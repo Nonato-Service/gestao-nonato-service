@@ -1,0 +1,71 @@
+﻿      {showClientesModal && (
+        <div className="modal-overlay" onClick={() => setShowClientesModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{safeT?.clientesTitle || 'Cadastro de Clientes'}</h2>
+            <p style={{ marginBottom: '20px' }}>Modal de Clientes - Em desenvolvimento</p>
+            <button className="btn-primary" onClick={() => setShowClientesModal(false)}>{safeT?.close || 'Fechar'}</button>
+          </div>
+        </div>
+      )}
+
+      {showFornecedoresModal && (
+        <div className="modal-overlay" onClick={() => setShowFornecedoresModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{safeT?.fornecedoresTitle || 'Cadastro de Fornecedores'}</h2>
+            <p style={{ marginBottom: '20px' }}>Modal de Fornecedores - Em desenvolvimento</p>
+            <button className="btn-primary" onClick={() => setShowFornecedoresModal(false)}>{safeT?.close || 'Fechar'}</button>
+          </div>
+        </div>
+      )}
+
+      {showRelatoriosModal && (
+        <div className="modal-overlay" onClick={() => setShowRelatoriosModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{safeT?.relatorioServicoTitle || 'RelatÃ³rio de ServiÃ§o'}</h2>
+            <p style={{ marginBottom: '20px' }}>Modal de RelatÃ³rios - Em desenvolvimento</p>
+            <button className="btn-primary" onClick={() => setShowRelatoriosModal(false)}>{safeT?.close || 'Fechar'}</button>
+          </div>
+        </div>
+      )}
+
+      {showBibliotecaPecasModal && (
+        <div className="modal-overlay" onClick={() => setShowBibliotecaPecasModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{safeT?.bibliotecaPecasTitle || 'Biblioteca de PeÃ§as'}</h2>
+            <p style={{ marginBottom: '20px' }}>Modal de Biblioteca de PeÃ§as - Em desenvolvimento</p>
+            <button className="btn-primary" onClick={() => setShowBibliotecaPecasModal(false)}>{safeT?.close || 'Fechar'}</button>
+          </div>
+        </div>
+      )}
+
+      {showAgendaModal && (
+        <div className="modal-overlay" onClick={() => setShowAgendaModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{safeT?.agendaTitle || 'Agenda'}</h2>
+            <p style={{ marginBottom: '20px' }}>Modal de Agenda - Em desenvolvimento</p>
+            <button className="btn-primary" onClick={() => setShowAgendaModal(false)}>{safeT?.close || 'Fechar'}</button>
+          </div>
+        </div>
+      )}
+
+      {showDesmontadosModal && (
+        <div className="modal-overlay" onClick={() => setShowDesmontadosModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{safeT?.desmontadosTitle || 'CADASTRO E BIBLIOTECA DE GRUPOS E PEÃ‡AS DE EQUIPAMENTOS DESMONTADOS'}</h2>
+            <p style={{ marginBottom: '20px' }}>Modal de Desmontados - Em desenvolvimento</p>
+            <button className="btn-primary" onClick={() => setShowDesmontadosModal(false)}>{safeT?.close || 'Fechar'}</button>
+          </div>
+        </div>
+      )}
+
+      {showCadastroServicosModal && (
+        <div className="modal-overlay" onClick={() => setShowCadastroServicosModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{safeT?.cadastroServicosTitle || 'CADASTRO DE SERVIÃ‡OS'}</h2>
+            <p style={{ marginBottom: '20px' }}>Modal de Cadastro de ServiÃ§os - Em desenvolvimento</p>
+            <button className="btn-primary" onClick={() => setShowCadastroServicosModal(false)}>{safeT?.close || 'Fechar'}</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )

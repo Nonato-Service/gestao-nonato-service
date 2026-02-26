@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Extrair Backup do Sistema</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #000;
+            color: #0f0;
+        }
+        button {
+            background: #0f0;
+            color: #000;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        pre {
+            background: #1a1a1a;
+            padding: 10px;
+            border: 1px solid #0f0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Extrator de Backup - Nonato Service</h1>
+    <button onclick="extractBackups()">Extrair Backups do localStorage</button>
+    <div id="result"></div>
+
+    <script>
+        function extractBackups() {
+            try {
+                const backupsStr = localStorage.getItem('nonato-auto-backups');
+                if (!backupsStr) {
+                    document.getElementById('result').innerHTML = '<p style="color: #f00;">Nenhum backup encontrado no localStorage.</p>';
+                    return;
+                }
+
+                const backups = JSON.parse(backupsStr);
+                const sortedBackups = backups.sort((a, b) => b.timestamp - a.timestamp);
+
+                let html = `<h2>Backups Encontrados: ${sortedBackups.length}</h2>`;
+                
+                sortedBackups.forEach((backup, index) => {
+                    const date = new Date(backup.timestamp).toLocaleString();
+                    html += `
+                        <div style="margin: 20px 0; padding: 10px; border: 1px solid #0f0;">
+                            <h3>Backup ${index + 1} - ${date}</h3>
+                            <button onclick="downloadBackup(${index})">Baixar Backup ${index + 1}</button>
+                            <pre style="max-height: 200px; overflow-y: auto;">${JSON.stringify(backup, null, 2).substring(0, 1000)}...</pre>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('result').innerHTML = html;
+                
+                // Salvar backups globalmente para download
+                window.backups = sortedBackups;
+            } catch (error) {
+                document.getElementById('result').innerHTML = `<p style="color: #f00;">Erro: ${error.message}</p>`;
+            }
+        }
+
+        function downloadBackup(index) {
+            const backup = window.backups[index];
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup-nonato-${new Date(backup.timestamp).toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
+

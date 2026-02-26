@@ -1,0 +1,1771 @@
+powershell -NoProfile -ExecutionPolicy Bypass -Command Start-Process .\index.html
+start index.html
+start teste.html
+start teste_simples.html
+copy index.html index_backup.html
+powershell -Command "(Get-Content index.html) -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {' | Set-Content index.html"
+powershell -Command "$content = Get-Content index.html -Raw; $content = $content -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {'; Set-Content index.html $content"
+sed -i 's/grupoData\.pecas\.forEach(({\.\.\.peca, idx}) => {/grupoData.pecas.forEach(({...peca, idx}) => {/g' index.html
+powershell -Command "(Get-Content index.html) -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {' | Set-Content index.html"
+powershell -Command "$content = Get-Content index.html -Raw; $content = $content -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {'; Set-Content index.html $content"
+powershell -Command "(Get-Content index.html) -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {' | Set-Content index.html"
+powershell -Command "$content = Get-Content index.html -Raw; $content = $content -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {'; Set-Content index.html $content"
+powershell -Command "(Get-Content index.html) -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {' | Set-Content index.html"
+powershell -Command "$content = Get-Content index.html -Raw; $content = $content -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {'; Set-Content index.html $content"
+powershell -Command "(Get-Content index.html) -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {' | Set-Content index.html"
+powershell -Command "$content = Get-Content index.html -Raw; $content = $content -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {'; Set-Content index.html $content"
+powershell -Command "(Get-Content index.html) -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {' | Set-Content index.html"
+powershell -Command "$content = Get-Content index.html -Raw; $content = $content -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {'; Set-Content index.html $content"
+powershell -Command "(Get-Content index.html) -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {' | Set-Content index.html"
+powershell -Command "$content = Get-Content index.html -Raw; $content = $content -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {'; Set-Content index.html $content"
+powershell -Command "(Get-Content index.html) -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {' | Set-Content index.html"
+powershell -Command "$content = Get-Content index.html -Raw; $content = $content -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {'; Set-Content index.html $content"
+powershell -Command "(Get-Content index.html) -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {' | Set-Content index.html"
+powershell -Command "$content = Get-Content index.html -Raw; $content = $content -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {'; Set-Content index.html $content"
+powershell -Command "(Get-Content index.html) -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {' | Set-Content index.html"
+powershell -Command "$content = Get-Content index.html -Raw; $content = $content -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {'; Set-Content index.html $content"
+powershell -Command "(Get-Content index.html) -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {' | Set-Content index.html"
+powershell -Command "$content = Get-Content index.html -Raw; $content = $content -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {'; Set-Content index.html $content"
+powershell -Command "(Get-Content index.html) -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {' | Set-Content index.html"
+powershell -Command "$content = Get-Content index.html -Raw; $content = $content -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {'; Set-Content index.html $content"
+powershell -Command "(Get-Content index.html) -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {' | Set-Content index.html"
+powershell -Command "$content = Get-Content index.html -Raw; $content = $content -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {'; Set-Content index.html $content"
+powershell -Command "(Get-Content index.html) -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {' | Set-Content index.html"
+powershell -Command "$content = Get-Content index.html -Raw; $content = $content -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {'; Set-Content index.html $content"
+copy index_backup.html index.html /Y
+Copy-Item index_backup.html index.html -Force
+start index.html
+powershell -Command "(Get-Content index.html) -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {' | Set-Content index.html"
+powershell -Command "$content = Get-Content index.html -Raw; $content = $content -replace 'grupoData\.pecas\.forEach\(\(\{\.\.\.peca, idx\}\) => \{', 'grupoData.pecas.forEach(({...peca, idx}) => {'; Set-Content index.html $content"
+powershell -Command "Get-Content index.html | Select-String -Pattern 'grupoData\.pecas\.forEach' -Context 2"
+powershell -Command "Get-Content index.html | Select-String -Pattern 'forEach.*=.*>' -Context 1"
+start index.html
+copy "index_backup.html" "index.html"
+start index.html
+copy "index_backup.html" "index.html"
+start index.html
+wc -l index.html
+Get-Content index.html | Measure-Object -Line
+copy "index_backup.html" "index.html"
+Get-Content index.html | Measure-Object -Line
+Get-Content index_backup.html | Measure-Object -Line
+copy "index_backup.html" "index.html"
+Get-Content index.html | Measure-Object -Line
+fc index.html index_backup.html
+Compare-Object (Get-Content index.html) (Get-Content index_backup.html)
+start index.html
+copy index.html index_backup_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_teste_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+copy index.html index_backup_antes_correcao_botao_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_botao_novo_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_gerenciar_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_assistencia_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_centralizar_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_verde_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_remover_equip_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_gestao_equip_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_cores_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_barra_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_textos_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_todos_textos_brancos_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_botoes_verde_transparente_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_corrigir_azul_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_cinza_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_arvore_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_imagem_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_corrigir_imagem_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_botao_acima_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_imagem_externa_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_layout_vertical_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_tela_inicial_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+copy index.html index_backup_antes_tela_inicial.html
+start index.html
+copy index.html index_backup_antes_imagem_grande_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_animacao_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_animacao_completa_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_login_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_botao_acessar_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_gestao_usuarios_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_mover_armazem_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_renomear_gerenciar_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_visualizador_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_corrigir_layout_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_buscador_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_filtro_busca_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_acessorios_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_situacao_venda_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_acessorios_vendidos_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_nomes_acessorios_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_corrigir_limpar_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_filtro_vendidos_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_selecao_acessorios_venda_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+copy index.html index_backup_antes_mesmos_acessorios_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+copy index.html index_backup_antes_corrigir_cores_acessorios_$(Get-Date -Format "yyyyMMdd_HHmmss").html
+start index.html
+python -m http.server 8000
+echo "Criando ícones PNG..." && echo "Os ícones serão criados automaticamente pelo navegador"
+start create_icons.html
+start index.html
+dir
+echo "Criando ícones PNG..." && copy icon.svg icon-192.png && copy icon.svg icon-512.png
+copy icon.svg icon-192.png
+copy icon.svg icon-512.png
+netstat -an | findstr :8000
+start http://localhost:8000
+start index.html
+start http://localhost:8000
+taskkill /f /im python.exe
+start index.html
+dir
+cd meu-projeto-sw && dir
+cd meu-projeto-sw
+dir
+cd meu-projeto-sw
+pwd
+start index.html
+cd meu-projeto-sw
+dir
+start index.html
+start teste.html
+Invoke-Item teste.html
+dir
+copy index.html index_backup.html
+cd meu-projeto-sw
+dir *.json
+dir *backup*
+Invoke-Item restaurar.html
+dir
+Invoke-Item index.html
+cd meu-projeto-sw
+pwd
+python -m http.server 8000
+start http://localhost:8000
+cd meu-projeto-sw
+dir
+taskkill /f /im python.exe
+start http://localhost:8000/?v=2
+taskkill /f /im python.exe
+cd meu-projeto-sw
+pwd
+python -m http.server 8000
+start http://localhost:8000
+taskkill /f /im python.exe
+pwd
+dir
+start http://localhost:8000/index.html
+taskkill /f /im python.exe
+copy index_backup.html index.html
+python -m http.server 8000
+start http://localhost:8000
+taskkill /f /im python.exe
+start http://localhost:8000/armazem.html
+taskkill /f /im python.exe
+cd meu-projeto-sw
+pwd
+dir
+dir *.html
+python -m http.server 8000
+start http://localhost:8000/armazem.html
+start ARMAZEM_FUNCIONANDO.html
+Invoke-Item ARMAZEM_FUNCIONANDO.html
+dir *.html
+Invoke-Item ARMAGEM_DEFINITIVO.html
+dir *.html
+cd meu-projeto-sw
+pwd
+dir
+cd meu-projeto-sw && dir
+cd meu-projeto-sw
+dir
+ls NONATO_SERVICE.html
+dir NONATO_SERVICE.html
+ls
+echo "teste" > NONATO_SERVICE.html
+ls
+del NONATO_SERVICE.html
+@"`
+<!DOCTYPE html>`
+<html lang="pt-BR">`
+<head>`
+    <meta charset="UTF-8">`
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">`
+    <title>Nonato Service - Sistema de Gestão</title>`
+    <style>`
+        * { margin: 0; padding: 0; box-sizing: border-box; }`
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #000000; color: #ffffff; overflow-x: hidden; }`
+        .container { display: flex; min-height: 100vh; }`
+        .sidebar { width: 300px; background: #1a1a1a; border-right: 2px solid #00ff00; padding: 20px; overflow-y: auto; }`
+        .logo-section { text-align: center; margin-bottom: 30px; padding: 20px; border: 2px solid #00ff00; border-radius: 10px; background: #2d2d2d; }`
+        .logo { font-size: 24px; font-weight: bold; color: #00ff00; margin-bottom: 5px; }`
+        .logo-subtitle { font-size: 14px; color: #cccccc; margin-bottom: 15px; }`
+        .logo-icons { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; }`
+        .logo-icon { width: 20px; height: 20px; background: #00ff00; border-radius: 3px; }`
+        .nav-arrows { display: flex; justify-content: center; gap: 20px; }`
+        .nav-arrow { color: #00ff00; font-size: 18px; cursor: pointer; }`
+        .nav-item { display: flex; align-items: center; padding: 15px; margin-bottom: 5px; background: #2d2d2d; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; border: 1px solid transparent; }`
+        .nav-item:hover { background: #3d3d3d; border-color: #00ff00; }`
+        .nav-item.active { background: #00ff00; color: #000000; }`
+        .nav-icon { font-size: 20px; margin-right: 15px; }`
+        .nav-text { flex: 1; font-weight: 500; }`
+        .main-content { flex: 1; padding: 20px; overflow-y: auto; }`
+        .header { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #00ff00; }`
+        .header-content { display: flex; align-items: center; gap: 15px; }`
+        .gear-icon { width: 40px; height: 40px; background: #00ff00; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #000000; }`
+        .header h1 { color: #00ff00; font-size: 28px; margin-bottom: 5px; }`
+        .header p { color: #cccccc; font-size: 16px; }`
+        .page-content { display: none; }`
+        .page-content.active { display: block; }`
+        .equipment-header { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; }`
+        .equipment-icon { font-size: 40px; }`
+        .equipment-title { font-size: 32px; color: #ffffff; font-weight: bold; }`
+        .nova-familia-section { background: #2d2d2d; border: 1px solid #00ff00; border-radius: 8px; padding: 20px; margin-bottom: 20px; }`
+        .nova-familia-section h3 { color: #ffffff; margin-bottom: 15px; font-size: 18px; }`
+        .input-group { display: flex; gap: 10px; align-items: center; }`
+        .familia-input { flex: 1; padding: 12px; border: 1px solid #555; border-radius: 4px; background: #3d3d3d; color: #ffffff; font-size: 14px; }`
+        .familia-input:focus { outline: none; border-color: #00ff00; box-shadow: 0 0 5px rgba(0, 255, 0, 0.3); }`
+        .btn-green { background: #00ff00; color: #000000; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; }`
+        .btn-green:hover { background: #00cc00; }`
+        .familia-section { background: #2d2d2d; border: 1px solid #00ff00; border-radius: 8px; padding: 20px; margin-bottom: 20px; }`
+        .familia-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #00ff00; margin-bottom: 15px; }`
+        .familia-title, .acoes-title { color: #ffffff; font-weight: bold; font-size: 16px; }`
+        .familia-list { display: flex; flex-direction: column; gap: 10px; }`
+        .familia-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #00ff00; }`
+        .familia-item:last-child { border-bottom: none; }`
+        .familia-name { color: #ffffff; font-size: 14px; }`
+        .btn-red { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: all 0.3s ease; }`
+        .btn-red:hover { background: #c0392b; }`
+        .buscar-equipamento-section { background: #2d2d2d; border: 1px solid #00ff00; border-radius: 8px; padding: 20px; margin-bottom: 20px; }`
+        .buscar-equipamento-section h3 { color: #ffffff; margin-bottom: 10px; font-size: 18px; }`
+        .buscar-descricao { color: #cccccc; margin-bottom: 15px; font-size: 14px; }`
+        .buscar-group { display: flex; gap: 10px; align-items: center; }`
+        .buscar-input { flex: 1; padding: 12px; border: 1px solid #555; border-radius: 4px; background: #3d3d3d; color: #ffffff; font-size: 14px; }`
+        .buscar-input:focus { outline: none; border-color: #00ff00; box-shadow: 0 0 5px rgba(0, 255, 0, 0.3); }`
+        .btn-icon { margin-right: 5px; }`
+        .equipamentos-table-section { background: #2d2d2d; border: 1px solid #00ff00; border-radius: 8px; padding: 20px; overflow-x: auto; }`
+        .equipamentos-table { width: 100%; border-collapse: collapse; color: #ffffff; }`
+        .equipamentos-table th { background: #1a1a1a; color: #00ff00; padding: 12px; text-align: left; border-bottom: 2px solid #00ff00; font-weight: bold; }`
+        .equipamentos-table td { padding: 12px; border-bottom: 1px solid #333; }`
+        .equipamentos-table tr:hover { background: #3d3d3d; }`
+        .empty-row { text-align: center; }`
+        .empty-message { padding: 40px; }`
+        .empty-content { display: flex; flex-direction: column; align-items: center; gap: 10px; color: #888888; }`
+        .empty-icon { font-size: 24px; }`
+    </style>`
+</head>`
+<body>`
+    <div class="container">`
+        <div class="sidebar">`
+            <div class="logo-section">`
+                <div class="logo">NONATO</div>`
+                <div class="logo-subtitle">SERVICE</div>`
+                <div class="logo-icons">`
+                    <div class="logo-icon">■</div>`
+                    <div class="logo-icon">●</div>`
+                    <div class="logo-icon">▲</div>`
+                    <div class="logo-icon">*</div>`
+                </div>`
+                <div class="nav-arrows">`
+                    <div class="nav-arrow">←</div>`
+                    <div class="nav-arrow">→</div>`
+                </div>`
+            </div>`
+            <div class="nav-item active">`
+                <div class="nav-icon" style="color: #00ff00;">🏭</div>`
+                <div class="nav-text">Gestão de Equipamentos do Armazém</div>`
+                <div class="nav-arrow-icon">▶</div>`
+            </div>`
+            <div class="nav-item">`
+                <div class="nav-icon">🔧</div>`
+                <div class="nav-text">✔ Assistência Técnica</div>`
+            </div>`
+            <div class="nav-item">`
+                <div class="nav-icon">👥</div>`
+                <div class="nav-text">• Clientes</div>`
+            </div>`
+            <div class="nav-item">`
+                <div class="nav-icon">👤</div>`
+                <div class="nav-text">Gestão de Usuários</div>`
+            </div>`
+            <div class="nav-item">`
+                <div class="nav-icon">📊</div>`
+                <div class="nav-text">Relatórios</div>`
+            </div>`
+        </div>`
+        <div class="main-content">`
+            <div class="header">`
+                <div class="header-content">`
+                    <div class="gear-icon">⚙</div>`
+                    <div>`
+                        <h1>Sistema de Gestão da Nonato Service</h1>`
+                        <p>Assistência técnica e checklists</p>`
+                    </div>`
+                </div>`
+            </div>`
+            <div id="equipamentos-page" class="page-content active">`
+                <div class="equipment-header">`
+                    <div class="equipment-icon">🏭</div>`
+                    <div class="equipment-title">Armazém de Equipamentos</div>`
+                </div>`
+                <div class="nova-familia-section">`
+                    <h3>Nova Família</h3>`
+                    <div class="input-group">`
+                        <input type="text" id="novaFamiliaInput" placeholder="Ex.: Impressoras" class="familia-input">`
+                        <button class="btn btn-green" id="adicionarFamiliaBtn">Adicionar Família</button>`
+                    </div>`
+                </div>`
+                <div class="familia-section">`
+                    <div class="familia-header">`
+                        <span class="familia-title">Família</span>`
+                        <span class="acoes-title">Ações</span>`
+                    </div>`
+                    <div id="familiaList" class="familia-list">`
+                        <div class="familia-item">`
+                            <span class="familia-name">EDGE BAND</span>`
+                            <button class="btn btn-red btn-small" onclick="excluirFamilia('EDGE BAND')">Excluir</button>`
+                        </div>`
+                        <div class="familia-item">`
+                            <span class="familia-name">FURADEIRAS</span>`
+                            <button class="btn btn-red btn-small" onclick="excluirFamilia('FURADEIRAS')">Excluir</button>`
+                        </div>`
+                        <div class="familia-item">`
+                            <span class="familia-name">GAZ</span>`
+                            <button class="btn btn-red btn-small" onclick="excluirFamilia('GAZ')">Excluir</button>`
+                        </div>`
+                    </div>`
+                </div>`
+                <div class="buscar-equipamento-section">`
+                    <h3>Buscar Equipamento</h3>`
+                    <p class="buscar-descricao">Buscar por ID ou Número do Equipamento</p>`
+                    <div class="buscar-group">`
+                        <input type="text" id="buscarEquipamentoInput" placeholder="Digite o ID ou número do equipamento..." class="buscar-input">`
+                        <button class="btn btn-green" id="buscarEquipamentoBtn">`
+                            <span class="btn-icon">🔍</span>`
+                            Buscar`
+                        </button>`
+                        <button class="btn btn-green" id="novoEquipamentoBtn">`
+                            <span class="btn-icon">+</span>`
+                            Novo Equipamento`
+                        </button>`
+                    </div>`
+                </div>`
+                <div class="equipamentos-table-section">`
+                    <table class="equipamentos-table">`
+                        <thead>`
+                            <tr>`
+                                <th>ID</th>`
+                                <th>Tipo</th>`
+                                <th>Modelo</th>`
+                                <th>Marca</th>`
+                                <th>N° Série</th>`
+                                <th>Família</th>`
+                                <th>Ações</th>`
+                            </tr>`
+                        </thead>`
+                        <tbody id="equipamentosTableBody">`
+                            <tr class="empty-row">`
+                                <td colspan="7" class="empty-message">`
+                                    <div class="empty-content">`
+                                        <span class="empty-icon">🔍</span>`
+                                        <span>Digite um ID ou número do equipamento para buscar</span>`
+                                    </div>`
+                                </td>`
+                            </tr>`
+                        </tbody>`
+                    </table>`
+                </div>`
+            </div>`
+        </div>`
+    </div>`
+    <script>`
+        let families = [`
+            { id: 1, name: 'EDGE BAND', code: 'EDG' },`
+            { id: 2, name: 'FURADEIRAS', code: 'FUR' },`
+            { id: 3, name: 'GAZ', code: 'GAZ' }`
+        ];`
+        let equipment = [];`
+        function adicionarFamilia() {`
+            const input = document.getElementById('novaFamiliaInput');`
+            const nomeFamilia = input.value.trim();`
+            if (nomeFamilia) {`
+                const familiaList = document.getElementById('familiaList');`
+                const novaFamiliaItem = document.createElement('div');`
+                novaFamiliaItem.className = 'familia-item';`
+                novaFamiliaItem.innerHTML = '<span class="familia-name">' + nomeFamilia.toUpperCase() + '</span><button class="btn btn-red btn-small" onclick="excluirFamilia(\'' + nomeFamilia + '\')">Excluir</button>';`
+                familiaList.appendChild(novaFamiliaItem);`
+                input.value = '';`
+                const novaFamily = { id: Date.now(), name: nomeFamilia, code: nomeFamilia.substring(0, 3).toUpperCase() };`
+                families.push(novaFamily);`
+                console.log('Nova família "' + nomeFamilia + '" adicionada');`
+            }`
+        }`
+        function excluirFamilia(nomeFamilia) {`
+            if (confirm('Tem certeza que deseja excluir a família "' + nomeFamilia + '"?')) {`
+                const familiaItems = document.querySelectorAll('.familia-item');`
+                familiaItems.forEach(item => {`
+                    const nome = item.querySelector('.familia-name').textContent;`
+                    if (nome === nomeFamilia.toUpperCase()) {`
+                        item.remove();`
+                    }`
+                });`
+                families = families.filter(f => f.name !== nomeFamilia);`
+                console.log('Família "' + nomeFamilia + '" excluída');`
+            }`
+        }`
+        function buscarEquipamento() {`
+            const termo = document.getElementById('buscarEquipamentoInput').value.trim();`
+            const tbody = document.getElementById('equipamentosTableBody');`
+            if (termo) {`
+                tbody.innerHTML = '<tr class="empty-row"><td colspan="7" class="empty-message"><div class="empty-content"><span class="empty-icon">❌</span><span>Nenhum equipamento encontrado para "' + termo + '"</span></div></td></tr>';`
+                console.log('Busca realizada por: "' + termo + '"');`
+            } else {`
+                tbody.innerHTML = '<tr class="empty-row"><td colspan="7" class="empty-message"><div class="empty-content"><span class="empty-icon">🔍</span><span>Digite um ID ou número do equipamento para buscar</span></div></td></tr>';`
+            }`
+        }`
+        function novoEquipamento() {`
+            alert('Funcionalidade de novo equipamento em desenvolvimento');`
+            console.log('Abrindo modal para novo equipamento');`
+        }`
+        document.addEventListener('DOMContentLoaded', function() {`
+            console.log('Sistema Nonato Service carregado');`
+            document.getElementById('adicionarFamiliaBtn').addEventListener('click', adicionarFamilia);`
+            document.getElementById('novaFamiliaInput').addEventListener('keypress', (e) => {`
+                if (e.key === 'Enter') {`
+                    adicionarFamilia();`
+                }`
+            });`
+            document.getElementById('buscarEquipamentoBtn').addEventListener('click', buscarEquipamento);`
+            document.getElementById('buscarEquipamentoInput').addEventListener('keypress', (e) => {`
+                if (e.key === 'Enter') {`
+                    buscarEquipamento();`
+                }`
+            });`
+            document.getElementById('novoEquipamentoBtn').addEventListener('click', novoEquipamento);`
+        });`
+    </script>`
+</body>`
+</html>`
+"@ | Out-File -FilePath "NONATO_SERVICE.html" -Encoding UTF8
+cd meu-projeto-sw
+cd meu-projeto-sw && dir NONATO_SERVICE.html
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'equipamentos-page' -Context 5,50 | Select-Object -First 1"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'armazem-pecas-page' -Context 5,20"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'Armazém' -Context 1,5"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern '\.sidebar' -Context 5,10"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'nav-subitem' -Context 3,10"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern '\.nav-subitem \{' -Context 0,15"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'Equipamentos Internos' -Context 2,2"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'equipamentos-internos-page' -Context 2,2"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'nav-subitem' -Context 0,1"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'addEventListener.*click' -Context 1,3"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'nav-main.*addEventListener' -Context 2,2"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern '\.nav-icon' -Context 0,5"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'nav-icon.*id=' -Context 0,1"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'nav-item.*nav-' -Context 0,2"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'equipamentos-page' -Context 5,20"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'info-section' -Context 3,10"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'funcionalidade-card' -Context 2,10"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'equipamentos-page' -Context 5,25"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'functionality-card' -Context 0,5 | Select-Object -First 20"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'equipamentos-page' -Context 3,15"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'id=\"equipamentos-page\"' -Context 5,20"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'equipamentos-page' -Context 2,10"
+cd \meu-projeto-sw && python -m http.server 8000
+cd \meu-projeto-sw
+cd \meu-projeto-sw
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'adicionarFamiliaBtn' -Context 5,10"
+powershell -Command "Get-Content '\meu-projeto-sw\NONATO_SERVICE.html' | Select-String -Pattern 'familiaList' -Context 2,2"
+cd \meu-projeto-sw
+python -m http.server 8000
+echo '<!DOCTYPE html>`
+<html lang="pt-BR">`
+<head>`
+    <meta charset="UTF-8">`
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">`
+    <title>Gestão da Nonato Service</title>`
+    <link rel="stylesheet" href="styles.css">`
+</head>`
+<body>`
+    <div class="app-container">`
+        <header class="header">`
+            <h1>Gestão da Nonato Service</h1>`
+            <div class="user-info">`
+                <span>Usuário: Admin</span>`
+            </div>`
+        </header>`
+        `
+        <nav class="sidebar">`
+            <ul class="nav-menu">`
+                <li><a href="#" class="nav-item active">Dashboard</a></li>`
+                <li><a href="#" class="nav-item">Equipamentos</a></li>`
+                <li><a href="#" class="nav-item">Ordens de Serviço</a></li>`
+                <li><a href="#" class="nav-item">Manutenções</a></li>`
+                <li><a href="#" class="nav-item">Estoque</a></li>`
+                <li><a href="#" class="nav-item">Relatórios</a></li>`
+            </ul>`
+        </nav>`
+        `
+        <main class="main-content">`
+            <div class="content-area">`
+                <h2>Bem-vindo ao Sistema de Gestão</h2>`
+                <p>Gestão da Nonato Service - Sistema pronto para uso!</p>`
+            </div>`
+        </main>`
+    </div>`
+    `
+    <script src="script.js"></script>`
+</body>`
+</html>' > index.html
+echo '/* Gestão da Nonato Service - Estilos CSS */`
+* {`
+    margin: 0;`
+    padding: 0;`
+    box-sizing: border-box;`
+}`
+`
+body {`
+    font-family: Arial, sans-serif;`
+    background-color: #000000;`
+    color: #ffffff;`
+    height: 100vh;`
+    overflow: hidden;`
+}`
+`
+.app-container {`
+    display: flex;`
+    flex-direction: column;`
+    height: 100vh;`
+    background-color: #000000;`
+}`
+`
+.header {`
+    background-color: #111111;`
+    padding: 1rem 2rem;`
+    border-bottom: 2px solid #333333;`
+    display: flex;`
+    justify-content: space-between;`
+    align-items: center;`
+}`
+`
+.header h1 {`
+    color: #00ff00;`
+    font-size: 1.8rem;`
+    font-weight: bold;`
+}`
+`
+.user-info {`
+    color: #cccccc;`
+    font-size: 0.9rem;`
+}`
+`
+.main-container {`
+    display: flex;`
+    flex: 1;`
+    height: calc(100vh - 80px);`
+}`
+`
+.sidebar {`
+    width: 250px;`
+    background-color: #111111;`
+    border-right: 2px solid #333333;`
+    padding: 1rem 0;`
+}`
+`
+.nav-menu {`
+    list-style: none;`
+}`
+`
+.nav-item {`
+    display: block;`
+    padding: 1rem 2rem;`
+    color: #cccccc;`
+    text-decoration: none;`
+    border-bottom: 1px solid #222222;`
+    transition: all 0.3s ease;`
+}`
+`
+.nav-item:hover {`
+    background-color: #222222;`
+    color: #00ff00;`
+}`
+`
+.nav-item.active {`
+    background-color: #333333;`
+    color: #00ff00;`
+    border-left: 4px solid #00ff00;`
+}`
+`
+.main-content {`
+    flex: 1;`
+    background-color: #000000;`
+    padding: 2rem;`
+    overflow-y: auto;`
+}`
+`
+.content-area h2 {`
+    color: #00ff00;`
+    margin-bottom: 1rem;`
+    font-size: 1.5rem;`
+}`
+`
+.content-area p {`
+    color: #cccccc;`
+    font-size: 1.1rem;`
+    line-height: 1.6;`
+}`
+`
+/* Scrollbar personalizada */`
+::-webkit-scrollbar {`
+    width: 8px;`
+}`
+`
+::-webkit-scrollbar-track {`
+    background: #111111;`
+}`
+`
+::-webkit-scrollbar-thumb {`
+    background: #333333;`
+    border-radius: 4px;`
+}`
+`
+::-webkit-scrollbar-thumb:hover {`
+    background: #555555;`
+}' > styles.css
+echo '// Gestão da Nonato Service - JavaScript`
+document.addEventListener("DOMContentLoaded", function() {`
+    console.log("Sistema Gestão da Nonato Service carregado!");`
+    `
+    // Navegação do menu`
+    const navItems = document.querySelectorAll(".nav-item");`
+    `
+    navItems.forEach(item => {`
+        item.addEventListener("click", function(e) {`
+            e.preventDefault();`
+            `
+            // Remove active de todos os itens`
+            navItems.forEach(nav => nav.classList.remove("active"));`
+            `
+            // Adiciona active ao item clicado`
+            this.classList.add("active");`
+            `
+            // Aqui você pode adicionar lógica para carregar diferentes páginas`
+            const pageName = this.textContent;`
+            console.log("Navegando para:", pageName);`
+        });`
+    });`
+    `
+    // Adicionar data/hora atual no header`
+    function updateDateTime() {`
+        const now = new Date();`
+        const dateTime = now.toLocaleString("pt-BR");`
+        `
+        const userInfo = document.querySelector(".user-info");`
+        if (userInfo) {`
+            userInfo.innerHTML = `<span>Usuário: Admin | ${dateTime}</span>`;`
+        }`
+    }`
+    `
+    // Atualizar data/hora a cada segundo`
+    updateDateTime();`
+    setInterval(updateDateTime, 1000);`
+    `
+    // Efeito de digitação no título principal`
+    const mainTitle = document.querySelector(".content-area h2");`
+    if (mainTitle) {`
+        const text = mainTitle.textContent;`
+        mainTitle.textContent = "";`
+        `
+        let i = 0;`
+        const typeWriter = () => {`
+            if (i < text.length) {`
+                mainTitle.textContent += text.charAt(i);`
+                i++;`
+                setTimeout(typeWriter, 100);`
+            }`
+        };`
+        `
+        setTimeout(typeWriter, 500);`
+    }`
+});' > script.js
+dir
+powershell -Command "(Get-Content index.html) -replace 'Gestão da Nonato Service', 'Gestão Técnica Nonato Service' | Set-Content index.html"
+type index.html
+echo '<!DOCTYPE html>`
+<html lang="pt-BR">`
+<head>`
+    <meta charset="UTF-8">`
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">`
+    <title>Gestão Técnica Nonato Service</title>`
+    <link rel="stylesheet" href="styles.css">`
+</head>`
+<body>`
+    <div class="app-container">`
+        <header class="header">`
+            <h1>Gestão Técnica Nonato Service</h1>`
+            <div class="user-info">`
+                <span>Usuário: Admin</span>`
+            </div>`
+        </header>`
+        `
+        <nav class="sidebar">`
+            <ul class="nav-menu">`
+                <li><a href="#" class="nav-item active">Dashboard</a></li>`
+                <li><a href="#" class="nav-item">Equipamentos</a></li>`
+                <li><a href="#" class="nav-item">Ordens de Serviço</a></li>`
+                <li><a href="#" class="nav-item">Manutenções</a></li>`
+                <li><a href="#" class="nav-item">Estoque</a></li>`
+                <li><a href="#" class="nav-item">Relatórios</a></li>`
+            </ul>`
+        </nav>`
+        `
+        <main class="main-content">`
+            <div class="content-area">`
+                <h2>Bem-vindo ao Sistema de Gestão</h2>`
+                <p>Gestão Técnica Nonato Service - Sistema pronto para uso!</p>`
+            </div>`
+        </main>`
+    </div>`
+    `
+    <script src="script.js"></script>`
+</body>`
+</html>' > index.html
+del index.html
+notepad index.html
+echo ^<!DOCTYPE html^> > index.html && echo ^<html lang="pt-BR"^> >> index.html && echo ^<head^> >> index.html && echo     ^<meta charset="UTF-8"^> >> index.html && echo     ^<meta name="viewport" content="width=device-width, initial-scale=1.0"^> >> index.html && echo     ^<title^>Gestão Técnica Nonato Service^</title^> >> index.html && echo     ^<link rel="stylesheet" href="styles.css"^> >> index.html && echo ^</head^> >> index.html
+copy con index.html
+echo. > index.html
+echo ^<!DOCTYPE html^> > index.html
+echo "<!DOCTYPE html>" > index.html
+echo "<html lang=\"pt-BR\">" >> index.html
+echo "<!DOCTYPE html><html lang=\"pt-BR\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Gestão Técnica Nonato Service</title><link rel=\"stylesheet\" href=\"styles.css\"></head><body><div class=\"app-container\"><header class=\"header\"><h1>Gestão Técnica Nonato Service</h1><div class=\"user-info\"><span>Usuário: Admin</span></div></header><nav class=\"sidebar\"><ul class=\"nav-menu\"><li><a href=\"#\" class=\"nav-item active\">Dashboard</a></li><li><a href=\"#\" class=\"nav-item\">Equipamentos</a></li><li><a href=\"#\" class=\"nav-item\">Ordens de Serviço</a></li><li><a href=\"#\" class=\"nav-item\">Manutenções</a></li><li><a href=\"#\" class=\"nav-item\">Estoque</a></li><li><a href=\"#\" class=\"nav-item\">Relatórios</a></li></ul></nav><main class=\"main-content\"><div class=\"content-area\"><h2>Bem-vindo ao Sistema de Gestão</h2><p>Gestão Técnica Nonato Service - Sistema pronto para uso!</p></div></main></div><script src=\"script.js\"></script></body></html>" > index.html
+echo "/* Gestão Técnica Nonato Service - Estilos CSS */ * { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: Arial, sans-serif; background-color: #000000; color: #ffffff; height: 100vh; overflow: hidden; } .app-container { display: flex; flex-direction: column; height: 100vh; background-color: #000000; } .header { background-color: #111111; padding: 1rem 2rem; border-bottom: 2px solid #333333; display: flex; justify-content: space-between; align-items: center; } .header h1 { color: #00ff00; font-size: 1.8rem; font-weight: bold; } .user-info { color: #cccccc; font-size: 0.9rem; } .main-container { display: flex; flex: 1; height: calc(100vh - 80px); } .sidebar { width: 250px; background-color: #111111; border-right: 2px solid #333333; padding: 1rem 0; } .nav-menu { list-style: none; } .nav-item { display: block; padding: 1rem 2rem; color: #cccccc; text-decoration: none; border-bottom: 1px solid #222222; transition: all 0.3s ease; } .nav-item:hover { background-color: #222222; color: #00ff00; } .nav-item.active { background-color: #333333; color: #00ff00; border-left: 4px solid #00ff00; } .main-content { flex: 1; background-color: #000000; padding: 2rem; overflow-y: auto; } .content-area h2 { color: #00ff00; margin-bottom: 1rem; font-size: 1.5rem; } .content-area p { color: #cccccc; font-size: 1.1rem; line-height: 1.6; } ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #111111; } ::-webkit-scrollbar-thumb { background: #333333; border-radius: 4px; } ::-webkit-scrollbar-thumb:hover { background: #555555; }" > styles.css
+echo "// Gestão Técnica Nonato Service - JavaScript document.addEventListener(\"DOMContentLoaded\", function() { console.log(\"Sistema Gestão Técnica Nonato Service carregado!\"); const navItems = document.querySelectorAll(\".nav-item\"); navItems.forEach(item => { item.addEventListener(\"click\", function(e) { e.preventDefault(); navItems.forEach(nav => nav.classList.remove(\"active\")); this.classList.add(\"active\"); const pageName = this.textContent; console.log(\"Navegando para:\", pageName); }); }); function updateDateTime() { const now = new Date(); const dateTime = now.toLocaleString(\"pt-BR\"); const userInfo = document.querySelector(\".user-info\"); if (userInfo) { userInfo.innerHTML = \`<span>Usuário: Admin | \${dateTime}</span>\`; } } updateDateTime(); setInterval(updateDateTime, 1000); const mainTitle = document.querySelector(\".content-area h2\"); if (mainTitle) { const text = mainTitle.textContent; mainTitle.textContent = \"\"; let i = 0; const typeWriter = () => { if (i < text.length) { mainTitle.textContent += text.charAt(i); i++; setTimeout(typeWriter, 100); } }; setTimeout(typeWriter, 500); } });" > script.js
+dir *.html *.css *.js
+notepad index.html
+type index.html
+more index.html
+start index.html
+explorer index.html
+cmd /c start index.html
+powershell -Command "Start-Process index.html"
+dir index.html
+python -m http.server 8000
+taskkill /f /im python.exe
+cd C:\
+echo "<!DOCTYPE html><html lang=\"pt-BR\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>NSA - Gestão Técnica Nonato Service</title><style>body{font-family:Arial,sans-serif;background-color:#000000;color:#ffffff;margin:0;padding:0;height:100vh;display:flex;justify-content:center;align-items:center;flex-direction:column;}.container{text-align:center;}.title{color:#00ff00;font-size:3rem;margin-bottom:2rem;text-shadow:0 0 10px #00ff00;}.subtitle{color:#cccccc;font-size:1.5rem;margin-bottom:1rem;}.description{color:#888888;font-size:1.2rem;line-height:1.6;max-width:600px;}.menu{margin-top:3rem;}.menu-item{display:inline-block;margin:0 1rem;padding:1rem 2rem;background-color:#111111;color:#00ff00;text-decoration:none;border:2px solid #00ff00;border-radius:5px;transition:all 0.3s ease;}.menu-item:hover{background-color:#00ff00;color:#000000;box-shadow:0 0 20px #00ff00;}</style></head><body><div class=\"container\"><h1 class=\"title\">NSA</h1><h2 class=\"subtitle\">Gestão Técnica Nonato Service</h2><p class=\"description\">Sistema de gestão técnica profissional com interface moderna e funcionalidades avançadas para controle de equipamentos, manutenções e ordens de serviço.</p><div class=\"menu\"><a href=\"#\" class=\"menu-item\">Dashboard</a><a href=\"#\" class=\"menu-item\">Equipamentos</a><a href=\"#\" class=\"menu-item\">Ordens de Serviço</a><a href=\"#\" class=\"menu-item\">Manutenções</a><a href=\"#\" class=\"menu-item\">Estoque</a><a href=\"#\" class=\"menu-item\">Relatórios</a></div></div></body></html>" > C:\NSA.html
+start C:\NSA.html
+explorer C:\NSA.html
+dir C:\NSA.html
+notepad index.html
+cd C:/Users/W10 && start index.html
+start index.html
+mkdir backup-$(Get-Date -Format "yyyy-MM-dd-HH-mm-ss")
+copy index.html backup-2025-10-05-23-04-09\
+copy styles.css backup-2025-10-05-23-04-09\
+copy script.js backup-2025-10-05-23-04-09\
+dir backup-2025-10-05-23-04-09
+start index.html
+netstat -ano | findstr :8000
+dir
+type index.html
+python --version
+cd "C:/Users/W10" && start index.html
+start index.html
+node --version
+mkdir backup_sistema_$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
+copy *.html backup_sistema_2025-10-06_15-39-03\
+copy *.css backup_sistema_2025-10-06_15-39-03\
+copy *.js backup_sistema_2025-10-06_15-39-03\
+dir backup_sistema_2025-10-06_15-39-03\
+Compress-Archive -Path "backup_sistema_2025-10-06_15-39-03\*" -DestinationPath "backup_sistema_completo_2025-10-06.zip"
+dir *.zip
+start index.html
+python -m http.server 8000
+netstat -ano | findstr :8000
+dir backup-2025-10-05-23-04-09
+pwd
+ls
+ls "backup-2025-10-05-23-04-09"
+ls "backup_sistema_2025-10-06_15-39-03"
+findstr /i "backup\|export" script.js
+findstr /n "loadManagementDashboardData\|loadTechnicianDashboardData\|loadBackupData" script.js
+findstr /n "ManagementDashboard\|TechnicianDashboard\|Backup" script.js
+findstr /n "loadBackupData\|createManualBackup\|exportAllData" script.js
+findstr /n "loadTechnicianChecklist" script.js
+findstr /n "technician" script.js
+start index.html
+findstr /n "serviceDateInput.onchange" script.js
+copy script_clean.js script.js
+start index.html
+copy script_clean.js script.js
+dir *.js
+dir backup*
+dir "backup-2025-10-05-23-04-09\*.js"
+copy "backup-2025-10-05-23-04-09\script.js" script.js
+start index.html
+mkdir "backup_seguranca_$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss')"
+copy index.html "backup_seguranca_2025-10-07_00-20-04\"
+copy script.js "backup_seguranca_2025-10-07_00-20-04\"
+copy styles.css "backup_seguranca_2025-10-07_00-20-04\"
+powershell "Compress-Archive -Path 'backup_seguranca_2025-10-07_00-20-04\*' -DestinationPath 'backup_seguranca_completo_2025-10-07.zip'"
+dir backup_seguranca*
+dir "backup_seguranca_2025-10-07_00-20-04"
+findstr /n "switchUserMode" script.js
+findstr /n "switch" script.js
+findstr /n "mode" script.js
+findstr /n "function.*Mode" script.js
+findstr /n "switchUserMode\|switch.*Mode" script.js
+findstr /n "onclick.*switch" script.js
+findstr /n "management.*Mode" script.js
+findstr /n "function" script.js | head -10
+findstr /n "function" script.js
+findstr /n "switchUserMode" index.html
+findstr /n "onclick" index.html
+findstr /n "switchUserMode\|switch.*User" script.js
+findstr /n "Mode" script.js
+findstr /n "user" script.js
+findstr /n "management" script.js
+findstr /n "technician" script.js
+findstr /n "backup" script.js
+findstr /n "function" script.js
+findstr /n "switch" script.js
+findstr /n "onclick" script.js
+findstr /n "addEventListener" script.js
+findstr /n "click" script.js
+findstr /n "Mode" script.js
+findstr /n "mode-btn" styles.css
+findstr /n "Mode" styles.css
+findstr /n "button" styles.css
+findstr /n "btn" styles.css
+findstr /n "mode" styles.css
+findstr /n "user" styles.css
+findstr /n "selector" styles.css
+findstr /n "header" styles.css
+findstr /n "\.mode-btn\|\.user-mode-selector" styles.css
+findstr /n "selector" styles.css
+findstr /n "user-mode" styles.css
+findstr /n "mode" styles.css
+findstr /n "button" styles.css
+findstr /n "btn" styles.css
+findstr /n "header" styles.css
+start index.html
+findstr /n "\.mode-btn\.active\|\.active.*mode-btn" styles.css
+findstr /n "active.*color\|color.*active" styles.css
+findstr /n "ffa500\|255.*165.*0" styles.css
+findstr /n "mode-btn\|\.mode-btn" styles.css
+findstr /n "btn.*active\|active.*btn" styles.css
+findstr /n "\.active" styles.css
+findstr /n "active" styles.css
+findstr /n "button.*color\|color.*button" styles.css
+findstr /n "button" styles.css
+findstr /n "btn" styles.css
+findstr /n "\.btn\|button.*{" styles.css
+findstr /n "\.btn" styles.css
+findstr /n "btn" styles.css
+findstr /n "function showNotification" script.js
+start index.html
+mkdir "backup_seguranca_$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss')"
+copy index.html "backup_seguranca_2025-10-07_01-05-30\"
+copy script.js "backup_seguranca_2025-10-07_01-05-30\"
+copy styles.css "backup_seguranca_2025-10-07_01-05-30\"
+powershell "Compress-Archive -Path 'backup_seguranca_2025-10-07_01-05-30\*' -DestinationPath 'backup_seguranca_atualizado_2025-10-07.zip'"
+dir backup_seguranca*
+findstr /n "sold-preparation" index.html
+findstr /n "sold" index.html
+findstr /n "sold-preparation" index.html
+findstr /n "sold" index.html
+findstr /n "warehouse-equipment" index.html
+findstr /n "function.*Equipment\|function.*equipment" script.js
+findstr /n "Equipment" script.js
+findstr /n "equipment" script.js
+copy script.js "backup_seguranca_2025-10-07_01-05-30\script.js"
+powershell "Compress-Archive -Path 'backup_seguranca_2025-10-07_01-05-30\*' -DestinationPath 'backup_seguranca_final_2025-10-07.zip' -Force"
+start index.html
+findstr /n "searchSoldEquipment" script.js
+findstr /n "notification" styles.css
+wc -l styles.css
+Get-Content styles.css | Measure-Object -Line
+findstr /n "Layout em Duas Colunas" index.html
+findstr /n "two-column-layout" index.html
+findstr /n "sold-preparation" index.html
+findstr /n "Vendido - Início da Preparação" index.html
+findstr /n "showSelectedEquipment" script.js
+findstr /n "equipment" script.js
+findstr /n "warehouseEquipments" script.js
+findstr /n "loadEquipmentsFromStorage" script.js
+findstr /n "loadEquipmentsFromStorage\|warehouseEquipments.*=" script.js
+findstr /n "warehouseEquipments" script.js
+findstr /n "window.warehouseEquipments\|var warehouseEquipments\|let warehouseEquipments" script.js
+findstr /n "warehouseEquipments.*=" script.js
+findstr /n "localStorage.*warehouseEquipments\|getItem.*warehouseEquipments" script.js
+findstr /n "function loadEquipmentsFromStorage" script.js
+findstr /n "loadEquipmentsFromStorage" script.js
+findstr /n "warehouse-equipments" index.html
+findstr /n "equipment-table-container\|warehouse-equipments" index.html
+findstr /n "warehouse-equipments\|equipment-table-container" index.html
+findstr /n "add-equipment-btn" styles.css
+findstr /n "showAllEquipments" script.js
+findstr /n "hideFamilySuggestions" script.js
+findstr /n "Campo id é obrigatório" script.js
+findstr /n "obrigatório" script.js
+findstr /n "obrigatorio" script.js
+dir backup*
+dir /b
+ls
+dir C:\Users\W10\backup* /s
+Get-ChildItem -Path C:\Users\W10 -Name "*backup*" -Recurse
+dir /s /b *backup*
+dir C:\Users\W10\
+copy "C:\Users\W10\backup_seguranca_2025-10-07_01-05-30\script.js" "C:\Users\W10\script.js"
+copy "C:\Users\W10\backup_seguranca_2025-10-07_01-05-30\styles.css" "C:\Users\W10\styles.css"
+findstr /n "dashboard-grid\|dashboard-card" styles.css
+cd "C:/Users/W10" && powershell -Command "(Get-Content 'NONATO_SERVICE.html') -replace 'content: \"â—\"', 'content: \"●\"' | Set-Content 'NONATO_SERVICE.html'"
+powershell -Command "(Get-Content 'NONATO_SERVICE.html') -replace 'content: \"â—\"', 'content: \"●\"' | Set-Content 'NONATO_SERVICE.html'"
+powershell -Command "(Get-Content 'NONATO_SERVICE.html' -Raw) -replace 'â—', '●' | Set-Content 'NONATO_SERVICE.html'"
+powershell -Command "$content = Get-Content 'NONATO_SERVICE.html' -Raw; $content = $content -replace 'â—', '●'; Set-Content 'NONATO_SERVICE.html' -Value $content"
+powershell -Command "Get-Content 'NONATO_SERVICE.html' | Set-Content 'NONATO_SERVICE.html' -Encoding UTF8"
+copy "NONATO_SERVICE.html" "NONATO_SERVICE_backup.html"
+copy "NONATO_SERVICE_ATUALIZADO.html" "NONATO_SERVICE.html"
+findstr /i "Gestao Informacoes Navegacao Pagina Manutencao Relatorios Analises manutencoes maxima eficiencia botao esta" NONATO_SERVICE.html
+findstr /i "Gestao" NONATO_SERVICE.html
+findstr /i "Informacoes" NONATO_SERVICE.html
+findstr /i "Navegacao" NONATO_SERVICE.html
+findstr /i "Pagina" NONATO_SERVICE.html
+findstr /i "Manutencao" NONATO_SERVICE.html
+type NONATO_SERVICE.html | findstr /i "Gestao Informacoes Navegacao Pagina Manutencao Relatorios Analises manutencoes maxima eficiencia botao esta"
+type NONATO_SERVICE.html | findstr /i "Gestao"
+type NONATO_SERVICE.html | findstr /i "Informacoes"
+type NONATO_SERVICE.html | findstr /i "Navegacao"
+type NONATO_SERVICE.html | findstr /i "Pagina"
+type NONATO_SERVICE.html | findstr /i "Manutencao"
+cd C:/Users/W10/Desktop && mkdir "NONATO_SERVICE_BACKUP_$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss')"
+cd C:/Users/W10/Desktop
+mkdir "NONATO_SERVICE_BACKUP_2024-12-19"
+copy "NONATO_SERVICE.html" "NONATO_SERVICE_BACKUP_2024-12-19/"
+copy "gestao_equipamentos_final.html" "NONATO_SERVICE_BACKUP_2024-12-19/"
+dir "NONATO_SERVICE_BACKUP_2024-12-19"
+findstr /n "selecionarFormaSaida" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "checklist-header" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+start "" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+start "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "Informações do Cliente e Equipamento" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "edicao-section" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "mostrarModalChecklistPrevio" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "camposPersonalizados" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "Solicitação Feita pelo Cliente" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "left-sidebar" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "GERENCIA\|header\|title\|h1\|h2" "C:\Users\W10\Desktop\gestao_equipamentos_final.html" | head -10
+findstr /n "GERENCIA" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr "GERENCIA" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "novo-botao-btn" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "GERENCIA" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "GERENCIA\|management-content" "C:\Users\W10\Desktop\gestao_equipamentos_final.html" | head -5
+findstr /n "GERENCIA" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "main-content" "C:\Users\W10\Desktop\gestao_equipamentos_final.html" | head -5
+findstr /n "\.main-content" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "CADASTRO DE TÉCNICOS" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "mostrarModalTecnicos" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "tecnicos-overlay" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "tecnicos-lista-tipo" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "Técnicos Cadastrados" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "lista-tecnicos-section" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "Técnicos Cadastrados" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "tecnicos" "C:\Users\W10\Desktop\gestao_equipamentos_final.html" | head -10
+findstr /n "lista-tecnicos" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "Técnicos Cadastrados" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /n "cadastro-tecnico-section" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+copy "C:\Users\W10\Desktop\gestao_equipamentos_final.html" "C:\Users\W10\Desktop\gestao_equipamentos_final_BACKUP_$(Get-Date -Format 'yyyyMMdd_HHmmss').html"
+dir "C:\Users\W10\Desktop\gestao_equipamentos_final*" | Sort-Object LastWriteTime -Descending
+mkdir "C:\Users\W10\Desktop\BACKUP_SISTEMA_COMPLETO_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+robocopy "C:\Users\W10\Desktop" "C:\Users\W10\Desktop\BACKUP_SISTEMA_COMPLETO_20251011_114529" /E /XD "BACKUP_SISTEMA_COMPLETO_*" /R:3 /W:1
+dir "C:\Users\W10\Desktop\BACKUP_SISTEMA_COMPLETO_*" | Sort-Object LastWriteTime -Descending
+dir "C:\Users\W10\Desktop\BACKUP_SISTEMA_COMPLETO_*"
+ls "C:\Users\W10\Desktop\BACKUP_SISTEMA_COMPLETO_*"
+Get-ChildItem "C:\Users\W10\Desktop" -Name "*BACKUP*"
+echo "Verificando backup..."
+powershell -Command "Get-Content 'C:\Users\W10\Desktop\gestao_equipamentos_final.html' | Select-String -Pattern 'center-bar' -Context 0,10 | Select-Object -First 1"
+powershell -Command "$content = Get-Content 'C:\Users\W10\Desktop\gestao_equipamentos_final.html' -Raw; $index = $content.IndexOf('<div class=\"center-bar\"'); if($index -gt 0) { $content.Substring($index, 2000) }"
+findstr /N "center-bar" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "</style>" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "<script>" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "EQUIPAMENTO VENDIDO" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "abrirEquipamentosVendidos" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "buscarEquipamentoVendido" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "já existe" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "function carregarClientes" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "verDetalhesEquipamentoVendido" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "fecharModalChecklistPrevio" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "clienteChecklist" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "DESTINAR ATIVIDADE" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "abrirDestinarAtividade" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "buscarEquipamentoPorId\|buscarClientePorNumero\|salvarDestinacaoAtividade" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "function buscarEquipamentoPorId" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "GERAL" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "PRE CHECK\|Pre Check" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "GERAL\|geral" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "tecnico-pre-check" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "atualizarOpcoesTecnico" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "carregarTecnicosPorSituacao" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "function abrirTecnicoPreCheck" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "destinar-atividade-container\|situacao-tecnico" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "destinar-atividade-container" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "mostrarModalDestinarAtividade" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "destinar-atividade-container" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "function salvarDestinacaoAtividade" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "function editarDestinacao\|function excluirDestinacao" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+findstr /N "tecnicos-atividade-btn\|destinar-atividade-btn" "C:\Users\W10\Desktop\gestao_equipamentos_final.html"
+Select-String -Path "C:\Users\W10\Desktop\gestao_equipamentos_final.html" -Pattern "\.tecnicos-atividade-overlay" | Select-Object -First 5
+dir
+cd Desktop
+dir Desktop
+ls
+type "gestao_equipamentos_final.htm" | head -50
+Get-Content "gestao_equipamentos_final.htm" | Select-Object -First 50
+ls *.htm*
+Get-Content "gestao_equipamentos_final.html" | Select-Object -First 100
+Get-Content "gestao_equipamentos_final.html" | Select-Object -Skip 100 -First 100
+Get-Content "gestao_equipamentos_final.html" | Select-String -Pattern "GESTAO TECNICA|EQUIPAMENTOS|button" -Context 3
+Get-Content "gestao_equipamentos_final.html" | Select-String -Pattern "EQUIPAMENTOS DO ARMAZEM|GESTAO TECNICA" -Context 5
+Get-Content "gestao_equipamentos_final.html" | Select-String -Pattern "EQUIPAMENTOS|GESTAO" -Context 2
+Copy-Item "gestao_equipamentos_final.html" "gestao_equipamentos_final.htm"
+start "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /i /n "cadastro.*clientes" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "clientes-overlay" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "</div>" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html" | findstr /A "10855"
+findstr /n "clientesOverlay" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "<!-- Modal" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "<!-- Modal" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html" | findstr /A "10854"
+findstr /n "<!-- Modal" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html" | findstr /v "10854"
+findstr /n "mostrarModalEquipamentosVendidos" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "</div>" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html" | findstr "1109[0-9]"
+findstr /n "clientesOverlay" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "</div>" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html" | findstr "110[0-9][0-9]"
+findstr /n "clientes-container" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "</div>" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html" | findstr "110[0-9][0-9]"
+powershell -Command "(Get-Content 'c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html') | Select-Object -Skip 10850 -First 200 | Select-Object -First 10"
+powershell -Command "$content = Get-Content 'c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html'; $newContent = $content[0..10849] + $content[11047..($content.Length-1)]; $newContent | Set-Content 'c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html'"
+powershell -Command "$content = Get-Content 'c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html'; $part1 = $content[0..10849]; $part2 = $content[11047..($content.Length-1)]; $newContent = $part1 + $part2; $newContent | Set-Content 'c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html'"
+powershell -ExecutionPolicy Bypass -File "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\remove_clientes.ps1"
+findstr /n "clientes-overlay" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "Modal Cadastro de Clientes" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "clientes-overlay" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "clientes" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "abrirCadastroClientes\|fecharCadastroClientes\|abrirClientes\|abrirEquipamentos" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "FUNÇÕES DO CADASTRO DE CLIENTES" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /i "cliente" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html" | findstr /i "function\|onclick"
+findstr /n "CADASTRO DE CLIENTES" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "abrirCadastroClientes" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "clientes" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "function salvarCliente" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "clienteEquipamento" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n /i "valor" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "cadastro-equipamento-full" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "\.cadastro-equipamento-full" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "right-sidebar" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "sidebar.*right" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "sidebar" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html" | head -10
+findstr /n "Cadastro de Equipamentos" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "EQUIPAMENTOS" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html" | head -5
+findstr /n "equipamentos" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html" | head -5
+findstr /n "sidebar" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "right" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html" | head -10
+findstr /n "lateral" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html" | head -5
+findstr /n "barra" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html" | head -5
+findstr /n "sidebar-right" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "right-sidebar" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "Cadastro de Equipamentos" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+findstr /n "carregarFamiliasParaEquipamentos" "c:\Users\W10\Desktop\BACKUP CURSOR NONATO\gestao_equipamentos_final.html"
+wc -l "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html"
+Get-Content "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" | Measure-Object -Line
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "familiasNovo" -Context 2
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "familiasLista" -Context 1
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "function.*mostrar.*[Ff]amili" -Context 2
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "function.*[Ff]amili.*\(\)" -Context 1
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "mostrarFamilias|mostrar.*[Ff]amili" -Context 1
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "function mostrarFamilias" -Context 3
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "secaoFamilias" -Context 2
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "var familiasNovo|let familiasNovo|const familiasNovo" -Context 2
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "</body>" -Context 2
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "DOMContentLoaded" -Context 3
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "let familias" -Context 2
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "salvarNovaFamiliaNovo" -Context 1
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "abrirModalNovaFamilia" -Context 2
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "function.*\(\)" -Context 1 | Select-String -A 5 -B 5 "salvarNovaFamiliaNovo"
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "}" -Context 0 | Select-String -A 1 -B 1 "salvarNovaFamiliaNovo"
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "// ========== NOVO SISTEMA DE FAMÍLIAS" -Context 1
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "/\*" -Context 1
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "\*/" -Context 1
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "function abrirModalNovaFamiliaNovo" -Context 3
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "abrirModalNovaFamiliaNovo"
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "modalNovaFamiliaNovo" -Context 2
+Select-String -Path "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" -Pattern "abrirModalNovaFamiliaNovo" -Context 3
+Get-Content "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" | Select-String -Pattern "Nova Família" -Context 2
+Get-Content "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" | Select-String -Pattern "Nova Família" -Context 1
+Get-Content "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" | Select-String -Pattern "function abrirModalNovaFamiliaNovo" -Context 10
+Get-Content "c:/Users/W10/Desktop/BACKUP CURSOR NONATO/gestao_equipamentos_final.html" | Select-String -Pattern "Nova Família" -Context 1
+dir "C:\Users\W10\backup_gestao_nonato_service"
+start "" "C:\Users\W10\backup_gestao_nonato_service\index.html"
+Invoke-Item "C:\Users\W10\backup_gestao_nonato_service\index.html"
+dir "C:\Users\W10\backup_gestao_nonato_service"
+mkdir "C:\Users\W10\backup_gestao_nonato_service\backup_$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss')"
+copy "C:\Users\W10\backup_gestao_nonato_service\*" "C:\Users\W10\backup_gestao_nonato_service\backup_2025-10-18_15-44-45\" /Y
+Copy-Item "C:\Users\W10\backup_gestao_nonato_service\*" "C:\Users\W10\backup_gestao_nonato_service\backup_2025-10-18_15-44-45\" -Recurse -Force
+dir "C:\Users\W10\backup_gestao_nonato_service\backup_2025-10-18_15-44-45"
+cd "C:\Users\W10\backup_gestao_nonato_service"
+cd "C:\Users\W10\backup_gestao_nonato_service" && npm init -y
+cd "C:\Users\W10\backup_gestao_nonato_service"
+npm init -y
+mkdir config, routes, middleware, models, controllers, utils, scripts, tests, uploads
+cd "C:\Users\W10\backup_gestao_nonato_service" && mkdir "backup_$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss')"
+cd "C:\Users\W10\backup_gestao_nonato_service"
+$backupName = "backup_$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss')"; mkdir $backupName
+Copy-Item -Path "index.html" -Destination "backup_2025-10-19_17-45-39\"
+Copy-Item -Path "script.js" -Destination "backup_2025-10-19_17-45-39\"
+Copy-Item -Path "styles.css" -Destination "backup_2025-10-19_17-45-39\"
+Copy-Item -Path "package.json" -Destination "backup_2025-10-19_17-45-39\" -ErrorAction SilentlyContinue
+Copy-Item -Path "server.js" -Destination "backup_2025-10-19_17-45-39\" -ErrorAction SilentlyContinue
+Copy-Item -Path "README.md" -Destination "backup_2025-10-19_17-45-39\" -ErrorAction SilentlyContinue
+Copy-Item -Path "*.env*" -Destination "backup_2025-10-19_17-45-39\" -ErrorAction SilentlyContinue
+Copy-Item -Path "*.json" -Destination "backup_2025-10-19_17-45-39\" -ErrorAction SilentlyContinue
+Copy-Item -Path "*.js" -Destination "backup_2025-10-19_17-45-39\" -ErrorAction SilentlyContinue
+Copy-Item -Path "*.css" -Destination "backup_2025-10-19_17-45-39\" -ErrorAction SilentlyContinue
+Copy-Item -Path "*.html" -Destination "backup_2025-10-19_17-45-39\" -ErrorAction SilentlyContinue
+Copy-Item -Path "*.md" -Destination "backup_2025-10-19_17-45-39\" -ErrorAction SilentlyContinue
+cd "C:\Users\W10\backup_gestao_nonato_service" && dir backup_2025-10-19_17-45-39
+cd "C:\Users\W10\backup_gestao_nonato_service"
+dir backup_2025-10-19_17-45-39
+mkdir "backup_correto_$(Get-Date -Format 'yyyy-MM-dd_HH-mm-ss')"
+Copy-Item -Path "index.html" -Destination "backup_correto_2025-10-19_17-52-56\"
+Copy-Item -Path "script.js" -Destination "backup_correto_2025-10-19_17-52-56\"
+Copy-Item -Path "styles.css" -Destination "backup_correto_2025-10-19_17-52-56\"
+Copy-Item -Path "package.json" -Destination "backup_correto_2025-10-19_17-52-56\"
+Copy-Item -Path "server.js" -Destination "backup_correto_2025-10-19_17-52-56\"
+Copy-Item -Path "README.md" -Destination "backup_correto_2025-10-19_17-52-56\"
+Copy-Item -Path ".env*" -Destination "backup_correto_2025-10-19_17-52-56\"
+dir "backup_correto_2025-10-19_17-52-56"
+cd "C:\Users\W10\backup_gestao_nonato_service"
+dir
+start index.html
+wc -l "C:/Users/W10/backup_gestao_nonato_service/index.html"
+Get-Content "C:/Users/W10/backup_gestao_nonato_service/index.html" | Measure-Object -Line
+Get-Content "C:/Users/W10/backup_gestao_nonato_service/index.html" | Select-Object -Last 50
+Select-String -Path "C:/Users/W10/backup_gestao_nonato_service/index.html" -Pattern "cadastro-clientes-page" -Context 2
+Select-String -Path "C:/Users/W10/backup_gestao_nonato_service/styles.css" -Pattern "common-item|hidden|display.*none" -Context 2
+cd "C:/Users/W10/backup_gestao_nonato_service" && start index.html
+cd "C:/Users/W10/backup_gestao_nonato_service"
+start index.html
+cd "C:/Users/W10/backup_gestao_nonato_service"
+Select-String -Path "script.js" -Pattern "common-item|display.*none|visibility.*hidden" -Context 3
+Select-String -Path "script.js" -Pattern "switchUserMode|user-mode|common-item" -Context 5
+Select-String -Path "script.js" -Pattern "USER_PERMISSIONS|ALL_FEATURES" -Context 10
+Select-String -Path "script.js" -Pattern "const USER_PERMISSIONS|const ALL_FEATURES" -Context 20
+Select-String -Path "script.js" -Pattern "function openManagementSystem" -Context 10
+start teste-botao.html
+start index.html
+Select-String -Path "index.html" -Pattern "cadastro-clientes-page" -Context 5
+start index.html
+cd backup_gestao_nonato_service && start index.html
+cd backup_gestao_nonato_service && findstr /n "function saveDynamicClient" script.js
+$BASE = Join-Path $HOME 'Projetos'; New-Item -ItemType Directory -Path $BASE -Force | Out-Null; $PROJECT_ROOT = Join-Path $BASE 'gestao-tecnica'; New-Item -ItemType Directory -Path $PROJECT_ROOT -Force | Out-Null
+$PROJECT_ROOT = Join-Path $HOME 'Projetos/gestao-tecnica'; Set-Location $PROJECT_ROOT; $pwd
+git init
+New-Item -ItemType Directory -Path '.\src','.\docs','.\tests' -Force | Out-Null
+sim por favor
+warp --help
+ls
+mkdir templates
+python run.py
+Move-Item templates src/
+cd src
+python app.py
+netstat -an | findstr :5000
+python app.py
+python app_simple.py
+netstat -an | findstr LISTENING
+python test_server.py
+Get-Process | Where-Object {$_.ProcessName -like "*python*"}
+cd ..
+python gestao_cli.py
+cd "C:\Users\W10\backup_gestao_nonato_service" && echo "Testando sistema de mensagens com técnicos..."
+cd "C:\Users\W10\backup_gestao_nonato_service"
+start test-messages.html
+cd "C:\Users\W10\backup_gestao_nonato_service" && start index.html
+cd "C:\Users\W10\backup_gestao_nonato_service"
+start index.html
+cd "C:\Users\W10\backup_gestao_nonato_service" && start index.html
+cd "C:\Users\W10\backup_gestao_nonato_service"
+start index.html
+cd "C:\Users\W10\backup_gestao_nonato_service" && start index.html
+cd "C:\Users\W10\backup_gestao_nonato_service"
+start index.html
+cd "C:\Users\W10\backup_gestao_nonato_service" && start index.html
+cd "C:\Users\W10\backup_gestao_nonato_service"
+start index.html
+cd "C:\Users\W10\backup_gestao_nonato_service"
+start index.html
+cd "C:\Users\W10\backup_gestao_nonato_service"
+start index.html
+findstr /n /i "grupo\|group\|biblioteca\|library\|apagar\|delete" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "function.*grupo\|function.*group\|function.*apagar\|function.*delete\|function.*biblioteca\|function.*library" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "library-container\|biblioteca\|peças\|parts" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "library\|Library\|BIBLIOTECA\|Biblioteca" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "grupo\|Grupo\|GROUP\|Group" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "peça\|peças\|PECA\|PECAS" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "equipment\|Equipment\|EQUIPAMENTO\|Equipamento" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "management\|Management\|GESTAO\|Gestão" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "warehouse\|Warehouse\|ARMAZEM\|Armazém" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "function\|onclick\|button" "c:\Users\W10\backup_gestao_nonato_service\index.html" | findstr /i "grupo\|group\|apagar\|delete\|biblioteca\|library"
+findstr /n "library-container\|library-header\|library-content\|library-sidebar" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "<script>" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "function.*grupo\|function.*group\|function.*apagar\|function.*delete" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "function" "c:\Users\W10\backup_gestao_nonato_service\index.html" | findstr /i "grupo\|group\|apagar\|delete"
+findstr /n "function" "c:\Users\W10\backup_gestao_nonato_service\index.html" | head -20
+findstr /n "function" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "function" "c:\Users\W10\backup_gestao_nonato_service\index.html" | findstr /v "function"
+findstr /n "showPartDetails" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "showPartDetails\|part-details" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "part-details" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "selected-part" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "function.*showPartDetails\|function.*displayPartDetails" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "showPartDetails" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "detail-actions\|parts-details" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "library-layout\|parts-details" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "library-main\|library-layout" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "deletePart\|function.*deletePart" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "addNewPart\|function.*addNewPart" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "displayParts\|part-code" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "forceShowHomagParts" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "function forceShowHomagParts" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "editPart\|EDITAR" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "detail-actions\|btn.*edit\|btn.*delete" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "showPartDetails" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "function showPartDetails" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "showPartDetails" "c:\Users\W10\backup_gestao_nonato_service\index.html" | head -5
+findstr /n "showPartDetails" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "PartDetails" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "selectPart" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n "onclick.*edit\|onclick.*delete" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+wc -l "C:/Users/W10/backup_gestao_nonato_service/index.html"
+Get-Content "C:/Users/W10/backup_gestao_nonato_service/index.html" | Measure-Object -Line
+Get-Content "C:/Users/W10/backup_gestao_nonato_service/index.html" | Select-Object -Last 20
+Select-String -Path "C:/Users/W10/backup_gestao_nonato_service/index.html" -Pattern "<body" -Context 5
+Select-String -Path "C:/Users/W10/backup_gestao_nonato_service/index.html" -Pattern "biblioteca|peças|parts" -Context 3
+Select-String -Path "C:/Users/W10/backup_gestao_nonato_service/index.html" -Pattern "Biblioteca de Peças|parts-library|partsGrid" -Context 5
+Select-String -Path "C:/Users/W10/backup_gestao_nonato_service/index.html" -Pattern "parts-library|Biblioteca.*Peças" -Context 3
+Select-String -Path "C:/Users/W10/backup_gestao_nonato_service/index.html" -Pattern "parts-library" -Context 2
+Select-String -Path "C:/Users/W10/backup_gestao_nonato_service/index.html" -Pattern "parts-list-view|partsList" -Context 2
+Select-String -Path "C:/Users/W10/backup_gestao_nonato_service/index.html" -Pattern "Modal para Adicionar" -Context 2
+Select-String -Path "C:/Users/W10/backup_gestao_nonato_service/index.html" -Pattern "</script>" -Context 2
+Select-String -Path "C:/Users/W10/backup_gestao_nonato_service/index.html" -Pattern "biblioteca-pecas-page" -Context 5
+Select-String -Path "C:/Users/W10/backup_gestao_nonato_service/index.html" -Pattern "FUNÇÕES DO CADASTRO DE PEÇAS" -Context 2
+Select-String -Path "C:/Users/W10/backup_gestao_nonato_service/index.html" -Pattern "function savePart" -Context 2
+Select-String -Path "C:/Users/W10/backup_gestao_nonato_service/index.html" -Pattern "SISTEMA DE PEÇAS" -Context 2
+jupyter notebook gestao_auto.ipynb
+pip install jupyter notebook
+jupyter notebook gestao_auto.ipynb
+cd "C:\Users\W10\backup_gestao_nonato_service" && start index.html
+cd "C:\Users\W10\backup_gestao_nonato_service"
+start index.html
+start c:\Users\W10\backup_gestao_nonato_service\index_novo.html
+start c:\Users\W10\backup_gestao_nonato_service\tela_inicial.html
+start c:\Users\W10\backup_gestao_nonato_service\cadastro_equipamentos.html
+start c:\Users\W10\backup_gestao_nonato_service\tela_inicial.html
+start c:\Users\W10\backup_gestao_nonato_service\sistema_principal.html
+start c:\Users\W10\backup_gestao_nonato_service\adicionar_equipamentos_teste.html
+start c:\Users\W10\backup_gestao_nonato_service\sistema_principal_direto.html
+start c:\Users\W10\backup_gestao_nonato_service\verificar_dados.html
+start c:\Users\W10\backup_gestao_nonato_service\backup_completo.html
+start c:\Users\W10\backup_gestao_nonato_service\verificar_dados_real.html
+start c:\Users\W10\backup_gestao_nonato_service\backup_funcionando.html
+start c:\Users\W10\backup_gestao_nonato_service\backup_simples.html
+start c:\Users\W10\backup_gestao_nonato_service\encontrar_dados.html
+start c:\Users\W10\backup_gestao_nonato_service\sistema_completo_funcionando.html
+start c:\Users\W10\backup_gestao_nonato_service\index.html
+start c:\Users\W10\backup_gestao_nonato_service\sistema_limpo_funcionando.html
+findstr /n /i "Separar Equipamentos" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+findstr /n /i "Pre Check" "c:\Users\W10\backup_gestao_nonato_service\index.html"
+cd "c:\Users\W10\backup_gestao_nonato_service" && dir /b
+cd "c:\Users\W10\backup_gestao_nonato_service"
+dir
+mkdir "backup_sistema_principal_2025-10-25_19-40-00"
+copy "index.html" "backup_sistema_principal_2025-10-25_19-40-00\"
+copy "sistema_principal.html" "backup_sistema_principal_2025-10-25_19-40-00\"
+copy "tela_inicial.html" "backup_sistema_principal_2025-10-25_19-40-00\"
+copy "cadastro_*.html" "backup_sistema_principal_2025-10-25_19-40-00\"
+copy "criacao_pre_check.html" "backup_sistema_principal_2025-10-25_19-40-00\"
+dir "backup_sistema_principal_2025-10-25_19-40-00"
+cd "c:\Users\W10\backup_gestao_nonato_service"
+Get-Content "index.html" | Measure-Object -Line
+Get-Content "sistema_principal.html" | Measure-Object -Line
+Get-Content "tela_inicial.html" | Measure-Object -Line
+Get-Content "cadastro_equipamentos.html" | Measure-Object -Line
+Get-Content "cadastro_clientes.html" | Measure-Object -Line
+Get-Content "cadastro_gerencia_tecnicos.html" | Measure-Object -Line
+Get-Content "cadastro_pecas.html" | Measure-Object -Line
+Get-Content "criacao_pre_check.html" | Measure-Object -Line
+powershell -Command "Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern 'sidebar|nav-item|menu' -Context 0,2 | Select-Object -First 50"
+powershell -Command "Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern 'class=\"nav-item\"' -Context 0,1 | Select-Object -First 100"
+powershell -Command "Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern 'nav-item' | Select-Object -First 80"
+powershell -Command "Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern '<nav class=\"sidebar\">' -Context 0,5"
+powershell -Command "Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern 'sidebar' -Context 2,2"
+powershell -Command "Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern '<nav class=\"sidebar\">' -Context 0,10"
+powershell -Command "Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern 'nav class=sidebar' -Context 0,10"
+powershell -Command "Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern 'nav-menu' -Context 5,5"
+powershell -Command "Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern '</ul>' -Context 2,2 | Select-Object -First 5"
+powershell -Command "Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern 'main-container' -Context 5,5"
+powershell -Command "Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern '</nav>' -Context 2,2"
+powershell -Command "Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern 'ul class=\"nav-menu\"' -Context 0,50"
+powershell -Command "Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern 'nav-menu' -Context 0,50"
+powershell -Command "Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern 'Restore' -Context 2,2"
+powershell -Command "Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern 'main-container' -Context 0,5"
+powershell -Command "(Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern 'main-container').LineNumber"
+powershell -Command "(Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern '</nav>' | Select-Object -First 1).LineNumber"
+powershell -Command "Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern 'nav-item' | Measure-Object | Select-Object Count"
+powershell -Command "Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern 'nav-item' -Context 1,1"
+powershell -Command "Get-Content 'c:\Users\W10\backup_gestao_nonato_service\index.html' | Select-String -Pattern 'sidebar' -Context 2,2"
+dir "C:\Users\W10\backup_gestao_nonato_service\*.html" /b
+Get-ChildItem "C:\Users\W10\backup_gestao_nonato_service\*.html" | Select-Object Name
+Get-ChildItem "C:\Users\W10\backup_gestao_nonato_service\*.html" | Select-Object Name | Where-Object { $_.Name -like "*check*" -or $_.Name -like "*Check*" -or $_.Name -like "*CHECK*" }
+Get-ChildItem "C:\Users\W10\backup_gestao_nonato_service\*.html" | Where-Object { $_.Name -like "*gerado*" -or $_.Name -like "*Gerado*" -or $_.Name -like "*GERADO*" } | Select-Object Name
+Get-ChildItem "C:\Users\W10\backup_gestao_nonato_service\*.html" | Where-Object { $_.Name -like "*check*" -or $_.Name -like "*Check*" } | Select-Object Name
+Get-ChildItem "C:\Users\W10\backup_gestao_nonato_service\*.html" | ForEach-Object { Write-Host $_.Name }
+findstr /n /c:"PRE CHECK E CHECKLISTE GERADOS" "C:/Users/W10/backup_gestao_nonato_service/sistema_principal.html"
+findstr /n /c:"function iniciarPreCheck" "C:\Users\W10\backup_gestao_nonato_service\sistema_principal.html"
+cd C:\Users\W10\backup_gestao_nonato_service && node -c sistema_principal.html 2>&1 || echo "Arquivo não é JavaScript puro, verificando HTML/JS..."
+findstr /n /c:"let servicosList" "C:\Users\W10\backup_gestao_nonato_service\sistema_principal.html"
+findstr /n /c:"html +=" "C:\Users\W10\backup_gestao_nonato_service\sistema_principal.html" | findstr "316"
+cd "C:\Users\W10\backup_gestao_nonato_service" && powershell -Command "Get-Content sistema_principal.html | Select-String -Pattern 'function mostrarPreCheckGerados' -Context 0,50"
+findstr /n "function mostrarPreCheckGerados" "C:\Users\W10\backup_gestao_nonato_service\sistema_principal.html"
+findstr /n "PRE CHECK E CHECKLIST" "C:\Users\W10\backup_gestao_nonato_service\sistema_principal.html"
+powershell -Command "(Get-Content 'C:/Users/W10/backup_gestao_nonato_service/sistema_principal.html').Count"
+powershell -Command "Select-String -Path 'C:/Users/W10/backup_gestao_nonato_service/sistema_principal.html' -Pattern 'function|class|const ' | Select-Object -First 20"
+cd C:\Users\W10\backup_gestao_nonato_service && dir
+cd C:\Users\W10\backup_gestao_nonato_service; Get-ChildItem
+powershell -Command "Select-String -Path 'C:/Users/W10/backup_gestao_nonato_service/sistema_principal.html' -Pattern 'mostrarPreCheckGerados|PRE CHECK E CHECKLIST GERADOS' -Context 3"
+powershell -Command "Select-String -Path 'C:/Users/W10/backup_gestao_nonato_service/sistema_principal.html' -Pattern 'CRIAÇÃO DO PRE CHECK|CRIAÇAO DO PRE CHECK' -Context 2"
+powershell -Command "Select-String -Path 'C:/Users/W10/backup_gestao_nonato_service/sistema_principal.html' -Pattern 'CRIA|PRE CHECK' -Context 1 | Select-Object -First 30"
+powershell -Command "Select-String -Path 'C:/Users/W10/backup_gestao_nonato_service/sistema_principal.html' -Pattern 'function.*PreCheck|function.*servico|function.*trabalhador' | Select-Object -First 50"
+powershell -Command "(Select-String -Path 'C:/Users/W10/backup_gestao_nonato_service/sistema_principal.html' -Pattern 'function' | Measure-Object).Count"
+powershell -Command "Select-String -Path 'C:/Users/W10/backup_gestao_nonato_service/sistema_principal.html' -Pattern '^\s*function' | Select-Object -ExpandProperty Line"
+powershell -Command "Select-String -Path 'C:/Users/W10/backup_gestao_nonato_service/sistema_principal.html' -Pattern 'GERAR PRE-CHECK E BLOQUEAR|GERAR PRE CHECK E BLOQUEAR|gerarPreCheckCompleto' -Context 3"
+powershell -Command "Select-String -Path 'C:/Users/W10/backup_gestao_nonato_service/cadastro_gerencia_tecnicos.html' -Pattern 'localStorage.setItem' -Context 1 | Select-Object -First 10"
+powershell -Command "Select-String -Path 'C:/Users/W10/backup_gestao_nonato_service/cadastro_gerencia_tecnicos.html' -Pattern 'tipo.*gerente|tipo.*tecnico' -Context 1 | Select-Object -First 20"
+powershell -Command "Select-String -Path 'C:/Users/W10/backup_gestao_nonato_service/cadastro_gerencia_tecnicos.html' -Pattern 'gerencia|tecnico' | Select-Object -First 30"
+powershell -Command "Select-String -Path 'C:/Users/W10/backup_gestao_nonato_service/cadastro_gerencia_tecnicos.html' -Pattern 'let gerencia|let tecnico|gerencia=|tecnico=' -Context 1 | Select-Object -First 10"
+powershell -Command "Select-String -Path 'C:/Users/W10/backup_gestao_nonato_service/cadastro_gerencia_tecnicos.html' -Pattern 'setItem.*externo|localStorage.*externo' -Context 1"
+cd C:\Users\W10\backup_gestao_nonato_service && echo "POR FAVOR, CADASTRE UM TECNICO E ENTÃO VENHA ATE ESTA TELA DE COMUNICAÇÃO INTERNA E ME DIGA O QUE APARECE NO CONSOLE DO IFRAME (CADASTRO)"
+cd C:\Users\W10\backup_gestao_nonato_service && dir sistema_principal.html
+cd C:\Users\W10\backup_gestao_nonato_service
+cd C:\Users\W10\backup_gestao_nonato_service ; dir sistema_principal.html
+cd C:\Users\W10\backup_gestao_nonato_service ; Select-String -Path sistema_principal.html -Pattern "function mostrarEmDesenvolvimento" | Select-Object -First 5
+cd C:\Users\W10\backup_gestao_nonato_service ; Select-String -Path sistema_principal.html -Pattern "function mostrarPreChecksSalvados" | Select-Object -First 5
+cd C:\Users\W10\backup_gestao_nonato_service ; Get-Content sistema_principal.html -Tail 5
+cd C:\Users\W10\backup_gestao_nonato_service ; node -c sistema_principal.html 2>&1 | Select-Object -First 10
+cd C:\Users\W10\backup_gestao_nonato_service ; Select-String -Path sistema_principal.html -Pattern "function abrirTelaTecnico" | Select-Object -First 3
+cd C:\Users\W10\backup_gestao_nonato_service ; Get-Content sistema_principal.html -TotalCount 5
+cd C:\Users\W10\backup_gestao_nonato_service ; Copy-Item sistema_principal.html C:\Users\W10\Desktop\sistema_principal.html
+cd Desktop && findstr /n "function abrirCadastroGerenciaTecnicos" sistema_principal.html
+cd Desktop; findstr /n "function abrirCadastroGerenciaTecnicos" sistema_principal.html
+cd C:\Users\W10\Desktop; dir cadastro_gerencia_tecnicos.html
+Test-Path "C:\Users\W10\Desktop\cadastro_gerencia_tecnicos.html"
+Copy-Item "C:\Users\W10\backup_gestao_nonato_service\*.html" -Destination "C:\Users\W10\Desktop\" -Force
+$data = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"; Copy-Item "C:\Users\W10\Desktop\sistema_principal.html" -Destination "C:\Users\W10\Desktop\sistema_principal_BACKUP_$data.html"; Copy-Item "C:\Users\W10\Desktop\sistema_principal.html" -Destination "C:\Users\W10\backup_gestao_nonato_service\sistema_principal_BACKUP_$data.html"; Write-Host "✅ Backup criado com sucesso: sistema_principal_BACKUP_$data.html"
+Copy-Item "C:\Users\W10\Desktop\sistema_principal.html" -Destination "C:\Users\W10\backup_gestao_nonato_service\sistema_principal.html" -Force; Write-Host "✅ Arquivo principal atualizado na pasta original"
+$data = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"; $destino = "C:\Users\W10\backup_gestao_nonato_service\BACKUP_COMPLETO_$data"; New-Item -ItemType Directory -Path $destino -Force | Out-Null; Copy-Item "C:\Users\W10\Desktop\*.html" -Destination $destino -Force; Write-Host "✅ Backup completo criado em: $destino"
+cd Desktop && findstr /n /i "abrirCadastroGruposFamilia" sistema_principal.html
+cd Desktop; Select-String -Pattern "abrirCadastroGruposFamilia" sistema_principal.html | Select-Object -First 5
+cd Desktop; Select-String -Pattern "cadastro.*peca|biblioteca.*peca" sistema_principal.html -CaseSensitive:$false | Select-Object -First 3
+cd Desktop && Select-String -Pattern "Cadastro.*Peça|localStorage.*peca" sistema_principal.html -CaseSensitive:$false | Select-Object -First 10
+cd Desktop; Select-String -Pattern "Cadastro.*Peça|localStorage.*peca" sistema_principal.html -CaseSensitive:$false | Select-Object -First 10
+Select-String -Pattern "setItem.*peca|getItem.*peca" sistema_principal.html -CaseSensitive:$false | Select-Object -First 15
+cd "C:\Users\W10\backup_gestao_nonato_service" && Select-String -Pattern "buscarTodasPecasGlobal|function.*buscarTodasPecas" sistema_principal.html | Select-Object -First 5
+cd "C:\Users\W10\backup_gestao_nonato_service" && Select-String -Pattern "Cadastro.*Peça|bibliotecaPecas|abrirCadastro.*[Pp]eça" sistema_principal.html -CaseSensitive:$false | Select-Object -First 10
+cd "C:\Users\W10\Desktop" && findstr /n /i "gerenciarPecas\|buscarTodasPecas\|Gerenciar Peças" sistema_principal.html | findstr /v "Binary"
+cd "C:\Users\W10\Desktop" && findstr /n /i "Cadastro de Grupos\|abrirCadastroGrupos" sistema_principal.html | findstr /v "Binary" | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Pattern "gerenciarPecas|buscarTodasPecas|Gerenciar Peças" sistema_principal.html | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Pattern "Cadastro.*Peça|Cadastrar Peça|localStorage\.setItem.*peca" sistema_principal.html -CaseSensitive:$false | Select-Object -First 10
+cd "C:\Users\W10\Desktop"; Select-String -Pattern "iframe.*peca|iframe.*cadastro|src.*peca" sistema_principal.html -CaseSensitive:$false | Select-Object -First 5
+cd "C:\Users\W10\Desktop" && powershell -Command "(Get-Item sistema_principal.html).Length"
+cd "C:\Users\W10\Desktop" && powershell -Command "(Get-Item sistema_principal.html).Length / 1KB"
+cd "C:\Users\W10\backup_gestao_nonato_service" && powershell -Command "(Get-Item sistema_principal.html).Length / 1KB"
+Copy-Item "C:\Users\W10\backup_gestao_nonato_service\sistema_principal.html" -Destination "C:\Users\W10\Desktop\sistema_principal.html" -Force
+Get-ChildItem "C:\Users\W10\Desktop" -Filter "*sistema*" | Select-Object Name, Length, LastWriteTime | Format-Table -AutoSize
+Get-ChildItem "C:\Users\W10" -Recurse -Filter "*sistema_principal*" -ErrorAction SilentlyContinue | Select-Object FullName, Length, LastWriteTime | Format-Table -AutoSize
+Get-Item "C:\Users\W10\Desktop\sistema_principal.html" | Select-Object Length, LastWriteTime
+Get-Item "C:\Users\W10\Desktop\sistema_principal_BACKUP_2025-10-29_21-52-54.html" | Select-Object Length, LastWriteTime
+(Get-Content "C:\Users\W10\Desktop\sistema_principal.html" | Measure-Object -Line).Lines
+(Get-Content "C:\Users\W10\Desktop\sistema_principal_BACKUP_2025-10-29_21-52-54.html" | Measure-Object -Line).Lines
+Get-ChildItem "C:\Users\W10\Desktop" -Filter "*sistema*" | Where-Object {$_.Length -gt 200000} | Select-Object Name, @{Name="SizeKB";Expression={[math]::Round($_.Length/1KB,2)}}, LastWriteTime | Sort-Object LastWriteTime -Descending | Format-Table -AutoSize
+Select-String -Path "C:\Users\W10\Desktop\sistema_principal.html" -Pattern "abrirCadastroGruposFamilia|gerenciarTrabalhosGrupo|buscarTodasPecasGlobal" | Select-Object -First 5
+Select-String -Path "C:\Users\W10\Desktop\sistema_principal.html" -Pattern "gerenciarTrabalhosGrupo|buscarTodasPecasGlobal|abrirModalSincronizarPecas" | Select-Object -First 10
+Select-String -Path "C:\Users\W10\Desktop\sistema_principal.html" -Pattern "function gerenciarTrabalhosGrupo|function abrirModalSincronizarPecas|function copiarComandoAutomatico" | Select-Object -First 5
+Select-String -Path "C:\Users\W10\Desktop\sistema_principal.html" -Pattern "</html>|</body>|</script>" | Select-Object -Last 3
+Select-String -Path "C:\Users\W10\Desktop\sistema_principal.html" -Pattern "gerenciarTrabalhosGrupo|abrirModalSincronizarPecas|mostrarAbaGrupos" | Select-Object -First 5
+Select-String -Path "C:\Users\W10\Desktop\sistema_principal.html" -Pattern "function gerenciarTrabalhosGrupo|gerenciarTrabalhosGrupo\s*=" | Select-Object -First 3
+Select-String -Path "C:\Users\W10\Desktop\sistema_principal.html" -Pattern "abrirCadastroPecas|Sincronizar.*Peça" | Select-Object -First 5
+Test-Path "C:\Users\W10\Desktop\sistema_principal.html"
+Get-Item "C:\Users\W10\Desktop\sistema_principal.html" | Select-Object Name, Length, LastWriteTime
+Select-String -Path "C:\Users\W10\Desktop\sistema_principal.html" -Pattern "function gerenciarPecasTrabalho" | Select-Object -First 1
+Select-String -Path "C:\Users\W10\Desktop\sistema_principal.html" -Pattern "window.gerenciarPecasTrabalho|gerenciarPecasTrabalho.*function" | Select-Object -First 3
+Select-String -Path "C:\Users\W10\Desktop\sistema_principal.html" -Pattern "Gerenciar Peças|gerenciarPecasTrabalho" | Select-Object -First 5
+Select-String -Path "C:\Users\W10\Desktop\sistema_principal.html" -Pattern "function abrirCadastroGruposFamilia" | Select-Object -First 1
+cd Desktop && findstr /n /i "Código do Grupo Descrição Família Selecionar família Anexar imagens Gerenciar Trabalhos Tipo de Trabalho Necessita Peças Gerenciar Peças" sistema_principal.html | head -20
+cd Desktop && findstr /n /i "iframe.*src" sistema_principal.html | head -20
+cd Desktop && findstr /n /i "iframe" sistema_principal.html | head -30
+cd Desktop; findstr /n /i "iframe" sistema_principal.html
+cd Desktop; findstr /n /i "fazerBackupCompleto" sistema_principal.html
+cd Desktop; findstr /n /i "function.*backup" sistema_principal.html
+cd Desktop; findstr /n /i "fazerBackup" sistema_principal.html | head -5
+cd Desktop; findstr /n /i "Backup.*Completo" sistema_principal.html
+cd Desktop; findstr /n /i "abrirBackupRestore" sistema_principal.html
+findstr /n /i "instrucao5.*Confirm restoration" sistema_principal.html
+findstr /n /i "instrucao5.*Confirmez la restauration" sistema_principal.html
+findstr /n /i "abrirRelatorioAtividadeDiaria" sistema_principal.html | head -5
+cd Desktop; findstr /n "abrirRelatorioAtividadeDiaria" sistema_principal.html
+cd Desktop && findstr /n "Backup and Restore" sistema_principal.html | head -5
+cd Desktop && findstr /n "verifiqueBarraDownloads" sistema_principal.html | findstr "English\|en:" | head -1
+cd Desktop && findstr /n "traducoes" sistema_principal.html | head -5
+cd Desktop && findstr /n "organizacaoSalva.*en:" sistema_principal.html | head -1
+cd Desktop && findstr /n "atualizarDadosClienteEquipamento" sistema_principal.html | head -5
+cd "C:/Users/W10/Desktop" && findstr /n /i "abrirRelatorioServico" sistema_principal.html | head -20
+cd "C:/Users/W10/Desktop"; Select-String -Pattern "abrirRelatorioServico" -Path "sistema_principal.html" | Select-Object -First 5
+cd "C:/Users/W10/Desktop"; Select-String -Pattern "gerarPDFRelatorioServico|function gerarPDF" -Path "sistema_principal.html" | Select-Object -First 10
+cd "C:/Users/W10/Desktop"; Select-String -Pattern "pecasUtilizadas|listaPecasRelatorio|peca-item-relatorio" -Path "sistema_principal.html" | Select-Object -First 10
+cd "C:/Users/W10/Desktop"; Select-String -Pattern "adicionarPecaRelatorio|peca-item-relatorio" -Path "sistema_principal.html" | Select-Object -First 15
+cd "C:/Users/W10/Desktop"; Select-String -Pattern "visualizarRelatorioServico|visualizar" -Path "sistema_principal.html" | Select-Object -First 10
+cd "C:/Users/W10/Desktop"; Select-String -Pattern "function visualizarRelatorioServico|window.visualizarRelatorioServico" -Path "sistema_principal.html"
+cd "C:/Users/W10/Desktop"; Select-String -Pattern "clienteEndereco|clienteCodigoPostal|clientePais|clienteCodigoFiscal|clienteContato" -Path "sistema_principal.html" | Select-Object -First 5
+cd "C:/Users/W10/Desktop"; Select-String -Pattern "salvarRelatorio|salvar.*relatorio|relatorios.*localStorage|getItem.*relatorio" -Path "sistema_principal.html" -CaseSensitive:$false | Select-Object -First 10
+cd "C:/Users/W10/Desktop"; Select-String -Pattern "listarRelatorio|visualizarRelatorio|verRelatorio|mostrarRelatorio" -Path "sistema_principal.html" -CaseSensitive:$false | Select-Object -First 10
+cd "C:/Users/W10/Desktop"; Select-String -Pattern "salvarRelatorioServico|relatoriosServico|setItem.*relatorio" -Path "sistema_principal.html" -CaseSensitive:$false | Select-Object -First 15
+cd "C:/Users/W10/Desktop"; Select-String -Pattern "listarRelatoriosServico|mostrarRelatoriosServico|abrirRelatorios|verRelatorios" -Path "sistema_principal.html" -CaseSensitive:$false | Select-Object -First 10
+cd "C:/Users/W10/Desktop"; Select-String -Pattern "RELATÓRIOS SALVOS|Relatórios Salvos|relatorios salvos" -Path "sistema_principal.html" -CaseSensitive:$false | Select-Object -First 5
+cd "C:/Users/W10/Desktop"; Select-String -Pattern "menu-item|sidebar" -Path "sistema_principal.html" | Select-Object -First 20
+cd "C:/Users/W10/Desktop"; Select-String -Pattern "grupo|Grupo|GRUPO" -Path "sistema_principal.html" | Select-Object -First 20
+cd "C:/Users/W10/Desktop"; Select-String -Pattern "cadastro.*grupo|gerenciar.*grupo|tipos.*grupo" -Path "sistema_principal.html" -CaseSensitive:$false | Select-Object -First 10
+cd "C:/Users/W10/Desktop"; Select-String -Pattern "gruposFamilia|grupos.*familia" -Path "sistema_principal.html" -CaseSensitive:$false | Select-Object -First 5
+powershell -Command "(Get-Content 'C:\Users\W10\Desktop\sistema_principal.html' | Measure-Object -Line).Lines"
+powershell -Command "Select-String -Path 'C:\Users\W10\Desktop\sistema_principal.html' -Pattern 'localStorage|sessionStorage|IndexedDB|getItem|setItem' | Select-Object -First 20"
+powershell -Command "Select-String -Path 'C:\Users\W10\Desktop\sistema_principal.html' -Pattern 'English|english|EN|en-US|translate|tradu' -CaseSensitive:$false | Select-Object -First 30"
+powershell -Command "Select-String -Path 'C:\Users\W10\Desktop\sistema_principal.html' -Pattern 'localStorage\.(getItem|setItem)' | Select-Object -First 50"
+powershell -Command "Select-String -Path 'C:\Users\W10\Desktop\sistema_principal.html' -Pattern 'alert\(|textContent|innerHTML|placeholder=|title=|value=' | Select-Object -First 100 | ForEach-Object { $_.LineNumber.ToString() + ': ' + $_.Line.Trim() }"
+powershell -Command "Select-String -Path 'C:\Users\W10\Desktop\sistema_principal.html' -Pattern 'function gerarConteudoAba|function mostrarAbaGrupos|function filtrarGruposPorFamilia' | Select-Object -First 10 | ForEach-Object { $_.LineNumber.ToString() + ': ' + $_.Line.Trim() }"
+powershell -Command "Get-Content 'C:\Users\W10\Desktop\sistema_principal.html' | Select-Object -Last 50"
+powershell -Command "(Get-Content 'C:\Users\W10\Desktop\sistema_principal.html' | Measure-Object -Line).Lines"
+powershell -Command "$content = Get-Content 'C:\Users\W10\Desktop\sistema_principal.html' -Raw; if ($content -match '</html>$') { Write-Host 'Arquivo completo' } else { Write-Host 'Arquivo incompleto ou sem tag de fechamento' }"
+powershell -Command "$content = Get-Content 'C:\Users\W10\Desktop\sistema_principal.html' -Raw; $openTags = ([regex]::Matches($content, '<script')).Count; $closeTags = ([regex]::Matches($content, '</script>')).Count; Write-Host \"Scripts abertos: $openTags, fechados: $closeTags\""
+powershell -Command "Get-Content 'C:\Users\W10\Desktop\sistema_principal.html' -Tail 20"
+powershell -Command "$lines = Get-Content 'C:\Users\W10\Desktop\sistema_principal.html'; $lastLine = $lines[-1]; Write-Host \"Ultima linha: $lastLine\""
+powershell -Command "$content = [System.IO.File]::ReadAllText('C:\Users\W10\Desktop\sistema_principal.html'); if ($content -notmatch '</script>\s*</body>\s*</html>') { Write-Host 'ARQUIVO INCOMPLETO - Faltam tags de fechamento' } else { Write-Host 'Arquivo completo' }"
+findstr /C:"</html>" "C:\Users\W10\Desktop\sistema_principal.html"
+findstr /C:"</body>" "C:\Users\W10\Desktop\sistema_principal.html"
+findstr /C:"</script>" "C:\Users\W10\Desktop\sistema_principal.html" | findstr /C:"</script>" | measure-object -Line
+findstr /N /C:"</html>" "C:\Users\W10\Desktop\sistema_principal.html"
+findstr /N /C:"</body>" "C:\Users\W10\Desktop\sistema_principal.html"
+powershell -Command "Get-Content 'C:\Users\W10\Desktop\sistema_principal.html' | Select-Object -Last 5"
+dir "C:\Users\W10\Desktop\*.html" /b
+powershell -Command "Get-ChildItem 'C:\Users\W10\Desktop\*.html' | Select-Object Name"
+powershell -Command "(Get-Content 'C:\Users\W10\Desktop\sistema_principal_BACKUP_2025-10-29_21-52-54.html' | Measure-Object -Line).Lines"
+powershell -Command "Get-Content 'C:\Users\W10\Desktop\sistema_principal_BACKUP_2025-10-29_21-52-54.html' | Select-Object -Last 10"
+powershell -Command "(Get-Content 'C:\Users\W10\Desktop\sistema_completo_funcionando.html' | Measure-Object -Line).Lines"
+powershell -Command "Get-Content 'C:\Users\W10\Desktop\sistema_completo_funcionando.html' | Select-Object -Last 5"
+powershell -Command "(Get-Content 'C:\Users\W10\Desktop\sistema_principal_direto.html' | Measure-Object -Line).Lines"
+powershell -Command "$content = Get-Content 'C:\Users\W10\Desktop\sistema_principal.html' -Raw; $content.Length"
+powershell -Command "Get-Content 'C:\Users\W10\Desktop\sistema_principal.html' | Select-Object -Last 1"
+powershell -Command "$lines = Get-Content 'C:\Users\W10\Desktop\sistema_principal.html'; Write-Host $lines[-1]"
+start "" "C:\Users\W10\Desktop\sistema_principal.html"
+Invoke-Item "C:\Users\W10\Desktop\sistema_principal.html"
+powershell -Command "(Get-Content 'C:/Users/W10/Desktop/sistema_principal.html' | Measure-Object -Line).Lines"
+Copy-Item "C:\Users\W10\Desktop\sistema_principal.html" "C:\Users\W10\Desktop\sistema_principal_backup_$(Get-Date -Format 'yyyyMMdd_HHmmss').html"
+Get-ChildItem "C:\Users\W10\Desktop\sistema_principal*.html" | Select-Object Name, Length, LastWriteTime | Format-Table -AutoSize
+cd "c:\Users\W10\Desktop" && echo "Verificando arquivo..."
+node --version
+cd Desktop && node --version
+cd Desktop
+node --version
+python --version
+python server.py
+cd Desktop
+python server.py
+cd C:\Users\W10\Desktop
+dir server.py
+cd C:\Users\W10\Desktop
+python server.py
+timeout /t 2 /nobreak >nul && curl http://localhost:3000 -I
+Start-Sleep -Seconds 2; Invoke-WebRequest -Uri http://localhost:3000 -Method Head -UseBasicParsing
+Get-Process python -ErrorAction SilentlyContinue | Select-Object Id, ProcessName
+cd C:\Users\W10\Desktop
+python -c "import http.server, socketserver; print('✅ Módulos Python OK')"
+cd C:\Users\W10\Desktop; python -c "import server; print('✅ Servidor importado com sucesso!')"
+ipconfig | findstr /i "IPv4"
+cd C:\Users\W10\Desktop
+python criar_icones.py
+mkdir -p styles js
+New-Item -ItemType Directory -Force -Path styles,js
+pwd
+cd $env:USERPROFILE; Get-Location
+@'`
+<!DOCTYPE html>`
+<html lang="pt-BR">`
+<head>`
+    <meta charset="UTF-8">`
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">`
+    <title>Máquinas Premium - Sua Loja de Máquinas</title>`
+    <link rel="stylesheet" href="styles/main.css">`
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">`
+</head>`
+<body>`
+    <header class="header">`
+        <div class="container">`
+            <div class="header-content">`
+                <div class="logo">`
+                    <i class="fas fa-cog"></i>`
+                    <span>Máquinas Premium</span>`
+                </div>`
+                <nav class="nav">`
+                    <a href="index.html" class="nav-link active">Início</a>`
+                    <a href="catalogo.html" class="nav-link">Catálogo</a>`
+                    <a href="sobre.html" class="nav-link">Sobre</a>`
+                    <a href="contato.html" class="nav-link">Contato</a>`
+                </nav>`
+                <div class="header-actions">`
+                    <a href="carrinho.html" class="cart-icon">`
+                        <i class="fas fa-shopping-cart"></i>`
+                        <span class="cart-count" id="cartCount">0</span>`
+                    </a>`
+                    <button class="menu-toggle" id="menuToggle">`
+                        <i class="fas fa-bars"></i>`
+                    </button>`
+                </div>`
+            </div>`
+        </div>`
+    </header>`
+    <section class="hero">`
+        <div class="hero-content">`
+            <h1 class="hero-title">Máquinas de Alta Qualidade</h1>`
+            <p class="hero-subtitle">Encontre as melhores máquinas para o seu negócio</p>`
+            <a href="catalogo.html" class="btn btn-primary">Ver Catálogo</a>`
+        </div>`
+        <div class="hero-overlay"></div>`
+    </section>`
+    <section class="features">`
+        <div class="container">`
+            <div class="features-grid">`
+                <div class="feature-card">`
+                    <i class="fas fa-shipping-fast"></i>`
+                    <h3>Entrega Rápida</h3>`
+                    <p>Entrega em todo o Brasil</p>`
+                </div>`
+                <div class="feature-card">`
+                    <i class="fas fa-shield-alt"></i>`
+                    <h3>Garantia Total</h3>`
+                    <p>Garantia de 12 meses</p>`
+                </div>`
+                <div class="feature-card">`
+                    <i class="fas fa-tools"></i>`
+                    <h3>Suporte Técnico</h3>`
+                    <p>Assistência especializada</p>`
+                </div>`
+                <div class="feature-card">`
+                    <i class="fas fa-dollar-sign"></i>`
+                    <h3>Melhor Preço</h3>`
+                    <p>Os melhores preços do mercado</p>`
+                </div>`
+            </div>`
+        </div>`
+    </section>`
+    <section class="featured-products">`
+        <div class="container">`
+            <h2 class="section-title">Máquinas em Destaque</h2>`
+            <div class="products-grid" id="featuredProducts"></div>`
+            <div class="text-center">`
+                <a href="catalogo.html" class="btn btn-secondary">Ver Todos os Produtos</a>`
+            </div>`
+        </div>`
+    </section>`
+    <footer class="footer">`
+        <div class="container">`
+            <div class="footer-content">`
+                <div class="footer-section">`
+                    <h3>Máquinas Premium</h3>`
+                    <p>Sua loja confiável de máquinas de alta qualidade.</p>`
+                    <div class="social-links">`
+                        <a href="#"><i class="fab fa-facebook"></i></a>`
+                        <a href="#"><i class="fab fa-instagram"></i></a>`
+                        <a href="#"><i class="fab fa-twitter"></i></a>`
+                        <a href="#"><i class="fab fa-linkedin"></i></a>`
+                    </div>`
+                </div>`
+                <div class="footer-section">`
+                    <h4>Links Rápidos</h4>`
+                    <ul>`
+                        <li><a href="index.html">Início</a></li>`
+                        <li><a href="catalogo.html">Catálogo</a></li>`
+                        <li><a href="sobre.html">Sobre Nós</a></li>`
+                        <li><a href="contato.html">Contato</a></li>`
+                    </ul>`
+                </div>`
+                <div class="footer-section">`
+                    <h4>Suporte</h4>`
+                    <ul>`
+                        <li><a href="#">Central de Ajuda</a></li>`
+                        <li><a href="#">Política de Privacidade</a></li>`
+                        <li><a href="#">Termos de Uso</a></li>`
+                        <li><a href="#">Garantia</a></li>`
+                    </ul>`
+                </div>`
+                <div class="footer-section">`
+                    <h4>Contato</h4>`
+                    <ul>`
+                        <li><i class="fas fa-phone"></i> (11) 9999-9999</li>`
+                        <li><i class="fas fa-envelope"></i> contato@maquinaspremium.com</li>`
+                        <li><i class="fas fa-map-marker-alt"></i> São Paulo, SP</li>`
+                    </ul>`
+                </div>`
+            </div>`
+            <div class="footer-bottom">`
+                <p>&copy; 2024 Máquinas Premium. Todos os direitos reservados.</p>`
+            </div>`
+        </div>`
+    </footer>`
+    <script src="js/main.js"></script>`
+    <script src="js/cart.js"></script>`
+</body>`
+</html>`
+'@ | Out-File -FilePath index.html -Encoding UTF8
+Test-Path index.html
+cd C:\Users\W10 && type index.html | findstr /n "footerPhone footerEmail footerAddress"
+cd C:\Users\W10 && findstr /n "footerPhone" index.html
+cd "C:\Users\W10\Desktop" && findstr /i /n "Editar Família Excluir Família" sistema_principal.html
+cd "C:\Users\W10\Desktop"; findstr /i /n "Família" sistema_principal.html | Select-Object -First 20
+cd "C:\Users\W10\Desktop"; findstr /i /n "Editar.*Excluir\|Excluir.*Editar" sistema_principal.html | Select-Object -First 10
+cd "C:\Users\W10\Desktop"; Select-String -Path sistema_principal.html -Pattern "familia|Familia|FAMILIA" -CaseSensitive:$false | Select-Object -First 10
+cd "C:\Users\W10\Desktop"; Select-String -Path sistema_principal.html -Pattern "Relatórios de Serviço|relatorios.*servico" -CaseSensitive:$false | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Path sistema_principal.html -Pattern "relatorios|report" -CaseSensitive:$false | Select-Object -First 15
+cd "C:\Users\W10\Desktop"; Select-String -Path sistema_principal.html -Pattern "function abrirRelatorioServico|abrirRelatorioServico.*function" -CaseSensitive:$false | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Path sistema_principal.html -Pattern "function listarRelatorios" -CaseSensitive:$false | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Path sistema_principal.html -Pattern "rgba\(255, 136, 0|rgba\(255, 68, 68|#ff8800|#ff4444" -CaseSensitive:$false | Select-Object -First 20
+cd "C:\Users\W10\Desktop"; Select-String -Path sistema_principal.html -Pattern "rgba\(255, 136, 0, 0\.05\)|rgba\(255, 68, 68, 0\.05\)" -CaseSensitive:$false | Select-Object -First 10
+cd "C:\Users\W10\Desktop"; Select-String -Path sistema_principal.html -Pattern "#00aaff|rgba\(0, 170, 255" -CaseSensitive:$false | Select-Object -First 15
+cd "C:\Users\W10\Desktop"; Select-String -Path sistema_principal.html -Pattern "rgba\(0, 170, 255, 0\.05\)|rgba\(37, 211, 102, 0\.05\)|border: 2px solid #00aaff|border: 2px solid #25D366" -CaseSensitive:$false | Select-Object -First 10
+cd "C:\Users\W10\Desktop"; Select-String -Path sistema_principal.html -Pattern "rgba\(37, 211, 102, 0\.05\)|border: 2px solid #25D366" -CaseSensitive:$false | Select-Object -First 10
+cd "C:\Users\W10\Desktop"; Select-String -Path sistema_principal.html -Pattern "#00ff00|rgba\(0, 255, 0" -CaseSensitive:$false | Select-Object -First 20
+cd "C:\Users\W10\Desktop"; Select-String -Path sistema_principal.html -Pattern "rgba\(0, 255, 0, 0\.05\)|border: 2px solid #00ff00" -CaseSensitive:$false | Select-Object -First 15
+cd "C:\Users\W10\Desktop"; Select-String -Path sistema_principal.html -Pattern "background: rgba\(0, 255, 0, 0\.05\)|background:rgba\(0, 255, 0, 0\.05\)" -CaseSensitive:$false | Select-Object -First 10
+cd "C:\Users\W10\Desktop"; Select-String -Path sistema_principal.html -Pattern "CONTROLE DE HORAS|CONTROLE.*HORAS.*DESLOCAMENTO|report.hours.displacement" -CaseSensitive:$false | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Path sistema_principal.html -Pattern "function adicionarLinhaHoras" -CaseSensitive:$false | Select-Object -First 3
+cd "C:\Users\W10\Desktop"; Select-String -Path sistema_principal.html -Pattern "function abrirRelatorioServico|function abrirAgendaTecnica" -CaseSensitive:$false | Select-Object -First 3
+cd "C:\Users\W10\Desktop"; Select-String -Path sistema_principal.html -Pattern "relatorio-servico.*orcamento-pecas|menuIds.*relatorio" -CaseSensitive:$false | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Path sistema_principal.html -Pattern "PORTUGUES|português|idioma|bandeira|flag|🇵🇹|🇧🇷" -CaseSensitive:$false | Select-Object -First 15
+cd "C:/Users/W10/Desktop" && findstr /i /n "armazem" sistema_principal.html | head -20
+cd "C:/Users/W10/Desktop"; Select-String -Path "sistema_principal.html" -Pattern "armazem" -CaseSensitive:$false | Select-Object -First 10
+cd "C:/Users/W10/Desktop"; Select-String -Path "sistema_principal.html" -Pattern "cadastro.*equipamentos.*armazem|equipamentos.*armazem|armazem.*equipamentos" -CaseSensitive:$false | Select-Object -First 20
+cd "C:/Users/W10/Desktop"; Select-String -Path "sistema_principal.html" -Pattern "menu-container|menu-item|CADASTRO DE EQUIPAMENTOS|equipamentos.*armazem" -CaseSensitive:$false | Select-Object -First 30
+cd "C:/Users/W10/Desktop"; Select-String -Path "sistema_principal.html" -Pattern "function abrirCadastroEquipamentos" | Select-Object -First 5
+cd "C:/Users/W10/Desktop"; Select-String -Path "sistema_principal.html" -Pattern "checklist|CHECKLIST" -CaseSensitive:$false | Select-Object -First 30
+cd "C:/Users/W10/Desktop"; Select-String -Path "sistema_principal.html" -Pattern "function abrirChecklist" | Select-Object -First 5
+cd "C:/Users/W10/Desktop"; Select-String -Path "sistema_principal.html" -Pattern "criarSecaoItensChecklist|secaoItensChecklistCriar" | Select-Object -First 10
+cd "C:/Users/W10/Desktop"; Select-String -Path "sistema_principal.html" -Pattern "function criarSecaoItensChecklist" | Select-Object -First 5
+cd "C:/Users/W10/Desktop"; Select-String -Path "sistema_principal.html" -Pattern "function salvarChecklistTecnicoCriar" | Select-Object -First 5
+cd "C:/Users/W10/Desktop"; Select-String -Path "sistema_principal.html" -Pattern "function salvarChecklistTecnicoCriarCompleto" | Select-Object -First 5
+cd "C:/Users/W10/Desktop"; Select-String -Path "sistema_principal.html" -Pattern "Salvar Checklist Técnico Completo" | Select-Object -First 5
+cd "C:/Users/W10/Desktop"; Select-String -Path "sistema_principal.html" -Pattern "ITENS DO CHECKLIST" | Select-Object -First 5
+cd "C:/Users/W10/Desktop"; Select-String -Path "sistema_principal.html" -Pattern "Trabalho|trabalho" | Select-Object -First 10
+cd "C:/Users/W10/Desktop"; Select-String -Path "sistema_principal.html" -Pattern "item-checklist-criar|item-checklist" | Select-Object -First 10
+cd "C:/Users/W10/Desktop"; Select-String -Path "sistema_principal.html" -Pattern "abrirBuscaTecnico|selecionarTecnico" | Select-Object -First 5
+cd "C:/Users/W10/Desktop"; Select-String -Path "sistema_principal.html" -Pattern "buscarEquipamentoParaChecklistCriar|equipamentoEncontrado" | Select-Object -First 10
+findstr /i /n "GERAR CHECKLIST\|selecionar.*técnico\|selecionar.*tecnico\|CHECKLISTE" "C:\Users\W10\Desktop\sistema_principal.html"
+findstr /i /n "abrirVisualizacaoChecklistGerado\|tecnicoResponsavel\|selecionar.*tecnico" "C:\Users\W10\Desktop\sistema_principal.html"
+findstr /i /n "abrirVisualizacao" "C:\Users\W10\Desktop\sistema_principal.html"
+findstr /i /n "window\.abrir\|window\.fechar\|window\.confirmar" "C:\Users\W10\Desktop\sistema_principal.html" | findstr /i "MotivoParada\|ParadaTempo"
+findstr /i /n "window\." "C:\Users\W10\Desktop\sistema_principal.html" | findstr /i "abrir\|fechar" | findstr /v "function" | findstr /v "getElementById" | findstr /v "querySelector" | findstr /v "addEventListener" | findstr /v "insertAdjacentHTML" | findstr /v "remove" | findstr /v "style" | findstr /v "textContent" | findstr /v "value" | findstr /v "innerHTML" | findstr /v "setItem" | findstr /v "getItem" | findstr /v "parse" | findstr /v "stringify" | findstr /v "length" | findstr /v "push" | findstr /v "map" | findstr /v "forEach" | findstr /v "filter" | findstr /v "find" | findstr /v "includes" | findstr /v "replace" | findstr /v "split" | findstr /v "join" | findstr /v "trim" | findstr /v "toLowerCase" | findstr /v "toUpperCase" | findstr /v "substring" | findstr /v "indexOf" | findstr /v "slice" | findstr /v "charAt" | findstr /v "match" | findstr /v "test" | findstr /v "exec" | findstr /v "search" | findstr /v "toString" | findstr /v "toLocaleString" | findstr /v "toISOString" | findstr /v "getTime" | findstr /v "Date.now" | findstr /v "setTimeout" | findstr /v "setInterval" | findstr /v "clearInterval" | findstr /v "clearTimeout" | findstr /v "alert" | findstr /v "confirm" | findstr /v "prompt" | findstr /v "console" | findstr /v "localStorage" | findstr /v "sessionStorage" | findstr /v "JSON" | findstr /v "Math" | findstr /v "String" | findstr /v "Number" | findstr /v "Array" | findstr /v "Object" | findstr /v "Boolean" | findstr /v "isNaN" | findstr /v "parseInt" | findstr /v "parseFloat" | findstr /v "isFinite" | findstr /v "encodeURI" | findstr /v "decodeURI" | findstr /v "encodeURIComponent" | findstr /v "decodeURIComponent" | findstr /v "escape" | findstr /v "unescape" | findstr /v "eval" | findstr /v "Function" | findstr /v "Error" | findstr /v "TypeError" | findstr /v "ReferenceError" | findstr /v "SyntaxError" | findstr /v "RangeError" | findstr /v "EvalError" | findstr /v "URIError" | findstr /v "Infinity" | findstr /v "NaN" | findstr /v "undefined" | findstr /v "null" | findstr /v "true" | findstr /v "false" | findstr /v "this" | findstr /v "self" | findstr /v "top" | findstr /v "parent" | findstr /v "frames" | findstr /v "location" | findstr /v "history" | findstr /v "navigator" | findstr /v "screen" | findstr /v "document" | findstr /v "window" | findstr /v "global" | findstr /v "globalThis" | findstr /v "arguments" | findstr /v "callee" | findstr /v "caller" | findstr /v "prototype" | findstr /v "constructor" | findstr /v "hasOwnProperty" | findstr /v "isPrototypeOf" | findstr /v "propertyIsEnumerable" | findstr /v "toLocaleString" | findstr /v "toString" | findstr /v "valueOf" | findstr /v "length" | findstr /v "name" | findstr /v "message" | findstr /v "stack" | findstr /v "fileName" | findstr /v "lineNumber" | findstr /v "columnNumber" | findstr /v "cause" | findstr /v "Error" | findstr /v "TypeError" | findstr /v "ReferenceError" | findstr /v "SyntaxError" | findstr /v "RangeError" | findstr /v "EvalError" | findstr /v "URIError" | findstr /v "Infinity" | findstr /v "NaN" | findstr /v "undefined" | findstr /v "null" | findstr /v "true" | findstr /v "false" | findstr /v "this" | findstr /v "self" | findstr /v "top" | findstr /v "parent" | findstr /v "frames" | findstr /v "location" | findstr /v "history" | findstr /v "navigator" | findstr /v "screen" | findstr /v "document" | findstr /v "window" | findstr /v "global" | findstr /v "globalThis" | findstr /v "arguments" | findstr /v "callee" | findstr /v "caller" | findstr /v "prototype" | findstr /v "constructor" | findstr /v "hasOwnProperty" | findstr /v "isPrototypeOf" | findstr /v "propertyIsEnumerable" | findstr /v "toLocaleString" | findstr /v "toString" | findstr /v "valueOf" | findstr /v "length" | findstr /v "name" | findstr /v "message" | findstr /v "stack" | findstr /v "fileName" | findstr /v "lineNumber" | findstr /v "columnNumber" | findstr /v "cause" | findstr /v "Error" | findstr /v "TypeError" | findstr /v "ReferenceError" | findstr /v "SyntaxError" | findstr /v "RangeError" | findstr /v "EvalError" | findstr /v "URIError" | findstr /v "Infinity" | findstr /v "NaN" | findstr /v "undefined" | findstr /v "null" | findstr /v "true" | findstr /v "false" | findstr /v "this" | findstr /v "self" | findstr /v "top" | findstr /v "parent" | findstr /v "frames" | findstr /v "location" | findstr /v "history" | findstr /v "navigator" | findstr /v "screen" | findstr /v "document" | findstr /v "window" | findstr /v "global" | findstr /v "globalThis" | findstr /v "arguments" | findstr /v "callee" | findstr /v "caller" | findstr /v "prototype" | findstr /v "constructor" | findstr /v "hasOwnProperty" | findstr /v "isPrototypeOf" | findstr /v "propertyIsEnumerable" | findstr /v "toLocaleString" | findstr /v "toString" | findstr /v "valueOf" | findstr /v "length" | findstr /v "name" | findstr /v "message" | findstr /v "stack" | findstr /v "fileName" | findstr /v "lineNumber" | findstr /v "columnNumber" | findstr /v "cause"
+findstr /i /n "gerentes\|localStorage.setItem.*gerente" "C:\Users\W10\Desktop\sistema_principal.html" | findstr /v "function\|window\|console\|alert\|confirm" | findstr /i "gerentes" | head -20
+cd "C:\Users\W10\Desktop" && findstr /i /n "aprovado gerente técnico cadastro senha" sistema_principal.html | head -50
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "aprovado|gerente|técnico|cadastro|senha" -CaseSensitive:$false | Select-Object -First 100 | Format-Table -AutoSize
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "aprovado|APROVADO" -CaseSensitive:$false | Select-Object -First 50
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "checklist|CHECKLIST" -CaseSensitive:$false | Select-Object -First 50
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "salvar.*gerente|cadastrar.*gerente|addGerente|saveGerente" -CaseSensitive:$false | Select-Object -First 30
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "localStorage.*gerente|gerente.*localStorage" -CaseSensitive:$false | Select-Object -First 30
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "abrirCadastroGenerico.*geren|geren.*abrirCadastro" -CaseSensitive:$false | Select-Object -First 20
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "function abrirCadastroGerenciaTecnicos|abrirCadastroGerenciaTecnicos.*=" -CaseSensitive:$false | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "function salvarGestor|salvarGestor.*=" -CaseSensitive:$false | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "CRIAR.*EXECUTAR.*EXECUTADOS|abrirChecklist|CHECKLIST.*CRIAR" -CaseSensitive:$false | Select-Object -First 20
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "function abrirChecklist|abrirChecklist.*=" -CaseSensitive:$false | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "gerar.*checklist|checklist.*gerado|localStorage.*checklist" -CaseSensitive:$false | Select-Object -First 30
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "renderizarChecklistsExecutados|renderizarExecutarChecklist" -CaseSensitive:$false | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "checklistsExecutados.*push|executar.*checklist" -CaseSensitive:$false | Select-Object -First 20
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "abrirVisualizacaoChecklistGerado|executar.*gerado" -CaseSensitive:$false | Select-Object -First 10
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "salvarExecucaoChecklistGerado|executar.*gerado|checklistGerado.*executar" -CaseSensitive:$false | Select-Object -First 10
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "aprovado.*gerado|finalizar.*gerado|checklistsExecutados.*push" -CaseSensitive:$false | Select-Object -First 15
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "finalizar.*checklist|checklist.*finalizado|todos.*aprovado" -CaseSensitive:$false | Select-Object -First 10
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "window.deletarChecklistGerado|window.renderizarChecklistsGerados" -CaseSensitive:$false | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "window\\.renderizarChecklistsExecutados|window\\.deletar" -CaseSensitive:$false | Select-Object -First 10
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "window\\.renderizarChecklists|window\\.verDetalhes" -CaseSensitive:$false | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "verificarEfinalizarChecklistGerado" -CaseSensitive:$false | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "abrirVisualizacaoChecklistGerado|CHECKLIST GERADO" -CaseSensitive:$false | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "buscarPeca|abrirBuscaPeca|cadastro.*peça" -CaseSensitive:$false | Select-Object -First 10
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "ITENS DO CHECKLIST|secaoItensChecklistCriar" -CaseSensitive:$false | Select-Object -First 10
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "function abrirBuscaPecas|abrirBuscaPecasBiblioteca|abrirBuscaPecasManualPDF" -CaseSensitive:$false | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "function abrirBuscaPecasBibliotecaGenerica|function abrirBuscaPecasManualPDFGenerica" -CaseSensitive:$false | Select-Object -First 3
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "window.adicionarServicoAdicional|window.adicionarPecaAdicional" -CaseSensitive:$false | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "function verDetalhesExecucaoChecklist" -CaseSensitive:$false | Select-Object -First 3
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "grupoFamilia|grupo.*familia|familia.*grupo" -CaseSensitive:$false | Select-Object -First 10
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "dadosFormulario|grupo|familia" -CaseSensitive:$false | Select-Object -First 20
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "const dados|dados =|dadosFormulario" -CaseSensitive:$false | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "const dados = checklist\.dadosFormulario|dados = checklist\.dadosFormulario" -CaseSensitive:$false
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "function adicionarServicoAdicional" -CaseSensitive:$false
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "grupoFamilia.*split|split.*grupoFamilia" -CaseSensitive:$false
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "atualizarListaServicosAdicionais|atualizarListaPecasAdicionais" -CaseSensitive:$false
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "window\.finalizarChecklistGerado|function finalizarChecklistGerado" -CaseSensitive:$false
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "window\.adicionarServicoAdicional|window\.adicionarPecaAdicional" -CaseSensitive:$false | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "function salvarExecucaoChecklist|function verDetalhesExecucaoChecklist" -CaseSensitive:$false
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "confirmarAprovacaoGerente|verificarEfinalizarChecklistGerado" -CaseSensitive:$false
+cd "C:\Users\W10\Desktop"; Select-String -Path "sistema_principal.html" -Pattern "temposPorTecnico|tempoTotal" -CaseSensitive:$false | Select-Object -First 10
+cd "C:\Users\W10\Desktop" && findstr /n "backdrop-filter" sistema_principal.html
+cd "C:\Users\W10\Desktop" && findstr /n /i "background.*:" sistema_principal.html | findstr /v "background-color" | findstr /v "background-image" | findstr /v "background-position" | findstr /v "background-size" | findstr /v "background-repeat" | head -20
+cd "C:\Users\W10\Desktop"; Select-String -Pattern "backdrop-filter" -Path sistema_principal.html | Select-Object -First 5
+cd "C:\Users\W10\Desktop"; Select-String -Pattern "background\s*:" -Path sistema_principal.html | Select-Object -First 20 | Format-Table -AutoSize
+cd "C:\Users\W10\Desktop"; Select-String -Pattern "CHECKLIST GERADOS" -Path sistema_principal.html -CaseSensitive:$false
+cd "C:\Users\W10\Desktop"; Select-String -Pattern "checklist.*gerado" -Path sistema_principal.html -CaseSensitive:$false | Select-Object -First 10
+cd "C:\Users\W10\Desktop"; Select-String -Pattern "precheck-gerados" -Path sistema_principal.html | Select-Object -First 10
+cd "C:\Users\W10\Desktop"; Select-String -Pattern "backdrop-filter" -Path sistema_principal.html | Select-Object LineNumber, Line

@@ -1,0 +1,61 @@
+BACKUP DO CÓDIGO FONTE
+=======================
+Data/Hora: 24/02/2026, 19:18:13
+Sistema: Gestão Técnica Nonato Service
+Versão: 1.0.0
+
+Arquivos incluídos:
+- C:\Users\W10\gestao-tecnica-nonato-service\app\AdicionarServicosStyle.tsx
+- C:\Users\W10\gestao-tecnica-nonato-service\app\api\backup-code\list\route.ts
+- C:\Users\W10\gestao-tecnica-nonato-service\app\api\backup-code\restore\route.ts
+- C:\Users\W10\gestao-tecnica-nonato-service\app\api\backup-code\route.ts
+- C:\Users\W10\gestao-tecnica-nonato-service\app\api\data\load\route.ts
+- C:\Users\W10\gestao-tecnica-nonato-service\app\api\data\load-text\route.ts
+- C:\Users\W10\gestao-tecnica-nonato-service\app\api\data\save\route.ts
+- C:\Users\W10\gestao-tecnica-nonato-service\app\api\data\save-all\route.ts
+- C:\Users\W10\gestao-tecnica-nonato-service\app\api\data\save-text\route.ts
+- C:\Users\W10\gestao-tecnica-nonato-service\app\api\data\shared.ts
+- C:\Users\W10\gestao-tecnica-nonato-service\app\api\import-from-url\route.ts
+- C:\Users\W10\gestao-tecnica-nonato-service\app\api\pdf\confirmacao-orcamento\[id]\route.ts
+- C:\Users\W10\gestao-tecnica-nonato-service\app\api\pdf\confirmacao-pedido-os\[id]\route.ts
+- C:\Users\W10\gestao-tecnica-nonato-service\app\api\pdf\pedido-separacao-envio\[id]\route.ts
+- C:\Users\W10\gestao-tecnica-nonato-service\app\api\video\logo\route.ts
+- C:\Users\W10\gestao-tecnica-nonato-service\app\globals.css
+- C:\Users\W10\gestao-tecnica-nonato-service\app\icon.svg
+- C:\Users\W10\gestao-tecnica-nonato-service\app\layout.tsx
+- C:\Users\W10\gestao-tecnica-nonato-service\app\page.tsx
+- C:\Users\W10\gestao-tecnica-nonato-service\app\RegisterSW.tsx
+- C:\Users\W10\gestao-tecnica-nonato-service\app\translations.ts
+- C:\Users\W10\gestao-tecnica-nonato-service\app\utils\dataStorage.ts
+- C:\Users\W10\gestao-tecnica-nonato-service\public\favicon.ico
+- C:\Users\W10\gestao-tecnica-nonato-service\public\icon.svg
+- C:\Users\W10\gestao-tecnica-nonato-service\public\logo-inicial.png
+- C:\Users\W10\gestao-tecnica-nonato-service\public\manifest.json
+- C:\Users\W10\gestao-tecnica-nonato-service\public\sw.js
+- C:\Users\W10\gestao-tecnica-nonato-service\next.config.js
+- C:\Users\W10\gestao-tecnica-nonato-service\package.json
+- C:\Users\W10\gestao-tecnica-nonato-service\package-lock.json
+- C:\Users\W10\gestao-tecnica-nonato-service\tsconfig.json
+- C:\Users\W10\gestao-tecnica-nonato-service\next-env.d.ts
+- C:\Users\W10\gestao-tecnica-nonato-service\.gitignore
+- C:\Users\W10\gestao-tecnica-nonato-service\README.md
+
+Total de arquivos de código: 34
+
+
+HISTÓRICO DE COMANDOS:
+- Histórico do PowerShell: C:\Users\W10\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
+
+Total de arquivos de histórico: 1
+
+Os arquivos de histórico estão na pasta: _command-history/
+
+
+Para restaurar:
+1. Copie os arquivos deste backup de volta para o diretório do projeto
+2. Execute: npm install
+3. Execute: npm run dev
+
+Para restaurar o histórico de comandos:
+- Os arquivos estão na pasta _command-history/
+- Copie-os para seus locais originais conforme indicado no README-HISTORY.txt

@@ -1,0 +1,1382 @@
+﻿'use client'
+
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { translations } from './translations'
+import { loadData, saveData, loadAllFromServer, loadFromServer } from './utils/dataStorage'
+
+type Language = {
+  code: string
+  name: string
+  flag: string
+}
+
+type User = {
+  id: string
+  name: string
+  email: string
+  role: string
+}
+
+type SidebarButton = {
+  id: string
+  name: string
+  action: string
+  order: number
+  translationKey?: string // Chave de traduÃ§Ã£o opcional
+}
+
+type Gestor = {
+  id: string
+  name: string
+  email: string
+  phone: string
+  address: string
+  type: 'internal' | 'external'
+  photo?: string
+}
+
+type Tecnico = {
+  id: string
+  name: string
+  email: string
+  phone: string
+  address: string
+  type: 'internal' | 'external'
+  photo?: string
+}
+
+type Equipamento = {
+  id: string
+  tipoEquipamento: string
+  modelo: string
+  marca: string
+  numeroSerie: string
+  familia: string
+  grupo: string
+  photo?: string
+  coverPhoto?: string
+  photoLibrary?: string[]
+  manualPdf?: string
+  itemsIncluded?: string[]
+  status?: 'ativo' | 'baixado'
+  dataBaixa?: string
+}
+
+type RelatorioEquipamento = {
+  id: string
+  titulo: string
+  dataGeracao: string
+  conteudo: string
+  equipamentoId?: string // Para identificar qual equipamento (usando numeroSerie como referÃªncia)
+}
+
+type DiaTrabalho = {
+  id?: string
+  data: string
+  idaHora: string
+  idaChegada: string
+  idaDuracao: string
+  horasInicio: string
+  horasFim: string
+  horasDuracao: string
+  retornoSaida: string
+  retornoChegada: string
+  retornoDuracao: string
+  kmIda: string
+  kmRetorno: string
+  kmTotal: string
+  pausa: string
+  descricaoTrabalho: string
+}
+
+type PecaSubstituicao = {
+  id: string
+  imagem?: string
+  descricao: string
+  codigo: string
+  quantidade: string
+}
+
+type CategoriaPeca = {
+  id: string
+  nome: string
+}
+
+type SubcategoriaPeca = {
+  id: string
+  nome: string
+  categoriaId: string
+}
+
+type PecaBiblioteca = {
+  id: string
+  nome: string
+  codigo: string
+  preco?: string
+  descricao?: string
+  categoria?: string
+  categoriaId?: string
+  subcategoria?: string
+  subcategoriaId?: string
+  imagem?: string
+  quantidade?: number
+  dataCriacao?: string
+}
+
+type RelatorioServico = {
+  id: string
+  numero: string
+  tecnico: string
+  cliente: string
+  cidade: string
+  telefone: string
+  data: string
+  maquinaModelo: string
+  numeroMaquina: string
+  tipoServico: string
+  diasTrabalho: DiaTrabalho[]
+  horasTrabalho: string
+  kmsPercorridos: string
+  horasViagem: string
+  servicoConcluido: boolean
+  retornoNecessario: boolean
+  entregaDocumentacao: boolean
+  liberacaoProducao: boolean
+  instrucaoFuncionarios: boolean
+  necessarioTrocaPecas: boolean
+  observacoes: string
+  pontosAberto: string
+  pecasSubstituicao: PecaSubstituicao[]
+  equipamentoId?: string // Para associar ao equipamento do cliente
+  clienteId?: string // Para associar ao cliente
+}
+
+type Agendamento = {
+  id: string
+  tipo: 'pre-agendamento' | 'agendamento-tecnico'
+  tecnico: string
+  cliente: string
+  clienteId?: string
+  equipamento?: string
+  equipamentoId?: string
+  data: string
+  hora: string
+  duracaoEstimada: string // em horas
+  tipoServico: string
+  observacoes: string
+  status: 'pendente' | 'confirmado' | 'em-andamento' | 'concluido' | 'cancelado'
+  telefone: string
+  endereco: string
+  cidade: string
+  dataCriacao: string
+  dataConfirmacao?: string
+}
+
+type EquipamentoCliente = {
+  tipoEquipamento: string
+  modelo: string
+  marca: string
+  numeroSerie: string
+  familia: string
+  grupo: string
+  photo?: string
+  coverPhoto?: string
+  photoLibrary?: string[]
+  manualPdf?: string
+  itemsIncluded?: string[]
+  relatorios?: RelatorioEquipamento[]
+}
+
+type Cliente = {
+  id: string
+  nomeEmpresa: string
+  morada: string
+  localidade: string
+  conselho: string
+  pais: string
+  codigoPostal: string
+  freguesia: string
+  numeroContribuicaoFiscal: string
+  telefones: string
+  email: string
+  contato: string
+  equipamentos: EquipamentoCliente[]
+}
+
+type FaturaFornecedor = {
+  id: string
+  numeroFatura: string
+  mes: string // Formato: "YYYY-MM" (ex: "2024-01")
+  valor: number
+  clienteId: string // ID do cliente
+  clienteNome: string // Nome do cliente (para exibiÃ§Ã£o)
+  dataVencimento?: string
+  status: 'pendente' | 'paga' | 'vencida'
+  observacoes?: string
+}
+
+type Fornecedor = {
+  id: string
+  nomeEmpresa: string
+  morada: string
+  localidade: string
+  conselho: string
+  pais: string
+  codigoPostal: string
+  freguesia: string
+  numeroContribuicaoFiscal: string
+  telefones: string
+  email: string
+  contato: string
+  iban: string
+  faturas: FaturaFornecedor[]
+}
+
+type GrupoDesmontado = {
+  id: string
+  numeroGrupo: string // NÃºmero do grupo
+  familia: string // FamÃ­lia que pertence
+  idFabricante?: string // ID ou nÃºmero do fabricante
+  imagem?: string // Imagem do grupo
+  localizacao: {
+    rua: string // Rua
+    numeroEspaco: string // NÃºmero ou letras do espaÃ§o
+    numeroGrupoPrateleira: string // NÃºmero do grupo da prateleira
+  }
+  nome: string // Mantido para compatibilidade
+  descricao?: string
+  dataCriacao: string
+}
+
+type PecaDesmontada = {
+  id: string
+  numeroPeca: string // NÃºmero da peÃ§a
+  familia: string // FamÃ­lia que pertence
+  grupoId: string
+  grupoNome: string
+  nome: string // Mantido para compatibilidade
+  codigo?: string
+  marca?: string
+  modelo?: string
+  tipoEquipamento?: string
+  observacoes?: string
+  quantidade: number // Quantidade da peÃ§a
+  imagens?: string[] // Imagens anexadas da peÃ§a
+  statusFuncional?: 'funciona' | 'nao-funciona' | 'nao-testado' // Status funcional
+  foiRecuperada?: boolean // Se foi recuperada
+  foiTestada?: boolean // Se foi testada
+  tecnicoTeste?: string // TÃ©cnico que testou
+  descricaoTeste?: string // DescriÃ§Ã£o do que foi feito/testado
+  localizacao: {
+    rua: string // Rua
+    numeroEspaco: string // NÃºmero ou letras do espaÃ§o
+    numeroGrupoPrateleira: string // NÃºmero do grupo da prateleira
+  }
+  dataCriacao: string
+}
+
+type TabType = 'gestores' | 'equipamentos' | 'users' | 'extras' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'agenda' | 'desmontados' | 'cadastro-servicos'
+
+const languages: Language[] = [
+  { code: 'pt-BR', name: 'PortuguÃªs', flag: 'ðŸ‡§ðŸ‡·' },
+  { code: 'es', name: 'Espanhol', flag: 'ðŸ‡ªðŸ‡¸' },
+  { code: 'fr', name: 'FrancÃªs', flag: 'ðŸ‡«ðŸ‡·' },
+  { code: 'it', name: 'Italiano', flag: 'ðŸ‡®ðŸ‡¹' },
+  { code: 'de', name: 'AlemÃ£o', flag: 'ðŸ‡©ðŸ‡ª' },
+  { code: 'en', name: 'InglÃªs', flag: 'ðŸ‡¬ðŸ‡§' }
+]
+
+export default function Dashboard() {
+  const [showModal, setShowModal] = useState(false)
+  const [showGestoresModal, setShowGestoresModal] = useState(false)
+  const [gestoresActiveTab, setGestoresActiveTab] = useState<'gestores' | 'tecnicos'>('gestores')
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [logoType, setLogoType] = useState<'image' | 'video' | null>(null)
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('pt-BR')
+  const [users, setUsers] = useState<User[]>([])
+  const [showUserForm, setShowUserForm] = useState(false)
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [userForm, setUserForm] = useState({ name: '', email: '', role: '' })
+  const [sidebarButtons, setSidebarButtons] = useState<SidebarButton[]>([])
+  const [showButtonForm, setShowButtonForm] = useState(false)
+  const [editingButton, setEditingButton] = useState<SidebarButton | null>(null)
+  const [buttonForm, setButtonForm] = useState({ name: '', action: '' })
+  const [draggedButton, setDraggedButton] = useState<string | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const [gestores, setGestores] = useState<Gestor[]>([])
+  const [showGestorForm, setShowGestorForm] = useState(false)
+  const [editingGestor, setEditingGestor] = useState<Gestor | null>(null)
+  const [gestorForm, setGestorForm] = useState({ name: '', email: '', phone: '', address: '', type: 'internal' as 'internal' | 'external', photo: '' })
+  const [tecnicos, setTecnicos] = useState<Tecnico[]>([])
+  const [showTecnicoForm, setShowTecnicoForm] = useState(false)
+  const [editingTecnico, setEditingTecnico] = useState<Tecnico | null>(null)
+  const [tecnicoForm, setTecnicoForm] = useState({ name: '', email: '', phone: '', address: '', type: 'internal' as 'internal' | 'external', photo: '' })
+  const [equipamentos, setEquipamentos] = useState<Equipamento[]>([])
+  const [showEquipamentosModal, setShowEquipamentosModal] = useState(false)
+  const [showEquipamentoForm, setShowEquipamentoForm] = useState(false)
+  const [editingEquipamento, setEditingEquipamento] = useState<Equipamento | null>(null)
+  const [equipamentoForm, setEquipamentoForm] = useState({ 
+    id: '',
+    tipoEquipamento: '', 
+    modelo: '', 
+    marca: '', 
+    numeroSerie: '', 
+    familia: '', 
+    grupo: '',
+    photo: '',
+    coverPhoto: '',
+    photoLibrary: [] as string[],
+    manualPdf: '',
+    itemsIncluded: [] as string[]
+  })
+  const [newItem, setNewItem] = useState('')
+  const [searchEquipamentoId, setSearchEquipamentoId] = useState('')
+  const [searchedEquipamento, setSearchedEquipamento] = useState<Equipamento | null>(null)
+  const [backupMethod, setBackupMethod] = useState<'local' | 'server'>('local')
+  const [backupServerUrl, setBackupServerUrl] = useState<string>('')
+  const [autoBackupEnabled, setAutoBackupEnabled] = useState<boolean>(false)
+  const [autoBackupInterval, setAutoBackupInterval] = useState<number>(60) // minutos
+  const [translatorText, setTranslatorText] = useState('')
+  const [translatorFrom, setTranslatorFrom] = useState<string>('pt-BR')
+  const [translatorTo, setTranslatorTo] = useState<string>('en')
+  const [translatedText, setTranslatedText] = useState('')
+  const [translating, setTranslating] = useState(false)
+  const [selectedText, setSelectedText] = useState('')
+  const [showQuickTranslate, setShowQuickTranslate] = useState(false)
+  const [quickTranslatePosition, setQuickTranslatePosition] = useState({ x: 0, y: 0 })
+  const [quickTranslateResult, setQuickTranslateResult] = useState('')
+  const [quickTranslating, setQuickTranslating] = useState(false)
+  const [expandedEquipamentos, setExpandedEquipamentos] = useState<Set<string>>(new Set())
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [showDashboardView, setShowDashboardView] = useState(true) // Dashboard central por padrÃ£o
+  
+  // Sistema de mÃºltiplas pÃ¡ginas/abas
+  const [openTabs, setOpenTabs] = useState<TabType[]>([])
+  const [activeTab, setActiveTab] = useState<TabType | null>(null)
+  // Evita abrir modais automaticamente na carga inicial (ex: HMR/estado preservado)
+  const [tabsOpenedByUser, setTabsOpenedByUser] = useState(false)
+  
+  // Estados para Agenda
+  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([])
+  const [showAgendaModal, setShowAgendaModal] = useState(false)
+  const [showAgendaForm, setShowAgendaForm] = useState(false)
+  const [editingAgendamento, setEditingAgendamento] = useState<Agendamento | null>(null)
+  const [agendaForm, setAgendaForm] = useState<Agendamento>({
+    id: '',
+    tipo: 'pre-agendamento',
+    tecnico: '',
+    cliente: '',
+    clienteId: '',
+    equipamento: '',
+    equipamentoId: '',
+    data: new Date().toISOString().split('T')[0],
+    hora: '09:00',
+    duracaoEstimada: '2',
+    tipoServico: '',
+    observacoes: '',
+    status: 'pendente',
+    telefone: '',
+    endereco: '',
+    cidade: '',
+    dataCriacao: new Date().toISOString()
+  })
+  const [filtroAgenda, setFiltroAgenda] = useState<'todos' | 'pre-agendamento' | 'agendamento-tecnico' | 'nenhum' | 'folga' | 'doente' | 'ferias'>('todos')
+  const [filtroTecnicoAgenda, setFiltroTecnicoAgenda] = useState('')
+  const [filtroDataAgenda, setFiltroDataAgenda] = useState('')
+  const [visualizacaoAgenda, setVisualizacaoAgenda] = useState<'lista' | 'calendario'>('lista')
+  const [calendarioMes, setCalendarioMes] = useState(new Date().getMonth())
+  const [calendarioAno, setCalendarioAno] = useState(new Date().getFullYear())
+  const [tecnicoSelecionadoCalendario, setTecnicoSelecionadoCalendario] = useState<string | null>(null)
+  const [tecnicoCalendarioAtivo, setTecnicoCalendarioAtivo] = useState<string>('') // tÃ©cnico selecionado para o modo calendÃ¡rio
+  const [datasSelecionadasCalendario, setDatasSelecionadasCalendario] = useState<string[]>([])
+  const [statusDiaSelecionado, setStatusDiaSelecionado] = useState<'nenhum' | 'folga' | 'doente' | 'ferias'>('nenhum')
+  const [statusTecnicoPorDia, setStatusTecnicoPorDia] = useState<Record<string, Record<string, 'nenhum' | 'pre' | 'agendamento' | 'folga' | 'doente' | 'ferias'>>>({})
+  const [execucaoTecnicoPorDia, setExecucaoTecnicoPorDia] = useState<Record<string, Record<string, 'pendente' | 'concluido'>>>({})
+  const [modoExecucaoResumo, setModoExecucaoResumo] = useState<'pendente' | 'concluido'>('pendente')
+  
+  // Estados para Biblioteca de PeÃ§as
+  const [pecasBiblioteca, setPecasBiblioteca] = useState<PecaBiblioteca[]>([])
+  const [categoriasPecas, setCategoriasPecas] = useState<CategoriaPeca[]>([])
+  const [showBibliotecaPecasModal, setShowBibliotecaPecasModal] = useState(false)
+  const [showBibliotecaPecasForm, setShowBibliotecaPecasForm] = useState(false)
+  const [editingPecaBiblioteca, setEditingPecaBiblioteca] = useState<PecaBiblioteca | null>(null)
+  const [pecaBibliotecaForm, setPecaBibliotecaForm] = useState<PecaBiblioteca>({
+    id: '',
+    nome: '',
+    codigo: '',
+    preco: '',
+    descricao: '',
+    categoria: '',
+    categoriaId: '',
+    subcategoria: '',
+    subcategoriaId: '',
+    imagem: '',
+    dataCriacao: new Date().toISOString()
+  })
+  const [showNovaCategoriaForm, setShowNovaCategoriaForm] = useState(false)
+  const [novaCategoriaNome, setNovaCategoriaNome] = useState('')
+  const [showNovaSubcategoriaForm, setShowNovaSubcategoriaForm] = useState(false)
+  const [novaSubcategoriaNome, setNovaSubcategoriaNome] = useState('')
+  const [subcategoriasPecas, setSubcategoriasPecas] = useState<SubcategoriaPeca[]>([])
+  
+  // Estados para Clientes
+  const [clientes, setClientes] = useState<Cliente[]>([])
+  const [showClientesModal, setShowClientesModal] = useState(false)
+  const [showClienteForm, setShowClienteForm] = useState(false)
+  const [editingCliente, setEditingCliente] = useState<Cliente | null>(null)
+  const [clienteForm, setClienteForm] = useState({
+    nomeEmpresa: '',
+    morada: '',
+    localidade: '',
+    conselho: '',
+    pais: '',
+    codigoPostal: '',
+    freguesia: '',
+    numeroContribuicaoFiscal: '',
+    telefones: '',
+    email: '',
+    contato: ''
+  })
+  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
+  const [showFornecedoresModal, setShowFornecedoresModal] = useState(false)
+  const [showFornecedorForm, setShowFornecedorForm] = useState(false)
+  const [editingFornecedor, setEditingFornecedor] = useState<Fornecedor | null>(null)
+  const [fornecedorForm, setFornecedorForm] = useState({
+    nomeEmpresa: '',
+    morada: '',
+    localidade: '',
+    conselho: '',
+    pais: '',
+    codigoPostal: '',
+    freguesia: '',
+    numeroContribuicaoFiscal: '',
+    telefones: '',
+    email: '',
+    contato: '',
+    iban: ''
+  })
+  const [selectedFornecedorForFatura, setSelectedFornecedorForFatura] = useState<Fornecedor | null>(null)
+  const [showFaturaForm, setShowFaturaForm] = useState(false)
+  const [editingFatura, setEditingFatura] = useState<FaturaFornecedor | null>(null)
+  const [faturaForm, setFaturaForm] = useState({
+    numeroFatura: '',
+    mes: new Date().toISOString().slice(0, 7), // YYYY-MM
+    valor: 0,
+    clienteId: '',
+    clienteNome: '',
+    dataVencimento: '',
+    status: 'pendente' as 'pendente' | 'paga' | 'vencida',
+    observacoes: ''
+  })
+  const [showFaturasAPagarModal, setShowFaturasAPagarModal] = useState(false)
+  const [showEquipamentoClienteForm, setShowEquipamentoClienteForm] = useState(false)
+  const [editingEquipamentoCliente, setEditingEquipamentoCliente] = useState<EquipamentoCliente | null>(null)
+  const [equipamentoClienteForm, setEquipamentoClienteForm] = useState<EquipamentoCliente>({
+    tipoEquipamento: '',
+    modelo: '',
+    marca: '',
+    numeroSerie: '',
+    familia: '',
+    grupo: '',
+    photo: '',
+    coverPhoto: '',
+    photoLibrary: [],
+    manualPdf: '',
+    itemsIncluded: []
+  })
+  const [selectedClienteForEquipamento, setSelectedClienteForEquipamento] = useState<Cliente | null>(null)
+  const [newItemCliente, setNewItemCliente] = useState('')
+  const [showRelatoriosModal, setShowRelatoriosModal] = useState(false)
+  const [selectedEquipamentoForRelatorio, setSelectedEquipamentoForRelatorio] = useState<{cliente: Cliente, equipamento: EquipamentoCliente, index: number} | null>(null)
+  const [showRelatorioForm, setShowRelatorioForm] = useState(false)
+  const [editingRelatorio, setEditingRelatorio] = useState<RelatorioEquipamento | null>(null)
+  const [relatorioForm, setRelatorioForm] = useState({
+    titulo: '',
+    conteudo: ''
+  })
+  
+  // Estados para RelatÃ³rio de ServiÃ§o
+  const [relatoriosServico, setRelatoriosServico] = useState<RelatorioServico[]>([])
+  const [showRelatorioServicoModal, setShowRelatorioServicoModal] = useState(false)
+  const [showRelatorioServicoForm, setShowRelatorioServicoForm] = useState(false)
+  const [editingRelatorioServico, setEditingRelatorioServico] = useState<RelatorioServico | null>(null)
+  const [showPecasSubstituicaoModal, setShowPecasSubstituicaoModal] = useState(false)
+  const [relatorioServicoForm, setRelatorioServicoForm] = useState<RelatorioServico>({
+    id: '',
+    numero: '',
+    tecnico: '',
+    cliente: '',
+    cidade: '',
+    telefone: '',
+    data: new Date().toISOString().split('T')[0],
+    maquinaModelo: '',
+    numeroMaquina: '',
+    tipoServico: '',
+    diasTrabalho: [],
+    horasTrabalho: '',
+    kmsPercorridos: '',
+    horasViagem: '',
+    servicoConcluido: false,
+    retornoNecessario: false,
+    entregaDocumentacao: false,
+    liberacaoProducao: false,
+    instrucaoFuncionarios: false,
+    necessarioTrocaPecas: false,
+    observacoes: '',
+    pontosAberto: '',
+    pecasSubstituicao: []
+  })
+  const [novoDiaTrabalho, setNovoDiaTrabalho] = useState<DiaTrabalho>({
+    data: '',
+    idaHora: '',
+    idaChegada: '',
+    idaDuracao: '',
+    horasInicio: '',
+    horasFim: '',
+    horasDuracao: '',
+    retornoSaida: '',
+    retornoChegada: '',
+    retornoDuracao: '',
+    kmIda: '',
+    kmRetorno: '',
+    kmTotal: '',
+    pausa: '',
+    descricaoTrabalho: ''
+  })
+  const [novaPeca, setNovaPeca] = useState<PecaSubstituicao>({
+    id: '',
+    descricao: '',
+    codigo: '',
+    quantidade: ''
+  })
+  const [showAdicionarPecaModal, setShowAdicionarPecaModal] = useState(false)
+  const [metodoAdicionarPeca, setMetodoAdicionarPeca] = useState<'biblioteca' | 'pdf' | 'manual'>('biblioteca')
+  const [buscaPecaBiblioteca, setBuscaPecaBiblioteca] = useState('')
+  const [equipamentosClienteSelecionado, setEquipamentosClienteSelecionado] = useState<EquipamentoCliente[]>([])
+
+  // ===== Cadastro de ServiÃ§os =====
+  const [showCadastroServicosModal, setShowCadastroServicosModal] = useState(false)
+  const [servicos, setServicos] = useState<Array<{
+    id: string
+    nome: string
+    descricao?: string
+    valor: number
+    tipoCobranca: 'unidade' | 'km' | 'hora' | 'valor-fixo' | 'diarias' | 'extras'
+    categoria: 'servico' | 'despesa'
+  }>>([])
+  const [showServicoForm, setShowServicoForm] = useState(false)
+  const [editingServico, setEditingServico] = useState<{
+    id: string
+    nome: string
+    descricao?: string
+    valor: number
+    tipoCobranca: 'unidade' | 'km' | 'hora' | 'valor-fixo' | 'diarias' | 'extras'
+    categoria: 'servico' | 'despesa'
+  } | null>(null)
+  const [servicoForm, setServicoForm] = useState({
+    nome: '',
+    descricao: '',
+    valor: 0,
+    tipoCobranca: 'unidade' as 'unidade' | 'km' | 'hora' | 'valor-fixo' | 'diarias' | 'extras',
+    categoria: 'servico' as 'servico' | 'despesa'
+  })
+
+  // ===== Biblioteca de Grupos e PeÃ§as (Equipamentos Desmontados) =====
+  const [showDesmontadosModal, setShowDesmontadosModal] = useState(false)
+  const [gruposDesmontados, setGruposDesmontados] = useState<GrupoDesmontado[]>([])
+  const [pecasDesmontadas, setPecasDesmontadas] = useState<PecaDesmontada[]>([])
+  const [buscaDesmontados, setBuscaDesmontados] = useState('')
+  const [abaDesmontados, setAbaDesmontados] = useState<'grupos' | 'pecas'>('pecas')
+  const [showGrupoDesmontadoForm, setShowGrupoDesmontadoForm] = useState(false)
+  const [showPecaDesmontadaForm, setShowPecaDesmontadaForm] = useState(false)
+  const [editingGrupoDesmontado, setEditingGrupoDesmontado] = useState<GrupoDesmontado | null>(null)
+  const [editingPecaDesmontada, setEditingPecaDesmontada] = useState<PecaDesmontada | null>(null)
+  const [grupoDesmontadoForm, setGrupoDesmontadoForm] = useState({ 
+    numeroGrupo: '', 
+    familia: '', 
+    idFabricante: '', 
+    imagem: '',
+    localizacao: { rua: '', numeroEspaco: '', numeroGrupoPrateleira: '' },
+    nome: '', 
+    descricao: '' 
+  })
+  const [pecaDesmontadaForm, setPecaDesmontadaForm] = useState({
+    numeroPeca: '',
+    familia: '',
+    grupoId: '',
+    nome: '',
+    codigo: '',
+    marca: '',
+    modelo: '',
+    tipoEquipamento: '',
+    observacoes: '',
+    quantidade: 1,
+    imagens: [] as string[],
+    statusFuncional: 'nao-testado' as 'funciona' | 'nao-funciona' | 'nao-testado',
+    foiRecuperada: false,
+    foiTestada: false,
+    tecnicoTeste: '',
+    descricaoTeste: '',
+    localizacao: { rua: '', numeroEspaco: '', numeroGrupoPrateleira: '' }
+  })
+
+  const t: any = translations[selectedLanguage as keyof typeof translations] || translations['pt-BR']
+
+  // ===== InventÃ¡rio do ArmazÃ©m (Dashboard) =====
+  const equipamentosAtivos = useMemo(
+    () => equipamentos.filter((e) => (e.status || 'ativo') !== 'baixado'),
+    [equipamentos]
+  )
+
+  const inventarioArmazem = useMemo(() => {
+    const porFamilia: Record<string, number> = {}
+    const porMarca: Record<string, number> = {}
+
+    for (const e of equipamentosAtivos) {
+      const familia = (e.familia || '').trim() || (t.semFamilia || 'Sem FamÃ­lia')
+      const marca = (e.marca || '').trim() || (t.semMarca || 'Sem Marca')
+      porFamilia[familia] = (porFamilia[familia] || 0) + 1
+      porMarca[marca] = (porMarca[marca] || 0) + 1
+    }
+
+    const sortDesc = (a: [string, number], b: [string, number]) => b[1] - a[1]
+
+    return {
+      totalAtivos: equipamentosAtivos.length,
+      totalBaixados: equipamentos.length - equipamentosAtivos.length,
+      porFamilia: Object.entries(porFamilia).sort(sortDesc),
+      porMarca: Object.entries(porMarca).sort(sortDesc)
+    }
+  }, [equipamentosAtivos, equipamentos.length, t.semFamilia, t.semMarca])
+
+  // Sistema de traduÃ§Ã£o rÃ¡pida (contextual)
+  useEffect(() => {
+    // Garantir que sÃ³ executa no cliente
+    if (typeof window === 'undefined' || typeof document === 'undefined') return
+
+    const handleTextSelection = () => {
+      const selection = window.getSelection()
+      if (selection && selection.toString().trim().length > 0) {
+        const text = selection.toString().trim()
+        if (text.length > 0 && text.length < 500) { // Limitar tamanho
+          const range = selection.getRangeAt(0)
+          const rect = range.getBoundingClientRect()
+          
+          setSelectedText(text)
+          setQuickTranslatePosition({
+            x: rect.left + rect.width / 2,
+            y: rect.top - 10
+          })
+          setShowQuickTranslate(true)
+        }
+      } else {
+        setShowQuickTranslate(false)
+        setSelectedText('')
+      }
+    }
+
+    const handleContextMenu = (e: MouseEvent) => {
+      const selection = window.getSelection()
+      if (selection && selection.toString().trim().length > 0) {
+        // NÃ£o fazer nada especial aqui, deixar o menu padrÃ£o aparecer
+        // Mas podemos adicionar um item customizado depois
+      }
+    }
+
+    document.addEventListener('mouseup', handleTextSelection)
+    document.addEventListener('contextmenu', handleContextMenu)
+    
+    return () => {
+      document.removeEventListener('mouseup', handleTextSelection)
+      document.removeEventListener('contextmenu', handleContextMenu)
+    }
+  }, [])
+
+  // Sistema de Tradutor - languageCodes precisa estar definido antes de handleQuickTranslate
+  const languageCodes: { [key: string]: string } = {
+    'pt-BR': 'pt',
+    'es': 'es',
+    'fr': 'fr',
+    'it': 'it',
+    'de': 'de',
+    'en': 'en'
+  }
+
+  const handleQuickTranslate = async (text: string, fromLang?: string, toLang?: string) => {
+    const from = fromLang || selectedLanguage
+    const to = toLang || (selectedLanguage === 'pt-BR' ? 'en' : 'pt-BR') // Traduzir para portuguÃªs ou inglÃªs por padrÃ£o
+    
+    if (from === to) {
+      setQuickTranslateResult(text)
+      return
+    }
+
+    setQuickTranslating(true)
+    setQuickTranslateResult('')
+
+    try {
+      const fromCode = languageCodes[from] || from
+      const toCode = languageCodes[to] || to
+      
+      // Usar a mesma lÃ³gica de traduÃ§Ã£o
+      try {
+        const response = await fetch(
+          `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${fromCode}|${toCode}`,
+          { 
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+          }
+        )
+
+        if (response.ok) {
+          const data = await response.json()
+          if (data.responseData && data.responseData.translatedText) {
+            setQuickTranslateResult(data.responseData.translatedText)
+            setQuickTranslating(false)
+            return
+          }
+        }
+      } catch (e) {
+        // Tentar prÃ³xima API
+      }
+
+      try {
+        const response2 = await fetch('https://libretranslate.de/translate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            q: text,
+            source: fromCode,
+            target: toCode,
+            format: 'text'
+          })
+        })
+
+        if (response2.ok) {
+          const data = await response2.json()
+          if (data.translatedText) {
+            setQuickTranslateResult(data.translatedText)
+            setQuickTranslating(false)
+            return
+          }
+        }
+      } catch (e) {
+        // Falhou
+      }
+
+      setQuickTranslateResult(t.translationError)
+    } catch (error) {
+      setQuickTranslateResult(t.translationError)
+    }
+
+    setQuickTranslating(false)
+  }
+
+  // Carregar logo, idioma e usuÃ¡rios salvos ao iniciar
+  useEffect(() => {
+    // Garantir que sÃ³ executa no cliente
+    if (typeof window === 'undefined') return
+    
+    const loadAllData = async () => {
+      try {
+        // Primeiro, tentar carregar tudo do servidor
+        const serverData = await loadAllFromServer() || {}
+      
+      // FunÃ§Ã£o auxiliar para obter dados (servidor primeiro, depois localStorage)
+      const getData = (key: string, parseJson = true): any => {
+        // Verificar dados do servidor primeiro
+        if (serverData[key] !== undefined && serverData[key] !== null) {
+          const serverValue = serverData[key]
+          // Se for string vazia, tratar como null
+          if (typeof serverValue === 'string' && serverValue === '') {
+            // Tentar localStorage como fallback
+          } else {
+            return serverValue
+          }
+        }
+        // Fallback para localStorage
+        const localData = localStorage.getItem(key)
+        if (localData !== null && localData !== '') {
+          if (parseJson) {
+            try {
+              const parsed = JSON.parse(localData)
+              return parsed
+            } catch (error) {
+              console.error(`Erro ao fazer parse do JSON (${key}):`, error)
+              return null
+            }
+          } else {
+            return localData
+          }
+        }
+        return null
+      }
+
+      // Carregar logo - sempre tentar do servidor primeiro para vÃ­deos
+      let savedLogo = null
+      let savedLogoType = null
+      
+      // Limpar vÃ­deo corrompido do localStorage se existir
+      if (typeof window !== 'undefined') {
+        try {
+          const localLogo = localStorage.getItem('nonato-logo')
+          if (localLogo && localLogo.startsWith('data:video/')) {
+            // Verificar se o vÃ­deo no localStorage estÃ¡ corrompido (muito curto ou nÃ£o termina corretamente)
+            const base64Part = localLogo.split(',')[1]
+            if (!base64Part || base64Part.length < 1000 || !base64Part.match(/^[A-Za-z0-9+\/]+={0,2}$/)) {
+              console.warn('VÃ­deo corrompido detectado no localStorage, removendo...')
+              localStorage.removeItem('nonato-logo')
+              localStorage.removeItem('nonato-logo-type')
+            }
+          }
+        } catch (e) {
+          console.warn('Erro ao verificar logo no localStorage:', e)
+        }
+      }
+      
+      // Para logos, sempre tentar carregar do servidor primeiro (especialmente vÃ­deos)
+      try {
+        // Primeiro, verificar se existe um arquivo de vÃ­deo binÃ¡rio no servidor
+        const videoResponse = await fetch('/api/video/logo')
+        if (videoResponse.ok) {
+          // VÃ­deo binÃ¡rio existe, usar URL da API
+          savedLogo = '/api/video/logo'
+          savedLogoType = 'video'
+          console.log('âœ… VÃ­deo encontrado no servidor como arquivo binÃ¡rio')
+        } else {
+          // Se nÃ£o encontrou vÃ­deo binÃ¡rio, tentar carregar base64 (apenas para imagens)
+          const serverLogoType = await loadFromServer('nonato-logo-type')
+          
+          // Se o tipo for 'video', nÃ£o tentar carregar base64 (vÃ­deos devem ser binÃ¡rios)
+          if (serverLogoType !== 'video') {
+            const serverLogo = await loadFromServer('nonato-logo')
+            if (serverLogo && typeof serverLogo === 'string' && serverLogo.startsWith('data:image/')) {
+              savedLogo = serverLogo
+              savedLogoType = serverLogoType || 'image'
+            }
+          } else {
+            // Tipo Ã© 'video' mas nÃ£o existe arquivo binÃ¡rio - limpar dados antigos
+            console.warn('VÃ­deo antigo (base64) detectado, mas arquivo binÃ¡rio nÃ£o existe. Limpando dados antigos...')
+            await saveData('nonato-logo', '', false)
+            await saveData('nonato-logo-type', '', false)
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('nonato-logo')
+              localStorage.removeItem('nonato-logo-type')
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Erro ao carregar logo do servidor:', e)
+      }
+      
+      // Se nÃ£o encontrou no servidor, tentar do localStorage (apÃ³s limpeza)
+      if (!savedLogo && typeof window !== 'undefined') {
+        try {
+          const localLogo = localStorage.getItem('nonato-logo')
+          const localLogoType = localStorage.getItem('nonato-logo-type')
+          if (localLogo) {
+            savedLogo = localLogo
+            savedLogoType = localLogoType
+          }
+        } catch (e) {
+          console.warn('Erro ao carregar logo do localStorage:', e)
+        }
+      }
+      
+      if (savedLogo) {
+        // Se for URL da API (vÃ­deo binÃ¡rio), usar diretamente
+        if (savedLogo === '/api/video/logo') {
+          setLogoUrl(savedLogo)
+          setLogoType('video')
+        } else {
+          // Verificar se o logo Ã© vÃ¡lido (nÃ£o estÃ¡ corrompido) - para base64
+          const isValidLogo = typeof savedLogo === 'string' && (savedLogo.startsWith('data:image/') || savedLogo.startsWith('data:video/'))
+          if (isValidLogo) {
+            // NÃƒO carregar vÃ­deos base64 - apenas imagens
+            // VÃ­deos devem ser sempre arquivos binÃ¡rios
+            if (savedLogo.startsWith('data:video/')) {
+              console.warn('VÃ­deo base64 antigo detectado. Limpando e pedindo para fazer upload novamente...')
+              // Limpar vÃ­deo base64 antigo
+              savedLogo = null
+              await saveData('nonato-logo', '', false)
+              await saveData('nonato-logo-type', '', false)
+              if (typeof window !== 'undefined') {
+                localStorage.removeItem('nonato-logo')
+                localStorage.removeItem('nonato-logo-type')
+              }
+            } else if (savedLogo.startsWith('data:image/')) {
+              // Imagens base64 sÃ£o OK
+              setLogoUrl(savedLogo)
+              setLogoType('image')
+            }
+          } else {
+            console.warn('Logo encontrado mas parece estar corrompido, ignorando...')
+            savedLogo = null
+          }
+        }
+      }
+      
+      // Se nÃ£o encontrou logo vÃ¡lido, limpar tudo
+      if (!savedLogo && typeof window !== 'undefined') {
+        localStorage.removeItem('nonato-logo')
+        localStorage.removeItem('nonato-logo-type')
+      }
+      
+      // Carregar idioma
+      const savedLanguage = getData('nonato-language', false)
+      if (savedLanguage) {
+        setSelectedLanguage(savedLanguage)
+      }
+
+      // Carregar usuÃ¡rios
+      const savedUsers = getData('nonato-users')
+      if (savedUsers) {
+        setUsers(savedUsers)
+      }
+
+      // Carregar gestores
+      const savedGestores = getData('nonato-gestores')
+      if (savedGestores) {
+        setGestores(savedGestores)
+      }
+
+      // Carregar serviÃ§os
+      const savedServicos = getData('nonato-servicos')
+      if (savedServicos && Array.isArray(savedServicos)) {
+        setServicos(savedServicos)
+      }
+
+      // Carregar tÃ©cnicos
+      const savedTecnicos = getData('nonato-tecnicos')
+      if (savedTecnicos) {
+        setTecnicos(savedTecnicos)
+      }
+
+      // Carregar equipamentos
+      const savedEquipamentos = getData('nonato-equipamentos')
+      if (savedEquipamentos) {
+        setEquipamentos(savedEquipamentos)
+      }
+
+      // Carregar clientes
+      const savedClientes = getData('nonato-clientes')
+      if (savedClientes) {
+        setClientes(savedClientes)
+      }
+
+      // Carregar fornecedores
+      const savedFornecedores = getData('nonato-fornecedores')
+      if (savedFornecedores) {
+        setFornecedores(savedFornecedores)
+      }
+
+      // Carregar relatÃ³rios de serviÃ§o
+      const savedRelatoriosServico = getData('nonato-relatorios-servico')
+      if (savedRelatoriosServico) {
+        setRelatoriosServico(savedRelatoriosServico)
+      }
+
+      // Carregar peÃ§as biblioteca
+      const savedPecasBiblioteca = getData('nonato-pecas-biblioteca')
+      if (savedPecasBiblioteca) {
+        setPecasBiblioteca(savedPecasBiblioteca)
+      }
+
+      // Carregar categorias de peÃ§as
+      const savedCategoriasPecas = getData('nonato-categorias-pecas')
+      if (savedCategoriasPecas) {
+        setCategoriasPecas(savedCategoriasPecas)
+      }
+
+      // Carregar subcategorias de peÃ§as
+      const savedSubcategoriasPecas = getData('nonato-subcategorias-pecas')
+      if (savedSubcategoriasPecas) {
+        setSubcategoriasPecas(savedSubcategoriasPecas)
+      }
+
+      // Carregar agendamentos
+      const savedAgendamentos = getData('nonato-agendamentos')
+      if (savedAgendamentos) {
+        setAgendamentos(savedAgendamentos)
+      }
+
+      // Carregar grupos desmontados
+      const savedGruposDesmontados = getData('nonato-desmontados-grupos')
+      if (savedGruposDesmontados) {
+        const grupos = savedGruposDesmontados
+        // MigraÃ§Ã£o: adicionar campos novos se nÃ£o existirem
+        const gruposMigrados = grupos.map((g: any) => ({
+          ...g,
+          numeroGrupo: g.numeroGrupo || g.nome || '',
+          familia: g.familia || '',
+          idFabricante: g.idFabricante || undefined,
+          imagem: g.imagem || undefined,
+          localizacao: g.localizacao || { rua: '', numeroEspaco: '', numeroGrupoPrateleira: '' }
+        }))
+        setGruposDesmontados(gruposMigrados)
+        if (gruposMigrados.length > 0 && (!gruposMigrados[0].numeroGrupo || !gruposMigrados[0].localizacao)) {
+          saveData('nonato-desmontados-grupos', gruposMigrados)
+        }
+      }
+
+      // Carregar peÃ§as desmontadas
+      const savedPecasDesmontadas = getData('nonato-desmontados-pecas')
+      if (savedPecasDesmontadas) {
+        const pecas = savedPecasDesmontadas
+        // MigraÃ§Ã£o: adicionar campos novos se nÃ£o existirem
+        const pecasMigradas = pecas.map((p: any) => ({
+          ...p,
+          numeroPeca: p.numeroPeca || p.nome || '',
+          familia: p.familia || '',
+          quantidade: p.quantidade || 1,
+          imagens: p.imagens || [],
+          statusFuncional: p.statusFuncional || 'nao-testado',
+          foiRecuperada: p.foiRecuperada || false,
+          foiTestada: p.foiTestada || false,
+          tecnicoTeste: p.tecnicoTeste || undefined,
+          descricaoTeste: p.descricaoTeste || undefined,
+          localizacao: p.localizacao || { rua: '', numeroEspaco: '', numeroGrupoPrateleira: '' }
+        }))
+        setPecasDesmontadas(pecasMigradas)
+        if (pecasMigradas.length > 0 && (!pecasMigradas[0].numeroPeca || !pecasMigradas[0].localizacao || !pecasMigradas[0].quantidade)) {
+          saveData('nonato-desmontados-pecas', pecasMigradas)
+        }
+      }
+
+      // Carregar configuraÃ§Ãµes de backup
+      const savedBackupMethod = getData('nonato-backup-method', false)
+      if (savedBackupMethod) {
+        setBackupMethod(savedBackupMethod as 'local' | 'server')
+      }
+
+      const savedBackupUrl = getData('nonato-backup-url', false)
+      if (savedBackupUrl) {
+        setBackupServerUrl(savedBackupUrl)
+      }
+
+      // Carregar configuraÃ§Ãµes de backup automÃ¡tico
+      const savedAutoBackupEnabled = getData('nonato-auto-backup-enabled', false)
+      if (savedAutoBackupEnabled) {
+        setAutoBackupEnabled(savedAutoBackupEnabled === 'true')
+      }
+
+      const savedAutoBackupInterval = getData('nonato-auto-backup-interval', false)
+      if (savedAutoBackupInterval) {
+        setAutoBackupInterval(parseInt(savedAutoBackupInterval, 10))
+      }
+
+      // Criar primeiro backup automÃ¡tico ao iniciar
+      createAutoBackup()
+
+      // Carregar botÃµes da sidebar
+      const savedButtons = getData('nonato-sidebar-buttons')
+    if (savedButtons) {
+      // getData jÃ¡ retorna o objeto parseado quando parseJson=true (padrÃ£o)
+      // Mas vamos garantir que seja um array
+      let buttons: SidebarButton[] = []
+      if (Array.isArray(savedButtons)) {
+        buttons = savedButtons
+      } else if (typeof savedButtons === 'string') {
+        try {
+          buttons = JSON.parse(savedButtons)
+        } catch (e) {
+          console.error('Erro ao fazer parse dos botÃµes:', e)
+          buttons = []
+        }
+      }
+
+      // Normalizar botÃµes padrÃ£o (evita action incorreta salva no localStorage)
+      buttons = (Array.isArray(buttons) ? buttons : []).map((b: SidebarButton) => {
+        if (b?.id === 'extras-default') return { ...b, action: 'open-extras', translationKey: 'extras' }
+        if (b?.id === 'gestores-default') return { ...b, action: 'open-gestores', translationKey: 'gestoresTitle' }
+        if (b?.id === 'equipamentos-default') return { ...b, action: 'open-equipamentos', translationKey: 'equipamentosTitle' }
+        if (b?.id === 'clientes-default') return { ...b, action: 'open-clientes', translationKey: 'clientesTitle' }
+        if (b?.id === 'fornecedores-default') return { ...b, action: 'open-fornecedores', translationKey: 'fornecedoresTitle' }
+        if (b?.id === 'relatorio-servico-default') return { ...b, action: 'open-relatorio-servico', translationKey: 'relatorioServicoTitle' }
+        if (b?.id === 'biblioteca-pecas-default') return { ...b, action: 'open-biblioteca-pecas', translationKey: 'bibliotecaPecasTitle' }
+        if (b?.id === 'agenda-default') return { ...b, action: 'open-agenda', translationKey: 'agendaTitle' }
+        if (b?.id === 'cadastro-servicos-default') return { ...b, action: 'open-cadastro-servicos', translationKey: 'cadastroServicosTitle' }
+        return b
+      })
+      // Garantir que sempre existe o botÃ£o EXTRAS
+      const hasExtras = buttons.some((b: SidebarButton) => b.id === 'extras-default')
+      const hasGestores = buttons.some((b: SidebarButton) => b.id === 'gestores-default')
+      const hasEquipamentos = buttons.some((b: SidebarButton) => b.id === 'equipamentos-default')
+      const hasClientes = buttons.some((b: SidebarButton) => b.id === 'clientes-default')
+      const hasFornecedores = buttons.some((b: SidebarButton) => b.id === 'fornecedores-default')
+      const hasRelatorioServico = buttons.some((b: SidebarButton) => b.id === 'relatorio-servico-default')
+      const hasBibliotecaPecas = buttons.some((b: SidebarButton) => b.id === 'biblioteca-pecas-default')
+      const hasAgenda = buttons.some((b: SidebarButton) => b.id === 'agenda-default')
+      const hasCadastroServicos = buttons.some((b: SidebarButton) => b.id === 'cadastro-servicos-default')
+      
+      if (!hasExtras) {
+        const defaultButton: SidebarButton = {
+          id: 'extras-default',
+          name: 'EXTRAS',
+          action: 'open-extras',
+          order: 0,
+          translationKey: 'extras'
+        }
+        buttons.unshift(defaultButton)
+      }
+      
+      if (!hasGestores) {
+        const gestoresButton: SidebarButton = {
+          id: 'gestores-default',
+          name: 'CADASTRO DE GESTORES TECNICOS INTERNOS E EXTERNOS',
+          action: 'open-gestores',
+          order: buttons.length,
+          translationKey: 'gestoresTitle'
+        }
+        buttons.push(gestoresButton)
+      }
+
+      if (!hasEquipamentos) {
+        const equipamentosButton: SidebarButton = {
+          id: 'equipamentos-default',
+          name: 'CADASTRO DE EQUIPAMENTOS NO ARMAZEM',
+          action: 'open-equipamentos',
+          order: buttons.length,
+          translationKey: 'equipamentosTitle'
+        }
+        buttons.push(equipamentosButton)
+      }
+
+      if (!hasClientes) {
+        const clientesButton: SidebarButton = {
+          id: 'clientes-default',
+          name: 'CADASTRO DE CLIENTES',
+          action: 'open-clientes',
+          order: buttons.length,
+          translationKey: 'clientesTitle'
+        }
+        buttons.push(clientesButton)
+      }
+
+      if (!hasFornecedores) {
+        const fornecedoresButton: SidebarButton = {
+          id: 'fornecedores-default',
+          name: 'FORNECEDORES',
+          action: 'open-fornecedores',
+          order: buttons.length,
+          translationKey: 'fornecedoresTitle'
+        }
+        buttons.push(fornecedoresButton)
+      }
+
+      if (!hasRelatorioServico) {
+        const relatorioServicoButton: SidebarButton = {
+          id: 'relatorio-servico-default',
+          name: 'RELATÃ“RIO DE SERVIÃ‡O',
+          action: 'open-relatorio-servico',
+          order: buttons.length,
+          translationKey: 'relatorioServicoTitle'
+        }
+        buttons.push(relatorioServicoButton)
+      }
+
+      if (!hasBibliotecaPecas) {
+        const bibliotecaPecasButton: SidebarButton = {
+          id: 'biblioteca-pecas-default',
+          name: 'BIBLIOTECA DE PEÃ‡AS',
+          action: 'open-biblioteca-pecas',
+          order: buttons.length,
+          translationKey: 'bibliotecaPecasTitle'
+        }
+        buttons.push(bibliotecaPecasButton)
+      }
+
+      if (!hasAgenda) {
+        const agendaButton: SidebarButton = {
+          id: 'agenda-default',
+          name: 'AGENDA',
+          action: 'open-agenda',
+          order: buttons.length,
+          translationKey: 'agendaTitle'
+        }
+        buttons.push(agendaButton)
+      }
+
+      if (!hasCadastroServicos) {
+        const cadastroServicosButton: SidebarButton = {
+          id: 'cadastro-servicos-default',
+          name: 'CADASTRO DE SERVIÃ‡OS',
+          action: 'open-cadastro-servicos',
+          order: buttons.length,
+          translationKey: 'cadastroServicosTitle'
+        }
+        buttons.push(cadastroServicosButton)
+      }
+
+      // Salvar os botÃµes atualizados
+      if (buttons) {
+        saveData('nonato-sidebar-buttons', buttons)
+        setSidebarButtons(buttons)
+      }
+      
+      // Remover botÃ£o "CADASTRO DE VACAS" se existir
+      const filteredButtons = buttons.filter((btn: SidebarButton) => {
+        const nameUpper = btn.name.toUpperCase()
+        return !nameUpper.includes('VACA')
+      })
+      
+      // Garantir novamente que os botÃµes padrÃ£o estÃ£o presentes apÃ³s filtrar
+      const hasExtrasAfter = filteredButtons.some((b: SidebarButton) => b.id === 'extras-default')
+      const hasGestoresAfter = filteredButtons.some((b: SidebarButton) => b.id === 'gestores-default')
+      const hasEquipamentosAfter = filteredButtons.some((b: SidebarButton) => b.id === 'equipamentos-default')
+      const hasClientesAfter = filteredButtons.some((b: SidebarButton) => b.id === 'clientes-default')
+      const hasRelatorioServicoAfter = filteredButtons.some((b: SidebarButton) => b.id === 'relatorio-servico-default')
+      const hasBibliotecaPecasAfter = filteredButtons.some((b: SidebarButton) => b.id === 'biblioteca-pecas-default')
+      const hasAgendaAfter = filteredButtons.some((b: SidebarButton) => b.id === 'agenda-default')
+      
+      if (!hasExtrasAfter) {
+        filteredButtons.unshift({
+          id: 'extras-default',
+          name: 'EXTRAS',
+          action: 'open-extras',
+          order: 0,
+          translationKey: 'extras'
+        })
+      }
+      if (!hasGestoresAfter) {
+        filteredButtons.push({
+          id: 'gestores-default',
+          name: 'CADASTRO DE GESTORES TECNICOS INTERNOS E EXTERNOS',
+          action: 'open-gestores',
+          order: filteredButtons.length,
+          translationKey: 'gestoresTitle'
+        })
+      }
+      if (!hasEquipamentosAfter) {
+        filteredButtons.push({
+          id: 'equipamentos-default',
+          name: 'CADASTRO DE EQUIPAMENTOS NO ARMAZEM',
+          action: 'open-equipamentos',
+          order: filteredButtons.length,
+          translationKey: 'equipamentosTitle'
+        })
+      }
+      if (!hasClientesAfter) {
+        filteredButtons.push({
+          id: 'clientes-default',
+          name: 'CADASTRO DE CLIENTES',
+          action: 'open-clientes',
+          order: filteredButtons.length,
+          translationKey: 'clientesTitle'
+        })
+      }
+      if (!hasRelatorioServicoAfter) {
+        filteredButtons.push({
+          id: 'relatorio-servico-default',
+          name: 'RELATÃ“RIO DE SERVIÃ‡O',
+          action: 'open-relatorio-servico',
+          order: filteredButtons.length,
+          translationKey: 'relatorioServicoTitle'
+        })
+      }
+      if (!hasBibliotecaPecasAfter) {
+        filteredButtons.push({
+          id: 'biblioteca-pecas-default',
+          name: 'BIBLIOTECA DE PEÃ‡AS',
+          action: 'open-biblioteca-pecas',
+          order: filteredButtons.length,
+          translationKey: 'bibliotecaPecasTitle'
+        })
+      }
+      if (!hasAgendaAfter) {
+        filteredButtons.push({
+          id: 'agenda-default',
+          name: 'AGENDA',
+          action: 'open-agenda',
+          order: filteredButtons.length,
+          translationKey: 'agendaTitle'
+        })
+      }
+
+      const hasDesmontadosAfter = filteredButtons.some((b: SidebarButton) => b.id === 'desmontados-default')
+      if (!hasDesmontadosAfter) {
+        filteredButtons.push({
+          id: 'desmontados-default',
+          name: 'CADASTRO E BIBLIOTECA DE GRUPOS E PEÃ‡AS DE EQUIPAMENTOS DESMONTADOS',
+          action: 'open-desmontados',
+          order: filteredButtons.length,
+          translationKey: 'desmontadosTitle'
+        })
+      }
+      
+      const hasCadastroServicosAfter = filteredButtons.some((b: SidebarButton) => b.id === 'cadastro-servicos-default')
+      if (!hasCadastroServicosAfter) {
+        filteredButtons.push({
+          id: 'cadastro-servicos-default',
+          name: 'CADASTRO DE SERVIÃ‡OS',
+          action: 'open-cadastro-servicos',
+          order: filteredButtons.length,
+          translationKey: 'cadastroServicosTitle'
+        })
+      }
+      
+      // Ordenar por ordem
+      const sortedButtons = filteredButtons.sort((a: SidebarButton, b: SidebarButton) => a.order - b.order)
+      
+      // Reordenar para garantir ordem sequencial
+      const reordered = sortedButtons.map((btn: SidebarButton, idx: number) => ({ ...btn, order: idx }))
+      setSidebarButtons(reordered)
+      saveData('nonato-sidebar-buttons', reordered)
+    } else {
+      // BotÃµes padrÃ£o
+      const defaultButtons: SidebarButton[] = [
+        {
+          id: 'extras-default',
+          name: 'EXTRAS',
+          action: 'open-extras',
+          order: 0,
+          translationKey: 'extras'
+        },
+        {
+          id: 'gestores-default',
+          name: 'CADASTRO DE GESTORES TECNICOS INTERNOS E EXTERNOS',
+          action: 'open-gestores',
+          order: 1,
+          translationKey: 'gestoresTitle'
+        },
+        {
+          id: 'equipamentos-default',
+          name: 'CADASTRO DE EQUIPAMENTOS NO ARMAZEM',
+          action: 'open-equipamentos',
+          order: 2,
+          translationKey: 'equipamentosTitle'
+        },
+        {
+          id: 'clientes-default',
+          name: 'CADASTRO DE CLIENTES',
+          action: 'open-clientes',
+          order: 3,
+          translationKey: 'clientesTitle'
+        },
+        {
+          id: 'fornecedores-default',
+          name: 'FORNECEDORES',
+          action: 'open-fornecedores',
+          order: 4,
+          translationKey: 'fornecedoresTitle'
+        },
+        {
+          id: 'relatorio-servico-default',
+          name: 'RELATÃ“RIO DE SERVIÃ‡O',
+          action: 'open-relatorio-servico',
+          order: 5,
+          translationKey: 'relatorioServicoTitle'
+        },
+        {
+          id: 'biblioteca-pecas-default',
+          name: 'BIBLIOTECA DE PEÃ‡AS',
+          action: 'open-biblioteca-pecas',
+          order: 6,
+          translationKey: 'bibliotecaPecasTitle'
+        },
+        {
+          id: 'agenda-default',
+          name: 'AGENDA',
+          action: 'op

@@ -1,0 +1,51 @@
+---
+description: Manter suporte aos 6 idiomas (PT-BR, ES, FR, IT, DE, EN) em todo o projeto
+alwaysApply: true
+---
+
+# Regra: 6 Idiomas Obrigatórios
+
+O projeto **Gestão Técnica Nonato Service** deve manter suporte completo a **6 idiomas** em toda a interface, PDFs e mensagens.
+
+## Idiomas obrigatórios
+
+| Chave no código | Idioma        |
+|-----------------|---------------|
+| `pt-BR`         | Português (BR)|
+| `es`            | Espanhol      |
+| `fr`            | Francês       |
+| `it`            | Italiano      |
+| `de`            | Alemão        |
+| `en`            | Inglês        |
+
+## Onde aplicar
+
+- **Traduções de UI:** `app/translations.ts` — toda chave deve existir nas 6 línguas.
+- **Novos textos:** Ao adicionar botões, labels, títulos, mensagens ou placeholders, adicionar a chave em **todas** as 6 seções do objeto `translations`.
+- **PDFs e APIs:** Textos em rotas de PDF (`app/api/pdf/**`) e respostas que o usuário vê devem usar o parâmetro `lang` e ter suporte aos 6 idiomas.
+
+## Ao implementar ou alterar
+
+1. **Nunca** deixar texto fixo em um único idioma na UI; usar sempre uma chave de `translations`.
+2. **Sempre** preencher as 6 traduções para cada chave nova em `app/translations.ts`.
+3. Em PDFs ou documentos gerados, garantir que todos os textos tenham versão para os 6 idiomas (por exemplo via `?lang=pt-BR`, `?lang=es`, etc.).
+
+## Exemplo em translations.ts
+
+```typescript
+// ✅ CORRETO: chave presente nos 6 idiomas
+'pt-BR': { novoLabel: 'Novo texto' },
+'es':    { novoLabel: 'Nuevo texto' },
+'fr':    { novoLabel: 'Nouveau texte' },
+'it':    { novoLabel: 'Nuovo testo' },
+'de':    { novoLabel: 'Neuer Text' },
+'en':    { novoLabel: 'New text' },
+```
+
+```typescript
+// ❌ EVITAR: chave só em um idioma
+'pt-BR': { novoLabel: 'Novo texto' },
+// falta es, fr, it, de, en
+```
+
+Resumindo: **qualquer texto visível ao usuário deve existir nos 6 idiomas.**

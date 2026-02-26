@@ -1,0 +1,919 @@
+﻿ira.trim()) {
+      alert(t.fillAllFields || 'Preencha todos os campos obrigatÃ³rios')
+      return
+    }
+    const grupo = gruposDesmontados.find(g => g.id === pecaDesmontadaForm.grupoId)
+    const novo: PecaDesmontada = {
+      id: editingPecaDesmontada?.id || Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      numeroPeca: pecaDesmontadaForm.numeroPeca.trim(),
+      familia: pecaDesmontadaForm.familia.trim(),
+      grupoId: pecaDesmontadaForm.grupoId,
+      grupoNome: grupo?.nome || grupo?.numeroGrupo || '',
+      nome: pecaDesmontadaForm.numeroPeca.trim(), // Mantido para compatibilidade
+      codigo: pecaDesmontadaForm.codigo.trim() || undefined,
+      marca: pecaDesmontadaForm.marca.trim() || undefined,
+      modelo: pecaDesmontadaForm.modelo.trim() || undefined,
+      tipoEquipamento: pecaDesmontadaForm.tipoEquipamento.trim() || undefined,
+      observacoes: pecaDesmontadaForm.observacoes.trim() || undefined,
+      quantidade: pecaDesmontadaForm.quantidade || 1,
+      imagens: pecaDesmontadaForm.imagens && pecaDesmontadaForm.imagens.length > 0 ? pecaDesmontadaForm.imagens : undefined,
+      statusFuncional: pecaDesmontadaForm.statusFuncional || 'nao-testado',
+      foiRecuperada: pecaDesmontadaForm.foiRecuperada || false,
+      foiTestada: pecaDesmontadaForm.foiTestada || false,
+      tecnicoTeste: pecaDesmontadaForm.tecnicoTeste.trim() || undefined,
+      descricaoTeste: pecaDesmontadaForm.descricaoTeste.trim() || undefined,
+      localizacao: {
+        rua: pecaDesmontadaForm.localizacao.rua.trim(),
+        numeroEspaco: pecaDesmontadaForm.localizacao.numeroEspaco.trim(),
+        numeroGrupoPrateleira: pecaDesmontadaForm.localizacao.numeroGrupoPrateleira.trim()
+      },
+      dataCriacao: editingPecaDesmontada?.dataCriacao || new Date().toISOString()
+    }
+    const next = editingPecaDesmontada
+      ? pecasDesmontadas.map(p => p.id === editingPecaDesmontada.id ? novo : p)
+      : [...pecasDesmontadas, novo]
+    savePecasDesmontadas(next)
+    setShowPecaDesmontadaForm(false)
+    setEditingPecaDesmontada(null)
+    setPecaDesmontadaForm({ numeroPeca: '', familia: '', grupoId: '', nome: '', codigo: '', marca: '', modelo: '', tipoEquipamento: '', observacoes: '', quantidade: 1, imagens: [], statusFuncional: 'nao-testado', foiRecuperada: false, foiTestada: false, tecnicoTeste: '', descricaoTeste: '', localizacao: { rua: '', numeroEspaco: '', numeroGrupoPrateleira: '' } })
+  }
+
+  const handleEditPecaDesmontada = (p: PecaDesmontada) => {
+    setEditingPecaDesmontada(p)
+    setPecaDesmontadaForm({
+      numeroPeca: p.numeroPeca || p.nome || '',
+      familia: p.familia || '',
+      grupoId: p.grupoId,
+      nome: p.nome || '',
+      codigo: p.codigo || '',
+      marca: p.marca || '',
+      modelo: p.modelo || '',
+      tipoEquipamento: p.tipoEquipamento || '',
+      observacoes: p.observacoes || '',
+      quantidade: p.quantidade || 1,
+      imagens: p.imagens || [],
+      statusFuncional: p.statusFuncional || 'nao-testado',
+      foiRecuperada: p.foiRecuperada || false,
+      foiTestada: p.foiTestada || false,
+      tecnicoTeste: p.tecnicoTeste || '',
+      descricaoTeste: p.descricaoTeste || '',
+      localizacao: p.localizacao || { rua: '', numeroEspaco: '', numeroGrupoPrateleira: '' }
+    })
+    setShowPecaDesmontadaForm(true)
+    setAbaDesmontados('pecas')
+  }
+
+  const handleDeletePecaDesmontada = (id: string) => {
+    if (!window.confirm((t as any).confirmDeletePeca || 'Tem certeza que deseja excluir esta peÃ§a?')) return
+    const next = pecasDesmontadas.filter(p => p.id !== id)
+    savePecasDesmontadas(next)
+  }
+
+  const handlePecaDesmontadaImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files) return
+    
+    Array.from(files).forEach(file => {
+      if (!file.type.startsWith('image/')) {
+        alert(t.selectImage || 'Selecione apenas imagens')
+        return
+      }
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const result = event.target?.result as string
+        setPecaDesmontadaForm({
+          ...pecaDesmontadaForm,
+          imagens: [...(pecaDesmontadaForm.imagens || []), result]
+        })
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const handleRemovePecaDesmontadaImage = (index: number) => {
+    const novasImagens = [...(pecaDesmontadaForm.imagens || [])]
+    novasImagens.splice(index, 1)
+    setPecaDesmontadaForm({
+      ...pecaDesmontadaForm,
+      imagens: novasImagens
+    })
+  }
+
+  // Garantir que t estÃ¡ definido de forma segura
+  const safeT = useMemo(() => {
+    try {
+      if (t && typeof t === 'object') {
+        return t
+      }
+      if (translations && translations['pt-BR']) {
+        return translations['pt-BR']
+      }
+      return { title: 'GestÃ£o TÃ©cnica da Nonato Service', welcome: 'Bem-vindo ao Dashboard' }
+    } catch (error) {
+      console.error('Erro ao carregar traduÃ§Ãµes:', error)
+      return { title: 'GestÃ£o TÃ©cnica da Nonato Service', welcome: 'Bem-vindo ao Dashboard' }
+    }
+  }, [t])
+
+  // FunÃ§Ã£o para lidar com cliques nos botÃµes da sidebar
+  const handleButtonClick = (action: string) => {
+    if (action === 'open-extras') {
+      setShowModal(true)
+    } else if (action === 'open-gestores') {
+      setShowGestoresModal(true)
+    } else if (action === 'open-equipamentos') {
+      setShowEquipamentosModal(true)
+    } else if (action === 'open-clientes') {
+      setShowClientesModal(true)
+    } else if (action === 'open-fornecedores') {
+      setShowFornecedoresModal(true)
+    } else if (action === 'open-relatorio-servico') {
+      setShowRelatoriosModal(true)
+    } else if (action === 'open-biblioteca-pecas') {
+      setShowBibliotecaPecasModal(true)
+    } else if (action === 'open-agenda') {
+      setShowAgendaModal(true)
+    } else if (action === 'open-desmontados') {
+      setShowDesmontadosModal(true)
+    } else if (action === 'open-cadastro-servicos') {
+      setShowCadastroServicosModal(true)
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#000', color: '#fff' }}>
+      {/* Sidebar */}
+      <div className="sidebar" style={{ width: '280px', minHeight: '100vh', padding: '30px 20px', display: 'flex', flexDirection: 'column', gap: '15px', borderRight: '1px solid rgba(0, 255, 0, 0.1)' }}>
+        {/* Logo */}
+        {logoUrl && (
+          <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+            {logoType === 'video' ? (
+              <video src={logoUrl} autoPlay loop muted style={{ maxWidth: '100%', maxHeight: '100px' }} />
+            ) : (
+              <img src={logoUrl} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100px' }} />
+            )}
+          </div>
+        )}
+
+        {/* Seletor de Idioma */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px' }}>{safeT?.selectLanguage || 'Idioma'}</label>
+          <select 
+            value={selectedLanguage} 
+            onChange={(e) => setSelectedLanguage(e.target.value)}
+            style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+          >
+            {languages.map(lang => (
+              <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* BotÃµes da Sidebar */}
+        {sidebarButtons
+          .sort((a, b) => a.order - b.order)
+          .map((button) => (
+            <button
+              key={button.id}
+              className="btn-primary"
+              onClick={() => handleButtonClick(button.action)}
+              style={{ width: '100%', textAlign: 'left', padding: '12px', marginBottom: '5px' }}
+            >
+              {getButtonName(button)}
+            </button>
+          ))}
+      </div>
+
+      {/* Ãrea Principal */}
+      <div style={{ flex: 1, padding: '30px' }}>
+        <div className="header">
+          <h1>{safeT?.title || 'GestÃ£o TÃ©cnica da Nonato Service'}</h1>
+          <p>{safeT?.welcome || 'Bem-vindo ao Dashboard'}</p>
+          <p style={{ marginTop: '10px', opacity: 0.7 }}>{safeT?.welcomeText2 || 'Utilize o menu lateral para acessar as funcionalidades disponÃ­veis.'}</p>
+        </div>
+
+        {/* ConteÃºdo Principal */}
+        <div className="container" style={{ marginTop: '30px' }}>
+          <h2>{safeT?.inventarioArmazemTitle || 'InventÃ¡rio do ArmazÃ©m'}</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginTop: '20px' }}>
+            <div style={{ padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+              <h3 style={{ color: '#00ff00', marginBottom: '10px' }}>{safeT?.totalEquipamentosArmazem || 'Total no armazÃ©m'}</h3>
+              <p style={{ fontSize: '24px', fontWeight: 'bold' }}>{inventarioArmazem.totalAtivos}</p>
+            </div>
+            <div style={{ padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+              <h3 style={{ color: '#00ff00', marginBottom: '10px' }}>{safeT?.totalBaixados || 'Baixados'}</h3>
+              <p style={{ fontSize: '24px', fontWeight: 'bold' }}>{inventarioArmazem.totalBaixados}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal de Extras */}
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{safeT?.extras || 'EXTRAS'}</h2>
+            
+            <div style={{ marginBottom: '20px' }}>
+              <button className="btn-primary" onClick={handleAddUser} style={{ marginRight: '10px' }}>
+                {safeT?.addUser || 'Adicionar UsuÃ¡rio'}
+              </button>
+              <button className="btn-primary" onClick={() => setShowButtonForm(true)} style={{ marginRight: '10px' }}>
+                {safeT?.addButton || 'Adicionar BotÃ£o'}
+              </button>
+              <label className="btn-primary" style={{ marginRight: '10px', display: 'inline-block', cursor: 'pointer' }}>
+                {safeT?.changeLogo || 'Alterar Logo'}
+                <input
+                  type="file"
+                  accept="image/*,video/mp4"
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
+                />
+              </label>
+            </div>
+
+            {/* GestÃ£o de UsuÃ¡rios */}
+            <div style={{ marginBottom: '30px' }}>
+              <h3>{safeT?.userManagement || 'GestÃ£o de UsuÃ¡rios'}</h3>
+              {users.length === 0 ? (
+                <p>{safeT?.noUsers || 'Nenhum usuÃ¡rio cadastrado'}</p>
+              ) : (
+                <div style={{ marginTop: '15px' }}>
+                  {users.map(user => (
+                    <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: '#1a1a1a', marginBottom: '10px', borderRadius: '4px' }}>
+                      <div>
+                        <strong>{user.name}</strong> - {user.email} ({user.role})
+                      </div>
+                      <div>
+                        <button className="btn-primary" onClick={() => handleEditUser(user)} style={{ marginRight: '5px', padding: '5px 10px' }}>
+                          {safeT?.edit || 'Editar'}
+                        </button>
+                        <button className="btn-danger" onClick={() => handleDeleteUser(user.id)} style={{ padding: '5px 10px' }}>
+                          {safeT?.delete || 'Excluir'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Organizador de BotÃµes */}
+            <div style={{ marginBottom: '30px' }}>
+              <h3>{safeT?.buttonOrganizer || 'Organizador de BotÃµes'}</h3>
+              <p style={{ marginBottom: '15px', fontSize: '14px', opacity: 0.7 }}>{safeT?.dragToReorder || 'Arraste os botÃµes para reorganizÃ¡-los'}</p>
+              {sidebarButtons
+                .sort((a, b) => a.order - b.order)
+                .map((button, index) => (
+                  <div 
+                    key={button.id}
+                    draggable
+                    onDragStart={() => handleDragStart(button.id)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, index)}
+                    onDragEnd={handleDragEnd}
+                    style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
+                      padding: '10px', 
+                      backgroundColor: dragOverIndex === index ? '#2a4a2a' : '#1a1a1a', 
+                      marginBottom: '10px', 
+                      borderRadius: '4px',
+                      cursor: 'move',
+                      border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)'
+                    }}
+                  >
+                    <span>{getButtonName(button)}</span>
+                    <div>
+                      <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ marginRight: '5px', padding: '5px 10px' }}>
+                        {safeT?.edit || 'Editar'}
+                      </button>
+                      <button className="btn-danger" onClick={() => handleDeleteButton(button.id)} style={{ padding: '5px 10px' }}>
+                        {safeT?.delete || 'Excluir'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* Backup e Restore */}
+            <div style={{ marginBottom: '30px' }}>
+              <h3>{safeT?.backupRestore || 'Backup e Restore'}</h3>
+              <button className="btn-primary" onClick={handleCreateBackup} style={{ marginRight: '10px' }}>
+                {safeT?.createBackup || 'Criar Backup'}
+              </button>
+            </div>
+
+            <button className="btn-primary" onClick={() => setShowModal(false)} style={{ width: '100%', marginTop: '20px' }}>
+              {safeT?.close || 'Fechar'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de FormulÃ¡rio de UsuÃ¡rio */}
+      {showUserForm && (
+        <div className="modal-overlay" onClick={() => { setShowUserForm(false); setEditingUser(null); setUserForm({ name: '', email: '', role: '' }); }}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{editingUser ? safeT?.editUser : safeT?.addUser}</h2>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.name || 'Nome'}</label>
+              <input
+                type="text"
+                value={userForm.name}
+                onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'}</label>
+              <input
+                type="email"
+                value={userForm.email}
+                onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.role || 'FunÃ§Ã£o'}</label>
+              <input
+                type="text"
+                value={userForm.role}
+                onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn-primary" onClick={handleSaveUser} style={{ flex: 1 }}>
+                {safeT?.save || 'Salvar'}
+              </button>
+              <button className="btn-primary" onClick={() => { setShowUserForm(false); setEditingUser(null); setUserForm({ name: '', email: '', role: '' }); }} style={{ flex: 1 }}>
+                {safeT?.cancel || 'Cancelar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de FormulÃ¡rio de BotÃ£o */}
+      {showButtonForm && (
+        <div className="modal-overlay" onClick={() => { setShowButtonForm(false); setEditingButton(null); setButtonForm({ name: '', action: '' }); }}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{editingButton ? safeT?.editButton : safeT?.addButton}</h2>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.buttonName || 'Nome do BotÃ£o'}</label>
+              <input
+                type="text"
+                value={buttonForm.name}
+                onChange={(e) => setButtonForm({ ...buttonForm, name: e.target.value })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.buttonAction || 'AÃ§Ã£o do BotÃ£o'}</label>
+              <input
+                type="text"
+                value={buttonForm.action}
+                onChange={(e) => setButtonForm({ ...buttonForm, action: e.target.value })}
+                placeholder="ex: open-gestores"
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn-primary" onClick={handleSaveButton} style={{ flex: 1 }}>
+                {safeT?.save || 'Salvar'}
+              </button>
+              <button className="btn-primary" onClick={() => { setShowButtonForm(false); setEditingButton(null); setButtonForm({ name: '', action: '' }); }} style={{ flex: 1 }}>
+                {safeT?.cancel || 'Cancelar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Gestores */}
+      {showGestoresModal && (
+        <div className="modal-overlay" onClick={() => setShowGestoresModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '900px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h2>{safeT?.gestoresTitle || 'Cadastro de Gestores e TÃ©cnicos'}</h2>
+            
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
+              <button 
+                className={gestoresActiveTab === 'gestores' ? 'btn-primary' : 'btn-primary'}
+                onClick={() => setGestoresActiveTab('gestores')}
+                style={{ backgroundColor: gestoresActiveTab === 'gestores' ? 'rgba(0, 255, 0, 0.2)' : '#2a2a2a' }}
+              >
+                {safeT?.gestoresTab || 'Gestores'}
+              </button>
+              <button 
+                className={gestoresActiveTab === 'tecnicos' ? 'btn-primary' : 'btn-primary'}
+                onClick={() => setGestoresActiveTab('tecnicos')}
+                style={{ backgroundColor: gestoresActiveTab === 'tecnicos' ? 'rgba(0, 255, 0, 0.2)' : '#2a2a2a' }}
+              >
+                {safeT?.tecnicosTab || 'TÃ©cnicos'}
+              </button>
+            </div>
+
+            {gestoresActiveTab === 'gestores' ? (
+              <div>
+                <button className="btn-primary" onClick={handleAddGestor} style={{ marginBottom: '20px' }}>
+                  {safeT?.addGestor || 'Adicionar Gestor'}
+                </button>
+                {gestores.length === 0 ? (
+                  <p>{safeT?.noGestores || 'Nenhum gestor cadastrado'}</p>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
+                    {gestores.map(gestor => (
+                      <div key={gestor.id} style={{ padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                        {gestor.photo && (
+                          <img src={gestor.photo} alt={gestor.name} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
+                        )}
+                        <h3 style={{ marginBottom: '10px' }}>{gestor.name}</h3>
+                        <p style={{ fontSize: '14px', marginBottom: '5px' }}>{gestor.email}</p>
+                        <p style={{ fontSize: '14px', marginBottom: '5px' }}>{gestor.phone}</p>
+                        <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '10px' }}>{gestor.type === 'internal' ? safeT?.internal : safeT?.external}</p>
+                        <div style={{ display: 'flex', gap: '5px' }}>
+                          <button className="btn-primary" onClick={() => handleEditGestor(gestor)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
+                            {safeT?.edit || 'Editar'}
+                          </button>
+                          <button className="btn-danger" onClick={() => handleDeleteGestor(gestor.id)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
+                            {safeT?.delete || 'Excluir'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div>
+                <button className="btn-primary" onClick={handleAddTecnico} style={{ marginBottom: '20px' }}>
+                  {safeT?.addTecnico || 'Adicionar TÃ©cnico'}
+                </button>
+                {tecnicos.length === 0 ? (
+                  <p>{safeT?.noTecnicos || 'Nenhum tÃ©cnico cadastrado'}</p>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
+                    {tecnicos.map(tecnico => (
+                      <div key={tecnico.id} style={{ padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                        {tecnico.photo && (
+                          <img src={tecnico.photo} alt={tecnico.name} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
+                        )}
+                        <h3 style={{ marginBottom: '10px' }}>{tecnico.name}</h3>
+                        <p style={{ fontSize: '14px', marginBottom: '5px' }}>{tecnico.email}</p>
+                        <p style={{ fontSize: '14px', marginBottom: '5px' }}>{tecnico.phone}</p>
+                        <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '10px' }}>{tecnico.type === 'internal' ? safeT?.internal : safeT?.external}</p>
+                        <div style={{ display: 'flex', gap: '5px' }}>
+                          <button className="btn-primary" onClick={() => handleEditTecnico(tecnico)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
+                            {safeT?.edit || 'Editar'}
+                          </button>
+                          <button className="btn-danger" onClick={() => handleDeleteTecnico(tecnico.id)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
+                            {safeT?.delete || 'Excluir'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <button className="btn-primary" onClick={() => setShowGestoresModal(false)} style={{ width: '100%', marginTop: '20px' }}>
+              {safeT?.close || 'Fechar'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de FormulÃ¡rio de Gestor */}
+      {showGestorForm && (
+        <div className="modal-overlay" onClick={() => { setShowGestorForm(false); setEditingGestor(null); setGestorForm({ name: '', email: '', phone: '', address: '', type: 'internal', photo: '' }); }}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{editingGestor ? safeT?.editGestor : safeT?.addGestor}</h2>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.name || 'Nome'}</label>
+              <input
+                type="text"
+                value={gestorForm.name}
+                onChange={(e) => setGestorForm({ ...gestorForm, name: e.target.value })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'}</label>
+              <input
+                type="email"
+                value={gestorForm.email}
+                onChange={(e) => setGestorForm({ ...gestorForm, email: e.target.value })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.phone || 'Telefone'}</label>
+              <input
+                type="text"
+                value={gestorForm.phone}
+                onChange={(e) => setGestorForm({ ...gestorForm, phone: e.target.value })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.address || 'EndereÃ§o'}</label>
+              <input
+                type="text"
+                value={gestorForm.address}
+                onChange={(e) => setGestorForm({ ...gestorForm, address: e.target.value })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.type || 'Tipo'}</label>
+              <select
+                value={gestorForm.type}
+                onChange={(e) => setGestorForm({ ...gestorForm, type: e.target.value as 'internal' | 'external' })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              >
+                <option value="internal">{safeT?.internal || 'Interno'}</option>
+                <option value="external">{safeT?.external || 'Externo'}</option>
+              </select>
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.photo || 'Foto'}</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleGestorPhotoChange}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+              {gestorForm.photo && (
+                <div style={{ marginTop: '10px' }}>
+                  <img src={gestorForm.photo} alt="Preview" style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '4px' }} />
+                  <button className="btn-danger" onClick={handleRemoveGestorPhoto} style={{ marginLeft: '10px', padding: '5px 10px' }}>
+                    {safeT?.removeEquipamentoPhoto || 'Remover Foto'}
+                  </button>
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn-primary" onClick={handleSaveGestor} style={{ flex: 1 }}>
+                {safeT?.save || 'Salvar'}
+              </button>
+              <button className="btn-primary" onClick={() => { setShowGestorForm(false); setEditingGestor(null); setGestorForm({ name: '', email: '', phone: '', address: '', type: 'internal', photo: '' }); }} style={{ flex: 1 }}>
+                {safeT?.cancel || 'Cancelar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de FormulÃ¡rio de TÃ©cnico */}
+      {showTecnicoForm && (
+        <div className="modal-overlay" onClick={() => { setShowTecnicoForm(false); setEditingTecnico(null); setTecnicoForm({ name: '', email: '', phone: '', address: '', type: 'internal', photo: '' }); }}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{editingTecnico ? safeT?.editTecnico : safeT?.addTecnico}</h2>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.name || 'Nome'}</label>
+              <input
+                type="text"
+                value={tecnicoForm.name}
+                onChange={(e) => setTecnicoForm({ ...tecnicoForm, name: e.target.value })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'}</label>
+              <input
+                type="email"
+                value={tecnicoForm.email}
+                onChange={(e) => setTecnicoForm({ ...tecnicoForm, email: e.target.value })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.phone || 'Telefone'}</label>
+              <input
+                type="text"
+                value={tecnicoForm.phone}
+                onChange={(e) => setTecnicoForm({ ...tecnicoForm, phone: e.target.value })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.address || 'EndereÃ§o'}</label>
+              <input
+                type="text"
+                value={tecnicoForm.address}
+                onChange={(e) => setTecnicoForm({ ...tecnicoForm, address: e.target.value })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.type || 'Tipo'}</label>
+              <select
+                value={tecnicoForm.type}
+                onChange={(e) => setTecnicoForm({ ...tecnicoForm, type: e.target.value as 'internal' | 'external' })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              >
+                <option value="internal">{safeT?.internal || 'Interno'}</option>
+                <option value="external">{safeT?.external || 'Externo'}</option>
+              </select>
+            </div>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.photo || 'Foto'}</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleTecnicoPhotoChange}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+              {tecnicoForm.photo && (
+                <div style={{ marginTop: '10px' }}>
+                  <img src={tecnicoForm.photo} alt="Preview" style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '4px' }} />
+                  <button className="btn-danger" onClick={handleRemoveTecnicoPhoto} style={{ marginLeft: '10px', padding: '5px 10px' }}>
+                    {safeT?.removeEquipamentoPhoto || 'Remover Foto'}
+                  </button>
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn-primary" onClick={handleSaveTecnico} style={{ flex: 1 }}>
+                {safeT?.save || 'Salvar'}
+              </button>
+              <button className="btn-primary" onClick={() => { setShowTecnicoForm(false); setEditingTecnico(null); setTecnicoForm({ name: '', email: '', phone: '', address: '', type: 'internal', photo: '' }); }} style={{ flex: 1 }}>
+                {safeT?.cancel || 'Cancelar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Equipamentos */}
+      {showEquipamentosModal && (
+        <div className="modal-overlay" onClick={() => setShowEquipamentosModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1000px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h2>{safeT?.equipamentosTitle || 'Cadastro de Equipamentos no ArmazÃ©m'}</h2>
+            
+            <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
+              <button className="btn-primary" onClick={handleAddEquipamento}>
+                {safeT?.addEquipamento || 'Adicionar Equipamento'}
+              </button>
+              <input
+                type="text"
+                placeholder={safeT?.searchEquipamento || 'Buscar Equipamento por ID'}
+                value={searchEquipamentoId}
+                onChange={(e) => setSearchEquipamentoId(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    const found = equipamentos.find(eq => eq.id === searchEquipamentoId.trim())
+                    setSearchedEquipamento(found || null)
+                  }
+                }}
+                style={{ flex: 1, padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+
+            {searchedEquipamento ? (
+              <div style={{ padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', marginBottom: '20px' }}>
+                <h3>{searchedEquipamento.tipoEquipamento} - {searchedEquipamento.modelo}</h3>
+                <p><strong>{safeT?.marca || 'Marca'}:</strong> {searchedEquipamento.marca}</p>
+                <p><strong>{safeT?.numeroSerie || 'NÃºmero de SÃ©rie'}:</strong> {searchedEquipamento.numeroSerie}</p>
+                <button className="btn-primary" onClick={() => setSearchedEquipamento(null)} style={{ marginTop: '10px' }}>
+                  {safeT?.close || 'Fechar'}
+                </button>
+              </div>
+            ) : (
+              <>
+                {equipamentos.length === 0 ? (
+                  <p>{safeT?.noEquipamentos || 'Nenhum equipamento cadastrado'}</p>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
+                    {equipamentos.map(equipamento => (
+                      <div key={equipamento.id} style={{ padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                        {equipamento.photo && (
+                          <img src={equipamento.photo} alt={equipamento.modelo} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
+                        )}
+                        <h3 style={{ marginBottom: '10px' }}>{equipamento.tipoEquipamento}</h3>
+                        <p style={{ fontSize: '14px', marginBottom: '5px' }}><strong>{safeT?.modelo || 'Modelo'}:</strong> {equipamento.modelo}</p>
+                        <p style={{ fontSize: '14px', marginBottom: '5px' }}><strong>{safeT?.marca || 'Marca'}:</strong> {equipamento.marca}</p>
+                        <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '10px' }}>ID: {equipamento.id}</p>
+                        <div style={{ display: 'flex', gap: '5px' }}>
+                          <button className="btn-primary" onClick={() => { 
+                            setEditingEquipamento(equipamento); 
+                            setEquipamentoForm({ 
+                              id: equipamento.id || '',
+                              tipoEquipamento: equipamento.tipoEquipamento || '',
+                              modelo: equipamento.modelo || '',
+                              marca: equipamento.marca || '',
+                              numeroSerie: equipamento.numeroSerie || '',
+                              familia: equipamento.familia || '',
+                              grupo: equipamento.grupo || '',
+                              photo: equipamento.photo || '',
+                              coverPhoto: equipamento.coverPhoto || '',
+                              photoLibrary: equipamento.photoLibrary || [],
+                              manualPdf: equipamento.manualPdf || '',
+                              itemsIncluded: equipamento.itemsIncluded || []
+                            }); 
+                            setShowEquipamentoForm(true); 
+                          }} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
+                            {safeT?.edit || 'Editar'}
+                          </button>
+                          <button className="btn-danger" onClick={() => handleDeleteEquipamento(equipamento.id)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
+                            {safeT?.delete || 'Excluir'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            <button className="btn-primary" onClick={() => setShowEquipamentosModal(false)} style={{ width: '100%', marginTop: '20px' }}>
+              {safeT?.close || 'Fechar'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de FormulÃ¡rio de Equipamento */}
+      {showEquipamentoForm && (
+        <div className="modal-overlay" onClick={() => { setShowEquipamentoForm(false); setEditingEquipamento(null); }}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h2>{editingEquipamento ? safeT?.editEquipamento : safeT?.addEquipamento}</h2>
+            
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.equipamentoId || 'ID do Equipamento'}</label>
+              <input
+                type="text"
+                value={equipamentoForm.id}
+                onChange={(e) => setEquipamentoForm({ ...equipamentoForm, id: e.target.value })}
+                disabled={!!editingEquipamento}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.tipoEquipamento || 'Tipo de Equipamento'}</label>
+              <input
+                type="text"
+                value={equipamentoForm.tipoEquipamento}
+                onChange={(e) => setEquipamentoForm({ ...equipamentoForm, tipoEquipamento: e.target.value })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.modelo || 'Modelo'}</label>
+              <input
+                type="text"
+                value={equipamentoForm.modelo}
+                onChange={(e) => setEquipamentoForm({ ...equipamentoForm, modelo: e.target.value })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.marca || 'Marca'}</label>
+              <input
+                type="text"
+                value={equipamentoForm.marca}
+                onChange={(e) => setEquipamentoForm({ ...equipamentoForm, marca: e.target.value })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.numeroSerie || 'NÃºmero de SÃ©rie'}</label>
+              <input
+                type="text"
+                value={equipamentoForm.numeroSerie}
+                onChange={(e) => setEquipamentoForm({ ...equipamentoForm, numeroSerie: e.target.value })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.familia || 'FamÃ­lia'}</label>
+              <input
+                type="text"
+                value={equipamentoForm.familia}
+                onChange={(e) => setEquipamentoForm({ ...equipamentoForm, familia: e.target.value })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.grupo || 'Grupo'}</label>
+              <input
+                type="text"
+                value={equipamentoForm.grupo}
+                onChange={(e) => setEquipamentoForm({ ...equipamentoForm, grupo: e.target.value })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.imagemEquipamento || 'Imagem do Equipamento'}</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleEquipamentoPhotoChange}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              />
+              {equipamentoForm.photo && (
+                <div style={{ marginTop: '10px' }}>
+                  <img src={equipamentoForm.photo} alt="Preview" style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '4px' }} />
+                  <button className="btn-danger" onClick={handleRemoveEquipamentoPhoto} style={{ marginLeft: '10px', padding: '5px 10px' }}>
+                    {safeT?.removeEquipamentoPhoto || 'Remover Foto'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn-primary" onClick={handleSaveEquipamento} style={{ flex: 1 }}>
+                {safeT?.save || 'Salvar'}
+              </button>
+              <button className="btn-primary" onClick={() => { setShowEquipamentoForm(false); setEditingEquipamento(null); }} style={{ flex: 1 }}>
+                {safeT?.cancel || 'Cancelar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Placeholder para outros modais - serÃ£o adicionados conforme necessÃ¡rio */}
+      {showClientesModal && (
+        <div className="modal-overlay" onClick={() => setShowClientesModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{safeT?.clientesTitle || 'Cadastro de Clientes'}</h2>
+            <p style={{ marginBottom: '20px' }}>Modal de Clientes - Em desenvolvimento</p>
+            <button className="btn-primary" onClick={() => setShowClientesModal(false)}>{safeT?.close || 'Fechar'}</button>
+          </div>
+        </div>
+      )}
+
+      {showFornecedoresModal && (
+        <div className="modal-overlay" onClick={() => setShowFornecedoresModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{safeT?.fornecedoresTitle || 'Cadastro de Fornecedores'}</h2>
+            <p style={{ marginBottom: '20px' }}>Modal de Fornecedores - Em desenvolvimento</p>
+            <button className="btn-primary" onClick={() => setShowFornecedoresModal(false)}>{safeT?.close || 'Fechar'}</button>
+          </div>
+        </div>
+      )}
+
+      {showRelatoriosModal && (
+        <div className="modal-overlay" onClick={() => setShowRelatoriosModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{safeT?.relatorioServicoTitle || 'RelatÃ³rio de ServiÃ§o'}</h2>
+            <p style={{ marginBottom: '20px' }}>Modal de RelatÃ³rios - Em desenvolvimento</p>
+            <button className="btn-primary" onClick={() => setShowRelatoriosModal(false)}>{safeT?.close || 'Fechar'}</button>
+          </div>
+        </div>
+      )}
+
+      {showBibliotecaPecasModal && (
+        <div className="modal-overlay" onClick={() => setShowBibliotecaPecasModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{safeT?.bibliotecaPecasTitle || 'Biblioteca de PeÃ§as'}</h2>
+            <p style={{ marginBottom: '20px' }}>Modal de Biblioteca de PeÃ§as - Em desenvolvimento</p>
+            <button className="btn-primary" onClick={() => setShowBibliotecaPecasModal(false)}>{safeT?.close || 'Fechar'}</button>
+          </div>
+        </div>
+      )}
+
+      {showAgendaModal && (
+        <div className="modal-overlay" onClick={() => setShowAgendaModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{safeT?.agendaTitle || 'Agenda'}</h2>
+            <p style={{ marginBottom: '20px' }}>Modal de Agenda - Em desenvolvimento</p>
+            <button className="btn-primary" onClick={() => setShowAgendaModal(false)}>{safeT?.close || 'Fechar'}</button>
+          </div>
+        </div>
+      )}
+
+      {showDesmontadosModal && (
+        <div className="modal-overlay" onClick={() => setShowDesmontadosModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{safeT?.desmontadosTitle || 'CADASTRO E BIBLIOTECA DE GRUPOS E PEÃ‡AS DE EQUIPAMENTOS DESMONTADOS'}</h2>
+            <p style={{ marginBottom: '20px' }}>Modal de Desmontados - Em desenvolvimento</p>
+            <button className="btn-primary" onClick={() => setShowDesmontadosModal(false)}>{safeT?.close || 'Fechar'}</button>
+          </div>
+        </div>
+      )}
+
+      {showCadastroServicosModal && (
+        <div className="modal-overlay" onClick={() => setShowCadastroServicosModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{safeT?.cadastroServicosTitle || 'CADASTRO DE SERVIÃ‡OS'}</h2>
+            <p style={{ marginBottom: '20px' }}>Modal de Cadastro de ServiÃ§os - Em desenvolvimento</p>
+            <button className="btn-primary" onClick={() => setShowCadastroServicosModal(false)}>{safeT?.close || 'Fechar'}</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

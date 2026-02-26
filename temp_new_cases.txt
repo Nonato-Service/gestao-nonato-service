@@ -1,0 +1,540 @@
+﻿      case 'mensagens-internas-tecnicos':
+        return (
+          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
+            <div style={{
+              marginBottom: '40px',
+              padding: '30px',
+              background: 'linear-gradient(135deg, rgba(0, 100, 255, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
+              borderRadius: '20px',
+              border: '2px solid rgba(0, 100, 255, 0.3)',
+              boxShadow: '0 8px 32px rgba(0, 100, 255, 0.1)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h1 style={{ 
+                    fontSize: '32px', 
+                    fontWeight: 'bold', 
+                    color: '#ffffff', 
+                    marginBottom: '10px',
+                    letterSpacing: '2px',
+                    textShadow: '0 0 20px rgba(0, 255, 0, 0.3)'
+                  }}>
+                    {safeT?.mensagensInternasTecnicos || 'MENSAGENS INTERNAS / TÃ‰CNICOS'}
+                  </h1>
+                  <p style={{ color: '#00ff00', fontSize: '16px', margin: 0 }}>
+                    {safeT?.mensagensInternasTecnicosDesc || 'Selecione o tipo de tÃ©cnico para visualizar'}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button 
+                    onClick={() => {
+                      const tab = openTabs.find(t => t.type === activeTabId)
+                      if (tab) {
+                        const index = openTabs.indexOf(tab)
+                        if (index > 0) {
+                          setActiveTabId(openTabs[index - 1].id)
+                        }
+                      }
+                    }}
+                    style={{ 
+                      padding: '6px 8px', 
+                      fontSize: '16px',
+                      backgroundColor: 'transparent',
+                      border: '1px solid rgba(0, 255, 0, 0.3)',
+                      borderRadius: '4px',
+                      color: '#00ff00',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '32px',
+                      height: '32px'
+                    }}
+                    title={safeT?.voltar || 'Voltar'}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
+                    }}
+                  >
+                    â†¶
+                  </button>
+                  <button 
+                    onClick={voltarPaginaInicial}
+                    style={{ 
+                      padding: '6px 8px', 
+                      fontSize: '16px',
+                      backgroundColor: 'transparent',
+                      border: '1px solid rgba(0, 150, 255, 0.3)',
+                      borderRadius: '4px',
+                      color: '#66b3ff',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '32px',
+                      height: '32px'
+                    }}
+                    title={safeT?.paginaInicial || 'PÃ¡gina Inicial'}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.1)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.5)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.3)'
+                    }}
+                  >
+                    ðŸ 
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+              <button
+                onClick={() => openTab('tecnicos-internos', getTabTitle('tecnicos-internos'))}
+                style={{
+                  padding: '30px',
+                  backgroundColor: '#1a1a1a',
+                  borderRadius: '12px',
+                  border: '2px solid rgba(0, 100, 255, 0.3)',
+                  color: '#ffffff',
+                  fontSize: '18px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  textAlign: 'center'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#66b3ff'
+                  e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 100, 255, 0.3)'
+                  e.currentTarget.style.transform = 'translateY(-5px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(0, 100, 255, 0.3)'
+                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                {safeT?.tecnicosInternos || 'TÃ‰CNICOS INTERNOS'}
+              </button>
+              
+              <button
+                onClick={() => openTab('tecnicos-externos', getTabTitle('tecnicos-externos'))}
+                style={{
+                  padding: '30px',
+                  backgroundColor: '#1a1a1a',
+                  borderRadius: '12px',
+                  border: '2px solid rgba(0, 100, 255, 0.3)',
+                  color: '#ffffff',
+                  fontSize: '18px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  textAlign: 'center'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#66b3ff'
+                  e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 100, 255, 0.3)'
+                  e.currentTarget.style.transform = 'translateY(-5px)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(0, 100, 255, 0.3)'
+                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.transform = 'translateY(0)'
+                }}
+              >
+                {safeT?.tecnicosExternos || 'TÃ‰CNICOS EXTERNOS'}
+              </button>
+            </div>
+          </div>
+        )
+
+      case 'tecnicos-internos':
+        const tecnicosInternos = tecnicos.filter(t => t.type === 'internal')
+        
+        return (
+          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
+            <div style={{
+              marginBottom: '40px',
+              padding: '30px',
+              background: 'linear-gradient(135deg, rgba(0, 100, 255, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
+              borderRadius: '20px',
+              border: '2px solid rgba(0, 100, 255, 0.3)',
+              boxShadow: '0 8px 32px rgba(0, 100, 255, 0.1)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h1 style={{ 
+                    fontSize: '32px', 
+                    fontWeight: 'bold', 
+                    color: '#ffffff', 
+                    marginBottom: '10px',
+                    letterSpacing: '2px',
+                    textShadow: '0 0 20px rgba(0, 255, 0, 0.3)'
+                  }}>
+                    {safeT?.tecnicosInternos || 'TÃ‰CNICOS INTERNOS'}
+                  </h1>
+                  <p style={{ color: '#00ff00', fontSize: '16px', margin: 0 }}>
+                    {safeT?.tecnicosInternosDesc || 'Visualize os tÃ©cnicos internos'}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button 
+                    onClick={() => {
+                      const tab = openTabs.find(t => t.type === activeTabId)
+                      if (tab) {
+                        const index = openTabs.indexOf(tab)
+                        if (index > 0) {
+                          setActiveTabId(openTabs[index - 1].id)
+                        }
+                      }
+                    }}
+                    style={{ 
+                      padding: '6px 8px', 
+                      fontSize: '16px',
+                      backgroundColor: 'transparent',
+                      border: '1px solid rgba(0, 255, 0, 0.3)',
+                      borderRadius: '4px',
+                      color: '#00ff00',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '32px',
+                      height: '32px'
+                    }}
+                    title={safeT?.voltar || 'Voltar'}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
+                    }}
+                  >
+                    â†¶
+                  </button>
+                  <button 
+                    onClick={voltarPaginaInicial}
+                    style={{ 
+                      padding: '6px 8px', 
+                      fontSize: '16px',
+                      backgroundColor: 'transparent',
+                      border: '1px solid rgba(0, 150, 255, 0.3)',
+                      borderRadius: '4px',
+                      color: '#66b3ff',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '32px',
+                      height: '32px'
+                    }}
+                    title={safeT?.paginaInicial || 'PÃ¡gina Inicial'}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.1)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.5)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.3)'
+                    }}
+                  >
+                    ðŸ 
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '20px' }}>
+              {tecnicosInternos.map(tecnico => (
+                <div
+                  key={tecnico.id}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    padding: '20px',
+                    backgroundColor: '#2a2a2a',
+                    borderRadius: '12px',
+                    border: '2px solid rgba(0, 100, 255, 0.3)',
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = '#66b3ff'
+                    e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 100, 255, 0.3)'
+                    e.currentTarget.style.transform = 'translateY(-5px)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(0, 100, 255, 0.3)'
+                    e.currentTarget.style.boxShadow = 'none'
+                    e.currentTarget.style.transform = 'translateY(0)'
+                  }}
+                >
+                  <div style={{
+                    width: '100px',
+                    height: '100px',
+                    borderRadius: '50%',
+                    backgroundColor: tecnico.photo ? 'transparent' : 'rgba(0, 100, 255, 0.2)',
+                    border: '3px solid #66b3ff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '15px',
+                    overflow: 'hidden',
+                    position: 'relative'
+                  }}>
+                    {tecnico.photo ? (
+                      <img 
+                        src={tecnico.photo} 
+                        alt={tecnico.name}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
+                        }}
+                      />
+                    ) : (
+                      <div style={{
+                        fontSize: '48px',
+                        color: '#66b3ff'
+                      }}>
+                        ðŸ‘¤
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div style={{
+                    color: '#ffffff',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    wordBreak: 'break-word',
+                    lineHeight: '1.4'
+                  }}>
+                    {tecnico.name}
+                  </div>
+                </div>
+              ))}
+              
+              {tecnicosInternos.length === 0 && (
+                <div style={{
+                  padding: '40px',
+                  textAlign: 'center',
+                  color: '#999',
+                  backgroundColor: '#1a1a1a',
+                  borderRadius: '12px',
+                  border: '2px solid rgba(0, 100, 255, 0.3)',
+                  gridColumn: '1 / -1'
+                }}>
+                  <p style={{ fontSize: '18px', margin: 0 }}>
+                    {safeT?.nenhumTecnicoInterno || 'Nenhum tÃ©cnico interno cadastrado'}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+
+      case 'tecnicos-externos':
+        const tecnicosExternos = tecnicos.filter(t => t.type === 'external')
+        
+        return (
+          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
+            <div style={{
+              marginBottom: '40px',
+              padding: '30px',
+              background: 'linear-gradient(135deg, rgba(0, 100, 255, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
+              borderRadius: '20px',
+              border: '2px solid rgba(0, 100, 255, 0.3)',
+              boxShadow: '0 8px 32px rgba(0, 100, 255, 0.1)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h1 style={{ 
+                    fontSize: '32px', 
+                    fontWeight: 'bold', 
+                    color: '#ffffff', 
+                    marginBottom: '10px',
+                    letterSpacing: '2px',
+                    textShadow: '0 0 20px rgba(0, 255, 0, 0.3)'
+                  }}>
+                    {safeT?.tecnicosExternos || 'TÃ‰CNICOS EXTERNOS'}
+                  </h1>
+                  <p style={{ color: '#00ff00', fontSize: '16px', margin: 0 }}>
+                    {safeT?.tecnicosExternosDesc || 'Visualize os tÃ©cnicos externos'}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button 
+                    onClick={() => {
+                      const tab = openTabs.find(t => t.type === activeTabId)
+                      if (tab) {
+                        const index = openTabs.indexOf(tab)
+                        if (index > 0) {
+                          setActiveTabId(openTabs[index - 1].id)
+                        }
+                      }
+                    }}
+                    style={{ 
+                      padding: '6px 8px', 
+                      fontSize: '16px',
+                      backgroundColor: 'transparent',
+                      border: '1px solid rgba(0, 255, 0, 0.3)',
+                      borderRadius: '4px',
+                      color: '#00ff00',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '32px',
+                      height: '32px'
+                    }}
+                    title={safeT?.voltar || 'Voltar'}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
+                    }}
+                  >
+                    â†¶
+                  </button>
+                  <button 
+                    onClick={voltarPaginaInicial}
+                    style={{ 
+                      padding: '6px 8px', 
+                      fontSize: '16px',
+                      backgroundColor: 'transparent',
+                      border: '1px solid rgba(0, 150, 255, 0.3)',
+                      borderRadius: '4px',
+                      color: '#66b3ff',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '32px',
+                      height: '32px'
+                    }}
+                    title={safeT?.paginaInicial || 'PÃ¡gina Inicial'}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.1)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.5)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.3)'
+                    }}
+                  >
+                    ðŸ 
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '20px' }}>
+              {tecnicosExternos.map(tecnico => (
+                <div
+                  key={tecnico.id}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    padding: '20px',
+                    backgroundColor: '#2a2a2a',
+                    borderRadius: '12px',
+                    border: '2px solid rgba(0, 100, 255, 0.3)',
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = '#66b3ff'
+                    e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 100, 255, 0.3)'
+                    e.currentTarget.style.transform = 'translateY(-5px)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(0, 100, 255, 0.3)'
+                    e.currentTarget.style.boxShadow = 'none'
+                    e.currentTarget.style.transform = 'translateY(0)'
+                  }}
+                >
+                  <div style={{
+                    width: '100px',
+                    height: '100px',
+                    borderRadius: '50%',
+                    backgroundColor: tecnico.photo ? 'transparent' : 'rgba(0, 100, 255, 0.2)',
+                    border: '3px solid #66b3ff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '15px',
+                    overflow: 'hidden',
+                    position: 'relative'
+                  }}>
+                    {tecnico.photo ? (
+                      <img 
+                        src={tecnico.photo} 
+                        alt={tecnico.name}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
+                        }}
+                      />
+                    ) : (
+                      <div style={{
+                        fontSize: '48px',
+                        color: '#66b3ff'
+                      }}>
+                        ðŸ‘¤
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div style={{
+                    color: '#ffffff',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    wordBreak: 'break-word',
+                    lineHeight: '1.4'
+                  }}>
+                    {tecnico.name}
+                  </div>
+                </div>
+              ))}
+              
+              {tecnicosExternos.length === 0 && (
+                <div style={{
+                  padding: '40px',
+                  textAlign: 'center',
+                  color: '#999',
+                  backgroundColor: '#1a1a1a',
+                  borderRadius: '12px',
+                  border: '2px solid rgba(0, 100, 255, 0.3)',
+                  gridColumn: '1 / -1'
+                }}>
+                  <p style={{ fontSize: '18px', margin: 0 }}>
+                    {safeT?.nenhumTecnicoExterno || 'Nenhum tÃ©cnico externo cadastrado'}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+

@@ -1,0 +1,19 @@
+﻿# ConfiguraÃ§Ã£o do Assistente Cursor
+# Este arquivo garante que vocÃª seja atendido pelo assistente Auto
+
+## PreferÃªncias do Assistente
+- Sempre responder em portuguÃªs
+- Usar o assistente Auto (agente roteador do Cursor)
+- Manter consistÃªncia nas respostas
+- Ser direto e objetivo nas explicaÃ§Ãµes
+
+## Regras de ComunicaÃ§Ã£o
+- Responder sempre em portuguÃªs brasileiro
+- Ser claro e didÃ¡tico nas explicaÃ§Ãµes
+- Fornecer exemplos prÃ¡ticos quando necessÃ¡rio
+- Verificar cÃ³digo antes de fazer alteraÃ§Ãµes
+
+## Estilo de CÃ³digo
+- Seguir as melhores prÃ¡ticas do projeto
+- Manter consistÃªncia com o cÃ³digo existente
+- Comentar mudanÃ§as significativas
