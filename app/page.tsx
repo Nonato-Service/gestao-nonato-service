@@ -37954,7 +37954,30 @@ A1;Peça exemplo;10'
                     </button>
                   </div>
 
-                  {/* SEMPRE visível: Código, Descrição e Quantidade (manual e biblioteca) */}
+                  {/* Código da peça - sempre primeiro e visível (manual e biblioteca) */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', marginBottom: '6px', color: '#00ff00', fontWeight: 700, fontSize: '14px' }}>
+                      {safeT?.codigoPeca || 'Código da peça'}
+                    </label>
+                    <input
+                      type="text"
+                      value={itemForm.codigo}
+                      onChange={(e) => setItemForm(prev => ({ ...prev, codigo: e.target.value }))}
+                      placeholder={safeT?.codigoPecaBibliotecaPlaceholder || 'Ex: REF-001, SKU-123...'}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        backgroundColor: '#1a1a1a',
+                        border: '2px solid rgba(0, 255, 0, 0.6)',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '14px',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+
+                  {/* Descrição e Quantidade */}
                   <div style={{
                     marginBottom: '20px',
                     padding: '18px',
@@ -37965,27 +37988,6 @@ A1;Peça exemplo;10'
                     <h4 style={{ color: '#00ff00', marginBottom: '14px', fontSize: '15px', marginTop: 0 }}>
                       Campos do item
                     </h4>
-                    <div style={{ marginBottom: '14px' }}>
-                      <label style={{ display: 'block', marginBottom: '6px', color: '#00ff00', fontWeight: 700, fontSize: '14px' }}>
-                        {safeT?.codigoPeca || 'Código da peça'}
-                      </label>
-                      <input
-                        type="text"
-                        value={itemForm.codigo}
-                        onChange={(e) => setItemForm(prev => ({ ...prev, codigo: e.target.value }))}
-                        placeholder={safeT?.codigoPecaBibliotecaPlaceholder || 'Ex: REF-001, SKU-123...'}
-                        style={{
-                          width: '100%',
-                          padding: '12px',
-                          backgroundColor: '#1a1a1a',
-                          border: '2px solid rgba(0, 255, 0, 0.6)',
-                          borderRadius: '6px',
-                          color: '#fff',
-                          fontSize: '14px',
-                          boxSizing: 'border-box'
-                        }}
-                      />
-                    </div>
                     <div style={{ marginBottom: '14px' }}>
                       <label style={{ display: 'block', marginBottom: '6px', color: '#e0e0e0', fontWeight: 600 }}>
                         {safeT?.descricaoItem || 'Descrição'} *
