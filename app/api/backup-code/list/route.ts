@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
+import { getDemoContext } from '../../data/demo-context'
 
 export async function GET(request: NextRequest) {
   try {
+    const { isDemo } = getDemoContext(request)
+    if (isDemo) {
+      return NextResponse.json({ backups: [] }, { status: 200 })
+    }
     const projectRoot = process.cwd()
     const backupsDir = path.join(projectRoot, 'backups')
 

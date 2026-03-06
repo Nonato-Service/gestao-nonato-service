@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import { DATA_DIR, ensureDataDir } from '../shared'
+import { ensureDataDir } from '../shared'
+import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 
+export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
+    const { isDemo, expired, dataDir } = getDemoContext(request)
+    if (isDemo && expired) {
+      return NextResponse.json(
+        { error: 'demo_expired', message: 'Período de demonstração expirado (15 dias).' },
+        { status: 403 }
+      )
+    }
     ensureDataDir()
+    ensureDemoDataDir(dataDir)
 
     const { searchParams } = new URL(request.url)
     const key = searchParams.get('key')
@@ -20,7 +30,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Tentar carregar como .txt primeiro (para vídeos/imagens grandes)
-    const txtPath = path.join(DATA_DIR, `${key}.txt`)
+    const txtPath = path.join(dataDir, `${key}.txt`)
     if (fs.existsSync(txtPath)) {
       try {
         // Para arquivos grandes, usar readFileSync com encoding correto
@@ -48,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     // Fallback para .json (mas apenas se não for logo - logos devem ser .txt)
     if (key !== 'nonato-logo') {
-      const jsonPath = path.join(DATA_DIR, `${key}.json`)
+      const jsonPath = path.join(dataDir, `${key}.json`)
       if (fs.existsSync(jsonPath)) {
         try {
           const content = fs.readFileSync(jsonPath, 'utf-8')
@@ -78,8 +88,9 @@ export async function GET(request: NextRequest) {
     })
   } catch (error: any) {
     console.error('Erro ao carregar dados:', error)
+    const msg = process.env.NODE_ENV === 'development' ? error.message : 'Erro ao carregar dados'
     return NextResponse.json(
-      { error: 'Erro ao carregar dados: ' + error.message },
+      { error: 'Erro ao carregar dados', details: msg },
       { status: 500 }
     )
   }

@@ -1,27 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import { DATA_DIR, ensureDataDir } from '../shared'
+import { ensureDataDir } from '../shared'
+import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 
+export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
+    const { isDemo, expired, dataDir } = getDemoContext(request)
+    if (isDemo && expired) {
+      return NextResponse.json(
+        { error: 'demo_expired', message: 'Período de demonstração expirado (15 dias).' },
+        { status: 403 }
+      )
+    }
     ensureDataDir()
+    ensureDemoDataDir(dataDir)
 
     const { searchParams } = new URL(request.url)
     const key = searchParams.get('key')
 
     if (!key) {
       // Retornar todos os dados disponíveis
-      const jsonFiles = fs.existsSync(DATA_DIR) ? fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json')) : []
-      const txtFiles = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.txt'))
+      const jsonFiles = fs.existsSync(dataDir) ? fs.readdirSync(dataDir).filter((f: string) => f.endsWith('.json')) : []
+      const txtFiles = fs.existsSync(dataDir) ? fs.readdirSync(dataDir).filter((f: string) => f.endsWith('.txt')) : []
       const allData: Record<string, any> = {}
       
       // Carregar arquivos JSON
       for (const file of jsonFiles) {
         const fileKey = file.replace('.json', '')
-        const filePath = path.join(DATA_DIR, file)
+        const filePath = path.join(dataDir, file)
         try {
           const content = fs.readFileSync(filePath, 'utf-8')
           // Verificar se o conteúdo não está vazio
@@ -39,7 +49,7 @@ export async function GET(request: NextRequest) {
         const fileKey = file.replace('.txt', '')
         // Só adicionar se não existir já no JSON (prioridade para JSON)
         if (!allData[fileKey]) {
-          const filePath = path.join(DATA_DIR, file)
+          const filePath = path.join(dataDir, file)
           try {
             const content = fs.readFileSync(filePath, 'utf-8')
             if (content && content.trim() !== '') {
@@ -55,7 +65,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Carregar um arquivo específico
-    const filePath = path.join(DATA_DIR, `${key}.json`)
+    const filePath = path.join(dataDir, `${key}.json`)
     
     if (!fs.existsSync(filePath)) {
       return NextResponse.json({ 
@@ -88,8 +98,9 @@ export async function GET(request: NextRequest) {
     }
   } catch (error: any) {
     console.error('Erro ao carregar dados:', error)
+    const msg = process.env.NODE_ENV === 'development' ? error.message : 'Erro ao carregar dados'
     return NextResponse.json(
-      { error: 'Erro ao carregar dados: ' + error.message },
+      { error: 'Erro ao carregar dados', details: msg },
       { status: 500 }
     )
   }

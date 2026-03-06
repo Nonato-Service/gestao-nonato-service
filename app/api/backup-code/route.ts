@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
+import { getDemoContext } from '../data/demo-context'
+
+export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
   try {
+    const { isDemo } = getDemoContext(request)
+    if (isDemo) {
+      return NextResponse.json(
+        { error: 'Backup do código desativado no modo demonstração.' },
+        { status: 403 }
+      )
+    }
     const projectRoot = process.cwd()
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
     const backupDir = path.join(projectRoot, 'backups', `code-backup-${timestamp}`)

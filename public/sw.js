@@ -1,6 +1,6 @@
 // Service Worker - Gestão Técnica Nonato Service (PWA offline)
-// Versão 5: cache prioritário para abrir offline após fechar o app
-const CACHE_NAME = 'nonato-pwa-v5'
+// Bumpar CACHE_NAME em cada deploy para utilizadores verem a versão nova
+const CACHE_NAME = 'nonato-pwa-v8'
 
 const PRECACHE_ASSETS = [
   '/',

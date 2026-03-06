@@ -2,6 +2,10 @@
 
 Siga estes passos para que o telemóvel e tablet funcionem mesmo com o PC desligado.
 
+**Projeto:** Gestão Técnica Nonato Service  
+**Repositório recomendado:** `gestao-tecnica-nonato-service`  
+**Última atualização:** Março 2026
+
 ---
 
 ## 1. Criar conta no GitHub
@@ -17,17 +21,17 @@ Siga estes passos para que o telemóvel e tablet funcionem mesmo com o PC deslig
 
 1. Faça login no GitHub
 2. Clique no **+** no canto superior direito → **New repository**
-3. Nome: `gestao-nonato-service` (ou outro)
+3. Nome: `gestao-tecnica-nonato-service` (ou outro, ex: `gestao-nonato-service`)
 4. Deixe **Private** ou **Public** (à sua escolha)
 5. **NÃO** marque "Add a README"
 6. Clique em **Create repository**
-7. Copie o endereço que aparece (ex: `https://github.com/SEU_USER/gestao-nonato-service.git`)
+7. Copie o endereço que aparece (ex: `https://github.com/SEU_USER/gestao-tecnica-nonato-service.git`)
 
 ---
 
 ## 3. Enviar o projeto para o GitHub
 
-Abra o **PowerShell** na pasta do projeto e execute (substitua pelo seu endereço):
+Abra o **PowerShell** na pasta do projeto e execute (substitua `SEU_USER` pelo seu utilizador GitHub):
 
 ```powershell
 cd C:\Users\W10\gestao-tecnica-nonato-service
@@ -35,7 +39,7 @@ cd C:\Users\W10\gestao-tecnica-nonato-service
 git add .
 git commit -m "Projeto inicial"
 git branch -M main
-git remote add origin https://github.com/SEU_USER/gestao-nonato-service.git
+git remote add origin https://github.com/SEU_USER/gestao-tecnica-nonato-service.git
 git push -u origin main
 ```
 
@@ -56,10 +60,10 @@ git push -u origin main
 1. No Railway, clique em **New Project**
 2. Escolha **Deploy from GitHub repo**
 3. Se pedir, ligue a sua conta GitHub
-4. Selecione o repositório `gestao-nonato-service`
+4. Selecione o repositório **gestao-tecnica-nonato-service** (ou o nome que usou)
 5. Clique em **Deploy Now**
 
-O Railway vai começar a fazer o deploy. Aguarde alguns minutos.
+O Railway vai começar a fazer o deploy. Aguarde alguns minutos. O projeto usa `railway.json` (build: `npm run build`, start: `npm start`) e escuta na porta `PORT` definida pelo Railway.
 
 ---
 
@@ -71,7 +75,9 @@ O Railway vai começar a fazer o deploy. Aguarde alguns minutos.
 4. Nome: `dados`
 5. **Mount Path:** `/app/data`
 6. Clique em **Add**
-7. O Railway vai fazer um novo deploy. Aguarde.
+7. Em **Variables**, adicione: **`DATA_DIR`** = **`/app/data`**  
+   (O app usa esta variável; o Railway pode também definir `RAILWAY_VOLUME_MOUNT_PATH` automaticamente.)
+8. O Railway vai fazer um novo deploy. Aguarde.
 
 ---
 
@@ -80,7 +86,7 @@ O Railway vai começar a fazer o deploy. Aguarde alguns minutos.
 1. No Railway, clique no serviço
 2. Vá ao separador **Settings**
 3. Em **Networking** → **Public Networking**, clique em **Generate Domain**
-4. Será criado um URL tipo: `gestao-nonato-service-production-xxxx.up.railway.app`
+4. Será criado um URL tipo: `gestao-tecnica-nonato-service-production-xxxx.up.railway.app`
 5. Copie esse URL
 
 ---
@@ -119,8 +125,18 @@ O Railway faz o deploy automaticamente.
 
 ---
 
+## Variável opcional (memória no build)
+
+Se o deploy falhar por falta de memória (ex.: "Killed" nos logs):
+
+1. No Railway → **Variables** → **Add Variable**
+2. Nome: **`NODE_OPTIONS`** | Valor: **`--max-old-space-size=384`**
+3. Guarde e faça **Redeploy**
+
+---
+
 ## Problemas?
 
-- **Erro de login no Git:** Use um Personal Access Token em vez da password.
-- **Deploy falha:** Verifique se há erros no separador **Deployments** do Railway.
-- **Dados desaparecem:** Confirme que o Volume está com Mount Path `/app/data`.
+- **Erro de login no Git:** Use um Personal Access Token em vez da password (GitHub → Settings → Developer settings → Personal access tokens).
+- **Deploy falha:** Verifique os **Deploy Logs** no separador **Deployments** do Railway. Se aparecer "Killed", adicione `NODE_OPTIONS=--max-old-space-size=384`.
+- **Dados desaparecem:** Confirme que o Volume está com Mount Path **`/app/data`** e que a variável **`DATA_DIR`** = **`/app/data`**.

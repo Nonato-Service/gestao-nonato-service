@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import { DATA_DIR } from '../../../data/shared'
+import { getDemoContext } from '../../../data/demo-context'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,12 +10,16 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { isDemo, expired, dataDir } = getDemoContext(request)
+    if (isDemo && expired) {
+      return new NextResponse('Demonstração expirada.', { status: 403 })
+    }
     const { searchParams } = new URL(request.url)
     const lang = searchParams.get('lang') || 'pt-BR'
     const orcamentoId = params.id
 
     // Carregar orçamentos
-    const orcamentosPath = path.join(DATA_DIR, 'nonato-orcamentos-avulso.json')
+    const orcamentosPath = path.join(dataDir, 'nonato-orcamentos-avulso.json')
     if (!fs.existsSync(orcamentosPath)) {
       return new NextResponse('Orçamento não encontrado', { status: 404 })
     }
@@ -167,7 +171,7 @@ export async function GET(
   </table>
   
   <div class="footer">
-    <p>${t.rodape} ${dataFormatada} - NONATO SERVICE</p>
+    <p>${t.rodape} ${dataFormatada} - NONATO SERVICE${isDemo ? ' - DEMO' : ''}</p>
   </div>
 </body>
 </html>

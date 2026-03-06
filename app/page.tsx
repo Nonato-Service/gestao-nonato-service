@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { translations } from './translations'
 import { loadData, saveData, loadAllFromServer, loadFromServer } from './utils/dataStorage'
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
@@ -738,6 +739,11 @@ export default function Dashboard() {
   const [checklistAccessPasswordInput, setChecklistAccessPasswordInput] = useState('')
   const [codeBackups, setCodeBackups] = useState<Array<{ path: string; timestamp: string; filesCount: number }>>([])
   const [loadingBackups, setLoadingBackups] = useState(false)
+  const [isDemoMode, setIsDemoMode] = useState(false)
+  const [demoExpired, setDemoExpired] = useState(false)
+  const [demoDaysLeft, setDemoDaysLeft] = useState<number | null>(null)
+  const [demoLinkRecipients, setDemoLinkRecipients] = useState<Array<{ id: string; nome: string; email: string; dataEnvio: string; observacoes?: string }>>([])
+  const [demoLinkForm, setDemoLinkForm] = useState({ nome: '', email: '', observacoes: '' })
   const [userForm, setUserForm] = useState<{
     name: string
     email: string
@@ -3013,6 +3019,23 @@ export default function Dashboard() {
     }
   }, [activeTabId, openTabs])
 
+  // Verificar modo DEMO (dados isolados, 15 dias, sem export/backup)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    fetch('/api/demo/status', { credentials: 'include' })
+      .then(r => r.json())
+      .then((d: { isDemo: boolean; expired: boolean; daysLeft: number | null }) => {
+        setIsDemoMode(d.isDemo)
+        setDemoExpired(d.expired)
+        setDemoDaysLeft(d.daysLeft)
+        if (d.expired) {
+          document.cookie = 'nonato_demo=; path=/; max-age=0'
+          document.cookie = 'nonato_demo_start=; path=/; max-age=0'
+        }
+      })
+      .catch(() => {})
+  }, [])
+
   // Carregar logo, idioma e usuários salvos ao iniciar
   // Carregar mensagens de comunicação
   useEffect(() => {
@@ -3607,6 +3630,12 @@ export default function Dashboard() {
       const savedAutoBackupInterval = getData('nonato-auto-backup-interval', false)
       if (savedAutoBackupInterval) {
         setAutoBackupInterval(parseInt(savedAutoBackupInterval, 10))
+      }
+
+      // Carregar lista de pessoas que receberam o link demo
+      const savedDemoRecipients = getData('nonato-demo-link-recipients')
+      if (savedDemoRecipients && Array.isArray(savedDemoRecipients)) {
+        setDemoLinkRecipients(savedDemoRecipients)
       }
 
       // Criar primeiro backup automático ao iniciar
@@ -6686,7 +6715,7 @@ export default function Dashboard() {
     setShowServicoForm(true)
   }
 
-  const handleSaveServico = () => {
+  const handleSaveServico = async () => {
     if (!servicoForm.nome.trim() || servicoForm.valor < 0 || isNaN(servicoForm.valor)) {
       alert((t as any).preenchaNomeValor || 'Preencha o nome e um valor válido (zero ou maior) para o serviço!')
       return
@@ -6694,8 +6723,9 @@ export default function Dashboard() {
 
     createAutoBackupBeforeOperation()
 
+    let updatedServicos: typeof servicos
     if (editingServico) {
-      const updatedServicos = servicos.map(s =>
+      updatedServicos = servicos.map(s =>
         s.id === editingServico.id
           ? {
               ...s,
@@ -6707,8 +6737,6 @@ export default function Dashboard() {
             }
           : s
       )
-      setServicos(updatedServicos)
-      saveData('nonato-servicos', updatedServicos)
     } else {
       const newServico = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
@@ -6718,9 +6746,16 @@ export default function Dashboard() {
         tipoCobranca: servicoForm.tipoCobranca,
         categoria: servicoForm.categoria
       }
-      const updatedServicos = [...servicos, newServico]
-      setServicos(updatedServicos)
-      saveData('nonato-servicos', updatedServicos)
+      updatedServicos = [...servicos, newServico]
+    }
+    setServicos(updatedServicos)
+
+    try {
+      await saveData('nonato-servicos', updatedServicos)
+    } catch (err) {
+      console.error('Erro ao salvar serviços:', err)
+      alert((t as any).erroAoSalvarServico || 'Não foi possível salvar. Verifique se o navegador permite armazenamento local (não use modo anônimo sem permissão) ou tente novamente.')
+      return
     }
 
     setShowServicoForm(false)
@@ -7224,7 +7259,7 @@ export default function Dashboard() {
     }
   }
 
-  const handleSaveCliente = () => {
+  const handleSaveCliente = async () => {
     if (!clienteForm.nomeEmpresa || !clienteForm.morada || !clienteForm.email) {
       alert(t.fillAllFields)
       return
@@ -7232,23 +7267,29 @@ export default function Dashboard() {
 
     createAutoBackupBeforeOperation()
 
+    let updatedClientes: Cliente[]
     if (editingCliente) {
-      const updatedClientes = clientes.map(c => 
-        c.id === editingCliente.id 
+      updatedClientes = clientes.map(c =>
+        c.id === editingCliente.id
           ? { ...c, ...clienteForm }
           : c
       )
-      setClientes(updatedClientes)
-      saveData('nonato-clientes', updatedClientes)
     } else {
       const newCliente: Cliente = {
         id: Date.now().toString(),
         ...clienteForm,
         equipamentos: []
       }
-      const updatedClientes = [...clientes, newCliente]
-      setClientes(updatedClientes)
-      saveData('nonato-clientes', updatedClientes)
+      updatedClientes = [...clientes, newCliente]
+    }
+    setClientes(updatedClientes)
+
+    try {
+      await saveData('nonato-clientes', updatedClientes)
+    } catch (err) {
+      console.error('Erro ao salvar clientes:', err)
+      alert((t as any).erroSalvar || 'Erro ao salvar. Tente novamente.')
+      return
     }
 
     setShowClienteForm(false)
@@ -7267,6 +7308,7 @@ export default function Dashboard() {
       photo: ''
     })
     setEditingCliente(null)
+    setClientesActiveTab('listar')
     alert((t as any).clienteSaved || 'Cliente salvo com sucesso!')
   }
 
@@ -7920,7 +7962,7 @@ export default function Dashboard() {
   const handleSaveEquipamentoCliente = () => {
     if (!selectedClienteForEquipamento) return
 
-    if (!equipamentoClienteForm.tipoEquipamento || !equipamentoClienteForm.modelo || !equipamentoClienteForm.marca || !equipamentoClienteForm.numeroSerie || !equipamentoClienteForm.familia || !equipamentoClienteForm.grupo) {
+    if (!equipamentoClienteForm.tipoEquipamento || !equipamentoClienteForm.modelo || !equipamentoClienteForm.marca || !equipamentoClienteForm.numeroSerie) {
       alert(t.fillAllFields)
       return
     }
@@ -15498,6 +15540,119 @@ const nextF = familias.filter(x => x !== f)
                 </div>
               </div>
             </div>
+
+            {/* SEÇÃO: CONTROLE DE ENVIO DO LINK PARA TESTE - Primeira secção para maior visibilidade */}
+            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', borderLeft: '4px solid #66b3ff' }}>
+              <h3 style={{ color: '#66b3ff', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(102, 179, 255, 0.3)', paddingBottom: '10px' }}>
+                📤 Controle de Envio do Link para Teste
+              </h3>
+              <p style={{ fontSize: '13px', opacity: 0.8, marginBottom: '15px' }}>
+                Registe aqui as pessoas a quem enviou o link de demonstração (15 dias, dados isolados).
+              </p>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                  <input
+                    type="text"
+                    placeholder="Nome"
+                    value={demoLinkForm.nome}
+                    onChange={(e) => setDemoLinkForm(f => ({ ...f, nome: e.target.value }))}
+                    style={{ flex: 1, minWidth: '120px', padding: '8px 12px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Email"
+                    value={demoLinkForm.email}
+                    onChange={(e) => setDemoLinkForm(f => ({ ...f, email: e.target.value }))}
+                    style={{ flex: 1, minWidth: '160px', padding: '8px 12px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Observações (opcional)"
+                    value={demoLinkForm.observacoes}
+                    onChange={(e) => setDemoLinkForm(f => ({ ...f, observacoes: e.target.value }))}
+                    style={{ flex: 1, minWidth: '160px', padding: '8px 12px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    className="btn-primary"
+                    onClick={() => {
+                      if (!demoLinkForm.nome.trim()) {
+                        alert('Indique o nome da pessoa.')
+                        return
+                      }
+                      const novo = {
+                        id: 'demo-' + Date.now(),
+                        nome: demoLinkForm.nome.trim(),
+                        email: demoLinkForm.email.trim(),
+                        dataEnvio: new Date().toISOString(),
+                        observacoes: demoLinkForm.observacoes.trim() || undefined
+                      }
+                      const updated = [...demoLinkRecipients, novo]
+                      setDemoLinkRecipients(updated)
+                      saveData('nonato-demo-link-recipients', updated)
+                      setDemoLinkForm({ nome: '', email: '', observacoes: '' })
+                    }}
+                    style={{ padding: '8px 16px' }}
+                  >
+                    + Adicionar
+                  </button>
+                  <button
+                    className="btn-primary"
+                    onClick={() => {
+                      const url = (typeof window !== 'undefined' ? window.location.origin : '') + '/demo'
+                      navigator.clipboard.writeText(url)
+                      alert('Link copiado: ' + url)
+                    }}
+                    style={{ padding: '8px 16px', backgroundColor: 'rgba(0, 150, 255, 0.2)', borderColor: '#66b3ff', color: '#66b3ff' }}
+                  >
+                    📋 Copiar link /demo
+                  </button>
+                </div>
+              </div>
+              {demoLinkRecipients.length === 0 ? (
+                <p style={{ textAlign: 'center', opacity: 0.6, padding: '20px' }}>Nenhuma pessoa registada</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '280px', overflowY: 'auto' }}>
+                  {demoLinkRecipients.map((r) => (
+                    <div
+                      key={r.id}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '12px',
+                        backgroundColor: '#2a2a2a',
+                        borderRadius: '6px',
+                        border: '1px solid rgba(0, 255, 0, 0.1)'
+                      }}
+                    >
+                      <div>
+                        <strong style={{ display: 'block', marginBottom: '2px' }}>{r.nome}</strong>
+                        {r.email && <span style={{ fontSize: '12px', opacity: 0.8 }}>{r.email}</span>}
+                        <span style={{ fontSize: '11px', opacity: 0.6, display: 'block', marginTop: '4px' }}>
+                          Enviado em: {new Date(r.dataEnvio).toLocaleString(selectedLanguage === 'pt-BR' ? 'pt-BR' : 'pt-BR')}
+                          {r.observacoes ? ' • ' + r.observacoes : ''}
+                        </span>
+                      </div>
+                      <button
+                        className="btn-danger"
+                        onClick={() => {
+                          if (window.confirm('Remover este registo?')) {
+                            const updated = demoLinkRecipients.filter(x => x.id !== r.id)
+                            setDemoLinkRecipients(updated)
+                            saveData('nonato-demo-link-recipients', updated)
+                          }
+                        }}
+                        style={{ padding: '6px 12px', fontSize: '12px' }}
+                      >
+                        Excluir
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             
             {/* SEÇÃO 1: CONFIGURAÇÕES GERAIS */}
             <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
@@ -16526,7 +16681,8 @@ const nextF = familias.filter(x => x !== f)
               </div>
             </div>
 
-            {/* SEÇÃO 5: BACKUP E SEGURANÇA */}
+            {/* SEÇÃO 5: BACKUP E SEGURANÇA - Oculto no modo DEMO */}
+            {!isDemoMode && (
             <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
                 {safeT?.backupRestore || 'BACKUP E SEGURANÇA'}
@@ -16614,6 +16770,7 @@ const nextF = familias.filter(x => x !== f)
                 </div>
               </div>
             </div>
+            )}
           </div>
         )
       
@@ -37751,8 +37908,8 @@ A1;Peça exemplo;10'
               </div>
             )}
 
-            {/* Modal para Adicionar Item */}
-            {showItemForm && (
+            {/* Modal para Adicionar Item - renderizado no body para garantir visibilidade */}
+            {showItemForm && typeof document !== 'undefined' && createPortal(
               <div style={{
                 position: 'fixed',
                 top: 0,
@@ -37763,7 +37920,7 @@ A1;Peça exemplo;10'
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                zIndex: 10000
+                zIndex: 2147483647
               }} onClick={() => setShowItemForm(false)}>
                 <div style={{
                   backgroundColor: '#1a1a1a',
@@ -37797,6 +37954,83 @@ A1;Peça exemplo;10'
                     </button>
                   </div>
 
+                  {/* SEMPRE visível: Código, Descrição e Quantidade (manual e biblioteca) */}
+                  <div style={{
+                    marginBottom: '20px',
+                    padding: '18px',
+                    backgroundColor: '#252525',
+                    borderRadius: '10px',
+                    border: '2px solid rgba(0, 255, 0, 0.5)'
+                  }}>
+                    <h4 style={{ color: '#00ff00', marginBottom: '14px', fontSize: '15px', marginTop: 0 }}>
+                      Campos do item
+                    </h4>
+                    <div style={{ marginBottom: '14px' }}>
+                      <label style={{ display: 'block', marginBottom: '6px', color: '#00ff00', fontWeight: 700, fontSize: '14px' }}>
+                        Código do produto
+                      </label>
+                      <input
+                        type="text"
+                        value={itemForm.codigo}
+                        onChange={(e) => setItemForm(prev => ({ ...prev, codigo: e.target.value }))}
+                        placeholder="Ex: REF-001, SKU-123..."
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          backgroundColor: '#1a1a1a',
+                          border: '2px solid rgba(0, 255, 0, 0.6)',
+                          borderRadius: '6px',
+                          color: '#fff',
+                          fontSize: '14px',
+                          boxSizing: 'border-box'
+                        }}
+                      />
+                    </div>
+                    <div style={{ marginBottom: '14px' }}>
+                      <label style={{ display: 'block', marginBottom: '6px', color: '#e0e0e0', fontWeight: 600 }}>
+                        {safeT?.descricaoItem || 'Descrição'} *
+                      </label>
+                      <input
+                        type="text"
+                        value={itemForm.descricao}
+                        onChange={(e) => setItemForm(prev => ({ ...prev, descricao: e.target.value }))}
+                        placeholder="Descrição do item"
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          backgroundColor: '#1a1a1a',
+                          border: '1px solid rgba(0, 255, 0, 0.5)',
+                          borderRadius: '6px',
+                          color: '#fff',
+                          fontSize: '14px',
+                          boxSizing: 'border-box'
+                        }}
+                      />
+                    </div>
+                    <div style={{ marginBottom: '0' }}>
+                      <label style={{ display: 'block', marginBottom: '6px', color: '#e0e0e0', fontWeight: 600 }}>
+                        {safeT?.quantidade || 'Quantidade'}
+                      </label>
+                      <input
+                        type="number"
+                        value={itemForm.quantidade}
+                        onChange={(e) => setItemForm(prev => ({ ...prev, quantidade: parseFloat(e.target.value) || 1 }))}
+                        min={1}
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          backgroundColor: '#1a1a1a',
+                          border: '1px solid rgba(0, 255, 0, 0.5)',
+                          borderRadius: '6px',
+                          color: '#fff',
+                          fontSize: '14px',
+                          boxSizing: 'border-box'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* MODO BIBLIOTECA: busca por peça */}
                   {itemFormMode === 'biblioteca' && (
                     <div style={{ marginBottom: '20px' }}>
                       <label style={{ display: 'block', marginBottom: '5px', color: '#ccc' }}>
@@ -37874,45 +38108,6 @@ A1;Peça exemplo;10'
                       />
                     </div>
                   )}
-
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', color: '#ccc' }}>
-                      {safeT?.descricaoItem || 'Descrição'} *
-                    </label>
-                    <input
-                      type="text"
-                      value={itemForm.descricao}
-                      onChange={(e) => setItemForm({ ...itemForm, descricao: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '10px',
-                        backgroundColor: '#2a2a2a',
-                        border: '1px solid rgba(0, 255, 0, 0.3)',
-                        borderRadius: '6px',
-                        color: '#fff'
-                      }}
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', color: '#ccc' }}>
-                      {safeT?.quantidade || 'Quantidade'}
-                    </label>
-                    <input
-                      type="number"
-                      value={itemForm.quantidade}
-                      onChange={(e) => setItemForm({ ...itemForm, quantidade: parseFloat(e.target.value) || 1 })}
-                      min="1"
-                      style={{
-                        width: '100%',
-                        padding: '10px',
-                        backgroundColor: '#2a2a2a',
-                        border: '1px solid rgba(0, 255, 0, 0.3)',
-                        borderRadius: '6px',
-                        color: '#fff'
-                      }}
-                    />
-                  </div>
 
                   <div style={{ marginBottom: '15px' }}>
                     <label style={{ display: 'block', marginBottom: '5px', color: '#ccc' }}>
@@ -38052,7 +38247,8 @@ A1;Peça exemplo;10'
                     </button>
                   </div>
                 </div>
-              </div>
+              </div>,
+              document.body
             )}
 
             {/* Total - Só aparece se houver itens e não for orcamento-relatorio ou cliente-prioritario-fixo */}
@@ -39470,7 +39666,7 @@ A1;Peça exemplo;10'
             objectFit: 'cover',
             objectPosition: 'center 34%',
             opacity: 0.06,
-            filter: 'drop-shadow(0 0 0 2px #00ff00) drop-shadow(0 0 0 1px #00ff00)',
+            filter: 'drop-shadow(0 0 4px rgba(0, 255, 0, 0.15))',
             pointerEvents: 'none',
             zIndex: 0
           }}
@@ -39967,10 +40163,29 @@ A1;Peça exemplo;10'
     )
   }
 
+  if (demoExpired) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'linear-gradient(135deg, #0d1a0d 0%, #1a2a1a 100%)', color: '#fff', padding: '40px', textAlign: 'center' }}>
+        <h1 style={{ color: '#ff6b6b', marginBottom: '20px', fontSize: '24px' }}>Demonstração expirada</h1>
+        <p style={{ opacity: 0.9, marginBottom: '30px', maxWidth: '400px' }}>
+          O período de 15 dias de demonstração terminou. Entre em contacto para obter acesso completo.
+        </p>
+        <a href="/" style={{ padding: '12px 24px', backgroundColor: '#00ff00', color: '#000', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold' }}>
+          Voltar ao início
+        </a>
+      </div>
+    )
+  }
+
   return (
-    <div className="app-layout" style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#000', color: '#fff', paddingBottom: openTabs.length > 0 ? '54px' : '0' }}>
-      {/* Sidebar */}
-      <div className="sidebar" style={{ width: '280px', minHeight: '100vh', padding: '30px 20px', display: 'flex', flexDirection: 'column', gap: '15px', borderRight: '1px solid rgba(0, 255, 0, 0.1)' }}>
+    <div className="app-layout" style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#000', color: '#fff', paddingBottom: openTabs.length > 0 ? '54px' : '0', paddingTop: isDemoMode ? '50px' : 0 }}>
+      {isDemoMode && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '10px 20px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '2px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', fontSize: '14px', textAlign: 'center' }}>
+          🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Sem exportação nem backup
+        </div>
+      )}
+      {/* Sidebar - estilos em globals.css (media queries para mobile) */}
+      <div className="sidebar">
         {/* Logo NONATO SERVICE — logo ocupa 100% do contorno verde, borda mantida */}
         <div style={{ marginBottom: '25px', textAlign: 'center', padding: 0, overflow: 'hidden', backgroundColor: '#0a0a0a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', height: '150px' }}>
           {logoUrl ? (
@@ -40087,7 +40302,7 @@ A1;Peça exemplo;10'
           </button>
           
           {expandedGroups.has('gestao-tecnica') && getButtonsByGroup('gestao-tecnica').some((b) => canAccessAction(b.action === 'open-biblioteca-hub' ? 'open-biblioteca-pecas' : b.action)) && (
-            <div style={{ marginTop: '5px', marginBottom: '10px' }}>
+            <div className="sidebar-action-buttons" style={{ marginTop: '5px', marginBottom: '10px' }}>
               {getButtonsByGroup('gestao-tecnica')
                 .filter((button) => button.id === 'biblioteca-pecas-default' ? canAccessAction('open-biblioteca-pecas') : canAccessAction(button.action))
                 .sort((a, b) => a.order - b.order)
@@ -40097,10 +40312,9 @@ A1;Peça exemplo;10'
                     return (
                       <button
                         key={button.id}
-                        className="btn-primary"
+                        className="btn-primary sidebar-action-btn"
                         onClick={() => handleButtonClick('open-biblioteca-hub')}
                         style={{ 
-                          width: '100%', 
                           textAlign: 'center', 
                           padding: '12px', 
                           marginBottom: '6px',
@@ -40135,10 +40349,9 @@ A1;Peça exemplo;10'
                   return (
                     <button
                       key={button.id}
-                      className="btn-primary"
+                      className="btn-primary sidebar-action-btn"
                       onClick={() => handleButtonClick(button.action)}
                       style={{ 
-                        width: '100%', 
                         textAlign: 'center', 
                         padding: '12px', 
                         marginBottom: '6px',
@@ -40247,7 +40460,7 @@ A1;Peça exemplo;10'
           </button>
           
           {expandedGroups.has('gestao-custos') && (
-            <div style={{ marginTop: '5px', marginBottom: '10px' }}>
+            <div className="sidebar-action-buttons" style={{ marginTop: '5px', marginBottom: '10px' }}>
               {getButtonsByGroup('gestao-custos')
                 .sort((a, b) => a.order - b.order)
                 .map((button) => {
@@ -40255,10 +40468,9 @@ A1;Peça exemplo;10'
                   return (
                     <button
                       key={button.id}
-                      className="btn-primary"
+                      className="btn-primary sidebar-action-btn"
                       onClick={() => handleButtonClick(button.action)}
                       style={{ 
-                        width: '100%', 
                         textAlign: 'center', 
                         padding: '12px', 
                         marginBottom: '6px',
@@ -40371,7 +40583,7 @@ A1;Peça exemplo;10'
           </button>
           
           {expandedGroups.has('comunicacao-interna') && (
-            <div style={{ marginTop: '5px', marginBottom: '10px' }}>
+            <div className="sidebar-action-buttons" style={{ marginTop: '5px', marginBottom: '10px' }}>
               {(() => {
                 // Sempre mostrar os 3 botões: usar dados guardados se existirem, senão usar defaults
                 const ids: Array<{ id: string; action: string; translationKey: string }> = [
@@ -40387,10 +40599,9 @@ A1;Peça exemplo;10'
                   return (
                     <button
                       key={id}
-                      className="btn-primary"
+                      className="btn-primary sidebar-action-btn"
                       onClick={() => handleButtonClick(action)}
                       style={{ 
-                        width: '100%', 
                         textAlign: 'center', 
                         padding: '12px', 
                         marginBottom: '6px',
@@ -40678,7 +40889,7 @@ A1;Peça exemplo;10'
             )
           })()}
           {expandedGroups.has('gestao-industrial') && (
-            <div style={{ marginTop: '5px', marginBottom: '10px' }}>
+            <div className="sidebar-action-buttons" style={{ marginTop: '5px', marginBottom: '10px' }}>
               {getButtonsByGroup('gestao-industrial')
                 .sort((a, b) => a.order - b.order)
                 .map((button) => {
@@ -40688,10 +40899,9 @@ A1;Peça exemplo;10'
                     return (
                       <div key={button.id} style={{ marginBottom: '5px' }}>
                         <button
-                          className="btn-primary"
+                          className="btn-primary sidebar-action-btn"
                           onClick={() => handleButtonClick(button.action)}
                           style={{ 
-                            width: '100%', 
                             textAlign: 'left', 
                             padding: '12px', 
                             marginBottom: '6px',
@@ -40738,7 +40948,7 @@ A1;Peça exemplo;10'
                           <span style={{ fontSize: '12px' }}>{expandedGroups.has('checklist-group') ? '▼' : '▶'}</span>
                         </button>
                         {expandedGroups.has('checklist-group') && (
-                          <div style={{ marginLeft: '15px', marginTop: '5px', marginBottom: '5px' }}>
+                          <div className="sidebar-action-buttons" style={{ marginLeft: '15px', marginTop: '5px', marginBottom: '5px' }}>
                             {getButtonsByGroup('checklist-group')
                               .sort((a, b) => a.order - b.order)
                               .map((subButton) => {
@@ -40746,11 +40956,10 @@ A1;Peça exemplo;10'
                                 return (
                                   <button
                                     key={subButton.id}
-                                    className="btn-primary"
+                                    className="btn-primary sidebar-action-btn"
                                     data-button-action={subButton.action}
                                     onClick={() => handleButtonClick(subButton.action)}
                                     style={{ 
-                                      width: '100%', 
                                       textAlign: 'center', 
                                       padding: '10px', 
                                       marginBottom: '5px',
@@ -40804,10 +41013,9 @@ A1;Peça exemplo;10'
                   return (
                     <button
                       key={button.id}
-                      className="btn-primary"
+                      className="btn-primary sidebar-action-btn"
                       onClick={() => handleButtonClick(button.action, button.id)}
                       style={{ 
-                        width: '100%', 
                         textAlign: 'center', 
                         padding: '12px', 
                         marginBottom: '6px',
@@ -41053,7 +41261,7 @@ A1;Peça exemplo;10'
           </button>
           
           {expandedGroups.has('gestao-financeira') && (
-            <div style={{ marginTop: '5px', marginBottom: '10px' }}>
+            <div className="sidebar-action-buttons" style={{ marginTop: '5px', marginBottom: '10px' }}>
               {getButtonsByGroup('gestao-financeira')
                 .sort((a, b) => a.order - b.order)
                 .map((button) => {
@@ -41061,10 +41269,9 @@ A1;Peça exemplo;10'
                   return (
                     <button
                       key={button.id}
-                      className="btn-primary"
+                      className="btn-primary sidebar-action-btn"
                       onClick={() => handleButtonClick(button.action)}
                       style={{ 
-                        width: '100%', 
                         textAlign: 'center', 
                         padding: '12px', 
                         marginBottom: '6px',
@@ -41177,7 +41384,7 @@ A1;Peça exemplo;10'
           </button>
           
           {expandedGroups.has('extra') && (
-            <div style={{ marginTop: '5px', marginBottom: '10px' }}>
+            <div className="sidebar-action-buttons" style={{ marginTop: '5px', marginBottom: '10px' }}>
               {/* Seletor de Idioma */}
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', color: '#ffffff' }}>{safeT?.selectLanguage || 'Idioma'}</label>
@@ -41197,10 +41404,9 @@ A1;Peça exemplo;10'
 
               {/* Botão Tradutor de Idiomas */}
               <button
-                className="btn-primary"
+                className="btn-primary sidebar-action-btn"
                 onClick={() => handleButtonClick('open-translator')}
                 style={{ 
-                  width: '100%', 
                   textAlign: 'center', 
                   padding: '12px', 
                   marginBottom: '6px',
@@ -41417,7 +41623,7 @@ A1;Peça exemplo;10'
           </button>
         </div>
         {/* Conteúdo da Aba Ativa ou Dashboard */}
-        <div style={{ flex: 1, padding: '30px', overflowY: 'auto' }}>
+        <div className="main-content-area" style={{ flex: 1, padding: '30px', overflowY: 'auto', minWidth: 0 }}>
           {activeTabId ? (
             // Renderizar conteúdo da aba ativa
             <div style={{ height: '100%', overflowY: 'auto' }}>
@@ -42026,6 +42232,61 @@ A1;Peça exemplo;10'
             <h2 style={{ marginBottom: '30px', borderBottom: '2px solid rgba(0, 255, 0, 0.3)', paddingBottom: '15px' }}>
               {safeT?.administrador || 'ADMINISTRADOR'}
             </h2>
+
+            {/* CONTROLE DE ENVIO DO LINK PARA TESTE - Primeiro para maior visibilidade */}
+            <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', borderLeft: '4px solid #66b3ff' }}>
+              <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '18px', borderBottom: '1px solid rgba(102, 179, 255, 0.3)', paddingBottom: '10px' }}>
+                📤 Controle de Envio do Link para Teste
+              </h3>
+              <p style={{ fontSize: '12px', opacity: 0.8, marginBottom: '12px' }}>Registe as pessoas a quem enviou o link de demonstração.</p>
+              <div style={{ marginBottom: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <input
+                  type="text"
+                  placeholder="Nome"
+                  value={demoLinkForm.nome}
+                  onChange={(e) => setDemoLinkForm(f => ({ ...f, nome: e.target.value }))}
+                  style={{ flex: 1, minWidth: '100px', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                />
+                <input
+                  type="text"
+                  placeholder="Email"
+                  value={demoLinkForm.email}
+                  onChange={(e) => setDemoLinkForm(f => ({ ...f, email: e.target.value }))}
+                  style={{ flex: 1, minWidth: '120px', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                />
+                <button
+                  className="btn-primary"
+                  onClick={() => {
+                    if (!demoLinkForm.nome.trim()) { alert('Indique o nome.'); return }
+                    const novo = { id: 'demo-' + Date.now(), nome: demoLinkForm.nome.trim(), email: demoLinkForm.email.trim(), dataEnvio: new Date().toISOString(), observacoes: demoLinkForm.observacoes.trim() || undefined }
+                    const updated = [...demoLinkRecipients, novo]
+                    setDemoLinkRecipients(updated)
+                    saveData('nonato-demo-link-recipients', updated)
+                    setDemoLinkForm({ nome: '', email: '', observacoes: '' })
+                  }}
+                  style={{ padding: '8px 16px' }}
+                >
+                  + Adicionar
+                </button>
+                <button
+                  className="btn-primary"
+                  onClick={() => { const url = (typeof window !== 'undefined' ? window.location.origin : '') + '/demo'; navigator.clipboard.writeText(url); alert('Link copiado!'); }}
+                  style={{ padding: '8px 16px', backgroundColor: 'rgba(0, 150, 255, 0.2)', borderColor: '#66b3ff', color: '#66b3ff' }}
+                >
+                  📋 Copiar link
+                </button>
+              </div>
+              {demoLinkRecipients.length > 0 && (
+                <div style={{ maxHeight: '180px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {demoLinkRecipients.map((r) => (
+                    <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', backgroundColor: '#2a2a2a', borderRadius: '4px' }}>
+                      <span><strong>{r.nome}</strong>{r.email ? ' • ' + r.email : ''} <span style={{ fontSize: '10px', opacity: 0.6 }}>({new Date(r.dataEnvio).toLocaleDateString('pt-BR')})</span></span>
+                      <button className="btn-danger" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => { if (window.confirm('Remover?')) { const u = demoLinkRecipients.filter(x => x.id !== r.id); setDemoLinkRecipients(u); saveData('nonato-demo-link-recipients', u) } }}>Excluir</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             
             {/* SEÇÃO 1: CONFIGURAÇÕES GERAIS */}
             <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
@@ -42646,7 +42907,8 @@ A1;Peça exemplo;10'
               )}
             </div>
 
-            {/* SEÇÃO 4: BACKUP E SEGURANÇA */}
+            {/* SEÇÃO 5: BACKUP E SEGURANÇA - Oculto no modo DEMO */}
+            {!isDemoMode && (
             <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
                 {safeT?.backupRestore || 'BACKUP E SEGURANÇA'}
@@ -42670,6 +42932,7 @@ A1;Peça exemplo;10'
                 </div>
               </div>
             </div>
+            )}
 
             <button className="btn-primary" onClick={() => setShowModal(false)} style={{ width: '100%', padding: '12px', marginTop: '20px' }}>
               {safeT?.close || 'Fechar'}
@@ -45348,8 +45611,6 @@ A1;Peça exemplo;10'
                 <input type="text" placeholder={safeT?.modelo || 'Modelo'} value={equipamentoClienteForm.modelo} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, modelo: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                 <input type="text" placeholder={safeT?.marca || 'Marca'} value={equipamentoClienteForm.marca} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, marca: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                 <input type="text" placeholder={safeT?.numeroSerie || 'Número de Série'} value={equipamentoClienteForm.numeroSerie} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, numeroSerie: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
-                <input type="text" placeholder={safeT?.familia || 'Família'} value={equipamentoClienteForm.familia} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, familia: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
-                <input type="text" placeholder={safeT?.grupo || 'Grupo'} value={equipamentoClienteForm.grupo} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, grupo: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button className="btn-primary" onClick={handleSaveEquipamentoCliente} style={{ flex: 1 }}>{safeT?.save || 'Salvar'}</button>
                   <button className="btn-primary" onClick={() => { setShowEquipamentoClienteForm(false); setEditingEquipamentoCliente(null); }} style={{ flex: 1 }}>{safeT?.cancel || 'Cancelar'}</button>

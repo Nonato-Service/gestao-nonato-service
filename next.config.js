@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Reduz uso de memória no build (importante para Railway plano gratuito)
+  productionBrowserSourceMaps: false,
+  async rewrites() {
+    return [
+      // Evitar 404 quando o browser pede /favicon.ico (usa o ícone da app)
+      { source: '/favicon.ico', destination: '/icon.svg' },
+    ]
+  },
   async headers() {
     return [
       {
@@ -12,6 +20,10 @@ const nextConfig = {
   // Permite o build concluir mesmo com erros de tipo (corrija os tipos gradualmente)
   typescript: {
     ignoreBuildErrors: true,
+  },
+  // Desativa ESLint no build para reduzir uso de memória
+  eslint: {
+    ignoreDuringBuilds: true,
   },
   // Melhorar o carregamento de scripts
   experimental: {

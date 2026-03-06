@@ -2,6 +2,8 @@
 
 Este guia explica como colocar o seu programa na internet. O sistema **guarda dados em arquivos** (pasta `data/`), por isso é preciso usar uma hospedagem que **mantenha disco persistente**.
 
+**Última atualização:** Março 2026
+
 ---
 
 ## ⚠️ Importante
@@ -27,18 +29,16 @@ A [Railway](https://railway.app) oferece plano gratuito (com limite de uso) e su
 
 3. **Configurar o serviço**
    - Se usou “Deploy from GitHub repo”, selecione o repositório do **gestao-tecnica-nonato-service**.
-   - Railway detecta Next.js e usa:
-     - **Build Command:** `npm install && npm run build`
-     - **Start Command:** `npm start`
-     - **Root Directory:** (deixe em branco se o projeto está na raiz do repo).
+   - O projeto tem `railway.json`: **Build** = `npm run build`, **Start** = `npm start` (usa `scripts/start-server.js` com `PORT` e `0.0.0.0`).
+   - **Root Directory:** deixe em branco se o projeto está na raiz do repo.
 
 4. **Criar volume para os dados**
    - No projeto, clique no seu serviço (o app).
    - Aba **“Variables”**: adicione uma variável:
      - Nome: `DATA_DIR`  
-     - Valor: `/data`
+     - Valor: **`/app/data`**
    - Aba **“Settings”** (ou **“Volumes”**): adicione um **Volume**.
-   - Monte o volume no caminho: `/data`.
+   - Nome do volume: `dados` | **Mount Path:** **`/app/data`**
    - Assim, tudo que o app salvar em `data/` será guardado nesse volume e **não se perde** quando fizer novo deploy.
 
 5. **Deploy**
@@ -53,10 +53,11 @@ A [Railway](https://railway.app) oferece plano gratuito (com limite de uso) e su
 
 | Item        | Valor |
 |------------|--------|
-| Build      | `npm install && npm run build` |
-| Start      | `npm start` |
-| Variável   | `DATA_DIR=/data` |
-| Volume     | Montar em `/data` |
+| Build      | `npm run build` (definido em `railway.json`) |
+| Start      | `npm start` (usa `scripts/start-server.js`, porta `PORT`, escuta `0.0.0.0`) |
+| Variável   | `DATA_DIR=/app/data` |
+| Volume     | Montar em `/app/data` |
+| Opcional   | `NODE_OPTIONS=--max-old-space-size=384` se o build falhar por memória |
 
 ---
 
@@ -73,7 +74,7 @@ A [Render](https://render.com) também tem plano gratuito e suporta **disco pers
 5. Em **Environment** (variáveis de ambiente), adicione:
    - `DATA_DIR` = `/data`  
    (só use se for criar um disco e montar em `/data`; no plano gratuito o disco pode ser limitado.)
-6. Se usar **Disk** (disco persistente), monte em `/data` e mantenha `DATA_DIR=/data`.
+6. Se usar **Disk** (disco persistente), monte em `/data` e mantenha `DATA_DIR=/data`. No Railway use sempre **`/app/data`** (ver guia DEPLOY-RAILWAY.md).
 7. Deploy: Render faz deploy automático a cada push.
 
 O plano gratuito pode reiniciar o serviço após inatividade; os dados só persistem se você tiver disco persistente configurado.
@@ -131,8 +132,8 @@ Assim você pode, na Railway ou Render, montar um volume em `/data` e definir `D
 
 - [ ] Código no **GitHub** (ou outro Git) para conectar à Railway/Render.
 - [ ] **Node.js** em versão 20 ou 22 (ajuste no servidor ou no painel da hospedagem se necessário).
-- [ ] Na hospedagem: **variável `DATA_DIR`** apenas se usar volume/disco (ex.: `DATA_DIR=/data`).
-- [ ] Volume/disco montado em **`/data`** (Railway/Render) se quiser persistência dos dados.
+- [ ] Na hospedagem: **variável `DATA_DIR`** apenas se usar volume/disco (Railway: `DATA_DIR=/app/data`; Render: `DATA_DIR=/data` se montar disco em `/data`).
+- [ ] Volume/disco: Railway **`/app/data`**; Render **`/data`** se quiser persistência dos dados.
 
 ---
 
@@ -155,4 +156,4 @@ Assim você pode, na Railway ou Render, montar um volume em `/data` e definir `D
 
 ---
 
-**Resumo:** Você pode hospedar sozinho seguindo este guia. A opção mais simples para começar é **Railway**: criar conta, conectar o repo, definir `DATA_DIR=/data`, criar volume em `/data` e gerar o domínio. Se disser em qual opção quer (Railway, Render ou VPS), posso detalhar só essa em mais passos ou em prints.
+**Resumo:** Você pode hospedar sozinho seguindo este guia. A opção mais simples para começar é **Railway**: criar conta, conectar o repo **gestao-tecnica-nonato-service**, definir **`DATA_DIR=/app/data`**, criar volume com mount path **`/app/data`** e gerar o domínio. Guia passo a passo: **DEPLOY-RAILWAY.md**.

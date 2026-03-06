@@ -294,12 +294,13 @@ export async function saveAllToServer(data: Record<string, any>): Promise<boolea
 
 // Função híbrida: salva no localStorage E no servidor
 export async function saveData(key: string, value: any, saveToLocalStorage = true): Promise<void> {
-  // Salvar no localStorage (para acesso rápido)
+  // Salvar no localStorage (para acesso rápido) - falha aqui deve ser reportada ao caller
   if (saveToLocalStorage && typeof window !== 'undefined') {
     try {
       localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value))
     } catch (error) {
       console.error(`Erro ao salvar no localStorage (${key}):`, error)
+      throw error
     }
   }
 

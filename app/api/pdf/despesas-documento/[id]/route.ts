@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import { DATA_DIR } from '../../../data/shared'
+import { getDemoContext } from '../../../data/demo-context'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,11 +10,15 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { isDemo, expired, dataDir } = getDemoContext(request)
+    if (isDemo && expired) {
+      return new NextResponse('Demonstração expirada.', { status: 403 })
+    }
     const { searchParams } = new URL(request.url)
     const lang = searchParams.get('lang') || 'pt-BR'
     const docId = params.id
 
-    const filePath = path.join(DATA_DIR, 'nonato-despesas-documentos.json')
+    const filePath = path.join(dataDir, 'nonato-despesas-documentos.json')
     if (!fs.existsSync(filePath)) {
       return new NextResponse('Documento não encontrado', { status: 404 })
     }
@@ -141,7 +145,7 @@ export async function GET(
   </table>
 
   <div class="footer">
-    <p>${labels.rodape} ${dataFormatada} — ${labels.nonato}</p>
+    <p>${labels.rodape} ${dataFormatada} — ${labels.nonato}${isDemo ? ' — DEMO' : ''}</p>
   </div>
 </body>
 </html>`

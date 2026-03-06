@@ -1,14 +1,20 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { AdicionarServicosStyle } from './AdicionarServicosStyle'
 import { RegisterSW } from './RegisterSW'
 import { OfflineIndicator } from './components/OfflineIndicator'
 
+// Evita pré-renderização pesada no build (reduz memória no Railway)
+export const dynamic = 'force-dynamic'
+
+export const viewport: Viewport = {
+  themeColor: '#00ff00',
+}
+
 export const metadata: Metadata = {
   title: 'Gestão Técnica da Nonato Service',
   description: 'Sistema de Gestão Técnica',
   manifest: '/manifest.json',
-  themeColor: '#00ff00',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -25,10 +31,9 @@ export default function RootLayout({
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
         <meta name="mobile-web-app-capable" content="yes" />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#00ff00" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Nonato Service" />

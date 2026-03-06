@@ -374,6 +374,7 @@ O projeto utiliza TypeScript com tipos bem definidos:
 - Histórico mantido no localStorage: `nonato-code-backups`
 
 ### Scripts de Gerenciamento Disponíveis
+- **`ATUALIZAR-DEPLOY.bat`** - Enviar alterações para o GitHub e atualizar o deploy no Railway (rápido: add + commit + push). Ver **ATUALIZACOES-RAPIDAS.md**.
 - `start-server.bat` - Iniciar servidor de desenvolvimento
 - `stop-server.bat` - Parar servidor
 - `restart-server.bat` - Reiniciar servidor
@@ -389,6 +390,15 @@ O projeto utiliza TypeScript com tipos bem definidos:
 - `handleBackupCodigo()` - Backup manual do código
 - `createAutoCodeBackup()` - Backup automático
 - `createAutoBackupBeforeOperation()` - Backup antes de operações críticas
+
+### 🌐 Deploy (Hospedagem)
+- **Repositório:** `gestao-tecnica-nonato-service` (GitHub)
+- **Railway:** Guia passo a passo em **DEPLOY-RAILWAY.md**  
+  - Volume: Mount Path **`/app/data`** | Variável **`DATA_DIR=/app/data`**  
+  - Opcional: `NODE_OPTIONS=--max-old-space-size=384` se o build falhar por memória
+- **Config:** `railway.json` (build: `npm run build`, start: `npm start`)  
+- **Start:** `scripts/start-server.js` usa `PORT` e escuta em `0.0.0.0`
+- **Mais opções:** COMO-HOSPEDAR.md (Railway, Render, VPS) | GUIA-SIMPLES-DEPLOY.md | PROXIMOS-PASSOS-DEPLOY.md
 
 ## 🚀 COMO USAR O SISTEMA
 
@@ -450,7 +460,7 @@ Get-ChildItem backups\ -Directory | Sort-Object LastWriteTime -Descending
 **Usuário:** Mesmo usuário do projeto Nonato Service  
 **Projeto:** Gestão Técnica Nonato Service  
 **Localização:** `C:\Users\W10\gestao-tecnica-nonato-service`  
-**Última atualização:** Fevereiro 2026
+**Última atualização:** Março 2026
 
 **Contexto importante:**
 - Sistema já tem backup automático implementado
@@ -532,7 +542,7 @@ Get-ChildItem backups\ -Directory | Sort-Object LastWriteTime -Descending
 
 ---
 
-**Última atualização:** 4 de Fevereiro de 2026  
+**Última atualização:** Março 2026  
 **Status:** ✅ SISTEMA 100% FUNCIONAL - TODAS AS FUNCIONALIDADES PRINCIPAIS COMPLETAS! 🎉
 
 **Últimas implementações:**

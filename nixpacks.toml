@@ -1,0 +1,15 @@
+# Configuração Nixpacks para Railway
+# Separa o build (fase de compilação) do start (fase de execução)
+# NODE_OPTIONS limita memória para evitar "Killed" no plano gratuito (~512MB RAM)
+
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["NODE_OPTIONS='--max-old-space-size=384' npm run build"]
+
+[start]
+cmd = "npm start"

@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import { DATA_DIR, ensureDataDir } from '../shared'
+import { ensureDataDir } from '../shared'
+import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 
 export async function POST(request: NextRequest) {
   try {
+    const { isDemo, expired, dataDir } = getDemoContext(request)
+    if (isDemo && expired) {
+      return NextResponse.json(
+        { error: 'demo_expired', message: 'Período de demonstração expirado (15 dias).' },
+        { status: 403 }
+      )
+    }
     ensureDataDir()
+    ensureDemoDataDir(dataDir)
     const allData = await request.json()
 
     if (!allData || typeof allData !== 'object') {
@@ -21,7 +30,7 @@ export async function POST(request: NextRequest) {
     // Salvar cada item
     for (const [key, value] of Object.entries(allData)) {
       try {
-        const filePath = path.join(DATA_DIR, `${key}.json`)
+        const filePath = path.join(dataDir, `${key}.json`)
         fs.writeFileSync(filePath, JSON.stringify(value, null, 2), 'utf-8')
         saved.push(key)
       } catch (error: any) {

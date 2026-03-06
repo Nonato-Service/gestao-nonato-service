@@ -1,0 +1,27 @@
+---
+description: Fazer mudanças no programa de forma rápida e eficiente; atualizar deploy com um comando
+alwaysApply: true
+---
+
+# Regra: Mudanças Rápidas e Eficientes
+
+No projeto **Gestão Técnica Nonato Service**, as alterações ao código devem ser feitas de forma **rápida e eficiente** e o deploy deve poder ser atualizado com o mínimo de passos.
+
+## Ao editar código
+
+1. **Edições cirúrgicas:** Preferir sempre `StrReplace` (substituição exata) em vez de reescrever ficheiros inteiros. Especialmente em `app/page.tsx` (~38.000 linhas): nunca reescrever o ficheiro todo; fazer apenas as alterações necessárias com contexto único (3–5 linhas antes e depois).
+2. **Um objetivo por alteração:** Cada mudança deve ser mínima e focada. Se forem várias alterações, fazer várias substituições em vez de um único bloco enorme.
+3. **Evitar toques desnecessários:** Não alterar código que não está relacionado com o pedido do utilizador (evitar "limpeza" ou reformatação em ficheiros grandes).
+4. **Traduções:** Novos textos na UI devem seguir a regra dos 6 idiomas (`app/translations.ts`) — ver regra `idiomas-6.mdc`.
+
+## Depois de fazer mudanças
+
+5. **Atualizar deploy:** Para colocar as alterações na internet (Railway), o utilizador deve executar **ATUALIZAR-DEPLOY.bat** (ou, no terminal: `git add . && git commit -m "Atualização" && git push`). O Railway faz o deploy automaticamente em 2–5 minutos.
+6. **Mensagem opcional:** Pode sugerir ao utilizador: "Para publicar as alterações, execute **ATUALIZAR-DEPLOY.bat** ou use: `git add . && git commit -m \"Descrição da alteração\" && git push`."
+
+## Resumo para o utilizador
+
+- **Desenvolvimento local:** `npm run dev` — as mudanças aparecem de imediato no browser (hot reload).
+- **Publicar na internet:** Executar **ATUALIZAR-DEPLOY.bat** (duplo clique) ou `git add . && git commit -m "Sua mensagem" && git push`. O Railway atualiza o site automaticamente.
+
+Documentação completa do fluxo: **ATUALIZACOES-RAPIDAS.md**.

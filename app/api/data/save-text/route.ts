@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import { DATA_DIR, ensureDataDir } from '../shared'
+import { ensureDataDir } from '../shared'
+import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 
 export async function POST(request: NextRequest) {
   try {
+    const { isDemo, expired, dataDir } = getDemoContext(request)
+    if (isDemo && expired) {
+      return NextResponse.json(
+        { error: 'demo_expired', message: 'Período de demonstração expirado (15 dias).' },
+        { status: 403 }
+      )
+    }
     ensureDataDir()
+    ensureDemoDataDir(dataDir)
     const body = await request.json()
     const { key, value } = body
 
@@ -16,7 +25,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const filePath = path.join(DATA_DIR, `${key}.txt`)
+    const filePath = path.join(dataDir, `${key}.txt`)
     
     // Salvar como texto puro (para vídeos/imagens em base64)
     fs.writeFileSync(filePath, value, 'utf-8')

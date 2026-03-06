@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getDemoContext } from '../data/demo-context'
 
 export const dynamic = 'force-dynamic'
 
@@ -6,9 +7,17 @@ export const dynamic = 'force-dynamic'
  * Busca o conteúdo de uma URL no servidor (evita CORS no browser).
  * POST body: { url: string }
  * Retorna: { ok: true, data: string, contentType?: string } ou { ok: false, error: string }
+ * Bloqueado em modo DEMO para evitar importação de dados.
  */
 export async function POST(request: NextRequest) {
   try {
+    const { isDemo } = getDemoContext(request)
+    if (isDemo) {
+      return NextResponse.json(
+        { ok: false, error: 'Importação de URL desativada no modo demonstração.' },
+        { status: 403 }
+      )
+    }
     const body = await request.json()
     const url = typeof body?.url === 'string' ? body.url.trim() : ''
 
