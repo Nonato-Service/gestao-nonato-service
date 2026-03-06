@@ -740,6 +740,7 @@ export default function Dashboard() {
   const [codeBackups, setCodeBackups] = useState<Array<{ path: string; timestamp: string; filesCount: number }>>([])
   const [loadingBackups, setLoadingBackups] = useState(false)
   const [isDemoMode, setIsDemoMode] = useState(false)
+  const [hideDemoBar, setHideDemoBar] = useState(false) // no telemóvel/tablet: poder fechar a faixa verde para não bloquear
   const [demoExpired, setDemoExpired] = useState(false)
   const [demoDaysLeft, setDemoDaysLeft] = useState<number | null>(null)
   const [demoLinkRecipients, setDemoLinkRecipients] = useState<Array<{ id: string; nome: string; email: string; dataEnvio: string; observacoes?: string }>>([])
@@ -37936,7 +37937,7 @@ A1;Peça exemplo;10'
                     <h3 style={{ color: '#66b3ff', margin: 0 }}>
                       {itemFormMode === 'biblioteca' 
                         ? (safeT?.adicionarItemBiblioteca || 'Adicionar Item da Biblioteca')
-                        : (safeT?.adicionarItemManual || 'Adicionar Item Manual')
+                        : (safeT?.adicionarItemManual || 'Adicionar Item Manual') + ' — Código, Descrição, Quantidade'
                       }
                     </h3>
                     <button
@@ -37954,10 +37955,10 @@ A1;Peça exemplo;10'
                     </button>
                   </div>
 
-                  {/* Código da peça - sempre primeiro e visível (manual e biblioteca) */}
-                  <div style={{ marginBottom: '16px' }}>
-                    <label style={{ display: 'block', marginBottom: '6px', color: '#00ff00', fontWeight: 700, fontSize: '14px' }}>
-                      {safeT?.codigoPeca || 'Código da peça'}
+                  {/* 1. Código da peça - sempre primeiro (manual e biblioteca) */}
+                  <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: 'rgba(0, 255, 0, 0.08)', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.4)' }}>
+                    <label style={{ display: 'block', marginBottom: '6px', color: '#00ff00', fontWeight: 700, fontSize: '15px' }}>
+                      1. {safeT?.codigoPeca || 'Código da peça'}
                     </label>
                     <input
                       type="text"
@@ -37990,7 +37991,7 @@ A1;Peça exemplo;10'
                     </h4>
                     <div style={{ marginBottom: '14px' }}>
                       <label style={{ display: 'block', marginBottom: '6px', color: '#e0e0e0', fontWeight: 600 }}>
-                        {safeT?.descricaoItem || 'Descrição'} *
+                        2. {safeT?.descricaoItem || 'Descrição'} *
                       </label>
                       <input
                         type="text"
@@ -38011,7 +38012,7 @@ A1;Peça exemplo;10'
                     </div>
                     <div style={{ marginBottom: '0' }}>
                       <label style={{ display: 'block', marginBottom: '6px', color: '#e0e0e0', fontWeight: 600 }}>
-                        {safeT?.quantidade || 'Quantidade'}
+                        3. {safeT?.quantidade || 'Quantidade'}
                       </label>
                       <input
                         type="number"
@@ -40179,11 +40180,13 @@ A1;Peça exemplo;10'
     )
   }
 
+  const showDemoBar = isDemoMode && !hideDemoBar
   return (
-    <div className="app-layout" style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#000', color: '#fff', paddingBottom: openTabs.length > 0 ? '54px' : '0', paddingTop: isDemoMode ? '50px' : 0 }}>
-      {isDemoMode && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '10px 20px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '2px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', fontSize: '14px', textAlign: 'center' }}>
-          🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Sem exportação nem backup
+    <div className="app-layout" style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#000', color: '#fff', paddingBottom: openTabs.length > 0 ? '54px' : '0', paddingTop: showDemoBar ? '50px' : 0 }}>
+      {showDemoBar && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '10px 12px 10px 20px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '2px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, touchAction: 'manipulation' }}>
+          <span style={{ flex: 1, minWidth: 0 }}>🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Sem exportação nem backup</span>
+          <button type="button" onClick={() => setHideDemoBar(true)} aria-label="Fechar" style={{ flexShrink: 0, padding: '6px 12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(0,255,0,0.5)', borderRadius: 6, color: '#00ff00', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Fechar</button>
         </div>
       )}
       {/* Sidebar - estilos em globals.css (media queries para mobile) */}

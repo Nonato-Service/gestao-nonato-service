@@ -71,10 +71,14 @@ export function RegisterSW() {
     }
   }
 
+  // Fechar o banner (importante no telemóvel/tablet: não bloquear zoom nem a tela)
+  const handleDismiss = () => setUpdateReady(false)
+
   if (!updateReady) return null
   return (
     <div
       className="pwa-update-banner"
+      role="alert"
       style={{
         position: 'fixed',
         top: 0,
@@ -83,33 +87,54 @@ export function RegisterSW() {
         zIndex: 10000,
         background: 'linear-gradient(135deg, #00aa00 0%, #006600 100%)',
         color: '#fff',
-        padding: '14px 20px',
+        padding: '12px 16px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: 12,
+        gap: 10,
         boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
         fontSize: 15,
-        fontWeight: 600
+        fontWeight: 600,
+        minHeight: '48px',
+        touchAction: 'manipulation'
       }}
     >
-      <span>Atualização disponível</span>
-      <button
-        onClick={handleUpdate}
-        style={{
-          padding: '10px 24px',
-          background: '#fff',
-          color: '#006600',
-          border: 'none',
-          borderRadius: 8,
-          fontWeight: 700,
-          cursor: 'pointer',
-          fontSize: 14
-        }}
-      >
-        ATUALIZAR
-      </button>
+      <span style={{ flex: '1 1 auto', minWidth: 0 }}>Atualização disponível</span>
+      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        <button
+          type="button"
+          onClick={handleDismiss}
+          style={{
+            padding: '8px 14px',
+            background: 'rgba(255,255,255,0.25)',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.5)',
+            borderRadius: 8,
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontSize: 13
+          }}
+        >
+          Fechar
+        </button>
+        <button
+          type="button"
+          onClick={handleUpdate}
+          style={{
+            padding: '10px 24px',
+            background: '#fff',
+            color: '#006600',
+            border: 'none',
+            borderRadius: 8,
+            fontWeight: 700,
+            cursor: 'pointer',
+            fontSize: 14
+          }}
+        >
+          ATUALIZAR
+        </button>
+      </div>
     </div>
   )
 }

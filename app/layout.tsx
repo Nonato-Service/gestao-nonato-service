@@ -3,6 +3,7 @@ import './globals.css'
 import { AdicionarServicosStyle } from './AdicionarServicosStyle'
 import { RegisterSW } from './RegisterSW'
 import { OfflineIndicator } from './components/OfflineIndicator'
+import { InstallPrompt } from './components/InstallPrompt'
 
 // Evita pré-renderização pesada no build (reduz memória no Railway)
 export const dynamic = 'force-dynamic'
@@ -43,6 +44,7 @@ export default function RootLayout({
         <AdicionarServicosStyle />
         <RegisterSW />
         <OfflineIndicator />
+        <InstallPrompt />
       </body>
     </html>
   )
