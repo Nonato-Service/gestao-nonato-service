@@ -2,6 +2,16 @@
 
 import React from 'react'
 
+function getActivateUrl(): string {
+  if (typeof window === 'undefined') return '/api/demo/activate'
+  const { protocol, hostname, port } = window.location
+  if (hostname === '0.0.0.0') {
+    const p = port || (protocol === 'https:' ? '443' : '80')
+    return `${protocol === 'https:' ? 'http' : 'http'}://localhost:${p}/api/demo/activate`
+  }
+  return '/api/demo/activate'
+}
+
 export default function DemoWelcomePage() {
   return (
     <div
@@ -76,9 +86,9 @@ export default function DemoWelcomePage() {
         >
           Sem exportação nem backup. Ao clicar em &quot;Aceitar e entrar&quot;, concorda com estes termos.
         </p>
-        {/* Link direto para forçar pedido completo e gravação dos cookies no browser */}
+        {/* Link: em 0.0.0.0 usa localhost para evitar NS_ERROR_CONNECTION_REFUSED */}
         <a
-          href="/api/demo/activate"
+          href={getActivateUrl()}
           style={{
             display: 'inline-block',
             padding: '14px 32px',
