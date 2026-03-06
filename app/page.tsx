@@ -15642,7 +15642,7 @@ const nextF = familias.filter(x => x !== f)
                         </span>
                       </div>
                       <button
-                        className="btn-danger"
+                        className="btn-danger btn-excluir-compact"
                         onClick={() => {
                           if (window.confirm('Remover este registo?')) {
                             const updated = demoLinkRecipients.filter(x => x.id !== r.id)
@@ -15650,10 +15650,11 @@ const nextF = familias.filter(x => x !== f)
                             saveData('nonato-demo-link-recipients', updated)
                           }
                         }}
-                        style={{ flexShrink: 0, padding: '4px 8px', fontSize: '11px' }}
                         title="Excluir"
+                        style={{ flexShrink: 0, flexGrow: 0, width: 'auto', maxWidth: 'fit-content' }}
                       >
-                        Excluir
+                        <span className="btn-excluir-text">Excluir</span>
+                        <span className="btn-excluir-icon" aria-hidden>✕</span>
                       </button>
                     </div>
                   ))}
@@ -40187,8 +40188,9 @@ A1;Peça exemplo;10'
   }
 
   const showDemoBar = isDemoMode && !hideDemoBar
+  const hasBottomTabs = openTabs.length > 0
   return (
-    <div className={`app-layout${showDemoBar ? ' has-demo-bar' : ''}`} style={{ display: 'flex', minHeight: '100vh', minHeight: '100dvh', backgroundColor: '#000', color: '#fff', paddingBottom: openTabs.length > 0 ? '54px' : '0', paddingTop: showDemoBar ? '50px' : 0, width: '100%', maxWidth: '100vw', boxSizing: 'border-box' }}>
+    <div className={`app-layout${showDemoBar ? ' has-demo-bar' : ''}${hasBottomTabs ? ' has-bottom-tabs' : ''}`} style={{ display: 'flex', minHeight: '100vh', minHeight: '100dvh', backgroundColor: '#000', color: '#fff', paddingBottom: hasBottomTabs ? 'calc(54px + env(safe-area-inset-bottom, 0px))' : 0, paddingTop: showDemoBar ? '50px' : 0, width: '100%', maxWidth: '100vw', boxSizing: 'border-box' }}>
       {showDemoBar && (
         <div className="demo-top-bar" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '10px 12px 10px 20px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '2px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, touchAction: 'manipulation' }}>
           <span style={{ flex: 1, minWidth: 0 }}>🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Sem exportação nem backup</span>
@@ -41602,7 +41604,7 @@ A1;Peça exemplo;10'
       </div>
 
       {/* Área Principal */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="app-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
         {/* Botão pequeno: voltar à tela inicial */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 20px 0 0', flexShrink: 0 }}>
           <button
@@ -42292,7 +42294,7 @@ A1;Peça exemplo;10'
                   {demoLinkRecipients.map((r) => (
                     <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', backgroundColor: '#2a2a2a', borderRadius: '4px' }}>
                       <span><strong>{r.nome}</strong>{r.email ? ' • ' + r.email : ''} <span style={{ fontSize: '10px', opacity: 0.6 }}>({new Date(r.dataEnvio).toLocaleDateString('pt-BR')})</span></span>
-                      <button className="btn-danger" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => { if (window.confirm('Remover?')) { const u = demoLinkRecipients.filter(x => x.id !== r.id); setDemoLinkRecipients(u); saveData('nonato-demo-link-recipients', u) } }}>Excluir</button>
+                      <button className="btn-danger btn-excluir-compact" style={{ flexShrink: 0, flexGrow: 0, width: 'auto', maxWidth: 'fit-content' }} onClick={() => { if (window.confirm('Remover?')) { const u = demoLinkRecipients.filter(x => x.id !== r.id); setDemoLinkRecipients(u); saveData('nonato-demo-link-recipients', u) } }} title="Excluir"><span className="btn-excluir-text">Excluir</span><span className="btn-excluir-icon" aria-hidden>✕</span></button>
                     </div>
                   ))}
                 </div>
