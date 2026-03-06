@@ -72,9 +72,29 @@ export function RegisterSW() {
   }
 
   // Fechar o banner (importante no telemóvel/tablet: não bloquear zoom nem a tela)
-  const handleDismiss = () => setUpdateReady(false)
+  const DISMISS_KEY = 'nonato-pwa-banner-dismissed'
+  const DISMISS_HOURS = 24
 
-  if (!updateReady) return null
+  const handleDismiss = () => {
+    setUpdateReady(false)
+    try {
+      localStorage.setItem(DISMISS_KEY, String(Date.now() + DISMISS_HOURS * 60 * 60 * 1000))
+    } catch {}
+  }
+
+  // Não mostrar o banner se o utilizador fechou nas últimas 24h (evita tela verde no telemóvel)
+  const [canShowBanner, setCanShowBanner] = useState<boolean | null>(null)
+  useEffect(() => {
+    if (!updateReady) return
+    try {
+      const until = parseInt(localStorage.getItem(DISMISS_KEY) || '0', 10)
+      setCanShowBanner(until <= Date.now())
+    } catch {
+      setCanShowBanner(true)
+    }
+  }, [updateReady])
+
+  if (!updateReady || canShowBanner !== true) return null
   return (
     <div
       className="pwa-update-banner"

@@ -740,7 +740,10 @@ export default function Dashboard() {
   const [codeBackups, setCodeBackups] = useState<Array<{ path: string; timestamp: string; filesCount: number }>>([])
   const [loadingBackups, setLoadingBackups] = useState(false)
   const [isDemoMode, setIsDemoMode] = useState(false)
-  const [hideDemoBar, setHideDemoBar] = useState(false) // no telemóvel/tablet: poder fechar a faixa verde para não bloquear
+  const [hideDemoBar, setHideDemoBar] = useState(() => {
+    if (typeof window === 'undefined') return false
+    try { return localStorage.getItem('nonato-hide-demo-bar') === '1' } catch { return false }
+  }) // no telemóvel/tablet: persistir fechar da faixa verde
   const [demoExpired, setDemoExpired] = useState(false)
   const [demoDaysLeft, setDemoDaysLeft] = useState<number | null>(null)
   const [demoLinkRecipients, setDemoLinkRecipients] = useState<Array<{ id: string; nome: string; email: string; dataEnvio: string; observacoes?: string }>>([])
@@ -40182,11 +40185,11 @@ A1;Peça exemplo;10'
 
   const showDemoBar = isDemoMode && !hideDemoBar
   return (
-    <div className="app-layout" style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#000', color: '#fff', paddingBottom: openTabs.length > 0 ? '54px' : '0', paddingTop: showDemoBar ? '50px' : 0 }}>
+    <div className={`app-layout${showDemoBar ? ' has-demo-bar' : ''}`} style={{ display: 'flex', minHeight: '100vh', minHeight: '100dvh', backgroundColor: '#000', color: '#fff', paddingBottom: openTabs.length > 0 ? '54px' : '0', paddingTop: showDemoBar ? '50px' : 0, width: '100%', maxWidth: '100vw', boxSizing: 'border-box' }}>
       {showDemoBar && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '10px 12px 10px 20px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '2px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, touchAction: 'manipulation' }}>
+        <div className="demo-top-bar" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '10px 12px 10px 20px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '2px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, touchAction: 'manipulation' }}>
           <span style={{ flex: 1, minWidth: 0 }}>🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Sem exportação nem backup</span>
-          <button type="button" onClick={() => setHideDemoBar(true)} aria-label="Fechar" style={{ flexShrink: 0, padding: '6px 12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(0,255,0,0.5)', borderRadius: 6, color: '#00ff00', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Fechar</button>
+          <button type="button" onClick={() => { setHideDemoBar(true); try { localStorage.setItem('nonato-hide-demo-bar', '1') } catch {} }} aria-label="Fechar" style={{ flexShrink: 0, padding: '6px 12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(0,255,0,0.5)', borderRadius: 6, color: '#00ff00', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Fechar</button>
         </div>
       )}
       {/* Sidebar - estilos em globals.css (media queries para mobile) */}

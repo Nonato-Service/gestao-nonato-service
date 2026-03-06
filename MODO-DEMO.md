@@ -1,19 +1,20 @@
-# Modo Demonstração
+# Modo Demonstração (Teste 15 dias)
 
-O sistema suporta um **modo demonstração** que permite partilhar um link para outra pessoa usar durante **15 dias**, com dados isolados e sem possibilidade de exportar ou fazer backup.
+O sistema tem uma **opção de teste por 15 dias**: o cliente acede por um link, usa a aplicação em modo demonstração e **nada é guardado no vosso banco de dados principal**. Ao fim de 15 dias o acesso é **bloqueado** automaticamente.
 
 ## Como usar
 
-1. **Criar o link demo:** O utilizador deve aceder a:
+1. **Link para o cliente testar:**
    ```
    https://seu-dominio.up.railway.app/demo
    ```
+   (Substitua pelo vosso domínio, ex.: gest-o-nonato-gestao.up.railway.app/demo)
 
-2. Ao aceder, o sistema define automaticamente um cookie e redireciona para a aplicação em modo demo.
+2. O cliente abre o link → vê a página "Acesso de demonstração" → clica em **"Aceitar e entrar"**. O sistema grava um cookie e redireciona para a app.
 
-3. **Dados isolados:** Tudo o que a pessoa fizer fica guardado numa pasta separada (`data/demo/`), não afetando os dados principais.
+3. **Dados isolados:** Tudo o que o cliente fizer no teste fica numa pasta separada no servidor (`data/demo/`). Os vossos dados reais (clientes, orçamentos, etc.) **não são alterados**.
 
-4. **Expiração:** Após 15 dias, o acesso é bloqueado e é mostrada a mensagem "Demonstração expirada".
+4. **Ao fim de 15 dias:** O acesso fica bloqueado. É mostrada a mensagem "O período de 15 dias de demonstração terminou. Entre em contacto para obter acesso completo." e não é possível guardar nem continuar a usar.
 
 5. **Restrições no modo demo:**
    - Sem exportação de dados
@@ -24,9 +25,9 @@ O sistema suporta um **modo demonstração** que permite partilhar um link para 
 
 ## Segurança
 
-- Os dados da demo ficam em `data/demo/` (ou `$DATA_DIR/demo` no Railway).
+- O **banco de dados principal** (ficheiros em `data/`, ex.: nonato-clientes.json) **não é usado** em modo demo. A API escreve apenas em `data/demo/`.
 - A API verifica o cookie em cada pedido e usa a pasta correta.
-- Após expiração, os cookies são limpos e o acesso é negado.
+- Após expiração, os cookies são limpos e a API devolve 403 (bloqueado).
 
 ## Configuração
 

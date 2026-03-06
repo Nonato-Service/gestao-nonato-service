@@ -61,11 +61,20 @@ export default function DemoWelcomePage() {
             color: 'rgba(255,255,255,0.7)',
             fontSize: '0.95rem',
             lineHeight: 1.5,
+            marginBottom: '12px',
+          }}
+        >
+          Os dados do teste <strong>não são guardados no nosso banco de dados</strong> — ficam numa área isolada apenas para si. Ao fim de 15 dias o acesso é bloqueado automaticamente.
+        </p>
+        <p
+          style={{
+            color: 'rgba(255,255,255,0.6)',
+            fontSize: '0.9rem',
+            lineHeight: 1.5,
             marginBottom: '32px',
           }}
         >
-          Os dados desta demonstração ficam isolados e não afetam outros utilizadores. Ao clicar em
-          &quot;Aceitar e entrar&quot;, concorda com estes termos.
+          Sem exportação nem backup. Ao clicar em &quot;Aceitar e entrar&quot;, concorda com estes termos.
         </p>
         {/* Link direto para forçar pedido completo e gravação dos cookies no browser */}
         <a

@@ -9,7 +9,7 @@ import { InstallPrompt } from './components/InstallPrompt'
 export const dynamic = 'force-dynamic'
 
 export const viewport: Viewport = {
-  themeColor: '#00ff00',
+  themeColor: '#000000', // preto no telemóvel para não ficar "tela verde" na barra de estado
 }
 
 export const metadata: Metadata = {
