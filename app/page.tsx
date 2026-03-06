@@ -15625,16 +15625,18 @@ const nextF = familias.filter(x => x !== f)
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        padding: '12px',
+                        gap: '10px',
+                        padding: '10px 12px',
                         backgroundColor: '#2a2a2a',
                         borderRadius: '6px',
-                        border: '1px solid rgba(0, 255, 0, 0.1)'
+                        border: '1px solid rgba(0, 255, 0, 0.1)',
+                        flexWrap: 'nowrap'
                       }}
                     >
-                      <div>
-                        <strong style={{ display: 'block', marginBottom: '2px' }}>{r.nome}</strong>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <strong style={{ display: 'inline', marginRight: '6px' }}>{r.nome}</strong>
                         {r.email && <span style={{ fontSize: '12px', opacity: 0.8 }}>{r.email}</span>}
-                        <span style={{ fontSize: '11px', opacity: 0.6, display: 'block', marginTop: '4px' }}>
+                        <span style={{ fontSize: '11px', opacity: 0.6, display: 'block', marginTop: '2px' }}>
                           Enviado em: {new Date(r.dataEnvio).toLocaleString(selectedLanguage === 'pt-BR' ? 'pt-BR' : 'pt-BR')}
                           {r.observacoes ? ' • ' + r.observacoes : ''}
                         </span>
@@ -15648,7 +15650,8 @@ const nextF = familias.filter(x => x !== f)
                             saveData('nonato-demo-link-recipients', updated)
                           }
                         }}
-                        style={{ padding: '6px 12px', fontSize: '12px' }}
+                        style={{ flexShrink: 0, padding: '4px 8px', fontSize: '11px' }}
+                        title="Excluir"
                       >
                         Excluir
                       </button>
@@ -15876,16 +15879,16 @@ const nextF = familias.filter(x => x !== f)
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {users.map(user => (
-                    <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
-                      <div>
-                        <strong style={{ display: 'block', marginBottom: '5px' }}>{user.name}</strong>
+                    <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', padding: '10px 12px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)', flexWrap: 'nowrap' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <strong style={{ display: 'inline', marginRight: '8px' }}>{user.name}</strong>
                         <span style={{ fontSize: '12px', opacity: 0.7 }}>{user.email} • {user.role}</span>
                       </div>
-                      <div style={{ display: 'flex', gap: '5px' }}>
-                        <button className="btn-primary" onClick={() => handleEditUser(user)} style={{ padding: '8px 16px', fontSize: '13px', whiteSpace: 'nowrap', minWidth: '80px' }}>
+                      <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                        <button className="btn-primary" onClick={() => handleEditUser(user)} style={{ padding: '4px 10px', fontSize: '11px', whiteSpace: 'nowrap' }}>
                           {safeT?.edit || 'Editar'}
                         </button>
-                        <button className="btn-danger" onClick={() => handleDeleteUser(user.id)} style={{ padding: '8px 16px', fontSize: '13px', whiteSpace: 'nowrap', minWidth: '80px' }}>
+                        <button className="btn-danger" onClick={() => handleDeleteUser(user.id)} style={{ padding: '4px 10px', fontSize: '11px', whiteSpace: 'nowrap' }} title={safeT?.delete || 'Excluir'}>
                           {safeT?.delete || 'Excluir'}
                         </button>
                       </div>
@@ -42353,16 +42356,16 @@ A1;Peça exemplo;10'
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {users.map(user => (
-                    <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
-                      <div>
-                        <strong style={{ display: 'block', marginBottom: '5px' }}>{user.name}</strong>
+                    <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', padding: '10px 12px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)', flexWrap: 'nowrap' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <strong style={{ display: 'inline', marginRight: '8px' }}>{user.name}</strong>
                         <span style={{ fontSize: '12px', opacity: 0.7 }}>{user.email} • {user.role}</span>
                       </div>
-                      <div style={{ display: 'flex', gap: '5px' }}>
-                        <button className="btn-primary" onClick={() => handleEditUser(user)} style={{ padding: '8px 16px', fontSize: '13px', whiteSpace: 'nowrap', minWidth: '80px' }}>
+                      <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                        <button className="btn-primary" onClick={() => handleEditUser(user)} style={{ padding: '4px 10px', fontSize: '11px', whiteSpace: 'nowrap' }}>
                           {safeT?.edit || 'Editar'}
                         </button>
-                        <button className="btn-danger" onClick={() => handleDeleteUser(user.id)} style={{ padding: '8px 16px', fontSize: '13px', whiteSpace: 'nowrap', minWidth: '80px' }}>
+                        <button className="btn-danger" onClick={() => handleDeleteUser(user.id)} style={{ padding: '4px 10px', fontSize: '11px', whiteSpace: 'nowrap' }} title={safeT?.delete || 'Excluir'}>
                           {safeT?.delete || 'Excluir'}
                         </button>
                       </div>
@@ -42899,11 +42902,11 @@ A1;Peça exemplo;10'
                               <span style={{ opacity: 0.5, fontSize: '12px', flexShrink: 0 }}>☰</span>
                               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getButtonName(button)}</span>
                             </div>
-                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '6px 15px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '70px' }}>
+                            <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '4px 10px', fontSize: '11px', whiteSpace: 'nowrap' }}>
                                 {safeT?.edit || 'Editar'}
                               </button>
-                              <button className="btn-danger" onClick={() => handleDeleteButton(button.id)} style={{ padding: '6px 15px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '70px' }}>
+                              <button className="btn-danger" onClick={() => handleDeleteButton(button.id)} style={{ padding: '4px 10px', fontSize: '11px', whiteSpace: 'nowrap' }} title={safeT?.delete || 'Excluir'}>
                                 {safeT?.delete || 'Excluir'}
                               </button>
                             </div>
