@@ -37967,13 +37967,13 @@ A1;Peça exemplo;10'
                     </h4>
                     <div style={{ marginBottom: '14px' }}>
                       <label style={{ display: 'block', marginBottom: '6px', color: '#00ff00', fontWeight: 700, fontSize: '14px' }}>
-                        Código do produto
+                        {safeT?.codigoPeca || 'Código da peça'}
                       </label>
                       <input
                         type="text"
                         value={itemForm.codigo}
                         onChange={(e) => setItemForm(prev => ({ ...prev, codigo: e.target.value }))}
-                        placeholder="Ex: REF-001, SKU-123..."
+                        placeholder={safeT?.codigoPecaBibliotecaPlaceholder || 'Ex: REF-001, SKU-123...'}
                         style={{
                           width: '100%',
                           padding: '12px',
