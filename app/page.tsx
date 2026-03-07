@@ -15554,17 +15554,17 @@ const nextF = familias.filter(x => x !== f)
               </div>
             </div>
 
-            {/* SEÇÃO: CONTROLE DE ENVIO DO LINK PARA TESTE - Primeira secção para maior visibilidade */}
-            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', borderLeft: '4px solid #66b3ff' }}>
-              <h3 style={{ color: '#66b3ff', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(102, 179, 255, 0.3)', paddingBottom: '10px' }}>
-                📤 Controle de Envio do Link para Teste
+            {/* SEÇÃO: LINK DEMO - Dentro de Administradores, para enviar ao cliente testar (15 dias) */}
+            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: 'rgba(102, 179, 255, 0.08)', borderRadius: '8px', border: '1px solid rgba(102, 179, 255, 0.4)', borderLeft: '4px solid #66b3ff' }}>
+              <h3 style={{ color: '#66b3ff', marginBottom: '8px', fontSize: '18px', borderBottom: '1px solid rgba(102, 179, 255, 0.3)', paddingBottom: '10px' }}>
+                🔗 Link para Demo (enviar ao cliente)
               </h3>
-              <p style={{ fontSize: '13px', opacity: 0.8, marginBottom: '15px' }}>
-                Registe aqui as pessoas a quem enviou o link de demonstração (15 dias, dados isolados).
+              <p style={{ fontSize: '12px', opacity: 0.85, marginBottom: '14px' }}>
+                Use este link para o cliente testar o sistema durante 15 dias (dados isolados, não afetam os seus).
               </p>
-              {/* Link do demo editável — o que está aqui é o que se copia ao clicar em Copiar */}
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', fontSize: '12px', opacity: 0.8, marginBottom: '6px' }}>Link para copiar (pode editar, ex.: http://localhost:3000/demo):</label>
+              {/* Link do demo em destaque — pode editar e copiar */}
+              <div style={{ marginBottom: '18px' }}>
+                <label style={{ display: 'block', fontSize: '12px', opacity: 0.9, marginBottom: '6px' }}>Link para copiar (pode editar):</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
                   <input
                     type="url"
@@ -15574,8 +15574,8 @@ const nextF = familias.filter(x => x !== f)
                       setDemoLinkUrl(v)
                       saveData('nonato-demo-link-url', v)
                     }}
-                    placeholder="http://localhost:3000/demo"
-                    style={{ flex: 1, minWidth: '200px', padding: '8px 12px', backgroundColor: '#2a2a2a', color: '#66b3ff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
+                    placeholder="https://seu-dominio.com/demo"
+                    style={{ flex: 1, minWidth: '220px', padding: '10px 12px', backgroundColor: '#1a1a1a', color: '#66b3ff', border: '1px solid rgba(102, 179, 255, 0.4)', borderRadius: '6px', fontSize: '14px' }}
                   />
                   <button
                     type="button"
@@ -15584,12 +15584,15 @@ const nextF = familias.filter(x => x !== f)
                       const url = demoLinkUrl || (typeof window !== 'undefined' ? window.location.origin + '/demo' : '')
                       navigator.clipboard.writeText(url).then(() => alert('Link copiado: ' + url)).catch(() => alert('Não foi possível copiar.'))
                     }}
-                    style={{ padding: '8px 16px', backgroundColor: 'rgba(0, 150, 255, 0.2)', borderColor: '#66b3ff', color: '#66b3ff' }}
+                    style={{ padding: '10px 20px', backgroundColor: 'rgba(0, 150, 255, 0.25)', borderColor: '#66b3ff', color: '#66b3ff', fontWeight: 600 }}
                   >
-                    📋 Copiar link
+                    📋 Copiar link demo
                   </button>
                 </div>
               </div>
+              <p style={{ fontSize: '12px', opacity: 0.75, marginBottom: '16px' }}>
+                Registe abaixo as pessoas a quem enviou o link de demonstração.
+              </p>
               <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
                   <input
@@ -42283,13 +42286,29 @@ A1;Peça exemplo;10'
               {safeT?.administrador || 'ADMINISTRADOR'}
             </h2>
 
-            {/* CONTROLE DE ENVIO DO LINK PARA TESTE - Primeiro para maior visibilidade */}
-            <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', borderLeft: '4px solid #66b3ff' }}>
-              <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '18px', borderBottom: '1px solid rgba(102, 179, 255, 0.3)', paddingBottom: '10px' }}>
-                📤 Controle de Envio do Link para Teste
+            {/* LINK DEMO - Dentro de Administradores */}
+            <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: 'rgba(102, 179, 255, 0.08)', borderRadius: '8px', border: '1px solid rgba(102, 179, 255, 0.4)', borderLeft: '4px solid #66b3ff' }}>
+              <h3 style={{ color: '#66b3ff', marginBottom: '8px', fontSize: '18px', borderBottom: '1px solid rgba(102, 179, 255, 0.3)', paddingBottom: '10px' }}>
+                🔗 Link para Demo (enviar ao cliente)
               </h3>
-              <p style={{ fontSize: '12px', opacity: 0.8, marginBottom: '12px' }}>Registe as pessoas a quem enviou o link de demonstração.</p>
-              <div style={{ marginBottom: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <p style={{ fontSize: '12px', opacity: 0.85, marginBottom: '12px' }}>Link para o cliente testar 15 dias (dados isolados). Registe abaixo a quem enviou.</p>
+              <div style={{ marginBottom: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <input
+                  type="url"
+                  placeholder="https://seu-dominio.com/demo"
+                  value={demoLinkUrl || (typeof window !== 'undefined' ? window.location.origin + '/demo' : '')}
+                  onChange={(e) => { const v = e.target.value.trim(); setDemoLinkUrl(v); saveData('nonato-demo-link-url', v) }}
+                  style={{ flex: 1, minWidth: '180px', padding: '8px 12px', backgroundColor: '#2a2a2a', color: '#66b3ff', border: '1px solid rgba(102, 179, 255, 0.4)', borderRadius: '4px', fontSize: '13px' }}
+                />
+                <button
+                  className="btn-primary"
+                  onClick={() => { const url = demoLinkUrl || (typeof window !== 'undefined' ? window.location.origin + '/demo' : ''); navigator.clipboard.writeText(url); alert('Link copiado: ' + url); }}
+                  style={{ padding: '8px 16px', backgroundColor: 'rgba(0, 150, 255, 0.25)', borderColor: '#66b3ff', color: '#66b3ff', fontWeight: 600 }}
+                >
+                  📋 Copiar link demo
+                </button>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
                 <input
                   type="text"
                   placeholder="Nome"
@@ -42317,13 +42336,6 @@ A1;Peça exemplo;10'
                   style={{ padding: '8px 16px' }}
                 >
                   + Adicionar
-                </button>
-                <button
-                  className="btn-primary"
-                  onClick={() => { const url = demoLinkUrl || (typeof window !== 'undefined' ? window.location.origin + '/demo' : ''); navigator.clipboard.writeText(url); alert('Link copiado: ' + url); }}
-                  style={{ padding: '8px 16px', backgroundColor: 'rgba(0, 150, 255, 0.2)', borderColor: '#66b3ff', color: '#66b3ff' }}
-                >
-                  📋 Copiar link
                 </button>
               </div>
               {demoLinkRecipients.length > 0 && (

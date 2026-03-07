@@ -1,6 +1,8 @@
 /**
  * Contexto do modo DEMO: dados isolados e expiração em 15 dias.
  * Usado pelas APIs para decidir qual pasta de dados usar.
+ * - Acesso por / → modo NORMAL (seus dados, uso próprio).
+ * - Acesso por /demo + "Aceitar e entrar" → modo DEMO (15 dias, dados isolados em data/demo/).
  */
 import path from 'path'
 import { NextRequest } from 'next/server'
