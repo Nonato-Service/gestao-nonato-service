@@ -7,16 +7,13 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   const startDate = new Date().toISOString()
-  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || request.nextUrl.host
-  let origin = request.nextUrl.origin
-  if (host && host.includes('0.0.0.0')) {
-    const port = request.nextUrl.port || (request.nextUrl.protocol === 'https:' ? '443' : '80')
-    origin = `http://localhost:${port}`
-  } else if (origin.includes('0.0.0.0')) {
-    origin = origin.replace('0.0.0.0', 'localhost')
-    if (origin.startsWith('https:')) origin = 'http' + origin.slice(5)
+  // Usar o mesmo host/porta do pedido para o redirect (evita NS_ERROR_CONNECTION_REFUSED)
+  const redirectUrl = new URL('/', request.url)
+  if (redirectUrl.hostname === '0.0.0.0') {
+    redirectUrl.hostname = 'localhost'
+    redirectUrl.protocol = 'http:'
   }
-  const response = NextResponse.redirect(origin + '/', 302)
+  const response = NextResponse.redirect(redirectUrl.toString(), 302)
   response.cookies.set('nonato_demo', '1', {
     path: '/',
     maxAge: COOKIE_MAX_AGE,

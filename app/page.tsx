@@ -748,6 +748,7 @@ export default function Dashboard() {
   const [demoDaysLeft, setDemoDaysLeft] = useState<number | null>(null)
   const [demoLinkRecipients, setDemoLinkRecipients] = useState<Array<{ id: string; nome: string; email: string; dataEnvio: string; observacoes?: string }>>([])
   const [demoLinkForm, setDemoLinkForm] = useState({ nome: '', email: '', observacoes: '' })
+  const [demoLinkUrl, setDemoLinkUrl] = useState('')
   const [userForm, setUserForm] = useState<{
     name: string
     email: string
@@ -3640,6 +3641,14 @@ export default function Dashboard() {
       const savedDemoRecipients = getData('nonato-demo-link-recipients')
       if (savedDemoRecipients && Array.isArray(savedDemoRecipients)) {
         setDemoLinkRecipients(savedDemoRecipients)
+      }
+      // Link do demo a copiar (ex.: http://localhost:3000/demo) — se não guardado, usa origem atual
+      const savedDemoLinkUrl = getData('nonato-demo-link-url')
+      if (savedDemoLinkUrl && typeof savedDemoLinkUrl === 'string') {
+        setDemoLinkUrl(savedDemoLinkUrl)
+      } else if (typeof window !== 'undefined') {
+        const defaultUrl = window.location.origin + '/demo'
+        setDemoLinkUrl(defaultUrl)
       }
 
       // Criar primeiro backup automático ao iniciar
@@ -15553,6 +15562,34 @@ const nextF = familias.filter(x => x !== f)
               <p style={{ fontSize: '13px', opacity: 0.8, marginBottom: '15px' }}>
                 Registe aqui as pessoas a quem enviou o link de demonstração (15 dias, dados isolados).
               </p>
+              {/* Link do demo editável — o que está aqui é o que se copia ao clicar em Copiar */}
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', fontSize: '12px', opacity: 0.8, marginBottom: '6px' }}>Link para copiar (pode editar, ex.: http://localhost:3000/demo):</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
+                  <input
+                    type="url"
+                    value={demoLinkUrl || (typeof window !== 'undefined' ? window.location.origin + '/demo' : '')}
+                    onChange={(e) => {
+                      const v = e.target.value.trim()
+                      setDemoLinkUrl(v)
+                      saveData('nonato-demo-link-url', v)
+                    }}
+                    placeholder="http://localhost:3000/demo"
+                    style={{ flex: 1, minWidth: '200px', padding: '8px 12px', backgroundColor: '#2a2a2a', color: '#66b3ff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
+                  />
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => {
+                      const url = demoLinkUrl || (typeof window !== 'undefined' ? window.location.origin + '/demo' : '')
+                      navigator.clipboard.writeText(url).then(() => alert('Link copiado: ' + url)).catch(() => alert('Não foi possível copiar.'))
+                    }}
+                    style={{ padding: '8px 16px', backgroundColor: 'rgba(0, 150, 255, 0.2)', borderColor: '#66b3ff', color: '#66b3ff' }}
+                  >
+                    📋 Copiar link
+                  </button>
+                </div>
+              </div>
               <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
                   <input
@@ -15604,7 +15641,7 @@ const nextF = familias.filter(x => x !== f)
                   <button
                     className="btn-primary"
                     onClick={() => {
-                      const url = (typeof window !== 'undefined' ? window.location.origin : '') + '/demo'
+                      const url = demoLinkUrl || (typeof window !== 'undefined' ? window.location.origin + '/demo' : '')
                       navigator.clipboard.writeText(url)
                       alert('Link copiado: ' + url)
                     }}
@@ -42283,7 +42320,7 @@ A1;Peça exemplo;10'
                 </button>
                 <button
                   className="btn-primary"
-                  onClick={() => { const url = (typeof window !== 'undefined' ? window.location.origin : '') + '/demo'; navigator.clipboard.writeText(url); alert('Link copiado!'); }}
+                  onClick={() => { const url = demoLinkUrl || (typeof window !== 'undefined' ? window.location.origin + '/demo' : ''); navigator.clipboard.writeText(url); alert('Link copiado: ' + url); }}
                   style={{ padding: '8px 16px', backgroundColor: 'rgba(0, 150, 255, 0.2)', borderColor: '#66b3ff', color: '#66b3ff' }}
                 >
                   📋 Copiar link
