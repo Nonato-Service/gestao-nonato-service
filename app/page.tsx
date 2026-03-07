@@ -15554,6 +15554,14 @@ const nextF = familias.filter(x => x !== f)
               </div>
             </div>
 
+            {/* Se estiver em modo demo, aviso para sair e usar versão completa (uso pessoal) */}
+            {isDemoMode && (
+              <div style={{ marginBottom: '24px', padding: '16px 20px', backgroundColor: 'rgba(255, 200, 0, 0.12)', borderRadius: '8px', border: '1px solid rgba(255, 200, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+                <span style={{ color: '#ffc800', fontSize: '14px' }}>Está em modo demonstração. Para o seu uso pessoal (dados completos, backup, exportação), use a versão completa.</span>
+                <button type="button" onClick={() => { document.cookie = 'nonato_demo=; path=/; max-age=0'; document.cookie = 'nonato_demo_start=; path=/; max-age=0'; try { localStorage.removeItem('nonato-hide-demo-bar') } catch {}; window.location.href = '/' }} style={{ padding: '8px 16px', background: '#ffc800', color: '#000', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 14, fontWeight: 700 }}>Sair do demo → Versão completa</button>
+              </div>
+            )}
+
             {/* SEÇÃO: LINK DEMO - Dentro de Administradores, para enviar ao cliente testar (15 dias) */}
             <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: 'rgba(102, 179, 255, 0.08)', borderRadius: '8px', border: '1px solid rgba(102, 179, 255, 0.4)', borderLeft: '4px solid #66b3ff' }}>
               <h3 style={{ color: '#66b3ff', marginBottom: '8px', fontSize: '18px', borderBottom: '1px solid rgba(102, 179, 255, 0.3)', paddingBottom: '10px' }}>
@@ -40232,9 +40240,12 @@ A1;Peça exemplo;10'
   return (
     <div className={`app-layout${showDemoBar ? ' has-demo-bar' : ''}${hasBottomTabs ? ' has-bottom-tabs' : ''}`} style={{ display: 'flex', minHeight: '100vh', minHeight: '100dvh', backgroundColor: '#000', color: '#fff', paddingBottom: hasBottomTabs ? 'calc(54px + env(safe-area-inset-bottom, 0px))' : 0, paddingTop: showDemoBar ? '50px' : 0, width: '100%', maxWidth: '100vw', boxSizing: 'border-box' }}>
       {showDemoBar && (
-        <div className="demo-top-bar" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '10px 12px 10px 20px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '2px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, touchAction: 'manipulation' }}>
+        <div className="demo-top-bar" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '10px 12px 10px 20px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '2px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, touchAction: 'manipulation', flexWrap: 'wrap' }}>
           <span style={{ flex: 1, minWidth: 0 }}>🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Sem exportação nem backup</span>
-          <button type="button" onClick={() => { setHideDemoBar(true); try { localStorage.setItem('nonato-hide-demo-bar', '1') } catch {} }} aria-label="Fechar" style={{ flexShrink: 0, padding: '6px 12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(0,255,0,0.5)', borderRadius: 6, color: '#00ff00', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Fechar</button>
+          <div style={{ display: 'flex', gap: '8px', flexShrink: 0, flexWrap: 'wrap' }}>
+            <button type="button" onClick={() => { document.cookie = 'nonato_demo=; path=/; max-age=0'; document.cookie = 'nonato_demo_start=; path=/; max-age=0'; try { localStorage.removeItem('nonato-hide-demo-bar') } catch {}; window.location.href = '/' }} style={{ padding: '6px 14px', background: 'rgba(255, 255, 255, 0.95)', color: '#000', border: '1px solid #00ff00', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>Sair do modo demo (versão completa)</button>
+            <button type="button" onClick={() => { setHideDemoBar(true); try { localStorage.setItem('nonato-hide-demo-bar', '1') } catch {} }} aria-label="Fechar" style={{ padding: '6px 12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(0,255,0,0.5)', borderRadius: 6, color: '#00ff00', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Ocultar barra</button>
+          </div>
         </div>
       )}
       {/* Sidebar - estilos em globals.css (media queries para mobile) */}
@@ -42285,6 +42296,13 @@ A1;Peça exemplo;10'
             <h2 style={{ marginBottom: '30px', borderBottom: '2px solid rgba(0, 255, 0, 0.3)', paddingBottom: '15px' }}>
               {safeT?.administrador || 'ADMINISTRADOR'}
             </h2>
+
+            {isDemoMode && (
+              <div style={{ marginBottom: '20px', padding: '12px 16px', backgroundColor: 'rgba(255, 200, 0, 0.12)', borderRadius: '8px', border: '1px solid rgba(255, 200, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <span style={{ color: '#ffc800', fontSize: '13px' }}>Modo demonstração. Para uso pessoal (versão completa):</span>
+                <button type="button" onClick={() => { document.cookie = 'nonato_demo=; path=/; max-age=0'; document.cookie = 'nonato_demo_start=; path=/; max-age=0'; try { localStorage.removeItem('nonato-hide-demo-bar') } catch {}; window.location.href = '/' }} style={{ padding: '6px 12px', background: '#ffc800', color: '#000', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>Sair do demo</button>
+              </div>
+            )}
 
             {/* LINK DEMO - Dentro de Administradores */}
             <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: 'rgba(102, 179, 255, 0.08)', borderRadius: '8px', border: '1px solid rgba(102, 179, 255, 0.4)', borderLeft: '4px solid #66b3ff' }}>
