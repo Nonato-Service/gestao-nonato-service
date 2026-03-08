@@ -14299,7 +14299,7 @@ export default function Dashboard() {
               <h3 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: 600, color: '#00ff00' }}>
                 {(safeT as any)?.manuaisFamiliasLabel || 'Famílias'}
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '240px', width: '100%', boxSizing: 'border-box' }}>
                 <input
                   type="text"
                   value={novaFamiliaManuais}
@@ -14319,7 +14319,6 @@ export default function Dashboard() {
                   }}
                   style={{
                     width: '100%',
-                    maxWidth: '240px',
                     minWidth: 0,
                     padding: '10px 12px',
                     background: '#0a0a0a',
@@ -14463,13 +14462,13 @@ const nextF = familias.filter(x => x !== f)
             borderRight: '2px solid rgba(0, 255, 0, 0.2)',
             overflow: 'hidden'
           }}>
-            <div style={{ padding: '16px 12px 16px 16px', borderBottom: '2px solid rgba(0, 255, 0, 0.2)', flexShrink: 0, minWidth: 0, overflow: 'hidden' }}>
-              <h3 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: 600, color: '#00ff00', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', minWidth: 0 }}>
-                <span style={{ flexShrink: 0 }}>{(safeT as any)?.manuaisGruposLabel || 'Grupos'}</span>
-                {selectedFamiliaManuais && <span style={{ fontWeight: 400, color: '#aaa', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{' - '}{selectedFamiliaManuais}</span>}
+            <div style={{ padding: '16px', borderBottom: '2px solid rgba(0, 255, 0, 0.2)', flexShrink: 0, minWidth: 0 }}>
+              <h3 style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: 600, color: '#00ff00' }}>
+                {(safeT as any)?.manuaisGruposLabel || 'Grupos'}
               </h3>
+              {selectedFamiliaManuais ? <p style={{ margin: '0 0 12px', fontSize: '12px', color: '#aaa', wordBreak: 'break-word' }}>{selectedFamiliaManuais}</p> : <div style={{ height: '20px' }} />}
               {selectedFamiliaManuais ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '240px', width: '100%', boxSizing: 'border-box' }}>
                   <input
                     type="text"
                     value={novoGrupoManuais}
@@ -14489,7 +14488,6 @@ const nextF = familias.filter(x => x !== f)
                     }}
                     style={{
                       width: '100%',
-                      maxWidth: '240px',
                       minWidth: 0,
                       padding: '10px 12px',
                       background: '#0a0a0a',
@@ -14644,7 +14642,7 @@ const nextF = familias.filter(x => x !== f)
                 {(safeT as any)?.manuaisModelosLabel || 'Modelos'}
               </h3>
               {selectedGrupoManuais ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '240px', width: '100%', boxSizing: 'border-box' }}>
                   <input
                     type="text"
                     value={novoModeloManuais}
@@ -14664,7 +14662,6 @@ const nextF = familias.filter(x => x !== f)
                     }}
                     style={{
                       width: '100%',
-                      maxWidth: '240px',
                       minWidth: 0,
                       padding: '10px 12px',
                       background: '#0a0a0a',
