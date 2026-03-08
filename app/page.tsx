@@ -14299,7 +14299,7 @@ export default function Dashboard() {
               <h3 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: 600, color: '#00ff00' }}>
                 {(safeT as any)?.manuaisFamiliasLabel || 'Famílias'}
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
                 <input
                   type="text"
                   value={novaFamiliaManuais}
@@ -14325,7 +14325,8 @@ export default function Dashboard() {
                     borderRadius: '8px',
                     color: '#fff',
                     fontSize: '14px',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
+                    outline: 'none'
                   }}
                 />
                 <button
@@ -14453,7 +14454,8 @@ const nextF = familias.filter(x => x !== f)
 
           <div style={{
             flex: 1,
-            minWidth: '280px',
+            minWidth: '260px',
+            maxWidth: '340px',
             display: 'flex',
             flexDirection: 'column',
             borderRight: '2px solid rgba(0, 255, 0, 0.2)',
@@ -14465,7 +14467,7 @@ const nextF = familias.filter(x => x !== f)
                 {selectedFamiliaManuais && <span style={{ fontWeight: 400, color: '#aaa', marginLeft: '8px' }}>{' - '}{selectedFamiliaManuais}</span>}
               </h3>
               {selectedFamiliaManuais ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
                   <input
                     type="text"
                     value={novoGrupoManuais}
@@ -14491,7 +14493,8 @@ const nextF = familias.filter(x => x !== f)
                       borderRadius: '8px',
                       color: '#fff',
                       fontSize: '14px',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      outline: 'none'
                     }}
                   />
                   <button
@@ -14625,7 +14628,8 @@ const nextF = familias.filter(x => x !== f)
           {/* Painel Modelos (terceiro nível: Família → Grupo → Modelos) */}
           <div style={{
             flex: 1,
-            minWidth: '240px',
+            minWidth: '260px',
+            maxWidth: '340px',
             display: 'flex',
             flexDirection: 'column',
             borderLeft: '2px solid rgba(0, 255, 0, 0.2)',
@@ -14636,7 +14640,7 @@ const nextF = familias.filter(x => x !== f)
                 {(safeT as any)?.manuaisModelosLabel || 'Modelos'}
               </h3>
               {selectedGrupoManuais ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
                   <input
                     type="text"
                     value={novoModeloManuais}
@@ -14662,7 +14666,8 @@ const nextF = familias.filter(x => x !== f)
                       borderRadius: '8px',
                       color: '#fff',
                       fontSize: '14px',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      outline: 'none'
                     }}
                   />
                   <button
@@ -41984,7 +41989,7 @@ A1;Peça exemplo;10'
                 >
                   <div style={{ fontSize: '36px', marginBottom: '10px' }}>⚙️</div>
                   <h3 style={{ color: '#00ff00', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                    {safeT?.equipamentos || 'Equipamentos'}
+                    {safeT?.equipamentosDoArmazem || 'EQUIPAMENTOS DO ARMAZÉM'}
                   </h3>
                   <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#ffffff' }}>{inventarioArmazem.totalAtivos}</p>
                 </div>
