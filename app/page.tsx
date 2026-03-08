@@ -14319,8 +14319,8 @@ export default function Dashboard() {
                   }}
                   style={{
                     width: '100%',
+                    maxWidth: '240px',
                     minWidth: 0,
-                    maxWidth: '100%',
                     padding: '10px 12px',
                     background: '#0a0a0a',
                     border: '1px solid rgba(0, 255, 0, 0.35)',
@@ -14489,8 +14489,8 @@ const nextF = familias.filter(x => x !== f)
                     }}
                     style={{
                       width: '100%',
+                      maxWidth: '240px',
                       minWidth: 0,
-                      maxWidth: '100%',
                       padding: '10px 12px',
                       background: '#0a0a0a',
                       border: '1px solid rgba(0, 255, 0, 0.35)',
@@ -14664,8 +14664,8 @@ const nextF = familias.filter(x => x !== f)
                     }}
                     style={{
                       width: '100%',
+                      maxWidth: '240px',
                       minWidth: 0,
-                      maxWidth: '100%',
                       padding: '10px 12px',
                       background: '#0a0a0a',
                       border: '1px solid rgba(0, 255, 0, 0.35)',
