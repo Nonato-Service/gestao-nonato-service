@@ -50,7 +50,6 @@ export default function RootLayout({
         <RegisterSW />
         <OfflineIndicator />
         <InstallPrompt />
-        </div>
       </body>
     </html>
   )
