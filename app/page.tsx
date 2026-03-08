@@ -14287,19 +14287,19 @@ export default function Dashboard() {
           overflow: 'hidden'
         }}>
           <div style={{
-            flex: 1,
-            minWidth: '260px',
+            flex: '1 1 0',
+            minWidth: 0,
             maxWidth: '340px',
             display: 'flex',
             flexDirection: 'column',
             borderRight: '2px solid rgba(0, 255, 0, 0.2)',
             overflow: 'hidden'
           }}>
-            <div style={{ padding: '16px', borderBottom: '2px solid rgba(0, 255, 0, 0.2)', flexShrink: 0 }}>
+            <div style={{ padding: '16px', borderBottom: '2px solid rgba(0, 255, 0, 0.2)', flexShrink: 0, minWidth: 0 }}>
               <h3 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: 600, color: '#00ff00' }}>
                 {(safeT as any)?.manuaisFamiliasLabel || 'Famílias'}
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }}>
                 <input
                   type="text"
                   value={novaFamiliaManuais}
@@ -14319,6 +14319,8 @@ export default function Dashboard() {
                   }}
                   style={{
                     width: '100%',
+                    minWidth: 0,
+                    maxWidth: '100%',
                     padding: '10px 12px',
                     background: '#0a0a0a',
                     border: '1px solid rgba(0, 255, 0, 0.35)',
@@ -14342,13 +14344,13 @@ export default function Dashboard() {
                       saveData('nonato-manuais-familias-grupos', { familias: next, grupos: grupos, modelos: manuaisModelos })
                     }
                   }}
-                  style={{ padding: '10px 16px', whiteSpace: 'nowrap', alignSelf: 'flex-start', minWidth: '100px' }}
+                  style={{ padding: '10px 16px', whiteSpace: 'nowrap', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
                 >
                   {(safeT as any)?.manuaisAdicionar || 'Adicionar'}
                 </button>
               </div>
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '8px', minWidth: 0 }}>
               {familiasListManuais.length === 0 ? (
                 <p style={{ color: '#888', fontSize: '13px', padding: '12px', margin: 0 }}>
                   {(safeT as any)?.manuaisNenhumaFamilia || 'Nenhuma família. Crie uma acima.'}
@@ -14453,21 +14455,21 @@ const nextF = familias.filter(x => x !== f)
           </div>
 
           <div style={{
-            flex: 1,
-            minWidth: '260px',
+            flex: '1 1 0',
+            minWidth: 0,
             maxWidth: '340px',
             display: 'flex',
             flexDirection: 'column',
             borderRight: '2px solid rgba(0, 255, 0, 0.2)',
             overflow: 'hidden'
           }}>
-            <div style={{ padding: '16px', borderBottom: '2px solid rgba(0, 255, 0, 0.2)', flexShrink: 0 }}>
+            <div style={{ padding: '16px', borderBottom: '2px solid rgba(0, 255, 0, 0.2)', flexShrink: 0, minWidth: 0 }}>
               <h3 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: 600, color: '#00ff00' }}>
                 {(safeT as any)?.manuaisGruposLabel || 'Grupos'}
                 {selectedFamiliaManuais && <span style={{ fontWeight: 400, color: '#aaa', marginLeft: '8px' }}>{' - '}{selectedFamiliaManuais}</span>}
               </h3>
               {selectedFamiliaManuais ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }}>
                   <input
                     type="text"
                     value={novoGrupoManuais}
@@ -14487,6 +14489,8 @@ const nextF = familias.filter(x => x !== f)
                     }}
                     style={{
                       width: '100%',
+                      minWidth: 0,
+                      maxWidth: '100%',
                       padding: '10px 12px',
                       background: '#0a0a0a',
                       border: '1px solid rgba(0, 255, 0, 0.35)',
@@ -14510,7 +14514,7 @@ const nextF = familias.filter(x => x !== f)
                         saveData('nonato-manuais-familias-grupos', { familias: familias, grupos: next, modelos: manuaisModelos })
                       }
                     }}
-                    style={{ padding: '10px 16px', whiteSpace: 'nowrap', alignSelf: 'flex-start', minWidth: '100px' }}
+                    style={{ padding: '10px 16px', whiteSpace: 'nowrap', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
                   >
                     {(safeT as any)?.manuaisAdicionar || 'Adicionar'}
                   </button>
@@ -14521,7 +14525,7 @@ const nextF = familias.filter(x => x !== f)
                 </p>
               )}
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '8px', minWidth: 0 }}>
               {!selectedFamiliaManuais ? (
                 <p style={{ color: '#888', fontSize: '13px', padding: '12px', margin: 0 }}>
                   {(safeT as any)?.manuaisSelecioneFamilia || 'Selecione uma família à esquerda.'}
@@ -14627,20 +14631,20 @@ const nextF = familias.filter(x => x !== f)
 
           {/* Painel Modelos (terceiro nível: Família → Grupo → Modelos) */}
           <div style={{
-            flex: 1,
-            minWidth: '260px',
+            flex: '1 1 0',
+            minWidth: 0,
             maxWidth: '340px',
             display: 'flex',
             flexDirection: 'column',
             borderLeft: '2px solid rgba(0, 255, 0, 0.2)',
             overflow: 'hidden'
           }}>
-            <div style={{ padding: '16px', borderBottom: '2px solid rgba(0, 255, 0, 0.2)', flexShrink: 0 }}>
+            <div style={{ padding: '16px', borderBottom: '2px solid rgba(0, 255, 0, 0.2)', flexShrink: 0, minWidth: 0 }}>
               <h3 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: 600, color: '#00ff00' }}>
                 {(safeT as any)?.manuaisModelosLabel || 'Modelos'}
               </h3>
               {selectedGrupoManuais ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }}>
                   <input
                     type="text"
                     value={novoModeloManuais}
@@ -14660,6 +14664,8 @@ const nextF = familias.filter(x => x !== f)
                     }}
                     style={{
                       width: '100%',
+                      minWidth: 0,
+                      maxWidth: '100%',
                       padding: '10px 12px',
                       background: '#0a0a0a',
                       border: '1px solid rgba(0, 255, 0, 0.35)',
@@ -14683,7 +14689,7 @@ const nextF = familias.filter(x => x !== f)
                         saveData('nonato-manuais-familias-grupos', { familias: familias, grupos: grupos, modelos: next })
                       }
                     }}
-                    style={{ padding: '10px 16px', whiteSpace: 'nowrap', alignSelf: 'flex-start', minWidth: '100px' }}
+                    style={{ padding: '10px 16px', whiteSpace: 'nowrap', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
                   >
                     {(safeT as any)?.manuaisAdicionar || 'Adicionar'}
                   </button>
@@ -14694,7 +14700,7 @@ const nextF = familias.filter(x => x !== f)
                 </p>
               )}
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '8px', minWidth: 0 }}>
               {!selectedGrupoManuais ? (
                 <p style={{ color: '#888', fontSize: '13px', padding: '12px', margin: 0 }}>
                   {(safeT as any)?.manuaisSelecioneGrupo || 'Selecione um grupo ao lado.'}
