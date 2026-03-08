@@ -14468,7 +14468,7 @@ const nextF = familias.filter(x => x !== f)
                 {selectedFamiliaManuais ? ` - ${selectedFamiliaManuais}` : ''}
               </h3>
               {selectedFamiliaManuais ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '240px', boxSizing: 'border-box', marginLeft: '-6px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '240px', boxSizing: 'border-box', marginLeft: '-14px' }}>
                   <input
                     type="text"
                     value={novoGrupoManuais}
