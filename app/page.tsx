@@ -1168,7 +1168,28 @@ export default function Dashboard() {
   // Sistema de múltiplas páginas/abas
   const [openTabs, setOpenTabs] = useState<Tab[]>([])
   const [activeTabId, setActiveTabId] = useState<string | null>(null)
-  
+  const mainContentAreaRef = useRef<HTMLDivElement>(null)
+
+  // Ao mudar de aba, scroll para o topo para a página abrir desde o início (evitar tela preta / ter de rolar)
+  useEffect(() => {
+    if (!activeTabId) return
+    const scrollToTop = () => {
+      const el = mainContentAreaRef.current
+      if (el) {
+        el.scrollTop = 0
+        el.scrollLeft = 0
+        const inner = el.firstElementChild as HTMLElement | null
+        if (inner) {
+          inner.scrollTop = 0
+          inner.scrollLeft = 0
+        }
+      }
+      window.scrollTo(0, 0)
+    }
+    scrollToTop()
+    requestAnimationFrame(scrollToTop)
+  }, [activeTabId])
+
   // Funções para gerenciar abas
   const openTab = (type: TabType, title: string, icon?: string) => {
     const tabId = `${type}-${Date.now()}`
@@ -41844,7 +41865,7 @@ A1;Peça exemplo;10'
           </button>
         </div>
         {/* Conteúdo da Aba Ativa ou Dashboard */}
-        <div className="main-content-area" style={{ flex: 1, padding: '30px', overflowY: 'auto', minWidth: 0 }}>
+        <div ref={mainContentAreaRef} className="main-content-area" style={{ flex: 1, padding: '30px', overflowY: 'auto', minWidth: 0 }}>
           {activeTabId ? (
             // Renderizar conteúdo da aba ativa
             <div style={{ height: '100%', overflowY: 'auto' }}>
