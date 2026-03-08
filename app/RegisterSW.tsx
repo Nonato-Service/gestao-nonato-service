@@ -14,13 +14,22 @@ export function RegisterSW() {
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
 
+    // Evitar loop de reload no telemóvel: não fazer reload automático em dispositivos móveis
+    const isMobile = window.innerWidth < 768 || 'ontouchstart' in window || (navigator as { maxTouchPoints?: number }).maxTouchPoints > 0
+    const SW_RELOAD_KEY = 'nonato-sw-reload-time'
+    const justReloaded = (() => {
+      try {
+        const t = parseInt(sessionStorage.getItem(SW_RELOAD_KEY) || '0', 10)
+        return t > 0 && Date.now() - t < 4000
+      } catch { return false }
+    })()
+
     const register = () => {
       navigator.serviceWorker
         .register(`/sw.js?v=${SW_VERSION}`)
         .then((reg) => {
           setRegistration(reg)
           if (reg.waiting) setUpdateReady(true)
-          // Verificar atualizações imediatamente e quando voltar ao app (importante no mobile)
           reg.update()
           reg.addEventListener('updatefound', () => {
             const newWorker = reg.installing
@@ -36,12 +45,25 @@ export function RegisterSW() {
     }
     register()
 
+    // No telemóvel: NUNCA fazer reload automático (evita tela a piscar). Só mostrar o banner "Atualização disponível".
+    // No desktop: fazer reload só uma vez e evitar loop com sessionStorage.
     const onControllerChange = () => {
       if (reloadHandled.current) return
+      if (isMobile) return
+      if (justReloaded) return
       reloadHandled.current = true
+      try { sessionStorage.setItem(SW_RELOAD_KEY, String(Date.now())) } catch {}
       window.location.reload()
     }
-    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange)
+    let removed = false
+    if (!justReloaded) {
+      navigator.serviceWorker.addEventListener('controllerchange', onControllerChange)
+    }
+    const removeControllerChange = () => {
+      if (removed) return
+      removed = true
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
+    }
 
     const onVisibilityChange = () => {
       if (document.visibilityState === 'visible' && navigator.onLine) {
@@ -58,6 +80,7 @@ export function RegisterSW() {
 
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange)
+      removeControllerChange()
     }
   }, [])
 
