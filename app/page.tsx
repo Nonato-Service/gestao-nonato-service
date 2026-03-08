@@ -40421,7 +40421,7 @@ A1;Peça exemplo;10'
   const showDemoBar = isDemoMode && !hideDemoBar
   const hasBottomTabs = openTabs.length > 0
   return (
-    <div className={`app-layout${showDemoBar ? ' has-demo-bar' : ''}${hasBottomTabs ? ' has-bottom-tabs' : ''}`} style={{ display: 'flex', minHeight: '100vh', minHeight: '100dvh', backgroundColor: '#000', color: '#fff', paddingBottom: hasBottomTabs ? 'calc(54px + env(safe-area-inset-bottom, 0px))' : 0, paddingTop: showDemoBar ? '50px' : 0, width: '100%', maxWidth: '100vw', boxSizing: 'border-box' }}>
+    <div className={`app-layout${showDemoBar ? ' has-demo-bar' : ''}${hasBottomTabs ? ' has-bottom-tabs' : ''}`} style={{ display: 'flex', minHeight: '100vh', minHeight: '100dvh', backgroundColor: '#000', color: '#fff', paddingBottom: hasBottomTabs ? 'calc(54px + env(safe-area-inset-bottom, 0px))' : 0, paddingTop: showDemoBar ? '50px' : 0, width: '100%', maxWidth: '100%', overflowX: 'hidden', boxSizing: 'border-box' }}>
       {showDemoBar && (
         <div className="demo-top-bar" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '10px 12px 10px 20px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '2px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, touchAction: 'manipulation', flexWrap: 'wrap' }}>
           <span style={{ flex: 1, minWidth: 0 }}>🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Sem exportação nem backup</span>
