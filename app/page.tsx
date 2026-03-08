@@ -14463,10 +14463,10 @@ const nextF = familias.filter(x => x !== f)
             borderRight: '2px solid rgba(0, 255, 0, 0.2)',
             overflow: 'hidden'
           }}>
-            <div style={{ padding: '16px', borderBottom: '2px solid rgba(0, 255, 0, 0.2)', flexShrink: 0, minWidth: 0 }}>
-              <h3 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: 600, color: '#00ff00' }}>
-                {(safeT as any)?.manuaisGruposLabel || 'Grupos'}
-                {selectedFamiliaManuais && <span style={{ fontWeight: 400, color: '#aaa', marginLeft: '8px' }}>{' - '}{selectedFamiliaManuais}</span>}
+            <div style={{ padding: '16px 12px 16px 16px', borderBottom: '2px solid rgba(0, 255, 0, 0.2)', flexShrink: 0, minWidth: 0, overflow: 'hidden' }}>
+              <h3 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: 600, color: '#00ff00', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', minWidth: 0 }}>
+                <span style={{ flexShrink: 0 }}>{(safeT as any)?.manuaisGruposLabel || 'Grupos'}</span>
+                {selectedFamiliaManuais && <span style={{ fontWeight: 400, color: '#aaa', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{' - '}{selectedFamiliaManuais}</span>}
               </h3>
               {selectedFamiliaManuais ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '100%', minWidth: 0, boxSizing: 'border-box' }}>
@@ -14722,7 +14722,7 @@ const nextF = familias.filter(x => x !== f)
                       alignItems: 'center',
                       gap: '8px',
                       padding: '10px 12px',
-                      marginBottom: '4px',
+                      marginBottom: '10px',
                       borderRadius: '8px',
                       background: selectedModeloManuaisId === m.id ? 'rgba(0, 255, 0, 0.12)' : 'rgba(255,255,255,0.03)',
                       border: selectedModeloManuaisId === m.id ? '1px solid rgba(0, 255, 0, 0.5)' : '1px solid rgba(0, 255, 0, 0.15)',
