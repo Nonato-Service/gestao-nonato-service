@@ -14468,7 +14468,7 @@ const nextF = familias.filter(x => x !== f)
                 {selectedFamiliaManuais ? ` - ${selectedFamiliaManuais}` : ''}
               </h3>
               {selectedFamiliaManuais ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '240px', boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '240px', boxSizing: 'border-box', marginLeft: '-6px' }}>
                   <input
                     type="text"
                     value={novoGrupoManuais}
@@ -14642,7 +14642,7 @@ const nextF = familias.filter(x => x !== f)
                 {(safeT as any)?.manuaisModelosLabel || 'Modelos'}
               </h3>
               {selectedGrupoManuais ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '240px', boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '240px', boxSizing: 'border-box', marginLeft: '-4px' }}>
                   <input
                     type="text"
                     value={novoModeloManuais}
