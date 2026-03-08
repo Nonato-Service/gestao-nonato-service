@@ -2313,7 +2313,7 @@ export default function Dashboard() {
       'informacoes-conhecimento-tecnicos': t?.informacoesConhecimentoTecnicosTitle || 'Informações de Conhecimento dos Técnicos',
       'gestao-custos': t?.gestaoCustosTitle || 'Gestão de Custos',
       'biblioteca-relatorios': t?.bibliotecaRelatoriosTitle || 'Biblioteca de Relatórios Salvos',
-      'gestao-financeira': t?.gestaoFinanceiraTitle || 'Gestão Financeira',
+      'gestao-financeira': t?.gestaoFinanceiraTitle || 'Gestão Financeira / Clientes',
       'clientes-financeiro': t?.clientesFinanceiroTitle || 'Clientes Financeiro',
       'orcamentos-avulso': t?.orcamentosAvulsoTitle || 'Orçamentos Avulso',
       'registro-despesas': t?.registroDespesasTitle || 'Registro de Despesas',
@@ -2429,6 +2429,7 @@ export default function Dashboard() {
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null)
   const [buscaCliente, setBuscaCliente] = useState('')
   const [clientesActiveTab, setClientesActiveTab] = useState<'cadastrar' | 'listar'>('cadastrar')
+  const [selectedClienteDetalhes, setSelectedClienteDetalhes] = useState<Cliente | null>(null)
   const [clienteForm, setClienteForm] = useState({
     nomeEmpresa: '',
     morada: '',
@@ -3025,8 +3026,17 @@ export default function Dashboard() {
   }, [activeTabId, openTabs])
 
   // Verificar modo DEMO (dados isolados, 15 dias, sem export/backup)
+  // Verificar modo DEMO: se entrou pela página inicial (/) sem vir do link /demo, limpar cookies de demo para abrir sempre em modo normal
   useEffect(() => {
     if (typeof window === 'undefined') return
+    const pathname = window.location.pathname || '/'
+    const search = window.location.search || ''
+    const cameFromDemo = search.includes('from=demo')
+    // Quando abre o programa pela raiz (bookmark, PWA, URL direta) sem ?from=demo → modo normal: apagar cookie de demo antes do fetch
+    if (pathname === '/' && !cameFromDemo) {
+      document.cookie = 'nonato_demo=; path=/; max-age=0'
+      document.cookie = 'nonato_demo_start=; path=/; max-age=0'
+    }
     fetch('/api/demo/status', { credentials: 'include' })
       .then(r => r.json())
       .then((d: { isDemo: boolean; expired: boolean; daysLeft: number | null }) => {
@@ -3036,6 +3046,14 @@ export default function Dashboard() {
         if (d.expired) {
           document.cookie = 'nonato_demo=; path=/; max-age=0'
           document.cookie = 'nonato_demo_start=; path=/; max-age=0'
+        }
+        // Remover ?from=demo da URL para ficar limpa (o cookie já foi lido)
+        if (cameFromDemo && typeof window.history.replaceState === 'function') {
+          const u = new URL(window.location.href)
+          u.searchParams.delete('from')
+          u.searchParams.delete('demo')
+          const clean = u.pathname + (u.search || '') + u.hash
+          window.history.replaceState({}, '', clean)
         }
       })
       .catch(() => {})
@@ -4012,7 +4030,7 @@ export default function Dashboard() {
       if (!hasGestaoFinanceira) {
         const gestaoFinanceiraButton: SidebarButton = {
           id: 'gestao-financeira-default',
-          name: 'GESTÃO FINANCEIRA',
+          name: 'GESTÃO FINANCEIRA / CLIENTES',
           action: 'open-gestao-financeira',
           order: 9998, // Ordem logo antes do EXTRAS (9999)
           translationKey: 'gestaoFinanceiraTitle',
@@ -4563,7 +4581,7 @@ export default function Dashboard() {
       if (!finalHasGestaoFinanceira) {
         const gestaoFinanceiraButton: SidebarButton = {
           id: 'gestao-financeira-default',
-          name: 'GESTÃO FINANCEIRA',
+          name: 'GESTÃO FINANCEIRA / CLIENTES',
           action: 'open-gestao-financeira',
           order: 9998,
           translationKey: 'gestaoFinanceiraTitle',
@@ -5346,7 +5364,7 @@ export default function Dashboard() {
     if (button.id === 'extras-default' || button.id === 'administrador-default') {
       return safeT?.extras || safeT?.administrador || button.name || ''
     } else if (button.id === 'gestao-financeira-default') {
-      return safeT?.gestaoFinanceiraTitle || button.name || ''
+      return safeT?.gestaoFinanceiraTitle || button.name || 'GESTÃO FINANCEIRA / CLIENTES'
       } else if (button.id === 'familias-grupos-default') {
         return safeT?.familiasGruposTitle || button.name || ''
       } else if (button.id === 'familias-grupos-equipamentos-default') {
@@ -16438,7 +16456,7 @@ const nextF = familias.filter(x => x !== f)
               {/* Grupo: GESTÃO FINANCEIRA */}
               <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 150, 255, 0.3)' }}>
                 <h4 style={{ color: '#66b3ff', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                  {safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}
+                  {safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA / CLIENTES'}
                 </h4>
                 {getButtonsByGroup('gestao-financeira').length === 0 ? (
                   <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center' }}>
@@ -21120,6 +21138,138 @@ onKeyPress={(e) => {
               </div>
             ) : (
               <div>
+                {selectedClienteDetalhes ? (
+                  /* ========== DETALHES DO CLIENTE (ao clicar no nome do cliente) ========== */
+                  (() => {
+                    const c = selectedClienteDetalhes
+                    const getIniciaisDet = (nome: string) => {
+                      const palavras = nome.trim().split(/\s+/)
+                      if (palavras.length >= 2) return (palavras[0][0] + palavras[1][0]).toUpperCase()
+                      return nome.substring(0, 2).toUpperCase()
+                    }
+                    const faturasCliente = faturasPecas.filter(f => f.clienteId === c.id)
+                    const osCliente = ordensServico.filter(os => os.clienteId === c.id)
+                    const totalFaturado = faturasCliente.reduce((s, f) => s + f.valorTotal, 0)
+                    const totalPagos = faturasCliente.filter(f => f.status === 'paga').reduce((s, f) => s + f.valorTotal, 0)
+                    const totalPendente = faturasCliente.filter(f => f.status === 'pendente').reduce((s, f) => s + f.valorTotal, 0)
+                    const totalDevedores = faturasCliente.filter(f => f.status === 'vencida').reduce((s, f) => s + f.valorTotal, 0)
+                    const totalIVA = faturasCliente.reduce((s, f) => s + f.valorIVA, 0)
+                    const vendasSemIVA = faturasCliente.reduce((s, f) => s + f.valorSemIVA, 0)
+                    const devedor = clientesDevedores.find(d => d.clienteId === c.id)
+                    const dataCriacao = c.id && c.id.length >= 10 ? (() => { try { const n = parseInt(c.id, 10); if (!isNaN(n)) return new Date(n).toLocaleDateString('pt-PT'); } catch {} return '-' })() : '-'
+                    return (
+                      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+                          <div>
+                            <h2 style={{ margin: 0, fontSize: '22px', color: '#00ff00', fontWeight: 700 }}>{(safeT as any)?.detalhesDoCliente || 'Detalhes do Cliente'}</h2>
+                            <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#aaa' }}>{(safeT as any)?.visualizeGerencieCliente || 'Visualize e gerencie informações do cliente'}</p>
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            <button className="btn-primary" onClick={() => { handleEditCliente(c); setClientesActiveTab('cadastrar'); setSelectedClienteDetalhes(null); }} style={{ padding: '8px 16px' }}>{(safeT as any)?.editar || 'Editar'}</button>
+                            <button className="btn-danger" onClick={() => { if (window.confirm((safeT as any)?.confirmarExcluirCliente || 'Excluir este cliente?')) { handleDeleteCliente(c.id); setSelectedClienteDetalhes(null); } }} style={{ padding: '8px 16px' }}>{(safeT as any)?.excluir || 'Excluir'}</button>
+                            <button className="btn-primary" onClick={handleAddCliente} style={{ padding: '8px 16px', background: 'rgba(0, 255, 0, 0.2)', borderColor: '#00ff00' }}>+</button>
+                          </div>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+                          <div style={{ padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                            <h3 style={{ margin: '0 0 12px', fontSize: '14px', color: '#00ff00' }}>{(safeT as any)?.informacoesDoCliente || 'Informações do Cliente'}</h3>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
+                              {c.photo ? (
+                                <img src={c.photo} alt="" style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(0, 255, 0, 0.3)' }} />
+                              ) : (
+                                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#8B4513', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold', fontSize: '18px' }}>{getIniciaisDet(c.nomeEmpresa)}</div>
+                              )}
+                              <div>
+                                <div style={{ fontWeight: 700, fontSize: '16px', color: '#fff' }}>{c.nomeEmpresa}</div>
+                                <div style={{ fontSize: '12px', color: '#888' }}>{(safeT as any)?.idDoCliente || 'ID'}: {c.id?.slice(0, 8) || '-'}</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div style={{ padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                            <h3 style={{ margin: '0 0 12px', fontSize: '14px', color: '#00ff00' }}>{(safeT as any)?.informacoesDeContato || 'Informações de Contato'}</h3>
+                            <p style={{ margin: '4px 0', fontSize: '13px' }}><strong>{(safeT as any)?.telefone || 'Telefone'}:</strong> {c.telefones || '-'}</p>
+                            <p style={{ margin: '4px 0', fontSize: '13px' }}><strong>{(safeT as any)?.endereco || 'Endereço'}:</strong> {[c.morada, c.localidade].filter(Boolean).join(', ') || '-'}</p>
+                            <p style={{ margin: '4px 0', fontSize: '13px' }}><strong>{(safeT as any)?.codigoPostal || 'Código Postal'}:</strong> {c.codigoPostal || '-'}</p>
+                            <p style={{ margin: '4px 0', fontSize: '13px' }}><strong>NIF:</strong> {c.numeroContribuicaoFiscal || '-'}</p>
+                          </div>
+                        </div>
+                        <div style={{ padding: '16px', backgroundColor: '#1a1a1a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '24px', display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+                          <h3 style={{ margin: '0 0 12px', width: '100%', fontSize: '14px', color: '#00ff00' }}>{(safeT as any)?.estatisticas || 'Estatísticas'}</h3>
+                          <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.clienteDesde || 'Cliente desde'}</span><br /><span style={{ color: '#fff' }}>{dataCriacao}</span></div>
+                          <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.totalServicos || 'Total de Serviços'}</span><br /><span style={{ color: '#fff' }}>{osCliente.length}</span></div>
+                          <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.equipamentos || 'Equipamentos'}</span><br /><span style={{ color: '#fff' }}>{c.equipamentos?.length ?? 0}</span></div>
+                          <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.idDoCliente || 'ID do Cliente'}</span><br /><span style={{ color: '#fff', fontSize: '12px' }}>#{c.id?.slice(0, 10) || '-'}</span></div>
+                        </div>
+                        <div style={{ padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '24px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                            <h3 style={{ margin: 0, fontSize: '14px', color: '#00ff00' }}>{(safeT as any)?.equipamentos || 'Equipamentos'} ({c.equipamentos?.length ?? 0})</h3>
+                            <button className="btn-primary" onClick={() => handleViewClienteEquipamentos(c)} style={{ padding: '6px 14px', fontSize: '13px' }}>+ {(safeT as any)?.adicionarEquipamento || 'Adicionar Equipamento'}</button>
+                          </div>
+                          {c.equipamentos && c.equipamentos.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              {c.equipamentos.map((eq, idx) => {
+                                const relatoriosEq = (eq as any).relatorios || eq.relatorios
+                                const ultimaManutData = relatoriosEq && relatoriosEq.length > 0 && (relatoriosEq as any[]).some((r: any) => r.data)
+                                  ? (relatoriosEq as any[]).reduce((max: string | null, r: any) => (r.data && (!max || new Date(r.data) > new Date(max)) ? r.data : max), null as string | null)
+                                  : (eq as any).ultimaManutencao || null
+                                const ultimaManut = ultimaManutData ? new Date(ultimaManutData).toLocaleDateString('pt-PT') : '-'
+                                const nomeEq = (eq as any).modeloOuNome || eq.modelo || eq.numeroSerie || '-'
+                                return (
+                                  <div key={(eq as any).id || idx} style={{ padding: '12px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.15)' }}>
+                                    <div style={{ fontWeight: 600, color: '#fff' }}>{nomeEq}</div>
+                                    <div style={{ fontSize: '12px', color: '#888' }}>{(safeT as any)?.referenciaOuSerie || 'Série/Ref.'}: {eq.numeroSerie || '-'}</div>
+                                    <div style={{ fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.ultimaManutencao || 'Última manutenção'} {ultimaManut}</div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          ) : (
+                            <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>{(safeT as any)?.nenhumEquipamento || 'Nenhum equipamento registado'}</p>
+                          )}
+                        </div>
+                        <div style={{ marginBottom: '24px' }}>
+                          <h3 style={{ margin: '0 0 12px', fontSize: '14px', color: '#00ff00' }}>€ {(safeT as any)?.situacaoFinanceira || 'Situação Financeira'}</h3>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '10px' }}>
+                            <div style={{ padding: '12px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid #555', textAlign: 'center' }}><div style={{ fontSize: '11px', color: '#888' }}>{(safeT as any)?.totalFaturado || 'Total Faturado'}</div><div style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>€ {totalFaturado.toFixed(2).replace('.', ',')}</div></div>
+                            <div style={{ padding: '12px', backgroundColor: 'rgba(0, 255, 0, 0.1)', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}><div style={{ fontSize: '11px', color: '#888' }}>{(safeT as any)?.pagos || 'Pagos'}</div><div style={{ fontSize: '16px', fontWeight: 700, color: '#00ff00' }}>€ {totalPagos.toFixed(2).replace('.', ',')}</div></div>
+                            <div style={{ padding: '12px', backgroundColor: 'rgba(255, 200, 0, 0.1)', borderRadius: '8px', border: '1px solid rgba(255, 200, 0, 0.4)', textAlign: 'center' }}><div style={{ fontSize: '11px', color: '#888' }}>{(safeT as any)?.residuos || 'Resíduos'}</div><div style={{ fontSize: '16px', fontWeight: 700, color: '#ffc800' }}>€ {(totalPendente + totalDevedores).toFixed(2).replace('.', ',')}</div></div>
+                            <div style={{ padding: '12px', backgroundColor: 'rgba(255, 68, 68, 0.15)', borderRadius: '8px', border: '1px solid rgba(255, 68, 68, 0.4)', textAlign: 'center' }}><div style={{ fontSize: '11px', color: '#888' }}>{(safeT as any)?.devedores || 'Devedores'}</div><div style={{ fontSize: '16px', fontWeight: 700, color: '#ff4444' }}>€ {(devedor?.saldoPendente ?? totalDevedores).toFixed(2).replace('.', ',')}</div></div>
+                            <div style={{ padding: '12px', backgroundColor: 'rgba(100, 150, 255, 0.15)', borderRadius: '8px', border: '1px solid rgba(100, 150, 255, 0.4)', textAlign: 'center' }}><div style={{ fontSize: '11px', color: '#888' }}>{(safeT as any)?.ivaTotal || 'IVA Total'}</div><div style={{ fontSize: '16px', fontWeight: 700, color: '#66b3ff' }}>€ {totalIVA.toFixed(2).replace('.', ',')}</div></div>
+                            <div style={{ padding: '12px', backgroundColor: 'rgba(180, 100, 255, 0.15)', borderRadius: '8px', border: '1px solid rgba(180, 100, 255, 0.4)', textAlign: 'center' }}><div style={{ fontSize: '11px', color: '#888' }}>{(safeT as any)?.vendasSemIVA || 'Vendas (s/ IVA)'}</div><div style={{ fontSize: '16px', fontWeight: 700, color: '#b464ff' }}>€ {vendasSemIVA.toFixed(2).replace('.', ',')}</div></div>
+                          </div>
+                        </div>
+                        <div style={{ marginBottom: '24px' }}>
+                          <h3 style={{ margin: '0 0 12px', fontSize: '14px', color: '#00ff00' }}>{(safeT as any)?.historicoServicos || 'Histórico de Serviços'} ({faturasCliente.length})</h3>
+                          {faturasCliente.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                              {faturasCliente.map((fatura) => (
+                                <div key={fatura.id} style={{ padding: '14px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+                                  <div>
+                                    <span style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, backgroundColor: 'rgba(0, 255, 0, 0.2)', color: '#00ff00' }}>{(safeT as any)?.fechamento || 'Fechamento'}</span>
+                                    <span style={{ marginLeft: '8px', color: '#aaa', fontSize: '12px' }}>{fatura.numeroOS || fatura.id?.slice(0, 12)}</span>
+                                    <span style={{ marginLeft: '8px', color: '#fff' }}>{fatura.dataEmissao ? new Date(fatura.dataEmissao).toLocaleDateString('pt-PT') : '-'}</span>
+                                  </div>
+                                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <span style={{ fontSize: '12px', color: '#888' }}>{(safeT as any)?.subtotal || 'Subtotal'}: € {fatura.valorSemIVA.toFixed(2)}</span>
+                                    <span style={{ fontSize: '12px', color: '#888' }}>IVA: € {fatura.valorIVA.toFixed(2)}</span>
+                                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>{(safeT as any)?.total || 'Total'}: € {fatura.valorTotal.toFixed(2)}</span>
+                                    <button type="button" className="btn-primary" onClick={() => { const updated = faturasPecas.map(f => f.id === fatura.id ? { ...f, status: 'paga' as const } : f); setFaturasPecas(updated); saveData('nonato-faturas-pecas', updated); }} style={{ padding: '4px 10px', fontSize: '11px', backgroundColor: fatura.status === 'paga' ? 'rgba(0, 255, 0, 0.25)' : 'transparent' }}>{(safeT as any)?.pago || 'Pago'}</button>
+                                    <button type="button" className="btn-primary" onClick={() => { const updated = faturasPecas.map(f => f.id === fatura.id ? { ...f, status: 'pendente' as const } : f); setFaturasPecas(updated); saveData('nonato-faturas-pecas', updated); }} style={{ padding: '4px 10px', fontSize: '11px', backgroundColor: fatura.status === 'pendente' ? 'rgba(255, 200, 0, 0.25)' : 'transparent', borderColor: '#ffc800' }}>{(safeT as any)?.pendente || 'Pendente'}</button>
+                                    <button type="button" className="btn-danger" onClick={() => { const updated = faturasPecas.map(f => f.id === fatura.id ? { ...f, status: 'vencida' as const } : f); setFaturasPecas(updated); saveData('nonato-faturas-pecas', updated); }} style={{ padding: '4px 10px', fontSize: '11px', backgroundColor: fatura.status === 'vencida' ? 'rgba(255, 68, 68, 0.25)' : 'transparent' }}>{(safeT as any)?.devedor || 'Devedor'}</button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>{(safeT as any)?.nenhumServicoOuFatura || 'Nenhum serviço ou fatura registado'}</p>
+                          )}
+                        </div>
+                        <button className="btn-primary" onClick={() => setSelectedClienteDetalhes(null)} style={{ padding: '10px 24px' }}>← {(safeT as any)?.voltarLista || 'Voltar à lista'}</button>
+                      </div>
+                    )
+                  })()
+                ) : (
+                  <>
                 {clientes.length > 0 && (
                   <div style={{ marginBottom: '20px' }}>
                     <input
@@ -21172,6 +21322,10 @@ onKeyPress={(e) => {
                       return (
                         <div 
                           key={cliente.id} 
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => setSelectedClienteDetalhes(cliente)}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedClienteDetalhes(cliente) } }}
                           style={{ 
                             backgroundColor: '#2a2a2a', 
                             padding: '8px', 
@@ -21180,11 +21334,12 @@ onKeyPress={(e) => {
                             display: 'flex',
                             gap: '8px',
                             alignItems: 'center',
-                            position: 'relative'
+                            position: 'relative',
+                            cursor: 'pointer'
                           }}
                         >
                           {/* Avatar Quadrado com Cantos Arredondados */}
-                          <div style={{ flexShrink: 0 }}>
+                          <div style={{ flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
                             {cliente.photo ? (
                               <div style={{
                                 width: '50px',
@@ -21227,7 +21382,7 @@ onKeyPress={(e) => {
                             )}
                           </div>
                           
-                          {/* Informações do Cliente */}
+                          {/* Informações do Cliente - clicar abre Detalhes do Cliente */}
                           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
                               <div style={{ flex: 1, minWidth: 0 }}>
@@ -21319,8 +21474,8 @@ onKeyPress={(e) => {
                               )}
                             </div>
                             
-                            {/* Botões de Ação - Compactos na mesma linha */}
-                            <div style={{ display: 'flex', gap: '4px', marginTop: '3px', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'flex-start', width: '100%', maxWidth: '600px', marginLeft: '0', paddingLeft: '0' }}>
+                            {/* Botões de Ação - Compactos na mesma linha (evitar abrir detalhes ao clicar) */}
+                            <div style={{ display: 'flex', gap: '4px', marginTop: '3px', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'flex-start', width: '100%', maxWidth: '600px', marginLeft: '0', paddingLeft: '0' }} onClick={(e) => e.stopPropagation()}>
                               <button 
                                 className="btn-primary" 
                                 onClick={() => {
@@ -21351,6 +21506,8 @@ onKeyPress={(e) => {
                       )
                     })}
                   </div>
+                )}
+                  </>
                 )}
               </div>
             )}
@@ -35258,7 +35415,7 @@ A1;Peça exemplo;10'
                     textShadow: '0 0 20px rgba(0, 255, 0, 0.3)',
                     marginBottom: '8px'
                   }}>
-                    {safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}
+                    {safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA / CLIENTES'}
                   </h1>
                   <p style={{
                     margin: 0,
@@ -41319,7 +41476,7 @@ A1;Peça exemplo;10'
               }}>
                 💰
               </span>
-              {safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}
+              {safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA / CLIENTES'}
             </span>
             <span style={{ fontSize: '12px' }}>{expandedGroups.has('gestao-financeira') ? '▼' : '▶'}</span>
           </button>
@@ -42494,7 +42651,7 @@ A1;Peça exemplo;10'
                                 ({button.group === 'gestao-tecnica' ? (safeT?.gestaoTecnicaTitle || 'GESTÃO TÉCNICA') : 
                                   button.group === 'gestao-custos' ? (safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS') :
                                   button.group === 'gestao-industrial' ? (safeT?.gestaoIndustrialTitle || 'GESTÃO INDUSTRIAL') : 
-                                  button.group === 'gestao-financeira' ? (safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA') :
+                                  button.group === 'gestao-financeira' ? (safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA / CLIENTES') :
                                   button.group === 'checklist-group' ? (safeT?.checklistGroupTitle || 'CHECKLIST') :
                                   button.group === 'comunicacao-interna' ? ((safeT as any)?.comunicacaoInternaTitle || 'COMUNICAÇÃO INTERNA') :
                                   button.group === 'manuais-informacoes-tecnicas' ? ((safeT as any)?.manuaisInformacoesTecnicasTitle || 'MANUAIS') :
@@ -42530,7 +42687,7 @@ A1;Peça exemplo;10'
                                 <option value="gestao-industrial">{safeT?.gestaoIndustrialTitle || 'GESTÃO INDUSTRIAL'}</option>
                                 <option value="manuais-informacoes-tecnicas">{(safeT as any)?.manuaisInformacoesTecnicasTitle || 'MANUAIS E INFORMAÇÕES TÉCNICAS'}</option>
                                 <option value="almoxarifado-armazem">{(safeT as any)?.almoxarifadoArmazemTitle || 'ALMOXARIFADO / ARMAZÉM'}</option>
-                                <option value="gestao-financeira">{safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}</option>
+                                <option value="gestao-financeira">{safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA / CLIENTES'}</option>
                                 <option value="outros">{safeT?.outrosBotoes || 'OUTROS'}</option>
                               </select>
                             )}
@@ -42876,7 +43033,7 @@ A1;Peça exemplo;10'
               {/* Grupo: GESTÃO FINANCEIRA */}
               <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 150, 255, 0.3)' }}>
                 <h4 style={{ color: '#66b3ff', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                  {safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}
+                  {safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA / CLIENTES'}
                 </h4>
                 {getButtonsByGroup('gestao-financeira').length === 0 ? (
                   <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center' }}>

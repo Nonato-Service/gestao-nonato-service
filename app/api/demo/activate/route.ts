@@ -7,8 +7,9 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   const startDate = new Date().toISOString()
-  // Usar o mesmo host/porta do pedido para o redirect (evita NS_ERROR_CONNECTION_REFUSED)
+  // Redirecionar para /?from=demo para o cliente saber que veio do link demo (senão ao abrir / entramos sempre em modo normal)
   const redirectUrl = new URL('/', request.url)
+  redirectUrl.searchParams.set('from', 'demo')
   if (redirectUrl.hostname === '0.0.0.0') {
     redirectUrl.hostname = 'localhost'
     redirectUrl.protocol = 'http:'

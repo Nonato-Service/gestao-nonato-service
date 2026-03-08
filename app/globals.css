@@ -66,8 +66,8 @@ body {
 .container {
   background-color: #2a2a2a;
   border-radius: 12px;
-  padding: 30px;
-  margin: 20px;
+  padding: 22px 24px;
+  margin: 16px 20px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.05);
   transition: all 0.3s ease;
@@ -79,16 +79,16 @@ body {
 }
 
 .header {
-  /* Fundo original (escuro) + cabeçalho maior */
+  /* Fundo original (escuro) + cabeçalho proporcional ao ecrã */
   background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
   border-bottom: 3px solid rgba(0, 255, 0, 0.45);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-  padding: 60px 70px;
-  min-height: 180px;
+  padding: 36px 40px;
+  min-height: 120px;
 }
 
 .header h1 {
-  font-size: 44px;
+  font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.5px;
   /* Nome verde transparente + contorno verde */
@@ -108,14 +108,14 @@ body {
   margin: 0 auto;
 }
 
-/* Padrão igual Visualizar Equipamentos: contorno fino, verde opaco, texto branco, hover só brilho */
+/* Padrão igual Visualizar Equipamentos: contorno fino, verde opaco, texto branco, hover só brilho. Tamanho proporcional ao ecrã (computador). */
 .btn-primary {
   background: transparent;
   border: 1px solid rgba(0, 255, 0, 0.95);
   color: #fff !important;
-  padding: 14px 28px;
+  padding: 10px 20px;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: box-shadow 0.2s ease, filter 0.2s ease;
@@ -123,6 +123,8 @@ body {
   letter-spacing: 0.5px;
   box-shadow: none;
   text-transform: none;
+  width: auto;
+  max-width: 100%;
 }
 
 .btn-primary:hover {
@@ -139,12 +141,12 @@ body {
 
 .sidebar {
   background-color: #000000;
-  width: 280px;
+  width: 260px;
   min-height: 100vh;
-  padding: 30px 20px;
+  padding: 20px 14px;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 10px;
   border-right: 1px solid rgba(0, 255, 0, 0.1);
   box-shadow: 2px 0 15px rgba(0, 0, 0, 0.3);
 }
@@ -234,8 +236,8 @@ body {
 .modal {
   background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
   border-radius: 16px;
-  padding: 40px;
-  max-width: 650px;
+  padding: 28px 32px;
+  max-width: 600px;
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
@@ -313,28 +315,29 @@ body {
 }
 
 .modal h2 {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 700;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
   color: #ffffff;
   letter-spacing: -0.5px;
   border-bottom: 2px solid rgba(0, 255, 0, 0.3);
-  padding-bottom: 15px;
+  padding-bottom: 12px;
 }
 
 .file-upload-label {
   display: inline-block;
-  padding: 16px 28px;
+  padding: 12px 20px;
   background: linear-gradient(135deg, rgba(0, 255, 0, 0.1) 0%, rgba(0, 255, 0, 0.05) 100%);
   border: 2px dashed #00ff00;
   color: #ffffff;
   border-radius: 10px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: center;
   width: 100%;
+  max-width: 320px;
   letter-spacing: 0.5px;
   box-shadow: 0 2px 10px rgba(0, 255, 0, 0.15);
 }
@@ -347,18 +350,19 @@ body {
   transform: translateY(-2px);
 }
 
-/* Botão vermelho: mesmo padrão Visualizar Equipamentos - texto branco, hover só brilho */
+/* Botão vermelho: mesmo padrão Visualizar Equipamentos - texto branco, hover só brilho. No computador não ocupa a linha toda (só na sidebar). */
 .btn-danger {
   background: transparent;
   border: 1px solid rgba(255, 68, 68, 0.9);
   color: #fff !important;
-  padding: 14px 28px;
+  padding: 10px 20px;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: box-shadow 0.2s ease, filter 0.2s ease;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   letter-spacing: 0.5px;
   box-shadow: none;
 }
@@ -428,11 +432,11 @@ button.btn-danger.btn-excluir-compact,
   }
 }
 
-/* Barra inferior de abas - moderna, animada, laranja transparente - começa após a sidebar (280px) */
+/* Barra inferior de abas - moderna, animada, laranja transparente - começa após a sidebar (260px) */
 .bottom-tabs-bar {
   position: fixed;
   bottom: 0;
-  left: 280px;
+  left: 260px;
   right: 0;
   height: 54px;
   padding-bottom: env(safe-area-inset-bottom, 0);
@@ -572,14 +576,14 @@ button.btn-danger.btn-excluir-compact,
   box-shadow: 0 4px 15px rgba(0, 255, 0, 0.3) !important;
 }
 
-/* Botão Administrador: mesmo padrão Visualizar Equipamentos */
+/* Botão Administrador: mesmo padrão Visualizar Equipamentos. Tamanho proporcional ao ecrã. */
 .btn-administrador {
   background: transparent;
   border: 1px solid rgba(255, 68, 68, 0.9);
   color: #ffffff;
-  padding: 14px 28px;
+  padding: 10px 20px;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: box-shadow 0.2s ease, filter 0.2s ease;
@@ -587,6 +591,8 @@ button.btn-danger.btn-excluir-compact,
   letter-spacing: 0.5px;
   box-shadow: none;
   text-transform: none;
+  width: auto;
+  max-width: 100%;
 }
 
 .btn-administrador:hover {
