@@ -14344,7 +14344,7 @@ export default function Dashboard() {
                       saveData('nonato-manuais-familias-grupos', { familias: next, grupos: grupos, modelos: manuaisModelos })
                     }
                   }}
-                  style={{ padding: '10px 16px', whiteSpace: 'nowrap', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
+                  style={{ padding: '10px 16px', whiteSpace: 'nowrap', alignSelf: 'flex-start', minWidth: '100px' }}
                 >
                   {(safeT as any)?.manuaisAdicionar || 'Adicionar'}
                 </button>
@@ -14514,7 +14514,7 @@ const nextF = familias.filter(x => x !== f)
                         saveData('nonato-manuais-familias-grupos', { familias: familias, grupos: next, modelos: manuaisModelos })
                       }
                     }}
-                    style={{ padding: '10px 16px', whiteSpace: 'nowrap', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
+                    style={{ padding: '10px 16px', whiteSpace: 'nowrap', alignSelf: 'flex-start', minWidth: '100px' }}
                   >
                     {(safeT as any)?.manuaisAdicionar || 'Adicionar'}
                   </button>
@@ -14689,7 +14689,7 @@ const nextF = familias.filter(x => x !== f)
                         saveData('nonato-manuais-familias-grupos', { familias: familias, grupos: grupos, modelos: next })
                       }
                     }}
-                    style={{ padding: '10px 16px', whiteSpace: 'nowrap', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
+                    style={{ padding: '10px 16px', whiteSpace: 'nowrap', alignSelf: 'flex-start', minWidth: '100px' }}
                   >
                     {(safeT as any)?.manuaisAdicionar || 'Adicionar'}
                   </button>
