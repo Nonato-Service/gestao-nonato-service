@@ -12773,6 +12773,10 @@ export default function Dashboard() {
       setSelectedSidebarButton(buttonId != null && buttonId !== '' ? buttonId : action)
     })
     
+    if (action === 'open-pagina-empresa') {
+      if (typeof window !== 'undefined') window.location.href = '/pagina-empresa'
+      return
+    }
     if (action === 'open-administrador') {
       openTab('administrador', getTabTitle('administrador'))
     } else if (action === 'open-gestores') {
@@ -14468,7 +14472,7 @@ const nextF = familias.filter(x => x !== f)
                 {selectedFamiliaManuais ? ` - ${selectedFamiliaManuais}` : ''}
               </h3>
               {selectedFamiliaManuais ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '240px', boxSizing: 'border-box', marginLeft: '-14px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '240px', boxSizing: 'border-box' }}>
                   <input
                     type="text"
                     value={novoGrupoManuais}
