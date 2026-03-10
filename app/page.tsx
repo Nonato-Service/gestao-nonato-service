@@ -16960,11 +16960,11 @@ const nextF = familias.filter(x => x !== f)
                 backgroundColor: '#1a1a1a',
                 overflow: 'hidden'
               }}>
-                <div style={{ padding: '20px', borderBottom: '2px solid rgba(0, 255, 0, 0.2)' }}>
-                  <h3 style={{ margin: '0 0 15px', fontSize: '16px', fontWeight: 600, color: '#00ff00' }}>
+                <div style={{ padding: '24px 28px', borderBottom: '2px solid rgba(0, 255, 0, 0.2)' }}>
+                  <h3 style={{ margin: '0 0 18px', fontSize: '20px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.5px' }}>
                     {safeT?.familia || 'Famílias'}
                   </h3>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch' }}>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch', flexWrap: 'wrap' }}>
                     <input
                       type="text"
                       value={novaFamiliaEquipamento}
@@ -16991,15 +16991,16 @@ const nextF = familias.filter(x => x !== f)
                         }
                       }}
                       style={{
-                        flex: 1,
+                        flex: '1 1 220px',
                         minWidth: 0,
-                        padding: '10px 12px',
-                        height: '40px',
+                        padding: '12px 16px',
+                        height: '44px',
                         backgroundColor: '#2a2a2a',
                         border: '1px solid rgba(0, 255, 0, 0.3)',
-                        borderRadius: '6px',
+                        borderRadius: '8px',
                         color: '#fff',
-                        fontSize: '15px'
+                        fontSize: '15px',
+                        boxSizing: 'border-box'
                       }}
                     />
                     <button
@@ -17022,15 +17023,15 @@ const nextF = familias.filter(x => x !== f)
                           }
                         }
                       }}
-                      style={{ padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 600, borderRadius: '6px', minWidth: '100px', backgroundColor: 'rgba(0, 255, 0, 0.2)', borderColor: 'rgba(0, 255, 0, 0.5)', color: '#00ff00' }}
+                      style={{ padding: '0 20px', height: '44px', fontSize: '15px', fontWeight: 600, borderRadius: '8px', minWidth: '120px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00' }}
                     >
                       + {safeT?.add || 'Adicionar'}
                     </button>
                   </div>
                 </div>
-                <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
+                <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', minHeight: '120px' }}>
                   {familiasList.length === 0 ? (
-                    <div style={{ padding: '24px 16px', textAlign: 'center', color: '#ccc', fontSize: '14px' }}>
+                    <div style={{ padding: '32px 24px', textAlign: 'center', color: '#aaa', fontSize: '15px' }}>
                       {safeT?.nenhumaFamilia || 'Nenhuma família. Adicione uma acima.'}
                     </div>
                   ) : (
@@ -17039,8 +17040,8 @@ const nextF = familias.filter(x => x !== f)
                       const isSelected = selectedFamiliaForGrupos === f
                       const isExpanded = isChecklist && familiaExpandidaChecklist === f
                       const parentesDestaFamilia = isChecklist ? parentesChecklist.filter(p => p.familia === f) : []
-                      const btnStyle = { padding: '4px 10px', height: '28px', fontSize: '11px', borderRadius: '4px', minWidth: '90px', whiteSpace: 'nowrap' as const, border: '1px solid rgba(0, 255, 0, 0.7)' }
-                      const btnDangerStyle = { padding: '4px 10px', height: '28px', fontSize: '11px', borderRadius: '4px', minWidth: '70px', whiteSpace: 'nowrap' as const, border: '1px solid rgba(255, 68, 68, 0.8)' }
+                      const btnStyle = { padding: '8px 14px', height: '36px', fontSize: '13px', borderRadius: '6px', minWidth: '100px', whiteSpace: 'nowrap' as const, border: '1px solid rgba(0, 255, 0, 0.7)', fontWeight: 600 }
+                      const btnDangerStyle = { padding: '8px 14px', height: '36px', fontSize: '13px', borderRadius: '6px', minWidth: '90px', whiteSpace: 'nowrap' as const, border: '1px solid rgba(255, 68, 68, 0.8)', fontWeight: 600 }
                       return (
                         <React.Fragment key={f}>
                         <div
@@ -17048,21 +17049,21 @@ const nextF = familias.filter(x => x !== f)
                           style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '12px',
-                            padding: '12px 15px',
-                            marginBottom: '8px',
-                            borderRadius: '6px',
+                            gap: '14px',
+                            padding: '14px 18px',
+                            marginBottom: '10px',
+                            borderRadius: '8px',
                             cursor: editingFamiliaNome === f ? 'default' : 'pointer',
                             backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.15)' : '#2a2a2a',
                             border: isSelected ? '1px solid rgba(0, 255, 0, 0.5)' : '1px solid rgba(0, 255, 0, 0.2)',
                             borderLeft: isSelected ? '4px solid #00ff00' : '4px solid transparent',
-                            minHeight: '52px'
+                            minHeight: '58px'
                           }}
                         >
                           {isChecklist && (
-                            <span style={{ width: '20px', flexShrink: 0, cursor: 'pointer', fontSize: '10px', color: '#00ff00' }} onClick={e => { e.stopPropagation(); setFamiliaExpandidaChecklist(prev => prev === f ? null : f); }} title={isExpanded ? (safeT?.close || 'Fechar') : (safeT?.adicionarParente || 'Adicionar Parente')}>{isExpanded ? '▼' : '▶'}</span>
+                            <span style={{ width: '24px', flexShrink: 0, cursor: 'pointer', fontSize: '12px', color: '#00ff00' }} onClick={e => { e.stopPropagation(); setFamiliaExpandidaChecklist(prev => prev === f ? null : f); }} title={isExpanded ? (safeT?.close || 'Fechar') : (safeT?.adicionarParente || 'Adicionar Parente')}>{isExpanded ? '▼' : '▶'}</span>
                           )}
-                          <span style={{ color: '#00ff00', fontSize: '13px', fontWeight: 600, width: '22px', flexShrink: 0 }}>{index + 1}</span>
+                          <span style={{ color: '#00ff00', fontSize: '14px', fontWeight: 600, width: '26px', flexShrink: 0 }}>{index + 1}</span>
                           {editingFamiliaNome === f ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }} onClick={e => e.stopPropagation()}>
                               <input
@@ -17100,7 +17101,7 @@ const nextF = familias.filter(x => x !== f)
                                     }
                                   }
                                 }}
-                                style={{ flex: 1, minWidth: 0, height: '36px', padding: '0 10px', backgroundColor: '#1a1a1a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '13px' }}
+                                style={{ flex: 1, minWidth: 0, height: '40px', padding: '0 12px', backgroundColor: '#1a1a1a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
                                 autoFocus
                               />
                               <button className="btn-primary" onClick={() => {
@@ -17136,13 +17137,13 @@ const nextF = familias.filter(x => x !== f)
                             </div>
                           ) : (
                             <>
-                              <span style={{ flex: 1, minWidth: 0, fontWeight: 600, color: '#fff', fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={f}>{f}</span>
-                              <span style={{ padding: '4px 8px', backgroundColor: 'rgba(0, 255, 0, 0.15)', borderRadius: '6px', fontSize: '12px', color: '#00ff00', fontWeight: 600, flexShrink: 0 }}>{count} {safeT?.grupos || 'grupos'}</span>
-                              <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                              <span style={{ flex: 1, minWidth: 0, fontWeight: 600, color: '#fff', fontSize: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={f}>{f}</span>
+                              <span style={{ padding: '6px 10px', backgroundColor: 'rgba(0, 255, 0, 0.15)', borderRadius: '6px', fontSize: '13px', color: '#00ff00', fontWeight: 600, flexShrink: 0 }}>{count} {safeT?.grupos || 'grupos'}</span>
+                              <div style={{ display: 'flex', gap: '8px', flexShrink: 0, alignItems: 'center' }} onClick={e => e.stopPropagation()}>
                                 {isChecklist && (
-                                  <button type="button" className="btn-primary" style={{ ...btnStyle, padding: '4px 10px', whiteSpace: 'nowrap' }} onClick={() => { setSelectedFamiliaForGrupos(f); setSelectedParenteIdForPainelGrupos(''); setSelectedParenteIdForNovoGrupo(''); setTimeout(() => document.getElementById('grupos-familia-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100); }}>{safeT?.verGrupos || 'Ver Grupos'}</button>
+                                  <button type="button" className="btn-primary" style={{ ...btnStyle }} onClick={() => { setSelectedFamiliaForGrupos(f); setSelectedParenteIdForPainelGrupos(''); setSelectedParenteIdForNovoGrupo(''); setTimeout(() => document.getElementById('grupos-familia-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100); }}>{safeT?.verGrupos || 'Ver Grupos'}</button>
                                 )}
-                                <button className="btn-primary" onClick={() => { setEditingFamiliaNome(f); setEditFamiliaValue(f); }} style={{ ...btnStyle, minWidth: '95px' }} title={safeT?.edit || 'Editar'}>{safeT?.edit || 'Editar'}</button>
+                                <button className="btn-primary" onClick={() => { setEditingFamiliaNome(f); setEditFamiliaValue(f); }} style={{ ...btnStyle }} title={safeT?.edit || 'Editar'}>{safeT?.edit || 'Editar'}</button>
                                 <button className="btn-danger" onClick={() => {
                                   if (isChecklist) {
                                     const nextFam = familiasChecklist.filter(x => x !== f)
@@ -17170,41 +17171,41 @@ const nextF = familias.filter(x => x !== f)
                                   )}
                                 </div>
                                 {isChecklist && isExpanded && (
-                                  <div style={{ marginLeft: '28px', marginBottom: '12px', paddingLeft: '12px', borderLeft: '2px solid rgba(0, 255, 0, 0.3)', backgroundColor: 'rgba(0,255,0,0.04)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
-                                      <p style={{ margin: '8px 0 6px', fontSize: '11px', color: '#00ff00', fontWeight: 600 }} title={safeT?.parenteDesc}>{safeT?.parente || 'Parente'}</p>
-                                      <button type="button" className="btn-primary" style={{ padding: '4px 10px', height: '28px', fontSize: '11px', whiteSpace: 'nowrap', flexShrink: 0 }} onClick={() => { setSelectedFamiliaForGrupos(f); setSelectedParenteIdForPainelGrupos(''); setSelectedParenteIdForNovoGrupo(''); setTimeout(() => document.getElementById('grupos-familia-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100); }}>{safeT?.verGrupos || 'Ver Grupos'}</button>
+                                  <div style={{ marginLeft: '32px', marginBottom: '14px', padding: '14px 16px', borderLeft: '3px solid rgba(0, 255, 0, 0.3)', backgroundColor: 'rgba(0,255,0,0.04)', borderRadius: '0 8px 8px 0' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
+                                      <p style={{ margin: 0, fontSize: '14px', color: '#00ff00', fontWeight: 600 }} title={safeT?.parenteDesc}>{safeT?.parente || 'Parente'}</p>
+                                      <button type="button" className="btn-primary" style={{ padding: '8px 14px', height: '36px', fontSize: '13px', whiteSpace: 'nowrap', flexShrink: 0 }} onClick={() => { setSelectedFamiliaForGrupos(f); setSelectedParenteIdForPainelGrupos(''); setSelectedParenteIdForNovoGrupo(''); setTimeout(() => document.getElementById('grupos-familia-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100); }}>{safeT?.verGrupos || 'Ver Grupos'}</button>
                                     </div>
                                     {parentesDestaFamilia.map((p) => (
-                                      <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', marginBottom: '6px', borderRadius: '6px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0,255,0,0.2)', flexWrap: 'nowrap' }}>
+                                      <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', marginBottom: '8px', borderRadius: '8px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0,255,0,0.2)', flexWrap: 'wrap' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0, width: '56px' }}>
                                           <div style={{ width: '40px', height: '40px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(0,255,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a1a1a' }}>
                                             {p.imagem ? <img src={p.imagem} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '18px', opacity: 0.5 }}>🖼</span>}
                                           </div>
-                                          <label style={{ cursor: 'pointer', fontSize: '10px', color: '#00ff00', whiteSpace: 'nowrap' }}>
+                                          <label style={{ cursor: 'pointer', fontSize: '12px', color: '#00ff00', whiteSpace: 'nowrap' }}>
                                             <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(ev) => { const file = ev.target.files?.[0]; if (file) { const r = new FileReader(); r.onload = () => { const next = parentesChecklist.map(x => x.id === p.id ? { ...x, imagem: r.result as string } : x); setParentesChecklist(next); saveData('nonato-parentes-checklist', next); }; r.readAsDataURL(file); } ev.target.value = ''; }} />
                                             {safeT?.adicionarImagem || 'Imagem'}
                                           </label>
                                         </div>
-                                        <div style={{ flex: 1, minWidth: '120px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div style={{ flex: 1, minWidth: '140px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                                           {editingParenteId === p.id ? (
-                                            <div style={{ display: 'flex', gap: '4px', flex: 1, minWidth: 0 }} onClick={e => e.stopPropagation()}>
-                                              <input type="text" value={editParenteNome} onChange={(e) => setEditParenteNome(e.target.value)} onKeyPress={(e) => { if (e.key === 'Enter') { const nome = editParenteNome.trim(); if (nome) { const next = parentesChecklist.map(x => x.id === p.id ? { ...x, nome } : x); setParentesChecklist(next); saveData('nonato-parentes-checklist', next); setEditingParenteId(null); } } }} style={{ flex: 1, minWidth: 0, height: '28px', padding: '0 8px', fontSize: '12px', backgroundColor: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '4px', color: '#fff' }} autoFocus />
-                                              <button type="button" className="btn-primary" style={{ padding: '4px 8px', height: '28px', fontSize: '11px', whiteSpace: 'nowrap', minWidth: '58px' }} onClick={() => { const nome = editParenteNome.trim(); if (nome) { const next = parentesChecklist.map(x => x.id === p.id ? { ...x, nome } : x); setParentesChecklist(next); saveData('nonato-parentes-checklist', next); setEditingParenteId(null); } }}>{safeT?.save || 'Salvar'}</button>
-                                              <button type="button" style={{ padding: '4px 8px', height: '28px', fontSize: '11px', border: '1px solid rgba(0,255,0,0.2)', borderRadius: '4px', backgroundColor: '#2a2a2a', color: '#ccc', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={() => setEditingParenteId(null)}>{safeT?.cancel || 'Cancelar'}</button>
+                                            <div style={{ display: 'flex', gap: '8px', flex: 1, minWidth: 0 }} onClick={e => e.stopPropagation()}>
+                                              <input type="text" value={editParenteNome} onChange={(e) => setEditParenteNome(e.target.value)} onKeyPress={(e) => { if (e.key === 'Enter') { const nome = editParenteNome.trim(); if (nome) { const next = parentesChecklist.map(x => x.id === p.id ? { ...x, nome } : x); setParentesChecklist(next); saveData('nonato-parentes-checklist', next); setEditingParenteId(null); } } }} style={{ flex: 1, minWidth: 0, height: '36px', padding: '0 12px', fontSize: '14px', backgroundColor: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} autoFocus />
+                                              <button type="button" className="btn-primary" style={{ padding: '8px 14px', height: '36px', fontSize: '13px', whiteSpace: 'nowrap' }} onClick={() => { const nome = editParenteNome.trim(); if (nome) { const next = parentesChecklist.map(x => x.id === p.id ? { ...x, nome } : x); setParentesChecklist(next); saveData('nonato-parentes-checklist', next); setEditingParenteId(null); } }}>{safeT?.save || 'Salvar'}</button>
+                                              <button type="button" style={{ padding: '8px 14px', height: '36px', fontSize: '13px', border: '1px solid rgba(0,255,0,0.2)', borderRadius: '6px', backgroundColor: '#2a2a2a', color: '#ccc', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={() => setEditingParenteId(null)}>{safeT?.cancel || 'Cancelar'}</button>
                                             </div>
                                           ) : (
                                             <>
-                                              <span style={{ flex: 1, minWidth: '100px', fontSize: '14px', fontWeight: 600, color: '#00ff00', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.nome}>{p.nome}</span>
-                                              <button type="button" className="btn-primary" style={{ padding: '4px 8px', height: '26px', fontSize: '11px', whiteSpace: 'nowrap', flexShrink: 0 }} onClick={(e) => { e.stopPropagation(); setSelectedFamiliaForGrupos(f); setSelectedParenteIdForPainelGrupos(p.id); setSelectedParenteIdForNovoGrupo(p.id); setTimeout(() => document.getElementById('grupos-familia-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100); }}>{safeT?.adicionarGrupos || 'Adicionar Grupos'}</button>
-                                              <button type="button" className="btn-primary" style={{ padding: '4px 8px', height: '26px', fontSize: '11px', whiteSpace: 'nowrap', width: '55px', flexShrink: 0 }} onClick={(e) => { e.stopPropagation(); setEditingParenteId(p.id); setEditParenteNome(p.nome); }}>{safeT?.edit || 'Editar'}</button>
-                                              <button type="button" className="btn-danger" style={{ width: '32px', minWidth: '32px', maxWidth: '32px', height: '26px', padding: 0, fontSize: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); const next = parentesChecklist.filter(x => x.id !== p.id); setParentesChecklist(next); saveData('nonato-parentes-checklist', next); setEditingParenteId(null); }} title={safeT?.delete || 'Excluir'}>🗑</button>
+                                              <span style={{ flex: 1, minWidth: '100px', fontSize: '15px', fontWeight: 600, color: '#00ff00', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.nome}>{p.nome}</span>
+                                              <button type="button" className="btn-primary" style={{ padding: '8px 12px', height: '36px', fontSize: '13px', whiteSpace: 'nowrap', flexShrink: 0 }} onClick={(e) => { e.stopPropagation(); setSelectedFamiliaForGrupos(f); setSelectedParenteIdForPainelGrupos(p.id); setSelectedParenteIdForNovoGrupo(p.id); setTimeout(() => document.getElementById('grupos-familia-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100); }}>{safeT?.adicionarGrupos || 'Adicionar Grupos'}</button>
+                                              <button type="button" className="btn-primary" style={{ padding: '8px 14px', height: '36px', fontSize: '13px', whiteSpace: 'nowrap', flexShrink: 0 }} onClick={(e) => { e.stopPropagation(); setEditingParenteId(p.id); setEditParenteNome(p.nome); }}>{safeT?.edit || 'Editar'}</button>
+                                              <button type="button" className="btn-danger" style={{ width: '38px', minWidth: '38px', height: '36px', padding: 0, fontSize: '16px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => { e.stopPropagation(); const next = parentesChecklist.filter(x => x.id !== p.id); setParentesChecklist(next); saveData('nonato-parentes-checklist', next); setEditingParenteId(null); }} title={safeT?.delete || 'Excluir'}>🗑</button>
                                             </>
                                           )}
                                         </div>
                                       </div>
                                     ))}
-                                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginTop: '8px', flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
+                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '12px', flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
                                       <input
                                         type="text"
                                         value={novoParenteNomePorFamilia[f] ?? ''}
@@ -17222,12 +17223,12 @@ const nextF = familias.filter(x => x !== f)
                                             }
                                           }
                                         }}
-                                        style={{ flex: 1, minWidth: '120px', height: '32px', padding: '0 10px', fontSize: '12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }}
+                                        style={{ flex: 1, minWidth: '160px', height: '40px', padding: '0 14px', fontSize: '14px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '8px', color: '#fff' }}
                                       />
                                       <button
                                         type="button"
                                         className="btn-primary"
-                                        style={{ padding: '0 12px', height: '32px', fontSize: '12px' }}
+                                        style={{ padding: '0 18px', height: '40px', fontSize: '14px', fontWeight: 600 }}
                                         onClick={() => {
                                           const nome = (novoParenteNomePorFamilia[f] ?? '').trim();
                                           if (nome && !parentesDestaFamilia.some(x => x.nome === nome)) {
@@ -17240,7 +17241,7 @@ const nextF = familias.filter(x => x !== f)
                                         }}
                                       >+ {safeT?.adicionarParente || 'Adicionar Parente'}</button>
                                     </div>
-                                    {parentesDestaFamilia.length === 0 && <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#888' }}>{safeT?.nenhumParente}</p>}
+                                    {parentesDestaFamilia.length === 0 && <p style={{ margin: '10px 0 0', fontSize: '13px', color: '#888' }}>{safeT?.nenhumParente}</p>}
                                   </div>
                                 )}
                         </React.Fragment>
@@ -17308,19 +17309,19 @@ const nextF = familias.filter(x => x !== f)
                   return (
                     <>
                       <div style={{
-                        padding: '20px 24px',
+                        padding: '24px 28px',
                         borderBottom: '2px solid rgba(0, 255, 0, 0.2)',
                         backgroundColor: '#1a1a1a'
                       }}>
-                        <h3 style={{ margin: '0 0 15px', fontSize: '16px', fontWeight: 600, color: '#00ff00' }}>
+                        <h3 style={{ margin: '0 0 20px', fontSize: '20px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.5px' }}>
                           {safeT?.gruposDe || 'Grupos de'} <span style={{ color: '#fff' }}>{nomeFamilia}</span>
                           {parenteSelecionadoPainel && <><span style={{ color: 'rgba(255,255,255,0.7)' }}> — </span><span style={{ color: '#00ff00' }}>{parenteSelecionadoPainel.nome}</span></>}
                         </h3>
                         {isChecklist && (() => {
                           const parentesDaFamilia = parentesChecklist.filter(p => p.familia === nomeFamilia)
                           return parentesDaFamilia.length > 0 ? (
-                            <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-                              <label style={{ fontSize: '11px', color: '#00ff00', fontWeight: 600 }}>{safeT?.mostrarGruposDe || 'Mostrar grupos de'}</label>
+                            <div style={{ marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                              <label style={{ fontSize: '14px', color: '#00ff00', fontWeight: 600 }}>{safeT?.mostrarGruposDe || 'Mostrar grupos de'}</label>
                               <select
                                 value={selectedParenteIdForPainelGrupos}
                                 onChange={(e) => {
@@ -17328,7 +17329,7 @@ const nextF = familias.filter(x => x !== f)
                                   setSelectedParenteIdForPainelGrupos(v)
                                   setSelectedParenteIdForNovoGrupo(v)
                                 }}
-                                style={{ width: '100%', maxWidth: '280px', height: '36px', padding: '0 10px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', fontSize: '13px' }}
+                                style={{ minWidth: '200px', maxWidth: '320px', height: '40px', padding: '0 12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px' }}
                               >
                                 <option value="">{safeT?.nenhum || 'Nenhum'}</option>
                                 {parentesDaFamilia.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
@@ -17336,12 +17337,11 @@ const nextF = familias.filter(x => x !== f)
                             </div>
                           ) : null
                         })()}
-                        {/* Uma sobre a outra: linha 1 = campos; linha 2 = botão (evita cortar "Adicionar grupo" no PC/tablet) */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
                           {showNumeroGrupo && (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
-                            <label style={{ fontSize: '11px', color: '#00ff00', fontWeight: 600 }}>{safeT?.numeroGrupo || 'Número do Grupo'}</label>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
+                            <label style={{ fontSize: '13px', color: '#00ff00', fontWeight: 600 }}>{safeT?.numeroGrupo || 'Número do Grupo'}</label>
                             <input
                               type="text"
                               value={valorNovoNumero}
@@ -17383,8 +17383,8 @@ const nextF = familias.filter(x => x !== f)
                             />
                           </div>
                           )}
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
-                            <label style={{ fontSize: '11px', color: '#00ff00', fontWeight: 600 }}>{safeT?.nomeDoGrupo || 'Nome do Grupo'}</label>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
+                            <label style={{ fontSize: '13px', color: '#00ff00', fontWeight: 600 }}>{safeT?.nomeDoGrupo || 'Nome do Grupo'}</label>
                             <input
                               type="text"
                               value={valorNovoNome}
@@ -17450,7 +17450,7 @@ onKeyPress={(e) => {
                                 }
                               }
                             }}
-                            style={{ padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 600, borderRadius: '6px', alignSelf: 'flex-start', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' }}
+                            style={{ padding: '0 20px', height: '44px', fontSize: '15px', fontWeight: 600, borderRadius: '8px', alignSelf: 'flex-start', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' }}
                           >
                             + {safeT?.addGrupo ?? safeT?.add || 'Adicionar grupo'}
                           </button>
