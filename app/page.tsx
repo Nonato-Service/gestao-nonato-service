@@ -16912,7 +16912,7 @@ const nextF = familias.filter(x => x !== f)
                     {tab.type === 'familias-grupos-equipamentos' ? (safeT?.familiasGruposEquipamentosTitle || 'CADASTRO DE FAMÍLIAS E GRUPOS PARA OS EQUIPAMENTOS') : (safeT?.familiasGruposTitle || 'FAMÍLIAS E GRUPOS')}
                   </h1>
                   <p style={{ margin: 0, fontSize: '14px', color: '#ccc', opacity: 0.9 }}>
-                    {safeT?.familiasGruposDesc || 'Famílias são categorias; grupos são subdivisões. Selecione uma família à esquerda para gerir os grupos.'}
+                    {safeT?.familiasGruposDesc || 'Famílias são categorias; grupos são subdivisões. Selecione uma família acima para gerir os grupos abaixo.'}
                   </p>
                 </div>
                 <button
@@ -16941,9 +16941,10 @@ const nextF = familias.filter(x => x !== f)
               </div>
             </div>
 
-            {/* Área de dois painéis — metade para Famílias, metade para Grupos */}
+            {/* Área central: Famílias em cima, Grupos abaixo (uma coluna) */}
             <div style={{
               display: 'flex',
+              flexDirection: 'column',
               gap: '0',
               minHeight: '500px',
               backgroundColor: '#1a1a1a',
@@ -16951,14 +16952,11 @@ const nextF = familias.filter(x => x !== f)
               border: '1px solid rgba(0, 255, 0, 0.2)',
               overflow: 'hidden'
             }}>
-              {/* PAINEL ESQUERDO: Lista de famílias (50%) */}
+              {/* SECÇÃO 1: Famílias (em cima) */}
               <div style={{
-                flex: 1,
-                minWidth: '300px',
-                maxWidth: '50%',
                 display: 'flex',
                 flexDirection: 'column',
-                borderRight: '2px solid rgba(0, 255, 0, 0.2)',
+                borderBottom: '2px solid rgba(0, 255, 0, 0.2)',
                 backgroundColor: '#1a1a1a',
                 overflow: 'hidden'
               }}>
@@ -17252,10 +17250,10 @@ const nextF = familias.filter(x => x !== f)
                 </div>
               </div>
 
-              {/* PAINEL DIREITO: Grupos da família selecionada (50%) */}
+              {/* SECÇÃO 2: Grupos da família selecionada (abaixo) */}
               <div id="grupos-familia-panel" style={{
                 flex: 1,
-                minWidth: '300px',
+                minHeight: '320px',
                 display: 'flex',
                 flexDirection: 'column',
                 backgroundColor: '#1a1a1a',
