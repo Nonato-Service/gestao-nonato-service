@@ -16965,48 +16965,46 @@ const nextF = familias.filter(x => x !== f)
                     {safeT?.familia || 'Famílias'}
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
-                      <div style={{ flex: '1 1 260px', minWidth: 0 }}>
-                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#00ff00', fontWeight: 600 }}>{safeT?.novaFamilia || 'Nova família'}</label>
-                        <input
-                          type="text"
-                          value={novaFamiliaEquipamento}
-                          onChange={(e) => setNovaFamiliaEquipamento(e.target.value)}
-                          placeholder={safeT?.novaFamilia || 'Nome da nova família...'}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              const nome = novaFamiliaEquipamento.trim()
-                              if (nome && !familiasList.includes(nome)) {
-                                if (isChecklist) {
-                                  const next = [...familiasChecklist, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-                                  setFamiliasChecklist(next)
-                                  setNovaFamiliaEquipamento('')
-                                  setSelectedFamiliaForGrupos(nome)
-                                  saveData('nonato-familias-checklist', next)
-                                } else {
-                                  const next = [...familiasEquipamento, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-                                  setFamiliasEquipamento(next)
-                                  setNovaFamiliaEquipamento('')
-                                  setSelectedFamiliaForGrupos(nome)
-                                  saveData('nonato-familias-grupos-equipamento', { familias: next, grupos: gruposEquipamento })
-                                }
-                              }
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', color: '#00ff00', fontWeight: 600 }}>{safeT?.novaFamilia || 'Nova família'}</label>
+                    <input
+                      type="text"
+                      value={novaFamiliaEquipamento}
+                      onChange={(e) => setNovaFamiliaEquipamento(e.target.value)}
+                      placeholder={safeT?.nomeNovaFamiliaPlaceholder || 'Nome da nova família...'}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          const nome = novaFamiliaEquipamento.trim()
+                          if (nome && !familiasList.includes(nome)) {
+                            if (isChecklist) {
+                              const next = [...familiasChecklist, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                              setFamiliasChecklist(next)
+                              setNovaFamiliaEquipamento('')
+                              setSelectedFamiliaForGrupos(nome)
+                              saveData('nonato-familias-checklist', next)
+                            } else {
+                              const next = [...familiasEquipamento, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                              setFamiliasEquipamento(next)
+                              setNovaFamiliaEquipamento('')
+                              setSelectedFamiliaForGrupos(nome)
+                              saveData('nonato-familias-grupos-equipamento', { familias: next, grupos: gruposEquipamento })
                             }
-                          }}
-                          style={{
-                            width: '100%',
-                            padding: '12px 16px',
-                            height: '44px',
-                            backgroundColor: '#2a2a2a',
-                            border: '1px solid rgba(0, 255, 0, 0.3)',
-                            borderRadius: '8px',
-                            color: '#fff',
-                            fontSize: '15px',
-                            boxSizing: 'border-box'
-                          }}
-                        />
-                      </div>
-                      <button
+                          }
+                        }
+                      }}
+                      style={{
+                        width: '100%',
+                        maxWidth: '400px',
+                        padding: '12px 16px',
+                        height: '44px',
+                        backgroundColor: '#2a2a2a',
+                        border: '1px solid rgba(0, 255, 0, 0.3)',
+                        borderRadius: '8px',
+                        color: '#fff',
+                        fontSize: '15px',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                    <button
                         className="btn-primary"
                         onClick={() => {
                           const nome = novaFamiliaEquipamento.trim()
@@ -17029,8 +17027,7 @@ const nextF = familias.filter(x => x !== f)
                         style={{ padding: '0 20px', height: '44px', fontSize: '15px', fontWeight: 600, borderRadius: '8px', minWidth: '130px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00' }}
                       >
                         + {safeT?.add || 'Adicionar'}
-                      </button>
-                    </div>
+                    </button>
                   </div>
                 </div>
                 <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px', minHeight: '140px' }}>
