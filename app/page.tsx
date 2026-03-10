@@ -17338,7 +17338,9 @@ const nextF = familias.filter(x => x !== f)
                             </div>
                           ) : null
                         })()}
-                        <div style={{ display: 'grid', gridTemplateColumns: showNumeroGrupo ? '140px 1fr auto' : '1fr auto', gap: '12px', alignItems: 'flex-end', alignContent: 'center' }}>
+                        {/* Uma sobre a outra: linha 1 = campos; linha 2 = botão (evita cortar "Adicionar grupo" no PC/tablet) */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
                           {showNumeroGrupo && (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
                             <label style={{ fontSize: '11px', color: '#00ff00', fontWeight: 600 }}>{safeT?.numeroGrupo || 'Número do Grupo'}</label>
@@ -17426,6 +17428,7 @@ onKeyPress={(e) => {
                               }}
                             />
                           </div>
+                          </div>
                           <button
                             className="btn-primary"
                             onClick={() => {
@@ -17449,7 +17452,7 @@ onKeyPress={(e) => {
                                 }
                               }
                             }}
-                            style={{ padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 600, borderRadius: '6px', minWidth: '100px', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' }}
+                            style={{ padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 600, borderRadius: '6px', alignSelf: 'flex-start', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' }}
                           >
                             + {safeT?.addGrupo ?? safeT?.add || 'Adicionar grupo'}
                           </button>
