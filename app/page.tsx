@@ -16952,8 +16952,10 @@ const nextF = familias.filter(x => x !== f)
               border: '1px solid rgba(0, 255, 0, 0.2)',
               overflow: 'hidden'
             }}>
-              {/* SECÇÃO 1: Famílias — mesmo estilo que Grupos (cabeçalho + lista em cartões) */}
+              {/* SECÇÃO 1: Famílias — mesmo estilo e tamanho que Grupos (cabeçalho + lista em cartões) */}
               <div style={{
+                flex: 1,
+                minHeight: '320px',
                 display: 'flex',
                 flexDirection: 'column',
                 borderBottom: '2px solid rgba(0, 255, 0, 0.2)',
@@ -16966,7 +16968,7 @@ const nextF = familias.filter(x => x !== f)
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0, flex: '1 1 260px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0, maxWidth: '320px' }}>
                         <label style={{ fontSize: '13px', color: '#00ff00', fontWeight: 600 }}>{safeT?.novaFamilia || 'Nova família'}</label>
                         <input
                           type="text"
@@ -17033,7 +17035,7 @@ const nextF = familias.filter(x => x !== f)
                     </button>
                   </div>
                 </div>
-                <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px', minHeight: '140px' }}>
+                <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
                   {familiasList.length === 0 ? (
                     <div style={{ padding: '32px 24px', textAlign: 'center', color: '#aaa', fontSize: '15px' }}>
                       {safeT?.nenhumaFamilia || 'Nenhuma família. Adicione uma acima.'}
