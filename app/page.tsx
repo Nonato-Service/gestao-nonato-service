@@ -16965,143 +16965,158 @@ const nextF = familias.filter(x => x !== f)
                     {safeT?.familia || 'Famílias'}
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', color: '#00ff00', fontWeight: 600 }}>{safeT?.novaFamilia || 'Nova família'}</label>
-                    <input
-                      type="text"
-                      value={novaFamiliaEquipamento}
-                      onChange={(e) => setNovaFamiliaEquipamento(e.target.value)}
-                      placeholder={safeT?.nomeNovaFamiliaPlaceholder || 'Nome da nova família...'}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          const nome = novaFamiliaEquipamento.trim()
-                          if (nome && !familiasList.includes(nome)) {
-                            if (isChecklist) {
-                              const next = [...familiasChecklist, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-                              setFamiliasChecklist(next)
-                              setNovaFamiliaEquipamento('')
-                              setSelectedFamiliaForGrupos(nome)
-                              saveData('nonato-familias-checklist', next)
-                            } else {
-                              const next = [...familiasEquipamento, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-                              setFamiliasEquipamento(next)
-                              setNovaFamiliaEquipamento('')
-                              setSelectedFamiliaForGrupos(nome)
-                              saveData('nonato-familias-grupos-equipamento', { familias: next, grupos: gruposEquipamento })
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0, flex: '1 1 260px' }}>
+                        <label style={{ fontSize: '13px', color: '#00ff00', fontWeight: 600 }}>{safeT?.novaFamilia || 'Nova família'}</label>
+                        <input
+                          type="text"
+                          value={novaFamiliaEquipamento}
+                          onChange={(e) => setNovaFamiliaEquipamento(e.target.value)}
+                          placeholder={safeT?.nomeNovaFamiliaPlaceholder || 'Nome da nova família...'}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              const nome = novaFamiliaEquipamento.trim()
+                              if (nome && !familiasList.includes(nome)) {
+                                if (isChecklist) {
+                                  const next = [...familiasChecklist, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                                  setFamiliasChecklist(next)
+                                  setNovaFamiliaEquipamento('')
+                                  setSelectedFamiliaForGrupos(nome)
+                                  saveData('nonato-familias-checklist', next)
+                                } else {
+                                  const next = [...familiasEquipamento, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                                  setFamiliasEquipamento(next)
+                                  setNovaFamiliaEquipamento('')
+                                  setSelectedFamiliaForGrupos(nome)
+                                  saveData('nonato-familias-grupos-equipamento', { familias: next, grupos: gruposEquipamento })
+                                }
+                              }
                             }
+                          }}
+                          style={{
+                            width: '100%',
+                            height: '40px',
+                            padding: '0 12px',
+                            backgroundColor: '#2a2a2a',
+                            border: '1px solid rgba(0, 255, 0, 0.3)',
+                            borderRadius: '6px',
+                            color: '#fff',
+                            fontSize: '14px',
+                            boxSizing: 'border-box'
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <button
+                      className="btn-primary"
+                      onClick={() => {
+                        const nome = novaFamiliaEquipamento.trim()
+                        if (nome && !familiasList.includes(nome)) {
+                          if (isChecklist) {
+                            const next = [...familiasChecklist, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                            setFamiliasChecklist(next)
+                            setNovaFamiliaEquipamento('')
+                            setSelectedFamiliaForGrupos(nome)
+                            saveData('nonato-familias-checklist', next)
+                          } else {
+                            const next = [...familiasEquipamento, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                            setFamiliasEquipamento(next)
+                            setNovaFamiliaEquipamento('')
+                            setSelectedFamiliaForGrupos(nome)
+                            saveData('nonato-familias-grupos-equipamento', { familias: next, grupos: gruposEquipamento })
                           }
                         }
                       }}
-                      style={{
-                        width: '100%',
-                        maxWidth: '400px',
-                        padding: '12px 16px',
-                        height: '44px',
-                        backgroundColor: '#2a2a2a',
-                        border: '1px solid rgba(0, 255, 0, 0.3)',
-                        borderRadius: '8px',
-                        color: '#fff',
-                        fontSize: '15px',
-                        boxSizing: 'border-box'
-                      }}
-                    />
-                    <button
-                        className="btn-primary"
-                        onClick={() => {
-                          const nome = novaFamiliaEquipamento.trim()
-                          if (nome && !familiasList.includes(nome)) {
-                            if (isChecklist) {
-                              const next = [...familiasChecklist, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-                              setFamiliasChecklist(next)
-                              setNovaFamiliaEquipamento('')
-                              setSelectedFamiliaForGrupos(nome)
-                              saveData('nonato-familias-checklist', next)
-                            } else {
-                              const next = [...familiasEquipamento, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-                              setFamiliasEquipamento(next)
-                              setNovaFamiliaEquipamento('')
-                              setSelectedFamiliaForGrupos(nome)
-                              saveData('nonato-familias-grupos-equipamento', { familias: next, grupos: gruposEquipamento })
-                            }
-                          }
-                        }}
-                        style={{ padding: '0 20px', height: '44px', fontSize: '15px', fontWeight: 600, borderRadius: '8px', minWidth: '130px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00' }}
-                      >
-                        + {safeT?.add || 'Adicionar'}
+                      style={{ padding: '0 20px', height: '44px', fontSize: '15px', fontWeight: 600, borderRadius: '8px', alignSelf: 'flex-start', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' }}
+                    >
+                      + {safeT?.add || 'Adicionar'}
                     </button>
                   </div>
                 </div>
-                <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px', minHeight: '140px' }}>
+                <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px', minHeight: '140px' }}>
                   {familiasList.length === 0 ? (
                     <div style={{ padding: '32px 24px', textAlign: 'center', color: '#aaa', fontSize: '15px' }}>
                       {safeT?.nenhumaFamilia || 'Nenhuma família. Adicione uma acima.'}
                     </div>
                   ) : (
-                    familiasList.map((f, index) => {
+                    <>
+                      <div style={{ display: 'grid', gridTemplateColumns: isChecklist ? '28px 28px 1fr 90px 200px' : '28px 1fr 90px 200px', gap: '12px', alignItems: 'center', padding: '10px 18px', borderBottom: '1px solid rgba(0, 255, 0, 0.3)', marginBottom: '4px' }}>
+                        <span />
+                        {isChecklist && <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase' }} />}
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase', minWidth: 0 }}>{safeT?.familia || 'Família'}</span>
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase' }}>{safeT?.grupos || 'Grupos'}</span>
+                        <span style={{ textAlign: 'right', fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase' }}>{safeT?.actions || 'Ações'}</span>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {familiasList.map((f, index) => {
                       const count = (isChecklist ? gruposChecklist : gruposEquipamento).filter(g => g.familia === f).length
                       const isSelected = selectedFamiliaForGrupos === f
                       const isExpanded = isChecklist && familiaExpandidaChecklist === f
                       const parentesDestaFamilia = isChecklist ? parentesChecklist.filter(p => p.familia === f) : []
-                      const btnStyle = { padding: '10px 16px', height: '38px', fontSize: '14px', borderRadius: '8px', minWidth: '110px', whiteSpace: 'nowrap' as const, border: '1px solid rgba(0, 255, 0, 0.7)', fontWeight: 600 }
-                      const btnDangerStyle = { padding: '10px 16px', height: '38px', fontSize: '14px', borderRadius: '8px', minWidth: '100px', whiteSpace: 'nowrap' as const, border: '1px solid rgba(255, 68, 68, 0.8)', fontWeight: 600 }
+                      const btnFamiliaStyle = { padding: '0 12px', height: '36px', fontSize: '13px', fontWeight: 600, borderRadius: '6px', minWidth: '70px', whiteSpace: 'nowrap' as const, backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' as const }
+                      const btnFamiliaDangerStyle = { padding: '0 12px', height: '36px', fontSize: '13px', fontWeight: 600, borderRadius: '6px', minWidth: '70px', whiteSpace: 'nowrap' as const, backgroundColor: 'rgba(255, 68, 68, 0.15)', border: '1px solid rgba(255, 68, 68, 0.5)', color: '#ff6b6b', cursor: 'pointer' as const }
                       return (
                         <React.Fragment key={f}>
                         <div
                           onClick={() => { if (editingFamiliaNome !== f) { setSelectedFamiliaForGrupos(f); if (isChecklist) setFamiliaExpandidaChecklist(prev => prev === f ? null : f); } }}
                           style={{
-                            display: 'flex',
-                            flexDirection: 'column',
+                            display: 'grid',
+                            gridTemplateColumns: isChecklist ? '28px 28px 1fr 90px 200px' : '28px 1fr 90px 200px',
                             gap: '12px',
-                            padding: '18px 20px',
-                            marginBottom: '14px',
-                            borderRadius: '10px',
-                            cursor: editingFamiliaNome === f ? 'default' : 'pointer',
+                            alignItems: 'center',
+                            padding: '12px 18px',
                             backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.12)' : '#2a2a2a',
-                            border: isSelected ? '2px solid rgba(0, 255, 0, 0.5)' : '1px solid rgba(0, 255, 0, 0.25)',
-                            borderLeft: isSelected ? '5px solid #00ff00' : '5px solid transparent'
+                            borderRadius: '6px',
+                            border: '1px solid rgba(0, 255, 0, 0.2)',
+                            minHeight: '52px',
+                            cursor: editingFamiliaNome === f ? 'default' : 'pointer'
                           }}
                         >
+                          <span style={{ color: '#00ff00', fontSize: '13px', fontWeight: 600 }}>{index + 1}.</span>
+                          {isChecklist && (
+                            <span style={{ cursor: 'pointer', fontSize: '12px', color: '#00ff00' }} onClick={e => { e.stopPropagation(); setFamiliaExpandidaChecklist(prev => prev === f ? null : f); }} title={isExpanded ? (safeT?.close || 'Fechar') : (safeT?.adicionarParente || 'Adicionar Parente')}>{isExpanded ? '▼' : '▶'}</span>
+                          )}
                           {editingFamiliaNome === f ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} onClick={e => e.stopPropagation()}>
-                              <label style={{ fontSize: '13px', color: '#00ff00', fontWeight: 600 }}>{safeT?.nomeDaFamilia || 'Nome da família'}</label>
-                              <input
-                                type="text"
-                                value={editFamiliaValue}
-                                onChange={(e) => setEditFamiliaValue(e.target.value)}
-                                onKeyPress={(e) => {
-                                  if (e.key === 'Enter') {
-                                    const nome = editFamiliaValue.trim()
-                                    if (nome && (nome === f || !familiasList.includes(nome))) {
-                                      if (isChecklist) {
-                                        if (familiasChecklist.includes(f)) {
-                                          const nextFam = familiasChecklist.map(x => x === f ? nome : x).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-                                          setFamiliasChecklist(nextFam)
-                                          saveData('nonato-familias-checklist', nextFam)
+                            <>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, gridColumn: isChecklist ? 'span 1' : 'span 1' }} onClick={e => e.stopPropagation()}>
+                                <input
+                                  type="text"
+                                  value={editFamiliaValue}
+                                  onChange={(e) => setEditFamiliaValue(e.target.value)}
+                                  onKeyPress={(e) => {
+                                    if (e.key === 'Enter') {
+                                      const nome = editFamiliaValue.trim()
+                                      if (nome && (nome === f || !familiasList.includes(nome))) {
+                                        if (isChecklist) {
+                                          if (familiasChecklist.includes(f)) {
+                                            const nextFam = familiasChecklist.map(x => x === f ? nome : x).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                                            setFamiliasChecklist(nextFam)
+                                            saveData('nonato-familias-checklist', nextFam)
+                                          }
+                                          const nextGr = gruposChecklist.map(g => g.familia === f ? { ...g, familia: nome } : g)
+                                          setGruposChecklist(nextGr)
+                                          const nextParentes = parentesChecklist.map(p => p.familia === f ? { ...p, familia: nome } : p)
+                                          setParentesChecklist(nextParentes)
+                                          setSelectedFamiliaForGrupos(nome)
+                                          if (familiaExpandidaChecklist === f) setFamiliaExpandidaChecklist(nome)
+                                          saveData('nonato-grupos-checklist', nextGr)
+                                          saveData('nonato-parentes-checklist', nextParentes)
+                                          setEditingFamiliaNome(null)
+                                        } else {
+                                          const next = familiasEquipamento.map(x => x === f ? nome : x).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                                          setFamiliasEquipamento(next)
+                                          setSelectedFamiliaForGrupos(nome)
+                                          const nextGr = gruposEquipamento.map(g => g.familia === f ? { ...g, familia: nome } : g)
+                                          setGruposEquipamento(nextGr)
+                                          saveData('nonato-familias-grupos-equipamento', { familias: next, grupos: nextGr })
+                                          setEditingFamiliaNome(null)
                                         }
-                                        const nextGr = gruposChecklist.map(g => g.familia === f ? { ...g, familia: nome } : g)
-                                        setGruposChecklist(nextGr)
-                                        const nextParentes = parentesChecklist.map(p => p.familia === f ? { ...p, familia: nome } : p)
-                                        setParentesChecklist(nextParentes)
-                                        setSelectedFamiliaForGrupos(nome)
-                                        if (familiaExpandidaChecklist === f) setFamiliaExpandidaChecklist(nome)
-                                        saveData('nonato-grupos-checklist', nextGr)
-                                        saveData('nonato-parentes-checklist', nextParentes)
-                                        setEditingFamiliaNome(null)
-                                      } else {
-                                        const next = familiasEquipamento.map(x => x === f ? nome : x).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-                                        setFamiliasEquipamento(next)
-                                        setSelectedFamiliaForGrupos(nome)
-                                        const nextGr = gruposEquipamento.map(g => g.familia === f ? { ...g, familia: nome } : g)
-                                        setGruposEquipamento(nextGr)
-                                        saveData('nonato-familias-grupos-equipamento', { familias: next, grupos: nextGr })
-                                        setEditingFamiliaNome(null)
                                       }
                                     }
-                                  }
-                                }}
-                                style={{ width: '100%', height: '44px', padding: '0 14px', backgroundColor: '#1a1a1a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', color: '#fff', fontSize: '15px', boxSizing: 'border-box' }}
-                                autoFocus
-                              />
-                              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                  }}
+                                  style={{ flex: 1, minWidth: 0, height: '36px', padding: '0 10px', backgroundColor: '#1a1a1a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }}
+                                  autoFocus
+                                />
                                 <button className="btn-primary" onClick={() => {
                                   const nome = editFamiliaValue.trim()
                                   if (nome && (nome === f || !familiasList.includes(nome))) {
@@ -17130,25 +17145,21 @@ const nextF = familias.filter(x => x !== f)
                                       setEditingFamiliaNome(null)
                                     }
                                   }
-                                }} style={btnStyle}>{safeT?.save || 'Salvar'}</button>
-                                <button onClick={() => { setEditingFamiliaNome(null); setEditFamiliaValue(''); }} style={{ ...btnStyle, backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.2)', color: '#ccc', cursor: 'pointer' }}>{safeT?.cancel || 'Cancelar'}</button>
+                                }} style={{ ...btnFamiliaStyle, minWidth: '58px' }}>{safeT?.save || 'Salvar'}</button>
+                                <button onClick={() => { setEditingFamiliaNome(null); setEditFamiliaValue(''); }} style={{ ...btnFamiliaStyle, minWidth: '58px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.2)', color: '#ccc', cursor: 'pointer' }}>{safeT?.cancel || 'Cancelar'}</button>
                               </div>
-                            </div>
+                              <span style={{ padding: '4px 8px', backgroundColor: 'rgba(0, 255, 0, 0.15)', borderRadius: '6px', fontSize: '12px', color: '#00ff00', fontWeight: 600 }}>{count} {safeT?.grupos || 'grupos'}</span>
+                              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }} onClick={e => e.stopPropagation()} />
+                            </>
                           ) : (
                             <>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                              <span style={{ minWidth: 0, fontWeight: 600, color: '#fff', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={f}>{f}</span>
+                              <span style={{ padding: '4px 8px', backgroundColor: 'rgba(0, 255, 0, 0.15)', borderRadius: '6px', fontSize: '12px', color: '#00ff00', fontWeight: 600 }}>{count} {safeT?.grupos || 'grupos'}</span>
+                              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }} onClick={e => e.stopPropagation()}>
                                 {isChecklist && (
-                                  <span style={{ width: '28px', flexShrink: 0, cursor: 'pointer', fontSize: '14px', color: '#00ff00', padding: '4px 0' }} onClick={e => { e.stopPropagation(); setFamiliaExpandidaChecklist(prev => prev === f ? null : f); }} title={isExpanded ? (safeT?.close || 'Fechar') : (safeT?.adicionarParente || 'Adicionar Parente')}>{isExpanded ? '▼' : '▶'}</span>
+                                  <button type="button" className="btn-primary" style={btnFamiliaStyle} onClick={() => { setSelectedFamiliaForGrupos(f); setSelectedParenteIdForPainelGrupos(''); setSelectedParenteIdForNovoGrupo(''); setTimeout(() => document.getElementById('grupos-familia-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100); }}>{safeT?.verGrupos || 'Ver Grupos'}</button>
                                 )}
-                                <span style={{ color: '#00ff00', fontSize: '15px', fontWeight: 700, width: '28px', flexShrink: 0 }}>{index + 1}</span>
-                                <span style={{ flex: 1, minWidth: 0, fontWeight: 700, color: '#fff', fontSize: '17px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={f}>{f}</span>
-                                <span style={{ padding: '8px 12px', backgroundColor: 'rgba(0, 255, 0, 0.18)', borderRadius: '8px', fontSize: '14px', color: '#00ff00', fontWeight: 600, flexShrink: 0 }}>{count} {safeT?.grupos || 'grupos'}</span>
-                              </div>
-                              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', paddingTop: '4px', borderTop: '1px solid rgba(0,255,255,0.08)' }} onClick={e => e.stopPropagation()}>
-                                {isChecklist && (
-                                  <button type="button" className="btn-primary" style={{ ...btnStyle }} onClick={() => { setSelectedFamiliaForGrupos(f); setSelectedParenteIdForPainelGrupos(''); setSelectedParenteIdForNovoGrupo(''); setTimeout(() => document.getElementById('grupos-familia-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100); }}>{safeT?.verGrupos || 'Ver Grupos'}</button>
-                                )}
-                                <button className="btn-primary" onClick={() => { setEditingFamiliaNome(f); setEditFamiliaValue(f); }} style={{ ...btnStyle }} title={safeT?.edit || 'Editar'}>{safeT?.edit || 'Editar'}</button>
+                                <button className="btn-primary" onClick={() => { setEditingFamiliaNome(f); setEditFamiliaValue(f); }} style={btnFamiliaStyle} title={safeT?.edit || 'Editar'}>{safeT?.edit || 'Editar'}</button>
                                 <button className="btn-danger" onClick={() => {
                                   if (isChecklist) {
                                     const nextFam = familiasChecklist.filter(x => x !== f)
@@ -17170,12 +17181,12 @@ const nextF = familias.filter(x => x !== f)
                                     if (editingFamiliaNome === f) setEditingFamiliaNome(null)
                                     saveData('nonato-familias-grupos-equipamento', { familias: next, grupos: gruposEquipamento })
                                   }
-                                }} style={btnDangerStyle}>{safeT?.delete || 'Excluir'}</button>
+                                }} style={btnFamiliaDangerStyle}>{safeT?.delete || 'Excluir'}</button>
                               </div>
                             </>
                           )}
                         </div>
-                                {isChecklist && isExpanded && (
+                        {isChecklist && isExpanded && (
                                   <div style={{ marginLeft: '32px', marginBottom: '14px', padding: '14px 16px', borderLeft: '3px solid rgba(0, 255, 0, 0.3)', backgroundColor: 'rgba(0,255,0,0.04)', borderRadius: '0 8px 8px 0' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
                                       <p style={{ margin: 0, fontSize: '14px', color: '#00ff00', fontWeight: 600 }} title={safeT?.parenteDesc}>{safeT?.parente || 'Parente'}</p>
@@ -17251,7 +17262,9 @@ const nextF = familias.filter(x => x !== f)
                                 )}
                         </React.Fragment>
                       )
-                    })
+                    })}
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
