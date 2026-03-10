@@ -43,21 +43,50 @@ gestao-tecnica-nonato-service/
 │       │   ├── save/route.ts
 │       │   ├── save-all/route.ts
 │       │   └── save-text/route.ts
-│       ├── pdf/              # ⭐ APIs de geração de PDFs
+│       ├── pdf/              # APIs de geração de PDFs
 │       │   ├── confirmacao-orcamento/[id]/route.ts
 │       │   ├── confirmacao-pedido-os/[id]/route.ts
-│       │   └── pedido-separacao-envio/[id]/route.ts
-│       ├── video/
-│       │   └── logo/route.ts
-│       └── backup-code/route.ts  # API de backup
-├── data/                     # Dados salvos (JSON)
-│   ├── .gitkeep
-│   └── nonato-logo.mp4       # Logo em vídeo
+│       │   ├── pedido-separacao-envio/[id]/route.ts
+│       │   ├── despesas-documento/[id]/route.ts
+│       │   └── manual-gestor/route.ts
+│       ├── backup-code/
+│       │   ├── route.ts      # Backup do código
+│       │   ├── list/route.ts
+│       │   └── restore/route.ts
+│       ├── demo/
+│       │   ├── activate/route.ts
+│       │   └── status/route.ts
+│       ├── health/route.ts
+│       ├── video/logo/route.ts
+│       └── import-from-url/route.ts
+├── data/                     # Dados salvos (JSON) – 40+ ficheiros
+│   ├── nonato-clientes.json, nonato-fornecedores.json, nonato-equipamentos.json
+│   ├── nonato-gestores.json, nonato-tecnicos.json, nonato-users.json
+│   ├── nonato-sidebar-buttons.json, nonato-language.json, nonato-logo.json
+│   ├── nonato-relatorios-servico.json, nonato-relatorio-contador.json
+│   ├── nonato-pedidos-orcamento.json, nonato-pecas-biblioteca.json, nonato-orcamentos-avulso.json
+│   ├── nonato-agendamentos.json, nonato-servicos.json, nonato-mensagens-comunicacao.json
+│   ├── nonato-grupos-checklist.json, nonato-familias-checklist.json, nonato-pre-checks.json
+│   ├── nonato-pedidos-separacao.json, nonato-ordens-preparacao.json
+│   ├── nonato-biblioteca-manuais.json, nonato-manuais-familias-grupos.json
+│   ├── nonato-categorias-pecas.json, nonato-subcategorias-pecas.json, nonato-pecas-biblioteca.json
+│   ├── nonato-pecas-solicitadas-armazem.json, nonato-relatorios-financeiros.json
+│   ├── nonato-relatorios-servico.json, nonato-chats-individuais.json
+│   ├── nonato-conhecimento-tecnicos.json, nonato-conhecimentos-tecnicos.json
+│   ├── nonato-servicos-por-grupo.json, nonato-translator-library.json
+│   ├── nonato-formularios-checklist-tecnicos.json, nonato-opcoes-tipo-checklist.json
+│   ├── nonato-parentes-checklist.json, nonato-managed-passwords.json
+│   ├── nonato-clientes-devedores.json, nonato-cliente-prioritario.json
+│   └── nonato-logo-type.json, nonato-familias-grupos-equipamento.json
 ├── backups/                  # ⭐ Backups automáticos do código (100+)
 ├── public/                   # Arquivos públicos
-├── MANUAL-DE-USO.md          # ⭐ Manual completo de uso
-├── CONTEXTO.md               # ⭐ Documentação do contexto
-├── TODO.md                   # ⭐ Lista de tarefas
+├── .cursor/rules/            # Regras Cursor (sempre aplicadas)
+│   ├── atualizacoes-rapidas.mdc   # Edições cirúrgicas, deploy com ATUALIZAR-DEPLOY.bat
+│   └── idiomas-6.mdc             # 6 idiomas obrigatórios (PT-BR, ES, FR, IT, DE, EN)
+├── MANUAL-DE-USO.md          # Manual completo de uso
+├── CONTEXTO.md               # Este ficheiro – documentação do contexto
+├── TODO.md                   # Lista de tarefas
+├── ATUALIZACOES-RAPIDAS.md   # Fluxo de deploy rápido
 ├── next.config.js            # Configuração do Next.js
 ├── tsconfig.json             # Configuração do TypeScript
 ├── package.json              # Dependências do projeto
@@ -202,7 +231,13 @@ gestao-tecnica-nonato-service/
   - Salvar automaticamente
   - Suporte a tradução automática
 
-### 8. Sistema de Geração de PDFs ⭐
+### 8. Rotas de API (resumo atual)
+- **Dados:** `api/data/load`, `load-text`, `save`, `save-all`, `save-text`
+- **PDF:** `api/pdf/confirmacao-orcamento/[id]`, `confirmacao-pedido-os/[id]`, `pedido-separacao-envio/[id]`, `despesas-documento/[id]`, `manual-gestor`
+- **Backup:** `api/backup-code` (POST/GET), `api/backup-code/list`, `api/backup-code/restore`
+- **Outros:** `api/health`, `api/demo/activate`, `api/demo/status`, `api/video/logo`, `api/import-from-url`
+
+### 9. Sistema de Geração de PDFs ⭐
 - **8 Modelos de PDF para Relatórios de Serviço:**
   1. **Clássico** - Baseado na imagem original do sistema
   2. **Compacto** - Versão condensada
@@ -228,7 +263,7 @@ gestao-tecnica-nonato-service/
   - Geração de documentos PDF para orçamentos avulsos
   - Botão "GERAR DOCUMENTOS PDF" com suporte a 6 idiomas
 
-### 9. Sistema de Checklist ⭐
+### 10. Sistema de Checklist ⭐
 - **Templates de Checklist:**
   - Criação e edição de templates personalizados
   - Itens configuráveis com descrição e tipo
@@ -247,7 +282,7 @@ gestao-tecnica-nonato-service/
   - Observações por técnico
   - Rastreamento de execução
 
-### 10. Sistema de Comunicação Interna ⭐
+### 11. Sistema de Comunicação Interna ⭐
 - **Mensagens entre Gestores:**
   - Envio de mensagens entre gestores
   - Suporte a arquivos e imagens (base64)
@@ -262,7 +297,7 @@ gestao-tecnica-nonato-service/
   - Alertas importantes
   - Histórico de mensagens
 
-### 11. Almoxarifado e Armazém ⭐
+### 12. Almoxarifado e Armazém ⭐
 - **Gestão de Estoque:**
   - Controle de peças em estoque
   - Entrada e saída de materiais
@@ -276,7 +311,7 @@ gestao-tecnica-nonato-service/
   - Organização por localização
   - Rastreamento visual
 
-### 12. Gestão Financeira ⭐
+### 13. Gestão Financeira ⭐
 - **Gestão Financeira Geral:**
   - Controle financeiro completo
   - Relatórios financeiros
@@ -460,7 +495,7 @@ Get-ChildItem backups\ -Directory | Sort-Object LastWriteTime -Descending
 **Usuário:** Mesmo usuário do projeto Nonato Service  
 **Projeto:** Gestão Técnica Nonato Service  
 **Localização:** `C:\Users\W10\gestao-tecnica-nonato-service`  
-**Última atualização:** Março 2026
+**Última atualização:** 10 de março de 2026
 
 **Contexto importante:**
 - Sistema já tem backup automático implementado
@@ -542,7 +577,7 @@ Get-ChildItem backups\ -Directory | Sort-Object LastWriteTime -Descending
 
 ---
 
-**Última atualização:** Março 2026  
+**Última atualização:** 10 de março de 2026  
 **Status:** ✅ SISTEMA 100% FUNCIONAL - TODAS AS FUNCIONALIDADES PRINCIPAIS COMPLETAS! 🎉
 
 **Últimas implementações:**
@@ -581,10 +616,10 @@ Get-ChildItem backups\ -Directory | Sort-Object LastWriteTime -Descending
 - **Idiomas suportados:** 6 (PT-BR, ES, FR, IT, DE, EN)
 - **Modelos de PDF:** 8 modelos diferentes
 - **Modais implementados:** 30+ modais completos
-- **APIs implementadas:** 10+ rotas de API
+- **APIs implementadas:** 18 rotas de API (data, pdf, backup-code, demo, health, video, import-from-url)
 - **Scripts de gerenciamento:** 20+ scripts .bat
 - **Tipos TypeScript:** 50+ tipos definidos
-- **Arquivos de dados:** 20+ arquivos JSON
+- **Arquivos de dados:** 40+ arquivos JSON em `data/`
 
 **Porta do Servidor:** 3000 (http://localhost:3000)
 
