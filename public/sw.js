@@ -70,7 +70,7 @@ self.addEventListener('fetch', (event) => {
             .catch(() => {
               return caches.match('/', { ignoreSearch: true })
                 .then((index) => index || new Response(
-                  '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Offline</title></head><body style="background:#000;color:#0f0;font-family:sans-serif;padding:20px;text-align:center"><h1>Sem ligação</h1><p>Abra o app quando tiver internet para carregar os dados.</p></body></html>',
+                  '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Offline</title></head><body style="background:#121212;color:#0f0;font-family:sans-serif;padding:20px;text-align:center"><h1>Sem ligação</h1><p>Abra o app quando tiver internet para carregar os dados.</p></body></html>',
                   { headers: { 'Content-Type': 'text/html' } }
                 ))
             })

@@ -8,7 +8,7 @@ export default function PaginaEmpresa() {
     <div
       style={{
         minHeight: '100vh',
-        background: '#000',
+        background: '#121212',
         color: '#fff',
         padding: '24px 20px 48px',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',

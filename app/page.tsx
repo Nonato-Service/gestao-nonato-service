@@ -14225,7 +14225,7 @@ export default function Dashboard() {
       ? modelos.filter((m: ManuaisModelo) => m.grupoId === selectedGrupoManuais).sort((a, b) => a.nome.localeCompare(b.nome, undefined, { sensitivity: 'base' }))
       : []
     return (
-      <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto', minHeight: '480px', backgroundColor: '#0d0d0d' }}>
+      <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto', minHeight: '480px', backgroundColor: '#121212' }}>
         <div style={{
           marginBottom: '20px',
           padding: '16px 24px',
@@ -14325,7 +14325,7 @@ export default function Dashboard() {
                     width: '100%',
                     minWidth: 0,
                     padding: '10px 12px',
-                    background: '#0a0a0a',
+                    background: '#1a1a1a',
                     border: '1px solid rgba(0, 255, 0, 0.35)',
                     borderRadius: '8px',
                     color: '#fff',
@@ -14396,7 +14396,7 @@ export default function Dashboard() {
                             }
                             if (e.key === 'Escape') setEditingFamiliaManuais(null)
                           }}
-                          style={{ flex: 1, padding: '6px 8px', background: '#0a0a0a', border: '1px solid rgba(0,255,0,0.4)', borderRadius: '6px', color: '#fff', fontSize: '13px' }}
+                          style={{ flex: 1, padding: '6px 8px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.4)', borderRadius: '6px', color: '#fff', fontSize: '13px' }}
                           autoFocus
                         />
                         <button
@@ -14494,7 +14494,7 @@ const nextF = familias.filter(x => x !== f)
                       width: '100%',
                       minWidth: 0,
                       padding: '10px 12px',
-                      background: '#0a0a0a',
+                      background: '#1a1a1a',
                       border: '1px solid rgba(0, 255, 0, 0.35)',
                       borderRadius: '8px',
                       color: '#fff',
@@ -14573,7 +14573,7 @@ const nextF = familias.filter(x => x !== f)
                             }
                             if (e.key === 'Escape') setEditingGrupoManuaisId(null)
                           }}
-                          style={{ flex: 1, padding: '6px 8px', background: '#0a0a0a', border: '1px solid rgba(0,255,0,0.4)', borderRadius: '6px', color: '#fff', fontSize: '13px' }}
+                          style={{ flex: 1, padding: '6px 8px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.4)', borderRadius: '6px', color: '#fff', fontSize: '13px' }}
                           autoFocus
                         />
                         <button
@@ -14668,7 +14668,7 @@ const nextF = familias.filter(x => x !== f)
                       width: '100%',
                       minWidth: 0,
                       padding: '10px 12px',
-                      background: '#0a0a0a',
+                      background: '#1a1a1a',
                       border: '1px solid rgba(0, 255, 0, 0.35)',
                       borderRadius: '8px',
                       color: '#fff',
@@ -14748,7 +14748,7 @@ const nextF = familias.filter(x => x !== f)
                             }
                             if (e.key === 'Escape') setEditingModeloManuaisId(null)
                           }}
-                          style={{ flex: 1, padding: '6px 8px', background: '#0a0a0a', border: '1px solid rgba(0,255,0,0.4)', borderRadius: '6px', color: '#fff', fontSize: '13px' }}
+                          style={{ flex: 1, padding: '6px 8px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.4)', borderRadius: '6px', color: '#fff', fontSize: '13px' }}
                           autoFocus
                         />
                         <button
@@ -14813,7 +14813,7 @@ const nextF = familias.filter(x => x !== f)
             flexDirection: 'column',
             borderLeft: '2px solid rgba(0, 255, 0, 0.2)',
             overflow: 'hidden',
-            backgroundColor: '#0f0f0f'
+            backgroundColor: '#1a1a1a'
           }}>
             <div style={{ padding: '10px 14px', borderBottom: '2px solid rgba(0, 255, 0, 0.2)', backgroundColor: '#141414' }}>
               <h3 style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: '#888', letterSpacing: '0.5px' }}>
@@ -14875,7 +14875,7 @@ const nextF = familias.filter(x => x !== f)
                           <div style={sectionTitle}>🔗 {(safeT as any)?.manuaisEquipamentosAssociados || 'Equipamentos associados'}</div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                             {equipamentosAssociados.map((e: Equipamento) => (
-                              <div key={e.id} style={{ padding: '8px 10px', background: '#0d0d0d', borderRadius: '6px', border: '1px solid rgba(0,255,0,0.15)', fontSize: '12px', color: '#ddd' }}>
+                              <div key={e.id} style={{ padding: '8px 10px', background: '#121212', borderRadius: '6px', border: '1px solid rgba(0,255,0,0.15)', fontSize: '12px', color: '#ddd' }}>
                                 <span style={{ fontWeight: 600, color: '#00ff00' }}>{e.id}</span>
                                 <span style={{ marginLeft: '8px' }}>{e.tipoEquipamento} · {e.modelo} · {e.marca}</span>
                                 {e.numeroSerie && <span style={{ marginLeft: '6px', color: '#888' }}>(Série: {e.numeroSerie})</span>}
@@ -14894,7 +14894,7 @@ const nextF = familias.filter(x => x !== f)
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                             {documentos.map((d) => (
-                              <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: '#0d0d0d', borderRadius: '6px', border: '1px solid rgba(0,255,0,0.15)' }}>
+                              <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: '#121212', borderRadius: '6px', border: '1px solid rgba(0,255,0,0.15)' }}>
                                 <a href={d.dados} download={d.nome} target="_blank" rel="noopener noreferrer" style={{ flex: 1, fontSize: '12px', color: '#8cf', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={d.nome}>{d.nome}</a>
                                 <button type="button" onClick={() => removeDocumento(d.id)} style={{ flexShrink: 0, padding: '4px 6px', fontSize: '11px', border: '1px solid rgba(255,68,68,0.6)', color: '#ff6b6b', background: 'transparent', borderRadius: '4px', cursor: 'pointer' }} title={(safeT as any)?.excluir || 'Excluir'}>✕</button>
                               </div>
@@ -14915,7 +14915,7 @@ const nextF = familias.filter(x => x !== f)
                         onChange={(e) => updateModelo({ infoTecnicas: e.target.value })}
                         placeholder={(safeT as any)?.manuaisInfoTecnicasPlaceholder || 'Texto livre...'}
                         rows={2}
-                        style={{ width: '100%', padding: '10px', background: '#0d0d0d', border: '1px solid rgba(0,255,0,0.25)', borderRadius: '8px', color: '#fff', fontSize: '13px', resize: 'vertical', minHeight: '56px', boxSizing: 'border-box' }}
+                        style={{ width: '100%', padding: '10px', background: '#121212', border: '1px solid rgba(0,255,0,0.25)', borderRadius: '8px', color: '#fff', fontSize: '13px', resize: 'vertical', minHeight: '56px', boxSizing: 'border-box' }}
                       />
                     </div>
 
@@ -14926,7 +14926,7 @@ const nextF = familias.filter(x => x !== f)
                         onChange={(e) => updateModelo({ infoMecanicas: e.target.value })}
                         placeholder={(safeT as any)?.manuaisInfoMecanicasPlaceholder || 'Texto livre...'}
                         rows={2}
-                        style={{ width: '100%', padding: '10px', background: '#0d0d0d', border: '1px solid rgba(0,255,0,0.25)', borderRadius: '8px', color: '#fff', fontSize: '13px', resize: 'vertical', minHeight: '56px', boxSizing: 'border-box' }}
+                        style={{ width: '100%', padding: '10px', background: '#121212', border: '1px solid rgba(0,255,0,0.25)', borderRadius: '8px', color: '#fff', fontSize: '13px', resize: 'vertical', minHeight: '56px', boxSizing: 'border-box' }}
                       />
                     </div>
 
@@ -14937,7 +14937,7 @@ const nextF = familias.filter(x => x !== f)
                         onChange={(e) => updateModelo({ infoEletricas: e.target.value })}
                         placeholder={(safeT as any)?.manuaisInfoEletricasPlaceholder || 'Texto livre...'}
                         rows={2}
-                        style={{ width: '100%', padding: '10px', background: '#0d0d0d', border: '1px solid rgba(0,255,0,0.25)', borderRadius: '8px', color: '#fff', fontSize: '13px', resize: 'vertical', minHeight: '56px', boxSizing: 'border-box' }}
+                        style={{ width: '100%', padding: '10px', background: '#121212', border: '1px solid rgba(0,255,0,0.25)', borderRadius: '8px', color: '#fff', fontSize: '13px', resize: 'vertical', minHeight: '56px', boxSizing: 'border-box' }}
                       />
                     </div>
 
@@ -16281,7 +16281,7 @@ const nextF = familias.filter(x => x !== f)
               </div>
 
               {/* Grupo: GESTÃO TÉCNICA */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.gestaoTecnicaTitle || 'GESTÃO TÉCNICA'}
                 </h4>
@@ -16338,7 +16338,7 @@ const nextF = familias.filter(x => x !== f)
               </div>
 
               {/* Grupo: GESTÃO INDUSTRIAL */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.gestaoIndustrialTitle || 'GESTÃO INDUSTRIAL'}
                 </h4>
@@ -16395,7 +16395,7 @@ const nextF = familias.filter(x => x !== f)
               </div>
 
               {/* Grupo: GESTÃO DE CUSTOS (Orçamentos/Custos) */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS (Orçamentos/Custos)'}
                 </h4>
@@ -16441,7 +16441,7 @@ const nextF = familias.filter(x => x !== f)
               </div>
 
               {/* Grupo: GESTÃO DOS CHECKLIST */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.checklistGroupTitle || 'GESTÃO DOS CHECKLIST'}
                 </h4>
@@ -16487,7 +16487,7 @@ const nextF = familias.filter(x => x !== f)
               </div>
 
               {/* Grupo: GESTÃO FINANCEIRA */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 150, 255, 0.3)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 150, 255, 0.3)' }}>
                 <h4 style={{ color: '#66b3ff', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA / CLIENTES'}
                 </h4>
@@ -16534,7 +16534,7 @@ const nextF = familias.filter(x => x !== f)
 
               {/* Outros Botões */}
               {getButtonsByGroup('outros').length > 0 && (
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                   <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                     {safeT?.outrosBotoes || 'OUTROS BOTÕES'}
                   </h4>
@@ -34670,7 +34670,7 @@ A1;Peça exemplo;10'
             saveData('nonato-conhecimento-tecnicos', next).catch(() => {})
           }
           return (
-            <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto', minHeight: '480px', backgroundColor: '#0d0d0d' }}>
+            <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto', minHeight: '480px', backgroundColor: '#121212' }}>
               <div style={{
                 marginBottom: '24px',
                 padding: '16px 24px',
@@ -39891,7 +39891,7 @@ A1;Peça exemplo;10'
           inset: 0,
           width: '100vw',
           height: '100vh',
-          backgroundColor: '#0d0d0d',
+          backgroundColor: '#121212',
           zIndex: 99999,
           overflow: 'auto',
           display: 'flex',
@@ -40243,7 +40243,7 @@ A1;Peça exemplo;10'
           inset: 0,
           width: '100vw',
           height: '100vh',
-          backgroundColor: '#000000',
+          backgroundColor: '#121212',
           zIndex: 99999,
           display: 'flex',
           alignItems: 'center',
@@ -40256,7 +40256,7 @@ A1;Peça exemplo;10'
             maxWidth: '440px',
             width: '100%',
             padding: '32px',
-            backgroundColor: '#0a0a0a',
+            backgroundColor: '#1a1a1a',
             borderRadius: '12px',
             border: '2px solid rgba(255, 255, 255, 0.2)',
             boxShadow: '0 0 30px rgba(0, 255, 0, 0.1)'
@@ -40367,7 +40367,7 @@ A1;Peça exemplo;10'
           inset: 0,
           width: '100vw',
           height: '100vh',
-          backgroundColor: '#000000',
+          backgroundColor: '#121212',
           zIndex: 99999,
           display: 'flex',
           alignItems: 'center',
@@ -40380,7 +40380,7 @@ A1;Peça exemplo;10'
             maxWidth: '440px',
             width: '100%',
             padding: '32px',
-            backgroundColor: '#0a0a0a',
+            backgroundColor: '#1a1a1a',
             borderRadius: '12px',
             border: '2px solid rgba(255, 255, 255, 0.2)',
             boxShadow: '0 0 30px rgba(0, 255, 0, 0.1)'
@@ -40428,7 +40428,7 @@ A1;Peça exemplo;10'
   const showDemoBar = isDemoMode && !hideDemoBar
   const hasBottomTabs = openTabs.length > 0
   return (
-    <div className={`app-layout${showDemoBar ? ' has-demo-bar' : ''}${hasBottomTabs ? ' has-bottom-tabs' : ''}`} style={{ display: 'flex', minHeight: '100vh', minHeight: '100dvh', backgroundColor: '#000', color: '#fff', paddingBottom: hasBottomTabs ? 'calc(54px + env(safe-area-inset-bottom, 0px))' : 0, paddingTop: showDemoBar ? '50px' : 0, width: '100%', maxWidth: '100%', overflowX: 'hidden', boxSizing: 'border-box' }}>
+    <div className={`app-layout${showDemoBar ? ' has-demo-bar' : ''}${hasBottomTabs ? ' has-bottom-tabs' : ''}`} style={{ display: 'flex', minHeight: '100vh', minHeight: '100dvh', backgroundColor: '#121212', color: '#fff', paddingBottom: hasBottomTabs ? 'calc(54px + env(safe-area-inset-bottom, 0px))' : 0, paddingTop: showDemoBar ? '50px' : 0, width: '100%', maxWidth: '100%', overflowX: 'hidden', boxSizing: 'border-box' }}>
       {showDemoBar && (
         <div className="demo-top-bar" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '10px 12px 10px 20px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '2px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, touchAction: 'manipulation', flexWrap: 'wrap' }}>
           <span style={{ flex: 1, minWidth: 0 }}>🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Sem exportação nem backup</span>
@@ -40441,7 +40441,7 @@ A1;Peça exemplo;10'
       {/* Sidebar - estilos em globals.css (media queries para mobile) */}
       <div className="sidebar">
         {/* Logo NONATO SERVICE — logo ocupa 100% do contorno verde, borda mantida */}
-        <div style={{ marginBottom: '25px', textAlign: 'center', padding: 0, overflow: 'hidden', backgroundColor: '#0a0a0a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', height: '150px' }}>
+        <div style={{ marginBottom: '25px', textAlign: 'center', padding: 0, overflow: 'hidden', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', height: '150px' }}>
           {logoUrl ? (
             logoType === 'video' ? (
               <video src={logoUrl} autoPlay loop muted style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -42650,7 +42650,7 @@ A1;Peça exemplo;10'
               </p>
 
               {/* Seção: TODOS OS BOTÕES - Organização livre por grupo */}
-              <div style={{ marginBottom: '30px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div style={{ marginBottom: '30px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                 <h4 style={{ color: '#00ff00', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.manageButtonGroups || 'ORGANIZAR BOTÕES POR GRUPO'}
                 </h4>
@@ -42735,7 +42735,7 @@ A1;Peça exemplo;10'
               </div>
               
               {/* Grupo: GESTÃO TÉCNICA */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.gestaoTecnicaTitle || 'GESTÃO TÉCNICA'}
                 </h4>
@@ -42793,7 +42793,7 @@ A1;Peça exemplo;10'
               </div>
 
               {/* Grupo: GESTÃO INDUSTRIAL */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.gestaoIndustrialTitle || 'GESTÃO INDUSTRIAL'}
                 </h4>
@@ -42851,7 +42851,7 @@ A1;Peça exemplo;10'
               </div>
 
               {/* Grupo: GESTÃO DE CUSTOS (Orçamentos/Custos) */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS (Orçamentos/Custos)'}
                 </h4>
@@ -42908,7 +42908,7 @@ A1;Peça exemplo;10'
               </div>
 
               {/* Grupo: GESTÃO DOS CHECKLIST */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.checklistGroupTitle || 'GESTÃO DOS CHECKLIST'}
                 </h4>
@@ -42965,7 +42965,7 @@ A1;Peça exemplo;10'
               </div>
 
               {/* Grupo: COMUNICAÇÃO INTERNA */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {(safeT as any)?.comunicacaoInternaTitle || 'COMUNICAÇÃO INTERNA'}
                 </h4>
@@ -42998,7 +42998,7 @@ A1;Peça exemplo;10'
               </div>
 
               {/* Grupo: MANUAIS E INFORMAÇÕES TÉCNICAS */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {(safeT as any)?.manuaisInformacoesTecnicasTitle || 'MANUAIS E INFORMAÇÕES TÉCNICAS'}
                 </h4>
@@ -43031,7 +43031,7 @@ A1;Peça exemplo;10'
               </div>
 
               {/* Grupo: ALMOXARIFADO / ARMAZÉM */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {(safeT as any)?.almoxarifadoArmazemTitle || 'ALMOXARIFADO / ARMAZÉM'}
                 </h4>
@@ -43064,7 +43064,7 @@ A1;Peça exemplo;10'
               </div>
 
               {/* Grupo: GESTÃO FINANCEIRA */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 150, 255, 0.3)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 150, 255, 0.3)' }}>
                 <h4 style={{ color: '#66b3ff', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA / CLIENTES'}
                 </h4>
@@ -43123,7 +43123,7 @@ A1;Peça exemplo;10'
 
               {/* Outros Botões */}
               {getButtonsByGroup('outros').length > 0 && (
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                   <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                     {safeT?.outrosBotoes || 'OUTROS BOTÕES'}
                   </h4>

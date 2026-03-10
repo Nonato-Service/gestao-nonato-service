@@ -9,7 +9,7 @@ import { InstallPrompt } from './components/InstallPrompt'
 export const dynamic = 'force-dynamic'
 
 export const viewport: Viewport = {
-  themeColor: '#000000', // preto no telemóvel para não ficar "tela verde" na barra de estado
+  themeColor: '#121212', // cinza escuro (barra de estado do telemóvel)
 }
 
 export const metadata: Metadata = {
@@ -36,7 +36,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover, height=device-height, interactive-widget=resizes-content" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="format-detection" content="telephone=no" />
-        <meta name="theme-color" content="#000000" />
+        <meta name="theme-color" content="#121212" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
