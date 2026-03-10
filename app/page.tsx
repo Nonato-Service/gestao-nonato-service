@@ -41226,7 +41226,14 @@ A1;Peça exemplo;10'
                                       fontWeight: isSubSelected ? 'bold' : '500',
                                       transform: isSubSelected ? 'scale(1.02)' : undefined,
                                       transition: 'all 0.3s ease',
-                                      position: 'relative'
+                                      position: 'relative',
+                                      whiteSpace: 'normal',
+                                      wordBreak: 'break-word',
+                                      lineHeight: 1.35,
+                                      minHeight: '44px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center'
                                     }}
                                     onMouseEnter={(e) => {
                                       if (!isSubSelected) {
@@ -41282,7 +41289,14 @@ A1;Peça exemplo;10'
                         fontWeight: isSelected ? 'bold' : '500',
                         transform: isSelected ? 'scale(1.02)' : undefined,
                         transition: 'all 0.3s ease',
-                        position: 'relative'
+                        position: 'relative',
+                        whiteSpace: 'normal',
+                        wordBreak: 'break-word',
+                        lineHeight: 1.35,
+                        minHeight: '48px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
                       }}
                       onMouseEnter={(e) => {
                         if (!isSelected) {
