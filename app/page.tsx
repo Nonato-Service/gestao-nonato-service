@@ -17047,7 +17047,7 @@ const nextF = familias.filter(x => x !== f)
                     </div>
                   ) : (
                     <>
-                      <div style={{ display: 'grid', gridTemplateColumns: isChecklist ? '28px 28px 1fr 140px 220px' : '28px 1fr 140px 220px', gap: '12px', alignItems: 'center', padding: '10px 18px', borderBottom: '1px solid rgba(0, 255, 0, 0.3)', marginBottom: '4px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: isChecklist ? '28px 28px 1fr 120px minmax(220px, 1fr)' : '28px 1fr 120px minmax(220px, 1fr)', gap: '12px', alignItems: 'center', padding: '10px 18px', borderBottom: '1px solid rgba(0, 255, 0, 0.3)', marginBottom: '4px' }}>
                         <span />
                         {isChecklist && <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase' }} />}
                         <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase', minWidth: 0 }}>{safeT?.familia || 'Família'}</span>
@@ -17068,7 +17068,7 @@ const nextF = familias.filter(x => x !== f)
                           onClick={() => { if (editingFamiliaNome !== f) { setSelectedFamiliaForGrupos(f); if (isChecklist) setFamiliaExpandidaChecklist(prev => prev === f ? null : f); } }}
                           style={{
                             display: 'grid',
-                            gridTemplateColumns: isChecklist ? '28px 28px 1fr 140px 220px' : '28px 1fr 140px 220px',
+                            gridTemplateColumns: isChecklist ? '28px 28px 1fr 120px minmax(220px, 1fr)' : '28px 1fr 120px minmax(220px, 1fr)',
                             gap: '12px',
                             alignItems: 'center',
                             padding: '12px 18px',
@@ -17162,12 +17162,12 @@ const nextF = familias.filter(x => x !== f)
                             <>
                               <span style={{ minWidth: 0, fontWeight: 600, color: '#fff', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={f}>{f}</span>
                               <span style={{ padding: '4px 8px', backgroundColor: 'rgba(0, 255, 0, 0.15)', borderRadius: '6px', fontSize: '12px', color: '#00ff00', fontWeight: 600 }}>{count} {safeT?.grupos || 'grupos'}</span>
-                              <div style={{ display: 'flex', gap: '10px', flexWrap: 'nowrap', justifyContent: 'flex-end', flexShrink: 0, minWidth: '140px' }} onClick={e => e.stopPropagation()}>
+                              <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap', width: '100%', justifyContent: 'flex-end', minWidth: 0 }} onClick={e => e.stopPropagation()}>
                                 {isChecklist && (
-                                  <button type="button" className="btn-primary" style={{ ...btnFamiliaStyle, flexShrink: 0 }} onClick={() => { setSelectedFamiliaForGrupos(f); setSelectedParenteIdForPainelGrupos(''); setSelectedParenteIdForNovoGrupo(''); setTimeout(() => document.getElementById('grupos-familia-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100); }}>{safeT?.verGrupos || 'Ver Grupos'}</button>
+                                  <button type="button" className="btn-primary" style={{ ...btnFamiliaStyle, flex: '1', minWidth: '90px', maxWidth: '140px' }} onClick={() => { setSelectedFamiliaForGrupos(f); setSelectedParenteIdForPainelGrupos(''); setSelectedParenteIdForNovoGrupo(''); setTimeout(() => document.getElementById('grupos-familia-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100); }}>{safeT?.verGrupos || 'Ver Grupos'}</button>
                                 )}
-                                <button type="button" className="btn-primary" style={{ ...btnFamiliaStyle, flexShrink: 0 }} onClick={() => { setEditingFamiliaNome(f); setEditFamiliaValue(f); }} title={safeT?.edit || 'Editar'}>{safeT?.edit || 'Editar'}</button>
-                                <button type="button" className="btn-danger" style={{ ...btnFamiliaDangerStyle, flexShrink: 0 }} onClick={() => {
+                                <button type="button" className="btn-primary" style={{ ...btnFamiliaStyle, flex: '1', minWidth: '70px', maxWidth: '120px' }} onClick={() => { setEditingFamiliaNome(f); setEditFamiliaValue(f); }} title={safeT?.edit || 'Editar'}>{safeT?.edit || 'Editar'}</button>
+                                <button type="button" className="btn-danger" style={{ ...btnFamiliaDangerStyle, flex: '1', minWidth: '70px', maxWidth: '120px' }} onClick={() => {
                                   if (isChecklist) {
                                     const nextFam = familiasChecklist.filter(x => x !== f)
                                     setFamiliasChecklist(nextFam)
@@ -17188,7 +17188,7 @@ const nextF = familias.filter(x => x !== f)
                                     if (editingFamiliaNome === f) setEditingFamiliaNome(null)
                                     saveData('nonato-familias-grupos-equipamento', { familias: next, grupos: gruposEquipamento })
                                   }
-                                }} style={btnFamiliaDangerStyle}>{safeT?.delete || 'Excluir'}</button>
+                                }}>{safeT?.delete || 'Excluir'}</button>
                               </div>
                             </>
                           )}
