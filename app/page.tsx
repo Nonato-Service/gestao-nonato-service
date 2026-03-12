@@ -17041,13 +17041,13 @@ const nextF = familias.filter(x => x !== f)
                 </div>
                 <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
                   {familiasList.length === 0 ? (
-                    <div style={{ padding: '32px 24px', textAlign: 'center', color: '#aaa', fontSize: '15px' }}>
-                      {safeT?.nenhumaFamilia || 'Nenhuma família. Adicione uma acima.'}
+                    <div style={{ padding: '20px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)', textAlign: 'center', color: '#ccc', fontSize: '14px' }}>
+                      <p style={{ margin: 0 }}>{safeT?.nenhumaFamilia || 'Nenhuma família. Adicione uma acima.'}</p>
                     </div>
                   ) : (
                     <>
-                      {/* Cabeçalho da lista — mesma estrutura que Grupos (colunas fixas) */}
-                      <div style={{ display: 'grid', gridTemplateColumns: isChecklist ? '28px 28px 1fr 100px 240px' : '28px 1fr 100px 240px', gap: '12px', alignItems: 'center', padding: '10px 18px', borderBottom: '1px solid rgba(0, 255, 0, 0.3)', marginBottom: '4px' }}>
+                      {/* Cabeçalho — igual à tabela de Grupos (mesmo padding, bordas, tipografia) */}
+                      <div style={{ display: 'grid', gridTemplateColumns: isChecklist ? '28px 28px 1fr 100px 180px' : '28px 1fr 100px 180px', gap: '12px', alignItems: 'center', padding: '10px 18px', borderBottom: '1px solid rgba(0, 255, 0, 0.3)', marginBottom: '4px' }}>
                         <span />
                         {isChecklist && <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase' }} />}
                         <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase', minWidth: 0 }}>{safeT?.familia || 'Família'}</span>
@@ -17060,15 +17060,15 @@ const nextF = familias.filter(x => x !== f)
                       const isSelected = selectedFamiliaForGrupos === f
                       const isExpanded = isChecklist && familiaExpandidaChecklist === f
                       const parentesDestaFamilia = isChecklist ? parentesChecklist.filter(p => p.familia === f) : []
-                      const btnFamiliaStyle = { padding: '0 10px', height: '36px', fontSize: '12px', fontWeight: 600, borderRadius: '6px', minWidth: '64px', whiteSpace: 'nowrap' as const, backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' as const }
-                      const btnFamiliaDangerStyle = { padding: '0 10px', height: '36px', fontSize: '12px', fontWeight: 600, borderRadius: '6px', minWidth: '64px', whiteSpace: 'nowrap' as const, backgroundColor: 'rgba(255, 68, 68, 0.15)', border: '1px solid rgba(255, 68, 68, 0.5)', color: '#ff6b6b', cursor: 'pointer' as const }
+                      const btnFamiliaStyle = { padding: '0 12px', height: '36px', fontSize: '13px', fontWeight: 600, borderRadius: '6px', minWidth: '70px', whiteSpace: 'nowrap' as const, backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' as const }
+                      const btnFamiliaDangerStyle = { padding: '0 12px', height: '36px', fontSize: '13px', fontWeight: 600, borderRadius: '6px', minWidth: '70px', whiteSpace: 'nowrap' as const, backgroundColor: 'rgba(255, 68, 68, 0.15)', border: '1px solid rgba(255, 68, 68, 0.5)', color: '#ff6b6b', cursor: 'pointer' as const }
                       return (
                         <React.Fragment key={f}>
                         <div
                           onClick={() => { if (editingFamiliaNome !== f) { setSelectedFamiliaForGrupos(f); if (isChecklist) setFamiliaExpandidaChecklist(prev => prev === f ? null : f); } }}
                           style={{
                             display: 'grid',
-                            gridTemplateColumns: isChecklist ? '28px 28px 1fr 100px 240px' : '28px 1fr 100px 240px',
+                            gridTemplateColumns: isChecklist ? '28px 28px 1fr 100px 180px' : '28px 1fr 100px 180px',
                             gap: '12px',
                             alignItems: 'center',
                             padding: '12px 18px',
@@ -17197,36 +17197,35 @@ const nextF = familias.filter(x => x !== f)
                                   <div style={{ marginLeft: '32px', marginBottom: '14px', padding: '14px 16px', borderLeft: '3px solid rgba(0, 255, 0, 0.3)', backgroundColor: 'rgba(0,255,0,0.04)', borderRadius: '0 8px 8px 0' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '14px' }}>
                                       <p style={{ margin: 0, fontSize: '14px', color: '#00ff00', fontWeight: 600 }} title={safeT?.parenteDesc}>{safeT?.parente || 'Parente'}</p>
-                                      <button type="button" className="btn-primary" style={{ padding: '0 12px', height: '36px', fontSize: '12px', fontWeight: 600, borderRadius: '6px', whiteSpace: 'nowrap', flexShrink: 0, backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' }} onClick={() => { setSelectedFamiliaForGrupos(f); setSelectedParenteIdForPainelGrupos(''); setSelectedParenteIdForNovoGrupo(''); setTimeout(() => document.getElementById('grupos-familia-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100); }}>{safeT?.verGrupos || 'Ver Grupos'}</button>
+                                      <button type="button" className="btn-primary" style={{ padding: '0 12px', height: '36px', fontSize: '13px', fontWeight: 600, borderRadius: '6px', minWidth: '70px', whiteSpace: 'nowrap', flexShrink: 0, backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' }} onClick={() => { setSelectedFamiliaForGrupos(f); setSelectedParenteIdForPainelGrupos(''); setSelectedParenteIdForNovoGrupo(''); setTimeout(() => document.getElementById('grupos-familia-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100); }}>{safeT?.verGrupos || 'Ver Grupos'}</button>
                                     </div>
-                                    {/* Tabela de parentes — mesma estrutura que Grupos (cabeçalho + linhas alinhadas) */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: '72px 1fr 200px', gap: '12px', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(0, 255, 0, 0.3)', marginBottom: '6px' }}>
-                                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase' }}>{safeT?.adicionarImagem || 'Imagem'}</span>
+                                    {/* Tabela de parentes — idêntica à de Grupos: mesmo cabeçalho, mesmas linhas (padding 12px 18px, fundo #2a2a2a, borda, minHeight 52px), mesmos botões */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '72px 1fr 180px', gap: '12px', alignItems: 'center', padding: '10px 18px', borderBottom: '1px solid rgba(0, 255, 0, 0.3)', marginBottom: '4px' }}>
+                                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase' }}>{safeT?.imagemDoGrupo ?? safeT?.adicionarImagem || 'Imagem'}</span>
                                       <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase', minWidth: 0 }}>{safeT?.parente || 'Parente'}</span>
                                       <span style={{ textAlign: 'right', fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase' }}>{safeT?.actions || 'Ações'}</span>
                                     </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     {parentesDestaFamilia.map((p) => {
-                                      const btnParenteStyle = { padding: '0 10px', height: '36px', fontSize: '12px', fontWeight: 600, borderRadius: '6px', minWidth: '64px', whiteSpace: 'nowrap' as const, backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' as const };
-                                      const btnParenteDangerStyle = { padding: '0 10px', height: '36px', fontSize: '12px', fontWeight: 600, borderRadius: '6px', minWidth: '64px', whiteSpace: 'nowrap' as const, backgroundColor: 'rgba(255, 68, 68, 0.15)', border: '1px solid rgba(255, 68, 68, 0.5)', color: '#ff6b6b', cursor: 'pointer' as const };
+                                      const btnParenteStyle = { padding: '0 12px', height: '36px', fontSize: '13px', fontWeight: 600, borderRadius: '6px', minWidth: '70px', whiteSpace: 'nowrap' as const, backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' as const };
+                                      const btnParenteDangerStyle = { padding: '0 12px', height: '36px', fontSize: '13px', fontWeight: 600, borderRadius: '6px', minWidth: '70px', whiteSpace: 'nowrap' as const, backgroundColor: 'rgba(255, 68, 68, 0.15)', border: '1px solid rgba(255, 68, 68, 0.5)', color: '#ff6b6b', cursor: 'pointer' as const };
                                       return (
-                                        <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '72px 1fr 200px', gap: '12px', alignItems: 'center', padding: '12px 0', minHeight: '52px', borderBottom: '1px solid rgba(0,255,0,0.15)' }} onClick={e => e.stopPropagation()}>
-                                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                                            <div style={{ width: '40px', height: '40px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(0,255,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a1a1a' }}>
-                                              {p.imagem ? <img src={p.imagem} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '18px', opacity: 0.5 }}>🖼</span>}
-                                            </div>
-                                            <label style={{ cursor: 'pointer', fontSize: '11px', color: '#00ff00', whiteSpace: 'nowrap' }}>
+                                        <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '72px 1fr 180px', gap: '12px', alignItems: 'center', padding: '12px 18px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)', minHeight: '52px' }} onClick={e => e.stopPropagation()}>
+                                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', width: '44px' }}>
+                                            <label style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(0,255,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a1a1a', cursor: 'pointer', margin: 0 }}>
                                               <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(ev) => { const file = ev.target.files?.[0]; if (file) { const r = new FileReader(); r.onload = () => { const next = parentesChecklist.map(x => x.id === p.id ? { ...x, imagem: r.result as string } : x); setParentesChecklist(next); saveData('nonato-parentes-checklist', next); }; r.readAsDataURL(file); } ev.target.value = ''; }} />
-                                              {safeT?.adicionarImagem || 'Imagem'}
+                                              {p.imagem ? <img src={p.imagem} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '16px', opacity: 0.5 }}>🖼</span>}
                                             </label>
+                                            <span style={{ fontSize: '9px', color: '#00ff00', whiteSpace: 'nowrap' }}>{safeT?.adicionarImagem || 'Imagem'}</span>
                                           </div>
                                           {editingParenteId === p.id ? (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-                                              <input type="text" value={editParenteNome} onChange={(e) => setEditParenteNome(e.target.value)} onKeyPress={(e) => { if (e.key === 'Enter') { const nome = editParenteNome.trim(); if (nome) { const next = parentesChecklist.map(x => x.id === p.id ? { ...x, nome } : x); setParentesChecklist(next); saveData('nonato-parentes-checklist', next); setEditingParenteId(null); } } }} style={{ flex: 1, minWidth: 0, height: '36px', padding: '0 12px', fontSize: '14px', backgroundColor: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', boxSizing: 'border-box' }} autoFocus />
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                                              <input type="text" value={editParenteNome} onChange={(e) => setEditParenteNome(e.target.value)} onKeyPress={(e) => { if (e.key === 'Enter') { const nome = editParenteNome.trim(); if (nome) { const next = parentesChecklist.map(x => x.id === p.id ? { ...x, nome } : x); setParentesChecklist(next); saveData('nonato-parentes-checklist', next); setEditingParenteId(null); } } }} style={{ flex: 1, minWidth: 0, height: '36px', padding: '0 10px', fontSize: '13px', backgroundColor: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', boxSizing: 'border-box' }} autoFocus />
                                               <button type="button" className="btn-primary" style={btnParenteStyle} onClick={() => { const nome = editParenteNome.trim(); if (nome) { const next = parentesChecklist.map(x => x.id === p.id ? { ...x, nome } : x); setParentesChecklist(next); saveData('nonato-parentes-checklist', next); setEditingParenteId(null); } }}>{safeT?.save || 'Salvar'}</button>
-                                              <button type="button" style={{ ...btnParenteStyle, backgroundColor: '#2a2a2a', border: '1px solid rgba(0,255,0,0.2)', color: '#ccc' }} onClick={() => setEditingParenteId(null)}>{safeT?.cancel || 'Cancelar'}</button>
+                                              <button type="button" style={{ ...btnParenteStyle, backgroundColor: '#2a2a2a', border: '1px solid rgba(0,255,0,0.2)', color: '#ccc', cursor: 'pointer' }} onClick={() => setEditingParenteId(null)}>{safeT?.cancel || 'Cancelar'}</button>
                                             </div>
                                           ) : (
-                                            <span style={{ minWidth: 0, fontSize: '14px', fontWeight: 600, color: '#00ff00', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.nome}>{p.nome}</span>
+                                            <span style={{ minWidth: 0, fontSize: '14px', fontWeight: 600, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.nome}>{p.nome}</span>
                                           )}
                                           <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
                                             {editingParenteId !== p.id && (
@@ -17240,6 +17239,7 @@ const nextF = familias.filter(x => x !== f)
                                         </div>
                                       );
                                     })}
+                                    </div>
                                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '14px', flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
                                       <input
                                         type="text"
