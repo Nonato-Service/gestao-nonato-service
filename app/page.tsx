@@ -17046,15 +17046,15 @@ const nextF = familias.filter(x => x !== f)
                     </div>
                   ) : (
                     <>
-                      {/* Cabeçalho — grid idêntico ao da tabela de Grupos (28 72 140 1fr 180) */}
-                      <div style={{ display: 'grid', gridTemplateColumns: isChecklist ? '28px 28px 140px 1fr 180px' : '28px 140px 1fr 180px', gap: '12px', alignItems: 'center', padding: '10px 18px', borderBottom: '1px solid rgba(0, 255, 0, 0.3)', marginBottom: '4px' }}>
+                      {/* Cabeçalho — igual à tabela de Grupos (classes CSS forçam mesmo estilo) */}
+                      <div className="fg-tabela-cabecalho" style={{ gridTemplateColumns: isChecklist ? '28px 28px 140px 1fr 180px' : '28px 140px 1fr 180px' }}>
                         <span />
                         {isChecklist && <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase' }} />}
                         <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase' }}>{safeT?.grupos || 'Grupos'}</span>
                         <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase', minWidth: 0 }}>{safeT?.familia || 'Família'}</span>
                         <span style={{ textAlign: 'right', fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase' }}>{safeT?.actions || 'Ações'}</span>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div className="fg-tabela-wrap">
                     {familiasList.map((f, index) => {
                       const count = (isChecklist ? gruposChecklist : gruposEquipamento).filter(g => g.familia === f).length
                       const isSelected = selectedFamiliaForGrupos === f
@@ -17065,17 +17065,10 @@ const nextF = familias.filter(x => x !== f)
                       return (
                         <React.Fragment key={f}>
                         <div
+                          className={'fg-tabela-linha' + (isSelected ? ' fg-selecionada' : '')}
                           onClick={() => { if (editingFamiliaNome !== f) { setSelectedFamiliaForGrupos(f); if (isChecklist) setFamiliaExpandidaChecklist(prev => prev === f ? null : f); } }}
                           style={{
-                            display: 'grid',
                             gridTemplateColumns: isChecklist ? '28px 28px 140px 1fr 180px' : '28px 140px 1fr 180px',
-                            gap: '12px',
-                            alignItems: 'center',
-                            padding: '12px 18px',
-                            backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.12)' : '#2a2a2a',
-                            borderRadius: '6px',
-                            border: '1px solid rgba(0, 255, 0, 0.2)',
-                            minHeight: '52px',
                             cursor: editingFamiliaNome === f ? 'default' : 'pointer'
                           }}
                         >
@@ -17194,24 +17187,23 @@ const nextF = familias.filter(x => x !== f)
                           )}
                         </div>
                         {isChecklist && isExpanded && (
-                                  <div style={{ marginLeft: '32px', marginBottom: '14px', padding: '14px 16px', borderLeft: '3px solid rgba(0, 255, 0, 0.3)', backgroundColor: 'rgba(0,255,0,0.04)', borderRadius: '0 8px 8px 0' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '14px' }}>
+                                  <div className="fg-parentes-box">
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
                                       <p style={{ margin: 0, fontSize: '14px', color: '#00ff00', fontWeight: 600 }} title={safeT?.parenteDesc}>{safeT?.parente || 'Parente'}</p>
                                       <button type="button" className="btn-primary" style={{ padding: '0 12px', height: '36px', fontSize: '13px', fontWeight: 600, borderRadius: '6px', minWidth: '70px', whiteSpace: 'nowrap', flexShrink: 0, backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' }} onClick={() => { setSelectedFamiliaForGrupos(f); setSelectedParenteIdForPainelGrupos(''); setSelectedParenteIdForNovoGrupo(''); setTimeout(() => document.getElementById('grupos-familia-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100); }}>{safeT?.verGrupos || 'Ver Grupos'}</button>
                                     </div>
-                                    {/* Tabela de parentes — grid idêntico ao de Grupos: 28px 72px 1fr 180px (cabeçalho), 28px 44px 1fr 180px (linhas) */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: '28px 72px 1fr 180px', gap: '12px', alignItems: 'center', padding: '10px 18px', borderBottom: '1px solid rgba(0, 255, 0, 0.3)', marginBottom: '4px' }}>
+                                    <div className="fg-tabela-cabecalho" style={{ gridTemplateColumns: '28px 72px 1fr 180px' }}>
                                       <span />
                                       <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase' }}>{safeT?.imagemDoGrupo ?? safeT?.adicionarImagem || 'Imagem'}</span>
                                       <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase', minWidth: 0 }}>{safeT?.parente || 'Parente'}</span>
                                       <span style={{ textAlign: 'right', fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase' }}>{safeT?.actions || 'Ações'}</span>
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <div className="fg-tabela-wrap">
                                     {parentesDestaFamilia.map((p, idxP) => {
                                       const btnParenteStyle = { padding: '0 12px', height: '36px', fontSize: '13px', fontWeight: 600, borderRadius: '6px', minWidth: '70px', whiteSpace: 'nowrap' as const, backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' as const };
                                       const btnParenteDangerStyle = { padding: '0 12px', height: '36px', fontSize: '13px', fontWeight: 600, borderRadius: '6px', minWidth: '70px', whiteSpace: 'nowrap' as const, backgroundColor: 'rgba(255, 68, 68, 0.15)', border: '1px solid rgba(255, 68, 68, 0.5)', color: '#ff6b6b', cursor: 'pointer' as const };
                                       return (
-                                        <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '28px 44px 1fr 180px', gap: '12px', alignItems: 'center', padding: '12px 18px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)', minHeight: '52px' }} onClick={e => e.stopPropagation()}>
+                                        <div key={p.id} className="fg-tabela-linha" style={{ gridTemplateColumns: '28px 44px 1fr 180px' }} onClick={e => e.stopPropagation()}>
                                           <span style={{ color: '#00ff00', fontSize: '13px', fontWeight: 600 }}>{idxP + 1}.</span>
                                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', width: '44px' }}>
                                             <label style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(0,255,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a1a1a', cursor: 'pointer', margin: 0 }}>
@@ -17509,9 +17501,8 @@ onKeyPress={(e) => {
                             <p style={{ margin: 0 }}>{safeT?.nenhumGrupoNestaFamilia || 'Nenhum grupo nesta família. Use o campo acima para adicionar.'}</p>
                           </div>
                         ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {/* Cabeçalho: [Imagem] [Número] | Nome | Ações — checklist tem coluna imagem */}
-                            <div style={{ display: 'grid', gridTemplateColumns: showNumeroGrupo && isChecklist ? '28px 72px 140px 1fr 180px' : showNumeroGrupo ? '28px 140px 1fr 180px' : isChecklist ? '28px 72px 1fr 180px' : '28px 1fr 180px', gap: '12px', alignItems: 'center', padding: '10px 18px', borderBottom: '1px solid rgba(0, 255, 0, 0.3)', marginBottom: '4px' }}>
+                          <div className="fg-tabela-wrap">
+                            <div className="fg-tabela-cabecalho" style={{ gridTemplateColumns: showNumeroGrupo && isChecklist ? '28px 72px 140px 1fr 180px' : showNumeroGrupo ? '28px 140px 1fr 180px' : isChecklist ? '28px 72px 1fr 180px' : '28px 1fr 180px' }}>
                               <span />
                               {isChecklist && <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase' }}>{safeT?.imagemDoGrupo || 'Imagem'}</span>}
                               {showNumeroGrupo && <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase' }}>{safeT?.numeroGrupo || 'Número do Grupo'}</span>}
@@ -17527,16 +17518,9 @@ onKeyPress={(e) => {
                               return (
                                 <div
                                   key={isChecklist ? (g as GrupoChecklist).id : `${nomeFamilia}-${gNome}-${idx}`}
+                                  className="fg-tabela-linha"
                                   style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: showNumeroGrupo && isChecklist ? '28px 44px 140px 1fr 180px' : showNumeroGrupo ? '28px 140px 1fr 180px' : isChecklist ? '28px 44px 1fr 180px' : '28px 1fr 180px',
-                                    gap: '12px',
-                                    alignItems: 'center',
-                                    padding: '12px 18px',
-                                    backgroundColor: '#2a2a2a',
-                                    borderRadius: '6px',
-                                    border: '1px solid rgba(0, 255, 0, 0.2)',
-                                    minHeight: '52px'
+                                    gridTemplateColumns: showNumeroGrupo && isChecklist ? '28px 44px 140px 1fr 180px' : showNumeroGrupo ? '28px 140px 1fr 180px' : isChecklist ? '28px 44px 1fr 180px' : '28px 1fr 180px'
                                   }}
                                 >
                                   <span style={{ color: '#00ff00', fontSize: '13px', fontWeight: 600 }}>{idx + 1}.</span>

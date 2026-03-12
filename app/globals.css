@@ -548,6 +548,38 @@ button.btn-danger.btn-excluir-compact,
   color: #ffffff;
 }
 
+/* Tabela superior (Famílias/Parentes) = mesma estrutura da tabela de Grupos (inferior) */
+.familias-grupos-panel .fg-tabela-wrap {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+.familias-grupos-panel .fg-tabela-cabecalho {
+  display: grid !important;
+  gap: 12px !important;
+  align-items: center !important;
+  padding: 10px 18px !important;
+  border-bottom: 1px solid rgba(0, 255, 0, 0.3) !important;
+  margin-bottom: 4px !important;
+}
+.familias-grupos-panel .fg-tabela-linha {
+  display: grid !important;
+  gap: 12px !important;
+  align-items: center !important;
+  padding: 12px 18px !important;
+  background-color: #2a2a2a !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(0, 255, 0, 0.2) !important;
+  min-height: 52px !important;
+}
+.familias-grupos-panel .fg-tabela-linha.fg-selecionada {
+  background-color: rgba(0, 255, 0, 0.12) !important;
+}
+.familias-grupos-panel .fg-parentes-box {
+  margin-left: 24px;
+  margin-bottom: 8px;
+}
+
 /* Gestão Financeira > Clientes Financeiro > Conteúdo: botões = padrão Visualizar Equipamentos */
 .clientes-financeiro-panel .clientes-financeiro-conteudo button {
   background: transparent !important;
