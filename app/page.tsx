@@ -16889,7 +16889,7 @@ const nextF = familias.filter(x => x !== f)
           : [...familiasEquipamento].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
         return (
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', boxSizing: 'border-box' }}>
-          <div className="familias-grupos-panel" style={{ padding: '30px', maxWidth: '1600px', width: '100%', boxSizing: 'border-box' }}>
+          <div className="familias-grupos-panel" style={{ padding: '40px', maxWidth: '1920px', width: '100%', boxSizing: 'border-box' }}>
             {/* Cabeçalho no estilo Equipamentos / Visualizar equipamento */}
             <div style={{
               marginBottom: '30px',
