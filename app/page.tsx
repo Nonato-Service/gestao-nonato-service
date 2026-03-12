@@ -16953,7 +16953,7 @@ const nextF = familias.filter(x => x !== f)
               border: '1px solid rgba(0, 255, 0, 0.2)',
               overflow: 'hidden'
             }}>
-              {/* SECÇÃO 1: Famílias — mesmo estilo e estrutura que Grupos (cabeçalho + formulário em linha + lista em grid) */}
+              {/* SECÇÃO 1: Famílias — mesmo layout que Grupos: uma linha com título (esq) e formulário (dir) */}
               <div style={{
                 flex: 1,
                 minHeight: '320px',
@@ -16968,19 +16968,43 @@ const nextF = familias.filter(x => x !== f)
                   borderBottom: '2px solid rgba(0, 255, 0, 0.2)',
                   backgroundColor: '#1a1a1a'
                 }}>
-                  <h3 style={{ margin: '0 0 20px', fontSize: '20px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.5px' }}>
-                    {safeT?.familia || 'Famílias'}
-                  </h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0, maxWidth: '320px' }}>
-                      <label style={{ fontSize: '13px', color: '#00ff00', fontWeight: 600 }}>{safeT?.novaFamilia || 'Nova família'}</label>
-                      <input
-                        type="text"
-                        value={novaFamiliaEquipamento}
-                        onChange={(e) => setNovaFamiliaEquipamento(e.target.value)}
-                        placeholder={safeT?.nomeNovaFamiliaPlaceholder || 'Nome da nova família...'}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px', rowGap: '16px' }}>
+                    <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.5px' }}>
+                      {safeT?.familia || 'Famílias'}
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                      <span style={{ fontSize: '13px', color: '#fff', fontWeight: 500 }}>{safeT?.novaFamilia || 'Nova família'}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <input
+                          type="text"
+                          value={novaFamiliaEquipamento}
+                          onChange={(e) => setNovaFamiliaEquipamento(e.target.value)}
+                          placeholder={safeT?.nomeNovaFamiliaPlaceholder || 'Nome da nova família...'}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              const nome = novaFamiliaEquipamento.trim()
+                              if (nome && !familiasList.includes(nome)) {
+                                if (isChecklist) {
+                                  const next = [...familiasChecklist, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                                  setFamiliasChecklist(next)
+                                  setNovaFamiliaEquipamento('')
+                                  setSelectedFamiliaForGrupos(nome)
+                                  saveData('nonato-familias-checklist', next)
+                                } else {
+                                  const next = [...familiasEquipamento, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                                  setFamiliasEquipamento(next)
+                                  setNovaFamiliaEquipamento('')
+                                  setSelectedFamiliaForGrupos(nome)
+                                  saveData('nonato-familias-grupos-equipamento', { familias: next, grupos: gruposEquipamento })
+                                }
+                              }
+                            }
+                          }}
+                          style={{ width: '200px', height: '40px', padding: '0 12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box' }}
+                        />
+                        <button
+                          className="btn-primary"
+                          onClick={() => {
                             const nome = novaFamiliaEquipamento.trim()
                             if (nome && !familiasList.includes(nome)) {
                               if (isChecklist) {
@@ -16997,44 +17021,12 @@ const nextF = familias.filter(x => x !== f)
                                 saveData('nonato-familias-grupos-equipamento', { familias: next, grupos: gruposEquipamento })
                               }
                             }
-                          }
-                        }}
-                        style={{
-                          width: '100%',
-                          height: '40px',
-                          padding: '0 12px',
-                          backgroundColor: '#2a2a2a',
-                          border: '1px solid rgba(0, 255, 0, 0.3)',
-                          borderRadius: '6px',
-                          color: '#fff',
-                          fontSize: '14px',
-                          boxSizing: 'border-box'
-                        }}
-                      />
-                      <button
-                        className="btn-primary"
-                        onClick={() => {
-                          const nome = novaFamiliaEquipamento.trim()
-                          if (nome && !familiasList.includes(nome)) {
-                            if (isChecklist) {
-                              const next = [...familiasChecklist, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-                              setFamiliasChecklist(next)
-                              setNovaFamiliaEquipamento('')
-                              setSelectedFamiliaForGrupos(nome)
-                              saveData('nonato-familias-checklist', next)
-                            } else {
-                              const next = [...familiasEquipamento, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-                              setFamiliasEquipamento(next)
-                              setNovaFamiliaEquipamento('')
-                              setSelectedFamiliaForGrupos(nome)
-                              saveData('nonato-familias-grupos-equipamento', { familias: next, grupos: gruposEquipamento })
-                            }
-                          }
-                        }}
-                        style={{ padding: '0 20px', height: '44px', fontSize: '15px', fontWeight: 600, borderRadius: '8px', alignSelf: 'flex-start', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' }}
-                      >
-                        + {safeT?.add || 'Adicionar'}
-                      </button>
+                          }}
+                          style={{ padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 600, borderRadius: '6px', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' }}
+                        >
+                          + {safeT?.add || 'Adicionar'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -17349,40 +17341,47 @@ const nextF = familias.filter(x => x !== f)
                         borderBottom: '2px solid rgba(0, 255, 0, 0.2)',
                         backgroundColor: '#1a1a1a'
                       }}>
-                        <h3 style={{ margin: '0 0 20px', fontSize: '20px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.5px' }}>
-                          {safeT?.gruposDe || 'Grupos de'} <span style={{ color: '#fff' }}>{nomeFamilia}</span>
-                          {parenteSelecionadoPainel && <><span style={{ color: 'rgba(255,255,255,0.7)' }}> — </span><span style={{ color: '#00ff00' }}>{parenteSelecionadoPainel.nome}</span></>}
-                        </h3>
-                        {isChecklist && (() => {
-                          const parentesDaFamilia = parentesChecklist.filter(p => p.familia === nomeFamilia)
-                          return parentesDaFamilia.length > 0 ? (
-                            <div style={{ marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                              <label style={{ fontSize: '14px', color: '#00ff00', fontWeight: 600 }}>{safeT?.mostrarGruposDe || 'Mostrar grupos de'}</label>
-                              <select
-                                value={selectedParenteIdForPainelGrupos}
-                                onChange={(e) => {
-                                  const v = e.target.value
-                                  setSelectedParenteIdForPainelGrupos(v)
-                                  setSelectedParenteIdForNovoGrupo(v)
-                                }}
-                                style={{ minWidth: '200px', maxWidth: '320px', height: '40px', padding: '0 12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px' }}
-                              >
-                                <option value="">{safeT?.nenhum || 'Nenhum'}</option>
-                                {parentesDaFamilia.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
-                              </select>
+                        {/* Uma única linha: título (esq) | Mostrar grupos de + dropdown (centro) | Número/Nome + inputs + botão (dir) — igual à foto */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px', rowGap: '16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 700, letterSpacing: '0.5px' }}>
+                              <span style={{ color: '#fff' }}>{safeT?.gruposDe || 'Grupos de'} </span>
+                              <span style={{ color: '#00ff00', fontWeight: 700 }}>{nomeFamilia}</span>
+                              {parenteSelecionadoPainel && <><span style={{ color: '#fff' }}> — </span><span style={{ color: '#00ff00', fontWeight: 700 }}>{parenteSelecionadoPainel.nome}</span></>}
+                            </h3>
+                            {isChecklist && (() => {
+                              const parentesDaFamilia = parentesChecklist.filter(p => p.familia === nomeFamilia)
+                              return parentesDaFamilia.length > 0 ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <span style={{ fontSize: '14px', color: '#fff' }}>{safeT?.mostrarGruposDe || 'Mostrar grupos de'}</span>
+                                  <select
+                                    value={selectedParenteIdForPainelGrupos}
+                                    onChange={(e) => {
+                                      const v = e.target.value
+                                      setSelectedParenteIdForPainelGrupos(v)
+                                      setSelectedParenteIdForNovoGrupo(v)
+                                    }}
+                                    style={{ minWidth: '140px', height: '40px', padding: '0 12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
+                                  >
+                                    <option value="">{safeT?.nenhum || 'Nenhum'}</option>
+                                    {parentesDaFamilia.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                                  </select>
+                                </div>
+                              ) : null
+                            })()}
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                            <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>
+                              {showNumeroGrupo && <span style={{ fontSize: '13px', color: '#fff', fontWeight: 500 }}>{safeT?.numeroGrupo || 'Número do Grupo'}</span>}
+                              <span style={{ fontSize: '13px', color: '#fff', fontWeight: 500 }}>{safeT?.nomeDoGrupo || 'Nome do Grupo'}</span>
                             </div>
-                          ) : null
-                        })()}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
-                            {showNumeroGrupo && (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
-                                <label style={{ fontSize: '13px', color: '#00ff00', fontWeight: 600 }}>{safeT?.numeroGrupo || 'Número do Grupo'}</label>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              {showNumeroGrupo && (
                                 <input
                                   type="text"
                                   value={valorNovoNumero}
                                   onChange={(e) => setNovoNumeroGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: e.target.value }))}
-                                  placeholder={safeT?.numeroGrupoCampoPlaceholder ?? safeT?.numeroGrupoPlaceholder ?? 'Número do grupo...'}
+                                  placeholder={safeT?.numeroGrupoCampoPlaceholder ?? safeT?.numeroGrupoPlaceholder ?? 'Número do grupo.'}
                                   onKeyPress={(e) => {
                                     if (e.key === 'Enter') {
                                       const nome = valorNovoNome.trim()
@@ -17405,12 +17404,9 @@ const nextF = familias.filter(x => x !== f)
                                       }
                                     }
                                   }}
-                                  style={{ width: '100%', minWidth: '100px', maxWidth: '140px', height: '40px', padding: '0 12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box' }}
+                                  style={{ width: '100px', height: '40px', padding: '0 12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box' }}
                                 />
-                              </div>
-                            )}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
-                              <label style={{ fontSize: '13px', color: '#00ff00', fontWeight: 600 }}>{safeT?.nomeDoGrupo || 'Nome do Grupo'}</label>
+                              )}
                               <input
                                 type="text"
                                 value={valorNovoNome}
@@ -17439,36 +17435,36 @@ const nextF = familias.filter(x => x !== f)
                                     }
                                   }
                                 }}
-                                style={{ width: '100%', minWidth: '180px', maxWidth: '320px', height: '40px', padding: '0 16px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box' }}
+                                style={{ width: '200px', height: '40px', padding: '0 12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box' }}
                               />
-                            </div>
-                            <button
-                              className="btn-primary"
-                              onClick={() => {
-                                const nome = valorNovoNome.trim()
-                                const nomeIgual = isChecklist ? (g: { nomeGrupo: string }) => g.nomeGrupo === nome : (g: { nome: string }) => g.nome === nome
-                                if (nome && !gruposDestaFamilia.some(nomeIgual as any)) {
-                                  if (isChecklist) {
-                                    const next = [...gruposChecklist, { id: Date.now().toString(), numeroGrupo: showNumeroGrupo ? valorNovoNumero.trim() : '', nomeGrupo: nome, familia: nomeFamilia, parenteId: selectedParenteIdForNovoGrupo || undefined, tipo: 'basico' as const, imagem: undefined, manutencoes: [], dataCriacao: new Date().toISOString() }]
-                                    setGruposChecklist(next)
-                                    setNovoNumeroGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
-                                    setNovoGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
-                                    if (!selectedParenteIdForPainelGrupos) setSelectedParenteIdForNovoGrupo('')
-                                    saveData('nonato-grupos-checklist', next)
-                                  } else {
-                                    const numero = showNumeroGrupo ? valorNovoNumero.trim() : ''
-                                    const next = [...gruposEquipamento, { numeroGrupo: numero, nome, familia: nomeFamilia, numerosGrupo: [] }]
-                                    setGruposEquipamento(next)
-                                    setNovoNumeroGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
-                                    setNovoGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
-                                    saveData('nonato-familias-grupos-equipamento', { familias: familiasEquipamento, grupos: next })
+                              <button
+                                className="btn-primary"
+                                onClick={() => {
+                                  const nome = valorNovoNome.trim()
+                                  const nomeIgual = isChecklist ? (g: { nomeGrupo: string }) => g.nomeGrupo === nome : (g: { nome: string }) => g.nome === nome
+                                  if (nome && !gruposDestaFamilia.some(nomeIgual as any)) {
+                                    if (isChecklist) {
+                                      const next = [...gruposChecklist, { id: Date.now().toString(), numeroGrupo: showNumeroGrupo ? valorNovoNumero.trim() : '', nomeGrupo: nome, familia: nomeFamilia, parenteId: selectedParenteIdForNovoGrupo || undefined, tipo: 'basico' as const, imagem: undefined, manutencoes: [], dataCriacao: new Date().toISOString() }]
+                                      setGruposChecklist(next)
+                                      setNovoNumeroGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
+                                      setNovoGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
+                                      if (!selectedParenteIdForPainelGrupos) setSelectedParenteIdForNovoGrupo('')
+                                      saveData('nonato-grupos-checklist', next)
+                                    } else {
+                                      const numero = showNumeroGrupo ? valorNovoNumero.trim() : ''
+                                      const next = [...gruposEquipamento, { numeroGrupo: numero, nome, familia: nomeFamilia, numerosGrupo: [] }]
+                                      setGruposEquipamento(next)
+                                      setNovoNumeroGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
+                                      setNovoGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
+                                      saveData('nonato-familias-grupos-equipamento', { familias: familiasEquipamento, grupos: next })
+                                    }
                                   }
-                                }
-                              }}
-                              style={{ padding: '0 20px', height: '44px', fontSize: '15px', fontWeight: 600, borderRadius: '8px', alignSelf: 'flex-end', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' }}
-                            >
-                              + {safeT?.addGrupo ?? safeT?.add || 'Adicionar grupo'}
-                            </button>
+                                }}
+                                style={{ padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 600, borderRadius: '6px', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' }}
+                              >
+                                + {safeT?.addGrupo ?? safeT?.add || 'Adicionar grupo'}
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
