@@ -16968,12 +16968,10 @@ const nextF = familias.filter(x => x !== f)
                   borderBottom: '2px solid rgba(0, 255, 0, 0.2)',
                   backgroundColor: '#1a1a1a'
                 }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-                    <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.5px' }}>
-                      {safeT?.familia || 'Famílias'}
-                    </h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                      <label style={{ fontSize: '13px', color: '#00ff00', fontWeight: 600 }}>{safeT?.novaFamilia || 'Nova família'}</label>
+                  <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'nowrap' }}>
+                    <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.5px', flexShrink: 0 }}>{safeT?.familia || 'Famílias'}</h3>
+                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '10px', flexWrap: 'nowrap', flexShrink: 0 }}>
+                      <label style={{ fontSize: '13px', color: '#00ff00', fontWeight: 600, whiteSpace: 'nowrap' }}>{safeT?.novaFamilia || 'Nova família'}</label>
                       <input
                         type="text"
                         value={novaFamiliaEquipamento}
@@ -16999,7 +16997,7 @@ const nextF = familias.filter(x => x !== f)
                             }
                           }
                         }}
-                        style={{ width: '220px', height: '40px', padding: '0 12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box' }}
+                        style={{ width: '200px', minWidth: '120px', height: '40px', padding: '0 12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', flexShrink: 0 }}
                       />
                       <button
                         className="btn-primary"
@@ -17021,7 +17019,7 @@ const nextF = familias.filter(x => x !== f)
                             }
                           }
                         }}
-                        style={{ padding: '0 18px', height: '40px', fontSize: '14px', fontWeight: 600, borderRadius: '6px', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' }}
+                        style={{ padding: '0 18px', height: '40px', fontSize: '14px', fontWeight: 600, borderRadius: '6px', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer', flexShrink: 0 }}
                       >
                         + {safeT?.add || 'Adicionar'}
                       </button>
@@ -17339,39 +17337,25 @@ const nextF = familias.filter(x => x !== f)
                         borderBottom: '2px solid rgba(0, 255, 0, 0.2)',
                         backgroundColor: '#1a1a1a'
                       }}>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-                            <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.5px' }}>
-                              {safeT?.gruposDe || 'Grupos de'} <span style={{ color: '#fff' }}>{nomeFamilia}</span>
-                              {parenteSelecionadoPainel && <><span style={{ color: 'rgba(255,255,255,0.8)' }}> — </span><span style={{ color: '#00ff00' }}>{parenteSelecionadoPainel.nome}</span></>}
-                            </h3>
-                            {isChecklist && (() => {
-                              const parentesDaFamilia = parentesChecklist.filter(p => p.familia === nomeFamilia)
-                              return parentesDaFamilia.length > 0 ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                  <span style={{ fontSize: '14px', color: '#fff' }}>{safeT?.mostrarGruposDe || 'Mostrar grupos de'}</span>
-                                  <select
-                                    value={selectedParenteIdForPainelGrupos}
-                                    onChange={(e) => {
-                                      const v = e.target.value
-                                      setSelectedParenteIdForPainelGrupos(v)
-                                      setSelectedParenteIdForNovoGrupo(v)
-                                    }}
-                                    style={{ minWidth: '140px', height: '40px', padding: '0 12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
-                                  >
-                                    <option value="">{safeT?.nenhum || 'Nenhum'}</option>
-                                    {parentesDaFamilia.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
-                                  </select>
-                                </div>
-                              ) : null
-                            })()}
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
-                            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                              {showNumeroGrupo && <span style={{ fontSize: '13px', color: '#fff', fontWeight: 500 }}>{safeT?.numeroGrupo || 'Número do Grupo'}</span>}
-                              <span style={{ fontSize: '13px', color: '#fff', fontWeight: 500 }}>{safeT?.nomeDoGrupo || 'Nome do Grupo'}</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'nowrap' }}>
+                          <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.5px', flexShrink: 0 }}>{safeT?.gruposDe || 'Grupos de'} <span style={{ color: '#fff' }}>{nomeFamilia}</span>{parenteSelecionadoPainel && <><span style={{ color: 'rgba(255,255,255,0.8)' }}> — </span><span style={{ color: '#00ff00' }}>{parenteSelecionadoPainel.nome}</span></>}</h3>
+                          {isChecklist && (() => {
+                            const parentesDaFamilia = parentesChecklist.filter(p => p.familia === nomeFamilia)
+                            return parentesDaFamilia.length > 0 ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                                <span style={{ fontSize: '14px', color: '#fff', whiteSpace: 'nowrap' }}>{safeT?.mostrarGruposDe || 'Mostrar grupos de'}</span>
+                                <select
+                                  value={selectedParenteIdForPainelGrupos}
+                                  onChange={(e) => { const v = e.target.value; setSelectedParenteIdForPainelGrupos(v); setSelectedParenteIdForNovoGrupo(v); } }
+                                  style={{ minWidth: '100px', height: '40px', padding: '0 12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', flexShrink: 0 }}
+                                >
+                                  <option value="">{safeT?.nenhum || 'Nenhum'}</option>
+                                  {parentesDaFamilia.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                                </select>
+                              </div>
+                            ) : null
+                          })()}
+                          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '10px', flexWrap: 'nowrap', flexShrink: 0 }}>
                               {showNumeroGrupo && (
                                 <input
                                   type="text"
