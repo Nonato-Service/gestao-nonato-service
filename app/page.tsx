@@ -17376,73 +17376,29 @@ const nextF = familias.filter(x => x !== f)
                           ) : null
                         })()}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', width: '100%', maxWidth: '100%' }}>
                           {showNumeroGrupo && (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
-                            <label style={{ fontSize: '13px', color: '#00ff00', fontWeight: 600 }}>{safeT?.numeroGrupo || 'Número do Grupo'}</label>
-                            <input
-                              type="text"
-                              value={valorNovoNumero}
-                              onChange={(e) => setNovoNumeroGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: e.target.value }))}
-                              placeholder={safeT?.numeroGrupoCampoPlaceholder ?? safeT?.numeroGrupoPlaceholder ?? 'Número do grupo...'}
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                  const nome = valorNovoNome.trim()
-                                  const nomeIgual = isChecklist ? (g: { nomeGrupo: string }) => g.nomeGrupo === nome : (g: { nome: string }) => g.nome === nome
-                                  if (nome && !gruposDestaFamilia.some(nomeIgual as any)) {
-                                    if (isChecklist) {
-                                      const next = [...gruposChecklist, { id: Date.now().toString(), numeroGrupo: valorNovoNumero.trim(), nomeGrupo: nome, familia: nomeFamilia, parenteId: selectedParenteIdForNovoGrupo || undefined, tipo: 'basico' as const, imagem: undefined, manutencoes: [], dataCriacao: new Date().toISOString() }]
-                                      setGruposChecklist(next)
-                                      setNovoNumeroGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
-                                      setNovoGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
-                                      if (!selectedParenteIdForPainelGrupos) setSelectedParenteIdForNovoGrupo('')
-                                      saveData('nonato-grupos-checklist', next)
-                                    } else {
-                                      const next = [...gruposEquipamento, { numeroGrupo: valorNovoNumero.trim(), nome, familia: nomeFamilia, numerosGrupo: [] }]
-                                      setGruposEquipamento(next)
-                                      setNovoNumeroGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
-                                      setNovoGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
-                                      saveData('nonato-familias-grupos-equipamento', { familias: familiasEquipamento, grupos: next })
-                                    }
-                                  }
-                                }
-                              }}
-                              style={{
-                                width: '100%',
-                                height: '40px',
-                                padding: '0 12px',
-                                backgroundColor: '#2a2a2a',
-                                border: '1px solid rgba(0, 255, 0, 0.3)',
-                                borderRadius: '6px',
-                                color: '#fff',
-                                fontSize: '14px',
-                                boxSizing: 'border-box'
-                              }}
-                            />
-                          </div>
-                          )}
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
-                            <label style={{ fontSize: '13px', color: '#00ff00', fontWeight: 600 }}>{safeT?.nomeDoGrupo || 'Nome do Grupo'}</label>
-                            <input
-                              type="text"
-                              value={valorNovoNome}
-                              onChange={(e) => setNovoGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: e.target.value }))}
-                              placeholder={safeT?.novoGrupoNestaFamilia || 'Nome do novo grupo...'}
-onKeyPress={(e) => {
+                            <>
+                              <label style={{ fontSize: '13px', color: '#00ff00', fontWeight: 600, flexShrink: 0 }}>{safeT?.numeroGrupo || 'Número do Grupo'}</label>
+                              <input
+                                type="text"
+                                value={valorNovoNumero}
+                                onChange={(e) => setNovoNumeroGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: e.target.value }))}
+                                placeholder={safeT?.numeroGrupoCampoPlaceholder ?? safeT?.numeroGrupoPlaceholder ?? 'Número do grupo...'}
+                                onKeyPress={(e) => {
                                   if (e.key === 'Enter') {
                                     const nome = valorNovoNome.trim()
                                     const nomeIgual = isChecklist ? (g: { nomeGrupo: string }) => g.nomeGrupo === nome : (g: { nome: string }) => g.nome === nome
                                     if (nome && !gruposDestaFamilia.some(nomeIgual as any)) {
                                       if (isChecklist) {
-                                        const next = [...gruposChecklist, { id: Date.now().toString(), numeroGrupo: showNumeroGrupo ? valorNovoNumero.trim() : '', nomeGrupo: nome, familia: nomeFamilia, parenteId: selectedParenteIdForNovoGrupo || undefined, tipo: 'basico' as const, imagem: undefined, manutencoes: [], dataCriacao: new Date().toISOString() }]
+                                        const next = [...gruposChecklist, { id: Date.now().toString(), numeroGrupo: valorNovoNumero.trim(), nomeGrupo: nome, familia: nomeFamilia, parenteId: selectedParenteIdForNovoGrupo || undefined, tipo: 'basico' as const, imagem: undefined, manutencoes: [], dataCriacao: new Date().toISOString() }]
                                         setGruposChecklist(next)
                                         setNovoNumeroGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
                                         setNovoGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
                                         if (!selectedParenteIdForPainelGrupos) setSelectedParenteIdForNovoGrupo('')
                                         saveData('nonato-grupos-checklist', next)
                                       } else {
-                                        const numero = showNumeroGrupo ? valorNovoNumero.trim() : ''
-                                        const next = [...gruposEquipamento, { numeroGrupo: numero, nome, familia: nomeFamilia, numerosGrupo: [] }]
+                                        const next = [...gruposEquipamento, { numeroGrupo: valorNovoNumero.trim(), nome, familia: nomeFamilia, numerosGrupo: [] }]
                                         setGruposEquipamento(next)
                                         setNovoNumeroGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
                                         setNovoGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
@@ -17451,47 +17407,69 @@ onKeyPress={(e) => {
                                     }
                                   }
                                 }}
-                              style={{
-                                width: '100%',
-                                height: '40px',
-                                padding: '0 16px',
-                                backgroundColor: '#2a2a2a',
-                                border: '1px solid rgba(0, 255, 0, 0.3)',
-                                borderRadius: '6px',
-                                color: '#fff',
-                                fontSize: '14px',
-                                boxSizing: 'border-box'
-                              }}
-                            />
-                          </div>
-                          </div>
-                          <button
-                            className="btn-primary"
-                            onClick={() => {
-                              const nome = valorNovoNome.trim()
-                              const nomeIgual = isChecklist ? (g: { nomeGrupo: string }) => g.nomeGrupo === nome : (g: { nome: string }) => g.nome === nome
-                              if (nome && !gruposDestaFamilia.some(nomeIgual as any)) {
-                                if (isChecklist) {
-                                  const next = [...gruposChecklist, { id: Date.now().toString(), numeroGrupo: showNumeroGrupo ? valorNovoNumero.trim() : '', nomeGrupo: nome, familia: nomeFamilia, parenteId: selectedParenteIdForNovoGrupo || undefined, tipo: 'basico' as const, imagem: undefined, manutencoes: [], dataCriacao: new Date().toISOString() }]
-                                  setGruposChecklist(next)
-                                  setNovoNumeroGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
-                                  setNovoGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
-                                  if (!selectedParenteIdForPainelGrupos) setSelectedParenteIdForNovoGrupo('')
-                                  saveData('nonato-grupos-checklist', next)
-                                } else {
-                                  const numero = showNumeroGrupo ? valorNovoNumero.trim() : ''
-                                  const next = [...gruposEquipamento, { numeroGrupo: numero, nome, familia: nomeFamilia, numerosGrupo: [] }]
-                                  setGruposEquipamento(next)
-                                  setNovoNumeroGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
-                                  setNovoGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
-                                  saveData('nonato-familias-grupos-equipamento', { familias: familiasEquipamento, grupos: next })
+                                style={{ flex: '1', minWidth: '80px', maxWidth: '140px', height: '40px', padding: '0 12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box' }}
+                              />
+                            </>
+                          )}
+                            <label style={{ fontSize: '13px', color: '#00ff00', fontWeight: 600, flexShrink: 0 }}>{safeT?.nomeDoGrupo || 'Nome do Grupo'}</label>
+                            <input
+                              type="text"
+                              value={valorNovoNome}
+                              onChange={(e) => setNovoGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: e.target.value }))}
+                              placeholder={safeT?.novoGrupoNestaFamilia || 'Nome do novo grupo...'}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                  const nome = valorNovoNome.trim()
+                                  const nomeIgual = isChecklist ? (g: { nomeGrupo: string }) => g.nomeGrupo === nome : (g: { nome: string }) => g.nome === nome
+                                  if (nome && !gruposDestaFamilia.some(nomeIgual as any)) {
+                                    if (isChecklist) {
+                                      const next = [...gruposChecklist, { id: Date.now().toString(), numeroGrupo: showNumeroGrupo ? valorNovoNumero.trim() : '', nomeGrupo: nome, familia: nomeFamilia, parenteId: selectedParenteIdForNovoGrupo || undefined, tipo: 'basico' as const, imagem: undefined, manutencoes: [], dataCriacao: new Date().toISOString() }]
+                                      setGruposChecklist(next)
+                                      setNovoNumeroGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
+                                      setNovoGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
+                                      if (!selectedParenteIdForPainelGrupos) setSelectedParenteIdForNovoGrupo('')
+                                      saveData('nonato-grupos-checklist', next)
+                                    } else {
+                                      const numero = showNumeroGrupo ? valorNovoNumero.trim() : ''
+                                      const next = [...gruposEquipamento, { numeroGrupo: numero, nome, familia: nomeFamilia, numerosGrupo: [] }]
+                                      setGruposEquipamento(next)
+                                      setNovoNumeroGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
+                                      setNovoGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
+                                      saveData('nonato-familias-grupos-equipamento', { familias: familiasEquipamento, grupos: next })
+                                    }
+                                  }
                                 }
-                              }
-                            }}
-                            style={{ padding: '0 20px', height: '44px', fontSize: '15px', fontWeight: 600, borderRadius: '8px', alignSelf: 'flex-start', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' }}
-                          >
-                            + {safeT?.addGrupo ?? safeT?.add || 'Adicionar grupo'}
-                          </button>
+                              }}
+                              style={{ flex: '1', minWidth: '180px', maxWidth: '400px', height: '40px', padding: '0 16px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box' }}
+                            />
+                            <button
+                              className="btn-primary"
+                              onClick={() => {
+                                const nome = valorNovoNome.trim()
+                                const nomeIgual = isChecklist ? (g: { nomeGrupo: string }) => g.nomeGrupo === nome : (g: { nome: string }) => g.nome === nome
+                                if (nome && !gruposDestaFamilia.some(nomeIgual as any)) {
+                                  if (isChecklist) {
+                                    const next = [...gruposChecklist, { id: Date.now().toString(), numeroGrupo: showNumeroGrupo ? valorNovoNumero.trim() : '', nomeGrupo: nome, familia: nomeFamilia, parenteId: selectedParenteIdForNovoGrupo || undefined, tipo: 'basico' as const, imagem: undefined, manutencoes: [], dataCriacao: new Date().toISOString() }]
+                                    setGruposChecklist(next)
+                                    setNovoNumeroGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
+                                    setNovoGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
+                                    if (!selectedParenteIdForPainelGrupos) setSelectedParenteIdForNovoGrupo('')
+                                    saveData('nonato-grupos-checklist', next)
+                                  } else {
+                                    const numero = showNumeroGrupo ? valorNovoNumero.trim() : ''
+                                    const next = [...gruposEquipamento, { numeroGrupo: numero, nome, familia: nomeFamilia, numerosGrupo: [] }]
+                                    setGruposEquipamento(next)
+                                    setNovoNumeroGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
+                                    setNovoGrupoPorFamilia(prev => ({ ...prev, [nomeFamilia]: '' }))
+                                    saveData('nonato-familias-grupos-equipamento', { familias: familiasEquipamento, grupos: next })
+                                  }
+                                }
+                              }}
+                              style={{ padding: '0 20px', height: '44px', fontSize: '15px', fontWeight: 600, borderRadius: '8px', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' }}
+                            >
+                              + {safeT?.addGrupo ?? safeT?.add || 'Adicionar grupo'}
+                            </button>
+                          </div>
                         </div>
                       </div>
                       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
@@ -17509,7 +17487,7 @@ onKeyPress={(e) => {
                           </div>
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: showNumeroGrupo && isChecklist ? '28px 72px 140px 1fr 180px' : showNumeroGrupo ? '28px 140px 1fr 180px' : isChecklist ? '28px 72px 1fr 180px' : '28px 1fr 180px', gap: '12px', alignItems: 'center', padding: '10px 18px', borderBottom: '1px solid rgba(0, 255, 0, 0.3)', marginBottom: '4px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: showNumeroGrupo && isChecklist ? '28px 72px 120px 1fr minmax(220px, 1fr)' : showNumeroGrupo ? '28px 120px 1fr minmax(220px, 1fr)' : isChecklist ? '28px 72px 1fr minmax(220px, 1fr)' : '28px 1fr minmax(220px, 1fr)', gap: '12px', alignItems: 'center', padding: '10px 18px', borderBottom: '1px solid rgba(0, 255, 0, 0.3)', marginBottom: '4px' }}>
                               <span />
                               {isChecklist && <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase' }}>{safeT?.imagemDoGrupo || 'Imagem'}</span>}
                               {showNumeroGrupo && <span style={{ fontSize: '11px', fontWeight: 700, color: '#00ff00', textTransform: 'uppercase' }}>{safeT?.numeroGrupo || 'Número do Grupo'}</span>}
@@ -17527,7 +17505,7 @@ onKeyPress={(e) => {
                                   key={isChecklist ? (g as GrupoChecklist).id : `${nomeFamilia}-${gNome}-${idx}`}
                                   style={{
                                     display: 'grid',
-                                    gridTemplateColumns: showNumeroGrupo && isChecklist ? '28px 44px 140px 1fr 180px' : showNumeroGrupo ? '28px 140px 1fr 180px' : isChecklist ? '28px 44px 1fr 180px' : '28px 1fr 180px',
+                                    gridTemplateColumns: showNumeroGrupo && isChecklist ? '28px 44px 120px 1fr minmax(220px, 1fr)' : showNumeroGrupo ? '28px 120px 1fr minmax(220px, 1fr)' : isChecklist ? '28px 44px 1fr minmax(220px, 1fr)' : '28px 1fr minmax(220px, 1fr)',
                                     gap: '12px',
                                     alignItems: 'center',
                                     padding: '12px 18px',
@@ -17626,8 +17604,8 @@ onKeyPress={(e) => {
                                     <>
                                       {showNumeroGrupo && <span style={{ fontWeight: 600, color: '#00ff00', fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={numeroDisplay}>{numeroDisplay}</span>}
                                       <span style={{ fontWeight: 600, color: '#fff', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }} title={gNome}>{gNome}</span>
-                                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexShrink: 0, minWidth: '130px' }}>
-                                        <button type="button" className="btn-primary" onClick={() => { setEditingGrupoFamilia(nomeFamilia); setEditingGrupoNome(gNome); setEditGrupoValue(gNome); setEditGrupoNumeroValue((g.numeroGrupo ?? '').trim()); }} style={{ ...btnGrupoStyle, minWidth: '64px' }} title={safeT?.edit || 'Editar'}>{safeT?.edit || 'Editar'}</button>
+                                      <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'flex-end', minWidth: 0 }}>
+                                        <button type="button" className="btn-primary" onClick={() => { setEditingGrupoFamilia(nomeFamilia); setEditingGrupoNome(gNome); setEditGrupoValue(gNome); setEditGrupoNumeroValue((g.numeroGrupo ?? '').trim()); }} style={{ ...btnGrupoStyle, flex: '1', minWidth: '70px', maxWidth: '120px' }} title={safeT?.edit || 'Editar'}>{safeT?.edit || 'Editar'}</button>
                                         <button type="button" className="btn-danger" onClick={() => {
                                           if (isChecklist) {
                                             const next = gruposChecklist.filter(gr => gr.id !== (g as GrupoChecklist).id)
@@ -17640,7 +17618,7 @@ onKeyPress={(e) => {
                                             saveData('nonato-familias-grupos-equipamento', { familias: familiasEquipamento, grupos: next })
                                             if (editingGrupoFamilia === nomeFamilia && editingGrupoNome === gNome) { setEditingGrupoFamilia(null); setEditingGrupoNome(null); }
                                           }
-                                        }} style={{ ...btnGrupoDangerStyle, minWidth: '58px' }}>{safeT?.delete || 'Excluir'}</button>
+                                        }} style={{ ...btnGrupoDangerStyle, flex: '1', minWidth: '70px', maxWidth: '120px' }}>{safeT?.delete || 'Excluir'}</button>
                                       </div>
                                     </>
                                   )}
