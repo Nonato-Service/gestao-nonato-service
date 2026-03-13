@@ -649,6 +649,7 @@ type Tab = {
 
 type ComprovanteDespesa = {
   id: string
+  tipo: 'cliente' | 'pessoal'  // cliente = despesa por cliente; pessoal = despesas pessoais
   cliente: string
   data: string
   valorUnitario: number
@@ -2326,7 +2327,7 @@ export default function Dashboard() {
       'clientes-financeiro': t?.clientesFinanceiroTitle || 'Clientes Financeiro',
       'orcamentos-avulso': t?.orcamentosAvulsoTitle || 'Orçamentos Avulso',
       'registro-despesas': t?.registroDespesasTitle || 'Registro de Despesas',
-      'comprovantes-despesas': t?.comprovantesDespesasTitle || 'Comprovantes de Despesas',
+      'comprovantes-despesas': t?.comprovantesDespesasTitle || 'COMPROVANTES DE DESPESAS',
       'mapa-visual-separacao-pecas': t?.mapaVisualSeparacaoPecasTitle || 'Mapa Visual de Separação de Peças / Cliente',
       'manuais-informacoes-tecnicas': t?.manuaisInformacoesTecnicasTitle || 'Manuais e Informações Técnica dos Equipamentos',
       'almoxarifado-armazem': t?.almoxarifadoArmazemTitle || 'Almoxarifado / Armazém',
@@ -3518,7 +3519,10 @@ export default function Dashboard() {
 
       const savedComprovantesDespesas = getData('nonato-comprovantes-despesas')
       if (savedComprovantesDespesas && Array.isArray(savedComprovantesDespesas)) {
-        setComprovantesDespesas(savedComprovantesDespesas)
+        setComprovantesDespesas(savedComprovantesDespesas.map((c: any) => ({
+          ...c,
+          tipo: c.tipo === 'pessoal' ? 'pessoal' : 'cliente'
+        })))
       }
 
       const savedIVAControles = getData('nonato-iva-controles')
@@ -5343,6 +5347,8 @@ export default function Dashboard() {
         return safeT?.orcamentosAvulsoTitle || button.name || ''
       } else if (button.id === 'registro-despesas-default') {
         return safeT?.registroDespesasTitle || button.name || ''
+      } else if (button.id === 'comprovantes-despesas-default') {
+        return safeT?.comprovantesDespesasTitle || button.name || ''
       } else if (button.id === 'mapa-visual-separacao-pecas-default') {
         return safeT?.mapaVisualSeparacaoPecasTitle || button.name || ''
       } else if (button.id === 'almoxarifado-armazem-default') {
@@ -26211,20 +26217,37 @@ A1;Peça exemplo;10'
         />
 
       case 'comprovantes-despesas': {
+        const labelPessoal = (safeT as any)?.despesasPessoais || 'Despesas Pessoais'
+        const getWeekKey = (dateStr: string) => {
+          const d = new Date(dateStr + 'T12:00:00')
+          const start = new Date(d.getFullYear(), 0, 1)
+          const dayOfYear = 1 + Math.floor((d.getTime() - start.getTime()) / (24 * 60 * 60 * 1000))
+          const weekNum = Math.ceil(dayOfYear / 7)
+          return `${d.getFullYear()}-W${String(weekNum).padStart(2, '0')}`
+        }
         const [filtroMes, setFiltroMes] = useState<string>('')
+        const [filtroSemana, setFiltroSemana] = useState<string>('')
+        const [filtroPeriodoView, setFiltroPeriodoView] = useState<'semanal' | 'mensal'>('mensal')
         const [filtroCliente, setFiltroCliente] = useState<string>('')
-        const [formComp, setFormComp] = useState({ cliente: '', data: new Date().toISOString().slice(0, 10), valorUnitario: 0, quantidade: 1, descricao: '', imagemBase64: '' })
+        const [formComp, setFormComp] = useState<{ tipo: 'cliente' | 'pessoal'; cliente: string; data: string; valorUnitario: number; quantidade: number; descricao: string; imagemBase64: string }>({ tipo: 'cliente', cliente: '', data: new Date().toISOString().slice(0, 10), valorUnitario: 0, quantidade: 1, descricao: '', imagemBase64: '' })
         const [showFormComp, setShowFormComp] = useState(false)
+        const [showEnvioModal, setShowEnvioModal] = useState(false)
+        const [envioForm, setEnvioForm] = useState<{ templateId: 1|2|3|4|5; whatsapp: boolean; email: boolean; telefone: string; emailDestino: string; tecnicoId: string }>({ templateId: 1, whatsapp: true, email: false, telefone: '', emailDestino: '', tecnicoId: '' })
         const mesesAnos = Array.from(new Set(comprovantesDespesas.map(c => {
           const d = new Date(c.data)
           return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
         }))).sort().reverse()
-        const clientesUnicos = Array.from(new Set(comprovantesDespesas.map(c => c.cliente).filter(Boolean))).sort()
+        const semanasDisponiveis = Array.from(new Set(comprovantesDespesas.map(c => getWeekKey(c.data)))).sort().reverse()
+        const getClienteOuPessoal = (c: ComprovanteDespesa) => (c.tipo === 'pessoal' ? labelPessoal : c.cliente) || '—'
+        const clientesOuPessoalUnicos = Array.from(new Set(comprovantesDespesas.map(c => c.tipo === 'pessoal' ? labelPessoal : c.cliente).filter(Boolean))).sort((a, b) => (a === labelPessoal ? 1 : b === labelPessoal ? -1 : a.localeCompare(b)))
         const filtrados = comprovantesDespesas.filter(c => {
           const d = new Date(c.data)
           const mesAno = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-          if (filtroMes && mesAno !== filtroMes) return false
-          if (filtroCliente && c.cliente !== filtroCliente) return false
+          const semanaKey = getWeekKey(c.data)
+          if (filtroPeriodoView === 'mensal' && filtroMes && mesAno !== filtroMes) return false
+          if (filtroPeriodoView === 'semanal' && filtroSemana && semanaKey !== filtroSemana) return false
+          const clienteOuPessoal = c.tipo === 'pessoal' ? labelPessoal : c.cliente
+          if (filtroCliente && clienteOuPessoal !== filtroCliente) return false
           return true
         })
         const totalGeral = filtrados.reduce((s, c) => s + c.valorTotal, 0)
@@ -26234,11 +26257,22 @@ A1;Peça exemplo;10'
           acc[key] = (acc[key] || 0) + c.valorTotal
           return acc
         }, {} as Record<string, number>)
+        const totalPorSemana = filtrados.reduce((acc, c) => {
+          const key = getWeekKey(c.data)
+          acc[key] = (acc[key] || 0) + c.valorTotal
+          return acc
+        }, {} as Record<string, number>)
+        const totalPorCliente = filtrados.reduce((acc, c) => {
+          const key = c.tipo === 'pessoal' ? labelPessoal : (c.cliente || '—')
+          acc[key] = (acc[key] || 0) + c.valorTotal
+          return acc
+        }, {} as Record<string, number>)
         const handleAddComprovante = () => {
           const valorTotal = formComp.valorUnitario * formComp.quantidade
           const novo: ComprovanteDespesa = {
             id: Date.now().toString(),
-            cliente: formComp.cliente.trim(),
+            tipo: formComp.tipo,
+            cliente: formComp.tipo === 'cliente' ? formComp.cliente.trim() : '',
             data: formComp.data,
             valorUnitario: formComp.valorUnitario,
             quantidade: formComp.quantidade,
@@ -26249,7 +26283,7 @@ A1;Peça exemplo;10'
           const atualizados = [...comprovantesDespesas, novo]
           setComprovantesDespesas(atualizados)
           saveData('nonato-comprovantes-despesas', atualizados)
-          setFormComp({ cliente: '', data: new Date().toISOString().slice(0, 10), valorUnitario: 0, quantidade: 1, descricao: '', imagemBase64: '' })
+          setFormComp({ tipo: 'cliente', cliente: '', data: new Date().toISOString().slice(0, 10), valorUnitario: 0, quantidade: 1, descricao: '', imagemBase64: '' })
           setShowFormComp(false)
         }
         const handleRemoverComp = (id: string) => {
@@ -26258,40 +26292,128 @@ A1;Peça exemplo;10'
           setComprovantesDespesas(atualizados)
           saveData('nonato-comprovantes-despesas', atualizados)
         }
+        const tituloRelatorio = (safeT as any)?.comprovantesDespesasTitle || 'COMPROVANTES DE DESPESAS'
+        const getMensagemEnvio = (templateId: 1|2|3|4|5): string => {
+          const periodo = filtroPeriodoView === 'mensal' && filtroMes ? filtroMes : filtroPeriodoView === 'semanal' && filtroSemana ? filtroSemana : (safeT as any)?.comprovantesTodosMeses || 'Todos'
+          if (templateId === 1) {
+            let msg = `${tituloRelatorio}\n\nTotal geral: ${totalGeral.toFixed(2)} €\n\n`
+            Object.entries(totalPorCliente).sort((a, b) => b[1] - a[1]).forEach(([nome, tot]) => { msg += `${nome}: ${tot.toFixed(2)} €\n` })
+            return msg.trim()
+          }
+          if (templateId === 2) {
+            let msg = `${tituloRelatorio}\n\n`
+            filtrados.forEach(c => { msg += `${c.data} | ${getClienteOuPessoal(c)} | ${c.valorTotal.toFixed(2)} €${c.descricao ? ' | ' + c.descricao : ''}\n` })
+            msg += `\nTotal: ${totalGeral.toFixed(2)} €`
+            return msg.trim()
+          }
+          if (templateId === 3) {
+            let msg = `${tituloRelatorio}\nPeríodo: ${periodo}\n\nTotal do período: ${totalGeral.toFixed(2)} €\n\n`
+            Object.entries(totalPorCliente).sort((a, b) => b[1] - a[1]).forEach(([nome, tot]) => { msg += `${nome}: ${tot.toFixed(2)} €\n` })
+            return msg.trim()
+          }
+          if (templateId === 4) {
+            let msg = `NONATO SERVICE\nRelatório de Comprovantes de Despesas\nData do relatório: ${new Date().toLocaleDateString('pt-PT')}\n────────────────────────\n\n`
+            msg += `Total geral: ${totalGeral.toFixed(2)} €\n\nPor cliente/beneficiário:\n`
+            Object.entries(totalPorCliente).sort((a, b) => b[1] - a[1]).forEach(([nome, tot]) => { msg += `• ${nome}: ${tot.toFixed(2)} €\n` })
+            msg += `\n────────────────────────\nFim do relatório.`
+            return msg
+          }
+          if (templateId === 5) {
+            let msg = `Total: ${totalGeral.toFixed(2)} €`
+            Object.entries(totalPorCliente).sort((a, b) => b[1] - a[1]).forEach(([nome, tot]) => { msg += `\n${nome}: ${tot.toFixed(2)} €` })
+            return msg
+          }
+          return ''
+        }
+        const tecnicoSelecionado = envioForm.tecnicoId ? tecnicos.find(t => t.id === envioForm.tecnicoId) : null
+        const mensagemEnvio = (() => { const base = getMensagemEnvio(envioForm.templateId); if (tecnicoSelecionado?.name) return `Técnico: ${tecnicoSelecionado.name}\n\n` + base; return base })()
+        const handleCopiarEnvio = () => { navigator.clipboard.writeText(mensagemEnvio); alert((safeT as any)?.comprovantesCopiado || 'Mensagem copiada!') }
+        const handleAbrirWhatsApp = () => { const tel = envioForm.telefone.replace(/\D/g, ''); const url = `https://wa.me/${tel || '351'}` + (mensagemEnvio ? `?text=${encodeURIComponent(mensagemEnvio)}` : ''); window.open(url, '_blank') }
+        const handleAbrirEmail = () => { const to = envioForm.emailDestino || ''; const subj = encodeURIComponent(tituloRelatorio + ' - ' + new Date().toLocaleDateString('pt-PT')); const body = encodeURIComponent(mensagemEnvio); window.open(`mailto:${to}?subject=${subj}&body=${body}`, '_blank') }
+        const handleGerarPDF = async () => {
+          const periodo = filtroPeriodoView === 'mensal' && filtroMes ? filtroMes : filtroPeriodoView === 'semanal' && filtroSemana ? filtroSemana : ''
+          const payload = {
+            comprovantes: filtrados.map(c => ({ id: c.id, tipo: c.tipo, cliente: c.cliente, data: c.data, valorUnitario: c.valorUnitario, quantidade: c.quantidade, valorTotal: c.valorTotal, descricao: c.descricao })),
+            totalGeral,
+            totalPorCliente,
+            modelo: envioForm.templateId,
+            tecnicoNome: tecnicoSelecionado?.name || undefined,
+            periodo,
+            labelPessoal,
+            tituloRelatorio
+          }
+          try {
+            const res = await fetch('/api/pdf/comprovantes-despesas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            if (!res.ok) throw new Error(await res.text())
+            const html = await res.text()
+            const w = window.open('', '_blank')
+            if (w) { w.document.write(html); w.document.close() } else alert((safeT as any)?.comprovantesGerarPDF || 'Permita pop-ups para abrir o PDF.')
+          } catch (e) { console.error(e); alert('Erro ao gerar PDF. Tente novamente.') }
+        }
         return (
           <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto' }}>
             <div style={{ marginBottom: '24px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
               <h1 style={{ margin: 0, fontSize: '24px', color: '#00ff00' }}>
-                {(safeT as any)?.comprovantesDespesasTitle || 'Comprovantes de Despesas'}
+                {(safeT as any)?.comprovantesDespesasTitle || 'COMPROVANTES DE DESPESAS'}
               </h1>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <button onClick={() => closeTab(activeTabId || '')} style={{ padding: '8px 12px', background: 'transparent', border: '1px solid rgba(0,255,0,0.5)', borderRadius: '6px', color: '#00ff00', cursor: 'pointer' }}>↶ {(safeT as any)?.voltar || 'Voltar'}</button>
                 <button onClick={() => setShowFormComp(true)} style={{ padding: '10px 20px', background: 'rgba(0,255,0,0.2)', border: '1px solid #00ff00', borderRadius: '8px', color: '#00ff00', fontWeight: 600, cursor: 'pointer' }}>
                   + {(safeT as any)?.comprovantesAdicionar || 'Adicionar comprovante'}
                 </button>
+                <button onClick={() => setShowEnvioModal(true)} style={{ padding: '10px 20px', background: 'rgba(0,200,100,0.2)', border: '1px solid #00c864', borderRadius: '8px', color: '#00e676', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  📤 {(safeT as any)?.comprovantesEnvioTitulo || 'Enviar por WhatsApp e Email'}
+                </button>
               </div>
             </div>
             <p style={{ color: '#aaa', marginBottom: '20px', fontSize: '14px' }}>{(safeT as any)?.comprovantesDespesasDesc || 'Adicione imagens de comprovantes, filtre por mês e cliente, valores unitários e totais por operação.'}</p>
-            {/* Filtros */}
+            {/* Filtros: Ver por Semanal / Mensal */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '24px', padding: '16px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0,255,0,0.2)' }}>
-              <label style={{ color: '#00ff00', fontSize: '13px' }}>{(safeT as any)?.comprovantesFiltroMes || 'Filtrar por mês'}</label>
-              <select value={filtroMes} onChange={e => setFiltroMes(e.target.value)} style={{ padding: '8px 12px', background: '#222', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', minWidth: '160px' }}>
-                <option value="">{(safeT as any)?.comprovantesTodosMeses || 'Todos os meses'}</option>
-                {mesesAnos.map(m => (<option key={m} value={m}>{m}</option>))}
-              </select>
+              <span style={{ color: '#00ff00', fontSize: '13px', marginRight: '8px' }}>{(safeT as any)?.comprovantesVerPor || 'Ver por'}:</span>
+              <button type="button" onClick={() => { setFiltroPeriodoView('semanal'); setFiltroMes(''); }} style={{ padding: '8px 14px', background: filtroPeriodoView === 'semanal' ? 'rgba(0,255,0,0.25)' : '#222', border: '1px solid rgba(0,255,0,0.4)', borderRadius: '6px', color: '#00ff00', cursor: 'pointer', fontWeight: filtroPeriodoView === 'semanal' ? 700 : 400 }}>{(safeT as any)?.comprovantesSemanal || 'Semanal'}</button>
+              <button type="button" onClick={() => { setFiltroPeriodoView('mensal'); setFiltroSemana(''); }} style={{ padding: '8px 14px', background: filtroPeriodoView === 'mensal' ? 'rgba(0,255,0,0.25)' : '#222', border: '1px solid rgba(0,255,0,0.4)', borderRadius: '6px', color: '#00ff00', cursor: 'pointer', fontWeight: filtroPeriodoView === 'mensal' ? 700 : 400 }}>{(safeT as any)?.comprovantesMensal || 'Mensal'}</button>
+              {filtroPeriodoView === 'mensal' && (
+                <>
+                  <label style={{ color: '#00ff00', fontSize: '13px', marginLeft: '12px' }}>{(safeT as any)?.comprovantesFiltroMes || 'Filtrar por mês'}</label>
+                  <select value={filtroMes} onChange={e => setFiltroMes(e.target.value)} style={{ padding: '8px 12px', background: '#222', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', minWidth: '160px' }}>
+                    <option value="">{(safeT as any)?.comprovantesTodosMeses || 'Todos os meses'}</option>
+                    {mesesAnos.map(m => (<option key={m} value={m}>{m}</option>))}
+                  </select>
+                </>
+              )}
+              {filtroPeriodoView === 'semanal' && (
+                <>
+                  <label style={{ color: '#00ff00', fontSize: '13px', marginLeft: '12px' }}>{(safeT as any)?.comprovantesSemana || 'Semana'}</label>
+                  <select value={filtroSemana} onChange={e => setFiltroSemana(e.target.value)} style={{ padding: '8px 12px', background: '#222', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', minWidth: '160px' }}>
+                    <option value="">{(safeT as any)?.comprovantesTodasSemanas || 'Todas as semanas'}</option>
+                    {semanasDisponiveis.map(s => (<option key={s} value={s}>{s}</option>))}
+                  </select>
+                </>
+              )}
               <label style={{ color: '#00ff00', fontSize: '13px', marginLeft: '8px' }}>{(safeT as any)?.comprovantesFiltroCliente || 'Filtrar por cliente'}</label>
               <select value={filtroCliente} onChange={e => setFiltroCliente(e.target.value)} style={{ padding: '8px 12px', background: '#222', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', minWidth: '180px' }}>
                 <option value="">{(safeT as any)?.comprovantesTodosClientes || 'Todos os clientes'}</option>
-                {clientesUnicos.map(cl => (<option key={cl} value={cl}>{cl}</option>))}
+                {clientesOuPessoalUnicos.map(cl => (<option key={cl} value={cl}>{cl}</option>))}
               </select>
             </div>
-            {/* Resumo */}
+            {/* Resumo: Total geral + por período + por cliente */}
             <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#141414', borderRadius: '10px', border: '1px solid rgba(0,255,0,0.25)' }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'center', marginBottom: '16px' }}>
                 <span style={{ color: '#00ff00', fontWeight: 700, fontSize: '18px' }}>{(safeT as any)?.comprovantesTotalGeral || 'Total geral'}: {totalGeral.toFixed(2)} €</span>
-                {Object.entries(totalPorMes).sort((a, b) => b[0].localeCompare(a[0])).map(([mes, tot]) => (
+                {filtroPeriodoView === 'mensal' && Object.entries(totalPorMes).sort((a, b) => b[0].localeCompare(a[0])).map(([mes, tot]) => (
                   <span key={mes} style={{ color: '#ccc', fontSize: '14px' }}>{(safeT as any)?.comprovantesTotalMes || 'Total do mês'} {mes}: <strong style={{ color: '#00ff00' }}>{tot.toFixed(2)} €</strong></span>
                 ))}
+                {filtroPeriodoView === 'semanal' && Object.entries(totalPorSemana).sort((a, b) => b[0].localeCompare(a[0])).map(([sem, tot]) => (
+                  <span key={sem} style={{ color: '#ccc', fontSize: '14px' }}>{(safeT as any)?.comprovantesSemana || 'Semana'} {sem}: <strong style={{ color: '#00ff00' }}>{tot.toFixed(2)} €</strong></span>
+                ))}
+              </div>
+              <div style={{ borderTop: '1px solid rgba(0,255,0,0.2)', paddingTop: '12px' }}>
+                <div style={{ color: '#00ff00', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>{(safeT as any)?.comprovantesTotalPorCliente || 'Total por cliente'}</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px 20px' }}>
+                  {Object.entries(totalPorCliente).sort((a, b) => b[1] - a[1]).map(([nome, tot]) => (
+                    <span key={nome} style={{ color: '#ccc', fontSize: '13px' }}>{nome}: <strong style={{ color: '#00ff00' }}>{tot.toFixed(2)} €</strong></span>
+                  ))}
+                </div>
               </div>
             </div>
             {/* Lista */}
@@ -26299,9 +26421,9 @@ A1;Peça exemplo;10'
               {filtrados.length === 0 && <p style={{ color: '#888', textAlign: 'center', padding: '24px' }}>Nenhum comprovante. Clique em &quot;Adicionar comprovante&quot;.</p>}
               {filtrados.map(c => (
                 <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '14px', backgroundColor: '#222', borderRadius: '10px', border: '1px solid rgba(0,255,0,0.15)' }}>
-                  {c.imagemBase64 && <img src={c.imagemBase64} alt="" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: '6px' }} />}
+                  {c.imagemBase64 ? <img src={c.imagemBase64} alt="Recibo" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: '6px', border: '1px solid rgba(0,255,0,0.2)' }} /> : <div style={{ width: 60, height: 60, borderRadius: '6px', background: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: '11px' }}>📄</div>}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: '#fff', fontWeight: 600 }}>{c.cliente || '—'}</div>
+                    <div style={{ color: '#fff', fontWeight: 600 }}>{getClienteOuPessoal(c)}</div>
                     <div style={{ color: '#aaa', fontSize: '13px' }}>{c.data} · {(safeT as any)?.comprovantesValorUnitario || 'Unit.'}: {c.valorUnitario.toFixed(2)} × {c.quantidade} = <strong style={{ color: '#00ff00' }}>{c.valorTotal.toFixed(2)} €</strong></div>
                     {c.descricao && <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>{c.descricao}</div>}
                   </div>
@@ -26314,16 +26436,91 @@ A1;Peça exemplo;10'
               <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }} onClick={() => setShowFormComp(false)}>
                 <div style={{ background: '#222', padding: '24px', borderRadius: '12px', border: '2px solid rgba(0,255,0,0.3)', maxWidth: '440px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
                   <h3 style={{ margin: '0 0 16px', color: '#00ff00' }}>{(safeT as any)?.comprovantesAdicionar || 'Adicionar comprovante'}</h3>
-                  <input placeholder={(safeT as any)?.comprovantesCliente || 'Cliente'} value={formComp.cliente} onChange={e => setFormComp(prev => ({ ...prev, cliente: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ color: '#00ff00', fontSize: '12px', marginBottom: '6px' }}>{(safeT as any)?.comprovantesTipoDespesa || 'Tipo de despesa'}</div>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: '#ccc' }}>
+                        <input type="radio" name="tipoComp" checked={formComp.tipo === 'cliente'} onChange={() => setFormComp(prev => ({ ...prev, tipo: 'cliente' }))} />
+                        {(safeT as any)?.comprovantesCliente || 'Cliente'}
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: '#ccc' }}>
+                        <input type="radio" name="tipoComp" checked={formComp.tipo === 'pessoal'} onChange={() => setFormComp(prev => ({ ...prev, tipo: 'pessoal', cliente: '' }))} />
+                        {(safeT as any)?.despesasPessoais || 'Despesas Pessoais'}
+                      </label>
+                    </div>
+                  </div>
+                  {formComp.tipo === 'cliente' && (
+                    <input placeholder={(safeT as any)?.comprovantesCliente || 'Cliente'} value={formComp.cliente} onChange={e => setFormComp(prev => ({ ...prev, cliente: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
+                  )}
                   <input type="date" value={formComp.data} onChange={e => setFormComp(prev => ({ ...prev, data: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
                   <input type="number" step={0.01} placeholder={(safeT as any)?.comprovantesValorUnitario || 'Valor unitário'} value={formComp.valorUnitario || ''} onChange={e => setFormComp(prev => ({ ...prev, valorUnitario: Number(e.target.value) || 0 }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
                   <input type="number" min={1} placeholder={(safeT as any)?.comprovantesQuantidade || 'Quantidade'} value={formComp.quantidade || ''} onChange={e => setFormComp(prev => ({ ...prev, quantidade: Number(e.target.value) || 1 }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
                   <input placeholder={(safeT as any)?.comprovantesDescricao || 'Descrição (opcional)'} value={formComp.descricao} onChange={e => setFormComp(prev => ({ ...prev, descricao: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
-                  <label style={{ display: 'block', color: '#00ff00', fontSize: '12px', marginBottom: '6px' }}>{(safeT as any)?.comprovantesImagem || 'Imagem do comprovante'}</label>
-                  <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setFormComp(prev => ({ ...prev, imagemBase64: (r.result as string) || '' })); r.readAsDataURL(f); } }} style={{ width: '100%', padding: '8px', marginBottom: '16px', color: '#ccc' }} />
+                  <label style={{ display: 'block', color: '#00ff00', fontSize: '12px', marginBottom: '6px' }}>{(safeT as any)?.comprovantesImagem || 'Imagem do recibo (anexar)'}</label>
+                  <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setFormComp(prev => ({ ...prev, imagemBase64: (r.result as string) || '' })); r.readAsDataURL(f); } }} style={{ width: '100%', padding: '8px', marginBottom: formComp.imagemBase64 ? '8px' : '16px', color: '#ccc' }} />
+                  {formComp.imagemBase64 && <div style={{ marginBottom: '16px' }}><img src={formComp.imagemBase64} alt="Preview" style={{ maxWidth: '100%', maxHeight: 120, borderRadius: '6px', border: '1px solid rgba(0,255,0,0.3)' }} /><button type="button" onClick={() => setFormComp(prev => ({ ...prev, imagemBase64: '' }))} style={{ display: 'block', marginTop: '6px', padding: '4px 8px', fontSize: '11px', background: 'rgba(255,68,68,0.2)', border: '1px solid #ff4444', borderRadius: '4px', color: '#ff4444', cursor: 'pointer' }}>Remover imagem</button></div>}
                   <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                     <button onClick={() => setShowFormComp(false)} style={{ padding: '10px 18px', background: 'transparent', border: '1px solid #666', borderRadius: '6px', color: '#ccc', cursor: 'pointer' }}>Cancelar</button>
                     <button onClick={handleAddComprovante} style={{ padding: '10px 18px', background: 'rgba(0,255,0,0.2)', border: '1px solid #00ff00', borderRadius: '6px', color: '#00ff00', fontWeight: 600, cursor: 'pointer' }}>Guardar</button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* Modal Envio WhatsApp / Email - 5 modelos */}
+            {showEnvioModal && (
+              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10001 }} onClick={() => setShowEnvioModal(false)}>
+                <div style={{ background: '#1e1e1e', padding: '28px', borderRadius: '16px', border: '2px solid rgba(0,255,0,0.35)', maxWidth: '720px', width: '100%', maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }} onClick={e => e.stopPropagation()}>
+                  <h2 style={{ margin: '0 0 8px', color: '#00ff00', fontSize: '22px' }}>{(safeT as any)?.comprovantesEnvioTitulo || 'Enviar por WhatsApp e Email'}</h2>
+                  <p style={{ color: '#aaa', fontSize: '13px', marginBottom: '24px' }}>{(safeT as any)?.comprovantesEnvioDesc || 'Escolha um dos 5 modelos, selecione o canal e gere a mensagem para copiar ou abrir diretamente.'}</p>
+                  {/* 5 modelos */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+                    {([1, 2, 3, 4, 5] as const).map(id => (
+                      <button type="button" key={id} onClick={() => setEnvioForm(f => ({ ...f, templateId: id }))} style={{ textAlign: 'left', padding: '14px', borderRadius: '10px', border: envioForm.templateId === id ? '2px solid #00ff00' : '1px solid #444', background: envioForm.templateId === id ? 'rgba(0,255,0,0.12)' : '#252525', color: '#fff', cursor: 'pointer' }}>
+                        <div style={{ fontWeight: 700, color: '#00ff00', marginBottom: '4px' }}>{(safeT as any)?.[`comprovantesModelo${id}`] || `Modelo ${id}`}</div>
+                        <div style={{ fontSize: '12px', color: '#999' }}>{(safeT as any)?.[`comprovantesModelo${id}Desc`] || ''}</div>
+                      </button>
+                    ))}
+                  </div>
+                  {/* Técnico (opcional) */}
+                  <div style={{ marginBottom: '20px', padding: '16px', background: '#252525', borderRadius: '10px', border: '1px solid #333' }}>
+                    <div style={{ color: '#00ff00', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>{(safeT as any)?.comprovantesTecnicoOpcional || 'Técnico (opcional)'}</div>
+                    <select value={envioForm.tecnicoId} onChange={e => setEnvioForm(f => ({ ...f, tecnicoId: e.target.value }))} style={{ width: '100%', padding: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }}>
+                      <option value="">{(safeT as any)?.comprovantesNenhumTecnico || 'Nenhum técnico selecionado'}</option>
+                      {tecnicos.map(t => (<option key={t.id} value={t.id}>{t.name}{t.email ? ` (${t.email})` : ''}</option>))}
+                    </select>
+                  </div>
+                  {/* Canais */}
+                  <div style={{ marginBottom: '20px', padding: '16px', background: '#252525', borderRadius: '10px', border: '1px solid #333' }}>
+                    <div style={{ color: '#00ff00', fontSize: '13px', fontWeight: 600, marginBottom: '12px' }}>{(safeT as any)?.comprovantesEnviarPor || 'Enviar por'}</div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', cursor: 'pointer', color: '#ccc' }}>
+                      <input type="checkbox" checked={envioForm.whatsapp} onChange={e => setEnvioForm(f => ({ ...f, whatsapp: e.target.checked }))} />
+                      {(safeT as any)?.comprovantesCanalWhatsApp || 'WhatsApp'}
+                    </label>
+                    {envioForm.whatsapp && (
+                      <input type="text" placeholder={(safeT as any)?.comprovantesTelefone || 'Telefone (ex: 351912345678)'} value={envioForm.telefone} onChange={e => setEnvioForm(f => ({ ...f, telefone: e.target.value }))} style={{ width: '100%', padding: '10px', marginTop: '6px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
+                    )}
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', cursor: 'pointer', color: '#ccc' }}>
+                      <input type="checkbox" checked={envioForm.email} onChange={e => setEnvioForm(f => ({ ...f, email: e.target.checked }))} />
+                      {(safeT as any)?.comprovantesCanalEmail || 'Email'}
+                    </label>
+                    {envioForm.email && (
+                      <input type="email" placeholder={(safeT as any)?.comprovantesEmailDestino || 'Email do destinatário'} value={envioForm.emailDestino} onChange={e => setEnvioForm(f => ({ ...f, emailDestino: e.target.value }))} style={{ width: '100%', padding: '10px', marginTop: '6px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
+                    )}
+                  </div>
+                  {/* Preview */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ color: '#00ff00', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>{(safeT as any)?.comprovantesPreview || 'Pré-visualização da mensagem'}</div>
+                    <textarea readOnly value={mensagemEnvio} rows={8} style={{ width: '100%', padding: '12px', background: '#141414', border: '1px solid #333', borderRadius: '8px', color: '#ccc', fontSize: '13px', resize: 'vertical', fontFamily: 'inherit' }} />
+                  </div>
+                  {/* Ações */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <button type="button" onClick={() => setShowEnvioModal(false)} style={{ padding: '10px 18px', background: 'transparent', border: '1px solid #666', borderRadius: '8px', color: '#ccc', cursor: 'pointer' }}>Fechar</button>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                      <button type="button" onClick={handleGerarPDF} style={{ padding: '10px 18px', background: 'rgba(0,255,0,0.15)', border: '1px solid #00ff00', borderRadius: '8px', color: '#00ff00', fontWeight: 600, cursor: 'pointer' }}>📄 {(safeT as any)?.comprovantesGerarPDF || 'Gerar PDF'}</button>
+                      <button type="button" onClick={handleCopiarEnvio} style={{ padding: '10px 18px', background: 'rgba(0,255,0,0.2)', border: '1px solid #00ff00', borderRadius: '8px', color: '#00ff00', fontWeight: 600, cursor: 'pointer' }}>{(safeT as any)?.comprovantesCopiar || 'Copiar mensagem'}</button>
+                      {envioForm.whatsapp && <button type="button" onClick={handleAbrirWhatsApp} style={{ padding: '10px 18px', background: 'rgba(37,211,102,0.2)', border: '1px solid #25d366', borderRadius: '8px', color: '#25d366', fontWeight: 600, cursor: 'pointer' }}>{(safeT as any)?.comprovantesAbrirWhatsApp || 'Abrir WhatsApp'}</button>}
+                      {envioForm.email && <button type="button" onClick={handleAbrirEmail} style={{ padding: '10px 18px', background: 'rgba(0,150,255,0.2)', border: '1px solid #0096ff', borderRadius: '8px', color: '#0096ff', fontWeight: 600, cursor: 'pointer' }}>{(safeT as any)?.comprovantesAbrirEmail || 'Abrir cliente de email'}</button>}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -35578,7 +35775,7 @@ A1;Peça exemplo;10'
                     gap: '10px'
                   }}
                 >
-                  📄 {safeT?.comprovantesDespesasTitle || 'Comprovantes de Despesas'}
+                  📄 {safeT?.comprovantesDespesasTitle || 'COMPROVANTES DE DESPESAS'}
                 </button>
                 {/* Botão Clientes Financeiro */}
                 <button
