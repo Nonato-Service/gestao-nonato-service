@@ -40198,12 +40198,14 @@ A1;Peça exemplo;10'
   }
 
   return (
-    <div className="app-layout" style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#000', color: '#fff', paddingBottom: openTabs.length > 0 ? '54px' : '0', paddingTop: isDemoMode ? '50px' : 0 }}>
-      {isDemoMode && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '10px 20px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '2px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', fontSize: '14px', textAlign: 'center' }}>
-          🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Sem exportação nem backup
-        </div>
-      )}
+    <div className="app-layout" style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#000', color: '#fff', paddingBottom: openTabs.length > 0 ? '54px' : '0', paddingTop: '48px' }}>
+      {/* Barra superior: em modo demo mostra aviso; sempre mostra atalho para Administrador / Backup */}
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '8px 16px', background: isDemoMode ? 'rgba(0, 255, 0, 0.15)' : 'rgba(0, 255, 0, 0.08)', borderBottom: '1px solid rgba(0, 255, 0, 0.4)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
+        {isDemoMode && <span>🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Sem exportação nem backup</span>}
+        <button type="button" onClick={() => { handleButtonClick('open-administrador'); setTimeout(() => document.getElementById('admin-backup-seguranca')?.scrollIntoView({ behavior: 'smooth' }), 400); }} style={{ background: 'rgba(0,255,0,0.2)', border: '1px solid rgba(0,255,0,0.6)', color: '#00ff00', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}>
+          🔒 Administrador / Backup
+        </button>
+      </div>
       {/* Sidebar - estilos em globals.css (media queries para mobile) */}
       <div className="sidebar">
         {/* Logo NONATO SERVICE — logo ocupa 100% do contorno verde, borda mantida */}
@@ -41517,55 +41519,59 @@ A1;Peça exemplo;10'
           )}
         </div>
 
-        {/* Botão ADMINISTRADOR - Sempre no final */}
-        {getButtonsByGroup('outros')
-          .filter(button => button.id === 'administrador-default')
-          .sort((a, b) => a.order - b.order)
-          .map((button) => {
-            const isSelected = selectedSidebarButton === button.action
-            return (
-              <button
-                key={button.id}
-                className="btn-administrador"
-                onClick={() => handleButtonClick(button.action)}
-                style={{ 
-                  width: '100%', 
-                  textAlign: 'left', 
-                  padding: '12px', 
-                  marginTop: 'auto',
-                  marginBottom: '20px',
-                  backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.3)' : undefined,
-                  borderColor: isSelected ? '#00ff00' : undefined,
-                  borderWidth: isSelected ? '2px' : undefined,
-                  boxShadow: isSelected ? '0 0 15px rgba(0, 255, 0, 0.6), 0 0 30px rgba(0, 255, 0, 0.4)' : undefined,
-                  color: isSelected ? '#00ff00' : undefined,
-                  fontWeight: isSelected ? 'bold' : undefined,
-                  transform: isSelected ? 'scale(1.02)' : undefined,
-                  transition: 'all 0.3s ease',
-                  position: 'relative'
-                }}
-              >
-                {isSelected && (
-                  <span style={{
-                    position: 'absolute',
-                    top: '8px',
-                    right: '30px',
-                    fontSize: '16px',
-                    color: '#00ff00',
-                    fontWeight: 'bold'
-                  }}>✓</span>
-                )}
-                <span style={{ 
-                  display: 'inline-block', 
-                  marginRight: '8px',
-                  animation: 'lockPulse 2s ease-in-out infinite'
-                }}>
-                  🔒
-                </span>
-                {getButtonName(button)}
-              </button>
-            )
-          })}
+        {/* Botão ADMINISTRADOR - Sempre visível no final (fallback se a lista estiver vazia após deploy) */}
+        {(() => {
+          const adminBtn = getButtonsByGroup('outros').find(b => b.id === 'administrador-default') || {
+            id: 'administrador-default',
+            name: 'ADMINISTRADOR',
+            action: 'open-administrador',
+            order: 9999,
+            translationKey: 'administrador'
+          }
+          const isSelected = selectedSidebarButton === adminBtn.action
+          return (
+            <button
+              key={adminBtn.id}
+              className="btn-administrador"
+              onClick={() => handleButtonClick(adminBtn.action)}
+              style={{ 
+                width: '100%', 
+                textAlign: 'left', 
+                padding: '12px', 
+                marginTop: 'auto',
+                marginBottom: '20px',
+                backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.3)' : undefined,
+                borderColor: isSelected ? '#00ff00' : undefined,
+                borderWidth: isSelected ? '2px' : undefined,
+                boxShadow: isSelected ? '0 0 15px rgba(0, 255, 0, 0.6), 0 0 30px rgba(0, 255, 0, 0.4)' : undefined,
+                color: isSelected ? '#00ff00' : undefined,
+                fontWeight: isSelected ? 'bold' : undefined,
+                transform: isSelected ? 'scale(1.02)' : undefined,
+                transition: 'all 0.3s ease',
+                position: 'relative'
+              }}
+            >
+              {isSelected && (
+                <span style={{
+                  position: 'absolute',
+                  top: '8px',
+                  right: '30px',
+                  fontSize: '16px',
+                  color: '#00ff00',
+                  fontWeight: 'bold'
+                }}>✓</span>
+              )}
+              <span style={{ 
+                display: 'inline-block', 
+                marginRight: '8px',
+                animation: 'lockPulse 2s ease-in-out infinite'
+              }}>
+                🔒
+              </span>
+              {getButtonName(adminBtn)}
+            </button>
+          )
+        })()}
 
         {/* Botão Sair do Sistema - fixo no rodapé da sidebar */}
         <button
