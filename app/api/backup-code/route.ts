@@ -2,23 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 import { getDemoContext } from '../data/demo-context'
+import { getProjectRoot } from './project-root'
 
 export const runtime = 'nodejs'
-
-// Raiz do projeto: partir do diretório desta rota e subir até encontrar package.json + app
-function getProjectRoot(): string {
-  let dir = typeof __dirname !== 'undefined' ? __dirname : path.resolve(process.cwd())
-  dir = path.resolve(dir)
-  for (let i = 0; i < 10; i++) {
-    if (fs.existsSync(path.join(dir, 'package.json')) && fs.existsSync(path.join(dir, 'app'))) {
-      return dir
-    }
-    const parent = path.join(dir, '..')
-    if (parent === dir) break
-    dir = parent
-  }
-  return path.resolve(process.cwd())
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,6 +22,20 @@ export async function POST(request: NextRequest) {
 
     console.log('[backup-code] Raiz do projeto:', projectRoot)
     console.log('[backup-code] Pasta de backups:', path.resolve(backupsBase))
+
+    // Ficheiro de diagnóstico: onde o backup está a ser gravado (na raiz do projeto)
+    try {
+      const diagnosticPath = path.join(projectRoot, 'backups', 'ONDE-GUARDAMOS-BACKUPS.txt')
+      const diagnosticDir = path.dirname(diagnosticPath)
+      if (!fs.existsSync(diagnosticDir)) {
+        fs.mkdirSync(diagnosticDir, { recursive: true })
+      }
+      fs.writeFileSync(
+        diagnosticPath,
+        'Pasta onde os backups do código são guardados:\n' + path.resolve(backupsBase) + '\n\nRaiz do projeto detectada: ' + projectRoot + '\nData: ' + new Date().toISOString(),
+        'utf-8'
+      )
+    } catch (_) {}
 
     // Criar diretório de backup (garantir que a pasta backups existe)
     try {
@@ -126,6 +126,19 @@ export async function POST(request: NextRequest) {
         }
       }
     })
+
+    // Se nenhum ficheiro de código foi copiado, a raiz do projeto está errada
+    if (backedUpFiles.length === 0) {
+      try {
+        fs.rmSync(backupDir, { recursive: true, force: true })
+      } catch (_) {}
+      return NextResponse.json(
+        {
+          error: 'Nenhum ficheiro foi copiado. A pasta "app" não foi encontrada na raiz usada. Raiz do projeto: ' + projectRoot + ' — Verifique se está a correr o servidor a partir da pasta do projeto (ex: npm run dev na pasta gestao-tecnica-nonato-service).'
+        },
+        { status: 500 }
+      )
+    }
 
     // Fazer backup do histórico de comandos
     const historyDir = path.join(backupDir, '_command-history')

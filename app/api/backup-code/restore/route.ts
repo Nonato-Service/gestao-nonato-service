@@ -2,18 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 import { getDemoContext } from '../../data/demo-context'
-
-function getProjectRoot(): string {
-  const cwd = path.resolve(process.cwd())
-  if (fs.existsSync(path.join(cwd, 'package.json'))) {
-    return cwd
-  }
-  const parent = path.join(cwd, '..')
-  if (parent !== cwd && fs.existsSync(path.join(parent, 'package.json'))) {
-    return parent
-  }
-  return cwd
-}
+import { getProjectRoot } from '../project-root'
 
 const itemsToRestore = [
   'app',

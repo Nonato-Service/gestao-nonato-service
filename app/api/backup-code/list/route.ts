@@ -2,18 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 import { getDemoContext } from '../../data/demo-context'
-
-function getProjectRoot(): string {
-  const cwd = path.resolve(process.cwd())
-  if (fs.existsSync(path.join(cwd, 'package.json'))) {
-    return cwd
-  }
-  const parent = path.join(cwd, '..')
-  if (parent !== cwd && fs.existsSync(path.join(parent, 'package.json'))) {
-    return parent
-  }
-  return cwd
-}
+import { getProjectRoot } from '../project-root'
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,9 +12,10 @@ export async function GET(request: NextRequest) {
     }
     const projectRoot = getProjectRoot()
     const backupsDir = path.join(projectRoot, 'backups')
+    const backupsFolder = path.resolve(backupsDir)
 
     if (!fs.existsSync(backupsDir)) {
-      return NextResponse.json({ backups: [] })
+      return NextResponse.json({ backups: [], backupsFolder })
     }
 
     const backups = fs.readdirSync(backupsDir)
@@ -54,7 +44,10 @@ export async function GET(request: NextRequest) {
       })
       .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime())
 
-    return NextResponse.json({ backups })
+    return NextResponse.json({
+      backups,
+      backupsFolder
+    })
   } catch (error: any) {
     return NextResponse.json(
       { error: 'Erro ao listar backups: ' + error.message },

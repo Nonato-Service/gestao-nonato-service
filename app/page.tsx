@@ -738,6 +738,7 @@ export default function Dashboard() {
   const [checklistAccessStep, setChecklistAccessStep] = useState<'message' | 'password'>('message')
   const [checklistAccessPasswordInput, setChecklistAccessPasswordInput] = useState('')
   const [codeBackups, setCodeBackups] = useState<Array<{ path: string; timestamp: string; filesCount: number }>>([])
+  const [codeBackupsFolder, setCodeBackupsFolder] = useState<string>('')
   const [loadingBackups, setLoadingBackups] = useState(false)
   const [isDemoMode, setIsDemoMode] = useState(false)
   const [demoExpired, setDemoExpired] = useState(false)
@@ -6154,6 +6155,7 @@ export default function Dashboard() {
       const result = await response.json()
       if (response.ok) {
         setCodeBackups(result.backups || [])
+        setCodeBackupsFolder(result.backupsFolder || '')
       } else {
         // Se a API não existir, tentar carregar do localStorage
         const localBackups = JSON.parse(localStorage.getItem('nonato-code-backups') || '[]')
@@ -15543,6 +15545,11 @@ const nextF = familias.filter(x => x !== f)
               </div>
             </div>
 
+            {/* Atalho para Backup e segurança */}
+            <p style={{ marginBottom: '20px', fontSize: '13px', opacity: 0.9 }}>
+              <a href="#admin-backup-seguranca" style={{ color: '#00ff00', textDecoration: 'underline' }}>{safeT?.backupRestore || '▼ Ir para BACKUP E SEGURANÇA (backup do código e restauração)'}</a>
+            </p>
+
             {/* SEÇÃO: CONTROLE DE ENVIO DO LINK PARA TESTE - Primeira secção para maior visibilidade */}
             <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', borderLeft: '4px solid #66b3ff' }}>
               <h3 style={{ color: '#66b3ff', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(102, 179, 255, 0.3)', paddingBottom: '10px' }}>
@@ -16683,18 +16690,21 @@ const nextF = familias.filter(x => x !== f)
               </div>
             </div>
 
-            {/* SEÇÃO 5: BACKUP E SEGURANÇA - Oculto no modo DEMO */}
-            {!isDemoMode && (
-            <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            {/* SEÇÃO 5: BACKUP E SEGURANÇA - Sempre visível; em modo DEMO mostra aviso */}
+            <div id="admin-backup-seguranca" style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
                 {safeT?.backupRestore || 'BACKUP E SEGURANÇA'}
               </h3>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              {isDemoMode && (
+                <p style={{ padding: '12px', marginBottom: '15px', backgroundColor: 'rgba(255, 165, 0, 0.15)', border: '1px solid rgba(255, 165, 0, 0.4)', borderRadius: '6px', color: '#ffa500', fontSize: '13px' }}>
+                  Em modo demonstração o backup e restauração do código estão desativados. Para usar backup, abra a aplicação fora do link de demonstração.
+                </p>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', opacity: isDemoMode ? 0.7 : 1, pointerEvents: isDemoMode ? 'none' : 'auto' }}>
                 <div style={{ padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupTitle || 'Backup Completo do Sistema'}</strong>
                   <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>{safeT?.backupDescription || 'Crie um backup completo de todos os dados do sistema'}</p>
-                  <button className="btn-primary" onClick={handleCreateBackup} style={{ padding: '8px 15px' }}>
+                  <button className="btn-primary" onClick={handleCreateBackup} style={{ padding: '8px 15px' }} disabled={isDemoMode}>
                     {safeT?.createBackup || 'Criar Backup'}
                   </button>
                 </div>
@@ -16702,7 +16712,7 @@ const nextF = familias.filter(x => x !== f)
                 <div style={{ padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupCodigoTitle || 'Backup do Código do Programa'}</strong>
                   <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>{safeT?.backupCodigoDescription || 'Faça backup de TODOS os arquivos do código fonte do programa'}</p>
-                  <button className="btn-primary" onClick={handleBackupCodigo} style={{ padding: '8px 15px', marginBottom: '10px' }}>
+                  <button className="btn-primary" onClick={handleBackupCodigo} style={{ padding: '8px 15px', marginBottom: '10px' }} disabled={isDemoMode}>
                     {safeT?.backupCodigoButton || 'Fazer Backup do Código'}
                   </button>
                 </div>
@@ -16712,7 +16722,11 @@ const nextF = familias.filter(x => x !== f)
                   <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>
                     {safeT?.restoreCodeDescription || 'Restaure o código do programa a partir de um backup anterior. Esta operação substituirá TODOS os arquivos atuais pelos arquivos do backup selecionado.'}
                   </p>
-                  
+                  <p style={{ fontSize: '12px', marginBottom: '12px', padding: '8px 10px', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '4px', border: '1px solid rgba(255,165,0,0.2)' }}>
+                    <strong style={{ color: '#ffa500' }}>Pasta onde os backups estão guardados:</strong>
+                    <br />
+                    <span style={{ wordBreak: 'break-all', opacity: 0.95 }}>{codeBackupsFolder || (isDemoMode ? 'Em modo demonstração o backup está desativado.' : (loadingBackups ? 'A carregar…' : 'Clique em «Atualizar Lista» para ver o caminho.'))}</span>
+                  </p>
                   {loadingBackups ? (
                     <p style={{ fontSize: '12px', opacity: 0.7, padding: '10px', textAlign: 'center' }}>{safeT?.loadingBackups || 'Carregando backups...'}</p>
                   ) : codeBackups.length === 0 ? (
@@ -16746,6 +16760,7 @@ const nextF = familias.filter(x => x !== f)
                           <button
                             className="btn-primary"
                             onClick={() => handleRestoreCodigo(backup.path)}
+                            disabled={isDemoMode}
                             style={{ 
                               padding: '8px 16px', 
                               fontSize: '12px', 
@@ -16766,13 +16781,13 @@ const nextF = familias.filter(x => x !== f)
                     className="btn-primary" 
                     onClick={loadCodeBackups} 
                     style={{ padding: '6px 12px', fontSize: '11px', opacity: 0.8 }}
+                    disabled={isDemoMode}
                   >
                     {safeT?.updateListButton || '🔄 Atualizar Lista'}
                   </button>
                 </div>
               </div>
             </div>
-            )}
           </div>
         )
       
@@ -42912,18 +42927,21 @@ A1;Peça exemplo;10'
               )}
             </div>
 
-            {/* SEÇÃO 5: BACKUP E SEGURANÇA - Oculto no modo DEMO */}
-            {!isDemoMode && (
+            {/* SEÇÃO 5: BACKUP E SEGURANÇA */}
             <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
                 {safeT?.backupRestore || 'BACKUP E SEGURANÇA'}
               </h3>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              {isDemoMode && (
+                <p style={{ padding: '12px', marginBottom: '15px', backgroundColor: 'rgba(255, 165, 0, 0.15)', border: '1px solid rgba(255, 165, 0, 0.4)', borderRadius: '6px', color: '#ffa500', fontSize: '13px' }}>
+                  Em modo demonstração o backup está desativado.
+                </p>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', opacity: isDemoMode ? 0.7 : 1, pointerEvents: isDemoMode ? 'none' : 'auto' }}>
                 <div style={{ padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupTitle || 'Backup Completo do Sistema'}</strong>
                   <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>{safeT?.backupDescription || 'Crie um backup completo de todos os dados do sistema'}</p>
-                  <button className="btn-primary" onClick={handleCreateBackup} style={{ padding: '8px 15px' }}>
+                  <button className="btn-primary" onClick={handleCreateBackup} style={{ padding: '8px 15px' }} disabled={isDemoMode}>
                     {safeT?.createBackup || 'Criar Backup'}
                   </button>
                 </div>
@@ -42931,13 +42949,13 @@ A1;Peça exemplo;10'
                 <div style={{ padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupCodigoTitle || 'Backup do Código do Programa'}</strong>
                   <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>{safeT?.backupCodigoDescription || 'Faça backup de TODOS os arquivos do código fonte do programa'}</p>
-                  <button className="btn-primary" onClick={handleBackupCodigo} style={{ padding: '8px 15px' }}>
+                  <p style={{ fontSize: '12px', marginBottom: '8px', opacity: 0.8 }}><strong>Pasta dos backups:</strong> {codeBackupsFolder || (isDemoMode ? '—' : 'Atualize a lista.')}</p>
+                  <button className="btn-primary" onClick={handleBackupCodigo} style={{ padding: '8px 15px' }} disabled={isDemoMode}>
                     {safeT?.backupCodigoButton || 'Fazer Backup do Código'}
                   </button>
                 </div>
               </div>
             </div>
-            )}
 
             <button className="btn-primary" onClick={() => setShowModal(false)} style={{ width: '100%', padding: '12px', marginTop: '20px' }}>
               {safeT?.close || 'Fechar'}
