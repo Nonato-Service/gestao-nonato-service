@@ -1485,7 +1485,7 @@ export default function Dashboard() {
               }}
               style={{
                 padding: '10px',
-                backgroundColor: '#2a2a2a',
+                backgroundColor: '#222222',
                 border: '2px solid rgba(0, 255, 0, 0.3)',
                 borderRadius: '6px',
                 color: '#fff',
@@ -1523,7 +1523,7 @@ export default function Dashboard() {
               }}
               style={{
                 padding: '10px',
-                backgroundColor: '#2a2a2a',
+                backgroundColor: '#222222',
                 border: '2px solid rgba(0, 255, 0, 0.3)',
                 borderRadius: '6px',
                 color: '#fff',
@@ -1554,7 +1554,7 @@ export default function Dashboard() {
                   {gestoresDisponiveis.map(g => (
                     <div key={g.id} style={{ 
                       padding: '6px 10px', 
-                      backgroundColor: g.id === remetenteId ? 'rgba(0, 100, 255, 0.2)' : '#1a1a1a',
+                      backgroundColor: g.id === remetenteId ? 'rgba(0, 100, 255, 0.2)' : '#141414',
                       borderRadius: '4px',
                       fontSize: '12px',
                       border: g.id === remetenteId ? '1px solid rgba(0, 100, 255, 0.5)' : '1px solid rgba(0, 100, 255, 0.2)'
@@ -1592,7 +1592,7 @@ export default function Dashboard() {
               }}
               style={{
                 padding: '10px',
-                backgroundColor: '#2a2a2a',
+                backgroundColor: '#222222',
                 border: '2px solid rgba(0, 255, 0, 0.3)',
                 borderRadius: '6px',
                 color: '#fff',
@@ -1619,7 +1619,7 @@ export default function Dashboard() {
                 onChange={(e) => setDestinatarioId(e.target.value)}
                 style={{
                   padding: '10px',
-                  backgroundColor: '#2a2a2a',
+                  backgroundColor: '#222222',
                   border: '2px solid rgba(0, 255, 0, 0.3)',
                   borderRadius: '6px',
                   color: '#fff',
@@ -1650,7 +1650,7 @@ export default function Dashboard() {
                     {tecnicosDisponiveis.map(t => (
                       <div key={t.id} style={{ 
                         padding: '6px 10px', 
-                        backgroundColor: t.id === destinatarioId ? (destinatarioTipo === 'interno' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 165, 0, 0.2)') : '#1a1a1a',
+                        backgroundColor: t.id === destinatarioId ? (destinatarioTipo === 'interno' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 165, 0, 0.2)') : '#141414',
                         borderRadius: '4px',
                         fontSize: '12px',
                         border: t.id === destinatarioId ? `1px solid ${destinatarioTipo === 'interno' ? 'rgba(0, 255, 0, 0.5)' : 'rgba(255, 165, 0, 0.5)'}` : `1px solid ${destinatarioTipo === 'interno' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 165, 0, 0.2)'}`
@@ -1669,7 +1669,7 @@ export default function Dashboard() {
             </div>
           )}
           {destinatarioTipo === 'armazem' && (
-            <div style={{ padding: '10px', backgroundColor: '#2a2a2a', borderRadius: '6px', color: '#ccc', textAlign: 'center' }}>
+            <div style={{ padding: '10px', backgroundColor: '#222222', borderRadius: '6px', color: '#ccc', textAlign: 'center' }}>
               {safeT?.armazem || 'Armazém'}
             </div>
           )}
@@ -1687,7 +1687,7 @@ export default function Dashboard() {
             placeholder={safeT?.assunto || 'Assunto'}
             style={{
               padding: '10px',
-              backgroundColor: '#2a2a2a',
+              backgroundColor: '#222222',
               border: '1px solid rgba(0, 255, 0, 0.3)',
               borderRadius: '4px',
               color: '#fff',
@@ -1731,7 +1731,7 @@ export default function Dashboard() {
             onChange={(e) => onFiltroChange(e.target.value as any)}
             style={{
               padding: '8px',
-              backgroundColor: '#2a2a2a',
+              backgroundColor: '#222222',
               border: '1px solid rgba(0, 255, 0, 0.3)',
               borderRadius: '4px',
               color: '#fff'
@@ -1754,7 +1754,7 @@ export default function Dashboard() {
                 key={mensagem.id}
                 style={{
                   padding: '20px',
-                  backgroundColor: mensagem.lida ? '#1a1a1a' : 'rgba(0, 100, 255, 0.1)',
+                  backgroundColor: mensagem.lida ? '#141414' : 'rgba(0, 100, 255, 0.1)',
                   border: `2px solid ${mensagem.lida ? 'rgba(0, 100, 255, 0.2)' : '#66b3ff'}`,
                   borderRadius: '8px',
                   position: 'relative'
@@ -1803,7 +1803,7 @@ export default function Dashboard() {
                           alignItems: 'center',
                           gap: '10px',
                           padding: '8px',
-                          backgroundColor: '#1a1a1a',
+                          backgroundColor: '#141414',
                           borderRadius: '4px',
                           border: '1px solid rgba(0, 100, 255, 0.2)'
                         }}>
@@ -2018,7 +2018,7 @@ export default function Dashboard() {
               }}
               style={{
                 padding: '8px',
-                backgroundColor: '#2a2a2a',
+                backgroundColor: '#222222',
                 border: '1px solid rgba(0, 255, 0, 0.3)',
                 borderRadius: '4px',
                 color: '#fff',
@@ -2037,7 +2037,7 @@ export default function Dashboard() {
                 }}
                 style={{
                   padding: '8px',
-                  backgroundColor: '#2a2a2a',
+                  backgroundColor: '#222222',
                   border: '1px solid rgba(0, 255, 0, 0.3)',
                   borderRadius: '4px',
                   color: '#fff',
@@ -2055,7 +2055,7 @@ export default function Dashboard() {
               onChange={(e) => setDestinatarioId(e.target.value)}
               style={{
                 padding: '8px',
-                backgroundColor: '#2a2a2a',
+                backgroundColor: '#222222',
                 border: '1px solid rgba(0, 255, 0, 0.3)',
                 borderRadius: '4px',
                 color: '#fff',
@@ -2071,7 +2071,7 @@ export default function Dashboard() {
             </select>
           )}
           {tipoDestinatario === 'armazem' && (
-            <div style={{ padding: '8px', backgroundColor: '#2a2a2a', borderRadius: '4px', color: '#ccc' }}>
+            <div style={{ padding: '8px', backgroundColor: '#222222', borderRadius: '4px', color: '#ccc' }}>
               {safeT?.armazem || 'Armazém'}
             </div>
           )}
@@ -2089,7 +2089,7 @@ export default function Dashboard() {
             placeholder={safeT?.assunto || 'Assunto'}
             style={{
               padding: '10px',
-              backgroundColor: '#2a2a2a',
+              backgroundColor: '#222222',
               border: '1px solid rgba(0, 255, 0, 0.3)',
               borderRadius: '4px',
               color: '#fff',
@@ -2110,7 +2110,7 @@ export default function Dashboard() {
             rows={8}
             style={{
               padding: '10px',
-              backgroundColor: '#2a2a2a',
+              backgroundColor: '#222222',
               border: '1px solid rgba(0, 255, 0, 0.3)',
               borderRadius: '4px',
               color: '#fff',
@@ -2173,7 +2173,7 @@ export default function Dashboard() {
                 key={mensagem.id}
                 style={{
                   padding: '20px',
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   border: '2px solid rgba(0, 100, 255, 0.2)',
                   borderRadius: '8px'
                 }}
@@ -2212,7 +2212,7 @@ export default function Dashboard() {
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            backgroundColor: '#2a2a2a',
+            backgroundColor: '#222222',
             borderColor: '#00ff00'
           }}
           title={safeT?.voltar || 'Voltar'}
@@ -2230,7 +2230,7 @@ export default function Dashboard() {
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            backgroundColor: '#2a2a2a',
+            backgroundColor: '#222222',
             borderColor: 'rgba(0, 255, 0, 0.5)'
           }}
           title={safeT?.paginaInicial || 'Página Inicial'}
@@ -14294,7 +14294,7 @@ export default function Dashboard() {
           display: 'flex',
           gap: 0,
           minHeight: '420px',
-          backgroundColor: '#1a1a1a',
+          backgroundColor: '#141414',
           borderRadius: '12px',
           border: '1px solid rgba(0, 255, 0, 0.2)',
           overflow: 'hidden'
@@ -14859,7 +14859,7 @@ const nextF = familias.filter(x => x !== f)
                   reader.readAsDataURL(file)
                 }
                 const removeImagem = (id: string) => updateModelo({ imagens: imagens.filter(i => i.id !== id) })
-                const cardStyle = { background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.2)', borderRadius: '10px', padding: '14px 16px', marginBottom: '14px' }
+                const cardStyle = { background: '#141414', border: '1px solid rgba(0,255,0,0.2)', borderRadius: '10px', padding: '14px 16px', marginBottom: '14px' }
                 const sectionTitle = { fontSize: '12px', fontWeight: 700, color: '#00ff00', marginBottom: '10px', letterSpacing: '0.5px', textTransform: 'uppercase' as const }
                 return (
                   <>
@@ -15185,7 +15185,7 @@ const nextF = familias.filter(x => x !== f)
                       onChange={(e) => setFiltroAreaGestor(e.target.value)}
                       style={{
                         padding: '8px 12px',
-                        backgroundColor: '#2a2a2a',
+                        backgroundColor: '#222222',
                         color: '#fff',
                         border: '1px solid rgba(0, 255, 0, 0.3)',
                         borderRadius: '4px',
@@ -15202,27 +15202,27 @@ const nextF = familias.filter(x => x !== f)
                 </div>
                 
                 {showGestorForm && !editingGestor && (
-                  <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#1a1a1a' }}>
+                  <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414' }}>
                     <h3 style={{ marginBottom: '15px' }}>{safeT?.addGestor || 'Adicionar Gestor'}</h3>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.name || 'Nome'}</label>
-                      <input type="text" value={gestorForm.name} onChange={(e) => setGestorForm({ ...gestorForm, name: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                      <input type="text" value={gestorForm.name} onChange={(e) => setGestorForm({ ...gestorForm, name: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'}</label>
-                      <input type="email" value={gestorForm.email} onChange={(e) => setGestorForm({ ...gestorForm, email: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                      <input type="email" value={gestorForm.email} onChange={(e) => setGestorForm({ ...gestorForm, email: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.phone || 'Telefone'}</label>
-                      <input type="text" value={gestorForm.phone} onChange={(e) => setGestorForm({ ...gestorForm, phone: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                      <input type="text" value={gestorForm.phone} onChange={(e) => setGestorForm({ ...gestorForm, phone: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.address || 'Endereço'}</label>
-                      <input type="text" value={gestorForm.address} onChange={(e) => setGestorForm({ ...gestorForm, address: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                      <input type="text" value={gestorForm.address} onChange={(e) => setGestorForm({ ...gestorForm, address: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.areaAtuacao || 'Área de Atuação'}</label>
-                      <select value={gestorForm.area} onChange={(e) => setGestorForm({ ...gestorForm, area: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}>
+                      <select value={gestorForm.area} onChange={(e) => setGestorForm({ ...gestorForm, area: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}>
                         {tiposGestores.sort((a, b) => a.ordem - b.ordem).map(tipo => (
                           <option key={tipo.id} value={tipo.id}>{tipo.icone} {tipo.nome}</option>
                         ))}
@@ -15239,7 +15239,7 @@ const nextF = familias.filter(x => x !== f)
                           }
                           reader.readAsDataURL(file)
                         }
-                      }} style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                      }} style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
                       <button className="btn-primary" onClick={handleSaveGestor} style={{ flex: 1 }}>
@@ -15265,7 +15265,7 @@ const nextF = familias.filter(x => x !== f)
                     {gestores
                       .filter(gestor => filtroAreaGestor === 'todas' || gestor.area === filtroAreaGestor)
                       .map(gestor => (
-                      <div key={gestor.id} style={{ padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                      <div key={gestor.id} style={{ padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                         {gestor.photo && (
                           <img src={gestor.photo} alt={gestor.name} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
                         )}
@@ -15393,27 +15393,27 @@ const nextF = familias.filter(x => x !== f)
                 </button>
                 
                 {showTecnicoForm && (
-                  <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#1a1a1a' }}>
+                  <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414' }}>
                     <h3 style={{ marginBottom: '15px' }}>{editingTecnico ? (safeT?.editTecnico || 'Editar Técnico') : (safeT?.addTecnico || 'Adicionar Técnico')}</h3>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.name || 'Nome'}</label>
-                      <input type="text" value={tecnicoForm.name} onChange={(e) => setTecnicoForm({ ...tecnicoForm, name: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                      <input type="text" value={tecnicoForm.name} onChange={(e) => setTecnicoForm({ ...tecnicoForm, name: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'}</label>
-                      <input type="email" value={tecnicoForm.email} onChange={(e) => setTecnicoForm({ ...tecnicoForm, email: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                      <input type="email" value={tecnicoForm.email} onChange={(e) => setTecnicoForm({ ...tecnicoForm, email: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.phone || 'Telefone'}</label>
-                      <input type="text" value={tecnicoForm.phone} onChange={(e) => setTecnicoForm({ ...tecnicoForm, phone: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                      <input type="text" value={tecnicoForm.phone} onChange={(e) => setTecnicoForm({ ...tecnicoForm, phone: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.address || 'Endereço'}</label>
-                      <input type="text" value={tecnicoForm.address} onChange={(e) => setTecnicoForm({ ...tecnicoForm, address: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                      <input type="text" value={tecnicoForm.address} onChange={(e) => setTecnicoForm({ ...tecnicoForm, address: e.target.value })} style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.type || 'Tipo'}</label>
-                      <select value={tecnicoForm.type} onChange={(e) => setTecnicoForm({ ...tecnicoForm, type: e.target.value as 'internal' | 'external' })} style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}>
+                      <select value={tecnicoForm.type} onChange={(e) => setTecnicoForm({ ...tecnicoForm, type: e.target.value as 'internal' | 'external' })} style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}>
                         <option value="internal">{safeT?.internal || 'Interno'}</option>
                         <option value="external">{safeT?.external || 'Externo'}</option>
                       </select>
@@ -15429,7 +15429,7 @@ const nextF = familias.filter(x => x !== f)
                           }
                           reader.readAsDataURL(file)
                         }
-                      }} style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                      }} style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
                       <button className="btn-primary" onClick={handleSaveTecnico} style={{ flex: 1 }}>
@@ -15468,7 +15468,7 @@ const nextF = familias.filter(x => x !== f)
                   return (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
                       {tecnicosFiltrados.map(tecnico => (
-                        <div key={tecnico.id} style={{ padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                        <div key={tecnico.id} style={{ padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                           {tecnico.photo && (
                             <img src={tecnico.photo} alt={tecnico.name} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
                           )}
@@ -15612,35 +15612,35 @@ const nextF = familias.filter(x => x !== f)
             </p>
 
             {/* SEÇÃO: CONTROLE DE ENVIO DO LINK PARA TESTE - Primeira secção para maior visibilidade */}
-            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', borderLeft: '4px solid #66b3ff' }}>
+            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', borderLeft: '4px solid #66b3ff' }}>
               <h3 style={{ color: '#66b3ff', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(102, 179, 255, 0.3)', paddingBottom: '10px' }}>
                 📤 Controle de Envio do Link para Teste
               </h3>
               <p style={{ fontSize: '13px', opacity: 0.8, marginBottom: '15px' }}>
                 Registe aqui as pessoas a quem enviou o link de demonstração (15 dias, dados isolados).
               </p>
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
                   <input
                     type="text"
                     placeholder="Nome"
                     value={demoLinkForm.nome}
                     onChange={(e) => setDemoLinkForm(f => ({ ...f, nome: e.target.value }))}
-                    style={{ flex: 1, minWidth: '120px', padding: '8px 12px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ flex: 1, minWidth: '120px', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                   <input
                     type="text"
                     placeholder="Email"
                     value={demoLinkForm.email}
                     onChange={(e) => setDemoLinkForm(f => ({ ...f, email: e.target.value }))}
-                    style={{ flex: 1, minWidth: '160px', padding: '8px 12px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ flex: 1, minWidth: '160px', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                   <input
                     type="text"
                     placeholder="Observações (opcional)"
                     value={demoLinkForm.observacoes}
                     onChange={(e) => setDemoLinkForm(f => ({ ...f, observacoes: e.target.value }))}
-                    style={{ flex: 1, minWidth: '160px', padding: '8px 12px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ flex: 1, minWidth: '160px', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -15692,7 +15692,7 @@ const nextF = familias.filter(x => x !== f)
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         padding: '12px',
-                        backgroundColor: '#2a2a2a',
+                        backgroundColor: '#222222',
                         borderRadius: '6px',
                         border: '1px solid rgba(0, 255, 0, 0.1)'
                       }}
@@ -15725,13 +15725,13 @@ const nextF = familias.filter(x => x !== f)
             </div>
             
             {/* SEÇÃO 1: CONFIGURAÇÕES GERAIS */}
-            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
                 {safeT?.configuracoesGerais || 'CONFIGURAÇÕES GERAIS'}
               </h3>
               
               {/* Configuração de Contador de Relatórios */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                 <h4 style={{ color: '#00ff00', marginBottom: '15px', fontSize: '16px' }}>
                   {safeT?.configuracaoRelatorios || 'CONFIGURAÇÃO DE RELATÓRIOS'}
                 </h4>
@@ -15749,13 +15749,13 @@ const nextF = familias.filter(x => x !== f)
                         saveData('nonato-relatorio-contador', novoValor)
                       }}
                       min="1"
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <p style={{ fontSize: '12px', opacity: 0.7, marginTop: '5px' }}>
                       {safeT?.contadorRelatoriosDesc || 'Próximo número será gerado automaticamente no formato: NÚMERO-MÊS/ANO (ex: 123-0126)'}
                     </p>
                   </div>
-                  <div style={{ padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                     <p style={{ fontSize: '12px', marginBottom: '5px', opacity: 0.8 }}>
                       {safeT?.proximoNumero || 'Próximo Número'}
                     </p>
@@ -15772,7 +15772,7 @@ const nextF = familias.filter(x => x !== f)
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
                   <div>
                     <strong style={{ display: 'block', marginBottom: '5px' }}>{safeT?.changeLogo || 'Alterar Logo'}</strong>
                     <span style={{ fontSize: '12px', opacity: 0.7 }}>{safeT?.selectImageOrVideo || 'Selecionar Imagem ou Vídeo MP4'}</span>
@@ -15789,7 +15789,7 @@ const nextF = familias.filter(x => x !== f)
                 </div>
 
                 {logoUrl && (
-                  <div style={{ padding: '12px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+                  <div style={{ padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
                     <strong style={{ display: 'block', marginBottom: '10px' }}>{safeT?.currentLogo || 'Logo Atual'}:</strong>
                     <div style={{ marginBottom: '10px' }}>
                       {logoType === 'video' ? (
@@ -15807,7 +15807,7 @@ const nextF = familias.filter(x => x !== f)
             </div>
 
             {/* SEÇÃO 2: GESTÃO DE USUÁRIOS */}
-            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
                 <h3 style={{ color: '#00ff00', fontSize: '18px', margin: 0 }}>
                   {safeT?.userManagement || 'GESTÃO DE USUÁRIOS'}
@@ -15818,7 +15818,7 @@ const nextF = familias.filter(x => x !== f)
               </div>
               
               {showUserForm && (
-                <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#2a2a2a' }}>
+                <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#222222' }}>
                   <h3 style={{ marginBottom: '15px' }}>{editingUser ? safeT?.editUser : safeT?.addUser}</h3>
                   
                   <div style={{ marginBottom: '15px' }}>
@@ -15827,7 +15827,7 @@ const nextF = familias.filter(x => x !== f)
                       type="text"
                       value={userForm.name}
                       onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -15837,7 +15837,7 @@ const nextF = familias.filter(x => x !== f)
                       type="email"
                       value={userForm.email}
                       onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -15847,7 +15847,7 @@ const nextF = familias.filter(x => x !== f)
                       type="text"
                       value={userForm.role}
                       onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -15860,11 +15860,11 @@ const nextF = familias.filter(x => x !== f)
                       value={userForm.password}
                       onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
                       placeholder={editingUser ? (safeT?.leaveEmptyToKeepPassword || 'Deixe vazio para manter a senha atual') : ''}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
-                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
                       <input
                         type="checkbox"
@@ -15880,7 +15880,7 @@ const nextF = familias.filter(x => x !== f)
                   </div>
                   
                   {!userForm.isAdmin && (
-                    <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                    <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                       <strong style={{ display: 'block', marginBottom: '15px' }}>{safeT?.permissions || 'Permissões'}</strong>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
                         {userForm.permissions && Object.entries(userForm.permissions).map(([key, value]) => (
@@ -15942,7 +15942,7 @@ const nextF = familias.filter(x => x !== f)
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {users.map(user => (
-                    <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
+                    <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
                       <div>
                         <strong style={{ display: 'block', marginBottom: '5px' }}>{user.name}</strong>
                         <span style={{ fontSize: '12px', opacity: 0.7 }}>{user.email} • {user.role}</span>
@@ -15962,7 +15962,7 @@ const nextF = familias.filter(x => x !== f)
             </div>
 
             {/* SEÇÃO 3: CADASTRO DE CLIENTE PRIORITÁRIO */}
-            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(255, 215, 0, 0.2)' }}>
+            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(255, 215, 0, 0.2)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(255, 215, 0, 0.2)', paddingBottom: '10px' }}>
                 <h3 style={{ color: '#ffd700', fontSize: '18px', margin: 0 }}>
                   {safeT?.clientePrioritarioTitle || 'CADASTRO DE CLIENTE PRIORITÁRIO'}
@@ -15986,7 +15986,7 @@ const nextF = familias.filter(x => x !== f)
               </div>
 
               {clientePrioritario && !showClientePrioritarioForm ? (
-                <div style={{ padding: '20px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(255, 215, 0, 0.3)' }}>
+                <div style={{ padding: '20px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(255, 215, 0, 0.3)' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px', marginBottom: '20px' }}>
                     <div>
                       <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.nomeEmpresa || 'Nome da Empresa'}</strong>
@@ -16041,7 +16041,7 @@ const nextF = familias.filter(x => x !== f)
                   </div>
                 </div>
               ) : showClientePrioritarioForm ? (
-                <div style={{ border: '1px solid rgba(255, 215, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#2a2a2a' }}>
+                <div style={{ border: '1px solid rgba(255, 215, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#222222' }}>
                   <h3 style={{ marginBottom: '15px', color: '#ffd700' }}>{editingClientePrioritario ? (safeT?.editClientePrioritario || 'Editar Cliente Prioritário') : (safeT?.addClientePrioritario || 'Adicionar Cliente Prioritário')}</h3>
                   
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
@@ -16052,7 +16052,7 @@ const nextF = familias.filter(x => x !== f)
                         placeholder={safeT?.nomeEmpresa || 'Nome da Empresa'}
                         value={clientePrioritarioForm.nomeEmpresa}
                         onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, nomeEmpresa: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     
@@ -16063,7 +16063,7 @@ const nextF = familias.filter(x => x !== f)
                         placeholder={safeT?.morada || 'Morada'}
                         value={clientePrioritarioForm.morada}
                         onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, morada: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     
@@ -16074,7 +16074,7 @@ const nextF = familias.filter(x => x !== f)
                         placeholder={safeT?.localidade || 'Localidade'}
                         value={clientePrioritarioForm.localidade}
                         onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, localidade: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     
@@ -16085,7 +16085,7 @@ const nextF = familias.filter(x => x !== f)
                         placeholder={safeT?.conselho || 'Conselho'}
                         value={clientePrioritarioForm.conselho}
                         onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, conselho: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     
@@ -16096,7 +16096,7 @@ const nextF = familias.filter(x => x !== f)
                         placeholder={safeT?.pais || 'País'}
                         value={clientePrioritarioForm.pais}
                         onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, pais: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     
@@ -16107,7 +16107,7 @@ const nextF = familias.filter(x => x !== f)
                         placeholder={safeT?.codigoPostal || 'Código Postal'}
                         value={clientePrioritarioForm.codigoPostal}
                         onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, codigoPostal: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     
@@ -16118,7 +16118,7 @@ const nextF = familias.filter(x => x !== f)
                         placeholder={safeT?.freguesia || 'Freguesia'}
                         value={clientePrioritarioForm.freguesia}
                         onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, freguesia: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     
@@ -16129,7 +16129,7 @@ const nextF = familias.filter(x => x !== f)
                         placeholder={safeT?.identificacaoFiscal || 'Identificação Fiscal'}
                         value={clientePrioritarioForm.numeroContribuicaoFiscal}
                         onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, numeroContribuicaoFiscal: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     
@@ -16140,7 +16140,7 @@ const nextF = familias.filter(x => x !== f)
                         placeholder={safeT?.telefones || 'Telefones'}
                         value={clientePrioritarioForm.telefones}
                         onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, telefones: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     
@@ -16151,7 +16151,7 @@ const nextF = familias.filter(x => x !== f)
                         placeholder={safeT?.email || 'E-mail'}
                         value={clientePrioritarioForm.email}
                         onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, email: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     
@@ -16162,7 +16162,7 @@ const nextF = familias.filter(x => x !== f)
                         placeholder={safeT?.contato || 'Contato'}
                         value={clientePrioritarioForm.contato}
                         onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, contato: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     
@@ -16172,7 +16172,7 @@ const nextF = familias.filter(x => x !== f)
                         type="file"
                         accept="image/*"
                         onChange={handleClientePrioritarioPhotoChange}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
                       />
                       {clientePrioritarioForm.photo && (
                         <div style={{ marginTop: '10px' }}>
@@ -16217,7 +16217,7 @@ const nextF = familias.filter(x => x !== f)
             </div>
 
             {/* SEÇÃO 4: ORGANIZAÇÃO DA INTERFACE */}
-            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
                 <h3 style={{ color: '#00ff00', fontSize: '18px', margin: 0 }}>
                   {safeT?.buttonOrganizer || 'ORGANIZAÇÃO DA INTERFACE'}
@@ -16276,7 +16276,7 @@ const nextF = familias.filter(x => x !== f)
                               justifyContent: 'space-between', 
                               alignItems: 'center', 
                               padding: '10px', 
-                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#1a1a1a', 
+                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', 
                               borderRadius: '4px',
                               cursor: 'move',
                               border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
@@ -16333,7 +16333,7 @@ const nextF = familias.filter(x => x !== f)
                               justifyContent: 'space-between', 
                               alignItems: 'center', 
                               padding: '10px', 
-                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#1a1a1a', 
+                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', 
                               borderRadius: '4px',
                               cursor: 'move',
                               border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
@@ -16385,7 +16385,7 @@ const nextF = familias.filter(x => x !== f)
                               handleDropWithGroup(e, targetIndex, 'gestao-custos')
                             }}
                             onDragEnd={handleDragEnd}
-                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#1a1a1a', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}
+                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}
                           >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
                               <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
@@ -16431,7 +16431,7 @@ const nextF = familias.filter(x => x !== f)
                               handleDropWithGroup(e, targetIndex, 'checklist-group')
                             }}
                             onDragEnd={handleDragEnd}
-                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#1a1a1a', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}
+                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}
                           >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
                               <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
@@ -16477,7 +16477,7 @@ const nextF = familias.filter(x => x !== f)
                               handleDropWithGroup(e, targetIndex, 'gestao-financeira')
                             }}
                             onDragEnd={handleDragEnd}
-                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#1a1a1a', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}
+                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}
                           >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
                               <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
@@ -16524,7 +16524,7 @@ const nextF = familias.filter(x => x !== f)
                               justifyContent: 'space-between', 
                               alignItems: 'center', 
                               padding: '10px', 
-                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#1a1a1a', 
+                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', 
                               borderRadius: '4px',
                               cursor: 'move',
                               border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
@@ -16550,7 +16550,7 @@ const nextF = familias.filter(x => x !== f)
             </div>
 
             {/* SEÇÃO 4: GESTOR DE SENHAS */}
-            <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px', display: 'flex', alignItems: 'center' }}>
                 <span className="password-manager-lock">🔒</span>
                 {safeT?.passwordManagerTitle || 'GESTOR DE SENHAS'}
@@ -16574,7 +16574,7 @@ const nextF = familias.filter(x => x !== f)
                 {showPasswordForm && (
                   <div style={{ 
                     padding: '20px', 
-                    backgroundColor: '#2a2a2a', 
+                    backgroundColor: '#222222', 
                     borderRadius: '6px', 
                     border: '1px solid rgba(0, 255, 0, 0.3)',
                     display: 'flex',
@@ -16597,7 +16597,7 @@ const nextF = familias.filter(x => x !== f)
                         style={{ 
                           width: '100%', 
                           padding: '10px', 
-                          backgroundColor: '#1a1a1a', 
+                          backgroundColor: '#141414', 
                           color: '#fff', 
                           border: '1px solid rgba(0, 255, 0, 0.3)', 
                           borderRadius: '4px',
@@ -16619,7 +16619,7 @@ const nextF = familias.filter(x => x !== f)
                           style={{ 
                             flex: 1,
                             padding: '10px', 
-                            backgroundColor: '#1a1a1a', 
+                            backgroundColor: '#141414', 
                             color: '#fff', 
                             border: '1px solid rgba(0, 255, 0, 0.3)', 
                             borderRadius: '4px',
@@ -16663,7 +16663,7 @@ const nextF = familias.filter(x => x !== f)
                 )}
                 
                 {managedPasswords.length === 0 && !showPasswordForm ? (
-                  <div style={{ padding: '20px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)', textAlign: 'center' }}>
+                  <div style={{ padding: '20px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)', textAlign: 'center' }}>
                     <p style={{ fontSize: '14px', opacity: 0.6 }}>{safeT?.noPasswordsManaged || 'Nenhuma senha gerenciada ainda.'}</p>
                   </div>
                 ) : (
@@ -16673,7 +16673,7 @@ const nextF = familias.filter(x => x !== f)
                         key={entry.id} 
                         style={{ 
                           padding: '15px', 
-                          backgroundColor: '#2a2a2a', 
+                          backgroundColor: '#222222', 
                           borderRadius: '6px', 
                           border: '1px solid rgba(0, 255, 0, 0.2)',
                           display: 'flex',
@@ -16734,7 +16734,7 @@ const nextF = familias.filter(x => x !== f)
                         {visiblePasswords.has(entry.id) && (
                           <div style={{ 
                             padding: '10px', 
-                            backgroundColor: '#1a1a1a', 
+                            backgroundColor: '#141414', 
                             borderRadius: '4px', 
                             border: '1px solid rgba(0, 255, 0, 0.3)',
                             fontFamily: 'monospace',
@@ -16752,7 +16752,7 @@ const nextF = familias.filter(x => x !== f)
             </div>
 
             {/* SEÇÃO 5: BACKUP E SEGURANÇA - Sempre visível; em modo DEMO mostra aviso */}
-            <div id="admin-backup-seguranca" style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            <div id="admin-backup-seguranca" style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
                 {safeT?.backupRestore || 'BACKUP E SEGURANÇA'}
               </h3>
@@ -16767,7 +16767,7 @@ const nextF = familias.filter(x => x !== f)
                 </p>
               )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', opacity: isDemoMode ? 0.7 : 1, pointerEvents: isDemoMode ? 'none' : 'auto' }}>
-                <div style={{ padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
+                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupTitle || 'Backup Completo do Sistema'}</strong>
                   <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>{safeT?.backupDescription || 'Crie um backup completo de todos os dados do sistema'}</p>
                   <button className="btn-primary" onClick={handleCreateBackup} style={{ padding: '8px 15px' }} disabled={isDemoMode}>
@@ -16775,7 +16775,7 @@ const nextF = familias.filter(x => x !== f)
                   </button>
                 </div>
 
-                <div style={{ padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)', borderLeft: '4px solid #00ff00' }}>
+                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)', borderLeft: '4px solid #00ff00' }}>
                   <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupCodigoTitle || 'Backup do Código do Programa'}</strong>
                   <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>{safeT?.backupCodigoDescription || 'Faça backup de TODOS os arquivos do código fonte do programa'}</p>
                   <button className="btn-primary" onClick={handleBackupCodigo} style={{ padding: '8px 15px', marginRight: '8px', marginBottom: '8px' }} disabled={isDemoMode}>
@@ -16786,7 +16786,7 @@ const nextF = familias.filter(x => x !== f)
                   </button>
                 </div>
 
-                <div style={{ padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(255, 165, 0, 0.3)' }}>
+                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(255, 165, 0, 0.3)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px', color: '#ffa500' }}>{safeT?.restoreCodeTitle || '⚠️ RESTAURAR CÓDIGO DO PROGRAMA'}</strong>
                   <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>
                     {safeT?.restoreCodeDescription || 'Restaure o código do programa a partir de um backup anterior. Esta operação substituirá TODOS os arquivos atuais pelos arquivos do backup selecionado.'}
@@ -16807,7 +16807,7 @@ const nextF = familias.filter(x => x !== f)
                           key={index}
                           style={{ 
                             padding: '12px', 
-                            backgroundColor: '#1a1a1a', 
+                            backgroundColor: '#141414', 
                             borderRadius: '4px', 
                             border: '1px solid rgba(255, 165, 0, 0.2)',
                             display: 'flex',
@@ -16945,7 +16945,7 @@ const nextF = familias.filter(x => x !== f)
               flexDirection: 'column',
               gap: '0',
               minHeight: '80vh',
-              backgroundColor: '#1a1a1a',
+              backgroundColor: '#141414',
               borderRadius: '12px',
               border: '1px solid rgba(0, 255, 0, 0.2)',
               overflow: 'hidden'
@@ -16959,7 +16959,7 @@ const nextF = familias.filter(x => x !== f)
                 display: 'flex',
                 flexDirection: 'column',
                 borderBottom: '2px solid rgba(0, 255, 0, 0.2)',
-                backgroundColor: '#1a1a1a',
+                backgroundColor: '#141414',
                 overflow: 'hidden'
               }}>
                 <div style={{ padding: '20px', borderBottom: '2px solid rgba(0, 255, 0, 0.2)', width: '100%', boxSizing: 'border-box' }}>
@@ -16997,7 +16997,7 @@ const nextF = familias.filter(x => x !== f)
                         minWidth: 0,
                         padding: '10px 12px',
                         height: '40px',
-                        backgroundColor: '#2a2a2a',
+                        backgroundColor: '#222222',
                         border: '1px solid rgba(0, 255, 0, 0.3)',
                         borderRadius: '6px',
                         color: '#fff',
@@ -17104,7 +17104,7 @@ const nextF = familias.filter(x => x !== f)
                                     }
                                   }
                                 }}
-                                style={{ flex: 1, minWidth: 0, height: '36px', padding: '0 10px', backgroundColor: '#1a1a1a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '13px' }}
+                                style={{ flex: 1, minWidth: 0, height: '36px', padding: '0 10px', backgroundColor: '#141414', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '13px' }}
                                 autoFocus
                               />
                               <button className="btn-primary" onClick={() => {
@@ -17136,7 +17136,7 @@ const nextF = familias.filter(x => x !== f)
                                   }
                                 }
                               }} style={btnStyle}>{safeT?.save || 'Salvar'}</button>
-                              <button onClick={() => { setEditingFamiliaNome(null); setEditFamiliaValue(''); }} style={{ ...btnStyle, backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.2)', color: '#ccc', cursor: 'pointer' }}>{safeT?.cancel || 'Cancelar'}</button>
+                              <button onClick={() => { setEditingFamiliaNome(null); setEditFamiliaValue(''); }} style={{ ...btnStyle, backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.2)', color: '#ccc', cursor: 'pointer' }}>{safeT?.cancel || 'Cancelar'}</button>
                             </div>
                           ) : (
                             <>
@@ -17180,9 +17180,9 @@ const nextF = familias.filter(x => x !== f)
                                       <button type="button" className="btn-primary" style={{ padding: '4px 10px', height: '28px', fontSize: '11px', whiteSpace: 'nowrap', flexShrink: 0 }} onClick={() => { setSelectedFamiliaForGrupos(f); setSelectedParenteIdForPainelGrupos(''); setSelectedParenteIdForNovoGrupo(''); setTimeout(() => document.getElementById('grupos-familia-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100); }}>{safeT?.verGrupos || 'Ver Grupos'}</button>
                                     </div>
                                     {parentesDestaFamilia.map((p) => (
-                                      <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', marginBottom: '6px', borderRadius: '6px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0,255,0,0.2)', flexWrap: 'nowrap' }}>
+                                      <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', marginBottom: '6px', borderRadius: '6px', backgroundColor: '#222222', border: '1px solid rgba(0,255,0,0.2)', flexWrap: 'nowrap' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0, width: '44px' }}>
-                                          <label style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(0,255,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a1a1a', cursor: 'pointer', margin: 0, marginLeft: 'auto' }}>
+                                          <label style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(0,255,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#141414', cursor: 'pointer', margin: 0, marginLeft: 'auto' }}>
                                             <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(ev) => { const file = ev.target.files?.[0]; if (file) { const r = new FileReader(); r.onload = () => { const next = parentesChecklist.map(x => x.id === p.id ? { ...x, imagem: r.result as string } : x); setParentesChecklist(next); saveData('nonato-parentes-checklist', next); }; r.readAsDataURL(file); } ev.target.value = ''; }} />
                                             {p.imagem ? <img src={p.imagem} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '16px', opacity: 0.5 }}>🖼</span>}
                                           </label>
@@ -17191,9 +17191,9 @@ const nextF = familias.filter(x => x !== f)
                                         <div style={{ flex: 1, minWidth: '120px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                           {editingParenteId === p.id ? (
                                             <div style={{ display: 'flex', gap: '4px', flex: 1, minWidth: 0 }} onClick={e => e.stopPropagation()}>
-                                              <input type="text" value={editParenteNome} onChange={(e) => setEditParenteNome(e.target.value)} onKeyPress={(e) => { if (e.key === 'Enter') { const nome = editParenteNome.trim(); if (nome) { const next = parentesChecklist.map(x => x.id === p.id ? { ...x, nome } : x); setParentesChecklist(next); saveData('nonato-parentes-checklist', next); setEditingParenteId(null); } } }} style={{ flex: 1, minWidth: 0, height: '28px', padding: '0 8px', fontSize: '12px', backgroundColor: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '4px', color: '#fff' }} autoFocus />
+                                              <input type="text" value={editParenteNome} onChange={(e) => setEditParenteNome(e.target.value)} onKeyPress={(e) => { if (e.key === 'Enter') { const nome = editParenteNome.trim(); if (nome) { const next = parentesChecklist.map(x => x.id === p.id ? { ...x, nome } : x); setParentesChecklist(next); saveData('nonato-parentes-checklist', next); setEditingParenteId(null); } } }} style={{ flex: 1, minWidth: 0, height: '28px', padding: '0 8px', fontSize: '12px', backgroundColor: '#141414', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '4px', color: '#fff' }} autoFocus />
                                               <button type="button" className="btn-primary" style={{ padding: '4px 8px', height: '28px', fontSize: '11px', whiteSpace: 'nowrap', minWidth: '58px' }} onClick={() => { const nome = editParenteNome.trim(); if (nome) { const next = parentesChecklist.map(x => x.id === p.id ? { ...x, nome } : x); setParentesChecklist(next); saveData('nonato-parentes-checklist', next); setEditingParenteId(null); } }}>{safeT?.save || 'Salvar'}</button>
-                                              <button type="button" style={{ padding: '4px 8px', height: '28px', fontSize: '11px', border: '1px solid rgba(0,255,0,0.2)', borderRadius: '4px', backgroundColor: '#2a2a2a', color: '#ccc', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={() => setEditingParenteId(null)}>{safeT?.cancel || 'Cancelar'}</button>
+                                              <button type="button" style={{ padding: '4px 8px', height: '28px', fontSize: '11px', border: '1px solid rgba(0,255,0,0.2)', borderRadius: '4px', backgroundColor: '#222222', color: '#ccc', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={() => setEditingParenteId(null)}>{safeT?.cancel || 'Cancelar'}</button>
                                             </div>
                                           ) : (
                                             <>
@@ -17224,7 +17224,7 @@ const nextF = familias.filter(x => x !== f)
                                             }
                                           }
                                         }}
-                                        style={{ flex: 1, minWidth: '120px', height: '32px', padding: '0 10px', fontSize: '12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }}
+                                        style={{ flex: 1, minWidth: '120px', height: '32px', padding: '0 10px', fontSize: '12px', backgroundColor: '#222222', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }}
                                       />
                                       <button
                                         type="button"
@@ -17259,7 +17259,7 @@ const nextF = familias.filter(x => x !== f)
                 minHeight: '280px',
                 display: 'flex',
                 flexDirection: 'column',
-                backgroundColor: '#1a1a1a',
+                backgroundColor: '#141414',
                 overflow: 'hidden'
               }}>
                 {!selectedFamiliaForGrupos ? (
@@ -17313,7 +17313,7 @@ const nextF = familias.filter(x => x !== f)
                       <div style={{
                         padding: '20px 24px',
                         borderBottom: '2px solid rgba(0, 255, 0, 0.2)',
-                        backgroundColor: '#1a1a1a'
+                        backgroundColor: '#141414'
                       }}>
                         <h3 style={{ margin: '0 0 15px', fontSize: '16px', fontWeight: 600, color: '#00ff00' }}>
                           {safeT?.gruposDe || 'Grupos de'} <span style={{ color: '#fff' }}>{nomeFamilia}</span>
@@ -17331,7 +17331,7 @@ const nextF = familias.filter(x => x !== f)
                                   setSelectedParenteIdForPainelGrupos(v)
                                   setSelectedParenteIdForNovoGrupo(v)
                                 }}
-                                style={{ width: '100%', maxWidth: '280px', height: '36px', padding: '0 10px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', fontSize: '13px' }}
+                                style={{ width: '100%', maxWidth: '280px', height: '36px', padding: '0 10px', backgroundColor: '#222222', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', fontSize: '13px' }}
                               >
                                 <option value="">{safeT?.nenhum || 'Nenhum'}</option>
                                 {parentesDaFamilia.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
@@ -17374,7 +17374,7 @@ const nextF = familias.filter(x => x !== f)
                                 width: '100%',
                                 height: '40px',
                                 padding: '0 12px',
-                                backgroundColor: '#2a2a2a',
+                                backgroundColor: '#222222',
                                 border: '1px solid rgba(0, 255, 0, 0.3)',
                                 borderRadius: '6px',
                                 color: '#fff',
@@ -17418,7 +17418,7 @@ onKeyPress={(e) => {
                                 width: '100%',
                                 height: '40px',
                                 padding: '0 16px',
-                                backgroundColor: '#2a2a2a',
+                                backgroundColor: '#222222',
                                 border: '1px solid rgba(0, 255, 0, 0.3)',
                                 borderRadius: '6px',
                                 color: '#fff',
@@ -17460,7 +17460,7 @@ onKeyPress={(e) => {
                         {gruposDestaFamilia.length === 0 ? (
                           <div style={{
                             padding: '20px',
-                            backgroundColor: '#2a2a2a',
+                            backgroundColor: '#222222',
                             borderRadius: '6px',
                             border: '1px solid rgba(0, 255, 0, 0.2)',
                             textAlign: 'center',
@@ -17494,7 +17494,7 @@ onKeyPress={(e) => {
                                     gap: '12px',
                                     alignItems: 'center',
                                     padding: '12px 18px',
-                                    backgroundColor: '#2a2a2a',
+                                    backgroundColor: '#222222',
                                     borderRadius: '6px',
                                     border: '1px solid rgba(0, 255, 0, 0.2)',
                                     minHeight: '52px'
@@ -17503,7 +17503,7 @@ onKeyPress={(e) => {
                                   <span style={{ color: '#00ff00', fontSize: '13px', fontWeight: 600 }}>{idx + 1}.</span>
                                   {isChecklist && (
                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', width: '44px' }}>
-                                      <label style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(0,255,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a1a1a', cursor: 'pointer', margin: 0 }}>
+                                      <label style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(0,255,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#141414', cursor: 'pointer', margin: 0 }}>
                                         <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(ev) => { const file = ev.target.files?.[0]; if (file) { const r = new FileReader(); r.onload = () => { const next = gruposChecklist.map(x => x.id === (g as GrupoChecklist).id ? { ...x, imagem: r.result as string } : x); setGruposChecklist(next); saveData('nonato-grupos-checklist', next); }; r.readAsDataURL(file); } ev.target.value = ''; }} />
                                         {(g as GrupoChecklist).imagem ? <img src={(g as GrupoChecklist).imagem} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '16px', opacity: 0.5 }}>🖼</span>}
                                       </label>
@@ -17518,7 +17518,7 @@ onKeyPress={(e) => {
                                           value={editGrupoNumeroValue}
                                           onChange={(e) => setEditGrupoNumeroValue(e.target.value)}
                                           placeholder={safeT?.numeroGrupoCampoPlaceholder ?? safeT?.numeroGrupoPlaceholder ?? 'Número'}
-                                          style={{ width: '100%', height: '36px', padding: '0 10px', backgroundColor: '#1a1a1a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }}
+                                          style={{ width: '100%', height: '36px', padding: '0 10px', backgroundColor: '#141414', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }}
                                         />
                                       )}
                                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flexWrap: 'wrap' }}>
@@ -17553,7 +17553,7 @@ onKeyPress={(e) => {
                                               }
                                             }
                                           }}
-                                          style={{ flex: 1, minWidth: 0, height: '36px', padding: '0 12px', backgroundColor: '#1a1a1a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
+                                          style={{ flex: 1, minWidth: 0, height: '36px', padding: '0 12px', backgroundColor: '#141414', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
                                           autoFocus
                                         />
                                         <button className="btn-primary" onClick={() => {
@@ -17581,7 +17581,7 @@ onKeyPress={(e) => {
                                             }
                                           }
                                         }} style={{ ...btnGrupoStyle, minWidth: '58px' }}>{safeT?.save || 'Salvar'}</button>
-                                        <button onClick={() => { setEditingGrupoFamilia(null); setEditingGrupoNome(null); setEditGrupoValue(''); setEditGrupoNumeroValue(''); }} style={{ ...btnGrupoStyle, minWidth: '58px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.2)', color: '#ccc', cursor: 'pointer' }}>{safeT?.cancel || 'Cancelar'}</button>
+                                        <button onClick={() => { setEditingGrupoFamilia(null); setEditingGrupoNome(null); setEditGrupoValue(''); setEditGrupoNumeroValue(''); }} style={{ ...btnGrupoStyle, minWidth: '58px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.2)', color: '#ccc', cursor: 'pointer' }}>{safeT?.cancel || 'Cancelar'}</button>
                                       </div>
                                       <span />
                                     </>
@@ -17646,7 +17646,7 @@ onKeyPress={(e) => {
               </p>
               <div style={{
                 minHeight: '120px',
-                backgroundColor: '#1a1a1a',
+                backgroundColor: '#141414',
                 borderRadius: '12px',
                 border: '1px solid rgba(0, 255, 0, 0.2)',
                 overflow: 'hidden'
@@ -17659,7 +17659,7 @@ onKeyPress={(e) => {
                       <select
                         value={selectedFamiliaCriacaoChecklist}
                         onChange={(e) => { setSelectedFamiliaCriacaoChecklist(e.target.value); setSelectedParenteIdCriacaoChecklist(''); setSelectedGrupoIdCriacaoChecklist(''); }}
-                        style={{ height: '42px', padding: '0 12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', minWidth: '220px' }}
+                        style={{ height: '42px', padding: '0 12px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', minWidth: '220px' }}
                       >
                         <option value="">— {safeT?.nenhum || 'Nenhum'}</option>
                         {(() => {
@@ -17677,7 +17677,7 @@ onKeyPress={(e) => {
                         value={selectedParenteIdCriacaoChecklist}
                         onChange={(e) => setSelectedParenteIdCriacaoChecklist(e.target.value)}
                         disabled={!selectedFamiliaCriacaoChecklist}
-                        style={{ height: '42px', padding: '0 12px', backgroundColor: selectedFamiliaCriacaoChecklist ? '#2a2a2a' : '#1a1a1a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: selectedFamiliaCriacaoChecklist ? '#fff' : '#666', fontSize: '14px', minWidth: '220px' }}
+                        style={{ height: '42px', padding: '0 12px', backgroundColor: selectedFamiliaCriacaoChecklist ? '#2a2a2a' : '#141414', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: selectedFamiliaCriacaoChecklist ? '#fff' : '#666', fontSize: '14px', minWidth: '220px' }}
                       >
                         <option value="">— {safeT?.nenhum || 'Nenhum'}</option>
                         {selectedFamiliaCriacaoChecklist && parentesChecklist.filter(p => p.familia === selectedFamiliaCriacaoChecklist).map(pr => (
@@ -17692,7 +17692,7 @@ onKeyPress={(e) => {
                 {selectedFamiliaCriacaoChecklist && selectedParenteIdCriacaoChecklist && (() => {
                   const parenteSelecionadoCab = parentesChecklist.find(p => p.id === selectedParenteIdCriacaoChecklist)
                   return (
-                    <div style={{ marginBottom: '24px', padding: '16px 20px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.25)', borderLeft: '4px solid #00ff00' }}>
+                    <div style={{ marginBottom: '24px', padding: '16px 20px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.25)', borderLeft: '4px solid #00ff00' }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px 32px', alignItems: 'center' }}>
                         <div>
                           <span style={{ fontSize: '12px', color: '#00ff00', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{(safeT as any)?.familia || 'Família'}</span>
@@ -17769,11 +17769,11 @@ onKeyPress={(e) => {
                               if (criacaoChecklistEditingItemId === itemId) cancelForm()
                             }
                             return (
-                            <div key={gr.id} style={{ border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '10px', overflow: 'hidden', backgroundColor: '#1a1a1a' }}>
+                            <div key={gr.id} style={{ border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '10px', overflow: 'hidden', backgroundColor: '#141414' }}>
                               {/* Cabeçalho do grupo: foto bem visível + número/nome + Adicionar serviços ao lado */}
-                              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', padding: '20px', backgroundColor: '#2a2a2a', borderBottom: '2px solid rgba(0, 255, 0, 0.2)' }}>
+                              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', padding: '20px', backgroundColor: '#222222', borderBottom: '2px solid rgba(0, 255, 0, 0.2)' }}>
                                 <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-                                  <div style={{ width: '140px', height: '140px', borderRadius: '10px', overflow: 'hidden', border: '2px solid rgba(0, 255, 0, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a1a1a', color: '#00ff00', fontSize: '42px', fontWeight: 700, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
+                                  <div style={{ width: '140px', height: '140px', borderRadius: '10px', overflow: 'hidden', border: '2px solid rgba(0, 255, 0, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#141414', color: '#00ff00', fontSize: '42px', fontWeight: 700, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
                                     {gr.imagem ? (
                                       <img src={gr.imagem} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     ) : (
@@ -17803,14 +17803,14 @@ onKeyPress={(e) => {
                                   {gr.trabalhosASeremExecutados && <div style={{ fontSize: '12px', color: '#aaa', marginTop: '4px' }}>{gr.trabalhosASeremExecutados}</div>}
                                 </div>
                               </div>
-                              <div style={{ padding: '16px', backgroundColor: '#1a1a1a' }}>
+                              <div style={{ padding: '16px', backgroundColor: '#141414' }}>
                                 {/* Serviços em colunas — cada serviço uma coluna para levar a informação para outro lado */}
                                 {itens.length > 0 && (
                                   <div style={{ marginBottom: '16px' }}>
                                     <div style={{ fontSize: '12px', color: '#00ff00', fontWeight: 600, marginBottom: '10px' }}>{(safeT as any)?.servicos || 'Serviços'}</div>
                                     <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '12px' }}>
                                     {itens.map(item => (
-                                      <div key={item.id} style={{ minWidth: '200px', maxWidth: '260px', padding: '14px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.25)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                      <div key={item.id} style={{ minWidth: '200px', maxWidth: '260px', padding: '14px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.25)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         {/* Coluna: um serviço por coluna */}
                                         <div style={{ fontSize: '11px', color: '#00ff00', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{item.tipo || (safeT as any)?.servico || 'Serviço'}</div>
                                         <div style={{ flex: 1, fontSize: '14px', color: '#fff', fontWeight: 500, lineHeight: 1.35, wordBreak: 'break-word' }}>{item.descricaoTrabalho}</div>
@@ -17824,10 +17824,10 @@ onKeyPress={(e) => {
                                   </div>
                                 )}
                                 {(showForm && (isAdding || itens.some(i => i.id === criacaoChecklistEditingItemId))) && (
-                                  <div style={{ padding: '16px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.3)', marginTop: itens.length ? '8px' : 0 }}>
+                                  <div style={{ padding: '16px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.3)', marginTop: itens.length ? '8px' : 0 }}>
                                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                                       <label style={{ fontSize: '12px', color: '#00ff00', flexShrink: 0 }}>{(safeT as any)?.qualTrabalho || 'Qual o trabalho?'}</label>
-                                      <input type="text" value={criacaoChecklistItemForm.descricaoTrabalho} onChange={e => setCriacaoChecklistItemForm(f => ({ ...f, descricaoTrabalho: e.target.value }))} onKeyPress={e => { if (e.key === 'Enter' && !criacaoChecklistEditingItemId) { const tipo = criacaoChecklistItemForm.tipo.trim() || (safeT as any)?.outro || 'Outro'; const descricaoTrabalho = criacaoChecklistItemForm.descricaoTrabalho.trim(); if (!descricaoTrabalho) return; const novoItem: ItemTrabalhoCriacao = { id: Date.now().toString(), tipo, descricaoTrabalho, necessitaPecas: false, dataCriacao: new Date().toISOString() }; const nextGrupos = gruposChecklist.map(g => g.id !== gr.id ? g : { ...g, itensTrabalho: [...(g.itensTrabalho || []), novoItem] }); setGruposChecklist(nextGrupos); saveData('nonato-grupos-checklist', nextGrupos); setCriacaoChecklistItemForm(f => ({ ...f, descricaoTrabalho: '' })) } }} placeholder="Texto direto (uma linha)" style={{ flex: 1, minWidth: '180px', padding: '8px 10px', backgroundColor: '#1a1a1a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '13px' }} />
+                                      <input type="text" value={criacaoChecklistItemForm.descricaoTrabalho} onChange={e => setCriacaoChecklistItemForm(f => ({ ...f, descricaoTrabalho: e.target.value }))} onKeyPress={e => { if (e.key === 'Enter' && !criacaoChecklistEditingItemId) { const tipo = criacaoChecklistItemForm.tipo.trim() || (safeT as any)?.outro || 'Outro'; const descricaoTrabalho = criacaoChecklistItemForm.descricaoTrabalho.trim(); if (!descricaoTrabalho) return; const novoItem: ItemTrabalhoCriacao = { id: Date.now().toString(), tipo, descricaoTrabalho, necessitaPecas: false, dataCriacao: new Date().toISOString() }; const nextGrupos = gruposChecklist.map(g => g.id !== gr.id ? g : { ...g, itensTrabalho: [...(g.itensTrabalho || []), novoItem] }); setGruposChecklist(nextGrupos); saveData('nonato-grupos-checklist', nextGrupos); setCriacaoChecklistItemForm(f => ({ ...f, descricaoTrabalho: '' })) } }} placeholder="Texto direto (uma linha)" style={{ flex: 1, minWidth: '180px', padding: '8px 10px', backgroundColor: '#141414', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '13px' }} />
                                       {criacaoChecklistEditingItemId ? (
                                         <button type="button" onClick={() => { const tipo = criacaoChecklistItemForm.tipo.trim() || (safeT as any)?.outro || 'Outro'; const descricaoTrabalho = criacaoChecklistItemForm.descricaoTrabalho.trim(); if (!descricaoTrabalho) return; const nextGrupos = gruposChecklist.map(g => g.id !== gr.id ? g : { ...g, itensTrabalho: (g.itensTrabalho || []).map(i => i.id !== criacaoChecklistEditingItemId ? i : { ...i, tipo, descricaoTrabalho }) }); setGruposChecklist(nextGrupos); saveData('nonato-grupos-checklist', nextGrupos); setCriacaoChecklistEditingItemId(null); setCriacaoChecklistItemForm(f => ({ ...f, descricaoTrabalho: '' })) }} style={{ padding: '8px 14px', fontSize: '12px', fontWeight: 600, borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.5)', backgroundColor: 'rgba(0, 255, 0, 0.2)', color: '#00ff00', cursor: 'pointer' }}>{(safeT as any)?.save || 'Salvar'}</button>
                                       ) : (
@@ -17957,7 +17957,7 @@ onKeyPress={(e) => {
             <div style={{
               marginBottom: '20px',
               padding: '14px 18px',
-              backgroundColor: '#2a2a2a',
+              backgroundColor: '#222222',
               borderRadius: '8px',
               border: '1px solid rgba(0, 255, 0, 0.2)',
               display: 'flex',
@@ -17994,7 +17994,7 @@ onKeyPress={(e) => {
                   style={{
                     width: '100%',
                     padding: '12px 40px 12px 16px',
-                    backgroundColor: '#2a2a2a',
+                    backgroundColor: '#222222',
                     color: '#fff',
                     border: '1px solid rgba(0, 255, 0, 0.3)',
                     borderRadius: '8px',
@@ -18013,7 +18013,7 @@ onKeyPress={(e) => {
             </div>
 
             {showEquipamentoForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#2a2a2a' }}>
+              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#222222' }}>
                 <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>{editingEquipamento ? safeT?.editEquipamento : safeT?.addEquipamento}</h3>
                 
                 <div style={{ marginBottom: '15px' }}>
@@ -18023,7 +18023,7 @@ onKeyPress={(e) => {
                     value={equipamentoForm.id}
                     onChange={(e) => setEquipamentoForm({ ...equipamentoForm, id: e.target.value })}
                     disabled={!!editingEquipamento}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -18033,7 +18033,7 @@ onKeyPress={(e) => {
                     type="text"
                     value={equipamentoForm.tipoEquipamento}
                     onChange={(e) => setEquipamentoForm({ ...equipamentoForm, tipoEquipamento: e.target.value })}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -18043,7 +18043,7 @@ onKeyPress={(e) => {
                     type="text"
                     value={equipamentoForm.modelo}
                     onChange={(e) => setEquipamentoForm({ ...equipamentoForm, modelo: e.target.value })}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -18053,7 +18053,7 @@ onKeyPress={(e) => {
                     type="text"
                     value={equipamentoForm.marca}
                     onChange={(e) => setEquipamentoForm({ ...equipamentoForm, marca: e.target.value })}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -18063,7 +18063,7 @@ onKeyPress={(e) => {
                     type="text"
                     value={equipamentoForm.numeroSerie}
                     onChange={(e) => setEquipamentoForm({ ...equipamentoForm, numeroSerie: e.target.value })}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -18073,7 +18073,7 @@ onKeyPress={(e) => {
                     type="text"
                     value={equipamentoForm.familia}
                     onChange={(e) => setEquipamentoForm({ ...equipamentoForm, familia: e.target.value })}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -18083,7 +18083,7 @@ onKeyPress={(e) => {
                     type="text"
                     value={equipamentoForm.grupo}
                     onChange={(e) => setEquipamentoForm({ ...equipamentoForm, grupo: e.target.value })}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -18094,7 +18094,7 @@ onKeyPress={(e) => {
                     placeholder={(safeT as any)?.equipamentoPesoExemplo || 'Ex: 10 kg'}
                     value={equipamentoForm.peso}
                     onChange={(e) => setEquipamentoForm({ ...equipamentoForm, peso: e.target.value })}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -18144,13 +18144,13 @@ onKeyPress={(e) => {
                           )
                           setEquipamentoForm({ ...equipamentoForm, quantidadePartes: qtd, partes: novasPartes })
                         }}
-                        style={{ width: '100%', maxWidth: '120px', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', maxWidth: '120px', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     {(equipamentoForm.partes || []).map((parte, idx) => {
                       const total = equipamentoForm.quantidadePartes || 1
                       return (
-                        <div key={idx} style={{ marginBottom: '20px', padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                        <div key={idx} style={{ marginBottom: '20px', padding: '14px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                           <div style={{ marginBottom: '10px', fontWeight: 600, color: '#00ff00' }}>
                             {(safeT as any)?.equipamentoParte || 'Parte'} {parte.ordem}/{total}
                           </div>
@@ -18164,7 +18164,7 @@ onKeyPress={(e) => {
                                 novasPartes[idx] = { ...parte, tipoId, id: tipoId === 'especifico' ? (parte.id || '') : undefined }
                                 setEquipamentoForm({ ...equipamentoForm, partes: novasPartes })
                               }}
-                              style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                              style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                             >
                               <option value="geral">{(safeT as any)?.equipamentoIdGeral || 'ID geral (igual ao equipamento)'}</option>
                               <option value="especifico">{(safeT as any)?.equipamentoIdEspecifico || 'ID específico'}</option>
@@ -18181,7 +18181,7 @@ onKeyPress={(e) => {
                                   novasPartes[idx] = { ...parte, numeroSerieFabricante: e.target.value }
                                   setEquipamentoForm({ ...equipamentoForm, partes: novasPartes })
                                 }}
-                                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                               />
                             </div>
                           )}
@@ -18197,7 +18197,7 @@ onKeyPress={(e) => {
                                     novasPartes[idx] = { ...parte, id: e.target.value }
                                     setEquipamentoForm({ ...equipamentoForm, partes: novasPartes })
                                   }}
-                                  style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                                  style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                                 />
                               </div>
                               <div style={{ marginBottom: '10px' }}>
@@ -18210,7 +18210,7 @@ onKeyPress={(e) => {
                                     novasPartes[idx] = { ...parte, numeroSerieFabricante: e.target.value }
                                     setEquipamentoForm({ ...equipamentoForm, partes: novasPartes })
                                   }}
-                                  style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                                  style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                                 />
                               </div>
                             </>
@@ -18227,7 +18227,7 @@ onKeyPress={(e) => {
                     type="file"
                     accept="image/*"
                     onChange={handleEquipamentoPhotoChange}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                   {equipamentoForm.photo && (
                     <div style={{ marginTop: '10px' }}>
@@ -18251,7 +18251,7 @@ onKeyPress={(e) => {
             )}
 
             {searchedEquipamento ? (
-              <div style={{ padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', marginBottom: '20px' }}>
+              <div style={{ padding: '20px', backgroundColor: '#141414', borderRadius: '8px', marginBottom: '20px' }}>
                 <h3>{searchedEquipamento.tipoEquipamento} - {searchedEquipamento.modelo}</h3>
                 <p><strong>{safeT?.marca || 'Marca'}:</strong> {searchedEquipamento.marca}</p>
                 <p><strong>{safeT?.numeroSerie || 'Número de Série'}:</strong> {searchedEquipamento.numeroSerie}</p>
@@ -18266,7 +18266,7 @@ onKeyPress={(e) => {
                 ) : (
                   <div style={{ 
                     padding: '20px', 
-                    backgroundColor: '#1a1a1a', 
+                    backgroundColor: '#141414', 
                     borderRadius: '12px', 
                     border: '1px solid rgba(0, 255, 0, 0.2)',
                     marginBottom: '20px'
@@ -18276,7 +18276,7 @@ onKeyPress={(e) => {
                     </h3>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
                     {equipamentos.map(equipamento => (
-                      <div key={equipamento.id} style={{ padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                      <div key={equipamento.id} style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                         {equipamento.photo && (
                           <img src={equipamento.photo} alt={equipamento.modelo} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
                         )}
@@ -18376,7 +18376,7 @@ onKeyPress={(e) => {
             {/* Modal de Visualização Detalhada do Equipamento */}
             {viewingEquipamento && (
               <div className="modal-overlay" onClick={() => setViewingEquipamento(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-                <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1200px', maxHeight: '90vh', overflowY: 'auto', width: '100%', backgroundColor: '#1a1a1a', borderRadius: '8px', padding: '20px' }}>
+                <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1200px', maxHeight: '90vh', overflowY: 'auto', width: '100%', backgroundColor: '#141414', borderRadius: '8px', padding: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid rgba(0, 255, 0, 0.3)', paddingBottom: '15px' }}>
                     <h2 style={{ margin: 0 }}>{viewingEquipamento.tipoEquipamento} - {viewingEquipamento.modelo}</h2>
                     <button
@@ -18391,7 +18391,7 @@ onKeyPress={(e) => {
                   </div>
 
                   {/* Informações Básicas */}
-                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px' }}>
                     <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>{t.informacoesBasicas || 'Informações Básicas'}</h3>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
                       <p><strong>ID:</strong> {viewingEquipamento.id}</p>
@@ -18437,7 +18437,7 @@ onKeyPress={(e) => {
                     {equipamentoDetailTab === 'historico' && (
                       <div>
                         <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>{t.historicoEquipamento || 'Histórico do Equipamento'}</h3>
-                        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+                        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px' }}>
                           <h4 style={{ marginBottom: '10px' }}>{t.adicionarEventoHistorico || 'Adicionar Evento ao Histórico'}</h4>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             <div>
@@ -18445,7 +18445,7 @@ onKeyPress={(e) => {
                               <select
                                 value={historicoForm.tipo}
                                 onChange={(e) => setHistoricoForm({ ...historicoForm, tipo: e.target.value })}
-                                style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                                style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                               >
                                 <option value="manutencao">{t.manutencao || 'Manutenção'}</option>
                                 <option value="reparo">{t.reparo || 'Reparo'}</option>
@@ -18461,7 +18461,7 @@ onKeyPress={(e) => {
                                 value={historicoForm.descricao}
                                 onChange={(e) => setHistoricoForm({ ...historicoForm, descricao: e.target.value })}
                                 rows={3}
-                                style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                                style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                                 placeholder={t?.descricaoEventoPlaceholder || 'Descreva o evento...'}
                               />
                             </div>
@@ -18471,7 +18471,7 @@ onKeyPress={(e) => {
                                 type="text"
                                 value={historicoForm.responsavel}
                                 onChange={(e) => setHistoricoForm({ ...historicoForm, responsavel: e.target.value })}
-                                style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                                style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                                 placeholder={t?.nomeResponsavel || 'Nome do responsável'}
                               />
                             </div>
@@ -18481,7 +18481,7 @@ onKeyPress={(e) => {
                                 value={historicoForm.observacoes}
                                 onChange={(e) => setHistoricoForm({ ...historicoForm, observacoes: e.target.value })}
                                 rows={2}
-                                style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                                style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                                 placeholder={t?.observacoesAdicionais || 'Observações adicionais...'}
                               />
                             </div>
@@ -18527,7 +18527,7 @@ onKeyPress={(e) => {
                             <p style={{ textAlign: 'center', opacity: 0.6, padding: '20px' }}>{t.nenhumEventoRegistrado || 'Nenhum evento registrado no histórico.'}</p>
                           ) : (
                             viewingEquipamento.historico.map((evento) => (
-                              <div key={evento.id} style={{ padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                              <div key={evento.id} style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
                                   <div>
                                     <strong style={{ color: '#00ff00' }}>{evento.tipo.charAt(0).toUpperCase() + evento.tipo.slice(1)}</strong>
@@ -18576,7 +18576,7 @@ onKeyPress={(e) => {
                     {equipamentoDetailTab === 'documentos' && (
                       <div>
                         <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>{t.documentoPDF || 'Documentos PDF'}</h3>
-                        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+                        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px' }}>
                           <h4 style={{ marginBottom: '10px' }}>{t.addPdf || 'Adicionar Documento PDF'}</h4>
                           <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', opacity: 0.8 }}>{t.selecioneArquivoPdf || 'Selecione um arquivo PDF:'}</label>
                           <input
@@ -18604,7 +18604,7 @@ onKeyPress={(e) => {
                                 reader.readAsDataURL(file)
                               }
                             }}
-                            style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                            style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                           />
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -18612,7 +18612,7 @@ onKeyPress={(e) => {
                             <p style={{ textAlign: 'center', opacity: 0.6, padding: '20px' }}>{t.nenhumDocumentoPdf || 'Nenhum documento PDF cadastrado.'}</p>
                           ) : (
                             viewingEquipamento.documentosPdf.map((pdf, index) => (
-                              <div key={index} style={{ padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div key={index} style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                   <span style={{ fontSize: '24px' }}>📄</span>
                                   <span>{t.documentoPDF || 'Documento PDF'} {index + 1}</span>
@@ -18641,7 +18641,7 @@ onKeyPress={(e) => {
                     {equipamentoDetailTab === 'fotos' && (
                       <div>
                         <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>{t.albumFotos || 'Álbum de Fotos'}</h3>
-                        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+                        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px' }}>
                           <h4 style={{ marginBottom: '10px' }}>{t.adicionarFotoAlbum || 'Adicionar Foto ao Álbum'}</h4>
                           <input
                             type="file"
@@ -18669,7 +18669,7 @@ onKeyPress={(e) => {
                                 })
                               }
                             }}
-                            style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                            style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                           />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px' }}>
@@ -18677,7 +18677,7 @@ onKeyPress={(e) => {
                             <div style={{ gridColumn: '1 / -1', textAlign: 'center', opacity: 0.6, padding: '20px' }}>{t.nenhumaFotoAlbum || 'Nenhuma foto no álbum.'}</div>
                           ) : (
                             viewingEquipamento.photoLibrary.map((foto, index) => (
-                              <div key={index} style={{ position: 'relative', padding: '10px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                              <div key={index} style={{ position: 'relative', padding: '10px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                                 <img src={foto} alt={`Foto ${index + 1}`} style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px', cursor: 'pointer' }} onClick={() => window.open(foto, '_blank')} />
                                 <button className="btn-danger" onClick={() => {
                                   if (window.confirm(t.confirmDeleteFoto || 'Tem certeza que deseja excluir esta foto?')) {
@@ -18702,7 +18702,7 @@ onKeyPress={(e) => {
                         
                         {/* Formulário de Adicionar/Editar Item */}
                         {(editingItemIncluded || !editingItemIncluded) && (
-                          <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+                          <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px' }}>
                             <h4 style={{ marginBottom: '10px' }}>{editingItemIncluded ? (t.editItem || 'Editar Item') : (t.addItem || 'Adicionar Item')}</h4>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                               <input 
@@ -18716,7 +18716,7 @@ onKeyPress={(e) => {
                                   }
                                 }}
                                 placeholder={t.enterItemName || 'Digite o nome do item'} 
-                                style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} 
+                                style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} 
                               />
                               <div>
                                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px' }}>{t.anexarImagemOpcional || 'Anexar Imagem (opcional)'}</label>
@@ -18738,7 +18738,7 @@ onKeyPress={(e) => {
                                       reader.readAsDataURL(file)
                                     }
                                   }}
-                                  style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                                  style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                                 />
                                 {(editingItemIncluded ? itemIncludedForm.imagem : itemIncludedForm.imagem) && (
                                   <div style={{ marginTop: '10px' }}>
@@ -18843,7 +18843,7 @@ onKeyPress={(e) => {
                                 : item
                               
                               return (
-                                <div key={itemObj.id || index} style={{ padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                                <div key={itemObj.id || index} style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                                   <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                                     {itemObj.imagem && (
                                       <img 
@@ -19042,11 +19042,11 @@ onKeyPress={(e) => {
             </div>
             
             {showRelatorioServicoForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#1a1a1a', maxHeight: '90vh', overflowY: 'auto' }}>
+              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414', maxHeight: '90vh', overflowY: 'auto' }}>
                 <h3 style={{ marginBottom: '15px' }}>{editingRelatorioServico ? (safeT?.editRelatorioServico || 'Editar Relatório de Serviço') : (safeT?.addRelatorioServico || 'Adicionar Relatório de Serviço')}</h3>
                 
                 {/* Informações Básicas */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px' }}>
                   <h4 style={{ marginBottom: '15px', color: '#00ff00' }}>{safeT?.informacoesBasicas || 'Informações Básicas'}</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
                     <div>
@@ -19056,7 +19056,7 @@ onKeyPress={(e) => {
                         placeholder={safeT?.numeroRelatorio || 'Número do Relatório'}
                         value={relatorioServicoForm.numero}
                         onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, numero: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     
@@ -19066,7 +19066,7 @@ onKeyPress={(e) => {
                         type="date"
                         value={relatorioServicoForm.data}
                         onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, data: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     
@@ -19075,7 +19075,7 @@ onKeyPress={(e) => {
                       <select
                         value={relatorioServicoForm.tecnico}
                         onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, tecnico: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                       >
                         <option value="">{safeT?.selecioneTecnico || 'Selecione o técnico'}</option>
                         {tecnicos.map(tec => (
@@ -19098,7 +19098,7 @@ onKeyPress={(e) => {
                             telefone: selectedClient?.telefones || '',
                           });
                         }}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                       >
                         <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
                         {clientes.map(cli => (
@@ -19114,7 +19114,7 @@ onKeyPress={(e) => {
                         placeholder={safeT?.maquinaModelo || 'Máquina/Modelo'}
                         value={relatorioServicoForm.maquinaModelo}
                         onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, maquinaModelo: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     
@@ -19133,7 +19133,7 @@ onKeyPress={(e) => {
                             maquinaModelo: selectedEquipamento ? `${selectedEquipamento.modelo} ${selectedEquipamento.marca}`.trim() : relatorioServicoForm.maquinaModelo
                           })
                         }}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                         disabled={!relatorioServicoForm.clienteId}
                       >
                         <option value="">{safeT?.selecioneEquipamento || 'Selecione o equipamento'}</option>
@@ -19155,7 +19155,7 @@ onKeyPress={(e) => {
                           placeholder={safeT?.numeroMaquina || 'Número da Máquina'}
                           value={relatorioServicoForm.numeroMaquina}
                           onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, numeroMaquina: e.target.value })}
-                          style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                          style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                         />
                       </div>
                     )}
@@ -19167,14 +19167,14 @@ onKeyPress={(e) => {
                         placeholder={safeT?.tipoServico || 'Tipo de Serviço'}
                         value={relatorioServicoForm.tipoServico}
                         onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, tipoServico: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Dias de Trabalho */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px' }}>
                   <h4 style={{ marginBottom: '15px', color: '#00ff00' }}>{safeT?.diasTrabalho || 'Dias de Trabalho'}</h4>
                   
                   {/* Formulário para adicionar novo dia - Formato da Foto */}
@@ -19183,7 +19183,7 @@ onKeyPress={(e) => {
                     padding: '20px', 
                     borderRadius: '8px', 
                     marginBottom: '15px', 
-                    backgroundColor: '#1a1a1a' 
+                    backgroundColor: '#141414' 
                   }}>
                     <h5 style={{ 
                       marginBottom: '20px', 
@@ -19206,7 +19206,7 @@ onKeyPress={(e) => {
                       fontSize: '11px', 
                       color: '#00ff00',
                       padding: '8px',
-                      backgroundColor: '#1a1a1a',
+                      backgroundColor: '#141414',
                       borderRadius: '4px',
                       border: '1px solid rgba(0, 255, 0, 0.3)'
                     }}>
@@ -19248,7 +19248,7 @@ onKeyPress={(e) => {
                           style={{ 
                             width: '100%', 
                             padding: '12px 40px 12px 12px', 
-                            backgroundColor: '#2a2a2a', 
+                            backgroundColor: '#222222', 
                             color: '#fff', 
                             border: '1px solid rgba(255, 255, 255, 0.1)', 
                             borderRadius: '6px', 
@@ -19298,7 +19298,7 @@ onKeyPress={(e) => {
                             style={{ 
                               width: '100%', 
                               padding: '12px 40px 12px 12px', 
-                              backgroundColor: '#2a2a2a', 
+                              backgroundColor: '#222222', 
                               color: '#fff', 
                               border: '1px solid rgba(255, 255, 255, 0.1)', 
                               borderRadius: '6px', 
@@ -19332,7 +19332,7 @@ onKeyPress={(e) => {
                             style={{ 
                               width: '100%', 
                               padding: '12px 40px 12px 12px', 
-                              backgroundColor: '#2a2a2a', 
+                              backgroundColor: '#222222', 
                               color: '#fff', 
                               border: '1px solid rgba(255, 255, 255, 0.1)', 
                               borderRadius: '6px', 
@@ -19384,7 +19384,7 @@ onKeyPress={(e) => {
                             style={{ 
                               width: '100%', 
                               padding: '12px 40px 12px 12px', 
-                              backgroundColor: '#2a2a2a', 
+                              backgroundColor: '#222222', 
                               color: '#fff', 
                               border: '1px solid rgba(255, 255, 255, 0.1)', 
                               borderRadius: '6px', 
@@ -19418,7 +19418,7 @@ onKeyPress={(e) => {
                             style={{ 
                               width: '100%', 
                               padding: '12px 40px 12px 12px', 
-                              backgroundColor: '#2a2a2a', 
+                              backgroundColor: '#222222', 
                               color: '#fff', 
                               border: '1px solid rgba(255, 255, 255, 0.1)', 
                               borderRadius: '6px', 
@@ -19470,7 +19470,7 @@ onKeyPress={(e) => {
                             style={{ 
                               width: '100%', 
                               padding: '12px 40px 12px 12px', 
-                              backgroundColor: '#2a2a2a', 
+                              backgroundColor: '#222222', 
                               color: '#fff', 
                               border: '1px solid rgba(255, 255, 255, 0.1)', 
                               borderRadius: '6px', 
@@ -19504,7 +19504,7 @@ onKeyPress={(e) => {
                             style={{ 
                               width: '100%', 
                               padding: '12px 40px 12px 12px', 
-                              backgroundColor: '#2a2a2a', 
+                              backgroundColor: '#222222', 
                               color: '#fff', 
                               border: '1px solid rgba(255, 255, 255, 0.1)', 
                               borderRadius: '6px', 
@@ -19557,7 +19557,7 @@ onKeyPress={(e) => {
                             style={{ 
                               width: '100%', 
                               padding: '12px', 
-                              backgroundColor: '#2a2a2a', 
+                              backgroundColor: '#222222', 
                               color: '#fff', 
                               border: '1px solid rgba(255, 255, 255, 0.1)', 
                               borderRadius: '6px', 
@@ -19583,7 +19583,7 @@ onKeyPress={(e) => {
                             style={{ 
                               width: '100%', 
                               padding: '12px', 
-                              backgroundColor: '#2a2a2a', 
+                              backgroundColor: '#222222', 
                               color: '#fff', 
                               border: '1px solid rgba(255, 255, 255, 0.1)', 
                               borderRadius: '6px', 
@@ -19671,7 +19671,7 @@ onKeyPress={(e) => {
                         <div style={{ 
                           marginTop: '12px',
                           padding: '12px',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           borderRadius: '6px',
                           border: '1px solid rgba(0, 255, 0, 0.3)'
                         }}>
@@ -19696,7 +19696,7 @@ onKeyPress={(e) => {
                               style={{ 
                                 width: '100%', 
                                 padding: '12px 40px 12px 12px', 
-                                backgroundColor: '#1a1a1a', 
+                                backgroundColor: '#141414', 
                                 color: '#fff', 
                                 border: '1px solid rgba(255, 255, 255, 0.1)', 
                                 borderRadius: '6px', 
@@ -19746,7 +19746,7 @@ onKeyPress={(e) => {
                         style={{ 
                           width: '100%', 
                           padding: '12px', 
-                          backgroundColor: '#2a2a2a', 
+                          backgroundColor: '#222222', 
                           color: '#fff', 
                           border: '1px solid rgba(255, 255, 255, 0.1)', 
                           borderRadius: '6px', 
@@ -19776,7 +19776,7 @@ onKeyPress={(e) => {
                     <div style={{ marginTop: '15px' }}>
                       <h5 style={{ marginBottom: '10px', color: '#ffffff', fontSize: '14px', fontWeight: 'bold' }}>{safeT?.controleHorasDeslocamentos || 'CONTROLE DE HORAS E DESLOCAMENTOS'}</h5>
                       <div style={{ overflowX: 'auto', overflowY: 'visible', maxWidth: '100%' }}>
-                        <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse', backgroundColor: '#1a1a1a', border: '1px solid rgba(0, 255, 0, 0.3)', fontSize: '10px' }}>
+                        <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse', backgroundColor: '#141414', border: '1px solid rgba(0, 255, 0, 0.3)', fontSize: '10px' }}>
                           <thead>
                             <tr style={{ backgroundColor: '#0a4a0a', borderBottom: '2px solid #00ff00' }}>
                               <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: '60px' }} rowSpan={2}>{safeT?.data || 'DATA'}</th>
@@ -19832,7 +19832,7 @@ onKeyPress={(e) => {
                                   </tr>
                                   {temDescricao && (
                                     <tr style={{ borderBottom: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                                      <td colSpan={15} style={{ padding: '8px', textAlign: 'left', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '10px', color: '#ffffff', backgroundColor: '#1a1a1a' }}>
+                                      <td colSpan={15} style={{ padding: '8px', textAlign: 'left', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '10px', color: '#ffffff', backgroundColor: '#141414' }}>
                                         <div style={{ display: 'flex', alignItems: 'start', gap: '8px' }}>
                                           <span style={{ fontSize: '12px', marginRight: '4px' }}>📝</span>
                                           <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{dia.descricaoTrabalho}</span>
@@ -19848,14 +19848,14 @@ onKeyPress={(e) => {
                       </div>
                     </div>
                 ) : (
-                  <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', textAlign: 'center', border: '1px solid rgba(255, 255, 0, 0.3)' }}>
+                  <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px', textAlign: 'center', border: '1px solid rgba(255, 255, 0, 0.3)' }}>
                     <p style={{ color: '#ffaa00', fontSize: '13px' }}>{safeT?.nenhumDiaTrabalhoAdicionado || 'Nenhum dia de trabalho adicionado ainda'}</p>
                   </div>
                   )}
                 </div>
 
                 {/* Observações */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px' }}>
                   <h4 style={{ marginBottom: '15px', color: '#00ff00' }}>{t?.observacoes || 'Observações'}</h4>
                   <div>
                     <label style={{ display: 'block', marginBottom: '5px' }}>{t?.observacoes || 'Observações'}</label>
@@ -19864,13 +19864,13 @@ onKeyPress={(e) => {
                       onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, observacoes: e.target.value })}
                       rows={4}
                       placeholder={t?.observacoesPlaceholder || 'Digite as observações do serviço...'}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                 </div>
 
                 {/* Pontos em Aberto */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px' }}>
                   <h4 style={{ marginBottom: '15px', color: '#00ff00' }}>{t?.pontosAberto || 'Pontos em Aberto'}</h4>
                   <div>
                     <label style={{ display: 'block', marginBottom: '5px' }}>{t?.pontosAberto || 'Pontos em Aberto'}</label>
@@ -19879,18 +19879,18 @@ onKeyPress={(e) => {
                       onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, pontosAberto: e.target.value })}
                       rows={4}
                       placeholder={t?.pontosAbertoPlaceholder || 'Digite os pontos que ficaram abertos...'}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                 </div>
 
                 {/* Peças de Substituição */}
                 {relatorioServicoForm.necessarioTrocaPecas && (
-                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px' }}>
                     <h4 style={{ marginBottom: '15px', color: '#00ff00' }}>{safeT?.pecasSubstituicao || 'Peças de Substituição'}</h4>
                     
                     {/* Formulário para adicionar peça */}
-                    <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '6px', marginBottom: '15px', backgroundColor: '#1a1a1a' }}>
+                    <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '6px', marginBottom: '15px', backgroundColor: '#141414' }}>
                       <h5 style={{ marginBottom: '10px' }}>{safeT?.addPeca || 'Adicionar Peça'}</h5>
                       
                       {/* Busca por código da biblioteca */}
@@ -19939,7 +19939,7 @@ onKeyPress={(e) => {
                                 })
                               }
                             }}
-                            style={{ flex: 1, padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '12px' }}
+                            style={{ flex: 1, padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '12px' }}
                           />
                           <button
                             className="btn-primary"
@@ -19956,7 +19956,7 @@ onKeyPress={(e) => {
 
                       {/* Exibir peça encontrada */}
                       {pecaSelecionadaBiblioteca && (
-                        <div style={{ marginBottom: '15px', padding: '12px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '2px solid rgba(0, 255, 0, 0.5)' }}>
+                        <div style={{ marginBottom: '15px', padding: '12px', backgroundColor: '#222222', borderRadius: '6px', border: '2px solid rgba(0, 255, 0, 0.5)' }}>
                           <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                             {pecaSelecionadaBiblioteca.imagem && (
                               <img 
@@ -19998,7 +19998,7 @@ onKeyPress={(e) => {
                           value={novaPeca.quantidade}
                           onChange={(e) => setNovaPeca({ ...novaPeca, quantidade: e.target.value })}
                           placeholder={safeT?.digiteQuantidade || 'Digite a quantidade...'}
-                          style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '12px' }}
+                          style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '12px' }}
                         />
                       </div>
 
@@ -20031,7 +20031,7 @@ onKeyPress={(e) => {
                       <div>
                         <h5 style={{ marginBottom: '10px' }}>{safeT?.pecasAdicionadas || 'Peças Adicionadas'}:</h5>
                         {relatorioServicoForm.pecasSubstituicao.map((peca, index) => (
-                          <div key={peca.id || index} style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '10px', borderRadius: '6px', marginBottom: '10px', backgroundColor: '#1a1a1a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div key={peca.id || index} style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '10px', borderRadius: '6px', marginBottom: '10px', backgroundColor: '#141414', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
                               <p style={{ marginBottom: '3px', fontWeight: 'bold' }}>{peca.descricao}</p>
                               <p style={{ fontSize: '12px', marginBottom: '3px' }}>{safeT?.codigo || 'Código'}: {peca.codigo} | {safeT?.quantidade || 'Quantidade'}: {peca.quantidade}</p>
@@ -20046,7 +20046,7 @@ onKeyPress={(e) => {
                     
                     {/* Botão Gerar Pedido de Orçamento - padrão Visualizar Equipamento (card #2a2a2a, borda 1px, botão estilo aba) */}
                     {relatorioServicoForm.pecasSubstituicao.length > 0 && (
-                      <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                      <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                         <button 
                           onClick={() => setShowPedidoOrcamentoModal(true)}
                           style={{ 
@@ -20074,40 +20074,40 @@ onKeyPress={(e) => {
                   <div style={{ marginBottom: '15px', marginTop: '15px' }}>
                     <h3 style={{ marginBottom: '10px', color: '#00ff00', fontSize: '14px', textAlign: 'center', fontWeight: 'bold' }}>{safeT?.resumoHorasDeslocamentos?.toUpperCase() || 'RESUMO DE HORAS, DESLOCAMENTOS E DIÁRIAS'}</h3>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
-                      <div style={{ padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
+                      <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                         <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasTrabalho || 'Horas de Trabalho'}</p>
                         <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasTrabalho}h</p>
                       </div>
-                      <div style={{ padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
+                      <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                         <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.kmsPercorridos || 'Km\'s Percorridos'}</p>
                         <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).kmsPercorridos} km</p>
                       </div>
-                      <div style={{ padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
+                      <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                         <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasViagem || 'Horas de Viagem'}</p>
                         <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasViagem}h</p>
                       </div>
-                      <div style={{ padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
+                      <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                         <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.diarias || 'DIÁRIAS'}</p>
                         <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{relatorioServicoForm.diasTrabalho.length}</p>
                       </div>
-                      <div style={{ padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
+                      <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
                         <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemIda || 'Horas de Viagem de Ida'}</p>
                         <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#00ff00' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasViagemIda}</p>
                       </div>
-                      <div style={{ padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
+                      <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
                         <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemRetorno || 'Horas de Viagem de Retorno'}</p>
                         <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#00ff00' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasViagemRetorno}</p>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div style={{ marginBottom: '15px', padding: '12px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(255, 255, 0, 0.3)', textAlign: 'center' }}>
+                  <div style={{ marginBottom: '15px', padding: '12px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(255, 255, 0, 0.3)', textAlign: 'center' }}>
                     <p style={{ color: '#ffaa00', fontSize: '12px' }}>⚠️ {safeT?.adicioneDiasTrabalho || 'Adicione dias de trabalho para ver os cálculos finais'}</p>
                   </div>
                 )}
 
                 {/* Status do Serviço */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px' }}>
                   <h4 style={{ marginBottom: '15px', color: '#00ff00' }}>{safeT?.statusServico || 'Status do Serviço'}</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
@@ -20227,7 +20227,7 @@ onKeyPress={(e) => {
                       codigo: '',
                       quantidade: ''
                     });
-                  }} style={{ padding: '8px 16px', backgroundColor: '#2a2a2a', borderColor: '#666' }}>
+                  }} style={{ padding: '8px 16px', backgroundColor: '#222222', borderColor: '#666' }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                   </div>
@@ -20245,7 +20245,7 @@ onKeyPress={(e) => {
               }}>
                 <div style={{
                   padding: '12px 15px',
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   borderRadius: '8px',
                   border: '2px solid rgba(0, 255, 0, 0.3)',
                   textAlign: 'center',
@@ -20263,7 +20263,7 @@ onKeyPress={(e) => {
                 </div>
                 <div style={{
                   padding: '12px 15px',
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   borderRadius: '8px',
                   border: '2px solid rgba(0, 255, 0, 0.3)',
                   textAlign: 'center',
@@ -20283,7 +20283,7 @@ onKeyPress={(e) => {
                 </div>
                 <div style={{
                   padding: '12px 15px',
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   borderRadius: '8px',
                   border: '2px solid rgba(0, 255, 0, 0.3)',
                   textAlign: 'center',
@@ -20303,7 +20303,7 @@ onKeyPress={(e) => {
                 </div>
                 <div style={{
                   padding: '12px 15px',
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   borderRadius: '8px',
                   border: '2px solid rgba(255, 68, 68, 0.3)',
                   textAlign: 'center',
@@ -20327,7 +20327,7 @@ onKeyPress={(e) => {
             {relatoriosServico.length === 0 ? (
               <div style={{
                 padding: '60px 40px',
-                backgroundColor: '#1a1a1a',
+                backgroundColor: '#141414',
                 borderRadius: '16px',
                 border: '2px solid rgba(0, 255, 0, 0.3)',
                 textAlign: 'center'
@@ -20363,7 +20363,7 @@ onKeyPress={(e) => {
                       <div 
                         key={relatorio.id} 
                         style={{ 
-                          backgroundColor: '#1a1a1a', 
+                          backgroundColor: '#141414', 
                           padding: '15px', 
                           borderRadius: '12px', 
                           border: '2px solid rgba(0, 255, 0, 0.3)',
@@ -20510,7 +20510,7 @@ onKeyPress={(e) => {
                         {relatorio.diasTrabalho.length > 0 && (
                           <div style={{
                             padding: '12px',
-                            backgroundColor: '#2a2a2a',
+                            backgroundColor: '#222222',
                             borderRadius: '8px',
                             marginBottom: '15px',
                             border: '1px solid rgba(0, 255, 0, 0.2)'
@@ -20593,7 +20593,7 @@ onKeyPress={(e) => {
                                 flex: 1,
                                 padding: '8px',
                                 fontSize: '11px',
-                                backgroundColor: '#1a1a1a',
+                                backgroundColor: '#141414',
                                 color: '#66b3ff',
                                 border: '1px solid rgba(0, 150, 255, 0.5)',
                                 borderRadius: '4px',
@@ -20952,7 +20952,7 @@ onKeyPress={(e) => {
                 </button>
                 
                 {showClienteForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#1a1a1a' }}>
+              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414' }}>
                 <h3 style={{ marginBottom: '15px' }}>{editingCliente ? (safeT?.editCliente || 'Editar Cliente') : (safeT?.addCliente || 'Adicionar Cliente')}</h3>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
@@ -20963,7 +20963,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.nomeEmpresa || 'Nome da Empresa'}
                       value={clienteForm.nomeEmpresa}
                       onChange={(e) => setClienteForm({ ...clienteForm, nomeEmpresa: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -20974,7 +20974,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.morada || 'Morada'}
                       value={clienteForm.morada}
                       onChange={(e) => setClienteForm({ ...clienteForm, morada: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -20985,7 +20985,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.localidade || 'Localidade'}
                       value={clienteForm.localidade}
                       onChange={(e) => setClienteForm({ ...clienteForm, localidade: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -20996,7 +20996,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.conselho || 'Conselho'}
                       value={clienteForm.conselho}
                       onChange={(e) => setClienteForm({ ...clienteForm, conselho: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21007,7 +21007,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.pais || 'País'}
                       value={clienteForm.pais}
                       onChange={(e) => setClienteForm({ ...clienteForm, pais: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21018,7 +21018,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.codigoPostal || 'Código Postal'}
                       value={clienteForm.codigoPostal}
                       onChange={(e) => setClienteForm({ ...clienteForm, codigoPostal: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21057,7 +21057,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.freguesia || 'Freguesia'}
                       value={clienteForm.freguesia}
                       onChange={(e) => setClienteForm({ ...clienteForm, freguesia: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21068,7 +21068,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.identificacaoFiscal || 'Identificação Fiscal'}
                       value={clienteForm.numeroContribuicaoFiscal}
                       onChange={(e) => setClienteForm({ ...clienteForm, numeroContribuicaoFiscal: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21079,7 +21079,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.telefones || 'Telefones'}
                       value={clienteForm.telefones}
                       onChange={(e) => setClienteForm({ ...clienteForm, telefones: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21090,7 +21090,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.email || 'E-mail'}
                       value={clienteForm.email}
                       onChange={(e) => setClienteForm({ ...clienteForm, email: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21101,7 +21101,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.contato || 'Contato'}
                       value={clienteForm.contato}
                       onChange={(e) => setClienteForm({ ...clienteForm, contato: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21111,7 +21111,7 @@ onKeyPress={(e) => {
                       type="file"
                       accept="image/*"
                       onChange={handleClientePhotoChange}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                     {clienteForm.photo && (
                       <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
@@ -21126,7 +21126,7 @@ onKeyPress={(e) => {
                             borderRadius: '8px', 
                             border: '2px solid rgba(0, 255, 0, 0.5)',
                             objectFit: 'contain',
-                            backgroundColor: '#2a2a2a',
+                            backgroundColor: '#222222',
                             padding: '5px'
                           }} 
                         />
@@ -21182,7 +21182,7 @@ onKeyPress={(e) => {
                       style={{ 
                         width: '100%', 
                         padding: '10px', 
-                        backgroundColor: '#2a2a2a', 
+                        backgroundColor: '#222222', 
                         color: '#fff', 
                         border: '1px solid rgba(0, 255, 0, 0.3)', 
                         borderRadius: '4px',
@@ -21199,7 +21199,7 @@ onKeyPress={(e) => {
                     {safeT?.nenhumEncontrado || 'Nenhum encontrado com'} {safeT?.cliente || 'cliente'} "{buscaCliente}"
                   </p>
                 ) : (
-                  <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#2a2a2a', borderRadius: '6px', fontSize: '14px' }}>
+                  <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#222222', borderRadius: '6px', fontSize: '14px' }}>
                     {safeT?.mostrando || 'Mostrando'} {clientesFiltrados.length} {safeT?.de || 'de'} {clientes.length} {safeT?.clientes || 'cliente(s)'}
                   </div>
                 )}
@@ -21225,7 +21225,7 @@ onKeyPress={(e) => {
                         <div 
                           key={cliente.id} 
                           style={{ 
-                            backgroundColor: '#2a2a2a', 
+                            backgroundColor: '#222222', 
                             padding: '8px', 
                             borderRadius: '6px', 
                             border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -21244,7 +21244,7 @@ onKeyPress={(e) => {
                                 borderRadius: '6px',
                                 overflow: 'hidden',
                                 border: '1px solid rgba(255, 255, 255, 0.2)',
-                                backgroundColor: '#1a1a1a',
+                                backgroundColor: '#141414',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center'
@@ -21544,7 +21544,7 @@ onKeyPress={(e) => {
               <div style={{
                 marginBottom: '30px',
                 padding: '20px',
-                backgroundColor: '#1a1a1a',
+                backgroundColor: '#141414',
                 borderRadius: '12px',
                 border: '1px solid rgba(255, 165, 0, 0.2)'
               }}>
@@ -21557,7 +21557,7 @@ onKeyPress={(e) => {
                     style={{ 
                       width: '100%', 
                       padding: '12px 40px 12px 16px', 
-                      backgroundColor: '#2a2a2a', 
+                      backgroundColor: '#222222', 
                       color: '#fff', 
                       border: '1px solid rgba(255, 165, 0, 0.3)', 
                       borderRadius: '8px',
@@ -21577,7 +21577,7 @@ onKeyPress={(e) => {
             )}
             
             {showFornecedorForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#1a1a1a' }}>
+              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414' }}>
                 <h3 style={{ marginBottom: '15px' }}>{editingFornecedor ? (safeT?.editFornecedor || 'Editar Fornecedor') : (safeT?.addFornecedor || 'Adicionar Fornecedor')}</h3>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
@@ -21588,7 +21588,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.nomeEmpresa || 'Nome da Empresa'}
                       value={fornecedorForm.nomeEmpresa}
                       onChange={(e) => setFornecedorForm({ ...fornecedorForm, nomeEmpresa: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21599,7 +21599,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.morada || 'Morada'}
                       value={fornecedorForm.morada}
                       onChange={(e) => setFornecedorForm({ ...fornecedorForm, morada: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21610,7 +21610,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.localidade || 'Localidade'}
                       value={fornecedorForm.localidade}
                       onChange={(e) => setFornecedorForm({ ...fornecedorForm, localidade: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21621,7 +21621,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.conselho || 'Conselho'}
                       value={fornecedorForm.conselho}
                       onChange={(e) => setFornecedorForm({ ...fornecedorForm, conselho: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21632,7 +21632,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.pais || 'País'}
                       value={fornecedorForm.pais}
                       onChange={(e) => setFornecedorForm({ ...fornecedorForm, pais: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21643,7 +21643,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.codigoPostal || 'Código Postal'}
                       value={fornecedorForm.codigoPostal}
                       onChange={(e) => setFornecedorForm({ ...fornecedorForm, codigoPostal: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21654,7 +21654,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.freguesia || 'Freguesia'}
                       value={fornecedorForm.freguesia}
                       onChange={(e) => setFornecedorForm({ ...fornecedorForm, freguesia: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21665,7 +21665,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.numeroContribuicaoFiscal || 'Número de Contribuição Fiscal'}
                       value={fornecedorForm.numeroContribuicaoFiscal}
                       onChange={(e) => setFornecedorForm({ ...fornecedorForm, numeroContribuicaoFiscal: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21676,7 +21676,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.telefones || 'Telefones'}
                       value={fornecedorForm.telefones}
                       onChange={(e) => setFornecedorForm({ ...fornecedorForm, telefones: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21687,7 +21687,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.email || 'E-mail'}
                       value={fornecedorForm.email}
                       onChange={(e) => setFornecedorForm({ ...fornecedorForm, email: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21698,7 +21698,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.contato || 'Contato'}
                       value={fornecedorForm.contato}
                       onChange={(e) => setFornecedorForm({ ...fornecedorForm, contato: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   
@@ -21709,7 +21709,7 @@ onKeyPress={(e) => {
                       placeholder={safeT?.iban || 'IBAN'}
                       value={fornecedorForm.iban}
                       onChange={(e) => setFornecedorForm({ ...fornecedorForm, iban: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                 </div>
@@ -21749,7 +21749,7 @@ onKeyPress={(e) => {
                 {safeT?.nenhumEncontrado || 'Nenhum encontrado com'} {safeT?.fornecedor || 'fornecedor'} "{buscaFornecedor}"
               </p>
             ) : (
-              <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#2a2a2a', borderRadius: '6px', fontSize: '14px' }}>
+              <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#222222', borderRadius: '6px', fontSize: '14px' }}>
                 {safeT?.mostrando || 'Mostrando'} {fornecedoresFiltrados.length} {safeT?.de || 'de'} {fornecedores.length} {safeT?.fornecedores || 'fornecedor(es)'}
               </div>
             )}
@@ -21788,7 +21788,7 @@ onKeyPress={(e) => {
                   const temFaturas = fornecedor.faturas && fornecedor.faturas.length > 0
 
                   return (
-                    <div key={fornecedor.id} style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                    <div key={fornecedor.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                       <h3 style={{ marginBottom: '10px', color: '#00ff00' }}>{fornecedor.nomeEmpresa}</h3>
                       {fornecedor.localidade && (
                         <p style={{ fontSize: '14px', marginBottom: '5px' }}><strong>{t.localidade}:</strong> {fornecedor.localidade}{fornecedor.pais && `, ${fornecedor.pais}`}</p>
@@ -21811,7 +21811,7 @@ onKeyPress={(e) => {
 
                       {/* Indicadores de Status de Faturas por Cliente */}
                       {!temFaturas ? (
-                        <div style={{ marginTop: '15px', marginBottom: '10px', padding: '10px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+                        <div style={{ marginTop: '15px', marginBottom: '10px', padding: '10px', backgroundColor: '#222222', borderRadius: '6px' }}>
                           <h4 style={{ fontSize: '13px', marginBottom: '10px', color: '#00ff00' }}>{safeT?.statusFaturas || 'Status de Faturas'}:</h4>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
                             {/* BRANCA - Sem Faturas */}
@@ -21848,7 +21848,7 @@ onKeyPress={(e) => {
                           </div>
                         </div>
                       ) : statusPorCliente.length > 0 && (
-                        <div style={{ marginTop: '15px', marginBottom: '10px', padding: '10px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+                        <div style={{ marginTop: '15px', marginBottom: '10px', padding: '10px', backgroundColor: '#222222', borderRadius: '6px' }}>
                           <h4 style={{ fontSize: '13px', marginBottom: '10px', color: '#00ff00' }}>{safeT?.statusFaturasPorCliente || 'Status de Faturas por Cliente'}:</h4>
                           {statusPorCliente.map((status, idx) => (
                             <div key={idx} style={{ marginBottom: '15px', paddingBottom: '15px', borderBottom: idx < statusPorCliente.length - 1 ? '1px solid rgba(0, 255, 0, 0.1)' : 'none' }}>
@@ -22025,14 +22025,14 @@ onKeyPress={(e) => {
               alignItems: 'start',
               marginBottom: '32px'
             }}>
-              <div style={{ padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.25)' }}>
+              <div style={{ padding: '20px', backgroundColor: '#141414', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.25)' }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#00ff00', fontWeight: 600 }}>
                   {safeT?.translateFrom || 'Traduzir de:'}
                 </label>
                 <select
                   value={translatorFrom}
                   onChange={(e) => setTranslatorFrom(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', marginBottom: '14px', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '10px 12px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', marginBottom: '14px', fontSize: '14px' }}
                 >
                   {langs.map(lang => (
                     <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
@@ -22043,7 +22043,7 @@ onKeyPress={(e) => {
                   onChange={(e) => setTranslatorText(e.target.value)}
                   placeholder={safeT?.enterTextToTranslate || 'Digite o texto...'}
                   rows={5}
-                  style={{ width: '100%', padding: '14px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', resize: 'vertical', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '14px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', resize: 'vertical', fontSize: '14px' }}
                 />
               </div>
 
@@ -22073,14 +22073,14 @@ onKeyPress={(e) => {
                 </button>
               </div>
 
-              <div style={{ padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.25)' }}>
+              <div style={{ padding: '20px', backgroundColor: '#141414', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.25)' }}>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#00ff00', fontWeight: 600 }}>
                   {safeT?.translateTo || 'Traduzir para:'}
                 </label>
                 <select
                   value={translatorTo}
                   onChange={(e) => setTranslatorTo(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', marginBottom: '14px', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '10px 12px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', marginBottom: '14px', fontSize: '14px' }}
                 >
                   {langs.map(lang => (
                     <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
@@ -22090,7 +22090,7 @@ onKeyPress={(e) => {
                   readOnly
                   value={translatedText || quickTranslateResult || ''}
                   rows={5}
-                  style={{ width: '100%', padding: '14px', backgroundColor: '#2a2a2a', color: '#00ff00', border: '1px solid rgba(0, 255, 0, 0.4)', borderRadius: '8px', resize: 'vertical', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '14px', backgroundColor: '#222222', color: '#00ff00', border: '1px solid rgba(0, 255, 0, 0.4)', borderRadius: '8px', resize: 'vertical', fontSize: '14px' }}
                 />
                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
                   {(translatedText || quickTranslateResult) && (
@@ -22148,7 +22148,7 @@ onKeyPress={(e) => {
             {/* Biblioteca de palavras-chave - separada por idiomas */}
             <div style={{
               padding: '24px',
-              backgroundColor: '#1a1a1a',
+              backgroundColor: '#141414',
               borderRadius: '16px',
               border: '2px solid rgba(0, 255, 0, 0.3)',
               boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
@@ -22165,7 +22165,7 @@ onKeyPress={(e) => {
                   <select
                     value={translatorLibraryFrom}
                     onChange={(e) => setTranslatorLibraryFrom(e.target.value)}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px' }}
                   >
                     {langs.map(lang => (
                       <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
@@ -22177,7 +22177,7 @@ onKeyPress={(e) => {
                   <select
                     value={translatorLibraryTo}
                     onChange={(e) => setTranslatorLibraryTo(e.target.value)}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px' }}
                   >
                     {langs.map(lang => (
                       <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
@@ -22193,7 +22193,7 @@ onKeyPress={(e) => {
                     value={libraryEntrySource}
                     onChange={(e) => setLibraryEntrySource(e.target.value)}
                     placeholder={safeT?.enterWord || 'Ex.: Olá'}
-                    style={{ width: '100%', padding: '10px 12px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px' }}
+                    style={{ width: '100%', padding: '10px 12px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px' }}
                   />
                 </div>
                 <div>
@@ -22203,7 +22203,7 @@ onKeyPress={(e) => {
                     value={libraryEntryTarget}
                     onChange={(e) => setLibraryEntryTarget(e.target.value)}
                     placeholder={safeT?.enterTranslation || 'Ex.: Hello'}
-                    style={{ width: '100%', padding: '10px 12px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px' }}
+                    style={{ width: '100%', padding: '10px 12px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px' }}
                   />
                 </div>
                 <button
@@ -22249,7 +22249,7 @@ onKeyPress={(e) => {
                           justifyContent: 'space-between',
                           alignItems: 'center',
                           padding: '12px 14px',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           borderRadius: '8px',
                           border: '1px solid rgba(0, 255, 0, 0.2)'
                         }}
@@ -22386,7 +22386,7 @@ onKeyPress={(e) => {
             }}>
               <div style={{
                 padding: '10px 12px',
-                backgroundColor: '#1a1a1a',
+                backgroundColor: '#141414',
                 borderRadius: '8px',
                 border: '1px solid rgba(0, 255, 0, 0.25)',
                 textAlign: 'center',
@@ -22413,7 +22413,7 @@ onKeyPress={(e) => {
               </div>
               <div style={{
                 padding: '10px 12px',
-                backgroundColor: '#1a1a1a',
+                backgroundColor: '#141414',
                 borderRadius: '8px',
                 border: '1px solid rgba(0, 255, 0, 0.25)',
                 textAlign: 'center',
@@ -22440,7 +22440,7 @@ onKeyPress={(e) => {
               </div>
               <div style={{
                 padding: '10px 12px',
-                backgroundColor: '#1a1a1a',
+                backgroundColor: '#141414',
                 borderRadius: '8px',
                 border: '1px solid rgba(0, 255, 0, 0.25)',
                 textAlign: 'center',
@@ -22592,7 +22592,7 @@ onKeyPress={(e) => {
                     setFiltroGrupoBiblioteca(e.target.value)
                     setFiltroSubgrupoBiblioteca('') // Limpar subgrupo quando mudar grupo
                   }}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                 >
                   <option value="">{safeT?.todosGrupos || 'Todos os grupos'}</option>
                   {categoriasPecas.map(cat => (
@@ -22608,7 +22608,7 @@ onKeyPress={(e) => {
                   <select
                     value={filtroSubgrupoBiblioteca || ''}
                     onChange={(e) => setFiltroSubgrupoBiblioteca(e.target.value)}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                   >
                     <option value="">{safeT?.todasSubcategorias || 'Todas as subcategorias'}</option>
                     {subcategoriasPecas
@@ -22660,7 +22660,7 @@ onKeyPress={(e) => {
             </button>
             
             {showBibliotecaPecasForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#1a1a1a' }}>
+              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414' }}>
                 <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>
                   {editingPecaBiblioteca ? (safeT?.editPecaBiblioteca || 'Editar Peça') : (safeT?.novaPecaBiblioteca || 'Nova Peça')}
                 </h3>
@@ -22715,7 +22715,7 @@ onKeyPress={(e) => {
                     placeholder={safeT?.nomePecaBiblioteca || 'Nome'}
                     value={pecaBibliotecaForm.nome}
                     onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, nome: e.target.value })}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
                 
@@ -22728,7 +22728,7 @@ onKeyPress={(e) => {
                     placeholder={safeT?.codigoPecaBiblioteca || 'Código'}
                     value={pecaBibliotecaForm.codigo}
                     onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, codigo: e.target.value })}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
                 
@@ -22742,7 +22742,7 @@ onKeyPress={(e) => {
                     placeholder={safeT?.precoPecaBiblioteca || 'Preço (€)'}
                     value={pecaBibliotecaForm.preco}
                     onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, preco: e.target.value })}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
                 
@@ -22755,7 +22755,7 @@ onKeyPress={(e) => {
                     value={pecaBibliotecaForm.descricao}
                     onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, descricao: e.target.value })}
                     rows={4}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', resize: 'vertical' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', resize: 'vertical' }}
                   ></textarea>
                 </div>
 
@@ -22788,7 +22788,7 @@ onKeyPress={(e) => {
                       })
                       setUltimoSubgrupoSelecionado('') // Limpar subgrupo quando mudar grupo
                     }}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   >
                     <option value="">{safeT?.selecioneCategoria || 'Selecione uma categoria'}</option>
                     {categoriasPecas.map(cat => (
@@ -22824,7 +22824,7 @@ onKeyPress={(e) => {
                           subcategoria: subcategoria?.nome || ''
                         })
                       }}
-                      style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     >
                       <option value="">{safeT?.selecioneSubcategoria || 'Selecione uma subcategoria'}</option>
                       {subcategoriasPecas
@@ -22926,7 +22926,7 @@ onKeyPress={(e) => {
                 zIndex: 10000 
               }}>
                 <div style={{ 
-                  backgroundColor: '#1a1a1a', 
+                  backgroundColor: '#141414', 
                   padding: '30px', 
                   borderRadius: '8px', 
                   border: '1px solid rgba(0, 255, 0, 0.3)',
@@ -22945,7 +22945,7 @@ onKeyPress={(e) => {
                       value={novaCategoriaNome}
                       onChange={(e) => setNovaCategoriaNome(e.target.value)}
                           placeholder={safeT?.nomeCategoria || 'Nome da Categoria'}
-                      style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                       onKeyPress={(e) => {
                         if (e.key === 'Enter' && novaCategoriaNome.trim()) {
                           const newCategoria: CategoriaPeca = {
@@ -23015,7 +23015,7 @@ onKeyPress={(e) => {
                 zIndex: 10000 
               }}>
                 <div style={{ 
-                  backgroundColor: '#1a1a1a', 
+                  backgroundColor: '#141414', 
                   padding: '30px', 
                   borderRadius: '8px', 
                   border: '1px solid rgba(0, 255, 0, 0.3)',
@@ -23040,7 +23040,7 @@ onKeyPress={(e) => {
                     </div>
                   ) : (
                     <>
-                      <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#2a2a2a', borderRadius: '4px' }}>
+                      <div style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#222222', borderRadius: '4px' }}>
                         <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '5px' }}>
                           {safeT?.categoriaPecaBiblioteca || 'Categoria'}:
                         </p>
@@ -23057,7 +23057,7 @@ onKeyPress={(e) => {
                           value={novaSubcategoriaNome}
                           onChange={(e) => setNovaSubcategoriaNome(e.target.value)}
                           placeholder={safeT?.nomeSubcategoria || 'Nome da Subcategoria'}
-                          style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                          style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                           onKeyPress={(e) => {
                             if (e.key === 'Enter' && novaSubcategoriaNome.trim() && pecaBibliotecaForm.categoriaId) {
                               const newSubcategoria: SubcategoriaPeca = {
@@ -23129,7 +23129,7 @@ onKeyPress={(e) => {
               })
 
               return pecasFiltradas.length === 0 ? (
-                <div style={{ padding: '40px', textAlign: 'center', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginTop: '20px' }}>
+                <div style={{ padding: '40px', textAlign: 'center', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginTop: '20px' }}>
                   <p style={{ fontSize: '16px', opacity: 0.7 }}>
                     {(filtroGrupoBiblioteca || filtroSubgrupoBiblioteca) 
                       ? (safeT?.nenhumaPecaFiltro || 'Nenhuma peça encontrada com os filtros selecionados.')
@@ -23170,7 +23170,7 @@ onKeyPress={(e) => {
                           <div
                             key={peca.id}
                             style={{
-                              backgroundColor: '#1a1a1a',
+                              backgroundColor: '#141414',
                               padding: '16px',
                               borderRadius: '8px',
                               border: '1px solid rgba(0, 255, 0, 0.2)',
@@ -23202,7 +23202,7 @@ onKeyPress={(e) => {
                                 height: '120px',
                                 marginBottom: '12px',
                                 borderRadius: '6px',
-                                backgroundColor: '#2a2a2a',
+                                backgroundColor: '#222222',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -23315,7 +23315,7 @@ onKeyPress={(e) => {
                         setFiltroGrupoBiblioteca(e.target.value)
                         setFiltroSubgrupoBiblioteca('')
                       }}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                     >
                       <option value="">{safeT?.todosGrupos || 'Todos os grupos'}</option>
                       {categoriasPecas.map(cat => (
@@ -23334,7 +23334,7 @@ onKeyPress={(e) => {
 
                   if (pecasFiltradas.length === 0) {
                     return (
-                      <div style={{ padding: '40px', textAlign: 'center', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                      <div style={{ padding: '40px', textAlign: 'center', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                         <p style={{ fontSize: '16px', opacity: 0.7 }}>
                           {filtroGrupoBiblioteca 
                             ? (safeT?.nenhumaPecaFiltro || 'Nenhuma peça encontrada com os filtros selecionados.')
@@ -23352,7 +23352,7 @@ onKeyPress={(e) => {
                           const isPendingChecklist = criacaoChecklistPendentePeca?.origem === 'biblioteca'
                           const isSelected = isPendingChecklist && pecaSelecionadaParaChecklist?.id === peca.id
                           return (
-                            <div key={peca.id} style={{ backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.15)' : '#1a1a1a', padding: '15px', borderRadius: '8px', border: isSelected ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', cursor: 'pointer', transition: 'transform 0.2s' }}
+                            <div key={peca.id} style={{ backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.15)' : '#141414', padding: '15px', borderRadius: '8px', border: isSelected ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', cursor: 'pointer', transition: 'transform 0.2s' }}
                               onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
                               onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                               onClick={() => { if (isPendingChecklist) setPecaSelecionadaParaChecklist(peca) }}
@@ -23360,7 +23360,7 @@ onKeyPress={(e) => {
                               {peca.imagem ? (
                                 <img src={peca.imagem} alt={peca.nome} style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
                               ) : (
-                                <div style={{ width: '100%', height: '150px', backgroundColor: '#2a2a2a', borderRadius: '4px', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
+                                <div style={{ width: '100%', height: '150px', backgroundColor: '#222222', borderRadius: '4px', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
                                   {safeT?.semImagem || 'Sem Imagem'}
                                 </div>
                               )}
@@ -23382,13 +23382,13 @@ onKeyPress={(e) => {
                           const isPendingChecklist = criacaoChecklistPendentePeca?.origem === 'biblioteca'
                           const isSelected = isPendingChecklist && pecaSelecionadaParaChecklist?.id === peca.id
                           return (
-                            <div key={peca.id} style={{ backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.15)' : '#1a1a1a', padding: '15px', borderRadius: '8px', border: isSelected ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', gap: '15px', alignItems: 'center', cursor: isPendingChecklist ? 'pointer' : undefined }}
+                            <div key={peca.id} style={{ backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.15)' : '#141414', padding: '15px', borderRadius: '8px', border: isSelected ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', gap: '15px', alignItems: 'center', cursor: isPendingChecklist ? 'pointer' : undefined }}
                               onClick={() => { if (isPendingChecklist) setPecaSelecionadaParaChecklist(peca) }}
                             >
                               {peca.imagem ? (
                                 <img src={peca.imagem} alt={peca.nome} style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '4px' }} />
                               ) : (
-                                <div style={{ width: '100px', height: '100px', backgroundColor: '#2a2a2a', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: '12px' }}>
+                                <div style={{ width: '100px', height: '100px', backgroundColor: '#222222', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: '12px' }}>
                                   {safeT?.semImagem || 'Sem Imagem'}
                                 </div>
                               )}
@@ -23452,7 +23452,7 @@ onKeyPress={(e) => {
                   paddingRight: '6px'
                 }}>
                   {categoriasPecas.length === 0 ? (
-                    <div style={{ padding: '40px 24px', textAlign: 'center', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                    <div style={{ padding: '40px 24px', textAlign: 'center', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                       <p style={{ fontSize: '15px', opacity: 0.8, margin: 0 }}>{safeT?.nenhumaCategoria || 'Nenhuma categoria cadastrada. Clique em "Nova Categoria" para começar.'}</p>
                     </div>
                   ) : (
@@ -23495,7 +23495,7 @@ onKeyPress={(e) => {
                                     value={novaCategoriaNome}
                                     onChange={(e) => setNovaCategoriaNome(e.target.value)}
                                     placeholder={safeT?.nomeCategoria || 'Nome da categoria'}
-                                    style={{ flex: '1 1 200px', minWidth: '180px', padding: '9px 14px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.4)', borderRadius: '6px', fontSize: '15px', fontWeight: '600' }}
+                                    style={{ flex: '1 1 200px', minWidth: '180px', padding: '9px 14px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.4)', borderRadius: '6px', fontSize: '15px', fontWeight: '600' }}
                                     onKeyPress={(e) => {
                                       if (e.key === 'Enter' && novaCategoriaNome.trim()) {
                                         const updated = categoriasPecas.map(c => c.id === categoria.id ? { ...c, nome: novaCategoriaNome.trim() } : c)
@@ -23559,7 +23559,7 @@ onKeyPress={(e) => {
                             </div>
 
                             {/* Bloco de subcategorias - conteúdo da categoria (ex: itens sob Sensores) */}
-                            <div style={{ padding: '16px 18px', backgroundColor: '#1a1a1a' }}>
+                            <div style={{ padding: '16px 18px', backgroundColor: '#141414' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                                 <span style={{ fontSize: '12px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{safeT?.subcategorias || 'Subcategorias'}</span>
                                 <button
@@ -23587,7 +23587,7 @@ onKeyPress={(e) => {
                                             type="text"
                                             value={novaSubcategoriaNome}
                                             onChange={(e) => setNovaSubcategoriaNome(e.target.value)}
-                                            style={{ width: '100%', padding: '7px 10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }}
+                                            style={{ width: '100%', padding: '7px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }}
                                             onKeyPress={(e) => {
                                               if (e.key === 'Enter' && novaSubcategoriaNome.trim()) {
                                                 const updated = subcategoriasPecas.map(s => s.id === subcategoria.id ? { ...s, nome: novaSubcategoriaNome.trim() } : s)
@@ -23676,7 +23676,7 @@ onKeyPress={(e) => {
                       flex: '1',
                       minWidth: '280px',
                       padding: '12px 16px',
-                      backgroundColor: '#1a1a1a',
+                      backgroundColor: '#141414',
                       border: '1px solid rgba(0, 255, 0, 0.3)',
                       borderRadius: '8px',
                       color: '#fff',
@@ -23749,7 +23749,7 @@ A1;Peça exemplo;10'
                     width: '100%',
                     minHeight: '100px',
                     padding: '12px',
-                    backgroundColor: '#1a1a1a',
+                    backgroundColor: '#141414',
                     border: '1px solid rgba(0, 255, 0, 0.3)',
                     borderRadius: '8px',
                     color: '#fff',
@@ -23908,7 +23908,7 @@ A1;Peça exemplo;10'
                     flex: '1',
                     minWidth: '280px',
                     padding: '12px 16px',
-                    backgroundColor: '#1a1a1a',
+                    backgroundColor: '#141414',
                     border: '1px solid rgba(0, 255, 0, 0.3)',
                     borderRadius: '8px',
                     color: '#fff',
@@ -23981,7 +23981,7 @@ A1;Peça exemplo;10'
                   width: '100%',
                   minHeight: '100px',
                   padding: '12px',
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   border: '1px solid rgba(0, 255, 0, 0.3)',
                   borderRadius: '8px',
                   color: '#fff',
@@ -24178,7 +24178,7 @@ A1;Peça exemplo;10'
             <div style={{
               marginBottom: '30px',
               padding: '20px',
-              backgroundColor: '#1a1a1a',
+              backgroundColor: '#141414',
               borderRadius: '12px',
               border: '1px solid rgba(0, 255, 0, 0.2)',
               display: 'flex',
@@ -24229,7 +24229,7 @@ A1;Peça exemplo;10'
                 <select
                   value={filtroAgenda}
                   onChange={(e) => setFiltroAgenda(e.target.value as typeof filtroAgenda)}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                 >
                   <option value="todos">{safeT?.todos || 'Todos'}</option>
                   <option value="pre-agendamento">{safeT?.preAgendamento || 'Pré-Agendamento'}</option>
@@ -24240,7 +24240,7 @@ A1;Peça exemplo;10'
                 <select
                   value={filtroTecnicoAgenda}
                   onChange={(e) => setFiltroTecnicoAgenda(e.target.value)}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                 >
                   <option value="">{safeT?.todosTecnicos || 'Todos os técnicos'}</option>
                   {tecnicos.map(tec => (
@@ -24253,7 +24253,7 @@ A1;Peça exemplo;10'
                   type="date"
                   value={filtroDataAgenda}
                   onChange={(e) => setFiltroDataAgenda(e.target.value)}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                 />
               </div>
               {(filtroAgenda !== 'todos' || filtroTecnicoAgenda || filtroDataAgenda) && (
@@ -24273,7 +24273,7 @@ A1;Peça exemplo;10'
 
             {/* Formulário de Agendamento */}
             {showAgendaForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#1a1a1a' }}>
+              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414' }}>
                 <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>
                   {editingAgendamento ? (safeT?.editarAgendamento || 'Editar Agendamento') : (safeT?.novoAgendamento || 'Novo Agendamento')}
                 </h3>
@@ -24285,7 +24285,7 @@ A1;Peça exemplo;10'
                   <select
                     value={agendaForm.tipo}
                     onChange={(e) => setAgendaForm({ ...agendaForm, tipo: e.target.value as 'pre-agendamento' | 'agendamento-tecnico' })}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   >
                     <option value="pre-agendamento">{safeT?.preAgendamento || 'Pré-Agendamento'}</option>
                     <option value="agendamento-tecnico">{safeT?.agendamentoTecnico || 'Agendamento Técnico'}</option>
@@ -24299,7 +24299,7 @@ A1;Peça exemplo;10'
                   <select
                     value={agendaForm.tecnico}
                     onChange={(e) => setAgendaForm({ ...agendaForm, tecnico: e.target.value })}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   >
                     <option value="">{safeT?.selecioneTecnico || 'Selecione o técnico'}</option>
                     {tecnicos.map(tec => (
@@ -24325,7 +24325,7 @@ A1;Peça exemplo;10'
                         telefone: selectedClient?.telefones || '',
                       });
                     }}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   >
                     <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
                     {clientes.map(cli => (
@@ -24343,7 +24343,7 @@ A1;Peça exemplo;10'
                       type="date"
                       value={agendaForm.data}
                       onChange={(e) => setAgendaForm({ ...agendaForm, data: e.target.value })}
-                      style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   <div>
@@ -24354,7 +24354,7 @@ A1;Peça exemplo;10'
                       type="time"
                       value={agendaForm.hora}
                       onChange={(e) => setAgendaForm({ ...agendaForm, hora: e.target.value })}
-                      style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                   <div>
@@ -24365,7 +24365,7 @@ A1;Peça exemplo;10'
                       type="number"
                       value={agendaForm.duracaoEstimada}
                       onChange={(e) => setAgendaForm({ ...agendaForm, duracaoEstimada: e.target.value })}
-                      style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
                 </div>
@@ -24379,7 +24379,7 @@ A1;Peça exemplo;10'
                     value={agendaForm.tipoServico}
                     onChange={(e) => setAgendaForm({ ...agendaForm, tipoServico: e.target.value })}
                     placeholder={safeT?.tipoServicoPlaceholder || 'Ex: Manutenção, Reparo, Instalação...'}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -24397,7 +24397,7 @@ A1;Peça exemplo;10'
                         equipamento: selectedEquip?.modelo || '',
                       });
                     }}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   >
                     <option value="">{safeT?.selecioneEquipamento || 'Selecione o equipamento'}</option>
                     {equipamentos.map(eq => (
@@ -24407,7 +24407,7 @@ A1;Peça exemplo;10'
                 </div>
 
                 {/* Informações de Contato e Localização */}
-                <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '4px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#222222', borderRadius: '4px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                   <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#00ff00' }}>{safeT?.informacoesContato || 'Informações de Contato e Localização'}</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
                     <div>
@@ -24419,7 +24419,7 @@ A1;Peça exemplo;10'
                         value={agendaForm.telefone}
                         onChange={(e) => setAgendaForm({ ...agendaForm, telefone: e.target.value })}
                         placeholder={safeT?.telefonePlaceholder || 'Telefone do cliente'}
-                        style={{ width: '100%', padding: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     <div>
@@ -24431,7 +24431,7 @@ A1;Peça exemplo;10'
                         value={agendaForm.endereco}
                         onChange={(e) => setAgendaForm({ ...agendaForm, endereco: e.target.value })}
                         placeholder={safeT?.enderecoPlaceholder || 'Endereço do cliente'}
-                        style={{ width: '100%', padding: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     <div>
@@ -24443,7 +24443,7 @@ A1;Peça exemplo;10'
                         value={agendaForm.cidade}
                         onChange={(e) => setAgendaForm({ ...agendaForm, cidade: e.target.value })}
                         placeholder={safeT?.cidadePlaceholder || 'Cidade do cliente'}
-                        style={{ width: '100%', padding: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                   </div>
@@ -24458,12 +24458,12 @@ A1;Peça exemplo;10'
                     onChange={(e) => setAgendaForm({ ...agendaForm, observacoesTecnicas: e.target.value })}
                     rows={4}
                     placeholder={safeT?.observacaoTecnicaPlaceholder || 'Observações técnicas sobre o agendamento...'}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', resize: 'vertical' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', resize: 'vertical' }}
                   ></textarea>
                 </div>
 
                 {/* Necessidade de Peças */}
-                <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '4px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#222222', borderRadius: '4px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', marginBottom: agendaForm.necessidadePecas ? '15px' : '0' }}>
                     <input
                       type="checkbox"
@@ -24485,7 +24485,7 @@ A1;Peça exemplo;10'
                           value={agendaForm.codigoNotaFiscal || ''}
                           onChange={(e) => setAgendaForm({ ...agendaForm, codigoNotaFiscal: e.target.value })}
                           placeholder={safeT?.codigoNotaFiscalPlaceholder || 'Digite o código da nota fiscal'}
-                          style={{ width: '100%', padding: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                          style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                         />
                       </div>
 
@@ -24516,7 +24516,7 @@ A1;Peça exemplo;10'
                                 }
                               }
                             }}
-                            style={{ flex: 1, padding: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                            style={{ flex: 1, padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                           />
                           <button
                             type="button"
@@ -24545,7 +24545,7 @@ A1;Peça exemplo;10'
                           </button>
                         </div>
                         {agendaForm.pecasAnexadas && agendaForm.pecasAnexadas.length > 0 && (
-                          <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '4px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                          <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#141414', borderRadius: '4px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                             <p style={{ fontSize: '12px', marginBottom: '8px', color: '#00ff00' }}>
                               {safeT?.pecasAnexadas || 'Peças selecionadas'}:
                             </p>
@@ -24554,7 +24554,7 @@ A1;Peça exemplo;10'
                                 const peca = pecasBiblioteca.find(p => p.id === pecaId)
                                 if (!peca) return null
                                 return (
-                                  <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', backgroundColor: '#2a2a2a', borderRadius: '3px' }}>
+                                  <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', backgroundColor: '#222222', borderRadius: '3px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
                                       {peca.imagem && (
                                         <img 
@@ -24644,7 +24644,7 @@ A1;Peça exemplo;10'
 
                   if (agendamentosFiltrados.length === 0) {
                     return (
-                      <div style={{ padding: '40px', textAlign: 'center', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                      <div style={{ padding: '40px', textAlign: 'center', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                         <p style={{ fontSize: '16px', opacity: 0.7 }}>
                           {(filtroAgenda !== 'todos' || filtroTecnicoAgenda || filtroDataAgenda)
                             ? (safeT?.nenhumAgendamentoFiltro || 'Nenhum agendamento encontrado com os filtros selecionados.')
@@ -24657,7 +24657,7 @@ A1;Peça exemplo;10'
                   return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                       {agendamentosFiltrados.map(agendamento => (
-                        <div key={agendamento.id} style={{ backgroundColor: '#1a1a1a', padding: '20px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                        <div key={agendamento.id} style={{ backgroundColor: '#141414', padding: '20px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
                             <div style={{ flex: 1 }}>
                               <h3 style={{ marginBottom: '8px', fontSize: '18px', color: '#00ff00' }}>
@@ -24711,7 +24711,7 @@ A1;Peça exemplo;10'
                               
                               {/* Informações de contato e localização */}
                               {(agendamento.telefone || agendamento.endereco || agendamento.cidade) && (
-                                <div style={{ padding: '10px', backgroundColor: '#2a2a2a', borderRadius: '4px', marginBottom: '10px' }}>
+                                <div style={{ padding: '10px', backgroundColor: '#222222', borderRadius: '4px', marginBottom: '10px' }}>
                                   <h4 style={{ fontSize: '14px', marginBottom: '8px', color: '#00ff00' }}>{safeT?.informacoesContato || 'Informações de Contato'}</h4>
                                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px', fontSize: '13px' }}>
                                     {agendamento.telefone && (
@@ -24734,7 +24734,7 @@ A1;Peça exemplo;10'
                               )}
                               
                               {agendamento.observacoesTecnicas && (
-                                <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#2a2a2a', borderRadius: '4px' }}>
+                                <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#222222', borderRadius: '4px' }}>
                                   <p style={{ margin: 0, fontSize: '13px', opacity: 0.8 }}>
                                     <strong style={{ color: '#00ff00' }}>{safeT?.observacaoTecnica || 'Observação Técnica'}:</strong> 
                                     <span style={{ marginLeft: '8px', fontStyle: 'italic' }}>{agendamento.observacoesTecnicas}</span>
@@ -24744,7 +24744,7 @@ A1;Peça exemplo;10'
 
                               {/* Informações sobre Peças */}
                               {agendamento.necessidadePecas && (
-                                <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#2a2a2a', borderRadius: '4px', border: '1px solid rgba(255, 165, 0, 0.3)' }}>
+                                <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#222222', borderRadius: '4px', border: '1px solid rgba(255, 165, 0, 0.3)' }}>
                                   <p style={{ margin: 0, fontSize: '13px', marginBottom: '8px', color: '#ffa500' }}>
                                     <strong>{safeT?.necessidadePecas || 'Há necessidade de levar alguma peça'}:</strong> {safeT?.sim || 'Sim'}
                                   </p>
@@ -24946,9 +24946,9 @@ A1;Peça exemplo;10'
                   </div>
 
                   {/* Calendário */}
-                  <div style={{ backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', overflow: 'hidden' }}>
+                  <div style={{ backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', overflow: 'hidden' }}>
                     {/* Cabeçalho dos dias da semana */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', backgroundColor: '#2a2a2a' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', backgroundColor: '#222222' }}>
                       {diasSemana.map((dia, index) => (
                         <div
                           key={index}
@@ -24996,7 +24996,7 @@ A1;Peça exemplo;10'
                               padding: '8px',
                               borderRight: (diaSemanaAjustado + dia) % 7 !== 0 ? '1px solid rgba(0, 255, 0, 0.1)' : 'none',
                               borderBottom: '1px solid rgba(0, 255, 0, 0.1)',
-                              backgroundColor: hojeDia ? 'rgba(0, 255, 0, 0.1)' : '#1a1a1a',
+                              backgroundColor: hojeDia ? 'rgba(0, 255, 0, 0.1)' : '#141414',
                               position: 'relative',
                               cursor: agendamentosDoDia.length > 0 ? 'pointer' : 'default'
                             }}
@@ -25086,7 +25086,7 @@ A1;Peça exemplo;10'
                   </div>
 
                   {/* Legenda */}
-                  <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                     <h4 style={{ marginBottom: '10px', fontSize: '14px', color: '#00ff00' }}>
                       {safeT?.legenda || 'Legenda'}
                     </h4>
@@ -25302,7 +25302,7 @@ A1;Peça exemplo;10'
                   <div 
                     key={tecnico.id} 
                     style={{ 
-                      backgroundColor: '#1a1a1a', 
+                      backgroundColor: '#141414', 
                       padding: '20px', 
                       borderRadius: '12px', 
                       border: '2px solid rgba(0, 255, 0, 0.3)',
@@ -25368,7 +25368,7 @@ A1;Peça exemplo;10'
                       <div style={{ 
                         marginTop: '15px', 
                         padding: '15px', 
-                        backgroundColor: '#2a2a2a', 
+                        backgroundColor: '#222222', 
                         borderRadius: '8px',
                         border: '1px solid rgba(0, 255, 0, 0.2)'
                       }}>
@@ -25432,7 +25432,7 @@ A1;Peça exemplo;10'
                       <div style={{ 
                         marginTop: '15px', 
                         padding: '15px', 
-                        backgroundColor: '#2a2a2a', 
+                        backgroundColor: '#222222', 
                         borderRadius: '8px',
                         textAlign: 'center',
                         opacity: 0.6
@@ -25587,12 +25587,12 @@ A1;Peça exemplo;10'
               </div>
             </div>
             {showServicoForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px', backgroundColor: '#1a1a1a' }}>
+              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px', backgroundColor: '#141414' }}>
                 <h4>{editingServico ? (safeT?.editarServico || 'Editar Serviço') : (safeT?.adicionarServico || 'Adicionar Serviço ou Despesa')}</h4>
                 <select
                   value={servicoForm.categoria}
                   onChange={(e) => setServicoForm({ ...servicoForm, categoria: e.target.value as 'servico' | 'despesa' })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="servico">{safeT?.servico || 'SERVIÇO'}</option>
                   <option value="despesa">{safeT?.despesa || 'DESPESA'}</option>
@@ -25602,26 +25602,26 @@ A1;Peça exemplo;10'
                   placeholder={safeT?.nomeServico || 'Nome do Serviço/Despesa'}
                   value={servicoForm.nome}
                   onChange={(e) => setServicoForm({ ...servicoForm, nome: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <textarea
                   placeholder={safeT?.descricaoServico || 'Descrição (opcional)'}
                   value={servicoForm.descricao}
                   onChange={(e) => setServicoForm({ ...servicoForm, descricao: e.target.value })}
                   rows={3}
-                  style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 ></textarea>
                 <input
                   type="number"
                   placeholder={safeT?.valorServico || 'Valor'}
                   value={servicoForm.valor}
                   onChange={(e) => setServicoForm({ ...servicoForm, valor: parseFloat(e.target.value) || 0 })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <select
                   value={servicoForm.tipoCobranca}
                   onChange={(e) => setServicoForm({ ...servicoForm, tipoCobranca: e.target.value as 'unidade' | 'km' | 'hora' | 'valor-fixo' | 'diarias' | 'extras' })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="unidade">{safeT?.tipoCobrancaUnidade || 'Por Unidade'}</option>
                   <option value="km">{safeT?.tipoCobrancaKm || 'Por KM'}</option>
@@ -25645,7 +25645,7 @@ A1;Peça exemplo;10'
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '15px', marginTop: '20px' }}>
                 {servicos.map(servico => (
-                  <div key={servico.id} style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <div key={servico.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                     <h3 style={{ marginBottom: '10px', color: '#00ff00' }}>{servico.nome}</h3>
                     <p style={{ fontSize: '14px', marginBottom: '5px' }}><strong>{safeT?.valorServico || 'Valor'}:</strong> {servico.valor}€</p>
                     <p style={{ fontSize: '14px', marginBottom: '5px' }}><strong>{safeT?.tipoCobranca || 'Tipo de Cobrança'}:</strong> {servico.tipoCobranca}</p>
@@ -25771,7 +25771,7 @@ A1;Peça exemplo;10'
             {/* Seção de Pedidos de Orçamento - padrão Visualizar Equipamento */}
             <div style={{ 
               padding: '30px', 
-              backgroundColor: '#1a1a1a', 
+              backgroundColor: '#141414', 
               borderRadius: '16px', 
               border: '2px solid rgba(0, 255, 0, 0.3)',
               marginBottom: '30px',
@@ -25829,7 +25829,7 @@ A1;Peça exemplo;10'
                           key={pedido.id} 
                           style={{ 
                             padding: '20px', 
-                            backgroundColor: '#2a2a2a', 
+                            backgroundColor: '#222222', 
                             borderRadius: '12px', 
                             border: '2px solid rgba(255, 165, 0, 0.2)',
                             transition: 'all 0.3s ease',
@@ -25935,13 +25935,13 @@ A1;Peça exemplo;10'
                             </button>
                           </div>
                           
-                          <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '4px' }}>
+                          <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#141414', borderRadius: '4px' }}>
                             <p style={{ fontSize: '13px', marginBottom: '8px', fontWeight: 'bold' }}>
                               {safeT?.pecasPedido || 'Peças'} ({pedido.pecas.length}):
                             </p>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
                               {pedido.pecas.map((peca, idx) => (
-                                <div key={idx} style={{ fontSize: '12px', padding: '5px', backgroundColor: '#2a2a2a', borderRadius: '3px' }}>
+                                <div key={idx} style={{ fontSize: '12px', padding: '5px', backgroundColor: '#222222', borderRadius: '3px' }}>
                                   {peca.descricao} - {safeT?.codigo || 'Código'}: {peca.codigo} - {safeT?.quantidade || 'Qtd'}: {peca.quantidade}
                                 </div>
                               ))}
@@ -25957,7 +25957,7 @@ A1;Peça exemplo;10'
             {/* Seção de Lista de Peças para Orçamento - padrão Visualizar Equipamento (1px borda, cards #2a2a2a) */}
             <div style={{ 
               padding: '30px', 
-              backgroundColor: '#1a1a1a', 
+              backgroundColor: '#141414', 
               borderRadius: '12px', 
               border: '1px solid rgba(0, 255, 0, 0.2)',
               marginTop: '30px'
@@ -26055,7 +26055,7 @@ A1;Peça exemplo;10'
                               key={index}
                               style={{ 
                                 padding: '15px', 
-                                backgroundColor: '#2a2a2a', 
+                                backgroundColor: '#222222', 
                                 borderRadius: '6px', 
                                 border: '1px solid rgba(255, 165, 0, 0.2)'
                               }}
@@ -26074,13 +26074,13 @@ A1;Peça exemplo;10'
                                 </div>
                               </div>
                               
-                              <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '4px' }}>
+                              <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#141414', borderRadius: '4px' }}>
                                 <p style={{ fontSize: '13px', marginBottom: '8px', fontWeight: 'bold', color: '#ffaa00' }}>
                                   {safeT?.pedidosContendoPeca || 'Pedidos contendo esta peça'} ({item.pedidos.length}):
                                 </p>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                                   {item.pedidos.map((pedido, pIndex) => (
-                                    <div key={pIndex} style={{ fontSize: '12px', padding: '5px', backgroundColor: '#2a2a2a', borderRadius: '3px', border: '1px solid rgba(255, 165, 0, 0.1)' }}>
+                                    <div key={pIndex} style={{ fontSize: '12px', padding: '5px', backgroundColor: '#222222', borderRadius: '3px', border: '1px solid rgba(255, 165, 0, 0.1)' }}>
                                       <strong>{safeT?.relatorio || 'Relatório'}:</strong> {pedido.relatorioNumero} | 
                                       <strong> {safeT?.cliente || 'Cliente'}:</strong> {pedido.cliente} | 
                                       <strong> {safeT?.quantidade || 'Qtd'}:</strong> {pedido.quantidade} | 
@@ -26101,7 +26101,7 @@ A1;Peça exemplo;10'
             {/* Seção de Cadastro de Serviços */}
             <div style={{ 
               padding: '20px', 
-              backgroundColor: '#1a1a1a', 
+              backgroundColor: '#141414', 
               borderRadius: '8px', 
               border: '1px solid rgba(0, 255, 0, 0.3)',
               marginTop: '20px'
@@ -26245,7 +26245,7 @@ A1;Peça exemplo;10'
             </div>
             <div style={{ 
               padding: '40px', 
-              backgroundColor: '#1a1a1a', 
+              backgroundColor: '#141414', 
               borderRadius: '12px', 
               border: '2px solid rgba(0, 255, 0, 0.3)',
               textAlign: 'center'
@@ -26321,7 +26321,7 @@ A1;Peça exemplo;10'
             </div>
 
             {/* Formulário */}
-            <div style={{ backgroundColor: '#1a1a1a', padding: '30px', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            <div style={{ backgroundColor: '#141414', padding: '30px', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               {/* Seção 1: Dados Gerais */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
                 <div>
@@ -26354,7 +26354,7 @@ A1;Peça exemplo;10'
                           setOrdemPreparacaoForm(prev => ({...prev, codiceSmeUp: val}))
                         }
                       }}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                     {/* Feedback visual se encontrou */}
                     {equipamentos.some(eq => eq.id.toLowerCase() === ordemPreparacaoForm.codiceSmeUp.toLowerCase() || eq.numeroSerie.toLowerCase() === ordemPreparacaoForm.codiceSmeUp.toLowerCase()) && ordemPreparacaoForm.codiceSmeUp && (
@@ -26383,7 +26383,7 @@ A1;Peça exemplo;10'
                       type="text"
                       value={(ordemPreparacaoForm as any)[field.key]}
                       onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, [field.key]: e.target.value})}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                   </div>
                 ))}
@@ -26431,7 +26431,7 @@ A1;Peça exemplo;10'
                       style={{ 
                         width: '100%', 
                         padding: '8px', 
-                        backgroundColor: '#2a2a2a', 
+                        backgroundColor: '#222222', 
                         border: '1px solid #444', 
                         color: '#fff', 
                         borderRadius: '4px',
@@ -26466,7 +26466,7 @@ A1;Peça exemplo;10'
                         top: '100%',
                         left: 0,
                         right: 0,
-                        backgroundColor: '#2a2a2a',
+                        backgroundColor: '#222222',
                         border: '1px solid #444',
                         borderRadius: '4px',
                         maxHeight: '200px',
@@ -26516,7 +26516,7 @@ A1;Peça exemplo;10'
                         top: '100%',
                         left: 0,
                         right: 0,
-                        backgroundColor: '#2a2a2a',
+                        backgroundColor: '#222222',
                         border: '1px solid #444',
                         borderRadius: '4px',
                         padding: '10px',
@@ -26576,7 +26576,7 @@ A1;Peça exemplo;10'
                     placeholder={safeT?.opOther || 'Outro'}
                     value={ordemPreparacaoForm.materialeLavoratoAltro}
                     onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, materialeLavoratoAltro: e.target.value})}
-                    style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                    style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -26602,7 +26602,7 @@ A1;Peça exemplo;10'
                     placeholder={safeT?.opOther || 'Outro'}
                     value={ordemPreparacaoForm.tipologiaImpiallaggiaturaAltro}
                     onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, tipologiaImpiallaggiaturaAltro: e.target.value})}
-                    style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                    style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -26628,7 +26628,7 @@ A1;Peça exemplo;10'
                     placeholder={safeT?.opOther || 'Outro'}
                     value={ordemPreparacaoForm.coloreAltro}
                     onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, coloreAltro: e.target.value})}
-                    style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                    style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -26641,21 +26641,21 @@ A1;Peça exemplo;10'
                       placeholder={safeT?.opMaxDim || 'Max (X/Y/Z)'}
                       value={ordemPreparacaoForm.dimensioniMax}
                       onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, dimensioniMax: e.target.value})}
-                      style={{ padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.opMinDim || 'Min (X/Y/Z)'}
                       value={ordemPreparacaoForm.dimensioniMin}
                       onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, dimensioniMin: e.target.value})}
-                      style={{ padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.opOther || 'Outro'}
                       value={ordemPreparacaoForm.dimensioniAltro}
                       onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, dimensioniAltro: e.target.value})}
-                      style={{ padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                   </div>
                 </div>
@@ -26686,7 +26686,7 @@ A1;Peça exemplo;10'
                     placeholder={safeT?.opOther || 'Outro'}
                     value={ordemPreparacaoForm.tipologiaBordoAltro}
                     onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, tipologiaBordoAltro: e.target.value})}
-                    style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                    style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -26716,7 +26716,7 @@ A1;Peça exemplo;10'
                     placeholder={safeT?.opOther || 'Outro'}
                     value={ordemPreparacaoForm.spessoreBordoAltro}
                     onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, spessoreBordoAltro: e.target.value})}
-                    style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                    style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -26746,7 +26746,7 @@ A1;Peça exemplo;10'
                     placeholder={safeT?.opOther || 'Outro'}
                     value={ordemPreparacaoForm.tipoCollaAltro}
                     onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, tipoCollaAltro: e.target.value})}
-                    style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                    style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -26791,7 +26791,7 @@ A1;Peça exemplo;10'
                       placeholder={safeT?.opWhich || 'Quais?'}
                       value={ordemPreparacaoForm.utensiliQuali}
                       onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, utensiliQuali: e.target.value})}
-                      style={{ padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                     <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                       <input
@@ -26825,7 +26825,7 @@ A1;Peça exemplo;10'
                       placeholder={safeT?.opSuctionCups || 'Ventosas (qtd)'}
                       value={ordemPreparacaoForm.ventose}
                       onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, ventose: e.target.value})}
-                      style={{ padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                   </div>
                 </div>
@@ -26848,7 +26848,7 @@ A1;Peça exemplo;10'
                       placeholder={safeT?.opWhichAndQty || 'Quais e Qtd?'}
                       value={ordemPreparacaoForm.materialeTestRunQualiQta}
                       onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, materialeTestRunQualiQta: e.target.value})}
-                      style={{ padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                     <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                       <input
@@ -26871,21 +26871,21 @@ A1;Peça exemplo;10'
                       type="text"
                       value={ordemPreparacaoForm.linguaDestinazione}
                       onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, linguaDestinazione: e.target.value})}
-                      style={{ padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                     <label style={{ color: '#ccc', fontSize: '12px' }}>{safeT?.opManuals || 'Manuais'}</label>
                     <input
                       type="text"
                       value={ordemPreparacaoForm.manualistica}
                       onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, manualistica: e.target.value})}
-                      style={{ padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                     <label style={{ color: '#ccc', fontSize: '12px' }}>{safeT?.opStickers || 'Adesivos'}</label>
                     <input
                       type="text"
                       value={ordemPreparacaoForm.adesivi}
                       onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, adesivi: e.target.value})}
-                      style={{ padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                      style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                   </div>
                 </div>
@@ -26897,7 +26897,7 @@ A1;Peça exemplo;10'
                     rows={5}
                     value={ordemPreparacaoForm.noteProduzione}
                     onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, noteProduzione: e.target.value})}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px', resize: 'vertical' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px', resize: 'vertical' }}
                   />
                 </div>
 
@@ -26909,7 +26909,7 @@ A1;Peça exemplo;10'
                     value={ordemPreparacaoForm.impressoes}
                     onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, impressoes: e.target.value})}
                     placeholder={safeT?.opImpressoesPlaceholder || 'Informações sobre impressões, etiquetas, marcações, etc...'}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px', resize: 'vertical' }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px', resize: 'vertical' }}
                   />
                 </div>
 
@@ -26966,7 +26966,7 @@ A1;Peça exemplo;10'
             </div>
 
             {/* Lista de Ordens Salvas */}
-            <div style={{ marginTop: '40px', backgroundColor: '#1a1a1a', padding: '30px', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            <div style={{ marginTop: '40px', backgroundColor: '#141414', padding: '30px', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <h3 style={{ color: '#00ff00', marginBottom: '20px' }}>{safeT?.opSavedOrders || 'Ordens Salvas'}</h3>
               
               {/* Busca */}
@@ -26975,7 +26975,7 @@ A1;Peça exemplo;10'
                 placeholder={safeT?.opSearch || 'Buscar Ordem'}
                 value={buscaOrdem}
                 onChange={(e) => setBuscaOrdem(e.target.value)}
-                style={{ width: '100%', padding: '10px', marginBottom: '20px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '10px', marginBottom: '20px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
               />
 
               {/* Lista */}
@@ -26994,7 +26994,7 @@ A1;Peça exemplo;10'
                       o.modello.toLowerCase().includes(buscaOrdem.toLowerCase())
                     )
                     .map(ordem => (
-                      <div key={ordem.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid #333' }}>
+                      <div key={ordem.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid #333' }}>
                         <div>
                           <div style={{ color: '#00ff00', fontWeight: 'bold', fontSize: '16px' }}>{ordem.codiceSmeUp}</div>
                           <div style={{ color: '#ccc', fontSize: '14px' }}>{ordem.cliente} - {ordem.modello}</div>
@@ -27095,7 +27095,7 @@ A1;Peça exemplo;10'
             </div>
 
             {/* Filtros */}
-            <div style={{ marginBottom: '30px', backgroundColor: '#1a1a1a', padding: '20px', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            <div style={{ marginBottom: '30px', backgroundColor: '#141414', padding: '20px', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px', alignItems: 'end' }}>
                 <div>
                   <label style={{ display: 'block', color: '#fff', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>
@@ -27106,7 +27106,7 @@ A1;Peça exemplo;10'
                     placeholder={safeT?.opSearchForm || 'Buscar formulário por código, cliente, técnico...'}
                     value={buscaFormulario}
                     onChange={(e) => setBuscaFormulario(e.target.value)}
-                    style={{ width: '100%', padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px', fontSize: '16px' }}
+                    style={{ width: '100%', padding: '12px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px', fontSize: '16px' }}
                   />
                 </div>
                 <div>
@@ -27116,7 +27116,7 @@ A1;Peça exemplo;10'
                   <select
                     value={filtroTipoFormulario}
                     onChange={(e) => setFiltroTipoFormulario(e.target.value as 'todos' | 'checklist-gerado' | 'ordem-preparacao')}
-                    style={{ width: '100%', padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#fff', borderRadius: '4px', fontSize: '16px', cursor: 'pointer' }}
+                    style={{ width: '100%', padding: '12px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#fff', borderRadius: '4px', fontSize: '16px', cursor: 'pointer' }}
                   >
                     <option value="todos">{safeT?.todosTipos || 'Todos os Tipos'}</option>
                     <option value="checklist-gerado">{safeT?.checklistGerado || 'Checklist Gerado'}</option>
@@ -27151,7 +27151,7 @@ A1;Peça exemplo;10'
                 })
                 .map(formulario => (
                   <div key={formulario.id} style={{
-                    backgroundColor: '#1a1a1a',
+                    backgroundColor: '#141414',
                     padding: '25px',
                     borderRadius: '12px',
                     border: '2px solid rgba(0, 255, 0, 0.3)',
@@ -27276,7 +27276,7 @@ A1;Peça exemplo;10'
                       <div style={{
                         marginTop: '20px',
                         padding: '15px',
-                        backgroundColor: '#2a2a2a',
+                        backgroundColor: '#222222',
                         borderRadius: '8px',
                         border: '1px solid #333'
                       }}>
@@ -27291,7 +27291,7 @@ A1;Peça exemplo;10'
                           <div><strong style={{ color: '#00ff00' }}>{safeT?.dataChecklist || 'Data'}:</strong> {formulario.data || '-'}</div>
                         </div>
                         {formulario.grupos && formulario.grupos.length > 0 && (
-                          <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '4px' }}>
+                          <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#141414', borderRadius: '4px' }}>
                             <strong style={{ color: '#66b3ff' }}>{safeT?.gruposSelecionados || 'Grupos Selecionados'}:</strong>
                             <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
                               {formulario.grupos.map((g: any, idx: number) => (
@@ -27307,7 +27307,7 @@ A1;Peça exemplo;10'
                       <div style={{
                         marginTop: '20px',
                         padding: '15px',
-                        backgroundColor: '#2a2a2a',
+                        backgroundColor: '#222222',
                         borderRadius: '8px',
                         border: '1px solid #333'
                       }}>
@@ -27319,14 +27319,14 @@ A1;Peça exemplo;10'
                         </div>
                         
                         {formulario.impressoes && (
-                          <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '4px' }}>
+                          <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#141414', borderRadius: '4px' }}>
                             <strong style={{ color: '#66b3ff' }}>Impressões:</strong>
                             <p style={{ margin: '5px 0 0 0', color: '#ccc', whiteSpace: 'pre-wrap' }}>{formulario.impressoes}</p>
                           </div>
                         )}
                         
                         {formulario.noteProduzione && (
-                          <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '4px' }}>
+                          <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#141414', borderRadius: '4px' }}>
                             <strong style={{ color: '#66b3ff' }}>Notas de Produção:</strong>
                             <p style={{ margin: '5px 0 0 0', color: '#ccc', whiteSpace: 'pre-wrap' }}>{formulario.noteProduzione}</p>
                           </div>
@@ -27339,7 +27339,7 @@ A1;Peça exemplo;10'
               {formulariosChecklistTecnicos.length === 0 && (
                 <div style={{
                   padding: '40px',
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   borderRadius: '12px',
                   border: '2px solid rgba(0, 255, 0, 0.3)',
                   textAlign: 'center'
@@ -27413,7 +27413,7 @@ A1;Peça exemplo;10'
               }}
               >
                 <div style={{
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   borderRadius: '12px',
                   border: '2px solid rgba(0, 255, 0, 0.5)',
                   maxWidth: '1600px',
@@ -27610,7 +27610,7 @@ A1;Peça exemplo;10'
                   <div style={{ 
                     marginBottom: '30px', 
                     padding: '20px', 
-                    backgroundColor: '#2a2a2a', 
+                    backgroundColor: '#222222', 
                     borderRadius: '8px',
                     border: '1px solid rgba(0, 255, 0, 0.3)'
                   }}>
@@ -27646,7 +27646,7 @@ A1;Peça exemplo;10'
                   </div>
 
                   {/* Solicitação de peças (só aparece quando o técnico seleciona e adiciona a peça) */}
-                  <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+                  <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                     <h3 style={{ color: '#00ff00', marginBottom: '15px', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
                       <span>{safeT?.solicitacaoPecas || 'Solicitação de peças'}</span>
                       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -27761,7 +27761,7 @@ A1;Peça exemplo;10'
                         style={{
                           width: '100%',
                           padding: '12px',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           border: '1px solid rgba(0, 255, 0, 0.3)',
                           borderRadius: '8px',
                           color: '#fff',
@@ -27774,7 +27774,7 @@ A1;Peça exemplo;10'
                     {(checklistGeradoVisualizar.pecasNecessarias && checklistGeradoVisualizar.pecasNecessarias.length > 0) ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '260px', overflowY: 'auto' }}>
                         {checklistGeradoVisualizar.pecasNecessarias.map((p: any, idx: number) => (
-                          <div key={p.id || idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)', flexWrap: 'wrap', gap: '8px' }}>
+                          <div key={p.id || idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)', flexWrap: 'wrap', gap: '8px' }}>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <span style={{ color: '#ccc' }}>{p.codigo || p.codigoPeca} · {p.nome || p.descricao || '-'} · Qtd: {p.quantidade || 1}</span>
                               {(p.tecnicoSolicitante || p.tecnico) && (
@@ -27838,7 +27838,7 @@ A1;Peça exemplo;10'
                     <div key={grupo.grupoId || grupoIndex} style={{ 
                       marginBottom: '30px', 
                       padding: '20px', 
-                      backgroundColor: '#2a2a2a', 
+                      backgroundColor: '#222222', 
                       borderRadius: '8px',
                       border: '1px solid rgba(0, 255, 0, 0.3)'
                     }}>
@@ -27926,7 +27926,7 @@ A1;Peça exemplo;10'
                             }}
                             style={{
                               padding: '8px 12px',
-                              backgroundColor: '#2a2a2a',
+                              backgroundColor: '#222222',
                               border: '1px solid rgba(0, 255, 0, 0.3)',
                               borderRadius: '6px',
                               color: '#fff',
@@ -27963,7 +27963,7 @@ A1;Peça exemplo;10'
                             style={{
                               padding: '8px 12px',
                               width: '160px',
-                              backgroundColor: '#2a2a2a',
+                              backgroundColor: '#222222',
                               border: '1px solid rgba(0, 255, 0, 0.3)',
                               borderRadius: '6px',
                               color: '#fff',
@@ -28030,7 +28030,7 @@ A1;Peça exemplo;10'
                         
                         // Determinar cor da borda baseado no status
                         let borderColor = 'rgba(0, 255, 0, 0.2)'
-                        let backgroundColor = '#1a1a1a'
+                        let backgroundColor = '#141414'
                         if (manutencao.statusConclusao === 'concluido') {
                           borderColor = 'rgba(255, 193, 7, 0.6)' // Amarelo
                           backgroundColor = 'rgba(255, 193, 7, 0.05)'
@@ -28076,7 +28076,7 @@ A1;Peça exemplo;10'
                             <div style={{ 
                               marginBottom: '15px', 
                               padding: '10px', 
-                              backgroundColor: '#2a2a2a', 
+                              backgroundColor: '#222222', 
                               borderRadius: '6px',
                               opacity: 0.7,
                               pointerEvents: 'none'
@@ -28192,7 +28192,7 @@ A1;Peça exemplo;10'
                                           novosGrupos[grupoIndex].manutencoes[manIndex].tecnicoExecucao = v === '__outro__' ? '' : v
                                           setChecklistGeradoVisualizar({ ...checklistGeradoVisualizar, grupos: novosGrupos })
                                         }}
-                                        style={{ flex: 1, minWidth: '140px', padding: '8px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
+                                        style={{ flex: 1, minWidth: '140px', padding: '8px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px' }}
                                       >
                                         <option value="">— {(safeT as any)?.selecioneTecnico || 'Selecione'} —</option>
                                         {(grupo.tecnicosNoGrupo as string[]).map((nome: string) => (
@@ -28205,7 +28205,7 @@ A1;Peça exemplo;10'
                                           const novosGrupos = [...(checklistGeradoVisualizar.grupos || [])]
                                           novosGrupos[grupoIndex].manutencoes[manIndex].tecnicoExecucao = e.target.value
                                           setChecklistGeradoVisualizar({ ...checklistGeradoVisualizar, grupos: novosGrupos })
-                                        }} placeholder={(safeT as any)?.nomeTecnicoOuOutro || 'Nome'} style={{ width: '120px', padding: '8px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px' }} />
+                                        }} placeholder={(safeT as any)?.nomeTecnicoOuOutro || 'Nome'} style={{ width: '120px', padding: '8px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px' }} />
                                       )}
                                     </>
                                   ) : (
@@ -28213,7 +28213,7 @@ A1;Peça exemplo;10'
                                       const novosGrupos = [...(checklistGeradoVisualizar.grupos || [])]
                                       novosGrupos[grupoIndex].manutencoes[manIndex].tecnicoExecucao = e.target.value
                                       setChecklistGeradoVisualizar({ ...checklistGeradoVisualizar, grupos: novosGrupos })
-                                    }} placeholder={safeT?.nomeTecnico || 'Nome do técnico'} style={{ flex: 1, minWidth: '140px', padding: '8px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px' }} />
+                                    }} placeholder={safeT?.nomeTecnico || 'Nome do técnico'} style={{ flex: 1, minWidth: '140px', padding: '8px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px' }} />
                                   )}
                                   <button
                                     onClick={async () => {
@@ -28278,13 +28278,13 @@ A1;Peça exemplo;10'
                                   trabalhandoAgoraDisplay.forEach((s: any) => { const [a,b,c] = (s.tempoIndividual || '00:00:00').split(':').map(Number); tot += (a||0)*3600+(b||0)*60+(c||0) })
                                   const th = Math.floor(tot/3600), tm = Math.floor((tot%3600)/60), ts = Math.floor(tot%60)
                                   return `${String(th).padStart(2,'0')}:${String(tm).padStart(2,'0')}:${String(ts).padStart(2,'0')}`
-                                })()} style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', border: '1px solid #444', borderRadius: '6px', color: '#00ff00', fontSize: '14px', fontWeight: 'bold' }} />
+                                })()} style={{ width: '100%', padding: '8px', backgroundColor: '#141414', border: '1px solid #444', borderRadius: '6px', color: '#00ff00', fontSize: '14px', fontWeight: 'bold' }} />
                               </div>
                             </div>
 
                             {/* Histórico de Técnicos */}
                             {manutencao.historicoTecnicos && manutencao.historicoTecnicos.length > 0 && (
-                              <div style={{ marginTop: '15px', marginBottom: '15px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                              <div style={{ marginTop: '15px', marginBottom: '15px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                                 <label style={{ display: 'block', color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                                   {safeT?.historicoTecnicos || 'Histórico de Técnicos'}:
                                 </label>
@@ -28292,7 +28292,7 @@ A1;Peça exemplo;10'
                                   {manutencao.historicoTecnicos.map((historico: any, idx: number) => (
                                     <div key={idx} style={{
                                       padding: '10px',
-                                      backgroundColor: '#1a1a1a',
+                                      backgroundColor: '#141414',
                                       borderRadius: '6px',
                                       border: '1px solid rgba(0, 255, 0, 0.1)',
                                       display: 'grid',
@@ -28457,7 +28457,7 @@ A1;Peça exemplo;10'
 
                               {/* Lista de Horários Registrados */}
                               {manutencao.horarios && manutencao.horarios.length > 0 && (
-                                <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px' }}>
+                                <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#141414', borderRadius: '6px' }}>
                                   {manutencao.horarios.map((h: any, hIndex: number) => (
                                     <div key={hIndex} style={{ 
                                       marginBottom: '5px', 
@@ -28508,7 +28508,7 @@ A1;Peça exemplo;10'
                                   style={{
                                     flex: '0 0 200px',
                                     padding: '8px',
-                                    backgroundColor: '#2a2a2a',
+                                    backgroundColor: '#222222',
                                     border: '1px solid rgba(0, 255, 0, 0.3)',
                                     borderRadius: '6px',
                                     color: '#fff',
@@ -28526,7 +28526,7 @@ A1;Peça exemplo;10'
                                   style={{
                                     flex: 1,
                                     padding: '8px',
-                                    backgroundColor: '#2a2a2a',
+                                    backgroundColor: '#222222',
                                     border: '1px solid rgba(0, 255, 0, 0.3)',
                                     borderRadius: '6px',
                                     color: '#fff',
@@ -28593,12 +28593,12 @@ A1;Peça exemplo;10'
 
                               {/* Lista de Observações */}
                               {manutencao.observacoes && manutencao.observacoes.length > 0 && (
-                                <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px' }}>
+                                <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#141414', borderRadius: '6px' }}>
                                   {manutencao.observacoes.map((obs: any, obsIndex: number) => (
                                     <div key={obsIndex} style={{ 
                                       marginBottom: '8px', 
                                       padding: '8px',
-                                      backgroundColor: '#2a2a2a',
+                                      backgroundColor: '#222222',
                                       borderRadius: '4px',
                                       fontSize: '13px'
                                     }}>
@@ -28812,7 +28812,7 @@ A1;Peça exemplo;10'
                     >
                       <div
                         style={{
-                          backgroundColor: '#1a1a1a',
+                          backgroundColor: '#141414',
                           borderRadius: '12px',
                           border: '2px solid rgba(0, 255, 0, 0.4)',
                           maxWidth: '700px',
@@ -28925,7 +28925,7 @@ A1;Peça exemplo;10'
                                       <strong style={{ color: '#00ff00' }}>{safeT?.outrosDocumentos || 'Outros documentos'}:</strong>
                                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
                                         {documentosPdf.map((url: string, i: number) => (
-                                          <button key={i} onClick={() => window.open(url, '_blank')} style={{ padding: '8px 16px', backgroundColor: '#2a2a2a', color: '#66b3ff', border: '1px solid #444', borderRadius: '6px', cursor: 'pointer', textAlign: 'left' }}>
+                                          <button key={i} onClick={() => window.open(url, '_blank')} style={{ padding: '8px 16px', backgroundColor: '#222222', color: '#66b3ff', border: '1px solid #444', borderRadius: '6px', cursor: 'pointer', textAlign: 'left' }}>
                                             📄 {safeT?.documento || 'Documento'} {i + 1}
                                           </button>
                                         ))}
@@ -28948,7 +28948,7 @@ A1;Peça exemplo;10'
                                 value={buscaCodigoPecaExecucao}
                                 onChange={(e) => setBuscaCodigoPecaExecucao(e.target.value)}
                                 placeholder={safeT?.codigoPeca || 'Código da peça'}
-                                style={{ flex: 1, minWidth: '180px', padding: '10px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff' }}
+                                style={{ flex: 1, minWidth: '180px', padding: '10px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff' }}
                               />
                               <input
                                 type="number"
@@ -28956,7 +28956,7 @@ A1;Peça exemplo;10'
                                 value={quantidadePecaExecucao}
                                 onChange={(e) => setQuantidadePecaExecucao(e.target.value || '1')}
                                 placeholder="Qtd"
-                                style={{ width: '80px', padding: '10px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff' }}
+                                style={{ width: '80px', padding: '10px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff' }}
                               />
                             </div>
                             {buscaCodigoPecaExecucao.trim() && (
@@ -28964,7 +28964,7 @@ A1;Peça exemplo;10'
                                 {pecasBiblioteca
                                   .filter((p: PecaBiblioteca) => (p.codigo || '').toLowerCase().includes(buscaCodigoPecaExecucao.toLowerCase()) || (p.nome || '').toLowerCase().includes(buscaCodigoPecaExecucao.toLowerCase()))
                                   .map((p: PecaBiblioteca) => (
-                                    <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: '#2a2a2a', borderRadius: '6px', marginBottom: '8px', border: '1px solid #333' }}>
+                                    <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: '#222222', borderRadius: '6px', marginBottom: '8px', border: '1px solid #333' }}>
                                       <div>
                                         <span style={{ color: '#00ff00', fontWeight: 'bold' }}>{p.codigo}</span>
                                         <span style={{ color: '#ccc', marginLeft: '10px' }}>{p.nome || p.descricao || '-'}</span>
@@ -29009,11 +29009,11 @@ A1;Peça exemplo;10'
                               value={buscaBibliotecaPecasExecucao}
                               onChange={(e) => setBuscaBibliotecaPecasExecucao(e.target.value)}
                               placeholder={safeT?.buscarPecaNomeCodigo || 'Buscar por nome, código ou descrição...'}
-                              style={{ width: '100%', padding: '12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', marginBottom: '15px' }}
+                              style={{ width: '100%', padding: '12px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', marginBottom: '15px' }}
                             />
                             <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', alignItems: 'center' }}>
                               <span style={{ color: '#00ff00', fontSize: '14px' }}>{safeT?.quantidade || 'Quantidade'}:</span>
-                              <input type="number" min="1" value={quantidadePecaExecucao} onChange={(e) => setQuantidadePecaExecucao(e.target.value || '1')} style={{ width: '80px', padding: '8px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff' }} />
+                              <input type="number" min="1" value={quantidadePecaExecucao} onChange={(e) => setQuantidadePecaExecucao(e.target.value || '1')} style={{ width: '80px', padding: '8px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff' }} />
                             </div>
                             <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '15px' }}>
                               {pecasBiblioteca
@@ -29023,7 +29023,7 @@ A1;Peça exemplo;10'
                                   return (p.codigo || '').toLowerCase().includes(q) || (p.nome || '').toLowerCase().includes(q) || (p.descricao || '').toLowerCase().includes(q)
                                 })
                                 .map((p: PecaBiblioteca) => (
-                                  <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: '#2a2a2a', borderRadius: '6px', marginBottom: '8px', border: '1px solid #333' }}>
+                                  <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: '#222222', borderRadius: '6px', marginBottom: '8px', border: '1px solid #333' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                       {p.imagem && <img src={p.imagem} alt="" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />}
                                       <div>
@@ -29097,7 +29097,7 @@ A1;Peça exemplo;10'
               }}
               >
                 <div style={{
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   borderRadius: '12px',
                   border: '2px solid rgba(0, 255, 0, 0.5)',
                   maxWidth: '1400px',
@@ -29131,14 +29131,14 @@ A1;Peça exemplo;10'
                   </button>
 
                   {/* Formulário - Estrutura Idêntica ao Original (Somente Leitura) */}
-                  <div style={{ backgroundColor: '#1a1a1a', padding: '30px', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <div style={{ backgroundColor: '#141414', padding: '30px', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                     {/* Seção 1: Dados Gerais */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
                       <div>
                         <label style={{ display: 'block', color: '#ccc', marginBottom: '5px', fontSize: '12px' }}>
                           {safeT?.opCode || 'Código SME_UP'}
                         </label>
-                        <div style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none' }}>
+                        <div style={{ width: '100%', padding: '8px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none' }}>
                           {formularioVisualizar.codiceSmeUp || '-'}
                         </div>
                       </div>
@@ -29157,7 +29157,7 @@ A1;Peça exemplo;10'
                           <label style={{ display: 'block', color: '#ccc', marginBottom: '5px', fontSize: '12px' }}>
                             {safeT?.[field.label] || field.label}
                           </label>
-                          <div style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none' }}>
+                          <div style={{ width: '100%', padding: '8px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none' }}>
                             {(formularioVisualizar as any)[field.key] || '-'}
                           </div>
                         </div>
@@ -29167,7 +29167,7 @@ A1;Peça exemplo;10'
                         <label style={{ display: 'block', color: '#ccc', marginBottom: '5px', fontSize: '12px' }}>
                           {safeT?.opTechResp || 'Técnico Responsável'}
                         </label>
-                        <div style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: '#fff', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none' }}>
+                        <div style={{ width: '100%', padding: '8px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none' }}>
                           {formularioVisualizar.tecnicoResponsabile || '-'}
                         </div>
                       </div>
@@ -29183,7 +29183,7 @@ A1;Peça exemplo;10'
                     {/* Seções Numeradas - Estrutura Idêntica ao Original */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
                     {/* Dados Gerais */}
-                    <div style={{ backgroundColor: '#2a2a2a', padding: '20px', borderRadius: '8px', border: '1px solid #444' }}>
+                    <div style={{ backgroundColor: '#222222', padding: '20px', borderRadius: '8px', border: '1px solid #444' }}>
                       <h3 style={{ color: '#00ff00', marginBottom: '15px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.3)', paddingBottom: '10px' }}>
                         {safeT?.opGeneralData || 'DADOS GERAIS'}
                       </h3>
@@ -29214,7 +29214,7 @@ A1;Peça exemplo;10'
                             </label>
                           ))}
                         </div>
-                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: formularioVisualizar.materialeLavoratoAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.materialeLavoratoAltro ? 'normal' : 'italic' }}>
+                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: formularioVisualizar.materialeLavoratoAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.materialeLavoratoAltro ? 'normal' : 'italic' }}>
                           {formularioVisualizar.materialeLavoratoAltro || safeT?.opOther || 'Outro'}
                         </div>
                       </div>
@@ -29232,7 +29232,7 @@ A1;Peça exemplo;10'
                             </label>
                           ))}
                         </div>
-                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: formularioVisualizar.tipologiaImpiallaggiaturaAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.tipologiaImpiallaggiaturaAltro ? 'normal' : 'italic' }}>
+                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: formularioVisualizar.tipologiaImpiallaggiaturaAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.tipologiaImpiallaggiaturaAltro ? 'normal' : 'italic' }}>
                           {formularioVisualizar.tipologiaImpiallaggiaturaAltro || safeT?.opOther || 'Outro'}
                         </div>
                       </div>
@@ -29250,7 +29250,7 @@ A1;Peça exemplo;10'
                             </label>
                           ))}
                         </div>
-                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: formularioVisualizar.coloreAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.coloreAltro ? 'normal' : 'italic' }}>
+                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: formularioVisualizar.coloreAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.coloreAltro ? 'normal' : 'italic' }}>
                           {formularioVisualizar.coloreAltro || safeT?.opOther || 'Outro'}
                         </div>
                       </div>
@@ -29259,13 +29259,13 @@ A1;Peça exemplo;10'
                       <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px' }}>
                         <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opSection4 || '4. Dimensões'}</h3>
                         <div style={{ display: 'grid', gap: '10px' }}>
-                          <div style={{ padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: formularioVisualizar.dimensioniMax ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.dimensioniMax ? 'normal' : 'italic' }}>
+                          <div style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: formularioVisualizar.dimensioniMax ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.dimensioniMax ? 'normal' : 'italic' }}>
                             {formularioVisualizar.dimensioniMax || safeT?.opMaxDim || 'Max (X/Y/Z)'}
                           </div>
-                          <div style={{ padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: formularioVisualizar.dimensioniMin ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.dimensioniMin ? 'normal' : 'italic' }}>
+                          <div style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: formularioVisualizar.dimensioniMin ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.dimensioniMin ? 'normal' : 'italic' }}>
                             {formularioVisualizar.dimensioniMin || safeT?.opMinDim || 'Min (X/Y/Z)'}
                           </div>
-                          <div style={{ padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: formularioVisualizar.dimensioniAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.dimensioniAltro ? 'normal' : 'italic' }}>
+                          <div style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: formularioVisualizar.dimensioniAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.dimensioniAltro ? 'normal' : 'italic' }}>
                             {formularioVisualizar.dimensioniAltro || safeT?.opOther || 'Outro'}
                           </div>
                         </div>
@@ -29284,7 +29284,7 @@ A1;Peça exemplo;10'
                             </label>
                           ))}
                         </div>
-                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: formularioVisualizar.tipologiaBordoAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.tipologiaBordoAltro ? 'normal' : 'italic' }}>
+                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: formularioVisualizar.tipologiaBordoAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.tipologiaBordoAltro ? 'normal' : 'italic' }}>
                           {formularioVisualizar.tipologiaBordoAltro || safeT?.opOther || 'Outro'}
                         </div>
                       </div>
@@ -29302,7 +29302,7 @@ A1;Peça exemplo;10'
                             </label>
                           ))}
                         </div>
-                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: formularioVisualizar.spessoreBordoAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.spessoreBordoAltro ? 'normal' : 'italic' }}>
+                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: formularioVisualizar.spessoreBordoAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.spessoreBordoAltro ? 'normal' : 'italic' }}>
                           {formularioVisualizar.spessoreBordoAltro || safeT?.opOther || 'Outro'}
                         </div>
                       </div>
@@ -29320,7 +29320,7 @@ A1;Peça exemplo;10'
                             </label>
                           ))}
                         </div>
-                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: formularioVisualizar.tipoCollaAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.tipoCollaAltro ? 'normal' : 'italic' }}>
+                        <div style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: formularioVisualizar.tipoCollaAltro ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.tipoCollaAltro ? 'normal' : 'italic' }}>
                           {formularioVisualizar.tipoCollaAltro || safeT?.opOther || 'Outro'}
                         </div>
                       </div>
@@ -29350,7 +29350,7 @@ A1;Peça exemplo;10'
                             </span>
                             <span style={{ color: '#ccc' }}>{safeT?.opClientProvided || 'Fornecido pelo Cliente'}</span>
                           </label>
-                          <div style={{ padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: formularioVisualizar.utensiliQuali ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.utensiliQuali ? 'normal' : 'italic' }}>
+                          <div style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: formularioVisualizar.utensiliQuali ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.utensiliQuali ? 'normal' : 'italic' }}>
                             {formularioVisualizar.utensiliQuali || safeT?.opWhich || 'Quais?'}
                           </div>
                           <label style={{ display: 'flex', alignItems: 'center', cursor: 'default', opacity: 0.8, pointerEvents: 'none' }}>
@@ -29371,7 +29371,7 @@ A1;Peça exemplo;10'
                             </span>
                             <span style={{ color: '#ccc' }}>{safeT?.opChipEvacuation || 'Tapete Evacuação'}</span>
                           </label>
-                          <div style={{ padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: formularioVisualizar.ventose ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.ventose ? 'normal' : 'italic' }}>
+                          <div style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: formularioVisualizar.ventose ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.ventose ? 'normal' : 'italic' }}>
                             {formularioVisualizar.ventose || safeT?.opSuctionCups || 'Ventosas (qtd)'}
                           </div>
                         </div>
@@ -29387,7 +29387,7 @@ A1;Peça exemplo;10'
                             </span>
                             <span style={{ color: '#ccc' }}>{safeT?.opClientProvided || 'Fornecido pelo Cliente'}</span>
                           </label>
-                          <div style={{ padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: formularioVisualizar.materialeTestRunQualiQta ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.materialeTestRunQualiQta ? 'normal' : 'italic' }}>
+                          <div style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: formularioVisualizar.materialeTestRunQualiQta ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.materialeTestRunQualiQta ? 'normal' : 'italic' }}>
                             {formularioVisualizar.materialeTestRunQualiQta || safeT?.opWhichAndQty || 'Quais e Qtd?'}
                           </div>
                           <label style={{ display: 'flex', alignItems: 'center', cursor: 'default', opacity: 0.8, pointerEvents: 'none' }}>
@@ -29405,19 +29405,19 @@ A1;Peça exemplo;10'
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                           <div>
                             <label style={{ color: '#ccc', fontSize: '12px', display: 'block', marginBottom: '5px' }}>{safeT?.opDestLang || 'Língua Destino'}</label>
-                            <div style={{ padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: formularioVisualizar.linguaDestinazione ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.linguaDestinazione ? 'normal' : 'italic' }}>
+                            <div style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: formularioVisualizar.linguaDestinazione ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.linguaDestinazione ? 'normal' : 'italic' }}>
                               {formularioVisualizar.linguaDestinazione || '-'}
                             </div>
                           </div>
                           <div>
                             <label style={{ color: '#ccc', fontSize: '12px', display: 'block', marginBottom: '5px' }}>{safeT?.opManuals || 'Manuais'}</label>
-                            <div style={{ padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: formularioVisualizar.manualistica ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.manualistica ? 'normal' : 'italic' }}>
+                            <div style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: formularioVisualizar.manualistica ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.manualistica ? 'normal' : 'italic' }}>
                               {formularioVisualizar.manualistica || '-'}
                             </div>
                           </div>
                           <div>
                             <label style={{ color: '#ccc', fontSize: '12px', display: 'block', marginBottom: '5px' }}>{safeT?.opStickers || 'Adesivos'}</label>
-                            <div style={{ padding: '6px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: formularioVisualizar.adesivi ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.adesivi ? 'normal' : 'italic' }}>
+                            <div style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: formularioVisualizar.adesivi ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', fontStyle: formularioVisualizar.adesivi ? 'normal' : 'italic' }}>
                               {formularioVisualizar.adesivi || '-'}
                             </div>
                           </div>
@@ -29427,7 +29427,7 @@ A1;Peça exemplo;10'
                       {/* Notas de Produção - Estrutura Idêntica ao Original */}
                       <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px', gridColumn: '1 / -1' }}>
                         <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opProductionNotes || 'Notas de Produção'}</h3>
-                        <div style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: formularioVisualizar.noteProduzione ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', minHeight: '100px', whiteSpace: 'pre-wrap', fontStyle: formularioVisualizar.noteProduzione ? 'normal' : 'italic' }}>
+                        <div style={{ width: '100%', padding: '10px', backgroundColor: '#222222', border: '1px solid #444', color: formularioVisualizar.noteProduzione ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', minHeight: '100px', whiteSpace: 'pre-wrap', fontStyle: formularioVisualizar.noteProduzione ? 'normal' : 'italic' }}>
                           {formularioVisualizar.noteProduzione || '-'}
                         </div>
                       </div>
@@ -29435,7 +29435,7 @@ A1;Peça exemplo;10'
                       {/* Campo de Impressões - Estrutura Idêntica ao Original */}
                       <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px', gridColumn: '1 / -1' }}>
                         <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opImpressoes || 'Impressões'}</h3>
-                        <div style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', border: '1px solid #444', color: formularioVisualizar.impressoes ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', minHeight: '80px', whiteSpace: 'pre-wrap', fontStyle: formularioVisualizar.impressoes ? 'normal' : 'italic' }}>
+                        <div style={{ width: '100%', padding: '10px', backgroundColor: '#222222', border: '1px solid #444', color: formularioVisualizar.impressoes ? '#fff' : '#666', borderRadius: '4px', opacity: 0.8, pointerEvents: 'none', minHeight: '80px', whiteSpace: 'pre-wrap', fontStyle: formularioVisualizar.impressoes ? 'normal' : 'italic' }}>
                           {formularioVisualizar.impressoes || safeT?.opImpressoesPlaceholder || 'Informações sobre impressões, etiquetas, marcações, etc...'}
                         </div>
                       </div>
@@ -29534,7 +29534,7 @@ A1;Peça exemplo;10'
             {/* Conteúdo Principal */}
             <div style={{ 
               padding: '30px', 
-              backgroundColor: '#1a1a1a', 
+              backgroundColor: '#141414', 
               borderRadius: '12px', 
               border: '2px solid rgba(0, 255, 0, 0.3)'
             }}>
@@ -29574,7 +29574,7 @@ A1;Peça exemplo;10'
 
                   {/* Filtro por Família */}
                   {gruposChecklist.length > 0 && (
-                    <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                    <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                       <label style={{ display: 'block', color: '#fff', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>
                         {safeT?.filtrarPorFamilia || 'Filtrar por Família'}:
                       </label>
@@ -29585,7 +29585,7 @@ A1;Peça exemplo;10'
                           width: '100%',
                           maxWidth: '400px',
                           padding: '10px',
-                          backgroundColor: '#1a1a1a',
+                          backgroundColor: '#141414',
                           border: '1px solid rgba(0, 255, 0, 0.3)',
                           borderRadius: '6px',
                           color: '#fff',
@@ -29643,7 +29643,7 @@ A1;Peça exemplo;10'
                       return familias.map(familia => (
                         <div key={familia} style={{
                           padding: '20px',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           borderRadius: '12px',
                           border: '2px solid rgba(0, 255, 0, 0.2)',
                           marginBottom: '20px'
@@ -29664,7 +29664,7 @@ A1;Peça exemplo;10'
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
                               {gruposPorFamilia[familia].map(grupo => (
                         <div key={grupo.id} style={{
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           borderRadius: '12px',
                           padding: '20px',
                           border: '1px solid rgba(0, 255, 0, 0.1)',
@@ -29727,7 +29727,7 @@ A1;Peça exemplo;10'
                                   {grupo.manutencoes.length} {safeT?.manutencoes || 'Manutenções'}
                                 </p>
                                 {grupo.trabalhosASeremExecutados && (
-                                  <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
+                                  <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
                                     <p style={{ color: '#00ff00', fontSize: '12px', fontWeight: 'bold', margin: '0 0 5px 0' }}>
                                       {safeT?.trabalhosASeremExecutados || 'Trabalhos a serem executados'}:
                                     </p>
@@ -29746,7 +29746,7 @@ A1;Peça exemplo;10'
                               {grupo.manutencoes.map(manutencao => (
                                 <div key={manutencao.id} style={{
                                   padding: '10px',
-                                  backgroundColor: '#1a1a1a',
+                                  backgroundColor: '#141414',
                                   borderRadius: '6px',
                                   marginBottom: '8px',
                                   border: '1px solid #333'
@@ -29940,7 +29940,7 @@ A1;Peça exemplo;10'
                         {gruposAprovados.length > 0 && (
                           <div style={{
                             padding: '30px',
-                            backgroundColor: '#1a1a1a',
+                            backgroundColor: '#141414',
                             borderRadius: '16px',
                             border: '2px solid rgba(0, 150, 255, 0.4)',
                             boxShadow: '0 4px 20px rgba(0, 150, 255, 0.1)'
@@ -29972,7 +29972,7 @@ A1;Peça exemplo;10'
                         {gruposFuncionamento.length > 0 && (
                           <div style={{
                             padding: '30px',
-                            backgroundColor: '#1a1a1a',
+                            backgroundColor: '#141414',
                             borderRadius: '16px',
                             border: '2px solid rgba(0, 255, 0, 0.4)',
                             boxShadow: '0 4px 20px rgba(0, 255, 0, 0.1)'
@@ -30003,7 +30003,7 @@ A1;Peça exemplo;10'
                         {/* Seção: Checklist e verificação geral do equipamento para entrega (sempre visível) */}
                         <div style={{
                           padding: '30px',
-                          backgroundColor: '#1a1a1a',
+                          backgroundColor: '#141414',
                           borderRadius: '16px',
                           border: '2px solid rgba(255, 180, 0, 0.4)',
                           boxShadow: '0 4px 20px rgba(255, 180, 0, 0.1)'
@@ -30125,7 +30125,7 @@ A1;Peça exemplo;10'
                             style={{
                               width: '100%',
                               padding: '12px',
-                              backgroundColor: '#2a2a2a',
+                              backgroundColor: '#222222',
                               border: '1px solid rgba(0, 255, 0, 0.3)',
                               borderRadius: '8px',
                               color: '#fff',
@@ -30145,7 +30145,7 @@ A1;Peça exemplo;10'
                             style={{
                               width: '100%',
                               padding: '12px',
-                              backgroundColor: '#2a2a2a',
+                              backgroundColor: '#222222',
                               border: '1px solid rgba(0, 255, 0, 0.3)',
                               borderRadius: '8px',
                               color: '#fff',
@@ -30178,7 +30178,7 @@ A1;Peça exemplo;10'
                             style={{
                               width: '100%',
                               padding: '12px',
-                              backgroundColor: '#2a2a2a',
+                              backgroundColor: '#222222',
                               border: '1px solid rgba(0, 255, 0, 0.3)',
                               borderRadius: '8px',
                               color: '#fff',
@@ -30197,7 +30197,7 @@ A1;Peça exemplo;10'
                           </p>
                         </div>
                         {(grupoChecklistForm.numeroGrupo || grupoChecklistForm.nomeGrupo) && (
-                          <div style={{ padding: '12px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                          <div style={{ padding: '12px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                             <div style={{ color: '#00ff00', fontSize: '13px', marginBottom: '4px' }}>{safeT?.numeroGrupo || 'Número do Grupo'}: {grupoChecklistForm.numeroGrupo}</div>
                             <div style={{ color: '#ccc', fontSize: '13px' }}>{safeT?.nomeGrupo || 'Nome do Grupo'}: {grupoChecklistForm.nomeGrupo}</div>
                           </div>
@@ -30227,7 +30227,7 @@ A1;Peça exemplo;10'
                           style={{
                             flex: 1,
                             padding: '12px',
-                            backgroundColor: '#2a2a2a',
+                            backgroundColor: '#222222',
                             border: '1px solid rgba(0, 255, 0, 0.3)',
                             borderRadius: '8px',
                             color: '#fff',
@@ -30271,7 +30271,7 @@ A1;Peça exemplo;10'
                             style={{
                               flex: 1,
                               padding: '12px',
-                              backgroundColor: '#2a2a2a',
+                              backgroundColor: '#222222',
                               border: '1px solid rgba(0, 150, 255, 0.3)',
                               borderRadius: '8px',
                               color: '#fff',
@@ -30302,7 +30302,7 @@ A1;Peça exemplo;10'
                         style={{
                           width: '100%',
                           padding: '12px',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           border: '1px solid rgba(0, 255, 0, 0.3)',
                           borderRadius: '8px',
                           color: '#fff',
@@ -30352,7 +30352,7 @@ A1;Peça exemplo;10'
                         style={{
                           width: '100%',
                           padding: '12px',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           border: '1px solid rgba(0, 255, 0, 0.3)',
                           borderRadius: '8px',
                           color: '#fff',
@@ -30437,7 +30437,7 @@ A1;Peça exemplo;10'
                     </h2>
                   </div>
 
-                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                     <p style={{ color: '#00ff00', margin: 0, fontSize: '14px', fontWeight: 'bold' }}>
                       {safeT?.grupo || 'Grupo'}: {grupoSelecionadoParaManutencao.numeroGrupo} - {grupoSelecionadoParaManutencao.nomeGrupo}
                     </p>
@@ -30456,7 +30456,7 @@ A1;Peça exemplo;10'
                         style={{
                           width: '100%',
                           padding: '12px',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           border: '1px solid rgba(0, 255, 0, 0.3)',
                           borderRadius: '8px',
                           color: '#fff',
@@ -30539,7 +30539,7 @@ A1;Peça exemplo;10'
                         <div style={{ 
                           marginBottom: '15px', 
                           padding: '15px', 
-                          backgroundColor: '#1a1a1a', 
+                          backgroundColor: '#141414', 
                           borderRadius: '8px',
                           border: '1px solid rgba(0, 255, 0, 0.2)'
                         }}>
@@ -30554,7 +30554,7 @@ A1;Peça exemplo;10'
                             style={{
                               width: '100%',
                               padding: '10px',
-                              backgroundColor: '#2a2a2a',
+                              backgroundColor: '#222222',
                               border: '1px solid rgba(0, 255, 0, 0.3)',
                               borderRadius: '6px',
                               color: '#fff',
@@ -30585,7 +30585,7 @@ A1;Peça exemplo;10'
                                     style={{
                                       padding: '10px',
                                       marginBottom: '8px',
-                                      backgroundColor: '#2a2a2a',
+                                      backgroundColor: '#222222',
                                       borderRadius: '6px',
                                       border: '1px solid rgba(0, 255, 0, 0.2)',
                                       cursor: 'pointer',
@@ -30673,7 +30673,7 @@ A1;Peça exemplo;10'
                                   key={pecaItem.pecaId}
                                   style={{
                                     padding: '12px',
-                                    backgroundColor: '#1a1a1a',
+                                    backgroundColor: '#141414',
                                     borderRadius: '6px',
                                     border: '1px solid rgba(0, 255, 0, 0.2)',
                                     display: 'flex',
@@ -30714,7 +30714,7 @@ A1;Peça exemplo;10'
                                       style={{
                                         width: '60px',
                                         padding: '4px 8px',
-                                        backgroundColor: '#2a2a2a',
+                                        backgroundColor: '#222222',
                                         border: '1px solid rgba(0, 255, 0, 0.3)',
                                         borderRadius: '4px',
                                         color: '#fff',
@@ -30867,7 +30867,7 @@ A1;Peça exemplo;10'
             <div style={{ 
               marginBottom: '40px', 
               padding: '30px', 
-              backgroundColor: '#1a1a1a', 
+              backgroundColor: '#141414', 
               borderRadius: '12px', 
               border: '1px solid rgba(0, 255, 0, 0.3)'
             }}>
@@ -30917,7 +30917,7 @@ A1;Peça exemplo;10'
                       style={{
                         flex: 1,
                         padding: '12px',
-                        backgroundColor: '#2a2a2a',
+                        backgroundColor: '#222222',
                         border: '1px solid rgba(0, 255, 0, 0.3)',
                         borderRadius: '8px',
                         color: '#fff',
@@ -30955,7 +30955,7 @@ A1;Peça exemplo;10'
                       style={{
                         flex: 1,
                         padding: '12px',
-                        backgroundColor: '#2a2a2a',
+                        backgroundColor: '#222222',
                         border: '1px solid rgba(0, 255, 0, 0.3)',
                         borderRadius: '8px',
                         color: '#fff',
@@ -30986,7 +30986,7 @@ A1;Peça exemplo;10'
                 )}
 
                 {checklistEquipamentoSelecionado && (
-                  <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.5)' }}>
+                  <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.5)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '15px' }}>
                       <h4 style={{ color: '#00ff00', margin: 0, fontSize: '18px' }}>
                         {safeT?.equipamentoEncontrado || 'Equipamento Encontrado'}
@@ -31014,7 +31014,7 @@ A1;Peça exemplo;10'
                       <div><strong style={{ color: '#00ff00' }}>{safeT?.numeroSerie || 'Número de Série'}:</strong> {checklistEquipamentoSelecionado.numeroSerie}</div>
                       <div><strong style={{ color: '#00ff00' }}>{safeT?.familia || 'Família'}:</strong> {checklistEquipamentoSelecionado.familia || 'N/A'}</div>
                     </div>
-                    <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+                    <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                       <p style={{ color: '#00ff00', margin: 0, fontSize: '14px', fontWeight: 'bold' }}>
                         ✓ {safeT?.equipamentoSelecionadoParaChecklist || 'Equipamento selecionado! Agora você pode criar o checklist para este equipamento.'}
                       </p>
@@ -31034,7 +31034,7 @@ A1;Peça exemplo;10'
               <div 
                 onClick={() => openTab('pre-checklist', getTabTitle('pre-checklist'))}
                 style={{
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   borderRadius: '16px',
                   padding: '40px',
                   border: '1px solid rgba(0, 255, 0, 0.1)',
@@ -31072,7 +31072,7 @@ A1;Peça exemplo;10'
               <div 
                 onClick={() => openTab('checklist', getTabTitle('checklist'))}
                 style={{
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   borderRadius: '16px',
                   padding: '40px',
                   border: '1px solid rgba(0, 255, 0, 0.1)',
@@ -31213,7 +31213,7 @@ A1;Peça exemplo;10'
             <div style={{ 
               marginBottom: '20px',
               padding: '20px', 
-              backgroundColor: '#2a2a2a', 
+              backgroundColor: '#222222', 
               borderRadius: '8px', 
               border: '1px solid rgba(0, 255, 0, 0.2)'
             }}>
@@ -31235,7 +31235,7 @@ A1;Peça exemplo;10'
                     style={{
                       width: '100%',
                       padding: '10px',
-                      backgroundColor: '#2a2a2a',
+                      backgroundColor: '#222222',
                       border: '1px solid rgba(0, 255, 0, 0.3)',
                       borderRadius: '8px',
                       color: '#fff',
@@ -31265,7 +31265,7 @@ A1;Peça exemplo;10'
                     style={{
                       width: '100%',
                       padding: '10px',
-                      backgroundColor: '#2a2a2a',
+                      backgroundColor: '#222222',
                       border: '1px solid rgba(0, 255, 0, 0.3)',
                       borderRadius: '8px',
                       color: '#fff',
@@ -31316,7 +31316,7 @@ A1;Peça exemplo;10'
               <div style={{ 
                 marginBottom: '20px',
                 padding: '20px', 
-                backgroundColor: '#2a2a2a', 
+                backgroundColor: '#222222', 
                 borderRadius: '8px', 
                 border: '1px solid rgba(0, 255, 0, 0.2)'
               }}>
@@ -31420,7 +31420,7 @@ A1;Peça exemplo;10'
                         style={{
                           width: '100%',
                           padding: '10px',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           border: '1px solid rgba(0, 255, 0, 0.3)',
                           borderRadius: '8px',
                           color: '#fff',
@@ -31444,7 +31444,7 @@ A1;Peça exemplo;10'
                         style={{
                           width: '100%',
                           padding: '10px',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           border: '1px solid rgba(0, 255, 0, 0.3)',
                           borderRadius: '8px',
                           color: '#fff',
@@ -31470,7 +31470,7 @@ A1;Peça exemplo;10'
               <div style={{ 
                 marginBottom: '30px',
                 padding: '25px', 
-                backgroundColor: '#1a1a1a', 
+                backgroundColor: '#141414', 
                 borderRadius: '12px', 
                 border: '1px solid rgba(0, 255, 0, 0.3)'
               }}>
@@ -31479,14 +31479,14 @@ A1;Peça exemplo;10'
                 </h3>
 
                 {/* Selecionar família | Selecionar parente */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                   <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: '24px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '220px' }}>
                       <label style={{ fontSize: '13px', fontWeight: 600, color: '#00ff00' }}>{safeT?.selecionarFamilia || 'Selecionar família'}</label>
                       <select
                         value={checklistMontagemFamilia}
                         onChange={(e) => { setChecklistMontagemFamilia(e.target.value); setChecklistMontagemParenteId(''); setChecklistMontagemServicosSelecionados(new Set()) }}
-                        style={{ height: '42px', padding: '0 12px', backgroundColor: '#1a1a1a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', minWidth: '220px' }}
+                        style={{ height: '42px', padding: '0 12px', backgroundColor: '#141414', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', minWidth: '220px' }}
                       >
                         <option value="">— {safeT?.nenhum || 'Nenhum'}</option>
                         {(() => {
@@ -31504,7 +31504,7 @@ A1;Peça exemplo;10'
                         value={checklistMontagemParenteId}
                         onChange={(e) => { setChecklistMontagemParenteId(e.target.value); setChecklistMontagemServicosSelecionados(new Set()) }}
                         disabled={!checklistMontagemFamilia}
-                        style={{ height: '42px', padding: '0 12px', backgroundColor: checklistMontagemFamilia ? '#1a1a1a' : '#111', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: checklistMontagemFamilia ? '#fff' : '#666', fontSize: '14px', minWidth: '220px' }}
+                        style={{ height: '42px', padding: '0 12px', backgroundColor: checklistMontagemFamilia ? '#141414' : '#111', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: checklistMontagemFamilia ? '#fff' : '#666', fontSize: '14px', minWidth: '220px' }}
                       >
                         <option value="">— {safeT?.nenhum || 'Nenhum'}</option>
                         {checklistMontagemFamilia && parentesChecklist.filter(p => p.familia === checklistMontagemFamilia).map(pr => (
@@ -31519,7 +31519,7 @@ A1;Peça exemplo;10'
                 {checklistMontagemFamilia && checklistMontagemParenteId && (() => {
                   const parenteCab = parentesChecklist.find(p => p.id === checklistMontagemParenteId)
                   return (
-                    <div style={{ marginBottom: '20px', padding: '16px 20px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.25)', borderLeft: '4px solid #00ff00' }}>
+                    <div style={{ marginBottom: '20px', padding: '16px 20px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.25)', borderLeft: '4px solid #00ff00' }}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px 32px', alignItems: 'center' }}>
                         <div>
                           <span style={{ fontSize: '12px', color: '#00ff00', fontWeight: 600, textTransform: 'uppercase' }}>{safeT?.familia || 'Família'}</span>
@@ -31558,7 +31558,7 @@ A1;Peça exemplo;10'
                         {gruposDoParente.map(gr => {
                           const itens = gr.itensTrabalho && gr.itensTrabalho.length > 0 ? gr.itensTrabalho : (gr.manutencoes || []).map((m: ManutencaoChecklist) => ({ id: m.id, tipo: safeT?.manutencao || 'Manutenção', descricaoTrabalho: m.nome || '', dataCriacao: (m as any).dataCriacao || '' } as ItemTrabalhoCriacao))
                           return (
-                            <div key={gr.id} style={{ border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#1a1a1a', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+                            <div key={gr.id} style={{ border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#141414', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
                               {/* Cabeçalho profissional: imagem centralizada e maior, número e nome do grupo */}
                               <div style={{
                                 display: 'flex',
@@ -31586,7 +31586,7 @@ A1;Peça exemplo;10'
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    backgroundColor: '#1a1a1a',
+                                    backgroundColor: '#141414',
                                     color: '#00ff00',
                                     fontSize: '48px',
                                     fontWeight: 700,
@@ -31678,7 +31678,7 @@ A1;Peça exemplo;10'
                                             alignItems: 'center',
                                             gap: '12px',
                                             padding: '12px',
-                                            backgroundColor: estaSelecionado ? '#1a3a1a' : '#1a1a1a',
+                                            backgroundColor: estaSelecionado ? '#1a3a1a' : '#141414',
                                             borderRadius: '6px',
                                             borderLeft: estaSelecionado ? '3px solid #00ff00' : '3px solid rgba(0, 255, 0, 0.3)',
                                             cursor: 'pointer',
@@ -31706,7 +31706,7 @@ A1;Peça exemplo;10'
                                 )}
                               </div>
                               {checklistMontagemGruposNecessitamPecas.has(gr.id) && (
-                                <div style={{ borderTop: '1px solid rgba(0, 255, 0, 0.25)', padding: '16px', backgroundColor: '#1a1a1a' }}>
+                                <div style={{ borderTop: '1px solid rgba(0, 255, 0, 0.25)', padding: '16px', backgroundColor: '#141414' }}>
                                   <div style={{ fontSize: '14px', fontWeight: 700, color: '#00ff00', marginBottom: '12px' }}>{safeT?.adicionarPecasGrupo ?? 'Adicionar peças'}</div>
                                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -31714,11 +31714,11 @@ A1;Peça exemplo;10'
                                       <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px', flexWrap: 'wrap' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                           <label style={{ fontSize: '11px', color: '#888', whiteSpace: 'nowrap' }}>{safeT?.codigoPeca ?? 'Código da peça'}</label>
-                                          <input type="text" placeholder="" value={checklistMontagemCodigoPecaInput[gr.id] || ''} onChange={(e) => setChecklistMontagemCodigoPecaInput(prev => ({ ...prev, [gr.id]: e.target.value }))} style={{ width: '160px', height: '36px', padding: '0 10px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.4)', borderRadius: '6px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }} />
+                                          <input type="text" placeholder="" value={checklistMontagemCodigoPecaInput[gr.id] || ''} onChange={(e) => setChecklistMontagemCodigoPecaInput(prev => ({ ...prev, [gr.id]: e.target.value }))} style={{ width: '160px', height: '36px', padding: '0 10px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.4)', borderRadius: '6px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }} />
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                           <label style={{ fontSize: '11px', color: '#888', whiteSpace: 'nowrap' }}>{safeT?.quantidade ?? 'Quantidade'}</label>
-                                          <input type="number" min={1} value={checklistMontagemQuantidadeInput[gr.id] ?? 1} onChange={(e) => setChecklistMontagemQuantidadeInput(prev => ({ ...prev, [gr.id]: Math.max(1, parseInt(e.target.value, 10) || 1) }))} style={{ minWidth: '90px', width: '90px', height: '36px', padding: '0 10px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.4)', borderRadius: '6px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }} />
+                                          <input type="number" min={1} value={checklistMontagemQuantidadeInput[gr.id] ?? 1} onChange={(e) => setChecklistMontagemQuantidadeInput(prev => ({ ...prev, [gr.id]: Math.max(1, parseInt(e.target.value, 10) || 1) }))} style={{ minWidth: '90px', width: '90px', height: '36px', padding: '0 10px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.4)', borderRadius: '6px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }} />
                                         </div>
                                         <button type="button" onClick={() => { const cod = (checklistMontagemCodigoPecaInput[gr.id] || '').trim(); if (!cod) return; const qtd = Math.max(1, checklistMontagemQuantidadeInput[gr.id] ?? 1); const nomePeca = pecasBiblioteca.find(p => p.codigo === cod)?.nome; setChecklistMontagemPecasPorGrupo(prev => ({ ...prev, [gr.id]: [...(prev[gr.id] || []), { codigo: cod, nome: nomePeca, quantidade: qtd }] })); setChecklistMontagemCodigoPecaInput(prev => ({ ...prev, [gr.id]: '' })); setChecklistMontagemQuantidadeInput(prev => ({ ...prev, [gr.id]: 1 })); }} style={{ padding: '8px 16px', height: '36px', fontSize: '13px', backgroundColor: '#00ff00', color: '#000', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}>{safeT?.adicionar ?? 'Adicionar'}</button>
                                       </div>
@@ -31769,7 +31769,7 @@ A1;Peça exemplo;10'
                     <button type="button" onClick={() => setChecklistMontagemImagemZoomLevel((v) => Math.max(25, v - 25))} style={{ padding: '8px 14px', backgroundColor: '#333', color: '#fff', border: '1px solid #00ff00', borderRadius: 6, cursor: 'pointer' }}>{safeT?.zoomOut ?? '− Zoom out'}</button>
                     <span style={{ color: '#fff', minWidth: 60, textAlign: 'center' }}>{checklistMontagemImagemZoomLevel}%</span>
                     <button type="button" onClick={() => setChecklistMontagemImagemZoomLevel((v) => Math.min(300, v + 25))} style={{ padding: '8px 14px', backgroundColor: '#333', color: '#fff', border: '1px solid #00ff00', borderRadius: 6, cursor: 'pointer' }}>{safeT?.zoomIn ?? '+ Zoom in'}</button>
-                    <button type="button" onClick={() => setChecklistMontagemImagemZoom(null)} style={{ padding: '8px 14px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid #888', borderRadius: 6, cursor: 'pointer', marginLeft: 8 }}>{safeT?.close ?? 'Fechar'}</button>
+                    <button type="button" onClick={() => setChecklistMontagemImagemZoom(null)} style={{ padding: '8px 14px', backgroundColor: '#141414', color: '#fff', border: '1px solid #888', borderRadius: 6, cursor: 'pointer', marginLeft: 8 }}>{safeT?.close ?? 'Fechar'}</button>
                   </div>
                 </div>
               </div>
@@ -31780,7 +31780,7 @@ A1;Peça exemplo;10'
               <div style={{ 
                 marginTop: '30px',
                 padding: '25px', 
-                backgroundColor: '#1a1a1a', 
+                backgroundColor: '#141414', 
                 borderRadius: '12px', 
                 border: '1px solid rgba(0, 255, 0, 0.3)',
                 display: 'flex',
@@ -31881,7 +31881,7 @@ A1;Peça exemplo;10'
               <div style={{
                 marginTop: '25px',
                 padding: '25px',
-                backgroundColor: '#1a1a1a',
+                backgroundColor: '#141414',
                 borderRadius: '12px',
                 border: '1px solid rgba(255, 193, 7, 0.3)'
               }}>
@@ -31900,7 +31900,7 @@ A1;Peça exemplo;10'
                           justifyContent: 'space-between',
                           alignItems: 'center',
                           padding: '14px 16px',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           borderRadius: '8px',
                           border: '1px solid rgba(255, 193, 7, 0.2)'
                         }}
@@ -32025,7 +32025,7 @@ A1;Peça exemplo;10'
             <div style={{ 
               marginBottom: '40px', 
               padding: '30px', 
-              backgroundColor: '#1a1a1a', 
+              backgroundColor: '#141414', 
               borderRadius: '12px', 
               border: '1px solid rgba(0, 255, 0, 0.3)'
             }}>
@@ -32075,7 +32075,7 @@ A1;Peça exemplo;10'
                       style={{
                         flex: 1,
                         padding: '12px',
-                        backgroundColor: '#2a2a2a',
+                        backgroundColor: '#222222',
                         border: '1px solid rgba(0, 255, 0, 0.3)',
                         borderRadius: '8px',
                         color: '#fff',
@@ -32113,7 +32113,7 @@ A1;Peça exemplo;10'
                       style={{
                         flex: 1,
                         padding: '12px',
-                        backgroundColor: '#2a2a2a',
+                        backgroundColor: '#222222',
                         border: '1px solid rgba(0, 255, 0, 0.3)',
                         borderRadius: '8px',
                         color: '#fff',
@@ -32144,7 +32144,7 @@ A1;Peça exemplo;10'
                 )}
 
                 {checklistEquipamentoSelecionado && (
-                  <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.5)' }}>
+                  <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.5)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '15px' }}>
                       <h4 style={{ color: '#00ff00', margin: 0, fontSize: '18px' }}>
                         {safeT?.equipamentoEncontrado || 'Equipamento Encontrado'}
@@ -32172,7 +32172,7 @@ A1;Peça exemplo;10'
                       <div><strong style={{ color: '#00ff00' }}>{safeT?.numeroSerie || 'Número de Série'}:</strong> {checklistEquipamentoSelecionado.numeroSerie}</div>
                       <div><strong style={{ color: '#00ff00' }}>{safeT?.familia || 'Família'}:</strong> {checklistEquipamentoSelecionado.familia || 'N/A'}</div>
                     </div>
-                    <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+                    <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                       <p style={{ color: '#00ff00', margin: 0, fontSize: '14px', fontWeight: 'bold' }}>
                         ✓ {safeT?.equipamentoSelecionadoParaChecklist || 'Equipamento selecionado! Agora você pode criar o checklist para este equipamento.'}
                       </p>
@@ -32192,7 +32192,7 @@ A1;Peça exemplo;10'
               <div 
                 onClick={() => openTab('pre-checklist', getTabTitle('pre-checklist'))}
                 style={{
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   borderRadius: '16px',
                   padding: '40px',
                   border: '1px solid rgba(0, 255, 0, 0.1)',
@@ -32230,7 +32230,7 @@ A1;Peça exemplo;10'
               <div 
                 onClick={() => openTab('checklist', getTabTitle('checklist'))}
                 style={{
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   borderRadius: '16px',
                   padding: '40px',
                   border: '1px solid rgba(0, 255, 0, 0.1)',
@@ -32371,7 +32371,7 @@ A1;Peça exemplo;10'
             <div style={{ 
               marginBottom: '20px',
               padding: '20px', 
-              backgroundColor: '#2a2a2a', 
+              backgroundColor: '#222222', 
               borderRadius: '8px', 
               border: '1px solid rgba(0, 255, 0, 0.2)'
             }}>
@@ -32393,7 +32393,7 @@ A1;Peça exemplo;10'
                     style={{
                       width: '100%',
                       padding: '10px',
-                      backgroundColor: '#2a2a2a',
+                      backgroundColor: '#222222',
                       border: '1px solid rgba(0, 255, 0, 0.3)',
                       borderRadius: '8px',
                       color: '#fff',
@@ -32423,7 +32423,7 @@ A1;Peça exemplo;10'
                     style={{
                       width: '100%',
                       padding: '10px',
-                      backgroundColor: '#2a2a2a',
+                      backgroundColor: '#222222',
                       border: '1px solid rgba(0, 255, 0, 0.3)',
                       borderRadius: '8px',
                       color: '#fff',
@@ -32474,7 +32474,7 @@ A1;Peça exemplo;10'
               <div style={{ 
                 marginBottom: '20px',
                 padding: '20px', 
-                backgroundColor: '#2a2a2a', 
+                backgroundColor: '#222222', 
                 borderRadius: '8px', 
                 border: '1px solid rgba(0, 255, 0, 0.2)'
               }}>
@@ -32649,7 +32649,7 @@ A1;Peça exemplo;10'
             {/* Conteúdo do Pre Checklist — padrão Visualizar Equipamento (borda 1px, fundo #1a1a1a) */}
             <div style={{ 
               padding: '30px', 
-              backgroundColor: '#1a1a1a', 
+              backgroundColor: '#141414', 
               borderRadius: '12px', 
               border: '1px solid rgba(0, 255, 0, 0.2)'
             }}>
@@ -32661,7 +32661,7 @@ A1;Peça exemplo;10'
               </p>
 
               {/* Busca de Equipamento */}
-              <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+              <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                 <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px' }}>
                   {safeT?.buscarEquipamento || 'Buscar Equipamento'}
                 </h3>
@@ -32703,7 +32703,7 @@ A1;Peça exemplo;10'
                       style={{
                         flex: 1,
                         padding: '10px',
-                        backgroundColor: '#2a2a2a',
+                        backgroundColor: '#222222',
                         border: '1px solid rgba(0, 255, 0, 0.3)',
                         borderRadius: '6px',
                         color: '#fff',
@@ -32737,7 +32737,7 @@ A1;Peça exemplo;10'
                       style={{
                         flex: 1,
                         padding: '10px',
-                        backgroundColor: '#2a2a2a',
+                        backgroundColor: '#222222',
                         border: '1px solid rgba(0, 255, 0, 0.3)',
                         borderRadius: '6px',
                         color: '#fff',
@@ -32764,7 +32764,7 @@ A1;Peça exemplo;10'
                 )}
 
                 {preCheckEquipamentoSelecionado && (
-                  <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                     <h4 style={{ color: '#00ff00', marginBottom: '15px', fontSize: '16px' }}>
                       {safeT?.equipamentoEncontrado || 'Equipamento Encontrado'}
                     </h4>
@@ -32797,7 +32797,7 @@ A1;Peça exemplo;10'
 
               {/* Formulário PRE CHECK */}
               {preCheckEquipamentoSelecionado && (
-                <div style={{ padding: '20px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                <div style={{ padding: '20px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                   <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px' }}>
                     {safeT?.preencherPreCheck || 'Preencher PRE CHECK'}
                   </h3>
@@ -32814,7 +32814,7 @@ A1;Peça exemplo;10'
                         style={{
                           width: '100%',
                           padding: '10px',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           border: '1px solid rgba(0, 255, 0, 0.3)',
                           borderRadius: '6px',
                           color: '#fff',
@@ -32833,7 +32833,7 @@ A1;Peça exemplo;10'
                         style={{
                           width: '100%',
                           padding: '10px',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           border: '1px solid rgba(0, 255, 0, 0.3)',
                           borderRadius: '6px',
                           color: '#fff',
@@ -32868,7 +32868,7 @@ A1;Peça exemplo;10'
                         style={{
                           width: '100%',
                           padding: '10px',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           border: '1px solid rgba(0, 255, 0, 0.3)',
                           borderRadius: '6px',
                           color: '#fff',
@@ -32893,7 +32893,7 @@ A1;Peça exemplo;10'
                         style={{
                           width: '100%',
                           padding: '10px',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           border: '1px solid rgba(0, 255, 0, 0.3)',
                           borderRadius: '6px',
                           color: '#fff',
@@ -32921,7 +32921,7 @@ A1;Peça exemplo;10'
 
               {/* Lista de PRE CHECKS Salvos */}
               {preCheckList.length > 0 && (
-                <div style={{ marginTop: '30px', padding: '20px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                <div style={{ marginTop: '30px', padding: '20px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                   <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px' }}>
                     PRE CHECKS Realizados ({preCheckList.length})
                   </h3>
@@ -32931,7 +32931,7 @@ A1;Peça exemplo;10'
                         key={pc.id}
                         style={{
                           padding: '15px',
-                          backgroundColor: '#1a1a1a',
+                          backgroundColor: '#141414',
                           borderRadius: '8px',
                           border: '1px solid rgba(0, 255, 0, 0.2)'
                         }}
@@ -33069,7 +33069,7 @@ A1;Peça exemplo;10'
                 </div>
               </div>
             )}
-            <div style={{ padding: '24px', backgroundColor: '#1a1a1a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            <div style={{ padding: '24px', backgroundColor: '#141414', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <p style={{ color: '#ccc', fontSize: '15px', lineHeight: 1.6, margin: 0 }}>
                 {safeT?.verificacaoFinalEntregaConteudo || 'Utilize esta área para realizar a verificação final do equipamento antes da entrega ao cliente. Aqui pode registar testes de funcionamento, inspeção visual e conformidade.'}
               </p>
@@ -33105,17 +33105,17 @@ A1;Peça exemplo;10'
               <button type="button" onClick={() => { setInformacoesMecanicasAba('lista'); setShowEquipamentoForm(false); setEditingEquipamento(null); }} style={{ padding: '12px 20px', fontSize: '14px', fontWeight: '600', backgroundColor: informacoesMecanicasAba === 'lista' ? 'rgba(0, 255, 0, 0.25)' : 'rgba(0, 255, 0, 0.08)', border: informacoesMecanicasAba === 'lista' ? '2px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '8px', color: informacoesMecanicasAba === 'lista' ? '#00ff00' : '#ccc', cursor: 'pointer' }}>📋 {(safeT as any)?.verEquipamentosArmazem || 'Ver equipamentos do armazém'}</button>
             </div>
             {informacoesMecanicasAba === 'cadastro' && showEquipamentoForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.25)', padding: '24px', borderRadius: '12px', marginBottom: '24px', backgroundColor: '#2a2a2a' }}>
+              <div style={{ border: '1px solid rgba(0, 255, 0, 0.25)', padding: '24px', borderRadius: '12px', marginBottom: '24px', backgroundColor: '#222222' }}>
                 <h3 style={{ marginBottom: '16px', color: '#00ff00' }}>{editingEquipamento ? (safeT?.editEquipamento || 'Editar equipamento') : ((safeT as any)?.cadastrarEquipamento || 'Cadastrar equipamento')}</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
-                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.equipamentoId || 'ID'}</label><input type="text" value={equipamentoForm.id} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, id: e.target.value })} disabled={!!editingEquipamento} style={{ width: '100%', padding: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} /></div>
-                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.tipoEquipamento || 'Tipo'}</label><input type="text" value={equipamentoForm.tipoEquipamento} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, tipoEquipamento: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} /></div>
-                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.modelo || 'Modelo'}</label><input type="text" value={equipamentoForm.modelo} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, modelo: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} /></div>
-                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.marca || 'Marca'}</label><input type="text" value={equipamentoForm.marca} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, marca: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} /></div>
-                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.numeroSerie || 'Nº Série'}</label><input type="text" value={equipamentoForm.numeroSerie} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, numeroSerie: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} /></div>
-                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{(safeT as any)?.equipamentoPeso || 'Peso'}</label><input type="text" placeholder={(safeT as any)?.equipamentoPesoExemplo || 'Ex: 10 kg'} value={equipamentoForm.peso} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, peso: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} /></div>
-                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.familia || 'Família'}</label><select value={equipamentoForm.familia} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, familia: e.target.value, grupo: '' })} style={{ width: '100%', padding: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }}><option value="">{(safeT as any)?.selecioneFamilia || 'Selecione a família'}</option>{familiasEquipamento.map(f => <option key={f} value={f}>{f}</option>)}</select></div>
-                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.grupo || 'Grupo'}</label><select value={equipamentoForm.grupo} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, grupo: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} disabled={!equipamentoForm.familia}><option value="">{(safeT as any)?.selecioneGrupo || 'Selecione o grupo'}</option>{gruposDaFamiliaSelecionada.map(g => <option key={g.nome + g.familia} value={g.nome}>{g.nome}</option>)}</select></div>
+                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.equipamentoId || 'ID'}</label><input type="text" value={equipamentoForm.id} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, id: e.target.value })} disabled={!!editingEquipamento} style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} /></div>
+                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.tipoEquipamento || 'Tipo'}</label><input type="text" value={equipamentoForm.tipoEquipamento} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, tipoEquipamento: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} /></div>
+                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.modelo || 'Modelo'}</label><input type="text" value={equipamentoForm.modelo} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, modelo: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} /></div>
+                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.marca || 'Marca'}</label><input type="text" value={equipamentoForm.marca} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, marca: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} /></div>
+                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.numeroSerie || 'Nº Série'}</label><input type="text" value={equipamentoForm.numeroSerie} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, numeroSerie: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} /></div>
+                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{(safeT as any)?.equipamentoPeso || 'Peso'}</label><input type="text" placeholder={(safeT as any)?.equipamentoPesoExemplo || 'Ex: 10 kg'} value={equipamentoForm.peso} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, peso: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} /></div>
+                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.familia || 'Família'}</label><select value={equipamentoForm.familia} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, familia: e.target.value, grupo: '' })} style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }}><option value="">{(safeT as any)?.selecioneFamilia || 'Selecione a família'}</option>{familiasEquipamento.map(f => <option key={f} value={f}>{f}</option>)}</select></div>
+                  <div><label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{safeT?.grupo || 'Grupo'}</label><select value={equipamentoForm.grupo} onChange={(e) => setEquipamentoForm({ ...equipamentoForm, grupo: e.target.value })} style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} disabled={!equipamentoForm.familia}><option value="">{(safeT as any)?.selecioneGrupo || 'Selecione o grupo'}</option>{gruposDaFamiliaSelecionada.map(g => <option key={g.nome + g.familia} value={g.nome}>{g.nome}</option>)}</select></div>
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#ccc' }}>{(safeT as any)?.equipamentoUmaParteSo || 'Este equipamento é composto de uma só parte?'}</label>
                     <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
@@ -33126,14 +33126,14 @@ A1;Peça exemplo;10'
                   {!equipamentoForm.umaParteSo && (
                     <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
                       <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>{(safeT as any)?.equipamentoQuantasPartes || 'Quantas partes?'}</label>
-                      <input type="number" min={1} max={99} value={equipamentoForm.quantidadePartes || 1} onChange={(e) => { const qtd = Math.max(1, Math.min(99, parseInt(e.target.value, 10) || 1)); const partesAtual = equipamentoForm.partes || []; const novasPartes: PartEquipamento[] = Array.from({ length: qtd }, (_, i) => partesAtual[i] ? { ...partesAtual[i], ordem: i + 1 } : { ordem: i + 1, tipoId: 'geral', numeroSerieFabricante: '' }); setEquipamentoForm({ ...equipamentoForm, quantidadePartes: qtd, partes: novasPartes }); }} style={{ width: '120px', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} />
+                      <input type="number" min={1} max={99} value={equipamentoForm.quantidadePartes || 1} onChange={(e) => { const qtd = Math.max(1, Math.min(99, parseInt(e.target.value, 10) || 1)); const partesAtual = equipamentoForm.partes || []; const novasPartes: PartEquipamento[] = Array.from({ length: qtd }, (_, i) => partesAtual[i] ? { ...partesAtual[i], ordem: i + 1 } : { ordem: i + 1, tipoId: 'geral', numeroSerieFabricante: '' }); setEquipamentoForm({ ...equipamentoForm, quantidadePartes: qtd, partes: novasPartes }); }} style={{ width: '120px', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} />
                       {(equipamentoForm.partes || []).map((parte, idx) => (
-                        <div key={idx} style={{ marginTop: '12px', padding: '12px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                        <div key={idx} style={{ marginTop: '12px', padding: '12px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                           <div style={{ marginBottom: '8px', fontWeight: 600, color: '#00ff00' }}>{(safeT as any)?.equipamentoParte || 'Parte'} {parte.ordem}/{equipamentoForm.quantidadePartes || 1}</div>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
-                            <div><label style={{ fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.equipamentoTipoId || 'ID geral ou específico?'}</label><select value={parte.tipoId} onChange={(e) => { const tipoId = e.target.value as 'geral' | 'especifico'; const novasPartes = [...(equipamentoForm.partes || [])]; novasPartes[idx] = { ...parte, tipoId, id: tipoId === 'especifico' ? (parte.id || '') : undefined }; setEquipamentoForm({ ...equipamentoForm, partes: novasPartes }); }} style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }}><option value="geral">{(safeT as any)?.equipamentoIdGeral || 'ID geral'}</option><option value="especifico">{(safeT as any)?.equipamentoIdEspecifico || 'ID específico'}</option></select></div>
-                            {parte.tipoId === 'especifico' && <div><label style={{ fontSize: '12px', color: '#aaa' }}>ID</label><input type="text" value={parte.id || ''} onChange={(e) => { const novasPartes = [...(equipamentoForm.partes || [])]; novasPartes[idx] = { ...parte, id: e.target.value }; setEquipamentoForm({ ...equipamentoForm, partes: novasPartes }); }} style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} /></div>}
-                            <div><label style={{ fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.equipamentoNumeroSerieFabricante || 'Nº série fabricante'}</label><input type="text" value={parte.numeroSerieFabricante || ''} onChange={(e) => { const novasPartes = [...(equipamentoForm.partes || [])]; novasPartes[idx] = { ...parte, numeroSerieFabricante: e.target.value }; setEquipamentoForm({ ...equipamentoForm, partes: novasPartes }); }} style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} /></div>
+                            <div><label style={{ fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.equipamentoTipoId || 'ID geral ou específico?'}</label><select value={parte.tipoId} onChange={(e) => { const tipoId = e.target.value as 'geral' | 'especifico'; const novasPartes = [...(equipamentoForm.partes || [])]; novasPartes[idx] = { ...parte, tipoId, id: tipoId === 'especifico' ? (parte.id || '') : undefined }; setEquipamentoForm({ ...equipamentoForm, partes: novasPartes }); }} style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }}><option value="geral">{(safeT as any)?.equipamentoIdGeral || 'ID geral'}</option><option value="especifico">{(safeT as any)?.equipamentoIdEspecifico || 'ID específico'}</option></select></div>
+                            {parte.tipoId === 'especifico' && <div><label style={{ fontSize: '12px', color: '#aaa' }}>ID</label><input type="text" value={parte.id || ''} onChange={(e) => { const novasPartes = [...(equipamentoForm.partes || [])]; novasPartes[idx] = { ...parte, id: e.target.value }; setEquipamentoForm({ ...equipamentoForm, partes: novasPartes }); }} style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} /></div>}
+                            <div><label style={{ fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.equipamentoNumeroSerieFabricante || 'Nº série fabricante'}</label><input type="text" value={parte.numeroSerieFabricante || ''} onChange={(e) => { const novasPartes = [...(equipamentoForm.partes || [])]; novasPartes[idx] = { ...parte, numeroSerieFabricante: e.target.value }; setEquipamentoForm({ ...equipamentoForm, partes: novasPartes }); }} style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} /></div>
                           </div>
                         </div>
                       ))}
@@ -33144,11 +33144,11 @@ A1;Peça exemplo;10'
               </div>
             )}
             {informacoesMecanicasAba === 'lista' && (
-              <div style={{ backgroundColor: '#1a1a1a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)', overflow: 'hidden' }}>
+              <div style={{ backgroundColor: '#141414', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)', overflow: 'hidden' }}>
                 <div style={{ padding: '16px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
                   <span style={{ color: '#00ff00', fontWeight: '600' }}>{(safeT as any)?.filtrarPor || 'Filtrar por'}:</span>
-                  <select value={informacoesMecanicasFiltroFamilia} onChange={(e) => setInformacoesMecanicasFiltroFamilia(e.target.value)} style={{ padding: '8px 12px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', minWidth: '160px' }}><option value="">{safeT?.familia || 'Família'} (todas)</option>{familiasEquipamento.map(f => <option key={f} value={f}>{f}</option>)}</select>
-                  <select value={informacoesMecanicasFiltroGrupo} onChange={(e) => setInformacoesMecanicasFiltroGrupo(e.target.value)} style={{ padding: '8px 12px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', minWidth: '160px' }}><option value="">{safeT?.grupo || 'Grupo'} (todos)</option>{gruposEquipamento.map(g => <option key={g.nome + g.familia} value={g.nome}>{g.nome} ({g.familia})</option>)}</select>
+                  <select value={informacoesMecanicasFiltroFamilia} onChange={(e) => setInformacoesMecanicasFiltroFamilia(e.target.value)} style={{ padding: '8px 12px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', minWidth: '160px' }}><option value="">{safeT?.familia || 'Família'} (todas)</option>{familiasEquipamento.map(f => <option key={f} value={f}>{f}</option>)}</select>
+                  <select value={informacoesMecanicasFiltroGrupo} onChange={(e) => setInformacoesMecanicasFiltroGrupo(e.target.value)} style={{ padding: '8px 12px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', minWidth: '160px' }}><option value="">{safeT?.grupo || 'Grupo'} (todos)</option>{gruposEquipamento.map(g => <option key={g.nome + g.familia} value={g.nome}>{g.nome} ({g.familia})</option>)}</select>
                   <span style={{ color: '#aaa', fontSize: '13px' }}>{listagemFiltrada.length} {(safeT as any)?.equipamentosAtivos || 'equipamento(s)'}</span>
                 </div>
                 <div style={{ overflowX: 'auto' }}>
@@ -33268,7 +33268,7 @@ A1;Peça exemplo;10'
             {/* Conteúdo da Comunicação Interna */}
             <div style={{ 
               padding: '30px', 
-              backgroundColor: '#1a1a1a', 
+              backgroundColor: '#141414', 
               borderRadius: '12px', 
               border: '2px solid rgba(0, 255, 0, 0.3)'
             }}>
@@ -33325,7 +33325,7 @@ A1;Peça exemplo;10'
             <div style={{ 
               marginTop: '50px',
               padding: '30px', 
-              backgroundColor: '#1a1a1a', 
+              backgroundColor: '#141414', 
               borderRadius: '12px', 
               border: '2px solid rgba(0, 255, 0, 0.3)'
             }}>
@@ -33357,7 +33357,7 @@ A1;Peça exemplo;10'
                   onChange={(e) => setTecnicoSelecionado(e.target.value)}
                   style={{
                     padding: '10px',
-                    backgroundColor: '#2a2a2a',
+                    backgroundColor: '#222222',
                     border: '2px solid rgba(0, 255, 0, 0.3)',
                     borderRadius: '8px',
                     color: '#fff',
@@ -33531,7 +33531,7 @@ A1;Peça exemplo;10'
             </div>
 
             {!hubUsuarioAtual ? (
-              <div style={{ background: '#1a1a1a', borderRadius: '16px', border: '2px solid rgba(0, 255, 0, 0.25)', padding: '28px' }}>
+              <div style={{ background: '#141414', borderRadius: '16px', border: '2px solid rgba(0, 255, 0, 0.25)', padding: '28px' }}>
                 <h3 style={{ margin: '0 0 20px 0', color: '#00ff00', fontSize: '18px' }}>
                   {safeT?.quemEstaUsando || 'Quem está usando agora?'}
                 </h3>
@@ -33579,7 +33579,7 @@ A1;Peça exemplo;10'
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 340px) 1fr', gap: '24px', alignItems: 'start' }}>
-                <div style={{ background: '#1a1a1a', borderRadius: '16px', border: '2px solid rgba(0, 255, 0, 0.25)', padding: '20px', position: 'sticky', top: '20px' }}>
+                <div style={{ background: '#141414', borderRadius: '16px', border: '2px solid rgba(0, 255, 0, 0.25)', padding: '20px', position: 'sticky', top: '20px' }}>
                   <div style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)' }}>
                     <span style={{ color: '#888', fontSize: '12px' }}>{safeT?.voceEstaComo || 'Você está como'}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>
@@ -33631,7 +33631,7 @@ A1;Peça exemplo;10'
                   )}
                 </div>
 
-                <div style={{ background: '#1a1a1a', borderRadius: '16px', border: '2px solid rgba(0, 255, 0, 0.25)', padding: '24px', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ background: '#141414', borderRadius: '16px', border: '2px solid rgba(0, 255, 0, 0.25)', padding: '24px', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
                   {hubDestinatarioSelecionado.length === 0 ? (
                     <div style={{ color: '#888', textAlign: 'center', padding: '48px 24px' }}>
                       {hubUsuarioAtual.tipo === 'tecnico' ? (safeT?.selecioneUmGestor || 'Selecione um gestor na lista ao lado para ver e enviar mensagens. Só esse gestor receberá e lerá.') : (safeT?.selecioneUmOuMaisTecnicos || 'Selecione um ou mais técnicos na lista ao lado. A mensagem será enviada para todos selecionados e todos leem da mesma forma.')}
@@ -33666,8 +33666,8 @@ A1;Peça exemplo;10'
                         })}
                       </div>
                       <div style={{ borderTop: '1px solid rgba(0, 255, 0, 0.2)', paddingTop: '16px' }}>
-                        <input type="text" placeholder={safeT?.assunto || 'Assunto'} value={hubAssunto} onChange={e => setHubAssunto(e.target.value)} style={{ width: '100%', padding: '10px 14px', marginBottom: '10px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
-                        <textarea placeholder={safeT?.mensagem || 'Mensagem'} value={hubMensagemTexto} onChange={e => setHubMensagemTexto(e.target.value)} rows={3} style={{ width: '100%', padding: '10px 14px', marginBottom: '12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px', resize: 'vertical' }} />
+                        <input type="text" placeholder={safeT?.assunto || 'Assunto'} value={hubAssunto} onChange={e => setHubAssunto(e.target.value)} style={{ width: '100%', padding: '10px 14px', marginBottom: '10px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
+                        <textarea placeholder={safeT?.mensagem || 'Mensagem'} value={hubMensagemTexto} onChange={e => setHubMensagemTexto(e.target.value)} rows={3} style={{ width: '100%', padding: '10px 14px', marginBottom: '12px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px', resize: 'vertical' }} />
                         <button type="button" onClick={enviarMensagemPrivada} disabled={!hubAssunto.trim() || !hubMensagemTexto.trim()} style={{ padding: '12px 24px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '2px solid rgba(0, 255, 0, 0.5)', borderRadius: '10px', color: '#00ff00', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
                           {safeT?.enviar || 'Enviar'}
                         </button>
@@ -33784,7 +33784,7 @@ A1;Peça exemplo;10'
             {/* Primeiro Painel: Mensagens */}
             <div style={{ 
               padding: '30px', 
-              backgroundColor: '#1a1a1a', 
+              backgroundColor: '#141414', 
               borderRadius: '12px', 
               border: '2px solid rgba(0, 255, 0, 0.3)',
               marginBottom: '30px'
@@ -33957,7 +33957,7 @@ A1;Peça exemplo;10'
             {/* Conteúdo organizado: Gestores, Técnicos Internos, Técnicos Externos */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
               {/* ========== SEÇÃO GESTORES ========== */}
-              <div style={{ padding: '30px', backgroundColor: '#1a1a1a', borderRadius: '12px', border: '2px solid rgba(0, 255, 0, 0.3)' }}>
+              <div style={{ padding: '30px', backgroundColor: '#141414', borderRadius: '12px', border: '2px solid rgba(0, 255, 0, 0.3)' }}>
                 <h2 style={{ color: '#66b3ff', fontSize: '22px', marginBottom: '25px', textTransform: 'uppercase', letterSpacing: '2px', borderBottom: '2px solid rgba(0, 100, 255, 0.3)', paddingBottom: '10px' }}>
                   {safeT?.gestores || 'GESTORES'}
                 </h2>
@@ -34088,7 +34088,7 @@ A1;Peça exemplo;10'
               </div>
 
               {/* ========== SEÇÃO TÉCNICOS INTERNOS ========== */}
-              <div style={{ padding: '30px', backgroundColor: '#1a1a1a', borderRadius: '12px', border: '2px solid rgba(0, 255, 100, 0.3)' }}>
+              <div style={{ padding: '30px', backgroundColor: '#141414', borderRadius: '12px', border: '2px solid rgba(0, 255, 100, 0.3)' }}>
                 <h2 style={{ color: '#00ff64', fontSize: '22px', marginBottom: '25px', textTransform: 'uppercase', letterSpacing: '2px', borderBottom: '2px solid rgba(0, 255, 100, 0.3)', paddingBottom: '10px' }}>
                   {safeT?.tecnicosInternos || 'TÉCNICOS INTERNOS'}
                 </h2>
@@ -34146,7 +34146,7 @@ A1;Peça exemplo;10'
               </div>
 
               {/* ========== SEÇÃO TÉCNICOS EXTERNOS ========== */}
-              <div style={{ padding: '30px', backgroundColor: '#1a1a1a', borderRadius: '12px', border: '2px solid rgba(0, 255, 0, 0.3)' }}>
+              <div style={{ padding: '30px', backgroundColor: '#141414', borderRadius: '12px', border: '2px solid rgba(0, 255, 0, 0.3)' }}>
                 <h2 style={{ color: '#ffa500', fontSize: '22px', marginBottom: '25px', textTransform: 'uppercase', letterSpacing: '2px', borderBottom: '2px solid rgba(255, 165, 0, 0.3)', paddingBottom: '10px' }}>
                   {safeT?.tecnicosExternos || 'TÉCNICOS EXTERNOS'}
                 </h2>
@@ -34208,7 +34208,7 @@ A1;Peça exemplo;10'
                 <div style={{
                   marginTop: '30px',
                   padding: '25px',
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   borderRadius: '12px',
                   border: '2px solid rgba(255, 193, 7, 0.4)'
                 }}>
@@ -34372,7 +34372,7 @@ A1;Peça exemplo;10'
                                   <strong style={{ color: '#ffc107', fontSize: '13px' }}>{safeT?.pecasSolicitadas || 'Peças solicitadas'}:</strong>
                                   <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                     {pecas.map((p: any, i: number) => (
-                                      <div key={i} style={{ padding: '8px 12px', backgroundColor: '#1a1a1a', borderRadius: '6px', fontSize: '13px', color: '#ccc', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                                      <div key={i} style={{ padding: '8px 12px', backgroundColor: '#141414', borderRadius: '6px', fontSize: '13px', color: '#ccc', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                                         <span>{p.codigo || '-'} · {p.nome || '-'} · Qtd: {p.quantidade ?? 1}</span>
                                         {p.tecnicoSolicitante && <span style={{ color: '#ffc107' }}>{safeT?.solicitadoPor || 'Solicitado por'}: {p.tecnicoSolicitante}</span>}
                                       </div>
@@ -34391,7 +34391,7 @@ A1;Peça exemplo;10'
 
               {/* Painel Mensagens do Técnico selecionado (Alerta) */}
               {tecnicoAlertaSelecionado && (
-                <div style={{ marginTop: '30px', padding: '25px', backgroundColor: '#1a1a1a', borderRadius: '12px', border: tecnicoAlertaSelecionado.type === 'internal' ? '2px solid rgba(0, 255, 100, 0.4)' : '2px solid rgba(255, 165, 0, 0.4)' }}>
+                <div style={{ marginTop: '30px', padding: '25px', backgroundColor: '#141414', borderRadius: '12px', border: tecnicoAlertaSelecionado.type === 'internal' ? '2px solid rgba(0, 255, 100, 0.4)' : '2px solid rgba(255, 165, 0, 0.4)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
                     <h3 style={{ color: tecnicoAlertaSelecionado.type === 'internal' ? '#00ff64' : '#ffa500', margin: 0, fontSize: '20px' }}>
                       📬 {safeT?.mensagensRecebidas || 'Mensagens recebidas'} — {tecnicoAlertaSelecionado.name}
@@ -34463,7 +34463,7 @@ A1;Peça exemplo;10'
                   padding: '40px',
                   textAlign: 'center',
                   color: '#999',
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   borderRadius: '12px',
                   border: '2px solid rgba(0, 255, 0, 0.3)'
                 }}>
@@ -34570,7 +34570,7 @@ A1;Peça exemplo;10'
                     onClick={() => setTecnicoConhecimentoSelecionado(tecnico.id)}
                     style={{
                       padding: '12px',
-                      backgroundColor: tecnicoConhecimentoSelecionado === tecnico.id ? 'rgba(0, 255, 0, 0.15)' : '#1a1a1a',
+                      backgroundColor: tecnicoConhecimentoSelecionado === tecnico.id ? 'rgba(0, 255, 0, 0.15)' : '#141414',
                       borderRadius: '10px',
                       border: tecnicoConhecimentoSelecionado === tecnico.id ? '2px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.2)',
                       cursor: 'pointer',
@@ -34578,7 +34578,7 @@ A1;Peça exemplo;10'
                       transition: 'all 0.2s ease'
                     }}
                   >
-                    <div style={{ width: '64px', height: '64px', margin: '0 auto 8px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: '64px', height: '64px', margin: '0 auto 8px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#222222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {tecnico.photo ? (
                         <img src={tecnico.photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
@@ -34600,12 +34600,12 @@ A1;Peça exemplo;10'
                 ))}
               </div>
               {tecnicos.length === 0 && (
-                <div style={{ padding: '24px', backgroundColor: '#1a1a1a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                <div style={{ padding: '24px', backgroundColor: '#141414', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                   <p style={{ color: '#aaa' }}>{(safeT as any)?.informacoesConhecimentoSemTecnicos || 'Não há técnicos cadastrados. Adicione técnicos em Cadastro de Técnicos (Gestão Técnica).'}</p>
                 </div>
               )}
               {tecnicoConhecimentoSelecionado && tecnicos.length > 0 && (
-                <div style={{ padding: '24px', backgroundColor: '#1a1a1a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.25)' }}>
+                <div style={{ padding: '24px', backgroundColor: '#141414', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.25)' }}>
                   <h3 style={{ margin: '0 0 16px', color: '#00ff00', fontSize: '16px' }}>
                     {(safeT as any)?.informacoesConhecimentoPorEquipamento || 'Tipos de equipamento e conhecimentos'}
                   </h3>
@@ -34620,7 +34620,7 @@ A1;Peça exemplo;10'
                         if (opt) addConhecimento(opt.id, opt.nome)
                         e.target.value = ''
                       }}
-                      style={{ padding: '8px 12px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', minWidth: '220px' }}
+                      style={{ padding: '8px 12px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', minWidth: '220px' }}
                     >
                       <option value="">— {(safeT as any)?.informacoesConhecimentoSelecioneTipo ?? 'Selecione'} —</option>
                       {tiposEquipamentoOpcoes.map(opt => (
@@ -34653,22 +34653,22 @@ A1;Peça exemplo;10'
                             <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                               <td style={{ padding: '10px', color: '#ddd' }}>{ent.equipamentoTipoNome}</td>
                               <td style={{ padding: '8px', textAlign: 'center' }}>
-                                <select value={ent.mecanico} onChange={(e) => updateConhecimento(ent.id, 'mecanico', Number(e.target.value))} style={{ padding: '6px 8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', minWidth: '100px' }}>
+                                <select value={ent.mecanico} onChange={(e) => updateConhecimento(ent.id, 'mecanico', Number(e.target.value))} style={{ padding: '6px 8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', minWidth: '100px' }}>
                                   {nivelOpcoes.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                                 </select>
                               </td>
                               <td style={{ padding: '8px', textAlign: 'center' }}>
-                                <select value={ent.eletrico} onChange={(e) => updateConhecimento(ent.id, 'eletrico', Number(e.target.value))} style={{ padding: '6px 8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', minWidth: '100px' }}>
+                                <select value={ent.eletrico} onChange={(e) => updateConhecimento(ent.id, 'eletrico', Number(e.target.value))} style={{ padding: '6px 8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', minWidth: '100px' }}>
                                   {nivelOpcoes.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                                 </select>
                               </td>
                               <td style={{ padding: '8px', textAlign: 'center' }}>
-                                <select value={ent.software} onChange={(e) => updateConhecimento(ent.id, 'software', Number(e.target.value))} style={{ padding: '6px 8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', minWidth: '100px' }}>
+                                <select value={ent.software} onChange={(e) => updateConhecimento(ent.id, 'software', Number(e.target.value))} style={{ padding: '6px 8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', minWidth: '100px' }}>
                                   {nivelOpcoes.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                                 </select>
                               </td>
                               <td style={{ padding: '8px', textAlign: 'center' }}>
-                                <select value={ent.programacao} onChange={(e) => updateConhecimento(ent.id, 'programacao', Number(e.target.value))} style={{ padding: '6px 8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', minWidth: '100px' }}>
+                                <select value={ent.programacao} onChange={(e) => updateConhecimento(ent.id, 'programacao', Number(e.target.value))} style={{ padding: '6px 8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', minWidth: '100px' }}>
                                   {nivelOpcoes.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                                 </select>
                               </td>
@@ -34697,7 +34697,7 @@ A1;Peça exemplo;10'
                                           onChange={(e) => updateConhecimentoDescricaoCampo(ent.id, key, e.target.value)}
                                           placeholder={(safeT as any)?.conhecimentoDescricaoPlaceholder ?? 'Descreva em detalhe os conhecimentos nesta área...'}
                                           rows={2}
-                                          style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#eee', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px', resize: 'vertical', minHeight: '56px' }}
+                                          style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#eee', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px', resize: 'vertical', minHeight: '56px' }}
                                         />
                                       </div>
                                     ))}
@@ -34823,7 +34823,7 @@ A1;Peça exemplo;10'
             {/* Conteúdo do Almoxarifado — padrão Visualizar Equipamento (borda 1px, fundo #1a1a1a) */}
             <div style={{ 
               padding: '30px', 
-              backgroundColor: '#1a1a1a', 
+              backgroundColor: '#141414', 
               borderRadius: '12px', 
               border: '1px solid rgba(0, 255, 0, 0.2)'
             }}>
@@ -34840,7 +34840,7 @@ A1;Peça exemplo;10'
                         {equipamentos.map((equip: Equipamento) => {
                           const temPdf = !!(equip.manualPdf && equip.manualPdf.trim())
                           return (
-                            <div key={equip.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                            <div key={equip.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                               <div>
                                 <span style={{ color: '#fff', fontWeight: 600 }}>{equip.modelo || equip.id}</span>
                                 {equip.marca && <span style={{ color: '#888', marginLeft: '8px' }}>{equip.marca}</span>}
@@ -34999,7 +34999,7 @@ A1;Peça exemplo;10'
                   <div style={{
                     marginTop: '20px',
                     padding: '20px',
-                    backgroundColor: '#2a2a2a',
+                    backgroundColor: '#222222',
                     borderRadius: '8px',
                     border: '1px solid rgba(0, 255, 0, 0.2)'
                   }}>
@@ -35387,7 +35387,7 @@ A1;Peça exemplo;10'
             {/* Conteúdo da Gestão Financeira - padrão Visualizar Equipamento */}
             <div style={{ 
               padding: '40px', 
-              backgroundColor: '#1a1a1a', 
+              backgroundColor: '#141414', 
               borderRadius: '12px', 
               border: '2px solid rgba(0, 255, 0, 0.3)'
             }}>
@@ -35540,7 +35540,7 @@ A1;Peça exemplo;10'
             <div style={{
               marginBottom: '20px',
               padding: '14px 18px',
-              backgroundColor: '#2a2a2a',
+              backgroundColor: '#222222',
               borderRadius: '8px',
               border: '1px solid rgba(0, 255, 0, 0.2)',
               display: 'flex',
@@ -35589,7 +35589,7 @@ A1;Peça exemplo;10'
             {/* Conteúdo das Abas — padrão Visualizar Equipamento (fundo #1a1a1a, borda 1px verde) */}
             <div className="clientes-financeiro-conteudo" style={{
               padding: '30px',
-              backgroundColor: '#1a1a1a',
+              backgroundColor: '#141414',
               borderRadius: '12px',
               border: '1px solid rgba(0, 255, 0, 0.2)',
               minHeight: '500px'
@@ -35639,7 +35639,7 @@ A1;Peça exemplo;10'
                       style={{
                         width: '100%',
                         padding: '12px',
-                        backgroundColor: '#2a2a2a',
+                        backgroundColor: '#222222',
                         border: '1px solid rgba(0, 255, 0, 0.3)',
                         borderRadius: '8px',
                         color: '#fff',
@@ -35657,7 +35657,7 @@ A1;Peça exemplo;10'
                           key={os.id}
                           style={{
                             padding: '20px',
-                            backgroundColor: '#2a2a2a',
+                            backgroundColor: '#222222',
                             border: '1px solid rgba(0, 255, 0, 0.2)',
                             borderRadius: '8px',
                             display: 'flex',
@@ -35771,7 +35771,7 @@ A1;Peça exemplo;10'
                         key={fatura.id}
                         style={{
                           padding: '20px',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           border: '1px solid rgba(0, 255, 0, 0.2)',
                           borderRadius: '8px'
                         }}
@@ -35841,7 +35841,7 @@ A1;Peça exemplo;10'
                           key={devedor.clienteId}
                           style={{
                             padding: '20px',
-                            backgroundColor: '#2a2a2a',
+                            backgroundColor: '#222222',
                             border: '1px solid rgba(255, 0, 0, 0.3)',
                             borderRadius: '8px'
                           }}
@@ -35880,7 +35880,7 @@ A1;Peça exemplo;10'
                                 {safeT?.faturasPendentes || 'Faturas Pendentes'}:
                               </p>
                               {devedor.faturasPendentes.map((fatura) => (
-                                <div key={fatura.faturaId} style={{ marginBottom: '8px', padding: '8px', backgroundColor: '#1a1a1a', border: '1px solid rgba(255, 0, 0, 0.2)', borderRadius: '4px' }}>
+                                <div key={fatura.faturaId} style={{ marginBottom: '8px', padding: '8px', backgroundColor: '#141414', border: '1px solid rgba(255, 0, 0, 0.2)', borderRadius: '4px' }}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span style={{ color: '#ccc', fontSize: '12px' }}>{fatura.numeroFatura}</span>
                                     <span style={{ color: '#ff0000', fontSize: '14px', fontWeight: 'bold' }}>€{fatura.valor.toFixed(2)}</span>
@@ -35925,7 +35925,7 @@ A1;Peça exemplo;10'
                         onChange={(e) => setFiltroPeriodo(e.target.value as 'semanal' | 'mensal' | 'anual')}
                         style={{
                           padding: '10px',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           border: '1px solid rgba(0, 255, 0, 0.3)',
                           borderRadius: '8px',
                           color: '#fff',
@@ -35950,19 +35950,19 @@ A1;Peça exemplo;10'
 
                       return (
                         <>
-                          <div style={{ padding: '20px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ padding: '20px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
                             <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.IVACobrado || 'IVA Cobrado'}</p>
                             <p style={{ color: '#00ff00', margin: 0, fontSize: '24px', fontWeight: 'bold' }}>€{totalCobrado.toFixed(2)}</p>
                           </div>
-                          <div style={{ padding: '20px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ padding: '20px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
                             <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.IVAPago || 'IVA Pago'}</p>
                             <p style={{ color: '#66b3ff', margin: 0, fontSize: '24px', fontWeight: 'bold' }}>€{totalPago.toFixed(2)}</p>
                           </div>
-                          <div style={{ padding: '20px', backgroundColor: '#2a2a2a', border: '1px solid rgba(255, 0, 0, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ padding: '20px', backgroundColor: '#222222', border: '1px solid rgba(255, 0, 0, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
                             <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.IVAApagar || 'IVA a Pagar'}</p>
                             <p style={{ color: '#ff0000', margin: 0, fontSize: '24px', fontWeight: 'bold' }}>€{totalApagar.toFixed(2)}</p>
                           </div>
-                          <div style={{ padding: '20px', backgroundColor: '#2a2a2a', border: '1px solid rgba(255, 255, 0, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ padding: '20px', backgroundColor: '#222222', border: '1px solid rgba(255, 255, 0, 0.2)', borderRadius: '8px', textAlign: 'center' }}>
                             <p style={{ color: '#ccc', margin: '5px 0', fontSize: '12px' }}>{safeT?.periodosPendentes || 'Períodos Pendentes'}</p>
                             <p style={{ color: '#ffff00', margin: 0, fontSize: '24px', fontWeight: 'bold' }}>{ivasPendentes}</p>
                           </div>
@@ -35981,7 +35981,7 @@ A1;Peça exemplo;10'
                           key={iva.id}
                           style={{
                             padding: '20px',
-                            backgroundColor: '#2a2a2a',
+                            backgroundColor: '#222222',
                             border: '1px solid rgba(0, 255, 0, 0.2)',
                             borderRadius: '8px'
                           }}
@@ -36048,7 +36048,7 @@ A1;Peça exemplo;10'
                         onChange={(e) => setFiltroPeriodo(e.target.value as 'semanal' | 'mensal' | 'anual')}
                         style={{
                           padding: '10px',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           border: '1px solid rgba(0, 255, 0, 0.3)',
                           borderRadius: '8px',
                           color: '#fff',
@@ -36139,7 +36139,7 @@ A1;Peça exemplo;10'
                           key={relatorio.id}
                           style={{
                             padding: '20px',
-                            backgroundColor: '#2a2a2a',
+                            backgroundColor: '#222222',
                             border: '1px solid rgba(0, 255, 0, 0.2)',
                             borderRadius: '8px'
                           }}
@@ -36370,7 +36370,7 @@ A1;Peça exemplo;10'
             {relatoriosPorCliente.length === 0 ? (
               <div style={{ 
                 padding: '60px 40px', 
-                backgroundColor: '#1a1a1a', 
+                backgroundColor: '#141414', 
                 borderRadius: '12px', 
                 border: '2px solid rgba(0, 255, 0, 0.3)',
                 textAlign: 'center'
@@ -36391,7 +36391,7 @@ A1;Peça exemplo;10'
                     <div 
                       key={cliente.id} 
                       style={{ 
-                        backgroundColor: '#1a1a1a', 
+                        backgroundColor: '#141414', 
                         padding: '15px', 
                         borderRadius: '8px', 
                         border: '1px solid rgba(0, 255, 0, 0.3)',
@@ -36433,7 +36433,7 @@ A1;Peça exemplo;10'
                             key={equipamento.numeroSerie || equipamento.modelo} 
                             style={{ 
                               padding: '12px', 
-                              backgroundColor: '#2a2a2a', 
+                              backgroundColor: '#222222', 
                               borderRadius: '6px', 
                               border: '1px solid rgba(0, 255, 0, 0.2)'
                             }}
@@ -36464,7 +36464,7 @@ A1;Peça exemplo;10'
                                     key={relatorio.id} 
                                     style={{ 
                                       padding: '10px', 
-                                      backgroundColor: '#1a1a1a', 
+                                      backgroundColor: '#141414', 
                                       borderRadius: '4px', 
                                       border: '1px solid rgba(0, 255, 0, 0.15)',
                                       transition: 'all 0.2s ease'
@@ -36475,7 +36475,7 @@ A1;Peça exemplo;10'
                                     }}
                                     onMouseLeave={(e) => {
                                       e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.15)'
-                                      e.currentTarget.style.backgroundColor = '#1a1a1a'
+                                      e.currentTarget.style.backgroundColor = '#141414'
                                     }}
                                   >
                                     {/* Informações do Relatório */}
@@ -36537,7 +36537,7 @@ A1;Peça exemplo;10'
                                           width: '100%',
                                           padding: '4px',
                                           fontSize: '9px',
-                                          backgroundColor: '#1a1a1a',
+                                          backgroundColor: '#141414',
                                           color: '#66b3ff',
                                           border: '1px solid rgba(0, 150, 255, 0.5)',
                                           borderRadius: '3px',
@@ -36560,7 +36560,7 @@ A1;Peça exemplo;10'
                                             flex: 1,
                                             padding: '6px 10px', 
                                             fontSize: '10px',
-                                            backgroundColor: '#2a2a2a',
+                                            backgroundColor: '#222222',
                                             borderColor: '#00ff00',
                                             color: '#00ff00'
                                           }}
@@ -36606,7 +36606,7 @@ A1;Peça exemplo;10'
             </h2>
             <div style={{ 
               padding: '20px', 
-              backgroundColor: '#1a1a1a', 
+              backgroundColor: '#141414', 
               borderRadius: '8px', 
               border: '1px solid rgba(0, 255, 0, 0.3)',
               color: '#ffffff'
@@ -37467,7 +37467,7 @@ A1;Peça exemplo;10'
         <div style={{ 
           marginBottom: '30px', 
           padding: '20px', 
-          backgroundColor: '#1a1a1a', 
+          backgroundColor: '#141414', 
           borderRadius: '12px', 
           border: '1px solid rgba(0, 255, 0, 0.2)'
         }}>
@@ -37563,7 +37563,7 @@ A1;Peça exemplo;10'
           <div style={{ 
             marginBottom: '30px', 
             padding: '20px', 
-            backgroundColor: '#1a1a1a', 
+            backgroundColor: '#141414', 
             borderRadius: '12px', 
             border: '1px solid rgba(0, 255, 0, 0.2)'
           }}>
@@ -37579,7 +37579,7 @@ A1;Peça exemplo;10'
                 width: '100%',
                 padding: '12px',
                 marginBottom: '15px',
-                backgroundColor: '#2a2a2a',
+                backgroundColor: '#222222',
                 border: '1px solid rgba(0, 255, 0, 0.3)',
                 borderRadius: '6px',
                 color: '#fff',
@@ -37636,7 +37636,7 @@ A1;Peça exemplo;10'
           <div style={{ 
             marginBottom: '30px', 
             padding: '20px', 
-            backgroundColor: '#1a1a1a', 
+            backgroundColor: '#141414', 
             borderRadius: '12px', 
             border: '1px solid rgba(0, 255, 0, 0.2)'
           }}>
@@ -37652,7 +37652,7 @@ A1;Peça exemplo;10'
                 width: '100%',
                 padding: '12px',
                 marginBottom: '15px',
-                backgroundColor: '#2a2a2a',
+                backgroundColor: '#222222',
                 border: '1px solid rgba(0, 255, 0, 0.3)',
                 borderRadius: '6px',
                 color: '#fff',
@@ -37700,7 +37700,7 @@ A1;Peça exemplo;10'
           tipoOrcamento === 'cliente-prioritario-valores') && (
           <div style={{ 
             padding: '30px', 
-            backgroundColor: '#1a1a1a', 
+            backgroundColor: '#141414', 
             borderRadius: '12px', 
             border: '1px solid rgba(0, 255, 0, 0.2)'
           }}>
@@ -37709,7 +37709,7 @@ A1;Peça exemplo;10'
             </h3>
             
             {/* Informações do Cliente/Empresa */}
-            <div style={{ marginBottom: '25px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            <div style={{ marginBottom: '25px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <h4 style={{ color: '#66b3ff', marginBottom: '10px', fontSize: '16px' }}>
                 {tipoOrcamento === 'dados-fixos' ? (safeT?.dadosNonatoService || 'Dados da NONATO SERVICE') :
                  tipoOrcamento === 'orcamento-relatorio' ? (safeT?.dadosDoRelatorio || 'Dados do Relatório') :
@@ -37774,7 +37774,7 @@ A1;Peça exemplo;10'
                   style={{
                     width: '100%',
                     padding: '10px',
-                    backgroundColor: '#2a2a2a',
+                    backgroundColor: '#222222',
                     border: '1px solid rgba(0, 255, 0, 0.3)',
                     borderRadius: '6px',
                     color: '#fff',
@@ -37793,7 +37793,7 @@ A1;Peça exemplo;10'
                   style={{
                     width: '100%',
                     padding: '10px',
-                    backgroundColor: '#2a2a2a',
+                    backgroundColor: '#222222',
                     border: '1px solid rgba(0, 255, 0, 0.3)',
                     borderRadius: '6px',
                     color: '#fff',
@@ -37813,7 +37813,7 @@ A1;Peça exemplo;10'
                   style={{
                     width: '100%',
                     padding: '10px',
-                    backgroundColor: '#2a2a2a',
+                    backgroundColor: '#222222',
                     border: '1px solid rgba(0, 255, 0, 0.3)',
                     borderRadius: '6px',
                     color: '#fff',
@@ -37834,7 +37834,7 @@ A1;Peça exemplo;10'
                 style={{
                   width: '100%',
                   padding: '10px',
-                  backgroundColor: '#2a2a2a',
+                  backgroundColor: '#222222',
                   border: '1px solid rgba(0, 255, 0, 0.3)',
                   borderRadius: '6px',
                   color: '#fff',
@@ -37920,7 +37920,7 @@ A1;Peça exemplo;10'
                     return (
                       <div key={index} style={{ 
                         padding: '15px', 
-                        backgroundColor: '#2a2a2a', 
+                        backgroundColor: '#222222', 
                         borderRadius: '8px',
                         border: '1px solid rgba(0, 255, 0, 0.2)'
                       }}>
@@ -37945,7 +37945,7 @@ A1;Peça exemplo;10'
                                 <span style={{ 
                                   fontSize: '11px', 
                                   color: '#999',
-                                  backgroundColor: '#1a1a1a',
+                                  backgroundColor: '#141414',
                                   padding: '2px 6px',
                                   borderRadius: '4px'
                                 }}>
@@ -38031,7 +38031,7 @@ A1;Peça exemplo;10'
                 zIndex: 2147483647
               }} onClick={() => setShowItemForm(false)}>
                 <div style={{
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   padding: '30px',
                   borderRadius: '12px',
                   border: '1px solid rgba(0, 255, 0, 0.3)',
@@ -38085,7 +38085,7 @@ A1;Peça exemplo;10'
                         style={{
                           width: '100%',
                           padding: '12px',
-                          backgroundColor: '#1a1a1a',
+                          backgroundColor: '#141414',
                           border: '2px solid rgba(0, 255, 0, 0.6)',
                           borderRadius: '6px',
                           color: '#fff',
@@ -38106,7 +38106,7 @@ A1;Peça exemplo;10'
                         style={{
                           width: '100%',
                           padding: '12px',
-                          backgroundColor: '#1a1a1a',
+                          backgroundColor: '#141414',
                           border: '1px solid rgba(0, 255, 0, 0.5)',
                           borderRadius: '6px',
                           color: '#fff',
@@ -38127,7 +38127,7 @@ A1;Peça exemplo;10'
                         style={{
                           width: '100%',
                           padding: '12px',
-                          backgroundColor: '#1a1a1a',
+                          backgroundColor: '#141414',
                           border: '1px solid rgba(0, 255, 0, 0.5)',
                           borderRadius: '6px',
                           color: '#fff',
@@ -38155,7 +38155,7 @@ A1;Peça exemplo;10'
                         style={{
                           width: '100%',
                           padding: '10px',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           border: '1px solid rgba(0, 255, 0, 0.3)',
                           borderRadius: '6px',
                           color: '#fff'
@@ -38168,7 +38168,7 @@ A1;Peça exemplo;10'
                           overflowY: 'auto',
                           border: '1px solid rgba(0, 255, 0, 0.3)',
                           borderRadius: '6px',
-                          backgroundColor: '#2a2a2a'
+                          backgroundColor: '#222222'
                         }}>
                           {pecasFiltradas.map(peca => (
                             <div
@@ -38270,7 +38270,7 @@ A1;Peça exemplo;10'
                           style={{
                             width: '100%',
                             padding: '10px',
-                            backgroundColor: '#2a2a2a',
+                            backgroundColor: '#222222',
                             border: '1px solid rgba(0, 255, 0, 0.3)',
                             borderRadius: '6px',
                             color: '#fff'
@@ -38291,7 +38291,7 @@ A1;Peça exemplo;10'
                           style={{
                             width: '100%',
                             padding: '10px',
-                            backgroundColor: '#2a2a2a',
+                            backgroundColor: '#222222',
                             border: '1px solid rgba(0, 255, 0, 0.3)',
                             borderRadius: '6px',
                             color: '#fff'
@@ -38301,7 +38301,7 @@ A1;Peça exemplo;10'
                       {itemForm.precoUnitario > 0 && itemForm.quantidade > 0 && (
                         <div style={{ 
                           padding: '10px', 
-                          backgroundColor: '#2a2a2a', 
+                          backgroundColor: '#222222', 
                           borderRadius: '6px',
                           marginBottom: '15px',
                           border: '1px solid rgba(0, 255, 0, 0.3)'
@@ -38363,7 +38363,7 @@ A1;Peça exemplo;10'
             {dadosOrcamento.itens.length > 0 && (tipoOrcamento !== 'orcamento-relatorio' && tipoOrcamento !== 'cliente-prioritario-fixo') && (
               <div style={{ 
                 padding: '20px', 
-                backgroundColor: '#2a2a2a', 
+                backgroundColor: '#222222', 
                 borderRadius: '8px',
                 border: '2px solid rgba(0, 100, 255, 0.5)',
                 textAlign: 'right'
@@ -38394,7 +38394,7 @@ A1;Peça exemplo;10'
                 style={{
                   width: '100%',
                   padding: '10px',
-                  backgroundColor: '#2a2a2a',
+                  backgroundColor: '#222222',
                   border: '1px solid rgba(0, 255, 0, 0.3)',
                   borderRadius: '6px',
                   color: '#fff',
@@ -38670,7 +38670,7 @@ A1;Peça exemplo;10'
                   }}
                   style={{
                     padding: '10px 20px',
-                    backgroundColor: '#2a2a2a',
+                    backgroundColor: '#222222',
                     border: '1px solid rgba(0, 255, 0, 0.5)',
                     borderRadius: '8px',
                     color: '#00ff00',
@@ -38913,7 +38913,7 @@ A1;Peça exemplo;10'
         {tipoOrcamento === 'orcamentos-gerados' && (
           <div style={{ 
             padding: '30px', 
-            backgroundColor: '#1a1a1a', 
+            backgroundColor: '#141414', 
             borderRadius: '12px', 
             border: '1px solid rgba(0, 255, 0, 0.3)'
           }}>
@@ -38925,7 +38925,7 @@ A1;Peça exemplo;10'
               <div style={{ 
                 padding: '40px', 
                 textAlign: 'center',
-                backgroundColor: '#2a2a2a',
+                backgroundColor: '#222222',
                 borderRadius: '8px',
                 border: '1px solid rgba(0, 255, 0, 0.3)'
               }}>
@@ -38942,7 +38942,7 @@ A1;Peça exemplo;10'
                       key={orcamento.id}
                       style={{
                         padding: '20px',
-                        backgroundColor: '#2a2a2a',
+                        backgroundColor: '#222222',
                         borderRadius: '8px',
                         border: '1px solid rgba(0, 255, 0, 0.3)',
                         transition: 'all 0.2s ease'
@@ -39191,7 +39191,7 @@ A1;Peça exemplo;10'
                             }}
                             style={{
                               padding: '8px 15px',
-                              backgroundColor: '#2a2a2a',
+                              backgroundColor: '#222222',
                               border: '1px solid rgba(0, 255, 0, 0.5)',
                               borderRadius: '6px',
                               color: '#00ff00',
@@ -39364,7 +39364,7 @@ A1;Peça exemplo;10'
                               return (
                                 <div key={index} style={{ 
                                   padding: '15px', 
-                                  backgroundColor: '#1a1a1a', 
+                                  backgroundColor: '#141414', 
                                   borderRadius: '4px',
                                   border: '1px solid rgba(0, 255, 0, 0.3)'
                                 }}>
@@ -39392,7 +39392,7 @@ A1;Peça exemplo;10'
                                           <span style={{ 
                                             fontSize: '11px', 
                                             color: '#999',
-                                            backgroundColor: '#2a2a2a',
+                                            backgroundColor: '#222222',
                                             padding: '2px 6px',
                                             borderRadius: '4px'
                                           }}>
@@ -39428,7 +39428,7 @@ A1;Peça exemplo;10'
                                                 style={{
                                                   width: '100%',
                                                   padding: '8px',
-                                                  backgroundColor: '#2a2a2a',
+                                                  backgroundColor: '#222222',
                                                   border: '1px solid rgba(0, 255, 0, 0.3)',
                                                   borderRadius: '4px',
                                                   color: '#fff',
@@ -39450,7 +39450,7 @@ A1;Peça exemplo;10'
                                                 style={{
                                                   width: '100%',
                                                   padding: '8px',
-                                                  backgroundColor: '#2a2a2a',
+                                                  backgroundColor: '#222222',
                                                   border: '1px solid rgba(0, 255, 0, 0.3)',
                                                   borderRadius: '4px',
                                                   color: '#fff',
@@ -39580,7 +39580,7 @@ A1;Peça exemplo;10'
             setEmailDestinatario('')
           }}>
             <div style={{
-              backgroundColor: '#1a1a1a',
+              backgroundColor: '#141414',
               padding: '30px',
               borderRadius: '12px',
               border: '2px solid rgba(0, 100, 255, 0.5)',
@@ -39601,7 +39601,7 @@ A1;Peça exemplo;10'
                   style={{
                     width: '100%',
                     padding: '10px',
-                    backgroundColor: '#2a2a2a',
+                    backgroundColor: '#222222',
                     border: '1px solid rgba(0, 255, 0, 0.3)',
                     borderRadius: '6px',
                     color: '#fff'
@@ -39667,7 +39667,7 @@ A1;Peça exemplo;10'
             setTelefoneDestinatario('')
           }}>
             <div style={{
-              backgroundColor: '#1a1a1a',
+              backgroundColor: '#141414',
               padding: '30px',
               borderRadius: '12px',
               border: '2px solid rgba(37, 211, 102, 0.5)',
@@ -39689,7 +39689,7 @@ A1;Peça exemplo;10'
                   style={{
                     width: '100%',
                     padding: '10px',
-                    backgroundColor: '#2a2a2a',
+                    backgroundColor: '#222222',
                     border: '1px solid rgba(37, 211, 102, 0.3)',
                     borderRadius: '6px',
                     color: '#fff'
@@ -40103,7 +40103,7 @@ A1;Peça exemplo;10'
           inset: 0,
           width: '100vw',
           height: '100vh',
-          backgroundColor: '#2d2d2d',
+          backgroundColor: '#1e1e1e',
           zIndex: 99999,
           display: 'flex',
           alignItems: 'center',
@@ -40143,7 +40143,7 @@ A1;Peça exemplo;10'
               width: '100%',
               padding: '12px 14px',
               fontSize: '14px',
-              backgroundColor: '#1a1a1a',
+              backgroundColor: '#141414',
               border: '2px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
               color: '#fff',
@@ -40162,7 +40162,7 @@ A1;Peça exemplo;10'
               width: '100%',
               padding: '12px 14px',
               fontSize: '14px',
-              backgroundColor: '#1a1a1a',
+              backgroundColor: '#141414',
               border: '2px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
               color: '#fff',
@@ -40227,7 +40227,7 @@ A1;Peça exemplo;10'
           inset: 0,
           width: '100vw',
           height: '100vh',
-          backgroundColor: '#2d2d2d',
+          backgroundColor: '#1e1e1e',
           zIndex: 99999,
           display: 'flex',
           alignItems: 'center',
@@ -40286,7 +40286,7 @@ A1;Peça exemplo;10'
   }
 
   return (
-    <div className="app-layout" style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#2d2d2d', color: '#fff', paddingBottom: openTabs.length > 0 ? '54px' : '0', paddingTop: '48px' }}>
+    <div className="app-layout" style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#1e1e1e', color: '#fff', paddingBottom: openTabs.length > 0 ? '54px' : '0', paddingTop: '48px' }}>
       {/* Barra superior: em modo demo mostra aviso; sempre mostra atalho para Administrador / Backup (classe app-top-bar para safe-area no telefone/tablet) */}
       <div className="app-top-bar" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '8px 16px', background: isDemoMode ? 'rgba(0, 255, 0, 0.15)' : 'rgba(0, 255, 0, 0.08)', borderBottom: '1px solid rgba(0, 255, 0, 0.4)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
         {isDemoMode && <span>🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Sem exportação nem backup</span>}
@@ -41504,7 +41504,7 @@ A1;Peça exemplo;10'
                     setSelectedLanguage(e.target.value)
                     handleLanguageChange(e.target.value)
                   }}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 >
                   {getLanguages(safeT).map(lang => (
                     <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
@@ -41807,7 +41807,7 @@ A1;Peça exemplo;10'
               }}>
                 <div style={{
                   padding: '25px',
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   borderRadius: '12px',
                   border: '2px solid rgba(0, 255, 0, 0.3)',
                   textAlign: 'center',
@@ -41835,7 +41835,7 @@ A1;Peça exemplo;10'
 
                 <div style={{
                   padding: '25px',
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   borderRadius: '12px',
                   border: '2px solid rgba(0, 255, 0, 0.3)',
                   textAlign: 'center',
@@ -41863,7 +41863,7 @@ A1;Peça exemplo;10'
 
                 <div style={{
                   padding: '25px',
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   borderRadius: '12px',
                   border: '2px solid rgba(0, 255, 0, 0.3)',
                   textAlign: 'center',
@@ -41891,7 +41891,7 @@ A1;Peça exemplo;10'
 
                 <div style={{
                   padding: '25px',
-                  backgroundColor: '#1a1a1a',
+                  backgroundColor: '#141414',
                   borderRadius: '12px',
                   border: '2px solid rgba(0, 255, 0, 0.3)',
                   textAlign: 'center',
@@ -41939,7 +41939,7 @@ A1;Peça exemplo;10'
                   {/* Card Relatório de Serviço */}
                   <div style={{
                     padding: '30px',
-                    backgroundColor: '#1a1a1a',
+                    backgroundColor: '#141414',
                     borderRadius: '16px',
                     border: '2px solid rgba(0, 255, 0, 0.3)',
                     transition: 'all 0.3s ease',
@@ -41993,7 +41993,7 @@ A1;Peça exemplo;10'
                   {/* Card Biblioteca de Relatórios */}
                   <div style={{
                     padding: '30px',
-                    backgroundColor: '#1a1a1a',
+                    backgroundColor: '#141414',
                     borderRadius: '16px',
                     border: '2px solid rgba(0, 255, 0, 0.3)',
                     transition: 'all 0.3s ease',
@@ -42047,7 +42047,7 @@ A1;Peça exemplo;10'
                   {/* Card Gestão de Custos */}
                   <div style={{
                     padding: '30px',
-                    backgroundColor: '#1a1a1a',
+                    backgroundColor: '#141414',
                     borderRadius: '16px',
                     border: '2px solid rgba(0, 255, 0, 0.3)',
                     transition: 'all 0.3s ease',
@@ -42103,7 +42103,7 @@ A1;Peça exemplo;10'
               {/* Inventário do Armazém */}
               <div style={{
                 padding: '30px',
-                backgroundColor: '#1a1a1a',
+                backgroundColor: '#141414',
                 borderRadius: '16px',
                 border: '2px solid rgba(0, 255, 0, 0.3)'
               }}>
@@ -42124,7 +42124,7 @@ A1;Peça exemplo;10'
                 }}>
                   <div style={{
                     padding: '25px',
-                    backgroundColor: '#2a2a2a',
+                    backgroundColor: '#222222',
                     borderRadius: '12px',
                     border: '1px solid rgba(0, 255, 0, 0.2)',
                     textAlign: 'center'
@@ -42137,7 +42137,7 @@ A1;Peça exemplo;10'
                   </div>
                   <div style={{
                     padding: '25px',
-                    backgroundColor: '#2a2a2a',
+                    backgroundColor: '#222222',
                     borderRadius: '12px',
                     border: '1px solid rgba(255, 68, 68, 0.3)',
                     textAlign: 'center'
@@ -42216,7 +42216,7 @@ A1;Peça exemplo;10'
           <div 
             className="modal" 
             onClick={(e) => e.stopPropagation()} 
-            style={{ maxWidth: '520px', width: '90%', padding: '24px', backgroundColor: '#1a1a1a', borderRadius: '12px', border: '2px solid rgba(255, 180, 0, 0.6)', boxShadow: '0 0 20px rgba(255, 180, 0, 0.2)' }}
+            style={{ maxWidth: '520px', width: '90%', padding: '24px', backgroundColor: '#141414', borderRadius: '12px', border: '2px solid rgba(255, 180, 0, 0.6)', boxShadow: '0 0 20px rgba(255, 180, 0, 0.2)' }}
           >
             <h3 style={{ color: '#ffb400', marginBottom: '16px', fontSize: '18px', borderBottom: '1px solid rgba(255, 180, 0, 0.3)', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span>⚠️</span>
@@ -42250,7 +42250,7 @@ A1;Peça exemplo;10'
                   onChange={(e) => setChecklistAccessPasswordInput(e.target.value)}
                   placeholder={safeT?.checklistPlaceholderSenha || 'Digite a senha'}
                   autoFocus
-                  style={{ width: '100%', padding: '12px 14px', fontSize: '14px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', outline: 'none' }}
+                  style={{ width: '100%', padding: '12px 14px', fontSize: '14px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', outline: 'none' }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       const ok = managedPasswords.some((p) => p.password === checklistAccessPasswordInput)
@@ -42348,7 +42348,7 @@ A1;Peça exemplo;10'
             </h2>
 
             {/* CONTROLE DE ENVIO DO LINK PARA TESTE - Primeiro para maior visibilidade */}
-            <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', borderLeft: '4px solid #66b3ff' }}>
+            <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', borderLeft: '4px solid #66b3ff' }}>
               <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '18px', borderBottom: '1px solid rgba(102, 179, 255, 0.3)', paddingBottom: '10px' }}>
                 📤 Controle de Envio do Link para Teste
               </h3>
@@ -42359,14 +42359,14 @@ A1;Peça exemplo;10'
                   placeholder="Nome"
                   value={demoLinkForm.nome}
                   onChange={(e) => setDemoLinkForm(f => ({ ...f, nome: e.target.value }))}
-                  style={{ flex: 1, minWidth: '100px', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ flex: 1, minWidth: '100px', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder="Email"
                   value={demoLinkForm.email}
                   onChange={(e) => setDemoLinkForm(f => ({ ...f, email: e.target.value }))}
-                  style={{ flex: 1, minWidth: '120px', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ flex: 1, minWidth: '120px', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <button
                   className="btn-primary"
@@ -42393,7 +42393,7 @@ A1;Peça exemplo;10'
               {demoLinkRecipients.length > 0 && (
                 <div style={{ maxHeight: '180px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {demoLinkRecipients.map((r) => (
-                    <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', backgroundColor: '#2a2a2a', borderRadius: '4px' }}>
+                    <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', backgroundColor: '#222222', borderRadius: '4px' }}>
                       <span><strong>{r.nome}</strong>{r.email ? ' • ' + r.email : ''} <span style={{ fontSize: '10px', opacity: 0.6 }}>({new Date(r.dataEnvio).toLocaleDateString('pt-BR')})</span></span>
                       <button className="btn-danger" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => { if (window.confirm('Remover?')) { const u = demoLinkRecipients.filter(x => x.id !== r.id); setDemoLinkRecipients(u); saveData('nonato-demo-link-recipients', u) } }}>Excluir</button>
                     </div>
@@ -42403,13 +42403,13 @@ A1;Peça exemplo;10'
             </div>
             
             {/* SEÇÃO 1: CONFIGURAÇÕES GERAIS */}
-            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
                 {safeT?.configuracoesGerais || 'CONFIGURAÇÕES GERAIS'}
               </h3>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
                   <div>
                     <strong style={{ display: 'block', marginBottom: '5px' }}>{safeT?.changeLogo || 'Alterar Logo'}</strong>
                     <span style={{ fontSize: '12px', opacity: 0.7 }}>{safeT?.selectImageOrVideo || 'Selecionar Imagem ou Vídeo MP4'}</span>
@@ -42426,7 +42426,7 @@ A1;Peça exemplo;10'
                 </div>
 
                 {logoUrl && (
-                  <div style={{ padding: '12px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+                  <div style={{ padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
                     <strong style={{ display: 'block', marginBottom: '10px' }}>{safeT?.currentLogo || 'Logo Atual'}:</strong>
                     <div style={{ marginBottom: '10px' }}>
                       {logoType === 'video' ? (
@@ -42444,7 +42444,7 @@ A1;Peça exemplo;10'
             </div>
 
             {/* SEÇÃO 2: GESTÃO DE USUÁRIOS */}
-            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
                 <h3 style={{ color: '#00ff00', fontSize: '18px', margin: 0 }}>
                   {safeT?.userManagement || 'GESTÃO DE USUÁRIOS'}
@@ -42459,7 +42459,7 @@ A1;Peça exemplo;10'
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {users.map(user => (
-                    <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
+                    <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
                       <div>
                         <strong style={{ display: 'block', marginBottom: '5px' }}>{user.name}</strong>
                         <span style={{ fontSize: '12px', opacity: 0.7 }}>{user.email} • {user.role}</span>
@@ -42479,7 +42479,7 @@ A1;Peça exemplo;10'
             </div>
 
             {/* SEÇÃO 3: ORGANIZAÇÃO DA INTERFACE */}
-            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
                 <h3 style={{ color: '#00ff00', fontSize: '18px', margin: 0 }}>
                   {safeT?.buttonOrganizer || 'ORGANIZAÇÃO DA INTERFACE'}
@@ -42514,7 +42514,7 @@ A1;Peça exemplo;10'
                             justifyContent: 'space-between', 
                             alignItems: 'center', 
                             padding: '12px', 
-                            backgroundColor: '#1a1a1a', 
+                            backgroundColor: '#141414', 
                             borderRadius: '6px',
                             border: '1px solid rgba(0, 255, 0, 0.2)'
                           }}
@@ -42549,7 +42549,7 @@ A1;Peça exemplo;10'
                                 onChange={(e) => handleMoveButtonToGroup(button.id, e.target.value as 'gestao-tecnica' | 'gestao-custos' | 'gestao-industrial' | 'gestao-financeira' | 'checklist-group' | 'comunicacao-interna' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'outros')}
                                 style={{ 
                                   padding: '6px 10px', 
-                                  backgroundColor: '#2a2a2a', 
+                                  backgroundColor: '#222222', 
                                   color: '#fff', 
                                   border: '1px solid rgba(0, 255, 0, 0.3)', 
                                   borderRadius: '4px',
@@ -42612,7 +42612,7 @@ A1;Peça exemplo;10'
                               justifyContent: 'space-between', 
                               alignItems: 'center', 
                               padding: '10px', 
-                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#1a1a1a', 
+                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', 
                               borderRadius: '4px',
                               cursor: 'move',
                               border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
@@ -42670,7 +42670,7 @@ A1;Peça exemplo;10'
                               justifyContent: 'space-between', 
                               alignItems: 'center', 
                               padding: '10px', 
-                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#1a1a1a', 
+                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', 
                               borderRadius: '4px',
                               cursor: 'move',
                               border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
@@ -42727,7 +42727,7 @@ A1;Peça exemplo;10'
                               justifyContent: 'space-between', 
                               alignItems: 'center', 
                               padding: '10px', 
-                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#1a1a1a', 
+                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', 
                               borderRadius: '4px',
                               cursor: 'move',
                               border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
@@ -42784,7 +42784,7 @@ A1;Peça exemplo;10'
                               justifyContent: 'space-between', 
                               alignItems: 'center', 
                               padding: '10px', 
-                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#1a1a1a', 
+                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', 
                               borderRadius: '4px',
                               cursor: 'move',
                               border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
@@ -42826,7 +42826,7 @@ A1;Peça exemplo;10'
                         return (
                           <div key={button.id} draggable onDragStart={() => handleDragStart(button.id)} onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)} onDragLeave={handleDragLeave}
                             onDrop={(e) => { e.preventDefault(); handleDropWithGroup(e, globalIndex >= 0 ? globalIndex : index, 'comunicacao-interna') }} onDragEnd={handleDragEnd}
-                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#1a1a1a', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}>
+                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
                               <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
                               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
@@ -42859,7 +42859,7 @@ A1;Peça exemplo;10'
                         return (
                           <div key={button.id} draggable onDragStart={() => handleDragStart(button.id)} onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)} onDragLeave={handleDragLeave}
                             onDrop={(e) => { e.preventDefault(); handleDropWithGroup(e, globalIndex >= 0 ? globalIndex : index, 'manuais-informacoes-tecnicas') }} onDragEnd={handleDragEnd}
-                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#1a1a1a', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}>
+                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
                               <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
                               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
@@ -42892,7 +42892,7 @@ A1;Peça exemplo;10'
                         return (
                           <div key={button.id} draggable onDragStart={() => handleDragStart(button.id)} onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)} onDragLeave={handleDragLeave}
                             onDrop={(e) => { e.preventDefault(); handleDropWithGroup(e, globalIndex >= 0 ? globalIndex : index, 'almoxarifado-armazem') }} onDragEnd={handleDragEnd}
-                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#1a1a1a', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}>
+                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
                               <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
                               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
@@ -42941,7 +42941,7 @@ A1;Peça exemplo;10'
                               justifyContent: 'space-between', 
                               alignItems: 'center', 
                               padding: '10px', 
-                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#1a1a1a', 
+                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', 
                               borderRadius: '4px',
                               cursor: 'move',
                               border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
@@ -42994,7 +42994,7 @@ A1;Peça exemplo;10'
                               justifyContent: 'space-between', 
                               alignItems: 'center', 
                               padding: '12px', 
-                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#1a1a1a', 
+                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', 
                               borderRadius: '6px',
                               cursor: 'move',
                               border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
@@ -43022,7 +43022,7 @@ A1;Peça exemplo;10'
             </div>
 
             {/* SEÇÃO 5: BACKUP E SEGURANÇA */}
-            <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
                 {safeT?.backupRestore || 'BACKUP E SEGURANÇA'}
               </h3>
@@ -43037,7 +43037,7 @@ A1;Peça exemplo;10'
                 </p>
               )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', opacity: isDemoMode ? 0.7 : 1, pointerEvents: isDemoMode ? 'none' : 'auto' }}>
-                <div style={{ padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
+                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupTitle || 'Backup Completo do Sistema'}</strong>
                   <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>{safeT?.backupDescription || 'Crie um backup completo de todos os dados do sistema'}</p>
                   <button className="btn-primary" onClick={handleCreateBackup} style={{ padding: '8px 15px' }} disabled={isDemoMode}>
@@ -43045,7 +43045,7 @@ A1;Peça exemplo;10'
                   </button>
                 </div>
 
-                <div style={{ padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
+                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupCodigoTitle || 'Backup do Código do Programa'}</strong>
                   <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>{safeT?.backupCodigoDescription || 'Faça backup de TODOS os arquivos do código fonte do programa'}</p>
                   <p style={{ fontSize: '12px', marginBottom: '8px', opacity: 0.8 }}><strong>Pasta dos backups:</strong> {codeBackupsFolder || (isDemoMode ? '—' : 'Atualize a lista.')}</p>
@@ -43100,7 +43100,7 @@ A1;Peça exemplo;10'
                 type="text"
                 value={userForm.name}
                 onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
             
@@ -43110,7 +43110,7 @@ A1;Peça exemplo;10'
                 type="email"
                 value={userForm.email}
                 onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
             
@@ -43120,7 +43120,7 @@ A1;Peça exemplo;10'
                 type="text"
                 value={userForm.role}
                 onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
             
@@ -43133,11 +43133,11 @@ A1;Peça exemplo;10'
                 value={userForm.password}
                 onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
                 placeholder={editingUser ? (safeT?.leaveEmptyToKeepPassword || 'Deixe vazio para manter a senha atual') : ''}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
             
-            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
@@ -43153,7 +43153,7 @@ A1;Peça exemplo;10'
             </div>
             
             {!userForm.isAdmin && (
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                 <strong style={{ display: 'block', marginBottom: '15px' }}>{safeT?.permissions || 'Permissões'}</strong>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
                   {userForm.permissions && Object.entries(userForm.permissions).map(([key, value]) => (
@@ -43222,7 +43222,7 @@ A1;Peça exemplo;10'
                 type="text"
                 value={buttonForm.name}
                 onChange={(e) => setButtonForm({ ...buttonForm, name: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
@@ -43232,7 +43232,7 @@ A1;Peça exemplo;10'
                 value={buttonForm.action}
                 onChange={(e) => setButtonForm({ ...buttonForm, action: e.target.value })}
                 placeholder="ex: open-gestores"
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -43339,7 +43339,7 @@ A1;Peça exemplo;10'
                       onChange={(e) => setFiltroAreaGestor(e.target.value)}
                       style={{
                         padding: '8px 12px',
-                        backgroundColor: '#2a2a2a',
+                        backgroundColor: '#222222',
                         color: '#fff',
                         border: '1px solid rgba(0, 255, 0, 0.3)',
                         borderRadius: '4px',
@@ -43363,7 +43363,7 @@ A1;Peça exemplo;10'
                     {gestores
                       .filter(gestor => filtroAreaGestor === 'todas' || gestor.area === filtroAreaGestor)
                       .map(gestor => (
-                      <div key={gestor.id} style={{ padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                      <div key={gestor.id} style={{ padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                         {gestor.photo && (
                           <img src={gestor.photo} alt={gestor.name} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
                         )}
@@ -43511,7 +43511,7 @@ A1;Peça exemplo;10'
                   return (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
                       {tecnicosFiltrados.map(tecnico => (
-                        <div key={tecnico.id} style={{ padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                        <div key={tecnico.id} style={{ padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                           {tecnico.photo && (
                             <img src={tecnico.photo} alt={tecnico.name} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
                           )}
@@ -43565,7 +43565,7 @@ A1;Peça exemplo;10'
                 type="text"
                 value={gestorForm.name}
                 onChange={(e) => setGestorForm({ ...gestorForm, name: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
@@ -43574,7 +43574,7 @@ A1;Peça exemplo;10'
                 type="email"
                 value={gestorForm.email}
                 onChange={(e) => setGestorForm({ ...gestorForm, email: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
@@ -43583,7 +43583,7 @@ A1;Peça exemplo;10'
                 type="text"
                 value={gestorForm.phone}
                 onChange={(e) => setGestorForm({ ...gestorForm, phone: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
@@ -43592,7 +43592,7 @@ A1;Peça exemplo;10'
                 type="text"
                 value={gestorForm.address}
                 onChange={(e) => setGestorForm({ ...gestorForm, address: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
@@ -43600,7 +43600,7 @@ A1;Peça exemplo;10'
               <select
                 value={gestorForm.area}
                 onChange={(e) => setGestorForm({ ...gestorForm, area: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               >
                 {tiposGestores.sort((a, b) => a.ordem - b.ordem).map(tipo => (
                   <option key={tipo.id} value={tipo.id}>{tipo.icone} {tipo.nome}</option>
@@ -43618,7 +43618,7 @@ A1;Peça exemplo;10'
                 type="file"
                 accept="image/*"
                 onChange={handleGestorPhotoChange}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
               {gestorForm.photo && (
                 <div style={{ marginTop: '10px' }}>
@@ -43662,7 +43662,7 @@ A1;Peça exemplo;10'
               </button>
 
               {(editingTipoGestor !== null || tipoGestorForm.nome !== '') && (
-                <div style={{ border: '1px solid rgba(255, 165, 0, 0.3)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#1a1a1a' }}>
+                <div style={{ border: '1px solid rgba(255, 165, 0, 0.3)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414' }}>
                   <h3 style={{ marginBottom: '15px', color: '#ffaa00' }}>
                     {editingTipoGestor && editingTipoGestor.id ? '✏️ Editar Tipo' : '➕ Adicionar Novo Tipo'}
                   </h3>
@@ -43681,7 +43681,7 @@ A1;Peça exemplo;10'
                         })
                       }}
                       placeholder="ex: Gestor de Qualidade"
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
 
@@ -43692,7 +43692,7 @@ A1;Peça exemplo;10'
                       value={tipoGestorForm.id}
                       onChange={(e) => setTipoGestorForm({ ...tipoGestorForm, id: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') })}
                       placeholder="ex: gestor-qualidade"
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <small style={{ color: '#999', fontSize: '12px' }}>ID único usado internamente (sem espaços ou caracteres especiais)</small>
                   </div>
@@ -43704,7 +43704,7 @@ A1;Peça exemplo;10'
                       value={tipoGestorForm.icone}
                       onChange={(e) => setTipoGestorForm({ ...tipoGestorForm, icone: e.target.value })}
                       placeholder="ex: 🎯"
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <small style={{ color: '#999', fontSize: '12px' }}>Use um emoji para representar o tipo</small>
                   </div>
@@ -43723,7 +43723,7 @@ A1;Peça exemplo;10'
                         value={tipoGestorForm.cor}
                         onChange={(e) => setTipoGestorForm({ ...tipoGestorForm, cor: e.target.value })}
                         placeholder="#00ff00"
-                        style={{ flex: 1, padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ flex: 1, padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                   </div>
@@ -43734,7 +43734,7 @@ A1;Peça exemplo;10'
                       type="number"
                       value={tipoGestorForm.ordem}
                       onChange={(e) => setTipoGestorForm({ ...tipoGestorForm, ordem: parseInt(e.target.value) || 0 })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(255, 165, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <small style={{ color: '#999', fontSize: '12px' }}>Números menores aparecem primeiro</small>
                   </div>
@@ -43771,7 +43771,7 @@ A1;Peça exemplo;10'
                           key={tipo.id} 
                           style={{ 
                             padding: '15px', 
-                            backgroundColor: '#1a1a1a', 
+                            backgroundColor: '#141414', 
                             borderRadius: '8px', 
                             border: `1px solid rgba(${corRgb[0]}, ${corRgb[1]}, ${corRgb[2]}, 0.3)`,
                             display: 'flex',
@@ -43840,7 +43840,7 @@ A1;Peça exemplo;10'
                 type="text"
                 value={tecnicoForm.name}
                 onChange={(e) => setTecnicoForm({ ...tecnicoForm, name: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
@@ -43849,7 +43849,7 @@ A1;Peça exemplo;10'
                 type="email"
                 value={tecnicoForm.email}
                 onChange={(e) => setTecnicoForm({ ...tecnicoForm, email: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
@@ -43858,7 +43858,7 @@ A1;Peça exemplo;10'
                 type="text"
                 value={tecnicoForm.phone}
                 onChange={(e) => setTecnicoForm({ ...tecnicoForm, phone: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
@@ -43867,7 +43867,7 @@ A1;Peça exemplo;10'
                 type="text"
                 value={tecnicoForm.address}
                 onChange={(e) => setTecnicoForm({ ...tecnicoForm, address: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
             <div style={{ marginBottom: '15px' }}>
@@ -43875,7 +43875,7 @@ A1;Peça exemplo;10'
               <select
                 value={tecnicoForm.type}
                 onChange={(e) => setTecnicoForm({ ...tecnicoForm, type: e.target.value as 'internal' | 'external' })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               >
                 <option value="internal">{safeT?.internal || 'Interno'}</option>
                 <option value="external">{safeT?.external || 'Externo'}</option>
@@ -43887,7 +43887,7 @@ A1;Peça exemplo;10'
                 type="file"
                 accept="image/*"
                 onChange={handleTecnicoPhotoChange}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
               {tecnicoForm.photo && (
                 <div style={{ marginTop: '10px' }}>
@@ -43931,12 +43931,12 @@ A1;Peça exemplo;10'
                     setSearchedEquipamento(found || null)
                   }
                 }}
-                style={{ flex: 1, padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ flex: 1, padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
 
             {searchedEquipamento ? (
-              <div style={{ padding: '20px', backgroundColor: '#1a1a1a', borderRadius: '8px', marginBottom: '20px' }}>
+              <div style={{ padding: '20px', backgroundColor: '#141414', borderRadius: '8px', marginBottom: '20px' }}>
                 <h3>{searchedEquipamento.tipoEquipamento} - {searchedEquipamento.modelo}</h3>
                 <p><strong>{safeT?.marca || 'Marca'}:</strong> {searchedEquipamento.marca}</p>
                 <p><strong>{safeT?.numeroSerie || 'Número de Série'}:</strong> {searchedEquipamento.numeroSerie}</p>
@@ -43951,7 +43951,7 @@ A1;Peça exemplo;10'
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
                     {equipamentos.map(equipamento => (
-                      <div key={equipamento.id} style={{ padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                      <div key={equipamento.id} style={{ padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                         {equipamento.photo && (
                           <img src={equipamento.photo} alt={equipamento.modelo} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
                         )}
@@ -44022,7 +44022,7 @@ A1;Peça exemplo;10'
                 value={equipamentoForm.id}
                 onChange={(e) => setEquipamentoForm({ ...equipamentoForm, id: e.target.value })}
                 disabled={!!editingEquipamento}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
 
@@ -44032,7 +44032,7 @@ A1;Peça exemplo;10'
                 type="text"
                 value={equipamentoForm.tipoEquipamento}
                 onChange={(e) => setEquipamentoForm({ ...equipamentoForm, tipoEquipamento: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
 
@@ -44042,7 +44042,7 @@ A1;Peça exemplo;10'
                 type="text"
                 value={equipamentoForm.modelo}
                 onChange={(e) => setEquipamentoForm({ ...equipamentoForm, modelo: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
 
@@ -44052,7 +44052,7 @@ A1;Peça exemplo;10'
                 type="text"
                 value={equipamentoForm.marca}
                 onChange={(e) => setEquipamentoForm({ ...equipamentoForm, marca: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
 
@@ -44062,7 +44062,7 @@ A1;Peça exemplo;10'
                 type="text"
                 value={equipamentoForm.numeroSerie}
                 onChange={(e) => setEquipamentoForm({ ...equipamentoForm, numeroSerie: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
 
@@ -44078,7 +44078,7 @@ A1;Peça exemplo;10'
                   setEquipamentoForm({ ...equipamentoForm, familia: novaFamilia, grupo: grupoValido ? equipamentoForm.grupo : '' })
                 }}
                 placeholder={familiasEquipamento.length ? (safeT?.selecioneOuDigiteFamilia || 'Selecione ou digite...') : (safeT?.digiteFamilia || 'Digite a família')}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
               <datalist id="datalist-familias-equipamento">
                 {familiasEquipamento.map((f, i) => <option key={i} value={f} />)}
@@ -44095,7 +44095,7 @@ A1;Peça exemplo;10'
                 placeholder={equipamentoForm.familia
                   ? (gruposEquipamento.filter(g => g.familia === equipamentoForm.familia).length ? (safeT?.selecioneOuDigiteGrupo || 'Selecione ou digite...') : (safeT?.digiteGrupo || 'Digite o grupo'))
                   : (safeT?.selecioneFamiliaPrimeiro || 'Selecione primeiro a família')}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
               <datalist id="datalist-grupos-equipamento">
                 {(equipamentoForm.familia
@@ -44122,7 +44122,7 @@ A1;Peça exemplo;10'
                     placeholder={(safeT as any)?.equipamentoPesoExemplo || 'Ex: 10 kg'}
                     value={equipamentoForm.peso}
                     onChange={(e) => setEquipamentoForm({ ...equipamentoForm, peso: e.target.value })}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
 
@@ -44172,13 +44172,13 @@ A1;Peça exemplo;10'
                           )
                           setEquipamentoForm({ ...equipamentoForm, quantidadePartes: qtd, partes: novasPartes })
                         }}
-                        style={{ width: '100%', maxWidth: '120px', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', maxWidth: '120px', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
                     {(equipamentoForm.partes || []).map((parte, idx) => {
                       const total = equipamentoForm.quantidadePartes || 1
                       return (
-                        <div key={idx} style={{ marginBottom: '20px', padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                        <div key={idx} style={{ marginBottom: '20px', padding: '14px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                           <div style={{ marginBottom: '10px', fontWeight: 600, color: '#00ff00' }}>
                             {(safeT as any)?.equipamentoParte || 'Parte'} {parte.ordem}/{total}
                           </div>
@@ -44192,7 +44192,7 @@ A1;Peça exemplo;10'
                                 novasPartes[idx] = { ...parte, tipoId, id: tipoId === 'especifico' ? (parte.id || '') : undefined }
                                 setEquipamentoForm({ ...equipamentoForm, partes: novasPartes })
                               }}
-                              style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                              style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                             >
                               <option value="geral">{(safeT as any)?.equipamentoIdGeral || 'ID geral (igual ao equipamento)'}</option>
                               <option value="especifico">{(safeT as any)?.equipamentoIdEspecifico || 'ID específico'}</option>
@@ -44209,7 +44209,7 @@ A1;Peça exemplo;10'
                                   novasPartes[idx] = { ...parte, numeroSerieFabricante: e.target.value }
                                   setEquipamentoForm({ ...equipamentoForm, partes: novasPartes })
                                 }}
-                                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                               />
                             </div>
                           )}
@@ -44225,7 +44225,7 @@ A1;Peça exemplo;10'
                                     novasPartes[idx] = { ...parte, id: e.target.value }
                                     setEquipamentoForm({ ...equipamentoForm, partes: novasPartes })
                                   }}
-                                  style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                                  style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                                 />
                               </div>
                               <div style={{ marginBottom: '10px' }}>
@@ -44238,7 +44238,7 @@ A1;Peça exemplo;10'
                                     novasPartes[idx] = { ...parte, numeroSerieFabricante: e.target.value }
                                     setEquipamentoForm({ ...equipamentoForm, partes: novasPartes })
                                   }}
-                                  style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                                  style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                                 />
                               </div>
                             </>
@@ -44256,7 +44256,7 @@ A1;Peça exemplo;10'
               <select
                 value={equipamentoForm.modeloManuaisId || ''}
                 onChange={(e) => setEquipamentoForm({ ...equipamentoForm, modeloManuaisId: e.target.value })}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               >
                 <option value="">{(safeT as any)?.equipamentoNenhumModeloManuais || '— Nenhum —'}</option>
                 {manuaisModelos.map((mod) => {
@@ -44276,7 +44276,7 @@ A1;Peça exemplo;10'
                 type="file"
                 accept="image/*"
                 onChange={handleEquipamentoPhotoChange}
-                style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
               {equipamentoForm.photo && (
                 <div style={{ marginTop: '10px' }}>
@@ -44319,77 +44319,77 @@ A1;Peça exemplo;10'
                   placeholder={safeT?.nomeEmpresa || 'Nome da Empresa'}
                   value={clienteForm.nomeEmpresa}
                   onChange={(e) => setClienteForm({ ...clienteForm, nomeEmpresa: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.morada || 'Morada'}
                   value={clienteForm.morada}
                   onChange={(e) => setClienteForm({ ...clienteForm, morada: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.localidade || 'Localidade'}
                   value={clienteForm.localidade}
                   onChange={(e) => setClienteForm({ ...clienteForm, localidade: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.conselho || 'Conselho'}
                   value={clienteForm.conselho}
                   onChange={(e) => setClienteForm({ ...clienteForm, conselho: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.pais || 'País'}
                   value={clienteForm.pais}
                   onChange={(e) => setClienteForm({ ...clienteForm, pais: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.codigoPostal || 'Código Postal'}
                   value={clienteForm.codigoPostal}
                   onChange={(e) => setClienteForm({ ...clienteForm, codigoPostal: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.freguesia || 'Freguesia'}
                   value={clienteForm.freguesia}
                   onChange={(e) => setClienteForm({ ...clienteForm, freguesia: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.identificacaoFiscal || 'Identificação Fiscal'}
                   value={clienteForm.numeroContribuicaoFiscal}
                   onChange={(e) => setClienteForm({ ...clienteForm, numeroContribuicaoFiscal: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.telefones || 'Telefones'}
                   value={clienteForm.telefones}
                   onChange={(e) => setClienteForm({ ...clienteForm, telefones: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="email"
                   placeholder={safeT?.email || 'E-mail'}
                   value={clienteForm.email}
                   onChange={(e) => setClienteForm({ ...clienteForm, email: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.contato || 'Contato'}
                   value={clienteForm.contato}
                   onChange={(e) => setClienteForm({ ...clienteForm, contato: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.photo || 'Foto do Cliente'}</label>
@@ -44397,7 +44397,7 @@ A1;Peça exemplo;10'
                     type="file"
                     accept="image/*"
                     onChange={handleClientePhotoChange}
-                    style={{ width: '100%', padding: '8px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                   {clienteForm.photo && (
                     <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
@@ -44412,7 +44412,7 @@ A1;Peça exemplo;10'
                           borderRadius: '8px', 
                           border: '2px solid rgba(0, 255, 0, 0.5)',
                           objectFit: 'contain',
-                          backgroundColor: '#2a2a2a',
+                          backgroundColor: '#222222',
                           padding: '5px'
                         }} 
                       />
@@ -44459,7 +44459,7 @@ A1;Peça exemplo;10'
                     <div 
                       key={cliente.id} 
                       style={{ 
-                        backgroundColor: '#2a2a2a', 
+                        backgroundColor: '#222222', 
                         padding: '8px', 
                         borderRadius: '6px', 
                         border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -44478,7 +44478,7 @@ A1;Peça exemplo;10'
                             borderRadius: '6px',
                             overflow: 'hidden',
                             border: '1px solid rgba(255, 255, 255, 0.2)',
-                            backgroundColor: '#1a1a1a',
+                            backgroundColor: '#141414',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center'
@@ -44640,84 +44640,84 @@ A1;Peça exemplo;10'
                   placeholder={safeT?.nomeEmpresa || 'Nome da Empresa'}
                   value={fornecedorForm.nomeEmpresa}
                   onChange={(e) => setFornecedorForm({ ...fornecedorForm, nomeEmpresa: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.morada || 'Morada'}
                   value={fornecedorForm.morada}
                   onChange={(e) => setFornecedorForm({ ...fornecedorForm, morada: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.localidade || 'Localidade'}
                   value={fornecedorForm.localidade}
                   onChange={(e) => setFornecedorForm({ ...fornecedorForm, localidade: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.conselho || 'Conselho'}
                   value={fornecedorForm.conselho}
                   onChange={(e) => setFornecedorForm({ ...fornecedorForm, conselho: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.pais || 'País'}
                   value={fornecedorForm.pais}
                   onChange={(e) => setFornecedorForm({ ...fornecedorForm, pais: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.codigoPostal || 'Código Postal'}
                   value={fornecedorForm.codigoPostal}
                   onChange={(e) => setFornecedorForm({ ...fornecedorForm, codigoPostal: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.freguesia || 'Freguesia'}
                   value={fornecedorForm.freguesia}
                   onChange={(e) => setFornecedorForm({ ...fornecedorForm, freguesia: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.numeroContribuicaoFiscal || 'Número de Contribuição Fiscal'}
                   value={fornecedorForm.numeroContribuicaoFiscal}
                   onChange={(e) => setFornecedorForm({ ...fornecedorForm, numeroContribuicaoFiscal: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.telefones || 'Telefones'}
                   value={fornecedorForm.telefones}
                   onChange={(e) => setFornecedorForm({ ...fornecedorForm, telefones: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="email"
                   placeholder={safeT?.email || 'E-mail'}
                   value={fornecedorForm.email}
                   onChange={(e) => setFornecedorForm({ ...fornecedorForm, email: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.contato || 'Contato'}
                   value={fornecedorForm.contato}
                   onChange={(e) => setFornecedorForm({ ...fornecedorForm, contato: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.iban || 'IBAN'}
                   value={fornecedorForm.iban}
                   onChange={(e) => setFornecedorForm({ ...fornecedorForm, iban: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button className="btn-primary" onClick={handleSaveFornecedor} style={{ flex: 1 }}>
@@ -44734,7 +44734,7 @@ A1;Peça exemplo;10'
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
                 {fornecedores.map(fornecedor => (
-                  <div key={fornecedor.id} style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <div key={fornecedor.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                     <p><strong>{fornecedor.nomeEmpresa}</strong></p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{fornecedor.localidade}, {fornecedor.pais}</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{fornecedor.telefones}</p>
@@ -44776,12 +44776,12 @@ A1;Peça exemplo;10'
                   placeholder={safeT?.numeroRelatorio || 'Número do Relatório'}
                   value={relatorioServicoForm.numero}
                   onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, numero: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <select
                   value={relatorioServicoForm.tecnico}
                   onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, tecnico: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="">{safeT?.selecioneTecnico || 'Selecione o técnico'}</option>
                   {tecnicos.map(tec => (
@@ -44800,7 +44800,7 @@ A1;Peça exemplo;10'
                       telefone: selectedClient?.telefones || '',
                     });
                   }}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
                   {clientes.map(cli => (
@@ -44812,28 +44812,28 @@ A1;Peça exemplo;10'
                   placeholder={safeT?.data || 'Data'}
                   value={relatorioServicoForm.data}
                   onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, data: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.maquinaModelo || 'Máquina/Modelo'}
                   value={relatorioServicoForm.maquinaModelo}
                   onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, maquinaModelo: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.numeroMaquina || 'Número da Máquina'}
                   value={relatorioServicoForm.numeroMaquina}
                   onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, numeroMaquina: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.tipoServico || 'Tipo de Serviço'}
                   value={relatorioServicoForm.tipoServico}
                   onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, tipoServico: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button className="btn-primary" onClick={handleSaveRelatorioServico} style={{ flex: 1 }}>
@@ -44850,7 +44850,7 @@ A1;Peça exemplo;10'
             ) : (
               <ul style={{ listStyle: 'none', padding: 0, marginTop: '20px' }}>
                 {relatoriosServico.map(relatorio => (
-                  <li key={relatorio.id} style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
+                  <li key={relatorio.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
                     <p><strong>{relatorio.numero}</strong> - {relatorio.cliente}</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.tecnico || 'Técnico'}: {relatorio.tecnico}</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.data || 'Data'}: {new Date(relatorio.data).toLocaleDateString()}</p>
@@ -44917,28 +44917,28 @@ A1;Peça exemplo;10'
                   placeholder={safeT?.nomePecaBiblioteca || 'Nome'}
                   value={pecaBibliotecaForm.nome}
                   onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, nome: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="text"
                   placeholder={safeT?.codigoPecaBiblioteca || 'Código'}
                   value={pecaBibliotecaForm.codigo}
                   onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, codigo: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="number"
                   placeholder={safeT?.precoPecaBiblioteca || 'Preço (€)'}
                   value={pecaBibliotecaForm.preco}
                   onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, preco: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <textarea
                   placeholder={safeT?.descricaoPecaBiblioteca || 'Descrição'}
                   value={pecaBibliotecaForm.descricao}
                   onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, descricao: e.target.value })}
                   rows={3}
-                  style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 ></textarea>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button className="btn-primary" onClick={() => {
@@ -44977,7 +44977,7 @@ A1;Peça exemplo;10'
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginTop: '20px' }}>
                 {pecasBiblioteca.map(peca => (
-                  <div key={peca.id} style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <div key={peca.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                     {peca.imagem && <img src={peca.imagem} alt="Imagem da Peça" style={{ maxWidth: '100%', maxHeight: '100px', objectFit: 'cover', marginBottom: '10px' }} />}
                     <p><strong>{peca.nome}</strong> ({peca.codigo})</p>
                     {peca.preco && <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.preco || 'Preço'}: {peca.preco}€</p>}
@@ -45023,7 +45023,7 @@ A1;Peça exemplo;10'
                     const searchTerm = e.target.value.toLowerCase()
                     // Filtro será aplicado na renderização
                   }}
-                  style={{ width: '100%', padding: '10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
               </div>
             </div>
@@ -45050,7 +45050,7 @@ A1;Peça exemplo;10'
                         }}
                         style={{
                           padding: '15px',
-                          backgroundColor: isSelecionada ? 'rgba(0, 255, 0, 0.2)' : '#1a1a1a',
+                          backgroundColor: isSelecionada ? 'rgba(0, 255, 0, 0.2)' : '#141414',
                           border: isSelecionada ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
                           borderRadius: '8px',
                           cursor: 'pointer',
@@ -45065,7 +45065,7 @@ A1;Peça exemplo;10'
                               style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px' }}
                             />
                           ) : (
-                            <div style={{ width: '60px', height: '60px', backgroundColor: '#2a2a2a', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
+                            <div style={{ width: '60px', height: '60px', backgroundColor: '#222222', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
                               📦
                             </div>
                           )}
@@ -45138,7 +45138,7 @@ A1;Peça exemplo;10'
                 <select
                   value={agendaForm.tipo}
                   onChange={(e) => setAgendaForm({ ...agendaForm, tipo: e.target.value as 'pre-agendamento' | 'agendamento-tecnico' })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="pre-agendamento">{safeT?.preAgendamento || 'Pré-Agendamento'}</option>
                   <option value="agendamento-tecnico">{safeT?.agendamentoTecnico || 'Agendamento Técnico'}</option>
@@ -45146,7 +45146,7 @@ A1;Peça exemplo;10'
                 <select
                   value={agendaForm.tecnico}
                   onChange={(e) => setAgendaForm({ ...agendaForm, tecnico: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="">{safeT?.selecioneTecnico || 'Selecione o técnico'}</option>
                   {tecnicos.map(tec => (
@@ -45166,7 +45166,7 @@ A1;Peça exemplo;10'
                       telefone: selectedClient?.telefones || '',
                     });
                   }}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
                   {clientes.map(cli => (
@@ -45178,21 +45178,21 @@ A1;Peça exemplo;10'
                   placeholder={safeT?.data || 'Data'}
                   value={agendaForm.data}
                   onChange={(e) => setAgendaForm({ ...agendaForm, data: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="time"
                   placeholder={safeT?.hora || 'Hora'}
                   value={agendaForm.hora}
                   onChange={(e) => setAgendaForm({ ...agendaForm, hora: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input
                   type="number"
                   placeholder={safeT?.duracaoEstimada || 'Duração Estimada (dias)'}
                   value={agendaForm.duracaoEstimada}
                   onChange={(e) => setAgendaForm({ ...agendaForm, duracaoEstimada: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <select
                   value={agendaForm.equipamentoId}
@@ -45204,7 +45204,7 @@ A1;Peça exemplo;10'
                       equipamento: selectedEquip?.modelo || '',
                     });
                   }}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="">{safeT?.selecioneEquipamento || 'Selecione o equipamento'}</option>
                   {equipamentos.map(eq => (
@@ -45216,7 +45216,7 @@ A1;Peça exemplo;10'
                   value={agendaForm.observacoesTecnicas}
                   onChange={(e) => setAgendaForm({ ...agendaForm, observacoesTecnicas: e.target.value })}
                   rows={3}
-                  style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 ></textarea>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button className="btn-primary" onClick={handleSaveAgendamento} style={{ flex: 1 }}>
@@ -45233,7 +45233,7 @@ A1;Peça exemplo;10'
             ) : (
               <div style={{ marginTop: '20px' }}>
                 {agendamentos.map(agendamento => (
-                  <div key={agendamento.id} style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
+                  <div key={agendamento.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
                     <p><strong>{agendamento.cliente}</strong> - {agendamento.data} {agendamento.hora}</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.tecnico || 'Técnico'}: {agendamento.tecnico}</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.tipoAgendamento || 'Tipo'}: {agendamento.tipo}</p>
@@ -45386,21 +45386,21 @@ A1;Peça exemplo;10'
                       placeholder={safeT?.numeroGrupo || 'Número do Grupo'}
                       value={grupoDesmontadoForm.numeroGrupo}
                       onChange={(e) => setGrupoDesmontadoForm({ ...grupoDesmontadoForm, numeroGrupo: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.familia || 'Família'}
                       value={grupoDesmontadoForm.familia}
                       onChange={(e) => setGrupoDesmontadoForm({ ...grupoDesmontadoForm, familia: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.idFabricante || 'ID/Número do Fabricante'}
                       value={grupoDesmontadoForm.idFabricante}
                       onChange={(e) => setGrupoDesmontadoForm({ ...grupoDesmontadoForm, idFabricante: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <h5 style={{ marginTop: '15px', marginBottom: '10px' }}>{safeT?.localizacao || 'Localização'}</h5>
                     <input
@@ -45408,21 +45408,21 @@ A1;Peça exemplo;10'
                       placeholder={safeT?.rua || 'Rua'}
                       value={grupoDesmontadoForm.localizacao.rua}
                       onChange={(e) => setGrupoDesmontadoForm({ ...grupoDesmontadoForm, localizacao: { ...grupoDesmontadoForm.localizacao, rua: e.target.value } })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.numeroEspaco || 'Número/Letras do Espaço'}
                       value={grupoDesmontadoForm.localizacao.numeroEspaco}
                       onChange={(e) => setGrupoDesmontadoForm({ ...grupoDesmontadoForm, localizacao: { ...grupoDesmontadoForm.localizacao, numeroEspaco: e.target.value } })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.numeroGrupoPrateleira || 'Número do Grupo da Prateleira'}
                       value={grupoDesmontadoForm.localizacao.numeroGrupoPrateleira}
                       onChange={(e) => setGrupoDesmontadoForm({ ...grupoDesmontadoForm, localizacao: { ...grupoDesmontadoForm.localizacao, numeroGrupoPrateleira: e.target.value } })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <label className="file-upload-label" htmlFor="grupo-desmontado-image-upload" style={{ marginBottom: '10px' }}>
                       {safeT?.imagemGrupo || 'Imagem do Grupo'}
@@ -45457,7 +45457,7 @@ A1;Peça exemplo;10'
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginTop: '20px' }}>
                     {gruposDesmontados.map(grupo => (
-                      <div key={grupo.id} style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                      <div key={grupo.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                         {grupo.imagem && <img src={grupo.imagem} alt="Imagem do Grupo" style={{ maxWidth: '100%', maxHeight: '100px', objectFit: 'cover', marginBottom: '10px' }} />}
                         <p><strong>{grupo.numeroGrupo}</strong> ({grupo.familia})</p>
                         <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.localizacao || 'Localização'}: {grupo.localizacao.rua}, {grupo.localizacao.numeroEspaco}, {grupo.localizacao.numeroGrupoPrateleira}</p>
@@ -45489,19 +45489,19 @@ A1;Peça exemplo;10'
                       placeholder={safeT?.numeroPeca || 'Número da Peça'}
                       value={pecaDesmontadaForm.numeroPeca}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, numeroPeca: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.familia || 'Família'}
                       value={pecaDesmontadaForm.familia}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, familia: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <select
                       value={pecaDesmontadaForm.grupoId}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, grupoId: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     >
                       <option value="">{safeT?.selecioneGrupo || 'Selecione um grupo'}</option>
                       {gruposDesmontados.map(grupo => (
@@ -45513,54 +45513,54 @@ A1;Peça exemplo;10'
                       placeholder={safeT?.nome || 'Nome'}
                       value={pecaDesmontadaForm.nome}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, nome: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.codigo || 'Código'}
                       value={pecaDesmontadaForm.codigo}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, codigo: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.marca || 'Marca'}
                       value={pecaDesmontadaForm.marca}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, marca: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.modelo || 'Modelo'}
                       value={pecaDesmontadaForm.modelo}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, modelo: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.tipoEquipamento || 'Tipo de Equipamento'}
                       value={pecaDesmontadaForm.tipoEquipamento}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, tipoEquipamento: e.target.value })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <textarea
                       placeholder={safeT?.observacoes || 'Observações'}
                       value={pecaDesmontadaForm.observacoes}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, observacoes: e.target.value })}
                       rows={3}
-                      style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     ></textarea>
                     <input
                       type="number"
                       placeholder={safeT?.quantidade || 'Quantidade'}
                       value={pecaDesmontadaForm.quantidade}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, quantidade: parseInt(e.target.value) || 1 })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                     <select
                       value={pecaDesmontadaForm.statusFuncional}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, statusFuncional: e.target.value as 'funciona' | 'nao-funciona' | 'nao-testado' })}
-                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     >
                       <option value="nao-testado">{safeT?.naoTestado || 'Não Testado'}</option>
                       <option value="funciona">{safeT?.funciona || 'Funciona'}</option>
@@ -45608,7 +45608,7 @@ A1;Peça exemplo;10'
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginTop: '20px' }}>
                     {pecasDesmontadas.map(peca => (
-                      <div key={peca.id} style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                      <div key={peca.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                         {peca.imagens && peca.imagens.length > 0 && <img src={peca.imagens[0]} alt="Imagem da Peça" style={{ maxWidth: '100%', maxHeight: '100px', objectFit: 'cover', marginBottom: '10px' }} />}
                         <p><strong>{peca.nome}</strong> ({peca.numeroPeca})</p>
                         <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.familia || 'Família'}: {peca.familia}</p>
@@ -45646,7 +45646,7 @@ A1;Peça exemplo;10'
                 <select
                   value={servicoForm.categoria}
                   onChange={(e) => setServicoForm({ ...servicoForm, categoria: e.target.value as 'servico' | 'despesa' })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="servico">{safeT?.servico || 'SERVIÇO'}</option>
                   <option value="despesa">{safeT?.despesa || 'DESPESA'}</option>
@@ -45656,26 +45656,26 @@ A1;Peça exemplo;10'
                   placeholder={safeT?.nomeServico || 'Nome do Serviço/Despesa'}
                   value={servicoForm.nome}
                   onChange={(e) => setServicoForm({ ...servicoForm, nome: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <textarea
                   placeholder={safeT?.descricaoServico || 'Descrição (opcional)'}
                   value={servicoForm.descricao}
                   onChange={(e) => setServicoForm({ ...servicoForm, descricao: e.target.value })}
                   rows={3}
-                  style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 ></textarea>
                 <input
                   type="number"
                   placeholder={safeT?.valorServico || 'Valor'}
                   value={servicoForm.valor}
                   onChange={(e) => setServicoForm({ ...servicoForm, valor: parseFloat(e.target.value) || 0 })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <select
                   value={servicoForm.tipoCobranca}
                   onChange={(e) => setServicoForm({ ...servicoForm, tipoCobranca: e.target.value as 'unidade' | 'km' | 'hora' | 'valor-fixo' | 'diarias' | 'extras' })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="unidade">{safeT?.tipoCobrancaUnidade || 'Por Unidade'}</option>
                   <option value="km">{safeT?.tipoCobrancaKm || 'Por KM'}</option>
@@ -45699,7 +45699,7 @@ A1;Peça exemplo;10'
             ) : (
               <ul style={{ listStyle: 'none', padding: 0, marginTop: '20px' }}>
                 {servicos.map(servico => (
-                  <li key={servico.id} style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
+                  <li key={servico.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
                     <p><strong>{servico.nome}</strong> - {servico.valor}€ ({servico.tipoCobranca})</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.tipo || 'Tipo'}: {servico.categoria}</p>
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
@@ -45732,10 +45732,10 @@ A1;Peça exemplo;10'
             {showEquipamentoClienteForm && (
               <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
                 <h4>{editingEquipamentoCliente ? (safeT?.editarEquipamento || 'Editar Equipamento') : (safeT?.adicionarEquipamento || 'Adicionar Equipamento')}</h4>
-                <input type="text" placeholder={safeT?.tipoEquipamento || 'Tipo de Equipamento'} value={equipamentoClienteForm.tipoEquipamento} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, tipoEquipamento: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
-                <input type="text" placeholder={safeT?.modelo || 'Modelo'} value={equipamentoClienteForm.modelo} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, modelo: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
-                <input type="text" placeholder={safeT?.marca || 'Marca'} value={equipamentoClienteForm.marca} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, marca: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
-                <input type="text" placeholder={safeT?.numeroSerie || 'Número de Série'} value={equipamentoClienteForm.numeroSerie} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, numeroSerie: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                <input type="text" placeholder={safeT?.tipoEquipamento || 'Tipo de Equipamento'} value={equipamentoClienteForm.tipoEquipamento} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, tipoEquipamento: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                <input type="text" placeholder={safeT?.modelo || 'Modelo'} value={equipamentoClienteForm.modelo} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, modelo: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                <input type="text" placeholder={safeT?.marca || 'Marca'} value={equipamentoClienteForm.marca} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, marca: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                <input type="text" placeholder={safeT?.numeroSerie || 'Número de Série'} value={equipamentoClienteForm.numeroSerie} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, numeroSerie: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button className="btn-primary" onClick={handleSaveEquipamentoCliente} style={{ flex: 1 }}>{safeT?.save || 'Salvar'}</button>
                   <button className="btn-primary" onClick={() => { setShowEquipamentoClienteForm(false); setEditingEquipamentoCliente(null); }} style={{ flex: 1 }}>{safeT?.cancel || 'Cancelar'}</button>
@@ -45750,13 +45750,13 @@ A1;Peça exemplo;10'
                   const relatoriosServicoEquipamento = selectedClienteForEquipamento.relatorios?.[equipamentoId] || []
                   
                   return (
-                    <div key={index} style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
+                    <div key={index} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
                       <p><strong>{equipamento.modelo}</strong> - {equipamento.marca} ({equipamento.numeroSerie})</p>
                       <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.tipoEquipamento || 'Tipo'}: {equipamento.tipoEquipamento}</p>
                       
                       {/* Seção de Relatórios de Serviço - Organizados por Data */}
                       {relatoriosServicoEquipamento.length > 0 && (
-                        <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+                        <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                           <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#00ff00', display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span>📋</span>
                             {safeT?.relatoriosServico || 'Relatórios de Serviço'} ({relatoriosServicoEquipamento.length})
@@ -45779,12 +45779,12 @@ A1;Peça exemplo;10'
                               })
                               
                               return datasOrdenadas.map(dataKey => (
-                                <div key={dataKey} style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                                <div key={dataKey} style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                                   <h5 style={{ fontSize: '12px', fontWeight: 'bold', color: '#00ff00', marginBottom: '8px', paddingBottom: '5px', borderBottom: '1px solid rgba(0, 255, 0, 0.3)' }}>
                                     📅 {dataKey} ({relatoriosPorData[dataKey].length} {relatoriosPorData[dataKey].length === 1 ? 'relatório' : 'relatórios'})
                                   </h5>
                                   {relatoriosPorData[dataKey].map((relatorio) => (
-                                    <div key={relatorio.id} style={{ padding: '8px', marginBottom: '6px', backgroundColor: '#2a2a2a', borderRadius: '4px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
+                                    <div key={relatorio.id} style={{ padding: '8px', marginBottom: '6px', backgroundColor: '#222222', borderRadius: '4px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
                                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '6px' }}>
                                         <div style={{ flex: 1 }}>
                                           <p style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', color: '#00ff00' }}>
@@ -45858,8 +45858,8 @@ A1;Peça exemplo;10'
             {showRelatorioForm && (
               <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
                 <h4>{editingRelatorio ? (safeT?.editarRelatorio || 'Editar Relatório') : (safeT?.novoRelatorio || 'Novo Relatório')}</h4>
-                <input type="text" placeholder={safeT?.tituloRelatorio || 'Título'} value={relatorioForm.titulo} onChange={(e) => setRelatorioForm({ ...relatorioForm, titulo: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
-                <textarea placeholder={safeT?.conteudoRelatorio || 'Conteúdo'} value={relatorioForm.conteudo} onChange={(e) => setRelatorioForm({ ...relatorioForm, conteudo: e.target.value })} rows={5} style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}></textarea>
+                <input type="text" placeholder={safeT?.tituloRelatorio || 'Título'} value={relatorioForm.titulo} onChange={(e) => setRelatorioForm({ ...relatorioForm, titulo: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                <textarea placeholder={safeT?.conteudoRelatorio || 'Conteúdo'} value={relatorioForm.conteudo} onChange={(e) => setRelatorioForm({ ...relatorioForm, conteudo: e.target.value })} rows={5} style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}></textarea>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button className="btn-primary" onClick={handleSaveRelatorio} style={{ flex: 1 }}>{safeT?.save || 'Salvar'}</button>
                   <button className="btn-primary" onClick={() => { setShowRelatorioForm(false); setEditingRelatorio(null); }} style={{ flex: 1 }}>{safeT?.cancel || 'Cancelar'}</button>
@@ -45869,7 +45869,7 @@ A1;Peça exemplo;10'
             {selectedEquipamentoForRelatorio.equipamento.relatorios && selectedEquipamentoForRelatorio.equipamento.relatorios.length > 0 ? (
               <div style={{ marginTop: '20px' }}>
                 {selectedEquipamentoForRelatorio.equipamento.relatorios.map(relatorio => (
-                  <div key={relatorio.id} style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
+                  <div key={relatorio.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
                     <p><strong>{relatorio.titulo}</strong></p>
                     <p style={{ fontSize: '14px', opacity: 0.8, whiteSpace: 'pre-wrap' }}>{relatorio.conteudo}</p>
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
@@ -45896,20 +45896,20 @@ A1;Peça exemplo;10'
             {showFaturaFornecedorForm && (
               <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
                 <h4>{editingFaturaFornecedor ? (safeT?.editarFatura || 'Editar Fatura') : (safeT?.adicionarFatura || 'Adicionar Fatura')}</h4>
-                <input type="text" placeholder={safeT?.numeroFatura || 'Número da Fatura'} value={faturaFornecedorForm.numeroFatura} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, numeroFatura: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
-                <input type="month" placeholder={safeT?.mes || 'Mês'} value={faturaFornecedorForm.mes} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, mes: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
-                <input type="number" placeholder={safeT?.valorFatura || 'Valor'} value={faturaFornecedorForm.valor} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, valor: parseFloat(e.target.value) || 0 })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
-                <select value={faturaFornecedorForm.clienteId} onChange={(e) => { const cliente = clientes.find(c => c.id === e.target.value); setFaturaFornecedorForm({ ...faturaFornecedorForm, clienteId: e.target.value, clienteNome: cliente?.nomeEmpresa || '' }); }} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}>
+                <input type="text" placeholder={safeT?.numeroFatura || 'Número da Fatura'} value={faturaFornecedorForm.numeroFatura} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, numeroFatura: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                <input type="month" placeholder={safeT?.mes || 'Mês'} value={faturaFornecedorForm.mes} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, mes: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                <input type="number" placeholder={safeT?.valorFatura || 'Valor'} value={faturaFornecedorForm.valor} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, valor: parseFloat(e.target.value) || 0 })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                <select value={faturaFornecedorForm.clienteId} onChange={(e) => { const cliente = clientes.find(c => c.id === e.target.value); setFaturaFornecedorForm({ ...faturaFornecedorForm, clienteId: e.target.value, clienteNome: cliente?.nomeEmpresa || '' }); }} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}>
                   <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
                   {clientes.map(cli => <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>)}
                 </select>
-                <input type="date" placeholder={safeT?.dataVencimento || 'Data de Vencimento'} value={faturaFornecedorForm.dataVencimento} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, dataVencimento: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
-                <select value={faturaFornecedorForm.status} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, status: e.target.value as 'pendente' | 'paga' | 'vencida' })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}>
+                <input type="date" placeholder={safeT?.dataVencimento || 'Data de Vencimento'} value={faturaFornecedorForm.dataVencimento} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, dataVencimento: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                <select value={faturaFornecedorForm.status} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, status: e.target.value as 'pendente' | 'paga' | 'vencida' })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}>
                   <option value="pendente">{safeT?.pendente || 'Pendente'}</option>
                   <option value="paga">{safeT?.paga || 'Paga'}</option>
                   <option value="vencida">{safeT?.vencida || 'Vencida'}</option>
                 </select>
-                <textarea placeholder={safeT?.observacoes || 'Observações'} value={faturaFornecedorForm.observacoes} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, observacoes: e.target.value })} rows={3} style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}></textarea>
+                <textarea placeholder={safeT?.observacoes || 'Observações'} value={faturaFornecedorForm.observacoes} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, observacoes: e.target.value })} rows={3} style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}></textarea>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button className="btn-primary" onClick={() => handleSaveFaturaFornecedor()} style={{ flex: 1 }}>{safeT?.save || 'Salvar'}</button>
                   <button className="btn-primary" onClick={() => { setShowFaturaFornecedorForm(false); setEditingFaturaFornecedor(null); }} style={{ flex: 1 }}>{safeT?.cancel || 'Cancelar'}</button>
@@ -45919,7 +45919,7 @@ A1;Peça exemplo;10'
             {selectedFornecedorForFatura.faturas && selectedFornecedorForFatura.faturas.length > 0 ? (
               <div style={{ marginTop: '20px' }}>
                 {selectedFornecedorForFatura.faturas.map(fatura => (
-                  <div key={fatura.id} style={{ backgroundColor: '#1a1a1a', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
+                  <div key={fatura.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
                     <p><strong>{fatura.numeroFatura}</strong> - {formatarMes(fatura.mes)}</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.valorFatura || 'Valor'}: {fatura.valor}€</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.cliente || 'Cliente'}: {fatura.clienteNome}</p>
@@ -45961,19 +45961,19 @@ A1;Peça exemplo;10'
                 
                 return (
                   <>
-                    <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '2px solid #ffffff' }}>
+                    <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '2px solid #ffffff' }}>
                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff', marginBottom: '5px' }}>{semFaturas}</div>
                       <div style={{ fontSize: '12px', opacity: 0.8 }}>{safeT?.fornecedoresSemFaturas || 'Fornecedores sem Faturas'}</div>
                     </div>
-                    <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '2px solid #ffd700' }}>
+                    <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '2px solid #ffd700' }}>
                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffd700', marginBottom: '5px' }}>{faturasPendentes.length}</div>
                       <div style={{ fontSize: '12px', opacity: 0.8 }}>{safeT?.faturasAPagar || 'Faturas a Pagar'}</div>
                     </div>
-                    <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '2px solid #ff0000' }}>
+                    <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '2px solid #ff0000' }}>
                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ff0000', marginBottom: '5px' }}>{faturasVencidas.length}</div>
                       <div style={{ fontSize: '12px', opacity: 0.8 }}>{safeT?.faturasVencidas || 'Faturas Vencidas'}</div>
                     </div>
-                    <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '2px solid #00ff00' }}>
+                    <div style={{ textAlign: 'center', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '2px solid #00ff00' }}>
                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#00ff00', marginBottom: '5px' }}>{faturasPagas.length}</div>
                       <div style={{ fontSize: '12px', opacity: 0.8 }}>{safeT?.faturasPagas || 'Faturas Pagas'}</div>
                     </div>
@@ -45991,7 +45991,7 @@ A1;Peça exemplo;10'
                 hoje.setHours(0, 0, 0, 0)
                 
                 return (
-                  <div key={fornecedor.id} style={{ marginBottom: '25px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <div key={fornecedor.id} style={{ marginBottom: '25px', padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                     <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>{fornecedor.nomeEmpresa}</h3>
                     
                     {/* Agrupar faturas por cliente */}
@@ -46011,7 +46011,7 @@ A1;Peça exemplo;10'
                         const faturasPagas = faturas.filter(f => f.status === 'paga')
                         
                         return (
-                          <div key={clienteId} style={{ marginBottom: '20px', padding: '12px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+                          <div key={clienteId} style={{ marginBottom: '20px', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
                             <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#00ff00' }}>Cliente: {clienteNome}</h4>
                             
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '15px' }}>
@@ -46059,7 +46059,7 @@ A1;Peça exemplo;10'
                                   <div key={fatura.id} style={{ 
                                     padding: '10px', 
                                     marginBottom: '8px', 
-                                    backgroundColor: '#1a1a1a', 
+                                    backgroundColor: '#141414', 
                                     borderRadius: '4px',
                                     borderLeft: `4px solid ${statusColor}`
                                   }}>
@@ -46125,7 +46125,7 @@ A1;Peça exemplo;10'
               <select 
                 value={translatorFrom} 
                 onChange={(e) => setTranslatorFrom(e.target.value)}
-                style={{ width: '100%', padding: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               >
                 {getLanguages(safeT).map(lang => (
                   <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
@@ -46140,7 +46140,7 @@ A1;Peça exemplo;10'
               <select 
                 value={translatorTo} 
                 onChange={(e) => setTranslatorTo(e.target.value)}
-                style={{ width: '100%', padding: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               >
                 {getLanguages(safeT).map(lang => (
                   <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
@@ -46157,7 +46157,7 @@ A1;Peça exemplo;10'
                 onChange={(e) => setTranslatorText(e.target.value)}
                 placeholder={safeT?.enterTextToTranslate || 'Digite o texto que deseja traduzir...'}
                 rows={6}
-                style={{ width: '100%', padding: '10px', backgroundColor: '#1a1a1a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', resize: 'vertical' }}
+                style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', resize: 'vertical' }}
               />
             </div>
 
@@ -46186,7 +46186,7 @@ A1;Peça exemplo;10'
                   value={translatedText || quickTranslateResult} 
                   readOnly
                   rows={6}
-                  style={{ width: '100%', padding: '10px', backgroundColor: '#1a1a1a', color: '#00ff00', border: '1px solid rgba(0, 255, 0, 0.5)', borderRadius: '4px', resize: 'vertical' }}
+                  style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#00ff00', border: '1px solid rgba(0, 255, 0, 0.5)', borderRadius: '4px', resize: 'vertical' }}
                 />
                 <button 
                   className="btn-primary" 
@@ -46232,7 +46232,7 @@ A1;Peça exemplo;10'
           zIndex: 10000
         }}>
           <div style={{
-            backgroundColor: '#1a1a1a',
+            backgroundColor: '#141414',
             padding: '30px',
             borderRadius: '8px',
             maxWidth: '800px',
@@ -46245,7 +46245,7 @@ A1;Peça exemplo;10'
               {safeT?.gerarPedidoOrcamento || '📋 Gerar Pedido de Orçamento'}
             </h2>
             
-            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px' }}>
+            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px' }}>
               <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>
                 {safeT?.cliente || 'Cliente'}: {relatorioServicoForm.cliente}
               </h3>
@@ -46264,9 +46264,9 @@ A1;Peça exemplo;10'
               <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>
                 {safeT?.pecasSubstituicao || 'Peças que deverão ser substituídas'}
               </h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#2a2a2a', borderRadius: '6px', overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#222222', borderRadius: '6px', overflow: 'hidden' }}>
                 <thead>
-                  <tr style={{ backgroundColor: '#1a1a1a' }}>
+                  <tr style={{ backgroundColor: '#141414' }}>
                     <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 255, 0, 0.3)' }}>
                       {safeT?.descricaoItem || 'Descrição'}
                     </th>
@@ -46400,7 +46400,7 @@ A1;Peça exemplo;10'
       {/* Modal de Visualização Completa do Relatório de Serviço */}
       {viewingRelatorioServico && (
         <div className="modal-overlay" onClick={() => setViewingRelatorioServico(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1200px', maxHeight: '90vh', overflowY: 'auto', backgroundColor: '#1a1a1a' }}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1200px', maxHeight: '90vh', overflowY: 'auto', backgroundColor: '#141414' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid rgba(0, 255, 0, 0.3)', paddingBottom: '15px' }}>
               <h2 style={{ color: '#00ff00', margin: 0 }}>
                 📋 {safeT?.relatorioServico || 'Relatório de Serviço'} - {viewingRelatorioServico.numero}
@@ -46411,7 +46411,7 @@ A1;Peça exemplo;10'
             </div>
 
             {/* Informações Principais */}
-            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <h3 style={{ color: '#00ff00', marginBottom: '15px', fontSize: '16px' }}>
                 {safeT?.dadosClienteEquipamento || 'Dados do Cliente e Equipamento'}
               </h3>
@@ -46453,7 +46453,7 @@ A1;Peça exemplo;10'
 
             {/* Dias de Trabalho */}
             {viewingRelatorioServico.diasTrabalho && viewingRelatorioServico.diasTrabalho.length > 0 && (
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                 <h3 style={{ color: '#00ff00', marginBottom: '15px', fontSize: '16px' }}>
                   {safeT?.controleHorasDeslocamentos || 'Controle de Horas e Deslocamentos'}
                 </h3>
@@ -46508,7 +46508,7 @@ A1;Peça exemplo;10'
                             </tr>
                             {temDescricao && (
                               <tr style={{ borderBottom: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                                <td colSpan={13} style={{ padding: '10px', textAlign: 'left', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '11px', color: '#ffffff', backgroundColor: '#1a1a1a' }}>
+                                <td colSpan={13} style={{ padding: '10px', textAlign: 'left', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '11px', color: '#ffffff', backgroundColor: '#141414' }}>
                                   <div style={{ display: 'flex', alignItems: 'start', gap: '8px' }}>
                                     <span style={{ fontSize: '14px' }}>📝</span>
                                     <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{dia.descricaoTrabalho}</span>
@@ -46530,27 +46530,27 @@ A1;Peça exemplo;10'
                     <div style={{ marginTop: '15px', marginBottom: '15px' }}>
                       <h3 style={{ marginBottom: '10px', color: '#00ff00', fontSize: '14px', textAlign: 'center', fontWeight: 'bold' }}>{safeT?.resumoHorasDeslocamentos?.toUpperCase() || 'RESUMO DE HORAS, DESLOCAMENTOS E DIÁRIAS'}</h3>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
-                        <div style={{ padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
+                        <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                           <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasTrabalho || 'Horas de Trabalho'}</p>
                           <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{totais.horasTrabalho}h</p>
                         </div>
-                        <div style={{ padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
+                        <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                           <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.kmsPercorridos || 'Km\'s Percorridos'}</p>
                           <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{totais.kmsPercorridos} km</p>
                         </div>
-                        <div style={{ padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
+                        <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                           <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasViagem || 'Horas de Viagem'}</p>
                           <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{totais.horasViagem}h</p>
                         </div>
-                        <div style={{ padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
+                        <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                           <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.diarias || 'DIÁRIAS'}</p>
                           <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{viewingRelatorioServico.diasTrabalho.length}</p>
                         </div>
-                        <div style={{ padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
+                        <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
                           <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemIda || 'Horas de Viagem de Ida'}</p>
                           <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#00ff00' }}>{totais.horasViagemIda}</p>
                         </div>
-                        <div style={{ padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
+                        <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
                           <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemRetorno || 'Horas de Viagem de Retorno'}</p>
                           <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#00ff00' }}>{totais.horasViagemRetorno}</p>
                         </div>
@@ -46563,13 +46563,13 @@ A1;Peça exemplo;10'
 
             {/* Peças de Substituição */}
             {viewingRelatorioServico.pecasSubstituicao && viewingRelatorioServico.pecasSubstituicao.length > 0 && (
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                 <h3 style={{ color: '#00ff00', marginBottom: '15px', fontSize: '16px' }}>
                   {safeT?.pecasSubstituicao || 'Peças de Substituição'}
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
                   {viewingRelatorioServico.pecasSubstituicao.map((peca, index) => (
-                    <div key={peca.id || index} style={{ padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                    <div key={peca.id || index} style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                       {peca.imagem && (
                         <img src={peca.imagem} alt={peca.descricao} style={{ width: '100%', maxHeight: '100px', objectFit: 'cover', borderRadius: '4px', marginBottom: '8px' }} />
                       )}
@@ -46584,7 +46584,7 @@ A1;Peça exemplo;10'
 
             {/* Observações e Pontos Abertos */}
             {(viewingRelatorioServico.observacoes || viewingRelatorioServico.pontosAberto) && (
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                 {viewingRelatorioServico.observacoes && (
                   <div style={{ marginBottom: viewingRelatorioServico.pontosAberto ? '15px' : '0' }}>
                     <h3 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px' }}>
@@ -46605,7 +46605,7 @@ A1;Peça exemplo;10'
             )}
 
             {/* Status do Serviço */}
-            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <h3 style={{ color: '#00ff00', marginBottom: '15px', fontSize: '16px' }}>
                 {safeT?.statusServico || 'Status do Serviço'}
               </h3>
@@ -46664,7 +46664,7 @@ A1;Peça exemplo;10'
                     width: '100%',
                     padding: '8px',
                     fontSize: '11px',
-                    backgroundColor: '#1a1a1a',
+                    backgroundColor: '#141414',
                     color: '#66b3ff',
                     border: '1px solid rgba(0, 150, 255, 0.5)',
                     borderRadius: '4px',
@@ -46756,7 +46756,7 @@ A1;Peça exemplo;10'
                       key={pedido.id}
                       style={{
                         padding: '20px',
-                        backgroundColor: '#2a2a2a',
+                        backgroundColor: '#222222',
                         borderRadius: '12px',
                         border: `3px solid ${statusColor}`,
                         boxShadow: `0 0 15px ${statusColor}40`
@@ -46813,7 +46813,7 @@ A1;Peça exemplo;10'
                       </div>
 
                       {/* Lista de Peças */}
-                      <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '8px' }}>
+                      <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#141414', borderRadius: '8px' }}>
                         <h4 style={{ color: '#00ff00', marginBottom: '15px', fontSize: '16px' }}>
                           {safeT?.pecas || 'Peças'}
                         </h4>
@@ -46836,7 +46836,7 @@ A1;Peça exemplo;10'
                                 key={item.id || index}
                                 style={{
                                   padding: '12px',
-                                  backgroundColor: '#2a2a2a',
+                                  backgroundColor: '#222222',
                                   borderRadius: '6px',
                                   border: `2px solid ${itemStatusColor}`,
                                   boxShadow: `0 0 8px ${itemStatusColor}40`,
@@ -46909,7 +46909,7 @@ A1;Peça exemplo;10'
                                     style={{
                                       width: '100%',
                                       padding: '6px 8px',
-                                      backgroundColor: '#1a1a1a',
+                                      backgroundColor: '#141414',
                                       border: '1px solid #00ff00',
                                       borderRadius: '4px',
                                       color: '#fff',
