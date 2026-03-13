@@ -17076,14 +17076,12 @@ const nextF = familias.filter(x => x !== f)
                                     </div>
                                     {parentesDestaFamilia.map((p) => (
                                       <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', marginBottom: '6px', borderRadius: '6px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0,255,0,0.2)', flexWrap: 'nowrap' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0, width: '56px' }}>
-                                          <div style={{ width: '40px', height: '40px', borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(0,255,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a1a1a' }}>
-                                            {p.imagem ? <img src={p.imagem} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '18px', opacity: 0.5 }}>🖼</span>}
-                                          </div>
-                                          <label style={{ cursor: 'pointer', fontSize: '10px', color: '#00ff00', whiteSpace: 'nowrap' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0, width: '44px' }}>
+                                          <label style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(0,255,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a1a1a', cursor: 'pointer', margin: 0 }}>
                                             <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(ev) => { const file = ev.target.files?.[0]; if (file) { const r = new FileReader(); r.onload = () => { const next = parentesChecklist.map(x => x.id === p.id ? { ...x, imagem: r.result as string } : x); setParentesChecklist(next); saveData('nonato-parentes-checklist', next); }; r.readAsDataURL(file); } ev.target.value = ''; }} />
-                                            {safeT?.adicionarImagem || 'Imagem'}
+                                            {p.imagem ? <img src={p.imagem} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '16px', opacity: 0.5 }}>🖼</span>}
                                           </label>
+                                          <span style={{ fontSize: '9px', color: '#00ff00', whiteSpace: 'nowrap', textAlign: 'center' }}>{safeT?.adicionarImagem || 'Adicionar Imagem'}</span>
                                         </div>
                                         <div style={{ flex: 1, minWidth: '120px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                           {editingParenteId === p.id ? (
@@ -17404,7 +17402,7 @@ onKeyPress={(e) => {
                                         <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(ev) => { const file = ev.target.files?.[0]; if (file) { const r = new FileReader(); r.onload = () => { const next = gruposChecklist.map(x => x.id === (g as GrupoChecklist).id ? { ...x, imagem: r.result as string } : x); setGruposChecklist(next); saveData('nonato-grupos-checklist', next); }; r.readAsDataURL(file); } ev.target.value = ''; }} />
                                         {(g as GrupoChecklist).imagem ? <img src={(g as GrupoChecklist).imagem} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '16px', opacity: 0.5 }}>🖼</span>}
                                       </label>
-                                      <span style={{ fontSize: '9px', color: '#00ff00', whiteSpace: 'nowrap' }}>{safeT?.adicionarImagem || 'Imagem'}</span>
+                                      <span style={{ fontSize: '9px', color: '#00ff00', whiteSpace: 'nowrap', textAlign: 'center' }}>{safeT?.adicionarImagem || 'Adicionar Imagem'}</span>
                                     </div>
                                   )}
                                   {isEditing ? (
