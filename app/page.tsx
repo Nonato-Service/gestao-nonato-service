@@ -16781,7 +16781,7 @@ const nextF = familias.filter(x => x !== f)
           ? Array.from(new Set([...familiasChecklist, ...gruposChecklist.map(g => g.familia).filter(f => f && f.trim())])).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
           : [...familiasEquipamento].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
         return (
-          <div className="familias-grupos-panel" style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
+          <div className="familias-grupos-panel" style={{ padding: '30px', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
             {/* Cabeçalho no estilo Equipamentos / Visualizar equipamento */}
             <div style={{
               marginBottom: '30px',
