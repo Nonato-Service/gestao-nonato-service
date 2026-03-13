@@ -10,28 +10,34 @@ html {
   font-size: 16px;
 }
 
-/* Tablet e telemóvel: reduzir escala base para caber melhor no ecrã */
+/* Tablet e telemóvel: reduzir escala base para não ficar gigante no ecrã */
 @media (max-width: 1024px) {
-  html {
-    font-size: 15px;
-  }
-}
-
-@media (max-width: 768px) {
   html {
     font-size: 14px;
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   html {
     font-size: 12px;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   html {
     font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  html {
+    font-size: 9px;
   }
 }
 
@@ -666,12 +672,15 @@ html, body {
 
 /* Tablet (até 1024px) - horizontal e vertical */
 @media (max-width: 1024px) {
+  .app-layout {
+    font-size: 13px !important;
+  }
   .header {
-    padding: 30px 20px !important;
-    min-height: 110px !important;
+    padding: 24px 16px !important;
+    min-height: 90px !important;
   }
   .header h1 {
-    font-size: 26px !important;
+    font-size: 22px !important;
   }
   .sidebar {
     width: 240px !important;
@@ -726,6 +735,22 @@ html, body {
   .app-layout {
     flex-direction: column !important;
     max-width: 100vw !important;
+    font-size: 12px !important;
+    padding-top: calc(34px + env(safe-area-inset-top, 0)) !important;
+  }
+  /* Barra superior mais compacta no telemóvel/tablet */
+  .app-top-bar {
+    font-size: 12px !important;
+    padding: 6px 10px !important;
+  }
+  .app-top-bar button {
+    font-size: 11px !important;
+    padding: 5px 10px !important;
+  }
+  /* Conteúdo principal: texto e blocos não gigantes */
+  .main-content-area,
+  .tab-content-wrapper {
+    font-size: 12px !important;
   }
   /* Sidebar: altura limitada no telemóvel para não ocupar a tela toda - scroll interno */
   .sidebar {
@@ -854,6 +879,22 @@ html, body {
 
 /* Telemóvel (até 480px) - ainda mais compacto, 4 colunas */
 @media (max-width: 480px) {
+  .app-layout {
+    font-size: 11px !important;
+    padding-top: calc(30px + env(safe-area-inset-top, 0)) !important;
+  }
+  .main-content-area,
+  .tab-content-wrapper {
+    font-size: 11px !important;
+  }
+  .app-top-bar {
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+  }
+  .app-top-bar button {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
   .header {
     padding: 8px 6px !important;
     min-height: 44px !important;
