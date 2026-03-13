@@ -14,6 +14,15 @@ export async function GET(request: NextRequest) {
     const backupsDir = path.join(projectRoot, 'backups')
     const backupsFolder = path.resolve(backupsDir)
 
+    // Garantir que a pasta backups existe (criar se não existir)
+    if (!fs.existsSync(backupsDir)) {
+      try {
+        fs.mkdirSync(backupsDir, { recursive: true })
+      } catch (e) {
+        console.error('[backup-code/list] Erro ao criar pasta backups:', e)
+      }
+    }
+
     if (!fs.existsSync(backupsDir)) {
       return NextResponse.json({ backups: [], backupsFolder })
     }

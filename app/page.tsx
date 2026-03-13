@@ -6084,6 +6084,29 @@ export default function Dashboard() {
     }
   }
 
+  // Descarregar backup do código como ZIP para o PC (mais seguro: não perde mesmo que o servidor apague)
+  const handleDownloadBackupZip = async () => {
+    try {
+      const response = await fetch('/api/backup-code/download', { method: 'GET' })
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err.error || 'Erro ao gerar ZIP')
+      }
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `backup-codigo-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.zip`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      alert('✓ ZIP descarregado. Guarde o ficheiro no seu PC para não perder o código.')
+    } catch (error) {
+      alert('❌ Erro ao descarregar backup: ' + (error as Error).message)
+    }
+  }
+
   // Função para criar backup AUTOMÁTICO do código do programa
   const handleBackupCodigo = async () => {
     try {
@@ -16695,6 +16718,11 @@ const nextF = familias.filter(x => x !== f)
               <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
                 {safeT?.backupRestore || 'BACKUP E SEGURANÇA'}
               </h3>
+              {!isDemoMode && (
+                <p style={{ padding: '10px 12px', marginBottom: '15px', backgroundColor: 'rgba(0, 150, 0, 0.12)', border: '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '6px', color: '#90ee90', fontSize: '12px' }}>
+                  <strong>Para não perder o código:</strong> use «Descarregar backup (ZIP)» e guarde o ficheiro no seu PC. Assim o código fica seguro mesmo que o servidor seja reinstalado.
+                </p>
+              )}
               {isDemoMode && (
                 <p style={{ padding: '12px', marginBottom: '15px', backgroundColor: 'rgba(255, 165, 0, 0.15)', border: '1px solid rgba(255, 165, 0, 0.4)', borderRadius: '6px', color: '#ffa500', fontSize: '13px' }}>
                   Em modo demonstração o backup e restauração do código estão desativados. Para usar backup, abra a aplicação fora do link de demonstração.
@@ -16709,11 +16737,14 @@ const nextF = familias.filter(x => x !== f)
                   </button>
                 </div>
 
-                <div style={{ padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
+                <div style={{ padding: '15px', backgroundColor: '#2a2a2a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)', borderLeft: '4px solid #00ff00' }}>
                   <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupCodigoTitle || 'Backup do Código do Programa'}</strong>
                   <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>{safeT?.backupCodigoDescription || 'Faça backup de TODOS os arquivos do código fonte do programa'}</p>
-                  <button className="btn-primary" onClick={handleBackupCodigo} style={{ padding: '8px 15px', marginBottom: '10px' }} disabled={isDemoMode}>
+                  <button className="btn-primary" onClick={handleBackupCodigo} style={{ padding: '8px 15px', marginRight: '8px', marginBottom: '8px' }} disabled={isDemoMode}>
                     {safeT?.backupCodigoButton || 'Fazer Backup do Código'}
+                  </button>
+                  <button type="button" onClick={handleDownloadBackupZip} disabled={isDemoMode} style={{ padding: '8px 15px', marginBottom: '8px', background: 'rgba(0, 150, 255, 0.25)', border: '1px solid rgba(0, 150, 255, 0.6)', color: '#66b3ff', borderRadius: '6px', cursor: isDemoMode ? 'not-allowed' : 'pointer', fontWeight: '600' }}>
+                    📥 Descarregar backup (ZIP) para o PC
                   </button>
                 </div>
 
@@ -42938,6 +42969,11 @@ A1;Peça exemplo;10'
               <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
                 {safeT?.backupRestore || 'BACKUP E SEGURANÇA'}
               </h3>
+              {!isDemoMode && (
+                <p style={{ padding: '10px 12px', marginBottom: '15px', backgroundColor: 'rgba(0, 150, 0, 0.12)', border: '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '6px', color: '#90ee90', fontSize: '12px' }}>
+                  <strong>Para não perder o código:</strong> use «Descarregar backup (ZIP)» e guarde no seu PC.
+                </p>
+              )}
               {isDemoMode && (
                 <p style={{ padding: '12px', marginBottom: '15px', backgroundColor: 'rgba(255, 165, 0, 0.15)', border: '1px solid rgba(255, 165, 0, 0.4)', borderRadius: '6px', color: '#ffa500', fontSize: '13px' }}>
                   Em modo demonstração o backup está desativado.
@@ -42956,8 +42992,11 @@ A1;Peça exemplo;10'
                   <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupCodigoTitle || 'Backup do Código do Programa'}</strong>
                   <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>{safeT?.backupCodigoDescription || 'Faça backup de TODOS os arquivos do código fonte do programa'}</p>
                   <p style={{ fontSize: '12px', marginBottom: '8px', opacity: 0.8 }}><strong>Pasta dos backups:</strong> {codeBackupsFolder || (isDemoMode ? '—' : 'Atualize a lista.')}</p>
-                  <button className="btn-primary" onClick={handleBackupCodigo} style={{ padding: '8px 15px' }} disabled={isDemoMode}>
+                  <button className="btn-primary" onClick={handleBackupCodigo} style={{ padding: '8px 15px', marginRight: '8px', marginBottom: '8px' }} disabled={isDemoMode}>
                     {safeT?.backupCodigoButton || 'Fazer Backup do Código'}
+                  </button>
+                  <button type="button" onClick={handleDownloadBackupZip} disabled={isDemoMode} style={{ padding: '8px 15px', marginBottom: '8px', background: 'rgba(0, 150, 255, 0.25)', border: '1px solid rgba(0, 150, 255, 0.6)', color: '#66b3ff', borderRadius: '6px', cursor: isDemoMode ? 'not-allowed' : 'pointer', fontWeight: '600' }}>
+                    📥 Descarregar backup (ZIP) para o PC
                   </button>
                 </div>
               </div>
