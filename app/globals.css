@@ -1083,6 +1083,11 @@ body {
   padding-top: calc(48px + env(safe-area-inset-top, 0)) !important;
 }
 
+/* Sem barra superior (botão Administrador só na lateral): menos espaço no topo */
+.app-layout.app-layout-no-top-bar {
+  padding-top: env(safe-area-inset-top, 0) !important;
+}
+
 /* Barra de abas inferior: safe-area no telefone (evitar sobreposição com gestos/indicador) */
 .bottom-tabs-bar {
   padding-bottom: env(safe-area-inset-bottom, 0);

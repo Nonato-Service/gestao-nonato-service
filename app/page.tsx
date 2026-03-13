@@ -40286,14 +40286,13 @@ A1;Peça exemplo;10'
   }
 
   return (
-    <div className="app-layout" style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#1e1e1e', color: '#fff', paddingBottom: openTabs.length > 0 ? '54px' : '0', paddingTop: '48px' }}>
-      {/* Barra superior: em modo demo mostra aviso; sempre mostra atalho para Administrador / Backup (classe app-top-bar para safe-area no telefone/tablet) */}
-      <div className="app-top-bar" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '8px 16px', background: isDemoMode ? 'rgba(0, 255, 0, 0.15)' : 'rgba(0, 255, 0, 0.08)', borderBottom: '1px solid rgba(0, 255, 0, 0.4)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-        {isDemoMode && <span>🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Sem exportação nem backup</span>}
-        <button type="button" onClick={() => { handleButtonClick('open-administrador'); setTimeout(() => document.getElementById('admin-backup-seguranca')?.scrollIntoView({ behavior: 'smooth' }), 400); }} style={{ background: 'rgba(0,255,0,0.2)', border: '1px solid rgba(0,255,0,0.6)', color: '#00ff00', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}>
-          🔒 Administrador / Backup
-        </button>
-      </div>
+    <div className={`app-layout${!isDemoMode ? ' app-layout-no-top-bar' : ''}`} style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#1e1e1e', color: '#fff', paddingBottom: openTabs.length > 0 ? '54px' : '0', paddingTop: '48px' }}>
+      {/* Barra superior: apenas em modo demo mostra aviso (botão Administrador / Backup está na barra lateral) */}
+      {isDemoMode && (
+        <div className="app-top-bar" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '8px 16px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '1px solid rgba(0, 255, 0, 0.4)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <span>🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Sem exportação nem backup</span>
+        </div>
+      )}
       {/* Sidebar - estilos em globals.css (media queries para mobile) */}
       <div className="sidebar">
         {/* Logo NONATO SERVICE — logo ocupa 100% do contorno verde, borda mantida */}
