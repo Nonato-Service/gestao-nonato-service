@@ -6,30 +6,8 @@
 
 html {
   width: 100%;
-  min-height: 100%;
-  min-height: 100dvh;
-  height: 100%;
   overflow-x: hidden;
   font-size: 16px;
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-  /* Telemóvel: preencher ecrã e evitar saltos */
-  -webkit-tap-highlight-color: transparent;
-  /* Evitar scroll horizontal no celular */
-  max-width: 100%;
-  /* Fundo cinza escuro mate, sem brilho */
-  background-color: #121212;
-}
-
-/* Wrapper raiz: fundo cinza escuro mate */
-.nonato-root {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  background-color: #121212;
 }
 
 /* Tablet e telemóvel: reduzir escala base para caber melhor no ecrã */
@@ -58,31 +36,26 @@ html {
 }
 
 body {
-  background-color: #121212 !important;
+  background-color: #000000;
   color: #ffffff;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
-  min-height: 100dvh;
-  min-height: -webkit-fill-available;
   line-height: 1.6;
   width: 100%;
-  max-width: 100%;
   overflow-x: hidden;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  box-sizing: border-box;
 }
 /* Suavização de fonte no Firefox macOS - ignorado por outros browsers */
 
 .container {
   background-color: #2a2a2a;
   border-radius: 12px;
-  padding: 22px 24px;
-  margin: 16px 20px;
+  padding: 30px;
+  margin: 20px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.05);
   transition: all 0.3s ease;
@@ -94,16 +67,16 @@ body {
 }
 
 .header {
-  /* Cinza escuro mate, sem brilho */
-  background-color: #121212;
+  /* Fundo original (escuro) + cabeçalho maior */
+  background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
   border-bottom: 3px solid rgba(0, 255, 0, 0.45);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-  padding: 36px 40px;
-  min-height: 120px;
+  padding: 60px 70px;
+  min-height: 180px;
 }
 
 .header h1 {
-  font-size: 28px;
+  font-size: 44px;
   font-weight: 700;
   letter-spacing: -0.5px;
   /* Nome verde transparente + contorno verde */
@@ -123,14 +96,14 @@ body {
   margin: 0 auto;
 }
 
-/* Padrão igual Visualizar Equipamentos: contorno fino, verde opaco, texto branco, hover só brilho. Tamanho proporcional ao ecrã (computador). */
+/* Padrão igual Visualizar Equipamentos: contorno fino, verde opaco, texto branco, hover só brilho */
 .btn-primary {
   background: transparent;
   border: 1px solid rgba(0, 255, 0, 0.95);
   color: #fff !important;
-  padding: 10px 20px;
+  padding: 14px 28px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: box-shadow 0.2s ease, filter 0.2s ease;
@@ -138,8 +111,6 @@ body {
   letter-spacing: 0.5px;
   box-shadow: none;
   text-transform: none;
-  width: auto;
-  max-width: 100%;
 }
 
 .btn-primary:hover {
@@ -155,20 +126,15 @@ body {
 }
 
 .sidebar {
-  background-color: #121212 !important;
-  width: 260px;
+  background-color: #000000;
+  width: 280px;
   min-height: 100vh;
-  max-height: 100vh;
-  padding: 20px 14px;
+  padding: 30px 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 15px;
   border-right: 1px solid rgba(0, 255, 0, 0.1);
   box-shadow: 2px 0 15px rgba(0, 0, 0, 0.3);
-  overflow-y: auto;
-  overflow-x: hidden;
-  flex-shrink: 0;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* Sidebar botão verde: mesmo padrão Visualizar Equipamentos */
@@ -182,29 +148,9 @@ body {
   transition: box-shadow 0.2s ease, filter 0.2s ease;
 }
 
-/* Desktop: botões dentro de sidebar-action-buttons — texto em várias linhas, nunca cortar */
-.sidebar .sidebar-action-buttons {
-  overflow: visible;
-  min-height: 0;
-}
+/* Desktop: botões dentro de sidebar-action-buttons mantêm 100% (media queries alteram em tablet/mobile) */
 .sidebar .sidebar-action-buttons > button {
   width: 100%;
-  min-height: 44px;
-  white-space: normal;
-  word-break: break-word;
-  line-height: 1.35;
-  overflow: visible;
-  text-align: center;
-}
-/* Subgrupos (ex.: dentro de Gestão Industrial) também não cortar */
-.sidebar .sidebar-action-buttons .sidebar-action-buttons {
-  overflow: visible;
-}
-.sidebar .sidebar-action-buttons .sidebar-action-buttons > button {
-  white-space: normal;
-  word-break: break-word;
-  min-height: 40px;
-  overflow: visible;
 }
 
 .sidebar .btn-primary:hover {
@@ -248,7 +194,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(18, 18, 18, 0.97);
+  background-color: rgba(0, 0, 0, 0.85);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -260,7 +206,7 @@ body {
   .modal-overlay {
     -webkit-backdrop-filter: blur(5px);
     backdrop-filter: blur(5px);
-    background-color: rgba(18, 18, 18, 0.95);
+    background-color: rgba(0, 0, 0, 0.7);
   }
 }
 
@@ -276,8 +222,8 @@ body {
 .modal {
   background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
   border-radius: 16px;
-  padding: 28px 32px;
-  max-width: 600px;
+  padding: 40px;
+  max-width: 650px;
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
@@ -355,29 +301,28 @@ body {
 }
 
 .modal h2 {
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 700;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   color: #ffffff;
   letter-spacing: -0.5px;
   border-bottom: 2px solid rgba(0, 255, 0, 0.3);
-  padding-bottom: 12px;
+  padding-bottom: 15px;
 }
 
 .file-upload-label {
   display: inline-block;
-  padding: 12px 20px;
+  padding: 16px 28px;
   background: linear-gradient(135deg, rgba(0, 255, 0, 0.1) 0%, rgba(0, 255, 0, 0.05) 100%);
   border: 2px dashed #00ff00;
   color: #ffffff;
   border-radius: 10px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: center;
   width: 100%;
-  max-width: 320px;
   letter-spacing: 0.5px;
   box-shadow: 0 2px 10px rgba(0, 255, 0, 0.15);
 }
@@ -390,19 +335,18 @@ body {
   transform: translateY(-2px);
 }
 
-/* Botão vermelho: mesmo padrão Visualizar Equipamentos - texto branco, hover só brilho. No computador não ocupa a linha toda (só na sidebar). */
+/* Botão vermelho: mesmo padrão Visualizar Equipamentos - texto branco, hover só brilho */
 .btn-danger {
   background: transparent;
   border: 1px solid rgba(255, 68, 68, 0.9);
   color: #fff !important;
-  padding: 10px 20px;
+  padding: 14px 28px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: box-shadow 0.2s ease, filter 0.2s ease;
-  width: auto;
-  max-width: 100%;
+  width: 100%;
   letter-spacing: 0.5px;
   box-shadow: none;
 }
@@ -419,69 +363,14 @@ body {
   transform: translateY(0);
 }
 
-/* Botão Excluir compacto (ex.: lista demo 15 dias) — NUNCA ocupa a linha toda */
-button.btn-danger.btn-excluir-compact,
-.btn-danger.btn-excluir-compact {
-  padding: 3px 8px !important;
-  font-size: 10px !important;
-  min-width: 0 !important;
-  width: auto !important;
-  max-width: none !important;
-  flex: 0 0 auto !important;
-  flex-shrink: 0 !important;
-  flex-grow: 0 !important;
-  display: inline-block !important;
-}
-
-/* No telemóvel: Excluir compacto muito mais pequeno — texto pequeno ou só ícone */
-.btn-excluir-compact .btn-excluir-icon {
-  display: none;
-}
-@media (max-width: 768px) {
-  button.btn-danger.btn-excluir-compact,
-  .btn-danger.btn-excluir-compact {
-    padding: 2px 5px !important;
-    font-size: 9px !important;
-    line-height: 1.2 !important;
-    min-height: 0 !important;
-  }
-}
-@media (max-width: 480px) {
-  button.btn-danger.btn-excluir-compact,
-  .btn-danger.btn-excluir-compact {
-    padding: 2px 4px !important;
-    font-size: 8px !important;
-  }
-}
-/* Em ecrã muito pequeno: mostrar só ✕ em vez de "Excluir" para botão mínimo */
-@media (max-width: 600px) {
-  .btn-excluir-compact .btn-excluir-text {
-    display: none !important;
-  }
-  .btn-excluir-compact .btn-excluir-icon {
-    display: inline !important;
-    font-size: 12px;
-    line-height: 1;
-  }
-  button.btn-danger.btn-excluir-compact,
-  .btn-danger.btn-excluir-compact {
-    padding: 4px 6px !important;
-    font-size: 0 !important;
-    min-width: 24px;
-    min-height: 24px;
-  }
-}
-
-/* Barra inferior de abas - moderna, animada, laranja transparente - começa após a sidebar (260px) */
+/* Barra inferior de abas - moderna, animada, laranja transparente - começa após a sidebar (280px) */
 .bottom-tabs-bar {
   position: fixed;
   bottom: 0;
-  left: 260px;
+  left: 280px;
   right: 0;
   height: 54px;
-  padding-bottom: env(safe-area-inset-bottom, 0);
-  min-height: calc(54px + env(safe-area-inset-bottom, 0));
-  background-color: #121212;
+  background: linear-gradient(180deg, rgba(255, 165, 0, 0.15) 0%, rgba(255, 140, 0, 0.08) 50%, rgba(26, 26, 26, 0.98) 100%);
   border-top: 2px solid rgba(255, 165, 0, 0.7);
   border-left: 1px solid rgba(255, 165, 0, 0.25);
   border-right: 1px solid rgba(255, 165, 0, 0.25);
@@ -587,14 +476,14 @@ button.btn-danger.btn-excluir-compact,
 }
 
 ::-webkit-scrollbar-track {
-  background: #121212;
+  background: #1a1a1a;
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, #00ff00 0%, #00cc00 100%);
   border-radius: 5px;
-  border: 2px solid #121212;
+  border: 2px solid #1a1a1a;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -604,7 +493,7 @@ button.btn-danger.btn-excluir-compact,
 /* Firefox scrollbar */
 :root {
   scrollbar-width: thin;
-  scrollbar-color: #00ff00 #121212;
+  scrollbar-color: #00ff00 #1a1a1a;
 }
 
 .language-button {
@@ -616,14 +505,14 @@ button.btn-danger.btn-excluir-compact,
   box-shadow: 0 4px 15px rgba(0, 255, 0, 0.3) !important;
 }
 
-/* Botão Administrador: mesmo padrão Visualizar Equipamentos. Tamanho proporcional ao ecrã. */
+/* Botão Administrador: mesmo padrão Visualizar Equipamentos */
 .btn-administrador {
   background: transparent;
   border: 1px solid rgba(255, 68, 68, 0.9);
   color: #ffffff;
-  padding: 10px 20px;
+  padding: 14px 28px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: box-shadow 0.2s ease, filter 0.2s ease;
@@ -631,8 +520,6 @@ button.btn-danger.btn-excluir-compact,
   letter-spacing: 0.5px;
   box-shadow: none;
   text-transform: none;
-  width: auto;
-  max-width: 100%;
 }
 
 .btn-administrador:hover {
@@ -765,181 +652,68 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Tablet horizontal / geral (769px - 1024px) - layout lado a lado otimizado */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .app-layout {
-    flex-direction: row !important;
-    display: flex !important;
-  }
-  .app-layout .app-main {
-    flex: 1 1 0% !important;
-    min-width: 0 !important;
-    overflow: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
+/* Tablet (até 1024px) - horizontal e vertical */
+@media (max-width: 1024px) {
   .header {
-    padding: 20px 24px !important;
-    min-height: 72px !important;
+    padding: 30px 20px !important;
+    min-height: 110px !important;
   }
   .header h1 {
-    font-size: 20px !important;
+    font-size: 26px !important;
   }
   .sidebar {
-    width: 200px !important;
-    min-width: 200px !important;
-    max-width: 200px !important;
-    padding: 14px 10px !important;
-    flex-shrink: 0 !important;
-  }
-  .sidebar > div:first-child {
-    height: 100px !important;
-    min-height: 100px !important;
-    margin-bottom: 16px !important;
+    width: 240px !important;
+    min-width: 240px !important;
+    padding: 16px 12px !important;
   }
   .bottom-tabs-bar {
-    left: 200px !important;
+    left: 240px;
   }
   .container {
-    margin: 14px 18px !important;
-    padding: 18px 20px !important;
+    margin: 12px !important;
+    padding: 20px !important;
   }
   .modal {
-    width: 90% !important;
-    max-width: 560px !important;
-    padding: 24px 28px !important;
-    max-height: 88vh !important;
-  }
-  .modal h2 {
-    font-size: 18px !important;
+    width: 92% !important;
+    max-width: 100% !important;
+    padding: 24px !important;
+    max-height: 85vh;
   }
   .tab-content-wrapper {
-    padding: 20px 24px !important;
+    padding: 20px !important;
     max-width: 100% !important;
-    min-width: 0 !important;
   }
   .main-content-area {
-    padding: 20px 24px !important;
-    min-width: 0 !important;
+    padding: 20px !important;
   }
-  .tab-content-wrapper h1 {
-    font-size: 20px !important;
-  }
-  .tab-content-wrapper h3 {
-    font-size: 15px !important;
-  }
+  /* Sidebar: 1 coluna no tablet para o texto não ser cortado */
   .sidebar .sidebar-action-buttons {
     display: flex !important;
     flex-direction: column !important;
     flex-wrap: nowrap !important;
     gap: 8px !important;
-    overflow: visible !important;
   }
   .sidebar .sidebar-action-buttons > button {
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
     margin-bottom: 0 !important;
-    padding: 12px 10px !important;
-    font-size: 13px !important;
+    padding: 10px 10px !important;
+    font-size: 12px !important;
     box-sizing: border-box !important;
     white-space: normal !important;
     word-break: break-word !important;
-    line-height: 1.35 !important;
-    min-height: 48px !important;
+    line-height: 1.3 !important;
+    min-height: 40px !important;
     text-align: center !important;
-    overflow: visible !important;
-  }
-  .sidebar .sidebar-action-buttons .sidebar-action-buttons > button {
-    min-height: 44px !important;
-    overflow: visible !important;
-  }
-  .sidebar > div:not(:first-child) > button {
-    padding: 8px 10px !important;
-    font-size: 11px !important;
-    min-height: 34px !important;
-  }
-  .btn-primary, .btn-danger {
-    padding: 10px 16px !important;
-    font-size: 13px !important;
-  }
-  .bottom-tab-item {
-    min-width: 120px !important;
-    max-width: 180px !important;
-    font-size: 12px !important;
-    padding: 8px 12px !important;
-  }
-  .bottom-tabs-bar {
-    height: 50px !important;
-    min-height: 50px !important;
   }
 }
 
-/* Tablet 769-1024px em portrait (ex.: iPad Pro) - sidebar mais estreita para dar mais espaço */
-@media (min-width: 769px) and (max-width: 1024px) and (orientation: portrait) {
-  .sidebar {
-    width: 180px !important;
-    min-width: 180px !important;
-    max-width: 180px !important;
-    padding: 12px 8px !important;
-  }
-  .sidebar > div:first-child {
-    height: 88px !important;
-    min-height: 88px !important;
-  }
-  .bottom-tabs-bar {
-    left: 180px !important;
-  }
-  .tab-content-wrapper,
-  .main-content-area {
-    padding: 16px 20px !important;
-  }
-}
-
-/* Tablet (até 1024px) - tamanho de fonte base */
-@media (max-width: 1024px) {
-  html {
-    font-size: 15px;
-  }
-}
-
-/* Celular e telas pequenas (até 768px) - base para vertical/coluna */
+/* Celular e telas pequenas (até 768px) */
 @media (max-width: 768px) {
-  html, body {
-    min-height: 100dvh !important;
-    min-height: -webkit-fill-available !important;
-    height: auto !important;
-    overflow-x: hidden !important;
-    position: relative !important;
-  }
-  .nonato-root {
-    min-height: 100dvh !important;
-    min-height: -webkit-fill-available !important;
-  }
-  .nonato-root > * {
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    max-width: 100% !important;
-  }
   .app-layout {
     flex-direction: column !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-height: 100dvh !important;
-    min-height: 100vh !important;
-    min-height: -webkit-fill-available !important;
-    box-sizing: border-box !important;
-    overflow-x: hidden !important;
-  }
-  /* Espaço para a barra inferior de abas (inclui safe-area do telemóvel) */
-  .app-layout.has-bottom-tabs {
-    padding-bottom: calc(54px + env(safe-area-inset-bottom, 0)) !important;
-  }
-  /* Área principal pode encolher e fazer scroll */
-  .app-layout .app-main {
-    min-height: 0 !important;
-    overflow: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    flex: 1 1 auto !important;
+    max-width: 100vw !important;
   }
   /* Sidebar: altura limitada no telemóvel para não ocupar a tela toda - scroll interno */
   .sidebar {
@@ -958,8 +732,6 @@ html, body {
   .bottom-tabs-bar {
     left: 0 !important;
     right: 0 !important;
-    padding-left: env(safe-area-inset-left, 0);
-    padding-right: env(safe-area-inset-right, 0);
   }
   .header {
     padding: 10px 8px !important;
@@ -992,24 +764,22 @@ html, body {
     width: auto !important;
     max-width: 100% !important;
   }
-  /* Sidebar: botões em coluna única no telemóvel — texto em várias linhas, nunca cortar */
+  /* Sidebar: botões em coluna única no telemóvel para o texto não ser cortado */
   .sidebar .btn-primary,
   .sidebar .btn-administrador,
   .sidebar button[class*="btn"] {
-    min-height: 40px !important;
+    min-height: 36px !important;
     padding: 8px 10px !important;
     font-size: 11px !important;
     white-space: normal !important;
     word-break: break-word !important;
-    line-height: 1.35 !important;
-    overflow: visible !important;
+    line-height: 1.3 !important;
   }
   .sidebar .sidebar-action-buttons {
     display: flex !important;
     flex-direction: column !important;
     flex-wrap: nowrap !important;
     gap: 6px !important;
-    overflow: visible !important;
   }
   .sidebar .sidebar-action-buttons > button {
     width: 100% !important;
@@ -1018,17 +788,12 @@ html, body {
     margin-bottom: 0 !important;
     padding: 8px 8px !important;
     font-size: 11px !important;
-    min-height: 44px !important;
+    min-height: 36px !important;
     box-sizing: border-box !important;
-    line-height: 1.35 !important;
+    line-height: 1.3 !important;
     white-space: normal !important;
     word-break: break-word !important;
     text-align: center !important;
-    overflow: visible !important;
-  }
-  .sidebar .sidebar-action-buttons .sidebar-action-buttons > button {
-    min-height: 40px !important;
-    overflow: visible !important;
   }
   /* Botões de grupo (GESTÃO TÉCNICA, etc): compactos */
   .sidebar > div:not(:first-child) > button {
@@ -1048,12 +813,8 @@ html, body {
   .tab-content-wrapper {
     padding: 8px !important;
     max-width: 100% !important;
-    width: 100% !important;
-    flex: 1 1 auto !important;
+    flex: 1 !important;
     min-height: 0 !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
-    overflow-x: hidden !important;
   }
   .main-content-area {
     padding: 8px !important;
@@ -1079,84 +840,7 @@ html, body {
   }
 }
 
-/* Tablet vertical (481px - 768px) - sobrepõe 768px com mais espaço e legibilidade */
-@media (min-width: 481px) and (max-width: 768px) {
-  .header {
-    padding: 12px 14px !important;
-    min-height: 56px !important;
-  }
-  .header h1 {
-    font-size: 18px !important;
-  }
-  .sidebar {
-    max-height: 50vh !important;
-    padding: 12px 10px !important;
-    border-bottom: 2px solid rgba(0, 255, 0, 0.2) !important;
-  }
-  .sidebar > div:first-child {
-    height: 72px !important;
-    min-height: 72px !important;
-    margin-bottom: 10px !important;
-  }
-  .sidebar .sidebar-action-buttons > button,
-  .sidebar .btn-primary,
-  .sidebar .btn-administrador {
-    min-height: 42px !important;
-    padding: 10px 12px !important;
-    font-size: 12px !important;
-  }
-  .sidebar > div:not(:first-child) > button {
-    padding: 8px 10px !important;
-    font-size: 10px !important;
-    min-height: 32px !important;
-  }
-  .tab-content-wrapper {
-    padding: 14px 16px !important;
-  }
-  .main-content-area {
-    padding: 14px 16px !important;
-    min-height: 45vh !important;
-  }
-  .tab-content-wrapper h1 {
-    font-size: 18px !important;
-  }
-  .tab-content-wrapper h3 {
-    font-size: 14px !important;
-  }
-  .container {
-    margin: 10px 12px !important;
-    padding: 14px 16px !important;
-  }
-  .modal {
-    width: 94% !important;
-    padding: 20px 24px !important;
-    max-height: 88vh !important;
-  }
-  .modal h2 {
-    font-size: 17px !important;
-  }
-  .btn-primary, .btn-danger {
-    padding: 10px 14px !important;
-    font-size: 12px !important;
-  }
-  .bottom-tab-item {
-    min-width: 72px !important;
-    max-width: 120px !important;
-    font-size: 11px !important;
-    padding: 6px 10px !important;
-  }
-  .mobile-sticky-toolbar {
-    padding: 10px 12px !important;
-  }
-  .mobile-toolbar-btn {
-    min-width: 60px !important;
-    max-width: 85px !important;
-    min-height: 38px !important;
-    font-size: 11px !important;
-  }
-}
-
-/* Telemóvel (até 480px) - ainda mais compacto */
+/* Telemóvel (até 480px) - ainda mais compacto, 4 colunas */
 @media (max-width: 480px) {
   .header {
     padding: 8px 6px !important;
@@ -1263,11 +947,11 @@ html, body {
 @media (max-width: 900px) {
   html, body {
     overflow-x: hidden !important;
-    max-width: 100% !important;
+    max-width: 100vw !important;
   }
   .app-layout {
     width: 100% !important;
-    max-width: 100% !important;
+    max-width: 100vw !important;
   }
   .app-layout > * {
     max-width: 100% !important;
@@ -1299,7 +983,7 @@ body {
     flex-wrap: wrap;
     gap: 6px;
     padding: 8px 10px;
-    background: #121212;
+    background: #1a1a1a;
     border: 2px solid rgba(0, 255, 0, 0.3);
     border-radius: 6px;
     margin: -8px -8px 12px -8px;
@@ -1346,26 +1030,10 @@ body {
   .pwa-update-banner {
     padding: 12px 16px !important;
     font-size: 14px !important;
-    padding-top: calc(12px + env(safe-area-inset-top, 0)) !important;
-    left: env(safe-area-inset-left, 0) !important;
-    right: env(safe-area-inset-right, 0) !important;
   }
   .pwa-update-banner button {
     padding: 10px 20px !important;
     font-size: 13px !important;
-  }
-  /* Faixa verde modo demo: no telemóvel mais compacta e com safe-area */
-  .demo-top-bar {
-    padding-top: calc(10px + env(safe-area-inset-top, 0)) !important;
-    padding-left: calc(12px + env(safe-area-inset-left, 0)) !important;
-    padding-right: calc(12px + env(safe-area-inset-right, 0)) !important;
-    left: 0 !important;
-    right: 0 !important;
-    font-size: 12px !important;
-    min-height: 44px !important;
-  }
-  .app-layout.has-demo-bar {
-    padding-top: calc(50px + env(safe-area-inset-top, 0)) !important;
   }
 }
 

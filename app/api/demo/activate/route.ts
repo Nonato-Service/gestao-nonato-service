@@ -7,14 +7,8 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   const startDate = new Date().toISOString()
-  // Redirecionar para /?from=demo para o cliente saber que veio do link demo (senão ao abrir / entramos sempre em modo normal)
-  const redirectUrl = new URL('/', request.url)
-  redirectUrl.searchParams.set('from', 'demo')
-  if (redirectUrl.hostname === '0.0.0.0') {
-    redirectUrl.hostname = 'localhost'
-    redirectUrl.protocol = 'http:'
-  }
-  const response = NextResponse.redirect(redirectUrl.toString(), 302)
+  const origin = request.nextUrl.origin
+  const response = NextResponse.redirect(origin + '/', 302)
   response.cookies.set('nonato_demo', '1', {
     path: '/',
     maxAge: COOKIE_MAX_AGE,

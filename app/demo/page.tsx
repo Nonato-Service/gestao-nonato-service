@@ -2,16 +2,6 @@
 
 import React from 'react'
 
-function getActivateUrl(): string {
-  if (typeof window === 'undefined') return '/api/demo/activate'
-  const { protocol, hostname, port } = window.location
-  if (hostname === '0.0.0.0') {
-    const p = port || (protocol === 'https:' ? '443' : '80')
-    return `${protocol === 'https:' ? 'http' : 'http'}://localhost:${p}/api/demo/activate`
-  }
-  return '/api/demo/activate'
-}
-
 export default function DemoWelcomePage() {
   return (
     <div
@@ -71,24 +61,15 @@ export default function DemoWelcomePage() {
             color: 'rgba(255,255,255,0.7)',
             fontSize: '0.95rem',
             lineHeight: 1.5,
-            marginBottom: '12px',
-          }}
-        >
-          Os dados do teste <strong>não são guardados no nosso banco de dados</strong> — ficam numa área isolada apenas para si. Ao fim de 15 dias o acesso é bloqueado automaticamente.
-        </p>
-        <p
-          style={{
-            color: 'rgba(255,255,255,0.6)',
-            fontSize: '0.9rem',
-            lineHeight: 1.5,
             marginBottom: '32px',
           }}
         >
-          Sem exportação nem backup. Ao clicar em &quot;Aceitar e entrar&quot;, concorda com estes termos.
+          Os dados desta demonstração ficam isolados e não afetam outros utilizadores. Ao clicar em
+          &quot;Aceitar e entrar&quot;, concorda com estes termos.
         </p>
-        {/* Link: em 0.0.0.0 usa localhost para evitar NS_ERROR_CONNECTION_REFUSED */}
+        {/* Link direto para forçar pedido completo e gravação dos cookies no browser */}
         <a
-          href={getActivateUrl()}
+          href="/api/demo/activate"
           style={{
             display: 'inline-block',
             padding: '14px 32px',
