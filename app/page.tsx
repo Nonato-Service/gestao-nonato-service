@@ -2290,7 +2290,7 @@ export default function Dashboard() {
     const t = safeT as any
     const titles: Record<TabType, string> = {
       'gestores': t?.gestoresTitle || 'Gestores e Técnicos',
-      'equipamentos': t?.equipamentos || 'Equipamentos',
+      'equipamentos': t?.equipamentos || 'Equipamentos do Armazém',
       'familias-grupos': t?.familiasGruposTitle || 'Cadastro de Famílias e Grupos para Checklist',
       'familias-grupos-equipamentos': t?.familiasGruposEquipamentosTitle || 'Cadastro de Famílias e Grupos para os Equipamentos',
       'pre-checklist': t?.preChecklistTitle || 'PRE CHECKLIST',
@@ -43914,7 +43914,7 @@ A1;Peça exemplo;10'
       {showEquipamentosModal && (
         <div className="modal-overlay" onClick={() => setShowEquipamentosModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1000px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2>{safeT?.equipamentosTitle || 'Cadastro de Equipamentos no Armazém'}</h2>
+            <h2>{safeT?.equipamentosTitle || 'Equipamentos do Armazém'}</h2>
             
             <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
               <button className="btn-primary" onClick={handleAddEquipamento}>
