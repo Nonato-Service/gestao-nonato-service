@@ -10,34 +10,51 @@ html {
   font-size: 16px;
 }
 
+/* Evitar inflação de texto no Android/iOS */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 /* Tablet e telemóvel: reduzir escala base para não ficar gigante no ecrã */
 @media (max-width: 1024px) {
   html {
-    font-size: 14px;
+    font-size: 13px;
   }
 }
 
 @media (max-width: 768px) {
   html {
-    font-size: 12px;
+    font-size: 11px;
+  }
+  /* Android/Chrome: zoom reduz TUDO (tabelas, botões, texto, padding) — Firefox ignora */
+  html {
+    zoom: 0.82;
   }
 }
 
 @media (max-width: 600px) {
   html {
-    font-size: 11px;
+    font-size: 10px;
   }
 }
 
 @media (max-width: 480px) {
   html {
-    font-size: 10px;
+    font-size: 9px;
+  }
+  /* Telemóvel Android: zoom ainda mais para nada ficar gigante */
+  html {
+    zoom: 0.76;
   }
 }
 
 @media (max-width: 360px) {
   html {
-    font-size: 9px;
+    font-size: 8px;
+  }
+  html {
+    zoom: 0.72;
   }
 }
 
@@ -670,10 +687,23 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Tablet (até 1024px) - horizontal e vertical */
+/* Tablet (até 1024px) - horizontal e vertical — Android tablet também fica menor */
 @media (max-width: 1024px) {
+  html {
+    zoom: 0.9;
+  }
+  @supports not (zoom: 1) {
+    .app-layout {
+      transform: scale(0.9);
+      transform-origin: top center;
+      width: 111.2% !important;
+      min-width: 111.2% !important;
+      min-height: 111.2vh !important;
+      margin-left: -5.6% !important;
+    }
+  }
   .app-layout {
-    font-size: 13px !important;
+    font-size: 12px !important;
   }
   .header {
     padding: 24px 16px !important;
@@ -732,10 +762,21 @@ html, body {
 
 /* Celular e telas pequenas (até 768px) */
 @media (max-width: 768px) {
+  /* Firefox Android: não suporta zoom — usar scale para reduzir tudo */
+  @supports not (zoom: 1) {
+    .app-layout {
+      transform: scale(0.82);
+      transform-origin: top center;
+      width: 122% !important;
+      min-width: 122% !important;
+      min-height: 122vh !important;
+      margin-left: -11% !important;
+    }
+  }
   .app-layout {
     flex-direction: column !important;
     max-width: 100vw !important;
-    font-size: 12px !important;
+    font-size: 11px !important;
     padding-top: calc(34px + env(safe-area-inset-top, 0)) !important;
   }
   /* Barra superior mais compacta no telemóvel/tablet */
@@ -750,7 +791,7 @@ html, body {
   /* Conteúdo principal: texto e blocos não gigantes */
   .main-content-area,
   .tab-content-wrapper {
-    font-size: 12px !important;
+    font-size: 11px !important;
   }
   /* Sidebar: altura limitada no telemóvel para não ocupar a tela toda - scroll interno */
   .sidebar {
@@ -879,13 +920,22 @@ html, body {
 
 /* Telemóvel (até 480px) - ainda mais compacto, 4 colunas */
 @media (max-width: 480px) {
+  @supports not (zoom: 1) {
+    .app-layout {
+      transform: scale(0.76);
+      width: 132% !important;
+      min-width: 132% !important;
+      min-height: 132vh !important;
+      margin-left: -16% !important;
+    }
+  }
   .app-layout {
-    font-size: 11px !important;
+    font-size: 10px !important;
     padding-top: calc(30px + env(safe-area-inset-top, 0)) !important;
   }
   .main-content-area,
   .tab-content-wrapper {
-    font-size: 11px !important;
+    font-size: 10px !important;
   }
   .app-top-bar {
     font-size: 11px !important;
@@ -996,14 +1046,13 @@ html, body {
   box-sizing: border-box;
 }
 
-/* Evitar scroll horizontal em ecrãs pequenos */
+/* Evitar scroll horizontal em ecrãs pequenos (não forçar width 100% para não quebrar scale no Firefox) */
 @media (max-width: 900px) {
   html, body {
     overflow-x: hidden !important;
     max-width: 100vw !important;
   }
   .app-layout {
-    width: 100% !important;
     max-width: 100vw !important;
   }
   .app-layout > * {
