@@ -6097,11 +6097,12 @@ export default function Dashboard() {
 
       if (response.ok) {
         alert((t.codeBackupCreatedSuccess || '✓ BACKUP DO CÓDIGO CRIADO COM SUCESSO!\n\nLocalização: {path}\nArquivos salvos: {count}\n\nO backup está salvo na pasta "backups" do projeto.').replace('{path}', result.backupPath).replace('{count}', String(result.filesCount)))
+        loadCodeBackups()
       } else {
         throw new Error(result.error || 'Erro ao criar backup')
       }
     } catch (error) {
-      alert('❌ ' + t.errorCreatingCodeBackup + ': ' + (error as Error).message)
+      alert('❌ ' + (t.errorCreatingCodeBackup || 'Erro ao criar backup do código') + ': ' + (error as Error).message)
       console.error('Erro no backup:', error)
     }
   }

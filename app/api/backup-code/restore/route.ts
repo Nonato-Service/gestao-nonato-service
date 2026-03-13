@@ -3,6 +3,18 @@ import fs from 'fs'
 import path from 'path'
 import { getDemoContext } from '../../data/demo-context'
 
+function getProjectRoot(): string {
+  const cwd = path.resolve(process.cwd())
+  if (fs.existsSync(path.join(cwd, 'package.json'))) {
+    return cwd
+  }
+  const parent = path.join(cwd, '..')
+  if (parent !== cwd && fs.existsSync(path.join(parent, 'package.json'))) {
+    return parent
+  }
+  return cwd
+}
+
 const itemsToRestore = [
   'app',
   'public',
@@ -29,7 +41,7 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       )
     }
-    const projectRoot = process.cwd()
+    const projectRoot = getProjectRoot()
     const backupsDir = path.join(projectRoot, 'backups')
     const body = await request.json()
     const { backupPath: rawBackupPath } = body || {}

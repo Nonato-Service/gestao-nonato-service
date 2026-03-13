@@ -3,13 +3,25 @@ import fs from 'fs'
 import path from 'path'
 import { getDemoContext } from '../../data/demo-context'
 
+function getProjectRoot(): string {
+  const cwd = path.resolve(process.cwd())
+  if (fs.existsSync(path.join(cwd, 'package.json'))) {
+    return cwd
+  }
+  const parent = path.join(cwd, '..')
+  if (parent !== cwd && fs.existsSync(path.join(parent, 'package.json'))) {
+    return parent
+  }
+  return cwd
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { isDemo } = getDemoContext(request)
     if (isDemo) {
       return NextResponse.json({ backups: [] }, { status: 200 })
     }
-    const projectRoot = process.cwd()
+    const projectRoot = getProjectRoot()
     const backupsDir = path.join(projectRoot, 'backups')
 
     if (!fs.existsSync(backupsDir)) {
@@ -22,7 +34,7 @@ export async function GET(request: NextRequest) {
         const backupPath = path.join(backupsDir, item)
         const stat = fs.statSync(backupPath)
         const metadataPath = path.join(backupPath, 'metadata.json')
-        let metadata = null
+        let metadata: { timestamp?: string; filesCount?: number } | null = null
         if (fs.existsSync(metadataPath)) {
           try {
             metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'))
@@ -35,6 +47,8 @@ export async function GET(request: NextRequest) {
           path: backupPath,
           created: stat.birthtime.toISOString(),
           modified: stat.mtime.toISOString(),
+          timestamp: metadata?.timestamp || stat.birthtime.toISOString(),
+          filesCount: metadata?.filesCount ?? 0,
           metadata
         }
       })

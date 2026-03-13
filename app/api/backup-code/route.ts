@@ -5,6 +5,19 @@ import { getDemoContext } from '../data/demo-context'
 
 export const runtime = 'nodejs'
 
+// Raiz do projeto (onde está package.json e a pasta backups)
+function getProjectRoot(): string {
+  const cwd = path.resolve(process.cwd())
+  if (fs.existsSync(path.join(cwd, 'package.json'))) {
+    return cwd
+  }
+  const parent = path.join(cwd, '..')
+  if (parent !== cwd && fs.existsSync(path.join(parent, 'package.json'))) {
+    return parent
+  }
+  return cwd
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { isDemo } = getDemoContext(request)
@@ -14,15 +27,24 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       )
     }
-    const projectRoot = process.cwd()
+    const projectRoot = path.resolve(getProjectRoot())
+    const backupsBase = path.join(projectRoot, 'backups')
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-    const backupDir = path.join(projectRoot, 'backups', `code-backup-${timestamp}`)
-    
-    // Criar diretório de backup
-    if (!fs.existsSync(path.join(projectRoot, 'backups'))) {
-      fs.mkdirSync(path.join(projectRoot, 'backups'), { recursive: true })
+    const backupDir = path.join(backupsBase, `code-backup-${timestamp}`)
+
+    // Criar diretório de backup (garantir que a pasta backups existe)
+    try {
+      if (!fs.existsSync(backupsBase)) {
+        fs.mkdirSync(backupsBase, { recursive: true })
+      }
+      fs.mkdirSync(backupDir, { recursive: true })
+    } catch (dirError: any) {
+      console.error('Erro ao criar pasta backups:', dirError)
+      return NextResponse.json(
+        { error: 'Não foi possível criar a pasta "backups". Verifique permissões de escrita em: ' + backupsBase + ' — ' + (dirError?.message || String(dirError)) },
+        { status: 500 }
+      )
     }
-    fs.mkdirSync(backupDir, { recursive: true })
 
     // Lista de arquivos e pastas importantes
     const itemsToBackup = [
@@ -253,6 +275,7 @@ Para restaurar o histórico de comandos:
       success: true,
       message: 'Backup criado com sucesso!',
       backupPath: backupDir,
+      backupsFolder: backupsBase,
       filesCount: backedUpFiles.length,
       historyFilesCount: backedUpHistoryFiles.length,
       includesCommandHistory: backedUpHistoryFiles.length > 0
@@ -268,7 +291,7 @@ Para restaurar o histórico de comandos:
 
 export async function GET(request: NextRequest) {
   try {
-    const projectRoot = process.cwd()
+    const projectRoot = path.resolve(getProjectRoot())
     const backupsDir = path.join(projectRoot, 'backups')
     
     if (!fs.existsSync(backupsDir)) {
