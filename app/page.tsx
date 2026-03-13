@@ -16805,7 +16805,7 @@ const nextF = familias.filter(x => x !== f)
                     {tab.type === 'familias-grupos-equipamentos' ? (safeT?.familiasGruposEquipamentosTitle || 'CADASTRO DE FAMÍLIAS E GRUPOS PARA OS EQUIPAMENTOS') : (safeT?.familiasGruposTitle || 'FAMÍLIAS E GRUPOS')}
                   </h1>
                   <p style={{ margin: 0, fontSize: '14px', color: '#ccc', opacity: 0.9 }}>
-                    {safeT?.familiasGruposDesc || 'Famílias são categorias; grupos são subdivisões. Selecione uma família à esquerda para gerir os grupos.'}
+                    {safeT?.familiasGruposDesc || 'Famílias são categorias; grupos são subdivisões. Selecione uma família no painel acima para gerir os grupos abaixo.'}
                   </p>
                 </div>
                 <button
@@ -16834,9 +16834,10 @@ const nextF = familias.filter(x => x !== f)
               </div>
             </div>
 
-            {/* Área de dois painéis — metade para Famílias, metade para Grupos */}
+            {/* Área de dois painéis — um em cima (Famílias), outro em baixo (Grupos), cada um a 100% da largura */}
             <div style={{
               display: 'flex',
+              flexDirection: 'column',
               gap: '0',
               minHeight: '500px',
               backgroundColor: '#1a1a1a',
@@ -16844,14 +16845,13 @@ const nextF = familias.filter(x => x !== f)
               border: '1px solid rgba(0, 255, 0, 0.2)',
               overflow: 'hidden'
             }}>
-              {/* PAINEL ESQUERDO: Lista de famílias (50%) */}
+              {/* PAINEL SUPERIOR: Lista de famílias (largura total) */}
               <div style={{
-                flex: 1,
-                minWidth: '300px',
-                maxWidth: '50%',
+                width: '100%',
+                minHeight: '280px',
                 display: 'flex',
                 flexDirection: 'column',
-                borderRight: '2px solid rgba(0, 255, 0, 0.2)',
+                borderBottom: '2px solid rgba(0, 255, 0, 0.2)',
                 backgroundColor: '#1a1a1a',
                 overflow: 'hidden'
               }}>
@@ -17145,10 +17145,11 @@ const nextF = familias.filter(x => x !== f)
                 </div>
               </div>
 
-              {/* PAINEL DIREITO: Grupos da família selecionada (50%) */}
+              {/* PAINEL INFERIOR: Grupos da família selecionada (largura total) */}
               <div id="grupos-familia-panel" style={{
                 flex: 1,
-                minWidth: '300px',
+                width: '100%',
+                minHeight: '280px',
                 display: 'flex',
                 flexDirection: 'column',
                 backgroundColor: '#1a1a1a',
@@ -17170,8 +17171,8 @@ const nextF = familias.filter(x => x !== f)
                     </h3>
                     <p style={{ margin: 0, fontSize: '14px', color: '#ccc', maxWidth: '320px', lineHeight: 1.5 }}>
                       {familiasList.length === 0
-                        ? (safeT?.cadastreFamiliaPrimeiro || 'Adicione uma família no painel à esquerda para começar.')
-                        : (safeT?.selecioneFamiliaEsquerda || 'Selecione uma família na lista à esquerda para ver e gerir os grupos aqui.')}
+                        ? (safeT?.cadastreFamiliaPrimeiro || 'Adicione uma família no painel acima para começar.')
+                        : (safeT?.selecioneFamiliaEsquerda || 'Selecione uma família no painel acima para ver e gerir os grupos aqui.')}
                     </p>
                   </div>
                 ) : (() => {
