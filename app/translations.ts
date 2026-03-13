@@ -228,6 +228,7 @@ export const translations = {
     adicionarEmFamiliasGruposEquipamentos: 'Adicione grupos em Cadastro de Famílias e Grupos para os Equipamentos.',
     familiasGruposDesc: 'Cadastre famílias e grupos que serão usados no cadastro de equipamentos.',
     add: 'Adicionar',
+    nomeDaFamilia: 'Nome da família',
     novaFamilia: 'Nome da nova família...',
     nenhumaFamilia: 'Nenhuma família. Adicione uma acima.',
     gruposPorFamilia: 'Grupos da família',

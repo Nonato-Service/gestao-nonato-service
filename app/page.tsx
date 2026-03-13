@@ -14300,10 +14300,8 @@ export default function Dashboard() {
             overflow: 'hidden'
           }}>
             <div style={{ padding: '16px', borderBottom: '2px solid rgba(0, 255, 0, 0.2)', flexShrink: 0, minWidth: 0 }}>
-              <h3 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: 600, color: '#00ff00' }}>
-                {(safeT as any)?.manuaisFamiliasLabel || 'Famílias'}
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '240px', boxSizing: 'border-box' }}>
+              <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', gap: '10px', width: '100%', minWidth: 0 }}>
+                <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#00ff00', flexShrink: 0 }}>{(safeT as any)?.manuaisFamiliasLabel || 'Famílias'}</h3>
                 <input
                   type="text"
                   value={novaFamiliaManuais}
@@ -14322,7 +14320,7 @@ export default function Dashboard() {
                     }
                   }}
                   style={{
-                    width: '100%',
+                    flex: 1,
                     minWidth: 0,
                     padding: '10px 12px',
                     background: '#1a1a1a',
@@ -14347,7 +14345,7 @@ export default function Dashboard() {
                       saveData('nonato-manuais-familias-grupos', { familias: next, grupos: grupos, modelos: manuaisModelos })
                     }
                   }}
-                  style={{ padding: '10px 16px', whiteSpace: 'nowrap', alignSelf: 'flex-start', minWidth: '100px' }}
+                  style={{ padding: '10px 16px', whiteSpace: 'nowrap', flexShrink: 0, minWidth: '90px' }}
                 >
                   {(safeT as any)?.manuaisAdicionar || 'Adicionar'}
                 </button>
@@ -16879,17 +16877,17 @@ const nextF = familias.filter(x => x !== f)
             </div>
             )}
           </div>
-        )
+        );
       
       case 'familias-grupos':
       case 'familias-grupos-equipamentos': {
         const isChecklist = tab.type === 'familias-grupos'
         const familiasList = isChecklist
           ? Array.from(new Set([...familiasChecklist, ...gruposChecklist.map(g => g.familia).filter(f => f && f.trim())])).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-          : [...familiasEquipamento].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+          : [...familiasEquipamento].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
         return (
           <div style={{ width: '100%', boxSizing: 'border-box', padding: '0 24px' }}>
-          <div className="familias-grupos-panel" style={{ padding: '40px', maxWidth: '1920px', width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
+            <div className="familias-grupos-panel" style={{ padding: '40px', maxWidth: '1920px', width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
             {/* Cabeçalho no estilo Equipamentos / Visualizar equipamento */}
             <div style={{
               marginBottom: '30px',
@@ -16968,10 +16966,19 @@ const nextF = familias.filter(x => x !== f)
                   borderBottom: '2px solid rgba(0, 255, 0, 0.2)',
                   backgroundColor: '#1a1a1a'
                 }}>
-                  <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'nowrap' }}>
-                    <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.5px', flexShrink: 0 }}>{safeT?.familia || 'Famílias'}</h3>
-                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '10px', flexWrap: 'nowrap', flexShrink: 0 }}>
-                      <label style={{ fontSize: '13px', color: '#00ff00', fontWeight: 600, whiteSpace: 'nowrap' }}>{safeT?.novaFamilia || 'Nova família'}</label>
+                  {/* Uma única linha: FAMÍLIA | NOME DA FAMÍLIA (campo) | ADICIONAR — sem quebrar */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    flexWrap: 'nowrap',
+                    alignItems: 'center',
+                    gap: '20px',
+                    width: '100%',
+                    minWidth: 0
+                  }}>
+                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.5px', flexShrink: 0 }}>{safeT?.familia || 'Famílias'}</h3>
+                    <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                      <label style={{ fontSize: '13px', color: '#00ff00', fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}>{safeT?.nomeDaFamilia || safeT?.novaFamilia || 'Nome da família'}</label>
                       <input
                         type="text"
                         value={novaFamiliaEquipamento}
@@ -16997,33 +17004,33 @@ const nextF = familias.filter(x => x !== f)
                             }
                           }
                         }}
-                        style={{ width: '200px', minWidth: '120px', height: '40px', padding: '0 12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', flexShrink: 0 }}
+                        style={{ flex: 1, minWidth: '120px', height: '40px', padding: '0 12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', boxSizing: 'border-box' }}
                       />
-                      <button
-                        className="btn-primary"
-                        onClick={() => {
-                          const nome = novaFamiliaEquipamento.trim()
-                          if (nome && !familiasList.includes(nome)) {
-                            if (isChecklist) {
-                              const next = [...familiasChecklist, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-                              setFamiliasChecklist(next)
-                              setNovaFamiliaEquipamento('')
-                              setSelectedFamiliaForGrupos(nome)
-                              saveData('nonato-familias-checklist', next)
-                            } else {
-                              const next = [...familiasEquipamento, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-                              setFamiliasEquipamento(next)
-                              setNovaFamiliaEquipamento('')
-                              setSelectedFamiliaForGrupos(nome)
-                              saveData('nonato-familias-grupos-equipamento', { familias: next, grupos: gruposEquipamento })
-                            }
-                          }
-                        }}
-                        style={{ padding: '0 18px', height: '40px', fontSize: '14px', fontWeight: 600, borderRadius: '6px', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer', flexShrink: 0 }}
-                      >
-                        + {safeT?.add || 'Adicionar'}
-                      </button>
                     </div>
+                    <button
+                      className="btn-primary"
+                      onClick={() => {
+                        const nome = novaFamiliaEquipamento.trim()
+                        if (nome && !familiasList.includes(nome)) {
+                          if (isChecklist) {
+                            const next = [...familiasChecklist, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                            setFamiliasChecklist(next)
+                            setNovaFamiliaEquipamento('')
+                            setSelectedFamiliaForGrupos(nome)
+                            saveData('nonato-familias-checklist', next)
+                          } else {
+                            const next = [...familiasEquipamento, nome].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+                            setFamiliasEquipamento(next)
+                            setNovaFamiliaEquipamento('')
+                            setSelectedFamiliaForGrupos(nome)
+                            saveData('nonato-familias-grupos-equipamento', { familias: next, grupos: gruposEquipamento })
+                          }
+                        }
+                      }}
+                      style={{ padding: '0 20px', height: '40px', fontSize: '14px', fontWeight: 600, borderRadius: '6px', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer', flexShrink: 0 }}
+                    >
+                      + {safeT?.add || 'Adicionar'}
+                    </button>
                   </div>
                 </div>
                 <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
@@ -17346,7 +17353,7 @@ const nextF = familias.filter(x => x !== f)
                                 <span style={{ fontSize: '14px', color: '#fff', whiteSpace: 'nowrap' }}>{safeT?.mostrarGruposDe || 'Mostrar grupos de'}</span>
                                 <select
                                   value={selectedParenteIdForPainelGrupos}
-                                  onChange={(e) => { const v = e.target.value; setSelectedParenteIdForPainelGrupos(v); setSelectedParenteIdForNovoGrupo(v); } }
+                                  onChange={(e) => { const v = e.target.value; setSelectedParenteIdForPainelGrupos(v); setSelectedParenteIdForNovoGrupo(v); }}
                                   style={{ minWidth: '100px', height: '40px', padding: '0 12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', fontSize: '14px', flexShrink: 0 }}
                                 >
                                   <option value="">{safeT?.nenhum || 'Nenhum'}</option>
