@@ -969,6 +969,32 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
+/* Barra superior fixa: respeitar notch e status bar no telefone/tablet */
+.app-top-bar {
+  padding-top: max(8px, env(safe-area-inset-top, 0)) !important;
+  left: env(safe-area-inset-left, 0);
+  right: env(safe-area-inset-right, 0);
+}
+
+/* Conteúdo principal: espaço para a barra fixa + safe-area (notebook, tablet, telefone) */
+.app-layout {
+  padding-top: calc(48px + env(safe-area-inset-top, 0)) !important;
+}
+
+/* Barra de abas inferior: safe-area no telefone (evitar sobreposição com gestos/indicador) */
+.bottom-tabs-bar {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Tabelas em conteúdo: limitar largura no telefone/tablet; use um wrapper com overflow-x: auto se a tabela for muito larga */
+@media (max-width: 1024px) {
+  .tab-content-wrapper table,
+  .main-content-area table {
+    max-width: 100%;
+    table-layout: fixed;
+  }
+}
+
 /* Barra fixa no topo para mobile - Voltar + ações sempre visíveis */
 .mobile-sticky-toolbar {
   display: none;
