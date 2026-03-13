@@ -16857,11 +16857,11 @@ const nextF = familias.filter(x => x !== f)
                 backgroundColor: '#1a1a1a',
                 overflow: 'hidden'
               }}>
-                <div style={{ padding: '20px', borderBottom: '2px solid rgba(0, 255, 0, 0.2)' }}>
+                <div style={{ padding: '20px', borderBottom: '2px solid rgba(0, 255, 0, 0.2)', width: '100%', boxSizing: 'border-box' }}>
                   <h3 style={{ margin: '0 0 15px', fontSize: '16px', fontWeight: 600, color: '#00ff00' }}>
                     {safeT?.familia || 'Famílias'}
                   </h3>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch' }}>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch', width: '100%' }}>
                     <input
                       type="text"
                       value={novaFamiliaEquipamento}
@@ -16925,7 +16925,7 @@ const nextF = familias.filter(x => x !== f)
                     </button>
                   </div>
                 </div>
-                <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
+                <div style={{ flex: 1, overflowY: 'auto', padding: '12px', width: '100%', boxSizing: 'border-box' }}>
                   {familiasList.length === 0 ? (
                     <div style={{ padding: '24px 16px', textAlign: 'center', color: '#ccc', fontSize: '14px' }}>
                       {safeT?.nenhumaFamilia || 'Nenhuma família. Adicione uma acima.'}
@@ -16949,6 +16949,8 @@ const nextF = familias.filter(x => x !== f)
                             padding: '12px 15px',
                             marginBottom: '8px',
                             borderRadius: '6px',
+                            width: '100%',
+                            boxSizing: 'border-box',
                             cursor: editingFamiliaNome === f ? 'default' : 'pointer',
                             backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.15)' : '#2a2a2a',
                             border: isSelected ? '1px solid rgba(0, 255, 0, 0.5)' : '1px solid rgba(0, 255, 0, 0.2)',
@@ -41626,10 +41628,10 @@ A1;Peça exemplo;10'
           </button>
         </div>
         {/* Conteúdo da Aba Ativa ou Dashboard */}
-        <div className="main-content-area" style={{ flex: 1, padding: '30px', overflowY: 'auto', minWidth: 0 }}>
+        <div className="main-content-area" style={{ flex: 1, padding: '30px', overflowY: 'auto', minWidth: 0, width: '100%', boxSizing: 'border-box' }}>
           {activeTabId ? (
             // Renderizar conteúdo da aba ativa
-            <div style={{ height: '100%', overflowY: 'auto' }}>
+            <div style={{ height: '100%', width: '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
               {(() => {
                 const activeTab = openTabs.find(t => t.id === activeTabId)
                 if (!activeTab) return null
