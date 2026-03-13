@@ -17076,12 +17076,12 @@ const nextF = familias.filter(x => x !== f)
                                     </div>
                                     {parentesDestaFamilia.map((p) => (
                                       <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', marginBottom: '6px', borderRadius: '6px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0,255,0,0.2)', flexWrap: 'nowrap' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0, width: '44px' }}>
-                                          <label style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(0,255,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a1a1a', cursor: 'pointer', margin: 0 }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0, width: '44px' }}>
+                                          <label style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '4px', overflow: 'hidden', border: '1px solid rgba(0,255,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a1a1a', cursor: 'pointer', margin: 0, marginLeft: 'auto' }}>
                                             <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(ev) => { const file = ev.target.files?.[0]; if (file) { const r = new FileReader(); r.onload = () => { const next = parentesChecklist.map(x => x.id === p.id ? { ...x, imagem: r.result as string } : x); setParentesChecklist(next); saveData('nonato-parentes-checklist', next); }; r.readAsDataURL(file); } ev.target.value = ''; }} />
                                             {p.imagem ? <img src={p.imagem} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '16px', opacity: 0.5 }}>🖼</span>}
                                           </label>
-                                          <span style={{ fontSize: '9px', color: '#00ff00', whiteSpace: 'nowrap', textAlign: 'center' }}>{safeT?.adicionarImagem || 'Adicionar Imagem'}</span>
+                                          <span style={{ fontSize: '9px', color: '#00ff00', whiteSpace: 'nowrap', textAlign: 'right', width: '100%', paddingRight: '2px' }}>{safeT?.adicionarImagem || 'Adicionar Imagem'}</span>
                                         </div>
                                         <div style={{ flex: 1, minWidth: '120px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                           {editingParenteId === p.id ? (
