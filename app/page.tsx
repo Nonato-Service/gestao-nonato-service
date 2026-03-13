@@ -16845,11 +16845,11 @@ const nextF = familias.filter(x => x !== f)
               border: '1px solid rgba(0, 255, 0, 0.2)',
               overflow: 'hidden'
             }}>
-              {/* PAINEL SUPERIOR: Lista de famílias (largura total, metade da altura) */}
+              {/* PAINEL SUPERIOR: Lista de famílias (largura total, mais altura que o segundo) */}
               <div style={{
                 width: '100%',
-                flex: 1,
-                minHeight: '320px',
+                flex: '2 1 60%',
+                minHeight: '400px',
                 display: 'flex',
                 flexDirection: 'column',
                 borderBottom: '2px solid rgba(0, 255, 0, 0.2)',
@@ -17146,11 +17146,11 @@ const nextF = familias.filter(x => x !== f)
                 </div>
               </div>
 
-              {/* PAINEL INFERIOR: Grupos da família selecionada (largura total, ~50% da altura) */}
+              {/* PAINEL INFERIOR: Grupos da família selecionada (largura total) */}
               <div id="grupos-familia-panel" style={{
-                flex: '1 1 50%',
+                flex: '1 1 40%',
                 width: '100%',
-                minHeight: '320px',
+                minHeight: '280px',
                 display: 'flex',
                 flexDirection: 'column',
                 backgroundColor: '#1a1a1a',
