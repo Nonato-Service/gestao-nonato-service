@@ -6096,7 +6096,8 @@ export default function Dashboard() {
       const result = await response.json()
 
       if (response.ok) {
-        alert((t.codeBackupCreatedSuccess || '✓ BACKUP DO CÓDIGO CRIADO COM SUCESSO!\n\nLocalização: {path}\nArquivos salvos: {count}\n\nO backup está salvo na pasta "backups" do projeto.').replace('{path}', result.backupPath).replace('{count}', String(result.filesCount)))
+        const pathToShow = result.backupsFolderAbsolute || result.backupPath || result.backupsFolder || ''
+        alert((t.codeBackupCreatedSuccess || '✓ BACKUP DO CÓDIGO CRIADO COM SUCESSO!\n\nPasta de backups: ' + pathToShow + '\n\nArquivos salvos: {count}\n\nAbra a pasta acima para ver o backup.').replace('{count}', String(result.filesCount)))
         loadCodeBackups()
       } else {
         throw new Error(result.error || 'Erro ao criar backup')

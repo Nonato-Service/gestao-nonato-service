@@ -5,17 +5,19 @@ import { getDemoContext } from '../data/demo-context'
 
 export const runtime = 'nodejs'
 
-// Raiz do projeto (onde está package.json e a pasta backups)
+// Raiz do projeto: partir do diretório desta rota e subir até encontrar package.json + app
 function getProjectRoot(): string {
-  const cwd = path.resolve(process.cwd())
-  if (fs.existsSync(path.join(cwd, 'package.json'))) {
-    return cwd
+  let dir = typeof __dirname !== 'undefined' ? __dirname : path.resolve(process.cwd())
+  dir = path.resolve(dir)
+  for (let i = 0; i < 10; i++) {
+    if (fs.existsSync(path.join(dir, 'package.json')) && fs.existsSync(path.join(dir, 'app'))) {
+      return dir
+    }
+    const parent = path.join(dir, '..')
+    if (parent === dir) break
+    dir = parent
   }
-  const parent = path.join(cwd, '..')
-  if (parent !== cwd && fs.existsSync(path.join(parent, 'package.json'))) {
-    return parent
-  }
-  return cwd
+  return path.resolve(process.cwd())
 }
 
 export async function POST(request: NextRequest) {
@@ -31,6 +33,9 @@ export async function POST(request: NextRequest) {
     const backupsBase = path.join(projectRoot, 'backups')
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
     const backupDir = path.join(backupsBase, `code-backup-${timestamp}`)
+
+    console.log('[backup-code] Raiz do projeto:', projectRoot)
+    console.log('[backup-code] Pasta de backups:', path.resolve(backupsBase))
 
     // Criar diretório de backup (garantir que a pasta backups existe)
     try {
@@ -271,11 +276,24 @@ Para restaurar o histórico de comandos:
     }
     fs.writeFileSync(path.join(backupDir, 'metadata.json'), JSON.stringify(metadata, null, 2), 'utf-8')
 
+    // Verificar se algo foi realmente gravado (pasta do backup existe e tem conteúdo)
+    const backupDirExists = fs.existsSync(backupDir)
+    const backupDirContents = backupDirExists ? fs.readdirSync(backupDir) : []
+    if (!backupDirExists || backupDirContents.length === 0) {
+      return NextResponse.json(
+        {
+          error: 'O backup foi criado mas nenhum ficheiro foi gravado. Raiz do projeto usada: ' + projectRoot + ' — Pasta de destino: ' + backupDir
+        },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Backup criado com sucesso!',
       backupPath: backupDir,
       backupsFolder: backupsBase,
+      backupsFolderAbsolute: path.resolve(backupsBase),
       filesCount: backedUpFiles.length,
       historyFilesCount: backedUpHistoryFiles.length,
       includesCommandHistory: backedUpHistoryFiles.length > 0
