@@ -2466,9 +2466,15 @@ export default function Dashboard() {
   const [clientesFinanceiroActiveTab, setClientesFinanceiroActiveTab] = useState<'os' | 'faturas' | 'devedores' | 'iva' | 'relatorios'>('os')
   const [comprovantesDespesas, setComprovantesDespesas] = useState<ComprovanteDespesa[]>([])
   const [comprovantesFiltroMes, setComprovantesFiltroMes] = useState<string>('')
+  const [comprovantesFiltroSemana, setComprovantesFiltroSemana] = useState<string>('')
+  const [comprovantesFiltroPeriodoView, setComprovantesFiltroPeriodoView] = useState<'semanal' | 'mensal'>('mensal')
   const [comprovantesFiltroCliente, setComprovantesFiltroCliente] = useState<string>('')
   const [comprovantesForm, setComprovantesForm] = useState({ cliente: '', data: new Date().toISOString().slice(0, 10), valorUnitario: 0, quantidade: 1, descricao: '', imagemBase64: '' })
   const [showComprovantesForm, setShowComprovantesForm] = useState(false)
+  const [formComp, setFormComp] = useState<{ tipo: 'cliente' | 'pessoal'; cliente: string; data: string; valorUnitario: number; quantidade: number; descricao: string; imagemBase64: string }>({ tipo: 'cliente', cliente: '', data: new Date().toISOString().slice(0, 10), valorUnitario: 0, quantidade: 1, descricao: '', imagemBase64: '' })
+  const [showFormComp, setShowFormComp] = useState(false)
+  const [showEnvioModal, setShowEnvioModal] = useState(false)
+  const [envioForm, setEnvioForm] = useState<{ templateId: 1|2|3|4|5; whatsapp: boolean; email: boolean; telefone: string; emailDestino: string; tecnicoId: string }>({ templateId: 1, whatsapp: true, email: false, telefone: '', emailDestino: '', tecnicoId: '' })
   const [buscaOS, setBuscaOS] = useState('')
   const [filtroPeriodo, setFiltroPeriodo] = useState<'semanal' | 'mensal' | 'anual'>('mensal')
   const [showOSForm, setShowOSForm] = useState(false)
@@ -26225,14 +26231,14 @@ A1;Peça exemplo;10'
           const weekNum = Math.ceil(dayOfYear / 7)
           return `${d.getFullYear()}-W${String(weekNum).padStart(2, '0')}`
         }
-        const [filtroMes, setFiltroMes] = useState<string>('')
-        const [filtroSemana, setFiltroSemana] = useState<string>('')
-        const [filtroPeriodoView, setFiltroPeriodoView] = useState<'semanal' | 'mensal'>('mensal')
-        const [filtroCliente, setFiltroCliente] = useState<string>('')
-        const [formComp, setFormComp] = useState<{ tipo: 'cliente' | 'pessoal'; cliente: string; data: string; valorUnitario: number; quantidade: number; descricao: string; imagemBase64: string }>({ tipo: 'cliente', cliente: '', data: new Date().toISOString().slice(0, 10), valorUnitario: 0, quantidade: 1, descricao: '', imagemBase64: '' })
-        const [showFormComp, setShowFormComp] = useState(false)
-        const [showEnvioModal, setShowEnvioModal] = useState(false)
-        const [envioForm, setEnvioForm] = useState<{ templateId: 1|2|3|4|5; whatsapp: boolean; email: boolean; telefone: string; emailDestino: string; tecnicoId: string }>({ templateId: 1, whatsapp: true, email: false, telefone: '', emailDestino: '', tecnicoId: '' })
+        const filtroMes = comprovantesFiltroMes
+        const setFiltroMes = setComprovantesFiltroMes
+        const filtroSemana = comprovantesFiltroSemana
+        const setFiltroSemana = setComprovantesFiltroSemana
+        const filtroPeriodoView = comprovantesFiltroPeriodoView
+        const setFiltroPeriodoView = setComprovantesFiltroPeriodoView
+        const filtroCliente = comprovantesFiltroCliente
+        const setFiltroCliente = setComprovantesFiltroCliente
         const mesesAnos = Array.from(new Set(comprovantesDespesas.map(c => {
           const d = new Date(c.data)
           return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
