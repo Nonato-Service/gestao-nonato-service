@@ -42,6 +42,7 @@ body {
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   line-height: 1.6;
   width: 100%;
@@ -79,13 +80,24 @@ body {
   font-size: 44px;
   font-weight: 700;
   letter-spacing: -0.5px;
-  /* Nome verde transparente + contorno verde */
+  /* Nome verde transparente + contorno verde (Firefox: fallback sem -webkit-text-stroke) */
   color: rgba(0, 255, 0, 0.22);
   -webkit-text-stroke: 1px rgba(0, 255, 0, 0.95);
   text-shadow:
     0 0 10px rgba(0, 255, 0, 0.35),
     0 0 20px rgba(0, 255, 0, 0.22),
     0 0 30px rgba(0, 255, 0, 0.16);
+}
+
+@supports not ((-webkit-text-stroke: 1px rgba(0, 255, 0, 0.95))) {
+  .header h1 {
+    color: rgba(0, 255, 0, 0.95);
+    text-shadow:
+      0 0 0 1px rgba(0, 255, 0, 0.95),
+      0 0 10px rgba(0, 255, 0, 0.35),
+      0 0 20px rgba(0, 255, 0, 0.22),
+      0 0 30px rgba(0, 255, 0, 0.16);
+  }
 }
 
 .modal {

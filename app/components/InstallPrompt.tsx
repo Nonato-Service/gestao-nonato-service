@@ -5,64 +5,70 @@ import { useEffect, useState, useRef } from 'react'
 const STORAGE_KEY = 'nonato-install-prompt-dismissed'
 const DISMISS_DAYS = 7
 
-const texts: Record<string, { installApp: string; installDesc: string; installNow: string; addToHome: string; iosHint: string; androidHint: string; later: string; close: string }> = {
+const texts: Record<string, { installApp: string; installDesc: string; installNow: string; addToHome: string; iosHint: string; androidHint: string; desktopHint: string; later: string; close: string }> = {
   pt: {
     installApp: 'Instalar a app',
-    installDesc: 'Use no telemóvel ou tablet como uma app. Acesso rápido a partir do ecrã inicial.',
+    installDesc: 'Use no telemóvel, tablet ou computador. Funciona no Firefox, Chrome e Edge.',
     installNow: 'Instalar agora',
     addToHome: 'Adicionar ao ecrã inicial',
     iosHint: 'No iPhone/iPad: Safari → Partilhar (□↑) → "Adicionar ao Ecrã Inicial"',
-    androidHint: 'No Android: Chrome → Menu (⋮) → "Instalar app" ou "Adicionar ao ecrã inicial"',
+    androidHint: 'No Android: Firefox ou Chrome → Menu (⋮) → "Instalar app" ou "Adicionar ao ecrã inicial"',
+    desktopHint: 'No computador: Firefox, Chrome ou Edge → menu (⋮) → "Instalar" ou "Guardar como"',
     later: 'Agora não',
     close: 'Fechar'
   },
   en: {
     installApp: 'Install the app',
-    installDesc: 'Use on your phone or tablet as an app. Quick access from the home screen.',
+    installDesc: 'Use on phone, tablet or computer. Works in Firefox, Chrome and Edge.',
     installNow: 'Install now',
     addToHome: 'Add to home screen',
     iosHint: 'On iPhone/iPad: Safari → Share (□↑) → "Add to Home Screen"',
-    androidHint: 'On Android: Chrome → Menu (⋮) → "Install app" or "Add to home screen"',
+    androidHint: 'On Android: Firefox or Chrome → Menu (⋮) → "Install app" or "Add to home screen"',
+    desktopHint: 'On computer: Firefox, Chrome or Edge → menu (⋮) → "Install" or "Save as"',
     later: 'Not now',
     close: 'Close'
   },
   es: {
     installApp: 'Instalar la app',
-    installDesc: 'Úsala en el móvil o tablet como una app. Acceso rápido desde la pantalla de inicio.',
+    installDesc: 'Úsala en móvil, tablet o ordenador. Funciona en Firefox, Chrome y Edge.',
     installNow: 'Instalar ahora',
     addToHome: 'Añadir a la pantalla de inicio',
     iosHint: 'En iPhone/iPad: Safari → Compartir (□↑) → "Añadir a la pantalla de inicio"',
-    androidHint: 'En Android: Chrome → Menú (⋮) → "Instalar aplicación" o "Añadir a la pantalla de inicio"',
+    androidHint: 'En Android: Firefox o Chrome → Menú (⋮) → "Instalar aplicación" o "Añadir a la pantalla de inicio"',
+    desktopHint: 'En ordenador: Firefox, Chrome o Edge → menú (⋮) → "Instalar" o "Guardar como"',
     later: 'Ahora no',
     close: 'Cerrar'
   },
   fr: {
     installApp: 'Installer l\'app',
-    installDesc: 'Utilisez sur téléphone ou tablette comme une app. Accès rapide depuis l\'écran d\'accueil.',
+    installDesc: 'Utilisez sur téléphone, tablette ou ordinateur. Fonctionne avec Firefox, Chrome et Edge.',
     installNow: 'Installer',
     addToHome: 'Ajouter à l\'écran d\'accueil',
     iosHint: 'Sur iPhone/iPad : Safari → Partager (□↑) → "Sur l\'écran d\'accueil"',
-    androidHint: 'Sur Android : Chrome → Menu (⋮) → "Installer l\'application"',
+    androidHint: 'Sur Android : Firefox ou Chrome → Menu (⋮) → "Installer l\'application"',
+    desktopHint: 'Sur ordinateur : Firefox, Chrome ou Edge → menu (⋮) → "Installer"',
     later: 'Plus tard',
     close: 'Fermer'
   },
   it: {
     installApp: 'Installa l\'app',
-    installDesc: 'Usa su telefono o tablet come un\'app. Accesso rapido dalla schermata Home.',
+    installDesc: 'Usa su telefono, tablet o computer. Funziona con Firefox, Chrome e Edge.',
     installNow: 'Installa ora',
     addToHome: 'Aggiungi alla schermata Home',
     iosHint: 'Su iPhone/iPad: Safari → Condividi (□↑) → "Aggiungi a Home"',
-    androidHint: 'Su Android: Chrome → Menu (⋮) → "Installa app"',
+    androidHint: 'Su Android: Firefox o Chrome → Menu (⋮) → "Installa app"',
+    desktopHint: 'Su computer: Firefox, Chrome o Edge → menu (⋮) → "Installa"',
     later: 'Ora no',
     close: 'Chiudi'
   },
   de: {
     installApp: 'App installieren',
-    installDesc: 'Auf dem Handy oder Tablet als App nutzen. Schnellzugriff vom Startbildschirm.',
+    installDesc: 'Auf Handy, Tablet oder Computer nutzen. Läuft in Firefox, Chrome und Edge.',
     installNow: 'Jetzt installieren',
     addToHome: 'Zum Startbildschirm',
     iosHint: 'Auf iPhone/iPad: Safari → Teilen (□↑) → "Zum Home-Bildschirm"',
-    androidHint: 'Auf Android: Chrome → Menü (⋮) → "App installieren"',
+    androidHint: 'Auf Android: Firefox oder Chrome → Menü (⋮) → "App installieren"',
+    desktopHint: 'Am Computer: Firefox, Chrome oder Edge → Menü (⋮) → "Installieren"',
     later: 'Später',
     close: 'Schließen'
   }
@@ -146,7 +152,7 @@ export function InstallPrompt() {
 
   const t = texts[getLang()] || texts.pt
 
-  if (!canShow || installed || isStandalone || !isMobileOrTablet) return null
+  if (!canShow || installed || isStandalone) return null
 
   return (
     <>
@@ -238,8 +244,14 @@ export function InstallPrompt() {
             ) : (
               <>
                 <p style={{ color: '#00ff00', fontSize: 13, marginBottom: 8, fontWeight: 600 }}>{t.addToHome}</p>
-                <p style={{ color: '#aaa', fontSize: 12, marginBottom: 8 }}>{t.iosHint}</p>
-                <p style={{ color: '#aaa', fontSize: 12, marginBottom: 16 }}>{t.androidHint}</p>
+                {isMobileOrTablet ? (
+                  <>
+                    <p style={{ color: '#aaa', fontSize: 12, marginBottom: 8 }}>{t.iosHint}</p>
+                    <p style={{ color: '#aaa', fontSize: 12, marginBottom: 16 }}>{t.androidHint}</p>
+                  </>
+                ) : (
+                  <p style={{ color: '#aaa', fontSize: 12, marginBottom: 16 }}>{t.desktopHint}</p>
+                )}
               </>
             )}
 
