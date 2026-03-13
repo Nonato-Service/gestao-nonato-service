@@ -740,6 +740,8 @@ export default function Dashboard() {
   const [codeBackups, setCodeBackups] = useState<Array<{ path: string; timestamp: string; filesCount: number }>>([])
   const [codeBackupsFolder, setCodeBackupsFolder] = useState<string>('')
   const [loadingBackups, setLoadingBackups] = useState(false)
+  const [restoringFromZip, setRestoringFromZip] = useState(false)
+  const restoreFromZipInputRef = useRef<HTMLInputElement | null>(null)
   const [isDemoMode, setIsDemoMode] = useState(false)
   const [demoExpired, setDemoExpired] = useState(false)
   const [demoDaysLeft, setDemoDaysLeft] = useState<number | null>(null)
@@ -6226,6 +6228,42 @@ export default function Dashboard() {
     } catch (error) {
       alert((t.errorRestoringCode || 'Erro ao restaurar código: {error}. Verifique se o backup existe e se você tem permissões para restaurar arquivos.').replace('{error}', (error as Error).message))
       console.error('Erro na restauração:', error)
+    }
+  }
+
+  // Restaurar código a partir de um ficheiro ZIP (backup descarregado para o PC)
+  const handleRestoreFromZip = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    if (!file.name.toLowerCase().endsWith('.zip')) {
+      alert('Selecione um ficheiro .zip (backup do código).')
+      event.target.value = ''
+      return
+    }
+    if (!window.confirm('Restaurar o código a partir deste ZIP? Os ficheiros atuais (app, public, config) serão substituídos. Continuar?')) {
+      event.target.value = ''
+      return
+    }
+    setRestoringFromZip(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const response = await fetch('/api/backup-code/restore-from-zip', {
+        method: 'POST',
+        body: formData,
+      })
+      const result = await response.json()
+      if (response.ok) {
+        alert('✓ ' + (result.message || `Restaurados ${result.filesCount} ficheiro(s). A página será recarregada.`))
+        setTimeout(() => window.location.reload(), 2000)
+      } else {
+        throw new Error(result.error || 'Erro ao restaurar')
+      }
+    } catch (error) {
+      alert('❌ Erro ao restaurar a partir do ZIP: ' + (error as Error).message)
+    } finally {
+      setRestoringFromZip(false)
+      event.target.value = ''
     }
   }
 
@@ -16816,6 +16854,25 @@ const nextF = familias.filter(x => x !== f)
                   >
                     {safeT?.updateListButton || '🔄 Atualizar Lista'}
                   </button>
+
+                  <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid rgba(255,165,0,0.2)' }}>
+                    <p style={{ fontSize: '12px', opacity: 0.8, marginBottom: '8px' }}>Restaurar a partir de um ficheiro ZIP (backup que descarregou para o PC):</p>
+                    <input
+                      ref={restoreFromZipInputRef}
+                      type="file"
+                      accept=".zip"
+                      onChange={handleRestoreFromZip}
+                      style={{ display: 'none' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => restoreFromZipInputRef.current?.click()}
+                      disabled={isDemoMode || restoringFromZip}
+                      style={{ padding: '8px 14px', fontSize: '12px', background: 'rgba(255, 165, 0, 0.2)', border: '1px solid rgba(255, 165, 0, 0.5)', color: '#ffa500', borderRadius: '6px', cursor: isDemoMode || restoringFromZip ? 'not-allowed' : 'pointer', fontWeight: '600' }}
+                    >
+                      {restoringFromZip ? 'A restaurar…' : '📂 Restaurar a partir de ficheiro ZIP'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -40046,7 +40103,7 @@ A1;Peça exemplo;10'
           inset: 0,
           width: '100vw',
           height: '100vh',
-          backgroundColor: '#000000',
+          backgroundColor: '#2d2d2d',
           zIndex: 99999,
           display: 'flex',
           alignItems: 'center',
@@ -40170,7 +40227,7 @@ A1;Peça exemplo;10'
           inset: 0,
           width: '100vw',
           height: '100vh',
-          backgroundColor: '#000000',
+          backgroundColor: '#2d2d2d',
           zIndex: 99999,
           display: 'flex',
           alignItems: 'center',
@@ -40229,7 +40286,7 @@ A1;Peça exemplo;10'
   }
 
   return (
-    <div className="app-layout" style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#000', color: '#fff', paddingBottom: openTabs.length > 0 ? '54px' : '0', paddingTop: '48px' }}>
+    <div className="app-layout" style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#2d2d2d', color: '#fff', paddingBottom: openTabs.length > 0 ? '54px' : '0', paddingTop: '48px' }}>
       {/* Barra superior: em modo demo mostra aviso; sempre mostra atalho para Administrador / Backup */}
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '8px 16px', background: isDemoMode ? 'rgba(0, 255, 0, 0.15)' : 'rgba(0, 255, 0, 0.08)', borderBottom: '1px solid rgba(0, 255, 0, 0.4)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
         {isDemoMode && <span>🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Sem exportação nem backup</span>}

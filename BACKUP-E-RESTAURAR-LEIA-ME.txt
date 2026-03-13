@@ -1,0 +1,75 @@
+================================================================================
+  BACKUP E RESTAURAR O CÓDIGO - GESTÃO TÉCNICA NONATO SERVICE
+================================================================================
+
+Onde encontrar na aplicação:
+  - Barra lateral: clique em ADMINISTRADOR (botão no final, com ícone de cadeado).
+  - Ou no topo da página: clique em "Administrador / Backup".
+  - Depois desça até à secção "BACKUP E SEGURANÇA".
+
+--------------------------------------------------------------------------------
+1. PARA NÃO PERDER O CÓDIGO (RECOMENDADO)
+--------------------------------------------------------------------------------
+
+  Use o botão "Descarregar backup (ZIP) para o PC" e guarde o ficheiro no seu
+  computador (por exemplo na pasta Documentos ou num disco externo). Assim o
+  código fica seguro mesmo que o servidor seja reinstalado ou apagado.
+
+  Faça isto com regularidade, e sempre antes de alterações importantes.
+
+--------------------------------------------------------------------------------
+2. FAZER BACKUP DO CÓDIGO (GUARDAR NO SERVIDOR)
+--------------------------------------------------------------------------------
+
+  Botão: "Fazer Backup do Código"
+
+  - Cria uma cópia do código na pasta "backups" do projeto no servidor.
+  - O caminho onde fica guardado aparece na secção "Pasta onde os backups
+    estão guardados" (pode clicar em "Atualizar Lista" para ver o caminho).
+  - Em alguns servidores (ex.: cloud) essa pasta pode não persistir entre
+    reinstalações; por isso use também o descarregamento em ZIP.
+
+--------------------------------------------------------------------------------
+3. RESTAURAR A PARTIR DA LISTA (BACKUPS NO SERVIDOR)
+--------------------------------------------------------------------------------
+
+  - Na lista "Backup 1", "Backup 2", etc., clique no botão "Restaurar" do
+    backup que quer usar.
+  - É automático: não precisa de descompactar nada. O código é reposto
+    a partir da pasta de backups do servidor.
+  - Só funciona para backups que foram guardados no servidor com
+    "Fazer Backup do Código".
+
+--------------------------------------------------------------------------------
+4. RESTAURAR A PARTIR DE FICHEIRO ZIP (BACKUP NO SEU PC)
+--------------------------------------------------------------------------------
+
+  - Use quando tiver apenas o ficheiro ZIP no seu PC (por exemplo depois de
+    reinstalar o servidor ou perder os backups do servidor).
+
+  Passos:
+    1. Na secção "RESTAURAR CÓDIGO DO PROGRAMA", desça até ao texto
+       "Restaurar a partir de um ficheiro ZIP (backup que descarregou para o PC)".
+    2. Clique no botão "Restaurar a partir de ficheiro ZIP".
+    3. Escolha o ficheiro .zip no seu computador (o que descarregou com
+       "Descarregar backup (ZIP) para o PC").
+    4. Confirme quando a aplicação pedir.
+    5. A aplicação descompacta o ZIP e substitui o código no servidor.
+    6. A página recarrega sozinha ao fim de alguns segundos.
+
+  Não é preciso descompactar o ZIP manualmente: a aplicação faz tudo.
+
+--------------------------------------------------------------------------------
+5. RESUMO RÁPIDO
+--------------------------------------------------------------------------------
+
+  - Descarregar ZIP para o PC  = cópia de segurança no seu computador.
+  - Fazer Backup do Código     = cópia na pasta "backups" do servidor.
+  - Restaurar (na lista)       = repor código a partir de um backup do servidor.
+  - Restaurar a partir de ZIP  = repor código a partir de um .zip do seu PC.
+
+  Em modo demonstração, o backup e a restauração estão desativados.
+
+================================================================================
+  Ficheiro criado automaticamente. Pode abrir sempre que precisar.
+================================================================================
