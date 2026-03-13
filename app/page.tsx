@@ -16839,17 +16839,18 @@ const nextF = familias.filter(x => x !== f)
               display: 'flex',
               flexDirection: 'column',
               gap: '0',
-              minHeight: '500px',
+              minHeight: '80vh',
               backgroundColor: '#1a1a1a',
               borderRadius: '12px',
               border: '1px solid rgba(0, 255, 0, 0.2)',
               overflow: 'hidden'
             }}>
-              {/* PAINEL SUPERIOR: Lista de famílias (largura total, mais altura que o segundo) */}
+              {/* PAINEL SUPERIOR: Lista de famílias (largura total, metade da altura do ecrã) */}
               <div style={{
                 width: '100%',
-                flex: '2 1 60%',
-                minHeight: '400px',
+                flex: '0 0 auto',
+                height: '50vh',
+                minHeight: '380px',
                 display: 'flex',
                 flexDirection: 'column',
                 borderBottom: '2px solid rgba(0, 255, 0, 0.2)',
