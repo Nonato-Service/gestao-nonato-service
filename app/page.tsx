@@ -638,13 +638,24 @@ type GrupoChecklist = {
   dataCriacao: string
 }
 
-type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'translator' | 'administrador' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'gestao-financeira' | 'clientes-financeiro' | 'orcamentos-avulso' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega'
+type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'translator' | 'administrador' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega'
 
 type Tab = {
   id: string
   type: TabType
   title: string
   icon?: string
+}
+
+type ComprovanteDespesa = {
+  id: string
+  cliente: string
+  data: string
+  valorUnitario: number
+  quantidade: number
+  valorTotal: number
+  descricao?: string
+  imagemBase64?: string
 }
 
 // Biblioteca do tradutor: entradas separadas por par de idiomas (origem → destino)
@@ -2315,6 +2326,7 @@ export default function Dashboard() {
       'clientes-financeiro': t?.clientesFinanceiroTitle || 'Clientes Financeiro',
       'orcamentos-avulso': t?.orcamentosAvulsoTitle || 'Orçamentos Avulso',
       'registro-despesas': t?.registroDespesasTitle || 'Registro de Despesas',
+      'comprovantes-despesas': t?.comprovantesDespesasTitle || 'Comprovantes de Despesas',
       'mapa-visual-separacao-pecas': t?.mapaVisualSeparacaoPecasTitle || 'Mapa Visual de Separação de Peças / Cliente',
       'manuais-informacoes-tecnicas': t?.manuaisInformacoesTecnicasTitle || 'Manuais e Informações Técnica dos Equipamentos',
       'almoxarifado-armazem': t?.almoxarifadoArmazemTitle || 'Almoxarifado / Armazém',
@@ -2451,6 +2463,11 @@ export default function Dashboard() {
   const [ivaControles, setIvaControles] = useState<IVAControle[]>([])
   const [relatoriosFinanceiros, setRelatoriosFinanceiros] = useState<RelatorioFinanceiro[]>([])
   const [clientesFinanceiroActiveTab, setClientesFinanceiroActiveTab] = useState<'os' | 'faturas' | 'devedores' | 'iva' | 'relatorios'>('os')
+  const [comprovantesDespesas, setComprovantesDespesas] = useState<ComprovanteDespesa[]>([])
+  const [comprovantesFiltroMes, setComprovantesFiltroMes] = useState<string>('')
+  const [comprovantesFiltroCliente, setComprovantesFiltroCliente] = useState<string>('')
+  const [comprovantesForm, setComprovantesForm] = useState({ cliente: '', data: new Date().toISOString().slice(0, 10), valorUnitario: 0, quantidade: 1, descricao: '', imagemBase64: '' })
+  const [showComprovantesForm, setShowComprovantesForm] = useState(false)
   const [buscaOS, setBuscaOS] = useState('')
   const [filtroPeriodo, setFiltroPeriodo] = useState<'semanal' | 'mensal' | 'anual'>('mensal')
   const [showOSForm, setShowOSForm] = useState(false)
@@ -3499,6 +3516,11 @@ export default function Dashboard() {
         setClientesDevedores(savedClientesDevedores)
       }
 
+      const savedComprovantesDespesas = getData('nonato-comprovantes-despesas')
+      if (savedComprovantesDespesas && Array.isArray(savedComprovantesDespesas)) {
+        setComprovantesDespesas(savedComprovantesDespesas)
+      }
+
       const savedIVAControles = getData('nonato-iva-controles')
       if (savedIVAControles) {
         setIvaControles(savedIVAControles)
@@ -3835,6 +3857,7 @@ export default function Dashboard() {
           'tecnicos-externos-default': { translationKey: 'tecnicosExternos' },
           'alerta-mensagens-default': { translationKey: 'alertaMensagens', group: 'comunicacao-interna' },
           'clientes-financeiro-default': { translationKey: 'clientesFinanceiroTitle', group: 'gestao-financeira' },
+          'comprovantes-despesas-default': { translationKey: 'comprovantesDespesasTitle', group: 'gestao-financeira' },
           'administrador-default': { translationKey: 'administrador' }
         }
         
@@ -4024,7 +4047,20 @@ export default function Dashboard() {
           group: 'gestao-financeira'
         }
         buttons.push(clientesFinanceiroButton)
-        // Salvar imediatamente após adicionar
+        saveData('nonato-sidebar-buttons', buttons)
+      }
+      
+      const hasComprovantesDespesas = buttons.some((b: SidebarButton) => b.id === 'comprovantes-despesas-default')
+      if (!hasComprovantesDespesas) {
+        const comprovantesDespesasButton: SidebarButton = {
+          id: 'comprovantes-despesas-default',
+          name: 'COMPROVANTES DE DESPESAS',
+          action: 'open-comprovantes-despesas',
+          order: buttons.length,
+          translationKey: 'comprovantesDespesasTitle',
+          group: 'gestao-financeira'
+        }
+        buttons.push(comprovantesDespesasButton)
         saveData('nonato-sidebar-buttons', buttons)
       }
       
@@ -12982,6 +13018,8 @@ export default function Dashboard() {
       })
     } else if (action === 'open-clientes-financeiro') {
       openTab('clientes-financeiro', getTabTitle('clientes-financeiro'))
+    } else if (action === 'open-comprovantes-despesas') {
+      openTab('comprovantes-despesas', getTabTitle('comprovantes-despesas'))
     } else if (action === 'open-gestao-industrial') {
       // Toggle do grupo GESTÃO INDUSTRIAL
       setExpandedGroups(prev => {
@@ -26172,6 +26210,128 @@ A1;Peça exemplo;10'
           activeTabId={activeTabId || undefined}
         />
 
+      case 'comprovantes-despesas': {
+        const [filtroMes, setFiltroMes] = useState<string>('')
+        const [filtroCliente, setFiltroCliente] = useState<string>('')
+        const [formComp, setFormComp] = useState({ cliente: '', data: new Date().toISOString().slice(0, 10), valorUnitario: 0, quantidade: 1, descricao: '', imagemBase64: '' })
+        const [showFormComp, setShowFormComp] = useState(false)
+        const mesesAnos = Array.from(new Set(comprovantesDespesas.map(c => {
+          const d = new Date(c.data)
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+        }))).sort().reverse()
+        const clientesUnicos = Array.from(new Set(comprovantesDespesas.map(c => c.cliente).filter(Boolean))).sort()
+        const filtrados = comprovantesDespesas.filter(c => {
+          const d = new Date(c.data)
+          const mesAno = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+          if (filtroMes && mesAno !== filtroMes) return false
+          if (filtroCliente && c.cliente !== filtroCliente) return false
+          return true
+        })
+        const totalGeral = filtrados.reduce((s, c) => s + c.valorTotal, 0)
+        const totalPorMes = filtrados.reduce((acc, c) => {
+          const d = new Date(c.data)
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+          acc[key] = (acc[key] || 0) + c.valorTotal
+          return acc
+        }, {} as Record<string, number>)
+        const handleAddComprovante = () => {
+          const valorTotal = formComp.valorUnitario * formComp.quantidade
+          const novo: ComprovanteDespesa = {
+            id: Date.now().toString(),
+            cliente: formComp.cliente.trim(),
+            data: formComp.data,
+            valorUnitario: formComp.valorUnitario,
+            quantidade: formComp.quantidade,
+            valorTotal,
+            descricao: formComp.descricao.trim() || undefined,
+            imagemBase64: formComp.imagemBase64 || undefined
+          }
+          const atualizados = [...comprovantesDespesas, novo]
+          setComprovantesDespesas(atualizados)
+          saveData('nonato-comprovantes-despesas', atualizados)
+          setFormComp({ cliente: '', data: new Date().toISOString().slice(0, 10), valorUnitario: 0, quantidade: 1, descricao: '', imagemBase64: '' })
+          setShowFormComp(false)
+        }
+        const handleRemoverComp = (id: string) => {
+          if (!window.confirm((safeT as any)?.confirmarExcluir || 'Remover este comprovante?')) return
+          const atualizados = comprovantesDespesas.filter(c => c.id !== id)
+          setComprovantesDespesas(atualizados)
+          saveData('nonato-comprovantes-despesas', atualizados)
+        }
+        return (
+          <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto' }}>
+            <div style={{ marginBottom: '24px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
+              <h1 style={{ margin: 0, fontSize: '24px', color: '#00ff00' }}>
+                {(safeT as any)?.comprovantesDespesasTitle || 'Comprovantes de Despesas'}
+              </h1>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button onClick={() => closeTab(activeTabId || '')} style={{ padding: '8px 12px', background: 'transparent', border: '1px solid rgba(0,255,0,0.5)', borderRadius: '6px', color: '#00ff00', cursor: 'pointer' }}>↶ {(safeT as any)?.voltar || 'Voltar'}</button>
+                <button onClick={() => setShowFormComp(true)} style={{ padding: '10px 20px', background: 'rgba(0,255,0,0.2)', border: '1px solid #00ff00', borderRadius: '8px', color: '#00ff00', fontWeight: 600, cursor: 'pointer' }}>
+                  + {(safeT as any)?.comprovantesAdicionar || 'Adicionar comprovante'}
+                </button>
+              </div>
+            </div>
+            <p style={{ color: '#aaa', marginBottom: '20px', fontSize: '14px' }}>{(safeT as any)?.comprovantesDespesasDesc || 'Adicione imagens de comprovantes, filtre por mês e cliente, valores unitários e totais por operação.'}</p>
+            {/* Filtros */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '24px', padding: '16px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0,255,0,0.2)' }}>
+              <label style={{ color: '#00ff00', fontSize: '13px' }}>{(safeT as any)?.comprovantesFiltroMes || 'Filtrar por mês'}</label>
+              <select value={filtroMes} onChange={e => setFiltroMes(e.target.value)} style={{ padding: '8px 12px', background: '#222', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', minWidth: '160px' }}>
+                <option value="">{(safeT as any)?.comprovantesTodosMeses || 'Todos os meses'}</option>
+                {mesesAnos.map(m => (<option key={m} value={m}>{m}</option>))}
+              </select>
+              <label style={{ color: '#00ff00', fontSize: '13px', marginLeft: '8px' }}>{(safeT as any)?.comprovantesFiltroCliente || 'Filtrar por cliente'}</label>
+              <select value={filtroCliente} onChange={e => setFiltroCliente(e.target.value)} style={{ padding: '8px 12px', background: '#222', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', minWidth: '180px' }}>
+                <option value="">{(safeT as any)?.comprovantesTodosClientes || 'Todos os clientes'}</option>
+                {clientesUnicos.map(cl => (<option key={cl} value={cl}>{cl}</option>))}
+              </select>
+            </div>
+            {/* Resumo */}
+            <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#141414', borderRadius: '10px', border: '1px solid rgba(0,255,0,0.25)' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'center' }}>
+                <span style={{ color: '#00ff00', fontWeight: 700, fontSize: '18px' }}>{(safeT as any)?.comprovantesTotalGeral || 'Total geral'}: {totalGeral.toFixed(2)} €</span>
+                {Object.entries(totalPorMes).sort((a, b) => b[0].localeCompare(a[0])).map(([mes, tot]) => (
+                  <span key={mes} style={{ color: '#ccc', fontSize: '14px' }}>{(safeT as any)?.comprovantesTotalMes || 'Total do mês'} {mes}: <strong style={{ color: '#00ff00' }}>{tot.toFixed(2)} €</strong></span>
+                ))}
+              </div>
+            </div>
+            {/* Lista */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {filtrados.length === 0 && <p style={{ color: '#888', textAlign: 'center', padding: '24px' }}>Nenhum comprovante. Clique em &quot;Adicionar comprovante&quot;.</p>}
+              {filtrados.map(c => (
+                <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '14px', backgroundColor: '#222', borderRadius: '10px', border: '1px solid rgba(0,255,0,0.15)' }}>
+                  {c.imagemBase64 && <img src={c.imagemBase64} alt="" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: '6px' }} />}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ color: '#fff', fontWeight: 600 }}>{c.cliente || '—'}</div>
+                    <div style={{ color: '#aaa', fontSize: '13px' }}>{c.data} · {(safeT as any)?.comprovantesValorUnitario || 'Unit.'}: {c.valorUnitario.toFixed(2)} × {c.quantidade} = <strong style={{ color: '#00ff00' }}>{c.valorTotal.toFixed(2)} €</strong></div>
+                    {c.descricao && <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>{c.descricao}</div>}
+                  </div>
+                  <button onClick={() => handleRemoverComp(c.id)} style={{ padding: '6px 10px', background: 'rgba(255,68,68,0.2)', border: '1px solid rgba(255,68,68,0.5)', borderRadius: '6px', color: '#ff4444', cursor: 'pointer', fontSize: '12px' }}>Remover</button>
+                </div>
+              ))}
+            </div>
+            {/* Modal adicionar */}
+            {showFormComp && (
+              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }} onClick={() => setShowFormComp(false)}>
+                <div style={{ background: '#222', padding: '24px', borderRadius: '12px', border: '2px solid rgba(0,255,0,0.3)', maxWidth: '440px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+                  <h3 style={{ margin: '0 0 16px', color: '#00ff00' }}>{(safeT as any)?.comprovantesAdicionar || 'Adicionar comprovante'}</h3>
+                  <input placeholder={(safeT as any)?.comprovantesCliente || 'Cliente'} value={formComp.cliente} onChange={e => setFormComp(prev => ({ ...prev, cliente: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
+                  <input type="date" value={formComp.data} onChange={e => setFormComp(prev => ({ ...prev, data: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
+                  <input type="number" step={0.01} placeholder={(safeT as any)?.comprovantesValorUnitario || 'Valor unitário'} value={formComp.valorUnitario || ''} onChange={e => setFormComp(prev => ({ ...prev, valorUnitario: Number(e.target.value) || 0 }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
+                  <input type="number" min={1} placeholder={(safeT as any)?.comprovantesQuantidade || 'Quantidade'} value={formComp.quantidade || ''} onChange={e => setFormComp(prev => ({ ...prev, quantidade: Number(e.target.value) || 1 }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
+                  <input placeholder={(safeT as any)?.comprovantesDescricao || 'Descrição (opcional)'} value={formComp.descricao} onChange={e => setFormComp(prev => ({ ...prev, descricao: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
+                  <label style={{ display: 'block', color: '#00ff00', fontSize: '12px', marginBottom: '6px' }}>{(safeT as any)?.comprovantesImagem || 'Imagem do comprovante'}</label>
+                  <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setFormComp(prev => ({ ...prev, imagemBase64: (r.result as string) || '' })); r.readAsDataURL(f); } }} style={{ width: '100%', padding: '8px', marginBottom: '16px', color: '#ccc' }} />
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <button onClick={() => setShowFormComp(false)} style={{ padding: '10px 18px', background: 'transparent', border: '1px solid #666', borderRadius: '6px', color: '#ccc', cursor: 'pointer' }}>Cancelar</button>
+                    <button onClick={handleAddComprovante} style={{ padding: '10px 18px', background: 'rgba(0,255,0,0.2)', border: '1px solid #00ff00', borderRadius: '6px', color: '#00ff00', fontWeight: 600, cursor: 'pointer' }}>Guardar</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      }
+
       case 'mapa-visual-separacao-pecas':
         return (
           <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
@@ -35400,6 +35560,26 @@ A1;Peça exemplo;10'
                   {safeT?.gestaoFinanceiraDesc || 'Gerencie finanças, faturas e pagamentos'}
                 </p>
                 
+                {/* Botão Comprovantes de Despesas */}
+                <button
+                  className="btn-primary"
+                  onClick={() => handleButtonClick('open-comprovantes-despesas')}
+                  style={{
+                    padding: '15px 30px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                    border: '2px solid rgba(0, 255, 0, 0.5)',
+                    borderRadius: '10px',
+                    color: '#00ff00',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px'
+                  }}
+                >
+                  📄 {safeT?.comprovantesDespesasTitle || 'Comprovantes de Despesas'}
+                </button>
                 {/* Botão Clientes Financeiro */}
                 <button
                   className="btn-primary"
@@ -36673,7 +36853,7 @@ A1;Peça exemplo;10'
                  'relatorio-servico-default', 'biblioteca-pecas-default', 'agenda-default', 
                  'desmontados-default', 'cadastro-servicos-default', 'gestao-tecnica-default', 
                  'gestao-custos-default', 'gestao-industrial-default', 'gestao-financeira-default',
-                 'clientes-financeiro-default', 'pre-checklist-default', 'checklist-default', 'gestao-grupos-checklist-default', 'ordem-preparacao-default', 'formularios-checklist-tecnicos-default', 'verificacao-final-entrega-default',
+                 'clientes-financeiro-default', 'comprovantes-despesas-default', 'pre-checklist-default', 'checklist-default', 'gestao-grupos-checklist-default', 'ordem-preparacao-default', 'formularios-checklist-tecnicos-default', 'verificacao-final-entrega-default',
                  'hub-comunicacao-default', 'mensagens-internas-default', 'mensagens-internas-tecnicos-default', 'alerta-mensagens-default', 'manuais-informacoes-tecnicas-default', 'almoxarifado-armazem-default'].includes(btn.id)
       }
     })
