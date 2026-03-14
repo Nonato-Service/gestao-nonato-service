@@ -1180,15 +1180,10 @@ export default function Dashboard() {
   const [activeTabId, setActiveTabId] = useState<string | null>(null)
   const mainContentAreaRef = useRef<HTMLDivElement>(null)
 
-  // Ao mudar de aba ou abrir uma nova, scroll da área de conteúdo para o topo (mostrar página desde o início)
+  // Ao mudar de aba ou abrir uma nova: scroll apenas da área CENTRAL (não mexer na barra lateral nem na janela)
   useEffect(() => {
     if (!activeTabId) return
     const run = () => {
-      if (typeof window !== 'undefined') {
-        window.scrollTo(0, 0)
-        document.documentElement.scrollTop = 0
-        document.body.scrollTop = 0
-      }
       const el = mainContentAreaRef.current
       if (el) {
         el.scrollTop = 0
@@ -12846,13 +12841,8 @@ export default function Dashboard() {
     }
   }, [selectedLanguage])
 
-  // Rolar a área de conteúdo principal para o topo (mostrar início da opção selecionada)
+  // Rolar apenas a área CENTRAL para o topo (não tocar na barra lateral nem na janela)
   const scrollMainContentToTop = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo(0, 0)
-      document.documentElement.scrollTop = 0
-      document.body.scrollTop = 0
-    }
     const el = mainContentAreaRef.current
     if (el) {
       el.scrollTop = 0
