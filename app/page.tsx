@@ -2342,7 +2342,7 @@ export default function Dashboard() {
       'gestao-custos': t?.gestaoCustosTitle || 'Gestão de Custos',
       'biblioteca-relatorios': t?.bibliotecaRelatoriosTitle || 'Biblioteca de Relatórios Salvos',
       'gestao-financeira': t?.gestaoFinanceiraTitle || 'Gestão Financeira',
-      'clientes-financeiro': t?.clientesFinanceiroTitle || 'Clientes Financeiro',
+      'clientes-financeiro': t?.clientesFinanceiroTitle || 'Clientes / Financeiro',
       'orcamentos-avulso': t?.orcamentosAvulsoTitle || 'Orçamentos Avulso',
       'registro-despesas': t?.registroDespesasTitle || 'Registro de Despesas',
       'comprovantes-despesas': t?.comprovantesDespesasTitle || 'COMPROVANTES DE DESPESAS',
@@ -4064,11 +4064,11 @@ export default function Dashboard() {
         saveData('nonato-sidebar-buttons', buttons)
       }
       
-      // Adicionar botão de Clientes Financeiro no grupo Gestão Financeira
+      // Adicionar botão de Clientes / Financeiro no grupo Gestão Financeira
       if (!hasClientesFinanceiro) {
         const clientesFinanceiroButton: SidebarButton = {
           id: 'clientes-financeiro-default',
-          name: 'CLIENTES FINANCEIRO',
+          name: 'CLIENTES / FINANCEIRO',
           action: 'open-clientes-financeiro',
           order: buttons.length,
           translationKey: 'clientesFinanceiroTitle',
@@ -32984,7 +32984,7 @@ A1;Peça exemplo;10'
       case 'pre-checklist':
         return (
           <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
-            {/* Cabeçalho — padrão Visualizar Equipamento (Equipamentos / Clientes Financeiro) */}
+            {/* Cabeçalho — padrão Visualizar Equipamento (Equipamentos / Clientes / Financeiro) */}
             <div style={{
               marginBottom: '20px',
               padding: '16px 24px',
@@ -35157,7 +35157,7 @@ A1;Peça exemplo;10'
       case 'almoxarifado-armazem':
         return (
           <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
-            {/* Cabeçalho — padrão Visualizar Equipamento (igual Equipamentos / Clientes Financeiro) */}
+            {/* Cabeçalho — padrão Visualizar Equipamento (igual Equipamentos / Clientes / Financeiro) */}
             <div style={{
               marginBottom: '20px',
               padding: '16px 24px',
@@ -35855,7 +35855,7 @@ A1;Peça exemplo;10'
                 >
                   📄 {safeT?.comprovantesDespesasTitle || 'COMPROVANTES DE DESPESAS'}
                 </button>
-                {/* Botão Clientes Financeiro */}
+                {/* Botão Clientes / Financeiro */}
                 <button
                   className="btn-primary"
                   onClick={() => handleButtonClick('open-clientes-financeiro')}
@@ -35884,7 +35884,7 @@ A1;Peça exemplo;10'
                     e.currentTarget.style.boxShadow = 'none'
                   }}
                 >
-                  {safeT?.clientesFinanceiro || 'Clientes Financeiro'}
+                  {safeT?.clientesFinanceiro || 'Clientes / Financeiro'}
                 </button>
               </div>
             </div>
@@ -35917,7 +35917,7 @@ A1;Peça exemplo;10'
                     textShadow: '0 0 12px rgba(0, 255, 0, 0.2)',
                     marginBottom: '4px'
                   }}>
-                    {safeT?.clientesFinanceiroTitle || 'CLIENTES FINANCEIRO'}
+                    {safeT?.clientesFinanceiroTitle || 'CLIENTES / FINANCEIRO'}
                   </h1>
                   <p style={{
                     margin: 0,
@@ -35925,7 +35925,7 @@ A1;Peça exemplo;10'
                     color: '#aaa',
                     opacity: 0.9
                   }}>
-                    {safeT?.clientesFinanceiro || 'Clientes Financeiro'}
+                    {safeT?.clientesFinanceiro || 'Clientes / Financeiro'}
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
@@ -36050,11 +36050,39 @@ A1;Peça exemplo;10'
               minHeight: '500px'
             }}>
               {clientesFinanceiroActiveTab === 'os' && (
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ color: '#00ff00', fontSize: '24px', margin: 0 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  {/* Barra de ações: título + busca + adicionar */}
+                  <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    gap: '16px',
+                    padding: '16px 20px',
+                    backgroundColor: '#1a1a1a',
+                    borderRadius: '10px',
+                    border: '1px solid rgba(0, 255, 0, 0.2)'
+                  }}>
+                    <h2 style={{ color: '#00ff00', fontSize: '18px', margin: 0, fontWeight: '700', letterSpacing: '0.5px', flexShrink: 0 }}>
                       {safeT?.ordemServico || 'ORDEM DE SERVIÇO'}
                     </h2>
+                    <div style={{ flex: 1, minWidth: '200px', maxWidth: '400px' }}>
+                      <input
+                        type="text"
+                        placeholder={safeT?.buscarPorNumeroOS || 'Buscar por número de OS...'}
+                        value={buscaOS}
+                        onChange={(e) => setBuscaOS(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '10px 14px',
+                          backgroundColor: '#222',
+                          border: '1px solid rgba(0, 255, 0, 0.35)',
+                          borderRadius: '8px',
+                          color: '#fff',
+                          fontSize: '14px',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
                     <button
                       className="btn-primary"
                       onClick={() => {
@@ -36077,75 +36105,63 @@ A1;Peça exemplo;10'
                       style={{
                         padding: '10px 20px',
                         fontSize: '14px',
-                        fontWeight: 'bold'
+                        fontWeight: '600',
+                        borderRadius: '8px',
+                        border: '1px solid #00ff00',
+                        whiteSpace: 'nowrap'
                       }}
                     >
                       + {safeT?.adicionarOS || 'Adicionar OS'}
                     </button>
                   </div>
-                  
-                  {/* Busca por número de OS */}
-                  <div style={{ marginBottom: '20px' }}>
-                    <input
-                      type="text"
-                      placeholder={safeT?.buscarPorNumeroOS || 'Buscar por número de OS...'}
-                      value={buscaOS}
-                      onChange={(e) => setBuscaOS(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        backgroundColor: '#222222',
-                        border: '1px solid rgba(0, 255, 0, 0.3)',
-                        borderRadius: '8px',
-                        color: '#fff',
-                        fontSize: '14px'
-                      }}
-                    />
-                  </div>
 
-                  {/* Lista de OS — padrão Visualizar Equipamento (card #2a2a2a, borda 1px verde) */}
-                  <div style={{ display: 'grid', gap: '15px' }}>
+                  {/* Lista de OS */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {ordensServico
                       .filter(os => !buscaOS || os.numeroOS.toLowerCase().includes(buscaOS.toLowerCase()))
                       .map((os) => (
                         <div
                           key={os.id}
                           style={{
-                            padding: '20px',
-                            backgroundColor: '#222222',
+                            padding: '18px 20px',
+                            backgroundColor: '#1e1e1e',
                             border: '1px solid rgba(0, 255, 0, 0.2)',
-                            borderRadius: '8px',
+                            borderRadius: '10px',
                             display: 'flex',
+                            flexWrap: 'wrap',
                             justifyContent: 'space-between',
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            gap: '16px'
                           }}
                         >
-                          <div style={{ flex: 1 }}>
-                            <div style={{ display: 'flex', gap: '15px', alignItems: 'center', marginBottom: '10px' }}>
-                              <h3 style={{ color: '#00ff00', margin: 0, fontSize: '18px' }}>{os.numeroOS}</h3>
+                          <div style={{ flex: 1, minWidth: '200px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                              <h3 style={{ color: '#00ff00', margin: 0, fontSize: '16px', fontWeight: '600' }}>{os.numeroOS}</h3>
                               <span style={{
-                                padding: '4px 12px',
-                                backgroundColor: os.status === 'concluida' ? 'rgba(0, 255, 0, 0.2)' : os.status === 'em-andamento' ? 'rgba(255, 255, 0, 0.2)' : 'rgba(255, 0, 0, 0.2)',
-                                border: `1px solid ${os.status === 'concluida' ? 'rgba(0, 255, 0, 0.5)' : os.status === 'em-andamento' ? 'rgba(255, 255, 0, 0.5)' : 'rgba(255, 0, 0, 0.5)'}`,
-                                borderRadius: '4px',
-                                color: os.status === 'concluida' ? '#00ff00' : os.status === 'em-andamento' ? '#ffff00' : '#ff0000',
-                                fontSize: '12px',
-                                textTransform: 'uppercase'
+                                padding: '4px 10px',
+                                backgroundColor: os.status === 'concluida' ? 'rgba(0, 255, 0, 0.15)' : os.status === 'em-andamento' ? 'rgba(255, 200, 0, 0.15)' : 'rgba(255, 80, 80, 0.15)',
+                                border: `1px solid ${os.status === 'concluida' ? 'rgba(0, 255, 0, 0.5)' : os.status === 'em-andamento' ? 'rgba(255, 200, 0, 0.5)' : 'rgba(255, 80, 80, 0.5)'}`,
+                                borderRadius: '6px',
+                                color: os.status === 'concluida' ? '#00ff00' : os.status === 'em-andamento' ? '#ffcc00' : '#ff6666',
+                                fontSize: '11px',
+                                fontWeight: '600',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px'
                               }}>
                                 {os.status}
                               </span>
                             </div>
-                            <p style={{ color: '#ccc', margin: '5px 0', fontSize: '14px' }}>
+                            <p style={{ color: 'rgba(255,255,255,0.85)', margin: '4px 0', fontSize: '13px' }}>
                               {safeT?.cliente || 'Cliente'}: {os.clienteNome}
                             </p>
-                            <p style={{ color: '#ccc', margin: '5px 0', fontSize: '14px' }}>
-                              {safeT?.dataAbertura || 'Data Abertura'}: {new Date(os.dataAbertura).toLocaleDateString()}
+                            <p style={{ color: 'rgba(255,255,255,0.7)', margin: '4px 0', fontSize: '13px' }}>
+                              {safeT?.dataAbertura || 'Data Abertura'}: {new Date(os.dataAbertura).toLocaleDateString('pt-BR')}
                             </p>
-                            <p style={{ color: '#00ff00', margin: '5px 0', fontSize: '16px', fontWeight: 'bold' }}>
+                            <p style={{ color: '#00ff00', margin: '8px 0 0', fontSize: '15px', fontWeight: '700' }}>
                               {safeT?.valorTotal || 'Valor Total'}: €{os.valorTotal.toFixed(2)}
                             </p>
                           </div>
-                          <div style={{ display: 'flex', gap: '10px' }}>
+                          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                             <button
                               className="btn-primary"
                               onClick={() => {
@@ -36167,7 +36183,9 @@ A1;Peça exemplo;10'
                               }}
                               style={{
                                 padding: '8px 16px',
-                                fontSize: '12px'
+                                fontSize: '13px',
+                                borderRadius: '8px',
+                                fontWeight: '500'
                               }}
                             >
                               {safeT?.editar || 'Editar'}
@@ -36176,7 +36194,15 @@ A1;Peça exemplo;10'
                         </div>
                       ))}
                     {ordensServico.filter(os => !buscaOS || os.numeroOS.toLowerCase().includes(buscaOS.toLowerCase())).length === 0 && (
-                      <div style={{ textAlign: 'center', padding: '40px', color: '#ccc' }}>
+                      <div style={{
+                        textAlign: 'center',
+                        padding: '48px 24px',
+                        color: 'rgba(255,255,255,0.6)',
+                        fontSize: '14px',
+                        backgroundColor: '#1a1a1a',
+                        borderRadius: '10px',
+                        border: '1px dashed rgba(0, 255, 0, 0.2)'
+                      }}>
                         {safeT?.nenhumaOS || 'Nenhuma ordem de serviço cadastrada'}
                       </div>
                     )}

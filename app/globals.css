@@ -472,7 +472,7 @@ body {
   color: #ffffff;
 }
 
-/* Gestão Financeira > Clientes Financeiro > Conteúdo: botões = padrão Visualizar Equipamentos */
+/* Gestão Financeira > Clientes / Financeiro > Conteúdo: botões = padrão Visualizar Equipamentos */
 .clientes-financeiro-panel .clientes-financeiro-conteudo button {
   background: transparent !important;
   border: 1px solid rgba(0, 255, 0, 0.95) !important;

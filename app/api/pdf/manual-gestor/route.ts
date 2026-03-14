@@ -110,7 +110,7 @@ export async function GET() {
         <tr><td>GESTÃO DE CUSTOS</td><td>Cadastro de Serviços, Orçamentos Avulso, Mapa Visual de Separação</td></tr>
         <tr><td>CHECKLIST</td><td>Pré-Checklist, Checklist, Gestão de Grupos, Ordem de Preparação, Formulários para Técnicos, Verificação Final Entrega</td></tr>
         <tr><td>COMUNICAÇÃO</td><td>Mensagens Internas, Alerta de Mensagens, Mensagens Técnicos</td></tr>
-        <tr><td>GESTÃO FINANCEIRA</td><td>Clientes financeiro, orçamentos</td></tr>
+        <tr><td>GESTÃO FINANCEIRA</td><td>Clientes / Financeiro, orçamentos</td></tr>
         <tr><td>EXTRAS</td><td>Idioma, Tradutor, Manual do Gestor, Administrador</td></tr>
       </tbody>
     </table>
