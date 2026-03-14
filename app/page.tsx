@@ -1183,12 +1183,23 @@ export default function Dashboard() {
   // Ao mudar de aba ou abrir uma nova, scroll da área de conteúdo para o topo (mostrar página desde o início)
   useEffect(() => {
     if (!activeTabId) return
-    const el = mainContentAreaRef.current
-    if (el) {
-      el.scrollTop = 0
-      const inner = el.querySelector('.tab-inner-scroll') as HTMLElement | null
-      if (inner) inner.scrollTop = 0
+    const run = () => {
+      if (typeof window !== 'undefined') {
+        window.scrollTo(0, 0)
+        document.documentElement.scrollTop = 0
+        document.body.scrollTop = 0
+      }
+      const el = mainContentAreaRef.current
+      if (el) {
+        el.scrollTop = 0
+        const inner = el.querySelector('.tab-inner-scroll') as HTMLElement | null
+        if (inner) inner.scrollTop = 0
+      }
     }
+    run()
+    const t1 = setTimeout(run, 50)
+    const t2 = setTimeout(run, 200)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [activeTabId])
 
   // Funções para gerenciar abas
@@ -12837,6 +12848,11 @@ export default function Dashboard() {
 
   // Rolar a área de conteúdo principal para o topo (mostrar início da opção selecionada)
   const scrollMainContentToTop = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0)
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+    }
     const el = mainContentAreaRef.current
     if (el) {
       el.scrollTop = 0
@@ -46130,130 +46146,145 @@ A1;Peça exemplo;10'
         </div>
       )}
 
-      {/* Modal de Equipamentos do Cliente */}
+      {/* Modal de Equipamentos do Cliente - Layout moderno */}
       {selectedClienteForEquipamento && (
         <div className="modal-overlay" onClick={() => { setSelectedClienteForEquipamento(null); setShowEquipamentoClienteForm(false); }}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>{safeT?.equipamentosCliente || 'Equipamentos'} - {selectedClienteForEquipamento.nomeEmpresa}</h2>
-            <button className="btn-primary" onClick={() => handleAddEquipamentoCliente(selectedClienteForEquipamento)} style={{ marginBottom: '15px' }}>
-              {safeT?.adicionarEquipamento || 'Adicionar Equipamento'}
-            </button>
-            {showEquipamentoClienteForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
-                <h4>{editingEquipamentoCliente ? (safeT?.editarEquipamento || 'Editar Equipamento') : (safeT?.adicionarEquipamento || 'Adicionar Equipamento')}</h4>
-                <input type="text" placeholder={safeT?.tipoEquipamento || 'Tipo de Equipamento'} value={equipamentoClienteForm.tipoEquipamento} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, tipoEquipamento: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
-                <input type="text" placeholder={safeT?.modelo || 'Modelo'} value={equipamentoClienteForm.modelo} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, modelo: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
-                <input type="text" placeholder={safeT?.marca || 'Marca'} value={equipamentoClienteForm.marca} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, marca: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
-                <input type="text" placeholder={safeT?.numeroSerie || 'Número de Série'} value={equipamentoClienteForm.numeroSerie} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, numeroSerie: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
-                <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                  <button className="btn-primary" onClick={handleSaveEquipamentoCliente} style={{ flex: 1 }}>{safeT?.save || 'Salvar'}</button>
-                  <button className="btn-primary" onClick={() => { setShowEquipamentoClienteForm(false); setEditingEquipamentoCliente(null); }} style={{ flex: 1 }}>{safeT?.cancel || 'Cancelar'}</button>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '720px', width: '95%', maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)', borderRadius: '16px', border: '1px solid rgba(0, 255, 0, 0.25)', boxShadow: '0 24px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,255,0,0.08)' }}>
+            {/* Cabeçalho */}
+            <div style={{ flexShrink: 0, padding: '20px 24px', borderBottom: '1px solid rgba(0, 255, 0, 0.15)', background: 'rgba(0, 255, 0, 0.04)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(0, 255, 0, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>⚙️</div>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#fff', letterSpacing: '0.3px' }}>{safeT?.equipamentosCliente || 'Equipamentos'}</h2>
+                    <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>{selectedClienteForEquipamento.nomeEmpresa}</p>
+                  </div>
                 </div>
+                <button
+                  className="btn-primary"
+                  onClick={() => handleAddEquipamentoCliente(selectedClienteForEquipamento)}
+                  style={{ padding: '10px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '8px', border: '1px solid #00ff00', background: 'rgba(0, 255, 0, 0.12)', color: '#00ff00' }}
+                >
+                  <span>+</span> {safeT?.adicionarEquipamento || 'Adicionar Equipamento'}
+                </button>
               </div>
-            )}
-            {selectedClienteForEquipamento.equipamentos && selectedClienteForEquipamento.equipamentos.length > 0 ? (
-              <div style={{ marginTop: '20px' }}>
-                {selectedClienteForEquipamento.equipamentos.map((equipamento, index) => {
-                  // Buscar relatórios de serviço para este equipamento
-                  const equipamentoId = equipamento.numeroSerie || equipamento.modelo || index.toString()
-                  const relatoriosServicoEquipamento = selectedClienteForEquipamento.relatorios?.[equipamentoId] || []
-                  
-                  return (
-                    <div key={index} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
-                      <p><strong>{equipamento.modelo}</strong> - {equipamento.marca} ({equipamento.numeroSerie})</p>
-                      <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.tipoEquipamento || 'Tipo'}: {equipamento.tipoEquipamento}</p>
-                      
-                      {/* Seção de Relatórios de Serviço - Organizados por Data */}
-                      {relatoriosServicoEquipamento.length > 0 && (
-                        <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
-                          <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#00ff00', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span>📋</span>
-                            {safeT?.relatoriosServico || 'Relatórios de Serviço'} ({relatoriosServicoEquipamento.length})
-                          </h4>
-                          <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                            {/* Agrupar relatórios por data */}
-                            {(() => {
-                              const relatoriosPorData: { [data: string]: RelatorioServico[] } = {}
-                              relatoriosServicoEquipamento.forEach(relatorio => {
-                                const dataKey = new Date(relatorio.data).toLocaleDateString('pt-BR')
-                                if (!relatoriosPorData[dataKey]) {
-                                  relatoriosPorData[dataKey] = []
-                                }
-                                relatoriosPorData[dataKey].push(relatorio)
-                              })
-                              
-                              // Ordenar datas (mais recente primeiro)
-                              const datasOrdenadas = Object.keys(relatoriosPorData).sort((a, b) => {
-                                return new Date(b.split('/').reverse().join('-')).getTime() - new Date(a.split('/').reverse().join('-')).getTime()
-                              })
-                              
-                              return datasOrdenadas.map(dataKey => (
-                                <div key={dataKey} style={{ marginBottom: '15px', padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                                  <h5 style={{ fontSize: '12px', fontWeight: 'bold', color: '#00ff00', marginBottom: '8px', paddingBottom: '5px', borderBottom: '1px solid rgba(0, 255, 0, 0.3)' }}>
-                                    📅 {dataKey} ({relatoriosPorData[dataKey].length} {relatoriosPorData[dataKey].length === 1 ? 'relatório' : 'relatórios'})
-                                  </h5>
-                                  {relatoriosPorData[dataKey].map((relatorio) => (
-                                    <div key={relatorio.id} style={{ padding: '8px', marginBottom: '6px', backgroundColor: '#222222', borderRadius: '4px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '6px' }}>
-                                        <div style={{ flex: 1 }}>
-                                          <p style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', color: '#00ff00' }}>
-                                            {relatorio.numero}
-                                          </p>
-                                          <p style={{ fontSize: '11px', opacity: 0.9, marginBottom: '2px' }}>
-                                            👤 {safeT?.tecnico || 'Técnico'}: {relatorio.tecnico}
-                                          </p>
-                                          {relatorio.tipoServico && (
-                                            <p style={{ fontSize: '11px', opacity: 0.8, marginBottom: '2px' }}>
-                                              🔧 {safeT?.tipoServico || 'Tipo de Serviço'}: {relatorio.tipoServico}
-                                            </p>
-                                          )}
-                                          {relatorio.diasTrabalho && relatorio.diasTrabalho.length > 0 && (
-                                            <p style={{ fontSize: '10px', opacity: 0.7, marginTop: '4px' }}>
-                                              📊 {relatorio.diasTrabalho.length} {relatorio.diasTrabalho.length === 1 ? 'dia' : 'dias'} de trabalho
-                                            </p>
-                                          )}
-                                        </div>
-                                        <button 
-                                          className="btn-primary" 
-                                          onClick={() => {
-                                            // Abrir o relatório para visualização completa
-                                            setViewingRelatorioServico(relatorio)
-                                          }}
-                                          style={{ 
-                                            padding: '4px 8px', 
-                                            fontSize: '10px', 
-                                            whiteSpace: 'nowrap',
-                                            marginLeft: '8px',
-                                            backgroundColor: '#0066cc',
-                                            borderColor: '#0066cc'
-                                          }}
-                                          title={safeT?.verRelatorio || 'Ver Relatório Completo'}
-                                        >
-                                          👁️ {safeT?.ver || 'Ver'}
-                                        </button>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              ))
-                            })()}
+            </div>
+
+            {/* Conteúdo com scroll */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
+              {/* Formulário Adicionar/Editar */}
+              {showEquipamentoClienteForm && (
+                <div style={{ marginBottom: '24px', padding: '20px', borderRadius: '14px', border: '1px solid rgba(0, 255, 0, 0.2)', background: 'rgba(0, 255, 0, 0.03)', boxShadow: 'inset 0 1px 0 rgba(0,255,0,0.06)' }}>
+                  <h4 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: '600', color: '#00ff00' }}>
+                    {editingEquipamentoCliente ? (safeT?.editarEquipamento || 'Editar Equipamento') : (safeT?.adicionarEquipamento || 'Adicionar Equipamento')}
+                  </h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
+                    <input type="text" placeholder={safeT?.tipoEquipamento || 'Tipo de Equipamento'} value={equipamentoClienteForm.tipoEquipamento} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, tipoEquipamento: e.target.value })} style={{ padding: '12px 14px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
+                    <input type="text" placeholder={safeT?.modelo || 'Modelo'} value={equipamentoClienteForm.modelo} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, modelo: e.target.value })} style={{ padding: '12px 14px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
+                    <input type="text" placeholder={safeT?.marca || 'Marca'} value={equipamentoClienteForm.marca} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, marca: e.target.value })} style={{ padding: '12px 14px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
+                    <input type="text" placeholder={safeT?.numeroSerie || 'Número de Série'} value={equipamentoClienteForm.numeroSerie} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, numeroSerie: e.target.value })} style={{ padding: '12px 14px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '18px' }}>
+                    <button className="btn-primary" onClick={handleSaveEquipamentoCliente} style={{ flex: 1, padding: '12px', borderRadius: '10px', fontSize: '14px', fontWeight: '600' }}>{safeT?.save || 'Salvar'}</button>
+                    <button className="btn-primary" onClick={() => { setShowEquipamentoClienteForm(false); setEditingEquipamentoCliente(null); }} style={{ flex: 1, padding: '12px', borderRadius: '10px', fontSize: '14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.9)' }}>{safeT?.cancel || 'Cancelar'}</button>
+                  </div>
+                </div>
+              )}
+
+              {/* Lista de equipamentos */}
+              {selectedClienteForEquipamento.equipamentos && selectedClienteForEquipamento.equipamentos.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {selectedClienteForEquipamento.equipamentos.map((equipamento, index) => {
+                    const equipamentoId = equipamento.numeroSerie || equipamento.modelo || index.toString()
+                    const relatoriosServicoEquipamento = selectedClienteForEquipamento.relatorios?.[equipamentoId] || []
+                    return (
+                      <div
+                        key={index}
+                        style={{
+                          padding: '18px 20px',
+                          borderRadius: '14px',
+                          border: '1px solid rgba(0, 255, 0, 0.15)',
+                          background: 'rgba(22, 22, 22, 0.8)',
+                          transition: 'border-color 0.2s, box-shadow 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
+                          e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 0, 0.08)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.15)'
+                          e.currentTarget.style.boxShadow = 'none'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', marginBottom: relatoriosServicoEquipamento.length > 0 ? '14px' : 0 }}>
+                          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(0, 255, 0, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>🔧</div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#fff' }}>{equipamento.modelo}</p>
+                            <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>{equipamento.marca} · {equipamento.numeroSerie}</p>
+                            <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'rgba(0, 255, 0, 0.8)' }}>{equipamento.tipoEquipamento}</p>
                           </div>
                         </div>
-                      )}
-                      
-                      <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
-                        <button className="btn-primary" onClick={() => handleEditEquipamentoCliente(selectedClienteForEquipamento, equipamento, index)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>{safeT?.edit || 'Editar'}</button>
-                        <button className="btn-primary" onClick={() => handleOpenRelatorios(selectedClienteForEquipamento, equipamento, index)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>{safeT?.relatorios || 'Relatórios'}</button>
-                        <button className="btn-danger" onClick={() => handleDeleteEquipamentoCliente(selectedClienteForEquipamento.id, index)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>{safeT?.delete || 'Excluir'}</button>
+
+                        {/* Relatórios de Serviço */}
+                        {relatoriosServicoEquipamento.length > 0 && (
+                          <div style={{ marginTop: '14px', padding: '14px', borderRadius: '10px', background: 'rgba(0, 255, 0, 0.04)', border: '1px solid rgba(0, 255, 0, 0.12)' }}>
+                            <h4 style={{ fontSize: '13px', fontWeight: '600', color: '#00ff00', margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span>📋</span> {safeT?.relatoriosServico || 'Relatórios de Serviço'} ({relatoriosServicoEquipamento.length})
+                            </h4>
+                            <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                              {(() => {
+                                const relatoriosPorData: { [data: string]: RelatorioServico[] } = {}
+                                relatoriosServicoEquipamento.forEach(relatorio => {
+                                  const dataKey = new Date(relatorio.data).toLocaleDateString('pt-BR')
+                                  if (!relatoriosPorData[dataKey]) relatoriosPorData[dataKey] = []
+                                  relatoriosPorData[dataKey].push(relatorio)
+                                })
+                                const datasOrdenadas = Object.keys(relatoriosPorData).sort((a, b) => new Date(b.split('/').reverse().join('-')).getTime() - new Date(a.split('/').reverse().join('-')).getTime())
+                                return datasOrdenadas.map(dataKey => (
+                                  <div key={dataKey} style={{ marginBottom: '12px' }}>
+                                    <p style={{ fontSize: '11px', fontWeight: '600', color: 'rgba(0, 255, 0, 0.9)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>📅 {dataKey}</p>
+                                    {relatoriosPorData[dataKey].map((relatorio) => (
+                                      <div key={relatorio.id} style={{ padding: '10px 12px', marginBottom: '6px', borderRadius: '8px', background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                                          <div>
+                                            <p style={{ margin: 0, fontSize: '12px', fontWeight: '600', color: '#00ff00' }}>{relatorio.numero}</p>
+                                            <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.8)' }}>👤 {relatorio.tecnico}</p>
+                                            {relatorio.tipoServico && <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.65)' }}>🔧 {relatorio.tipoServico}</p>}
+                                            {relatorio.diasTrabalho && relatorio.diasTrabalho.length > 0 && <p style={{ margin: '4px 0 0', fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>📊 {relatorio.diasTrabalho.length} {relatorio.diasTrabalho.length === 1 ? 'dia' : 'dias'}</p>}
+                                          </div>
+                                          <button className="btn-primary" onClick={() => setViewingRelatorioServico(relatorio)} style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '8px', flexShrink: 0, background: 'rgba(0, 100, 200, 0.3)', borderColor: 'rgba(0, 150, 255, 0.5)' }}>👁️ {safeT?.ver || 'Ver'}</button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ))
+                              })()}
+                            </div>
+                          </div>
+                        )}
+
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap' }}>
+                          <button className="btn-primary" onClick={() => handleEditEquipamentoCliente(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', flex: 1, minWidth: '80px' }}>✏️ {safeT?.edit || 'Editar'}</button>
+                          <button className="btn-primary" onClick={() => handleOpenRelatorios(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', flex: 1, minWidth: '80px', background: 'rgba(0, 255, 0, 0.1)', borderColor: 'rgba(0, 255, 0, 0.4)' }}>📋 {safeT?.relatorios || 'Relatórios'}</button>
+                          <button className="btn-danger" onClick={() => handleDeleteEquipamentoCliente(selectedClienteForEquipamento.id, index)} style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', flex: 1, minWidth: '80px' }}>🗑️ {safeT?.delete || 'Excluir'}</button>
+                        </div>
                       </div>
-                    </div>
-                  )
-                })}
-              </div>
-            ) : (
-              <p>{safeT?.nenhumEquipamento || 'Nenhum equipamento cadastrado.'}</p>
-            )}
-            <button className="btn-primary" onClick={() => { setSelectedClienteForEquipamento(null); setShowEquipamentoClienteForm(false); }} style={{ width: '100%', marginTop: '20px' }}>{safeT?.close || 'Fechar'}</button>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '48px 24px', borderRadius: '14px', border: '1px dashed rgba(0, 255, 0, 0.2)', background: 'rgba(0, 255, 0, 0.02)' }}>
+                  <div style={{ fontSize: '40px', marginBottom: '16px', opacity: 0.6 }}>⚙️</div>
+                  <p style={{ margin: 0, fontSize: '15px', color: 'rgba(255,255,255,0.7)' }}>{safeT?.nenhumEquipamento || 'Nenhum equipamento cadastrado.'}</p>
+                  <p style={{ margin: '8px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Clique em &quot;Adicionar Equipamento&quot; para começar.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Rodapé */}
+            <div style={{ flexShrink: 0, padding: '16px 24px', borderTop: '1px solid rgba(0, 255, 0, 0.12)', background: 'rgba(0,0,0,0.2)' }}>
+              <button className="btn-primary" onClick={() => { setSelectedClienteForEquipamento(null); setShowEquipamentoClienteForm(false); }} style={{ width: '100%', padding: '12px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', background: 'transparent', border: '1px solid rgba(0, 255, 0, 0.4)', color: '#00ff00' }}>{safeT?.close || 'Fechar'}</button>
+            </div>
           </div>
         </div>
       )}
