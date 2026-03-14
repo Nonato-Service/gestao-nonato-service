@@ -1178,7 +1178,19 @@ export default function Dashboard() {
   // Sistema de múltiplas páginas/abas
   const [openTabs, setOpenTabs] = useState<Tab[]>([])
   const [activeTabId, setActiveTabId] = useState<string | null>(null)
-  
+  const mainContentAreaRef = useRef<HTMLDivElement>(null)
+
+  // Ao mudar de aba ou abrir uma nova, scroll da área de conteúdo para o topo (mostrar página desde o início)
+  useEffect(() => {
+    if (!activeTabId) return
+    const el = mainContentAreaRef.current
+    if (el) {
+      el.scrollTop = 0
+      const inner = el.querySelector('.tab-inner-scroll') as HTMLElement | null
+      if (inner) inner.scrollTop = 0
+    }
+  }, [activeTabId])
+
   // Funções para gerenciar abas
   const openTab = (type: TabType, title: string, icon?: string) => {
     const tabId = `${type}-${Date.now()}`
@@ -12823,6 +12835,16 @@ export default function Dashboard() {
     }
   }, [selectedLanguage])
 
+  // Rolar a área de conteúdo principal para o topo (mostrar início da opção selecionada)
+  const scrollMainContentToTop = useCallback(() => {
+    const el = mainContentAreaRef.current
+    if (el) {
+      el.scrollTop = 0
+      const inner = el.querySelector('.tab-inner-scroll') as HTMLElement | null
+      if (inner) inner.scrollTop = 0
+    }
+  }, [])
+
   // Função para lidar com cliques nos botões da sidebar (buttonId opcional: quando dois botões abrem a mesma aba, usar id para só um ficar ativo)
   const handleButtonClick = useCallback((action: string, buttonId?: string) => {
     const groupToggles = ['open-gestao-tecnica', 'open-gestao-custos', 'open-comunicacao-interna', 'open-gestao-industrial', 'open-gestao-financeira', 'open-extra', 'open-biblioteca-hub']
@@ -12830,9 +12852,14 @@ export default function Dashboard() {
       window.alert('Você não tem permissão para acessar esta função.')
       return
     }
+    // Ao selecionar qualquer opção da sidebar, mostrar sempre desde o início do conteúdo
+    scrollMainContentToTop()
     requestAnimationFrame(() => {
+      scrollMainContentToTop()
       setSelectedSidebarButton(buttonId != null && buttonId !== '' ? buttonId : action)
     })
+    setTimeout(() => scrollMainContentToTop(), 0)
+    setTimeout(() => scrollMainContentToTop(), 150)
     
     if (action === 'open-administrador') {
       openTab('administrador', getTabTitle('administrador'))
@@ -13085,7 +13112,7 @@ export default function Dashboard() {
     } else if (action === 'open-biblioteca-relatorios') {
       openTab('biblioteca-relatorios', getTabTitle('biblioteca-relatorios'))
     }
-  }, [expandedGroups, openTab, getTabTitle, canAccessAction, safeT])
+  }, [expandedGroups, openTab, getTabTitle, canAccessAction, safeT, scrollMainContentToTop])
 
   // ===== Funções PRE CHECKLIST =====
   const handleBuscarEquipamentoPreCheck = () => {
@@ -42119,10 +42146,10 @@ A1;Peça exemplo;10'
           </button>
         </div>
         {/* Conteúdo da Aba Ativa ou Dashboard */}
-        <div className="main-content-area" style={{ flex: 1, padding: '30px', overflowY: 'auto', minWidth: 0, width: '100%', boxSizing: 'border-box' }}>
+        <div ref={mainContentAreaRef} className="main-content-area" style={{ flex: 1, padding: '30px', overflowY: 'auto', minWidth: 0, width: '100%', boxSizing: 'border-box' }}>
           {activeTabId ? (
             // Renderizar conteúdo da aba ativa
-            <div style={{ height: '100%', width: '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
+            <div className="tab-inner-scroll" style={{ height: '100%', width: '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
               {(() => {
                 const activeTab = openTabs.find(t => t.id === activeTabId)
                 if (!activeTab) return null
