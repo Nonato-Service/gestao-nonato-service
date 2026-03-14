@@ -22589,27 +22589,27 @@ onKeyPress={(e) => {
               </div>
             </div>
 
-            {/* Abas: Cadastro | Biblioteca | Gerenciar Categorias | Importação - compactas */}
+            {/* Abas: Cadastro | Biblioteca | Gerenciar Categorias | Importação - com contorno verde padrão */}
             <div style={{
               display: 'flex',
               flexWrap: 'wrap',
-              gap: '6px',
+              gap: '8px',
               marginBottom: '16px',
-              paddingBottom: '10px',
-              borderBottom: '1px solid rgba(0, 100, 255, 0.25)'
+              paddingBottom: '12px',
+              borderBottom: '1px solid rgba(0, 255, 0, 0.25)'
             }}>
               <button
                 onClick={() => setAbaBibliotecaPecas('cadastro')}
                 style={{
-                  padding: '6px 12px',
-                  backgroundColor: abaBibliotecaPecas === 'cadastro' ? 'rgba(0, 255, 0, 0.18)' : 'transparent',
-                  border: 'none',
-                  borderBottom: abaBibliotecaPecas === 'cadastro' ? '2px solid #00ff00' : '2px solid transparent',
-                  color: abaBibliotecaPecas === 'cadastro' ? '#00ff00' : '#ccc',
+                  padding: '8px 14px',
+                  backgroundColor: abaBibliotecaPecas === 'cadastro' ? 'rgba(0, 255, 0, 0.18)' : 'rgba(30, 35, 30, 0.9)',
+                  border: abaBibliotecaPecas === 'cadastro' ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.35)',
+                  color: abaBibliotecaPecas === 'cadastro' ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
                   cursor: 'pointer',
-                  fontSize: '12px',
-                  fontWeight: abaBibliotecaPecas === 'cadastro' ? 'bold' : 'normal',
-                  borderRadius: '4px'
+                  fontSize: '13px',
+                  fontWeight: abaBibliotecaPecas === 'cadastro' ? 'bold' : '500',
+                  borderRadius: '8px',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 {safeT?.cadastroPecas || 'Cadastro de Peças'}
@@ -22617,15 +22617,15 @@ onKeyPress={(e) => {
               <button
                 onClick={() => setAbaBibliotecaPecas('biblioteca')}
                 style={{
-                  padding: '6px 12px',
-                  backgroundColor: abaBibliotecaPecas === 'biblioteca' ? 'rgba(0, 255, 0, 0.18)' : 'transparent',
-                  border: 'none',
-                  borderBottom: abaBibliotecaPecas === 'biblioteca' ? '2px solid #00ff00' : '2px solid transparent',
-                  color: abaBibliotecaPecas === 'biblioteca' ? '#00ff00' : '#ccc',
+                  padding: '8px 14px',
+                  backgroundColor: abaBibliotecaPecas === 'biblioteca' ? 'rgba(0, 255, 0, 0.18)' : 'rgba(30, 35, 30, 0.9)',
+                  border: abaBibliotecaPecas === 'biblioteca' ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.35)',
+                  color: abaBibliotecaPecas === 'biblioteca' ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
                   cursor: 'pointer',
-                  fontSize: '12px',
-                  fontWeight: abaBibliotecaPecas === 'biblioteca' ? 'bold' : 'normal',
-                  borderRadius: '4px'
+                  fontSize: '13px',
+                  fontWeight: abaBibliotecaPecas === 'biblioteca' ? 'bold' : '500',
+                  borderRadius: '8px',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 {safeT?.bibliotecaPecas || 'Biblioteca'}
@@ -22633,15 +22633,15 @@ onKeyPress={(e) => {
               <button
                 onClick={() => setAbaBibliotecaPecas('grupos')}
                 style={{
-                  padding: '6px 12px',
-                  backgroundColor: abaBibliotecaPecas === 'grupos' ? 'rgba(0, 255, 0, 0.18)' : 'transparent',
-                  border: 'none',
-                  borderBottom: abaBibliotecaPecas === 'grupos' ? '2px solid #00ff00' : '2px solid transparent',
-                  color: abaBibliotecaPecas === 'grupos' ? '#00ff00' : '#ccc',
+                  padding: '8px 14px',
+                  backgroundColor: abaBibliotecaPecas === 'grupos' ? 'rgba(0, 255, 0, 0.18)' : 'rgba(30, 35, 30, 0.9)',
+                  border: abaBibliotecaPecas === 'grupos' ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.35)',
+                  color: abaBibliotecaPecas === 'grupos' ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
                   cursor: 'pointer',
-                  fontSize: '12px',
-                  fontWeight: abaBibliotecaPecas === 'grupos' ? 'bold' : 'normal',
-                  borderRadius: '4px'
+                  fontSize: '13px',
+                  fontWeight: abaBibliotecaPecas === 'grupos' ? 'bold' : '500',
+                  borderRadius: '8px',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 {safeT?.gerenciarCategorias || 'Gerenciar Categorias'}
@@ -22649,15 +22649,15 @@ onKeyPress={(e) => {
               <button
                 onClick={() => setAbaBibliotecaPecas('importacao')}
                 style={{
-                  padding: '6px 12px',
-                  backgroundColor: abaBibliotecaPecas === 'importacao' ? 'rgba(0, 255, 0, 0.18)' : 'transparent',
-                  border: 'none',
-                  borderBottom: abaBibliotecaPecas === 'importacao' ? '2px solid #00ff00' : '2px solid transparent',
-                  color: abaBibliotecaPecas === 'importacao' ? '#00ff00' : '#ccc',
+                  padding: '8px 14px',
+                  backgroundColor: abaBibliotecaPecas === 'importacao' ? 'rgba(0, 255, 0, 0.18)' : 'rgba(30, 35, 30, 0.9)',
+                  border: abaBibliotecaPecas === 'importacao' ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.35)',
+                  color: abaBibliotecaPecas === 'importacao' ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
                   cursor: 'pointer',
-                  fontSize: '12px',
-                  fontWeight: abaBibliotecaPecas === 'importacao' ? 'bold' : 'normal',
-                  borderRadius: '4px'
+                  fontSize: '13px',
+                  fontWeight: abaBibliotecaPecas === 'importacao' ? 'bold' : '500',
+                  borderRadius: '8px',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 📥 {safeT?.importacaoPecas || 'Importação de Peças'}
