@@ -20870,13 +20870,15 @@ onKeyPress={(e) => {
         )
       
       case 'clientes':
-        const clientesFiltrados = clientes.filter(cliente => 
-          cliente.nomeEmpresa.toLowerCase().includes(buscaCliente.toLowerCase()) ||
-          cliente.localidade?.toLowerCase().includes(buscaCliente.toLowerCase()) ||
-          cliente.telefones?.toLowerCase().includes(buscaCliente.toLowerCase()) ||
-          cliente.email?.toLowerCase().includes(buscaCliente.toLowerCase()) ||
-          cliente.contato?.toLowerCase().includes(buscaCliente.toLowerCase())
-        )
+        const clientesFiltrados = clientes
+          .filter(cliente => 
+            cliente.nomeEmpresa.toLowerCase().includes(buscaCliente.toLowerCase()) ||
+            cliente.localidade?.toLowerCase().includes(buscaCliente.toLowerCase()) ||
+            cliente.telefones?.toLowerCase().includes(buscaCliente.toLowerCase()) ||
+            cliente.email?.toLowerCase().includes(buscaCliente.toLowerCase()) ||
+            cliente.contato?.toLowerCase().includes(buscaCliente.toLowerCase())
+          )
+          .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
         
         return (
           <div style={{ padding: '30px', maxWidth: '1800px', margin: '0 auto', width: '100%' }} className="tab-content-wrapper">
@@ -37431,10 +37433,12 @@ A1;Peça exemplo;10'
       }, 0)
     }
 
-    const clientesFiltrados = clientes.filter(cliente =>
-      cliente.nomeEmpresa.toLowerCase().includes(buscaCliente.toLowerCase()) ||
-      cliente.email.toLowerCase().includes(buscaCliente.toLowerCase())
-    )
+    const clientesFiltrados = clientes
+      .filter(cliente =>
+        cliente.nomeEmpresa.toLowerCase().includes(buscaCliente.toLowerCase()) ||
+        cliente.email?.toLowerCase().includes(buscaCliente.toLowerCase())
+      )
+      .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
 
     const iniciarEdicaoItem = (orcamentoId: string, itemIndex: number) => {
       const orcamento = orcamentosGerados.find(o => o.id === orcamentoId)
@@ -44865,7 +44869,7 @@ A1;Peça exemplo;10'
               <p>{safeT?.noClientes || 'Nenhum cliente cadastrado.'}</p>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '8px' }}>
-                {clientes.map(cliente => {
+                {[...clientes].sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR')).map(cliente => {
                   // Gerar iniciais do nome da empresa
                   const getIniciais = (nome: string) => {
                     const palavras = nome.trim().split(/\s+/)
