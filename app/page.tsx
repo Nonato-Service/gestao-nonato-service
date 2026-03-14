@@ -12655,58 +12655,95 @@ export default function Dashboard() {
       setImportacaoUrlError(t?.importacaoUrlObrigatoria ?? 'Informe a URL da lista de peças.')
       return
     }
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      setImportacaoUrlError('A URL deve começar com http:// ou https://')
+      return
+    }
     setImportacaoUrlError(null)
     setImportacaoPreview(null)
     setImportacaoUrlLoading(true)
+
+    const tryParseAndPreview = (raw: string): boolean => {
+      try {
+        const pecas = parseRawToPecas(raw)
+        if (pecas.length === 0) return false
+        setImportacaoPreview(pecas)
+        setImportacaoUrlError(null)
+        return true
+      } catch {
+        return false
+      }
+    }
+
+    let apiError: string | null = null
     try {
+      // 1) Tentar primeiro pela API do servidor (evita CORS; funciona para a maioria dos URLs)
       const res = await fetch('/api/import-from-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url })
       })
-      let json: { ok?: boolean; error?: string; data?: string }
-      try {
-        const text = await res.text()
-        if (!text.trim()) {
-          setImportacaoUrlError(t?.importacaoErroRespostaVazia ?? 'O servidor respondeu sem dados.')
+      const text = await res.text()
+      let json: { ok?: boolean; error?: string; data?: string } = { ok: false }
+      if (text.trim()) {
+        try {
+          json = JSON.parse(text)
+        } catch {
+          apiError = (t?.importacaoErroRespostaInvalida ?? 'Resposta inválida do servidor.') + (res.status ? ` (${res.status})` : '')
+        }
+      }
+      if (!apiError && res.ok && json.ok && typeof json.data === 'string') {
+        if (tryParseAndPreview(json.data)) {
+          setImportacaoUrlLoading(false)
           return
         }
-        json = JSON.parse(text)
-      } catch (_) {
-        setImportacaoUrlError((t?.importacaoErroRespostaInvalida ?? 'Resposta inválida do servidor. Verifique se a aplicação está a correr.') + (res.status ? ` (${res.status})` : ''))
-        return
-      }
-      if (!res.ok || !json.ok) {
-        let errMsg = json.error || (t?.importacaoErroBusca ?? 'Erro ao buscar a URL.')
-        if (String(errMsg).toLowerCase().includes('fetch failed')) {
-          errMsg = t?.importacaoErroFetchFailed ?? 'Não foi possível aceder à URL. Verifique o endereço e a ligação, ou se o site permite acesso.'
-        }
-        setImportacaoUrlError(errMsg)
-        return
-      }
-      const raw = json.data as string
-      if (typeof raw !== 'string') {
-        setImportacaoUrlError(t?.importacaoErroBusca ?? 'Dados recebidos em formato inesperado.')
-        return
-      }
-      let pecas: PecaBiblioteca[]
-      try {
-        pecas = parseRawToPecas(raw)
-      } catch (_) {
         setImportacaoUrlError(t?.importacaoErroJsonInvalido ?? 'O conteúdo da URL não é um JSON ou CSV válido.')
+        setImportacaoUrlLoading(false)
         return
       }
-      if (pecas.length === 0) {
-        setImportacaoUrlError(t?.importacaoNenhumaLinha ?? 'Nenhuma lista encontrada. Verifique se a URL retorna JSON ou CSV.')
-        return
+      if (!apiError) {
+        if (!text.trim()) apiError = t?.importacaoErroRespostaVazia ?? 'O servidor respondeu sem dados.'
+        else if (json?.error) apiError = json.error
+        else apiError = t?.importacaoErroBusca ?? 'Erro ao buscar a URL.'
       }
-      setImportacaoPreview(pecas)
+
+      // 2) Se a API falhou (modo demo, 404, rota em falta após restauro, etc.), tentar buscar a URL diretamente no browser
+      try {
+        const directRes = await fetch(url, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json, text/csv, text/plain, */*' },
+          mode: 'cors'
+        })
+        if (directRes.ok) {
+          const raw = await directRes.text()
+          if (tryParseAndPreview(raw)) {
+            setImportacaoUrlLoading(false)
+            return
+          }
+        }
+      } catch (_) {
+        // Fallback direto falhou (ex.: CORS)
+      }
+      setImportacaoUrlError(String(apiError).toLowerCase().includes('fetch failed') ? (t?.importacaoErroFetchFailed ?? 'Não foi possível aceder à URL. Verifique o endereço e a ligação.') : apiError)
     } catch (e: any) {
-      let msg = e?.message || String(e)
-      if (msg && String(msg).toLowerCase().includes('fetch failed')) {
-        msg = t?.importacaoErroFetchFailed ?? 'Não foi possível aceder à URL. Verifique o endereço e a ligação, ou se o site permite acesso.'
-      }
-      setImportacaoUrlError(msg || (t?.importacaoErroBusca ?? 'Erro ao buscar ou interpretar a URL.'))
+      // Falha ao chamar a API (rede, etc.) — tentar buscar a URL diretamente no browser
+      try {
+        const directRes = await fetch(url, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json, text/csv, text/plain, */*' },
+          mode: 'cors'
+        })
+        if (directRes.ok) {
+          const raw = await directRes.text()
+          if (tryParseAndPreview(raw)) {
+            setImportacaoUrlLoading(false)
+            return
+          }
+        }
+      } catch (_) {}
+      const msg = e?.message || String(e)
+      const isNetwork = msg && String(msg).toLowerCase().includes('fetch failed')
+      setImportacaoUrlError(isNetwork ? (t?.importacaoErroFetchFailed ?? 'Não foi possível aceder à URL. Verifique o endereço e a ligação.') : (msg || (t?.importacaoErroBusca ?? 'Erro ao buscar a URL.')))
     } finally {
       setImportacaoUrlLoading(false)
     }
