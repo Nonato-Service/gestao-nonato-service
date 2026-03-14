@@ -26353,8 +26353,8 @@ A1;Peça exemplo;10'
             if (!res.ok) throw new Error(await res.text())
             const html = await res.text()
             const w = window.open('', '_blank')
-            if (w) { w.document.write(html); w.document.close() } else alert((safeT as any)?.comprovantesGerarPDF || 'Permita pop-ups para abrir o PDF.')
-          } catch (e) { console.error(e); alert('Erro ao gerar PDF. Tente novamente.') }
+            if (w) { w.document.write(html); w.document.close() } else alert((safeT as any)?.comprovantesPermitaPopups || 'Permita pop-ups para abrir o PDF.')
+          } catch (e) { console.error(e); alert((safeT as any)?.comprovantesErroPDF || 'Erro ao gerar PDF. Tente novamente.') }
         }
         return (
           <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto' }}>
@@ -26424,16 +26424,16 @@ A1;Peça exemplo;10'
             </div>
             {/* Lista */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {filtrados.length === 0 && <p style={{ color: '#888', textAlign: 'center', padding: '24px' }}>Nenhum comprovante. Clique em &quot;Adicionar comprovante&quot;.</p>}
+              {filtrados.length === 0 && <p style={{ color: '#888', textAlign: 'center', padding: '24px' }}>{(safeT as any)?.comprovantesNenhumComprovante || 'Nenhum comprovante. Clique em "Adicionar comprovante".'}</p>}
               {filtrados.map(c => (
                 <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '14px', backgroundColor: '#222', borderRadius: '10px', border: '1px solid rgba(0,255,0,0.15)' }}>
                   {c.imagemBase64 ? <img src={c.imagemBase64} alt="Recibo" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: '6px', border: '1px solid rgba(0,255,0,0.2)' }} /> : <div style={{ width: 60, height: 60, borderRadius: '6px', background: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: '11px' }}>📄</div>}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ color: '#fff', fontWeight: 600 }}>{getClienteOuPessoal(c)}</div>
-                    <div style={{ color: '#aaa', fontSize: '13px' }}>{c.data} · {(safeT as any)?.comprovantesValorUnitario || 'Unit.'}: {c.valorUnitario.toFixed(2)} × {c.quantidade} = <strong style={{ color: '#00ff00' }}>{c.valorTotal.toFixed(2)} €</strong></div>
+                    <div style={{ color: '#aaa', fontSize: '13px' }}>{c.data} · {(safeT as any)?.comprovantesValorUnitario || 'Valor unit.'}: {c.valorUnitario.toFixed(2)} × {c.quantidade} = <strong style={{ color: '#00ff00' }}>{c.valorTotal.toFixed(2)} €</strong></div>
                     {c.descricao && <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>{c.descricao}</div>}
                   </div>
-                  <button onClick={() => handleRemoverComp(c.id)} style={{ padding: '6px 10px', background: 'rgba(255,68,68,0.2)', border: '1px solid rgba(255,68,68,0.5)', borderRadius: '6px', color: '#ff4444', cursor: 'pointer', fontSize: '12px' }}>Remover</button>
+                  <button onClick={() => handleRemoverComp(c.id)} style={{ padding: '6px 10px', background: 'rgba(255,68,68,0.2)', border: '1px solid rgba(255,68,68,0.5)', borderRadius: '6px', color: '#ff4444', cursor: 'pointer', fontSize: '12px' }}>{(safeT as any)?.remover || (safeT as any)?.remove || 'Remover'}</button>
                 </div>
               ))}
             </div>
@@ -26461,13 +26461,13 @@ A1;Peça exemplo;10'
                   <input type="date" value={formComp.data} onChange={e => setFormComp(prev => ({ ...prev, data: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
                   <input type="number" step={0.01} placeholder={(safeT as any)?.comprovantesValorUnitario || 'Valor unitário'} value={formComp.valorUnitario || ''} onChange={e => setFormComp(prev => ({ ...prev, valorUnitario: Number(e.target.value) || 0 }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
                   <input type="number" min={1} placeholder={(safeT as any)?.comprovantesQuantidade || 'Quantidade'} value={formComp.quantidade || ''} onChange={e => setFormComp(prev => ({ ...prev, quantidade: Number(e.target.value) || 1 }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
-                  <input placeholder={(safeT as any)?.comprovantesDescricao || 'Descrição (opcional)'} value={formComp.descricao} onChange={e => setFormComp(prev => ({ ...prev, descricao: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
+                  <input placeholder={(safeT as any)?.comprovantesDescricaoOpcional || (safeT as any)?.comprovantesDescricao || 'Descrição (opcional)'} value={formComp.descricao} onChange={e => setFormComp(prev => ({ ...prev, descricao: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
                   <label style={{ display: 'block', color: '#00ff00', fontSize: '12px', marginBottom: '6px' }}>{(safeT as any)?.comprovantesImagem || 'Imagem do recibo (anexar)'}</label>
                   <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setFormComp(prev => ({ ...prev, imagemBase64: (r.result as string) || '' })); r.readAsDataURL(f); } }} style={{ width: '100%', padding: '8px', marginBottom: formComp.imagemBase64 ? '8px' : '16px', color: '#ccc' }} />
-                  {formComp.imagemBase64 && <div style={{ marginBottom: '16px' }}><img src={formComp.imagemBase64} alt="Preview" style={{ maxWidth: '100%', maxHeight: 120, borderRadius: '6px', border: '1px solid rgba(0,255,0,0.3)' }} /><button type="button" onClick={() => setFormComp(prev => ({ ...prev, imagemBase64: '' }))} style={{ display: 'block', marginTop: '6px', padding: '4px 8px', fontSize: '11px', background: 'rgba(255,68,68,0.2)', border: '1px solid #ff4444', borderRadius: '4px', color: '#ff4444', cursor: 'pointer' }}>Remover imagem</button></div>}
+                  {formComp.imagemBase64 && <div style={{ marginBottom: '16px' }}><img src={formComp.imagemBase64} alt="Preview" style={{ maxWidth: '100%', maxHeight: 120, borderRadius: '6px', border: '1px solid rgba(0,255,0,0.3)' }} /><button type="button" onClick={() => setFormComp(prev => ({ ...prev, imagemBase64: '' }))} style={{ display: 'block', marginTop: '6px', padding: '4px 8px', fontSize: '11px', background: 'rgba(255,68,68,0.2)', border: '1px solid #ff4444', borderRadius: '4px', color: '#ff4444', cursor: 'pointer' }}>{(safeT as any)?.comprovantesRemoverImagem || (safeT as any)?.removerImagem || 'Remover imagem'}</button></div>}
                   <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                    <button onClick={() => setShowFormComp(false)} style={{ padding: '10px 18px', background: 'transparent', border: '1px solid #666', borderRadius: '6px', color: '#ccc', cursor: 'pointer' }}>Cancelar</button>
-                    <button onClick={handleAddComprovante} style={{ padding: '10px 18px', background: 'rgba(0,255,0,0.2)', border: '1px solid #00ff00', borderRadius: '6px', color: '#00ff00', fontWeight: 600, cursor: 'pointer' }}>Guardar</button>
+                    <button onClick={() => setShowFormComp(false)} style={{ padding: '10px 18px', background: 'transparent', border: '1px solid #666', borderRadius: '6px', color: '#ccc', cursor: 'pointer' }}>{(safeT as any)?.cancel || 'Cancelar'}</button>
+                    <button onClick={handleAddComprovante} style={{ padding: '10px 18px', background: 'rgba(0,255,0,0.2)', border: '1px solid #00ff00', borderRadius: '6px', color: '#00ff00', fontWeight: 600, cursor: 'pointer' }}>{(safeT as any)?.guardar || 'Guardar'}</button>
                   </div>
                 </div>
               </div>
@@ -26520,7 +26520,7 @@ A1;Peça exemplo;10'
                   </div>
                   {/* Ações */}
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <button type="button" onClick={() => setShowEnvioModal(false)} style={{ padding: '10px 18px', background: 'transparent', border: '1px solid #666', borderRadius: '8px', color: '#ccc', cursor: 'pointer' }}>Fechar</button>
+                    <button type="button" onClick={() => setShowEnvioModal(false)} style={{ padding: '10px 18px', background: 'transparent', border: '1px solid #666', borderRadius: '8px', color: '#ccc', cursor: 'pointer' }}>{(safeT as any)?.close || 'Fechar'}</button>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
                       <button type="button" onClick={handleGerarPDF} style={{ padding: '10px 18px', background: 'rgba(0,255,0,0.15)', border: '1px solid #00ff00', borderRadius: '8px', color: '#00ff00', fontWeight: 600, cursor: 'pointer' }}>📄 {(safeT as any)?.comprovantesGerarPDF || 'Gerar PDF'}</button>
                       <button type="button" onClick={handleCopiarEnvio} style={{ padding: '10px 18px', background: 'rgba(0,255,0,0.2)', border: '1px solid #00ff00', borderRadius: '8px', color: '#00ff00', fontWeight: 600, cursor: 'pointer' }}>{(safeT as any)?.comprovantesCopiar || 'Copiar mensagem'}</button>
