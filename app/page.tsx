@@ -748,6 +748,7 @@ export default function Dashboard() {
   const [passwordForm, setPasswordForm] = useState({ tecnicoName: '', password: '' })
   const [showChecklistAccessModal, setShowChecklistAccessModal] = useState(false)
   const [checklistAccessStep, setChecklistAccessStep] = useState<'message' | 'password'>('message')
+  const [checklistAccessNomeInput, setChecklistAccessNomeInput] = useState('')
   const [checklistAccessPasswordInput, setChecklistAccessPasswordInput] = useState('')
   const [codeBackups, setCodeBackups] = useState<Array<{ path: string; timestamp: string; filesCount: number }>>([])
   const [codeBackupsFolder, setCodeBackupsFolder] = useState<string>('')
@@ -42695,7 +42696,7 @@ A1;Peça exemplo;10'
         )}
       </div>
 
-      {/* Modal de Acesso ao Checklist - Área restrita (credenciamento por senha do Gestor de Senhas) */}
+      {/* Modal de Acesso ao Checklist - Área restrita (nome + senha do Gestor de Senhas) */}
       {showChecklistAccessModal && (
         <div 
           className="modal-overlay" 
@@ -42703,6 +42704,7 @@ A1;Peça exemplo;10'
           onClick={() => {
             setShowChecklistAccessModal(false)
             setChecklistAccessStep('message')
+            setChecklistAccessNomeInput('')
             setChecklistAccessPasswordInput('')
           }}
         >
@@ -42720,13 +42722,13 @@ A1;Peça exemplo;10'
                 <>
                   {safeT?.checklistAreaRestritaTexto || 'Apenas pessoas autorizadas podem criar o checklist. Para isso, deverá conhecer o equipamento, saber manusear, fazer testes mecânicos, elétricos e testes de funcionalidades.'}
                   {'\n\n'}
-                  <strong style={{ color: '#00ff00' }}>{safeT?.checklistVoceCredenciado || 'Você é credenciado?'}</strong>
+                  <strong style={{ color: '#00ff00' }}>{safeT?.checklistVoceCredenciado || 'Você é credenciado e treinado?'}</strong>
                   {'\n'}
-                  {safeT?.checklistSeSimDigiteSenha || 'Se sim, digite a senha (uma das senhas do Gestor de Senhas). Se não, feche esta janela.'}
+                  {safeT?.checklistSeSimNomeSenha || 'Se sim, clique em "Sim" e informe o seu nome e a sua senha (a mesma cadastrada no Gestor de Senhas do Administrador). Se não, feche esta janela.'}
                 </>
               ) : (
                 <>
-                  {safeT?.checklistDigiteSenhaAcesso || 'Digite a senha de acesso (uma das senhas cadastradas no Gestor de Senhas do Administrador):'}
+                  {safeT?.checklistDigiteNomeESenha || 'Informe o seu nome e a sua senha (os mesmos cadastrados no Gestor de Senhas do Administrador):'}
                 </>
               )}
             </p>
@@ -42736,20 +42738,34 @@ A1;Peça exemplo;10'
               </p>
             )}
             {checklistAccessStep === 'password' && (
-              <div style={{ marginBottom: '20px' }}>
+              <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <input
+                  type="text"
+                  value={checklistAccessNomeInput}
+                  onChange={(e) => setChecklistAccessNomeInput(e.target.value)}
+                  placeholder={safeT?.checklistPlaceholderNome || 'Seu nome'}
+                  autoFocus
+                  style={{ width: '100%', padding: '12px 14px', fontSize: '14px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', outline: 'none' }}
+                />
                 <input
                   type="password"
                   value={checklistAccessPasswordInput}
                   onChange={(e) => setChecklistAccessPasswordInput(e.target.value)}
-                  placeholder={safeT?.checklistPlaceholderSenha || 'Digite a senha'}
-                  autoFocus
+                  placeholder={safeT?.checklistPlaceholderSenha || 'Sua senha (Gestor de Senhas)'}
                   style={{ width: '100%', padding: '12px 14px', fontSize: '14px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#fff', outline: 'none' }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      const ok = managedPasswords.some((p) => p.password === checklistAccessPasswordInput)
+                      const nome = checklistAccessNomeInput.trim()
+                      const senha = checklistAccessPasswordInput
+                      if (managedPasswords.length === 0) {
+                        window.alert(safeT?.checklistConfigureSenhaPrimeiro || 'Configure pelo menos uma senha no Gestor de Senhas (Administrador) primeiro.')
+                        return
+                      }
+                      const ok = managedPasswords.some((p) => p.tecnicoName.trim() === nome && p.password === senha)
                       if (ok) {
                         setShowChecklistAccessModal(false)
                         setChecklistAccessStep('message')
+                        setChecklistAccessNomeInput('')
                         setChecklistAccessPasswordInput('')
                         if (!expandedGroups.has('checklist-group')) {
                           setExpandedGroups(prev => { const newSet = new Set(prev); newSet.add('checklist-group'); return newSet })
@@ -42758,7 +42774,7 @@ A1;Peça exemplo;10'
                           openTab('checklist', getTabTitle('checklist'))
                         }
                       } else {
-                        window.alert(safeT?.checklistSenhaIncorreta || 'Senha incorreta. Tente novamente.')
+                        window.alert(safeT?.checklistNomeOuSenhaIncorretos || 'Nome ou senha incorretos. Use o nome e a senha cadastrados no Gestor de Senhas (Administrador).')
                       }
                     }
                   }}
@@ -42774,21 +42790,24 @@ A1;Peça exemplo;10'
                     onClick={() => {
                       setShowChecklistAccessModal(false)
                       setChecklistAccessStep('message')
+                      setChecklistAccessNomeInput('')
                       setChecklistAccessPasswordInput('')
                     }}
                   >
                     {safeT?.checklistNaoFechar || 'Não, fechar'}
                   </button>
-                  {managedPasswords.length > 0 && (
-                    <button
-                      type="button"
-                      className="btn-primary"
-                      style={{ borderColor: '#00ff00', color: '#00ff00' }}
-                      onClick={() => setChecklistAccessStep('password')}
-                    >
-                      {safeT?.checklistSimCredenciado || 'Sim, sou credenciado'}
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    style={{ borderColor: '#00ff00', color: '#00ff00' }}
+                    onClick={() => {
+                      setChecklistAccessStep('password')
+                      setChecklistAccessNomeInput('')
+                      setChecklistAccessPasswordInput('')
+                    }}
+                  >
+                    {safeT?.checklistSimCapacitadoTreinado || 'Sim, sou capacitado e treinado'}
+                  </button>
                 </>
               ) : (
                 <>
@@ -42797,6 +42816,7 @@ A1;Peça exemplo;10'
                     className="btn-primary"
                     onClick={() => {
                       setChecklistAccessStep('message')
+                      setChecklistAccessNomeInput('')
                       setChecklistAccessPasswordInput('')
                     }}
                   >
@@ -42807,10 +42827,17 @@ A1;Peça exemplo;10'
                     className="btn-primary"
                     style={{ borderColor: '#00ff00', color: '#00ff00' }}
                     onClick={() => {
-                      const ok = managedPasswords.some((p) => p.password === checklistAccessPasswordInput)
+                      const nome = checklistAccessNomeInput.trim()
+                      const senha = checklistAccessPasswordInput
+                      if (managedPasswords.length === 0) {
+                        window.alert(safeT?.checklistConfigureSenhaPrimeiro || 'Configure pelo menos uma senha no Gestor de Senhas (Administrador) primeiro.')
+                        return
+                      }
+                      const ok = managedPasswords.some((p) => p.tecnicoName.trim() === nome && p.password === senha)
                       if (ok) {
                         setShowChecklistAccessModal(false)
                         setChecklistAccessStep('message')
+                        setChecklistAccessNomeInput('')
                         setChecklistAccessPasswordInput('')
                         if (!expandedGroups.has('checklist-group')) {
                           setExpandedGroups(prev => { const newSet = new Set(prev); newSet.add('checklist-group'); return newSet })
@@ -42819,7 +42846,7 @@ A1;Peça exemplo;10'
                           openTab('checklist', getTabTitle('checklist'))
                         }
                       } else {
-                        window.alert(safeT?.checklistSenhaIncorreta || 'Senha incorreta. Tente novamente.')
+                        window.alert(safeT?.checklistNomeOuSenhaIncorretos || 'Nome ou senha incorretos. Use o nome e a senha cadastrados no Gestor de Senhas (Administrador).')
                       }
                     }}
                   >
