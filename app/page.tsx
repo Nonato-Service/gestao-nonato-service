@@ -24445,6 +24445,8 @@ A1;Peça exemplo;10'
                         endereco: selectedClient?.morada || '',
                         cidade: selectedClient?.localidade || '',
                         telefone: selectedClient?.telefones || '',
+                        equipamentoId: '',
+                        equipamento: '',
                       });
                     }}
                     style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
@@ -24512,19 +24514,28 @@ A1;Peça exemplo;10'
                   <select
                     value={agendaForm.equipamentoId}
                     onChange={(e) => {
-                      const selectedEquip = equipamentos.find(eq => eq.id === e.target.value);
+                      const valor = e.target.value;
+                      const clienteSel = clientes.find(c => c.id === agendaForm.clienteId);
+                      const equipamentosCliente = clienteSel?.equipamentos || [];
+                      const selectedEquip = equipamentosCliente.find((eq: EquipamentoCliente) => eq.numeroSerie === valor);
+                      const display = selectedEquip ? `${selectedEquip.modelo} (${selectedEquip.numeroSerie})` : '';
                       setAgendaForm({
                         ...agendaForm,
-                        equipamentoId: selectedEquip?.id || '',
-                        equipamento: selectedEquip?.modelo || '',
+                        equipamentoId: valor,
+                        equipamento: display,
                       });
                     }}
                     style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    disabled={!agendaForm.clienteId}
                   >
-                    <option value="">{safeT?.selecioneEquipamento || 'Selecione o equipamento'}</option>
-                    {equipamentos.map(eq => (
-                      <option key={eq.id} value={eq.id}>{eq.modelo} ({eq.numeroSerie})</option>
-                    ))}
+                    <option value="">{!agendaForm.clienteId ? (safeT?.selecioneClientePrimeiro || 'Selecione o cliente primeiro') : (safeT?.selecioneEquipamento || 'Selecione o equipamento')}</option>
+                    {(() => {
+                      const clienteSel = clientes.find(c => c.id === agendaForm.clienteId);
+                      const equipamentosDoCliente = clienteSel?.equipamentos || [];
+                      return equipamentosDoCliente.map((eq: EquipamentoCliente, idx: number) => (
+                        <option key={eq.numeroSerie + String(idx)} value={eq.numeroSerie}>{eq.modelo} ({eq.numeroSerie})</option>
+                      ));
+                    })()}
                   </select>
                 </div>
 
@@ -45646,6 +45657,8 @@ A1;Peça exemplo;10'
                       endereco: selectedClient?.morada || '',
                       cidade: selectedClient?.localidade || '',
                       telefone: selectedClient?.telefones || '',
+                      equipamentoId: '',
+                      equipamento: '',
                     });
                   }}
                   style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
@@ -45679,19 +45692,28 @@ A1;Peça exemplo;10'
                 <select
                   value={agendaForm.equipamentoId}
                   onChange={(e) => {
-                    const selectedEquip = equipamentos.find(eq => eq.id === e.target.value);
+                    const valor = e.target.value;
+                    const clienteSel = clientes.find(c => c.id === agendaForm.clienteId);
+                    const equipamentosCliente = clienteSel?.equipamentos || [];
+                    const selectedEquip = equipamentosCliente.find((eq: EquipamentoCliente) => eq.numeroSerie === valor);
+                    const display = selectedEquip ? `${selectedEquip.modelo} (${selectedEquip.numeroSerie})` : '';
                     setAgendaForm({
                       ...agendaForm,
-                      equipamentoId: selectedEquip?.id || '',
-                      equipamento: selectedEquip?.modelo || '',
+                      equipamentoId: valor,
+                      equipamento: display,
                     });
                   }}
                   style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  disabled={!agendaForm.clienteId}
                 >
-                  <option value="">{safeT?.selecioneEquipamento || 'Selecione o equipamento'}</option>
-                  {equipamentos.map(eq => (
-                    <option key={eq.id} value={eq.id}>{eq.modelo} ({eq.numeroSerie})</option>
-                  ))}
+                  <option value="">{!agendaForm.clienteId ? (safeT?.selecioneClientePrimeiro || 'Selecione o cliente primeiro') : (safeT?.selecioneEquipamento || 'Selecione o equipamento')}</option>
+                  {(() => {
+                    const clienteSel = clientes.find(c => c.id === agendaForm.clienteId);
+                    const equipamentosDoCliente = clienteSel?.equipamentos || [];
+                    return equipamentosDoCliente.map((eq: EquipamentoCliente, idx: number) => (
+                      <option key={eq.numeroSerie + String(idx)} value={eq.numeroSerie}>{eq.modelo} ({eq.numeroSerie})</option>
+                    ));
+                  })()}
                 </select>
                 <textarea
                   placeholder={safeT?.observacaoTecnica || 'Observação Técnica'}
