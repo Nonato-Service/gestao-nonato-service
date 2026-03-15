@@ -6824,24 +6824,19 @@ export default function Dashboard() {
     setShowEquipamentoForm(true)
   }
 
-  const handleDeleteEquipamento = (equipamentoId: string) => {
-    // "Dar baixa" (não apaga, mantém histórico)
+  const handleDeleteEquipamento = async (equipamentoId: string) => {
     const confirmMsg =
-      t.confirmBaixaEquipamento ||
-      (t.confirmDeleteEquipamento || 'Tem certeza que deseja dar baixa neste equipamento?')
-
+      (t as any).confirmExcluirEquipamentoDefinitivo ||
+      t.confirmDeleteEquipamento ||
+      'Tem certeza que deseja excluir definitivamente este equipamento? Esta ação não pode ser desfeita.'
     if (!window.confirm(confirmMsg)) return
 
-    const updatedEquipamentos = equipamentos.map((e) =>
-      e.id === equipamentoId
-        ? { ...e, status: 'baixado' as const, dataBaixa: new Date().toISOString() }
-        : e
-    )
+    const updatedEquipamentos = equipamentos.filter((e) => e.id !== equipamentoId)
     setEquipamentos(updatedEquipamentos)
-    saveData('nonato-equipamentos', updatedEquipamentos)
+    await saveData('nonato-equipamentos', updatedEquipamentos)
   }
 
-  const handleRestaurarEquipamentoArmazem = (equipamentoId: string) => {
+  const handleRestaurarEquipamentoArmazem = async (equipamentoId: string) => {
     const confirmMsg =
       t.confirmRestaurarEquipamento ||
       'Tem certeza que deseja reativar este equipamento no armazém?'
@@ -6851,7 +6846,7 @@ export default function Dashboard() {
       e.id === equipamentoId ? { ...e, status: 'ativo' as const, dataBaixa: undefined } : e
     )
     setEquipamentos(updatedEquipamentos)
-    saveData('nonato-equipamentos', updatedEquipamentos)
+    await saveData('nonato-equipamentos', updatedEquipamentos)
   }
 
   const handleEquipamentoPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -6945,7 +6940,7 @@ export default function Dashboard() {
     setEquipamentoForm({ ...equipamentoForm, manualPdf: '' })
   }
 
-  const handleSaveEquipamento = () => {
+  const handleSaveEquipamento = async () => {
     if (!equipamentoForm.id || !equipamentoForm.tipoEquipamento || !equipamentoForm.modelo || !equipamentoForm.marca || !equipamentoForm.numeroSerie || !equipamentoForm.familia || !equipamentoForm.grupo) {
       alert(t.fillAllFields)
       return
@@ -6982,7 +6977,7 @@ export default function Dashboard() {
           : e
       )
       setEquipamentos(updatedEquipamentos)
-      saveData('nonato-equipamentos', updatedEquipamentos)
+      await saveData('nonato-equipamentos', updatedEquipamentos)
     } else {
       const newEquipamento: Equipamento = {
         ...equipamentoPayload,
@@ -6990,7 +6985,7 @@ export default function Dashboard() {
       }
       const updatedEquipamentos = [...equipamentos, newEquipamento]
       setEquipamentos(updatedEquipamentos)
-      saveData('nonato-equipamentos', updatedEquipamentos)
+      await saveData('nonato-equipamentos', updatedEquipamentos)
     }
 
     // Limpar formulário e fechar
@@ -19146,7 +19141,7 @@ onKeyPress={(e) => {
             </div>
 
             {showEquipamentoForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#222222' }}>
+              <div id="equipamentos-form-section" style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#222222' }}>
                 <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>{editingEquipamento ? safeT?.editEquipamento : safeT?.addEquipamento}</h3>
                 
                 <div style={{ marginBottom: '15px' }}>
@@ -19501,6 +19496,7 @@ onKeyPress={(e) => {
                                       modeloManuaisId: equipamento.modeloManuaisId || ''
                                     })
                                     setShowEquipamentoForm(true)
+                                    setTimeout(() => document.getElementById('equipamentos-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
                                   }}
                                   style={{ padding: '10px 14px', fontSize: '13px', borderRadius: '10px', fontWeight: '600', background: 'rgba(0, 255, 0, 0.1)', border: '1px solid rgba(0, 255, 0, 0.35)', color: '#00ff00' }}
                                 >
