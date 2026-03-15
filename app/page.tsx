@@ -4272,7 +4272,9 @@ export default function Dashboard() {
           group: 'outros'
         }
         buttons.push(cadastroNonatoButton)
-        saveData('nonato-sidebar-buttons', buttons)
+        saveData('nonato-sidebar-buttons', buttons).then(() => {
+          setSidebarButtons(buttons)
+        })
       }
 
       const hasFichaCadastral = buttons.some((b: SidebarButton) => b.id === 'ficha-cadastral-default')
