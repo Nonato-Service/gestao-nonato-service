@@ -30,6 +30,15 @@ export type PecaPedido = {
   pecaId?: string
 }
 
+export type PedidoAvulsoGuardado = {
+  codigo: string
+  dataGeracao: string
+  clienteNomeReal: string
+  emitirComoCliente: 'cliente' | 'nonato-service'
+  equipamentoTexto: string
+  pecas: PecaPedido[]
+}
+
 type Props = {
   clientes: ClientePedido[]
   pecasBiblioteca: Array<{ id: string; codigo: string; nome: string; imagem?: string }>
@@ -38,9 +47,14 @@ type Props = {
   activeTabId: string
   voltarPaginaInicial: () => void
   LogoComponent: React.ComponentType<{ size?: 'small' | 'medium' | 'large' }>
+  saveData?: (key: string, data: any) => Promise<void>
+  loadData?: (key: string) => Promise<any>
+  onGerarOrcamento?: () => void
 }
 
 const PEDIDOS_AVULSO_KEY = 'nonato-pedidos-orcamento-avulso'
+
+const ORCAMENTOS_AVULSO_KEY = 'nonato-orcamentos-avulso'
 
 export function PedidoOrcamentosAvulsoContent({
   clientes,
@@ -51,7 +65,8 @@ export function PedidoOrcamentosAvulsoContent({
   voltarPaginaInicial,
   LogoComponent,
   saveData,
-  loadData
+  loadData,
+  onGerarOrcamento
 }: Props) {
   const [clienteSelecionado, setClienteSelecionado] = useState<ClientePedido | null>(null)
   const [clienteNomeManual, setClienteNomeManual] = useState('')
@@ -208,15 +223,51 @@ export function PedidoOrcamentosAvulsoContent({
         await saveData(PEDIDOS_AVULSO_KEY, atualizados)
       } catch (_) {}
     }
+
+    // Gravar também em Orçamentos Gerados (barra lateral > Orçamentos > Orçamentos Gerados)
     const nomeNoDoc = emitirComoCliente === 'nonato-service'
       ? (safeT?.nomeNonatoService || 'NONATO SERVICE')
       : nomeReal
+    if (saveData && loadData) {
+      try {
+        const existentes: any[] = (await loadData(ORCAMENTOS_AVULSO_KEY)) || []
+        const listaOrcamentos = Array.isArray(existentes) ? existentes : []
+        const orcamentoGerado = {
+          id: 'avulso-' + codigo,
+          numeroOrcamento: codigo,
+          data: new Date().toISOString().split('T')[0],
+          validade: '',
+          descricao: equipamentoTexto,
+          observacoes: '',
+          tipo: 'pedido-avulso' as const,
+          clienteNome: nomeNoDoc,
+          itens: pecasPedido.map((p) => ({
+            descricao: p.nome,
+            quantidade: p.quantidade,
+            precoUnitario: 0,
+            total: 0,
+            codigo: p.codigo,
+            tipoItem: 'sem-valor' as const,
+            iva: 0,
+            pecaId: p.pecaId,
+            imagem: p.imagem
+          })),
+          total: 0,
+          totalSemIva: 0,
+          totalIva: 0,
+          dataCriacao: new Date().toISOString()
+        }
+        await saveData(ORCAMENTOS_AVULSO_KEY, [...listaOrcamentos, orcamentoGerado])
+      } catch (_) {}
+    }
+
     alert(
       (safeT?.pedidoGeradoComSucesso || 'Pedido gerado com sucesso!') + '\n\n' +
       (safeT?.codigoOrcamento || 'Código do orçamento') + ': ' + codigo + '\n\n' +
       (safeT?.nomeNoDocumento || 'Nome no documento') + ': ' + nomeNoDoc + '\n\n' +
       (safeT?.guardeCodigoParaLocalizar || 'Guarde este código para localizar o orçamento depois.')
     )
+    onGerarOrcamento?.()
   }
 
   const containerStyle = {

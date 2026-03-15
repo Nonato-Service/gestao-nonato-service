@@ -858,6 +858,7 @@ export default function Dashboard() {
   const [selectedSidebarButton, setSelectedSidebarButton] = useState<string | null>(null) // Botão selecionado na sidebar
   const [familiasGruposModalVariant, setFamiliasGruposModalVariant] = useState<'checklist' | 'equipamentos'>('checklist') // Título do modal Famílias e Grupos
   const [showSplashInicial, setShowSplashInicial] = useState(true) // Tela inicial preta com logo (verde transparente)
+  const [openOrcamentosGeradosView, setOpenOrcamentosGeradosView] = useState(false) // Ao gerar pedido avulso, abrir Orçamentos > Orçamentos Gerados
   const [showPasswordScreen, setShowPasswordScreen] = useState(false) // Tela de login (usuário + senha) ao clicar Acessar Sistema
   const [loginUsuarioInput, setLoginUsuarioInput] = useState('') // Usuário (e-mail ou nome) no login
   const [senhaInicialInput, setSenhaInicialInput] = useState('') // Senha no login
@@ -27635,6 +27636,8 @@ A1;Peça exemplo;10'
           safeT={safeT}
           pedidosSeparacao={pedidosSeparacao}
           setPedidosSeparacao={setPedidosSeparacao}
+          initialTipoOrcamento={openOrcamentosGeradosView ? 'orcamentos-gerados' : undefined}
+          onOrcamentosGeradosViewShown={() => setOpenOrcamentosGeradosView(false)}
         />
 
       case 'pedido-orcamentos-avulso':
@@ -27649,6 +27652,10 @@ A1;Peça exemplo;10'
             LogoComponent={LogoComponent}
             saveData={saveData}
             loadData={loadData}
+            onGerarOrcamento={() => {
+              setOpenOrcamentosGeradosView(true)
+              openTab('orcamentos-avulso', getTabTitle('orcamentos-avulso'))
+            }}
           />
         )
 
@@ -38578,7 +38585,9 @@ A1;Peça exemplo;10'
     relatoriosServico,
     safeT,
     pedidosSeparacao,
-    setPedidosSeparacao
+    setPedidosSeparacao,
+    initialTipoOrcamento,
+    onOrcamentosGeradosViewShown
   }: { 
     clientes: Cliente[]
     clientePrioritario: ClientePrioritario | null
@@ -38619,6 +38628,8 @@ A1;Peça exemplo;10'
       }>
       dataCriacao: string
     }>>>
+    initialTipoOrcamento?: 'orcamentos-gerados'
+    onOrcamentosGeradosViewShown?: () => void
   }) => {
     const [tipoOrcamento, setTipoOrcamento] = useState<'dados-fixos' | 'cliente-cadastrado' | 'orcamento-relatorio' | 'cliente-prioritario-fixo' | 'cliente-prioritario-valores' | 'orcamentos-gerados'>('dados-fixos')
     const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(null)
@@ -38675,7 +38686,7 @@ A1;Peça exemplo;10'
       validade: string
       descricao: string
       observacoes: string
-      tipo: 'dados-fixos' | 'cliente-cadastrado' | 'orcamento-relatorio' | 'cliente-prioritario-fixo' | 'cliente-prioritario-valores'
+      tipo: 'dados-fixos' | 'cliente-cadastrado' | 'orcamento-relatorio' | 'cliente-prioritario-fixo' | 'cliente-prioritario-valores' | 'pedido-avulso'
       clienteId?: string
       clienteNome?: string
       relatorioId?: string
@@ -38733,6 +38744,14 @@ A1;Peça exemplo;10'
       }, 5000)
       return () => clearInterval(interval)
     }, [activeTabId])
+
+    // Abrir diretamente a vista "Orçamentos Gerados" quando vem do Pedido de Orçamentos Avulsos
+    useEffect(() => {
+      if (initialTipoOrcamento === 'orcamentos-gerados') {
+        setTipoOrcamento('orcamentos-gerados')
+        onOrcamentosGeradosViewShown?.()
+      }
+    }, [initialTipoOrcamento])
 
     // Dados fixos da NONATO SERVICE - usa cliente prioritário se existir
     const dadosNonatoService = clientePrioritario ? {
@@ -39053,6 +39072,7 @@ A1;Peça exemplo;10'
         </head>
         <body>
           <div class="header">
+            ${getLogoHtmlForReport() ? `<div style="margin-bottom:15px;display:flex;justify-content:center;">${getLogoHtmlForReport()}</div>` : ''}
             <h1>ORÇAMENTO</h1>
             <p><strong>N°: ${orcamento.numeroOrcamento}</strong></p>
             <p>DATA: ${new Date(orcamento.data).toLocaleDateString('pt-BR')}</p>
