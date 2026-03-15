@@ -8468,21 +8468,26 @@ export default function Dashboard() {
   }
 
   // Helper: HTML do logo para cabeçalho dos PDFs (respeita opção do Administrador e logo escolhido)
-  // Usa state (logosRelatorios, logoRelatorioSelecionadoId) quando disponível; senão localStorage
+  // Usa state primeiro (incluirLogoNosRelatorios, logosRelatorios, logoRelatorioSelecionadoId); fallback para localStorage
   const getLogoHtmlForReport = (): string => {
     if (typeof window === 'undefined') return '';
     try {
-      if (localStorage.getItem('nonato-relatorios-incluir-logo') !== 'true') return '';
+      const incluirFromState = incluirLogoNosRelatorios === true;
+      const incluirFromStorage = localStorage.getItem('nonato-relatorios-incluir-logo') === 'true';
+      if (!incluirFromState && !incluirFromStorage) return '';
     } catch { return ''; }
     const selectedId = (typeof logoRelatorioSelecionadoId !== 'undefined' && logoRelatorioSelecionadoId !== null)
-      ? logoRelatorioSelecionadoId
+      ? String(logoRelatorioSelecionadoId)
       : (() => { try { const r = localStorage.getItem('nonato-relatorios-logo-id'); return r != null ? r : ''; } catch { return ''; } })();
+    // 1) Logo da lista (state)
     if (selectedId && Array.isArray(logosRelatorios) && logosRelatorios.length > 0) {
       const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
       if (fromState && fromState.type === 'image' && fromState.data) {
-        return `<img src="${String(fromState.data).replace(/"/g, '&quot;')}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;" />`;
+        const src = String(fromState.data).replace(/"/g, '&quot;');
+        return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
       }
     }
+    // 2) Logo da lista (localStorage)
     if (selectedId) {
       try {
         const raw = localStorage.getItem('nonato-logos-relatorios');
@@ -8490,15 +8495,20 @@ export default function Dashboard() {
         if (Array.isArray(listRaw)) {
           const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === selectedId);
           if (logoItem && logoItem.type === 'image' && logoItem.data) {
-            return `<img src="${String(logoItem.data).replace(/"/g, '&quot;')}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;" />`;
+            const src = String(logoItem.data).replace(/"/g, '&quot;');
+            return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
           }
         }
       } catch (_) { /* lista inválida ou muito grande */ }
     }
+    // 3) Logo principal (localStorage)
     const logo = localStorage.getItem('nonato-logo');
     const type = localStorage.getItem('nonato-logo-type');
-    if (!logo || type === 'video') return '';
-    return `<img src="${logo.replace(/"/g, '&quot;')}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;" />`;
+    if (logo && type !== 'video') {
+      const src = String(logo).replace(/"/g, '&quot;');
+      return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+    }
+    return '';
   };
 
   // Função para gerar PDF/Imprimir Relatório - Formato Clássico (baseado na imagem)
