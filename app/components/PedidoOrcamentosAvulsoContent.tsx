@@ -182,7 +182,7 @@ export function PedidoOrcamentosAvulsoContent({
     color: '#fff',
     fontSize: '14px'
   }
-  const labelStyle = { color: '#66b3ff', marginBottom: '10px', fontSize: '16px', display: 'block' as const }
+  const labelStyle = { color: '#66b3ff', marginBottom: '10px', fontSize: '16px', display: 'block' as const, textTransform: 'uppercase' as const }
 
   return (
     <div style={containerStyle}>
@@ -193,10 +193,10 @@ export function PedidoOrcamentosAvulsoContent({
             <LogoComponent size="small" />
           </div>
           <div style={{ textAlign: 'center', flex: 1 }}>
-            <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#66b3ff', letterSpacing: '2px', marginBottom: '8px' }}>
+            <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#66b3ff', letterSpacing: '2px', marginBottom: '8px', textTransform: 'uppercase' }}>
               {safeT?.pedidoOrcamentosAvulsoTitle || 'PEDIDO DE ORÇAMENTOS AVULSO'}
             </h1>
-            <p style={{ margin: 0, fontSize: '14px', color: '#ccc', opacity: 0.8 }}>
+            <p style={{ margin: 0, fontSize: '14px', color: '#ccc', opacity: 0.8, textTransform: 'uppercase' }}>
               {safeT?.pedidoOrcamentoAvulsoDesc || 'Cliente, equipamento e peças para orçamento'}
             </p>
           </div>
@@ -281,7 +281,7 @@ export function PedidoOrcamentosAvulsoContent({
           )}
         </div>
         <div style={{ marginTop: '10px' }}>
-          <label style={{ color: '#999', fontSize: '13px', display: 'block', marginBottom: '6px' }}>
+          <label style={{ color: '#999', fontSize: '13px', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>
             {safeT?.ouNomeManualCliente || 'Ou nome do cliente (avulso)'}
           </label>
           <input
@@ -305,7 +305,7 @@ export function PedidoOrcamentosAvulsoContent({
       {/* Equipamento */}
       <div style={blockStyle}>
         <h3 style={labelStyle}>{safeT?.equipamento || 'Equipamento'}</h3>
-        <p style={{ color: '#999', fontSize: '13px', marginBottom: '12px' }}>
+        <p style={{ color: '#999', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase' }}>
           {safeT?.equipamentoDescPedido || 'Se o cliente for cadastrado, escolha um equipamento ou descreva manualmente.'}
         </p>
         {equipamentosDoCliente.length > 0 && (
@@ -362,7 +362,7 @@ export function PedidoOrcamentosAvulsoContent({
       {/* Adicionar peças */}
       <div style={blockStyle}>
         <h3 style={labelStyle}>{safeT?.adicionarPecas || 'Adicionar peças'}</h3>
-        <p style={{ color: '#999', fontSize: '13px', marginBottom: '12px' }}>
+        <p style={{ color: '#999', fontSize: '13px', marginBottom: '12px', textTransform: 'uppercase' }}>
           {safeT?.adicionarPecasDesc || 'Busque na Biblioteca de Peças por código/nome ou digite o código manualmente.'}
         </p>
         {!mostrarFormPeca ? (
@@ -377,7 +377,8 @@ export function PedidoOrcamentosAvulsoContent({
                 borderRadius: '8px',
                 color: '#00ff00',
                 cursor: 'pointer',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                textTransform: 'uppercase'
               }}
             >
               📚 {safeT?.buscarBibliotecaPecas || 'Buscar na Biblioteca de Peças'}
@@ -392,7 +393,8 @@ export function PedidoOrcamentosAvulsoContent({
                 borderRadius: '8px',
                 color: '#66b3ff',
                 cursor: 'pointer',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                textTransform: 'uppercase'
               }}
             >
               ✏️ {safeT?.digitarCodigoManual || 'Digitar código / peça manual'}
@@ -413,7 +415,7 @@ export function PedidoOrcamentosAvulsoContent({
                 />
                 <div style={{ maxHeight: '220px', overflowY: 'auto' }}>
                   {pecasFiltradas.length === 0 ? (
-                    <p style={{ color: '#888', padding: '10px' }}>{safeT?.nenhumaPecaEncontrada || 'Nenhuma peça encontrada'}</p>
+                    <p style={{ color: '#888', padding: '10px', textTransform: 'uppercase' }}>{safeT?.nenhumaPecaEncontrada || 'Nenhuma peça encontrada'}</p>
                   ) : (
                     pecasFiltradas.map((peca) => (
                       <div
@@ -460,7 +462,7 @@ export function PedidoOrcamentosAvulsoContent({
                   style={inputStyle}
                 />
                 <div style={{ marginBottom: '12px' }}>
-                  <label style={{ color: '#ccc', marginRight: '8px' }}>{safeT?.quantidade || 'Quantidade'}</label>
+                  <label style={{ color: '#ccc', marginRight: '8px', textTransform: 'uppercase' }}>{safeT?.quantidade || 'Quantidade'}</label>
                   <input
                     type="number"
                     min={1}
@@ -481,7 +483,7 @@ export function PedidoOrcamentosAvulsoContent({
             <button
               type="button"
               onClick={() => { setMostrarFormPeca(false); setModoPeca(null); }}
-              style={{ marginTop: '12px', padding: '8px 14px', backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid #555', borderRadius: '6px', color: '#ccc', cursor: 'pointer' }}
+              style={{ marginTop: '12px', padding: '8px 14px', backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid #555', borderRadius: '6px', color: '#ccc', cursor: 'pointer', textTransform: 'uppercase' }}
             >
               {safeT?.cancel || 'Cancelar'}
             </button>
@@ -491,7 +493,7 @@ export function PedidoOrcamentosAvulsoContent({
         {/* Lista de peças do pedido */}
         {pecasPedido.length > 0 && (
           <div style={{ marginTop: '20px' }}>
-            <h4 style={{ color: '#00ff00', marginBottom: '12px', fontSize: '15px' }}>{safeT?.pecasNoPedido || 'Peças no pedido'}</h4>
+            <h4 style={{ color: '#00ff00', marginBottom: '12px', fontSize: '15px', textTransform: 'uppercase' }}>{safeT?.pecasNoPedido || 'Peças no pedido'}</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {pecasPedido.map((p) => (
                 <div
@@ -535,7 +537,7 @@ export function PedidoOrcamentosAvulsoContent({
                   <button
                     type="button"
                     onClick={() => removerPeca(p.id)}
-                    style={{ padding: '6px 10px', backgroundColor: 'rgba(255,0,0,0.2)', border: '1px solid rgba(255,0,0,0.5)', borderRadius: 4, color: '#ff6666', cursor: 'pointer', fontSize: '12px' }}
+                    style={{ padding: '6px 10px', backgroundColor: 'rgba(255,0,0,0.2)', border: '1px solid rgba(255,0,0,0.5)', borderRadius: 4, color: '#ff6666', cursor: 'pointer', fontSize: '12px', textTransform: 'uppercase' }}
                   >
                     {safeT?.delete || 'Remover'}
                   </button>
