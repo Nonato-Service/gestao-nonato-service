@@ -38687,6 +38687,7 @@ A1;Peça exemplo;10'
       descricao: string
       observacoes: string
       tipo: 'dados-fixos' | 'cliente-cadastrado' | 'orcamento-relatorio' | 'cliente-prioritario-fixo' | 'cliente-prioritario-valores' | 'pedido-avulso'
+      status?: 'pendente' | 'cancelado' | 'concluido' | 'aprovado' | 'entregue'
       clienteId?: string
       clienteNome?: string
       relatorioId?: string
@@ -40893,6 +40894,8 @@ A1;Peça exemplo;10'
                                 ? (safeT?.orcamentoClientePrioritarioFixo || 'Cliente Prioritário (Fixo)')
                                 : orcamento.tipo === 'cliente-prioritario-valores'
                                 ? (safeT?.orcamentoClientePrioritarioValores || 'Cliente Prioritário (com Valores)')
+                                : orcamento.tipo === 'pedido-avulso'
+                                ? (safeT?.pedidoOrcamentosAvulsoTitle || 'Pedido Avulso')
                                 : (safeT?.clienteCadastrado || 'Cliente Cadastrado')}
                             </span>
                           </div>
@@ -41450,6 +41453,79 @@ A1;Peça exemplo;10'
                           </p>
                         </div>
                       )}
+
+                      {/* Ações e estado do orçamento: Guardar, Deletar, Pedido Cancelado, Concluído, Aprovado, Entregue */}
+                      <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(0, 255, 0, 0.3)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                          <span style={{ color: '#999', fontSize: '13px', textTransform: 'uppercase', marginRight: '8px' }}>
+                            {safeT?.estadoOrcamento || 'Estado'}:
+                          </span>
+                          <span
+                            style={{
+                              padding: '4px 10px',
+                              borderRadius: '6px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              backgroundColor: orcamento.status === 'entregue' ? 'rgba(0, 255, 0, 0.25)' : orcamento.status === 'aprovado' ? 'rgba(0, 200, 100, 0.25)' : orcamento.status === 'concluido' ? 'rgba(0, 150, 255, 0.25)' : orcamento.status === 'cancelado' ? 'rgba(255, 68, 68, 0.25)' : 'rgba(150, 150, 150, 0.25)',
+                              border: orcamento.status === 'entregue' ? '1px solid rgba(0, 255, 0, 0.7)' : orcamento.status === 'aprovado' ? '1px solid rgba(0, 200, 100, 0.7)' : orcamento.status === 'concluido' ? '1px solid rgba(0, 150, 255, 0.7)' : orcamento.status === 'cancelado' ? '1px solid rgba(255, 68, 68, 0.7)' : '1px solid rgba(150, 150, 150, 0.5)',
+                              color: orcamento.status === 'cancelado' ? '#ff8888' : '#fff'
+                            }}
+                          >
+                            {orcamento.status === 'cancelado' ? (safeT?.pedidoCancelado || 'Pedido Cancelado') : orcamento.status === 'concluido' ? (safeT?.concluido || 'Concluído') : orcamento.status === 'aprovado' ? (safeT?.aprovado || 'Aprovado') : orcamento.status === 'entregue' ? (safeT?.entregue || 'Entregue') : (safeT?.pendente || 'Pendente')}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          <button
+                            onClick={async () => {
+                              await saveData('nonato-orcamentos-avulso', orcamentosGerados)
+                              alert(safeT?.orcamentoSalvo || 'Orçamento salvo com sucesso!')
+                            }}
+                            style={{ padding: '8px 14px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.7)', borderRadius: '6px', color: '#00ff00', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.35)' }}
+                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.2)' }}
+                          >
+                            💾 {safeT?.guardar || 'Guardar'}
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (confirm(safeT?.confirmarExcluirOrcamento || 'Deseja realmente excluir este orçamento?')) {
+                                const novosOrcamentos = orcamentosGerados.filter(o => o.id !== orcamento.id)
+                                setOrcamentosGerados(novosOrcamentos)
+                                await saveData('nonato-orcamentos-avulso', novosOrcamentos)
+                              }
+                            }}
+                            style={{ padding: '8px 14px', backgroundColor: 'rgba(255, 68, 68, 0.2)', border: '1px solid rgba(255, 68, 68, 0.7)', borderRadius: '6px', color: '#ff6666', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 68, 68, 0.35)' }}
+                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 68, 68, 0.2)' }}
+                          >
+                            🗑️ {safeT?.deletar || 'Deletar'}
+                          </button>
+                          {(['cancelado', 'concluido', 'aprovado', 'entregue'] as const).map((status) => (
+                            <button
+                              key={status}
+                              onClick={async () => {
+                                const novosOrcamentos = orcamentosGerados.map(o => o.id === orcamento.id ? { ...o, status } : o)
+                                setOrcamentosGerados(novosOrcamentos)
+                                await saveData('nonato-orcamentos-avulso', novosOrcamentos)
+                              }}
+                              style={{
+                                padding: '8px 14px',
+                                backgroundColor: orcamento.status === status ? (status === 'entregue' ? 'rgba(0, 255, 0, 0.35)' : status === 'aprovado' ? 'rgba(0, 200, 100, 0.35)' : status === 'concluido' ? 'rgba(0, 150, 255, 0.35)' : 'rgba(255, 68, 68, 0.35)') : 'rgba(100, 100, 100, 0.2)',
+                                border: orcamento.status === status ? (status === 'entregue' ? '1px solid rgba(0, 255, 0, 0.8)' : status === 'aprovado' ? '1px solid rgba(0, 200, 100, 0.8)' : status === 'concluido' ? '1px solid rgba(0, 150, 255, 0.8)' : '1px solid rgba(255, 68, 68, 0.8)') : '1px solid rgba(150, 150, 150, 0.5)',
+                                borderRadius: '6px',
+                                color: orcamento.status === status ? '#fff' : '#aaa',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '600'
+                              }}
+                              onMouseEnter={(e) => { if (orcamento.status !== status) e.currentTarget.style.backgroundColor = 'rgba(100, 100, 100, 0.3)' }}
+                              onMouseLeave={(e) => { if (orcamento.status !== status) e.currentTarget.style.backgroundColor = 'rgba(100, 100, 100, 0.2)' }}
+                            >
+                              {status === 'cancelado' ? (safeT?.pedidoCancelado || 'Pedido Cancelado') : status === 'concluido' ? (safeT?.concluido || 'Concluído') : status === 'aprovado' ? (safeT?.aprovado || 'Aprovado') : (safeT?.entregue || 'Entregue')}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   ))}
               </div>
