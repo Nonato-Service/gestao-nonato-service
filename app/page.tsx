@@ -762,10 +762,10 @@ export default function Dashboard() {
       if (translations && translations['pt-BR']) {
         return translations['pt-BR'] as any
       }
-      return { title: 'Gestão Técnica da BOA TRADE', welcome: 'Bem-vindo ao Dashboard' } as any
+      return { title: 'Gestão Técnica da Nonato Service', welcome: 'Bem-vindo ao Painel de Controlo' } as any
     } catch (error) {
       console.error('Erro ao carregar traduções:', error)
-      return { title: 'Gestão Técnica da BOA TRADE', welcome: 'Bem-vindo ao Dashboard' } as any
+      return { title: 'Gestão Técnica da Nonato Service', welcome: 'Bem-vindo ao Painel de Controlo' } as any
     }
   }, [selectedLanguage])
   
@@ -778,10 +778,10 @@ export default function Dashboard() {
       if (translations && translations['pt-BR']) {
         return translations['pt-BR'] as any
       }
-      return { title: 'Gestão Técnica da BOA TRADE', welcome: 'Bem-vindo ao Dashboard' } as any
+      return { title: 'Gestão Técnica da Nonato Service', welcome: 'Bem-vindo ao Painel de Controlo' } as any
     } catch (error) {
       console.error('Erro ao carregar traduções:', error)
-      return { title: 'Gestão Técnica da BOA TRADE', welcome: 'Bem-vindo ao Dashboard' } as any
+      return { title: 'Gestão Técnica da Nonato Service', welcome: 'Bem-vindo ao Painel de Controlo' } as any
     }
   }, [selectedLanguage])
   
@@ -2412,7 +2412,7 @@ export default function Dashboard() {
       'gestao-financeira': t?.gestaoFinanceiraTitle || 'Gestão Financeira',
       'clientes-financeiro': t?.clientesFinanceiroTitle || 'Clientes / Financeiro',
       'orcamentos-avulso': t?.orcamentosAvulsoTitle || 'Orçamentos Avulso',
-      'pedido-orcamentos-avulso': t?.pedidoOrcamentosAvulsoTitle || 'Pedido de Orçamentos Avulso',
+      'pedido-orcamentos-avulso': t?.pedidoOrcamentosAvulsoTitle || 'PEDIDO DE ORÇAMENTOS AVULSO',
       'registro-despesas': t?.registroDespesasTitle || 'Registro de Despesas',
       'comprovantes-despesas': t?.comprovantesDespesasTitle || 'COMPROVANTES DE DESPESAS',
       'mapa-visual-separacao-pecas': t?.mapaVisualSeparacaoPecasTitle || 'Mapa Visual de Separação de Peças / Cliente',
@@ -41649,7 +41649,7 @@ A1;Peça exemplo;10'
               textShadow: '0 0 30px rgba(0, 255, 0, 0.2)'
             }}
           >
-            {safeT?.boaTrade || safeT?.nonatoService || 'BOA TRADE'}
+            {safeT?.boaTrade || safeT?.nonatoService || 'NONATO SERVICE'}
           </h1>
 
           <p
@@ -41664,7 +41664,7 @@ A1;Peça exemplo;10'
               textAlign: 'center'
             }}
           >
-            {(safeT as any)?.telaInicialHeadline || 'Domine a operação. Decida com dados. Cresça sem limites.'}
+            {(safeT as any)?.telaInicialHeadline || 'Gestão Técnica Profissional — Operação, Clientes e Relatórios num Só Lugar.'}
           </p>
           <p
             style={{
@@ -41677,7 +41677,7 @@ A1;Peça exemplo;10'
               textAlign: 'center'
             }}
           >
-            {safeT?.telaInicialSubtitle || 'Não é mais gestão — é comando. Controle total de serviços, equipamentos, equipas e relatórios. Uma única plataforma. Zero desculpas.'}
+            {safeT?.telaInicialSubtitle || 'Gestão integrada de serviços, equipamentos, equipe e relatórios. Uma única plataforma para comando total da operação.'}
           </p>
           <p
             style={{
@@ -41689,7 +41689,7 @@ A1;Peça exemplo;10'
               textAlign: 'center'
             }}
           >
-            {(safeT as any)?.telaInicialClaim || 'A ferramenta que a sua concorrência ainda não tem.'}
+            {(safeT as any)?.telaInicialClaim || 'Plataforma integrada para gestão técnica, clientes e relatórios de serviço.'}
           </p>
 
           <button
