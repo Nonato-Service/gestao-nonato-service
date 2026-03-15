@@ -6860,6 +6860,7 @@ export const translations = {
     resumoMes: 'Monatsübersicht',
     extras: 'EXTRAS', // Beibehalten für Kompatibilität
     administrador: 'ADMINISTRATOR',
+    fichaCadastralGuardar: 'Registrierung speichern',
     cadastroNonatoServiceTitle: 'REGISTRIERUNG NONATO SERVICE',
     cadastroNonatoServiceSubtitle: 'Bank- und Kontaktdaten für den Kunden zur Durchführung der Einzahlung oder Überweisung.',
     cadastroNonatoServiceIban: 'IBAN (internationale Überweisungen)',

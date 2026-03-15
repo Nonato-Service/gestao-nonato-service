@@ -16331,7 +16331,7 @@ const nextF = familias.filter(x => x !== f)
               </p>
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                 <button className="btn-primary" onClick={() => saveData('nonato-ficha-cadastral', fichaCadastral)} style={{ padding: '12px 24px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', fontWeight: 'bold', borderRadius: '8px', cursor: 'pointer' }}>
-                  {safeT?.fichaCadastralGuardar || 'Guardar'}
+                  {safeT?.fichaCadastralGuardar || safeT?.save || 'Guardar'}
                 </button>
                 <button
                   onClick={() => {
@@ -16415,7 +16415,7 @@ const nextF = familias.filter(x => x !== f)
                 {safeT?.fichaCadastralTransferencia || 'Os clientes devem efetuar a transferência do pagamento para a conta bancária indicada (NIB e SWIFT).'}
               </p>
               <button className="btn-primary" onClick={() => saveData('nonato-ficha-cadastral', fichaCadastral)} style={{ padding: '10px 24px', backgroundColor: 'rgba(0, 255, 0, 0.2)', borderColor: 'rgba(0, 255, 0, 0.5)', color: '#00ff00', fontWeight: 'bold' }}>
-                {safeT?.fichaCadastralGuardar || 'Guardar ficha cadastral'}
+                {safeT?.fichaCadastralGuardar || safeT?.save || 'Guardar ficha cadastral'}
               </button>
             </div>
           </div>
