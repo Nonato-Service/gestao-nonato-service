@@ -18408,113 +18408,131 @@ onKeyPress={(e) => {
             ) : (
               <>
                 {equipamentos.length === 0 ? (
-                  <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>{safeT?.noEquipamentos || 'Nenhum equipamento cadastrado'}</p>
+                  <div style={{ textAlign: 'center', padding: '48px 24px', borderRadius: '16px', border: '1px dashed rgba(0, 255, 0, 0.2)', background: 'rgba(0, 255, 0, 0.03)' }}>
+                    <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>📦</div>
+                    <p style={{ margin: 0, fontSize: '16px', color: 'rgba(255,255,255,0.75)' }}>{safeT?.noEquipamentos || 'Nenhum equipamento cadastrado'}</p>
+                    <p style={{ margin: '8px 0 0', fontSize: '14px', color: 'rgba(255,255,255,0.5)' }}>{safeT?.addEquipamento || 'Adicione equipamento'} para começar.</p>
+                  </div>
                 ) : (
-                  <div style={{ 
-                    padding: '20px', 
-                    backgroundColor: '#141414', 
-                    borderRadius: '12px', 
-                    border: '1px solid rgba(0, 255, 0, 0.2)',
-                    marginBottom: '20px'
-                  }}>
-                    <h3 style={{ margin: '0 0 16px 0', fontSize: '14px', fontWeight: 600, color: '#00ff00', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
-                      📋 {safeT?.visualizarEquipamentos || 'Visualizar Equipamentos'}
-                    </h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
-                    {equipamentos.map(equipamento => (
-                      <div key={equipamento.id} style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                        {equipamento.photo && (
-                          <img src={equipamento.photo} alt={equipamento.modelo} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
-                        )}
-                        <h3 style={{ marginBottom: '10px', color: '#00ff00' }}>{equipamento.tipoEquipamento}</h3>
-                        <p style={{ fontSize: '14px', marginBottom: '5px' }}><strong>{safeT?.modelo || 'Modelo'}:</strong> {equipamento.modelo}</p>
-                        <p style={{ fontSize: '14px', marginBottom: '5px' }}><strong>{safeT?.marca || 'Marca'}:</strong> {equipamento.marca}</p>
-                        <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '10px' }}>ID: {equipamento.id}</p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                          <button
-                            className="btn-primary"
-                            onClick={() => setViewingEquipamento(equipamento)}
-                            style={{ width: '100%', padding: '8px 12px', fontSize: '12px', marginBottom: '5px', transition: 'box-shadow 0.2s ease, filter 0.2s ease' }}
+                  <>
+                    {/* Resumo visual */}
+                    <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                      <div style={{ padding: '14px 20px', borderRadius: '12px', background: 'rgba(0, 255, 0, 0.08)', border: '1px solid rgba(0, 255, 0, 0.25)', flex: '1', minWidth: '140px' }}>
+                        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{safeT?.equipamentosAtivos || 'Ativos'}</span>
+                        <p style={{ margin: '6px 0 0', fontSize: '24px', fontWeight: '700', color: '#00ff00' }}>{inventarioArmazem.totalAtivos}</p>
+                      </div>
+                      <div style={{ padding: '14px 20px', borderRadius: '12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', flex: '1', minWidth: '140px' }}>
+                        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{safeT?.totalBaixados || 'Baixados'}</span>
+                        <p style={{ margin: '6px 0 0', fontSize: '24px', fontWeight: '700', color: 'rgba(255,255,255,0.9)' }}>{inventarioArmazem.totalBaixados}</p>
+                      </div>
+                    </div>
+                    {/* Grid de cards */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '18px' }}>
+                      {equipamentos.map(equipamento => {
+                        const isBaixado = equipamento.status === 'baixado'
+                        const foto = equipamento.photo || equipamento.coverPhoto
+                        return (
+                          <div
+                            key={equipamento.id}
+                            style={{
+                              borderRadius: '16px',
+                              overflow: 'hidden',
+                              border: '1px solid rgba(0, 255, 0, 0.15)',
+                              background: 'linear-gradient(180deg, rgba(26,26,26,0.98) 0%, rgba(18,18,18,0.98) 100%)',
+                              transition: 'border-color 0.2s, box-shadow 0.2s',
+                              opacity: isBaixado ? 0.85 : 1
+                            }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.45)'
-                              e.currentTarget.style.filter = 'brightness(1.15)'
+                              e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.35)'
+                              e.currentTarget.style.boxShadow = '0 8px 28px rgba(0, 255, 0, 0.08)'
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.boxShadow = ''
-                              e.currentTarget.style.filter = 'brightness(1)'
+                              e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.15)'
+                              e.currentTarget.style.boxShadow = 'none'
                             }}
                           >
-                            📋 {t.viewEquipamento}
-                          </button>
-                          <div style={{ display: 'flex', gap: '5px' }}>
-                            <button
-                              className="btn-primary"
-                              onClick={() => {
-                                setEditingEquipamento(equipamento)
-                                const qtd = Math.max(1, equipamento.quantidadePartes ?? (equipamento.partes?.length ?? 1))
-                                const partes = (equipamento.partes && equipamento.partes.length > 0)
-                                  ? equipamento.partes
-                                  : Array.from({ length: qtd }, (_, i) => ({ ordem: i + 1, tipoId: 'geral' as const, numeroSerieFabricante: '' }))
-                                setEquipamentoForm({
-                                  id: equipamento.id || '',
-                                  tipoEquipamento: equipamento.tipoEquipamento || '',
-                                  modelo: equipamento.modelo || '',
-                                  marca: equipamento.marca || '',
-                                  numeroSerie: equipamento.numeroSerie || '',
-                                  familia: equipamento.familia || '',
-                                  grupo: equipamento.grupo || '',
-                                  peso: equipamento.peso ?? '',
-                                  umaParteSo: equipamento.umaParteSo ?? true,
-                                  quantidadePartes: qtd,
-                                  partes,
-                                  photo: equipamento.photo || '',
-                                  coverPhoto: equipamento.coverPhoto || '',
-                                  photoLibrary: equipamento.photoLibrary || [],
-                                  manualPdf: equipamento.manualPdf || '',
-                                  documentosPdf: equipamento.documentosPdf || [],
-                                  itemsIncluded: (equipamento.itemsIncluded || []).map(item =>
-                                    typeof item === 'string'
-                                      ? { id: Date.now().toString() + Math.random(), nome: item }
-                                      : item
-                                  ),
-                                  historico: equipamento.historico || [],
-                                  modeloManuaisId: equipamento.modeloManuaisId || ''
-                                })
-                                setShowEquipamentoForm(true)
-                              }}
-                              style={{ flex: 1, padding: '8px 12px', fontSize: '12px', transition: 'box-shadow 0.2s ease, filter 0.2s ease' }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.45)'
-                                e.currentTarget.style.filter = 'brightness(1.15)'
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.boxShadow = ''
-                                e.currentTarget.style.filter = 'brightness(1)'
-                              }}
-                            >
-                              {safeT?.edit || 'Editar'}
-                            </button>
-                            <button
-                              className="btn-danger"
-                              onClick={() => handleDeleteEquipamento(equipamento.id)}
-                              style={{ flex: 1, padding: '8px 12px', fontSize: '12px', transition: 'box-shadow 0.2s ease, filter 0.2s ease' }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.boxShadow = '0 0 14px rgba(255, 70, 70, 0.5)'
-                                e.currentTarget.style.filter = 'brightness(1.15)'
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.boxShadow = ''
-                                e.currentTarget.style.filter = 'brightness(1)'
-                              }}
-                            >
-                              {safeT?.delete || 'Excluir'}
-                            </button>
+                            {/* Imagem ou placeholder */}
+                            <div style={{ position: 'relative', width: '100%', aspectRatio: '16/10', background: 'rgba(0, 255, 0, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                              {foto ? (
+                                <img src={foto} alt={equipamento.modelo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              ) : (
+                                <span style={{ fontSize: '48px', opacity: 0.4 }}>🔧</span>
+                              )}
+                              {isBaixado && (
+                                <span style={{ position: 'absolute', top: '10px', right: '10px', padding: '5px 12px', fontSize: '11px', fontWeight: '600', background: 'rgba(80,80,80,0.95)', color: 'rgba(255,255,255,0.95)', borderRadius: '8px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                                  {safeT?.baixado || 'Baixado'}
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ padding: '18px' }}>
+                              <p style={{ margin: 0, fontSize: '11px', color: 'rgba(0, 255, 0, 0.9)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{equipamento.tipoEquipamento}</p>
+                              <h3 style={{ margin: '8px 0 6px', fontSize: '17px', fontWeight: '600', color: '#fff' }}>{equipamento.modelo}</h3>
+                              <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.75)' }}>{equipamento.marca}{equipamento.numeroSerie ? ` · ${equipamento.numeroSerie}` : ''}</p>
+                              {(equipamento.familia || equipamento.grupo) && (
+                                <p style={{ margin: '8px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>{[equipamento.familia, equipamento.grupo].filter(Boolean).join(' / ')}</p>
+                              )}
+                              <p style={{ margin: '6px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>ID: {equipamento.id}</p>
+                              <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
+                                <button
+                                  className="btn-primary"
+                                  onClick={() => setViewingEquipamento(equipamento)}
+                                  style={{ flex: 1, minWidth: '90px', padding: '10px 14px', fontSize: '13px', borderRadius: '10px', fontWeight: '600' }}
+                                >
+                                  👁️ {t.viewEquipamento}
+                                </button>
+                                <button
+                                  className="btn-primary"
+                                  onClick={() => {
+                                    setEditingEquipamento(equipamento)
+                                    const qtd = Math.max(1, equipamento.quantidadePartes ?? (equipamento.partes?.length ?? 1))
+                                    const partes = (equipamento.partes && equipamento.partes.length > 0)
+                                      ? equipamento.partes
+                                      : Array.from({ length: qtd }, (_, i) => ({ ordem: i + 1, tipoId: 'geral' as const, numeroSerieFabricante: '' }))
+                                    setEquipamentoForm({
+                                      id: equipamento.id || '',
+                                      tipoEquipamento: equipamento.tipoEquipamento || '',
+                                      modelo: equipamento.modelo || '',
+                                      marca: equipamento.marca || '',
+                                      numeroSerie: equipamento.numeroSerie || '',
+                                      familia: equipamento.familia || '',
+                                      grupo: equipamento.grupo || '',
+                                      peso: equipamento.peso ?? '',
+                                      umaParteSo: equipamento.umaParteSo ?? true,
+                                      quantidadePartes: qtd,
+                                      partes,
+                                      photo: equipamento.photo || '',
+                                      coverPhoto: equipamento.coverPhoto || '',
+                                      photoLibrary: equipamento.photoLibrary || [],
+                                      manualPdf: equipamento.manualPdf || '',
+                                      documentosPdf: equipamento.documentosPdf || [],
+                                      itemsIncluded: (equipamento.itemsIncluded || []).map(item =>
+                                        typeof item === 'string'
+                                          ? { id: Date.now().toString() + Math.random(), nome: item }
+                                          : item
+                                      ),
+                                      historico: equipamento.historico || [],
+                                      modeloManuaisId: equipamento.modeloManuaisId || ''
+                                    })
+                                    setShowEquipamentoForm(true)
+                                  }}
+                                  style={{ padding: '10px 14px', fontSize: '13px', borderRadius: '10px', fontWeight: '600', background: 'rgba(0, 255, 0, 0.1)', border: '1px solid rgba(0, 255, 0, 0.35)', color: '#00ff00' }}
+                                >
+                                  ✏️ {safeT?.edit || 'Editar'}
+                                </button>
+                                <button
+                                  className="btn-danger"
+                                  onClick={() => handleDeleteEquipamento(equipamento.id)}
+                                  style={{ padding: '10px 14px', fontSize: '13px', borderRadius: '10px', fontWeight: '600' }}
+                                >
+                                  🗑️ {safeT?.delete || 'Excluir'}
+                                </button>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  </div>
+                        )
+                      })}
+                    </div>
+                  </>
                 )}
               </>
             )}
