@@ -2361,7 +2361,7 @@ export default function Dashboard() {
       'pecas-substituicao': t?.pecasSubstituicao || 'Peças de Substituição',
       'biblioteca-pecas': t?.bibliotecaPecas || 'Biblioteca de Peças',
       'importacao-pecas': t?.importacaoPecas || 'Importação de Peças',
-      'solicitacao-servico-tecnico': t?.solicitacaoServicoTecnicoTitle || 'Solicitação de Serviço Técnico',
+      'solicitacao-servico-tecnico': t?.solicitacaoServicoTecnicoTitle || 'SOLICITAÇÃO DE SERVIÇO TÉCNICO',
       'agenda': t?.agenda || 'Agenda',
       'desmontados': t?.desmontados || 'Desmontados',
       'cadastro-servicos': t?.cadastroServicos || 'Cadastro de Serviços',
