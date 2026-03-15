@@ -143,6 +143,25 @@ type PecaSolicitadaArmazem = {
   enviadoAvisoRetirada?: boolean
 }
 
+/** Solicitação de Serviço Técnico — formulário enviado ao cliente; cliente assina e reenvia por e-mail ou WhatsApp; após recebido será feito pré-agendamento e nível de urgência */
+type SolicitacaoServicoTecnico = {
+  id: string
+  nomeCliente: string
+  tipoEquipamento: string
+  marca: string
+  modelo: string
+  numeroSerie: string
+  problemasApresentados: string
+  endereco: string
+  telefone: string
+  responsavel: string
+  assinaturaCliente?: string
+  dataAssinaturaCliente?: string
+  nivelUrgencia?: 'baixa' | 'media' | 'alta' | 'critica'
+  dataCriacao: string
+  dataRecebimento?: string
+}
+
 type HistoricoEquipamento = {
   id: string
   data: string
@@ -2453,6 +2472,19 @@ export default function Dashboard() {
   const [showSelecionarPecasModal, setShowSelecionarPecasModal] = useState(false)
   const [pecasSelecionadasAgenda, setPecasSelecionadasAgenda] = useState<PecaBiblioteca[]>([])
   
+  // Estados para Solicitação de Serviço Técnico (formulário para enviar ao cliente; assinatura; envio por e-mail/WhatsApp)
+  const [solicitacoesServicoTecnico, setSolicitacoesServicoTecnico] = useState<SolicitacaoServicoTecnico[]>([])
+  const [showSolicitacaoServicoTecnicoForm, setShowSolicitacaoServicoTecnicoForm] = useState(false)
+  const [editingSolicitacaoServicoTecnico, setEditingSolicitacaoServicoTecnico] = useState<SolicitacaoServicoTecnico | null>(null)
+  const [solicitacaoServicoTecnicoForm, setSolicitacaoServicoTecnicoForm] = useState<Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'>>({
+    nomeCliente: '', tipoEquipamento: '', marca: '', modelo: '', numeroSerie: '', problemasApresentados: '',
+    endereco: '', telefone: '', responsavel: '', assinaturaCliente: undefined, dataAssinaturaCliente: undefined, dataRecebimento: undefined
+  })
+  const canvasAssinaturaSolicitacaoRef = useRef<HTMLCanvasElement>(null)
+  const [mostrarCanvasAssinaturaSolicitacao, setMostrarCanvasAssinaturaSolicitacao] = useState(false)
+  const isDrawingSolicitacaoRef = useRef(false)
+  const lastPosSolicitacaoRef = useRef<{ x: number; y: number } | null>(null)
+  
   // Estados para Biblioteca de Peças
   const [pecasBiblioteca, setPecasBiblioteca] = useState<PecaBiblioteca[]>([])
   const [categoriasPecas, setCategoriasPecas] = useState<CategoriaPeca[]>([])
@@ -3693,6 +3725,12 @@ export default function Dashboard() {
       const savedAgendamentos = getData('nonato-agendamentos')
       if (savedAgendamentos) {
         setAgendamentos(savedAgendamentos)
+      }
+
+      // Carregar solicitações de serviço técnico
+      const savedSolicitacoes = getData('nonato-solicitacoes-servico-tecnico')
+      if (savedSolicitacoes && Array.isArray(savedSolicitacoes)) {
+        setSolicitacoesServicoTecnico(savedSolicitacoes)
       }
 
       // Carregar grupos desmontados
@@ -24885,11 +24923,78 @@ A1;Peça exemplo;10'
           </div>
         )
       
-      case 'solicitacao-servico-tecnico':
+      case 'solicitacao-servico-tecnico': {
+        const buildSolicitacaoBody = (s: typeof solicitacaoServicoTecnicoForm | SolicitacaoServicoTecnico) => {
+          const t = translations[selectedLanguage as keyof typeof translations] as typeof translations['pt-BR']
+          const labels = {
+            nomeCliente: t?.solicitacaoServicoTecnicoNomeCliente ?? 'Nome do cliente',
+            tipoEquipamento: t?.solicitacaoServicoTecnicoTipoEquipamento ?? 'Tipo de equipamento',
+            marca: t?.solicitacaoServicoTecnicoMarca ?? 'Marca',
+            modelo: t?.solicitacaoServicoTecnicoModelo ?? 'Modelo',
+            numeroSerie: t?.solicitacaoServicoTecnicoNumeroSerie ?? 'Número de série',
+            problemas: t?.solicitacaoServicoTecnicoProblemasApresentados ?? 'Problemas apresentados',
+            endereco: t?.solicitacaoServicoTecnicoEndereco ?? 'Endereço',
+            telefone: t?.solicitacaoServicoTecnicoTelefone ?? 'Telefone',
+            responsavel: t?.solicitacaoServicoTecnicoResponsavel ?? 'Responsável',
+            assinaturaDesc: t?.solicitacaoServicoTecnicoAssinaturaDesc ?? 'O cliente deve assinar e enviar por e-mail ou WhatsApp.'
+          }
+          return [
+            (safeT?.solicitacaoServicoTecnicoTitle || 'SOLICITAÇÃO DE SERVIÇO TÉCNICO'),
+            '',
+            `${labels.nomeCliente}: ${s.nomeCliente || '-'}`,
+            `${labels.tipoEquipamento}: ${s.tipoEquipamento || '-'}`,
+            `${labels.marca}: ${s.marca || '-'}`,
+            `${labels.modelo}: ${s.modelo || '-'}`,
+            `${labels.numeroSerie}: ${s.numeroSerie || '-'}`,
+            `${labels.problemas}: ${s.problemasApresentados || '-'}`,
+            `${labels.endereco}: ${s.endereco || '-'}`,
+            `${labels.telefone}: ${s.telefone || '-'}`,
+            `${labels.responsavel}: ${s.responsavel || '-'}`,
+            '',
+            labels.assinaturaDesc
+          ].join('\n')
+        }
+        const handleGuardarSolicitacao = () => {
+          const id = editingSolicitacaoServicoTecnico?.id || `sst-${Date.now()}`
+          const nova: SolicitacaoServicoTecnico = {
+            id,
+            ...solicitacaoServicoTecnicoForm,
+            dataCriacao: editingSolicitacaoServicoTecnico?.dataCriacao || new Date().toISOString()
+          }
+          const list = editingSolicitacaoServicoTecnico
+            ? solicitacoesServicoTecnico.map(s => s.id === id ? nova : s)
+            : [...solicitacoesServicoTecnico, nova]
+          setSolicitacoesServicoTecnico(list)
+          saveData('nonato-solicitacoes-servico-tecnico', list)
+          setShowSolicitacaoServicoTecnicoForm(false)
+          setEditingSolicitacaoServicoTecnico(null)
+          setSolicitacaoServicoTecnicoForm({ nomeCliente: '', tipoEquipamento: '', marca: '', modelo: '', numeroSerie: '', problemasApresentados: '', endereco: '', telefone: '', responsavel: '', assinaturaCliente: undefined, dataAssinaturaCliente: undefined, dataRecebimento: undefined })
+        }
+        const handleEnviarEmail = (s?: SolicitacaoServicoTecnico) => {
+          const body = s ? buildSolicitacaoBody(s) : buildSolicitacaoBody(solicitacaoServicoTecnicoForm)
+          const subject = (safeT?.solicitacaoServicoTecnicoTitle || 'Solicitação de Serviço Técnico') + ' - ' + (s?.nomeCliente || solicitacaoServicoTecnicoForm.nomeCliente || '')
+          window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank')
+        }
+        const handleEnviarWhatsApp = (s?: SolicitacaoServicoTecnico) => {
+          const body = s ? buildSolicitacaoBody(s) : buildSolicitacaoBody(solicitacaoServicoTecnicoForm)
+          const tel = (s?.telefone || solicitacaoServicoTecnicoForm.telefone || '').replace(/\D/g, '')
+          const url = tel ? `https://wa.me/${tel.startsWith('0') ? '351' + tel.slice(1) : tel}` : 'https://wa.me/'
+          window.open(url + (tel ? '?' : '?') + `text=${encodeURIComponent(body)}`, '_blank')
+        }
+        const handleUpdateUrgencia = (id: string, nivel: 'baixa' | 'media' | 'alta' | 'critica' | undefined) => {
+          const list = solicitacoesServicoTecnico.map(s => s.id === id ? { ...s, nivelUrgencia: nivel || undefined } : s)
+          setSolicitacoesServicoTecnico(list)
+          saveData('nonato-solicitacoes-servico-tecnico', list)
+        }
+        const handleUpdateDataRecebimento = (id: string, data: string) => {
+          const list = solicitacoesServicoTecnico.map(s => s.id === id ? { ...s, dataRecebimento: data || undefined } : s)
+          setSolicitacoesServicoTecnico(list)
+          saveData('nonato-solicitacoes-servico-tecnico', list)
+        }
         return (
           <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
             <div style={{
-              marginBottom: '40px',
+              marginBottom: '24px',
               padding: '30px',
               background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
               borderRadius: '20px',
@@ -24901,32 +25006,128 @@ A1;Peça exemplo;10'
                   <LogoComponent size="small" />
                 </div>
                 <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 style={{
-                    margin: 0,
-                    fontSize: '32px',
-                    fontWeight: 'bold',
-                    color: '#00ff00',
-                    letterSpacing: '3px',
-                    textShadow: '0 0 20px rgba(0, 255, 0, 0.3)',
-                    marginBottom: '8px'
-                  }}>
+                  <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#00ff00', letterSpacing: '3px', textShadow: '0 0 20px rgba(0, 255, 0, 0.3)', marginBottom: '8px' }}>
                     {safeT?.solicitacaoServicoTecnicoTitle || 'SOLICITAÇÃO DE SERVIÇO TÉCNICO'}
                   </h1>
                   <p style={{ margin: 0, fontSize: '14px', color: '#ccc', opacity: 0.8 }}>
-                    {safeT?.solicitacaoServicoTecnicoEmBreve || 'Conteúdo em breve. Será definido em seguida.'}
+                    {safeT?.solicitacaoServicoTecnicoSubtitle || 'Formulário para enviar ao cliente. O cliente preenche, assina e reenvia por e-mail ou WhatsApp.'}
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  {!showSolicitacaoServicoTecnicoForm && (
+                    <button className="btn-primary" onClick={() => { setShowSolicitacaoServicoTecnicoForm(true); setEditingSolicitacaoServicoTecnico(null); setSolicitacaoServicoTecnicoForm({ nomeCliente: '', tipoEquipamento: '', marca: '', modelo: '', numeroSerie: '', problemasApresentados: '', endereco: '', telefone: '', responsavel: '', assinaturaCliente: undefined, dataAssinaturaCliente: undefined, dataRecebimento: undefined }); }} style={{ padding: '10px 20px', backgroundColor: 'rgba(0, 255, 0, 0.2)', borderColor: 'rgba(0, 255, 0, 0.5)', color: '#00ff00', fontWeight: 'bold' }}>
+                      ➕ {safeT?.solicitacaoServicoTecnicoNovaSolicitacao || 'Nova solicitação'}
+                    </button>
+                  )}
                   <button onClick={() => closeTab(activeTabId || '')} style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'transparent', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', color: '#00ff00', cursor: 'pointer' }} title={safeT?.voltar || 'Voltar'}>↶</button>
                   <button onClick={voltarPaginaInicial} style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'transparent', border: '1px solid rgba(0, 150, 255, 0.3)', borderRadius: '4px', color: '#66b3ff', cursor: 'pointer' }} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
                 </div>
               </div>
             </div>
-            <div style={{ padding: '20px', textAlign: 'center', color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>
-              {safeT?.solicitacaoServicoTecnicoEmBreve || 'Conteúdo em breve. Será definido em seguida.'}
+
+            <div style={{ marginBottom: '24px', padding: '16px 20px', backgroundColor: 'rgba(255, 193, 7, 0.1)', border: '1px solid rgba(255, 193, 7, 0.4)', borderRadius: '12px', color: '#ffc107', fontSize: '14px' }}>
+              <strong>{safeT?.solicitacaoServicoTecnicoNotice || 'Após receber esta solicitação preenchida e assinada pelo cliente, será feito o pré-agendamento e na mesma solicitação será aplicado o nível de urgência.'}</strong>
+            </div>
+
+            {showSolicitacaoServicoTecnicoForm && (
+              <div style={{ marginBottom: '32px', padding: '24px', backgroundColor: '#2a2a2a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+                <h3 style={{ marginBottom: '20px', color: '#00ff00' }}>{editingSolicitacaoServicoTecnico ? (safeT?.editar || 'Editar') : (safeT?.solicitacaoServicoTecnicoNovaSolicitacao || 'Nova solicitação')}</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+                  {[
+                    { key: 'nomeCliente', label: safeT?.solicitacaoServicoTecnicoNomeCliente },
+                    { key: 'tipoEquipamento', label: safeT?.solicitacaoServicoTecnicoTipoEquipamento },
+                    { key: 'marca', label: safeT?.solicitacaoServicoTecnicoMarca },
+                    { key: 'modelo', label: safeT?.solicitacaoServicoTecnicoModelo },
+                    { key: 'numeroSerie', label: safeT?.solicitacaoServicoTecnicoNumeroSerie },
+                    { key: 'endereco', label: safeT?.solicitacaoServicoTecnicoEndereco },
+                    { key: 'telefone', label: safeT?.solicitacaoServicoTecnicoTelefone },
+                    { key: 'responsavel', label: safeT?.solicitacaoServicoTecnicoResponsavel },
+                    { key: 'dataRecebimento', label: safeT?.solicitacaoServicoTecnicoDataRecebimento, type: 'date' as const }
+                  ].map(({ key, label, type }) => (
+                    <div key={key}>
+                      <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{label}</label>
+                      <input type={type || 'text'} value={type === 'date' ? ((solicitacaoServicoTecnicoForm as any)[key] ? String((solicitacaoServicoTecnicoForm as any)[key]).slice(0, 10) : '') : ((solicitacaoServicoTecnicoForm as any)[key] || '')} onChange={e => setSolicitacaoServicoTecnicoForm({ ...solicitacaoServicoTecnicoForm, [key]: type === 'date' ? (e.target.value || undefined) : e.target.value })} style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} />
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.solicitacaoServicoTecnicoProblemasApresentados}</label>
+                  <textarea value={solicitacaoServicoTecnicoForm.problemasApresentados} onChange={e => setSolicitacaoServicoTecnicoForm({ ...solicitacaoServicoTecnicoForm, problemasApresentados: e.target.value })} rows={3} style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} />
+                </div>
+
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+                  <h4 style={{ marginBottom: '8px', color: '#00ff00' }}>{safeT?.solicitacaoServicoTecnicoAssinaturaCliente}</h4>
+                  <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', marginBottom: '12px' }}>{safeT?.solicitacaoServicoTecnicoAssinaturaDesc}</p>
+                  {solicitacaoServicoTecnicoForm.assinaturaCliente && !mostrarCanvasAssinaturaSolicitacao ? (
+                    <div>
+                      <img src={solicitacaoServicoTecnicoForm.assinaturaCliente} alt="Assinatura" style={{ maxWidth: '100%', maxHeight: '100px', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '4px', background: '#fff' }} />
+                      <button type="button" className="btn-primary" onClick={() => { setMostrarCanvasAssinaturaSolicitacao(true); setSolicitacaoServicoTecnicoForm({ ...solicitacaoServicoTecnicoForm, assinaturaCliente: undefined, dataAssinaturaCliente: undefined }); }} style={{ marginTop: '8px', padding: '6px 12px', fontSize: '12px' }}>{safeT?.substituirAssinatura || 'Substituir assinatura'}</button>
+                    </div>
+                  ) : (
+                    <>
+                      <canvas ref={canvasAssinaturaSolicitacaoRef} width={320} height={120} style={{ display: 'block', width: '100%', maxWidth: '320px', height: '120px', border: '2px solid rgba(0,255,0,0.5)', borderRadius: '6px', background: '#fff', touchAction: 'none', cursor: 'crosshair' }}
+                        onMouseDown={(e) => { const c = canvasAssinaturaSolicitacaoRef.current; if (!c) return; const r = c.getBoundingClientRect(); const x = (e.clientX - r.left) * (c.width / r.width); const y = (e.clientY - r.top) * (c.height / r.height); isDrawingSolicitacaoRef.current = true; lastPosSolicitacaoRef.current = { x, y }; const ctx = c.getContext('2d'); if (ctx) { ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x, y); } }}
+                        onMouseMove={(e) => { if (!isDrawingSolicitacaoRef.current || !lastPosSolicitacaoRef.current) return; const c = canvasAssinaturaSolicitacaoRef.current; if (!c) return; const r = c.getBoundingClientRect(); const x = (e.clientX - r.left) * (c.width / r.width); const y = (e.clientY - r.top) * (c.height / r.height); const ctx = c.getContext('2d'); if (ctx) { ctx.lineTo(x, y); ctx.stroke(); } lastPosSolicitacaoRef.current = { x, y }; }}
+                        onMouseUp={() => { isDrawingSolicitacaoRef.current = false; lastPosSolicitacaoRef.current = null; }}
+                        onMouseLeave={() => { isDrawingSolicitacaoRef.current = false; lastPosSolicitacaoRef.current = null; }}
+                        onTouchStart={(e) => { e.preventDefault(); const c = canvasAssinaturaSolicitacaoRef.current; if (!c || !e.touches.length) return; const r = c.getBoundingClientRect(); const x = (e.touches[0].clientX - r.left) * (c.width / r.width); const y = (e.touches[0].clientY - r.top) * (c.height / r.height); isDrawingSolicitacaoRef.current = true; lastPosSolicitacaoRef.current = { x, y }; const ctx = c.getContext('2d'); if (ctx) { ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x, y); } }}
+                        onTouchMove={(e) => { e.preventDefault(); if (!isDrawingSolicitacaoRef.current || !lastPosSolicitacaoRef.current) return; const c = canvasAssinaturaSolicitacaoRef.current; if (!c || !e.touches.length) return; const r = c.getBoundingClientRect(); const x = (e.touches[0].clientX - r.left) * (c.width / r.width); const y = (e.touches[0].clientY - r.top) * (c.height / r.height); const ctx = c.getContext('2d'); if (ctx) { ctx.lineTo(x, y); ctx.stroke(); } lastPosSolicitacaoRef.current = { x, y }; }}
+                        onTouchEnd={() => { isDrawingSolicitacaoRef.current = false; lastPosSolicitacaoRef.current = null; }}
+                      />
+                      <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
+                        <button type="button" className="btn-primary" onClick={() => { const c = canvasAssinaturaSolicitacaoRef.current; if (!c) return; setSolicitacaoServicoTecnicoForm({ ...solicitacaoServicoTecnicoForm, assinaturaCliente: c.toDataURL('image/png'), dataAssinaturaCliente: new Date().toISOString() }); setMostrarCanvasAssinaturaSolicitacao(false); }} style={{ padding: '8px 14px', fontSize: '13px' }}>{safeT?.guardarAssinatura || 'Guardar assinatura'}</button>
+                        <button type="button" onClick={() => { const c = canvasAssinaturaSolicitacaoRef.current; if (c) { const ctx = c.getContext('2d'); if (ctx) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); } } }} style={{ padding: '8px 14px', fontSize: '13px', border: '1px solid #666', color: '#ccc', background: '#333', borderRadius: '6px', cursor: 'pointer' }}>{safeT?.limpar || 'Limpar'}</button>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <button className="btn-primary" onClick={handleGuardarSolicitacao} style={{ padding: '10px 20px', backgroundColor: 'rgba(0, 255, 0, 0.2)', borderColor: 'rgba(0, 255, 0, 0.5)', color: '#00ff00' }}>{safeT?.solicitacaoServicoTecnicoGuardar}</button>
+                  <button onClick={() => handleEnviarEmail()} style={{ padding: '10px 20px', border: '1px solid rgba(0, 150, 255, 0.5)', color: '#66b3ff', background: 'rgba(0, 150, 255, 0.15)', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>📧 {safeT?.solicitacaoServicoTecnicoEnviarPorEmail}</button>
+                  <button onClick={() => handleEnviarWhatsApp()} style={{ padding: '10px 20px', border: '1px solid rgba(37, 211, 102, 0.5)', color: '#25d366', background: 'rgba(37, 211, 102, 0.15)', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>💬 {safeT?.solicitacaoServicoTecnicoEnviarPorWhatsApp}</button>
+                  <button onClick={() => { setShowSolicitacaoServicoTecnicoForm(false); setEditingSolicitacaoServicoTecnico(null); }} style={{ padding: '10px 20px', border: '1px solid #666', color: '#ccc', background: '#333', borderRadius: '6px', cursor: 'pointer' }}>{safeT?.close || 'Fechar'}</button>
+                </div>
+              </div>
+            )}
+
+            <div style={{ padding: '20px', backgroundColor: '#2a2a2a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+              <h3 style={{ marginBottom: '16px', color: '#00ff00' }}>{safeT?.solicitacaoServicoTecnicoLista}</h3>
+              {solicitacoesServicoTecnico.length === 0 ? (
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>{safeT?.solicitacaoServicoTecnicoNenhuma}</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {solicitacoesServicoTecnico.map(s => (
+                    <div key={s.id} style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid #333' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                        <div>
+                          <strong style={{ color: '#fff' }}>{s.nomeCliente || '-'}</strong>
+                          <span style={{ color: '#888', marginLeft: '8px' }}>{s.tipoEquipamento} {s.marca} {s.modelo}</span>
+                          {s.dataCriacao && <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px' }}>{new Date(s.dataCriacao).toLocaleDateString()}</span>}
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '12px', color: '#aaa' }}>{safeT?.solicitacaoServicoTecnicoDataRecebimento}:</span>
+                          <input type="date" value={s.dataRecebimento ? s.dataRecebimento.slice(0, 10) : ''} onChange={e => handleUpdateDataRecebimento(s.id, e.target.value)} style={{ padding: '6px 10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '12px' }} title={safeT?.solicitacaoServicoTecnicoDataRecebimento} />
+                          <select value={s.nivelUrgencia || ''} onChange={e => handleUpdateUrgencia(s.id, e.target.value ? (e.target.value as 'baixa' | 'media' | 'alta' | 'critica') : undefined)} style={{ padding: '6px 10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '12px' }}>
+                            <option value="">{safeT?.solicitacaoServicoTecnicoNivelUrgencia}</option>
+                            <option value="baixa">{safeT?.solicitacaoServicoTecnicoUrgenciaBaixa}</option>
+                            <option value="media">{safeT?.solicitacaoServicoTecnicoUrgenciaMedia}</option>
+                            <option value="alta">{safeT?.solicitacaoServicoTecnicoUrgenciaAlta}</option>
+                            <option value="critica">{safeT?.solicitacaoServicoTecnicoUrgenciaCritica}</option>
+                          </select>
+                          <button onClick={() => handleEnviarEmail(s)} style={{ padding: '6px 12px', fontSize: '12px', border: '1px solid rgba(0, 150, 255, 0.5)', color: '#66b3ff', background: 'transparent', borderRadius: '6px', cursor: 'pointer' }}>📧</button>
+                          <button onClick={() => handleEnviarWhatsApp(s)} style={{ padding: '6px 12px', fontSize: '12px', border: '1px solid rgba(37, 211, 102, 0.5)', color: '#25d366', background: 'transparent', borderRadius: '6px', cursor: 'pointer' }}>💬</button>
+                          <button onClick={() => { setSolicitacaoServicoTecnicoForm({ nomeCliente: s.nomeCliente, tipoEquipamento: s.tipoEquipamento, marca: s.marca, modelo: s.modelo, numeroSerie: s.numeroSerie, problemasApresentados: s.problemasApresentados, endereco: s.endereco, telefone: s.telefone, responsavel: s.responsavel, assinaturaCliente: s.assinaturaCliente, dataAssinaturaCliente: s.dataAssinaturaCliente, dataRecebimento: s.dataRecebimento }); setEditingSolicitacaoServicoTecnico(s); setShowSolicitacaoServicoTecnicoForm(true); }} style={{ padding: '6px 12px', fontSize: '12px', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', background: 'transparent', borderRadius: '6px', cursor: 'pointer' }}>{safeT?.editar || 'Editar'}</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )
+      }
 
       case 'agenda':
         return (
