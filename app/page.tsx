@@ -11432,6 +11432,9 @@ export default function Dashboard() {
       case 'classico':
         handlePrintRelatorioClassico(relatorio);
         break;
+      case 'detalhado':
+        handlePrintRelatorioDetalhado(relatorio);
+        break;
       case 'moderno':
         handlePrintRelatorioModerno(relatorio);
         break;
@@ -11452,6 +11455,21 @@ export default function Dashboard() {
         break;
       case 'ferwood':
         handlePrintRelatorioFerwood(relatorio);
+        break;
+      case 'profissional':
+        handlePrintRelatorioProfissional(relatorio);
+        break;
+      case 'resumido':
+        handlePrintRelatorioResumido(relatorio);
+        break;
+      case 'colorido':
+        handlePrintRelatorioColorido(relatorio);
+        break;
+      case 'formal':
+        handlePrintRelatorioFormal(relatorio);
+        break;
+      case 'lista':
+        handlePrintRelatorioLista(relatorio);
         break;
       default:
         handlePrintRelatorioClassico(relatorio);
@@ -11950,6 +11968,244 @@ export default function Dashboard() {
       console.error('Erro ao gerar PDF Ferwood:', error);
       alert('Erro ao gerar PDF. Verifique o console para mais detalhes.');
     }
+  };
+
+  const localeReport = selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE';
+
+  const renderReportDiasTable = (relatorio: RelatorioServico, totais: { horasTrabalho: string; kmsPercorridos: string; horasViagem: string }) => {
+    if (!relatorio.diasTrabalho || relatorio.diasTrabalho.length === 0) return '';
+    return `
+    <div class="report-section">
+      <h3>${t.controleHorasDeslocamentos || 'CONTROLE DE HORAS E DESLOCAMENTOS'}</h3>
+      <table>
+        <thead><tr>
+          <th>${t.data || 'DATA'}</th><th>${t.ida || 'IDA'}</th><th>${t.horas || 'HORAS'}</th><th>${t.retorno || 'RETORNO'}</th><th>${t.km || 'KM'}</th>
+        </tr></thead>
+        <tbody>
+          ${relatorio.diasTrabalho.map((dia: DiaTrabalho) => {
+            const diaCalc = atualizarCalculosDia(dia);
+            const df = dia.data ? new Date(dia.data + 'T00:00:00').toLocaleDateString(localeReport, { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-';
+            return `<tr><td>${df}</td><td>${diaCalc.idaDuracao || '-'}</td><td>${diaCalc.horasDuracao || '-'}</td><td>${diaCalc.retornoDuracao || '-'}</td><td>${diaCalc.kmTotal || '0'}</td></tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      <div class="report-summary">
+        <span>${t.horasTrabalho || 'Horas'}: ${totais.horasTrabalho}h</span>
+        <span>${t.kmsPercorridos || 'KM'}: ${totais.kmsPercorridos}</span>
+        <span>${t.horasViagem || 'Viagem'}: ${totais.horasViagem}h</span>
+      </div>
+    </div>`;
+  };
+
+  const renderReportResultados = (relatorio: RelatorioServico) => `
+    <div class="report-resultados">
+      <div><span class="chk ${relatorio.servicoConcluido ? 'checked' : ''}"></span> ${t.servicoConcluido || 'Concluído'}</div>
+      <div><span class="chk ${relatorio.liberacaoProducao ? 'checked' : ''}"></span> ${t.liberacaoProducao || 'Liberação'}</div>
+      <div><span class="chk ${relatorio.retornoNecessario ? 'checked' : ''}"></span> ${t.retornoNecessario || 'Retorno'}</div>
+      <div><span class="chk ${relatorio.instrucaoFuncionarios ? 'checked' : ''}"></span> ${t.instrucaoFuncionarios || 'Instrução'}</div>
+      <div><span class="chk ${relatorio.entregaDocumentacao ? 'checked' : ''}"></span> ${t.entregaDocumentacao || 'Documentação'}</div>
+      <div><span class="chk ${relatorio.necessarioTrocaPecas ? 'checked' : ''}"></span> ${t.necessarioTrocaPecas || 'Troca de peças'}</div>
+    </div>`;
+
+  const renderReportPecas = (relatorio: RelatorioServico) => {
+    if (!relatorio.pecasSubstituicao || relatorio.pecasSubstituicao.length === 0) return '';
+    return `
+    <div class="report-section">
+      <h3>${t.pecasSubstituicao || 'PEÇAS SUBSTITUIÇÃO'}</h3>
+      <table><thead><tr><th>${t.descricaoItem || 'Descrição'}</th><th>${t.codigo || 'Código'}</th><th>${t.quantidade || 'Qtd'}</th></tr></thead>
+      <tbody>${relatorio.pecasSubstituicao.map((p: PecaSubstituicao) => `<tr><td>${p.descricao || '-'}</td><td>${p.codigo || '-'}</td><td>${p.quantidade || '-'}</td></tr>`).join('')}</tbody></table>
+    </div>`;
+  };
+
+  const handlePrintRelatorioProfissional = (relatorio: RelatorioServico) => {
+    try {
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) { alert('Por favor, permita pop-ups para gerar o PDF.'); return; }
+      const headerLogoContent = getLogoHtmlForReport() || '';
+      const totais = calcularTotais(relatorio.diasTrabalho);
+      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeReport) : '-';
+      const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${relatorio.numero}</title><style>
+        @page{size:A4;margin:15mm}*{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#1a1a1a;background:#fff;padding:20px;line-height:1.5}
+        .header-pro{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #0066aa}
+        .header-pro .logo img{max-height:48px;max-width:140px;object-fit:contain}
+        .header-pro .tit{font-size:16px;font-weight:600;color:#0066aa;flex:1;text-align:center}
+        .header-pro .num{font-size:12px;font-weight:600;color:#333}
+        .report-section{margin-bottom:18px;padding:14px;background:#f8fafc;border-left:4px solid #0066aa;border-radius:4px}
+        .report-section h3{font-size:11px;margin-bottom:10px;color:#0066aa;text-transform:uppercase}
+        table{width:100%;border-collapse:collapse;font-size:10px}
+        th,td{border:1px solid #ddd;padding:8px;text-align:left}
+        th{background:#0066aa;color:#fff;font-weight:600}
+        .report-summary{display:flex;gap:20px;margin-top:12px;font-size:11px;font-weight:500}
+        .report-resultados{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;font-size:10px}
+        .chk{width:14px;height:14px;border:2px solid #0066aa;display:inline-block;margin-right:8px;vertical-align:middle}
+        .chk.checked{background:#0066aa}
+        @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+      </style></head><body>
+        <div class="header-pro"><div class="logo">${headerLogoContent || '&nbsp;'}</div><div class="tit">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO'}</div><div class="num">Nº ${relatorio.numero}</div></div>
+        <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS'}</h3>
+          <p><strong>${t.tecnico || 'Técnico'}:</strong> ${relatorio.tecnico || '-'} &nbsp;|&nbsp; <strong>${t.data || 'Data'}:</strong> ${dataFormatada} &nbsp;|&nbsp; <strong>${t.cliente || 'Cliente'}:</strong> ${relatorio.cliente || '-'}</p>
+          <p><strong>${t.maquinaModelo || 'Máquina'}:</strong> ${relatorio.maquinaModelo || '-'} &nbsp;|&nbsp; <strong>${t.numeroMaquina || 'Nº'}:</strong> ${relatorio.numeroMaquina || '-'} &nbsp;|&nbsp; <strong>${t.tipoServico || 'Tipo'}:</strong> ${relatorio.tipoServico || '-'}</p>
+          <p><strong>${t.cidade || 'Cidade'}:</strong> ${relatorio.cidade || '-'} &nbsp;|&nbsp; <strong>${t.telefone || 'Telefone'}:</strong> ${relatorio.telefone || '-'}</p>
+        </div>
+        ${renderReportDiasTable(relatorio, totais)}
+        <div class="report-section"><h3>${t.resultadosTrabalho || 'RESULTADOS'}</h3>${renderReportResultados(relatorio)}</div>
+        ${relatorio.observacoes ? `<div class="report-section"><h3>${t.observacoes || 'Observações'}</h3><p>${relatorio.observacoes}</p></div>` : ''}
+        ${relatorio.pontosAberto ? `<div class="report-section"><h3>${t.pontosAberto || 'Pontos em Aberto'}</h3><p>${relatorio.pontosAberto}</p></div>` : ''}
+        ${renderReportPecas(relatorio)}
+      </body></html>`;
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      setTimeout(() => printWindow.print(), 250);
+    } catch (e) { console.error(e); alert('Erro ao gerar PDF.'); }
+  };
+
+  const handlePrintRelatorioResumido = (relatorio: RelatorioServico) => {
+    try {
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) { alert('Por favor, permita pop-ups para gerar o PDF.'); return; }
+      const headerLogoContent = getLogoHtmlForReport() || '';
+      const totais = calcularTotais(relatorio.diasTrabalho);
+      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeReport) : '-';
+      const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${relatorio.numero}</title><style>
+        @page{size:A4;margin:12mm}*{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Georgia,serif;font-size:11px;color:#222;background:#fff;padding:16px;line-height:1.6}
+        .header-res{text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #333}
+        .header-res .logo{display:flex;justify-content:center;margin-bottom:6px}.header-res .logo img{max-height:40px;max-width:120px;object-fit:contain}
+        .header-res .tit{font-size:14px;font-weight:700}.header-res .num{font-size:11px;color:#555;margin-top:4px}
+        .report-section{margin-bottom:14px;padding:10px 0;border-bottom:1px dashed #ccc}
+        .report-section h3{font-size:10px;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;color:#555}
+        .row-res{display:flex;flex-wrap:wrap;gap:8px 24px;font-size:10px}.row-res span{white-space:nowrap}
+        table{width:100%;border-collapse:collapse;font-size:9px}th,td{border:1px solid #ccc;padding:6px}
+        th{background:#f0f0f0}.report-summary{display:flex;gap:16px;margin-top:8px;font-size:10px}
+        .report-resultados{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:10px}
+        .chk{width:12px;height:12px;border:1px solid #333;display:inline-block;margin-right:6px;vertical-align:middle}.chk.checked{background:#000}
+        @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+      </style></head><body>
+        <div class="header-res"><div class="logo">${headerLogoContent || '&nbsp;'}</div><div class="tit">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO'}</div><div class="num">Nº ${relatorio.numero} &nbsp;|&nbsp; ${dataFormatada}</div></div>
+        <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS'}</h3>
+          <div class="row-res"><span>${t.tecnico}: ${relatorio.tecnico || '-'}</span><span>${t.cliente}: ${relatorio.cliente || '-'}</span><span>${t.maquinaModelo}: ${relatorio.maquinaModelo || '-'}</span><span>${t.tipoServico}: ${relatorio.tipoServico || '-'}</span><span>${t.telefone}: ${relatorio.telefone || '-'}</span></div>
+        </div>
+        ${renderReportDiasTable(relatorio, totais)}
+        <div class="report-section"><h3>${t.resultadosTrabalho || 'RESULTADOS'}</h3>${renderReportResultados(relatorio)}</div>
+        ${relatorio.observacoes ? `<div class="report-section"><h3>${t.observacoes}</h3><p>${relatorio.observacoes}</p></div>` : ''}
+        ${renderReportPecas(relatorio)}
+      </body></html>`;
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      setTimeout(() => printWindow.print(), 250);
+    } catch (e) { console.error(e); alert('Erro ao gerar PDF.'); }
+  };
+
+  const handlePrintRelatorioColorido = (relatorio: RelatorioServico) => {
+    try {
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) { alert('Por favor, permita pop-ups para gerar o PDF.'); return; }
+      const headerLogoContent = getLogoHtmlForReport() || '';
+      const totais = calcularTotais(relatorio.diasTrabalho);
+      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeReport) : '-';
+      const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${relatorio.numero}</title><style>
+        @page{size:A4;margin:15mm}*{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Arial,sans-serif;font-size:11px;color:#222;background:#fff;padding:18px}
+        .header-col{display:flex;align-items:center;gap:20px;margin-bottom:18px;padding:14px;background:linear-gradient(135deg,#00aa55 0%,#008844 100%);color:#fff;border-radius:8px}
+        .header-col .logo img{max-height:48px;max-width:130px;object-fit:contain;filter:brightness(0) invert(1)}
+        .header-col .tit{flex:1;font-size:15px;font-weight:700}.header-col .num{font-size:12px;opacity:0.95}
+        .report-section{margin-bottom:16px;padding:12px;background:#f0fff4;border:1px solid #00aa55;border-radius:6px}
+        .report-section h3{font-size:11px;margin-bottom:10px;color:#006633;font-weight:700}
+        table{width:100%;border-collapse:collapse;font-size:10px}th,td{border:1px solid #00aa55;padding:8px}
+        th{background:#00aa55;color:#fff}.report-summary{display:flex;gap:18px;margin-top:10px;color:#006633;font-weight:600}
+        .report-resultados{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:10px}
+        .chk{width:14px;height:14px;border:2px solid #00aa55;display:inline-block;margin-right:6px;vertical-align:middle;border-radius:2px}.chk.checked{background:#00aa55}
+        @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+      </style></head><body>
+        <div class="header-col"><div class="logo">${headerLogoContent || '&nbsp;'}</div><div class="tit">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO'}</div><div class="num">Nº ${relatorio.numero}</div></div>
+        <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS'}</h3>
+          <p><strong>${t.tecnico}:</strong> ${relatorio.tecnico || '-'} &nbsp; <strong>${t.data}:</strong> ${dataFormatada} &nbsp; <strong>${t.cliente}:</strong> ${relatorio.cliente || '-'}</p>
+          <p><strong>${t.maquinaModelo}:</strong> ${relatorio.maquinaModelo || '-'} &nbsp; <strong>${t.tipoServico}:</strong> ${relatorio.tipoServico || '-'} &nbsp; <strong>${t.telefone}:</strong> ${relatorio.telefone || '-'}</p>
+        </div>
+        ${renderReportDiasTable(relatorio, totais)}
+        <div class="report-section"><h3>${t.resultadosTrabalho || 'RESULTADOS'}</h3>${renderReportResultados(relatorio)}</div>
+        ${relatorio.observacoes ? `<div class="report-section"><h3>${t.observacoes}</h3><p>${relatorio.observacoes}</p></div>` : ''}
+        ${renderReportPecas(relatorio)}
+      </body></html>`;
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      setTimeout(() => printWindow.print(), 250);
+    } catch (e) { console.error(e); alert('Erro ao gerar PDF.'); }
+  };
+
+  const handlePrintRelatorioFormal = (relatorio: RelatorioServico) => {
+    try {
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) { alert('Por favor, permita pop-ups para gerar o PDF.'); return; }
+      const headerLogoContent = getLogoHtmlForReport() || '';
+      const totais = calcularTotais(relatorio.diasTrabalho);
+      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeReport) : '-';
+      const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${relatorio.numero}</title><style>
+        @page{size:A4;margin:20mm}*{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Times New Roman',Times,serif;font-size:12px;color:#000;background:#fff;padding:24px;line-height:1.7}
+        .header-for{text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:3px double #000}
+        .header-for .logo{display:flex;justify-content:center;margin-bottom:8px}.header-for .logo img{max-height:52px;max-width:150px;object-fit:contain}
+        .header-for .tit{font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:2px}
+        .header-for .num{font-size:12px;margin-top:8px}
+        .report-section{margin-bottom:20px}.report-section h3{font-size:12px;margin-bottom:12px;text-decoration:underline;font-weight:700}
+        table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #000;padding:10px}
+        th{background:#f5f5f5;font-weight:700}.report-summary{margin-top:12px;font-size:11px}
+        .report-resultados{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;font-size:11px}
+        .chk{width:14px;height:14px;border:2px solid #000;display:inline-block;margin-right:8px;vertical-align:middle}.chk.checked{background:#000}
+        @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+      </style></head><body>
+        <div class="header-for"><div class="logo">${headerLogoContent || '&nbsp;'}</div><div class="tit">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO'}</div><div class="num">Nº ${relatorio.numero} &nbsp;&nbsp; Data: ${dataFormatada}</div></div>
+        <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</h3>
+          <p><strong>${t.tecnico}:</strong> ${relatorio.tecnico || '-'}. <strong>${t.cliente}:</strong> ${relatorio.cliente || '-'}. <strong>${t.maquinaModelo}:</strong> ${relatorio.maquinaModelo || '-'}. <strong>${t.numeroMaquina}:</strong> ${relatorio.numeroMaquina || '-'}.</p>
+          <p><strong>${t.tipoServico}:</strong> ${relatorio.tipoServico || '-'}. <strong>${t.cidade}:</strong> ${relatorio.cidade || '-'}. <strong>${t.telefone}:</strong> ${relatorio.telefone || '-'}.</p>
+        </div>
+        ${renderReportDiasTable(relatorio, totais)}
+        <div class="report-section"><h3>${t.resultadosTrabalho || 'RESULTADOS DO TRABALHO'}</h3>${renderReportResultados(relatorio)}</div>
+        ${relatorio.observacoes ? `<div class="report-section"><h3>${t.observacoes}</h3><p>${relatorio.observacoes}</p></div>` : ''}
+        ${relatorio.pontosAberto ? `<div class="report-section"><h3>${t.pontosAberto}</h3><p>${relatorio.pontosAberto}</p></div>` : ''}
+        ${renderReportPecas(relatorio)}
+      </body></html>`;
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      setTimeout(() => printWindow.print(), 250);
+    } catch (e) { console.error(e); alert('Erro ao gerar PDF.'); }
+  };
+
+  const handlePrintRelatorioLista = (relatorio: RelatorioServico) => {
+    try {
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) { alert('Por favor, permita pop-ups para gerar o PDF.'); return; }
+      const headerLogoContent = getLogoHtmlForReport() || '';
+      const totais = calcularTotais(relatorio.diasTrabalho);
+      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeReport) : '-';
+      const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${relatorio.numero}</title><style>
+        @page{size:A4;margin:15mm}*{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Verdana,Geneva,sans-serif;font-size:11px;color:#333;background:#fff;padding:20px}
+        .header-lis{display:flex;align-items:center;gap:16px;margin-bottom:18px;padding-bottom:12px;border-bottom:2px solid #333}
+        .header-lis .logo img{max-height:44px;max-width:120px;object-fit:contain}
+        .header-lis .tit{flex:1;font-size:14px;font-weight:700}.header-lis .num{font-size:11px}
+        .report-section{margin-bottom:16px}.report-section h3{font-size:11px;margin-bottom:10px;color:#333;border-left:4px solid #333;padding-left:8px}
+        ul.lis{list-style:none;padding:0;margin:0}.lis li{padding:6px 0;border-bottom:1px solid #eee;display:flex;gap:12px}
+        .lis .l{font-weight:600;min-width:140px}.lis .v{color:#555}
+        table{width:100%;border-collapse:collapse;font-size:10px}th,td{border:1px solid #ddd;padding:8px}
+        th{background:#333;color:#fff}.report-summary{display:flex;gap:20px;margin-top:10px;font-size:11px}
+        .report-resultados ul.lis .chk{width:12px;height:12px;border:1px solid #333;display:inline-block;margin-right:8px;vertical-align:middle}.chk.checked{background:#333}
+        @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
+      </style></head><body>
+        <div class="header-lis"><div class="logo">${headerLogoContent || '&nbsp;'}</div><div class="tit">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO'}</div><div class="num">Nº ${relatorio.numero}</div></div>
+        <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS'}</h3>
+          <ul class="lis"><li><span class="l">${t.tecnico}</span><span class="v">${relatorio.tecnico || '-'}</span></li><li><span class="l">${t.data}</span><span class="v">${dataFormatada}</span></li><li><span class="l">${t.cliente}</span><span class="v">${relatorio.cliente || '-'}</span></li><li><span class="l">${t.maquinaModelo}</span><span class="v">${relatorio.maquinaModelo || '-'}</span></li><li><span class="l">${t.numeroMaquina}</span><span class="v">${relatorio.numeroMaquina || '-'}</span></li><li><span class="l">${t.tipoServico}</span><span class="v">${relatorio.tipoServico || '-'}</span></li><li><span class="l">${t.telefone}</span><span class="v">${relatorio.telefone || '-'}</span></li></ul>
+        </div>
+        ${renderReportDiasTable(relatorio, totais)}
+        <div class="report-section"><h3>${t.resultadosTrabalho || 'RESULTADOS'}</h3>${renderReportResultados(relatorio)}</div>
+        ${relatorio.observacoes ? `<div class="report-section"><h3>${t.observacoes}</h3><p>${relatorio.observacoes}</p></div>` : ''}
+        ${renderReportPecas(relatorio)}
+      </body></html>`;
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      setTimeout(() => printWindow.print(), 250);
+    } catch (e) { console.error(e); alert('Erro ao gerar PDF.'); }
   };
 
   const handleDeleteRelatorioServico = (relatorioId: string) => {
@@ -21067,13 +21323,19 @@ onKeyPress={(e) => {
                               title={safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF'}
                             >
                               <option value="classico">{safeT?.modeloClassico || 'Clássico'}</option>
+                              <option value="detalhado">{safeT?.modeloDetalhado || 'Detalhado'}</option>
                               <option value="moderno">{safeT?.modeloModerno || 'Moderno'}</option>
                               <option value="minimalista">{safeT?.modeloMinimalista || 'Minimalista'}</option>
                               <option value="tecnico">{safeT?.modeloTecnico || 'Técnico'}</option>
                               <option value="executivo">{safeT?.modeloExecutivo || 'Executivo'}</option>
                               <option value="negro">{safeT?.modeloNegro || 'Negro'}</option>
                               <option value="compacto">{safeT?.modeloCompacto || 'Compacto'}</option>
-                              <option value="ferwood">Ferwood</option>
+                              <option value="ferwood">{safeT?.modeloFerwood || 'Ferwood'}</option>
+                              <option value="profissional">{safeT?.modeloProfissional || 'Profissional'}</option>
+                              <option value="resumido">{safeT?.modeloResumido || 'Resumido'}</option>
+                              <option value="colorido">{safeT?.modeloColorido || 'Colorido'}</option>
+                              <option value="formal">{safeT?.modeloFormal || 'Formal'}</option>
+                              <option value="lista">{safeT?.modeloLista || 'Lista'}</option>
                             </select>
                             <button 
                               className="btn-primary" 
@@ -37382,12 +37644,19 @@ A1;Peça exemplo;10'
                                         }}
                                       >
                                         <option value="classico">{safeT?.modeloClassico || 'Clássico'}</option>
+                                        <option value="detalhado">{safeT?.modeloDetalhado || 'Detalhado'}</option>
                                         <option value="moderno">{safeT?.modeloModerno || 'Moderno'}</option>
                                         <option value="minimalista">{safeT?.modeloMinimalista || 'Minimalista'}</option>
                                         <option value="tecnico">{safeT?.modeloTecnico || 'Técnico'}</option>
                                         <option value="executivo">{safeT?.modeloExecutivo || 'Executivo'}</option>
                                         <option value="negro">{safeT?.modeloNegro || 'Negro'}</option>
                                         <option value="compacto">{safeT?.modeloCompacto || 'Compacto'}</option>
+                                        <option value="ferwood">{safeT?.modeloFerwood || 'Ferwood'}</option>
+                                        <option value="profissional">{safeT?.modeloProfissional || 'Profissional'}</option>
+                                        <option value="resumido">{safeT?.modeloResumido || 'Resumido'}</option>
+                                        <option value="colorido">{safeT?.modeloColorido || 'Colorido'}</option>
+                                        <option value="formal">{safeT?.modeloFormal || 'Formal'}</option>
+                                        <option value="lista">{safeT?.modeloLista || 'Lista'}</option>
                                       </select>
                                       <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
                                         <button 
@@ -47736,12 +48005,19 @@ A1;Peça exemplo;10'
                   title={safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF'}
                 >
                   <option value="classico">{safeT?.modeloClassico || 'Clássico'}</option>
+                  <option value="detalhado">{safeT?.modeloDetalhado || 'Detalhado'}</option>
                   <option value="moderno">{safeT?.modeloModerno || 'Moderno'}</option>
                   <option value="minimalista">{safeT?.modeloMinimalista || 'Minimalista'}</option>
                   <option value="tecnico">{safeT?.modeloTecnico || 'Técnico'}</option>
                   <option value="executivo">{safeT?.modeloExecutivo || 'Executivo'}</option>
                   <option value="negro">{safeT?.modeloNegro || 'Negro'}</option>
                   <option value="compacto">{safeT?.modeloCompacto || 'Compacto'}</option>
+                  <option value="ferwood">{safeT?.modeloFerwood || 'Ferwood'}</option>
+                  <option value="profissional">{safeT?.modeloProfissional || 'Profissional'}</option>
+                  <option value="resumido">{safeT?.modeloResumido || 'Resumido'}</option>
+                  <option value="colorido">{safeT?.modeloColorido || 'Colorido'}</option>
+                  <option value="formal">{safeT?.modeloFormal || 'Formal'}</option>
+                  <option value="lista">{safeT?.modeloLista || 'Lista'}</option>
                 </select>
                 <button 
                   className="btn-primary" 
