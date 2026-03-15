@@ -2492,6 +2492,7 @@ export default function Dashboard() {
   const [modoExecucaoResumo, setModoExecucaoResumo] = useState<'pendente' | 'concluido'>('pendente')
   const [showSelecionarPecasModal, setShowSelecionarPecasModal] = useState(false)
   const [pecasSelecionadasAgenda, setPecasSelecionadasAgenda] = useState<PecaBiblioteca[]>([])
+  const [showAgendaLembreteModal, setShowAgendaLembreteModal] = useState(false)
   
   // Estados para Solicitação de Serviço Técnico (formulário para enviar ao cliente; assinatura; envio por e-mail/WhatsApp)
   const [solicitacoesServicoTecnico, setSolicitacoesServicoTecnico] = useState<SolicitacaoServicoTecnico[]>([])
@@ -6824,16 +6825,30 @@ export default function Dashboard() {
     setShowEquipamentoForm(true)
   }
 
-  const handleDeleteEquipamento = async (equipamentoId: string) => {
+  const handleDeleteEquipamento = async (equipamentoId: string | undefined) => {
+    if (equipamentoId == null || equipamentoId === '') {
+      alert((t as any)?.equipamentoSemId || 'Este equipamento não possui ID. Não é possível excluir.')
+      return
+    }
     const confirmMsg =
       (t as any).confirmExcluirEquipamentoDefinitivo ||
       t.confirmDeleteEquipamento ||
       'Tem certeza que deseja excluir definitivamente este equipamento? Esta ação não pode ser desfeita.'
     if (!window.confirm(confirmMsg)) return
 
-    const updatedEquipamentos = equipamentos.filter((e) => e.id !== equipamentoId)
+    const idStr = String(equipamentoId)
+    const updatedEquipamentos = equipamentos.filter((e) => String(e?.id) !== idStr)
+    if (updatedEquipamentos.length === equipamentos.length) {
+      alert((t as any)?.equipamentoNaoEncontradoParaExcluir || 'Equipamento não encontrado na lista.')
+      return
+    }
     setEquipamentos(updatedEquipamentos)
-    await saveData('nonato-equipamentos', updatedEquipamentos)
+    try {
+      await saveData('nonato-equipamentos', updatedEquipamentos)
+    } catch (err) {
+      console.error('Erro ao salvar após excluir equipamento:', err)
+      alert((t as any)?.erroSalvarAposExcluir || 'Equipamento removido da lista, mas houve erro ao gravar. Recarregue a página e tente novamente.')
+    }
   }
 
   const handleRestaurarEquipamentoArmazem = async (equipamentoId: string) => {
@@ -7300,6 +7315,69 @@ export default function Dashboard() {
       saveData('nonato-agendamentos', updated)
     }
   }
+
+  // Lembretes Agenda: agendamentos de hoje e amanhã (exclui cancelados)
+  const getAgendamentosLembrete = (): Agendamento[] => {
+    const today = new Date()
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    const todayStr = today.toISOString().split('T')[0]
+    const tomorrowStr = tomorrow.toISOString().split('T')[0]
+    return agendamentos.filter(
+      (a) =>
+        a.status !== 'cancelado' &&
+        (a.data === todayStr || a.data === tomorrowStr)
+    )
+  }
+
+  // Formatar telefone para WhatsApp (apenas dígitos; Portugal 351 se 9 dígitos)
+  const formatTelefoneWhatsApp = (telefone: string): string => {
+    const digits = (telefone || '').replace(/\D/g, '')
+    if (digits.length === 9 && digits.startsWith('9')) return '351' + digits
+    if (digits.length >= 9) return digits
+    return '351' + digits
+  }
+
+  // Mensagem de lembrete para WhatsApp
+  const getMensagemLembreteAgenda = (a: Agendamento): string => {
+    const dataPt = a.data ? new Date(a.data + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''
+    const tipoLabel = a.tipo === 'agendamento-tecnico' ? (safeT?.agendamentoTecnico || 'Agendamento Técnico') : (safeT?.preAgendamento || 'Pré-Agendamento')
+    return [
+      (safeT?.lembreteAgendaWhatsAppPrefixo || 'Lembrete Nonato Service:'),
+      '',
+      (safeT?.lembreteAgendaTemosAgendado || 'Temos agendado para') + ` ${dataPt} ${safeT?.as || 'às'} ${a.hora || ''}:`,
+      `• ${tipoLabel}`,
+      `• ${safeT?.cliente || 'Cliente'}: ${a.cliente || ''}`,
+      `• ${safeT?.tecnico || 'Técnico'}: ${a.tecnico || ''}`,
+      a.equipamento ? `• ${safeT?.equipamento || 'Equipamento'}: ${a.equipamento}` : '',
+      '',
+      (safeT?.lembreteAgendaQualquerDuvida || 'Qualquer dúvida, contacte-nos.')
+    ].filter(Boolean).join('\n')
+  }
+
+  // Lembretes 3x por dia: 8h, 12h, 17h — ao abrir a app nesses horários mostra o modal uma vez por slot
+  useEffect(() => {
+    const REMINDER_SLOTS = [8, 12, 17]
+    const check = () => {
+      const now = new Date()
+      const hour = now.getHours()
+      const dateKey = now.toISOString().split('T')[0]
+      if (!REMINDER_SLOTS.includes(hour)) return
+      const key = `nonato-agenda-reminder-${dateKey}-${hour}`
+      try {
+        if (typeof window !== 'undefined' && localStorage.getItem(key)) return
+      } catch (_) {}
+      const list = getAgendamentosLembrete()
+      if (list.length === 0) return
+      setShowAgendaLembreteModal(true)
+      try {
+        if (typeof window !== 'undefined') localStorage.setItem(key, '1')
+      } catch (_) {}
+    }
+    check()
+    const interval = setInterval(check, 60000)
+    return () => clearInterval(interval)
+  }, [agendamentos])
 
   const handleDeleteServico = (id: string) => {
     if (window.confirm((t as any).confirmDeleteServico || 'Tem certeza que deseja excluir este serviço?')) {
@@ -25559,7 +25637,7 @@ A1;Peça exemplo;10'
                     {agendamentos.length} {safeT?.agendamentosCadastrados || 'agendamento(s) cadastrado(s)'}
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <button 
                     className="btn-primary" 
                     onClick={handleAddAgendamento} 
@@ -25573,6 +25651,25 @@ A1;Peça exemplo;10'
                     }}
                   >
                     ➕ {safeT?.novoAgendamento || 'Novo Agendamento'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAgendaLembreteModal(true)}
+                    style={{
+                      padding: '10px 18px',
+                      backgroundColor: 'rgba(37, 211, 102, 0.2)',
+                      border: '1px solid rgba(37, 211, 102, 0.6)',
+                      borderRadius: '8px',
+                      color: '#25d366',
+                      fontWeight: 'bold',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    💬 {safeT?.lembreteAgendaBotao || 'Lembretes do dia (WhatsApp)'}
                   </button>
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                     <button 
@@ -47281,6 +47378,110 @@ A1;Peça exemplo;10'
                 {safeT?.confirmar || 'Confirmar'} ({pecasSelecionadasAgenda.length})
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Lembretes da Agenda (WhatsApp) — 3x/dia ou botão manual */}
+      {showAgendaLembreteModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.85)',
+            zIndex: 10000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+          onClick={() => setShowAgendaLembreteModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: '560px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              background: 'linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)',
+              borderRadius: '16px',
+              border: '2px solid rgba(37, 211, 102, 0.4)',
+              padding: '24px',
+              boxShadow: '0 0 40px rgba(37, 211, 102, 0.15)'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid rgba(37, 211, 102, 0.3)' }}>
+              <h2 style={{ margin: 0, color: '#25d366', fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                💬 {safeT?.lembreteAgendaTitulo || 'Lembretes do dia — WhatsApp'}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowAgendaLembreteModal(false)}
+                style={{ padding: '8px 14px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ccc', cursor: 'pointer', fontSize: '14px' }}
+              >
+                ✕ {safeT?.close || 'Fechar'}
+              </button>
+            </div>
+            <p style={{ color: '#aaa', fontSize: '13px', marginBottom: '16px' }}>
+              {safeT?.lembreteAgendaDesc || 'Agendamentos de hoje e amanhã. Envie um lembrete por WhatsApp ao cliente com um clique.'}
+            </p>
+            {getAgendamentosLembrete().length === 0 ? (
+              <p style={{ color: '#888', textAlign: 'center', padding: '24px' }}>
+                {safeT?.lembreteAgendaNenhum || 'Nenhum agendamento para hoje ou amanhã.'}
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {getAgendamentosLembrete().map((a) => {
+                  const dataPt = a.data ? new Date(a.data + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''
+                  const tel = formatTelefoneWhatsApp(a.telefone)
+                  const msg = encodeURIComponent(getMensagemLembreteAgenda(a))
+                  const url = `https://wa.me/${tel}?text=${msg}`
+                  return (
+                    <div
+                      key={a.id}
+                      style={{
+                        padding: '14px 16px',
+                        backgroundColor: 'rgba(37, 211, 102, 0.08)',
+                        borderRadius: '10px',
+                        border: '1px solid rgba(37, 211, 102, 0.25)'
+                      }}
+                    >
+                      <div style={{ marginBottom: '8px' }}>
+                        <strong style={{ color: '#fff' }}>{a.cliente || '—'}</strong>
+                        <span style={{ color: '#25d366', marginLeft: '8px' }}>{dataPt} {a.hora || ''}</span>
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '10px' }}>
+                        {a.tecnico && <span>{safeT?.tecnico || 'Técnico'}: {a.tecnico}</span>}
+                        {a.equipamento && <span style={{ marginLeft: '12px' }}>{a.equipamento}</span>}
+                      </div>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '10px 16px',
+                          backgroundColor: '#25d366',
+                          color: '#fff',
+                          borderRadius: '8px',
+                          textDecoration: 'none',
+                          fontWeight: '600',
+                          fontSize: '14px'
+                        }}
+                      >
+                        💬 {safeT?.lembreteAgendaEnviarWhatsApp || 'Enviar lembrete por WhatsApp'}
+                      </a>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}
