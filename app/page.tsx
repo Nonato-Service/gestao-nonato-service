@@ -46385,47 +46385,98 @@ A1;Peça exemplo;10'
 
             {/* Conteúdo com scroll */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
-              {/* Formulário Adicionar/Editar - com anexo de imagem */}
+              {/* Formulário Adicionar/Editar - layout melhorado com imagem em destaque */}
               {showEquipamentoClienteForm && (
-                <div style={{ marginBottom: '28px', padding: '24px', borderRadius: '16px', border: '1px solid rgba(0, 255, 0, 0.18)', background: 'rgba(0, 255, 0, 0.03)', boxShadow: 'inset 0 1px 0 rgba(0,255,0,0.05)' }}>
-                  <h4 style={{ margin: '0 0 20px', fontSize: '16px', fontWeight: '600', color: '#00ff00', letterSpacing: '0.02em' }}>
-                    {editingEquipamentoCliente ? (safeT?.editarEquipamento || 'Editar Equipamento') : (safeT?.adicionarEquipamento || 'Adicionar Equipamento')}
-                  </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-                    <input type="text" placeholder={safeT?.tipoEquipamento || 'Tipo de Equipamento'} value={equipamentoClienteForm.tipoEquipamento} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, tipoEquipamento: e.target.value })} style={{ padding: '12px 16px', backgroundColor: '#111', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.22)', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
-                    <input type="text" placeholder={safeT?.modelo || 'Modelo'} value={equipamentoClienteForm.modelo} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, modelo: e.target.value })} style={{ padding: '12px 16px', backgroundColor: '#111', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.22)', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
-                    <input type="text" placeholder={safeT?.marca || 'Marca'} value={equipamentoClienteForm.marca} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, marca: e.target.value })} style={{ padding: '12px 16px', backgroundColor: '#111', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.22)', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
-                    <input type="text" placeholder={safeT?.numeroSerie || 'Número de Série'} value={equipamentoClienteForm.numeroSerie} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, numeroSerie: e.target.value })} style={{ padding: '12px 16px', backgroundColor: '#111', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.22)', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
+                <div style={{ marginBottom: '28px', borderRadius: '18px', overflow: 'hidden', border: '1px solid rgba(0, 255, 0, 0.2)', background: 'linear-gradient(180deg, rgba(0, 255, 0, 0.04) 0%, rgba(0, 0, 0, 0.4) 100%)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)' }}>
+                  {/* Título do formulário */}
+                  <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(0, 255, 0, 0.12)', background: 'rgba(0, 255, 0, 0.06)' }}>
+                    <h4 style={{ margin: 0, fontSize: '17px', fontWeight: '600', color: '#00ff00', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '20px' }}>{editingEquipamentoCliente ? '✏️' : '➕'}</span>
+                      {editingEquipamentoCliente ? (safeT?.editarEquipamento || 'Editar Equipamento') : (safeT?.adicionarEquipamento || 'Adicionar Equipamento')}
+                    </h4>
                   </div>
-                  {/* Seção: Anexar imagem do equipamento */}
-                  <div style={{ marginBottom: '20px', padding: '18px', borderRadius: '12px', background: 'rgba(0,0,0,0.25)', border: '1px dashed rgba(0, 255, 0, 0.2)' }}>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'rgba(255,255,255,0.9)', marginBottom: '12px' }}>
-                      {(safeT as any)?.imagemEquipamento || 'Imagem do Equipamento'} {(safeT as any)?.anexarImagemOpcional ? `(${(safeT as any).anexarImagemOpcional})` : '(opcional)'}
-                    </label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                      <div style={{ width: '120px', height: '120px', borderRadius: '12px', overflow: 'hidden', background: 'rgba(0, 255, 0, 0.06)', border: '1px solid rgba(0, 255, 0, 0.2)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {(equipamentoClienteForm.photo || equipamentoClienteForm.coverPhoto) ? (
-                          <img src={equipamentoClienteForm.photo || equipamentoClienteForm.coverPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        ) : (
-                          <span style={{ fontSize: '36px', opacity: 0.5 }}>📷</span>
-                        )}
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        <input type="file" id="equipamento-cliente-photo-input" accept="image/*" onChange={handleEquipamentoClientePhotoChange} style={{ display: 'none' }} />
-                        <button type="button" className="btn-primary" onClick={() => document.getElementById('equipamento-cliente-photo-input')?.click()} style={{ padding: '10px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: '600', border: '1px solid rgba(0, 255, 0, 0.4)', background: 'rgba(0, 255, 0, 0.1)', color: '#00ff00' }}>
-                          📎 {(safeT as any)?.anexarImagemOpcional?.replace?.(/ \(opcional\)$/i, '')?.replace?.(/ \(optional\)$/i, '') || 'Anexar imagem'}
-                        </button>
+                  <div style={{ padding: '24px 28px' }}>
+                    <div className="equipamento-cliente-form-grid">
+                      {/* Coluna esquerda: Imagem */}
+                      <div className="equipamento-cliente-form-image">
+                        <p style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                          {(safeT as any)?.imagemEquipamento || 'Imagem do Equipamento'} <span style={{ fontWeight: '400', opacity: 0.8 }}>(opcional)</span>
+                        </p>
+                        <div
+                          onClick={() => document.getElementById('equipamento-cliente-photo-input')?.click()}
+                          style={{
+                            width: '100%',
+                            aspectRatio: '1',
+                            maxWidth: '240px',
+                            borderRadius: '14px',
+                            overflow: 'hidden',
+                            background: (equipamentoClienteForm.photo || equipamentoClienteForm.coverPhoto) ? 'transparent' : 'rgba(0, 255, 0, 0.04)',
+                            border: '2px dashed rgba(0, 255, 0, 0.25)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            transition: 'border-color 0.2s, background 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
+                            e.currentTarget.style.background = 'rgba(0, 255, 0, 0.06)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.25)'
+                            e.currentTarget.style.background = (equipamentoClienteForm.photo || equipamentoClienteForm.coverPhoto) ? 'transparent' : 'rgba(0, 255, 0, 0.04)'
+                          }}
+                        >
+                          <input type="file" id="equipamento-cliente-photo-input" accept="image/*" onChange={handleEquipamentoClientePhotoChange} style={{ display: 'none' }} />
+                          {(equipamentoClienteForm.photo || equipamentoClienteForm.coverPhoto) ? (
+                            <img src={equipamentoClienteForm.photo || equipamentoClienteForm.coverPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <div style={{ textAlign: 'center', padding: '20px' }}>
+                              <div style={{ fontSize: '42px', marginBottom: '8px', opacity: 0.6 }}>📷</div>
+                              <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>Clique para anexar</span>
+                            </div>
+                          )}
+                        </div>
                         {(equipamentoClienteForm.photo || equipamentoClienteForm.coverPhoto) && (
-                          <button type="button" onClick={() => setEquipamentoClienteForm({ ...equipamentoClienteForm, photo: '', coverPhoto: '' })} style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', border: '1px solid rgba(255,100,100,0.4)', background: 'transparent', color: 'rgba(255,120,120,0.95)' }}>
+                          <button type="button" onClick={(e) => { e.stopPropagation(); setEquipamentoClienteForm({ ...equipamentoClienteForm, photo: '', coverPhoto: '' }); }} style={{ marginTop: '12px', width: '100%', maxWidth: '240px', padding: '10px 14px', fontSize: '12px', borderRadius: '10px', border: '1px solid rgba(255,100,100,0.35)', background: 'rgba(255,80,80,0.08)', color: 'rgba(255,140,140,0.95)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                             🗑️ Remover imagem
                           </button>
                         )}
                       </div>
+                      {/* Coluna direita: Dados do equipamento */}
+                      <div>
+                        <p style={{ margin: '0 0 16px', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                          Dados do equipamento
+                        </p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                          <div>
+                            <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)', fontWeight: '500' }}>{safeT?.tipoEquipamento || 'Tipo de Equipamento'}</label>
+                            <input type="text" value={equipamentoClienteForm.tipoEquipamento} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, tipoEquipamento: e.target.value })} placeholder="Ex.: Compressor, Gerador" style={{ width: '100%', padding: '14px 16px', backgroundColor: '#0f0f0f', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)', fontWeight: '500' }}>{safeT?.modelo || 'Modelo'}</label>
+                            <input type="text" value={equipamentoClienteForm.modelo} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, modelo: e.target.value })} placeholder="Ex.: XYZ-2000" style={{ width: '100%', padding: '14px 16px', backgroundColor: '#0f0f0f', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)', fontWeight: '500' }}>{safeT?.marca || 'Marca'}</label>
+                            <input type="text" value={equipamentoClienteForm.marca} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, marca: e.target.value })} placeholder="Ex.: Marca ABC" style={{ width: '100%', padding: '14px 16px', backgroundColor: '#0f0f0f', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)', fontWeight: '500' }}>{safeT?.numeroSerie || 'Número de Série'} <span style={{ color: 'rgba(255, 100, 100, 0.9)', fontWeight: '600' }}>*</span></label>
+                            <input type="text" value={equipamentoClienteForm.numeroSerie} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, numeroSerie: e.target.value })} placeholder="Ex.: SN123456789" style={{ width: '100%', padding: '14px 16px', backgroundColor: '#0f0f0f', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: '14px', marginTop: '20px' }}>
-                    <button className="btn-primary" onClick={handleSaveEquipamentoCliente} style={{ flex: 1, padding: '14px', borderRadius: '12px', fontSize: '14px', fontWeight: '600' }}>{safeT?.save || 'Salvar'}</button>
-                    <button className="btn-primary" onClick={() => { setShowEquipamentoClienteForm(false); setEditingEquipamentoCliente(null); }} style={{ flex: 1, padding: '14px', borderRadius: '12px', fontSize: '14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.25)', color: 'rgba(255,255,255,0.9)' }}>{safeT?.cancel || 'Cancelar'}</button>
+                    {/* Botões de acção */}
+                    <div style={{ display: 'flex', gap: '14px', marginTop: '28px', paddingTop: '24px', borderTop: '1px solid rgba(0, 255, 0, 0.1)' }}>
+                      <button className="btn-primary" onClick={handleSaveEquipamentoCliente} style={{ flex: 1, padding: '14px 20px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', border: '1px solid #00ff00', background: 'rgba(0, 255, 0, 0.15)', color: '#00ff00', cursor: 'pointer' }}>
+                        ✓ {safeT?.save || 'Salvar'}
+                      </button>
+                      <button type="button" onClick={() => { setShowEquipamentoClienteForm(false); setEditingEquipamentoCliente(null); }} style={{ flex: 1, padding: '14px 20px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.9)', cursor: 'pointer' }}>
+                        {safeT?.cancel || 'Cancelar'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

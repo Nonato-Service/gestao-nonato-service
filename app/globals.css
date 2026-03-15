@@ -1176,3 +1176,35 @@ body {
     flex-wrap: nowrap;
   }
 }
+
+/* Formulário Equipamento do Cliente: em mobile empilhar imagem em cima, dados em baixo */
+.equipamento-cliente-form-grid {
+  display: grid;
+  grid-template-columns: minmax(200px, 280px) 1fr;
+  gap: 28px;
+  align-items: start;
+}
+.equipamento-cliente-form-grid .equipamento-cliente-form-image {
+  position: sticky;
+  top: 12px;
+}
+@media (max-width: 640px) {
+  .equipamento-cliente-form-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .equipamento-cliente-form-grid .equipamento-cliente-form-image {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 220px;
+    margin: 0 auto;
+  }
+  .equipamento-cliente-form-grid .equipamento-cliente-form-image > div:first-of-type {
+    max-width: 100% !important;
+  }
+  .equipamento-cliente-form-grid .equipamento-cliente-form-image button {
+    max-width: 100% !important;
+  }
+}
