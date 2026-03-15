@@ -71,6 +71,14 @@ type Tecnico = {
   photo?: string
 }
 
+/** Logo disponível para uso nos relatórios PDF (lista no Administrador) */
+type LogoRelatorio = {
+  id: string
+  name: string
+  data: string
+  type: 'image' | 'video'
+}
+
 /** Conhecimento do técnico por tipo de equipamento (mecânico, elétrico, software, programação). Níveis 0 = nenhum, 1 = básico, 2 = médio, 3 = avançado, 4 = especialista. Descrição por área: só aparece opção para as áreas com nível > 0 */
 type ConhecimentoTecnicoEntry = {
   id: string
@@ -835,6 +843,8 @@ export default function Dashboard() {
   }) // Usuário logado — define o acesso conforme Administrador
   const [relatorioContador, setRelatorioContador] = useState<number>(1) // Contador de relatórios para numeração automática
   const [incluirLogoNosRelatorios, setIncluirLogoNosRelatorios] = useState<boolean>(true) // Incluir logo nos PDFs (Administrador)
+  const [logosRelatorios, setLogosRelatorios] = useState<LogoRelatorio[]>([]) // Logos disponíveis para escolha nos relatórios
+  const [logoRelatorioSelecionadoId, setLogoRelatorioSelecionadoId] = useState<string>('') // '' = logo principal
   const [showPedidoOrcamentoModal, setShowPedidoOrcamentoModal] = useState(false) // Modal para pedido de orçamento
   const [pedidosOrcamento, setPedidosOrcamento] = useState<PedidoOrcamento[]>([]) // Lista de pedidos de orçamento
   const [showListaPecasOrcamento, setShowListaPecasOrcamento] = useState(false) // Controla exibição da lista de peças para orçamento
@@ -3619,6 +3629,14 @@ export default function Dashboard() {
       const savedIncluirLogo = getData('nonato-relatorios-incluir-logo')
       if (savedIncluirLogo !== undefined && savedIncluirLogo !== null) {
         setIncluirLogoNosRelatorios(savedIncluirLogo === true || savedIncluirLogo === 'true')
+      }
+      const savedLogosRelatorios = getData('nonato-logos-relatorios')
+      if (Array.isArray(savedLogosRelatorios)) {
+        setLogosRelatorios(savedLogosRelatorios)
+      }
+      const savedLogoRelatorioId = getData('nonato-relatorios-logo-id')
+      if (typeof savedLogoRelatorioId === 'string') {
+        setLogoRelatorioSelecionadoId(savedLogoRelatorioId)
       }
       
       // Carregar pedidos de orçamento
@@ -8426,10 +8444,28 @@ export default function Dashboard() {
     setShowRelatorioServicoForm(true)
   }
 
-  // Helper: HTML do logo para cabeçalho dos PDFs (respeita opção do Administrador)
+  // Helper: HTML do logo para cabeçalho dos PDFs (respeita opção do Administrador e logo escolhido)
   const getLogoHtmlForReport = (): string => {
     if (typeof window === 'undefined') return '';
     if (localStorage.getItem('nonato-relatorios-incluir-logo') !== 'true') return '';
+    const selectedId = typeof logoRelatorioSelecionadoId !== 'undefined' ? logoRelatorioSelecionadoId : (() => {
+      try {
+        const raw = localStorage.getItem('nonato-relatorios-logo-id');
+        return raw || '';
+      } catch { return ''; }
+    })();
+    if (selectedId) {
+      const listRaw = typeof logosRelatorios !== 'undefined' && Array.isArray(logosRelatorios) ? logosRelatorios : (() => {
+        try {
+          const raw = localStorage.getItem('nonato-logos-relatorios');
+          return raw ? JSON.parse(raw) : [];
+        } catch { return []; }
+      })();
+      const logoItem = Array.isArray(listRaw) ? listRaw.find((l: LogoRelatorio) => l.id === selectedId) : null;
+      if (logoItem && logoItem.type === 'image' && logoItem.data) {
+        return `<img src="${String(logoItem.data).replace(/"/g, '&quot;')}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;" />`;
+      }
+    }
     const logo = localStorage.getItem('nonato-logo');
     const type = localStorage.getItem('nonato-logo-type');
     if (!logo || type === 'video') return '';
@@ -15945,6 +15981,96 @@ const nextF = familias.filter(x => x !== f)
                     <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.95)' }}>{safeT?.incluirLogoNosRelatorios || 'Incluir logo nos relatórios gerados (PDF)'}</span>
                   </label>
                   <p style={{ margin: '8px 0 0 32px', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{safeT?.incluirLogoNosRelatoriosDesc || 'Quando ativo, o logo configurado acima aparece no cabeçalho dos relatórios de serviço exportados em PDF.'}</p>
+                  {incluirLogoNosRelatorios && (
+                    <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'rgba(255,255,255,0.95)' }}>{safeT?.escolherLogoRelatorios || 'Escolher logo para relatórios'}</label>
+                      <select
+                        value={logoRelatorioSelecionadoId}
+                        onChange={(e) => {
+                          const v = e.target.value
+                          setLogoRelatorioSelecionadoId(v)
+                          saveData('nonato-relatorios-logo-id', v)
+                        }}
+                        style={{ width: '100%', maxWidth: '320px', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      >
+                        <option value="">{safeT?.logoPrincipal || 'Logo principal'}</option>
+                        {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
+                          <option key={l.id} value={l.id}>{l.name || l.id}</option>
+                        ))}
+                      </select>
+                      <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{safeT?.escolherLogoRelatoriosDesc || 'Selecione o logo principal ou um dos logos adicionados abaixo para aparecer nos PDFs.'}</p>
+                      <div style={{ marginTop: '14px' }}>
+                        <strong style={{ display: 'block', marginBottom: '8px', fontSize: '13px' }}>{safeT?.logosDisponiveisRelatorios || 'Logos disponíveis para relatórios'}</strong>
+                        {logosRelatorios.length === 0 ? (
+                          <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{safeT?.nenhumLogoRelatorio || 'Nenhum logo adicional. Use "Adicionar logo" para incluir mais opções (apenas imagens).'}</p>
+                        ) : (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                            {logosRelatorios.map((l) => (
+                              <div key={l.id} style={{ padding: '10px', backgroundColor: '#222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                {l.type === 'image' && l.data ? (
+                                  <img src={l.data} alt={l.name} style={{ maxWidth: '60px', maxHeight: '40px', objectFit: 'contain' }} />
+                                ) : null}
+                                <span style={{ fontSize: '12px', flex: 1, minWidth: '60px' }}>{l.name || l.id}</span>
+                                <button
+                                  type="button"
+                                  className="btn-primary"
+                                  style={{ padding: '4px 10px', fontSize: '11px' }}
+                                  onClick={() => {
+                                    setLogoRelatorioSelecionadoId(l.id)
+                                    saveData('nonato-relatorios-logo-id', l.id)
+                                  }}
+                                >
+                                  {safeT?.usarNosRelatorios || 'Usar nos relatórios'}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn-danger"
+                                  style={{ padding: '4px 8px', fontSize: '11px' }}
+                                  onClick={() => {
+                                    const next = logosRelatorios.filter((x) => x.id !== l.id)
+                                    setLogosRelatorios(next)
+                                    saveData('nonato-logos-relatorios', next)
+                                    if (logoRelatorioSelecionadoId === l.id) {
+                                      setLogoRelatorioSelecionadoId('')
+                                      saveData('nonato-relatorios-logo-id', '')
+                                    }
+                                  }}
+                                >
+                                  {safeT?.removeLogo || 'Remover'}
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 14px', marginTop: '10px', fontSize: '13px' }}>
+                          {safeT?.adicionarLogoRelatorios || 'Adicionar logo'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0]
+                              if (!file) return
+                              const reader = new FileReader()
+                              reader.onload = (ev) => {
+                                const data = ev.target?.result as string
+                                if (!data || !data.startsWith('data:image/')) return
+                                const name = file.name.replace(/\.[^.]+$/, '') || `Logo ${logosRelatorios.length + 1}`
+                                const id = `logo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+                                const next = [...logosRelatorios, { id, name, data, type: 'image' as const }]
+                                setLogosRelatorios(next)
+                                saveData('nonato-logos-relatorios', next)
+                                setLogoRelatorioSelecionadoId(id)
+                                saveData('nonato-relatorios-logo-id', id)
+                                e.target.value = ''
+                              }
+                              reader.readAsDataURL(file)
+                            }}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               

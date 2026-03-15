@@ -1,0 +1,33 @@
+---
+description: Todas as alterações devem manter o padrão visual/estrutural do sistema e os 6 idiomas
+alwaysApply: true
+---
+
+# Regra: Padrão do Sistema + 6 Idiomas
+
+No projeto **Gestão Técnica Nonato Service**, **toda e qualquer mudança** deve:
+
+1. **Manter o padrão do sistema** (visual e estrutural).
+2. **Manter os 6 idiomas** para qualquer texto visível ao utilizador.
+
+## Padrão do sistema
+
+- **Tema:** Dark mode — fundo preto `#000000`, containers/modais cinza `#2a2a2a`, bordas e acentos verde neon `#00ff00`.
+- **Componentes:** Sidebar fixa à esquerda; modais com overlay escuro; botões com bordas verdes; cards com fundo cinza escuro.
+- **Estrutura:** Novos modais/ecrãs devem seguir o mesmo padrão (título, botões Fechar, estilos inline consistentes).
+- **Convenções:** Usar os mesmos padrões de formulários, tabelas e listas já usados no projeto (ex.: `app/page.tsx`).
+
+## 6 idiomas obrigatórios
+
+Para **qualquer texto novo ou alterado** na interface, PDFs ou mensagens:
+
+- Adicionar/atualizar a chave em **todas** as 6 línguas em `app/translations.ts`: `pt-BR`, `es`, `fr`, `it`, `de`, `en`.
+- Na UI, usar sempre a chave de tradução (ex.: `translations[lang].novaChave`), nunca texto fixo num único idioma.
+
+Ver regra **idiomas-6.mdc** para detalhes e exemplos.
+
+## Resumo
+
+- **Design:** Cores e layout do sistema (preto, cinza, verde #00ff00).
+- **Código:** Mesma estrutura e convenções do resto do projeto.
+- **Textos:** Sempre 6 idiomas em `translations.ts` e uso das chaves na interface.
