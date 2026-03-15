@@ -834,6 +834,7 @@ export default function Dashboard() {
     }
   }) // Usuário logado — define o acesso conforme Administrador
   const [relatorioContador, setRelatorioContador] = useState<number>(1) // Contador de relatórios para numeração automática
+  const [incluirLogoNosRelatorios, setIncluirLogoNosRelatorios] = useState<boolean>(true) // Incluir logo nos PDFs (Administrador)
   const [showPedidoOrcamentoModal, setShowPedidoOrcamentoModal] = useState(false) // Modal para pedido de orçamento
   const [pedidosOrcamento, setPedidosOrcamento] = useState<PedidoOrcamento[]>([]) // Lista de pedidos de orçamento
   const [showListaPecasOrcamento, setShowListaPecasOrcamento] = useState(false) // Controla exibição da lista de peças para orçamento
@@ -3614,6 +3615,10 @@ export default function Dashboard() {
       const savedContador = getData('nonato-relatorio-contador')
       if (savedContador) {
         setRelatorioContador(savedContador)
+      }
+      const savedIncluirLogo = getData('nonato-relatorios-incluir-logo')
+      if (savedIncluirLogo !== undefined && savedIncluirLogo !== null) {
+        setIncluirLogoNosRelatorios(savedIncluirLogo === true || savedIncluirLogo === 'true')
       }
       
       // Carregar pedidos de orçamento
@@ -8421,6 +8426,16 @@ export default function Dashboard() {
     setShowRelatorioServicoForm(true)
   }
 
+  // Helper: HTML do logo para cabeçalho dos PDFs (respeita opção do Administrador)
+  const getLogoHtmlForReport = (): string => {
+    if (typeof window === 'undefined') return '';
+    if (localStorage.getItem('nonato-relatorios-incluir-logo') !== 'true') return '';
+    const logo = localStorage.getItem('nonato-logo');
+    const type = localStorage.getItem('nonato-logo-type');
+    if (!logo || type === 'video') return '';
+    return `<img src="${logo.replace(/"/g, '&quot;')}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;" />`;
+  };
+
   // Função para gerar PDF/Imprimir Relatório - Formato Clássico (baseado na imagem)
   const handlePrintRelatorioClassico = (relatorio: RelatorioServico) => {
     try {
@@ -8429,7 +8444,7 @@ export default function Dashboard() {
         alert('Por favor, permita pop-ups para gerar o PDF.')
         return;
       }
-
+      const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE') : '-';
       
@@ -15915,6 +15930,22 @@ const nextF = familias.filter(x => x !== f)
                     </p>
                   </div>
                 </div>
+                <div style={{ marginTop: '18px', padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={incluirLogoNosRelatorios}
+                      onChange={(e) => {
+                        const v = e.target.checked
+                        setIncluirLogoNosRelatorios(v)
+                        saveData('nonato-relatorios-incluir-logo', v)
+                      }}
+                      style={{ width: '20px', height: '20px', accentColor: '#00ff00' }}
+                    />
+                    <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.95)' }}>{safeT?.incluirLogoNosRelatorios || 'Incluir logo nos relatórios gerados (PDF)'}</span>
+                  </label>
+                  <p style={{ margin: '8px 0 0 32px', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{safeT?.incluirLogoNosRelatoriosDesc || 'Quando ativo, o logo configurado acima aparece no cabeçalho dos relatórios de serviço exportados em PDF.'}</p>
+                </div>
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -19938,32 +19969,32 @@ onKeyPress={(e) => {
                   {/* Tabela de dias adicionados - Compacta em uma linha */}
                   {relatorioServicoForm.diasTrabalho && relatorioServicoForm.diasTrabalho.length > 0 ? (
                     <div style={{ marginTop: '15px' }}>
-                      <h5 style={{ marginBottom: '10px', color: '#ffffff', fontSize: '14px', fontWeight: 'bold' }}>{safeT?.controleHorasDeslocamentos || 'CONTROLE DE HORAS E DESLOCAMENTOS'}</h5>
+                      <h5 style={{ marginBottom: '10px', color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: 'bold' }}>{safeT?.controleHorasDeslocamentos || 'CONTROLE DE HORAS E DESLOCAMENTOS'}</h5>
                       <div style={{ overflowX: 'auto', overflowY: 'visible', maxWidth: '100%' }}>
-                        <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse', backgroundColor: '#141414', border: '1px solid rgba(0, 255, 0, 0.3)', fontSize: '10px' }}>
+                        <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse', backgroundColor: '#141414', border: '1px solid rgba(0, 255, 0, 0.25)', fontSize: '10px' }}>
                           <thead>
-                            <tr style={{ backgroundColor: '#0a4a0a', borderBottom: '2px solid #00ff00' }}>
-                              <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: '60px' }} rowSpan={2}>{safeT?.data || 'DATA'}</th>
-                              <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }} colSpan={3}>{safeT?.ida || 'IDA'}</th>
-                              <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }} colSpan={3}>{safeT?.horas || 'HORAS'}</th>
-                              <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }} colSpan={3}>{safeT?.retorno || 'RETORNO'}</th>
-                              <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }} colSpan={3}>{safeT?.km || 'KM'}</th>
-                              <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: '50px' }} rowSpan={2}>{safeT?.pausa || 'PAUSA'}</th>
-                              <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: '60px' }} rowSpan={2}>{safeT?.acao || 'AÇÃO'}</th>
+                            <tr style={{ backgroundColor: 'rgba(0, 255, 0, 0.12)', borderBottom: '2px solid rgba(0, 255, 0, 0.35)' }}>
+                              <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: '60px' }} rowSpan={2}>{safeT?.data || 'DATA'}</th>
+                              <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }} colSpan={3}>{safeT?.ida || 'IDA'}</th>
+                              <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }} colSpan={3}>{safeT?.horas || 'HORAS'}</th>
+                              <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }} colSpan={3}>{safeT?.retorno || 'RETORNO'}</th>
+                              <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }} colSpan={3}>{safeT?.km || 'KM'}</th>
+                              <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: '50px' }} rowSpan={2}>{safeT?.pausa || 'PAUSA'}</th>
+                              <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: '60px' }} rowSpan={2}>{safeT?.acao || 'AÇÃO'}</th>
                             </tr>
-                            <tr style={{ backgroundColor: '#0a4a0a', borderBottom: '2px solid #00ff00' }}>
-                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.saida || 'Saída'}</th>
-                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.chegada || 'Chegada'}</th>
-                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.duracao || 'Duração'}</th>
-                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.inicio || 'Início'}</th>
-                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.fim || 'Fim'}</th>
-                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.duracao || 'Duração'}</th>
-                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.saida || 'Saída'}</th>
-                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.chegada || 'Chegada'}</th>
-                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.duracao || 'Duração'}</th>
-                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '40px' }}>{safeT?.ida || 'Ida'}</th>
-                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '40px' }}>{safeT?.retorno || 'Retorno'}</th>
-                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '40px' }}>{safeT?.total || 'Total'}</th>
+                            <tr style={{ backgroundColor: 'rgba(0, 255, 0, 0.12)', borderBottom: '2px solid rgba(0, 255, 0, 0.35)' }}>
+                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.saida || 'Saída'}</th>
+                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.chegada || 'Chegada'}</th>
+                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.duracao || 'Duração'}</th>
+                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.inicio || 'Início'}</th>
+                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.fim || 'Fim'}</th>
+                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.duracao || 'Duração'}</th>
+                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.saida || 'Saída'}</th>
+                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.chegada || 'Chegada'}</th>
+                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.duracao || 'Duração'}</th>
+                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '40px' }}>{safeT?.ida || 'Ida'}</th>
+                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '40px' }}>{safeT?.retorno || 'Retorno'}</th>
+                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '40px' }}>{safeT?.total || 'Total'}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -47216,33 +47247,33 @@ A1;Peça exemplo;10'
             {/* Dias de Trabalho */}
             {viewingRelatorioServico.diasTrabalho && viewingRelatorioServico.diasTrabalho.length > 0 && (
               <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                <h3 style={{ color: '#00ff00', marginBottom: '15px', fontSize: '16px' }}>
+                <h3 style={{ color: 'rgba(0, 255, 0, 0.9)', marginBottom: '15px', fontSize: '16px' }}>
                   {safeT?.controleHorasDeslocamentos || 'Controle de Horas e Deslocamentos'}
                 </h3>
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
                     <thead>
-                      <tr style={{ backgroundColor: '#0a4a0a', borderBottom: '2px solid #00ff00' }}>
-                        <th style={{ padding: '8px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold' }} rowSpan={2}>{safeT?.data || 'DATA'}</th>
-                        <th style={{ padding: '8px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold' }} colSpan={3}>{safeT?.ida || 'IDA'}</th>
-                        <th style={{ padding: '8px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold' }} colSpan={3}>{safeT?.horas || 'HORAS'}</th>
-                        <th style={{ padding: '8px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold' }} colSpan={3}>{safeT?.retorno || 'RETORNO'}</th>
-                        <th style={{ padding: '8px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold' }} colSpan={3}>{safeT?.km || 'KM'}</th>
-                        <th style={{ padding: '8px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold' }} rowSpan={2}>{safeT?.pausa || 'PAUSA'}</th>
+                      <tr style={{ backgroundColor: 'rgba(0, 255, 0, 0.12)', borderBottom: '2px solid rgba(0, 255, 0, 0.35)' }}>
+                        <th style={{ padding: '8px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold' }} rowSpan={2}>{safeT?.data || 'DATA'}</th>
+                        <th style={{ padding: '8px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold' }} colSpan={3}>{safeT?.ida || 'IDA'}</th>
+                        <th style={{ padding: '8px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold' }} colSpan={3}>{safeT?.horas || 'HORAS'}</th>
+                        <th style={{ padding: '8px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold' }} colSpan={3}>{safeT?.retorno || 'RETORNO'}</th>
+                        <th style={{ padding: '8px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold' }} colSpan={3}>{safeT?.km || 'KM'}</th>
+                        <th style={{ padding: '8px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold' }} rowSpan={2}>{safeT?.pausa || 'PAUSA'}</th>
                       </tr>
-                      <tr style={{ backgroundColor: '#0a4a0a', borderBottom: '2px solid #00ff00' }}>
-                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px' }}>{safeT?.saida || 'Saída'}</th>
-                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px' }}>{safeT?.chegada || 'Chegada'}</th>
-                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px' }}>{safeT?.duracao || 'Duração'}</th>
-                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px' }}>{safeT?.inicio || 'Início'}</th>
-                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px' }}>{safeT?.fim || 'Fim'}</th>
-                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px' }}>{safeT?.duracao || 'Duração'}</th>
-                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px' }}>{safeT?.saida || 'Saída'}</th>
-                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px' }}>{safeT?.chegada || 'Chegada'}</th>
-                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px' }}>{safeT?.duracao || 'Duração'}</th>
-                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px' }}>{safeT?.ida || 'Ida'}</th>
-                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px' }}>{safeT?.retorno || 'Retorno'}</th>
-                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.3)', color: '#ffffff', fontSize: '9px' }}>{safeT?.total || 'Total'}</th>
+                      <tr style={{ backgroundColor: 'rgba(0, 255, 0, 0.12)', borderBottom: '2px solid rgba(0, 255, 0, 0.35)' }}>
+                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px' }}>{safeT?.saida || 'Saída'}</th>
+                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px' }}>{safeT?.chegada || 'Chegada'}</th>
+                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px' }}>{safeT?.duracao || 'Duração'}</th>
+                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px' }}>{safeT?.inicio || 'Início'}</th>
+                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px' }}>{safeT?.fim || 'Fim'}</th>
+                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px' }}>{safeT?.duracao || 'Duração'}</th>
+                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px' }}>{safeT?.saida || 'Saída'}</th>
+                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px' }}>{safeT?.chegada || 'Chegada'}</th>
+                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px' }}>{safeT?.duracao || 'Duração'}</th>
+                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px' }}>{safeT?.ida || 'Ida'}</th>
+                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px' }}>{safeT?.retorno || 'Retorno'}</th>
+                        <th style={{ padding: '6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px' }}>{safeT?.total || 'Total'}</th>
                       </tr>
                     </thead>
                     <tbody>
