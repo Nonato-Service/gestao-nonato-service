@@ -2321,7 +2321,7 @@ export default function Dashboard() {
     const t = safeT as any
     const titles: Record<TabType, string> = {
       'gestores': t?.gestoresTitle || 'Gestores e Técnicos',
-      'equipamentos': t?.equipamentos || 'Cadastro de Equipamentos do Armazém',
+      'equipamentos': t?.equipamentos || 'CADASTRO DE EQUIPAMENTOS DO ARMAZÉM',
       'familias-grupos': t?.familiasGruposTitle || 'Cadastro de Famílias e Grupos para Checklist',
       'familias-grupos-equipamentos': t?.familiasGruposEquipamentosTitle || 'Cadastro de Famílias e Grupos para os Equipamentos',
       'pre-checklist': t?.preChecklistTitle || 'PRE CHECKLIST',
@@ -4119,7 +4119,7 @@ export default function Dashboard() {
       if (!hasEquipamentos) {
         const equipamentosButton: SidebarButton = {
           id: 'equipamentos-default',
-          name: 'CADASTRO DE EQUIPAMENTOS NO ARMAZEM',
+          name: 'CADASTRO DE EQUIPAMENTOS DO ARMAZÉM',
           action: 'open-equipamentos',
           order: buttons.length,
           translationKey: 'equipamentosTitle',
@@ -4714,7 +4714,7 @@ export default function Dashboard() {
       if (!hasEquipamentosAfter) {
         filteredButtons.push({
           id: 'equipamentos-default',
-          name: 'CADASTRO DE EQUIPAMENTOS NO ARMAZEM',
+          name: 'CADASTRO DE EQUIPAMENTOS DO ARMAZÉM',
           action: 'open-equipamentos',
           order: filteredButtons.length,
           translationKey: 'equipamentosTitle',
@@ -4849,7 +4849,7 @@ export default function Dashboard() {
         },
         {
           id: 'equipamentos-default',
-          name: 'CADASTRO DE EQUIPAMENTOS NO ARMAZEM',
+          name: 'CADASTRO DE EQUIPAMENTOS DO ARMAZÉM',
           action: 'open-equipamentos',
           order: 3,
           translationKey: 'equipamentosTitle',
@@ -46252,88 +46252,122 @@ A1;Peça exemplo;10'
         </div>
       )}
 
-      {/* Modal de Equipamentos do Cliente - Layout moderno */}
+      {/* Modal de Equipamentos do Cliente - Layout profissional com imagem */}
       {selectedClienteForEquipamento && (
         <div className="modal-overlay" onClick={() => { setSelectedClienteForEquipamento(null); setShowEquipamentoClienteForm(false); }}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '720px', width: '95%', maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)', borderRadius: '16px', border: '1px solid rgba(0, 255, 0, 0.25)', boxShadow: '0 24px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,255,0,0.08)' }}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '920px', width: '96%', maxHeight: '94vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #151515 0%, #0a0a0a 100%)', borderRadius: '20px', border: '1px solid rgba(0, 255, 0, 0.2)', boxShadow: '0 32px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,255,0,0.06)' }}>
             {/* Cabeçalho */}
-            <div style={{ flexShrink: 0, padding: '20px 24px', borderBottom: '1px solid rgba(0, 255, 0, 0.15)', background: 'rgba(0, 255, 0, 0.04)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(0, 255, 0, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>⚙️</div>
+            <div style={{ flexShrink: 0, padding: '24px 28px', borderBottom: '1px solid rgba(0, 255, 0, 0.12)', background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.06) 0%, transparent 100%)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: 'rgba(0, 255, 0, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>⚙️</div>
                   <div>
-                    <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#fff', letterSpacing: '0.3px' }}>{safeT?.equipamentosCliente || 'Equipamentos'}</h2>
-                    <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>{selectedClienteForEquipamento.nomeEmpresa}</p>
+                    <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '700', color: '#fff', letterSpacing: '0.02em' }}>{safeT?.equipamentosCliente || 'Equipamentos do Cliente'}</h2>
+                    <p style={{ margin: '6px 0 0', fontSize: '14px', color: 'rgba(255,255,255,0.65)' }}>{selectedClienteForEquipamento.nomeEmpresa}</p>
                   </div>
                 </div>
                 <button
                   className="btn-primary"
                   onClick={() => handleAddEquipamentoCliente(selectedClienteForEquipamento)}
-                  style={{ padding: '10px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '8px', border: '1px solid #00ff00', background: 'rgba(0, 255, 0, 0.12)', color: '#00ff00' }}
+                  style={{ padding: '12px 22px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '10px', border: '1px solid #00ff00', background: 'rgba(0, 255, 0, 0.14)', color: '#00ff00', boxShadow: '0 2px 12px rgba(0,255,0,0.15)' }}
                 >
-                  <span>+</span> {safeT?.adicionarEquipamento || 'Adicionar Equipamento'}
+                  <span style={{ fontSize: '18px', lineHeight: 1 }}>+</span> {safeT?.adicionarEquipamento || 'Adicionar Equipamento'}
                 </button>
               </div>
             </div>
 
             {/* Conteúdo com scroll */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
-              {/* Formulário Adicionar/Editar */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
+              {/* Formulário Adicionar/Editar - com anexo de imagem */}
               {showEquipamentoClienteForm && (
-                <div style={{ marginBottom: '24px', padding: '20px', borderRadius: '14px', border: '1px solid rgba(0, 255, 0, 0.2)', background: 'rgba(0, 255, 0, 0.03)', boxShadow: 'inset 0 1px 0 rgba(0,255,0,0.06)' }}>
-                  <h4 style={{ margin: '0 0 16px', fontSize: '15px', fontWeight: '600', color: '#00ff00' }}>
+                <div style={{ marginBottom: '28px', padding: '24px', borderRadius: '16px', border: '1px solid rgba(0, 255, 0, 0.18)', background: 'rgba(0, 255, 0, 0.03)', boxShadow: 'inset 0 1px 0 rgba(0,255,0,0.05)' }}>
+                  <h4 style={{ margin: '0 0 20px', fontSize: '16px', fontWeight: '600', color: '#00ff00', letterSpacing: '0.02em' }}>
                     {editingEquipamentoCliente ? (safeT?.editarEquipamento || 'Editar Equipamento') : (safeT?.adicionarEquipamento || 'Adicionar Equipamento')}
                   </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px' }}>
-                    <input type="text" placeholder={safeT?.tipoEquipamento || 'Tipo de Equipamento'} value={equipamentoClienteForm.tipoEquipamento} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, tipoEquipamento: e.target.value })} style={{ padding: '12px 14px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
-                    <input type="text" placeholder={safeT?.modelo || 'Modelo'} value={equipamentoClienteForm.modelo} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, modelo: e.target.value })} style={{ padding: '12px 14px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
-                    <input type="text" placeholder={safeT?.marca || 'Marca'} value={equipamentoClienteForm.marca} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, marca: e.target.value })} style={{ padding: '12px 14px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
-                    <input type="text" placeholder={safeT?.numeroSerie || 'Número de Série'} value={equipamentoClienteForm.numeroSerie} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, numeroSerie: e.target.value })} style={{ padding: '12px 14px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                    <input type="text" placeholder={safeT?.tipoEquipamento || 'Tipo de Equipamento'} value={equipamentoClienteForm.tipoEquipamento} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, tipoEquipamento: e.target.value })} style={{ padding: '12px 16px', backgroundColor: '#111', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.22)', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
+                    <input type="text" placeholder={safeT?.modelo || 'Modelo'} value={equipamentoClienteForm.modelo} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, modelo: e.target.value })} style={{ padding: '12px 16px', backgroundColor: '#111', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.22)', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
+                    <input type="text" placeholder={safeT?.marca || 'Marca'} value={equipamentoClienteForm.marca} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, marca: e.target.value })} style={{ padding: '12px 16px', backgroundColor: '#111', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.22)', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
+                    <input type="text" placeholder={safeT?.numeroSerie || 'Número de Série'} value={equipamentoClienteForm.numeroSerie} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, numeroSerie: e.target.value })} style={{ padding: '12px 16px', backgroundColor: '#111', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.22)', borderRadius: '10px', fontSize: '14px', outline: 'none' }} />
                   </div>
-                  <div style={{ display: 'flex', gap: '12px', marginTop: '18px' }}>
-                    <button className="btn-primary" onClick={handleSaveEquipamentoCliente} style={{ flex: 1, padding: '12px', borderRadius: '10px', fontSize: '14px', fontWeight: '600' }}>{safeT?.save || 'Salvar'}</button>
-                    <button className="btn-primary" onClick={() => { setShowEquipamentoClienteForm(false); setEditingEquipamentoCliente(null); }} style={{ flex: 1, padding: '12px', borderRadius: '10px', fontSize: '14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.9)' }}>{safeT?.cancel || 'Cancelar'}</button>
+                  {/* Seção: Anexar imagem do equipamento */}
+                  <div style={{ marginBottom: '20px', padding: '18px', borderRadius: '12px', background: 'rgba(0,0,0,0.25)', border: '1px dashed rgba(0, 255, 0, 0.2)' }}>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: 'rgba(255,255,255,0.9)', marginBottom: '12px' }}>
+                      {(safeT as any)?.imagemEquipamento || 'Imagem do Equipamento'} {(safeT as any)?.anexarImagemOpcional ? `(${(safeT as any).anexarImagemOpcional})` : '(opcional)'}
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                      <div style={{ width: '120px', height: '120px', borderRadius: '12px', overflow: 'hidden', background: 'rgba(0, 255, 0, 0.06)', border: '1px solid rgba(0, 255, 0, 0.2)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {(equipamentoClienteForm.photo || equipamentoClienteForm.coverPhoto) ? (
+                          <img src={equipamentoClienteForm.photo || equipamentoClienteForm.coverPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <span style={{ fontSize: '36px', opacity: 0.5 }}>📷</span>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <input type="file" id="equipamento-cliente-photo-input" accept="image/*" onChange={handleEquipamentoClientePhotoChange} style={{ display: 'none' }} />
+                        <button type="button" className="btn-primary" onClick={() => document.getElementById('equipamento-cliente-photo-input')?.click()} style={{ padding: '10px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: '600', border: '1px solid rgba(0, 255, 0, 0.4)', background: 'rgba(0, 255, 0, 0.1)', color: '#00ff00' }}>
+                          📎 {(safeT as any)?.anexarImagemOpcional?.replace?.(/ \(opcional\)$/i, '')?.replace?.(/ \(optional\)$/i, '') || 'Anexar imagem'}
+                        </button>
+                        {(equipamentoClienteForm.photo || equipamentoClienteForm.coverPhoto) && (
+                          <button type="button" onClick={() => setEquipamentoClienteForm({ ...equipamentoClienteForm, photo: '', coverPhoto: '' })} style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', border: '1px solid rgba(255,100,100,0.4)', background: 'transparent', color: 'rgba(255,120,120,0.95)' }}>
+                            🗑️ Remover imagem
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '14px', marginTop: '20px' }}>
+                    <button className="btn-primary" onClick={handleSaveEquipamentoCliente} style={{ flex: 1, padding: '14px', borderRadius: '12px', fontSize: '14px', fontWeight: '600' }}>{safeT?.save || 'Salvar'}</button>
+                    <button className="btn-primary" onClick={() => { setShowEquipamentoClienteForm(false); setEditingEquipamentoCliente(null); }} style={{ flex: 1, padding: '14px', borderRadius: '12px', fontSize: '14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.25)', color: 'rgba(255,255,255,0.9)' }}>{safeT?.cancel || 'Cancelar'}</button>
                   </div>
                 </div>
               )}
 
-              {/* Lista de equipamentos */}
+              {/* Lista de equipamentos - cards com foto */}
               {selectedClienteForEquipamento.equipamentos && selectedClienteForEquipamento.equipamentos.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   {selectedClienteForEquipamento.equipamentos.map((equipamento, index) => {
                     const equipamentoId = equipamento.numeroSerie || equipamento.modelo || index.toString()
                     const relatoriosServicoEquipamento = selectedClienteForEquipamento.relatorios?.[equipamentoId] || []
+                    const equipamentoPhoto = equipamento.photo || equipamento.coverPhoto
                     return (
                       <div
                         key={index}
                         style={{
-                          padding: '18px 20px',
-                          borderRadius: '14px',
-                          border: '1px solid rgba(0, 255, 0, 0.15)',
-                          background: 'rgba(22, 22, 22, 0.8)',
+                          padding: '20px 22px',
+                          borderRadius: '16px',
+                          border: '1px solid rgba(0, 255, 0, 0.14)',
+                          background: 'linear-gradient(180deg, rgba(28,28,28,0.95) 0%, rgba(18,18,18,0.98) 100%)',
                           transition: 'border-color 0.2s, box-shadow 0.2s'
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
-                          e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 0, 0.08)'
+                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.28)'
+                          e.currentTarget.style.boxShadow = '0 6px 24px rgba(0, 255, 0, 0.06)'
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.15)'
+                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.14)'
                           e.currentTarget.style.boxShadow = 'none'
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', marginBottom: relatoriosServicoEquipamento.length > 0 ? '14px' : 0 }}>
-                          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(0, 255, 0, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>🔧</div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#fff' }}>{equipamento.modelo}</p>
-                            <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>{equipamento.marca} · {equipamento.numeroSerie}</p>
-                            <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'rgba(0, 255, 0, 0.8)' }}>{equipamento.tipoEquipamento}</p>
+                        <div style={{ display: 'flex', alignItems: 'stretch', gap: '20px', marginBottom: relatoriosServicoEquipamento.length > 0 ? '16px' : 0 }}>
+                          {/* Miniatura da imagem do equipamento */}
+                          <div style={{ width: '100px', minWidth: '100px', height: '100px', borderRadius: '12px', overflow: 'hidden', background: 'rgba(0, 255, 0, 0.06)', border: '1px solid rgba(0, 255, 0, 0.15)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {equipamentoPhoto ? (
+                              <img src={equipamentoPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              <span style={{ fontSize: '32px', opacity: 0.45 }}>🔧</span>
+                            )}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                            <p style={{ margin: 0, fontSize: '17px', fontWeight: '600', color: '#fff', letterSpacing: '0.01em' }}>{equipamento.modelo}</p>
+                            <p style={{ margin: '8px 0 0', fontSize: '14px', color: 'rgba(255,255,255,0.75)' }}>{equipamento.marca} · {equipamento.numeroSerie}</p>
+                            <p style={{ margin: '6px 0 0', fontSize: '12px', color: 'rgba(0, 255, 0, 0.85)', fontWeight: '500' }}>{equipamento.tipoEquipamento}</p>
                           </div>
                         </div>
 
                         {/* Relatórios de Serviço */}
                         {relatoriosServicoEquipamento.length > 0 && (
-                          <div style={{ marginTop: '14px', padding: '14px', borderRadius: '10px', background: 'rgba(0, 255, 0, 0.04)', border: '1px solid rgba(0, 255, 0, 0.12)' }}>
+                          <div style={{ marginTop: '16px', padding: '16px', borderRadius: '12px', background: 'rgba(0, 255, 0, 0.04)', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
                             <h4 style={{ fontSize: '13px', fontWeight: '600', color: '#00ff00', margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                               <span>📋</span> {safeT?.relatoriosServico || 'Relatórios de Serviço'} ({relatoriosServicoEquipamento.length})
                             </h4>
@@ -46369,27 +46403,27 @@ A1;Peça exemplo;10'
                           </div>
                         )}
 
-                        <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap' }}>
-                          <button className="btn-primary" onClick={() => handleEditEquipamentoCliente(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', flex: 1, minWidth: '80px' }}>✏️ {safeT?.edit || 'Editar'}</button>
-                          <button className="btn-primary" onClick={() => handleOpenRelatorios(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', flex: 1, minWidth: '80px', background: 'rgba(0, 255, 0, 0.1)', borderColor: 'rgba(0, 255, 0, 0.4)' }}>📋 {safeT?.relatorios || 'Relatórios'}</button>
-                          <button className="btn-danger" onClick={() => handleDeleteEquipamentoCliente(selectedClienteForEquipamento.id, index)} style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', flex: 1, minWidth: '80px' }}>🗑️ {safeT?.delete || 'Excluir'}</button>
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}>
+                          <button className="btn-primary" onClick={() => handleEditEquipamentoCliente(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '10px 16px', fontSize: '13px', borderRadius: '10px', flex: 1, minWidth: '90px' }}>✏️ {safeT?.edit || 'Editar'}</button>
+                          <button className="btn-primary" onClick={() => handleOpenRelatorios(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '10px 16px', fontSize: '13px', borderRadius: '10px', flex: 1, minWidth: '90px', background: 'rgba(0, 255, 0, 0.1)', borderColor: 'rgba(0, 255, 0, 0.4)' }}>📋 {safeT?.relatorios || 'Relatórios'}</button>
+                          <button className="btn-danger" onClick={() => handleDeleteEquipamentoCliente(selectedClienteForEquipamento.id, index)} style={{ padding: '10px 16px', fontSize: '13px', borderRadius: '10px', flex: 1, minWidth: '90px' }}>🗑️ {safeT?.delete || 'Excluir'}</button>
                         </div>
                       </div>
                     )
                   })}
                 </div>
               ) : (
-                <div style={{ textAlign: 'center', padding: '48px 24px', borderRadius: '14px', border: '1px dashed rgba(0, 255, 0, 0.2)', background: 'rgba(0, 255, 0, 0.02)' }}>
-                  <div style={{ fontSize: '40px', marginBottom: '16px', opacity: 0.6 }}>⚙️</div>
-                  <p style={{ margin: 0, fontSize: '15px', color: 'rgba(255,255,255,0.7)' }}>{safeT?.nenhumEquipamento || 'Nenhum equipamento cadastrado.'}</p>
-                  <p style={{ margin: '8px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.5)' }}>Clique em &quot;Adicionar Equipamento&quot; para começar.</p>
+                <div style={{ textAlign: 'center', padding: '56px 28px', borderRadius: '16px', border: '1px dashed rgba(0, 255, 0, 0.18)', background: 'rgba(0, 255, 0, 0.02)' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '18px', opacity: 0.5 }}>⚙️</div>
+                  <p style={{ margin: 0, fontSize: '16px', color: 'rgba(255,255,255,0.75)' }}>{safeT?.nenhumEquipamento || 'Nenhum equipamento cadastrado.'}</p>
+                  <p style={{ margin: '10px 0 0', fontSize: '14px', color: 'rgba(255,255,255,0.5)' }}>Clique em &quot;Adicionar Equipamento&quot; para começar.</p>
                 </div>
               )}
             </div>
 
             {/* Rodapé */}
-            <div style={{ flexShrink: 0, padding: '16px 24px', borderTop: '1px solid rgba(0, 255, 0, 0.12)', background: 'rgba(0,0,0,0.2)' }}>
-              <button className="btn-primary" onClick={() => { setSelectedClienteForEquipamento(null); setShowEquipamentoClienteForm(false); }} style={{ width: '100%', padding: '12px', borderRadius: '10px', fontSize: '14px', fontWeight: '600', background: 'transparent', border: '1px solid rgba(0, 255, 0, 0.4)', color: '#00ff00' }}>{safeT?.close || 'Fechar'}</button>
+            <div style={{ flexShrink: 0, padding: '18px 28px', borderTop: '1px solid rgba(0, 255, 0, 0.1)', background: 'rgba(0,0,0,0.35)' }}>
+              <button className="btn-primary" onClick={() => { setSelectedClienteForEquipamento(null); setShowEquipamentoClienteForm(false); }} style={{ width: '100%', padding: '14px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', background: 'transparent', border: '1px solid rgba(0, 255, 0, 0.35)', color: '#00ff00' }}>{safeT?.close || 'Fechar'}</button>
             </div>
           </div>
         </div>
