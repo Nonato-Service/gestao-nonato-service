@@ -30,6 +30,8 @@ export type PecaPedido = {
   pecaId?: string
 }
 
+export type StatusPedidoAvulso = 'pendente' | 'cancelado' | 'concluido' | 'aprovado' | 'entregue'
+
 export type PedidoAvulsoGuardado = {
   codigo: string
   dataGeracao: string
@@ -37,6 +39,7 @@ export type PedidoAvulsoGuardado = {
   emitirComoCliente: 'cliente' | 'nonato-service'
   equipamentoTexto: string
   pecas: PecaPedido[]
+  status?: StatusPedidoAvulso
 }
 
 type Props = {
@@ -722,15 +725,103 @@ export function PedidoOrcamentosAvulsoContent({
           )}
           {pedidosGerados.length > 0 && (
             <div style={{ marginTop: '16px' }}>
-              <h4 style={{ color: '#66b3ff', marginBottom: '8px', fontSize: '14px', textTransform: 'uppercase' }}>
+              <h4 style={{ color: '#66b3ff', marginBottom: '12px', fontSize: '14px', textTransform: 'uppercase' }}>
                 {safeT?.ultimosPedidosGerados || 'Últimos pedidos (localizar por código)'}
               </h4>
-              <div style={{ maxHeight: '120px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {[...pedidosGerados].reverse().slice(0, 10).map((p) => (
-                  <div key={p.codigo} style={{ fontSize: '12px', color: '#ccc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#00ff00', fontWeight: '600' }}>{p.codigo}</span>
-                    <span>{p.emitirComoCliente === 'nonato-service' ? (safeT?.nomeNonatoService || 'NONATO SERVICE') : p.clienteNomeReal}</span>
-                    <span style={{ opacity: 0.8 }}>{new Date(p.dataGeracao).toLocaleDateString('pt-BR')}</span>
+              <div style={{ maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {[...pedidosGerados].reverse().slice(0, 50).map((p) => (
+                  <div
+                    key={p.codigo}
+                    style={{
+                      padding: '14px 16px',
+                      backgroundColor: '#1a1a1a',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(0, 255, 0, 0.25)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                        <span style={{ color: '#00ff00', fontWeight: '600', fontSize: '13px' }}>{p.codigo}</span>
+                        <span style={{ color: '#ccc', fontSize: '13px' }}>{p.emitirComoCliente === 'nonato-service' ? (safeT?.nomeNonatoService || 'NONATO SERVICE') : p.clienteNomeReal}</span>
+                        <span style={{ color: '#999', fontSize: '12px' }}>{new Date(p.dataGeracao).toLocaleDateString('pt-BR')}</span>
+                        <span
+                          style={{
+                            padding: '3px 8px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            backgroundColor: p.status === 'entregue' ? 'rgba(0, 255, 0, 0.2)' : p.status === 'aprovado' ? 'rgba(0, 200, 100, 0.2)' : p.status === 'concluido' ? 'rgba(0, 150, 255, 0.2)' : p.status === 'cancelado' ? 'rgba(255, 68, 68, 0.2)' : 'rgba(150, 150, 150, 0.2)',
+                            border: p.status === 'entregue' ? '1px solid rgba(0, 255, 0, 0.6)' : p.status === 'aprovado' ? '1px solid rgba(0, 200, 100, 0.6)' : p.status === 'concluido' ? '1px solid rgba(0, 150, 255, 0.6)' : p.status === 'cancelado' ? '1px solid rgba(255, 68, 68, 0.6)' : '1px solid rgba(150, 150, 150, 0.4)',
+                            color: p.status === 'cancelado' ? '#ff8888' : '#fff'
+                          }}
+                        >
+                          {p.status === 'cancelado' ? (safeT?.pedidoCancelado || 'Pedido Cancelado') : p.status === 'concluido' ? (safeT?.concluido || 'Concluído') : p.status === 'aprovado' ? (safeT?.aprovado || 'Aprovado') : p.status === 'entregue' ? (safeT?.entregue || 'Entregue') : (safeT?.pendente || 'Pendente')}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (saveData) await saveData(PEDIDOS_AVULSO_KEY, pedidosGerados)
+                          alert(safeT?.orcamentoSalvo || 'Orçamento salvo com sucesso!')
+                        }}
+                        style={{ padding: '6px 12px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.6)', borderRadius: '6px', color: '#00ff00', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
+                      >
+                        💾 {safeT?.guardar || 'Guardar'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!confirm(safeT?.confirmarExcluirOrcamento || 'Deseja realmente excluir este pedido?')) return
+                          const atualizados = pedidosGerados.filter((x) => x.codigo !== p.codigo)
+                          setPedidosGerados(atualizados)
+                          if (saveData) await saveData(PEDIDOS_AVULSO_KEY, atualizados)
+                          if (loadData && saveData) {
+                            try {
+                              const orcamentos: any[] = (await loadData(ORCAMENTOS_AVULSO_KEY)) || []
+                              const lista = Array.isArray(orcamentos) ? orcamentos : []
+                              const semEste = lista.filter((o: any) => o.id !== 'avulso-' + p.codigo)
+                              await saveData(ORCAMENTOS_AVULSO_KEY, semEste)
+                            } catch (_) {}
+                          }
+                        }}
+                        style={{ padding: '6px 12px', backgroundColor: 'rgba(255, 68, 68, 0.2)', border: '1px solid rgba(255, 68, 68, 0.6)', borderRadius: '6px', color: '#ff6666', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
+                      >
+                        🗑️ {safeT?.deletar || 'Deletar'}
+                      </button>
+                      {(['cancelado', 'concluido', 'aprovado', 'entregue'] as const).map((status) => (
+                        <button
+                          key={status}
+                          type="button"
+                          onClick={async () => {
+                            const atualizados = pedidosGerados.map((x) => (x.codigo === p.codigo ? { ...x, status } : x))
+                            setPedidosGerados(atualizados)
+                            if (saveData) await saveData(PEDIDOS_AVULSO_KEY, atualizados)
+                            if (loadData && saveData) {
+                              try {
+                                const orcamentos: any[] = (await loadData(ORCAMENTOS_AVULSO_KEY)) || []
+                                const lista = Array.isArray(orcamentos) ? orcamentos : []
+                                const atualizadosOrc = lista.map((o: any) => (o.id === 'avulso-' + p.codigo ? { ...o, status } : o))
+                                await saveData(ORCAMENTOS_AVULSO_KEY, atualizadosOrc)
+                              } catch (_) {}
+                            }
+                          }}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            backgroundColor: p.status === status ? (status === 'entregue' ? 'rgba(0, 255, 0, 0.35)' : status === 'aprovado' ? 'rgba(0, 200, 100, 0.35)' : status === 'concluido' ? 'rgba(0, 150, 255, 0.35)' : 'rgba(255, 68, 68, 0.35)') : 'rgba(100, 100, 100, 0.2)',
+                            border: p.status === status ? (status === 'entregue' ? '1px solid rgba(0, 255, 0, 0.8)' : status === 'aprovado' ? '1px solid rgba(0, 200, 100, 0.8)' : status === 'concluido' ? '1px solid rgba(0, 150, 255, 0.8)' : '1px solid rgba(255, 68, 68, 0.8)') : '1px solid rgba(150, 150, 150, 0.5)',
+                            color: p.status === status ? '#fff' : '#aaa'
+                          }}
+                        >
+                          {status === 'cancelado' ? (safeT?.pedidoCancelado || 'Pedido Cancelado') : status === 'concluido' ? (safeT?.concluido || 'Concluído') : status === 'aprovado' ? (safeT?.aprovado || 'Aprovado') : (safeT?.entregue || 'Entregue')}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
