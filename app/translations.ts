@@ -20,6 +20,8 @@ export const translations = {
     statPerformance: 'Performance',
     statSeguranca: 'Seguro',
     logoBarraLateral: 'Logo da Barra Lateral',
+    logoPainelControlo: 'Logo do Painel de Controlo',
+    logoPainelControloDesc: 'Imagem ou Vídeo MP4. Aparece na barra lateral e nos cabeçalhos do sistema (após login).',
     logoDashboard: 'Logo do Dashboard',
     recursosQueFazemDiferenca: 'Recursos que Fazem a Diferença',
     recursosQueFazemDiferencaDesc: 'Descubra as funcionalidades que vão revolucionar a forma como você gerencia seus serviços',

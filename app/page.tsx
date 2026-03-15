@@ -3480,35 +3480,58 @@ export default function Dashboard() {
         localStorage.removeItem('nonato-logo-type')
       }
 
-      // Carregar logo do dashboard (tela inicial)
+      // Carregar logo do dashboard (tela inicial) — priorizar o tipo guardado (image/video) para refletir a última escolha do utilizador
       let savedLogoDashboard: string | null = null
       let savedLogoDashboardType: string | null = null
       try {
-        const videoDashboardRes = await fetch('/api/video/logo-dashboard')
-        if (videoDashboardRes.ok) {
-          savedLogoDashboard = '/api/video/logo-dashboard'
-          savedLogoDashboardType = 'video'
-        } else {
-          const serverType = await loadFromServer('nonato-logo-dashboard-type')
-          if (serverType !== 'video') {
-            const serverLogo = await loadFromServer('nonato-logo-dashboard')
-            if (serverLogo && typeof serverLogo === 'string' && serverLogo.startsWith('data:image/')) {
-              savedLogoDashboard = serverLogo
-              savedLogoDashboardType = serverType || 'image'
+        // 1) Carregar primeiro o TIPO guardado (servidor e depois localStorage) para respeitar a última alteração
+        let preferredType: string | null = await loadFromServer('nonato-logo-dashboard-type')
+        if (typeof window !== 'undefined' && (preferredType === null || preferredType === '')) {
+          const localType = localStorage.getItem('nonato-logo-dashboard-type')
+          if (localType) preferredType = localType
+        }
+        // 2) Se o utilizador guardou uma IMAGEM, carregar a imagem (servidor ou localStorage)
+        if (preferredType === 'image') {
+          const serverLogo = await loadFromServer('nonato-logo-dashboard')
+          if (serverLogo && typeof serverLogo === 'string' && serverLogo.startsWith('data:image/')) {
+            savedLogoDashboard = serverLogo
+            savedLogoDashboardType = 'image'
+          }
+          if (!savedLogoDashboard && typeof window !== 'undefined') {
+            const local = localStorage.getItem('nonato-logo-dashboard')
+            if (local && local.startsWith('data:image/')) {
+              savedLogoDashboard = local
+              savedLogoDashboardType = 'image'
             }
           }
         }
-      } catch (_) {}
-      if (!savedLogoDashboard && typeof window !== 'undefined') {
-        try {
+        // 3) Se tipo é vídeo ou não definido, usar vídeo do servidor se existir; senão tentar imagem como fallback
+        if (!savedLogoDashboard) {
+          if (preferredType !== 'image') {
+            const videoDashboardRes = await fetch('/api/video/logo-dashboard')
+            if (videoDashboardRes.ok) {
+              savedLogoDashboard = '/api/video/logo-dashboard'
+              savedLogoDashboardType = 'video'
+            }
+          }
+          if (!savedLogoDashboard) {
+            const serverLogo = await loadFromServer('nonato-logo-dashboard')
+            if (serverLogo && typeof serverLogo === 'string' && serverLogo.startsWith('data:image/')) {
+              savedLogoDashboard = serverLogo
+              savedLogoDashboardType = 'image'
+            }
+          }
+        }
+        // 4) Fallback final: localStorage
+        if (!savedLogoDashboard && typeof window !== 'undefined') {
           const local = localStorage.getItem('nonato-logo-dashboard')
           const localType = localStorage.getItem('nonato-logo-dashboard-type')
           if (local && local.startsWith('data:image/')) {
             savedLogoDashboard = local
-            savedLogoDashboardType = localType as 'image' | 'video' | null
+            savedLogoDashboardType = (localType as 'image' | 'video' | null) || 'image'
           }
-        } catch (_) {}
-      }
+        }
+      } catch (_) {}
       if (savedLogoDashboard) {
         if (savedLogoDashboard === '/api/video/logo-dashboard') {
           setLogoUrlDashboard(savedLogoDashboard)
@@ -16864,6 +16887,30 @@ const nextF = familias.filter(x => x !== f)
                     <button className="btn-danger" onClick={handleRemoveSidebarLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>{safeT?.removeLogo || 'Remover Logo'}</button>
                   </div>
                 )}
+                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
+                    <div>
+                      <strong style={{ display: 'block', marginBottom: '5px' }}>{(safeT as any)?.logoPainelControlo || 'Logo do Painel de Controlo'}</strong>
+                      <span style={{ fontSize: '12px', opacity: 0.7 }}>{(safeT as any)?.logoPainelControloDesc || safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece na barra lateral e nos cabeçalhos do sistema (após login).'}</span>
+                    </div>
+                    <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 15px', margin: 0 }}>
+                      {safeT?.changeLogo || 'Alterar Logo'}
+                      <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeSidebarLogo} style={{ display: 'none' }} />
+                    </label>
+                  </div>
+                  {logoUrl && (
+                    <div style={{ padding: '12px', backgroundColor: '#222222', borderRadius: '6px', marginTop: '10px' }}>
+                      <div style={{ marginBottom: '10px' }}>
+                        {logoType === 'video' ? (
+                          <video src={logoUrl} autoPlay loop muted style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
+                        ) : (
+                          <img src={logoUrl} alt="Logo painel de controlo" style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
+                        )}
+                      </div>
+                      <button className="btn-danger" onClick={handleRemoveSidebarLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>{safeT?.removeLogo || 'Remover Logo'}</button>
+                    </div>
+                  )}
+                </div>
                 <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
                     <div>
@@ -44412,6 +44459,30 @@ A1;Peça exemplo;10'
                     <button className="btn-danger" onClick={handleRemoveSidebarLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>{safeT?.removeLogo || 'Remover Logo'}</button>
                   </div>
                 )}
+                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
+                    <div>
+                      <strong style={{ display: 'block', marginBottom: '5px' }}>{(safeT as any)?.logoPainelControlo || 'Logo do Painel de Controlo'}</strong>
+                      <span style={{ fontSize: '12px', opacity: 0.7 }}>{(safeT as any)?.logoPainelControloDesc || safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece na barra lateral e nos cabeçalhos do sistema (após login).'}</span>
+                    </div>
+                    <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 15px', margin: 0 }}>
+                      {safeT?.changeLogo || 'Alterar Logo'}
+                      <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeSidebarLogo} style={{ display: 'none' }} />
+                    </label>
+                  </div>
+                  {logoUrl && (
+                    <div style={{ padding: '12px', backgroundColor: '#222222', borderRadius: '6px', marginTop: '10px' }}>
+                      <div style={{ marginBottom: '10px' }}>
+                        {logoType === 'video' ? (
+                          <video src={logoUrl} autoPlay loop muted style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
+                        ) : (
+                          <img src={logoUrl} alt="Logo painel de controlo" style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
+                        )}
+                      </div>
+                      <button className="btn-danger" onClick={handleRemoveSidebarLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>{safeT?.removeLogo || 'Remover Logo'}</button>
+                    </div>
+                  )}
+                </div>
                 <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
                     <div>
