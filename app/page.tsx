@@ -2321,7 +2321,7 @@ export default function Dashboard() {
     const t = safeT as any
     const titles: Record<TabType, string> = {
       'gestores': t?.gestoresTitle || 'Gestores e Técnicos',
-      'equipamentos': t?.equipamentos || 'Equipamentos do Armazém',
+      'equipamentos': t?.equipamentos || 'Cadastro de Equipamentos do Armazém',
       'familias-grupos': t?.familiasGruposTitle || 'Cadastro de Famílias e Grupos para Checklist',
       'familias-grupos-equipamentos': t?.familiasGruposEquipamentosTitle || 'Cadastro de Famílias e Grupos para os Equipamentos',
       'pre-checklist': t?.preChecklistTitle || 'PRE CHECKLIST',
