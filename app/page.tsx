@@ -1180,6 +1180,19 @@ export default function Dashboard() {
   const [openTabs, setOpenTabs] = useState<Tab[]>([])
   const [activeTabId, setActiveTabId] = useState<string | null>(null)
   const mainContentAreaRef = useRef<HTMLDivElement>(null)
+  const [showHelpModal, setShowHelpModal] = useState(false)
+
+  // F1 — Abrir Help da seção ativa (aba aberta)
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F1') {
+        e.preventDefault()
+        if (activeTabId && openTabs.some(t => t.id === activeTabId)) setShowHelpModal(true)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [activeTabId, openTabs])
 
   // Ao mudar de aba ou abrir uma nova: scroll apenas da área CENTRAL (não mexer na barra lateral nem na janela)
   useEffect(() => {
@@ -2365,6 +2378,18 @@ export default function Dashboard() {
       'alerta-mensagens': t?.alertaMensagens || 'ALERTA DE MENSAGENS'
     }
     return titles[type] || type
+  }
+
+  // Chave de tradução para o Help da seção (ex: equipamentos -> helpEquipamentos)
+  const getHelpKey = (type: TabType): string => {
+    const key = 'help' + type.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('')
+    return key
+  }
+  const getHelpContent = (type: TabType): string => {
+    const t = safeT as Record<string, string | undefined>
+    const key = getHelpKey(type)
+    const text = t?.[key]
+    return text || (t?.helpDefault || 'Consulte o manual do sistema para mais informações sobre esta secção.')
   }
   // Evita abrir modais automaticamente na carga inicial (ex: HMR/estado preservado)
   const [tabsOpenedByUser, setTabsOpenedByUser] = useState(false)
@@ -42231,16 +42256,46 @@ A1;Peça exemplo;10'
           </button>
         </div>
         {/* Conteúdo da Aba Ativa ou Dashboard */}
-        <div ref={mainContentAreaRef} className="main-content-area" style={{ flex: 1, padding: '30px', overflowY: 'auto', minWidth: 0, width: '100%', boxSizing: 'border-box' }}>
+        <div ref={mainContentAreaRef} className="main-content-area" style={{ flex: 1, padding: '30px', overflowY: 'auto', minWidth: 0, width: '100%', boxSizing: 'border-box', position: 'relative' }}>
           {activeTabId ? (
-            // Renderizar conteúdo da aba ativa
-            <div className="tab-inner-scroll" style={{ height: '100%', width: '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
-              {(() => {
-                const activeTab = openTabs.find(t => t.id === activeTabId)
-                if (!activeTab) return null
-                return renderTabContent(activeTab)
-              })()}
-            </div>
+            <>
+              {/* Botão F1 - HELP (visível quando há aba ativa) */}
+              <button
+                type="button"
+                onClick={() => setShowHelpModal(true)}
+                style={{
+                  position: 'absolute',
+                  top: '20px',
+                  right: '30px',
+                  zIndex: 10,
+                  padding: '8px 14px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: 'rgba(0, 255, 0, 0.95)',
+                  background: 'rgba(0, 255, 0, 0.08)',
+                  border: '1px solid rgba(0, 255, 0, 0.35)',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                }}
+                title={safeT?.helpTooltip || 'Pressione F1 para abrir a ajuda'}
+              >
+                <span style={{ opacity: 0.9 }}>F1</span>
+                <span>—</span>
+                <span>{safeT?.help || 'HELP'}</span>
+              </button>
+              {/* Renderizar conteúdo da aba ativa */}
+              <div className="tab-inner-scroll" style={{ height: '100%', width: '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
+                {(() => {
+                  const activeTab = openTabs.find(t => t.id === activeTabId)
+                  if (!activeTab) return null
+                  return renderTabContent(activeTab)
+                })()}
+              </div>
+            </>
           ) : (
             // Dashboard Profissional
             <div style={{ 
@@ -42695,6 +42750,58 @@ A1;Peça exemplo;10'
           </div>
         )}
       </div>
+
+      {/* Modal F1 - HELP (ajuda da seção ativa) */}
+      {showHelpModal && activeTabId && (() => {
+        const activeTab = openTabs.find(t => t.id === activeTabId)
+        if (!activeTab) return null
+        const helpTitle = getTabTitle(activeTab.type)
+        const helpBody = getHelpContent(activeTab.type)
+        return (
+          <div
+            className="modal-overlay"
+            onClick={() => setShowHelpModal(false)}
+            style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10050, padding: '20px' }}
+          >
+            <div
+              className="modal"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                maxWidth: '560px',
+                width: '100%',
+                maxHeight: '85vh',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                background: 'linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%)',
+                borderRadius: '16px',
+                border: '1px solid rgba(0, 255, 0, 0.25)',
+                boxShadow: '0 24px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,255,0,0.08)'
+              }}
+            >
+              <div style={{ flexShrink: 0, padding: '20px 24px', borderBottom: '1px solid rgba(0, 255, 0, 0.15)', background: 'rgba(0, 255, 0, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>❓</span>
+                  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#fff' }}>{helpTitle}</h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowHelpModal(false)}
+                  style={{ padding: '8px 12px', fontSize: '14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.25)', borderRadius: '8px', color: '#ccc', cursor: 'pointer' }}
+                >
+                  {safeT?.close || 'Fechar'}
+                </button>
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '24px', fontSize: '14px', lineHeight: '1.65', color: 'rgba(255,255,255,0.9)' }}>
+                {helpBody}
+              </div>
+              <div style={{ flexShrink: 0, padding: '16px 24px', borderTop: '1px solid rgba(0, 255, 0, 0.1)', background: 'rgba(0,0,0,0.2)' }}>
+                <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>{safeT?.helpShortcut || 'Pressione F1 em qualquer secção para abrir esta ajuda.'}</p>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Modal de Acesso ao Checklist - Área restrita (nome + senha do Gestor de Senhas) */}
       {showChecklistAccessModal && (
