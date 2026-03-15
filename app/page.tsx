@@ -650,7 +650,7 @@ type GrupoChecklist = {
   dataCriacao: string
 }
 
-type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'translator' | 'administrador' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega'
+type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'translator' | 'administrador' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega'
 
 type Tab = {
   id: string
@@ -2361,6 +2361,7 @@ export default function Dashboard() {
       'pecas-substituicao': t?.pecasSubstituicao || 'Peças de Substituição',
       'biblioteca-pecas': t?.bibliotecaPecas || 'Biblioteca de Peças',
       'importacao-pecas': t?.importacaoPecas || 'Importação de Peças',
+      'solicitacao-servico-tecnico': t?.solicitacaoServicoTecnicoTitle || 'Solicitação de Serviço Técnico',
       'agenda': t?.agenda || 'Agenda',
       'desmontados': t?.desmontados || 'Desmontados',
       'cadastro-servicos': t?.cadastroServicos || 'Cadastro de Serviços',
@@ -3937,6 +3938,7 @@ export default function Dashboard() {
           'fornecedores-default': { translationKey: 'fornecedoresTitle', group: 'gestao-tecnica' },
           'relatorio-servico-default': { translationKey: 'relatorioServicoTitle', group: 'gestao-tecnica' },
           'biblioteca-pecas-default': { translationKey: 'cadastroPecasBibliotecaTitle', group: 'gestao-tecnica' },
+          'solicitacao-servico-tecnico-default': { translationKey: 'solicitacaoServicoTecnicoTitle', group: 'gestao-tecnica' },
           'agenda-default': { translationKey: 'agendaTitle', group: 'gestao-tecnica' },
           'estado-visual-tecnico-default': { translationKey: 'estadoVisualTecnico', group: 'gestao-tecnica' },
           'informacoes-conhecimento-tecnicos-default': { translationKey: 'informacoesConhecimentoTecnicosTitle', group: 'gestao-tecnica' },
@@ -4001,6 +4003,7 @@ export default function Dashboard() {
                                b.id === 'fornecedores-default' ? 'open-fornecedores' :
                                b.id === 'relatorio-servico-default' ? 'open-relatorio-servico' :
                                b.id === 'biblioteca-pecas-default' ? 'open-biblioteca-hub' :
+                               b.id === 'solicitacao-servico-tecnico-default' ? 'open-solicitacao-servico-tecnico' :
                                b.id === 'agenda-default' ? 'open-agenda' :
                                b.id === 'estado-visual-tecnico-default' ? 'open-estado-visual-tecnico' :
                                b.id === 'informacoes-conhecimento-tecnicos-default' ? 'open-informacoes-conhecimento-tecnicos' :
@@ -4042,6 +4045,7 @@ export default function Dashboard() {
         'fornecedores-default',
         'relatorio-servico-default',
         'biblioteca-pecas-default',
+        'solicitacao-servico-tecnico-default',
         'agenda-default'
       ]
       
@@ -4051,6 +4055,7 @@ export default function Dashboard() {
         'fornecedores-default': 'fornecedoresTitle',
         'relatorio-servico-default': 'relatorioServicoTitle',
         'biblioteca-pecas-default': 'cadastroPecasBibliotecaTitle',
+        'solicitacao-servico-tecnico-default': 'solicitacaoServicoTecnicoTitle',
         'agenda-default': 'agendaTitle',
         'cadastro-servicos-default': 'cadastroServicosTitle',
       }
@@ -4110,6 +4115,7 @@ export default function Dashboard() {
       const hasFornecedores = buttons.some((b: SidebarButton) => b.id === 'fornecedores-default')
       const hasRelatorioServico = buttons.some((b: SidebarButton) => b.id === 'relatorio-servico-default')
       const hasBibliotecaPecas = buttons.some((b: SidebarButton) => b.id === 'biblioteca-pecas-default')
+      const hasSolicitacaoServicoTecnico = buttons.some((b: SidebarButton) => b.id === 'solicitacao-servico-tecnico-default')
       const hasAgenda = buttons.some((b: SidebarButton) => b.id === 'agenda-default')
       const hasEstadoVisualTecnico = buttons.some((b: SidebarButton) => b.id === 'estado-visual-tecnico-default')
       const hasInformacoesConhecimentoTecnicos = buttons.some((b: SidebarButton) => b.id === 'informacoes-conhecimento-tecnicos-default')
@@ -4461,6 +4467,18 @@ export default function Dashboard() {
         buttons.push(bibliotecaPecasButton)
       }
 
+      if (!hasSolicitacaoServicoTecnico) {
+        const solicitacaoServicoTecnicoButton: SidebarButton = {
+          id: 'solicitacao-servico-tecnico-default',
+          name: 'SOLICITAÇÃO DE SERVIÇO TÉCNICO',
+          action: 'open-solicitacao-servico-tecnico',
+          order: buttons.length,
+          translationKey: 'solicitacaoServicoTecnicoTitle',
+          group: 'gestao-tecnica'
+        }
+        buttons.push(solicitacaoServicoTecnicoButton)
+      }
+
       if (!hasAgenda) {
         const agendaButton: SidebarButton = {
           id: 'agenda-default',
@@ -4735,6 +4753,7 @@ export default function Dashboard() {
       const hasClientesAfter = filteredButtons.some((b: SidebarButton) => b.id === 'clientes-default')
       const hasRelatorioServicoAfter = filteredButtons.some((b: SidebarButton) => b.id === 'relatorio-servico-default')
       const hasBibliotecaPecasAfter = filteredButtons.some((b: SidebarButton) => b.id === 'biblioteca-pecas-default')
+      const hasSolicitacaoServicoTecnicoAfter = filteredButtons.some((b: SidebarButton) => b.id === 'solicitacao-servico-tecnico-default')
       const hasAgendaAfter = filteredButtons.some((b: SidebarButton) => b.id === 'agenda-default')
       
       if (!hasExtrasAfter) {
@@ -4821,6 +4840,16 @@ export default function Dashboard() {
           action: 'open-biblioteca-hub',
           order: filteredButtons.length,
           translationKey: 'cadastroPecasBibliotecaTitle',
+          group: 'gestao-tecnica'
+        })
+      }
+      if (!hasSolicitacaoServicoTecnicoAfter) {
+        filteredButtons.push({
+          id: 'solicitacao-servico-tecnico-default',
+          name: 'SOLICITAÇÃO DE SERVIÇO TÉCNICO',
+          action: 'open-solicitacao-servico-tecnico',
+          order: filteredButtons.length,
+          translationKey: 'solicitacaoServicoTecnicoTitle',
           group: 'gestao-tecnica'
         })
       }
@@ -5385,7 +5414,7 @@ export default function Dashboard() {
         buttonId === 'gestores-default' || buttonId === 'equipamentos-default' || 
         buttonId === 'clientes-default' || buttonId === 'fornecedores-default' || 
         buttonId === 'relatorio-servico-default' || buttonId === 'cadastro-servicos-default' ||
-        buttonId === 'biblioteca-pecas-default' || buttonId === 'agenda-default' || 
+        buttonId === 'biblioteca-pecas-default' || buttonId === 'solicitacao-servico-tecnico-default' || buttonId === 'agenda-default' || 
         buttonId === 'desmontados-default') {
       alert(t.cannotDeleteExtras || 'Este botão não pode ser removido!')
       return
@@ -5409,6 +5438,7 @@ export default function Dashboard() {
       'fornecedores-default',
       'relatorio-servico-default',
       'biblioteca-pecas-default',
+      'solicitacao-servico-tecnico-default',
       'agenda-default',
       'cadastro-servicos-default'
     ]
@@ -5435,6 +5465,8 @@ export default function Dashboard() {
         return safeT?.relatorioServicoTitle || button.name || ''
       } else if (button.id === 'biblioteca-pecas-default') {
         return safeT?.cadastroPecasBibliotecaTitle || button.name || ''
+      } else if (button.id === 'solicitacao-servico-tecnico-default') {
+        return safeT?.solicitacaoServicoTecnicoTitle || button.name || ''
       } else if (button.id === 'agenda-default') {
         return safeT?.agendaTitle || button.name || ''
       } else if (button.id === 'estado-visual-tecnico-default') {
@@ -13265,6 +13297,7 @@ export default function Dashboard() {
     'open-relatorio-servico': 'relatorioServico',
     'open-biblioteca-pecas': 'bibliotecaPecas',
     'open-importacao-pecas': 'bibliotecaPecas',
+    'open-solicitacao-servico-tecnico': 'agenda',
     'open-agenda': 'agenda',
     'open-desmontados': 'desmontados',
     'open-cadastro-servicos': 'cadastroServicos',
@@ -13482,6 +13515,8 @@ export default function Dashboard() {
       openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
     } else if (action === 'open-importacao-pecas') {
       openTab('importacao-pecas', getTabTitle('importacao-pecas'))
+    } else if (action === 'open-solicitacao-servico-tecnico') {
+      openTab('solicitacao-servico-tecnico', getTabTitle('solicitacao-servico-tecnico'))
     } else if (action === 'open-agenda') {
       openTab('agenda', getTabTitle('agenda'))
     } else if (action === 'open-estado-visual-tecnico') {
@@ -24850,6 +24885,49 @@ A1;Peça exemplo;10'
           </div>
         )
       
+      case 'solicitacao-servico-tecnico':
+        return (
+          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
+            <div style={{
+              marginBottom: '40px',
+              padding: '30px',
+              background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
+              borderRadius: '20px',
+              border: '2px solid rgba(0, 255, 0, 0.3)',
+              boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                  <LogoComponent size="small" />
+                </div>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  <h1 style={{
+                    margin: 0,
+                    fontSize: '32px',
+                    fontWeight: 'bold',
+                    color: '#00ff00',
+                    letterSpacing: '3px',
+                    textShadow: '0 0 20px rgba(0, 255, 0, 0.3)',
+                    marginBottom: '8px'
+                  }}>
+                    {safeT?.solicitacaoServicoTecnicoTitle || 'SOLICITAÇÃO DE SERVIÇO TÉCNICO'}
+                  </h1>
+                  <p style={{ margin: 0, fontSize: '14px', color: '#ccc', opacity: 0.8 }}>
+                    {safeT?.solicitacaoServicoTecnicoEmBreve || 'Conteúdo em breve. Será definido em seguida.'}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <button onClick={() => closeTab(activeTabId || '')} style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'transparent', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', color: '#00ff00', cursor: 'pointer' }} title={safeT?.voltar || 'Voltar'}>↶</button>
+                  <button onClick={voltarPaginaInicial} style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'transparent', border: '1px solid rgba(0, 150, 255, 0.3)', borderRadius: '4px', color: '#66b3ff', cursor: 'pointer' }} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
+                </div>
+              </div>
+            </div>
+            <div style={{ padding: '20px', textAlign: 'center', color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>
+              {safeT?.solicitacaoServicoTecnicoEmBreve || 'Conteúdo em breve. Será definido em seguida.'}
+            </div>
+          </div>
+        )
+
       case 'agenda':
         return (
           <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
