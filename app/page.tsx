@@ -2707,7 +2707,9 @@ export default function Dashboard() {
     necessarioTrocaPecas: false,
     observacoes: '',
     pontosAberto: '',
-    pecasSubstituicao: []
+    pecasSubstituicao: [],
+    assinaturaCliente: undefined,
+    dataAssinaturaCliente: undefined
   })
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false)
   const canvasAssinaturaRef = useRef<HTMLCanvasElement>(null)
@@ -8428,7 +8430,9 @@ export default function Dashboard() {
       necessarioTrocaPecas: false,
       observacoes: '',
       pontosAberto: '',
-      pecasSubstituicao: []
+      pecasSubstituicao: [],
+      assinaturaCliente: undefined,
+      dataAssinaturaCliente: undefined
     })
     setNovoDiaTrabalho({
       data: new Date().toISOString().split('T')[0], // Inicializar com a data de hoje
@@ -8846,6 +8850,8 @@ export default function Dashboard() {
             </table>
           </div>
           ` : ''}
+
+          ${renderReportAssinaturaCliente(relatorio)}
         </body>
       </html>
     `;
@@ -9157,6 +9163,8 @@ export default function Dashboard() {
             </table>
           </div>
           ` : ''}
+
+          ${renderReportAssinaturaCliente(relatorio)}
         </body>
       </html>
     `;
@@ -9528,6 +9536,8 @@ export default function Dashboard() {
             </table>
           </div>
           ` : ''}
+
+          ${renderReportAssinaturaCliente(relatorio)}
         </body>
       </html>
     `;
@@ -9909,6 +9919,8 @@ export default function Dashboard() {
             </table>
           </div>
           ` : ''}
+
+          ${renderReportAssinaturaCliente(relatorio)}
         </body>
       </html>
     `;
@@ -10269,6 +10281,8 @@ export default function Dashboard() {
             </table>
           </div>
           ` : ''}
+
+          ${renderReportAssinaturaCliente(relatorio)}
         </body>
       </html>
     `;
@@ -10649,6 +10663,8 @@ export default function Dashboard() {
             </div>
           </div>
           ` : ''}
+
+          ${renderReportAssinaturaCliente(relatorio)}
         </body>
       </html>
     `;
@@ -11019,6 +11035,8 @@ export default function Dashboard() {
             </table>
           </div>
           ` : ''}
+
+          ${renderReportAssinaturaCliente(relatorio)}
         </body>
       </html>
     `;
@@ -11420,6 +11438,8 @@ export default function Dashboard() {
             </div>
           </div>
           ` : ''}
+
+          ${renderReportAssinaturaCliente(relatorio)}
         </body>
       </html>
     `;
@@ -12027,6 +12047,36 @@ export default function Dashboard() {
     </div>`;
   };
 
+  const labelAssinaturaCliente = t?.assinaturaCliente ?? 'Assinatura do Cliente'
+  const labelAssinaturaClienteConfirmacao = t?.assinaturaClienteConfirmacao ?? 'Confirmação do serviço pelo cliente'
+
+  const renderReportAssinaturaCliente = (relatorio: RelatorioServico) => {
+    const titulo = labelAssinaturaCliente
+    const subtitulo = labelAssinaturaClienteConfirmacao
+    const baseStyle = 'margin-top:24px;padding-top:16px;border-top:1px solid #ccc;'
+    const textStyle = 'font-size:10px;color:#666;margin-bottom:10px;'
+    const labelData = t?.dataAssinatura ?? 'Data'
+    if (relatorio.assinaturaCliente) {
+      const dataAssinatura = relatorio.dataAssinaturaCliente
+        ? new Date(relatorio.dataAssinaturaCliente).toLocaleString(localeReport, { dateStyle: 'short', timeStyle: 'short' })
+        : ''
+      return `
+    <div class="report-assinatura-cliente" style="${baseStyle}">
+      <h3 style="font-size:11px;margin-bottom:8px;font-weight:bold;">${titulo}</h3>
+      <p style="${textStyle}">${subtitulo}</p>
+      <img src="${String(relatorio.assinaturaCliente).replace(/"/g, '&quot;')}" alt="Assinatura" style="max-width:280px;max-height:100px;object-fit:contain;display:block;border-bottom:1px solid #000;padding-bottom:4px;background:#fff;" />
+      ${dataAssinatura ? `<p style="font-size:9px;color:#555;margin-top:6px;">${labelData}: ${dataAssinatura}</p>` : ''}
+    </div>`
+    }
+    return `
+    <div class="report-assinatura-cliente" style="${baseStyle}">
+      <h3 style="font-size:11px;margin-bottom:8px;font-weight:bold;">${titulo}</h3>
+      <p style="${textStyle}">${subtitulo}</p>
+      <div style="width:280px;height:70px;border-bottom:2px solid #000;margin-top:8px;"></div>
+      <p style="font-size:9px;color:#555;margin-top:6px;">${labelData}: _______________________</p>
+    </div>`
+  }
+
   const handlePrintRelatorioProfissional = (relatorio: RelatorioServico) => {
     try {
       const printWindow = window.open('', '_blank');
@@ -12063,6 +12113,7 @@ export default function Dashboard() {
         ${relatorio.observacoes ? `<div class="report-section"><h3>${t.observacoes || 'Observações'}</h3><p>${relatorio.observacoes}</p></div>` : ''}
         ${relatorio.pontosAberto ? `<div class="report-section"><h3>${t.pontosAberto || 'Pontos em Aberto'}</h3><p>${relatorio.pontosAberto}</p></div>` : ''}
         ${renderReportPecas(relatorio)}
+        ${renderReportAssinaturaCliente(relatorio)}
       </body></html>`;
       printWindow.document.write(htmlContent);
       printWindow.document.close();
@@ -12100,6 +12151,7 @@ export default function Dashboard() {
         <div class="report-section"><h3>${t.resultadosTrabalho || 'RESULTADOS'}</h3>${renderReportResultados(relatorio)}</div>
         ${relatorio.observacoes ? `<div class="report-section"><h3>${t.observacoes}</h3><p>${relatorio.observacoes}</p></div>` : ''}
         ${renderReportPecas(relatorio)}
+        ${renderReportAssinaturaCliente(relatorio)}
       </body></html>`;
       printWindow.document.write(htmlContent);
       printWindow.document.close();
@@ -12137,6 +12189,7 @@ export default function Dashboard() {
         <div class="report-section"><h3>${t.resultadosTrabalho || 'RESULTADOS'}</h3>${renderReportResultados(relatorio)}</div>
         ${relatorio.observacoes ? `<div class="report-section"><h3>${t.observacoes}</h3><p>${relatorio.observacoes}</p></div>` : ''}
         ${renderReportPecas(relatorio)}
+        ${renderReportAssinaturaCliente(relatorio)}
       </body></html>`;
       printWindow.document.write(htmlContent);
       printWindow.document.close();
@@ -12175,6 +12228,7 @@ export default function Dashboard() {
         ${relatorio.observacoes ? `<div class="report-section"><h3>${t.observacoes}</h3><p>${relatorio.observacoes}</p></div>` : ''}
         ${relatorio.pontosAberto ? `<div class="report-section"><h3>${t.pontosAberto}</h3><p>${relatorio.pontosAberto}</p></div>` : ''}
         ${renderReportPecas(relatorio)}
+        ${renderReportAssinaturaCliente(relatorio)}
       </body></html>`;
       printWindow.document.write(htmlContent);
       printWindow.document.close();
@@ -12211,6 +12265,7 @@ export default function Dashboard() {
         <div class="report-section"><h3>${t.resultadosTrabalho || 'RESULTADOS'}</h3>${renderReportResultados(relatorio)}</div>
         ${relatorio.observacoes ? `<div class="report-section"><h3>${t.observacoes}</h3><p>${relatorio.observacoes}</p></div>` : ''}
         ${renderReportPecas(relatorio)}
+        ${renderReportAssinaturaCliente(relatorio)}
       </body></html>`;
       printWindow.document.write(htmlContent);
       printWindow.document.close();
@@ -20510,9 +20565,8 @@ onKeyPress={(e) => {
                   </div>
                 </div>
 
-                {/* Assinatura do Cliente (apenas em tablet/telemóvel) */}
-                {isMobileOrTablet && (
-                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+                {/* Assinatura do Cliente - confirmação do serviço */}
+                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                     <h4 style={{ marginBottom: '10px', color: '#00ff00' }}>{safeT?.assinaturaCliente || 'Assinatura do Cliente'}</h4>
                     <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', marginBottom: '12px' }}>{safeT?.assinaturaClienteDesc || 'O cliente pode assinar aqui quando utilizar tablet ou telemóvel.'}</p>
                     {relatorioServicoForm.assinaturaCliente && !mostrarCanvasAssinatura ? (
@@ -20613,7 +20667,6 @@ onKeyPress={(e) => {
                       </div>
                     )}
                   </div>
-                )}
 
                 {/* Peças de Substituição */}
                 {relatorioServicoForm.necessarioTrocaPecas && (
