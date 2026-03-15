@@ -43181,6 +43181,62 @@ A1;Peça exemplo;10'
           )}
         </div>
 
+        {/* Botão CADASTRO DA NONATO SERVICE - Sempre visível acima do EXTRAS */}
+        <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+          <button
+            className="btn-primary"
+            onClick={() => handleButtonClick('open-cadastro-nonato-service')}
+            style={{
+              width: '100%',
+              textAlign: 'left',
+              padding: '12px',
+              marginBottom: '5px',
+              backgroundColor: selectedSidebarButton === 'open-cadastro-nonato-service' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
+              border: selectedSidebarButton === 'open-cadastro-nonato-service' ? '1px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.35)',
+              borderRadius: '8px',
+              boxShadow: selectedSidebarButton === 'open-cadastro-nonato-service' ? '0 0 12px rgba(0, 255, 0, 0.25)' : undefined,
+              color: selectedSidebarButton === 'open-cadastro-nonato-service' ? '#00ff00' : '#ccc',
+              fontWeight: 'bold',
+              fontSize: '12px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              transform: selectedSidebarButton === 'open-cadastro-nonato-service' ? 'scale(1.02)' : undefined,
+              transition: 'all 0.3s ease',
+              position: 'relative'
+            }}
+            onMouseEnter={(e) => {
+              if (selectedSidebarButton !== 'open-cadastro-nonato-service') {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.15)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.55)'
+                e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.45), 0 0 24px rgba(0, 255, 0, 0.2)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (selectedSidebarButton !== 'open-cadastro-nonato-service') {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.08)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.35)'
+                e.currentTarget.style.boxShadow = 'none'
+              }
+            }}
+          >
+            {selectedSidebarButton === 'open-cadastro-nonato-service' && (
+              <span style={{
+                position: 'absolute',
+                top: '8px',
+                right: '30px',
+                fontSize: '16px',
+                color: '#00ff00',
+                fontWeight: 'bold'
+              }}>✓</span>
+            )}
+            <span>
+              <span style={{ display: 'inline-block', marginRight: '8px' }}>📋</span>
+              {safeT?.cadastroNonatoServiceTitle || 'CADASTRO DA NONATO SERVICE'}
+            </span>
+          </button>
+        </div>
+
         {/* Grupo: EXTRA */}
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
           <button
