@@ -38353,9 +38353,19 @@ A1;Peça exemplo;10'
     }
   }
 
+  // Botão fixo CADASTRO DA NONATO SERVICE (sempre visível no grupo outros, acima do Extras)
+  const cadastroNonatoServiceButton: SidebarButton = {
+    id: 'cadastro-nonato-service-default',
+    name: 'CADASTRO DA NONATO SERVICE',
+    action: 'open-cadastro-nonato-service',
+    order: 1,
+    translationKey: 'cadastroNonatoServiceTitle',
+    group: 'outros'
+  }
+
   // Função para obter os botões de cada grupo
   const getButtonsByGroup = (group: 'gestao-tecnica' | 'gestao-custos' | 'gestao-industrial' | 'gestao-financeira' | 'checklist-group' | 'comunicacao-interna' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'outros'): SidebarButton[] => {
-    return sidebarButtons.filter(btn => {
+    const filtered = sidebarButtons.filter(btn => {
       // Botões principais de grupos não aparecem na lista de botões do grupo
       if (btn.id === 'gestao-tecnica-default' || btn.id === 'gestao-custos-default' || btn.id === 'gestao-industrial-default' || btn.id === 'gestao-financeira-default') {
         return false
@@ -38410,6 +38420,11 @@ A1;Peça exemplo;10'
                  'hub-comunicacao-default', 'mensagens-internas-default', 'mensagens-internas-tecnicos-default', 'alerta-mensagens-default', 'manuais-informacoes-tecnicas-default', 'almoxarifado-armazem-default'].includes(btn.id)
       }
     })
+    // Garantir que CADASTRO DA NONATO SERVICE aparece sempre no grupo "outros", acima do Extras (produção e localStorage antigo)
+    if (group === 'outros' && !filtered.some(b => b.id === 'cadastro-nonato-service-default')) {
+      return [cadastroNonatoServiceButton, ...filtered]
+    }
+    return filtered
   }
 
   // Função para mover botão entre grupos
