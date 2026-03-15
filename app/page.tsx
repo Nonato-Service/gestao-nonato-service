@@ -162,6 +162,15 @@ type SolicitacaoServicoTecnico = {
   dataRecebimento?: string
 }
 
+/** Ficha cadastral da Nonato Service — nome empresa, NIF, NIB, SWIFT, logo; para os clientes transferirem pagamento */
+type FichaCadastral = {
+  nomeEmpresa: string
+  nif: string
+  nib: string
+  swift: string
+  logo?: string
+}
+
 type HistoricoEquipamento = {
   id: string
   data: string
@@ -669,7 +678,7 @@ type GrupoChecklist = {
   dataCriacao: string
 }
 
-type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'translator' | 'administrador' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega'
+type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'ficha-cadastral' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'translator' | 'administrador' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega'
 
 type Tab = {
   id: string
@@ -2374,6 +2383,7 @@ export default function Dashboard() {
       'pre-checklist': t?.preChecklistTitle || 'PRE CHECKLIST',
       'users': t?.userManagement || 'Gestão de Usuários',
       'extras': t?.extras || 'Extras',
+      'ficha-cadastral': t?.fichaCadastralTitle || 'FICHA CADASTRAL DA NONATO SERVICE',
       'clientes': t?.clientes || 'Clientes',
       'fornecedores': t?.fornecedores || 'Fornecedores',
       'relatorio-servico': t?.relatorioServico || 'Relatório de Serviço',
@@ -2484,6 +2494,9 @@ export default function Dashboard() {
   const [mostrarCanvasAssinaturaSolicitacao, setMostrarCanvasAssinaturaSolicitacao] = useState(false)
   const isDrawingSolicitacaoRef = useRef(false)
   const lastPosSolicitacaoRef = useRef<{ x: number; y: number } | null>(null)
+  
+  // Ficha Cadastral da Nonato Service (nome empresa, NIF, NIB, SWIFT, logo)
+  const [fichaCadastral, setFichaCadastral] = useState<FichaCadastral>({ nomeEmpresa: '', nif: '', nib: '', swift: '' })
   
   // Estados para Biblioteca de Peças
   const [pecasBiblioteca, setPecasBiblioteca] = useState<PecaBiblioteca[]>([])
@@ -3733,6 +3746,18 @@ export default function Dashboard() {
         setSolicitacoesServicoTecnico(savedSolicitacoes)
       }
 
+      // Carregar ficha cadastral
+      const savedFichaCadastral = getData('nonato-ficha-cadastral')
+      if (savedFichaCadastral && typeof savedFichaCadastral === 'object' && !Array.isArray(savedFichaCadastral)) {
+        setFichaCadastral({
+          nomeEmpresa: savedFichaCadastral.nomeEmpresa ?? '',
+          nif: savedFichaCadastral.nif ?? '',
+          nib: savedFichaCadastral.nib ?? '',
+          swift: savedFichaCadastral.swift ?? '',
+          logo: savedFichaCadastral.logo
+        })
+      }
+
       // Carregar grupos desmontados
       const savedGruposDesmontados = getData('nonato-desmontados-grupos')
       if (savedGruposDesmontados) {
@@ -3964,6 +3989,7 @@ export default function Dashboard() {
         // Mapeamento de IDs para translationKeys e groups padrão
         const buttonDefaults: { [key: string]: { translationKey: string, group?: 'gestao-tecnica' | 'gestao-custos' | 'gestao-industrial' | 'gestao-financeira' | 'checklist-group' | 'comunicacao-interna' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'outros' } } = {
           'extras-default': { translationKey: 'administrador' },
+          'ficha-cadastral-default': { translationKey: 'fichaCadastralTitle', group: 'outros' },
           'gestores-default': { translationKey: 'gestoresTitle', group: 'gestao-tecnica' },
           'familias-grupos-default': { translationKey: 'familiasGruposTitle', group: 'gestao-industrial' },
           'familias-grupos-equipamentos-default': { translationKey: 'familiasGruposEquipamentosTitle', group: 'gestao-industrial' },
@@ -4057,6 +4083,7 @@ export default function Dashboard() {
                                b.id === 'mensagens-internas-default' ? 'open-mensagens-internas' :
                                b.id === 'mensagens-internas-tecnicos-default' ? 'open-mensagens-internas-tecnicos' :
                                b.id === 'alerta-mensagens-default' ? 'open-alerta-mensagens' :
+                               b.id === 'ficha-cadastral-default' ? 'open-ficha-cadastral' :
                                b.id === 'administrador-default' ? 'open-administrador' : ''),
             translationKey: defaults.translationKey, // SEMPRE definir translationKey
             group: (typeof b.group === 'string' && b.group.trim() !== '') ? b.group : (defaults.group !== undefined ? defaults.group : 'outros'), // Preservar grupo definido pelo usuário
@@ -4219,6 +4246,20 @@ export default function Dashboard() {
           translationKey: 'administrador'
         }
         buttons.push(defaultButton) // Adicionar no final ao invés do início
+      }
+      
+      const hasFichaCadastral = buttons.some((b: SidebarButton) => b.id === 'ficha-cadastral-default')
+      if (!hasFichaCadastral) {
+        const fichaCadastralButton: SidebarButton = {
+          id: 'ficha-cadastral-default',
+          name: 'FICHA CADASTRAL DA NONATO SERVICE',
+          action: 'open-ficha-cadastral',
+          order: 10000, // Abaixo dos Extras (9999)
+          translationKey: 'fichaCadastralTitle',
+          group: 'outros'
+        }
+        buttons.push(fichaCadastralButton)
+        saveData('nonato-sidebar-buttons', buttons)
       }
       
       if (!hasGestores) {
@@ -4799,8 +4840,19 @@ export default function Dashboard() {
           id: 'administrador-default',
           name: 'ADMINISTRADOR',
           action: 'open-administrador',
-          order: 9999, // Ordem alta para ficar por último
+          order: 9999,
           translationKey: 'administrador'
+        })
+      }
+      const hasFichaCadastralAfter = filteredButtons.some((b: SidebarButton) => b.id === 'ficha-cadastral-default')
+      if (!hasFichaCadastralAfter) {
+        filteredButtons.push({
+          id: 'ficha-cadastral-default',
+          name: 'FICHA CADASTRAL DA NONATO SERVICE',
+          action: 'open-ficha-cadastral',
+          order: 10000,
+          translationKey: 'fichaCadastralTitle',
+          group: 'outros'
         })
       }
       if (!hasGestoresAfter) {
@@ -5447,7 +5499,7 @@ export default function Dashboard() {
     }
     
     // Não permitir deletar os botões padrão e principais
-    if (buttonId === 'administrador-default' || buttonId === 'extras-default' || 
+    if (buttonId === 'administrador-default' || buttonId === 'extras-default' || buttonId === 'ficha-cadastral-default' || 
         buttonId === 'gestao-tecnica-default' || buttonId === 'gestao-industrial-default' ||
         buttonId === 'gestores-default' || buttonId === 'equipamentos-default' || 
         buttonId === 'clientes-default' || buttonId === 'fornecedores-default' || 
@@ -13341,6 +13393,7 @@ export default function Dashboard() {
     'open-cadastro-servicos': 'cadastroServicos',
     'open-extra': 'extras',
     'open-administrador': 'extras',
+    'open-ficha-cadastral': 'extras',
     'open-translator': 'extras',
     'open-familias-grupos': 'equipamentos',
     'open-familias-grupos-equipamentos': 'equipamentos',
@@ -13412,7 +13465,9 @@ export default function Dashboard() {
     setTimeout(() => scrollMainContentToTop(), 0)
     setTimeout(() => scrollMainContentToTop(), 150)
     
-    if (action === 'open-administrador') {
+    if (action === 'open-ficha-cadastral') {
+      openTab('ficha-cadastral', getTabTitle('ficha-cadastral'))
+    } else if (action === 'open-administrador') {
       openTab('administrador', getTabTitle('administrador'))
     } else if (action === 'open-gestores') {
       openTab('gestores', getTabTitle('gestores'))
@@ -16133,6 +16188,78 @@ const nextF = familias.filter(x => x !== f)
                 })()}
               </div>
             )}
+          </div>
+        );
+      
+      case 'ficha-cadastral':
+        return (
+          <div style={{ padding: '30px', maxWidth: '900px', margin: '0 auto' }}>
+            <div style={{
+              marginBottom: '24px',
+              padding: '24px',
+              background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
+              borderRadius: '20px',
+              border: '2px solid rgba(0, 255, 0, 0.3)',
+              boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                  <LogoComponent size="small" />
+                </div>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 'bold', color: '#00ff00', letterSpacing: '2px', marginBottom: '6px' }}>
+                    {safeT?.fichaCadastralTitle || 'FICHA CADASTRAL DA NONATO SERVICE'}
+                  </h1>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#ccc' }}>
+                    {safeT?.fichaCadastralSubtitle || 'Dados para os clientes transferirem o pagamento.'}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button onClick={() => closeTab(activeTabId || '')} style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'transparent', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', color: '#00ff00', cursor: 'pointer' }} title={safeT?.voltar || 'Voltar'}>↶</button>
+                  <button onClick={voltarPaginaInicial} style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'transparent', border: '1px solid rgba(0, 150, 255, 0.3)', borderRadius: '4px', color: '#66b3ff', cursor: 'pointer' }} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
+                </div>
+              </div>
+            </div>
+            <div style={{ padding: '24px', backgroundColor: '#2a2a2a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.fichaCadastralNomeEmpresa || 'Nome da empresa'}</label>
+                  <input type="text" value={fichaCadastral.nomeEmpresa} onChange={e => setFichaCadastral({ ...fichaCadastral, nomeEmpresa: e.target.value })} style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.fichaCadastralNif || 'NIF (Número de contribuinte)'}</label>
+                  <input type="text" value={fichaCadastral.nif} onChange={e => setFichaCadastral({ ...fichaCadastral, nif: e.target.value })} style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.fichaCadastralNib || 'NIB (Número da conta bancária)'}</label>
+                  <input type="text" value={fichaCadastral.nib} onChange={e => setFichaCadastral({ ...fichaCadastral, nib: e.target.value })} style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.fichaCadastralSwift || 'Código SWIFT'}</label>
+                  <input type="text" value={fichaCadastral.swift} onChange={e => setFichaCadastral({ ...fichaCadastral, swift: e.target.value })} style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.fichaCadastralLogo || 'Logo'}</label>
+                  {fichaCadastral.logo ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                      <img src={fichaCadastral.logo} alt="Logo" style={{ maxWidth: '180px', maxHeight: '80px', objectFit: 'contain', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', background: '#fff' }} />
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setFichaCadastral({ ...fichaCadastral, logo: r.result as string }); r.readAsDataURL(f); } }} style={{ fontSize: '12px' }} />
+                        <button type="button" onClick={() => setFichaCadastral({ ...fichaCadastral, logo: undefined })} style={{ padding: '6px 12px', border: '1px solid #666', color: '#ccc', background: '#333', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>{safeT?.removeLogo || 'Remover logo'}</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setFichaCadastral({ ...fichaCadastral, logo: r.result as string }); r.readAsDataURL(f); } }} style={{ fontSize: '12px' }} />
+                  )}
+                </div>
+              </div>
+              <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', marginBottom: '16px' }}>
+                {safeT?.fichaCadastralTransferencia || 'Os clientes devem efetuar a transferência do pagamento para a conta bancária indicada (NIB e SWIFT).'}
+              </p>
+              <button className="btn-primary" onClick={() => saveData('nonato-ficha-cadastral', fichaCadastral)} style={{ padding: '10px 24px', backgroundColor: 'rgba(0, 255, 0, 0.2)', borderColor: 'rgba(0, 255, 0, 0.5)', color: '#00ff00', fontWeight: 'bold' }}>
+                {safeT?.fichaCadastralGuardar || 'Guardar ficha cadastral'}
+              </button>
+            </div>
           </div>
         );
       
@@ -38077,12 +38204,12 @@ A1;Peça exemplo;10'
       }
       // Para o grupo "outros", incluir o botão ADMINISTRADOR e GESTÃO FINANCEIRA
       if (group === 'outros') {
-        if (btn.id === 'administrador-default' || btn.id === 'extras-default' || btn.id === 'gestao-financeira-default') {
+        if (btn.id === 'administrador-default' || btn.id === 'extras-default' || btn.id === 'gestao-financeira-default' || btn.id === 'ficha-cadastral-default') {
           return true
         }
       } else {
         // Para outros grupos, excluir o botão ADMINISTRADOR e GESTÃO FINANCEIRA
-        if (btn.id === 'administrador-default' || btn.id === 'extras-default' || btn.id === 'gestao-financeira-default') {
+        if (btn.id === 'administrador-default' || btn.id === 'extras-default' || btn.id === 'gestao-financeira-default' || btn.id === 'ficha-cadastral-default') {
           return false
         }
       }
