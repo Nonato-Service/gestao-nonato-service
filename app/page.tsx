@@ -734,6 +734,8 @@ export default function Dashboard() {
   const [filtroAreaGestor, setFiltroAreaGestor] = useState<string>('todas')
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [logoType, setLogoType] = useState<'image' | 'video' | null>(null)
+  const [logoUrlDashboard, setLogoUrlDashboard] = useState<string | null>(null)
+  const [logoTypeDashboard, setLogoTypeDashboard] = useState<'image' | 'video' | null>(null)
   // Carregar idioma do localStorage imediatamente, antes de qualquer renderização
   const getInitialLanguage = (): string => {
     if (typeof window !== 'undefined') {
@@ -3475,6 +3477,45 @@ export default function Dashboard() {
         localStorage.removeItem('nonato-logo')
         localStorage.removeItem('nonato-logo-type')
       }
+
+      // Carregar logo do dashboard (tela inicial)
+      let savedLogoDashboard: string | null = null
+      let savedLogoDashboardType: string | null = null
+      try {
+        const videoDashboardRes = await fetch('/api/video/logo-dashboard')
+        if (videoDashboardRes.ok) {
+          savedLogoDashboard = '/api/video/logo-dashboard'
+          savedLogoDashboardType = 'video'
+        } else {
+          const serverType = await loadFromServer('nonato-logo-dashboard-type')
+          if (serverType !== 'video') {
+            const serverLogo = await loadFromServer('nonato-logo-dashboard')
+            if (serverLogo && typeof serverLogo === 'string' && serverLogo.startsWith('data:image/')) {
+              savedLogoDashboard = serverLogo
+              savedLogoDashboardType = serverType || 'image'
+            }
+          }
+        }
+      } catch (_) {}
+      if (!savedLogoDashboard && typeof window !== 'undefined') {
+        try {
+          const local = localStorage.getItem('nonato-logo-dashboard')
+          const localType = localStorage.getItem('nonato-logo-dashboard-type')
+          if (local && local.startsWith('data:image/')) {
+            savedLogoDashboard = local
+            savedLogoDashboardType = localType as 'image' | 'video' | null
+          }
+        } catch (_) {}
+      }
+      if (savedLogoDashboard) {
+        if (savedLogoDashboard === '/api/video/logo-dashboard') {
+          setLogoUrlDashboard(savedLogoDashboard)
+          setLogoTypeDashboard('video')
+        } else if (savedLogoDashboard.startsWith('data:image/')) {
+          setLogoUrlDashboard(savedLogoDashboard)
+          setLogoTypeDashboard((savedLogoDashboardType as 'image') || 'image')
+        }
+      }
       
       // Idioma já foi carregado no estado inicial via getInitialLanguage()
       // Apenas sincronizar se houver mudança externa
@@ -5194,120 +5235,135 @@ export default function Dashboard() {
     }
   }, [])
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChangeSidebarLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-
-    // Verificar se é imagem ou vídeo MP4
     const isImage = file.type.startsWith('image/')
-    const fileName = file.name.toLowerCase()
-    const isMp4 = fileName.endsWith('.mp4')
-    // Aceitar qualquer vídeo se for MP4 por extensão, ou tipos MIME específicos
+    const isMp4 = file.name.toLowerCase().endsWith('.mp4')
     const isVideo = isMp4 || file.type === 'video/mp4' || file.type === 'video/mpeg' || file.type.startsWith('video/')
-
     if (!isImage && !isVideo) {
-      const tTyped = t as any
-      alert(tTyped.selectImageOrVideoError || 'Por favor, selecione uma imagem ou um vídeo MP4')
+      alert((t as any).selectImageOrVideoError || 'Por favor, selecione uma imagem ou um vídeo MP4')
       return
     }
-
-    // Verificar tamanho do arquivo (limite maior para vídeos - 50MB)
-    const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024 // 50MB para vídeo, 5MB para imagem
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024
     if (file.size > maxSize) {
-      const maxSizeText = isVideo ? '50MB' : '5MB'
-      const tTyped = t as any
-      alert((tTyped.fileTooLarge || 'Arquivo muito grande! Tamanho máximo: {size}').replace('{size}', maxSizeText))
+      alert(((t as any).fileTooLarge || 'Arquivo muito grande! Tamanho máximo: {size}').replace('{size}', isVideo ? '50MB' : '5MB'))
       return
     }
-
-    // Para vídeos, salvar como arquivo binário no servidor (não usar base64)
     if (isVideo) {
-      // Criar FormData para enviar o arquivo binário
       const formData = new FormData()
       formData.append('video', file)
-
-      fetch('/api/video/logo', {
-        method: 'POST',
-        body: formData,
-      })
-      .then(async (response) => {
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || 'Erro ao salvar vídeo')
-        }
-        return response.json()
-      })
-      .then(async () => {
-        // Usar URL da API em vez de base64
-        const videoUrl = '/api/video/logo'
-        setLogoUrl(videoUrl)
-        setLogoType('video')
-        
-        // Salvar apenas o tipo (não o base64)
-        await saveData('nonato-logo-type', 'video', false)
-        
-        alert(t.videoUpdatedSuccess || 'Vídeo atualizado com sucesso!')
-      })
-      .catch((videoError) => {
-        console.error('Erro ao salvar vídeo:', videoError)
-        alert(t.errorSavingVideo || 'Erro ao salvar o vídeo. Tente novamente.')
-      })
+      fetch('/api/video/logo', { method: 'POST', body: formData })
+        .then(r => r.ok ? r.json() : r.json().then(d => { throw new Error(d.error) }))
+        .then(async () => {
+          setLogoUrl('/api/video/logo')
+          setLogoType('video')
+          await saveData('nonato-logo-type', 'video', false)
+          alert(t.videoUpdatedSuccess || 'Vídeo atualizado com sucesso!')
+        })
+        .catch(() => alert(t.errorSavingVideo || 'Erro ao salvar o vídeo. Tente novamente.'))
     } else {
-      // Para imagens, usar FileReader para converter para base64
       const reader = new FileReader()
-      reader.onerror = (error) => {
-        console.error('Erro ao ler arquivo:', error)
-        alert(t.errorReadingFile || 'Erro ao ler o arquivo. Tente novamente.')
-      }
-      reader.onload = async (event) => {
+      reader.onload = async (ev) => {
+        const result = ev.target?.result as string
+        if (!result) return
+        setLogoUrl(result)
+        setLogoType('image')
         try {
-          const result = event.target?.result as string
-          if (!result) {
-            alert(t.errorProcessingFile || 'Erro ao processar o arquivo')
-            return
-          }
-          
-          setLogoUrl(result)
-          setLogoType('image')
-          
-          // Salvar no servidor (sempre salvar no servidor, localStorage apenas para imagens pequenas)
-          try {
-            await saveData('nonato-logo', result, true)
-            await saveData('nonato-logo-type', 'image', false)
-            alert(t.logoUpdatedSuccess || 'Logo atualizado com sucesso!')
-          } catch (saveError) {
-            console.error('Erro ao salvar logo:', saveError)
-            alert(t.logoLoadedButError || 'Logo carregado, mas houve um problema ao salvar. O logo será perdido ao recarregar a página.')
-          }
-        } catch (error) {
-          console.error('Erro ao processar logo:', error)
-          alert(t.errorProcessingLogo || 'Erro ao processar o logo. Tente novamente.')
+          await saveData('nonato-logo', result, true)
+          await saveData('nonato-logo-type', 'image', false)
+          alert(t.logoUpdatedSuccess || 'Logo atualizado com sucesso!')
+        } catch {
+          alert(t.logoLoadedButError || 'Logo carregado, mas houve um problema ao salvar.')
         }
       }
+      reader.onerror = () => alert(t.errorReadingFile || 'Erro ao ler o arquivo.')
       reader.readAsDataURL(file)
     }
+    e.target.value = ''
   }
 
-  const handleRemoveLogo = async () => {
+  const handleFileChangeDashboardLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const isImage = file.type.startsWith('image/')
+    const isMp4 = file.name.toLowerCase().endsWith('.mp4')
+    const isVideo = isMp4 || file.type === 'video/mp4' || file.type === 'video/mpeg' || file.type.startsWith('video/')
+    if (!isImage && !isVideo) {
+      alert((t as any).selectImageOrVideoError || 'Por favor, selecione uma imagem ou um vídeo MP4')
+      return
+    }
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      alert(((t as any).fileTooLarge || 'Arquivo muito grande! Tamanho máximo: {size}').replace('{size}', isVideo ? '50MB' : '5MB'))
+      return
+    }
+    if (isVideo) {
+      const formData = new FormData()
+      formData.append('video', file)
+      fetch('/api/video/logo-dashboard', { method: 'POST', body: formData })
+        .then(r => r.ok ? r.json() : r.json().then(d => { throw new Error(d.error) }))
+        .then(async () => {
+          setLogoUrlDashboard('/api/video/logo-dashboard')
+          setLogoTypeDashboard('video')
+          await saveData('nonato-logo-dashboard-type', 'video', false)
+          alert(t.videoUpdatedSuccess || 'Vídeo atualizado com sucesso!')
+        })
+        .catch(() => alert(t.errorSavingVideo || 'Erro ao salvar o vídeo. Tente novamente.'))
+    } else {
+      const reader = new FileReader()
+      reader.onload = async (ev) => {
+        const result = ev.target?.result as string
+        if (!result) return
+        setLogoUrlDashboard(result)
+        setLogoTypeDashboard('image')
+        try {
+          await saveData('nonato-logo-dashboard', result, true)
+          await saveData('nonato-logo-dashboard-type', 'image', false)
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('nonato-logo-dashboard', result)
+            localStorage.setItem('nonato-logo-dashboard-type', 'image')
+          }
+          alert(t.logoUpdatedSuccess || 'Logo atualizado com sucesso!')
+        } catch {
+          alert(t.logoLoadedButError || 'Logo carregado, mas houve um problema ao salvar.')
+        }
+      }
+      reader.onerror = () => alert(t.errorReadingFile || 'Erro ao ler o arquivo.')
+      reader.readAsDataURL(file)
+    }
+    e.target.value = ''
+  }
+
+  const handleRemoveSidebarLogo = async () => {
     setLogoUrl(null)
     setLogoType(null)
     if (typeof window !== 'undefined') {
       localStorage.removeItem('nonato-logo')
       localStorage.removeItem('nonato-logo-type')
     }
-    // Também remover do servidor
     try {
-      // Remover arquivo de vídeo binário se existir
-      try {
-        await fetch('/api/video/logo', { method: 'DELETE' })
-      } catch (e) {
-        // Ignorar erro se não existir rota DELETE (ainda não implementada)
-      }
-      // Remover dados base64/texto
+      await fetch('/api/video/logo', { method: 'DELETE' }).catch(() => {})
       await saveData('nonato-logo', '', false)
       await saveData('nonato-logo-type', '', false)
     } catch (e) {
       console.error('Erro ao remover logo do servidor:', e)
+    }
+  }
+
+  const handleRemoveDashboardLogo = async () => {
+    setLogoUrlDashboard(null)
+    setLogoTypeDashboard(null)
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('nonato-logo-dashboard')
+      localStorage.removeItem('nonato-logo-dashboard-type')
+    }
+    try {
+      await fetch('/api/video/logo-dashboard', { method: 'DELETE' }).catch(() => {})
+      await saveData('nonato-logo-dashboard', '', false)
+      await saveData('nonato-logo-dashboard-type', '', false)
+    } catch (e) {
+      console.error('Erro ao remover logo do dashboard:', e)
     }
   }
 
@@ -16768,35 +16824,50 @@ const nextF = familias.filter(x => x !== f)
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
                   <div>
-                    <strong style={{ display: 'block', marginBottom: '5px' }}>{safeT?.changeLogo || 'Alterar Logo'}</strong>
-                    <span style={{ fontSize: '12px', opacity: 0.7 }}>{safeT?.selectImageOrVideo || 'Selecionar Imagem ou Vídeo MP4'}</span>
+                    <strong style={{ display: 'block', marginBottom: '5px' }}>{(safeT as any)?.logoBarraLateral || 'Logo da Barra Lateral'}</strong>
+                    <span style={{ fontSize: '12px', opacity: 0.7 }}>{safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece no menu lateral.'}</span>
                   </div>
                   <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 15px', margin: 0 }}>
                     {safeT?.changeLogo || 'Alterar Logo'}
-                    <input
-                      type="file"
-                      accept="image/*,video/mp4"
-                      onChange={handleFileChange}
-                      style={{ display: 'none' }}
-                    />
+                    <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeSidebarLogo} style={{ display: 'none' }} />
                   </label>
                 </div>
-
                 {logoUrl && (
                   <div style={{ padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
-                    <strong style={{ display: 'block', marginBottom: '10px' }}>{safeT?.currentLogo || 'Logo Atual'}:</strong>
                     <div style={{ marginBottom: '10px' }}>
                       {logoType === 'video' ? (
                         <video src={logoUrl} autoPlay loop muted style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
                       ) : (
-                        <img src={logoUrl} alt="Logo" style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
+                        <img src={logoUrl} alt="Logo barra lateral" style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
                       )}
                     </div>
-                    <button className="btn-danger" onClick={handleRemoveLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>
-                      {safeT?.removeLogo || 'Remover Logo'}
-                    </button>
+                    <button className="btn-danger" onClick={handleRemoveSidebarLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>{safeT?.removeLogo || 'Remover Logo'}</button>
                   </div>
                 )}
+                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
+                    <div>
+                      <strong style={{ display: 'block', marginBottom: '5px' }}>{(safeT as any)?.logoDashboard || 'Logo do Dashboard'}</strong>
+                      <span style={{ fontSize: '12px', opacity: 0.7 }}>{safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece na tela inicial.'}</span>
+                    </div>
+                    <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 15px', margin: 0 }}>
+                      {safeT?.changeLogo || 'Alterar Logo'}
+                      <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeDashboardLogo} style={{ display: 'none' }} />
+                    </label>
+                  </div>
+                  {logoUrlDashboard && (
+                    <div style={{ padding: '12px', backgroundColor: '#222222', borderRadius: '6px', marginTop: '10px' }}>
+                      <div style={{ marginBottom: '10px' }}>
+                        {logoTypeDashboard === 'video' ? (
+                          <video src={logoUrlDashboard} autoPlay loop muted style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
+                        ) : (
+                          <img src={logoUrlDashboard} alt="Logo dashboard" style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
+                        )}
+                      </div>
+                      <button className="btn-danger" onClick={handleRemoveDashboardLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>{safeT?.removeLogo || 'Remover Logo'}</button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -41465,8 +41536,10 @@ A1;Peça exemplo;10'
     )
   }
 
-  // Tela inicial: imagem de fundo (logo) + fundo escuro, badge, Nonato Service, descrição, Acessar Sistema, recursos
+  // Tela inicial (dashboard): logo do dashboard, mensagem profissional e agressiva, métricas, CTA
   if (showSplashInicial) {
+    const dashboardLogo = logoUrlDashboard || logoUrl
+    const dashboardLogoType = logoUrlDashboard ? logoTypeDashboard : logoType
     return (
       <div
         style={{
@@ -41474,17 +41547,16 @@ A1;Peça exemplo;10'
           inset: 0,
           width: '100vw',
           height: '100vh',
-          backgroundColor: '#0d0d0d',
+          backgroundColor: '#0a0a0a',
           zIndex: 99999,
           overflow: 'auto',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'flex-start',
-          padding: 'clamp(40px, 8vh, 80px) 24px clamp(40px, 10vh, 100px)'
+          padding: 'clamp(32px, 6vh, 64px) 20px clamp(32px, 8vh, 80px)'
         }}
       >
-        {/* Imagem de fundo: seu logo (verde contorno, interior transparente) */}
         <img
           src="/logo-inicial.png"
           alt=""
@@ -41495,183 +41567,173 @@ A1;Peça exemplo;10'
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            objectPosition: 'center 34%',
-            opacity: 0.06,
-            filter: 'drop-shadow(0 0 4px rgba(0, 255, 0, 0.15))',
+            objectPosition: 'center 30%',
+            opacity: 0.05,
             pointerEvents: 'none',
             zIndex: 0
           }}
         />
-        {/* Conteúdo em cima da imagem */}
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-        {/* Ícone: prancheta + lista — gestão, checklists, ordens de serviço (contexto Nonato) */}
-        <div
-          style={{
-            marginBottom: '24px',
-            display: 'flex',
-            justifyContent: 'center',
-            filter: 'drop-shadow(0 2px 12px rgba(0, 255, 0, 0.15))'
-          }}
-        >
-          <svg
-            viewBox="0 0 56 72"
-            fill="none"
-            style={{ color: '#00ff00', width: 'clamp(56px, 12vw, 72px)', height: 'clamp(64px, 14vw, 80px)' }}
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '1100px' }}>
+          {/* Logo do dashboard (ou barra lateral como fallback) */}
+          {dashboardLogo && (
+            <div style={{ marginBottom: '28px', width: 'clamp(120px, 22vw, 200px)', height: 'clamp(80px, 14vw, 120px)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.25)', boxShadow: '0 4px 24px rgba(0, 255, 0, 0.08)' }}>
+              {dashboardLogoType === 'video' ? (
+                <video src={dashboardLogo} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              ) : (
+                <img src={dashboardLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              )}
+            </div>
+          )}
+
+          <div
+            style={{
+              display: 'inline-block',
+              padding: '8px 20px',
+              marginBottom: '16px',
+              backgroundColor: 'rgba(0, 255, 0, 0.08)',
+              border: '1px solid rgba(0, 255, 0, 0.35)',
+              borderRadius: '8px',
+              color: '#00ff00',
+              fontSize: 'clamp(11px, 1.5vw, 13px)',
+              fontWeight: '700',
+              letterSpacing: '1.5px',
+              textTransform: 'uppercase'
+            }}
           >
-            {/* Prancheta — retângulo com topo arredondado */}
-            <path
-              d="M12 8 L12 4 Q12 0 16 0 L40 0 Q44 0 44 4 L44 8 L44 64 Q44 72 28 72 Q12 72 12 64 Z"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              opacity="0.95"
-            />
-            {/* Clipe da prancheta */}
-            <rect x="22" y="0" width="12" height="6" rx="1" fill="currentColor" opacity="0.9" />
-            {/* Linhas da lista (itens) */}
-            <line x1="20" y1="22" x2="36" y2="22" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" opacity="0.9" />
-            <line x1="20" y1="34" x2="36" y2="34" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" opacity="0.9" />
-            <line x1="20" y1="46" x2="32" y2="46" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" opacity="0.9" />
-            {/* Check — concluído */}
-            <circle cx="42" cy="52" r="8" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.95" />
-            <path d="M39 52 L41.5 54.5 L46 49" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" opacity="0.95" />
-          </svg>
-        </div>
+            {safeT?.sistemaCompletoGestao || 'Sistema Completo de Gestão'}
+          </div>
 
-        {/* Badge: Sistema Completo de Gestão — mesmo padrão dos cards (Gestão de Clientes, etc.) */}
-        <div
-          style={{
-            display: 'inline-block',
-            padding: '10px 24px',
-            marginBottom: '20px',
-            backgroundColor: 'rgba(30, 35, 30, 0.9)',
-            border: '1px solid rgba(0, 255, 0, 0.2)',
-            borderRadius: '12px',
-            color: '#00ff00',
-            fontSize: 'clamp(12px, 1.8vw, 14px)',
-            fontWeight: '600',
-            letterSpacing: '0.5px',
-            transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
-            e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 0, 0.12)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.2)'
-            e.currentTarget.style.boxShadow = 'none'
-          }}
-        >
-          {safeT?.sistemaCompletoGestao || 'Sistema Completo de Gestão'}
-        </div>
+          <h1
+            style={{
+              margin: '0 0 12px 0',
+              padding: 0,
+              fontSize: 'clamp(28px, 6vw, 48px)',
+              fontWeight: '800',
+              color: '#00ff00',
+              letterSpacing: '1px',
+              textAlign: 'center',
+              lineHeight: 1.15,
+              textShadow: '0 0 30px rgba(0, 255, 0, 0.2)'
+            }}
+          >
+            {safeT?.boaTrade || safeT?.nonatoService || 'BOA TRADE'}
+          </h1>
 
-        {/* Título principal: Nonato Service — verde igual aos cards */}
-        <h1
-          style={{
-            margin: '0 0 16px 0',
-            padding: 0,
-            fontSize: 'clamp(32px, 8vw, 56px)',
-            fontWeight: '800',
-            color: '#00ff00',
-            letterSpacing: '2px',
-            textAlign: 'center',
-            lineHeight: 1.1,
-            textShadow: '0 0 20px rgba(0, 255, 0, 0.15)'
-          }}
-        >
-          {safeT?.boaTrade || safeT?.nonatoService || 'BOA TRADE'}
-        </h1>
+          <p
+            style={{
+              margin: '0 0 8px 0',
+              padding: '0 12px',
+              maxWidth: '640px',
+              fontSize: 'clamp(15px, 2vw, 18px)',
+              fontWeight: '700',
+              lineHeight: 1.35,
+              color: '#fff',
+              textAlign: 'center'
+            }}
+          >
+            {(safeT as any)?.telaInicialHeadline || 'Domine a operação. Decida com dados. Cresça sem limites.'}
+          </p>
+          <p
+            style={{
+              margin: '0 0 24px 0',
+              padding: '0 16px',
+              maxWidth: '600px',
+              fontSize: 'clamp(13px, 1.6vw, 15px)',
+              lineHeight: 1.5,
+              color: 'rgba(255, 255, 255, 0.75)',
+              textAlign: 'center'
+            }}
+          >
+            {safeT?.telaInicialSubtitle || 'Não é mais gestão — é comando. Controle total de serviços, equipamentos, equipas e relatórios. Uma única plataforma. Zero desculpas.'}
+          </p>
+          <p
+            style={{
+              margin: '0 0 28px 0',
+              fontSize: 'clamp(12px, 1.4vw, 14px)',
+              color: 'rgba(0, 255, 0, 0.85)',
+              fontWeight: '600',
+              letterSpacing: '0.5px',
+              textAlign: 'center'
+            }}
+          >
+            {(safeT as any)?.telaInicialClaim || 'A ferramenta que a sua concorrência ainda não tem.'}
+          </p>
 
-        {/* Descrição em cinza */}
-        <p
-          style={{
-            margin: '0 0 32px 0',
-            padding: '0 16px',
-            maxWidth: '560px',
-            fontSize: 'clamp(14px, 1.8vw, 16px)',
-            lineHeight: 1.6,
-            color: 'rgba(255, 255, 255, 0.7)',
-            textAlign: 'center'
-          }}
-        >
-          {safeT?.telaInicialSubtitle || 'A solução definitiva para gestão de serviços e manutenção. Transforme sua empresa com tecnologia de ponta e automação inteligente.'}
-        </p>
+          <button
+            type="button"
+            onClick={() => {
+              setShowSplashInicial(false)
+              setShowPasswordScreen(false)
+              setLoginUser((current) => current || {
+                id: 'default-admin',
+                name: 'Administrador',
+                email: '',
+                role: 'Administrador',
+                isAdmin: true,
+                permissions: {
+                  gestores: true,
+                  equipamentos: true,
+                  clientes: true,
+                  fornecedores: true,
+                  relatorioServico: true,
+                  bibliotecaPecas: true,
+                  agenda: true,
+                  desmontados: true,
+                  cadastroServicos: true,
+                  extras: true
+                }
+              })
+            }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '18px 40px',
+              fontSize: 'clamp(15px, 2vw, 17px)',
+              fontWeight: '700',
+              color: '#000',
+              backgroundColor: '#00ff00',
+              border: '2px solid #00ff00',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 4px 20px rgba(0, 255, 0, 0.25)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.9)'
+              e.currentTarget.style.transform = 'scale(1.03)'
+              e.currentTarget.style.boxShadow = '0 6px 28px rgba(0, 255, 0, 0.35)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#00ff00'
+              e.currentTarget.style.transform = 'scale(1)'
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 0, 0.25)'
+            }}
+          >
+            <span style={{ fontSize: '20px' }}>⚡</span>
+            {safeT?.acessarSistema || 'Acessar Sistema'}
+            <span style={{ fontSize: '18px' }}>→</span>
+          </button>
 
-        {/* Botão Acessar Sistema — acesso direto sem pedir senha (restaura admin se tiver saído) */}
-        <button
-          type="button"
-          onClick={() => {
-            setShowSplashInicial(false)
-            setShowPasswordScreen(false)
-            setLoginUser((current) => current || {
-              id: 'default-admin',
-              name: 'Administrador',
-              email: '',
-              role: 'Administrador',
-              isAdmin: true,
-              permissions: {
-                gestores: true,
-                equipamentos: true,
-                clientes: true,
-                fornecedores: true,
-                relatorioServico: true,
-                bibliotecaPecas: true,
-                agenda: true,
-                desmontados: true,
-                cadastroServicos: true,
-                extras: true
-              }
-            })
-          }}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '16px 36px',
-            fontSize: 'clamp(15px, 2vw, 17px)',
-            fontWeight: '700',
-            color: '#00ff00',
-            backgroundColor: 'rgba(30, 35, 30, 0.9)',
-            border: '1px solid rgba(0, 255, 0, 0.2)',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
-            e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 0, 0.12)'
-            e.currentTarget.style.transform = 'scale(1.02)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.2)'
-            e.currentTarget.style.boxShadow = 'none'
-            e.currentTarget.style.transform = 'scale(1)'
-          }}
-        >
-          <span style={{ fontSize: '18px' }}>⚡</span>
-          {safeT?.acessarSistema || 'Acessar Sistema'}
-          <span style={{ fontSize: '18px' }}>→</span>
-        </button>
-
-        {/* Métricas (4 blocos) */}
-        <div
-          style={{
-            marginTop: 'clamp(40px, 8vh, 64px)',
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            gap: 'clamp(20px, 4vw, 40px)',
-            maxWidth: '700px'
-          }}
-        >
-          {[
-            { icon: '🕐', value: '99.9%', label: safeT?.statUptime || 'Uptime' },
-            { icon: '🎧', value: '24/7', label: safeT?.statSuporte || 'Suporte' },
-            { icon: '👥', value: '500+', label: safeT?.statClientes || 'Clientes' },
-            { icon: '⚡', value: 'Fast', label: safeT?.statPerformance || 'Performance' }
-          ].map((item) => (
+          {/* Métricas — mais informações */}
+          <div
+            style={{
+              marginTop: 'clamp(36px, 6vh, 56px)',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
+              gap: 'clamp(16px, 3vw, 28px)',
+              width: '100%',
+              maxWidth: '720px',
+              padding: '0 16px'
+            }}
+          >
+            {[
+              { icon: '🕐', value: '99.9%', label: safeT?.statUptime || 'Uptime' },
+              { icon: '🎧', value: '24/7', label: safeT?.statSuporte || 'Suporte' },
+              { icon: '👥', value: '500+', label: safeT?.statClientes || 'Clientes' },
+              { icon: '⚡', value: 'Fast', label: safeT?.statPerformance || 'Performance' },
+              { icon: '🔒', value: '100%', label: (safeT as any)?.statSeguranca || 'Seguro' }
+            ].map((item) => (
             <div
               key={item.label}
               style={{
@@ -41708,7 +41770,7 @@ A1;Peça exemplo;10'
               lineHeight: 1.5
             }}
           >
-            {safeT?.recursosQueFazemDiferencaDesc || 'Descubra as funcionalidades que vão revolucionar a forma como você gerencia seus serviços'}
+            {(safeT as any)?.recursosQueFazemDiferencaDesc || 'Tudo o que precisa para comandar equipas, ativos e relatórios — num só lugar.'}
           </p>
           <div
             style={{
@@ -44297,35 +44359,50 @@ A1;Peça exemplo;10'
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
                   <div>
-                    <strong style={{ display: 'block', marginBottom: '5px' }}>{safeT?.changeLogo || 'Alterar Logo'}</strong>
-                    <span style={{ fontSize: '12px', opacity: 0.7 }}>{safeT?.selectImageOrVideo || 'Selecionar Imagem ou Vídeo MP4'}</span>
+                    <strong style={{ display: 'block', marginBottom: '5px' }}>{(safeT as any)?.logoBarraLateral || 'Logo da Barra Lateral'}</strong>
+                    <span style={{ fontSize: '12px', opacity: 0.7 }}>{safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece no menu lateral.'}</span>
                   </div>
                   <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 15px', margin: 0 }}>
                     {safeT?.changeLogo || 'Alterar Logo'}
-                    <input
-                      type="file"
-                      accept="image/*,video/mp4"
-                      onChange={handleFileChange}
-                      style={{ display: 'none' }}
-                    />
+                    <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeSidebarLogo} style={{ display: 'none' }} />
                   </label>
                 </div>
-
                 {logoUrl && (
                   <div style={{ padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
-                    <strong style={{ display: 'block', marginBottom: '10px' }}>{safeT?.currentLogo || 'Logo Atual'}:</strong>
                     <div style={{ marginBottom: '10px' }}>
                       {logoType === 'video' ? (
                         <video src={logoUrl} autoPlay loop muted style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
                       ) : (
-                        <img src={logoUrl} alt="Logo" style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
+                        <img src={logoUrl} alt="Logo barra lateral" style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
                       )}
                     </div>
-                    <button className="btn-danger" onClick={handleRemoveLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>
-                      {safeT?.removeLogo || 'Remover Logo'}
-                    </button>
+                    <button className="btn-danger" onClick={handleRemoveSidebarLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>{safeT?.removeLogo || 'Remover Logo'}</button>
                   </div>
                 )}
+                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
+                    <div>
+                      <strong style={{ display: 'block', marginBottom: '5px' }}>{(safeT as any)?.logoDashboard || 'Logo do Dashboard'}</strong>
+                      <span style={{ fontSize: '12px', opacity: 0.7 }}>{safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece na tela inicial.'}</span>
+                    </div>
+                    <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 15px', margin: 0 }}>
+                      {safeT?.changeLogo || 'Alterar Logo'}
+                      <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeDashboardLogo} style={{ display: 'none' }} />
+                    </label>
+                  </div>
+                  {logoUrlDashboard && (
+                    <div style={{ padding: '12px', backgroundColor: '#222222', borderRadius: '6px', marginTop: '10px' }}>
+                      <div style={{ marginBottom: '10px' }}>
+                        {logoTypeDashboard === 'video' ? (
+                          <video src={logoUrlDashboard} autoPlay loop muted style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
+                        ) : (
+                          <img src={logoUrlDashboard} alt="Logo dashboard" style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
+                        )}
+                      </div>
+                      <button className="btn-danger" onClick={handleRemoveDashboardLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>{safeT?.removeLogo || 'Remover Logo'}</button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
