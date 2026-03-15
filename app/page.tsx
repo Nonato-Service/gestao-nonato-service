@@ -27647,6 +27647,8 @@ A1;Peça exemplo;10'
             activeTabId={activeTabId || ''}
             voltarPaginaInicial={voltarPaginaInicial}
             LogoComponent={LogoComponent}
+            saveData={saveData}
+            loadData={loadData}
           />
         )
 

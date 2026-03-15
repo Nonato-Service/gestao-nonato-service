@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 
 export type ClientePedido = {
   id: string
@@ -40,6 +40,8 @@ type Props = {
   LogoComponent: React.ComponentType<{ size?: 'small' | 'medium' | 'large' }>
 }
 
+const PEDIDOS_AVULSO_KEY = 'nonato-pedidos-orcamento-avulso'
+
 export function PedidoOrcamentosAvulsoContent({
   clientes,
   pecasBiblioteca,
@@ -47,7 +49,9 @@ export function PedidoOrcamentosAvulsoContent({
   closeTab,
   activeTabId,
   voltarPaginaInicial,
-  LogoComponent
+  LogoComponent,
+  saveData,
+  loadData
 }: Props) {
   const [clienteSelecionado, setClienteSelecionado] = useState<ClientePedido | null>(null)
   const [clienteNomeManual, setClienteNomeManual] = useState('')
@@ -61,6 +65,16 @@ export function PedidoOrcamentosAvulsoContent({
   const [quantidadeNovaPeca, setQuantidadeNovaPeca] = useState(1)
   const [mostrarFormPeca, setMostrarFormPeca] = useState(false)
   const [modoPeca, setModoPeca] = useState<'biblioteca' | 'manual' | null>(null)
+  const [emitirComoCliente, setEmitirComoCliente] = useState<'cliente' | 'nonato-service'>('cliente')
+  const [pedidosGerados, setPedidosGerados] = useState<PedidoAvulsoGuardado[]>([])
+  const [codigoUltimoGerado, setCodigoUltimoGerado] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!loadData) return
+    loadData(PEDIDOS_AVULSO_KEY).then((data) => {
+      if (data && Array.isArray(data)) setPedidosGerados(data as PedidoAvulsoGuardado[])
+    }).catch(() => {})
+  }, [loadData])
 
   const clientesFiltrados = useMemo(() => {
     if (!buscaCliente.trim()) return clientes
@@ -149,6 +163,59 @@ export function PedidoOrcamentosAvulsoContent({
         const nova = p.quantidade + delta
         return { ...p, quantidade: nova < 1 ? 1 : nova }
       })
+    )
+  }
+
+  const gerarProximoCodigo = (): string => {
+    const ano = new Date().getFullYear()
+    const prefix = `POA-${ano}-`
+    const mesmosAno = pedidosGerados.filter((p) => p.codigo.startsWith(prefix))
+    const nums = mesmosAno.map((p) => {
+      const n = parseInt(p.codigo.replace(prefix, ''), 10)
+      return isNaN(n) ? 0 : n
+    })
+    const next = (nums.length ? Math.max(...nums) : 0) + 1
+    return `${prefix}${String(next).padStart(4, '0')}`
+  }
+
+  const handleGerarPedido = async () => {
+    const nomeReal = nomeClienteExibido
+    if (!nomeReal || nomeReal === '—') {
+      alert(safeT?.selecioneOuDigiteCliente || 'Selecione ou digite o nome do cliente.')
+      return
+    }
+    if (pecasPedido.length === 0) {
+      alert(safeT?.adicionePeloMenosUmaPeca || 'Adicione pelo menos uma peça ao pedido.')
+      return
+    }
+    const equipamentoTexto = equipamentoSelecionado
+      ? `${equipamentoSelecionado.tipoEquipamento} ${equipamentoSelecionado.modelo || ''} - ${equipamentoSelecionado.marca}`
+      : equipamentoManual || '—'
+    const codigo = gerarProximoCodigo()
+    const novo: PedidoAvulsoGuardado = {
+      codigo,
+      dataGeracao: new Date().toISOString(),
+      clienteNomeReal: nomeReal,
+      emitirComoCliente,
+      equipamentoTexto,
+      pecas: [...pecasPedido]
+    }
+    const atualizados = [...pedidosGerados, novo]
+    setPedidosGerados(atualizados)
+    setCodigoUltimoGerado(codigo)
+    if (saveData) {
+      try {
+        await saveData(PEDIDOS_AVULSO_KEY, atualizados)
+      } catch (_) {}
+    }
+    const nomeNoDoc = emitirComoCliente === 'nonato-service'
+      ? (safeT?.nomeNonatoService || 'NONATO SERVICE')
+      : nomeReal
+    alert(
+      (safeT?.pedidoGeradoComSucesso || 'Pedido gerado com sucesso!') + '\n\n' +
+      (safeT?.codigoOrcamento || 'Código do orçamento') + ': ' + codigo + '\n\n' +
+      (safeT?.nomeNoDocumento || 'Nome no documento') + ': ' + nomeNoDoc + '\n\n' +
+      (safeT?.guardeCodigoParaLocalizar || 'Guarde este código para localizar o orçamento depois.')
     )
   }
 
@@ -546,6 +613,79 @@ export function PedidoOrcamentosAvulsoContent({
             </div>
           </div>
         )}
+
+        {/* Opção: Gerar com nome do cliente ou NONATO SERVICE + Gerar pedido + Código */}
+        <div style={{ ...blockStyle, marginTop: '24px', borderColor: 'rgba(0, 255, 0, 0.35)' }}>
+          <h3 style={labelStyle}>{safeT?.gerarDocumentoComo || 'Ao gerar documento'}</h3>
+          <p style={{ color: '#999', fontSize: '13px', marginBottom: '16px', textTransform: 'uppercase' }}>
+            {safeT?.desejaGerarComNomeClienteOuNonato || 'Deseja gerar com o nome do cliente ou com o nome da NONATO SERVICE? Se escolher NONATO SERVICE, no documento enviado ao revendedor aparecerá apenas o nome NONATO SERVICE; o resto mantém-se (equipamento, peças).'}
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#ccc' }}>
+              <input
+                type="radio"
+                name="emitirComo"
+                checked={emitirComoCliente === 'cliente'}
+                onChange={() => setEmitirComoCliente('cliente')}
+                style={{ accentColor: '#00ff00' }}
+              />
+              <span style={{ textTransform: 'uppercase' }}>{safeT?.gerarComNomeCliente || 'Com nome do cliente'}</span>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#ccc' }}>
+              <input
+                type="radio"
+                name="emitirComo"
+                checked={emitirComoCliente === 'nonato-service'}
+                onChange={() => setEmitirComoCliente('nonato-service')}
+                style={{ accentColor: '#00ff00' }}
+              />
+              <span style={{ textTransform: 'uppercase' }}>{safeT?.gerarComNomeNonatoService || 'Com nome da NONATO SERVICE'}</span>
+            </label>
+          </div>
+          <button
+            type="button"
+            onClick={handleGerarPedido}
+            style={{
+              padding: '14px 24px',
+              backgroundColor: 'rgba(0, 255, 0, 0.2)',
+              border: '1px solid rgba(0, 255, 0, 0.6)',
+              borderRadius: '8px',
+              color: '#00ff00',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '15px',
+              textTransform: 'uppercase'
+            }}
+          >
+            {safeT?.gerarPedido || 'Gerar pedido'}
+          </button>
+          {codigoUltimoGerado && (
+            <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#1a2a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div style={{ color: '#00ff00', fontWeight: 'bold', marginBottom: '4px', textTransform: 'uppercase' }}>
+                {safeT?.codigoOrcamento || 'Código do orçamento'}: {codigoUltimoGerado}
+              </div>
+              <div style={{ fontSize: '12px', color: '#aaa', textTransform: 'uppercase' }}>
+                {safeT?.guardeCodigoParaLocalizar || 'Guarde este código para localizar o orçamento depois.'}
+              </div>
+            </div>
+          )}
+          {pedidosGerados.length > 0 && (
+            <div style={{ marginTop: '16px' }}>
+              <h4 style={{ color: '#66b3ff', marginBottom: '8px', fontSize: '14px', textTransform: 'uppercase' }}>
+                {safeT?.ultimosPedidosGerados || 'Últimos pedidos (localizar por código)'}
+              </h4>
+              <div style={{ maxHeight: '120px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {[...pedidosGerados].reverse().slice(0, 10).map((p) => (
+                  <div key={p.codigo} style={{ fontSize: '12px', color: '#ccc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ color: '#00ff00', fontWeight: '600' }}>{p.codigo}</span>
+                    <span>{p.emitirComoCliente === 'nonato-service' ? (safeT?.nomeNonatoService || 'NONATO SERVICE') : p.clienteNomeReal}</span>
+                    <span style={{ opacity: 0.8 }}>{new Date(p.dataGeracao).toLocaleDateString('pt-BR')}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
