@@ -140,7 +140,7 @@ export default function PaginaEmpresa() {
         </section>
 
         <p style={{ textAlign: 'center', color: '#666', fontSize: '13px', marginTop: '32px' }}>
-          Nonato Service — Gestão Técnica
+          BOA TRADE — Gestão Técnica
         </p>
       </div>
     </div>

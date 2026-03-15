@@ -1,6 +1,7 @@
 export const translations = {
   'pt-BR': {
-    title: 'Gestão Técnica da Nonato Service',
+    title: 'Gestão Técnica da BOA TRADE',
+    boaTrade: 'BOA TRADE',
     welcome: 'Bem-vindo ao Dashboard',
     welcomeText: 'Sistema de gestão técnica desenvolvido pela',
     welcomeText2: 'Utilize o menu lateral para acessar as funcionalidades disponíveis.',
@@ -1774,12 +1775,13 @@ export const translations = {
     opExecute: 'Executar'
   },
   'es': {
-    title: 'Gestión Técnica de Nonato Service',
+    title: 'Gestión Técnica de BOA TRADE',
     welcome: 'Bienvenido al Dashboard',
     welcomeText: 'Sistema de gestión técnica desarrollado para',
     welcomeText2: 'Utilice el menú lateral para acceder a las funcionalidades disponibles.',
     paginaInicial: 'Página Principal',
     nonatoService: 'Nonato Service',
+    boaTrade: 'BOA TRADE',
     sistemaCompletoGestao: 'Sistema Completo de Gestión',
     telaInicialSubtitle: 'La solución definitiva para gestión de servicios y mantenimiento. Transforme su empresa con tecnología de vanguardia y automatización inteligente.',
     acessarSistema: 'Acceder al Sistema',
@@ -3444,12 +3446,13 @@ export const translations = {
     opExecute: 'Ejecutar'
   },
   'fr': {
-    title: 'Gestion Technique de Nonato Service',
+    title: 'Gestion Technique de BOA TRADE',
     welcome: 'Bienvenue au Tableau de Bord',
     welcomeText: 'Système de gestion technique développé par',
     welcomeText2: 'Utilisez le menu latéral pour accéder aux fonctionnalités disponibles.',
     paginaInicial: 'Page d\'accueil',
     nonatoService: 'Nonato Service',
+    boaTrade: 'BOA TRADE',
     sistemaCompletoGestao: 'Système de Gestion Complet',
     telaInicialSubtitle: 'La solution définitive pour la gestion des services et de la maintenance. Transformez votre entreprise avec une technologie de pointe et une automatisation intelligente.',
     acessarSistema: 'Accéder au système',
@@ -5108,12 +5111,13 @@ export const translations = {
     statusItem: 'Statut de l\'Article'
   },
   'it': {
-    title: 'Gestione Tecnica di Nonato Service',
+    title: 'Gestione Tecnica di BOA TRADE',
     welcome: 'Benvenuto nella Dashboard',
     welcomeText: 'Sistema di gestione tecnica sviluppato da',
     welcomeText2: 'Utilizza il menu laterale per accedere alle funzionalità disponibili.',
     paginaInicial: 'Pagina iniziale',
     nonatoService: 'Nonato Service',
+    boaTrade: 'BOA TRADE',
     sistemaCompletoGestao: 'Sistema di Gestione Completo',
     telaInicialSubtitle: 'La soluzione definitiva per la gestione dei servizi e della manutenzione. Trasforma la tua azienda con tecnologia all\'avanguardia e automazione intelligente.',
     acessarSistema: 'Accedi al sistema',
@@ -6802,12 +6806,13 @@ export const translations = {
     statusItem: 'Stato dell\'Articolo'
   },
   'de': {
-    title: 'Technisches Management von Nonato Service',
+    title: 'Technisches Management von BOA TRADE',
     welcome: 'Willkommen im Dashboard',
     welcomeText: 'Technisches Managementsystem entwickelt für',
     welcomeText2: 'Verwenden Sie das Seitenmenü, um auf die verfügbaren Funktionen zuzugreifen.',
     paginaInicial: 'Startseite',
     nonatoService: 'Nonato Service',
+    boaTrade: 'BOA TRADE',
     sistemaCompletoGestao: 'Vollständiges Managementsystem',
     telaInicialSubtitle: 'Die ultimative Lösung für Service- und Wartungsmanagement. Transformieren Sie Ihr Unternehmen mit modernster Technologie und intelligenter Automatisierung.',
     acessarSistema: 'System öffnen',
@@ -8480,12 +8485,13 @@ export const translations = {
     relatoriosCadastrados: 'Bericht(e) registriert'
   },
   'en': {
-    title: 'Technical Management of Nonato Service',
+    title: 'Technical Management of BOA TRADE',
     welcome: 'Welcome to Dashboard',
     welcomeText: 'Technical management system developed by',
     welcomeText2: 'Use the side menu to access available features.',
     paginaInicial: 'Home Page',
     nonatoService: 'Nonato Service',
+    boaTrade: 'BOA TRADE',
     sistemaCompletoGestao: 'Complete Management System',
     telaInicialSubtitle: 'The definitive solution for service and maintenance management. Transform your business with cutting-edge technology and intelligent automation.',
     acessarSistema: 'Access System',

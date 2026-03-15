@@ -759,10 +759,10 @@ export default function Dashboard() {
       if (translations && translations['pt-BR']) {
         return translations['pt-BR'] as any
       }
-      return { title: 'Gestão Técnica da Nonato Service', welcome: 'Bem-vindo ao Dashboard' } as any
+      return { title: 'Gestão Técnica da BOA TRADE', welcome: 'Bem-vindo ao Dashboard' } as any
     } catch (error) {
       console.error('Erro ao carregar traduções:', error)
-      return { title: 'Gestão Técnica da Nonato Service', welcome: 'Bem-vindo ao Dashboard' } as any
+      return { title: 'Gestão Técnica da BOA TRADE', welcome: 'Bem-vindo ao Dashboard' } as any
     }
   }, [selectedLanguage])
   
@@ -775,10 +775,10 @@ export default function Dashboard() {
       if (translations && translations['pt-BR']) {
         return translations['pt-BR'] as any
       }
-      return { title: 'Gestão Técnica da Nonato Service', welcome: 'Bem-vindo ao Dashboard' } as any
+      return { title: 'Gestão Técnica da BOA TRADE', welcome: 'Bem-vindo ao Dashboard' } as any
     } catch (error) {
       console.error('Erro ao carregar traduções:', error)
-      return { title: 'Gestão Técnica da Nonato Service', welcome: 'Bem-vindo ao Dashboard' } as any
+      return { title: 'Gestão Técnica da BOA TRADE', welcome: 'Bem-vindo ao Dashboard' } as any
     }
   }, [selectedLanguage])
   
@@ -3270,16 +3270,12 @@ export default function Dashboard() {
       try {
         // Primeiro, tentar carregar tudo do servidor
         const serverData = await loadAllFromServer() || {}
-        
-        // Log para debug - verificar o que foi carregado do servidor
-        console.log('📦 Dados carregados do servidor:', Object.keys(serverData).length, 'chaves')
         const serverKeysWithData = Object.keys(serverData).filter(key => {
           const value = serverData[key]
           if (Array.isArray(value)) return value.length > 0
           if (typeof value === 'object' && value !== null) return Object.keys(value).length > 0
           return value !== null && value !== '' && value !== undefined
         })
-        console.log('✅ Chaves com dados válidos no servidor:', serverKeysWithData.length)
       
       // Função auxiliar para obter dados (servidor primeiro, depois localStorage)
       // IMPORTANTE: Preservar dados do localStorage se servidor retornar vazio/null
@@ -3310,8 +3306,6 @@ export default function Dashboard() {
               try {
                 const parsed = JSON.parse(localData)
                 if (Array.isArray(parsed) && parsed.length > 0) {
-                  // localStorage tem dados válidos, usar eles
-                  console.log(`⚠️ Servidor retornou array vazio para ${key}, usando dados do localStorage`)
                   return parsed
                 }
               } catch (e) {
@@ -3327,8 +3321,6 @@ export default function Dashboard() {
               try {
                 const parsed = JSON.parse(localData)
                 if (parsed !== null && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
-                  // localStorage tem dados válidos, usar eles
-                  console.log(`⚠️ Servidor retornou objeto vazio para ${key}, usando dados do localStorage`)
                   return parsed
                 }
               } catch (e) {
@@ -3405,7 +3397,6 @@ export default function Dashboard() {
           // Vídeo binário existe, usar URL da API
           savedLogo = '/api/video/logo'
           savedLogoType = 'video'
-          console.log('✅ Vídeo encontrado no servidor como arquivo binário')
         } else {
           // Se não encontrou vídeo binário, tentar carregar base64 (apenas para imagens)
           const serverLogoType = await loadFromServer('nonato-logo-type')
@@ -5197,10 +5188,9 @@ export default function Dashboard() {
         headers: { 'Content-Type': 'application/json' }
       }).then(response => response.json()).then(result => {
         if (result.success) {
-          console.log('✓ Backup automático criado:', result.backupPath)
           localStorage.setItem('nonato-last-code-backup-date', today)
         }
-      }).catch(err => console.error('Erro no backup automático:', err))
+      }).catch(() => {})
     }
   }, [])
 
@@ -5230,15 +5220,6 @@ export default function Dashboard() {
       return
     }
 
-    console.log('Processando arquivo:', {
-      nome: file.name,
-      tipo: file.type,
-      tamanho: file.size,
-      isImage,
-      isVideo,
-      isMp4
-    })
-
     // Para vídeos, salvar como arquivo binário no servidor (não usar base64)
     if (isVideo) {
       // Criar FormData para enviar o arquivo binário
@@ -5256,9 +5237,7 @@ export default function Dashboard() {
         }
         return response.json()
       })
-      .then(async (result) => {
-        console.log('✅ Vídeo salvo como arquivo binário:', result)
-
+      .then(async () => {
         // Usar URL da API em vez de base64
         const videoUrl = '/api/video/logo'
         setLogoUrl(videoUrl)
@@ -5288,8 +5267,6 @@ export default function Dashboard() {
             return
           }
           
-          console.log('Arquivo processado, tamanho do base64:', result.length)
-          
           setLogoUrl(result)
           setLogoType('image')
           
@@ -5297,7 +5274,6 @@ export default function Dashboard() {
           try {
             await saveData('nonato-logo', result, true)
             await saveData('nonato-logo-type', 'image', false)
-            console.log('Logo salvo com sucesso!')
             alert(t.logoUpdatedSuccess || 'Logo atualizado com sucesso!')
           } catch (saveError) {
             console.error('Erro ao salvar logo:', saveError)
@@ -6311,9 +6287,7 @@ export default function Dashboard() {
       // Salvar backups no localStorage com fallback de quota
       const persisted = tryPersistAutoBackups(backups)
 
-      if (persisted.ok) {
-        console.log(`✅ Backup automático criado. Total de backups: ${persisted.kept}`)
-      } else {
+      if (!persisted.ok) {
         console.warn('⚠️ Backup automático não pôde ser salvo por falta de espaço (quota).')
       }
       
@@ -6457,7 +6431,6 @@ export default function Dashboard() {
       })
       const result = await response.json()
       if (response.ok) {
-        console.log('✓ Backup automático criado:', result.backupPath)
         // Salvar também no localStorage como referência
         const backupInfo = {
           timestamp: new Date().toISOString(),
@@ -41608,7 +41581,7 @@ A1;Peça exemplo;10'
             textShadow: '0 0 20px rgba(0, 255, 0, 0.15)'
           }}
         >
-          {safeT?.nonatoService || 'Nonato Service'}
+          {safeT?.boaTrade || safeT?.nonatoService || 'BOA TRADE'}
         </h1>
 
         {/* Descrição em cinza */}
@@ -48391,8 +48364,6 @@ A1;Peça exemplo;10'
                     
                     // Salvar usando a função saveData
                     await saveData('nonato-orcamentos-avulso', novosOrcamentos)
-                    
-                    console.log('Orçamento criado e salvo com sucesso:', novoOrcamento)
                   } catch (error) {
                     console.error('Erro ao criar orçamento:', error)
                     alert('Erro ao criar orçamento: ' + (error instanceof Error ? error.message : String(error)))

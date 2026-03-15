@@ -51,9 +51,7 @@ export function RegisterSW() {
     document.addEventListener('visibilitychange', onVisibilityChange)
 
     if (navigator.onLine) {
-      processSyncQueue().then(({ synced }) => {
-        if (synced > 0) console.log('PWA: Sincronizados', synced, 'itens.')
-      })
+      processSyncQueue().then(() => {})
     }
 
     return () => {

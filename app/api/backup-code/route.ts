@@ -20,9 +20,6 @@ export async function POST(request: NextRequest) {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
     const backupDir = path.join(backupsBase, `code-backup-${timestamp}`)
 
-    console.log('[backup-code] Raiz do projeto:', projectRoot)
-    console.log('[backup-code] Pasta de backups:', path.resolve(backupsBase))
-
     // Ficheiro de diagnóstico: onde o backup está a ser gravado (na raiz do projeto)
     try {
       const diagnosticPath = path.join(projectRoot, 'backups', 'ONDE-GUARDAMOS-BACKUPS.txt')
