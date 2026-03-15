@@ -46499,9 +46499,9 @@ A1;Peça exemplo;10'
                 </div>
               )}
 
-              {/* Lista de equipamentos - cards com foto */}
+              {/* Lista de equipamentos - visualização melhorada */}
               {selectedClienteForEquipamento.equipamentos && selectedClienteForEquipamento.equipamentos.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   {selectedClienteForEquipamento.equipamentos.map((equipamento, index) => {
                     const equipamentoId = equipamento.numeroSerie || equipamento.modelo || index.toString()
                     const relatoriosServicoEquipamento = selectedClienteForEquipamento.relatorios?.[equipamentoId] || []
@@ -46510,79 +46510,85 @@ A1;Peça exemplo;10'
                       <div
                         key={index}
                         style={{
-                          padding: '20px 22px',
-                          borderRadius: '16px',
-                          border: '1px solid rgba(0, 255, 0, 0.14)',
-                          background: 'linear-gradient(180deg, rgba(28,28,28,0.95) 0%, rgba(18,18,18,0.98) 100%)',
+                          borderRadius: '18px',
+                          overflow: 'hidden',
+                          border: '1px solid rgba(0, 255, 0, 0.18)',
+                          background: 'linear-gradient(180deg, rgba(24,24,24,0.98) 0%, rgba(14,14,14,0.98) 100%)',
+                          boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
                           transition: 'border-color 0.2s, box-shadow 0.2s'
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.28)'
-                          e.currentTarget.style.boxShadow = '0 6px 24px rgba(0, 255, 0, 0.06)'
+                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.35)'
+                          e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 255, 0, 0.1)'
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.14)'
-                          e.currentTarget.style.boxShadow = 'none'
+                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.18)'
+                          e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.25)'
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'stretch', gap: '20px', marginBottom: relatoriosServicoEquipamento.length > 0 ? '16px' : 0 }}>
-                          {/* Miniatura da imagem do equipamento */}
-                          <div style={{ width: '100px', minWidth: '100px', height: '100px', borderRadius: '12px', overflow: 'hidden', background: 'rgba(0, 255, 0, 0.06)', border: '1px solid rgba(0, 255, 0, 0.15)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'stretch', minHeight: '0' }}>
+                          {/* Área da imagem - mais destacada */}
+                          <div style={{ width: '140px', minWidth: '140px', minHeight: '140px', background: 'rgba(0, 255, 0, 0.04)', borderRight: '1px solid rgba(0, 255, 0, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
                             {equipamentoPhoto ? (
-                              <img src={equipamentoPhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <img src={equipamentoPhoto} alt="" style={{ maxWidth: '100%', maxHeight: '120px', width: 'auto', height: 'auto', objectFit: 'contain', borderRadius: '10px' }} />
                             ) : (
-                              <span style={{ fontSize: '32px', opacity: 0.45 }}>🔧</span>
+                              <div style={{ width: '72px', height: '72px', borderRadius: '14px', background: 'rgba(0, 255, 0, 0.08)', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <span style={{ fontSize: '32px', opacity: 0.5 }}>🔧</span>
+                              </div>
                             )}
                           </div>
-                          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                            <p style={{ margin: 0, fontSize: '17px', fontWeight: '600', color: '#fff', letterSpacing: '0.01em' }}>{equipamento.modelo}</p>
-                            <p style={{ margin: '8px 0 0', fontSize: '14px', color: 'rgba(255,255,255,0.75)' }}>{equipamento.marca} · {equipamento.numeroSerie}</p>
-                            <p style={{ margin: '6px 0 0', fontSize: '12px', color: 'rgba(0, 255, 0, 0.85)', fontWeight: '500' }}>{equipamento.tipoEquipamento}</p>
-                          </div>
-                        </div>
+                          {/* Conteúdo */}
+                          <div style={{ flex: 1, minWidth: 0, padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
+                            <div>
+                              <p style={{ margin: 0, fontSize: '11px', fontWeight: '600', color: 'rgba(0, 255, 0, 0.95)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{equipamento.tipoEquipamento}</p>
+                              <h3 style={{ margin: '10px 0 8px', fontSize: '19px', fontWeight: '700', color: '#fff', letterSpacing: '0.02em', lineHeight: '1.25' }}>{equipamento.modelo}</h3>
+                              <p style={{ margin: 0, fontSize: '14px', color: 'rgba(255,255,255,0.78)' }}>{equipamento.marca}{equipamento.numeroSerie ? ` · ${equipamento.numeroSerie}` : ''}</p>
+                            </div>
 
-                        {/* Relatórios de Serviço */}
-                        {relatoriosServicoEquipamento.length > 0 && (
-                          <div style={{ marginTop: '16px', padding: '16px', borderRadius: '12px', background: 'rgba(0, 255, 0, 0.04)', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
-                            <h4 style={{ fontSize: '13px', fontWeight: '600', color: '#00ff00', margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <span>📋</span> {safeT?.relatoriosServico || 'Relatórios de Serviço'} ({relatoriosServicoEquipamento.length})
-                            </h4>
-                            <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
-                              {(() => {
-                                const relatoriosPorData: { [data: string]: RelatorioServico[] } = {}
-                                relatoriosServicoEquipamento.forEach(relatorio => {
-                                  const dataKey = new Date(relatorio.data).toLocaleDateString('pt-BR')
-                                  if (!relatoriosPorData[dataKey]) relatoriosPorData[dataKey] = []
-                                  relatoriosPorData[dataKey].push(relatorio)
-                                })
-                                const datasOrdenadas = Object.keys(relatoriosPorData).sort((a, b) => new Date(b.split('/').reverse().join('-')).getTime() - new Date(a.split('/').reverse().join('-')).getTime())
-                                return datasOrdenadas.map(dataKey => (
-                                  <div key={dataKey} style={{ marginBottom: '12px' }}>
-                                    <p style={{ fontSize: '11px', fontWeight: '600', color: 'rgba(0, 255, 0, 0.9)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>📅 {dataKey}</p>
-                                    {relatoriosPorData[dataKey].map((relatorio) => (
-                                      <div key={relatorio.id} style={{ padding: '10px 12px', marginBottom: '6px', borderRadius: '8px', background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
-                                          <div>
-                                            <p style={{ margin: 0, fontSize: '12px', fontWeight: '600', color: '#00ff00' }}>{relatorio.numero}</p>
-                                            <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.8)' }}>👤 {relatorio.tecnico}</p>
-                                            {relatorio.tipoServico && <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.65)' }}>🔧 {relatorio.tipoServico}</p>}
-                                            {relatorio.diasTrabalho && relatorio.diasTrabalho.length > 0 && <p style={{ margin: '4px 0 0', fontSize: '10px', color: 'rgba(255,255,255,0.5)' }}>📊 {relatorio.diasTrabalho.length} {relatorio.diasTrabalho.length === 1 ? 'dia' : 'dias'}</p>}
+                            {/* Relatórios de Serviço */}
+                            {relatoriosServicoEquipamento.length > 0 && (
+                              <div style={{ padding: '14px 16px', borderRadius: '12px', background: 'rgba(0, 255, 0, 0.05)', border: '1px solid rgba(0, 255, 0, 0.12)' }}>
+                                <h4 style={{ fontSize: '12px', fontWeight: '600', color: '#00ff00', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                  📋 {safeT?.relatoriosServico || 'Relatórios de Serviço'} ({relatoriosServicoEquipamento.length})
+                                </h4>
+                                <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                  {(() => {
+                                    const relatoriosPorData: { [data: string]: RelatorioServico[] } = {}
+                                    relatoriosServicoEquipamento.forEach(relatorio => {
+                                      const dataKey = new Date(relatorio.data).toLocaleDateString('pt-BR')
+                                      if (!relatoriosPorData[dataKey]) relatoriosPorData[dataKey] = []
+                                      relatoriosPorData[dataKey].push(relatorio)
+                                    })
+                                    const datasOrdenadas = Object.keys(relatoriosPorData).sort((a, b) => new Date(b.split('/').reverse().join('-')).getTime() - new Date(a.split('/').reverse().join('-')).getTime())
+                                    return datasOrdenadas.map(dataKey => (
+                                      <div key={dataKey} style={{ marginBottom: '10px' }}>
+                                        <p style={{ fontSize: '10px', fontWeight: '600', color: 'rgba(0, 255, 0, 0.85)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>📅 {dataKey}</p>
+                                        {relatoriosPorData[dataKey].map((relatorio) => (
+                                          <div key={relatorio.id} style={{ padding: '10px 12px', marginBottom: '6px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(0, 255, 0, 0.08)' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                                              <div>
+                                                <p style={{ margin: 0, fontSize: '12px', fontWeight: '600', color: '#00ff00' }}>{relatorio.numero}</p>
+                                                <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.8)' }}>👤 {relatorio.tecnico}</p>
+                                                {relatorio.tipoServico && <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.65)' }}>🔧 {relatorio.tipoServico}</p>}
+                                              </div>
+                                              <button className="btn-primary" onClick={() => setViewingRelatorioServico(relatorio)} style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '8px', flexShrink: 0, background: 'rgba(0, 100, 200, 0.3)', borderColor: 'rgba(0, 150, 255, 0.5)' }}>👁️ {safeT?.ver || 'Ver'}</button>
+                                            </div>
                                           </div>
-                                          <button className="btn-primary" onClick={() => setViewingRelatorioServico(relatorio)} style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '8px', flexShrink: 0, background: 'rgba(0, 100, 200, 0.3)', borderColor: 'rgba(0, 150, 255, 0.5)' }}>👁️ {safeT?.ver || 'Ver'}</button>
-                                        </div>
+                                        ))}
                                       </div>
-                                    ))}
-                                  </div>
-                                ))
-                              })()}
+                                    ))
+                                  })()}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Botões de acção */}
+                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                              <button className="btn-primary" onClick={() => handleEditEquipamentoCliente(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '11px 18px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(0, 255, 0, 0.4)', background: 'rgba(0, 255, 0, 0.12)', color: '#00ff00', flex: 1, minWidth: '100px' }}>✏️ {safeT?.edit || 'Editar'}</button>
+                              <button className="btn-primary" onClick={() => handleOpenRelatorios(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '11px 18px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(0, 255, 0, 0.35)', background: 'rgba(0, 255, 0, 0.08)', color: '#00ff00', flex: 1, minWidth: '100px' }}>📋 {safeT?.relatorios || 'Relatórios'}</button>
+                              <button className="btn-danger" onClick={() => handleDeleteEquipamentoCliente(selectedClienteForEquipamento.id, index)} style={{ padding: '11px 18px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', flex: 1, minWidth: '100px' }}>🗑️ {safeT?.delete || 'Excluir'}</button>
                             </div>
                           </div>
-                        )}
-
-                        <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}>
-                          <button className="btn-primary" onClick={() => handleEditEquipamentoCliente(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '10px 16px', fontSize: '13px', borderRadius: '10px', flex: 1, minWidth: '90px' }}>✏️ {safeT?.edit || 'Editar'}</button>
-                          <button className="btn-primary" onClick={() => handleOpenRelatorios(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '10px 16px', fontSize: '13px', borderRadius: '10px', flex: 1, minWidth: '90px', background: 'rgba(0, 255, 0, 0.1)', borderColor: 'rgba(0, 255, 0, 0.4)' }}>📋 {safeT?.relatorios || 'Relatórios'}</button>
-                          <button className="btn-danger" onClick={() => handleDeleteEquipamentoCliente(selectedClienteForEquipamento.id, index)} style={{ padding: '10px 16px', fontSize: '13px', borderRadius: '10px', flex: 1, minWidth: '90px' }}>🗑️ {safeT?.delete || 'Excluir'}</button>
                         </div>
                       </div>
                     )
