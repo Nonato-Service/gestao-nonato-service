@@ -312,6 +312,10 @@ type RelatorioServico = {
   pecasSubstituicao: PecaSubstituicao[]
   equipamentoId?: string // Para associar ao equipamento do cliente
   clienteId?: string // Para associar ao cliente
+  /** Assinatura do cliente (base64), quando preenchida em tablet/telemóvel */
+  assinaturaCliente?: string
+  /** Data/hora em que o cliente assinou (ISO) */
+  dataAssinaturaCliente?: string
 }
 
 type PedidoOrcamento = {
@@ -2705,6 +2709,11 @@ export default function Dashboard() {
     pontosAberto: '',
     pecasSubstituicao: []
   })
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(false)
+  const canvasAssinaturaRef = useRef<HTMLCanvasElement>(null)
+  const [mostrarCanvasAssinatura, setMostrarCanvasAssinatura] = useState(false)
+  const isDrawingRef = useRef(false)
+  const lastPosRef = useRef<{ x: number; y: number } | null>(null)
   const [novoDiaTrabalho, setNovoDiaTrabalho] = useState<DiaTrabalho>({
     data: new Date().toISOString().split('T')[0],
     idaHora: '',
@@ -2965,6 +2974,20 @@ export default function Dashboard() {
       setVerificacaoFinalAvisoReconhecido(false)
     }
   }, [activeTabId])
+
+  // Detetar tablet/telemóvel para mostrar opção de assinatura do cliente
+  useEffect(() => {
+    const check = () => {
+      const w = typeof window !== 'undefined' ? window.innerWidth : 1024
+      const touch = typeof window !== 'undefined' && ('ontouchstart' in window || (navigator as any).maxTouchPoints > 0)
+      setIsMobileOrTablet(w <= 1024 || touch)
+    }
+    check()
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', check)
+      return () => window.removeEventListener('resize', check)
+    }
+  }, [])
 
   // Garantir scroll quando o grupo checklist-group é expandido
   useEffect(() => {
@@ -8445,26 +8468,32 @@ export default function Dashboard() {
   }
 
   // Helper: HTML do logo para cabeçalho dos PDFs (respeita opção do Administrador e logo escolhido)
+  // Usa state (logosRelatorios, logoRelatorioSelecionadoId) quando disponível; senão localStorage
   const getLogoHtmlForReport = (): string => {
     if (typeof window === 'undefined') return '';
-    if (localStorage.getItem('nonato-relatorios-incluir-logo') !== 'true') return '';
-    const selectedId = typeof logoRelatorioSelecionadoId !== 'undefined' ? logoRelatorioSelecionadoId : (() => {
-      try {
-        const raw = localStorage.getItem('nonato-relatorios-logo-id');
-        return raw || '';
-      } catch { return ''; }
-    })();
-    if (selectedId) {
-      const listRaw = typeof logosRelatorios !== 'undefined' && Array.isArray(logosRelatorios) ? logosRelatorios : (() => {
-        try {
-          const raw = localStorage.getItem('nonato-logos-relatorios');
-          return raw ? JSON.parse(raw) : [];
-        } catch { return []; }
-      })();
-      const logoItem = Array.isArray(listRaw) ? listRaw.find((l: LogoRelatorio) => l.id === selectedId) : null;
-      if (logoItem && logoItem.type === 'image' && logoItem.data) {
-        return `<img src="${String(logoItem.data).replace(/"/g, '&quot;')}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;" />`;
+    try {
+      if (localStorage.getItem('nonato-relatorios-incluir-logo') !== 'true') return '';
+    } catch { return ''; }
+    const selectedId = (typeof logoRelatorioSelecionadoId !== 'undefined' && logoRelatorioSelecionadoId !== null)
+      ? logoRelatorioSelecionadoId
+      : (() => { try { const r = localStorage.getItem('nonato-relatorios-logo-id'); return r != null ? r : ''; } catch { return ''; } })();
+    if (selectedId && Array.isArray(logosRelatorios) && logosRelatorios.length > 0) {
+      const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
+      if (fromState && fromState.type === 'image' && fromState.data) {
+        return `<img src="${String(fromState.data).replace(/"/g, '&quot;')}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;" />`;
       }
+    }
+    if (selectedId) {
+      try {
+        const raw = localStorage.getItem('nonato-logos-relatorios');
+        const listRaw = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(listRaw)) {
+          const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === selectedId);
+          if (logoItem && logoItem.type === 'image' && logoItem.data) {
+            return `<img src="${String(logoItem.data).replace(/"/g, '&quot;')}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;" />`;
+          }
+        }
+      } catch (_) { /* lista inválida ou muito grande */ }
     }
     const logo = localStorage.getItem('nonato-logo');
     const type = localStorage.getItem('nonato-logo-type');
@@ -8656,7 +8685,7 @@ export default function Dashboard() {
         </head>
         <body>
           <div class="header">
-            <div class="header-logo">NONATO SERVICE</div>
+            <div class="header-logo">${headerLogoContent}</div>
             <div class="header-title">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO ASSISTÊNCIA TÉCNICA'}</div>
             <div class="header-number">N°: ${relatorio.numero}</div>
           </div>
@@ -8831,7 +8860,7 @@ export default function Dashboard() {
         alert('Por favor, permita pop-ups para gerar o PDF.')
         return;
       }
-
+      const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
     const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE') : '-';
     
@@ -8864,6 +8893,8 @@ export default function Dashboard() {
               border-bottom: 1px solid #000;
               padding-bottom: 5px;
             }
+            .header .header-logo { font-size: 14px; font-weight: bold; margin-bottom: 3px; }
+            .header .header-logo img { max-height: 40px; max-width: 120px; object-fit: contain; display: inline-block; vertical-align: middle; }
             .header h1 {
               font-size: 14px;
               margin-bottom: 3px;
@@ -8988,7 +9019,7 @@ export default function Dashboard() {
         </head>
         <body>
           <div class="header">
-            <h1>NONATO SERVICE</h1>
+            <div class="header-logo">${headerLogoContent}</div>
             <h2>${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO'}</h2>
             <p style="font-size: 9px;">${t.numeroRelatorio || 'Nº'}: ${relatorio.numero}</p>
           </div>
@@ -9140,7 +9171,7 @@ export default function Dashboard() {
         alert('Por favor, permita pop-ups para gerar o PDF.')
         return;
       }
-
+      const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
     const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE') : '-';
     
@@ -9325,7 +9356,7 @@ export default function Dashboard() {
         </head>
         <body>
           <div class="header">
-            <div class="header-logo">NONATO SERVICE</div>
+            <div class="header-logo">${headerLogoContent}</div>
             <div class="header-title">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO ASSISTÊNCIA TÉCNICA'}</div>
             <div class="header-number">N°: ${relatorio.numero}</div>
           </div>
@@ -9511,7 +9542,7 @@ export default function Dashboard() {
         alert('Por favor, permita pop-ups para gerar o PDF.')
         return;
       }
-
+      const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE') : '-';
       
@@ -9555,6 +9586,7 @@ export default function Dashboard() {
               font-weight: bold;
               letter-spacing: 2px;
             }
+            .header-modern .logo img { max-height: 48px; max-width: 140px; object-fit: contain; display: block; }
             .header-modern .title {
               font-size: 16px;
               font-weight: 600;
@@ -9716,7 +9748,7 @@ export default function Dashboard() {
         </head>
         <body>
           <div class="header-modern">
-            <div class="logo">NONATO SERVICE</div>
+            <div class="logo">${headerLogoContent}</div>
             <div class="title">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO ASSISTÊNCIA TÉCNICA'}</div>
             <div class="number">N°: ${relatorio.numero}</div>
           </div>
@@ -9891,7 +9923,7 @@ export default function Dashboard() {
         alert('Por favor, permita pop-ups para gerar o PDF.')
         return;
       }
-
+      const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE') : '-';
       
@@ -9932,6 +9964,7 @@ export default function Dashboard() {
               margin-bottom: 10px;
               color: #00ff00;
             }
+            .header-minimal .logo img { max-height: 48px; max-width: 140px; object-fit: contain; display: block; margin: 0 auto 10px; }
             .header-minimal .title {
               font-size: 14px;
               font-weight: 400;
@@ -10075,7 +10108,7 @@ export default function Dashboard() {
         </head>
         <body>
           <div class="header-minimal">
-            <div class="logo">NONATO SERVICE</div>
+            <div class="logo">${headerLogoContent}</div>
             <div class="title">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO ASSISTÊNCIA TÉCNICA'}</div>
             <div class="number">N°: ${relatorio.numero}</div>
           </div>
@@ -10250,7 +10283,7 @@ export default function Dashboard() {
         alert('Por favor, permita pop-ups para gerar o PDF.')
         return;
       }
-
+      const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE') : '-';
       
@@ -10296,6 +10329,7 @@ export default function Dashboard() {
               font-weight: bold;
               font-family: 'Arial Black', sans-serif;
             }
+            .header-tecnico .logo img { max-height: 44px; max-width: 130px; object-fit: contain; display: block; }
             .header-tecnico .number {
               font-size: 16px;
               font-weight: bold;
@@ -10445,7 +10479,7 @@ export default function Dashboard() {
         <body>
           <div class="header-tecnico">
             <div class="top">
-              <div class="logo">NONATO SERVICE</div>
+              <div class="logo">${headerLogoContent}</div>
               <div class="number">N°: ${relatorio.numero}</div>
             </div>
             <div class="title">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO ASSISTÊNCIA TÉCNICA'}</div>
@@ -10629,7 +10663,7 @@ export default function Dashboard() {
         alert('Por favor, permita pop-ups para gerar o PDF.')
         return;
       }
-
+      const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE') : '-';
       
@@ -10671,6 +10705,7 @@ export default function Dashboard() {
               margin-bottom: 8px;
               color: #00ff00;
             }
+            .header-executivo .logo img { max-height: 48px; max-width: 140px; object-fit: contain; display: block; margin: 0 auto 8px; }
             .header-executivo .title {
               font-size: 13px;
               font-weight: 400;
@@ -10823,7 +10858,7 @@ export default function Dashboard() {
         </head>
         <body>
           <div class="header-executivo">
-            <div class="logo">NONATO SERVICE</div>
+            <div class="logo">${headerLogoContent}</div>
             <div class="title">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO ASSISTÊNCIA TÉCNICA'}</div>
             <div class="number">N°: ${relatorio.numero}</div>
           </div>
@@ -10998,7 +11033,7 @@ export default function Dashboard() {
         alert('Por favor, permita pop-ups para gerar o PDF.')
         return;
       }
-
+      const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE') : '-';
       
@@ -11042,6 +11077,7 @@ export default function Dashboard() {
               letter-spacing: 3px;
               text-transform: uppercase;
             }
+            .header-negro .logo img { max-height: 48px; max-width: 140px; object-fit: contain; display: block; filter: brightness(0) invert(1); }
             .header-negro .title {
               font-size: 14px;
               font-weight: bold;
@@ -11215,7 +11251,7 @@ export default function Dashboard() {
         </head>
         <body>
           <div class="header-negro">
-            <div class="logo">NONATO SERVICE</div>
+            <div class="logo">${headerLogoContent}</div>
             <div class="title">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO ASSISTÊNCIA TÉCNICA'}</div>
             <div class="number">N°: ${relatorio.numero}</div>
           </div>
@@ -11430,7 +11466,7 @@ export default function Dashboard() {
         alert('Por favor, permita pop-ups para gerar o PDF.')
         return;
       }
-
+      const headerLogoContent = getLogoHtmlForReport() || '';
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE') : '-';
       
@@ -11554,6 +11590,8 @@ export default function Dashboard() {
               border-bottom: 2px solid #000;
               padding-bottom: 5px;
             }
+            .header .header-logo { text-align: center; margin-bottom: 5px; }
+            .header .header-logo img { max-height: 40px; max-width: 120px; object-fit: contain; }
             .header-title {
               font-size: 14px;
               font-weight: bold;
@@ -11652,6 +11690,7 @@ export default function Dashboard() {
           <!-- PÁGINA 1 -->
           <div class="page">
             <div class="header">
+              ${headerLogoContent ? `<div class="header-logo">${headerLogoContent}</div>` : ''}
               <div class="header-title">FERWOOD SERVICE REPORT</div>
             </div>
 
@@ -20204,6 +20243,111 @@ onKeyPress={(e) => {
                     />
                   </div>
                 </div>
+
+                {/* Assinatura do Cliente (apenas em tablet/telemóvel) */}
+                {isMobileOrTablet && (
+                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+                    <h4 style={{ marginBottom: '10px', color: '#00ff00' }}>{safeT?.assinaturaCliente || 'Assinatura do Cliente'}</h4>
+                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', marginBottom: '12px' }}>{safeT?.assinaturaClienteDesc || 'O cliente pode assinar aqui quando utilizar tablet ou telemóvel.'}</p>
+                    {relatorioServicoForm.assinaturaCliente && !mostrarCanvasAssinatura ? (
+                      <div>
+                        <img src={relatorioServicoForm.assinaturaCliente} alt="Assinatura" style={{ maxWidth: '100%', maxHeight: '120px', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '4px', background: '#fff' }} />
+                        {relatorioServicoForm.dataAssinaturaCliente && (
+                          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', marginTop: '6px' }}>{safeT?.dataAssinatura || 'Data'}: {new Date(relatorioServicoForm.dataAssinaturaCliente).toLocaleString()}</p>
+                        )}
+                        <button type="button" className="btn-primary" onClick={() => { setMostrarCanvasAssinatura(true); setRelatorioServicoForm({ ...relatorioServicoForm, assinaturaCliente: '', dataAssinaturaCliente: '' }); }} style={{ marginTop: '10px', padding: '8px 14px', fontSize: '13px' }}>
+                          {safeT?.substituirAssinatura || 'Substituir assinatura'}
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <canvas
+                          ref={canvasAssinaturaRef}
+                          width={320}
+                          height={140}
+                          style={{ display: 'block', width: '100%', maxWidth: '320px', height: '140px', border: '2px solid rgba(0,255,0,0.5)', borderRadius: '6px', background: '#fff', touchAction: 'none', cursor: 'crosshair' }}
+                          onMouseDown={(e) => {
+                            const canvas = canvasAssinaturaRef.current
+                            if (!canvas) return
+                            const rect = canvas.getBoundingClientRect()
+                            const scaleX = canvas.width / rect.width
+                            const scaleY = canvas.height / rect.height
+                            const x = (e.clientX - rect.left) * scaleX
+                            const y = (e.clientY - rect.top) * scaleY
+                            isDrawingRef.current = true
+                            lastPosRef.current = { x, y }
+                            const ctx = canvas.getContext('2d')
+                            if (ctx) { ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x, y); }
+                          }}
+                          onMouseMove={(e) => {
+                            if (!isDrawingRef.current || !lastPosRef.current) return
+                            const canvas = canvasAssinaturaRef.current
+                            if (!canvas) return
+                            const rect = canvas.getBoundingClientRect()
+                            const scaleX = canvas.width / rect.width
+                            const scaleY = canvas.height / rect.height
+                            const x = (e.clientX - rect.left) * scaleX
+                            const y = (e.clientY - rect.top) * scaleY
+                            const ctx = canvas.getContext('2d')
+                            if (ctx) { ctx.lineTo(x, y); ctx.stroke(); }
+                            lastPosRef.current = { x, y }
+                          }}
+                          onMouseUp={() => { isDrawingRef.current = false; lastPosRef.current = null; }}
+                          onMouseLeave={() => { isDrawingRef.current = false; lastPosRef.current = null; }}
+                          onTouchStart={(e) => {
+                            e.preventDefault()
+                            const canvas = canvasAssinaturaRef.current
+                            if (!canvas || !e.touches.length) return
+                            const rect = canvas.getBoundingClientRect()
+                            const scaleX = canvas.width / rect.width
+                            const scaleY = canvas.height / rect.height
+                            const x = (e.touches[0].clientX - rect.left) * scaleX
+                            const y = (e.touches[0].clientY - rect.top) * scaleY
+                            isDrawingRef.current = true
+                            lastPosRef.current = { x, y }
+                            const ctx = canvas.getContext('2d')
+                            if (ctx) { ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x, y); }
+                          }}
+                          onTouchMove={(e) => {
+                            e.preventDefault()
+                            if (!isDrawingRef.current || !lastPosRef.current) return
+                            const canvas = canvasAssinaturaRef.current
+                            if (!canvas || !e.touches.length) return
+                            const rect = canvas.getBoundingClientRect()
+                            const scaleX = canvas.width / rect.width
+                            const scaleY = canvas.height / rect.height
+                            const x = (e.touches[0].clientX - rect.left) * scaleX
+                            const y = (e.touches[0].clientY - rect.top) * scaleY
+                            const ctx = canvas.getContext('2d')
+                            if (ctx) { ctx.lineTo(x, y); ctx.stroke(); }
+                            lastPosRef.current = { x, y }
+                          }}
+                          onTouchEnd={() => { isDrawingRef.current = false; lastPosRef.current = null; }}
+                        />
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
+                          <button type="button" className="btn-primary" onClick={() => {
+                            const canvas = canvasAssinaturaRef.current
+                            if (!canvas) return
+                            const dataUrl = canvas.toDataURL('image/png')
+                            setRelatorioServicoForm({ ...relatorioServicoForm, assinaturaCliente: dataUrl, dataAssinaturaCliente: new Date().toISOString() })
+                            setMostrarCanvasAssinatura(false)
+                          }} style={{ padding: '8px 14px', fontSize: '13px' }}>
+                            {safeT?.guardarAssinatura || 'Guardar assinatura'}
+                          </button>
+                          <button type="button" className="btn-danger" onClick={() => {
+                            const canvas = canvasAssinaturaRef.current
+                            if (canvas) {
+                              const ctx = canvas.getContext('2d')
+                              if (ctx) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+                            }
+                          }} style={{ padding: '8px 14px', fontSize: '13px' }}>
+                            {safeT?.limparAssinatura || 'Limpar'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Peças de Substituição */}
                 {relatorioServicoForm.necessarioTrocaPecas && (
