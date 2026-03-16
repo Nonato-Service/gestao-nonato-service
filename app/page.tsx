@@ -352,6 +352,18 @@ type RelatorioServico = {
   dataAssinaturaCliente?: string
 }
 
+/** Item de cobrança no fechamento de um relatório de serviço (vinculado ao Cadastro de Serviços) */
+type FechamentoItem = {
+  id: string
+  descricao: string
+  servicoId?: string
+  tipoCobranca: 'hora' | 'km' | 'valor-fixo' | 'unidade' | 'diarias' | 'extras'
+  quantidade: number
+  valorUnitario: number
+  valorTotal: number
+  origem?: 'relatorio' | 'manual'
+}
+
 type PedidoOrcamento = {
   id: string
   numeroRelatorio: string
@@ -2735,6 +2747,9 @@ export default function Dashboard() {
   
   // Estados para Relatório de Serviço
   const [relatoriosServico, setRelatoriosServico] = useState<RelatorioServico[]>([])
+  /** Fechamentos por relatório: relatorioId -> itens de cobrança (vinculados ao Cadastro de Serviços) */
+  const [fechamentosRelatorios, setFechamentosRelatorios] = useState<Record<string, FechamentoItem[]>>({})
+  const [fechamentoRelatorioSelecionadoId, setFechamentoRelatorioSelecionadoId] = useState<string | null>(null)
   const [showRelatorioServicoModal, setShowRelatorioServicoModal] = useState(false)
   const [showRelatorioServicoForm, setShowRelatorioServicoForm] = useState(false)
   const [editingRelatorioServico, setEditingRelatorioServico] = useState<RelatorioServico | null>(null)
@@ -3756,6 +3771,10 @@ export default function Dashboard() {
       const savedRelatoriosServico = getData('nonato-relatorios-servico')
       if (savedRelatoriosServico) {
         setRelatoriosServico(savedRelatoriosServico)
+      }
+      const savedFechamentosRelatorios = getData('nonato-fechamentos-relatorios')
+      if (savedFechamentosRelatorios && typeof savedFechamentosRelatorios === 'object' && !Array.isArray(savedFechamentosRelatorios)) {
+        setFechamentosRelatorios(savedFechamentosRelatorios)
       }
       
       // Carregar contador de relatórios
@@ -27924,89 +27943,197 @@ A1;Peça exemplo;10'
           activeTabId={activeTabId || undefined}
         />
 
-      case 'fechamento-relatorios-servicos':
+      case 'fechamento-relatorios-servicos': {
+        const hhmmToDecimal = (s: string): number => {
+          if (!s || !String(s).trim()) return 0
+          const parts = String(s).trim().split(':')
+          const h = parseInt(parts[0], 10) || 0
+          const m = parseInt(parts[1], 10) || 0
+          return h + m / 60
+        }
+        const totaisFromRelatorio = (r: RelatorioServico) => {
+          const totais = calcularTotais(r.diasTrabalho || [])
+          const kmIdaTotal = (r.diasTrabalho || []).reduce((s, d) => s + (parseFloat(d.kmIda) || 0), 0)
+          const kmRetornoTotal = (r.diasTrabalho || []).reduce((s, d) => s + (parseFloat(d.kmRetorno) || 0), 0)
+          return {
+            horasTrabalho: r.horasTrabalho,
+            horasTrabalhoDecimal: hhmmToDecimal(r.horasTrabalho),
+            horasViagemIda: totais.horasViagemIda,
+            horasViagemIdaDecimal: hhmmToDecimal(totais.horasViagemIda),
+            horasViagemRetorno: totais.horasViagemRetorno,
+            horasViagemRetornoDecimal: hhmmToDecimal(totais.horasViagemRetorno),
+            kmsPercorridos: parseFloat(r.kmsPercorridos) || 0,
+            kmIdaTotal,
+            kmRetornoTotal
+          }
+        }
+        const relatorioSelecionado = fechamentoRelatorioSelecionadoId ? relatoriosServico.find(r => r.id === fechamentoRelatorioSelecionadoId) : null
+        const itensFechamento = (relatorioSelecionado && fechamentosRelatorios[relatorioSelecionado.id]) || []
+        const setItensFechamento = (itens: FechamentoItem[]) => {
+          if (!relatorioSelecionado) return
+          const next = { ...fechamentosRelatorios, [relatorioSelecionado.id]: itens }
+          setFechamentosRelatorios(next)
+          saveData('nonato-fechamentos-relatorios', next)
+        }
+        const getItensIniciaisDoRelatorio = (r: RelatorioServico): FechamentoItem[] => {
+          const t = totaisFromRelatorio(r)
+          const lab = (key: string) => (safeT as any)[key] || key
+          return [
+            { id: 'ht', descricao: lab('horasTrabalho') || 'Horas de Trabalho', tipoCobranca: 'hora', quantidade: t.horasTrabalhoDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
+            { id: 'hida', descricao: lab('horasViagemIda') || 'Horas de Ida', tipoCobranca: 'hora', quantidade: t.horasViagemIdaDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
+            { id: 'hret', descricao: lab('horasViagemRetorno') || 'Horas de Retorno', tipoCobranca: 'hora', quantidade: t.horasViagemRetornoDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
+            { id: 'kmida', descricao: (safeT as any)?.kmIda || 'Km Ida', tipoCobranca: 'km', quantidade: t.kmIdaTotal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
+            { id: 'kmret', descricao: (safeT as any)?.kmRetorno || 'Km Retorno', tipoCobranca: 'km', quantidade: t.kmRetornoTotal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' }
+          ]
+        }
+        const itensExistentes = relatorioSelecionado && fechamentosRelatorios[relatorioSelecionado.id]
+        const itensParaExibir = relatorioSelecionado
+          ? (itensExistentes && itensExistentes.length > 0 ? itensExistentes : getItensIniciaisDoRelatorio(relatorioSelecionado))
+          : []
+        const servicosParaItem = (item: FechamentoItem) => servicos.filter(s => item.tipoCobranca === 'hora' ? s.tipoCobranca === 'hora' : item.tipoCobranca === 'km' ? s.tipoCobranca === 'km' : true)
+        const totalCobranca = itensParaExibir.reduce((s, i) => s + i.valorTotal, 0)
+        const atualizarItem = (id: string, upd: Partial<FechamentoItem>) => {
+          const list = relatorioSelecionado ? (fechamentosRelatorios[relatorioSelecionado.id] || getItensIniciaisDoRelatorio(relatorioSelecionado)) : []
+          const idx = list.findIndex(i => i.id === id)
+          if (idx === -1) return
+          const item = { ...list[idx], ...upd }
+          if (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km') item.valorTotal = Math.round(item.quantidade * item.valorUnitario * 100) / 100
+          else if (item.tipoCobranca === 'valor-fixo' || item.tipoCobranca === 'unidade') item.valorTotal = item.valorUnitario * (item.quantidade || 1)
+          const nova = [...list.slice(0, idx), item, ...list.slice(idx + 1)]
+          setItensFechamento(nova)
+        }
+        const aplicarServico = (itemId: string, servico: typeof servicos[0]) => {
+          const list = relatorioSelecionado ? (fechamentosRelatorios[relatorioSelecionado.id] || getItensIniciaisDoRelatorio(relatorioSelecionado)) : []
+          const item = list.find(i => i.id === itemId)
+          if (!item) return
+          const tipo = (servico.tipoCobranca === 'hora' || servico.tipoCobranca === 'km') ? servico.tipoCobranca : 'valor-fixo'
+          const valorUnit = servico.valor
+          let total = valorUnit * item.quantidade
+          if (tipo === 'valor-fixo' || tipo === 'unidade') total = valorUnit
+          atualizarItem(itemId, { servicoId: servico.id, valorUnitario: valorUnit, valorTotal: total, tipoCobranca: tipo as FechamentoItem['tipoCobranca'] })
+        }
+        const adicionarItemManual = () => {
+          if (!relatorioSelecionado) return
+          const list = fechamentosRelatorios[relatorioSelecionado.id] || getItensIniciaisDoRelatorio(relatorioSelecionado)
+          const novo: FechamentoItem = { id: 'm' + Date.now(), descricao: (safeT as any)?.outroItem || 'Outro item', tipoCobranca: 'valor-fixo', quantidade: 1, valorUnitario: 0, valorTotal: 0, origem: 'manual' }
+          setItensFechamento([...list, novo])
+        }
+        const removerItem = (id: string) => {
+          if (!relatorioSelecionado) return
+          const list = (fechamentosRelatorios[relatorioSelecionado.id] || getItensIniciaisDoRelatorio(relatorioSelecionado)).filter(i => i.id !== id)
+          setItensFechamento(list)
+        }
         return (
           <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
-            <div style={{
-              marginBottom: '40px',
-              padding: '30px',
-              background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-              borderRadius: '20px',
-              border: '2px solid rgba(0, 255, 0, 0.3)',
-              boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                  <LogoComponent size="small" />
-                </div>
-                <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 style={{
-                    margin: 0,
-                    fontSize: '32px',
-                    fontWeight: 'bold',
-                    color: '#00ff00',
-                    letterSpacing: '3px',
-                    textShadow: '0 0 20px rgba(0, 255, 0, 0.3)',
-                    marginBottom: '8px'
-                  }}>
+            <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+              <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                <LogoComponent size="small" />
+                <div>
+                  <h1 style={{ margin: 0, fontSize: '26px', fontWeight: 'bold', color: '#00ff00', letterSpacing: '2px' }}>
                     {(safeT as any)?.fechamentoRelatoriosServicosTitle || 'FECHAMENTO DOS RELATÓRIOS DE SERVIÇOS'}
                   </h1>
-                  <p style={{ margin: 0, fontSize: '14px', color: '#ccc', opacity: 0.8 }}>
-                    {relatoriosServico.length} {(safeT as any)?.totalRelatorios || 'Total de Relatórios'}
-                  </p>
-                </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <button
-                    className="btn-primary"
-                    onClick={() => { openTab('relatorio-servico', getTabTitle('relatorio-servico')) }}
-                    style={{
-                      padding: '10px 20px',
-                      backgroundColor: 'rgba(0, 255, 0, 0.15)',
-                      borderColor: 'rgba(0, 255, 0, 0.5)',
-                      color: '#00ff00',
-                      fontWeight: 'bold',
-                      fontSize: '13px'
-                    }}
-                  >
-                    📋 {(safeT as any)?.abrirRelatorioServico ?? safeT?.relatorioServico ?? 'Abrir Relatório de Serviço'}
-                  </button>
-                  <button
-                    onClick={() => closeTab(activeTabId || '')}
-                    style={{
-                      padding: '6px 8px',
-                      fontSize: '16px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 255, 0, 0.3)',
-                      borderRadius: '4px',
-                      color: '#00ff00',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '32px',
-                      height: '32px'
-                    }}
-                    title={safeT?.voltar || 'Voltar'}
-                  >
-                    ↶
-                  </button>
+                  <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#aaa' }}>{relatoriosServico.length} {(safeT as any)?.totalRelatorios || 'Total de Relatórios'}</p>
                 </div>
               </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {fechamentoRelatorioSelecionadoId && (
+                  <button type="button" className="btn-primary" onClick={() => { setFechamentoRelatorioSelecionadoId(null) }} style={{ padding: '8px 16px', fontSize: '13px' }}>
+                    {(safeT as any)?.voltarLista || 'Voltar à lista'}
+                  </button>
+                )}
+                <button type="button" onClick={() => closeTab(activeTabId || '')} style={{ padding: '8px 12px', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#00ff00', background: 'transparent', cursor: 'pointer' }} title={safeT?.voltar || 'Voltar'}>↶</button>
+              </div>
             </div>
-            <div style={{
-              padding: '20px',
-              backgroundColor: '#2a2a2a',
-              borderRadius: '12px',
-              border: '1px solid rgba(0, 255, 0, 0.25)',
-              color: '#ccc'
-            }}>
-              <p style={{ margin: 0, lineHeight: 1.6 }}>
-                {(safeT as any)?.fechamentoRelatoriosServicosDesc ?? 'Consulte e feche os relatórios de serviço. Use o botão acima para abrir o módulo de Relatório de Serviço e gerir ou gerar PDFs.'}
-              </p>
-            </div>
+
+            {!relatorioSelecionado ? (
+              <div style={{ display: 'grid', gap: '12px' }}>
+                <p style={{ color: '#ccc', marginBottom: '12px' }}>{(safeT as any)?.selecioneRelatorioFechamento || 'Selecione um relatório para ver o fechamento e anexar o que será cobrado.'}</p>
+                {relatoriosServico.length === 0 ? (
+                  <p style={{ color: '#888' }}>{(safeT as any)?.nenhumRelatorioServico || 'Nenhum relatório de serviço. Crie e gere relatórios em Relatório de Serviço.'}</p>
+                ) : (
+                  relatoriosServico.map(r => (
+                    <div
+                      key={r.id}
+                      onClick={() => setFechamentoRelatorioSelecionadoId(r.id)}
+                      style={{
+                        padding: '16px 20px',
+                        backgroundColor: '#2a2a2a',
+                        borderRadius: '12px',
+                        border: '2px solid rgba(0, 255, 0, 0.3)',
+                        cursor: 'pointer',
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr 1fr auto',
+                        gap: '12px',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <span style={{ color: '#00ff00', fontWeight: 600 }}>{(safeT as any)?.numeroRelatorio || 'Nº'}: {r.numero}</span>
+                      <span style={{ color: '#fff' }}>{(safeT as any)?.cliente || 'Cliente'}: {r.cliente}</span>
+                      <span style={{ color: '#ccc' }}>{(safeT as any)?.equipamento || 'Equipamento'}: {r.maquinaModelo} {r.numeroMaquina ? `– ${r.numeroMaquina}` : ''}</span>
+                      <span style={{ color: '#888', fontSize: '13px' }}>{r.data}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : (
+              <>
+                <div style={{ padding: '20px', backgroundColor: '#2a2a2a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.25)', marginBottom: '24px' }}>
+                  <h3 style={{ margin: '0 0 12px', color: '#00ff00', fontSize: '14px' }}>{(safeT as any)?.cabecalhoRelatorio || 'Cabeçalho do relatório'}</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
+                    <div><span style={{ color: '#888' }}>{(safeT as any)?.cliente || 'Cliente'}:</span> <strong style={{ color: '#fff' }}>{relatorioSelecionado.cliente}</strong></div>
+                    <div><span style={{ color: '#888' }}>{(safeT as any)?.numeroRelatorio || 'Nº Relatório'}:</span> <strong style={{ color: '#00ff00' }}>{relatorioSelecionado.numero}</strong></div>
+                    <div><span style={{ color: '#888' }}>{(safeT as any)?.equipamento || 'Equipamento'}:</span> <strong style={{ color: '#fff' }}>{relatorioSelecionado.maquinaModelo} {relatorioSelecionado.numeroMaquina ? `– ${relatorioSelecionado.numeroMaquina}` : ''}</strong></div>
+                    <div><span style={{ color: '#888' }}>{(safeT as any)?.data || 'Data'}:</span> <span style={{ color: '#ccc' }}>{relatorioSelecionado.data}</span></div>
+                  </div>
+                </div>
+
+                <div style={{ padding: '20px', backgroundColor: '#1e1e1e', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.25)' }}>
+                  <h3 style={{ margin: '0 0 16px', color: '#00ff00', fontSize: '16px' }}>{(safeT as any)?.itensCobrancaFechamento || 'Itens a cobrar (ajuste com o Cadastro de Serviços)'}</h3>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', color: '#ccc' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid rgba(0,255,0,0.3)' }}>
+                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.descricao || 'Descrição'}</th>
+                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.quantidade || 'Quantidade'}</th>
+                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.valorUnitario || 'Valor unit.'}</th>
+                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.valorTotal || 'Total'}</th>
+                        <th style={{ width: '180px', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.servicoCadastro || 'Serviço (Cadastro)'}</th>
+                        <th style={{ width: '40px' }}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {itensParaExibir.map(item => (
+                        <tr key={item.id} style={{ borderBottom: '1px solid #333' }}>
+                          <td style={{ padding: '10px 8px' }}>{item.descricao}</td>
+                          <td style={{ padding: '10px 8px', textAlign: 'right' }}>{item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : item.quantidade}</td>
+                          <td style={{ padding: '10px 8px', textAlign: 'right' }}>
+                            <input type="number" step="0.01" min={0} value={item.valorUnitario} onChange={e => atualizarItem(item.id, { valorUnitario: parseFloat(e.target.value) || 0 })} style={{ width: '80px', padding: '6px', background: '#2a2a2a', border: '1px solid #444', borderRadius: '4px', color: '#fff' }} />
+                          </td>
+                          <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 600, color: '#00ff00' }}>{item.valorTotal.toFixed(2)} €</td>
+                          <td style={{ padding: '8px' }}>
+                            <select value={item.servicoId || ''} onChange={e => { const sid = e.target.value; const s = servicos.find(sv => sv.id === sid); if (s) aplicarServico(item.id, s) }} style={{ width: '100%', padding: '6px 8px', background: '#2a2a2a', border: '1px solid #444', borderRadius: '4px', color: '#fff', fontSize: '12px' }}>
+                              <option value="">{(safeT as any)?.selecioneServico || '— Selecionar serviço —'}</option>
+                              {servicosParaItem(item).map(s => (
+                                <option key={s.id} value={s.id}>{s.nome} – {s.valor}€ ({s.tipoCobranca})</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td style={{ padding: '8px' }}>
+                            {item.origem === 'manual' && <button type="button" onClick={() => removerItem(item.id)} style={{ background: 'transparent', border: 'none', color: '#f66', cursor: 'pointer', padding: '4px' }} title={(safeT as any)?.remover || 'Remover'}>✕</button>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                    <button type="button" className="btn-primary" onClick={adicionarItemManual} style={{ padding: '8px 16px' }}>+ {(safeT as any)?.adicionarItemCobranca || 'Adicionar item a cobrar'}</button>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{(safeT as any)?.total || 'Total'}: {totalCobranca.toFixed(2)} €</div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )
+      }
 
       case 'comprovantes-despesas': {
         const labelPessoal = (safeT as any)?.despesasPessoais || 'Despesas Pessoais'
