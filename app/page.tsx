@@ -13029,6 +13029,86 @@ export default function Dashboard() {
     }, 500)
   }
 
+  // Função para apenas gerar PDF do relatório (salva antes para ter dados atualizados; formulário permanece aberto)
+  const handleGerarPdfRelatorioServico = () => {
+    if (!relatorioServicoForm.tecnico || !relatorioServicoForm.cliente || !relatorioServicoForm.data || !relatorioServicoForm.numero) {
+      const camposFaltando = []
+      if (!relatorioServicoForm.tecnico) camposFaltando.push('Técnico')
+      if (!relatorioServicoForm.cliente) camposFaltando.push('Cliente')
+      if (!relatorioServicoForm.data) camposFaltando.push('Data')
+      if (!relatorioServicoForm.numero) camposFaltando.push('Número do Relatório')
+      alert(`Por favor, preencha os campos obrigatórios: ${camposFaltando.join(', ')}`)
+      return
+    }
+    const diasRecalculados = relatorioServicoForm.diasTrabalho.map(dia => atualizarCalculosDia(dia))
+    const totais = calcularTotais(diasRecalculados)
+    const relatorioToSave: RelatorioServico = {
+      ...relatorioServicoForm,
+      diasTrabalho: diasRecalculados,
+      horasTrabalho: totais.horasTrabalho,
+      kmsPercorridos: totais.kmsPercorridos,
+      horasViagem: totais.horasViagem
+    }
+    let savedRelatorio: RelatorioServico
+    let updatedRelatorios: RelatorioServico[]
+    if (editingRelatorioServico) {
+      savedRelatorio = { ...relatorioToSave, id: editingRelatorioServico.id }
+      updatedRelatorios = relatoriosServico.map(r => r.id === editingRelatorioServico.id ? savedRelatorio : r)
+    } else {
+      savedRelatorio = { ...relatorioToSave, id: Date.now().toString() }
+      updatedRelatorios = [...relatoriosServico, savedRelatorio]
+    }
+    setRelatoriosServico(updatedRelatorios)
+    saveData('nonato-relatorios-servico', updatedRelatorios)
+    if (relatorioToSave.clienteId && relatorioToSave.equipamentoId) {
+      const clienteIndex = clientes.findIndex(c => c.id === relatorioToSave.clienteId)
+      if (clienteIndex !== -1) {
+        const updatedClientes = [...clientes]
+        if (!updatedClientes[clienteIndex].relatorios) updatedClientes[clienteIndex].relatorios = {}
+        const equipamentoKey = relatorioToSave.equipamentoId
+        if (!updatedClientes[clienteIndex].relatorios![equipamentoKey]) updatedClientes[clienteIndex].relatorios![equipamentoKey] = []
+        const equipamentoRelatorios = updatedClientes[clienteIndex].relatorios![equipamentoKey]
+        const existingIndex = equipamentoRelatorios.findIndex(r => r.id === savedRelatorio.id)
+        if (existingIndex !== -1) equipamentoRelatorios[existingIndex] = savedRelatorio
+        else equipamentoRelatorios.push(savedRelatorio)
+        equipamentoRelatorios.sort((a, b) => {
+          const dataA = new Date(a.data).getTime()
+          const dataB = new Date(b.data).getTime()
+          if (dataA === dataB) return b.numero.localeCompare(a.numero)
+          return dataB - dataA
+        })
+        setClientes(updatedClientes)
+        saveData('nonato-clientes', updatedClientes)
+      }
+    }
+    handlePrintRelatorio(savedRelatorio)
+  }
+
+  // Deletar relatório a partir do formulário: se estiver editando, exclui da lista; senão limpa o formulário
+  const handleDeletarRelatorioServicoNoFormulario = () => {
+    if (editingRelatorioServico) {
+      if (window.confirm(t.confirmDeleteRelatorioServico || 'Tem certeza que deseja excluir este relatório de serviço?')) {
+        handleDeleteRelatorioServico(editingRelatorioServico.id)
+        setShowRelatorioServicoForm(false)
+        setEditingRelatorioServico(null)
+        setRelatorioServicoForm({
+          id: '', numero: '', tecnico: '', cliente: '', cidade: '', telefone: '',
+          data: new Date().toISOString().split('T')[0], maquinaModelo: '', numeroMaquina: '', tipoServico: '',
+          diasTrabalho: [], horasTrabalho: '', kmsPercorridos: '', horasViagem: '',
+          servicoConcluido: false, retornoNecessario: false, entregaDocumentacao: false, liberacaoProducao: false,
+          instrucaoFuncionarios: false, necessarioTrocaPecas: false, observacoes: '', pontosAberto: '', pecasSubstituicao: []
+        })
+        setNovoDiaTrabalho({
+          data: new Date().toISOString().split('T')[0], idaHora: '', idaChegada: '', idaDuracao: '', horasInicio: '', horasFim: '', horasDuracao: '',
+          retornoSaida: '', retornoChegada: '', retornoDuracao: '', kmIda: '0', kmRetorno: '0', kmTotal: '', pausa: '', tempoPausa: '', descricaoTrabalho: ''
+        })
+        setNovaPeca({ id: '', descricao: '', codigo: '', quantidade: '' })
+      }
+    } else {
+      handleLimparRelatorio()
+    }
+  }
+
   // Função para limpar todos os campos do formulário
   const handleLimparRelatorio = () => {
     if (window.confirm((t as any)?.confirmLimpar || 'Tem certeza que deseja limpar todos os campos do formulário?')) {
@@ -21495,11 +21575,17 @@ onKeyPress={(e) => {
                   </div>
                 </div>
                 
-                <div style={{ display: 'flex', gap: '10px', marginTop: '15px', justifyContent: 'space-between' }}>
-                  <button className="btn-primary" onClick={handleSaveAndGenerateRelatorio} style={{ flex: 1, padding: '8px 16px' }}>
-                    {safeT?.salvarEGerar || 'Salvar e Gerar'}
+                <div style={{ display: 'flex', gap: '10px', marginTop: '15px', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                  <button className="btn-primary" onClick={handleSaveRelatorioServico} style={{ padding: '8px 16px' }}>
+                    {safeT?.salvar || 'Salvar'}
                   </button>
-                  <div style={{ display: 'flex', gap: '10px' }}>
+                  <button className="btn-primary" onClick={handleGerarPdfRelatorioServico} style={{ padding: '8px 16px' }}>
+                    {safeT?.gerarPDF || 'Gerar'}
+                  </button>
+                  <button className="btn-primary" onClick={handleDeletarRelatorioServicoNoFormulario} style={{ padding: '8px 16px', backgroundColor: '#4a1515', borderColor: '#a33' }}>
+                    {safeT?.delete || safeT?.deletar || 'Deletar'}
+                  </button>
+                  <div style={{ display: 'flex', gap: '10px', marginLeft: 'auto' }}>
                     <button className="btn-primary" onClick={handleLimparRelatorio} style={{ padding: '8px 16px' }}>
                       {safeT?.limpar || safeT?.clear || 'Limpar'}
                     </button>
