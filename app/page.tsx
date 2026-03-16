@@ -356,6 +356,7 @@ type RelatorioServico = {
 type FechamentoItem = {
   id: string
   descricao: string
+  cod?: string
   servicoId?: string
   tipoCobranca: 'hora' | 'km' | 'valor-fixo' | 'unidade' | 'diarias' | 'extras'
   quantidade: number
@@ -2825,6 +2826,7 @@ export default function Dashboard() {
   const [showCadastroServicosModal, setShowCadastroServicosModal] = useState(false)
   const [servicos, setServicos] = useState<Array<{
     id: string
+    cod?: string
     nome: string
     descricao?: string
     valor: number
@@ -2834,6 +2836,7 @@ export default function Dashboard() {
   const [showServicoForm, setShowServicoForm] = useState(false)
   const [editingServico, setEditingServico] = useState<{
     id: string
+    cod?: string
     nome: string
     descricao?: string
     valor: number
@@ -2841,6 +2844,7 @@ export default function Dashboard() {
     categoria: 'servico' | 'despesa'
   } | null>(null)
   const [servicoForm, setServicoForm] = useState({
+    cod: '',
     nome: '',
     descricao: '',
     valor: 0,
@@ -7240,6 +7244,7 @@ export default function Dashboard() {
   const handleAddServico = () => {
     setEditingServico(null)
     setServicoForm({
+      cod: '',
       nome: '',
       descricao: '',
       valor: 0,
@@ -7252,6 +7257,7 @@ export default function Dashboard() {
   const handleEditServico = (servico: typeof servicos[0]) => {
     setEditingServico(servico)
     setServicoForm({
+      cod: servico.cod || '',
       nome: servico.nome,
       descricao: servico.descricao || '',
       valor: servico.valor,
@@ -7275,6 +7281,7 @@ export default function Dashboard() {
         s.id === editingServico.id
           ? {
               ...s,
+              cod: servicoForm.cod || undefined,
               nome: servicoForm.nome,
               descricao: servicoForm.descricao || undefined,
               valor: servicoForm.valor,
@@ -7286,6 +7293,7 @@ export default function Dashboard() {
     } else {
       const newServico = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        cod: servicoForm.cod || undefined,
         nome: servicoForm.nome,
         descricao: servicoForm.descricao || undefined,
         valor: servicoForm.valor,
@@ -7306,6 +7314,7 @@ export default function Dashboard() {
 
     setShowServicoForm(false)
     setServicoForm({
+      cod: '',
       nome: '',
       descricao: '',
       valor: 0,
@@ -27349,6 +27358,13 @@ A1;Peça exemplo;10'
                 </select>
                 <input
                   type="text"
+                  placeholder={(safeT as any)?.codigoServico || 'Código (COD)'}
+                  value={servicoForm.cod}
+                  onChange={(e) => setServicoForm({ ...servicoForm, cod: e.target.value })}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                />
+                <input
+                  type="text"
                   placeholder={safeT?.nomeServico || 'Nome do Serviço/Despesa'}
                   value={servicoForm.nome}
                   onChange={(e) => setServicoForm({ ...servicoForm, nome: e.target.value })}
@@ -27384,7 +27400,7 @@ A1;Peça exemplo;10'
                   <button className="btn-primary" onClick={handleSaveServico} style={{ flex: 1 }}>
                     {safeT?.save || 'Salvar'}
                   </button>
-                  <button className="btn-primary" onClick={() => { setShowServicoForm(false); setEditingServico(null); setServicoForm({ nome: '', descricao: '', valor: 0, categoria: 'servico', tipoCobranca: 'valor-fixo' }); }} style={{ flex: 1 }}>
+                  <button className="btn-primary" onClick={() => { setShowServicoForm(false); setEditingServico(null); setServicoForm({ cod: '', nome: '', descricao: '', valor: 0, categoria: 'servico', tipoCobranca: 'valor-fixo' }); }} style={{ flex: 1 }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>
@@ -27396,7 +27412,7 @@ A1;Peça exemplo;10'
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '15px', marginTop: '20px' }}>
                 {servicos.map(servico => (
                   <div key={servico.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                    <h3 style={{ marginBottom: '10px', color: '#00ff00' }}>{servico.nome}</h3>
+                    <h3 style={{ marginBottom: '10px', color: '#00ff00' }}>{servico.cod ? `${servico.cod} – ` : ''}{servico.nome}</h3>
                     <p style={{ fontSize: '14px', marginBottom: '5px' }}><strong>{safeT?.valorServico || 'Valor'}:</strong> {servico.valor}€</p>
                     <p style={{ fontSize: '14px', marginBottom: '5px' }}><strong>{safeT?.tipoCobranca || 'Tipo de Cobrança'}:</strong> {servico.tipoCobranca}</p>
                     <p style={{ fontSize: '14px', marginBottom: '5px', opacity: 0.8 }}><strong>{safeT?.tipo || 'Tipo'}:</strong> {servico.categoria}</p>
@@ -27978,13 +27994,30 @@ A1;Peça exemplo;10'
         const getItensIniciaisDoRelatorio = (r: RelatorioServico): FechamentoItem[] => {
           const t = totaisFromRelatorio(r)
           const lab = (key: string) => (safeT as any)[key] || key
-          return [
+          const base: FechamentoItem[] = [
             { id: 'ht', descricao: lab('horasTrabalho') || 'Horas de Trabalho', tipoCobranca: 'hora', quantidade: t.horasTrabalhoDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
             { id: 'hida', descricao: lab('horasViagemIda') || 'Horas de Ida', tipoCobranca: 'hora', quantidade: t.horasViagemIdaDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
             { id: 'hret', descricao: lab('horasViagemRetorno') || 'Horas de Retorno', tipoCobranca: 'hora', quantidade: t.horasViagemRetornoDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
             { id: 'kmida', descricao: (safeT as any)?.kmIda || 'Km Ida', tipoCobranca: 'km', quantidade: t.kmIdaTotal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
             { id: 'kmret', descricao: (safeT as any)?.kmRetorno || 'Km Retorno', tipoCobranca: 'km', quantidade: t.kmRetornoTotal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' }
           ]
+          // Preencher automaticamente com o primeiro serviço do cadastro que combine (hora/km) – COD, descrição e valor já vêm do cadastro
+          return base.map(item => {
+            const primeiroServico = servicos.find(s =>
+              item.tipoCobranca === 'hora' ? s.tipoCobranca === 'hora' : item.tipoCobranca === 'km' ? s.tipoCobranca === 'km' : false
+            )
+            if (!primeiroServico) return item
+            const valorUnit = primeiroServico.valor
+            const total = (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km') ? Math.round(item.quantidade * valorUnit * 100) / 100 : valorUnit
+            return {
+              ...item,
+              servicoId: primeiroServico.id,
+              cod: primeiroServico.cod,
+              descricao: primeiroServico.nome || primeiroServico.descricao || item.descricao,
+              valorUnitario: valorUnit,
+              valorTotal: total
+            }
+          })
         }
         const itensExistentes = relatorioSelecionado && fechamentosRelatorios[relatorioSelecionado.id]
         const itensParaExibir = relatorioSelecionado
@@ -28010,7 +28043,14 @@ A1;Peça exemplo;10'
           const valorUnit = servico.valor
           let total = valorUnit * item.quantidade
           if (tipo === 'valor-fixo' || tipo === 'unidade') total = valorUnit
-          atualizarItem(itemId, { servicoId: servico.id, valorUnitario: valorUnit, valorTotal: total, tipoCobranca: tipo as FechamentoItem['tipoCobranca'] })
+          atualizarItem(itemId, {
+            servicoId: servico.id,
+            cod: servico.cod,
+            descricao: servico.nome || servico.descricao || item.descricao,
+            valorUnitario: valorUnit,
+            valorTotal: total,
+            tipoCobranca: tipo as FechamentoItem['tipoCobranca']
+          })
         }
         const adicionarItemManual = () => {
           if (!relatorioSelecionado) return
@@ -28092,6 +28132,7 @@ A1;Peça exemplo;10'
                   <table style={{ width: '100%', borderCollapse: 'collapse', color: '#ccc' }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid rgba(0,255,0,0.3)' }}>
+                        <th style={{ width: '80px', textAlign: 'left', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.codigoOuCod || 'COD'}</th>
                         <th style={{ textAlign: 'left', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.descricao || 'Descrição'}</th>
                         <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.quantidade || 'Quantidade'}</th>
                         <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.valorUnitario || 'Valor unit.'}</th>
@@ -28101,8 +28142,12 @@ A1;Peça exemplo;10'
                       </tr>
                     </thead>
                     <tbody>
-                      {itensParaExibir.map(item => (
+                      {itensParaExibir.map(item => {
+                        const servicoVinculado = item.servicoId ? servicos.find(sv => sv.id === item.servicoId) : null
+                        const codExibir = item.cod ?? servicoVinculado?.cod ?? '—'
+                        return (
                         <tr key={item.id} style={{ borderBottom: '1px solid #333' }}>
+                          <td style={{ padding: '10px 8px', color: '#00ff00', fontWeight: 600 }}>{codExibir}</td>
                           <td style={{ padding: '10px 8px' }}>{item.descricao}</td>
                           <td style={{ padding: '10px 8px', textAlign: 'right' }}>{item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : item.quantidade}</td>
                           <td style={{ padding: '10px 8px', textAlign: 'right' }}>
@@ -28113,7 +28158,7 @@ A1;Peça exemplo;10'
                             <select value={item.servicoId || ''} onChange={e => { const sid = e.target.value; const s = servicos.find(sv => sv.id === sid); if (s) aplicarServico(item.id, s) }} style={{ width: '100%', padding: '6px 8px', background: '#2a2a2a', border: '1px solid #444', borderRadius: '4px', color: '#fff', fontSize: '12px' }}>
                               <option value="">{(safeT as any)?.selecioneServico || '— Selecionar serviço —'}</option>
                               {servicosParaItem(item).map(s => (
-                                <option key={s.id} value={s.id}>{s.nome} – {s.valor}€ ({s.tipoCobranca})</option>
+                                <option key={s.id} value={s.id}>{s.cod ? `${s.cod} – ` : ''}{s.nome} – {s.valor}€ ({s.tipoCobranca})</option>
                               ))}
                             </select>
                           </td>
@@ -28121,7 +28166,8 @@ A1;Peça exemplo;10'
                             {item.origem === 'manual' && <button type="button" onClick={() => removerItem(item.id)} style={{ background: 'transparent', border: 'none', color: '#f66', cursor: 'pointer', padding: '4px' }} title={(safeT as any)?.remover || 'Remover'}>✕</button>}
                           </td>
                         </tr>
-                      ))}
+                        )
+                      })}
                     </tbody>
                   </table>
                   <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
@@ -48396,6 +48442,13 @@ A1;Peça exemplo;10'
                 </select>
                 <input
                   type="text"
+                  placeholder={(safeT as any)?.codigoServico || 'Código (COD)'}
+                  value={servicoForm.cod}
+                  onChange={(e) => setServicoForm({ ...servicoForm, cod: e.target.value })}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                />
+                <input
+                  type="text"
                   placeholder={safeT?.nomeServico || 'Nome do Serviço/Despesa'}
                   value={servicoForm.nome}
                   onChange={(e) => setServicoForm({ ...servicoForm, nome: e.target.value })}
@@ -48431,7 +48484,7 @@ A1;Peça exemplo;10'
                   <button className="btn-primary" onClick={handleSaveServico} style={{ flex: 1 }}>
                     {safeT?.save || 'Salvar'}
                   </button>
-                  <button className="btn-primary" onClick={() => { setShowServicoForm(false); setEditingServico(null); setServicoForm({ nome: '', descricao: '', valor: 0, categoria: 'servico', tipoCobranca: 'valor-fixo' }); }} style={{ flex: 1 }}>
+                  <button className="btn-primary" onClick={() => { setShowServicoForm(false); setEditingServico(null); setServicoForm({ cod: '', nome: '', descricao: '', valor: 0, categoria: 'servico', tipoCobranca: 'valor-fixo' }); }} style={{ flex: 1 }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>
@@ -48443,7 +48496,7 @@ A1;Peça exemplo;10'
               <ul style={{ listStyle: 'none', padding: 0, marginTop: '20px' }}>
                 {servicos.map(servico => (
                   <li key={servico.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
-                    <p><strong>{servico.nome}</strong> - {servico.valor}€ ({servico.tipoCobranca})</p>
+                    <p><strong>{servico.cod ? `${servico.cod} – ` : ''}{servico.nome}</strong> - {servico.valor}€ ({servico.tipoCobranca})</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.tipo || 'Tipo'}: {servico.categoria}</p>
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
                       <button className="btn-primary" onClick={() => handleEditServico(servico)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
