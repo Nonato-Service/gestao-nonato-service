@@ -684,7 +684,7 @@ type GrupoChecklist = {
   dataCriacao: string
 }
 
-type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-cadastral' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'translator' | 'administrador' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega'
+type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-cadastral' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega'
 
 type Tab = {
   id: string
@@ -2404,6 +2404,7 @@ export default function Dashboard() {
       'agenda': t?.agenda || 'Agenda',
       'desmontados': t?.desmontados || 'Desmontados',
       'cadastro-servicos': t?.cadastroServicos || 'Cadastro de Serviços',
+      'fechamento-relatorios-servicos': t?.fechamentoRelatoriosServicosTitle || 'Fechamento dos Relatórios de Serviços',
       'translator': t?.translator || 'Tradutor de Idiomas',
       'administrador': t?.administrador || 'Administrador',
       'estado-visual-tecnico': t?.estadoVisualTecnico || 'Estado Visual do Técnico',
@@ -4078,6 +4079,7 @@ export default function Dashboard() {
           'estado-visual-tecnico-default': { translationKey: 'estadoVisualTecnico', group: 'gestao-tecnica' },
           'informacoes-conhecimento-tecnicos-default': { translationKey: 'informacoesConhecimentoTecnicosTitle', group: 'gestao-tecnica' },
           'cadastro-servicos-default': { translationKey: 'cadastroServicosTitle', group: 'gestao-custos' },
+          'fechamento-relatorios-servicos-default': { translationKey: 'fechamentoRelatoriosServicosTitle', group: 'gestao-custos' },
           'orcamentos-avulso-default': { translationKey: 'orcamentosAvulsoTitle', group: 'gestao-custos' },
           'pedido-orcamentos-avulso-default': { translationKey: 'pedidoOrcamentosAvulsoTitle', group: 'gestao-custos' },
           'registro-despesas-default': { translationKey: 'registroDespesasTitle', group: 'gestao-custos' },
@@ -4144,6 +4146,7 @@ export default function Dashboard() {
                                b.id === 'estado-visual-tecnico-default' ? 'open-estado-visual-tecnico' :
                                b.id === 'informacoes-conhecimento-tecnicos-default' ? 'open-informacoes-conhecimento-tecnicos' :
                                b.id === 'cadastro-servicos-default' ? 'open-cadastro-servicos' :
+                               b.id === 'fechamento-relatorios-servicos-default' ? 'open-fechamento-relatorios-servicos' :
                                b.id === 'orcamentos-avulso-default' ? 'open-orcamentos-avulso' :
                                b.id === 'pedido-orcamentos-avulso-default' ? 'open-pedido-orcamentos-avulso' :
                                b.id === 'mapa-visual-separacao-pecas-default' ? 'open-mapa-visual-separacao-pecas' :
@@ -4197,6 +4200,7 @@ export default function Dashboard() {
         'solicitacao-servico-tecnico-default': 'solicitacaoServicoTecnicoTitle',
         'agenda-default': 'agendaTitle',
         'cadastro-servicos-default': 'cadastroServicosTitle',
+        'fechamento-relatorios-servicos-default': 'fechamentoRelatoriosServicosTitle',
       }
       
       // Atualizar translationKey e customName (mas NÃO forçar group - respeitar escolha do usuário no Organizador)
@@ -4209,7 +4213,7 @@ export default function Dashboard() {
             // group: preservar o que o usuário definiu no Organizador de Botões
           }
         }
-        if (b.id === 'cadastro-servicos-default') {
+        if (b.id === 'cadastro-servicos-default' || b.id === 'fechamento-relatorios-servicos-default') {
           return {
             ...b,
             customName: false,
@@ -4697,6 +4701,19 @@ export default function Dashboard() {
         buttons.push(cadastroServicosButton)
       }
 
+      const hasFechamentoRelatoriosServicos = buttons.some((b: SidebarButton) => b.id === 'fechamento-relatorios-servicos-default')
+      if (!hasFechamentoRelatoriosServicos) {
+        const fechamentoRelatoriosServicosButton: SidebarButton = {
+          id: 'fechamento-relatorios-servicos-default',
+          name: 'FECHAMENTO DOS RELATÓRIOS DE SERVIÇOS',
+          action: 'open-fechamento-relatorios-servicos',
+          order: buttons.length,
+          translationKey: 'fechamentoRelatoriosServicosTitle',
+          group: 'gestao-custos'
+        }
+        buttons.push(fechamentoRelatoriosServicosButton)
+      }
+
       if (!hasOrcamentosAvulso) {
         const orcamentosAvulsoButton: SidebarButton = {
           id: 'orcamentos-avulso-default',
@@ -4883,6 +4900,25 @@ export default function Dashboard() {
           ...buttons[cadastroServicosIndex],
           translationKey: 'cadastroServicosTitle',
           customName: false
+        }
+      }
+
+      const hasFechamentoRelatoriosServicosAfter = buttons.some((b: SidebarButton) => b.id === 'fechamento-relatorios-servicos-default')
+      if (!hasFechamentoRelatoriosServicosAfter) {
+        const cadastroIdx = buttons.findIndex(b => b.id === 'cadastro-servicos-default')
+        const fechamentoButton: SidebarButton = {
+          id: 'fechamento-relatorios-servicos-default',
+          name: 'FECHAMENTO DOS RELATÓRIOS DE SERVIÇOS',
+          action: 'open-fechamento-relatorios-servicos',
+          order: cadastroIdx >= 0 ? (buttons[cadastroIdx].order ?? 0) + 0.5 : buttons.length,
+          translationKey: 'fechamentoRelatoriosServicosTitle',
+          group: 'gestao-custos',
+          customName: false
+        }
+        if (cadastroIdx >= 0) {
+          buttons.splice(cadastroIdx + 1, 0, fechamentoButton)
+        } else {
+          buttons.push(fechamentoButton)
         }
       }
 
@@ -5104,6 +5140,25 @@ export default function Dashboard() {
         }
       }
 
+      const hasFechamentoRelatoriosServicosFiltered = filteredButtons.some((b: SidebarButton) => b.id === 'fechamento-relatorios-servicos-default')
+      if (!hasFechamentoRelatoriosServicosFiltered) {
+        const cadastroIdx = filteredButtons.findIndex(b => b.id === 'cadastro-servicos-default')
+        const fechamentoBtn = {
+          id: 'fechamento-relatorios-servicos-default',
+          name: 'FECHAMENTO DOS RELATÓRIOS DE SERVIÇOS',
+          action: 'open-fechamento-relatorios-servicos',
+          order: cadastroIdx >= 0 ? cadastroIdx + 0.5 : filteredButtons.length,
+          translationKey: 'fechamentoRelatoriosServicosTitle',
+          group: 'gestao-custos' as const,
+          customName: false
+        }
+        if (cadastroIdx >= 0) {
+          filteredButtons.splice(cadastroIdx + 1, 0, fechamentoBtn)
+        } else {
+          filteredButtons.push(fechamentoBtn)
+        }
+      }
+
       // Ordenar por ordem
       const sortedButtons = filteredButtons.sort((a: SidebarButton, b: SidebarButton) => a.order - b.order)
       
@@ -5239,6 +5294,14 @@ export default function Dashboard() {
           action: 'open-cadastro-servicos',
           order: 11,
           translationKey: 'cadastroServicosTitle',
+          group: 'gestao-custos'
+        },
+        {
+          id: 'fechamento-relatorios-servicos-default',
+          name: 'FECHAMENTO DOS RELATÓRIOS DE SERVIÇOS',
+          action: 'open-fechamento-relatorios-servicos',
+          order: 11.5,
+          translationKey: 'fechamentoRelatoriosServicosTitle',
           group: 'gestao-custos'
         },
       ]
@@ -5625,7 +5688,7 @@ export default function Dashboard() {
         buttonId === 'gestao-tecnica-default' || buttonId === 'gestao-industrial-default' ||
         buttonId === 'gestores-default' || buttonId === 'equipamentos-default' || 
         buttonId === 'clientes-default' || buttonId === 'fornecedores-default' || 
-        buttonId === 'relatorio-servico-default' || buttonId === 'cadastro-servicos-default' ||
+        buttonId === 'relatorio-servico-default' || buttonId === 'cadastro-servicos-default' || buttonId === 'fechamento-relatorios-servicos-default' ||
         buttonId === 'biblioteca-pecas-default' || buttonId === 'solicitacao-servico-tecnico-default' || buttonId === 'agenda-default' || 
         buttonId === 'desmontados-default') {
       alert(t.cannotDeleteExtras || 'Este botão não pode ser removido!')
@@ -5652,7 +5715,12 @@ export default function Dashboard() {
       'biblioteca-pecas-default',
       'solicitacao-servico-tecnico-default',
       'agenda-default',
-      'cadastro-servicos-default'
+      'cadastro-servicos-default',
+      'fechamento-relatorios-servicos-default',
+      'orcamentos-avulso-default',
+      'pedido-orcamentos-avulso-default',
+      'registro-despesas-default',
+      'mapa-visual-separacao-pecas-default'
     ]
     
     const isGestaoTecnicaButton = gestaoTecnicaButtonIds.includes(button.id || '')
@@ -5685,6 +5753,8 @@ export default function Dashboard() {
         return (safeT?.estadoVisualTecnico || button.name || '').toUpperCase()
       } else if (button.id === 'cadastro-servicos-default') {
         return safeT?.cadastroServicosTitle || button.name || ''
+      } else if (button.id === 'fechamento-relatorios-servicos-default') {
+        return (safeT as any)?.fechamentoRelatoriosServicosTitle || button.name || ''
       } else if (button.id === 'orcamentos-avulso-default') {
         return safeT?.orcamentosAvulsoTitle || button.name || ''
       } else if (button.id === 'registro-despesas-default') {
@@ -13664,6 +13734,7 @@ export default function Dashboard() {
     'open-agenda': 'agenda',
     'open-desmontados': 'desmontados',
     'open-cadastro-servicos': 'cadastroServicos',
+    'open-fechamento-relatorios-servicos': 'relatorioServico',
     'open-extra': 'extras',
     'open-administrador': 'extras',
     'open-cadastro-nonato-service': 'extras',
@@ -13897,6 +13968,8 @@ export default function Dashboard() {
       openTab('desmontados', getTabTitle('desmontados'))
     } else if (action === 'open-cadastro-servicos') {
       openTab('cadastro-servicos', getTabTitle('cadastro-servicos'))
+    } else if (action === 'open-fechamento-relatorios-servicos') {
+      openTab('fechamento-relatorios-servicos', getTabTitle('fechamento-relatorios-servicos'))
     } else if (action === 'open-orcamentos-avulso') {
       openTab('orcamentos-avulso', getTabTitle('orcamentos-avulso'))
     } else if (action === 'open-pedido-orcamentos-avulso') {
@@ -27851,6 +27924,90 @@ A1;Peça exemplo;10'
           activeTabId={activeTabId || undefined}
         />
 
+      case 'fechamento-relatorios-servicos':
+        return (
+          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
+            <div style={{
+              marginBottom: '40px',
+              padding: '30px',
+              background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
+              borderRadius: '20px',
+              border: '2px solid rgba(0, 255, 0, 0.3)',
+              boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                  <LogoComponent size="small" />
+                </div>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  <h1 style={{
+                    margin: 0,
+                    fontSize: '32px',
+                    fontWeight: 'bold',
+                    color: '#00ff00',
+                    letterSpacing: '3px',
+                    textShadow: '0 0 20px rgba(0, 255, 0, 0.3)',
+                    marginBottom: '8px'
+                  }}>
+                    {(safeT as any)?.fechamentoRelatoriosServicosTitle || 'FECHAMENTO DOS RELATÓRIOS DE SERVIÇOS'}
+                  </h1>
+                  <p style={{ margin: 0, fontSize: '14px', color: '#ccc', opacity: 0.8 }}>
+                    {relatoriosServico.length} {(safeT as any)?.totalRelatorios || 'Total de Relatórios'}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <button
+                    className="btn-primary"
+                    onClick={() => { openTab('relatorio-servico', getTabTitle('relatorio-servico')) }}
+                    style={{
+                      padding: '10px 20px',
+                      backgroundColor: 'rgba(0, 255, 0, 0.15)',
+                      borderColor: 'rgba(0, 255, 0, 0.5)',
+                      color: '#00ff00',
+                      fontWeight: 'bold',
+                      fontSize: '13px'
+                    }}
+                  >
+                    📋 {(safeT as any)?.abrirRelatorioServico ?? safeT?.relatorioServico ?? 'Abrir Relatório de Serviço'}
+                  </button>
+                  <button
+                    onClick={() => closeTab(activeTabId || '')}
+                    style={{
+                      padding: '6px 8px',
+                      fontSize: '16px',
+                      backgroundColor: 'transparent',
+                      border: '1px solid rgba(0, 255, 0, 0.3)',
+                      borderRadius: '4px',
+                      color: '#00ff00',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '32px',
+                      height: '32px'
+                    }}
+                    title={safeT?.voltar || 'Voltar'}
+                  >
+                    ↶
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div style={{
+              padding: '20px',
+              backgroundColor: '#2a2a2a',
+              borderRadius: '12px',
+              border: '1px solid rgba(0, 255, 0, 0.25)',
+              color: '#ccc'
+            }}>
+              <p style={{ margin: 0, lineHeight: 1.6 }}>
+                {(safeT as any)?.fechamentoRelatoriosServicosDesc ?? 'Consulte e feche os relatórios de serviço. Use o botão acima para abrir o módulo de Relatório de Serviço e gerir ou gerar PDFs.'}
+              </p>
+            </div>
+          </div>
+        )
+
       case 'comprovantes-despesas': {
         const labelPessoal = (safeT as any)?.despesasPessoais || 'Despesas Pessoais'
         const getWeekKey = (dateStr: string) => {
@@ -38702,7 +38859,7 @@ A1;Peça exemplo;10'
         return ['gestores-default', 'clientes-default', 'fornecedores-default', 
                 'relatorio-servico-default', 'biblioteca-pecas-default', 'agenda-default'].includes(btn.id)
       } else if (group === 'gestao-custos') {
-        return ['cadastro-servicos-default', 'orcamentos-avulso-default', 'pedido-orcamentos-avulso-default', 'registro-despesas-default', 'mapa-visual-separacao-pecas-default'].includes(btn.id)
+        return ['cadastro-servicos-default', 'fechamento-relatorios-servicos-default', 'orcamentos-avulso-default', 'pedido-orcamentos-avulso-default', 'registro-despesas-default', 'mapa-visual-separacao-pecas-default'].includes(btn.id)
       } else if (group === 'gestao-industrial') {
         // Incluir equipamentos-default e desmontados-default no grupo gestao-industrial
         // Excluir pre-checklist-default e checklist-default que agora estão no grupo checklist-group
@@ -38726,7 +38883,7 @@ A1;Peça exemplo;10'
       } else {
         return !['gestores-default', 'equipamentos-default', 'clientes-default', 'fornecedores-default', 
                  'relatorio-servico-default', 'biblioteca-pecas-default', 'agenda-default', 
-                 'desmontados-default', 'cadastro-servicos-default', 'gestao-tecnica-default', 
+                 'desmontados-default', 'cadastro-servicos-default', 'fechamento-relatorios-servicos-default', 'gestao-tecnica-default', 
                  'gestao-custos-default', 'gestao-industrial-default', 'gestao-financeira-default',
                  'clientes-financeiro-default', 'comprovantes-despesas-default', 'pre-checklist-default', 'checklist-default', 'gestao-grupos-checklist-default', 'ordem-preparacao-default', 'formularios-checklist-tecnicos-default', 'verificacao-final-entrega-default',
                  'hub-comunicacao-default', 'mensagens-internas-default', 'mensagens-internas-tecnicos-default', 'alerta-mensagens-default', 'manuais-informacoes-tecnicas-default', 'almoxarifado-armazem-default'].includes(btn.id)
