@@ -28261,16 +28261,20 @@ A1;Peça exemplo;10'
         }
         const totaisFromRelatorio = (r: RelatorioServico) => {
           const totais = calcularTotais(r.diasTrabalho || [])
-          const kmIdaTotal = (r.diasTrabalho || []).reduce((s, d) => s + (parseFloat(d.kmIda) || 0), 0)
-          const kmRetornoTotal = (r.diasTrabalho || []).reduce((s, d) => s + (parseFloat(d.kmRetorno) || 0), 0)
+          const dias = r.diasTrabalho || []
+          const kmIdaTotal = dias.reduce((s, d) => s + (parseFloat(d.kmIda) || 0), 0)
+          const kmRetornoTotal = dias.reduce((s, d) => s + (parseFloat(d.kmRetorno) || 0), 0)
           return {
-            horasTrabalho: r.horasTrabalho,
-            horasTrabalhoDecimal: hhmmToDecimal(r.horasTrabalho),
+            horasTrabalho: totais.horasTrabalho,
+            horasTrabalhoDecimal: hhmmToDecimal(totais.horasTrabalho),
+            horasViagem: totais.horasViagem,
+            horasViagemDecimal: hhmmToDecimal(totais.horasViagem),
             horasViagemIda: totais.horasViagemIda,
             horasViagemIdaDecimal: hhmmToDecimal(totais.horasViagemIda),
             horasViagemRetorno: totais.horasViagemRetorno,
             horasViagemRetornoDecimal: hhmmToDecimal(totais.horasViagemRetorno),
-            kmsPercorridos: parseFloat(r.kmsPercorridos) || 0,
+            kmsPercorridos: parseFloat(totais.kmsPercorridos) || 0,
+            numDiarias: dias.length,
             kmIdaTotal,
             kmRetornoTotal
           }
@@ -28286,21 +28290,29 @@ A1;Peça exemplo;10'
         const getItensIniciaisDoRelatorio = (r: RelatorioServico): FechamentoItem[] => {
           const t = totaisFromRelatorio(r)
           const lab = (key: string) => (safeT as any)[key] || key
+          // 6 itens alinhados ao resumo: Horas Trabalho, Km's Percorridos, Horas de Viagem, Diárias, Hora Ida, Hora Retorno
           const base: FechamentoItem[] = [
             { id: 'ht', descricao: lab('horasTrabalho') || 'Horas de Trabalho', tipoCobranca: 'hora', quantidade: t.horasTrabalhoDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
-            { id: 'hida', descricao: lab('horasViagemIda') || 'Horas de Ida', tipoCobranca: 'hora', quantidade: t.horasViagemIdaDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
-            { id: 'hret', descricao: lab('horasViagemRetorno') || 'Horas de Retorno', tipoCobranca: 'hora', quantidade: t.horasViagemRetornoDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
-            { id: 'kmida', descricao: (safeT as any)?.kmIda || 'Km Ida', tipoCobranca: 'km', quantidade: t.kmIdaTotal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
-            { id: 'kmret', descricao: (safeT as any)?.kmRetorno || 'Km Retorno', tipoCobranca: 'km', quantidade: t.kmRetornoTotal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' }
+            { id: 'km', descricao: lab('kmsPercorridos') || 'Km\'s Percorridos', tipoCobranca: 'km', quantidade: t.kmsPercorridos, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
+            { id: 'hviagem', descricao: lab('horasViagem') || 'Horas de Viagem', tipoCobranca: 'hora', quantidade: t.horasViagemDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
+            { id: 'diarias', descricao: lab('diarias') || 'Diárias', tipoCobranca: 'diarias', quantidade: t.numDiarias, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
+            { id: 'hida', descricao: lab('horasViagemIda') || 'Horas de Viagem de Ida', tipoCobranca: 'hora', quantidade: t.horasViagemIdaDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
+            { id: 'hret', descricao: lab('horasViagemRetorno') || 'Horas de Viagem de Retorno', tipoCobranca: 'hora', quantidade: t.horasViagemRetornoDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' }
           ]
-          // Preencher automaticamente com o primeiro serviço do cadastro que combine (hora/km) – COD, descrição e valor já vêm do cadastro
+          // Preencher automaticamente com o primeiro serviço do cadastro que combine (hora/km/diarias) – COD, nome e valor vêm do Cadastro de Serviços
           return base.map(item => {
-            const primeiroServico = servicos.find(s =>
-              item.tipoCobranca === 'hora' ? s.tipoCobranca === 'hora' : item.tipoCobranca === 'km' ? s.tipoCobranca === 'km' : false
-            )
+            const primeiroServico = servicos.find(s => {
+              if (item.tipoCobranca === 'hora') return s.tipoCobranca === 'hora'
+              if (item.tipoCobranca === 'km') return s.tipoCobranca === 'km'
+              if (item.tipoCobranca === 'diarias') return s.tipoCobranca === 'diarias'
+              return false
+            })
             if (!primeiroServico) return item
             const valorUnit = primeiroServico.valor
-            const total = (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km') ? Math.round(item.quantidade * valorUnit * 100) / 100 : valorUnit
+            const qty = item.quantidade || 0
+            const total = (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias')
+              ? Math.round(qty * valorUnit * 100) / 100
+              : valorUnit
             return {
               ...item,
               servicoId: primeiroServico.id,
@@ -28315,14 +28327,14 @@ A1;Peça exemplo;10'
         const itensParaExibir = relatorioSelecionado
           ? (itensExistentes && itensExistentes.length > 0 ? itensExistentes : getItensIniciaisDoRelatorio(relatorioSelecionado))
           : []
-        const servicosParaItem = (item: FechamentoItem) => servicos.filter(s => item.tipoCobranca === 'hora' ? s.tipoCobranca === 'hora' : item.tipoCobranca === 'km' ? s.tipoCobranca === 'km' : true)
+        const servicosParaItem = (item: FechamentoItem) => servicos.filter(s => item.tipoCobranca === 'hora' ? s.tipoCobranca === 'hora' : item.tipoCobranca === 'km' ? s.tipoCobranca === 'km' : item.tipoCobranca === 'diarias' ? s.tipoCobranca === 'diarias' : true)
         const totalCobranca = itensParaExibir.reduce((s, i) => s + i.valorTotal, 0)
         const atualizarItem = (id: string, upd: Partial<FechamentoItem>) => {
           const list = relatorioSelecionado ? (fechamentosRelatorios[relatorioSelecionado.id] || getItensIniciaisDoRelatorio(relatorioSelecionado)) : []
           const idx = list.findIndex(i => i.id === id)
           if (idx === -1) return
           const item = { ...list[idx], ...upd }
-          if (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km') item.valorTotal = Math.round(item.quantidade * item.valorUnitario * 100) / 100
+          if (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias') item.valorTotal = Math.round(item.quantidade * item.valorUnitario * 100) / 100
           else if (item.tipoCobranca === 'valor-fixo' || item.tipoCobranca === 'unidade') item.valorTotal = item.valorUnitario * (item.quantidade || 1)
           const nova = [...list.slice(0, idx), item, ...list.slice(idx + 1)]
           setItensFechamento(nova)
@@ -28331,9 +28343,9 @@ A1;Peça exemplo;10'
           const list = relatorioSelecionado ? (fechamentosRelatorios[relatorioSelecionado.id] || getItensIniciaisDoRelatorio(relatorioSelecionado)) : []
           const item = list.find(i => i.id === itemId)
           if (!item) return
-          const tipo = (servico.tipoCobranca === 'hora' || servico.tipoCobranca === 'km') ? servico.tipoCobranca : 'valor-fixo'
+          const tipo = (servico.tipoCobranca === 'hora' || servico.tipoCobranca === 'km' || servico.tipoCobranca === 'diarias') ? servico.tipoCobranca : 'valor-fixo'
           const valorUnit = servico.valor
-          let total = valorUnit * item.quantidade
+          let total = (tipo === 'hora' || tipo === 'km' || tipo === 'diarias') ? Math.round((item.quantidade || 0) * valorUnit * 100) / 100 : valorUnit
           if (tipo === 'valor-fixo' || tipo === 'unidade') total = valorUnit
           atualizarItem(itemId, {
             servicoId: servico.id,
