@@ -28150,27 +28150,62 @@ A1;Peça exemplo;10'
           const list = (fechamentosRelatorios[relatorioSelecionado.id] || getItensIniciaisDoRelatorio(relatorioSelecionado)).filter(i => i.id !== id)
           setItensFechamento(list)
         }
+        const handleGerarPDFFechamento = () => {
+          if (!relatorioSelecionado) return
+          const logoHtml = getLogoHtmlForFechamento()
+          const logoSrc = logoHtml && logoHtml.includes('src="') ? logoHtml.replace(/.*src="([^"]+)".*/, '$1') : ''
+          const rows = itensParaExibir.map(item => {
+            const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
+            const cod = (item.cod ?? sv?.cod ?? sv?.nome ?? '—').toString().replace(/</g, '&lt;')
+            const desc = (item.descricao || '').replace(/</g, '&lt;')
+            const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
+            return `<tr><td>${cod}</td><td>${desc}</td><td style="text-align:right">${qtd}</td><td style="text-align:right">${item.valorUnitario.toFixed(2)} €</td><td style="text-align:right;font-weight:bold">${item.valorTotal.toFixed(2)} €</td></tr>`
+          }).join('')
+          const esc = (s: string) => (s || '').replace(/</g, '&lt;').replace(/"/g, '&quot;')
+          const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Fechamento - ${esc(relatorioSelecionado.numero)}</title><style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:20px;color:#111;font-size:11px}.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #00a650}.header-logo{max-height:52px;max-width:160px;object-fit:contain}.header-titulo{font-size:18px;font-weight:700;color:#00a650}.header-sub{font-size:12px;color:#555;margin-top:4px}.info-block{background:#f5f5f5;padding:14px 18px;border-radius:8px;margin-bottom:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}.info-block strong{color:#00a650}.tabela{width:100%;border-collapse:collapse;margin:16px 0}.tabela th,.tabela td{border:1px solid #ddd;padding:8px 10px;text-align:left}.tabela th{background:#00a650;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase}.tabela tfoot td{background:#e8f5e9;font-weight:700;font-size:14px;color:#00a650}.rodape{margin-top:24px;text-align:center;font-size:10px;color:#888}.no-print{display:block}@media print{.no-print{display:none!important}}</style></head><body><div class="no-print" style="margin-bottom:16px"><button onclick="window.print()" style="padding:10px 20px;background:#00a650;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">Imprimir / Guardar como PDF</button> <button onclick="window.close()" style="padding:10px 16px;background:#333;color:#fff;border:none;border-radius:6px;cursor:pointer">Fechar</button></div><div class="header">${logoSrc ? `<img src="${logoSrc}" alt="Logo" class="header-logo"/>` : '<div></div>'}<div><div class="header-titulo">Fechamento de Despesas - Relatório ${esc(relatorioSelecionado.numero)}</div><div class="header-sub">${esc(relatorioSelecionado.cliente)} · ${esc(relatorioSelecionado.maquinaModelo)} ${esc(relatorioSelecionado.numeroMaquina)} · ${esc(relatorioSelecionado.data)}</div></div></div><div class="info-block"><div><strong>Cliente</strong><br/>${esc(relatorioSelecionado.cliente)}</div><div><strong>Nº Relatório</strong><br/>${esc(relatorioSelecionado.numero)}</div><div><strong>Equipamento</strong><br/>${esc(relatorioSelecionado.maquinaModelo + (relatorioSelecionado.numeroMaquina ? ' ' + relatorioSelecionado.numeroMaquina : ''))}</div><div><strong>Data</strong><br/>${esc(relatorioSelecionado.data)}</div></div><table class="tabela"><thead><tr><th>COD</th><th>Descrição</th><th>Quantidade</th><th>Valor unit.</th><th>Total</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" style="text-align:right">SOMA TOTAL</td><td colspan="2" style="text-align:right">${totalCobranca.toFixed(2)} €</td></tr></tfoot></table><div class="rodape">Documento gerado em ${new Date().toLocaleString('pt-PT')}</div></body></html>`
+          const printWin = window.open('', '_blank')
+          if (!printWin) { alert((safeT as any)?.permitaPopupsPDF || 'Permita pop-ups para gerar o PDF.'); return }
+          printWin.document.write(html)
+          printWin.document.close()
+        }
+        const handleEnviarWhatsAppFechamento = () => {
+          if (!relatorioSelecionado) return
+          const linhas = itensParaExibir.map(i => `• ${(i.cod || i.descricao || '').toString().slice(0, 30)}: ${i.valorTotal.toFixed(2)} €`).join('\n')
+          const texto = `Fechamento Relatório ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento: ${relatorioSelecionado.maquinaModelo} ${relatorioSelecionado.numeroMaquina || ''}\nData: ${relatorioSelecionado.data}\n\nItens:\n${linhas}\n\n*Total: ${totalCobranca.toFixed(2)} €*`
+          window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener')
+        }
+        const handleEnviarEmailFechamento = () => {
+          if (!relatorioSelecionado) return
+          const linhas = itensParaExibir.map(i => `  • ${(i.cod || i.descricao || '').toString().slice(0, 40)}: ${i.valorTotal.toFixed(2)} €`).join('\n')
+          const assunto = `Fechamento Relatório ${relatorioSelecionado.numero} - ${relatorioSelecionado.cliente}`
+          const corpo = `Fechamento de despesas do relatório de serviço.\n\nRelatório: ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento: ${relatorioSelecionado.maquinaModelo} ${relatorioSelecionado.numeroMaquina || ''}\nData: ${relatorioSelecionado.data}\n\nItens a cobrar:\n${linhas}\n\nTotal: ${totalCobranca.toFixed(2)} €\n\n--\nEnviado pela Gestão Técnica Nonato Service`
+          window.location.href = `mailto:?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`
+        }
         return (
-          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
-            <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-              <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                <LogoComponent size="small" />
-                <div>
-                  <h1 style={{ margin: 0, fontSize: '26px', fontWeight: 'bold', color: '#00ff00', letterSpacing: '2px' }}>
-                    {(safeT as any)?.fechamentoRelatoriosServicosTitle || 'FECHAMENTO DOS RELATÓRIOS DE SERVIÇOS'}
-                  </h1>
-                  <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#aaa' }}>{relatoriosServico.length} {(safeT as any)?.totalRelatorios || 'Total de Relatórios'}</p>
+          <div style={{ padding: '24px 32px', maxWidth: '1600px', margin: '0 auto', minHeight: '100vh' }}>
+            <header style={{ background: 'linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%)', border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '16px', padding: '24px 28px', marginBottom: '28px', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <div style={{ width: '56px', height: '56px', borderRadius: '12px', background: 'rgba(0, 255, 0, 0.12)', border: '1px solid rgba(0, 255, 0, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px' }}>📋</div>
+                  <div>
+                    <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '700', color: '#fff', letterSpacing: '0.5px' }}>
+                      {(safeT as any)?.fechamentoRelatoriosServicosTitle || 'Fechamento dos Relatórios de Serviços'}
+                    </h1>
+                    <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.65)' }}>
+                      {relatoriosServico.length} {(safeT as any)?.totalRelatorios || 'relatórios'} · {(safeT as any)?.gestaoCustosTitle || 'Orçamentos e Custos'}
+                    </p>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                  {fechamentoRelatorioSelecionadoId && (
+                    <button type="button" className="btn-primary" onClick={() => setFechamentoRelatorioSelecionadoId(null)} style={{ padding: '10px 18px', fontSize: '13px', borderRadius: '10px' }}>
+                      {(safeT as any)?.voltarLista || 'Voltar à lista'}
+                    </button>
+                  )}
+                  <button type="button" onClick={() => closeTab(activeTabId || '')} style={{ padding: '10px 14px', border: '1px solid rgba(255,255,255,0.25)', borderRadius: '10px', color: 'rgba(255,255,255,0.9)', background: 'transparent', cursor: 'pointer' }} title={safeT?.voltar || 'Voltar'}>↶</button>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {fechamentoRelatorioSelecionadoId && (
-                  <button type="button" className="btn-primary" onClick={() => { setFechamentoRelatorioSelecionadoId(null) }} style={{ padding: '8px 16px', fontSize: '13px' }}>
-                    {(safeT as any)?.voltarLista || 'Voltar à lista'}
-                  </button>
-                )}
-                <button type="button" onClick={() => closeTab(activeTabId || '')} style={{ padding: '8px 12px', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', color: '#00ff00', background: 'transparent', cursor: 'pointer' }} title={safeT?.voltar || 'Voltar'}>↶</button>
-              </div>
-            </div>
+            </header>
 
             {!relatorioSelecionado ? (
               <div style={{ display: 'grid', gap: '12px' }}>
@@ -28204,13 +28239,25 @@ A1;Peça exemplo;10'
               </div>
             ) : (
               <>
-                <div style={{ padding: '20px', backgroundColor: '#2a2a2a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.25)', marginBottom: '24px' }}>
-                  <h3 style={{ margin: '0 0 12px', color: '#00ff00', fontSize: '14px' }}>{(safeT as any)?.cabecalhoRelatorio || 'Cabeçalho do relatório'}</h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
-                    <div><span style={{ color: '#888' }}>{(safeT as any)?.cliente || 'Cliente'}:</span> <strong style={{ color: '#fff' }}>{relatorioSelecionado.cliente}</strong></div>
-                    <div><span style={{ color: '#888' }}>{(safeT as any)?.numeroRelatorio || 'Nº Relatório'}:</span> <strong style={{ color: '#00ff00' }}>{relatorioSelecionado.numero}</strong></div>
-                    <div><span style={{ color: '#888' }}>{(safeT as any)?.equipamento || 'Equipamento'}:</span> <strong style={{ color: '#fff' }}>{relatorioSelecionado.maquinaModelo} {relatorioSelecionado.numeroMaquina ? `– ${relatorioSelecionado.numeroMaquina}` : ''}</strong></div>
-                    <div><span style={{ color: '#888' }}>{(safeT as any)?.data || 'Data'}:</span> <span style={{ color: '#ccc' }}>{relatorioSelecionado.data}</span></div>
+                <div style={{ padding: '22px 24px', backgroundColor: '#1e1e1e', borderRadius: '14px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '20px' }}>
+                  <h3 style={{ margin: '0 0 16px', color: 'rgba(0, 255, 0, 0.95)', fontSize: '13px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{(safeT as any)?.cabecalhoRelatorio || 'Cabeçalho do relatório'}</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+                    <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.cliente || 'Cliente'}</span><br/><strong style={{ color: '#fff', fontSize: '14px' }}>{relatorioSelecionado.cliente}</strong></div>
+                    <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.numeroRelatorio || 'Nº Relatório'}</span><br/><strong style={{ color: '#00ff00', fontSize: '14px' }}>{relatorioSelecionado.numero}</strong></div>
+                    <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.equipamento || 'Equipamento'}</span><br/><strong style={{ color: '#fff', fontSize: '14px' }}>{relatorioSelecionado.maquinaModelo} {relatorioSelecionado.numeroMaquina ? `– ${relatorioSelecionado.numeroMaquina}` : ''}</strong></div>
+                    <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.data || 'Data'}</span><br/><span style={{ color: '#ccc', fontSize: '14px' }}>{relatorioSelecionado.data}</span></div>
+                  </div>
+                  <div style={{ marginTop: '20px', paddingTop: '18px', borderTop: '1px solid rgba(0, 255, 0, 0.15)', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', marginRight: '8px' }}>{(safeT as any)?.gerarEnviar || 'Gerar / Enviar'}:</span>
+                    <button type="button" className="btn-primary" onClick={handleGerarPDFFechamento} style={{ padding: '10px 20px', fontSize: '13px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                      📄 {(safeT as any)?.gerarPDF || 'Gerar PDF'}
+                    </button>
+                    <button type="button" onClick={handleEnviarWhatsAppFechamento} style={{ padding: '10px 20px', fontSize: '13px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#25D366', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>
+                      <span style={{ fontSize: '16px' }}>WhatsApp</span> {(safeT as any)?.enviarPor || 'Enviar'}
+                    </button>
+                    <button type="button" onClick={handleEnviarEmailFechamento} style={{ padding: '10px 20px', fontSize: '13px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.4)', cursor: 'pointer', fontWeight: '500' }}>
+                      ✉ {(safeT as any)?.enviarEmail || 'Enviar por Email'}
+                    </button>
                   </div>
                 </div>
 
@@ -28224,30 +28271,39 @@ A1;Peça exemplo;10'
                         <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.quantidade || 'Quantidade'}</th>
                         <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.valorUnitario || 'Valor unit.'}</th>
                         <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.valorTotal || 'Total'}</th>
-                        <th style={{ width: '180px', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.servicoCadastro || 'Serviço (Cadastro)'}</th>
+                        <th style={{ width: '180px', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.servicoCadastroOuAnexar || 'Serviço (só para anexar)'}</th>
                         <th style={{ width: '40px' }}></th>
                       </tr>
                     </thead>
                     <tbody>
                       {itensParaExibir.map(item => {
                         const servicoVinculado = item.servicoId ? servicos.find(sv => sv.id === item.servicoId) : null
-                        const codExibir = item.cod ?? servicoVinculado?.cod ?? '—'
+                        const codExibir = (item.cod ?? servicoVinculado?.cod ?? servicoVinculado?.nome ?? '').trim() || '—'
+                        const itemFixoDoRelatorio = item.origem === 'relatorio' && (item.servicoId || item.valorUnitario > 0 || item.valorTotal > 0)
                         return (
                         <tr key={item.id} style={{ borderBottom: '1px solid #333' }}>
                           <td style={{ padding: '10px 8px', color: '#00ff00', fontWeight: 600 }}>{codExibir}</td>
                           <td style={{ padding: '10px 8px' }}>{item.descricao}</td>
                           <td style={{ padding: '10px 8px', textAlign: 'right' }}>{item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : item.quantidade}</td>
                           <td style={{ padding: '10px 8px', textAlign: 'right' }}>
-                            <input type="number" step="0.01" min={0} value={item.valorUnitario} onChange={e => atualizarItem(item.id, { valorUnitario: parseFloat(e.target.value) || 0 })} style={{ width: '80px', padding: '6px', background: '#2a2a2a', border: '1px solid #444', borderRadius: '4px', color: '#fff' }} />
+                            {itemFixoDoRelatorio ? (
+                              <span style={{ color: '#ccc' }}>{item.valorUnitario.toFixed(2)} €</span>
+                            ) : (
+                              <input type="number" step="0.01" min={0} value={item.valorUnitario} onChange={e => atualizarItem(item.id, { valorUnitario: parseFloat(e.target.value) || 0 })} style={{ width: '80px', padding: '6px', background: '#2a2a2a', border: '1px solid #444', borderRadius: '4px', color: '#fff' }} />
+                            )}
                           </td>
                           <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 600, color: '#00ff00' }}>{item.valorTotal.toFixed(2)} €</td>
                           <td style={{ padding: '8px' }}>
-                            <select value={item.servicoId || ''} onChange={e => { const sid = e.target.value; const s = servicos.find(sv => sv.id === sid); if (s) aplicarServico(item.id, s) }} style={{ width: '100%', padding: '6px 8px', background: '#2a2a2a', border: '1px solid #444', borderRadius: '4px', color: '#fff', fontSize: '12px' }}>
-                              <option value="">{(safeT as any)?.selecioneServico || '— Selecionar serviço —'}</option>
-                              {servicosParaItem(item).map(s => (
-                                <option key={s.id} value={s.id}>{s.cod ? `${s.cod} – ` : ''}{s.nome} – {s.valor}€ ({s.tipoCobranca})</option>
-                              ))}
-                            </select>
+                            {itemFixoDoRelatorio ? (
+                              <span style={{ fontSize: '12px', color: '#888' }}>{(safeT as any)?.dadosDoCadastro || 'Dados do Cadastro de Serviços'}</span>
+                            ) : (
+                              <select value={item.servicoId || ''} onChange={e => { const sid = e.target.value; const s = servicos.find(sv => sv.id === sid); if (s) aplicarServico(item.id, s) }} style={{ width: '100%', padding: '6px 8px', background: '#2a2a2a', border: '1px solid #444', borderRadius: '4px', color: '#fff', fontSize: '12px' }}>
+                                <option value="">{(safeT as any)?.selecioneServicoAnexar || '— Selecionar serviço (anexar) —'}</option>
+                                {servicosParaItem(item).map(s => (
+                                  <option key={s.id} value={s.id}>{s.cod ? `${s.cod} – ` : ''}{s.nome} – {s.valor}€ ({s.tipoCobranca})</option>
+                                ))}
+                              </select>
+                            )}
                           </td>
                           <td style={{ padding: '8px' }}>
                             {item.origem === 'manual' && <button type="button" onClick={() => removerItem(item.id)} style={{ background: 'transparent', border: 'none', color: '#f66', cursor: 'pointer', padding: '4px' }} title={(safeT as any)?.remover || 'Remover'}>✕</button>}
@@ -28256,6 +28312,13 @@ A1;Peça exemplo;10'
                         )
                       })}
                     </tbody>
+                    <tfoot>
+                      <tr style={{ borderTop: '2px solid rgba(0,255,0,0.5)', background: 'rgba(0,255,0,0.06)' }}>
+                        <td colSpan={4} style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', color: '#00ff00' }}>{(safeT as any)?.somaTotal || 'SOMA TOTAL'}</td>
+                        <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', fontSize: '16px', color: '#00ff00' }}>{totalCobranca.toFixed(2)} €</td>
+                        <td colSpan={2} style={{ padding: '12px 8px' }}></td>
+                      </tr>
+                    </tfoot>
                   </table>
                   <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                     <button type="button" className="btn-primary" onClick={adicionarItemManual} style={{ padding: '8px 16px' }}>+ {(safeT as any)?.adicionarItemCobranca || 'Adicionar item a cobrar'}</button>
