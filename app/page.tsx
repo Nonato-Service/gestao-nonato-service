@@ -28512,7 +28512,9 @@ A1;Peça exemplo;10'
                     <tbody>
                       {itensParaExibir.map(item => {
                         const servicoVinculado = item.servicoId ? servicos.find(sv => sv.id === item.servicoId) : null
-                        const codExibir = (item.cod ?? servicoVinculado?.cod ?? '').trim() || (servicoVinculado?.nome ?? '').trim() || '—'
+                        const codDoServico = (item.cod ?? servicoVinculado?.cod ?? '').trim() || (servicoVinculado?.nome ?? '').trim()
+                        const codFallbackRelatorio = item.origem === 'relatorio' && (item.id === 'ht' ? 'HT' : item.id === 'km' ? 'KM' : item.id === 'hviagem' ? 'H.Viag' : item.id === 'diarias' ? 'DIAR' : item.id === 'hida' ? 'H.Ida' : item.id === 'hret' ? 'H.Ret' : '')
+                        const codExibir = codDoServico || codFallbackRelatorio || '—'
                         const nomeExibir = (item.descricao ?? servicoVinculado?.nome ?? servicoVinculado?.descricao ?? '').trim() || '—'
                         const itemFixoDoRelatorio = item.origem === 'relatorio'
                         const eManual = item.origem === 'manual'
