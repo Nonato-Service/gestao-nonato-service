@@ -13356,6 +13356,23 @@ export default function Dashboard() {
     updatePecasButton()
   }, [updatePecasButton])
 
+  const normalizeDateKey = (value?: string): string => {
+    if (!value) return ''
+    const s = String(value).trim()
+    if (!s) return ''
+    // ISO datetime -> yyyy-mm-dd
+    if (s.includes('T') && s.length >= 10) return s.slice(0, 10)
+    // yyyy-mm-dd (input type="date")
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+    // dd/mm/yyyy (formato legado)
+    const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+    if (m) return `${m[3]}-${m[2]}-${m[1]}`
+    // fallback: tentar parsear
+    const d = new Date(s)
+    if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10)
+    return s
+  }
+
   const handleAddDiaTrabalho = () => {
     // Apenas a data é obrigatória. Se não houver data no estado, usar a data de hoje (que já aparece no campo)
     const dataParaUsar = novoDiaTrabalho.data || new Date().toISOString().split('T')[0]
@@ -13420,7 +13437,7 @@ export default function Dashboard() {
 
     const diaAtualizado = {
       ...novoDiaTrabalho,
-      data: dataParaUsar,
+      data: normalizeDateKey(dataParaUsar),
       id: editingDiaTrabalhoIndex !== null ? relatorioServicoForm.diasTrabalho[editingDiaTrabalhoIndex].id : (Date.now().toString() + Math.random().toString(36).substr(2, 9)),
       idaDuracao,
       retornoDuracao,
@@ -20765,12 +20782,13 @@ onKeyPress={(e) => {
                             // Aceitar qualquer data selecionada pelo usuário
                             const dataSelecionada = e.target.value
                             if (dataSelecionada) {
-                              const idxExistente = relatorioServicoForm.diasTrabalho?.findIndex(d => d.data === dataSelecionada) ?? -1
+                              const key = normalizeDateKey(dataSelecionada)
+                              const idxExistente = relatorioServicoForm.diasTrabalho?.findIndex(d => normalizeDateKey(d.data) === key) ?? -1
                               if (idxExistente >= 0) {
                                 const dia = relatorioServicoForm.diasTrabalho[idxExistente]
                                 setNovoDiaTrabalho({
                                   id: dia.id,
-                                  data: dia.data || dataSelecionada,
+                                  data: normalizeDateKey(dia.data) || key,
                                   idaHora: dia.idaHora || '',
                                   idaChegada: dia.idaChegada || '',
                                   idaDuracao: dia.idaDuracao || '',
@@ -20790,7 +20808,7 @@ onKeyPress={(e) => {
                                 setEditingDiaTrabalhoIndex(idxExistente)
                               } else {
                                 // Se não existir dia com essa data, apenas trocar a data e manter o resto como está
-                                setNovoDiaTrabalho(prev => ({ ...prev, data: dataSelecionada }))
+                                setNovoDiaTrabalho(prev => ({ ...prev, data: key }))
                                 setEditingDiaTrabalhoIndex(null)
                               }
                             }
@@ -20799,12 +20817,13 @@ onKeyPress={(e) => {
                             // Garantir que sempre há uma data válida quando o campo perde o foco
                             const dataValida = e.target.value || novoDiaTrabalho.data || new Date().toISOString().split('T')[0]
                             if (!novoDiaTrabalho.data || novoDiaTrabalho.data !== dataValida) {
-                              const idxExistente = relatorioServicoForm.diasTrabalho?.findIndex(d => d.data === dataValida) ?? -1
+                              const key = normalizeDateKey(dataValida)
+                              const idxExistente = relatorioServicoForm.diasTrabalho?.findIndex(d => normalizeDateKey(d.data) === key) ?? -1
                               if (idxExistente >= 0) {
                                 const dia = relatorioServicoForm.diasTrabalho[idxExistente]
                                 setNovoDiaTrabalho({
                                   id: dia.id,
-                                  data: dia.data || dataValida,
+                                  data: normalizeDateKey(dia.data) || key,
                                   idaHora: dia.idaHora || '',
                                   idaChegada: dia.idaChegada || '',
                                   idaDuracao: dia.idaDuracao || '',
@@ -20823,7 +20842,7 @@ onKeyPress={(e) => {
                                 })
                                 setEditingDiaTrabalhoIndex(idxExistente)
                               } else {
-                                setNovoDiaTrabalho(prev => ({ ...prev, data: dataValida }))
+                                setNovoDiaTrabalho(prev => ({ ...prev, data: key }))
                               }
                             }
                           }}
