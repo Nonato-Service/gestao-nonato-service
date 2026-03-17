@@ -28553,6 +28553,11 @@ A1;Peça exemplo;10'
           const list = itensParaExibir.filter(i => i.id !== id)
           setItensFechamento(list)
         }
+        const handleSalvarFechamentoNaBiblioteca = () => {
+          if (!relatorioSelecionado) return
+          setItensFechamento(itensParaExibir)
+          alert((safeT as any)?.fechamentoSalvoNaBiblioteca || 'Guardado. O fechamento está na pasta do cliente na Biblioteca de Relatórios.')
+        }
         const handleGerarPDFFechamento = () => {
           if (!relatorioSelecionado) return
           const logoHtml = getLogoHtmlForFechamento()
@@ -28566,8 +28571,34 @@ A1;Peça exemplo;10'
             return `<tr><td>${cod}</td><td>${desc}</td><td style="text-align:right">${qtd}</td><td style="text-align:right">${item.valorUnitario.toFixed(2)} €</td><td style="text-align:right;font-weight:bold">${totalLinha.toFixed(2)} €</td></tr>`
           }).join('')
           const esc = (s: string) => (s || '').replace(/</g, '&lt;').replace(/"/g, '&quot;')
-          const logoHtmlPart = logoSrc ? '<img src="' + esc(logoSrc) + '" alt="Logo" class="header-logo"/>' : '<div></div>'
-          const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Fechamento - ${esc(relatorioSelecionado.numero)}</title><style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:20px;color:#111;font-size:11px}.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #00a650}.header-logo{max-height:80px;max-width:220px;object-fit:contain}.header-titulo{font-size:18px;font-weight:700;color:#00a650}.header-sub{font-size:12px;color:#555;margin-top:4px}.info-block{background:#f5f5f5;padding:14px 18px;border-radius:8px;margin-bottom:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}.info-block strong{color:#00a650}.tabela{width:100%;border-collapse:collapse;margin:16px 0}.tabela th,.tabela td{border:1px solid #ddd;padding:8px 10px;text-align:left}.tabela th{background:#00a650;color:#fff;font-weight:600;font-size:10px;text-transform:uppercase}.tabela tfoot td{background:#e8f5e9;font-weight:700;font-size:14px;color:#00a650}.rodape{margin-top:24px;text-align:center;font-size:10px;color:#888}.no-print{display:block}@media print{.no-print{display:none!important}}</style></head><body><div class="no-print" style="margin-bottom:16px"><button onclick="window.print()" style="padding:10px 20px;background:#00a650;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">Imprimir / Guardar como PDF</button> <button onclick="window.close()" style="padding:10px 16px;background:#333;color:#fff;border:none;border-radius:6px;cursor:pointer">Fechar</button></div><div class="header">${logoHtmlPart}<div><div class="header-titulo">Fechamento de Despesas - Relatório ${esc(relatorioSelecionado.numero)}</div><div class="header-sub">${esc(relatorioSelecionado.cliente)} · ${esc(relatorioSelecionado.maquinaModelo)} ${esc(relatorioSelecionado.numeroMaquina)} · ${esc(relatorioSelecionado.data)}</div></div></div><div class="info-block"><div><strong>Cliente</strong><br/>${esc(relatorioSelecionado.cliente)}</div><div><strong>Nº Relatório</strong><br/>${esc(relatorioSelecionado.numero)}</div><div><strong>Equipamento</strong><br/>${esc(relatorioSelecionado.maquinaModelo + (relatorioSelecionado.numeroMaquina ? ' ' + relatorioSelecionado.numeroMaquina : ''))}</div><div><strong>Data</strong><br/>${esc(relatorioSelecionado.data)}</div></div><table class="tabela"><thead><tr><th>COD</th><th>Descrição</th><th>Quantidade</th><th>Valor unit.</th><th>Total</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" style="text-align:right">SOMA TOTAL</td><td colspan="2" style="text-align:right">${totalCobranca.toFixed(2)} €</td></tr></tfoot></table><div class="rodape">Documento gerado em ${new Date().toLocaleString('pt-PT')}</div></body></html>`
+          const titFechamento = (safeT as any)?.fechamentoDespesasRelatorio || 'Fechamento de Despesas'
+          const lblImprimir = (safeT as any)?.imprimirGuardarPDF || 'Imprimir / Guardar como PDF'
+          const lblFechar = safeT?.close || 'Fechar'
+          const lblCliente = (safeT as any)?.cliente || 'Cliente'
+          const lblNumRelatorio = (safeT as any)?.numeroRelatorio || 'Nº Relatório'
+          const lblEquipamento = (safeT as any)?.equipamento || 'Equipamento'
+          const lblData = (safeT as any)?.data || 'Data'
+          const lblCOD = (safeT as any)?.codigoOuCod || 'COD'
+          const lblDescricao = (safeT as any)?.descricao || 'Descrição'
+          const lblQuantidade = (safeT as any)?.quantidade || 'Quantidade'
+          const lblValorUnit = (safeT as any)?.valorUnitario || 'Valor unit.'
+          const lblTotal = (safeT as any)?.total || 'Total'
+          const lblSomaTotal = (safeT as any)?.somaTotal || 'SOMA TOTAL'
+          const modelo = fechamentoPdfModelo
+          const logoPart = logoSrc ? '<img src="' + esc(logoSrc) + '" alt="Logo" style="max-height:80px;max-width:220px;object-fit:contain"/>' : ''
+          const infoBlock = `<div style="background:#f5f5f5;padding:14px 18px;border-radius:8px;margin-bottom:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px"><div><strong>${esc(lblCliente)}</strong><br/>${esc(relatorioSelecionado.cliente)}</div><div><strong>${esc(lblNumRelatorio)}</strong><br/>${esc(relatorioSelecionado.numero)}</div><div><strong>${esc(lblEquipamento)}</strong><br/>${esc(relatorioSelecionado.maquinaModelo + (relatorioSelecionado.numeroMaquina ? ' ' + relatorioSelecionado.numeroMaquina : ''))}</div><div><strong>${esc(lblData)}</strong><br/>${esc(relatorioSelecionado.data)}</div></div>`
+          const tableContent = `<table style="width:100%;border-collapse:collapse;margin:16px 0"><thead><tr><th style="border:1px solid #ddd;padding:8px 10px;text-align:left;background:#00a650;color:#fff;font-weight:600;font-size:10px">${esc(lblCOD)}</th><th style="border:1px solid #ddd;padding:8px 10px;text-align:left;background:#00a650;color:#fff;font-weight:600;font-size:10px">${esc(lblDescricao)}</th><th style="border:1px solid #ddd;padding:8px 10px;text-align:right;background:#00a650;color:#fff;font-weight:600;font-size:10px">${esc(lblQuantidade)}</th><th style="border:1px solid #ddd;padding:8px 10px;text-align:right;background:#00a650;color:#fff;font-weight:600;font-size:10px">${esc(lblValorUnit)}</th><th style="border:1px solid #ddd;padding:8px 10px;text-align:right;background:#00a650;color:#fff;font-weight:600;font-size:10px">${esc(lblTotal)}</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" style="border:1px solid #ddd;padding:12px;text-align:right;background:#e8f5e9;font-weight:700">${esc(lblSomaTotal)}</td><td colspan="2" style="border:1px solid #ddd;padding:12px;text-align:right;background:#e8f5e9;font-weight:700;font-size:14px;color:#00a650">${totalCobranca.toFixed(2)} €</td></tr></tfoot></table>`
+          const rodape = `<div style="margin-top:24px;text-align:center;font-size:10px;color:#888">${new Date().toLocaleString(selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : selectedLanguage === 'de' ? 'de-DE' : 'en-GB')}</div>`
+          let headerStyle = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #00a650'
+          let titleStyle = 'font-size:18px;font-weight:700;color:#00a650'
+          let bodyBg = '#fff'
+          let bodyColor = '#111'
+          if (modelo === 2) { headerStyle = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #1565c0'; titleStyle = 'font-size:18px;font-weight:700;color:#1565c0' }
+          if (modelo === 3) { headerStyle = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #333'; titleStyle = 'font-size:18px;font-weight:700;color:#111' }
+          if (modelo === 4) { headerStyle = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding:16px;background:#37474f;color:#fff;border-radius:8px'; titleStyle = 'font-size:18px;font-weight:700;color:#fff'; bodyBg = '#fafafa'; bodyColor = '#263238' }
+          if (modelo === 5) { headerStyle = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding:20px;background:linear-gradient(135deg,#1a237e,#0d47a1);color:#fff;border-radius:12px'; titleStyle = 'font-size:20px;font-weight:700;color:#fff' }
+          if (modelo === 6) { headerStyle = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid #ff6f00'; titleStyle = 'font-size:18px;font-weight:700;color:#e65100' }
+          const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(titFechamento)} - ${esc(relatorioSelecionado.numero)}</title><style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:20px;color:${bodyColor};font-size:11px;background:${bodyBg}}.header{${headerStyle}}.no-print{display:block}@media print{.no-print{display:none!important}}</style></head><body><div class="no-print" style="margin-bottom:16px"><button onclick="window.print()" style="padding:10px 20px;background:#00a650;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">${esc(lblImprimir)}</button> <button onclick="window.close()" style="padding:10px 16px;background:#333;color:#fff;border:none;border-radius:6px;cursor:pointer">${esc(lblFechar)}</button></div><div class="header">${logoPart}<div><div style="${titleStyle}">${esc(titFechamento)} - ${(safeT as any)?.relatorio || 'Relatório'} ${esc(relatorioSelecionado.numero)}</div><div style="font-size:12px;color:#555;margin-top:4px">${esc(relatorioSelecionado.cliente)} · ${esc(relatorioSelecionado.maquinaModelo)} ${esc(relatorioSelecionado.numeroMaquina)} · ${esc(relatorioSelecionado.data)}</div></div></div>${infoBlock}${tableContent}${rodape}</body></html>`
           const printWin = window.open('', '_blank')
           if (!printWin) { alert((safeT as any)?.permitaPopupsPDF || 'Permita pop-ups para gerar o PDF.'); return }
           printWin.document.write(html)
@@ -28659,7 +28690,10 @@ A1;Peça exemplo;10'
                 </div>
 
                 <div style={{ padding: '20px', backgroundColor: '#1e1e1e', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.25)' }}>
-                  <h3 style={{ margin: '0 0 16px', color: '#00ff00', fontSize: '16px' }}>{(safeT as any)?.itensCobrancaFechamento || 'Itens a cobrar (ajuste com o Cadastro de Serviços)'}</h3>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '16px' }}>
+                    <h3 style={{ margin: 0, color: '#00ff00', fontSize: '16px' }}>{(safeT as any)?.itensCobrancaFechamento || 'Itens a cobrar (ajuste com o Cadastro de Serviços)'}</h3>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.8)' }}>✏️ {(safeT as any)?.editarItensFechamento || 'Editar itens'}</span>
+                  </div>
                   <table style={{ width: '100%', borderCollapse: 'collapse', color: '#ccc' }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid rgba(0,255,0,0.3)' }}>
@@ -28746,7 +28780,18 @@ A1;Peça exemplo;10'
                     <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{(safeT as any)?.total || 'Total'}: {totalCobranca.toFixed(2)} €</div>
                   </div>
                   <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', marginRight: '8px' }}>{(safeT as any)?.gerarEnviar || 'Gerar / Enviar'}:</span>
+                    <button type="button" className="btn-primary" onClick={handleSalvarFechamentoNaBiblioteca} style={{ padding: '10px 20px', fontSize: '13px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(0, 200, 83, 0.25)', border: '1px solid rgba(0, 255, 0, 0.6)', color: '#00ff00', fontWeight: '600' }}>
+                      💾 {(safeT as any)?.salvarEnviarBiblioteca || 'Salvar e enviar para a Biblioteca'}
+                    </button>
+                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', marginRight: '4px' }}>{(safeT as any)?.modeloPDFFechamento || 'Modelo PDF'}:</span>
+                    <select value={fechamentoPdfModelo} onChange={e => setFechamentoPdfModelo(Number(e.target.value))} style={{ padding: '8px 12px', fontSize: '12px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.4)', borderRadius: '8px', cursor: 'pointer', minWidth: '140px' }}>
+                      <option value={1}>{(safeT as any)?.modeloFechamentoClassico || '1. Clássico'}</option>
+                      <option value={2}>{(safeT as any)?.modeloFechamentoModerno || '2. Moderno'}</option>
+                      <option value={3}>{(safeT as any)?.modeloFechamentoMinimalista || '3. Minimalista'}</option>
+                      <option value={4}>{(safeT as any)?.modeloFechamentoTecnico || '4. Técnico'}</option>
+                      <option value={5}>{(safeT as any)?.modeloFechamentoExecutivo || '5. Executivo'}</option>
+                      <option value={6}>{(safeT as any)?.modeloFechamentoColorido || '6. Colorido'}</option>
+                    </select>
                     <button type="button" className="btn-primary" onClick={handleGerarPDFFechamento} style={{ padding: '10px 20px', fontSize: '13px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                       📄 {(safeT as any)?.gerarPDF || 'Gerar PDF'}
                     </button>
