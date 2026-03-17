@@ -28562,7 +28562,7 @@ A1;Peça exemplo;10'
                             {itemFixoDoRelatorio ? (
                               <span style={{ color: '#ccc' }}>{item.valorUnitario.toFixed(2)} €</span>
                             ) : (
-                              <input type="number" step="0.01" min={0} value={item.valorUnitario} onChange={e => atualizarItem(item.id, { valorUnitario: parseFloat(e.target.value) || 0 })} style={{ width: '80px', padding: '6px', background: '#2a2a2a', border: '1px solid #444', borderRadius: '4px', color: '#fff' }} />
+                              <input type="number" step="0.01" min={0} value={item.valorUnitario === 0 ? '' : item.valorUnitario} onChange={e => atualizarItem(item.id, { valorUnitario: parseFloat(e.target.value) || 0 })} style={{ width: '80px', padding: '6px', background: '#2a2a2a', border: '1px solid #444', borderRadius: '4px', color: '#fff' }} placeholder="0,00" />
                             )}
                           </td>
                           <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 600, color: cobrarDiaria ? '#00ff00' : '#888' }}>{totalExibir.toFixed(2)} €{eDiarias && !cobrarDiaria ? ' (' + ((safeT as any)?.naoCobrar || 'não cobrar') + ')' : ''}</td>
