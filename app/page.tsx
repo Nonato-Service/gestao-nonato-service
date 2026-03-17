@@ -363,6 +363,8 @@ type FechamentoItem = {
   valorUnitario: number
   valorTotal: number
   origem?: 'relatorio' | 'manual'
+  /** Apenas para item Diárias: false = não cobrar diária ao cliente (Sim/Não) */
+  cobrarDiaria?: boolean
 }
 
 type PedidoOrcamento = {
@@ -28295,7 +28297,7 @@ A1;Peça exemplo;10'
             { id: 'ht', descricao: lab('horasTrabalho') || 'Horas de Trabalho', tipoCobranca: 'hora', quantidade: t.horasTrabalhoDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
             { id: 'km', descricao: lab('kmsPercorridos') || 'Km\'s Percorridos', tipoCobranca: 'km', quantidade: t.kmsPercorridos, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
             { id: 'hviagem', descricao: lab('horasViagem') || 'Horas de Viagem', tipoCobranca: 'hora', quantidade: t.horasViagemDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
-            { id: 'diarias', descricao: lab('diarias') || 'Diárias', tipoCobranca: 'diarias', quantidade: t.numDiarias, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
+            { id: 'diarias', descricao: lab('diarias') || 'Diárias', tipoCobranca: 'diarias', quantidade: t.numDiarias, valorUnitario: 0, valorTotal: 0, origem: 'relatorio', cobrarDiaria: true },
             { id: 'hida', descricao: lab('horasViagemIda') || 'Horas de Viagem de Ida', tipoCobranca: 'hora', quantidade: t.horasViagemIdaDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
             { id: 'hret', descricao: lab('horasViagemRetorno') || 'Horas de Viagem de Retorno', tipoCobranca: 'hora', quantidade: t.horasViagemRetornoDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' }
           ]
@@ -28338,13 +28340,16 @@ A1;Peça exemplo;10'
                 const qty = item.quantidade ?? 0
                 const valorUnit = saved.valorUnitario ?? item.valorUnitario
                 const total = (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias') ? Math.round(qty * valorUnit * 100) / 100 : valorUnit
-                return { ...saved, quantidade: item.quantidade, valorUnitario: valorUnit, valorTotal: total }
+                const cobrarDiaria = item.id === 'diarias' && typeof saved.cobrarDiaria === 'boolean' ? saved.cobrarDiaria : (item as FechamentoItem).cobrarDiaria !== false
+                return { ...saved, quantidade: item.quantidade, valorUnitario: valorUnit, valorTotal: total, cobrarDiaria: item.id === 'diarias' ? cobrarDiaria : undefined }
               })
-              return [...seisComQuantidadeDoResumo, ...itensManuaisSalvos]
+              const seisIds = ['ht', 'km', 'hviagem', 'diarias', 'hida', 'hret']
+              const comTodosSeis = seisIds.map(id => seisComQuantidadeDoResumo.find(i => i.id === id) || itensIniciaisSempre.find(i => i.id === id)).filter(Boolean) as FechamentoItem[]
+              return [...comTodosSeis, ...itensManuaisSalvos]
             })()
           : []
         const servicosParaItem = (item: FechamentoItem) => servicos.filter(s => item.tipoCobranca === 'hora' ? s.tipoCobranca === 'hora' : item.tipoCobranca === 'km' ? s.tipoCobranca === 'km' : item.tipoCobranca === 'diarias' ? s.tipoCobranca === 'diarias' : true)
-        const totalCobranca = itensParaExibir.reduce((s, i) => s + i.valorTotal, 0)
+        const totalCobranca = itensParaExibir.reduce((s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal), 0)
         const atualizarItem = (id: string, upd: Partial<FechamentoItem>) => {
           const list = itensParaExibir
           const idx = list.findIndex(i => i.id === id)
@@ -28391,7 +28396,8 @@ A1;Peça exemplo;10'
             const cod = (item.cod ?? sv?.cod ?? sv?.nome ?? '—').toString().replace(/</g, '&lt;')
             const desc = (item.descricao || '').replace(/</g, '&lt;')
             const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
-            return `<tr><td>${cod}</td><td>${desc}</td><td style="text-align:right">${qtd}</td><td style="text-align:right">${item.valorUnitario.toFixed(2)} €</td><td style="text-align:right;font-weight:bold">${item.valorTotal.toFixed(2)} €</td></tr>`
+            const totalLinha = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
+            return `<tr><td>${cod}</td><td>${desc}</td><td style="text-align:right">${qtd}</td><td style="text-align:right">${item.valorUnitario.toFixed(2)} €</td><td style="text-align:right;font-weight:bold">${totalLinha.toFixed(2)} €</td></tr>`
           }).join('')
           const esc = (s: string) => (s || '').replace(/</g, '&lt;').replace(/"/g, '&quot;')
           const logoHtmlPart = logoSrc ? '<img src="' + esc(logoSrc) + '" alt="Logo" class="header-logo"/>' : '<div></div>'
@@ -28403,13 +28409,13 @@ A1;Peça exemplo;10'
         }
         const handleEnviarWhatsAppFechamento = () => {
           if (!relatorioSelecionado) return
-          const linhas = itensParaExibir.map(i => `• ${(i.cod || i.descricao || '').toString().slice(0, 30)}: ${i.valorTotal.toFixed(2)} €`).join('\n')
+          const linhas = itensParaExibir.map(i => `• ${(i.cod || i.descricao || '').toString().slice(0, 30)}: ${(i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal).toFixed(2)} €`).join('\n')
           const texto = `Fechamento Relatório ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento: ${relatorioSelecionado.maquinaModelo} ${relatorioSelecionado.numeroMaquina || ''}\nData: ${relatorioSelecionado.data}\n\nItens:\n${linhas}\n\n*Total: ${totalCobranca.toFixed(2)} €*`
           window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener')
         }
         const handleEnviarEmailFechamento = () => {
           if (!relatorioSelecionado) return
-          const linhas = itensParaExibir.map(i => `  • ${(i.cod || i.descricao || '').toString().slice(0, 40)}: ${i.valorTotal.toFixed(2)} €`).join('\n')
+          const linhas = itensParaExibir.map(i => `  • ${(i.cod || i.descricao || '').toString().slice(0, 40)}: ${(i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal).toFixed(2)} €`).join('\n')
           const assunto = `Fechamento Relatório ${relatorioSelecionado.numero} - ${relatorioSelecionado.cliente}`
           const corpo = `Fechamento de despesas do relatório de serviço.\n\nRelatório: ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento: ${relatorioSelecionado.maquinaModelo} ${relatorioSelecionado.numeroMaquina || ''}\nData: ${relatorioSelecionado.data}\n\nItens a cobrar:\n${linhas}\n\nTotal: ${totalCobranca.toFixed(2)} €\n\n--\nEnviado pela Gestão Técnica Nonato Service`
           window.location.href = `mailto:?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`
@@ -28496,6 +28502,7 @@ A1;Peça exemplo;10'
                         <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.quantidade || 'Quantidade'}</th>
                         <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.valorUnitario || 'Valor unit.'}</th>
                         <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.valorTotal || 'Total'}</th>
+                        <th style={{ width: '140px', padding: '10px 8px', color: '#00ff00', textAlign: 'center' }}>{(safeT as any)?.cobrarDiariaTecnico || 'Cobrar diária?'}</th>
                         {itensParaExibir.some(i => i.origem === 'manual') && (
                           <th style={{ width: '200px', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.selecionarServicoAnexar || 'Anexar: selecionar do Cadastro'}</th>
                         )}
@@ -28509,6 +28516,9 @@ A1;Peça exemplo;10'
                         const nomeExibir = (item.descricao ?? servicoVinculado?.nome ?? servicoVinculado?.descricao ?? '').trim() || '—'
                         const itemFixoDoRelatorio = item.origem === 'relatorio'
                         const eManual = item.origem === 'manual'
+                        const eDiarias = item.id === 'diarias'
+                        const cobrarDiaria = eDiarias ? (item.cobrarDiaria !== false) : true
+                        const totalExibir = eDiarias && !cobrarDiaria ? 0 : item.valorTotal
                         return (
                         <tr key={item.id} style={{ borderBottom: '1px solid #333' }}>
                           <td style={{ padding: '10px 8px', color: '#00ff00', fontWeight: 600 }}>{codExibir}</td>
@@ -28521,7 +28531,17 @@ A1;Peça exemplo;10'
                               <input type="number" step="0.01" min={0} value={item.valorUnitario} onChange={e => atualizarItem(item.id, { valorUnitario: parseFloat(e.target.value) || 0 })} style={{ width: '80px', padding: '6px', background: '#2a2a2a', border: '1px solid #444', borderRadius: '4px', color: '#fff' }} />
                             )}
                           </td>
-                          <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 600, color: '#00ff00' }}>{item.valorTotal.toFixed(2)} €</td>
+                          <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 600, color: cobrarDiaria ? '#00ff00' : '#888' }}>{totalExibir.toFixed(2)} €{eDiarias && !cobrarDiaria ? ' (' + ((safeT as any)?.naoCobrar || 'não cobrar') + ')' : ''}</td>
+                          <td style={{ padding: '8px', textAlign: 'center' }}>
+                            {eDiarias ? (
+                              <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                <button type="button" onClick={() => atualizarItem('diarias', { cobrarDiaria: true })} style={{ padding: '6px 12px', borderRadius: '6px', border: cobrarDiaria ? '2px solid #00ff00' : '1px solid #555', background: cobrarDiaria ? 'rgba(0,255,0,0.2)' : 'transparent', color: cobrarDiaria ? '#00ff00' : '#888', cursor: 'pointer', fontWeight: cobrarDiaria ? 600 : 400 }}>{(safeT as any)?.sim || 'Sim'}</button>
+                                <button type="button" onClick={() => atualizarItem('diarias', { cobrarDiaria: false })} style={{ padding: '6px 12px', borderRadius: '6px', border: !cobrarDiaria ? '2px solid #ff8800' : '1px solid #555', background: !cobrarDiaria ? 'rgba(255,136,0,0.15)' : 'transparent', color: !cobrarDiaria ? '#ff8800' : '#888', cursor: 'pointer', fontWeight: !cobrarDiaria ? 600 : 400 }}>{(safeT as any)?.nao || 'Não'}</button>
+                              </div>
+                            ) : (
+                              <span style={{ color: '#444' }}>—</span>
+                            )}
+                          </td>
                           {itensParaExibir.some(i => i.origem === 'manual') && (
                             <td style={{ padding: '8px' }}>
                               {eManual ? (
@@ -28547,6 +28567,7 @@ A1;Peça exemplo;10'
                       <tr style={{ borderTop: '2px solid rgba(0,255,0,0.5)', background: 'rgba(0,255,0,0.06)' }}>
                         <td colSpan={4} style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', color: '#00ff00' }}>{(safeT as any)?.somaTotal || 'SOMA TOTAL'}</td>
                         <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', fontSize: '16px', color: '#00ff00' }}>{totalCobranca.toFixed(2)} €</td>
+                        <td style={{ padding: '12px 8px' }}></td>
                         {itensParaExibir.some(i => i.origem === 'manual') && <td style={{ padding: '12px 8px' }}></td>}
                         <td style={{ padding: '12px 8px' }}></td>
                       </tr>
