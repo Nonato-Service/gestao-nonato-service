@@ -7884,10 +7884,29 @@ export default function Dashboard() {
   }
 
   const handleDeleteCliente = (clienteId: string) => {
-    if (window.confirm((t as any).confirmDeleteCliente)) {
+    if (window.confirm((t as any).confirmDeleteCliente || 'Tem certeza que deseja excluir este cliente? Os relatórios e despesas associados também serão removidos.')) {
       const updatedClientes = clientes.filter(c => c.id !== clienteId)
       setClientes(updatedClientes)
       saveData('nonato-clientes', updatedClientes)
+      // Remover relatórios de serviço e fechamentos deste cliente
+      const reportIdsDoCliente = relatoriosServico.filter(r => r.clienteId === clienteId).map(r => r.id)
+      if (reportIdsDoCliente.length > 0) {
+        const updatedRelatorios = relatoriosServico.filter(r => r.clienteId !== clienteId)
+        setRelatoriosServico(updatedRelatorios)
+        saveData('nonato-relatorios-servico', updatedRelatorios)
+        const nextFechamentos = { ...fechamentosRelatorios }
+        reportIdsDoCliente.forEach(id => { delete nextFechamentos[id] })
+        setFechamentosRelatorios(nextFechamentos)
+        saveData('nonato-fechamentos-relatorios', nextFechamentos)
+      }
+    }
+  }
+
+  const handleDeleteFechamentoRelatorio = (relatorioId: string) => {
+    if (window.confirm((safeT as any)?.confirmDeleteFechamentoDespesas || 'Remover o fechamento de despesas deste relatório?')) {
+      const { [relatorioId]: _, ...rest } = fechamentosRelatorios
+      setFechamentosRelatorios(rest)
+      saveData('nonato-fechamentos-relatorios', rest)
     }
   }
 
@@ -7910,7 +7929,8 @@ export default function Dashboard() {
       const newCliente: Cliente = {
         id: Date.now().toString(),
         ...clienteForm,
-        equipamentos: []
+        equipamentos: [],
+        relatorios: {} // Pasta na Biblioteca de Relatórios (Relatórios de Serviço + Despesas)
       }
       updatedClientes = [...clientes, newCliente]
     }
@@ -12843,6 +12863,24 @@ export default function Dashboard() {
       const updatedRelatorios = relatoriosServico.filter(r => r.id !== relatorioId)
       setRelatoriosServico(updatedRelatorios)
       saveData('nonato-relatorios-servico', updatedRelatorios)
+      // Remover também dos relatórios do cliente e o fechamento de despesas associado
+      const relatorio = relatoriosServico.find(r => r.id === relatorioId)
+      if (relatorio?.clienteId) {
+        const updatedClientes = clientes.map(c => {
+          if (c.id !== relatorio.clienteId || !c.relatorios) return c
+          const newRelatorios = { ...c.relatorios }
+          Object.keys(newRelatorios).forEach(equipKey => {
+            newRelatorios[equipKey] = newRelatorios[equipKey].filter(r => r.id !== relatorioId)
+            if (newRelatorios[equipKey].length === 0) delete newRelatorios[equipKey]
+          })
+          return { ...c, relatorios: newRelatorios }
+        })
+        setClientes(updatedClientes)
+        saveData('nonato-clientes', updatedClientes)
+      }
+      const { [relatorioId]: _, ...restFechamentos } = fechamentosRelatorios
+      setFechamentosRelatorios(restFechamentos)
+      saveData('nonato-fechamentos-relatorios', restFechamentos)
     }
   }
 
@@ -39120,55 +39158,59 @@ A1;Peça exemplo;10'
         )
 
       case 'biblioteca-relatorios':
-        // Coletar todos os relatórios organizados por cliente e equipamento
+        // Uma pasta por cliente: Relatórios de Serviço + Relatórios de Despesas (fechamentos). Todos os clientes aparecem.
         const relatoriosPorCliente: Array<{
           cliente: Cliente,
           equipamentos: Array<{
             equipamento: EquipamentoCliente,
             relatorios: RelatorioServico[]
-          }>
+          }>,
+          despesas: Array<{ relatorio: RelatorioServico, itens: FechamentoItem[] }>
         }> = []
 
         let totalRelatorios = 0
 
         clientes.forEach(cliente => {
-          if (cliente.relatorios && Object.keys(cliente.relatorios).length > 0) {
-            const equipamentosComRelatorios: Array<{
-              equipamento: EquipamentoCliente,
-              relatorios: RelatorioServico[]
-            }> = []
+          const equipamentosComRelatorios: Array<{
+            equipamento: EquipamentoCliente,
+            relatorios: RelatorioServico[]
+          }> = []
 
-            // Para cada equipamento que tem relatórios
+          if (cliente.relatorios && Object.keys(cliente.relatorios).length > 0) {
             Object.keys(cliente.relatorios).forEach(equipamentoKey => {
               const relatorios = cliente.relatorios![equipamentoKey] || []
               if (relatorios.length > 0) {
                 totalRelatorios += relatorios.length
-                // Encontrar o equipamento correspondente
-                const equipamento = cliente.equipamentos?.find(eq => 
-                  eq.numeroSerie === equipamentoKey || 
+                const equipamento = cliente.equipamentos?.find(eq =>
+                  eq.numeroSerie === equipamentoKey ||
                   `${eq.modelo} ${eq.marca}`.trim() === equipamentoKey
                 )
-                
                 if (equipamento) {
                   equipamentosComRelatorios.push({
                     equipamento,
                     relatorios: relatorios.sort((a, b) => {
                       const dataA = new Date(a.data).getTime()
                       const dataB = new Date(b.data).getTime()
-                      return dataB - dataA // Mais recente primeiro
+                      return dataB - dataA
                     })
                   })
                 }
               }
             })
-
-            if (equipamentosComRelatorios.length > 0) {
-              relatoriosPorCliente.push({
-                cliente,
-                equipamentos: equipamentosComRelatorios
-              })
-            }
           }
+
+          const relatoriosDoCliente = relatoriosServico.filter(r => r.clienteId === cliente.id)
+          const despesas: Array<{ relatorio: RelatorioServico, itens: FechamentoItem[] }> = []
+          relatoriosDoCliente.forEach(rel => {
+            const itens = fechamentosRelatorios[rel.id]
+            if (itens && itens.length > 0) despesas.push({ relatorio: rel, itens })
+          })
+
+          relatoriosPorCliente.push({
+            cliente,
+            equipamentos: equipamentosComRelatorios,
+            despesas
+          })
         })
 
         return (
@@ -39214,7 +39256,9 @@ A1;Peça exemplo;10'
                       color: '#ccc',
                       opacity: 0.8
                     }}>
-                      {safeT?.nenhumRelatorioSalvo || 'Nenhum relatório salvo ainda'}
+                      {relatoriosPorCliente.length === 0
+                        ? (safeT?.nenhumClienteCadastrado || 'Nenhum cliente cadastrado. Crie um cliente para ver a pasta na biblioteca.')
+                        : (safeT?.nenhumRelatorioSalvo || 'Nenhum relatório salvo ainda. Cada cliente tem a sua pasta.')}
                     </p>
                   )}
                 </div>
@@ -39294,12 +39338,12 @@ A1;Peça exemplo;10'
                   {safeT?.nenhumRelatorioSalvo || 'Nenhum relatório salvo ainda.'}
                 </p>
                 <p style={{ opacity: 0.5, fontSize: '14px' }}>
-                  {safeT?.relatoriosOrganizadosPorCliente || 'Os relatórios salvos aparecerão aqui organizados por cliente e equipamento.'}
+                  {safeT?.relatoriosOrganizadosPorCliente || 'Crie um cliente em Gestão Técnica → Clientes; cada cliente terá aqui uma pasta com Relatórios de Serviço e Relatórios de Despesas.'}
                 </p>
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '15px' }}>
-                {relatoriosPorCliente.map(({ cliente, equipamentos }) => {
+                {relatoriosPorCliente.map(({ cliente, equipamentos, despesas: despesasCliente }) => {
                   const totalRelatoriosCliente = equipamentos.reduce((sum, eq) => sum + eq.relatorios.length, 0)
                   return (
                     <div 
@@ -39312,30 +39356,61 @@ A1;Peça exemplo;10'
                         boxShadow: '0 2px 8px rgba(0, 255, 0, 0.1)'
                       }}
                     >
-                      {/* Cabeçalho do Cliente */}
+                      {/* Cabeçalho do Cliente + Excluir pasta */}
                       <div style={{ 
                         marginBottom: '12px', 
                         paddingBottom: '10px',
                         borderBottom: '1px solid rgba(0, 255, 0, 0.4)'
                       }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                          <h3 style={{ margin: 0, color: '#00ff00', fontSize: '16px', fontWeight: 'bold' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', flexWrap: 'wrap', gap: '8px' }}>
+                          <h3 style={{ margin: 0, color: '#00ff00', fontSize: '16px', fontWeight: 'bold', flex: 1, minWidth: 0 }}>
                             📋 {cliente.nomeEmpresa}
                           </h3>
-                          <span style={{ 
-                            backgroundColor: 'rgba(0, 255, 0, 0.2)', 
-                            color: '#00ff00',
-                            padding: '2px 8px',
-                            borderRadius: '8px',
-                            fontSize: '10px',
-                            fontWeight: 'bold'
-                          }}>
-                            {totalRelatoriosCliente}
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ 
+                              backgroundColor: 'rgba(0, 255, 0, 0.2)', 
+                              color: '#00ff00',
+                              padding: '2px 8px',
+                              borderRadius: '8px',
+                              fontSize: '10px',
+                              fontWeight: 'bold'
+                            }}>
+                              {totalRelatoriosCliente} {(safeT as any)?.relatoriosServicoShort || 'rel.'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCliente(cliente.id)}
+                              style={{
+                                padding: '4px 10px',
+                                fontSize: '10px',
+                                backgroundColor: 'rgba(255, 68, 68, 0.2)',
+                                border: '1px solid rgba(255, 68, 68, 0.6)',
+                                color: '#ff8888',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold'
+                              }}
+                              title={(safeT as any)?.excluirPastaBiblioteca || 'Excluir pasta (e cliente)'}
+                            >
+                              🗑️ {(safeT as any)?.excluirPasta || 'Excluir pasta'}
+                            </button>
+                          </div>
                         </div>
                         {cliente.localidade && (
                           <p style={{ margin: 0, fontSize: '11px', opacity: 0.7, color: '#ccc' }}>
                             📍 {cliente.localidade}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Secção: Relatórios de Serviço */}
+                      <div style={{ marginBottom: '8px' }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#00ff00', fontWeight: 'bold' }}>
+                          {(safeT as any)?.relatoriosServicoTitle || 'Relatórios de Serviço'}
+                        </h4>
+                        {equipamentos.length === 0 && (
+                          <p style={{ margin: 0, fontSize: '11px', opacity: 0.7, color: '#888' }}>
+                            {(safeT as any)?.nenhumRelatorioServicoCliente || 'Nenhum relatório de serviço'}
                           </p>
                         )}
                       </div>
@@ -39473,12 +39548,13 @@ A1;Peça exemplo;10'
                                         <option value="formal">{safeT?.modeloFormal || 'Formal'}</option>
                                         <option value="lista">{safeT?.modeloLista || 'Lista'}</option>
                                       </select>
-                                      <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
+                                      <div style={{ display: 'flex', gap: '6px', width: '100%', flexWrap: 'wrap' }}>
                                         <button 
                                           className="btn-primary" 
                                           onClick={() => setViewingRelatorioServico(relatorio)}
                                           style={{ 
                                             flex: 1,
+                                            minWidth: '60px',
                                             padding: '6px 10px', 
                                             fontSize: '10px',
                                             backgroundColor: 'rgba(0, 255, 0, 0.2)',
@@ -39493,6 +39569,7 @@ A1;Peça exemplo;10'
                                           onClick={() => handlePrintRelatorio(relatorio)}
                                           style={{ 
                                             flex: 1,
+                                            minWidth: '60px',
                                             padding: '6px 10px', 
                                             fontSize: '10px', 
                                             backgroundColor: 'rgba(0, 150, 255, 0.2)', 
@@ -39502,6 +39579,22 @@ A1;Peça exemplo;10'
                                         >
                                           📄 {safeT?.gerarPDF || 'PDF'}
                                         </button>
+                                        <button 
+                                          type="button"
+                                          onClick={() => handleDeleteRelatorioServico(relatorio.id)}
+                                          style={{ 
+                                            padding: '6px 10px', 
+                                            fontSize: '10px', 
+                                            backgroundColor: 'rgba(255, 68, 68, 0.2)', 
+                                            border: '1px solid rgba(255, 68, 68, 0.5)',
+                                            color: '#ff8888',
+                                            borderRadius: '4px',
+                                            cursor: 'pointer'
+                                          }}
+                                          title={safeT?.delete || 'Excluir'}
+                                        >
+                                          🗑️
+                                        </button>
                                       </div>
                                     </div>
                                   </div>
@@ -39510,6 +39603,65 @@ A1;Peça exemplo;10'
                             </div>
                           </div>
                         ))}
+
+                        {/* Secção: Relatórios de Despesas (fechamentos) */}
+                        <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid rgba(0, 255, 0, 0.25)' }}>
+                          <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffaa00', fontWeight: 'bold' }}>
+                            {(safeT as any)?.relatoriosDespesasTitle || 'Relatórios de Despesas'}
+                          </h4>
+                          {despesasCliente.length === 0 ? (
+                            <p style={{ margin: 0, fontSize: '11px', opacity: 0.7, color: '#888' }}>
+                              {(safeT as any)?.nenhumRelatorioDespesas || 'Nenhum fechamento de despesas'}
+                            </p>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              {despesasCliente.map(({ relatorio, itens }) => {
+                                const totalCobranca = itens.reduce((s, i) => s + (i.valorTotal || 0), 0)
+                                return (
+                                  <div 
+                                    key={relatorio.id} 
+                                    style={{ 
+                                      padding: '8px 10px', 
+                                      backgroundColor: '#1a1a1a', 
+                                      borderRadius: '4px', 
+                                      border: '1px solid rgba(255, 170, 0, 0.3)',
+                                      display: 'flex',
+                                      justifyContent: 'space-between',
+                                      alignItems: 'center',
+                                      flexWrap: 'wrap',
+                                      gap: '6px'
+                                    }}
+                                  >
+                                    <div>
+                                      <span style={{ fontWeight: 'bold', color: '#ffaa00', fontSize: '12px' }}>
+                                        {(safeT as any)?.fechamentoRelatorio || 'Fechamento'} {relatorio.numero}
+                                      </span>
+                                      <span style={{ fontSize: '11px', color: '#ccc', marginLeft: '6px' }}>
+                                        €{totalCobranca.toFixed(2)}
+                                      </span>
+                                    </div>
+                                    <button 
+                                      type="button"
+                                      onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)}
+                                      style={{ 
+                                        padding: '4px 8px', 
+                                        fontSize: '10px', 
+                                        backgroundColor: 'rgba(255, 68, 68, 0.2)', 
+                                        border: '1px solid rgba(255, 68, 68, 0.5)',
+                                        color: '#ff8888',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
+                                      }}
+                                      title={(safeT as any)?.excluirFechamentoDespesas || 'Excluir fechamento de despesas'}
+                                    >
+                                      🗑️ {safeT?.delete || 'Excluir'}
+                                    </button>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )
