@@ -21498,7 +21498,7 @@ onKeyPress={(e) => {
                                             fontWeight: '600',
                                             whiteSpace: 'nowrap',
                                             borderRadius: '4px',
-                                            width: '56px',
+                                            minWidth: '72px',
                                             boxSizing: 'border-box'
                                           }}
                                           title={(safeT as any)?.editar || safeT?.edit || 'Editar'}
@@ -21515,7 +21515,7 @@ onKeyPress={(e) => {
                                             fontWeight: '600',
                                             whiteSpace: 'nowrap',
                                             borderRadius: '4px',
-                                            width: '56px',
+                                            minWidth: '72px',
                                             boxSizing: 'border-box'
                                           }}
                                           title={safeT?.delete || 'Excluir'}
