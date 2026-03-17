@@ -22433,34 +22433,33 @@ onKeyPress={(e) => {
                                 padding: '8px 6px', 
                                 fontSize: '11px',
                                 fontWeight: 'bold',
-                                backgroundColor: '#00ff00',
-                                borderColor: '#00ff00',
-                                color: '#000',
-                              display: 'flex',
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: '6px',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                              border: '2px solid #00ff00',
-                              boxSizing: 'border-box',
-                              letterSpacing: '0.5px'
-                            }}
-                            title={safeT?.edit || 'Editar'}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
-                              e.currentTarget.style.transform = 'scale(1.02)'
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = '#2a2a2a'
-                              e.currentTarget.style.transform = 'scale(1)'
-                            }}
-                          >
-                            <span style={{ fontSize: '16px', lineHeight: '1' }}>✏️</span>
-                            <span style={{ lineHeight: '1.3', whiteSpace: 'nowrap', fontSize: '11px', fontWeight: 'bold', color: '#000' }}>{safeT?.edit || 'Editar'}</span>
-                          </button>
+                                backgroundColor: 'rgba(0, 255, 0, 0.2)',
+                                border: '1px solid rgba(0, 255, 0, 0.6)',
+                                color: '#fff',
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                boxSizing: 'border-box',
+                                letterSpacing: '0.5px'
+                              }}
+                              title={safeT?.edit || 'Editar'}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.35)'
+                                e.currentTarget.style.transform = 'scale(1.02)'
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.2)'
+                                e.currentTarget.style.transform = 'scale(1)'
+                              }}
+                            >
+                              <span style={{ fontSize: '16px', lineHeight: '1' }}>✏️</span>
+                              <span style={{ lineHeight: '1.3', whiteSpace: 'nowrap', fontSize: '11px', fontWeight: 'bold', color: '#fff' }}>{safeT?.edit || 'Editar'}</span>
+                            </button>
                           </div>
                           
                           {/* Segunda linha: Ver e Gerar PDF */}
@@ -22478,9 +22477,9 @@ onKeyPress={(e) => {
                                 padding: '6px', 
                                 fontSize: '10px',
                                 fontWeight: 'bold',
-                                backgroundColor: '#00ff00',
-                                borderColor: '#00ff00',
-                                color: '#000',
+                                backgroundColor: 'rgba(0, 255, 0, 0.2)',
+                                border: '1px solid rgba(0, 255, 0, 0.6)',
+                                color: '#fff',
                                 display: 'flex',
                                 flexDirection: 'row',
                                 alignItems: 'center',
@@ -22489,22 +22488,21 @@ onKeyPress={(e) => {
                                 borderRadius: '4px',
                                 cursor: 'pointer',
                                 transition: 'all 0.2s ease',
-                                border: '2px solid #00ff00',
                                 boxSizing: 'border-box',
                                 letterSpacing: '0.5px'
                               }}
                               title={safeT?.view || 'Ver'}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.8)'
+                                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.35)'
                                 e.currentTarget.style.transform = 'scale(1.02)'
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = '#00ff00'
+                                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.2)'
                                 e.currentTarget.style.transform = 'scale(1)'
                               }}
                             >
                               <span style={{ fontSize: '14px', lineHeight: '1' }}>👁️</span>
-                              <span style={{ lineHeight: '1.3', whiteSpace: 'nowrap', fontSize: '10px', fontWeight: 'bold', color: '#000' }}>{safeT?.view || 'Ver'}</span>
+                              <span style={{ lineHeight: '1.3', whiteSpace: 'nowrap', fontSize: '10px', fontWeight: 'bold', color: '#fff' }}>{safeT?.view || 'Ver'}</span>
                             </button>
                             <button 
                               className="btn-primary" 
@@ -22545,7 +22543,7 @@ onKeyPress={(e) => {
                             </button>
                           </div>
                           
-                          {/* Terceira linha: Exit */}
+                          {/* Terceira linha: Excluir */}
                           <button 
                             className="btn-danger" 
                             onClick={() => handleDeleteRelatorioServico(relatorio.id)} 
@@ -22555,8 +22553,8 @@ onKeyPress={(e) => {
                               padding: '6px', 
                               fontSize: '10px',
                               fontWeight: 'bold',
-                              backgroundColor: '#ff4444',
-                              borderColor: '#ff4444',
+                              backgroundColor: 'rgba(255, 68, 68, 0.2)',
+                              border: '1px solid rgba(255, 68, 68, 0.7)',
                               color: '#fff',
                               display: 'flex',
                               flexDirection: 'row',
@@ -22566,15 +22564,16 @@ onKeyPress={(e) => {
                               borderRadius: '4px',
                               cursor: 'pointer',
                               transition: 'all 0.2s ease',
-                              border: '2px solid #ff4444',
                               boxSizing: 'border-box',
                               letterSpacing: '0.5px'
                             }}
                             title={safeT?.delete || 'Excluir'}
                             onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = 'rgba(255, 68, 68, 0.35)'
                               e.currentTarget.style.transform = 'scale(1.02)'
                             }}
                             onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'rgba(255, 68, 68, 0.2)'
                               e.currentTarget.style.transform = 'scale(1)'
                             }}
                           >
@@ -39304,9 +39303,9 @@ A1;Peça exemplo;10'
                                             flex: 1,
                                             padding: '6px 10px', 
                                             fontSize: '10px',
-                                            backgroundColor: '#222222',
-                                            borderColor: '#00ff00',
-                                            color: '#00ff00'
+                                            backgroundColor: 'rgba(0, 255, 0, 0.2)',
+                                            border: '1px solid rgba(0, 255, 0, 0.6)',
+                                            color: '#fff'
                                           }}
                                         >
                                           👁️ {safeT?.view || 'Ver'}
@@ -47898,10 +47897,10 @@ A1;Peça exemplo;10'
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.tecnico || 'Técnico'}: {relatorio.tecnico}</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.data || 'Data'}: {new Date(relatorio.data).toLocaleDateString()}</p>
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
-                      <button className="btn-primary" onClick={() => handleEditRelatorioServico(relatorio)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
+                      <button className="btn-primary" onClick={() => handleEditRelatorioServico(relatorio)} style={{ flex: 1, padding: '5px', fontSize: '12px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.6)', color: '#fff' }}>
                         {safeT?.edit || 'Editar'}
                       </button>
-                      <button className="btn-danger" onClick={() => handleDeleteRelatorioServico(relatorio.id)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
+                      <button className="btn-danger" onClick={() => handleDeleteRelatorioServico(relatorio.id)} style={{ flex: 1, padding: '5px', fontSize: '12px', backgroundColor: 'rgba(255, 68, 68, 0.2)', border: '1px solid rgba(255, 68, 68, 0.7)', color: '#fff' }}>
                         {safeT?.delete || 'Excluir'}
                       </button>
                     </div>
@@ -49080,7 +49079,7 @@ A1;Peça exemplo;10'
                                                 <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.8)' }}>👤 {relatorio.tecnico}</p>
                                                 {relatorio.tipoServico && <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.65)' }}>🔧 {relatorio.tipoServico}</p>}
                                               </div>
-                                              <button className="btn-primary" onClick={() => setViewingRelatorioServico(relatorio)} style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '8px', flexShrink: 0, background: 'rgba(0, 100, 200, 0.3)', borderColor: 'rgba(0, 150, 255, 0.5)' }}>👁️ {safeT?.ver || 'Ver'}</button>
+                                              <button className="btn-primary" onClick={() => setViewingRelatorioServico(relatorio)} style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '8px', flexShrink: 0, backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.6)', color: '#fff' }}>👁️ {safeT?.ver || 'Ver'}</button>
                                             </div>
                                           </div>
                                         ))}
@@ -49144,8 +49143,8 @@ A1;Peça exemplo;10'
                     <p><strong>{relatorio.titulo}</strong></p>
                     <p style={{ fontSize: '14px', opacity: 0.8, whiteSpace: 'pre-wrap' }}>{relatorio.conteudo}</p>
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
-                      <button className="btn-primary" onClick={() => handleEditRelatorio(relatorio)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>{safeT?.edit || 'Editar'}</button>
-                      <button className="btn-danger" onClick={() => handleDeleteRelatorio(relatorio.id)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>{safeT?.delete || 'Excluir'}</button>
+                      <button className="btn-primary" onClick={() => handleEditRelatorio(relatorio)} style={{ flex: 1, padding: '5px', fontSize: '12px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.6)', color: '#fff' }}>{safeT?.edit || 'Editar'}</button>
+                      <button className="btn-danger" onClick={() => handleDeleteRelatorio(relatorio.id)} style={{ flex: 1, padding: '5px', fontSize: '12px', backgroundColor: 'rgba(255, 68, 68, 0.2)', border: '1px solid rgba(255, 68, 68, 0.7)', color: '#fff' }}>{safeT?.delete || 'Excluir'}</button>
                     </div>
                   </div>
                 ))}
@@ -49921,7 +49920,7 @@ A1;Peça exemplo;10'
                   setViewingRelatorioServico(null)
                   setShowRelatorioServicoForm(true)
                 }}
-                style={{ flex: 1, padding: '10px', backgroundColor: '#0066cc', borderColor: '#0066cc' }}
+                style={{ flex: 1, padding: '10px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.6)', color: '#fff' }}
               >
                 ✏️ {safeT?.edit || 'Editar Relatório'}
               </button>
@@ -49959,7 +49958,7 @@ A1;Peça exemplo;10'
                 <button 
                   className="btn-primary" 
                   onClick={() => handlePrintRelatorio(viewingRelatorioServico)}
-                  style={{ flex: 1, padding: '10px', backgroundColor: '#00aa00', borderColor: '#00aa00' }}
+                  style={{ flex: 1, padding: '10px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.6)', color: '#fff' }}
                 >
                   📄 {safeT?.gerarPDF || 'Gerar PDF/Imprimir'}
                 </button>
