@@ -21871,35 +21871,35 @@ onKeyPress={(e) => {
                   </div>
                 )}
 
-                {/* Resumo Final - Cálculos Finais - Organizado e Compacto (com código e valor unit. do Cadastro de Serviços) */}
+                {/* Resumo Final - Cálculos Finais - Organizado e Compacto */}
                 {relatorioServicoForm.diasTrabalho && relatorioServicoForm.diasTrabalho.length > 0 ? (
                   <div style={{ marginBottom: '15px', marginTop: '15px' }}>
                     <h3 style={{ marginBottom: '10px', color: '#00ff00', fontSize: '14px', textAlign: 'center', fontWeight: 'bold' }}>{safeT?.resumoHorasDeslocamentos?.toUpperCase() || 'RESUMO DE HORAS, DESLOCAMENTOS E DIÁRIAS'}</h3>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
-                      {(() => {
-                        const totaisResumo = calcularTotais(relatorioServicoForm.diasTrabalho)
-                        const sh = servicos.find(s => s.tipoCobranca === 'hora')
-                        const sk = servicos.find(s => s.tipoCobranca === 'km')
-                        const sd = servicos.find(s => s.tipoCobranca === 'diarias')
-                        const card = (label: string, valor: string, servico: typeof servicos[0] | undefined, unidade: string) => (
-                          <div key={label} style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
-                            <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{label}</p>
-                            <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{valor}</p>
-                            <p style={{ fontSize: '10px', marginTop: '6px', color: 'rgba(255,255,255,0.85)' }}>{(safeT as any)?.codigoOuCod || 'Cód.'}: {servico?.cod || '—'}</p>
-                            <p style={{ fontSize: '10px', marginTop: '2px', color: 'rgba(0,255,0,0.9)' }}>{(safeT as any)?.valorUnitario || 'Valor unit.'}: {servico != null ? `${servico.valor.toFixed(2)} €/${unidade}` : '—'}</p>
-                          </div>
-                        )
-                        return (
-                          <>
-                            {card(safeT?.horasTrabalho || 'Horas de Trabalho', totaisResumo.horasTrabalho + 'h', sh, 'h')}
-                            {card(safeT?.kmsPercorridos || 'Km\'s Percorridos', totaisResumo.kmsPercorridos + ' km', sk, 'km')}
-                            {card(safeT?.horasViagem || 'Horas de Viagem', totaisResumo.horasViagem + 'h', sh, 'h')}
-                            {card(safeT?.diarias || 'DIÁRIAS', String(relatorioServicoForm.diasTrabalho.length), sd, (safeT as any)?.diaria || 'diária')}
-                            {card(safeT?.horasViagemIda || 'Horas de Viagem de Ida', totaisResumo.horasViagemIda, sh, 'h')}
-                            {card(safeT?.horasViagemRetorno || 'Horas de Viagem de Retorno', totaisResumo.horasViagemRetorno, sh, 'h')}
-                          </>
-                        )
-                      })()}
+                      <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
+                        <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasTrabalho || 'Horas de Trabalho'}</p>
+                        <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasTrabalho}h</p>
+                      </div>
+                      <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
+                        <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.kmsPercorridos || 'Km\'s Percorridos'}</p>
+                        <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).kmsPercorridos} km</p>
+                      </div>
+                      <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
+                        <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasViagem || 'Horas de Viagem'}</p>
+                        <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasViagem}h</p>
+                      </div>
+                      <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
+                        <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.diarias || 'DIÁRIAS'}</p>
+                        <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{relatorioServicoForm.diasTrabalho.length}</p>
+                      </div>
+                      <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
+                        <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemIda || 'Horas de Viagem de Ida'}</p>
+                        <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#00ff00' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasViagemIda}</p>
+                      </div>
+                      <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
+                        <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemRetorno || 'Horas de Viagem de Retorno'}</p>
+                        <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#00ff00' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasViagemRetorno}</p>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -49803,30 +49803,37 @@ A1;Peça exemplo;10'
                   </table>
                 </div>
 
-                {/* Resumo de Totais (com código e valor unit. do Cadastro de Serviços) */}
+                {/* Resumo de Totais */}
                 {(() => {
                   const totais = calcularTotais(viewingRelatorioServico.diasTrabalho)
-                  const sh = servicos.find(s => s.tipoCobranca === 'hora')
-                  const sk = servicos.find(s => s.tipoCobranca === 'km')
-                  const sd = servicos.find(s => s.tipoCobranca === 'diarias')
-                  const card = (label: string, valor: string, servico: typeof servicos[0] | undefined, unidade: string) => (
-                    <div key={label} style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
-                      <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{label}</p>
-                      <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{valor}</p>
-                      <p style={{ fontSize: '10px', marginTop: '6px', color: 'rgba(255,255,255,0.85)' }}>{(safeT as any)?.codigoOuCod || 'Cód.'}: {servico?.cod || '—'}</p>
-                      <p style={{ fontSize: '10px', marginTop: '2px', color: 'rgba(0,255,0,0.9)' }}>{(safeT as any)?.valorUnitario || 'Valor unit.'}: {servico != null ? `${servico.valor.toFixed(2)} €/${unidade}` : '—'}</p>
-                    </div>
-                  )
                   return (
                     <div style={{ marginTop: '15px', marginBottom: '15px' }}>
                       <h3 style={{ marginBottom: '10px', color: '#00ff00', fontSize: '14px', textAlign: 'center', fontWeight: 'bold' }}>{safeT?.resumoHorasDeslocamentos?.toUpperCase() || 'RESUMO DE HORAS, DESLOCAMENTOS E DIÁRIAS'}</h3>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
-                        {card(safeT?.horasTrabalho || 'Horas de Trabalho', totais.horasTrabalho + 'h', sh, 'h')}
-                        {card(safeT?.kmsPercorridos || 'Km\'s Percorridos', totais.kmsPercorridos + ' km', sk, 'km')}
-                        {card(safeT?.horasViagem || 'Horas de Viagem', totais.horasViagem + 'h', sh, 'h')}
-                        {card(safeT?.diarias || 'DIÁRIAS', String(viewingRelatorioServico.diasTrabalho.length), sd, (safeT as any)?.diaria || 'diária')}
-                        {card(safeT?.horasViagemIda || 'Horas de Viagem de Ida', totais.horasViagemIda, sh, 'h')}
-                        {card(safeT?.horasViagemRetorno || 'Horas de Viagem de Retorno', totais.horasViagemRetorno, sh, 'h')}
+                        <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
+                          <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasTrabalho || 'Horas de Trabalho'}</p>
+                          <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{totais.horasTrabalho}h</p>
+                        </div>
+                        <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
+                          <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.kmsPercorridos || 'Km\'s Percorridos'}</p>
+                          <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{totais.kmsPercorridos} km</p>
+                        </div>
+                        <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
+                          <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasViagem || 'Horas de Viagem'}</p>
+                          <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{totais.horasViagem}h</p>
+                        </div>
+                        <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
+                          <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.diarias || 'DIÁRIAS'}</p>
+                          <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{viewingRelatorioServico.diasTrabalho.length}</p>
+                        </div>
+                        <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
+                          <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemIda || 'Horas de Viagem de Ida'}</p>
+                          <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#00ff00' }}>{totais.horasViagemIda}</p>
+                        </div>
+                        <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
+                          <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemRetorno || 'Horas de Viagem de Retorno'}</p>
+                          <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#00ff00' }}>{totais.horasViagemRetorno}</p>
+                        </div>
                       </div>
                     </div>
                   )
