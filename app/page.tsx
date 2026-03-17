@@ -9085,7 +9085,7 @@ export default function Dashboard() {
             }
             .summary {
               display: grid;
-              grid-template-columns: repeat(3, 1fr);
+              grid-template-columns: repeat(6, 1fr);
               gap: 10px;
               margin: 15px 0;
             }
@@ -9246,6 +9246,18 @@ export default function Dashboard() {
             <div class="summary-card">
               <h4>${t.horasViagem || 'Horas de Viagem'}</h4>
               <div class="value">${totais.horasViagem}h</div>
+            </div>
+            <div class="summary-card">
+              <h4>${t.diarias || 'DIÁRIAS'}</h4>
+              <div class="value">${relatorio.diasTrabalho.length}</div>
+            </div>
+            <div class="summary-card">
+              <h4>${t.horasViagemIda || 'Horas de Viagem de Ida'}</h4>
+              <div class="value">${totais.horasViagemIda ?? '-'}</div>
+            </div>
+            <div class="summary-card">
+              <h4>${t.horasViagemRetorno || 'Horas de Viagem de Retorno'}</h4>
+              <div class="value">${totais.horasViagemRetorno ?? '-'}</div>
             </div>
           </div>
           ` : ''}
@@ -9430,7 +9442,7 @@ export default function Dashboard() {
             }
             .summary {
               display: grid;
-              grid-template-columns: repeat(4, 1fr);
+              grid-template-columns: repeat(6, 1fr);
               gap: 5px;
               margin: 10px 0;
             }
@@ -9568,6 +9580,14 @@ export default function Dashboard() {
             <div class="summary-card">
               <h4>${t.diarias || 'Dias'}</h4>
               <div class="value">${relatorio.diasTrabalho.length}</div>
+            </div>
+            <div class="summary-card">
+              <h4>${t.horasViagemIda || 'H. Ida'}</h4>
+              <div class="value">${totais.horasViagemIda ?? '-'}</div>
+            </div>
+            <div class="summary-card">
+              <h4>${t.horasViagemRetorno || 'H. Retorno'}</h4>
+              <div class="value">${totais.horasViagemRetorno ?? '-'}</div>
             </div>
           </div>
           ` : ''}
@@ -9752,7 +9772,7 @@ export default function Dashboard() {
             }
             .summary {
               display: grid;
-              grid-template-columns: repeat(4, 1fr);
+              grid-template-columns: repeat(6, 1fr);
               gap: 15px;
               margin: 20px 0;
             }
@@ -9932,6 +9952,14 @@ export default function Dashboard() {
             <div class="summary-card">
               <h4>${t.diarias || 'DIÁRIAS'}</h4>
               <div class="value">${relatorio.diasTrabalho.length}</div>
+            </div>
+            <div class="summary-card">
+              <h4>${t.horasViagemIda || 'Horas de Viagem de Ida'}</h4>
+              <div class="value">${totais.horasViagemIda ?? '-'}</div>
+            </div>
+            <div class="summary-card">
+              <h4>${t.horasViagemRetorno || 'Horas de Viagem de Retorno'}</h4>
+              <div class="value">${totais.horasViagemRetorno ?? '-'}</div>
             </div>
           </div>
           ` : ''}
@@ -10149,7 +10177,7 @@ export default function Dashboard() {
             }
             .summary-modern {
               display: grid;
-              grid-template-columns: repeat(3, 1fr);
+              grid-template-columns: repeat(6, 1fr);
               gap: 15px;
               margin: 20px 0;
             }
@@ -10315,6 +10343,18 @@ export default function Dashboard() {
             <div class="summary-card-modern">
               <h4>${t.horasViagem || 'Horas de Viagem'}</h4>
               <div class="value">${totais.horasViagem}h</div>
+            </div>
+            <div class="summary-card-modern">
+              <h4>${t.diarias || 'DIÁRIAS'}</h4>
+              <div class="value">${relatorio.diasTrabalho.length}</div>
+            </div>
+            <div class="summary-card-modern">
+              <h4>${t.horasViagemIda || 'Horas de Viagem de Ida'}</h4>
+              <div class="value">${totais.horasViagemIda ?? '-'}</div>
+            </div>
+            <div class="summary-card-modern">
+              <h4>${t.horasViagemRetorno || 'Horas de Viagem de Retorno'}</h4>
+              <div class="value">${totais.horasViagemRetorno ?? '-'}</div>
             </div>
           </div>
           ` : ''}
@@ -10524,8 +10564,9 @@ export default function Dashboard() {
               text-align: center;
             }
             .summary-minimal {
-              display: flex;
-              justify-content: space-around;
+              display: grid;
+              grid-template-columns: repeat(6, 1fr);
+              gap: 12px;
               margin: 30px 0;
               padding: 20px 0;
               border-top: 1px solid #ddd;
@@ -10677,6 +10718,18 @@ export default function Dashboard() {
             <div class="summary-item">
               <div class="label">${t.horasViagem || 'Horas de Viagem'}</div>
               <div class="value">${totais.horasViagem}h</div>
+            </div>
+            <div class="summary-item">
+              <div class="label">${t.diarias || 'DIÁRIAS'}</div>
+              <div class="value">${relatorio.diasTrabalho.length}</div>
+            </div>
+            <div class="summary-item">
+              <div class="label">${t.horasViagemIda || 'Horas de Viagem de Ida'}</div>
+              <div class="value">${totais.horasViagemIda ?? '-'}</div>
+            </div>
+            <div class="summary-item">
+              <div class="label">${t.horasViagemRetorno || 'Horas de Viagem de Retorno'}</div>
+              <div class="value">${totais.horasViagemRetorno ?? '-'}</div>
             </div>
           </div>
           ` : ''}
@@ -10897,7 +10950,7 @@ export default function Dashboard() {
             }
             .summary-tecnico {
               display: grid;
-              grid-template-columns: repeat(3, 1fr);
+              grid-template-columns: repeat(6, 1fr);
               gap: 10px;
               margin: 15px 0;
             }
@@ -11055,6 +11108,18 @@ export default function Dashboard() {
             <div class="summary-card-tecnico">
               <h4>${t.horasViagem || 'Horas de Viagem'}</h4>
               <div class="value">${totais.horasViagem}h</div>
+            </div>
+            <div class="summary-card-tecnico">
+              <h4>${t.diarias || 'DIÁRIAS'}</h4>
+              <div class="value">${relatorio.diasTrabalho.length}</div>
+            </div>
+            <div class="summary-card-tecnico">
+              <h4>${t.horasViagemIda || 'Horas de Viagem de Ida'}</h4>
+              <div class="value">${totais.horasViagemIda ?? '-'}</div>
+            </div>
+            <div class="summary-card-tecnico">
+              <h4>${t.horasViagemRetorno || 'Horas de Viagem de Retorno'}</h4>
+              <div class="value">${totais.horasViagemRetorno ?? '-'}</div>
             </div>
           </div>
           ` : ''}
@@ -11272,8 +11337,9 @@ export default function Dashboard() {
               background: #f8f9fa;
             }
             .summary-executivo {
-              display: flex;
-              justify-content: space-between;
+              display: grid;
+              grid-template-columns: repeat(6, 1fr);
+              gap: 12px;
               margin: 30px 0;
               padding: 25px;
               background: #f8f9fa;
@@ -11431,6 +11497,18 @@ export default function Dashboard() {
             <div class="summary-item-executivo">
               <div class="label">${t.horasViagem || 'Horas de Viagem'}</div>
               <div class="value">${totais.horasViagem}h</div>
+            </div>
+            <div class="summary-item-executivo">
+              <div class="label">${t.diarias || 'DIÁRIAS'}</div>
+              <div class="value">${relatorio.diasTrabalho.length}</div>
+            </div>
+            <div class="summary-item-executivo">
+              <div class="label">${t.horasViagemIda || 'Horas de Viagem de Ida'}</div>
+              <div class="value">${totais.horasViagemIda ?? '-'}</div>
+            </div>
+            <div class="summary-item-executivo">
+              <div class="label">${t.horasViagemRetorno || 'Horas de Viagem de Retorno'}</div>
+              <div class="value">${totais.horasViagemRetorno ?? '-'}</div>
             </div>
           </div>
           ` : ''}
@@ -11657,7 +11735,7 @@ export default function Dashboard() {
             }
             .summary-negro {
               display: grid;
-              grid-template-columns: repeat(3, 1fr);
+              grid-template-columns: repeat(6, 1fr);
               gap: 15px;
               margin: 20px 0;
             }
@@ -11830,6 +11908,18 @@ export default function Dashboard() {
             <div class="summary-card-negro">
               <h4>${t.horasViagem || 'Horas de Viagem'}</h4>
               <div class="value">${totais.horasViagem}h</div>
+            </div>
+            <div class="summary-card-negro">
+              <h4>${t.diarias || 'DIÁRIAS'}</h4>
+              <div class="value">${relatorio.diasTrabalho.length}</div>
+            </div>
+            <div class="summary-card-negro">
+              <h4>${t.horasViagemIda || 'Horas de Viagem de Ida'}</h4>
+              <div class="value">${totais.horasViagemIda ?? '-'}</div>
+            </div>
+            <div class="summary-card-negro">
+              <h4>${t.horasViagemRetorno || 'Horas de Viagem de Retorno'}</h4>
+              <div class="value">${totais.horasViagemRetorno ?? '-'}</div>
             </div>
           </div>
           ` : ''}
@@ -12471,8 +12561,11 @@ export default function Dashboard() {
 
   const localeReport = selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE';
 
-  const renderReportDiasTable = (relatorio: RelatorioServico, totais: { horasTrabalho: string; kmsPercorridos: string; horasViagem: string }) => {
+  const renderReportDiasTable = (relatorio: RelatorioServico, totais: { horasTrabalho: string; kmsPercorridos: string; horasViagem: string; horasViagemIda?: string; horasViagemRetorno?: string }) => {
     if (!relatorio.diasTrabalho || relatorio.diasTrabalho.length === 0) return '';
+    const numDiarias = relatorio.diasTrabalho.length;
+    const hIda = totais.horasViagemIda ?? '-';
+    const hRet = totais.horasViagemRetorno ?? '-';
     return `
     <div class="report-section">
       <h3>${t.controleHorasDeslocamentos || 'CONTROLE DE HORAS E DESLOCAMENTOS'}</h3>
@@ -12492,6 +12585,9 @@ export default function Dashboard() {
         <span>${t.horasTrabalho || 'Horas'}: ${totais.horasTrabalho}h</span>
         <span>${t.kmsPercorridos || 'KM'}: ${totais.kmsPercorridos}</span>
         <span>${t.horasViagem || 'Viagem'}: ${totais.horasViagem}h</span>
+        <span>${t.diarias || 'Diárias'}: ${numDiarias}</span>
+        <span>${t.horasViagemIda || 'H. Ida'}: ${hIda}</span>
+        <span>${t.horasViagemRetorno || 'H. Retorno'}: ${hRet}</span>
       </div>
     </div>`;
   };
