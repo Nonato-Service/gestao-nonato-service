@@ -20765,14 +20765,66 @@ onKeyPress={(e) => {
                             // Aceitar qualquer data selecionada pelo usuário
                             const dataSelecionada = e.target.value
                             if (dataSelecionada) {
-                              setNovoDiaTrabalho({ ...novoDiaTrabalho, data: dataSelecionada })
+                              const idxExistente = relatorioServicoForm.diasTrabalho?.findIndex(d => d.data === dataSelecionada) ?? -1
+                              if (idxExistente >= 0) {
+                                const dia = relatorioServicoForm.diasTrabalho[idxExistente]
+                                setNovoDiaTrabalho({
+                                  id: dia.id,
+                                  data: dia.data || dataSelecionada,
+                                  idaHora: dia.idaHora || '',
+                                  idaChegada: dia.idaChegada || '',
+                                  idaDuracao: dia.idaDuracao || '',
+                                  horasInicio: dia.horasInicio || '',
+                                  horasFim: dia.horasFim || '',
+                                  horasDuracao: dia.horasDuracao || '',
+                                  retornoSaida: dia.retornoSaida || '',
+                                  retornoChegada: dia.retornoChegada || '',
+                                  retornoDuracao: dia.retornoDuracao || '',
+                                  kmIda: dia.kmIda || '0',
+                                  kmRetorno: dia.kmRetorno || '0',
+                                  kmTotal: dia.kmTotal || '',
+                                  pausa: dia.pausa || '',
+                                  tempoPausa: dia.tempoPausa || '',
+                                  descricaoTrabalho: dia.descricaoTrabalho || ''
+                                })
+                                setEditingDiaTrabalhoIndex(idxExistente)
+                              } else {
+                                // Se não existir dia com essa data, apenas trocar a data e manter o resto como está
+                                setNovoDiaTrabalho(prev => ({ ...prev, data: dataSelecionada }))
+                                setEditingDiaTrabalhoIndex(null)
+                              }
                             }
                           }}
                           onBlur={(e) => {
                             // Garantir que sempre há uma data válida quando o campo perde o foco
                             const dataValida = e.target.value || novoDiaTrabalho.data || new Date().toISOString().split('T')[0]
                             if (!novoDiaTrabalho.data || novoDiaTrabalho.data !== dataValida) {
-                              setNovoDiaTrabalho({ ...novoDiaTrabalho, data: dataValida })
+                              const idxExistente = relatorioServicoForm.diasTrabalho?.findIndex(d => d.data === dataValida) ?? -1
+                              if (idxExistente >= 0) {
+                                const dia = relatorioServicoForm.diasTrabalho[idxExistente]
+                                setNovoDiaTrabalho({
+                                  id: dia.id,
+                                  data: dia.data || dataValida,
+                                  idaHora: dia.idaHora || '',
+                                  idaChegada: dia.idaChegada || '',
+                                  idaDuracao: dia.idaDuracao || '',
+                                  horasInicio: dia.horasInicio || '',
+                                  horasFim: dia.horasFim || '',
+                                  horasDuracao: dia.horasDuracao || '',
+                                  retornoSaida: dia.retornoSaida || '',
+                                  retornoChegada: dia.retornoChegada || '',
+                                  retornoDuracao: dia.retornoDuracao || '',
+                                  kmIda: dia.kmIda || '0',
+                                  kmRetorno: dia.kmRetorno || '0',
+                                  kmTotal: dia.kmTotal || '',
+                                  pausa: dia.pausa || '',
+                                  tempoPausa: dia.tempoPausa || '',
+                                  descricaoTrabalho: dia.descricaoTrabalho || ''
+                                })
+                                setEditingDiaTrabalhoIndex(idxExistente)
+                              } else {
+                                setNovoDiaTrabalho(prev => ({ ...prev, data: dataValida }))
+                              }
                             }
                           }}
                           style={{ 
