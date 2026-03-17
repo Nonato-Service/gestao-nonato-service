@@ -21357,16 +21357,15 @@ onKeyPress={(e) => {
                       />
                     </div>
 
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginTop: '14px' }}>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginTop: '14px' }}>
                       <button
                         className="btn-primary"
                         onClick={handleAddDiaTrabalho}
                         style={{
-                          padding: '12px 24px',
-                          fontSize: '14px',
+                          padding: '10px 18px',
+                          fontSize: '13px',
                           fontWeight: 'bold',
-                          borderRadius: '8px',
-                          minWidth: '160px'
+                          borderRadius: '6px'
                         }}
                       >
                         {editingDiaTrabalhoIndex !== null ? (safeT?.atualizarDia || 'Atualizar Dia') : (safeT?.adicionarDia || 'Adicionar Dia')}
@@ -21397,11 +21396,10 @@ onKeyPress={(e) => {
                             })
                           }}
                           style={{
-                            padding: '12px 24px',
-                            fontSize: '14px',
-                            fontWeight: 'bold',
-                            borderRadius: '8px',
-                            minWidth: '120px'
+                            padding: '10px 16px',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            borderRadius: '6px'
                           }}
                         >
                           {safeT?.cancel || 'Cancelar'}
@@ -21463,8 +21461,8 @@ onKeyPress={(e) => {
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '10px', whiteSpace: 'nowrap' }}>{dia.kmRetorno || '0'}</td>
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '10px', fontWeight: 'bold', color: '#ffffff', whiteSpace: 'nowrap' }}>{diaCalculado.kmTotal || '0'}</td>
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '10px', color: '#ffffff', whiteSpace: 'nowrap' }} rowSpan={temDescricao ? 2 : 1}>{dia.pausa || '0'}</td>
-                                    <td style={{ padding: '8px 6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', verticalAlign: 'middle' }} rowSpan={temDescricao ? 2 : 1}>
-                                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap', alignItems: 'center' }}>
+                                    <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', verticalAlign: 'middle' }} rowSpan={temDescricao ? 2 : 1}>
+                                      <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'wrap', alignItems: 'center' }}>
                                         <button
                                           type="button"
                                           className="btn-primary"
@@ -21491,12 +21489,11 @@ onKeyPress={(e) => {
                                             setEditingDiaTrabalhoIndex(index)
                                           }}
                                           style={{
-                                            padding: '6px 10px',
-                                            fontSize: '11px',
+                                            padding: '4px 8px',
+                                            fontSize: '10px',
                                             fontWeight: '600',
                                             whiteSpace: 'nowrap',
-                                            borderRadius: '6px',
-                                            minWidth: '58px'
+                                            borderRadius: '4px'
                                           }}
                                           title={(safeT as any)?.editar || safeT?.edit || 'Editar'}
                                         >
@@ -21507,12 +21504,11 @@ onKeyPress={(e) => {
                                           className="btn-danger"
                                           onClick={() => handleRemoveDiaTrabalho(index)}
                                           style={{
-                                            padding: '6px 10px',
-                                            fontSize: '11px',
+                                            padding: '4px 8px',
+                                            fontSize: '10px',
                                             fontWeight: '600',
                                             whiteSpace: 'nowrap',
-                                            borderRadius: '6px',
-                                            minWidth: '58px'
+                                            borderRadius: '4px'
                                           }}
                                           title={safeT?.delete || 'Excluir'}
                                         >
