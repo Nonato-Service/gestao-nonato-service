@@ -21493,13 +21493,15 @@ onKeyPress={(e) => {
                                             setEditingDiaTrabalhoIndex(index)
                                           }}
                                           style={{
-                                            padding: '4px 8px',
+                                            padding: '4px 6px',
                                             fontSize: '10px',
                                             fontWeight: '600',
                                             whiteSpace: 'nowrap',
                                             borderRadius: '4px',
-                                            minWidth: '72px',
-                                            boxSizing: 'border-box'
+                                            width: '68px',
+                                            boxSizing: 'border-box',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis'
                                           }}
                                           title={(safeT as any)?.editar || safeT?.edit || 'Editar'}
                                         >
@@ -21510,13 +21512,15 @@ onKeyPress={(e) => {
                                           className="btn-danger"
                                           onClick={() => handleRemoveDiaTrabalho(index)}
                                           style={{
-                                            padding: '4px 8px',
+                                            padding: '4px 6px',
                                             fontSize: '10px',
                                             fontWeight: '600',
                                             whiteSpace: 'nowrap',
                                             borderRadius: '4px',
-                                            minWidth: '72px',
-                                            boxSizing: 'border-box'
+                                            width: '68px',
+                                            boxSizing: 'border-box',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis'
                                           }}
                                           title={safeT?.delete || 'Excluir'}
                                         >
