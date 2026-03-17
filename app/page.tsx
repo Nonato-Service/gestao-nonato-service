@@ -2812,6 +2812,7 @@ export default function Dashboard() {
     tempoPausa: '',
     descricaoTrabalho: ''
   })
+  const [editingDiaTrabalhoIndex, setEditingDiaTrabalhoIndex] = useState<number | null>(null)
   const [novaPeca, setNovaPeca] = useState<PecaSubstituicao>({
     id: '',
     descricao: '',
@@ -8875,6 +8876,7 @@ export default function Dashboard() {
       pausa: '',
       descricaoTrabalho: ''
     })
+    setEditingDiaTrabalhoIndex(null)
     setNovaPeca({
       id: '',
       descricao: '',
@@ -8886,6 +8888,7 @@ export default function Dashboard() {
 
   const handleEditRelatorioServico = (relatorio: RelatorioServico) => {
     setEditingRelatorioServico(relatorio)
+    setEditingDiaTrabalhoIndex(null)
     // Garantir que todos os campos sejam preservados, especialmente arrays
     setRelatorioServicoForm({ 
       ...relatorio,
@@ -13415,18 +13418,28 @@ export default function Dashboard() {
       horasDuracao = `${horas}:${String(minutos).padStart(2, '0')}`
     }
 
-    setRelatorioServicoForm({
-      ...relatorioServicoForm,
-      diasTrabalho: [...relatorioServicoForm.diasTrabalho, { 
-        ...novoDiaTrabalho,
-        data: dataParaUsar, // Garantir que usa a data (pode ser a de hoje se não foi preenchida)
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-        idaDuracao,
-        retornoDuracao,
-        horasDuracao,
-        kmTotal
-      }]
-    })
+    const diaAtualizado = {
+      ...novoDiaTrabalho,
+      data: dataParaUsar,
+      id: editingDiaTrabalhoIndex !== null ? relatorioServicoForm.diasTrabalho[editingDiaTrabalhoIndex].id : (Date.now().toString() + Math.random().toString(36).substr(2, 9)),
+      idaDuracao,
+      retornoDuracao,
+      horasDuracao,
+      kmTotal
+    }
+
+    if (editingDiaTrabalhoIndex !== null) {
+      const updatedDias = [...relatorioServicoForm.diasTrabalho]
+      updatedDias[editingDiaTrabalhoIndex] = diaAtualizado
+      setRelatorioServicoForm({ ...relatorioServicoForm, diasTrabalho: updatedDias })
+      setEditingDiaTrabalhoIndex(null)
+    } else {
+      setRelatorioServicoForm({
+        ...relatorioServicoForm,
+        diasTrabalho: [...relatorioServicoForm.diasTrabalho, diaAtualizado]
+      })
+    }
+
     setNovoDiaTrabalho({
       data: new Date().toISOString().split('T')[0],
       idaHora: '',
@@ -13451,6 +13464,29 @@ export default function Dashboard() {
     const updatedDias = [...relatorioServicoForm.diasTrabalho]
     updatedDias.splice(index, 1)
     setRelatorioServicoForm({ ...relatorioServicoForm, diasTrabalho: updatedDias })
+    if (editingDiaTrabalhoIndex === index) {
+      setEditingDiaTrabalhoIndex(null)
+      setNovoDiaTrabalho({
+        data: new Date().toISOString().split('T')[0],
+        idaHora: '',
+        idaChegada: '',
+        idaDuracao: '',
+        horasInicio: '',
+        horasFim: '',
+        horasDuracao: '',
+        retornoSaida: '',
+        retornoChegada: '',
+        retornoDuracao: '',
+        kmIda: '0',
+        kmRetorno: '0',
+        kmTotal: '',
+        pausa: '',
+        tempoPausa: '',
+        descricaoTrabalho: ''
+      })
+    } else if (editingDiaTrabalhoIndex !== null && editingDiaTrabalhoIndex > index) {
+      setEditingDiaTrabalhoIndex(editingDiaTrabalhoIndex - 1)
+    }
   }
 
   const handleAddPeca = () => {
@@ -21261,8 +21297,38 @@ onKeyPress={(e) => {
                         marginTop: '10px'
                       }}
                     >
-                      {safeT?.adicionarDia || 'Adicionar Dia'}
+                      {editingDiaTrabalhoIndex !== null ? (safeT?.atualizarDia || 'Atualizar Dia') : (safeT?.adicionarDia || 'Adicionar Dia')}
                     </button>
+                    {editingDiaTrabalhoIndex !== null && (
+                      <button
+                        type="button"
+                        className="btn-danger"
+                        onClick={() => {
+                          setEditingDiaTrabalhoIndex(null)
+                          setNovoDiaTrabalho({
+                            data: new Date().toISOString().split('T')[0],
+                            idaHora: '',
+                            idaChegada: '',
+                            idaDuracao: '',
+                            horasInicio: '',
+                            horasFim: '',
+                            horasDuracao: '',
+                            retornoSaida: '',
+                            retornoChegada: '',
+                            retornoDuracao: '',
+                            kmIda: '0',
+                            kmRetorno: '0',
+                            kmTotal: '',
+                            pausa: '',
+                            tempoPausa: '',
+                            descricaoTrabalho: ''
+                          })
+                        }}
+                        style={{ padding: '8px 14px', fontSize: '12px', marginLeft: '8px' }}
+                      >
+                        {safeT?.cancel || 'Cancelar'}
+                      </button>
+                    )}
                   </div>
 
                   {/* Tabela de dias adicionados - Compacta em uma linha */}
@@ -21319,9 +21385,39 @@ onKeyPress={(e) => {
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '10px', fontWeight: 'bold', color: '#ffffff', whiteSpace: 'nowrap' }}>{diaCalculado.kmTotal || '0'}</td>
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '10px', color: '#ffffff', whiteSpace: 'nowrap' }} rowSpan={temDescricao ? 2 : 1}>{dia.pausa || '0'}</td>
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)' }} rowSpan={temDescricao ? 2 : 1}>
-                                      <button className="btn-danger" onClick={() => handleRemoveDiaTrabalho(index)} style={{ padding: '3px 6px', fontSize: '9px', whiteSpace: 'nowrap' }}>
-                                        {safeT?.delete || 'Excluir'}
-                                      </button>
+                                      <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                        <button
+                                          className="btn-primary"
+                                          onClick={() => {
+                                            setNovoDiaTrabalho({
+                                              id: dia.id,
+                                              data: dia.data || new Date().toISOString().split('T')[0],
+                                              idaHora: dia.idaHora || '',
+                                              idaChegada: dia.idaChegada || '',
+                                              idaDuracao: dia.idaDuracao || '',
+                                              horasInicio: dia.horasInicio || '',
+                                              horasFim: dia.horasFim || '',
+                                              horasDuracao: dia.horasDuracao || '',
+                                              retornoSaida: dia.retornoSaida || '',
+                                              retornoChegada: dia.retornoChegada || '',
+                                              retornoDuracao: dia.retornoDuracao || '',
+                                              kmIda: dia.kmIda || '0',
+                                              kmRetorno: dia.kmRetorno || '0',
+                                              kmTotal: dia.kmTotal || '',
+                                              pausa: dia.pausa || '',
+                                              tempoPausa: dia.tempoPausa || '',
+                                              descricaoTrabalho: dia.descricaoTrabalho || ''
+                                            })
+                                            setEditingDiaTrabalhoIndex(index)
+                                          }}
+                                          style={{ padding: '3px 6px', fontSize: '9px', whiteSpace: 'nowrap' }}
+                                        >
+                                          {(safeT as any)?.editar || safeT?.edit || 'Editar'}
+                                        </button>
+                                        <button className="btn-danger" onClick={() => handleRemoveDiaTrabalho(index)} style={{ padding: '3px 6px', fontSize: '9px', whiteSpace: 'nowrap' }}>
+                                          {safeT?.delete || 'Excluir'}
+                                        </button>
+                                      </div>
                                     </td>
                                   </tr>
                                   {temDescricao && (
