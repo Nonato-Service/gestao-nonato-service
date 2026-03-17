@@ -28332,6 +28332,16 @@ A1;Peça exemplo;10'
             }
           })
         }
+        // Helper: obter serviço do Cadastro para um item do resumo (para preencher cod e valor unit. quando saved está vazio/desatualizado)
+        const textoServico = (s: typeof servicos[0]) => ((s.nome || '') + ' ' + (s.descricao || '')).toLowerCase()
+        const getServicoParaItemResumo = (itemId: string) => {
+          if (itemId === 'hida') return servicos.find(s => /viagem/.test(textoServico(s)) && /ida/.test(textoServico(s))) || servicos.find(s => s.tipoCobranca === 'hora')
+          if (itemId === 'hret') return servicos.find(s => /viagem/.test(textoServico(s)) && /retorno/.test(textoServico(s))) || servicos.find(s => s.tipoCobranca === 'hora')
+          if (itemId === 'ht' || itemId === 'hviagem') return servicos.find(s => s.tipoCobranca === 'hora')
+          if (itemId === 'km') return servicos.find(s => s.tipoCobranca === 'km')
+          if (itemId === 'diarias') return servicos.find(s => s.tipoCobranca === 'diarias')
+          return undefined
+        }
         // Sempre preencher a tabela a partir do resumo do relatório (Foto 1): 6 itens com quantidades do resumo + código/descrição/valor do Cadastro de Serviços
         const itensIniciaisSempre = relatorioSelecionado ? getItensIniciaisDoRelatorio(relatorioSelecionado) : []
         const salvosParaEsteRelatorio = (relatorioSelecionado && fechamentosRelatorios[relatorioSelecionado.id]) || []
@@ -28345,10 +28355,16 @@ A1;Peça exemplo;10'
                 const saved = salvos.find(s => s.id === item.id)
                 if (!saved) return item
                 const qty = item.quantidade ?? 0
-                const valorUnit = saved.valorUnitario ?? item.valorUnitario
-                const total = (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias') ? Math.round(qty * valorUnit * 100) / 100 : valorUnit
+                const temCodOuServico = (saved.cod && saved.cod.trim()) || saved.servicoId
+                const temValorUnit = saved.valorUnitario != null && saved.valorUnitario > 0
+                const servicoCadastro = getServicoParaItemResumo(item.id)
+                const valorUnit = (temValorUnit ? saved.valorUnitario : servicoCadastro?.valor ?? item.valorUnitario) ?? 0
+                const cod = temCodOuServico ? (saved.cod ?? servicos.find(s => s.id === saved.servicoId)?.cod) : (servicoCadastro?.cod ?? '')
+                const descricao = (temCodOuServico ? (saved.descricao ?? servicos.find(s => s.id === saved.servicoId)?.nome) : (servicoCadastro?.nome || servicoCadastro?.descricao || item.descricao)) ?? item.descricao
+                const servicoId = saved.servicoId || servicoCadastro?.id
+                const total = (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias' || item.id === 'hida' || item.id === 'hret') ? Math.round(qty * valorUnit * 100) / 100 : valorUnit
                 const cobrarDiaria = item.id === 'diarias' && typeof saved.cobrarDiaria === 'boolean' ? saved.cobrarDiaria : (item as FechamentoItem).cobrarDiaria !== false
-                return { ...saved, quantidade: item.quantidade, valorUnitario: valorUnit, valorTotal: total, cobrarDiaria: item.id === 'diarias' ? cobrarDiaria : undefined }
+                return { ...saved, servicoId, cod, descricao, quantidade: item.quantidade, valorUnitario: valorUnit, valorTotal: total, cobrarDiaria: item.id === 'diarias' ? cobrarDiaria : undefined }
               })
               const seisIds = ['ht', 'km', 'hviagem', 'diarias', 'hida', 'hret']
               const comTodosSeis = seisIds.map(id => seisComQuantidadeDoResumo.find(i => i.id === id) || itensIniciaisSempre.find(i => i.id === id)).filter(Boolean) as FechamentoItem[]
