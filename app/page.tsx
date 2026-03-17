@@ -27672,7 +27672,7 @@ A1;Peça exemplo;10'
                 <input
                   type="number"
                   placeholder={safeT?.valorServico || 'Valor'}
-                  value={servicoForm.valor}
+                  value={servicoForm.valor === 0 ? '' : servicoForm.valor}
                   onChange={(e) => setServicoForm({ ...servicoForm, valor: parseFloat(e.target.value) || 0 })}
                   style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
@@ -48832,7 +48832,7 @@ A1;Peça exemplo;10'
                 <input
                   type="number"
                   placeholder={safeT?.valorServico || 'Valor'}
-                  value={servicoForm.valor}
+                  value={servicoForm.valor === 0 ? '' : servicoForm.valor}
                   onChange={(e) => setServicoForm({ ...servicoForm, valor: parseFloat(e.target.value) || 0 })}
                   style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
