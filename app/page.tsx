@@ -21357,7 +21357,7 @@ onKeyPress={(e) => {
                       />
                     </div>
 
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginTop: '14px' }}>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '14px', flexWrap: 'nowrap' }}>
                       <button
                         className="btn-primary"
                         onClick={handleAddDiaTrabalho}
@@ -21365,7 +21365,8 @@ onKeyPress={(e) => {
                           padding: '10px 18px',
                           fontSize: '13px',
                           fontWeight: 'bold',
-                          borderRadius: '6px'
+                          borderRadius: '6px',
+                          flexShrink: 0
                         }}
                       >
                         {editingDiaTrabalhoIndex !== null ? (safeT?.atualizarDia || 'Atualizar Dia') : (safeT?.adicionarDia || 'Adicionar Dia')}
@@ -21399,7 +21400,10 @@ onKeyPress={(e) => {
                             padding: '10px 16px',
                             fontSize: '13px',
                             fontWeight: '600',
-                            borderRadius: '6px'
+                            borderRadius: '6px',
+                            flexShrink: 0,
+                            width: 'auto',
+                            minWidth: 'unset'
                           }}
                         >
                           {safeT?.cancel || 'Cancelar'}
@@ -21462,7 +21466,7 @@ onKeyPress={(e) => {
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '10px', fontWeight: 'bold', color: '#ffffff', whiteSpace: 'nowrap' }}>{diaCalculado.kmTotal || '0'}</td>
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '10px', color: '#ffffff', whiteSpace: 'nowrap' }} rowSpan={temDescricao ? 2 : 1}>{dia.pausa || '0'}</td>
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', verticalAlign: 'middle' }} rowSpan={temDescricao ? 2 : 1}>
-                                      <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'wrap', alignItems: 'center' }}>
+                                      <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'nowrap', alignItems: 'center' }}>
                                         <button
                                           type="button"
                                           className="btn-primary"
@@ -21493,7 +21497,9 @@ onKeyPress={(e) => {
                                             fontSize: '10px',
                                             fontWeight: '600',
                                             whiteSpace: 'nowrap',
-                                            borderRadius: '4px'
+                                            borderRadius: '4px',
+                                            width: '56px',
+                                            boxSizing: 'border-box'
                                           }}
                                           title={(safeT as any)?.editar || safeT?.edit || 'Editar'}
                                         >
@@ -21508,7 +21514,9 @@ onKeyPress={(e) => {
                                             fontSize: '10px',
                                             fontWeight: '600',
                                             whiteSpace: 'nowrap',
-                                            borderRadius: '4px'
+                                            borderRadius: '4px',
+                                            width: '56px',
+                                            boxSizing: 'border-box'
                                           }}
                                           title={safeT?.delete || 'Excluir'}
                                         >
