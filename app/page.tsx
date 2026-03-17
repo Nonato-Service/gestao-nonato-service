@@ -28301,20 +28301,27 @@ A1;Peça exemplo;10'
             { id: 'hida', descricao: lab('horasViagemIda') || 'Horas de Viagem de Ida', tipoCobranca: 'hora', quantidade: t.horasViagemIdaDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
             { id: 'hret', descricao: lab('horasViagemRetorno') || 'Horas de Viagem de Retorno', tipoCobranca: 'hora', quantidade: t.horasViagemRetornoDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' }
           ]
-          // Preencher automaticamente com o primeiro serviço do cadastro que combine (hora/km/diarias) – COD, nome e valor vêm do Cadastro de Serviços
+          // Preencher automaticamente com o serviço do cadastro que combine – COD, nome e valor vêm do Cadastro de Serviços
+          // Para "Horas de Viagem de Ida" e "Horas de Viagem de Retorno" procurar por nome (ex.: HVI, HVR) mesmo que tipo seja "unidade"
+          const texto = (s: typeof servicos[0]) => ((s.nome || '') + ' ' + (s.descricao || '')).toLowerCase()
           return base.map(item => {
-            const primeiroServico = servicos.find(s => {
-              if (item.tipoCobranca === 'hora') return s.tipoCobranca === 'hora'
-              if (item.tipoCobranca === 'km') return s.tipoCobranca === 'km'
-              if (item.tipoCobranca === 'diarias') return s.tipoCobranca === 'diarias'
-              return false
-            })
+            let primeiroServico: typeof servicos[0] | undefined
+            if (item.id === 'hida') {
+              primeiroServico = servicos.find(s => /viagem/.test(texto(s)) && /ida/.test(texto(s))) || servicos.find(s => s.tipoCobranca === 'hora')
+            } else if (item.id === 'hret') {
+              primeiroServico = servicos.find(s => /viagem/.test(texto(s)) && /retorno/.test(texto(s))) || servicos.find(s => s.tipoCobranca === 'hora')
+            } else if (item.tipoCobranca === 'hora') {
+              primeiroServico = servicos.find(s => s.tipoCobranca === 'hora')
+            } else if (item.tipoCobranca === 'km') {
+              primeiroServico = servicos.find(s => s.tipoCobranca === 'km')
+            } else if (item.tipoCobranca === 'diarias') {
+              primeiroServico = servicos.find(s => s.tipoCobranca === 'diarias')
+            }
             if (!primeiroServico) return item
             const valorUnit = primeiroServico.valor
             const qty = item.quantidade || 0
-            const total = (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias')
-              ? Math.round(qty * valorUnit * 100) / 100
-              : valorUnit
+            const usaQtyXValor = item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias' || item.id === 'hida' || item.id === 'hret'
+            const total = usaQtyXValor ? Math.round(qty * valorUnit * 100) / 100 : valorUnit
             return {
               ...item,
               servicoId: primeiroServico.id,
@@ -28348,14 +28355,22 @@ A1;Peça exemplo;10'
               return [...comTodosSeis, ...itensManuaisSalvos]
             })()
           : []
-        const servicosParaItem = (item: FechamentoItem) => servicos.filter(s => item.tipoCobranca === 'hora' ? s.tipoCobranca === 'hora' : item.tipoCobranca === 'km' ? s.tipoCobranca === 'km' : item.tipoCobranca === 'diarias' ? s.tipoCobranca === 'diarias' : true)
+        const servicosParaItem = (item: FechamentoItem) => {
+          const txt = (s: typeof servicos[0]) => ((s.nome || '') + ' ' + (s.descricao || '')).toLowerCase()
+          if (item.id === 'hida') return servicos.filter(s => s.tipoCobranca === 'hora' || (/viagem/.test(txt(s)) && /ida/.test(txt(s))))
+          if (item.id === 'hret') return servicos.filter(s => s.tipoCobranca === 'hora' || (/viagem/.test(txt(s)) && /retorno/.test(txt(s))))
+          if (item.tipoCobranca === 'hora') return servicos.filter(s => s.tipoCobranca === 'hora')
+          if (item.tipoCobranca === 'km') return servicos.filter(s => s.tipoCobranca === 'km')
+          if (item.tipoCobranca === 'diarias') return servicos.filter(s => s.tipoCobranca === 'diarias')
+          return servicos
+        }
         const totalCobranca = itensParaExibir.reduce((s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal), 0)
         const atualizarItem = (id: string, upd: Partial<FechamentoItem>) => {
           const list = itensParaExibir
           const idx = list.findIndex(i => i.id === id)
           if (idx === -1) return
           const item = { ...list[idx], ...upd }
-          if (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias') item.valorTotal = Math.round(item.quantidade * item.valorUnitario * 100) / 100
+          if (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias' || item.id === 'hida' || item.id === 'hret') item.valorTotal = Math.round(item.quantidade * item.valorUnitario * 100) / 100
           else if (item.tipoCobranca === 'valor-fixo' || item.tipoCobranca === 'unidade') item.valorTotal = item.valorUnitario * (item.quantidade || 1)
           const nova = [...list.slice(0, idx), item, ...list.slice(idx + 1)]
           setItensFechamento(nova)
@@ -28364,10 +28379,11 @@ A1;Peça exemplo;10'
           const list = itensParaExibir
           const item = list.find(i => i.id === itemId)
           if (!item) return
-          const tipo = (servico.tipoCobranca === 'hora' || servico.tipoCobranca === 'km' || servico.tipoCobranca === 'diarias') ? servico.tipoCobranca : 'valor-fixo'
+          const isHidaOuHret = itemId === 'hida' || itemId === 'hret'
+          const tipo = (servico.tipoCobranca === 'hora' || servico.tipoCobranca === 'km' || servico.tipoCobranca === 'diarias') ? servico.tipoCobranca : (isHidaOuHret ? 'hora' : 'valor-fixo')
           const valorUnit = servico.valor
-          let total = (tipo === 'hora' || tipo === 'km' || tipo === 'diarias') ? Math.round((item.quantidade || 0) * valorUnit * 100) / 100 : valorUnit
-          if (tipo === 'valor-fixo' || tipo === 'unidade') total = valorUnit
+          let total = (tipo === 'hora' || tipo === 'km' || tipo === 'diarias' || isHidaOuHret) ? Math.round((item.quantidade || 0) * valorUnit * 100) / 100 : valorUnit
+          if (tipo === 'valor-fixo' || (servico.tipoCobranca === 'unidade' && !isHidaOuHret)) total = valorUnit
           atualizarItem(itemId, {
             servicoId: servico.id,
             cod: servico.cod,
