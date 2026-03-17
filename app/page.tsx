@@ -28323,14 +28323,30 @@ A1;Peça exemplo;10'
             }
           })
         }
-        const itensExistentes = relatorioSelecionado && fechamentosRelatorios[relatorioSelecionado.id]
+        // Sempre preencher a tabela a partir do resumo do relatório (Foto 1): 6 itens com quantidades do resumo + código/descrição/valor do Cadastro de Serviços
+        const itensIniciaisSempre = relatorioSelecionado ? getItensIniciaisDoRelatorio(relatorioSelecionado) : []
+        const salvosParaEsteRelatorio = (relatorioSelecionado && fechamentosRelatorios[relatorioSelecionado.id]) || []
+        const itensManuaisSalvos = salvosParaEsteRelatorio.filter(i => i.origem === 'manual')
         const itensParaExibir = relatorioSelecionado
-          ? (itensExistentes && itensExistentes.length > 0 ? itensExistentes : getItensIniciaisDoRelatorio(relatorioSelecionado))
+          ? (() => {
+              const seisDoResumo = itensIniciaisSempre
+              const salvos = salvosParaEsteRelatorio
+              if (salvos.length === 0) return [...seisDoResumo, ...itensManuaisSalvos]
+              const seisComQuantidadeDoResumo = seisDoResumo.map(item => {
+                const saved = salvos.find(s => s.id === item.id)
+                if (!saved) return item
+                const qty = item.quantidade ?? 0
+                const valorUnit = saved.valorUnitario ?? item.valorUnitario
+                const total = (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias') ? Math.round(qty * valorUnit * 100) / 100 : valorUnit
+                return { ...saved, quantidade: item.quantidade, valorUnitario: valorUnit, valorTotal: total }
+              })
+              return [...seisComQuantidadeDoResumo, ...itensManuaisSalvos]
+            })()
           : []
         const servicosParaItem = (item: FechamentoItem) => servicos.filter(s => item.tipoCobranca === 'hora' ? s.tipoCobranca === 'hora' : item.tipoCobranca === 'km' ? s.tipoCobranca === 'km' : item.tipoCobranca === 'diarias' ? s.tipoCobranca === 'diarias' : true)
         const totalCobranca = itensParaExibir.reduce((s, i) => s + i.valorTotal, 0)
         const atualizarItem = (id: string, upd: Partial<FechamentoItem>) => {
-          const list = relatorioSelecionado ? (fechamentosRelatorios[relatorioSelecionado.id] || getItensIniciaisDoRelatorio(relatorioSelecionado)) : []
+          const list = itensParaExibir
           const idx = list.findIndex(i => i.id === id)
           if (idx === -1) return
           const item = { ...list[idx], ...upd }
@@ -28340,7 +28356,7 @@ A1;Peça exemplo;10'
           setItensFechamento(nova)
         }
         const aplicarServico = (itemId: string, servico: typeof servicos[0]) => {
-          const list = relatorioSelecionado ? (fechamentosRelatorios[relatorioSelecionado.id] || getItensIniciaisDoRelatorio(relatorioSelecionado)) : []
+          const list = itensParaExibir
           const item = list.find(i => i.id === itemId)
           if (!item) return
           const tipo = (servico.tipoCobranca === 'hora' || servico.tipoCobranca === 'km' || servico.tipoCobranca === 'diarias') ? servico.tipoCobranca : 'valor-fixo'
@@ -28358,13 +28374,12 @@ A1;Peça exemplo;10'
         }
         const adicionarItemManual = () => {
           if (!relatorioSelecionado) return
-          const list = fechamentosRelatorios[relatorioSelecionado.id] || getItensIniciaisDoRelatorio(relatorioSelecionado)
           const novo: FechamentoItem = { id: 'm' + Date.now(), descricao: (safeT as any)?.outroItem || 'Outro item', tipoCobranca: 'valor-fixo', quantidade: 1, valorUnitario: 0, valorTotal: 0, origem: 'manual' }
-          setItensFechamento([...list, novo])
+          setItensFechamento([...itensParaExibir, novo])
         }
         const removerItem = (id: string) => {
           if (!relatorioSelecionado) return
-          const list = (fechamentosRelatorios[relatorioSelecionado.id] || getItensIniciaisDoRelatorio(relatorioSelecionado)).filter(i => i.id !== id)
+          const list = itensParaExibir.filter(i => i.id !== id)
           setItensFechamento(list)
         }
         const handleGerarPDFFechamento = () => {
