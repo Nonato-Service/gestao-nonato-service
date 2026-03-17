@@ -138,5 +138,8 @@ Se o deploy falhar por falta de memória (ex.: "Killed" nos logs):
 ## Problemas?
 
 - **Erro de login no Git:** Use um Personal Access Token em vez da password (GitHub → Settings → Developer settings → Personal access tokens).
-- **Deploy falha:** Verifique os **Deploy Logs** no separador **Deployments** do Railway. Se aparecer "Killed", adicione `NODE_OPTIONS=--max-old-space-size=384`.
+- **"Failed to build an image" / Deploy falha:**  
+  1. Clique em **View logs** (ou **Build logs**) no deployment que falhou e veja a última mensagem de erro.  
+  2. Se aparecer **"Killed"** ou **"JavaScript heap out of memory"**: no Railway → **Variables** → adicione **`NODE_OPTIONS`** = **`--max-old-space-size=384`** (ou **`256`** no plano gratuito) e faça **Redeploy**.  
+  3. Se for outro erro (dependência, Node, etc.), use a mensagem dos logs para corrigir. O projeto já usa `nixpacks.toml` com limite de memória no build.
 - **Dados desaparecem:** Confirme que o Volume está com Mount Path **`/app/data`** e que a variável **`DATA_DIR`** = **`/app/data`**.
