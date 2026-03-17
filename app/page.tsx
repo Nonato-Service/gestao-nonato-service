@@ -21357,49 +21357,57 @@ onKeyPress={(e) => {
                       />
                     </div>
 
-                    <button 
-                      className="btn-primary" 
-                      onClick={handleAddDiaTrabalho} 
-                      style={{ 
-                        width: '100%',
-                        padding: '12px', 
-                        fontSize: '14px',
-                        fontWeight: 'bold',
-                        marginTop: '10px'
-                      }}
-                    >
-                      {editingDiaTrabalhoIndex !== null ? (safeT?.atualizarDia || 'Atualizar Dia') : (safeT?.adicionarDia || 'Adicionar Dia')}
-                    </button>
-                    {editingDiaTrabalhoIndex !== null && (
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginTop: '14px' }}>
                       <button
-                        type="button"
-                        className="btn-danger"
-                        onClick={() => {
-                          setEditingDiaTrabalhoIndex(null)
-                          setNovoDiaTrabalho({
-                            data: new Date().toISOString().split('T')[0],
-                            idaHora: '',
-                            idaChegada: '',
-                            idaDuracao: '',
-                            horasInicio: '',
-                            horasFim: '',
-                            horasDuracao: '',
-                            retornoSaida: '',
-                            retornoChegada: '',
-                            retornoDuracao: '',
-                            kmIda: '0',
-                            kmRetorno: '0',
-                            kmTotal: '',
-                            pausa: '',
-                            tempoPausa: '',
-                            descricaoTrabalho: ''
-                          })
+                        className="btn-primary"
+                        onClick={handleAddDiaTrabalho}
+                        style={{
+                          padding: '12px 24px',
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          borderRadius: '8px',
+                          minWidth: '160px'
                         }}
-                        style={{ padding: '8px 14px', fontSize: '12px', marginLeft: '8px' }}
                       >
-                        {safeT?.cancel || 'Cancelar'}
+                        {editingDiaTrabalhoIndex !== null ? (safeT?.atualizarDia || 'Atualizar Dia') : (safeT?.adicionarDia || 'Adicionar Dia')}
                       </button>
-                    )}
+                      {editingDiaTrabalhoIndex !== null && (
+                        <button
+                          type="button"
+                          className="btn-danger"
+                          onClick={() => {
+                            setEditingDiaTrabalhoIndex(null)
+                            setNovoDiaTrabalho({
+                              data: new Date().toISOString().split('T')[0],
+                              idaHora: '',
+                              idaChegada: '',
+                              idaDuracao: '',
+                              horasInicio: '',
+                              horasFim: '',
+                              horasDuracao: '',
+                              retornoSaida: '',
+                              retornoChegada: '',
+                              retornoDuracao: '',
+                              kmIda: '0',
+                              kmRetorno: '0',
+                              kmTotal: '',
+                              pausa: '',
+                              tempoPausa: '',
+                              descricaoTrabalho: ''
+                            })
+                          }}
+                          style={{
+                            padding: '12px 24px',
+                            fontSize: '14px',
+                            fontWeight: 'bold',
+                            borderRadius: '8px',
+                            minWidth: '120px'
+                          }}
+                        >
+                          {safeT?.cancel || 'Cancelar'}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Tabela de dias adicionados - Compacta em uma linha */}
@@ -21416,7 +21424,7 @@ onKeyPress={(e) => {
                               <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }} colSpan={3}>{safeT?.retorno || 'RETORNO'}</th>
                               <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }} colSpan={3}>{safeT?.km || 'KM'}</th>
                               <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: '50px' }} rowSpan={2}>{safeT?.pausa || 'PAUSA'}</th>
-                              <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: '60px' }} rowSpan={2}>{safeT?.acao || 'AÇÃO'}</th>
+                              <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: '100px' }} rowSpan={2}>{safeT?.acao || 'AÇÃO'}</th>
                             </tr>
                             <tr style={{ backgroundColor: 'rgba(0, 255, 0, 0.12)', borderBottom: '2px solid rgba(0, 255, 0, 0.35)' }}>
                               <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.saida || 'Saída'}</th>
@@ -21455,9 +21463,10 @@ onKeyPress={(e) => {
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '10px', whiteSpace: 'nowrap' }}>{dia.kmRetorno || '0'}</td>
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '10px', fontWeight: 'bold', color: '#ffffff', whiteSpace: 'nowrap' }}>{diaCalculado.kmTotal || '0'}</td>
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '10px', color: '#ffffff', whiteSpace: 'nowrap' }} rowSpan={temDescricao ? 2 : 1}>{dia.pausa || '0'}</td>
-                                    <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)' }} rowSpan={temDescricao ? 2 : 1}>
-                                      <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                    <td style={{ padding: '8px 6px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', verticalAlign: 'middle' }} rowSpan={temDescricao ? 2 : 1}>
+                                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap', alignItems: 'center' }}>
                                         <button
+                                          type="button"
                                           className="btn-primary"
                                           onClick={() => {
                                             setNovoDiaTrabalho({
@@ -21481,12 +21490,33 @@ onKeyPress={(e) => {
                                             })
                                             setEditingDiaTrabalhoIndex(index)
                                           }}
-                                          style={{ padding: '3px 6px', fontSize: '9px', whiteSpace: 'nowrap' }}
+                                          style={{
+                                            padding: '6px 10px',
+                                            fontSize: '11px',
+                                            fontWeight: '600',
+                                            whiteSpace: 'nowrap',
+                                            borderRadius: '6px',
+                                            minWidth: '58px'
+                                          }}
+                                          title={(safeT as any)?.editar || safeT?.edit || 'Editar'}
                                         >
-                                          {(safeT as any)?.editar || safeT?.edit || 'Editar'}
+                                          ✏️ {(safeT as any)?.editar || safeT?.edit || 'Editar'}
                                         </button>
-                                        <button className="btn-danger" onClick={() => handleRemoveDiaTrabalho(index)} style={{ padding: '3px 6px', fontSize: '9px', whiteSpace: 'nowrap' }}>
-                                          {safeT?.delete || 'Excluir'}
+                                        <button
+                                          type="button"
+                                          className="btn-danger"
+                                          onClick={() => handleRemoveDiaTrabalho(index)}
+                                          style={{
+                                            padding: '6px 10px',
+                                            fontSize: '11px',
+                                            fontWeight: '600',
+                                            whiteSpace: 'nowrap',
+                                            borderRadius: '6px',
+                                            minWidth: '58px'
+                                          }}
+                                          title={safeT?.delete || 'Excluir'}
+                                        >
+                                          🗑️ {safeT?.delete || 'Excluir'}
                                         </button>
                                       </div>
                                     </td>
