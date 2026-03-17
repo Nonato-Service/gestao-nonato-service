@@ -899,6 +899,8 @@ export default function Dashboard() {
   const [incluirLogoNosRelatorios, setIncluirLogoNosRelatorios] = useState<boolean>(true) // Incluir logo nos PDFs (Administrador)
   const [logosRelatorios, setLogosRelatorios] = useState<LogoRelatorio[]>([]) // Logos disponíveis para escolha nos relatórios
   const [logoRelatorioSelecionadoId, setLogoRelatorioSelecionadoId] = useState<string>('') // '' = logo principal
+  const [incluirLogoFechamentosDespesas, setIncluirLogoFechamentosDespesas] = useState<boolean>(true) // Logo nos PDF de Fechamentos de Despesas
+  const [logoFechamentoSelecionadoId, setLogoFechamentoSelecionadoId] = useState<string>('') // Logo escolhido para fechamentos
   const [showPedidoOrcamentoModal, setShowPedidoOrcamentoModal] = useState(false) // Modal para pedido de orçamento
   const [pedidosOrcamento, setPedidosOrcamento] = useState<PedidoOrcamento[]>([]) // Lista de pedidos de orçamento
   const [showListaPecasOrcamento, setShowListaPecasOrcamento] = useState(false) // Controla exibição da lista de peças para orçamento
@@ -3797,6 +3799,14 @@ export default function Dashboard() {
       const savedLogoRelatorioId = getData('nonato-relatorios-logo-id')
       if (typeof savedLogoRelatorioId === 'string') {
         setLogoRelatorioSelecionadoId(savedLogoRelatorioId)
+      }
+      const savedIncluirLogoFechamentos = getData('nonato-fechamentos-incluir-logo')
+      if (savedIncluirLogoFechamentos !== undefined && savedIncluirLogoFechamentos !== null) {
+        setIncluirLogoFechamentosDespesas(savedIncluirLogoFechamentos === true || savedIncluirLogoFechamentos === 'true')
+      }
+      const savedLogoFechamentoId = getData('nonato-fechamentos-logo-id')
+      if (typeof savedLogoFechamentoId === 'string') {
+        setLogoFechamentoSelecionadoId(savedLogoFechamentoId)
       }
       
       // Carregar pedidos de orçamento
@@ -8919,6 +8929,46 @@ export default function Dashboard() {
       } catch (_) { /* lista inválida ou muito grande */ }
     }
     // 3) Logo principal (localStorage)
+    const logo = localStorage.getItem('nonato-logo');
+    const type = localStorage.getItem('nonato-logo-type');
+    if (logo && type !== 'video') {
+      const src = String(logo).replace(/"/g, '&quot;');
+      return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+    }
+    return '';
+  };
+
+  // Helper: HTML do logo para PDF de Fechamentos de Despesas dos Relatórios (opção separada no Administrador)
+  const getLogoHtmlForFechamento = (): string => {
+    if (typeof window === 'undefined') return '';
+    try {
+      const incluirFromState = incluirLogoFechamentosDespesas === true;
+      const incluirFromStorage = localStorage.getItem('nonato-fechamentos-incluir-logo') === 'true';
+      if (!incluirFromState && !incluirFromStorage) return '';
+    } catch { return ''; }
+    const selectedId = (typeof logoFechamentoSelecionadoId !== 'undefined' && logoFechamentoSelecionadoId !== null)
+      ? String(logoFechamentoSelecionadoId)
+      : (() => { try { const r = localStorage.getItem('nonato-fechamentos-logo-id'); return r != null ? r : ''; } catch { return ''; } })();
+    if (selectedId && Array.isArray(logosRelatorios) && logosRelatorios.length > 0) {
+      const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
+      if (fromState && fromState.type === 'image' && fromState.data) {
+        const src = String(fromState.data).replace(/"/g, '&quot;');
+        return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+      }
+    }
+    if (selectedId) {
+      try {
+        const raw = localStorage.getItem('nonato-logos-relatorios');
+        const listRaw = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(listRaw)) {
+          const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === selectedId);
+          if (logoItem && logoItem.type === 'image' && logoItem.data) {
+            const src = String(logoItem.data).replace(/"/g, '&quot;');
+            return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+          }
+        }
+      } catch (_) { /* ignore */ }
+    }
     const logo = localStorage.getItem('nonato-logo');
     const type = localStorage.getItem('nonato-logo-type');
     if (logo && type !== 'video') {
@@ -17117,6 +17167,43 @@ const nextF = familias.filter(x => x !== f)
                     </div>
                   )}
                 </div>
+              </div>
+
+              <div style={{ marginTop: '18px', padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={incluirLogoFechamentosDespesas}
+                    onChange={(e) => {
+                      const v = e.target.checked
+                      setIncluirLogoFechamentosDespesas(v)
+                      saveData('nonato-fechamentos-incluir-logo', v)
+                    }}
+                    style={{ width: '20px', height: '20px', accentColor: '#00ff00' }}
+                  />
+                  <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.95)' }}>{(safeT as any)?.incluirLogoFechamentosDespesas || 'Incluir logo nos PDF de Fechamentos de Despesas dos Relatórios'}</span>
+                </label>
+                <p style={{ margin: '8px 0 0 32px', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{(safeT as any)?.incluirLogoFechamentosDespesasDesc || 'Quando ativo, o logo escolhido abaixo aparece nos documentos PDF de fechamento de despesas dos relatórios de serviço.'}</p>
+                {incluirLogoFechamentosDespesas && (
+                  <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'rgba(255,255,255,0.95)' }}>{(safeT as any)?.escolherLogoFechamentos || 'Escolher logo para fechamentos'}</label>
+                    <select
+                      value={logoFechamentoSelecionadoId}
+                      onChange={(e) => {
+                        const v = e.target.value
+                        setLogoFechamentoSelecionadoId(v)
+                        saveData('nonato-fechamentos-logo-id', v)
+                      }}
+                      style={{ width: '100%', maxWidth: '320px', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    >
+                      <option value="">{safeT?.logoPrincipal || 'Logo principal'}</option>
+                      {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
+                        <option key={l.id} value={l.id}>{l.name || l.id}</option>
+                      ))}
+                    </select>
+                    <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{(safeT as any)?.escolherLogoFechamentosDesc || 'Use o logo principal ou um dos logos adicionados acima (Relatórios).'}</p>
+                  </div>
+                )}
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
