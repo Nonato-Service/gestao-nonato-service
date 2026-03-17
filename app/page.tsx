@@ -21662,14 +21662,14 @@ onKeyPress={(e) => {
                           }}
                           onTouchEnd={() => { isDrawingRef.current = false; lastPosRef.current = null; }}
                         />
-                        <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'nowrap', alignItems: 'center' }}>
                           <button type="button" className="btn-primary" onClick={() => {
                             const canvas = canvasAssinaturaRef.current
                             if (!canvas) return
                             const dataUrl = canvas.toDataURL('image/png')
                             setRelatorioServicoForm({ ...relatorioServicoForm, assinaturaCliente: dataUrl, dataAssinaturaCliente: new Date().toISOString() })
                             setMostrarCanvasAssinatura(false)
-                          }} style={{ padding: '8px 14px', fontSize: '13px' }}>
+                          }} style={{ padding: '8px 14px', fontSize: '13px', flexShrink: 0 }}>
                             {safeT?.guardarAssinatura || 'Guardar assinatura'}
                           </button>
                           <button type="button" className="btn-danger" onClick={() => {
@@ -21678,7 +21678,7 @@ onKeyPress={(e) => {
                               const ctx = canvas.getContext('2d')
                               if (ctx) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
                             }
-                          }} style={{ padding: '8px 14px', fontSize: '13px' }}>
+                          }} style={{ padding: '8px 14px', fontSize: '13px', flexShrink: 0, width: 'auto', minWidth: 'unset' }}>
                             {safeT?.limparAssinatura || 'Limpar'}
                           </button>
                         </div>
