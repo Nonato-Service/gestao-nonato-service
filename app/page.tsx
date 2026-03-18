@@ -930,6 +930,7 @@ export default function Dashboard() {
   const [logoRelatorioSelecionadoId, setLogoRelatorioSelecionadoId] = useState<string>('') // '' = logo principal
   const [incluirLogoFechamentosDespesas, setIncluirLogoFechamentosDespesas] = useState<boolean>(true) // Logo nos PDF de Fechamentos de Despesas
   const [logoFechamentoSelecionadoId, setLogoFechamentoSelecionadoId] = useState<string>('') // Logo escolhido para fechamentos
+  const [logoOrcamentoSelecionadoId, setLogoOrcamentoSelecionadoId] = useState<string>('') // Logo escolhido para PDF de Orçamento
   const [showPedidoOrcamentoModal, setShowPedidoOrcamentoModal] = useState(false) // Modal para pedido de orçamento
   const [pedidosOrcamento, setPedidosOrcamento] = useState<PedidoOrcamento[]>([]) // Lista de pedidos de orçamento
   const [showListaPecasOrcamento, setShowListaPecasOrcamento] = useState(false) // Controla exibição da lista de peças para orçamento
@@ -2925,12 +2926,6 @@ export default function Dashboard() {
     assinaturaCliente: undefined,
     dataAssinaturaCliente: undefined
   })
-  /** Tradução IA (DeepSeek) no Relatório de Serviço: texto em PT/outro → idioma alvo */
-  const [relatorioDeepseekBusy, setRelatorioDeepseekBusy] = useState(false)
-  const [relatorioDeepseekSourceLang, setRelatorioDeepseekSourceLang] = useState<string>('pt-BR')
-  const [relatorioDeepseekTargetLang, setRelatorioDeepseekTargetLang] = useState<string>('en')
-  /** null = a carregar; false = sem DEEPSEEK_API_KEY no servidor */
-  const [deepseekServerConfigured, setDeepseekServerConfigured] = useState<boolean | null>(null)
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false)
   /** Largura ≤1024px: menu em gaveta, conteúdo a largura total (tablet/telemóvel) */
   const [isCompactLayout, setIsCompactLayout] = useState(false)
@@ -3337,83 +3332,6 @@ export default function Dashboard() {
     }
 
     setQuickTranslating(false)
-  }
-
-  useEffect(() => {
-    if (!showRelatorioServicoForm) return
-    if (selectedLanguage === 'pt-BR') {
-      setRelatorioDeepseekTargetLang('en')
-    } else {
-      setRelatorioDeepseekTargetLang(selectedLanguage)
-    }
-  }, [showRelatorioServicoForm, selectedLanguage])
-
-  useEffect(() => {
-    if (!showRelatorioServicoForm) {
-      setDeepseekServerConfigured(null)
-      return
-    }
-    fetch('/api/translate-deepseek')
-      .then((r) => r.json())
-      .then((d: { deepseekConfigured?: boolean }) => setDeepseekServerConfigured(!!d.deepseekConfigured))
-      .catch(() => setDeepseekServerConfigured(false))
-  }, [showRelatorioServicoForm])
-
-  const handleTraduzirRelatorioComDeepseek = async () => {
-    const src = relatorioDeepseekSourceLang
-    const tgt = relatorioDeepseekTargetLang
-    if (src === tgt) {
-      alert(safeT?.deepseekSameLang || 'Escolha idiomas diferentes (origem e destino).')
-      return
-    }
-    const fields: Record<string, string> = {}
-    if (relatorioServicoForm.observacoes.trim()) fields.observacoes = relatorioServicoForm.observacoes
-    if (relatorioServicoForm.pontosAberto.trim()) fields.pontosAberto = relatorioServicoForm.pontosAberto
-    if (relatorioServicoForm.tipoServico.trim()) fields.tipoServico = relatorioServicoForm.tipoServico
-    relatorioServicoForm.diasTrabalho.forEach((d, i) => {
-      if (d.descricaoTrabalho.trim()) fields[`dia_${i}`] = d.descricaoTrabalho
-    })
-    relatorioServicoForm.pecasSubstituicao.forEach((p, i) => {
-      if (p.descricao.trim()) fields[`peca_${i}`] = p.descricao
-    })
-    if (Object.keys(fields).length === 0) {
-      alert(safeT?.deepseekNoText || 'Preencha pelo menos um campo de texto (observações, pontos em aberto, tipo de serviço, descrição de dia ou de peça).')
-      return
-    }
-    setRelatorioDeepseekBusy(true)
-    try {
-      const res = await fetch('/api/translate-deepseek', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sourceLang: src, targetLang: tgt, fields }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        throw new Error((data as { error?: string }).error || `Erro ${res.status}`)
-      }
-      const out = (data as { translated?: Record<string, string> }).translated || {}
-      const newDias = relatorioServicoForm.diasTrabalho.map((d, i) => {
-        const k = `dia_${i}`
-        return out[k] !== undefined ? { ...d, descricaoTrabalho: out[k] } : d
-      })
-      const newPecas = relatorioServicoForm.pecasSubstituicao.map((p, i) => {
-        const k = `peca_${i}`
-        return out[k] !== undefined ? { ...p, descricao: out[k] } : p
-      })
-      setRelatorioServicoForm({
-        ...relatorioServicoForm,
-        observacoes: out.observacoes !== undefined ? out.observacoes : relatorioServicoForm.observacoes,
-        pontosAberto: out.pontosAberto !== undefined ? out.pontosAberto : relatorioServicoForm.pontosAberto,
-        tipoServico: out.tipoServico !== undefined ? out.tipoServico : relatorioServicoForm.tipoServico,
-        diasTrabalho: newDias,
-        pecasSubstituicao: newPecas,
-      })
-      alert(safeT?.deepseekDone || 'Tradução concluída. Reveja o texto antes de guardar.')
-    } catch (e) {
-      alert((e as Error).message || String(e))
-    } finally {
-      setRelatorioDeepseekBusy(false)
-    }
   }
 
   // Atualizar texto traduzido quando o resultado da tradução mudar
@@ -4070,6 +3988,10 @@ export default function Dashboard() {
       const savedLogoFechamentoId = getData('nonato-fechamentos-logo-id')
       if (typeof savedLogoFechamentoId === 'string') {
         setLogoFechamentoSelecionadoId(savedLogoFechamentoId)
+      }
+      const savedLogoOrcamentoId = getData('nonato-orcamento-logo-id')
+      if (typeof savedLogoOrcamentoId === 'string') {
+        setLogoOrcamentoSelecionadoId(savedLogoOrcamentoId)
       }
       
       // Carregar pedidos de orçamento
@@ -9307,6 +9229,41 @@ export default function Dashboard() {
     const selectedId = (typeof logoFechamentoSelecionadoId !== 'undefined' && logoFechamentoSelecionadoId !== null)
       ? String(logoFechamentoSelecionadoId)
       : (() => { try { const r = localStorage.getItem('nonato-fechamentos-logo-id'); return r != null ? r : ''; } catch { return ''; } })();
+    if (selectedId && Array.isArray(logosRelatorios) && logosRelatorios.length > 0) {
+      const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
+      if (fromState && fromState.type === 'image' && fromState.data) {
+        const src = String(fromState.data).replace(/"/g, '&quot;');
+        return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+      }
+    }
+    if (selectedId) {
+      try {
+        const raw = localStorage.getItem('nonato-logos-relatorios');
+        const listRaw = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(listRaw)) {
+          const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === selectedId);
+          if (logoItem && logoItem.type === 'image' && logoItem.data) {
+            const src = String(logoItem.data).replace(/"/g, '&quot;');
+            return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+          }
+        }
+      } catch (_) { /* ignore */ }
+    }
+    const logo = localStorage.getItem('nonato-logo');
+    const type = localStorage.getItem('nonato-logo-type');
+    if (logo && type !== 'video') {
+      const src = String(logo).replace(/"/g, '&quot;');
+      return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+    }
+    return '';
+  };
+
+  // Helper: HTML do logo para PDF de Orçamento (opção separada no Administrador)
+  const getLogoHtmlForOrcamento = (): string => {
+    if (typeof window === 'undefined') return '';
+    const selectedId = (typeof logoOrcamentoSelecionadoId !== 'undefined' && logoOrcamentoSelecionadoId !== null)
+      ? String(logoOrcamentoSelecionadoId)
+      : (() => { try { const r = localStorage.getItem('nonato-orcamento-logo-id'); return r != null ? r : ''; } catch { return ''; } })();
     if (selectedId && Array.isArray(logosRelatorios) && logosRelatorios.length > 0) {
       const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
       if (fromState && fromState.type === 'image' && fromState.data) {
@@ -17819,12 +17776,30 @@ const nextF = familias.filter(x => x !== f)
                     <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{(safeT as any)?.escolherLogoFechamentosDesc || 'Use o logo principal ou um dos logos adicionados acima (Relatórios).'}</p>
                   </div>
                 )}
+                <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'rgba(255,255,255,0.95)' }}>{(safeT as any)?.escolherLogoOrcamento || 'Logo para Orçamento (PDF)'}</label>
+                  <select
+                    value={logoOrcamentoSelecionadoId}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      setLogoOrcamentoSelecionadoId(v)
+                      saveData('nonato-orcamento-logo-id', v)
+                    }}
+                    style={{ width: '100%', maxWidth: '320px', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  >
+                    <option value="">{safeT?.logoPrincipal || 'Logo principal'}</option>
+                    {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
+                      <option key={l.id} value={l.id}>{l.name || l.id}</option>
+                    ))}
+                  </select>
+                  <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{(safeT as any)?.escolherLogoOrcamentoDesc || 'Logo que aparece no cabeçalho do PDF de orçamentos (avulso e do relatório).'}</p>
+                </div>
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
-                  <div>
-                    <strong style={{ display: 'block', marginBottom: '5px' }}>{(safeT as any)?.logoBarraLateral || 'Logo da Barra Lateral'}</strong>
+                    <div>
+                      <strong style={{ display: 'block', marginBottom: '5px' }}>{(safeT as any)?.logoBarraLateral || 'Logo da Barra Lateral'}</strong>
                     <span style={{ fontSize: '12px', opacity: 0.7 }}>{safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece no menu lateral.'}</span>
                   </div>
                   <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 15px', margin: 0 }}>
@@ -17847,32 +17822,8 @@ const nextF = familias.filter(x => x !== f)
                 <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
                     <div>
-                      <strong style={{ display: 'block', marginBottom: '5px' }}>{(safeT as any)?.logoPainelControlo || 'Logo do Painel de Controlo'}</strong>
-                      <span style={{ fontSize: '12px', opacity: 0.7 }}>{(safeT as any)?.logoPainelControloDesc || safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece na barra lateral e nos cabeçalhos do sistema (após login).'}</span>
-                    </div>
-                    <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 15px', margin: 0 }}>
-                      {safeT?.changeLogo || 'Alterar Logo'}
-                      <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeSidebarLogo} style={{ display: 'none' }} />
-                    </label>
-                  </div>
-                  {logoUrl && (
-                    <div style={{ padding: '12px', backgroundColor: '#222222', borderRadius: '6px', marginTop: '10px' }}>
-                      <div style={{ marginBottom: '10px' }}>
-                        {logoType === 'video' ? (
-                          <video src={logoUrl} autoPlay loop muted style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
-                        ) : (
-                          <img src={logoUrl} alt="Logo painel de controlo" style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
-                        )}
-                      </div>
-                      <button className="btn-danger" onClick={handleRemoveSidebarLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>{safeT?.removeLogo || 'Remover Logo'}</button>
-                    </div>
-                  )}
-                </div>
-                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
-                    <div>
                       <strong style={{ display: 'block', marginBottom: '5px' }}>{(safeT as any)?.logoDashboard || 'Logo do Dashboard'}</strong>
-                      <span style={{ fontSize: '12px', opacity: 0.7 }}>{safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece na tela inicial.'}</span>
+                      <span style={{ fontSize: '12px', opacity: 0.7 }}>{safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece na tela inicial (painel de controlo).'}</span>
                     </div>
                     <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 15px', margin: 0 }}>
                       {safeT?.changeLogo || 'Alterar Logo'}
@@ -21152,72 +21103,6 @@ onKeyPress={(e) => {
             {showRelatorioServicoForm && (
               <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414', maxHeight: '90vh', overflowY: 'auto' }}>
                 <h3 style={{ marginBottom: '15px' }}>{editingRelatorioServico ? (safeT?.editRelatorioServico || 'Editar Relatório de Serviço') : (safeT?.addRelatorioServico || 'Adicionar Relatório de Serviço')}</h3>
-
-                <div style={{ marginBottom: '18px', padding: '14px', backgroundColor: '#1a1f1a', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.15)' }}>
-                  <div style={{ fontWeight: 'bold', color: '#fff', marginBottom: '6px' }}>
-                    {safeT?.deepseekPanelTitle || 'Tradução com DeepSeek (API)'}
-                  </div>
-                  {deepseekServerConfigured === false && (
-                    <div
-                      style={{
-                        marginBottom: '12px',
-                        padding: '10px 12px',
-                        backgroundColor: 'rgba(180, 60, 60, 0.25)',
-                        border: '1px solid rgba(255, 120, 120, 0.5)',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        color: '#ffcccc',
-                        lineHeight: 1.45,
-                      }}
-                    >
-                      <strong>{safeT?.deepseekNoKeyBanner || 'DeepSeek não configurado no servidor.'}</strong>{' '}
-                      {safeT?.deepseekNoKeyBanner2 ||
-                        'Adicione DEEPSEEK_API_KEY no ficheiro .env (ex.: sk-...) e reinicie. No Railway: Variables → New Variable.'}
-                    </div>
-                  )}
-                  <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.75)', marginBottom: '12px', lineHeight: 1.45 }}>
-                    {safeT?.deepseekPanelDesc ||
-                      'Escreve em português (ou outro idioma), escolhe «Traduzir para» (ex.: Italiano) e clica em traduzir. Com a app em português, o destino padrão é Inglês — podes mudar no menu.'}
-                  </p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-                    <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#ccc' }}>
-                      <span>{safeT?.deepseekWrittenIn || 'Texto escrito em'}</span>
-                      <select
-                        value={relatorioDeepseekSourceLang}
-                        onChange={(e) => setRelatorioDeepseekSourceLang(e.target.value)}
-                        style={{ padding: '8px 10px', minWidth: '160px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '6px' }}
-                      >
-                        {getLanguages(safeT).map((lang) => (
-                          <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#ccc' }}>
-                      <span>{safeT?.deepseekTranslateTo || 'Traduzir para'}</span>
-                      <select
-                        value={relatorioDeepseekTargetLang}
-                        onChange={(e) => setRelatorioDeepseekTargetLang(e.target.value)}
-                        style={{ padding: '8px 10px', minWidth: '160px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '6px' }}
-                      >
-                        {getLanguages(safeT).map((lang) => (
-                          <option key={`t-${lang.code}`} value={lang.code}>{lang.flag} {lang.name}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <button
-                      type="button"
-                      className="btn-primary"
-                      disabled={relatorioDeepseekBusy || deepseekServerConfigured === false}
-                      onClick={() => void handleTraduzirRelatorioComDeepseek()}
-                      style={{ marginTop: '18px', padding: '10px 16px', fontSize: '13px' }}
-                    >
-                      {relatorioDeepseekBusy ? (safeT?.deepseekButtonBusy || 'A traduzir…') : (safeT?.deepseekButton || 'Traduzir campos de texto')}
-                    </button>
-                  </div>
-                  <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', marginTop: '10px', marginBottom: 0 }}>
-                    {safeT?.deepseekHint || 'Inclui: observações, pontos em aberto, tipo de serviço, descrições dos dias de trabalho e das peças. Configure DEEPSEEK_API_KEY no servidor (.env ou Railway).'}
-                  </p>
-                </div>
                 
                 {/* Informações Básicas */}
                 <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px' }}>
@@ -41112,7 +40997,7 @@ A1;Peça exemplo;10'
         </head>
         <body>
           <div class="header">
-            ${getLogoHtmlForReport() ? `<div style="margin-bottom:15px;display:flex;justify-content:center;">${getLogoHtmlForReport()}</div>` : ''}
+            ${getLogoHtmlForOrcamento() ? `<div style="margin-bottom:15px;display:flex;justify-content:center;">${getLogoHtmlForOrcamento()}</div>` : ''}
             <h1>ORÇAMENTO</h1>
             <p><strong>N°: ${orcamento.numeroOrcamento}</strong></p>
             <p>DATA: ${new Date(orcamento.data).toLocaleDateString('pt-BR')}</p>
@@ -46640,32 +46525,8 @@ A1;Peça exemplo;10'
                 <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
                     <div>
-                      <strong style={{ display: 'block', marginBottom: '5px' }}>{(safeT as any)?.logoPainelControlo || 'Logo do Painel de Controlo'}</strong>
-                      <span style={{ fontSize: '12px', opacity: 0.7 }}>{(safeT as any)?.logoPainelControloDesc || safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece na barra lateral e nos cabeçalhos do sistema (após login).'}</span>
-                    </div>
-                    <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 15px', margin: 0 }}>
-                      {safeT?.changeLogo || 'Alterar Logo'}
-                      <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeSidebarLogo} style={{ display: 'none' }} />
-                    </label>
-                  </div>
-                  {logoUrl && (
-                    <div style={{ padding: '12px', backgroundColor: '#222222', borderRadius: '6px', marginTop: '10px' }}>
-                      <div style={{ marginBottom: '10px' }}>
-                        {logoType === 'video' ? (
-                          <video src={logoUrl} autoPlay loop muted style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
-                        ) : (
-                          <img src={logoUrl} alt="Logo painel de controlo" style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
-                        )}
-                      </div>
-                      <button className="btn-danger" onClick={handleRemoveSidebarLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>{safeT?.removeLogo || 'Remover Logo'}</button>
-                    </div>
-                  )}
-                </div>
-                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
-                    <div>
                       <strong style={{ display: 'block', marginBottom: '5px' }}>{(safeT as any)?.logoDashboard || 'Logo do Dashboard'}</strong>
-                      <span style={{ fontSize: '12px', opacity: 0.7 }}>{safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece na tela inicial.'}</span>
+                      <span style={{ fontSize: '12px', opacity: 0.7 }}>{safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece na tela inicial (painel de controlo).'}</span>
                     </div>
                     <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 15px', margin: 0 }}>
                       {safeT?.changeLogo || 'Alterar Logo'}
