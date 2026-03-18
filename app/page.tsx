@@ -468,6 +468,23 @@ type Cliente = {
   saldoPendente?: number // Saldo pendente do cliente
 }
 
+// Protocolo de Serviço: antes/depois com texto, imagens e peças trocadas
+type ProtocoloBloco = {
+  tipo: 'texto' | 'imagens'
+  texto?: string
+  imagens?: string[] // máx. 2, uma ao lado da outra
+}
+
+type ProtocoloServico = {
+  id: string
+  clienteId: string
+  equipamentoNumeroSerie: string
+  textoInicial: string
+  blocos: ProtocoloBloco[]
+  pecasTrocadasCodigos: string[]
+  dataCriacao: string
+}
+
 type ClientePrioritario = {
   id: string
   nomeEmpresa: string
@@ -931,6 +948,7 @@ export default function Dashboard() {
   const [incluirLogoFechamentosDespesas, setIncluirLogoFechamentosDespesas] = useState<boolean>(true) // Logo nos PDF de Fechamentos de Despesas
   const [logoFechamentoSelecionadoId, setLogoFechamentoSelecionadoId] = useState<string>('') // Logo escolhido para fechamentos
   const [logoOrcamentoSelecionadoId, setLogoOrcamentoSelecionadoId] = useState<string>('') // Logo escolhido para PDF de Orçamento
+  const [logoProtocoloServicoSelecionadoId, setLogoProtocoloServicoSelecionadoId] = useState<string>('') // Logo para PDF de Protocolos de Serviço
   const [showPedidoOrcamentoModal, setShowPedidoOrcamentoModal] = useState(false) // Modal para pedido de orçamento
   const [pedidosOrcamento, setPedidosOrcamento] = useState<PedidoOrcamento[]>([]) // Lista de pedidos de orçamento
   const [showListaPecasOrcamento, setShowListaPecasOrcamento] = useState(false) // Controla exibição da lista de peças para orçamento
@@ -2901,6 +2919,9 @@ export default function Dashboard() {
   const [showPDFFormatMenu, setShowPDFFormatMenu] = useState<string | null>(null) // ID do relatório para mostrar menu
   const [pdfMenuPosition, setPdfMenuPosition] = useState<{ top: number; left: number; width: number } | null>(null)
   const [selectedPDFModel, setSelectedPDFModel] = useState<string>('classico') // Modelo de PDF selecionado
+  const [protocolosServico, setProtocolosServico] = useState<ProtocoloServico[]>([])
+  const [editingProtocoloServicoId, setEditingProtocoloServicoId] = useState<string | null>(null)
+  const [protocoloServicoForm, setProtocoloServicoForm] = useState<{ clienteId: string; equipamentoNumeroSerie: string; textoInicial: string; blocos: ProtocoloBloco[]; pecasTrocadasCodigos: string[] }>({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [] })
   const [relatorioServicoForm, setRelatorioServicoForm] = useState<RelatorioServico>({
     id: '',
     numero: '',
@@ -3996,11 +4017,20 @@ export default function Dashboard() {
       if (typeof savedLogoOrcamentoId === 'string') {
         setLogoOrcamentoSelecionadoId(savedLogoOrcamentoId)
       }
+      const savedLogoProtocoloServicoId = getData('nonato-protocolo-servico-logo-id')
+      if (typeof savedLogoProtocoloServicoId === 'string') {
+        setLogoProtocoloServicoSelecionadoId(savedLogoProtocoloServicoId)
+      }
       
       // Carregar pedidos de orçamento
       const savedPedidosOrcamento = getData('nonato-pedidos-orcamento')
       if (savedPedidosOrcamento) {
         setPedidosOrcamento(savedPedidosOrcamento)
+      }
+
+      const savedProtocolosServico = getData('nonato-protocolos-servico')
+      if (Array.isArray(savedProtocolosServico)) {
+        setProtocolosServico(savedProtocolosServico)
       }
 
       // Carregar peças biblioteca
@@ -9267,6 +9297,41 @@ export default function Dashboard() {
     const selectedId = (typeof logoOrcamentoSelecionadoId !== 'undefined' && logoOrcamentoSelecionadoId !== null)
       ? String(logoOrcamentoSelecionadoId)
       : (() => { try { const r = localStorage.getItem('nonato-orcamento-logo-id'); return r != null ? r : ''; } catch { return ''; } })();
+    if (selectedId && Array.isArray(logosRelatorios) && logosRelatorios.length > 0) {
+      const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
+      if (fromState && fromState.type === 'image' && fromState.data) {
+        const src = String(fromState.data).replace(/"/g, '&quot;');
+        return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+      }
+    }
+    if (selectedId) {
+      try {
+        const raw = localStorage.getItem('nonato-logos-relatorios');
+        const listRaw = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(listRaw)) {
+          const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === selectedId);
+          if (logoItem && logoItem.type === 'image' && logoItem.data) {
+            const src = String(logoItem.data).replace(/"/g, '&quot;');
+            return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+          }
+        }
+      } catch (_) { /* ignore */ }
+    }
+    const logo = localStorage.getItem('nonato-logo');
+    const type = localStorage.getItem('nonato-logo-type');
+    if (logo && type !== 'video') {
+      const src = String(logo).replace(/"/g, '&quot;');
+      return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+    }
+    return '';
+  };
+
+  // Helper: HTML do logo para PDF de Protocolos de Serviço (opção separada no Administrador)
+  const getLogoHtmlForProtocoloServico = (): string => {
+    if (typeof window === 'undefined') return '';
+    const selectedId = (typeof logoProtocoloServicoSelecionadoId !== 'undefined' && logoProtocoloServicoSelecionadoId !== null)
+      ? String(logoProtocoloServicoSelecionadoId)
+      : (() => { try { const r = localStorage.getItem('nonato-protocolo-servico-logo-id'); return r != null ? r : ''; } catch { return ''; } })();
     if (selectedId && Array.isArray(logosRelatorios) && logosRelatorios.length > 0) {
       const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
       if (fromState && fromState.type === 'image' && fromState.data) {
@@ -17851,6 +17916,50 @@ const nextF = familias.filter(x => x !== f)
                     />
                   </label>
                 </div>
+                <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'rgba(255,255,255,0.95)' }}>{(safeT as any)?.escolherLogoProtocoloServico || 'Logo para Protocolos de Serviço (PDF)'}</label>
+                  <select
+                    value={logoProtocoloServicoSelecionadoId}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      setLogoProtocoloServicoSelecionadoId(v)
+                      saveData('nonato-protocolo-servico-logo-id', v)
+                    }}
+                    style={{ width: '100%', maxWidth: '320px', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  >
+                    <option value="">{safeT?.logoPrincipal || 'Logo principal'}</option>
+                    {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
+                      <option key={l.id} value={l.id}>{l.name || l.id}</option>
+                    ))}
+                  </select>
+                  <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{(safeT as any)?.escolherLogoProtocoloServicoDesc || 'Logo que aparece no cabeçalho do PDF dos Protocolos de Serviço.'}</p>
+                  <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '6px 12px', marginTop: '8px', fontSize: '12px' }}>
+                    {(safeT as any)?.adicionarLogoLista || 'Adicionar logo à lista'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+                        const reader = new FileReader()
+                        reader.onload = (ev) => {
+                          const data = ev.target?.result as string
+                          if (!data || !data.startsWith('data:image/')) return
+                          const name = file.name.replace(/\.[^.]+$/, '') || `Logo ${logosRelatorios.length + 1}`
+                          const id = `logo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+                          const next = [...logosRelatorios, { id, name, data, type: 'image' as const }]
+                          setLogosRelatorios(next)
+                          saveData('nonato-logos-relatorios', next)
+                          setLogoProtocoloServicoSelecionadoId(id)
+                          saveData('nonato-protocolo-servico-logo-id', id)
+                          e.target.value = ''
+                        }
+                        reader.readAsDataURL(file)
+                      }}
+                    />
+                  </label>
+                </div>
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -21025,43 +21134,186 @@ onKeyPress={(e) => {
           </div>
         )
 
-      case 'protocolos-servico':
+      case 'protocolos-servico': {
+        const protoT = safeT as any
+        const tituloProto = protoT?.protocolosServicoTitle || 'PROTOCOLOS DE SERVIÇO'
+        const descProto = protoT?.protocolosServicoDesc || 'Consulte e gere os protocolos de serviço (antes/depois, imagens e peças trocadas).'
+        const clienteProto = clientes.find(c => c.id === protocoloServicoForm.clienteId)
+        const equipamentoProto = clienteProto?.equipamentos?.find(e => e.numeroSerie === protocoloServicoForm.equipamentoNumeroSerie)
+        const gerarPDFProtocolo = (p: ProtocoloServico) => {
+          const cl = clientes.find(c => c.id === p.clienteId)
+          const eq = cl?.equipamentos?.find(e => e.numeroSerie === p.equipamentoNumeroSerie)
+          const esc = (s: string) => (s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/\n/g, '<br/>')
+          const logoHtml = getLogoHtmlForProtocoloServico()
+          let blocosHtml = ''
+          p.blocos.forEach(b => {
+            if (b.tipo === 'texto' && b.texto) blocosHtml += `<div style="margin:12px 0;padding:10px;background:#f5f5f5;border-radius:6px;">${esc(b.texto)}</div>`
+            if (b.tipo === 'imagens' && b.imagens?.length) {
+              blocosHtml += '<div style="display:flex;gap:12px;margin:12px 0;flex-wrap:wrap;">'
+              b.imagens.slice(0, 2).forEach(src => { blocosHtml += `<img src="${(src || '').replace(/"/g, '&quot;')}" alt="Foto" style="max-width:280px;max-height:200px;object-fit:contain;border-radius:8px;" />` })
+              blocosHtml += '</div>'
+            }
+          })
+          const pecasHtml = p.pecasTrocadasCodigos.length ? `<div style="margin-top:16px;"><strong>${protoT?.protocolosServicoPecasTrocadas || 'Peças trocadas'}:</strong> ${p.pecasTrocadasCodigos.join(', ')}</div>` : ''
+          const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>${tituloProto}</title><style>body{font-family:Segoe UI,sans-serif;padding:20px;color:#222;} .header{text-align:center;margin-bottom:24px;border-bottom:2px solid #00aa00;padding-bottom:16px;} .sec{ margin:16px 0;padding:12px;background:#f9f9f9;border-radius:8px;} .sec h3{margin:0 0 8px;color:#00aa00;font-size:14px;} @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style></head><body>
+            <div class="header">${logoHtml ? `<div style="margin-bottom:12px;">${logoHtml}</div>` : ''}<h1 style="margin:0;color:#00aa00;">NONATO SERVICE</h1><h2 style="margin:8px 0 0;font-size:18px;">${tituloProto}</h2></div>
+            ${cl ? `<div class="sec"><h3>${protoT?.protocolosServicoInformacaoCliente || 'Informação do cliente'}</h3><p style="margin:0;">${esc(cl.nomeEmpresa)}${cl.morada ? '<br/>' + esc(cl.morada) : ''}${cl.telefones ? '<br/>' + esc(cl.telefones) : ''}${cl.email ? '<br/>' + esc(cl.email) : ''}</p></div>` : ''}
+            ${eq ? `<div class="sec"><h3>${protoT?.protocolosServicoInformacaoEquipamento || 'Informação do equipamento'}</h3><p style="margin:0;">${esc(eq.tipoEquipamento)} ${esc(eq.modelo)} ${esc(eq.marca)} ${protoT?.numeroSerie || 'Nº Série'}: ${esc(eq.numeroSerie)}</p></div>` : ''}
+            ${p.textoInicial ? `<div class="sec"><h3>${protoT?.protocolosServicoTextoInicial || 'Texto inicial'}</h3><p style="margin:0;white-space:pre-wrap;">${esc(p.textoInicial)}</p></div>` : ''}
+            ${blocosHtml}
+            ${pecasHtml}
+            <p style="margin-top:24px;font-size:11px;color:#666;">${new Date(p.dataCriacao).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'en' ? 'en-GB' : selectedLanguage)}</p>
+          </body></html>`
+          const w = window.open('', '_blank')
+          if (w) { w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 400) }
+        }
+        const enviarEmailProtocolo = (p: ProtocoloServico) => {
+          const cl = clientes.find(c => c.id === p.clienteId)
+          const assunto = `${tituloProto} - ${cl?.nomeEmpresa || ''} - ${new Date(p.dataCriacao).toLocaleDateString()}`
+          const corpo = (protoT?.protocolosServicoEnviarEmailCorpo || 'Segue em anexo o protocolo de serviço.') + '\n\n' + (cl?.nomeEmpresa || '') + (cl?.equipamentos?.find(e => e.numeroSerie === p.equipamentoNumeroSerie) ? ' - ' + (cl.equipamentos.find(e => e.numeroSerie === p.equipamentoNumeroSerie)?.tipoEquipamento || '') : '')
+          window.open(`mailto:?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`, '_blank')
+        }
+        const enviarWhatsAppProtocolo = (p: ProtocoloServico) => {
+          const cl = clientes.find(c => c.id === p.clienteId)
+          const texto = (protoT?.protocolosServicoEnviarWhatsAppTexto || 'Protocolo de Serviço') + ': ' + (cl?.nomeEmpresa || '') + ' - ' + new Date(p.dataCriacao).toLocaleDateString()
+          window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank')
+        }
+        const mostrarFormulario = editingProtocoloServicoId !== null
         return (
           <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }} className="tab-content-wrapper">
             <div className="mobile-sticky-toolbar">
               <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>↶ {safeT?.voltar || 'Voltar'}</button>
               <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
             </div>
-            <div style={{
-              marginBottom: '40px',
-              padding: '30px',
-              background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-              borderRadius: '20px',
-              border: '2px solid rgba(0, 255, 0, 0.3)',
-              boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
-            }}>
+            <div style={{ marginBottom: '24px', padding: '24px', background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)', borderRadius: '20px', border: '2px solid rgba(0, 255, 0, 0.3)', boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
                 </div>
                 <div style={{ textAlign: 'center', flex: 1, minWidth: '200px' }}>
-                  <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#00ff00', letterSpacing: '3px', textShadow: '0 0 20px rgba(0, 255, 0, 0.3)', marginBottom: '8px' }}>
-                    {(safeT as any)?.protocolosServicoTitle || 'PROTOCOLOS DE SERVIÇO'}
-                  </h1>
-                  <p style={{ margin: 0, fontSize: '14px', color: '#ccc', opacity: 0.9 }}>
-                    {(safeT as any)?.protocolosServicoDesc || 'Consulte e gere os protocolos de serviço.'}
-                  </p>
+                  <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 'bold', color: '#00ff00', letterSpacing: '2px' }}>{tituloProto}</h1>
+                  <p style={{ margin: '8px 0 0', fontSize: '14px', color: '#ccc' }}>{descProto}</p>
                 </div>
-                <button onClick={() => closeTab(activeTabId || '')} style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'transparent', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', color: '#00ff00', cursor: 'pointer', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={safeT?.voltar || 'Voltar'}>↶</button>
+                {!mostrarFormulario && (
+                  <button className="btn-primary" onClick={() => { setEditingProtocoloServicoId('new'); setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [] }) }} style={{ padding: '10px 20px' }}>
+                    ➕ {protoT?.protocolosServicoNovo || 'Novo protocolo'}
+                  </button>
+                )}
               </div>
             </div>
-            <div style={{ padding: '20px', backgroundColor: '#141414', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-              <p style={{ color: '#ccc', lineHeight: 1.6 }}>
-                {(safeT as any)?.protocolosServicoPlaceholder || 'Aqui poderá consultar e gerir os protocolos de serviço. Esta secção está pronta para ser desenvolvida consoante as suas necessidades.'}
-              </p>
-            </div>
+
+            {mostrarFormulario ? (
+              <div style={{ padding: '20px', backgroundColor: '#141414', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                <div style={{ display: 'grid', gap: '16px', marginBottom: '20px' }}>
+                  <label style={{ display: 'block', color: '#ccc', fontSize: '13px' }}>{protoT?.protocolosServicoCliente || 'Cliente'}</label>
+                  <select value={protocoloServicoForm.clienteId} onChange={(e) => { const v = e.target.value; setProtocoloServicoForm(prev => ({ ...prev, clienteId: v, equipamentoNumeroSerie: '' })) }} style={{ width: '100%', maxWidth: '400px', padding: '10px 12px', backgroundColor: '#0a0a0a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px' }}>
+                    <option value="">— {protoT?.protocolosServicoSelecionarCliente || 'Selecionar cliente'}</option>
+                    {clientes.map(c => <option key={c.id} value={c.id}>{c.nomeEmpresa}</option>)}
+                  </select>
+                  <label style={{ display: 'block', color: '#ccc', fontSize: '13px' }}>{protoT?.protocolosServicoEquipamento || 'Equipamento'}</label>
+                  <select value={protocoloServicoForm.equipamentoNumeroSerie} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, equipamentoNumeroSerie: e.target.value }))} style={{ width: '100%', maxWidth: '400px', padding: '10px 12px', backgroundColor: '#0a0a0a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px' }} disabled={!clienteProto?.equipamentos?.length}>
+                    <option value="">— {protoT?.protocolosServicoSelecionarEquipamento || 'Selecionar equipamento'}</option>
+                    {(clienteProto?.equipamentos || []).map(eq => <option key={eq.numeroSerie} value={eq.numeroSerie}>{eq.tipoEquipamento} — {eq.modelo} ({eq.numeroSerie})</option>)}
+                  </select>
+                  <label style={{ display: 'block', color: '#ccc', fontSize: '13px' }}>{protoT?.protocolosServicoTextoInicial || 'Texto inicial'}</label>
+                  <textarea value={protocoloServicoForm.textoInicial} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, textoInicial: e.target.value }))} placeholder={protoT?.protocolosServicoTextoInicialPlaceholder || 'Texto introdutório do protocolo...'} rows={4} style={{ width: '100%', maxWidth: '600px', padding: '12px', backgroundColor: '#0a0a0a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', resize: 'vertical' }} />
+                </div>
+
+                {protocoloServicoForm.blocos.map((bloco, idx) => (
+                  <div key={idx} style={{ marginBottom: '20px', padding: '16px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <span style={{ color: '#00ff00', fontSize: '13px' }}>{bloco.tipo === 'texto' ? (protoT?.protocolosServicoBlocoTexto || 'Bloco de texto') : (protoT?.protocolosServicoBlocoImagens || 'Bloco de imagens (máx. 2)')}</span>
+                      <button type="button" className="btn-danger" style={{ padding: '6px 10px', fontSize: '12px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.filter((_, i) => i !== idx) }))}>{protoT?.protocolosServicoRemoverBloco || 'Remover'}</button>
+                    </div>
+                    {bloco.tipo === 'texto' ? (
+                      <textarea value={bloco.texto || ''} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, i) => i === idx ? { ...b, texto: e.target.value } : b) }))} rows={3} style={{ width: '100%', padding: '10px', backgroundColor: '#0a0a0a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.2)', borderRadius: '6px', resize: 'vertical' }} />
+                    ) : (
+                      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                        {(bloco.imagens || []).slice(0, 2).map((src, i) => (
+                          <div key={i} style={{ position: 'relative' }}>
+                            <img src={src} alt="" style={{ maxWidth: '200px', maxHeight: '150px', objectFit: 'contain', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.3)' }} />
+                            <button type="button" style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(200,0,0,0.9)', color: '#fff', border: 'none', borderRadius: '4px', width: '24px', height: '24px', cursor: 'pointer', fontSize: '14px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, bi) => bi === idx ? { ...b, imagens: (b.imagens || []).filter((_, j) => j !== i) } : b) }))}>×</button>
+                          </div>
+                        ))}
+                        {(bloco.imagens || []).length < 2 && (
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                            <label style={{ padding: '10px 14px', border: '2px solid rgba(0,255,0,0.4)', borderRadius: '8px', cursor: 'pointer', color: '#00ff00', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                              📁 {protoT?.protocolosServicoBuscarImagem || 'Buscar imagem'}
+                              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, bi) => bi === idx ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b) })); ev.target.value = '' }; r.readAsDataURL(f) }} />
+                            </label>
+                            <label style={{ padding: '10px 14px', border: '2px solid rgba(0,255,0,0.4)', borderRadius: '8px', cursor: 'pointer', color: '#00ff00', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                              📷 {protoT?.protocolosServicoTirarFoto || 'Tirar foto'}
+                              <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, bi) => bi === idx ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b) })); ev.target.value = '' }; r.readAsDataURL(f) }} />
+                            </label>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <div style={{ marginBottom: '16px' }}>
+                  <button type="button" className="btn-primary" style={{ marginRight: '8px', marginBottom: '8px', padding: '8px 14px', fontSize: '13px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: [...prev.blocos, { tipo: 'texto', texto: '' }] }))}>➕ {protoT?.protocolosServicoAdicionarTexto || 'Adicionar bloco de texto'}</button>
+                  <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '13px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: [...prev.blocos, { tipo: 'imagens', imagens: [] }] }))}>🖼️ {protoT?.protocolosServicoAdicionarImagens || 'Adicionar bloco de imagens'}</button>
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', color: '#ccc', fontSize: '13px', marginBottom: '8px' }}>{protoT?.protocolosServicoPecasTrocadas || 'Peças trocadas (códigos)'}</label>
+                  {protocoloServicoForm.pecasTrocadasCodigos.map((cod, i) => (
+                    <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                      <input type="text" value={cod} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, pecasTrocadasCodigos: prev.pecasTrocadasCodigos.map((c, j) => j === i ? e.target.value : c) }))} placeholder={protoT?.protocolosServicoCodigoPeca || 'Código da peça'} style={{ width: '200px', padding: '8px 12px', backgroundColor: '#0a0a0a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} />
+                      <button type="button" className="btn-danger" style={{ padding: '6px 10px', fontSize: '12px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, pecasTrocadasCodigos: prev.pecasTrocadasCodigos.filter((_, j) => j !== i) }))}>{safeT?.delete || 'Excluir'}</button>
+                    </div>
+                  ))}
+                  <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '13px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, pecasTrocadasCodigos: [...prev.pecasTrocadasCodigos, ''] }))}>➕ {protoT?.protocolosServicoAdicionarPeca || 'Adicionar código de peça'}</button>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '24px' }}>
+                  <button className="btn-primary" onClick={() => {
+                    if (!protocoloServicoForm.clienteId || !protocoloServicoForm.equipamentoNumeroSerie) { alert(protoT?.protocolosServicoSelecionarClienteEquipamento || 'Selecione o cliente e o equipamento.'); return }
+                    const dataCriacao = editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? (protocolosServico.find(pr => pr.id === editingProtocoloServicoId)?.dataCriacao || new Date().toISOString()) : new Date().toISOString()
+                    const novo: ProtocoloServico = { id: editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? editingProtocoloServicoId : `proto-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, clienteId: protocoloServicoForm.clienteId, equipamentoNumeroSerie: protocoloServicoForm.equipamentoNumeroSerie, textoInicial: protocoloServicoForm.textoInicial, blocos: protocoloServicoForm.blocos, pecasTrocadasCodigos: protocoloServicoForm.pecasTrocadasCodigos.filter(c => c.trim()), dataCriacao }
+                    const next = editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? protocolosServico.map(p => p.id === novo.id ? novo : p) : [...protocolosServico, novo]
+                    setProtocolosServico(next)
+                    saveData('nonato-protocolos-servico', next)
+                    setEditingProtocoloServicoId(null)
+                    setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [] })
+                  }} style={{ padding: '10px 20px' }}>💾 {protoT?.protocolosServicoGuardar || 'Guardar'}</button>
+                  <button type="button" className="btn-primary" style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.4)' }} onClick={() => { setEditingProtocoloServicoId(null); setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [] }) }}>{protoT?.protocolosServicoCancelar || 'Cancelar'}</button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ padding: '20px', backgroundColor: '#141414', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                {protocolosServico.length === 0 ? (
+                  <p style={{ color: '#ccc', lineHeight: 1.6 }}>{protoT?.protocolosServicoSemProtocolos || 'Ainda não há protocolos. Clique em "Novo protocolo" para criar um (cliente, equipamento, texto, imagens antes/depois e peças trocadas).'}</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {protocolosServico.slice().reverse().map(p => {
+                      const cl = clientes.find(c => c.id === p.clienteId)
+                      const eq = cl?.equipamentos?.find(e => e.numeroSerie === p.equipamentoNumeroSerie)
+                      return (
+                        <div key={p.id} style={{ padding: '16px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                          <div>
+                            <strong style={{ color: '#fff' }}>{cl?.nomeEmpresa || '—'}</strong>
+                            <span style={{ color: '#888', marginLeft: '8px' }}>{eq ? `${eq.tipoEquipamento} — ${eq.numeroSerie}` : ''}</span>
+                            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>{new Date(p.dataCriacao).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'en' ? 'en-GB' : selectedLanguage)}</div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px' }} onClick={() => gerarPDFProtocolo(p)}>📄 {protoT?.protocolosServicoGerarPDF || 'Gerar PDF'}</button>
+                            <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px', backgroundColor: 'rgba(0, 150, 255, 0.2)', borderColor: 'rgba(0, 150, 255, 0.5)' }} onClick={() => enviarEmailProtocolo(p)}>✉️ {protoT?.protocolosServicoEnviarEmail || 'Email'}</button>
+                            <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px', backgroundColor: 'rgba(37, 211, 102, 0.2)', borderColor: 'rgba(37, 211, 102, 0.6)' }} onClick={() => enviarWhatsAppProtocolo(p)}>💬 {protoT?.protocolosServicoEnviarWhatsApp || 'WhatsApp'}</button>
+                            <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px' }} onClick={() => { const pr = protocolosServico.find(x => x.id === p.id); if (pr) { setProtocoloServicoForm({ clienteId: pr.clienteId, equipamentoNumeroSerie: pr.equipamentoNumeroSerie, textoInicial: pr.textoInicial, blocos: pr.blocos, pecasTrocadasCodigos: pr.pecasTrocadasCodigos }); setEditingProtocoloServicoId(pr.id) } }}>✏️ {protoT?.protocolosServicoEditar || 'Editar'}</button>
+                            <button type="button" className="btn-danger" style={{ padding: '8px 14px', fontSize: '12px' }} onClick={() => { if (window.confirm(protoT?.protocolosServicoConfirmarExcluir || 'Excluir este protocolo?')) { const next = protocolosServico.filter(x => x.id !== p.id); setProtocolosServico(next); saveData('nonato-protocolos-servico', next) } }}>🗑️ {protoT?.protocolosServicoExcluir || 'Excluir'}</button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )
+      }
 
       case 'relatorio-servico':
         return (
