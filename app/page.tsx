@@ -44252,7 +44252,6 @@ A1;Peça exemplo;10'
               backgroundColor: selectedSidebarButton === 'open-gestao-tecnica' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
               border: selectedSidebarButton === 'open-gestao-tecnica' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
-              boxShadow: selectedSidebarButton === 'open-gestao-tecnica' ? '0 0 12px rgba(0, 255, 0, 0.25)' : undefined,
               color: selectedSidebarButton === 'open-gestao-tecnica' ? '#00ff00' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
@@ -44285,7 +44284,8 @@ A1;Peça exemplo;10'
                 right: '30px',
                 fontSize: '16px',
                 color: '#ffffff',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                zIndex: 2
               }}>✓</span>
             )}
             <span>
@@ -44412,7 +44412,6 @@ A1;Peça exemplo;10'
               backgroundColor: selectedSidebarButton === 'open-gestao-custos' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
               border: selectedSidebarButton === 'open-gestao-custos' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
-              boxShadow: selectedSidebarButton === 'open-gestao-custos' ? '0 0 12px rgba(0, 255, 0, 0.25)' : undefined,
               color: selectedSidebarButton === 'open-gestao-custos' ? '#00ff00' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
@@ -44445,7 +44444,8 @@ A1;Peça exemplo;10'
                 right: '30px',
                 fontSize: '16px',
                 color: '#ffffff',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                zIndex: 2
               }}>✓</span>
             )}
             <span>
@@ -44537,7 +44537,6 @@ A1;Peça exemplo;10'
               backgroundColor: selectedSidebarButton === 'open-comunicacao-interna' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
               border: selectedSidebarButton === 'open-comunicacao-interna' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
-              boxShadow: selectedSidebarButton === 'open-comunicacao-interna' ? '0 0 12px rgba(0, 255, 0, 0.25)' : undefined,
               color: selectedSidebarButton === 'open-comunicacao-interna' ? '#00ff00' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
@@ -44570,7 +44569,8 @@ A1;Peça exemplo;10'
                 right: '30px',
                 fontSize: '16px',
                 color: '#ffffff',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                zIndex: 2
               }}>✓</span>
             )}
             <span>
@@ -44707,7 +44707,7 @@ A1;Peça exemplo;10'
               return (
                 <div key={button.id} style={{ marginBottom: '5px' }}>
                   <button
-                    className="btn-primary"
+                    className={`btn-primary${isSelected ? ' sidebar-group-btn-selected' : ''}`}
                     onClick={() => handleButtonClick(button.action)}
                     style={{ 
                       width: '100%', 
@@ -44716,9 +44716,8 @@ A1;Peça exemplo;10'
                       marginBottom: '5px',
                       fontSize: '12px',
                       backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
-                      border: isSelected ? '1px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.35)',
+                      border: isSelected ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
                       borderRadius: '8px',
-                      boxShadow: isSelected ? '0 0 12px rgba(0, 255, 0, 0.25)' : undefined,
                       color: isSelected ? '#00ff00' : '#ccc',
                       fontWeight: 'bold',
                       transform: isSelected ? 'scale(1.02)' : undefined,
@@ -44749,8 +44748,9 @@ A1;Peça exemplo;10'
                         top: '8px',
                         right: '30px',
                         fontSize: '16px',
-                        color: '#00ff00',
-                        fontWeight: 'bold'
+                        color: '#ffffff',
+                        fontWeight: 'bold',
+                        zIndex: 2
                       }}>✓</span>
                     )}
                     <span>
@@ -44842,7 +44842,6 @@ A1;Peça exemplo;10'
               backgroundColor: gestaoIndustrialActive ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
               border: gestaoIndustrialActive ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
-              boxShadow: gestaoIndustrialActive ? '0 0 12px rgba(0, 255, 0, 0.25)' : undefined,
               color: gestaoIndustrialActive ? '#00ff00' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
@@ -44874,8 +44873,9 @@ A1;Peça exemplo;10'
                 top: '8px',
                 right: '30px',
                 fontSize: '16px',
-                color: '#00ff00',
-                fontWeight: 'bold'
+                color: '#ffffff',
+                fontWeight: 'bold',
+                zIndex: 2
               }}>✓</span>
             )}
             <span>
@@ -45079,7 +45079,7 @@ A1;Peça exemplo;10'
             return (
               <button
                 key={button.id}
-                className="btn-primary"
+                className={`btn-primary${isSelected ? ' sidebar-group-btn-selected' : ''}`}
                 onClick={() => handleButtonClick(button.action)}
                 style={{
                   width: '100%',
@@ -45088,9 +45088,8 @@ A1;Peça exemplo;10'
                   marginTop: '10px',
                   marginBottom: '10px',
                   backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
-                  border: isSelected ? '1px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.35)',
+                  border: isSelected ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
                   borderRadius: '8px',
-                  boxShadow: isSelected ? '0 0 12px rgba(0, 255, 0, 0.25)' : undefined,
                   color: isSelected ? '#00ff00' : '#ccc',
                   fontWeight: 'bold',
                   fontSize: '12px',
@@ -45122,8 +45121,9 @@ A1;Peça exemplo;10'
                     top: '8px',
                     right: '30px',
                     fontSize: '16px',
-                    color: '#00ff00',
-                    fontWeight: 'bold'
+                    color: '#ffffff',
+                    fontWeight: 'bold',
+                    zIndex: 2
                   }}>✓</span>
                 )}
                 <span>
@@ -45142,7 +45142,7 @@ A1;Peça exemplo;10'
             return (
               <button
                 key={button.id}
-                className="btn-primary"
+                className={`btn-primary${isSelected ? ' sidebar-group-btn-selected' : ''}`}
                 onClick={() => handleButtonClick(button.action)}
                 style={{ 
                   width: '100%', 
@@ -45151,9 +45151,8 @@ A1;Peça exemplo;10'
                   marginTop: '10px',
                   marginBottom: '10px',
                   backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
-                  border: isSelected ? '1px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.35)',
+                  border: isSelected ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
                   borderRadius: '8px',
-                  boxShadow: isSelected ? '0 0 12px rgba(0, 255, 0, 0.25)' : undefined,
                   color: isSelected ? '#00ff00' : '#ccc',
                   fontWeight: 'bold',
                   fontSize: '12px',
@@ -45185,8 +45184,9 @@ A1;Peça exemplo;10'
                     top: '8px',
                     right: '30px',
                     fontSize: '16px',
-                    color: '#00ff00',
-                    fontWeight: 'bold'
+                    color: '#ffffff',
+                    fontWeight: 'bold',
+                    zIndex: 2
                   }}>✓</span>
                 )}
                 <span>
@@ -45205,7 +45205,7 @@ A1;Peça exemplo;10'
         {/* Grupo: GESTÃO FINANCEIRA */}
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
           <button
-            className="btn-primary"
+            className={`btn-primary${selectedSidebarButton === 'open-gestao-financeira' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-financeira')}
             style={{ 
               width: '100%', 
@@ -45213,9 +45213,8 @@ A1;Peça exemplo;10'
               padding: '12px', 
               marginBottom: '5px',
               backgroundColor: selectedSidebarButton === 'open-gestao-financeira' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
-              border: selectedSidebarButton === 'open-gestao-financeira' ? '1px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.35)',
+              border: selectedSidebarButton === 'open-gestao-financeira' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
-              boxShadow: selectedSidebarButton === 'open-gestao-financeira' ? '0 0 12px rgba(0, 255, 0, 0.25)' : undefined,
               color: selectedSidebarButton === 'open-gestao-financeira' ? '#00ff00' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
@@ -45247,8 +45246,9 @@ A1;Peça exemplo;10'
                 top: '8px',
                 right: '30px',
                 fontSize: '16px',
-                color: '#00ff00',
-                fontWeight: 'bold'
+                color: '#ffffff',
+                fontWeight: 'bold',
+                zIndex: 2
               }}>✓</span>
             )}
             <span>
@@ -45328,7 +45328,7 @@ A1;Peça exemplo;10'
         {/* Botão CADASTRO DA NONATO SERVICE - Sempre visível acima do EXTRAS */}
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
           <button
-            className="btn-primary"
+            className={`btn-primary${selectedSidebarButton === 'open-cadastro-nonato-service' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-cadastro-nonato-service')}
             style={{
               width: '100%',
@@ -45336,9 +45336,8 @@ A1;Peça exemplo;10'
               padding: '12px',
               marginBottom: '5px',
               backgroundColor: selectedSidebarButton === 'open-cadastro-nonato-service' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
-              border: selectedSidebarButton === 'open-cadastro-nonato-service' ? '1px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.35)',
+              border: selectedSidebarButton === 'open-cadastro-nonato-service' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
-              boxShadow: selectedSidebarButton === 'open-cadastro-nonato-service' ? '0 0 12px rgba(0, 255, 0, 0.25)' : undefined,
               color: selectedSidebarButton === 'open-cadastro-nonato-service' ? '#00ff00' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
@@ -45370,8 +45369,9 @@ A1;Peça exemplo;10'
                 top: '8px',
                 right: '30px',
                 fontSize: '16px',
-                color: '#00ff00',
-                fontWeight: 'bold'
+                color: '#ffffff',
+                fontWeight: 'bold',
+                zIndex: 2
               }}>✓</span>
             )}
             <span>
@@ -45384,7 +45384,7 @@ A1;Peça exemplo;10'
         {/* Grupo: EXTRA */}
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
           <button
-            className="btn-primary"
+            className={`btn-primary${selectedSidebarButton === 'open-extra' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-extra')}
             style={{ 
               width: '100%', 
@@ -45392,9 +45392,8 @@ A1;Peça exemplo;10'
               padding: '12px', 
               marginBottom: '5px',
               backgroundColor: selectedSidebarButton === 'open-extra' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
-              border: selectedSidebarButton === 'open-extra' ? '1px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.35)',
+              border: selectedSidebarButton === 'open-extra' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
-              boxShadow: selectedSidebarButton === 'open-extra' ? '0 0 12px rgba(0, 255, 0, 0.25)' : undefined,
               color: selectedSidebarButton === 'open-extra' ? '#00ff00' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
@@ -45426,8 +45425,9 @@ A1;Peça exemplo;10'
                 top: '8px',
                 right: '30px',
                 fontSize: '16px',
-                color: '#00ff00',
-                fontWeight: 'bold'
+                color: '#ffffff',
+                fontWeight: 'bold',
+                zIndex: 2
               }}>✓</span>
             )}
             <span>
@@ -45569,7 +45569,7 @@ A1;Peça exemplo;10'
           return (
             <button
               key={adminBtn.id}
-              className="btn-administrador"
+              className={`btn-administrador${isSelected ? ' sidebar-group-btn-selected' : ''}`}
               onClick={() => handleButtonClick(adminBtn.action)}
               style={{ 
                 width: '100%', 
@@ -45578,9 +45578,7 @@ A1;Peça exemplo;10'
                 marginTop: 'auto',
                 marginBottom: '20px',
                 backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.3)' : undefined,
-                borderColor: isSelected ? '#00ff00' : undefined,
-                borderWidth: isSelected ? '2px' : undefined,
-                boxShadow: isSelected ? '0 0 15px rgba(0, 255, 0, 0.6), 0 0 30px rgba(0, 255, 0, 0.4)' : undefined,
+                border: isSelected ? '2px solid transparent' : undefined,
                 color: isSelected ? '#00ff00' : undefined,
                 fontWeight: isSelected ? 'bold' : undefined,
                 transform: isSelected ? 'scale(1.02)' : undefined,
@@ -45594,8 +45592,9 @@ A1;Peça exemplo;10'
                   top: '8px',
                   right: '30px',
                   fontSize: '16px',
-                  color: '#00ff00',
-                  fontWeight: 'bold'
+                  color: '#ffffff',
+                  fontWeight: 'bold',
+                  zIndex: 2
                 }}>✓</span>
               )}
               <span style={{ 

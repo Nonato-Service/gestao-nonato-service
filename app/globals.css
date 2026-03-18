@@ -183,11 +183,15 @@ body {
   box-shadow: 0 0 14px rgba(0, 255, 0, 0.45);
 }
 
-/* Luz branca a mover no contorno do botão principal da sidebar (quando selecionado) */
+/* Luz branca no contorno do botão principal da sidebar (quando selecionado) */
 .sidebar-group-btn-selected {
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
   overflow: visible !important;
+  box-shadow:
+    0 0 12px rgba(255, 255, 255, 0.65),
+    0 0 24px rgba(255, 255, 255, 0.35),
+    0 0 4px rgba(255, 255, 255, 0.9) !important;
 }
 .sidebar-group-btn-selected::before {
   content: '';
