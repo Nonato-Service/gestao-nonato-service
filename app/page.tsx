@@ -1396,6 +1396,14 @@ export default function Dashboard() {
         return n
       })
     }
+
+    if (action) {
+      const scrollT = window.setTimeout(() => {
+        const el = document.querySelector(`[data-sidebar-nav-action="${action}"]`) as HTMLElement | null
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, tab.type === 'biblioteca-relatorios' ? 380 : 280)
+      return () => clearTimeout(scrollT)
+    }
   }, [activeTabId, openTabs])
 
   // Componente de botões de navegação (retorno e página inicial)
@@ -2886,6 +2894,8 @@ export default function Dashboard() {
     dataAssinaturaCliente: undefined
   })
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false)
+  /** Largura ≤1024px: menu em gaveta, conteúdo a largura total (tablet/telemóvel) */
+  const [isCompactLayout, setIsCompactLayout] = useState(false)
   const canvasAssinaturaRef = useRef<HTMLCanvasElement>(null)
   const [mostrarCanvasAssinatura, setMostrarCanvasAssinatura] = useState(false)
   const isDrawingRef = useRef(false)
@@ -3168,6 +3178,28 @@ export default function Dashboard() {
       return () => window.removeEventListener('resize', check)
     }
   }, [])
+
+  useEffect(() => {
+    const q = () => {
+      if (typeof window === 'undefined') return
+      setIsCompactLayout(window.innerWidth <= 1024)
+      if (window.innerWidth > 1024) setMobileMenuOpen(false)
+    }
+    q()
+    window.addEventListener('resize', q)
+    return () => window.removeEventListener('resize', q)
+  }, [])
+
+  useEffect(() => {
+    if (!isCompactLayout || !mobileMenuOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [isCompactLayout, mobileMenuOpen])
+
+  useEffect(() => {
+    if (isCompactLayout && activeTabId) setMobileMenuOpen(false)
+  }, [isCompactLayout, activeTabId])
 
   // Garantir scroll quando o grupo checklist-group é expandido
   useEffect(() => {
@@ -4386,6 +4418,20 @@ export default function Dashboard() {
         }
         return b
       })
+
+      // Biblioteca de Relatórios: fica em Gestão de custos (com Fechamento); antes estava em Gestão técnica
+      buttons = buttons.map((b: SidebarButton) => {
+        if (b.id === 'biblioteca-relatorios-default' && b.group !== 'gestao-custos') {
+          buttonsMigrated = true
+          return {
+            ...b,
+            group: 'gestao-custos',
+            translationKey: 'bibliotecaRelatoriosTitle',
+            action: 'open-biblioteca-relatorios'
+          }
+        }
+        return b
+      })
       
       // Salvar se houve migração
       if (buttonsMigrated) {
@@ -4768,7 +4814,7 @@ export default function Dashboard() {
           action: 'open-biblioteca-relatorios',
           order: buttons.length,
           translationKey: 'bibliotecaRelatoriosTitle',
-          group: 'gestao-tecnica'
+          group: 'gestao-custos'
         }
         buttons.push(bibliotecaRelatoriosButton)
       }
@@ -14520,7 +14566,14 @@ export default function Dashboard() {
     } else if (action === 'open-biblioteca-relatorios') {
       openTab('biblioteca-relatorios', getTabTitle('biblioteca-relatorios'))
     }
-  }, [expandedGroups, openTab, getTabTitle, canAccessAction, safeT, scrollMainContentToTop])
+    if (isCompactLayout) {
+      const keepDrawerOpen = new Set([
+        'open-gestao-tecnica', 'open-gestao-custos', 'open-comunicacao-interna',
+        'open-gestao-industrial', 'open-gestao-financeira', 'open-extra'
+      ])
+      if (!keepDrawerOpen.has(action)) setMobileMenuOpen(false)
+    }
+  }, [expandedGroups, openTab, getTabTitle, canAccessAction, safeT, scrollMainContentToTop, isCompactLayout])
 
   // ===== Funções PRE CHECKLIST =====
   const handleBuscarEquipamentoPreCheck = () => {
@@ -40083,7 +40136,7 @@ A1;Peça exemplo;10'
         return ['gestores-default', 'clientes-default', 'fornecedores-default', 
                 'relatorio-servico-default', 'biblioteca-pecas-default', 'agenda-default'].includes(btn.id)
       } else if (group === 'gestao-custos') {
-        return ['cadastro-servicos-default', 'fechamento-relatorios-servicos-default', 'orcamentos-avulso-default', 'pedido-orcamentos-avulso-default', 'registro-despesas-default', 'mapa-visual-separacao-pecas-default'].includes(btn.id)
+        return ['cadastro-servicos-default', 'fechamento-relatorios-servicos-default', 'biblioteca-relatorios-default', 'orcamentos-avulso-default', 'pedido-orcamentos-avulso-default', 'registro-despesas-default', 'mapa-visual-separacao-pecas-default'].includes(btn.id)
       } else if (group === 'gestao-industrial') {
         // Incluir equipamentos-default e desmontados-default no grupo gestao-industrial
         // Excluir pre-checklist-default e checklist-default que agora estão no grupo checklist-group
@@ -43809,15 +43862,52 @@ A1;Peça exemplo;10'
   }
 
   return (
-    <div className={`app-layout${!isDemoMode ? ' app-layout-no-top-bar' : ''}`} style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#1e1e1e', color: '#fff', paddingBottom: openTabs.length > 0 ? '54px' : '0', paddingTop: '48px' }}>
+    <div
+      className={`app-layout${!isDemoMode ? ' app-layout-no-top-bar' : ''}${isCompactLayout ? ' app-compact-layout' : ''}${isCompactLayout && isDemoMode ? ' app-compact-with-demo' : ''}`}
+      style={{
+        display: 'flex',
+        minHeight: '100dvh',
+        backgroundColor: '#1e1e1e',
+        color: '#fff',
+        paddingBottom: openTabs.length > 0 ? 'calc(54px + env(safe-area-inset-bottom, 0px))' : '0',
+        paddingTop: isDemoMode && !isCompactLayout ? '48px' : undefined
+      }}
+    >
       {/* Barra superior: apenas em modo demo mostra aviso (botão Administrador / Backup está na barra lateral) */}
       {isDemoMode && (
         <div className="app-top-bar" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '8px 16px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '1px solid rgba(0, 255, 0, 0.4)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <span>🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Sem exportação nem backup</span>
         </div>
       )}
-      {/* Sidebar - estilos em globals.css (media queries para mobile) */}
-      <div className="sidebar">
+      {isCompactLayout && mobileMenuOpen && (
+        <div
+          className="mobile-sidebar-backdrop"
+          onClick={() => setMobileMenuOpen(false)}
+          onKeyDown={(e) => e.key === 'Escape' && setMobileMenuOpen(false)}
+          role="button"
+          tabIndex={0}
+          aria-label="Fechar menu"
+        />
+      )}
+      {isCompactLayout && (
+        <header
+          className="mobile-app-header"
+          style={{ top: isDemoMode ? 44 : 0 }}
+        >
+          <button
+            type="button"
+            className="mobile-menu-toggle"
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            aria-expanded={mobileMenuOpen}
+            aria-label={mobileMenuOpen ? (safeT?.close || 'Fechar') : (safeT?.menu || 'Menu')}
+          >
+            {mobileMenuOpen ? '✕' : '☰'}
+          </button>
+          <span className="mobile-app-header-title">NONATO SERVICE</span>
+        </header>
+      )}
+      {/* Sidebar - em ecrã estreito: gaveta lateral (globals.css) */}
+      <div className={`sidebar${isCompactLayout && mobileMenuOpen ? ' sidebar-mobile-open' : ''}`}>
         {/* Logo NONATO SERVICE — logo ocupa 100% do contorno verde, borda mantida */}
         <div style={{ marginBottom: '25px', textAlign: 'center', padding: 0, overflow: 'hidden', backgroundColor: '#0a0a0a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', height: '150px' }}>
           {logoUrl ? (
@@ -43981,6 +44071,8 @@ A1;Peça exemplo;10'
                   return (
                     <button
                       key={button.id}
+                      type="button"
+                      data-sidebar-nav-action={button.action}
                       className="btn-primary sidebar-action-btn"
                       onClick={() => handleButtonClick(button.action)}
                       style={{ 
@@ -44100,6 +44192,8 @@ A1;Peça exemplo;10'
                   return (
                     <button
                       key={button.id}
+                      type="button"
+                      data-sidebar-nav-action={button.action}
                       className="btn-primary sidebar-action-btn"
                       onClick={() => handleButtonClick(button.action)}
                       style={{ 
@@ -45283,7 +45377,7 @@ A1;Peça exemplo;10'
       </div>
 
       {/* Área Principal */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="main-app-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
         {/* Botão pequeno: voltar à tela inicial */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 20px 0 0', flexShrink: 0 }}>
           <button

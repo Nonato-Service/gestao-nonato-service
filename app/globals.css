@@ -16,45 +16,25 @@ html {
   text-size-adjust: 100%;
 }
 
-/* Tablet e telemóvel: reduzir escala base para não ficar gigante no ecrã */
+/* Tablet e telemóvel: tipografia legível sem zoom (zoom quebra layout em iOS/Android) */
 @media (max-width: 1024px) {
+  html {
+    font-size: 15px;
+  }
+}
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+}
+@media (max-width: 480px) {
   html {
     font-size: 13px;
   }
 }
-
-@media (max-width: 768px) {
-  html {
-    font-size: 11px;
-  }
-  /* Android/Chrome: zoom reduz TUDO (tabelas, botões, texto, padding) — Firefox ignora */
-  html {
-    zoom: 0.82;
-  }
-}
-
-@media (max-width: 600px) {
-  html {
-    font-size: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  html {
-    font-size: 9px;
-  }
-  /* Telemóvel Android: zoom ainda mais para nada ficar gigante */
-  html {
-    zoom: 0.76;
-  }
-}
-
 @media (max-width: 360px) {
   html {
-    font-size: 8px;
-  }
-  html {
-    zoom: 0.72;
+    font-size: 12px;
   }
 }
 
@@ -687,23 +667,10 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Tablet (até 1024px) - horizontal e vertical — Android tablet também fica menor */
+/* Tablet (até 1024px) */
 @media (max-width: 1024px) {
-  html {
-    zoom: 0.9;
-  }
-  @supports not (zoom: 1) {
-    .app-layout {
-      transform: scale(0.9);
-      transform-origin: top center;
-      width: 111.2% !important;
-      min-width: 111.2% !important;
-      min-height: 111.2vh !important;
-      margin-left: -5.6% !important;
-    }
-  }
-  .app-layout {
-    font-size: 12px !important;
+  .app-layout:not(.app-compact-layout) {
+    font-size: 14px !important;
   }
   .header {
     padding: 24px 16px !important;
@@ -760,26 +727,13 @@ html, body {
   }
 }
 
-/* Celular e telas pequenas (até 768px) */
+/* Celular e telas pequenas (até 768px) — layout compacto usa gaveta; regras abaixo para fallback */
 @media (max-width: 768px) {
-  /* Firefox Android: não suporta zoom — usar scale para reduzir tudo */
-  @supports not (zoom: 1) {
-    .app-layout {
-      transform: scale(0.82);
-      transform-origin: top center;
-      width: 122% !important;
-      min-width: 122% !important;
-      min-height: 122vh !important;
-      margin-left: -11% !important;
-    }
-  }
-  .app-layout {
+  .app-layout:not(.app-compact-layout) {
     flex-direction: column !important;
     max-width: 100vw !important;
-    font-size: 11px !important;
-    padding-top: calc(34px + env(safe-area-inset-top, 0)) !important;
+    font-size: 13px !important;
   }
-  /* Barra superior mais compacta no telemóvel/tablet */
   .app-top-bar {
     font-size: 12px !important;
     padding: 6px 10px !important;
@@ -788,24 +742,13 @@ html, body {
     font-size: 11px !important;
     padding: 5px 10px !important;
   }
-  /* Conteúdo principal: texto e blocos não gigantes */
   .main-content-area,
   .tab-content-wrapper {
-    font-size: 11px !important;
+    font-size: 13px !important;
   }
-  /* Sidebar: altura limitada no telemóvel para não ocupar a tela toda - scroll interno */
-  .sidebar {
-    width: 100% !important;
-    min-width: 100% !important;
-    min-height: auto !important; /* sobrescreve inline minHeight: 100vh */
-    height: auto !important;
-    max-height: 42vh !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    padding: 8px 6px !important;
-    border-right: none !important;
-    border-bottom: 1px solid rgba(0, 255, 0, 0.15) !important;
-    flex-shrink: 0 !important;
+  .app-compact-layout .sidebar.sidebar-mobile-open {
+    width: min(100vw - 24px, 300px) !important;
+    min-width: min(100vw - 24px, 300px) !important;
   }
   .bottom-tabs-bar {
     left: 0 !important;
@@ -918,24 +861,14 @@ html, body {
   }
 }
 
-/* Telemóvel (até 480px) - ainda mais compacto, 4 colunas */
+/* Telemóvel (até 480px) */
 @media (max-width: 480px) {
-  @supports not (zoom: 1) {
-    .app-layout {
-      transform: scale(0.76);
-      width: 132% !important;
-      min-width: 132% !important;
-      min-height: 132vh !important;
-      margin-left: -16% !important;
-    }
-  }
-  .app-layout {
-    font-size: 10px !important;
-    padding-top: calc(30px + env(safe-area-inset-top, 0)) !important;
+  .app-layout:not(.app-compact-layout) {
+    font-size: 12px !important;
   }
   .main-content-area,
   .tab-content-wrapper {
-    font-size: 10px !important;
+    font-size: 12px !important;
   }
   .app-top-bar {
     font-size: 11px !important;
@@ -952,9 +885,8 @@ html, body {
   .header h1 {
     font-size: 12px !important;
   }
-  .sidebar {
+  .app-layout:not(.app-compact-layout) .sidebar {
     padding: 6px 4px !important;
-    max-height: 38vh !important;
   }
   .sidebar > div:first-child {
     height: 50px !important;
@@ -990,14 +922,15 @@ html, body {
     word-break: break-word !important;
     text-align: center !important;
   }
-  .sidebar > div:not(:first-child) > button {
+  .sidebar:not(.sidebar-mobile-open) > div:not(:first-child) > button {
     padding: 5px 6px !important;
-    font-size: 8px !important;
-    min-height: 26px !important;
+    font-size: 10px !important;
+    min-height: 36px !important;
   }
-  .sidebar button {
-    padding: 5px 6px !important;
-    font-size: 9px !important;
+  .app-compact-layout .sidebar.sidebar-mobile-open button {
+    min-height: 40px !important;
+    padding: 10px 10px !important;
+    font-size: 12px !important;
   }
   .tab-content-wrapper h1 {
     font-size: 14px !important;
@@ -1206,5 +1139,123 @@ body {
   }
   .equipamento-cliente-form-grid .equipamento-cliente-form-image button {
     max-width: 100% !important;
+  }
+}
+
+/* ========== Layout compacto (≤1024px): menu em gaveta, área principal a largura total ========== */
+.app-compact-layout {
+  flex-direction: column !important;
+  padding-top: calc(52px + env(safe-area-inset-top, 0px)) !important;
+}
+.app-layout.app-layout-no-top-bar.app-compact-layout {
+  padding-top: calc(52px + env(safe-area-inset-top, 0px)) !important;
+}
+.app-compact-with-demo {
+  padding-top: calc(96px + env(safe-area-inset-top, 0px)) !important;
+}
+
+.mobile-app-header {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 2080;
+  height: 52px;
+  padding: 0 12px;
+  padding-left: max(12px, env(safe-area-inset-left));
+  padding-right: max(12px, env(safe-area-inset-right));
+  padding-top: env(safe-area-inset-top, 0px);
+  min-height: calc(52px + env(safe-area-inset-top, 0px));
+  background: linear-gradient(180deg, #121212 0%, #0a0a0a 100%);
+  border-bottom: 1px solid rgba(0, 255, 0, 0.35);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+.app-layout:has(.app-top-bar) .mobile-app-header {
+  top: 44px !important;
+}
+.mobile-menu-toggle {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  min-height: 46px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 0, 0.45);
+  background: rgba(0, 255, 0, 0.08);
+  color: #00ff00;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.mobile-menu-toggle:active {
+  background: rgba(0, 255, 0, 0.18);
+}
+.mobile-app-header-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mobile-sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2070;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+@media (max-width: 1024px) {
+  .app-compact-layout .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: min(100vw - 40px, 320px) !important;
+    min-width: min(100vw - 40px, 320px) !important;
+    max-width: 320px !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    z-index: 2090 !important;
+    transform: translate3d(-105%, 0, 0) !important;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain;
+    padding: 12px 10px 24px !important;
+    padding-top: max(12px, env(safe-area-inset-top)) !important;
+    padding-bottom: max(24px, env(safe-area-inset-bottom)) !important;
+    border-right: 1px solid rgba(0, 255, 0, 0.25) !important;
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.55) !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .app-compact-layout .sidebar.sidebar-mobile-open {
+    transform: translate3d(0, 0, 0) !important;
+  }
+  .app-compact-layout .sidebar > div:first-child {
+    height: 88px !important;
+    min-height: 88px !important;
+    max-height: 100px !important;
+  }
+  .app-compact-layout .main-app-column {
+    width: 100% !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+  .app-compact-layout .bottom-tabs-bar {
+    left: 0 !important;
+    right: 0 !important;
   }
 }
