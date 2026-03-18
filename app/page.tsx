@@ -44303,6 +44303,7 @@ A1;Peça exemplo;10'
       {isDemoMode && (
         <div className="app-top-bar" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '8px 16px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '1px solid rgba(0, 255, 0, 0.4)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <span>🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Sem exportação nem backup</span>
+          <a href="/api/demo/exit" style={{ color: '#fff', textDecoration: 'underline', fontWeight: '600' }}>{safeT?.exitDemoLink || 'Sair da demonstração (usar app normal)'}</a>
         </div>
       )}
       {isCompactLayout && mobileMenuOpen && (

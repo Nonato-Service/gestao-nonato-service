@@ -827,6 +827,7 @@ export const translations = {
     deepseekSameLang: 'Escolha idiomas diferentes (origem e destino).',
     deepseekNoText: 'Preencha pelo menos um campo de texto (observações, pontos em aberto, tipo de serviço, descrição de dia ou de peça).',
     deepseekDone: 'Tradução concluída. Reveja o texto antes de guardar.',
+    exitDemoLink: 'Sair da demonstração (usar app normal)',
     numeroRelatorio: 'Número do Relatório',
     gerarPedidoOrcamento: '📋 Gerar Pedido de Orçamento',
     contadorRelatorios: 'Contador de Relatórios',
