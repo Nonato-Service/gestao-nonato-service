@@ -2754,6 +2754,8 @@ export default function Dashboard() {
   const [relatoriosServico, setRelatoriosServico] = useState<RelatorioServico[]>([])
   /** Fechamentos por relatório: relatorioId -> itens de cobrança (vinculados ao Cadastro de Serviços) */
   const [fechamentosRelatorios, setFechamentosRelatorios] = useState<Record<string, FechamentoItem[]>>({})
+  /** IDs de relatórios cujo fechamento de despesas foi guardado na Biblioteca (só aparecem lá até editar de novo) */
+  const [fechamentosGuardadosBibliotecaIds, setFechamentosGuardadosBibliotecaIds] = useState<string[]>([])
   const [fechamentoRelatorioSelecionadoId, setFechamentoRelatorioSelecionadoId] = useState<string | null>(null)
   const [fechamentoPdfModelo, setFechamentoPdfModelo] = useState<number>(1) // 1-8 modelos de PDF
   const [showRelatorioServicoModal, setShowRelatorioServicoModal] = useState(false)
@@ -3785,6 +3787,19 @@ export default function Dashboard() {
       const savedFechamentosRelatorios = getData('nonato-fechamentos-relatorios')
       if (savedFechamentosRelatorios && typeof savedFechamentosRelatorios === 'object' && !Array.isArray(savedFechamentosRelatorios)) {
         setFechamentosRelatorios(savedFechamentosRelatorios)
+        const guardSaved = getData('nonato-fechamentos-guardados-biblioteca')
+        if (guardSaved === undefined || guardSaved === null) {
+          const initialGuard = Object.keys(savedFechamentosRelatorios).filter(
+            k => Array.isArray((savedFechamentosRelatorios as Record<string, FechamentoItem[]>)[k]) && (savedFechamentosRelatorios as Record<string, FechamentoItem[]>)[k].length > 0
+          )
+          saveData('nonato-fechamentos-guardados-biblioteca', initialGuard)
+          setFechamentosGuardadosBibliotecaIds(initialGuard)
+        } else {
+          setFechamentosGuardadosBibliotecaIds(Array.isArray(guardSaved) ? guardSaved : [])
+        }
+      } else {
+        const guardSaved = getData('nonato-fechamentos-guardados-biblioteca')
+        setFechamentosGuardadosBibliotecaIds(Array.isArray(guardSaved) ? guardSaved : [])
       }
       
       // Carregar contador de relatórios
@@ -7898,6 +7913,11 @@ export default function Dashboard() {
         reportIdsDoCliente.forEach(id => { delete nextFechamentos[id] })
         setFechamentosRelatorios(nextFechamentos)
         saveData('nonato-fechamentos-relatorios', nextFechamentos)
+        setFechamentosGuardadosBibliotecaIds(prev => {
+          const next = prev.filter(id => !reportIdsDoCliente.includes(id))
+          saveData('nonato-fechamentos-guardados-biblioteca', next)
+          return next
+        })
       }
     }
   }
@@ -7907,7 +7927,18 @@ export default function Dashboard() {
       const { [relatorioId]: _, ...rest } = fechamentosRelatorios
       setFechamentosRelatorios(rest)
       saveData('nonato-fechamentos-relatorios', rest)
+      const nextGuard = fechamentosGuardadosBibliotecaIds.filter(id => id !== relatorioId)
+      setFechamentosGuardadosBibliotecaIds(nextGuard)
+      saveData('nonato-fechamentos-guardados-biblioteca', nextGuard)
     }
+  }
+
+  const handleEditarDespesasNaBiblioteca = (relatorioId: string) => {
+    const nextGuard = fechamentosGuardadosBibliotecaIds.filter(id => id !== relatorioId)
+    setFechamentosGuardadosBibliotecaIds(nextGuard)
+    saveData('nonato-fechamentos-guardados-biblioteca', nextGuard)
+    setFechamentoRelatorioSelecionadoId(relatorioId)
+    openTab('fechamento-relatorios-servicos', getTabTitle('fechamento-relatorios-servicos'))
   }
 
   const handleSaveCliente = async () => {
@@ -12881,6 +12912,11 @@ export default function Dashboard() {
       const { [relatorioId]: _, ...restFechamentos } = fechamentosRelatorios
       setFechamentosRelatorios(restFechamentos)
       saveData('nonato-fechamentos-relatorios', restFechamentos)
+      setFechamentosGuardadosBibliotecaIds(prev => {
+        const next = prev.filter(id => id !== relatorioId)
+        saveData('nonato-fechamentos-guardados-biblioteca', next)
+        return next
+      })
     }
   }
 
@@ -28556,6 +28592,14 @@ A1;Peça exemplo;10'
         const handleSalvarFechamentoNaBiblioteca = () => {
           if (!relatorioSelecionado) return
           setItensFechamento(itensParaExibir)
+          const rid = relatorioSelecionado.id
+          setFechamentosGuardadosBibliotecaIds(prev => {
+            const next = prev.includes(rid) ? prev : [...prev, rid]
+            saveData('nonato-fechamentos-guardados-biblioteca', next)
+            return next
+          })
+          setFechamentoRelatorioSelecionadoId(null)
+          openTab('biblioteca-relatorios', getTabTitle('biblioteca-relatorios'))
           alert((safeT as any)?.fechamentoSalvoNaBiblioteca || 'Guardado. O fechamento está na pasta do cliente na Biblioteca de Relatórios.')
         }
         const handleGerarPDFFechamento = () => {
@@ -28669,7 +28713,8 @@ A1;Peça exemplo;10'
                       {(safeT as any)?.fechamentoRelatoriosServicosTitle || 'Fechamento dos Relatórios de Serviços'}
                     </h1>
                     <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.65)' }}>
-                      {relatoriosServico.length} {(safeT as any)?.totalRelatorios || 'relatórios'} · {(safeT as any)?.gestaoCustosTitle || 'Orçamentos e Custos'}
+                      {relatoriosServico.filter(r => !fechamentosGuardadosBibliotecaIds.includes(r.id)).length} {(safeT as any)?.relatoriosPendentesFechamento || 'pendentes de guardar na Biblioteca'}
+                      {relatoriosServico.length > 0 && ` · ${fechamentosGuardadosBibliotecaIds.length} ${(safeT as any)?.naBibliotecaDespesas || 'já na Biblioteca (despesas)'}`}
                     </p>
                   </div>
                 </div>
@@ -28689,8 +28734,15 @@ A1;Peça exemplo;10'
                 <p style={{ color: '#ccc', marginBottom: '12px' }}>{(safeT as any)?.selecioneRelatorioFechamento || 'Selecione um relatório para ver o fechamento e anexar o que será cobrado.'}</p>
                 {relatoriosServico.length === 0 ? (
                   <p style={{ color: '#888' }}>{(safeT as any)?.nenhumRelatorioServico || 'Nenhum relatório de serviço. Crie e gere relatórios em Relatório de Serviço.'}</p>
+                ) : relatoriosServico.filter(r => !fechamentosGuardadosBibliotecaIds.includes(r.id)).length === 0 ? (
+                  <div style={{ padding: '20px', backgroundColor: '#252525', borderRadius: '12px', border: '1px solid rgba(0,255,0,0.25)' }}>
+                    <p style={{ color: '#ccc', margin: '0 0 12px' }}>{(safeT as any)?.todosFechamentosNaBiblioteca || 'Todos os relatórios com fechamento estão na Biblioteca de Relatórios. Para alterar despesas, abra a Biblioteca e use «Editar despesas».'}</p>
+                    <button type="button" className="btn-primary" onClick={() => openTab('biblioteca-relatorios', getTabTitle('biblioteca-relatorios'))} style={{ padding: '10px 18px', borderRadius: '10px' }}>
+                      {(safeT as any)?.abrirBibliotecaRelatorios || 'Abrir Biblioteca de Relatórios'}
+                    </button>
+                  </div>
                 ) : (
-                  relatoriosServico.map(r => (
+                  relatoriosServico.filter(r => !fechamentosGuardadosBibliotecaIds.includes(r.id)).map(r => (
                     <div
                       key={r.id}
                       onClick={() => setFechamentoRelatorioSelecionadoId(r.id)}
@@ -39287,7 +39339,9 @@ A1;Peça exemplo;10'
           const despesas: Array<{ relatorio: RelatorioServico, itens: FechamentoItem[] }> = []
           relatoriosDoCliente.forEach(rel => {
             const itens = fechamentosRelatorios[rel.id]
-            if (itens && itens.length > 0) despesas.push({ relatorio: rel, itens })
+            if (itens && itens.length > 0 && fechamentosGuardadosBibliotecaIds.includes(rel.id)) {
+              despesas.push({ relatorio: rel, itens })
+            }
           })
 
           relatoriosPorCliente.push({
@@ -39724,22 +39778,41 @@ A1;Peça exemplo;10'
                                         €{totalCobranca.toFixed(2)}
                                       </span>
                                     </div>
-                                    <button 
-                                      type="button"
-                                      onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)}
-                                      style={{ 
-                                        padding: '4px 8px', 
-                                        fontSize: '10px', 
-                                        backgroundColor: 'rgba(255, 68, 68, 0.2)', 
-                                        border: '1px solid rgba(255, 68, 68, 0.5)',
-                                        color: '#ff8888',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer'
-                                      }}
-                                      title={(safeT as any)?.excluirFechamentoDespesas || 'Excluir fechamento de despesas'}
-                                    >
-                                      🗑️ {safeT?.delete || 'Excluir'}
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                      <button 
+                                        type="button"
+                                        onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)}
+                                        style={{ 
+                                          padding: '4px 10px', 
+                                          fontSize: '10px', 
+                                          backgroundColor: 'rgba(0, 150, 255, 0.2)', 
+                                          border: '1px solid rgba(0, 150, 255, 0.55)',
+                                          color: '#66b3ff',
+                                          borderRadius: '4px',
+                                          cursor: 'pointer',
+                                          fontWeight: 'bold'
+                                        }}
+                                        title={(safeT as any)?.editarRelatorioDespesas || 'Editar relatório de despesas'}
+                                      >
+                                        ✏️ {(safeT as any)?.editarRelatorioDespesas || 'Editar despesas'}
+                                      </button>
+                                      <button 
+                                        type="button"
+                                        onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)}
+                                        style={{ 
+                                          padding: '4px 8px', 
+                                          fontSize: '10px', 
+                                          backgroundColor: 'rgba(255, 68, 68, 0.2)', 
+                                          border: '1px solid rgba(255, 68, 68, 0.5)',
+                                          color: '#ff8888',
+                                          borderRadius: '4px',
+                                          cursor: 'pointer'
+                                        }}
+                                        title={(safeT as any)?.excluirFechamentoDespesas || 'Excluir fechamento de despesas'}
+                                      >
+                                        🗑️ {safeT?.delete || 'Excluir'}
+                                      </button>
+                                    </div>
                                   </div>
                                 )
                               })}
