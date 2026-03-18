@@ -1261,6 +1261,7 @@ export const translations = {
     naBibliotecaDespesas: 'já na Biblioteca',
     todosFechamentosNaBiblioteca: 'Não há relatórios pendentes: os que já guardou estão na Biblioteca. Para alterar o relatório de despesas, abra a Biblioteca de Relatórios e use «Editar despesas» na pasta do cliente.',
     abrirBibliotecaRelatorios: 'Abrir Biblioteca de Relatórios',
+    visualizarDespesasBiblioteca: 'Visualizar',
     modeloPDFFechamento: 'Modelo PDF',
     modeloFechamentoClassico: '1. Clássico',
     modeloFechamentoModerno: '2. Moderno',

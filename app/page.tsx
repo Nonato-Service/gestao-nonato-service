@@ -2758,6 +2758,7 @@ export default function Dashboard() {
   const [fechamentosGuardadosBibliotecaIds, setFechamentosGuardadosBibliotecaIds] = useState<string[]>([])
   const [fechamentoRelatorioSelecionadoId, setFechamentoRelatorioSelecionadoId] = useState<string | null>(null)
   const [fechamentoPdfModelo, setFechamentoPdfModelo] = useState<number>(1) // 1-8 modelos de PDF
+  const [modalVisualizarDespesasBiblioteca, setModalVisualizarDespesasBiblioteca] = useState<{ relatorio: RelatorioServico; itens: FechamentoItem[] } | null>(null)
   const [showRelatorioServicoModal, setShowRelatorioServicoModal] = useState(false)
   const [showRelatorioServicoForm, setShowRelatorioServicoForm] = useState(false)
   const [editingRelatorioServico, setEditingRelatorioServico] = useState<RelatorioServico | null>(null)
@@ -9034,6 +9035,58 @@ export default function Dashboard() {
     }
     return '';
   };
+
+  /** PDF de fechamento de despesas a partir da Biblioteca */
+  const imprimirPDFDespesasDaBiblioteca = (relatorio: RelatorioServico, itens: FechamentoItem[]) => {
+    const st = translations[selectedLanguage as keyof typeof translations] || translations['pt-BR']
+    const tAny = st as Record<string, string>
+    const logoHtml = getLogoHtmlForFechamento()
+    const logoSrc = logoHtml && logoHtml.includes('src="') ? logoHtml.replace(/.*src="([^"]+)".*/, '$1') : ''
+    const esc = (s: string) => (s || '').replace(/</g, '&lt;').replace(/"/g, '&quot;')
+    const rows = itens.map(item => {
+      const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
+      const cod = (item.cod ?? sv?.cod ?? sv?.nome ?? '—').toString().replace(/</g, '&lt;')
+      const desc = (item.descricao || '').replace(/</g, '&lt;')
+      const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
+      const totalLinha = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
+      return `<tr><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;font-weight:600">${cod}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px">${desc}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right">${item.valorUnitario.toFixed(2)} €</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right;font-weight:700">${totalLinha.toFixed(2)} €</td></tr>`
+    }).join('')
+    const totalCobranca = itens.reduce((s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal), 0)
+    const titFechamento = tAny.fechamentoDespesasRelatorio || 'Fechamento de Despesas'
+    const lblImprimir = tAny.imprimirGuardarPDF || 'Imprimir / Guardar como PDF'
+    const lblFechar = tAny.close || 'Fechar'
+    const lblCliente = tAny.cliente || 'Cliente'
+    const lblNumRelatorio = tAny.numeroRelatorio || 'Nº Relatório'
+    const lblEquipamento = tAny.equipamento || 'Equipamento'
+    const lblData = tAny.data || 'Data'
+    const lblCOD = tAny.codigoOuCod || 'COD'
+    const lblDescricao = tAny.descricao || 'Descrição'
+    const lblQuantidade = tAny.quantidade || 'Quantidade'
+    const lblValorUnit = tAny.valorUnitario || 'Valor unit.'
+    const lblTotal = tAny.total || 'Total'
+    const lblSomaTotal = tAny.somaTotal || 'SOMA TOTAL'
+    const lblRelatorio = tAny.relatorio || 'Relatório'
+    const logoPart = logoSrc ? '<img src="' + esc(logoSrc) + '" alt="Logo" style="max-height:80px;max-width:220px;object-fit:contain;display:block"/>' : ''
+    const clienteVal = esc(relatorio.cliente)
+    const numVal = esc(relatorio.numero)
+    const equipVal = esc(relatorio.maquinaModelo + (relatorio.numeroMaquina ? ' ' + relatorio.numeroMaquina : ''))
+    const dataVal = esc(relatorio.data)
+    const tituloDoc = esc(titFechamento) + ' — ' + lblRelatorio + ' ' + numVal
+    const localeStr = selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : selectedLanguage === 'de' ? 'de-DE' : 'en-GB'
+    const docGeradoEm = tAny.pdfDocumentoGeradoEm || 'Documento gerado em'
+    const dataHoraGerado = new Date().toLocaleString(localeStr)
+    const tableContent = `<div style="margin:24px 0;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);border:1px solid #a5d6a7"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="padding:14px 18px;text-align:left;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblCOD)}</th><th style="padding:14px 18px;text-align:left;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblDescricao)}</th><th style="padding:14px 18px;text-align:right;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblQuantidade)}</th><th style="padding:14px 18px;text-align:right;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblValorUnit)}</th><th style="padding:14px 18px;text-align:right;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblTotal)}</th></tr></thead><tbody class="pdf-tbody">${rows}</tbody><tfoot><tr><td colspan="3" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:700;font-size:13px;border-top:3px solid #a5d6a7;color:#00a650">${esc(lblSomaTotal)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:800;font-size:18px;border-top:3px solid #a5d6a7;color:#00a650">${totalCobranca.toFixed(2)} €</td></tr></tfoot></table></div>`
+    const infoGrid = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px"><div style="background:#f1f8e9;border:1px solid #c8e6c9;padding:14px 18px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;color:#2e7d32">${esc(lblCliente)}</div><div style="font-size:13px;font-weight:600;color:#1b5e20">${clienteVal}</div></div><div style="background:#f1f8e9;border:1px solid #c8e6c9;padding:14px 18px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;color:#2e7d32">${esc(lblNumRelatorio)}</div><div style="font-size:13px;font-weight:600;color:#1b5e20">${numVal}</div></div><div style="background:#f1f8e9;border:1px solid #c8e6c9;padding:14px 18px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;color:#2e7d32">${esc(lblEquipamento)}</div><div style="font-size:13px;font-weight:600;color:#1b5e20">${equipVal}</div></div><div style="background:#f1f8e9;border:1px solid #c8e6c9;padding:14px 18px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;color:#2e7d32">${esc(lblData)}</div><div style="font-size:13px;font-weight:600;color:#1b5e20">${dataVal}</div></div></div>`
+    const headerHtml = `<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:20px;border-bottom:3px solid #00a650;flex-wrap:wrap;gap:16px">${logoPart ? '<div style="flex-shrink:0">' + logoPart + '</div>' : ''}<div style="flex:1;min-width:200px"><div style="font-size:20px;font-weight:700;color:#00a650;margin-bottom:8px">${tituloDoc}</div>${infoGrid}</div></div>`
+    const rodape = `<div style="margin-top:32px;padding-top:20px;border-top:1px solid #e0e0e0;text-align:center"><div style="font-size:11px;color:#666">${esc(docGeradoEm)} ${dataHoraGerado}</div><div style="font-size:10px;color:#999">Nonato Service</div></div>`
+    const btnsNoPrint = `<div class="no-print" style="margin-bottom:20px"><button onclick="window.print()" style="padding:12px 24px;background:#00a650;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">${esc(lblImprimir)}</button> <button onclick="window.close()" style="padding:12px 20px;background:#37474f;color:#fff;border:none;border-radius:8px;cursor:pointer">${esc(lblFechar)}</button></div>`
+    const pdfRowStyles = `.pdf-tbody tr:nth-child(odd){background:#fff}.pdf-tbody tr:nth-child(even){background:#f1f8e9}`
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(titFechamento)} - ${esc(relatorio.numero)}</title><style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:24px;font-size:12px;background:#fff}${pdfRowStyles}.no-print{display:block}@media print{.no-print{display:none!important}}</style></head><body>${btnsNoPrint}${headerHtml}${tableContent}${rodape}</body></html>`
+    const printWin = window.open('', '_blank')
+    if (!printWin) { alert(tAny.permitaPopupsPDF || 'Permita pop-ups para gerar o PDF.'); return }
+    printWin.document.write(html)
+    printWin.document.close()
+  }
 
   // Função para gerar PDF/Imprimir Relatório - Formato Clássico (baseado na imagem)
   const handlePrintRelatorioClassico = (relatorio: RelatorioServico) => {
@@ -28599,8 +28652,20 @@ A1;Peça exemplo;10'
             return next
           })
           setFechamentoRelatorioSelecionadoId(null)
-          openTab('biblioteca-relatorios', getTabTitle('biblioteca-relatorios'))
-          alert((safeT as any)?.fechamentoSalvoNaBiblioteca || 'Guardado. O fechamento está na pasta do cliente na Biblioteca de Relatórios.')
+          const tituloBib = getTabTitle('biblioteca-relatorios')
+          setOpenTabs(prev => {
+            const semFechamento = prev.filter(t => t.type !== 'fechamento-relatorios-servicos')
+            let bib = semFechamento.find(t => t.type === 'biblioteca-relatorios')
+            let nextTabs = semFechamento
+            if (!bib) {
+              bib = { id: `biblioteca-relatorios-${Date.now()}`, type: 'biblioteca-relatorios' as TabType, title: tituloBib }
+              nextTabs = [...semFechamento, bib]
+            }
+            const bibId = bib.id
+            queueMicrotask(() => setActiveTabId(bibId))
+            return nextTabs
+          })
+          alert((safeT as any)?.fechamentoSalvoNaBiblioteca || 'Guardado na Biblioteca.')
         }
         const handleGerarPDFFechamento = () => {
           if (!relatorioSelecionado) return
@@ -39352,6 +39417,7 @@ A1;Peça exemplo;10'
         })
 
         return (
+          <>
           <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
             {/* Cabeçalho Profissional */}
             <div style={{
@@ -39752,64 +39818,40 @@ A1;Peça exemplo;10'
                               {(safeT as any)?.nenhumRelatorioDespesas || 'Nenhum fechamento de despesas'}
                             </p>
                           ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                               {despesasCliente.map(({ relatorio, itens }) => {
-                                const totalCobranca = itens.reduce((s, i) => s + (i.valorTotal || 0), 0)
+                                const totalCobranca = itens.reduce((s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)), 0)
+                                const btnBase = { padding: '10px 14px', fontSize: '13px', borderRadius: '8px', cursor: 'pointer' as const, fontWeight: 600 as const, border: 'none' }
                                 return (
                                   <div 
                                     key={relatorio.id} 
                                     style={{ 
-                                      padding: '8px 10px', 
+                                      padding: '14px 16px', 
                                       backgroundColor: '#1a1a1a', 
-                                      borderRadius: '4px', 
-                                      border: '1px solid rgba(255, 170, 0, 0.3)',
-                                      display: 'flex',
-                                      justifyContent: 'space-between',
-                                      alignItems: 'center',
-                                      flexWrap: 'wrap',
-                                      gap: '6px'
+                                      borderRadius: '10px', 
+                                      border: '2px solid rgba(255, 170, 0, 0.45)',
+                                      width: '100%'
                                     }}
                                   >
-                                    <div>
-                                      <span style={{ fontWeight: 'bold', color: '#ffaa00', fontSize: '12px' }}>
+                                    <div style={{ marginBottom: '12px' }}>
+                                      <div style={{ fontWeight: 'bold', color: '#ffaa00', fontSize: '15px' }}>
                                         {(safeT as any)?.fechamentoRelatorio || 'Fechamento'} {relatorio.numero}
-                                      </span>
-                                      <span style={{ fontSize: '11px', color: '#ccc', marginLeft: '6px' }}>
-                                        €{totalCobranca.toFixed(2)}
-                                      </span>
+                                      </div>
+                                      <div style={{ fontSize: '12px', color: '#aaa', marginTop: '4px' }}>
+                                        {relatorio.cliente} · {relatorio.maquinaModelo} · {(safeT as any)?.total || 'Total'}: <strong style={{ color: '#00ff00' }}>€{totalCobranca.toFixed(2)}</strong>
+                                      </div>
                                     </div>
-                                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                                      <button 
-                                        type="button"
-                                        onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)}
-                                        style={{ 
-                                          padding: '4px 10px', 
-                                          fontSize: '10px', 
-                                          backgroundColor: 'rgba(0, 150, 255, 0.2)', 
-                                          border: '1px solid rgba(0, 150, 255, 0.55)',
-                                          color: '#66b3ff',
-                                          borderRadius: '4px',
-                                          cursor: 'pointer',
-                                          fontWeight: 'bold'
-                                        }}
-                                        title={(safeT as any)?.editarRelatorioDespesas || 'Editar relatório de despesas'}
-                                      >
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                                      <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens })} style={{ ...btnBase, backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00' }}>
+                                        👁️ {(safeT as any)?.visualizarDespesasBiblioteca || 'Visualizar'}
+                                      </button>
+                                      <button type="button" onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(0, 150, 255, 0.25)', border: '1px solid rgba(0, 150, 255, 0.6)', color: '#66b3ff' }}>
                                         ✏️ {(safeT as any)?.editarRelatorioDespesas || 'Editar despesas'}
                                       </button>
-                                      <button 
-                                        type="button"
-                                        onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)}
-                                        style={{ 
-                                          padding: '4px 8px', 
-                                          fontSize: '10px', 
-                                          backgroundColor: 'rgba(255, 68, 68, 0.2)', 
-                                          border: '1px solid rgba(255, 68, 68, 0.5)',
-                                          color: '#ff8888',
-                                          borderRadius: '4px',
-                                          cursor: 'pointer'
-                                        }}
-                                        title={(safeT as any)?.excluirFechamentoDespesas || 'Excluir fechamento de despesas'}
-                                      >
+                                      <button type="button" onClick={() => imprimirPDFDespesasDaBiblioteca(relatorio, itens)} style={{ ...btnBase, backgroundColor: 'rgba(150, 100, 255, 0.2)', border: '1px solid rgba(150, 100, 255, 0.5)', color: '#c4a7ff' }}>
+                                        📄 {(safeT as any)?.gerarPDF || 'PDF'}
+                                      </button>
+                                      <button type="button" onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(255, 68, 68, 0.2)', border: '1px solid rgba(255, 68, 68, 0.55)', color: '#ff8888' }}>
                                         🗑️ {safeT?.delete || 'Excluir'}
                                       </button>
                                     </div>
@@ -39826,6 +39868,53 @@ A1;Peça exemplo;10'
               </div>
             )}
           </div>
+          {modalVisualizarDespesasBiblioteca && (() => {
+            const { relatorio: relV, itens: itensV } = modalVisualizarDespesasBiblioteca
+            const totV = itensV.reduce((s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)), 0)
+            return (
+              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.82)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }} onClick={() => setModalVisualizarDespesasBiblioteca(null)}>
+                <div style={{ background: '#1a1a1a', borderRadius: '16px', border: '2px solid #ffaa00', maxWidth: '920px', width: '100%', maxHeight: '88vh', overflow: 'auto', padding: '22px' }} onClick={e => e.stopPropagation()}>
+                  <h3 style={{ color: '#ffaa00', margin: '0 0 8px', fontSize: '18px' }}>{(safeT as any)?.fechamentoRelatorio || 'Fechamento'} {relV.numero}</h3>
+                  <p style={{ color: '#aaa', fontSize: '13px', margin: '0 0 16px' }}>{relV.cliente} · {relV.maquinaModelo} · {relV.data}</p>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: '#ddd' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid #ffaa00' }}>
+                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#ffaa00' }}>{(safeT as any)?.codigoOuCod || 'COD'}</th>
+                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#ffaa00' }}>{(safeT as any)?.descricao || 'Descrição'}</th>
+                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#ffaa00' }}>{(safeT as any)?.quantidade || 'Qtd'}</th>
+                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#ffaa00' }}>{(safeT as any)?.valorUnitario || 'Unit.'}</th>
+                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#ffaa00' }}>{(safeT as any)?.total || 'Total'}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {itensV.map(item => {
+                        const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
+                        const cod = (item.cod ?? sv?.cod ?? sv?.nome ?? '—').toString()
+                        const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
+                        const linTot = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
+                        return (
+                          <tr key={item.id} style={{ borderBottom: '1px solid #333' }}>
+                            <td style={{ padding: '10px 8px', color: '#00ff00', fontWeight: 600 }}>{cod}</td>
+                            <td style={{ padding: '10px 8px' }}>{item.descricao || '—'}</td>
+                            <td style={{ padding: '10px 8px', textAlign: 'right' }}>{qtd}</td>
+                            <td style={{ padding: '10px 8px', textAlign: 'right' }}>{item.valorUnitario.toFixed(2)} €</td>
+                            <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 700 }}>{linTot.toFixed(2)} €</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                  <div style={{ marginTop: '16px', fontSize: '18px', fontWeight: 'bold', color: '#00ff00', textAlign: 'right' }}>{(safeT as any)?.somaTotal || 'SOMA TOTAL'}: €{totV.toFixed(2)}</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
+                    <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca(null)} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #666', background: '#333', color: '#fff', cursor: 'pointer' }}>{safeT?.close || 'Fechar'}</button>
+                    <button type="button" onClick={() => { imprimirPDFDespesasDaBiblioteca(relV, itensV) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #9966ff', background: 'rgba(150,100,255,0.2)', color: '#c4a7ff', cursor: 'pointer', fontWeight: 600 }}>📄 {(safeT as any)?.gerarPDF || 'PDF'}</button>
+                    <button type="button" onClick={() => { setModalVisualizarDespesasBiblioteca(null); handleEditarDespesasNaBiblioteca(relV.id) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #66b3ff', background: 'rgba(0,150,255,0.25)', color: '#66b3ff', cursor: 'pointer', fontWeight: 600 }}>✏️ {(safeT as any)?.editarRelatorioDespesas || 'Editar'}</button>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+          </>
         )
 
       default:
