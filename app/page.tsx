@@ -21145,6 +21145,7 @@ onKeyPress={(e) => {
           const eq = cl?.equipamentos?.find(e => e.numeroSerie === p.equipamentoNumeroSerie)
           const esc = (s: string) => (s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/\n/g, '<br/>')
           const logoHtml = getLogoHtmlForProtocoloServico()
+          const lab = (key: string, fallback: string) => (protoT && protoT[key]) || fallback
           let blocosHtml = ''
           p.blocos.forEach(b => {
             if (b.tipo === 'texto' && b.texto) blocosHtml += `<div style="margin:12px 0;padding:10px;background:#f5f5f5;border-radius:6px;">${esc(b.texto)}</div>`
@@ -21155,14 +21156,59 @@ onKeyPress={(e) => {
             }
           })
           const pecasHtml = p.pecasTrocadasCodigos.length ? `<div style="margin-top:16px;"><strong>${protoT?.protocolosServicoPecasTrocadas || 'Peças trocadas'}:</strong> ${p.pecasTrocadasCodigos.join(', ')}</div>` : ''
-          const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>${tituloProto}</title><style>body{font-family:Segoe UI,sans-serif;padding:20px;color:#222;} .header{text-align:center;margin-bottom:24px;border-bottom:2px solid #00aa00;padding-bottom:16px;} .sec{ margin:16px 0;padding:12px;background:#f9f9f9;border-radius:8px;} .sec h3{margin:0 0 8px;color:#00aa00;font-size:14px;} @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}</style></head><body>
-            <div class="header">${logoHtml ? `<div style="margin-bottom:12px;">${logoHtml}</div>` : ''}<h1 style="margin:0;color:#00aa00;">NONATO SERVICE</h1><h2 style="margin:8px 0 0;font-size:18px;">${tituloProto}</h2></div>
-            ${cl ? `<div class="sec"><h3>${protoT?.protocolosServicoInformacaoCliente || 'Informação do cliente'}</h3><p style="margin:0;">${esc(cl.nomeEmpresa)}${cl.morada ? '<br/>' + esc(cl.morada) : ''}${cl.telefones ? '<br/>' + esc(cl.telefones) : ''}${cl.email ? '<br/>' + esc(cl.email) : ''}</p></div>` : ''}
-            ${eq ? `<div class="sec"><h3>${protoT?.protocolosServicoInformacaoEquipamento || 'Informação do equipamento'}</h3><p style="margin:0;">${esc(eq.tipoEquipamento)} ${esc(eq.modelo)} ${esc(eq.marca)} ${protoT?.numeroSerie || 'Nº Série'}: ${esc(eq.numeroSerie)}</p></div>` : ''}
-            ${p.textoInicial ? `<div class="sec"><h3>${protoT?.protocolosServicoTextoInicial || 'Texto inicial'}</h3><p style="margin:0;white-space:pre-wrap;">${esc(p.textoInicial)}</p></div>` : ''}
+          const dataDoc = new Date(p.dataCriacao).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'en' ? 'en-GB' : selectedLanguage)
+          const clientRows: string[] = []
+          if (cl) {
+            if (cl.nomeEmpresa) clientRows.push(`<tr><td class="cl-label">${lab('nomeEmpresa', 'Empresa')}</td><td class="cl-value">${esc(cl.nomeEmpresa)}</td></tr>`)
+            if (cl.morada) clientRows.push(`<tr><td class="cl-label">${lab('morada', 'Morada')}</td><td class="cl-value">${esc(cl.morada)}</td></tr>`)
+            if (cl.codigoPostal || cl.localidade) clientRows.push(`<tr><td class="cl-label">${lab('codigoPostal', 'Código Postal')} / ${lab('localidade', 'Localidade')}</td><td class="cl-value">${esc(cl.codigoPostal || '')} ${cl.codigoPostal && cl.localidade ? ' — ' : ''}${esc(cl.localidade || '')}</td></tr>`)
+            if (cl.freguesia) clientRows.push(`<tr><td class="cl-label">${lab('freguesia', 'Freguesia')}</td><td class="cl-value">${esc(cl.freguesia)}</td></tr>`)
+            if (cl.conselho) clientRows.push(`<tr><td class="cl-label">${lab('conselho', 'Concelho')}</td><td class="cl-value">${esc(cl.conselho)}</td></tr>`)
+            if (cl.pais) clientRows.push(`<tr><td class="cl-label">${lab('pais', 'País')}</td><td class="cl-value">${esc(cl.pais)}</td></tr>`)
+            if (cl.numeroContribuicaoFiscal) clientRows.push(`<tr><td class="cl-label">${lab('fichaCadastralNif', 'NIF')}</td><td class="cl-value">${esc(cl.numeroContribuicaoFiscal)}</td></tr>`)
+            if (cl.telefones) clientRows.push(`<tr><td class="cl-label">${lab('telefones', 'Telefones')}</td><td class="cl-value">${esc(cl.telefones)}</td></tr>`)
+            if (cl.email) clientRows.push(`<tr><td class="cl-label">${lab('email', 'E-mail')}</td><td class="cl-value">${esc(cl.email)}</td></tr>`)
+            if (cl.contato) clientRows.push(`<tr><td class="cl-label">${lab('contato', 'Contato')}</td><td class="cl-value">${esc(cl.contato)}</td></tr>`)
+          }
+          const clienteSection = cl && clientRows.length > 0
+            ? `<div class="sec"><h3 class="sec-title">${protoT?.protocolosServicoInformacaoCliente || 'Informação do cliente'}</h3><table class="cl-table">${clientRows.join('')}</table></div>`
+            : ''
+          const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>${tituloProto}</title><style>
+            body{font-family:'Segoe UI',Arial,sans-serif;padding:0;margin:0;color:#1a1a1a;font-size:12px;line-height:1.4;}
+            .pdf-header{background:linear-gradient(180deg,#0d2d0d 0%,#0a220a 100%);color:#fff;padding:20px 24px;margin-bottom:0;border-bottom:3px solid #00aa00;}
+            .pdf-header-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+            .pdf-header-logo{flex-shrink:0;}
+            .pdf-header-logo img{max-height:52px;max-width:180px;object-fit:contain;}
+            .pdf-header-text{flex:1;min-width:200px;}
+            .pdf-header-company{font-size:22px;font-weight:700;letter-spacing:1px;margin:0 0 4px;color:#00dd00;}
+            .pdf-header-doc{font-size:14px;opacity:0.95;margin:0 0 6px;}
+            .pdf-header-meta{font-size:11px;opacity:0.8;}
+            .sec{margin:20px 24px;padding:16px;background:#f8f9fa;border-radius:8px;border:1px solid #e0e0e0;}
+            .sec-title{margin:0 0 12px;color:#006600;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+            .cl-table{width:100%;border-collapse:collapse;}
+            .cl-table .cl-label{width:140px;padding:6px 10px 6px 0;vertical-align:top;font-weight:600;color:#333;font-size:11px;}
+            .cl-table .cl-value{padding:6px 0;color:#1a1a1a;}
+            .body-wrap{padding-bottom:24px;}
+            @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}.pdf-header{background:#0a220a!important;}}
+          </style></head><body>
+            <div class="pdf-header">
+              <div class="pdf-header-inner">
+                <div class="pdf-header-logo">${logoHtml || '<span style="font-size:24px;font-weight:700;color:#00dd00;">NONATO SERVICE</span>'}</div>
+                <div class="pdf-header-text">
+                  <div class="pdf-header-company">NONATO SERVICE</div>
+                  <div class="pdf-header-doc">${tituloProto}</div>
+                  <div class="pdf-header-meta">${dataDoc}</div>
+                </div>
+              </div>
+            </div>
+            <div class="body-wrap">
+            ${clienteSection}
+            ${eq ? `<div class="sec"><h3 class="sec-title">${protoT?.protocolosServicoInformacaoEquipamento || 'Informação do equipamento'}</h3><table class="cl-table"><tr><td class="cl-label">${lab('tipoEquipamento', 'Tipo')}</td><td class="cl-value">${esc(eq.tipoEquipamento)}</td></tr><tr><td class="cl-label">${lab('modelo', 'Modelo')}</td><td class="cl-value">${esc(eq.modelo)}</td></tr><tr><td class="cl-label">${lab('marca', 'Marca')}</td><td class="cl-value">${esc(eq.marca)}</td></tr><tr><td class="cl-label">${protoT?.numeroSerie || 'Nº Série'}</td><td class="cl-value">${esc(eq.numeroSerie)}</td></tr></table></div>` : ''}
+            ${p.textoInicial ? `<div class="sec"><h3 class="sec-title">${protoT?.protocolosServicoTextoInicial || 'Texto inicial'}</h3><p style="margin:0;white-space:pre-wrap;">${esc(p.textoInicial)}</p></div>` : ''}
             ${blocosHtml}
             ${pecasHtml}
-            <p style="margin-top:24px;font-size:11px;color:#666;">${new Date(p.dataCriacao).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'en' ? 'en-GB' : selectedLanguage)}</p>
+            <p style="margin:24px 24px 0;font-size:11px;color:#666;">${dataDoc}</p>
+            </div>
           </body></html>`
           const w = window.open('', '_blank')
           if (w) { w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 400) }
@@ -44618,56 +44664,6 @@ A1;Peça exemplo;10'
           )}
         </div>
 
-        {/* Botão principal: Protocolos de Serviço (fora de qualquer grupo) */}
-        <div style={{ marginTop: '10px', marginBottom: '10px' }}>
-          <button
-            type="button"
-            className={`btn-primary${selectedSidebarButton === 'open-protocolos-servico' ? ' sidebar-group-btn-selected' : ''}`}
-            onClick={() => handleButtonClick('open-protocolos-servico')}
-            style={{
-              width: '100%',
-              textAlign: 'left',
-              padding: '12px',
-              marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-protocolos-servico' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
-              border: selectedSidebarButton === 'open-protocolos-servico' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
-              borderRadius: '8px',
-              color: selectedSidebarButton === 'open-protocolos-servico' ? '#00ff00' : '#ccc',
-              fontWeight: 'bold',
-              fontSize: '12px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              transform: selectedSidebarButton === 'open-protocolos-servico' ? 'scale(1.02)' : undefined,
-              transition: 'all 0.3s ease',
-              position: 'relative'
-            }}
-            onMouseEnter={(e) => {
-              if (selectedSidebarButton !== 'open-protocolos-servico') {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.15)'
-                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.55)'
-                e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.45), 0 0 24px rgba(0, 255, 0, 0.2)'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (selectedSidebarButton !== 'open-protocolos-servico') {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.08)'
-                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.35)'
-                e.currentTarget.style.boxShadow = 'none'
-              }
-            }}
-          >
-            {selectedSidebarButton === 'open-protocolos-servico' && (
-              <span style={{ position: 'absolute', top: '8px', right: '30px', fontSize: '16px', color: '#ffffff', fontWeight: 'bold', zIndex: 2 }}>✓</span>
-            )}
-            <span>
-              <span style={{ display: 'inline-block', marginRight: '8px' }}>📋</span>
-              {(safeT as any)?.protocolosServicoTitle || 'PROTOCOLOS DE SERVIÇO'}
-            </span>
-            <span style={{ fontSize: '12px' }}>▶</span>
-          </button>
-        </div>
-
         {/* Botões da Sidebar - Organizados por Grupos */}
         
         {/* Grupo: GESTÃO TÉCNICA — só mostra se o usuário tiver permissão em algum botão */}
@@ -44830,6 +44826,58 @@ A1;Peça exemplo;10'
           )}
         </div>
         )}
+
+        {/* Botão principal: Protocolos de Serviço (abaixo de Gestão Técnica) */}
+        <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+          <button
+            type="button"
+            className={`btn-primary${selectedSidebarButton === 'open-protocolos-servico' ? ' sidebar-group-btn-selected' : ''}`}
+            onClick={() => handleButtonClick('open-protocolos-servico')}
+            style={{
+              width: '100%',
+              textAlign: 'left',
+              padding: '12px',
+              marginBottom: '5px',
+              backgroundColor: selectedSidebarButton === 'open-protocolos-servico' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
+              border: selectedSidebarButton === 'open-protocolos-servico' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
+              borderRadius: '8px',
+              color: selectedSidebarButton === 'open-protocolos-servico' ? '#00ff00' : '#ccc',
+              fontWeight: 'bold',
+              fontSize: '12px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              transform: selectedSidebarButton === 'open-protocolos-servico' ? 'scale(1.02)' : undefined,
+              transition: 'all 0.3s ease',
+              position: 'relative'
+            }}
+            onMouseEnter={(e) => {
+              if (selectedSidebarButton !== 'open-protocolos-servico') {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.15)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.55)'
+                e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.45), 0 0 24px rgba(0, 255, 0, 0.2)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (selectedSidebarButton !== 'open-protocolos-servico') {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.08)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.35)'
+                e.currentTarget.style.boxShadow = 'none'
+              }
+            }}
+          >
+            {selectedSidebarButton === 'open-protocolos-servico' && (
+              <span style={{ position: 'absolute', top: '8px', right: '30px', fontSize: '16px', color: '#ffffff', fontWeight: 'bold', zIndex: 2 }}>✓</span>
+            )}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+              <span style={{ flexShrink: 0 }}>📋</span>
+              <span style={{ textTransform: 'uppercase', letterSpacing: '0.4px', lineHeight: 1.25 }}>
+                {(safeT as any)?.protocolosServicoTitle || 'Protocolos de Serviço'}
+              </span>
+            </span>
+            <span style={{ fontSize: '12px' }}>▶</span>
+          </button>
+        </div>
 
         {/* Grupo: GESTÃO DE CUSTOS — mesmo padrão de cores e contorno do botão GESTÃO TÉCNICA */}
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
