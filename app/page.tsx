@@ -44664,6 +44664,7 @@ A1;Peça exemplo;10'
               <span style={{ display: 'inline-block', marginRight: '8px' }}>📋</span>
               {(safeT as any)?.protocolosServicoTitle || 'PROTOCOLOS DE SERVIÇO'}
             </span>
+            <span style={{ fontSize: '12px' }}>▶</span>
           </button>
         </div>
 
@@ -45561,6 +45562,7 @@ A1;Peça exemplo;10'
                   <span style={{ display: 'inline-block', marginRight: '8px' }}>📋</span>
                   {getButtonName(button)}
                 </span>
+                <span style={{ fontSize: '12px' }}>▶</span>
               </button>
             )
           })}
@@ -45629,6 +45631,7 @@ A1;Peça exemplo;10'
                   </span>
                   {getButtonName(button)}
                 </span>
+                <span style={{ fontSize: '12px' }}>▶</span>
               </button>
             )
           })}

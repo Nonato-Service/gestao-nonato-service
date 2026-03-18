@@ -9,7 +9,7 @@ RUN npm ci
 
 # Código e build
 COPY . .
-ENV NODE_OPTIONS=--max-old-space-size=384
+ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN npm run build
 
 # Railway usa PORT; o script start-server.js já lê process.env.PORT
