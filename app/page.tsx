@@ -2929,6 +2929,8 @@ export default function Dashboard() {
   const [relatorioDeepseekBusy, setRelatorioDeepseekBusy] = useState(false)
   const [relatorioDeepseekSourceLang, setRelatorioDeepseekSourceLang] = useState<string>('pt-BR')
   const [relatorioDeepseekTargetLang, setRelatorioDeepseekTargetLang] = useState<string>('en')
+  /** null = a carregar; false = sem DEEPSEEK_API_KEY no servidor */
+  const [deepseekServerConfigured, setDeepseekServerConfigured] = useState<boolean | null>(null)
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false)
   /** Largura ≤1024px: menu em gaveta, conteúdo a largura total (tablet/telemóvel) */
   const [isCompactLayout, setIsCompactLayout] = useState(false)
@@ -3338,10 +3340,24 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
-    if (showRelatorioServicoForm) {
+    if (!showRelatorioServicoForm) return
+    if (selectedLanguage === 'pt-BR') {
+      setRelatorioDeepseekTargetLang('en')
+    } else {
       setRelatorioDeepseekTargetLang(selectedLanguage)
     }
   }, [showRelatorioServicoForm, selectedLanguage])
+
+  useEffect(() => {
+    if (!showRelatorioServicoForm) {
+      setDeepseekServerConfigured(null)
+      return
+    }
+    fetch('/api/translate-deepseek')
+      .then((r) => r.json())
+      .then((d: { deepseekConfigured?: boolean }) => setDeepseekServerConfigured(!!d.deepseekConfigured))
+      .catch(() => setDeepseekServerConfigured(false))
+  }, [showRelatorioServicoForm])
 
   const handleTraduzirRelatorioComDeepseek = async () => {
     const src = relatorioDeepseekSourceLang
@@ -21138,9 +21154,30 @@ onKeyPress={(e) => {
                 <h3 style={{ marginBottom: '15px' }}>{editingRelatorioServico ? (safeT?.editRelatorioServico || 'Editar Relatório de Serviço') : (safeT?.addRelatorioServico || 'Adicionar Relatório de Serviço')}</h3>
 
                 <div style={{ marginBottom: '18px', padding: '14px', backgroundColor: '#1a1f1a', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.15)' }}>
-                  <div style={{ fontWeight: 'bold', color: '#fff', marginBottom: '6px' }}>{safeT?.deepseekPanelTitle || 'Tradução IA (DeepSeek)'}</div>
+                  <div style={{ fontWeight: 'bold', color: '#fff', marginBottom: '6px' }}>
+                    {safeT?.deepseekPanelTitle || 'Tradução com DeepSeek (API)'}
+                  </div>
+                  {deepseekServerConfigured === false && (
+                    <div
+                      style={{
+                        marginBottom: '12px',
+                        padding: '10px 12px',
+                        backgroundColor: 'rgba(180, 60, 60, 0.25)',
+                        border: '1px solid rgba(255, 120, 120, 0.5)',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        color: '#ffcccc',
+                        lineHeight: 1.45,
+                      }}
+                    >
+                      <strong>{safeT?.deepseekNoKeyBanner || 'DeepSeek não configurado no servidor.'}</strong>{' '}
+                      {safeT?.deepseekNoKeyBanner2 ||
+                        'Adicione DEEPSEEK_API_KEY no ficheiro .env (ex.: sk-...) e reinicie. No Railway: Variables → New Variable.'}
+                    </div>
+                  )}
                   <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.75)', marginBottom: '12px', lineHeight: 1.45 }}>
-                    {safeT?.deepseekPanelDesc || 'Preencha em português (ou noutro idioma) e traduza os textos descritivos do relatório para o idioma do cliente. O idioma «Traduzir para» sugere-se conforme o idioma da interface.'}
+                    {safeT?.deepseekPanelDesc ||
+                      'Escreve em português (ou outro idioma), escolhe «Traduzir para» (ex.: Italiano) e clica em traduzir. Com a app em português, o destino padrão é Inglês — podes mudar no menu.'}
                   </p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
                     <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#ccc' }}>
@@ -21170,7 +21207,7 @@ onKeyPress={(e) => {
                     <button
                       type="button"
                       className="btn-primary"
-                      disabled={relatorioDeepseekBusy}
+                      disabled={relatorioDeepseekBusy || deepseekServerConfigured === false}
                       onClick={() => void handleTraduzirRelatorioComDeepseek()}
                       style={{ marginTop: '18px', padding: '10px 16px', fontSize: '13px' }}
                     >

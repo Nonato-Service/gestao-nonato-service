@@ -813,8 +813,12 @@ export const translations = {
     noRelatoriosServico: 'Nenhum relatório de serviço cadastrado',
     confirmDeleteRelatorioServico: 'Tem certeza que deseja excluir este relatório de serviço?',
     relatorioServicoSaved: 'Relatório de serviço salvo com sucesso!',
-    deepseekPanelTitle: 'Tradução IA (DeepSeek)',
-    deepseekPanelDesc: 'Preencha em português (ou noutro idioma) e traduza os textos descritivos do relatório para o idioma do cliente. «Traduzir para» alinha-se ao idioma da interface ao abrir o formulário.',
+    deepseekPanelTitle: 'Tradução com DeepSeek (API)',
+    deepseekNoKeyBanner: 'DeepSeek não configurado no servidor.',
+    deepseekNoKeyBanner2:
+      'Crie DEEPSEEK_API_KEY no .env (chave em platform.deepseek.com) e reinicie. No Railway: Settings → Variables.',
+    deepseekPanelDesc:
+      'Escreve em português, escolhe «Traduzir para» (Italiano, Espanhol, etc.) e clica. Com a app em português, o destino padrão é Inglês — altera o menu se quiseres outro idioma.',
     deepseekWrittenIn: 'Texto escrito em',
     deepseekTranslateTo: 'Traduzir para',
     deepseekButton: 'Traduzir campos de texto',

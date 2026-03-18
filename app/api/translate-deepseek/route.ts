@@ -12,19 +12,31 @@ const LANG_LABEL: Record<string, string> = {
   de: 'German',
 }
 
+function normalizeApiUrl(raw?: string): string {
+  const def = 'https://api.deepseek.com/chat/completions'
+  if (!raw?.trim()) return def
+  let u = raw.trim().replace(/\/$/, '')
+  if (!u.includes('chat/completions')) {
+    u = u.endsWith('/v1') ? `${u}/chat/completions` : `${u}/chat/completions`
+  }
+  return u
+}
+
 function extractJsonObject(text: string): Record<string, string> | null {
-  const trimmed = text.trim()
+  let s = text.trim()
+  const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i)
+  if (fence) s = fence[1].trim()
   try {
-    const o = JSON.parse(trimmed)
+    const o = JSON.parse(s)
     if (o && typeof o === 'object' && !Array.isArray(o)) return o as Record<string, string>
   } catch {
     /* fall through */
   }
-  const start = trimmed.indexOf('{')
-  const end = trimmed.lastIndexOf('}')
+  const start = s.indexOf('{')
+  const end = s.lastIndexOf('}')
   if (start >= 0 && end > start) {
     try {
-      const o = JSON.parse(trimmed.slice(start, end + 1))
+      const o = JSON.parse(s.slice(start, end + 1))
       if (o && typeof o === 'object' && !Array.isArray(o)) return o as Record<string, string>
     } catch {
       return null
@@ -33,13 +45,19 @@ function extractJsonObject(text: string): Record<string, string> | null {
   return null
 }
 
+/** GET: ver se a chave está configurada (para aviso na interface) */
+export async function GET() {
+  const ok = !!process.env.DEEPSEEK_API_KEY?.trim()
+  return NextResponse.json({ deepseekConfigured: ok })
+}
+
 export async function POST(req: Request) {
   const apiKey = process.env.DEEPSEEK_API_KEY
   if (!apiKey?.trim()) {
     return NextResponse.json(
       {
         error:
-          'Chave DeepSeek não configurada. Crie DEEPSEEK_API_KEY no ficheiro .env (local) ou nas variáveis do Railway.',
+          'DeepSeek: defina DEEPSEEK_API_KEY no .env (local) ou nas variáveis de ambiente do Railway / servidor.',
       },
       { status: 503 }
     )
@@ -49,12 +67,12 @@ export async function POST(req: Request) {
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: 'JSON inválido' }, { status: 400 })
+    return NextResponse.json({ error: 'JSON inválido no pedido' }, { status: 400 })
   }
 
   const { sourceLang = 'pt-BR', targetLang = 'en', fields } = body
   if (!fields || typeof fields !== 'object' || Array.isArray(fields)) {
-    return NextResponse.json({ error: 'Campo "fields" é obrigatório (objeto chave→texto)' }, { status: 400 })
+    return NextResponse.json({ error: 'Campo "fields" é obrigatório' }, { status: 400 })
   }
 
   const entries = Object.entries(fields).filter(
@@ -67,7 +85,7 @@ export async function POST(req: Request) {
   const totalChars = entries.reduce((n, [, v]) => n + v.length, 0)
   if (totalChars > 14000) {
     return NextResponse.json(
-      { error: 'Texto total demasiado longo (máx. ~14000 caracteres). Reduza e tente novamente.' },
+      { error: 'Texto demasiado longo (máx. ~14000 caracteres).' },
       { status: 400 }
     )
   }
@@ -81,58 +99,87 @@ export async function POST(req: Request) {
   }
 
   const payload = Object.fromEntries(entries)
-  const system = `You translate technical field service reports. Rules:
-- Preserve unchanged: numbers, dates, times, serial numbers, product codes, model names, email, URLs, percentages.
-- Translate only human-readable prose.
-- Output MUST be a single JSON object with EXACTLY the same keys as input. Values are translated strings.
-- Empty strings stay empty. No markdown fences. No commentary.`
+  const keysList = Object.keys(payload).join(', ')
+  const system = `You translate technical field service reports. Output valid JSON only.
+Rules: Keep numbers, dates, times, serial numbers, codes, model names, emails, URLs unchanged.
+Translate prose only. Return one JSON object with exactly these keys: ${keysList}
+Each value is the translated string. No markdown, no explanation, no code fences.`
 
-  const user = `Source language: ${src}
-Target language: ${tgt}
+  const user = `From ${src} to ${tgt}:\n${JSON.stringify(payload)}`
 
-Input JSON (translate each value):
-${JSON.stringify(payload, null, 0)}`
+  const url = normalizeApiUrl(process.env.DEEPSEEK_API_URL)
+  const model = process.env.DEEPSEEK_MODEL || 'deepseek-chat'
 
-  const url = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/chat/completions'
-
-  try {
-    const res = await fetch(url, {
+  async function callDeepSeek(useJsonMode: boolean) {
+    const bodyReq: Record<string, unknown> = {
+      model,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ],
+      temperature: 0.2,
+      max_tokens: 8192,
+    }
+    if (useJsonMode) {
+      bodyReq.response_format = { type: 'json_object' }
+    }
+    return fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: user },
-        ],
-        temperature: 0.2,
-        max_tokens: 8192,
-      }),
+      body: JSON.stringify(bodyReq),
     })
+  }
 
-    const data = await res.json().catch(() => ({}))
+  try {
+    let res = await callDeepSeek(true)
+    let data = await res.json().catch(() => ({}))
+
+    if (!res.ok && (data as { error?: { message?: string } })?.error?.message?.includes('response_format')) {
+      res = await callDeepSeek(false)
+      data = await res.json().catch(() => ({}))
+    }
+
     if (!res.ok) {
       const msg =
         (data as { error?: { message?: string } })?.error?.message ||
         (typeof (data as { message?: string }).message === 'string'
           ? (data as { message: string }).message
           : `HTTP ${res.status}`)
-      return NextResponse.json({ error: msg }, { status: res.status >= 500 ? 502 : 400 })
+      return NextResponse.json(
+        { error: `DeepSeek: ${msg}` },
+        { status: res.status >= 500 ? 502 : 400 }
+      )
     }
 
     const content = (data as { choices?: { message?: { content?: string } }[] })?.choices?.[0]?.message
       ?.content
     if (!content || typeof content !== 'string') {
-      return NextResponse.json({ error: 'Resposta vazia da API DeepSeek' }, { status: 502 })
+      return NextResponse.json(
+        { error: 'DeepSeek devolveu resposta vazia. Verifique o modelo e a chave API.' },
+        { status: 502 }
+      )
     }
 
-    const translated = extractJsonObject(content)
+    let translated = extractJsonObject(content)
+    if (!translated) {
+      const retryRes = await callDeepSeek(false)
+      const retryData = await retryRes.json().catch(() => ({}))
+      const retryContent = (retryData as { choices?: { message?: { content?: string } }[] })?.choices?.[0]
+        ?.message?.content
+      if (retryContent && typeof retryContent === 'string') {
+        translated = extractJsonObject(retryContent)
+      }
+    }
+
     if (!translated) {
       return NextResponse.json(
-        { error: 'Não foi possível ler o JSON da tradução. Tente de novo ou reduza o texto.' },
+        {
+          error:
+            'Não foi possível ler o JSON da tradução. Tente texto mais curto ou verifique a conta DeepSeek.',
+        },
         { status: 502 }
       )
     }
@@ -146,6 +193,6 @@ ${JSON.stringify(payload, null, 0)}`
     return NextResponse.json({ translated: out })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Erro de rede'
-    return NextResponse.json({ error: msg }, { status: 502 })
+    return NextResponse.json({ error: `DeepSeek: ${msg}` }, { status: 502 })
   }
 }
