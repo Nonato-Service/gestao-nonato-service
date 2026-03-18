@@ -726,7 +726,7 @@ type GrupoChecklist = {
   dataCriacao: string
 }
 
-type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-cadastral' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega'
+type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-cadastral' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico'
 
 type Tab = {
   id: string
@@ -1391,7 +1391,8 @@ export default function Dashboard() {
       'alerta-mensagens': 'open-alerta-mensagens',
       'gestao-financeira': 'open-gestao-financeira',
       'clientes-financeiro': 'open-clientes-financeiro',
-      'comprovantes-despesas': 'open-comprovantes-despesas'
+      'comprovantes-despesas': 'open-comprovantes-despesas',
+      'protocolos-servico': 'open-protocolos-servico'
     }
 
     const action = TAB_TO_SIDEBAR_ACTION[tab.type]
@@ -2578,7 +2579,8 @@ export default function Dashboard() {
       'mensagens-internas-tecnicos': t?.mensagensInternasTecnicos || 'MENSAGENS INTERNAS / TÉCNICOS',
       'tecnicos-internos': t?.tecnicosInternos || 'TÉCNICOS INTERNOS',
       'tecnicos-externos': t?.tecnicosExternos || 'TÉCNICOS EXTERNOS',
-      'alerta-mensagens': t?.alertaMensagens || 'ALERTA DE MENSAGENS'
+      'alerta-mensagens': t?.alertaMensagens || 'ALERTA DE MENSAGENS',
+      'protocolos-servico': (t as any)?.protocolosServicoTitle || 'Protocolos de Serviço'
     }
     return titles[type] || type
   }
@@ -14591,6 +14593,8 @@ export default function Dashboard() {
       openTab('fornecedores', getTabTitle('fornecedores'))
     } else if (action === 'open-relatorio-servico') {
       openTab('relatorio-servico', getTabTitle('relatorio-servico'))
+    } else if (action === 'open-protocolos-servico') {
+      openTab('protocolos-servico', getTabTitle('protocolos-servico'))
     } else if (action === 'open-biblioteca-hub') {
       // Um único botão: abre direto a tela com Cadastro de Peças | Biblioteca | Gerenciar Categorias | Importação
       openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
@@ -21020,7 +21024,45 @@ onKeyPress={(e) => {
             )}
           </div>
         )
-      
+
+      case 'protocolos-servico':
+        return (
+          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }} className="tab-content-wrapper">
+            <div className="mobile-sticky-toolbar">
+              <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>↶ {safeT?.voltar || 'Voltar'}</button>
+              <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
+            </div>
+            <div style={{
+              marginBottom: '40px',
+              padding: '30px',
+              background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
+              borderRadius: '20px',
+              border: '2px solid rgba(0, 255, 0, 0.3)',
+              boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                  <LogoComponent size="small" />
+                </div>
+                <div style={{ textAlign: 'center', flex: 1, minWidth: '200px' }}>
+                  <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#00ff00', letterSpacing: '3px', textShadow: '0 0 20px rgba(0, 255, 0, 0.3)', marginBottom: '8px' }}>
+                    {(safeT as any)?.protocolosServicoTitle || 'PROTOCOLOS DE SERVIÇO'}
+                  </h1>
+                  <p style={{ margin: 0, fontSize: '14px', color: '#ccc', opacity: 0.9 }}>
+                    {(safeT as any)?.protocolosServicoDesc || 'Consulte e gere os protocolos de serviço.'}
+                  </p>
+                </div>
+                <button onClick={() => closeTab(activeTabId || '')} style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'transparent', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', color: '#00ff00', cursor: 'pointer', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={safeT?.voltar || 'Voltar'}>↶</button>
+              </div>
+            </div>
+            <div style={{ padding: '20px', backgroundColor: '#141414', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+              <p style={{ color: '#ccc', lineHeight: 1.6 }}>
+                {(safeT as any)?.protocolosServicoPlaceholder || 'Aqui poderá consultar e gerir os protocolos de serviço. Esta secção está pronta para ser desenvolvida consoante as suas necessidades.'}
+              </p>
+            </div>
+          </div>
+        )
+
       case 'relatorio-servico':
         return (
           <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
@@ -44322,6 +44364,55 @@ A1;Peça exemplo;10'
               </div>
             </div>
           )}
+        </div>
+
+        {/* Botão principal: Protocolos de Serviço (fora de qualquer grupo) */}
+        <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+          <button
+            type="button"
+            className={`btn-primary${selectedSidebarButton === 'open-protocolos-servico' ? ' sidebar-group-btn-selected' : ''}`}
+            onClick={() => handleButtonClick('open-protocolos-servico')}
+            style={{
+              width: '100%',
+              textAlign: 'left',
+              padding: '12px',
+              marginBottom: '5px',
+              backgroundColor: selectedSidebarButton === 'open-protocolos-servico' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
+              border: selectedSidebarButton === 'open-protocolos-servico' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
+              borderRadius: '8px',
+              color: selectedSidebarButton === 'open-protocolos-servico' ? '#00ff00' : '#ccc',
+              fontWeight: 'bold',
+              fontSize: '12px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              transform: selectedSidebarButton === 'open-protocolos-servico' ? 'scale(1.02)' : undefined,
+              transition: 'all 0.3s ease',
+              position: 'relative'
+            }}
+            onMouseEnter={(e) => {
+              if (selectedSidebarButton !== 'open-protocolos-servico') {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.15)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.55)'
+                e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.45), 0 0 24px rgba(0, 255, 0, 0.2)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (selectedSidebarButton !== 'open-protocolos-servico') {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.08)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.35)'
+                e.currentTarget.style.boxShadow = 'none'
+              }
+            }}
+          >
+            {selectedSidebarButton === 'open-protocolos-servico' && (
+              <span style={{ position: 'absolute', top: '8px', right: '30px', fontSize: '16px', color: '#ffffff', fontWeight: 'bold', zIndex: 2 }}>✓</span>
+            )}
+            <span>
+              <span style={{ display: 'inline-block', marginRight: '8px' }}>📋</span>
+              {(safeT as any)?.protocolosServicoTitle || 'PROTOCOLOS DE SERVIÇO'}
+            </span>
+          </button>
         </div>
 
         {/* Botões da Sidebar - Organizados por Grupos */}
