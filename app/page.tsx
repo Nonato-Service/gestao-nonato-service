@@ -17773,7 +17773,33 @@ const nextF = familias.filter(x => x !== f)
                         <option key={l.id} value={l.id}>{l.name || l.id}</option>
                       ))}
                     </select>
-                    <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{(safeT as any)?.escolherLogoFechamentosDesc || 'Use o logo principal ou um dos logos adicionados acima (Relatórios).'}</p>
+                    <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{(safeT as any)?.escolherLogoFechamentosDesc || 'Use o logo principal ou adicione um logo à lista abaixo.'}</p>
+                    <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '6px 12px', marginTop: '8px', fontSize: '12px' }}>
+                      {(safeT as any)?.adicionarLogoLista || 'Adicionar logo à lista'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          const reader = new FileReader()
+                          reader.onload = (ev) => {
+                            const data = ev.target?.result as string
+                            if (!data || !data.startsWith('data:image/')) return
+                            const name = file.name.replace(/\.[^.]+$/, '') || `Logo ${logosRelatorios.length + 1}`
+                            const id = `logo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+                            const next = [...logosRelatorios, { id, name, data, type: 'image' as const }]
+                            setLogosRelatorios(next)
+                            saveData('nonato-logos-relatorios', next)
+                            setLogoFechamentoSelecionadoId(id)
+                            saveData('nonato-fechamentos-logo-id', id)
+                            e.target.value = ''
+                          }
+                          reader.readAsDataURL(file)
+                        }}
+                      />
+                    </label>
                   </div>
                 )}
                 <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
@@ -17793,6 +17819,32 @@ const nextF = familias.filter(x => x !== f)
                     ))}
                   </select>
                   <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{(safeT as any)?.escolherLogoOrcamentoDesc || 'Logo que aparece no cabeçalho do PDF de orçamentos (avulso e do relatório).'}</p>
+                  <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '6px 12px', marginTop: '8px', fontSize: '12px' }}>
+                    {(safeT as any)?.adicionarLogoLista || 'Adicionar logo à lista'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+                        const reader = new FileReader()
+                        reader.onload = (ev) => {
+                          const data = ev.target?.result as string
+                          if (!data || !data.startsWith('data:image/')) return
+                          const name = file.name.replace(/\.[^.]+$/, '') || `Logo ${logosRelatorios.length + 1}`
+                          const id = `logo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+                          const next = [...logosRelatorios, { id, name, data, type: 'image' as const }]
+                          setLogosRelatorios(next)
+                          saveData('nonato-logos-relatorios', next)
+                          setLogoOrcamentoSelecionadoId(id)
+                          saveData('nonato-orcamento-logo-id', id)
+                          e.target.value = ''
+                        }
+                        reader.readAsDataURL(file)
+                      }}
+                    />
+                  </label>
                 </div>
               </div>
               
