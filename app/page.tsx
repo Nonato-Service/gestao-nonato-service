@@ -1307,6 +1307,97 @@ export default function Dashboard() {
     })
   }
 
+  // Destacar na sidebar o botão correspondente ao separador ativo (ex.: abrir Biblioteca a partir do Fechamento)
+  useEffect(() => {
+    if (!activeTabId) {
+      setSelectedSidebarButton(null)
+      return
+    }
+    const tab = openTabs.find(t => t.id === activeTabId)
+    if (!tab) return
+
+    const TAB_TO_SIDEBAR_ACTION: Partial<Record<TabType, string>> = {
+      gestores: 'open-gestores',
+      equipamentos: 'open-equipamentos',
+      'familias-grupos': 'open-familias-grupos',
+      'familias-grupos-equipamentos': 'open-familias-grupos-equipamentos',
+      'cadastro-nonato-service': 'open-cadastro-nonato-service',
+      'ficha-cadastral': 'open-ficha-cadastral',
+      administrador: 'open-administrador',
+      clientes: 'open-clientes',
+      fornecedores: 'open-fornecedores',
+      'relatorio-servico': 'open-relatorio-servico',
+      'pecas-substituicao': 'open-pecas-substituicao',
+      'biblioteca-pecas': 'open-biblioteca-pecas',
+      'importacao-pecas': 'open-importacao-pecas',
+      'solicitacao-servico-tecnico': 'open-solicitacao-servico-tecnico',
+      agenda: 'open-agenda',
+      desmontados: 'open-desmontados',
+      'cadastro-servicos': 'open-cadastro-servicos',
+      'fechamento-relatorios-servicos': 'open-fechamento-relatorios-servicos',
+      'biblioteca-relatorios': 'open-biblioteca-relatorios',
+      translator: 'open-translator',
+      'estado-visual-tecnico': 'open-estado-visual-tecnico',
+      'informacoes-conhecimento-tecnicos': 'open-informacoes-conhecimento-tecnicos',
+      'gestao-custos': 'open-gestao-custos',
+      'orcamentos-avulso': 'open-orcamentos-avulso',
+      'pedido-orcamentos-avulso': 'open-pedido-orcamentos-avulso',
+      'registro-despesas': 'open-registro-despesas',
+      'mapa-visual-separacao-pecas': 'open-mapa-visual-separacao-pecas',
+      'manuais-informacoes-tecnicas': 'open-manuais-informacoes-tecnicas',
+      'almoxarifado-armazem': 'open-almoxarifado-armazem',
+      'pre-checklist': 'open-pre-checklist',
+      checklist: 'open-checklist',
+      'checklist-hub': 'open-checklist-hub',
+      'gestao-grupos-checklist': 'open-gestao-grupos-checklist',
+      'ordem-preparacao': 'open-ordem-preparacao',
+      'formularios-checklist-tecnicos': 'open-formularios-checklist-tecnicos',
+      'verificacao-final-entrega': 'open-verificacao-final-entrega',
+      'comunicacao-interna': 'open-comunicacao-interna',
+      'hub-comunicacao': 'open-hub-comunicacao',
+      'mensagens-internas': 'open-mensagens-internas',
+      'mensagens-internas-tecnicos': 'open-mensagens-internas-tecnicos',
+      'tecnicos-internos': 'open-tecnicos-internos',
+      'tecnicos-externos': 'open-tecnicos-externos',
+      'alerta-mensagens': 'open-alerta-mensagens',
+      'gestao-financeira': 'open-gestao-financeira',
+      'clientes-financeiro': 'open-clientes-financeiro',
+      'comprovantes-despesas': 'open-comprovantes-despesas'
+    }
+
+    const action = TAB_TO_SIDEBAR_ACTION[tab.type]
+    if (action) setSelectedSidebarButton(action)
+
+    const expand = new Set<string>()
+    const ty = tab.type
+    if (['gestores', 'clientes', 'fornecedores', 'relatorio-servico', 'biblioteca-pecas', 'importacao-pecas', 'solicitacao-servico-tecnico', 'agenda', 'estado-visual-tecnico', 'informacoes-conhecimento-tecnicos', 'desmontados', 'equipamentos', 'pecas-substituicao'].includes(ty)) {
+      expand.add('gestao-tecnica')
+    }
+    if (['cadastro-servicos', 'fechamento-relatorios-servicos', 'biblioteca-relatorios', 'orcamentos-avulso', 'pedido-orcamentos-avulso', 'registro-despesas', 'mapa-visual-separacao-pecas', 'gestao-custos'].includes(ty)) {
+      expand.add('gestao-custos')
+    }
+    if (['familias-grupos', 'familias-grupos-equipamentos', 'manuais-informacoes-tecnicas', 'almoxarifado-armazem'].includes(ty)) {
+      expand.add('gestao-industrial')
+    }
+    if (['clientes-financeiro', 'comprovantes-despesas', 'gestao-financeira'].includes(ty)) {
+      expand.add('gestao-financeira')
+    }
+    if (['pre-checklist', 'checklist', 'checklist-hub', 'gestao-grupos-checklist', 'ordem-preparacao', 'formularios-checklist-tecnicos', 'verificacao-final-entrega'].includes(ty)) {
+      expand.add('checklist-group')
+    }
+    if (['comunicacao-interna', 'hub-comunicacao', 'mensagens-internas', 'mensagens-internas-tecnicos', 'tecnicos-internos', 'tecnicos-externos', 'alerta-mensagens'].includes(ty)) {
+      expand.add('comunicacao-interna')
+    }
+    if (ty === 'translator') expand.add('extra')
+    if (expand.size > 0) {
+      setExpandedGroups(prev => {
+        const n = new Set(prev)
+        expand.forEach(g => n.add(g))
+        return n
+      })
+    }
+  }, [activeTabId, openTabs])
+
   // Componente de botões de navegação (retorno e página inicial)
   // Componente de Logo
   const LogoComponent = ({ size = 'medium' }: { size?: 'small' | 'medium' | 'large' }) => {
@@ -39416,6 +39507,22 @@ A1;Peça exemplo;10'
           })
         })
 
+        const cmpLocale = (a: string, b: string) =>
+          (a || '').localeCompare(b || '', undefined, { sensitivity: 'base', numeric: true })
+        relatoriosPorCliente.sort((x, y) =>
+          cmpLocale(x.cliente.nomeEmpresa || '', y.cliente.nomeEmpresa || '')
+        )
+        relatoriosPorCliente.forEach(row => {
+          row.equipamentos.sort((a, b) => {
+            const sa = `${a.equipamento.modelo || ''} ${a.equipamento.marca || ''} ${a.equipamento.numeroSerie || ''}`.trim()
+            const sb = `${b.equipamento.modelo || ''} ${b.equipamento.marca || ''} ${b.equipamento.numeroSerie || ''}`.trim()
+            return cmpLocale(sa, sb)
+          })
+          row.despesas.sort((a, b) =>
+            cmpLocale(String(a.relatorio.numero ?? ''), String(b.relatorio.numero ?? ''))
+          )
+        })
+
         return (
           <>
           <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
@@ -39843,10 +39950,10 @@ A1;Peça exemplo;10'
                                     </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                                       <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens })} style={{ ...btnBase, backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00' }}>
-                                        👁️ {(safeT as any)?.visualizarDespesasBiblioteca || 'Visualizar'}
+                                        👁️ {(safeT as any)?.visualizarDespesasBiblioteca ?? safeT?.view ?? 'View'}
                                       </button>
                                       <button type="button" onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(0, 150, 255, 0.25)', border: '1px solid rgba(0, 150, 255, 0.6)', color: '#66b3ff' }}>
-                                        ✏️ {(safeT as any)?.editarRelatorioDespesas || 'Editar despesas'}
+                                        ✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}
                                       </button>
                                       <button type="button" onClick={() => imprimirPDFDespesasDaBiblioteca(relatorio, itens)} style={{ ...btnBase, backgroundColor: 'rgba(150, 100, 255, 0.2)', border: '1px solid rgba(150, 100, 255, 0.5)', color: '#c4a7ff' }}>
                                         📄 {(safeT as any)?.gerarPDF || 'PDF'}
@@ -39908,7 +40015,7 @@ A1;Peça exemplo;10'
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
                     <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca(null)} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #666', background: '#333', color: '#fff', cursor: 'pointer' }}>{safeT?.close || 'Fechar'}</button>
                     <button type="button" onClick={() => { imprimirPDFDespesasDaBiblioteca(relV, itensV) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #9966ff', background: 'rgba(150,100,255,0.2)', color: '#c4a7ff', cursor: 'pointer', fontWeight: 600 }}>📄 {(safeT as any)?.gerarPDF || 'PDF'}</button>
-                    <button type="button" onClick={() => { setModalVisualizarDespesasBiblioteca(null); handleEditarDespesasNaBiblioteca(relV.id) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #66b3ff', background: 'rgba(0,150,255,0.25)', color: '#66b3ff', cursor: 'pointer', fontWeight: 600 }}>✏️ {(safeT as any)?.editarRelatorioDespesas || 'Editar'}</button>
+                    <button type="button" onClick={() => { setModalVisualizarDespesasBiblioteca(null); handleEditarDespesasNaBiblioteca(relV.id) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #66b3ff', background: 'rgba(0,150,255,0.25)', color: '#66b3ff', cursor: 'pointer', fontWeight: 600 }}>✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}</button>
                   </div>
                 </div>
               </div>
