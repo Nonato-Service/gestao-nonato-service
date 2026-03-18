@@ -367,6 +367,33 @@ type FechamentoItem = {
   cobrarDiaria?: boolean
 }
 
+/** Item arquivado ao excluir relatório (cópia de segurança por pasta de cliente) */
+type ItemRelatorioExcluidoArquivo =
+  | {
+      archiveId: string
+      excluidoEm: string
+      tipo: 'servico'
+      relatorio: RelatorioServico
+      fechamentoItens?: FechamentoItem[]
+      tinhaFechamentoBiblioteca?: boolean
+    }
+  | {
+      archiveId: string
+      excluidoEm: string
+      tipo: 'nota-equipamento'
+      relatorio: RelatorioEquipamento
+      equipamentoModelo?: string
+      equipamentoSerie?: string
+    }
+
+type PastaRelatoriosExcluidosCliente = {
+  clienteId: string
+  clienteNome: string
+  itens: ItemRelatorioExcluidoArquivo[]
+}
+
+type RelatoriosExcluidosClientesStorage = { pastas: Record<string, PastaRelatoriosExcluidosCliente> }
+
 type PedidoOrcamento = {
   id: string
   numeroRelatorio: string
@@ -699,7 +726,7 @@ type GrupoChecklist = {
   dataCriacao: string
 }
 
-type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-cadastral' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega'
+type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-cadastral' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega'
 
 type Tab = {
   id: string
@@ -1336,6 +1363,7 @@ export default function Dashboard() {
       'cadastro-servicos': 'open-cadastro-servicos',
       'fechamento-relatorios-servicos': 'open-fechamento-relatorios-servicos',
       'biblioteca-relatorios': 'open-biblioteca-relatorios',
+      'relatorios-excluidos-clientes': 'open-relatorios-excluidos-clientes',
       translator: 'open-translator',
       'estado-visual-tecnico': 'open-estado-visual-tecnico',
       'informacoes-conhecimento-tecnicos': 'open-informacoes-conhecimento-tecnicos',
@@ -1370,10 +1398,10 @@ export default function Dashboard() {
 
     const expand = new Set<string>()
     const ty = tab.type
-    if (['gestores', 'clientes', 'fornecedores', 'relatorio-servico', 'biblioteca-pecas', 'importacao-pecas', 'solicitacao-servico-tecnico', 'agenda', 'estado-visual-tecnico', 'informacoes-conhecimento-tecnicos', 'desmontados', 'equipamentos', 'pecas-substituicao'].includes(ty)) {
+    if (['gestores', 'clientes', 'fornecedores', 'relatorio-servico', 'biblioteca-pecas', 'importacao-pecas', 'biblioteca-relatorios', 'relatorios-excluidos-clientes', 'cadastro-servicos', 'solicitacao-servico-tecnico', 'agenda', 'estado-visual-tecnico', 'informacoes-conhecimento-tecnicos', 'desmontados', 'equipamentos', 'pecas-substituicao'].includes(ty)) {
       expand.add('gestao-tecnica')
     }
-    if (['cadastro-servicos', 'fechamento-relatorios-servicos', 'biblioteca-relatorios', 'orcamentos-avulso', 'pedido-orcamentos-avulso', 'registro-despesas', 'mapa-visual-separacao-pecas', 'gestao-custos'].includes(ty)) {
+    if (['fechamento-relatorios-servicos', 'orcamentos-avulso', 'pedido-orcamentos-avulso', 'registro-despesas', 'mapa-visual-separacao-pecas', 'gestao-custos'].includes(ty)) {
       expand.add('gestao-custos')
     }
     if (['familias-grupos', 'familias-grupos-equipamentos', 'manuais-informacoes-tecnicas', 'almoxarifado-armazem'].includes(ty)) {
@@ -2527,6 +2555,7 @@ export default function Dashboard() {
       'informacoes-conhecimento-tecnicos': t?.informacoesConhecimentoTecnicosTitle || 'Informações de Conhecimento dos Técnicos',
       'gestao-custos': t?.gestaoCustosTitle || 'Gestão de Custos',
       'biblioteca-relatorios': t?.bibliotecaRelatoriosTitle || 'Biblioteca de Relatórios Salvos',
+      'relatorios-excluidos-clientes': (t as any)?.relatoriosExcluidosClientesTitle || 'Relatórios Excluídos / Clientes',
       'gestao-financeira': t?.gestaoFinanceiraTitle || 'Gestão Financeira',
       'clientes-financeiro': t?.clientesFinanceiroTitle || 'Clientes / Financeiro',
       'orcamentos-avulso': t?.orcamentosAvulsoTitle || 'Orçamentos Avulso',
@@ -2855,6 +2884,9 @@ export default function Dashboard() {
   const [fechamentosRelatorios, setFechamentosRelatorios] = useState<Record<string, FechamentoItem[]>>({})
   /** IDs de relatórios cujo fechamento de despesas foi guardado na Biblioteca (só aparecem lá até editar de novo) */
   const [fechamentosGuardadosBibliotecaIds, setFechamentosGuardadosBibliotecaIds] = useState<string[]>([])
+  const [relatoriosExcluidosClientes, setRelatoriosExcluidosClientes] = useState<RelatoriosExcluidosClientesStorage>({ pastas: {} })
+  const [pastasExcluidasExpandidas, setPastasExcluidasExpandidas] = useState<Set<string>>(new Set())
+  const [modalNotaExcluida, setModalNotaExcluida] = useState<ItemRelatorioExcluidoArquivo | null>(null)
   const [fechamentoRelatorioSelecionadoId, setFechamentoRelatorioSelecionadoId] = useState<string | null>(null)
   const [fechamentoPdfModelo, setFechamentoPdfModelo] = useState<number>(1) // 1-8 modelos de PDF
   const [modalVisualizarDespesasBiblioteca, setModalVisualizarDespesasBiblioteca] = useState<{ relatorio: RelatorioServico; itens: FechamentoItem[] } | null>(null)
@@ -3925,6 +3957,11 @@ export default function Dashboard() {
         const guardSaved = getData('nonato-fechamentos-guardados-biblioteca')
         setFechamentosGuardadosBibliotecaIds(Array.isArray(guardSaved) ? guardSaved : [])
       }
+
+      const savedRelExcl = getData('nonato-relatorios-excluidos-clientes') as RelatoriosExcluidosClientesStorage | null
+      if (savedRelExcl && savedRelExcl.pastas && typeof savedRelExcl.pastas === 'object') {
+        setRelatoriosExcluidosClientes(savedRelExcl)
+      }
       
       // Carregar contador de relatórios
       const savedContador = getData('nonato-relatorio-contador')
@@ -4254,7 +4291,9 @@ export default function Dashboard() {
           'agenda-default': { translationKey: 'agendaTitle', group: 'gestao-tecnica' },
           'estado-visual-tecnico-default': { translationKey: 'estadoVisualTecnico', group: 'gestao-tecnica' },
           'informacoes-conhecimento-tecnicos-default': { translationKey: 'informacoesConhecimentoTecnicosTitle', group: 'gestao-tecnica' },
-          'cadastro-servicos-default': { translationKey: 'cadastroServicosTitle', group: 'gestao-custos' },
+          'biblioteca-relatorios-default': { translationKey: 'bibliotecaRelatoriosTitle', group: 'gestao-tecnica' },
+          'relatorios-excluidos-clientes-default': { translationKey: 'relatoriosExcluidosClientesTitle', group: 'gestao-tecnica' },
+          'cadastro-servicos-default': { translationKey: 'cadastroServicosTitle', group: 'gestao-tecnica' },
           'fechamento-relatorios-servicos-default': { translationKey: 'fechamentoRelatoriosServicosTitle', group: 'gestao-custos' },
           'orcamentos-avulso-default': { translationKey: 'orcamentosAvulsoTitle', group: 'gestao-custos' },
           'pedido-orcamentos-avulso-default': { translationKey: 'pedidoOrcamentosAvulsoTitle', group: 'gestao-custos' },
@@ -4337,6 +4376,8 @@ export default function Dashboard() {
                                b.id === 'alerta-mensagens-default' ? 'open-alerta-mensagens' :
                                b.id === 'cadastro-nonato-service-default' ? 'open-cadastro-nonato-service' :
                                b.id === 'ficha-cadastral-default' ? 'open-ficha-cadastral' :
+                               b.id === 'biblioteca-relatorios-default' ? 'open-biblioteca-relatorios' :
+                               b.id === 'relatorios-excluidos-clientes-default' ? 'open-relatorios-excluidos-clientes' :
                                b.id === 'administrador-default' ? 'open-administrador' : ''),
             translationKey: defaults.translationKey, // SEMPRE definir translationKey
             group: (typeof b.group === 'string' && b.group.trim() !== '') ? b.group : (defaults.group !== undefined ? defaults.group : 'outros'), // Preservar grupo definido pelo usuário
@@ -4419,16 +4460,19 @@ export default function Dashboard() {
         return b
       })
 
-      // Biblioteca de Relatórios: fica em Gestão de custos (com Fechamento); antes estava em Gestão técnica
+      // Biblioteca de Relatórios e Cadastro de Serviços: ficam dentro de Gestão Técnica
       buttons = buttons.map((b: SidebarButton) => {
-        if (b.id === 'biblioteca-relatorios-default' && b.group !== 'gestao-custos') {
+        if (b.id === 'biblioteca-relatorios-default' && b.group !== 'gestao-tecnica') {
           buttonsMigrated = true
-          return {
-            ...b,
-            group: 'gestao-custos',
-            translationKey: 'bibliotecaRelatoriosTitle',
-            action: 'open-biblioteca-relatorios'
-          }
+          return { ...b, group: 'gestao-tecnica', translationKey: 'bibliotecaRelatoriosTitle', action: 'open-biblioteca-relatorios' }
+        }
+        if (b.id === 'cadastro-servicos-default' && b.group !== 'gestao-tecnica') {
+          buttonsMigrated = true
+          return { ...b, group: 'gestao-tecnica', translationKey: 'cadastroServicosTitle', action: 'open-cadastro-servicos' }
+        }
+        if (b.id === 'relatorios-excluidos-clientes-default' && b.group !== 'gestao-tecnica') {
+          buttonsMigrated = true
+          return { ...b, group: 'gestao-tecnica', translationKey: 'relatoriosExcluidosClientesTitle', action: 'open-relatorios-excluidos-clientes' }
         }
         return b
       })
@@ -4460,6 +4504,7 @@ export default function Dashboard() {
       const hasAlmoxarifadoArmazem = buttons.some((b: SidebarButton) => b.id === 'almoxarifado-armazem-default')
       const hasDesmontados = buttons.some((b: SidebarButton) => b.id === 'desmontados-default')
       const hasBibliotecaRelatorios = buttons.some((b: SidebarButton) => b.id === 'biblioteca-relatorios-default')
+      const hasRelatoriosExcluidosClientes = buttons.some((b: SidebarButton) => b.id === 'relatorios-excluidos-clientes-default')
       const hasGestaoFinanceira = buttons.some((b: SidebarButton) => b.id === 'gestao-financeira-default')
       const hasClientesFinanceiro = buttons.some((b: SidebarButton) => b.id === 'clientes-financeiro-default')
       
@@ -4814,9 +4859,20 @@ export default function Dashboard() {
           action: 'open-biblioteca-relatorios',
           order: buttons.length,
           translationKey: 'bibliotecaRelatoriosTitle',
-          group: 'gestao-custos'
+          group: 'gestao-tecnica'
         }
         buttons.push(bibliotecaRelatoriosButton)
+      }
+
+      if (!hasRelatoriosExcluidosClientes) {
+        buttons.push({
+          id: 'relatorios-excluidos-clientes-default',
+          name: 'RELATÓRIOS EXCLUÍDOS / CLIENTES',
+          action: 'open-relatorios-excluidos-clientes',
+          order: buttons.length,
+          translationKey: 'relatoriosExcluidosClientesTitle',
+          group: 'gestao-tecnica'
+        })
       }
 
       if (!hasBibliotecaPecas) {
@@ -4886,7 +4942,7 @@ export default function Dashboard() {
           action: 'open-cadastro-servicos',
           order: buttons.length,
           translationKey: 'cadastroServicosTitle',
-          group: 'gestao-custos'
+          group: 'gestao-tecnica'
         }
         buttons.push(cadastroServicosButton)
       }
@@ -5070,7 +5126,7 @@ export default function Dashboard() {
         }
       }
 
-      // GARANTIR que cadastro-servicos-default sempre existe e está no grupo correto (gestao-custos)
+      // GARANTIR que cadastro-servicos-default sempre existe e está no grupo correto (gestao-tecnica)
       const cadastroServicosIndex = buttons.findIndex(b => b.id === 'cadastro-servicos-default')
       if (cadastroServicosIndex === -1) {
         // Se não existe, adicionar
@@ -5080,7 +5136,7 @@ export default function Dashboard() {
           action: 'open-cadastro-servicos',
           order: buttons.length,
           translationKey: 'cadastroServicosTitle',
-          group: 'gestao-custos',
+          group: 'gestao-tecnica',
           customName: false
         }
         buttons.push(cadastroServicosButton)
@@ -5306,7 +5362,7 @@ export default function Dashboard() {
         })
       }
       
-      // GARANTIR que cadastro-servicos-default sempre existe e está no grupo correto (gestao-custos)
+      // GARANTIR que cadastro-servicos-default sempre existe e está no grupo correto (gestao-tecnica)
       const hasCadastroServicosAfter = filteredButtons.some((b: SidebarButton) => b.id === 'cadastro-servicos-default')
       if (!hasCadastroServicosAfter) {
         filteredButtons.push({
@@ -5315,7 +5371,7 @@ export default function Dashboard() {
           action: 'open-cadastro-servicos',
           order: filteredButtons.length,
           translationKey: 'cadastroServicosTitle',
-          group: 'gestao-custos',
+          group: 'gestao-tecnica',
           customName: false
         })
       } else {
@@ -5484,7 +5540,7 @@ export default function Dashboard() {
           action: 'open-cadastro-servicos',
           order: 11,
           translationKey: 'cadastroServicosTitle',
-          group: 'gestao-custos'
+          group: 'gestao-tecnica'
         },
         {
           id: 'fechamento-relatorios-servicos-default',
@@ -8935,6 +8991,30 @@ export default function Dashboard() {
       if (cliente) {
         const equipamento = cliente.equipamentos[selectedEquipamentoForRelatorio.index]
         if (equipamento && equipamento.relatorios) {
+          const relRemovido = equipamento.relatorios.find(r => r.id === relatorioId)
+          if (relRemovido) {
+            const nomePasta = (cliente.nomeEmpresa || 'Cliente').trim() || 'Cliente'
+            const chavePasta = cliente.id
+            const itemArq: ItemRelatorioExcluidoArquivo = {
+              archiveId: `arch-nota-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+              excluidoEm: new Date().toISOString(),
+              tipo: 'nota-equipamento',
+              relatorio: JSON.parse(JSON.stringify(relRemovido)) as RelatorioEquipamento,
+              equipamentoModelo: `${equipamento.modelo || ''} ${equipamento.marca || ''}`.trim(),
+              equipamentoSerie: equipamento.numeroSerie
+            }
+            setRelatoriosExcluidosClientes(prev => {
+              const pastas = { ...prev.pastas }
+              const existente = pastas[chavePasta]
+              const pasta: PastaRelatoriosExcluidosCliente = existente
+                ? { ...existente, itens: [...existente.itens, itemArq] }
+                : { clienteId: chavePasta, clienteNome: nomePasta, itens: [itemArq] }
+              pastas[chavePasta] = pasta
+              const next = { pastas }
+              saveData('nonato-relatorios-excluidos-clientes', next)
+              return next
+            })
+          }
           const updatedRelatorios = equipamento.relatorios.filter(r => r.id !== relatorioId)
           const updatedEquipamento = { ...equipamento, relatorios: updatedRelatorios }
           const updatedEquipamentos = [...cliente.equipamentos]
@@ -13081,11 +13161,37 @@ export default function Dashboard() {
 
   const handleDeleteRelatorioServico = (relatorioId: string) => {
     if (window.confirm(t.confirmDeleteRelatorioServico || 'Tem certeza que deseja excluir este relatório de serviço?')) {
+      const relatorio = relatoriosServico.find(r => r.id === relatorioId)
+      if (relatorio) {
+        const c = clientes.find(cl => cl.id === relatorio.clienteId)
+        const nomePasta = (c?.nomeEmpresa || relatorio.cliente || 'Cliente').trim() || 'Cliente'
+        const chavePasta = relatorio.clienteId || `sem-id-${nomePasta.replace(/\s+/g, '-').slice(0, 40)}`
+        const fechItens = fechamentosRelatorios[relatorioId]
+        const tinhaBib = fechamentosGuardadosBibliotecaIds.includes(relatorioId)
+        const itemArq: ItemRelatorioExcluidoArquivo = {
+          archiveId: `arch-srv-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+          excluidoEm: new Date().toISOString(),
+          tipo: 'servico',
+          relatorio: JSON.parse(JSON.stringify(relatorio)) as RelatorioServico,
+          fechamentoItens: fechItens && fechItens.length > 0 ? JSON.parse(JSON.stringify(fechItens)) : undefined,
+          tinhaFechamentoBiblioteca: tinhaBib
+        }
+        setRelatoriosExcluidosClientes(prev => {
+          const pastas = { ...prev.pastas }
+          const existente = pastas[chavePasta]
+          const pasta: PastaRelatoriosExcluidosCliente = existente
+            ? { ...existente, itens: [...existente.itens, itemArq] }
+            : { clienteId: chavePasta, clienteNome: nomePasta, itens: [itemArq] }
+          pastas[chavePasta] = pasta
+          const next = { pastas }
+          saveData('nonato-relatorios-excluidos-clientes', next)
+          return next
+        })
+      }
       const updatedRelatorios = relatoriosServico.filter(r => r.id !== relatorioId)
       setRelatoriosServico(updatedRelatorios)
       saveData('nonato-relatorios-servico', updatedRelatorios)
       // Remover também dos relatórios do cliente e o fechamento de despesas associado
-      const relatorio = relatoriosServico.find(r => r.id === relatorioId)
       if (relatorio?.clienteId) {
         const updatedClientes = clientes.map(c => {
           if (c.id !== relatorio.clienteId || !c.relatorios) return c
@@ -14255,7 +14361,8 @@ export default function Dashboard() {
     'open-gestao-grupos-checklist': 'extras',
     'open-formularios-checklist-tecnicos': 'extras',
     'open-verificacao-final-entrega': 'extras',
-    'open-clientes-financeiro': 'extras'
+    'open-clientes-financeiro': 'extras',
+    'open-relatorios-excluidos-clientes': 'clientes'
   }
 
   const canAccessAction = useCallback((action: string): boolean => {
@@ -14565,6 +14672,8 @@ export default function Dashboard() {
       window.open('/api/pdf/manual-gestor', '_blank', 'noopener,noreferrer')
     } else if (action === 'open-biblioteca-relatorios') {
       openTab('biblioteca-relatorios', getTabTitle('biblioteca-relatorios'))
+    } else if (action === 'open-relatorios-excluidos-clientes') {
+      openTab('relatorios-excluidos-clientes', getTabTitle('relatorios-excluidos-clientes'))
     }
     if (isCompactLayout) {
       const keepDrawerOpen = new Set([
@@ -38527,7 +38636,6 @@ A1;Peça exemplo;10'
                       </div>
                     );
                     })()}
-                    )}
                   </div>
                 )}
               </div>
@@ -39947,6 +40055,8 @@ A1;Peça exemplo;10'
                                           type="button"
                                           onClick={() => handleDeleteRelatorioServico(relatorio.id)}
                                           style={{ 
+                                            flex: 1,
+                                            minWidth: '60px',
                                             padding: '6px 10px', 
                                             fontSize: '10px', 
                                             backgroundColor: 'rgba(255, 68, 68, 0.2)', 
@@ -39955,9 +40065,9 @@ A1;Peça exemplo;10'
                                             borderRadius: '4px',
                                             cursor: 'pointer'
                                           }}
-                                          title={safeT?.delete || 'Excluir'}
+                                          title={(safeT as any)?.confirmDeleteRelatorioServico || (safeT?.delete || 'Excluir')}
                                         >
-                                          🗑️
+                                          🗑️ {safeT?.delete || 'Excluir'}
                                         </button>
                                       </div>
                                     </div>
@@ -40077,6 +40187,173 @@ A1;Peça exemplo;10'
           </>
         )
 
+      case 'relatorios-excluidos-clientes': {
+        const pastasLista = Object.entries(relatoriosExcluidosClientes.pastas).sort((a, b) =>
+          (a[1].clienteNome || '').localeCompare(b[1].clienteNome || '', undefined, { sensitivity: 'base', numeric: true }))
+        const totalItens = pastasLista.reduce((s, [, p]) => s + p.itens.length, 0)
+        const tx = safeT as Record<string, string>
+        const titulo = tx.relatoriosExcluidosClientesTitle || 'RELATÓRIOS EXCLUÍDOS / CLIENTES'
+        const subtitulo = tx.relatoriosExcluidosClientesDesc || 'Cópia de segurança: cada exclusão fica guardada numa pasta com o nome do cliente.'
+        const exclEm = tx.excluidoEmLabel || 'Excluído em'
+        const tipoServ = tx.relatorioServico || 'Relatório de serviço'
+        const tipoNota = tx.notaEquipamentoExcluida || 'Nota do equipamento'
+        const confDel = tx.confirmEliminarDefinitivoCopia || 'Remover definitivamente esta cópia de segurança? Não poderá recuperar depois.'
+        return (
+          <>
+            <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto' }}>
+              <div style={{
+                marginBottom: '28px',
+                padding: '24px',
+                background: 'linear-gradient(135deg, rgba(255, 100, 100, 0.08) 0%, rgba(0, 0, 0, 0.85) 100%)',
+                borderRadius: '16px',
+                border: '2px solid rgba(255, 100, 100, 0.35)'
+              }}>
+                <h1 style={{ margin: 0, fontSize: '26px', color: '#ff8888', fontWeight: 800 }}>{titulo}</h1>
+                <p style={{ margin: '10px 0 0', color: '#aaa', fontSize: '14px', maxWidth: '720px' }}>{subtitulo}</p>
+                <p style={{ margin: '12px 0 0', color: '#888', fontSize: '13px' }}>
+                  {totalItens} {(tx.itensGuardados || 'item(ns) guardado(s)')} · {pastasLista.length} {(tx.pastasClientes || 'pasta(s) / cliente(s)')}
+                </p>
+              </div>
+              {pastasLista.length === 0 ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#888', background: '#1a1a1a', borderRadius: '12px', border: '1px dashed #444' }}>
+                  {tx.nenhumRelatorioExcluido || 'Nenhum relatório excluído guardado ainda. Ao eliminar um relatório de serviço ou uma nota no equipamento, uma cópia aparece aqui.'}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {pastasLista.map(([pastaKey, pasta]) => (
+                    <div key={pastaKey} style={{
+                      background: '#1c1c1c',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(0, 255, 0, 0.2)',
+                      overflow: 'hidden'
+                    }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPastasExcluidasExpandidas(prev => {
+                            const n = new Set(prev)
+                            if (n.has(pastaKey)) n.delete(pastaKey)
+                            else n.add(pastaKey)
+                            return n
+                          })
+                        }}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '16px 18px',
+                          background: 'rgba(0, 255, 0, 0.06)',
+                          border: 'none',
+                          color: '#00ff00',
+                          fontSize: '16px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <span>📁 {pasta.clienteNome}</span>
+                        <span style={{ fontSize: '13px', opacity: 0.85 }}>{pasta.itens.length} · {pastasExcluidasExpandidas.has(pastaKey) ? '▼' : '▶'}</span>
+                      </button>
+                      {pastasExcluidasExpandidas.has(pastaKey) && (
+                        <div style={{ padding: '12px 14px 18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                          {[...pasta.itens].sort((a, b) => new Date(b.excluidoEm).getTime() - new Date(a.excluidoEm).getTime()).map((item) => (
+                            <div
+                              key={item.archiveId}
+                              style={{
+                                padding: '14px',
+                                background: '#141414',
+                                borderRadius: '8px',
+                                border: '1px solid rgba(255, 255, 255, 0.08)'
+                              }}
+                            >
+                              <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px' }}>
+                                {exclEm}: {new Date(item.excluidoEm).toLocaleString()}
+                              </div>
+                              {item.tipo === 'servico' ? (
+                                <>
+                                  <div style={{ color: '#66b3ff', fontWeight: 700, marginBottom: '4px' }}>{tipoServ} · {item.relatorio.numero}</div>
+                                  <div style={{ fontSize: '13px', color: '#ccc' }}>{item.relatorio.cliente} · {item.relatorio.maquinaModelo} · {item.relatorio.data}</div>
+                                  {item.fechamentoItens && item.fechamentoItens.length > 0 && (
+                                    <div style={{ fontSize: '11px', color: '#ffaa00', marginTop: '6px' }}>
+                                      {(tx.fechamentoCopiado || 'Fechamento de despesas')} ({item.fechamentoItens.length} {(tx.itensCountLabel || 'itens')})
+                                      {item.tinhaFechamentoBiblioteca ? ` · ${tx.estavaNaBiblioteca || 'estava na biblioteca'}` : ''}
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  <div style={{ color: '#c4a7ff', fontWeight: 700, marginBottom: '4px' }}>{tipoNota}</div>
+                                  <div style={{ fontSize: '13px', color: '#ccc' }}>{item.relatorio.titulo}</div>
+                                  {(item.equipamentoModelo || item.equipamentoSerie) && (
+                                    <div style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>🔧 {item.equipamentoModelo} {item.equipamentoSerie ? `· ${item.equipamentoSerie}` : ''}</div>
+                                  )}
+                                </>
+                              )}
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
+                                {item.tipo === 'servico' ? (
+                                  <button
+                                    type="button"
+                                    className="btn-primary"
+                                    onClick={() => setViewingRelatorioServico(item.relatorio)}
+                                    style={{ padding: '8px 14px', fontSize: '12px', background: 'rgba(0,255,0,0.15)', border: '1px solid rgba(0,255,0,0.5)', color: '#fff' }}
+                                  >
+                                    👁️ {safeT?.view || 'Ver'}
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="btn-primary"
+                                    onClick={() => setModalNotaExcluida(item)}
+                                    style={{ padding: '8px 14px', fontSize: '12px', background: 'rgba(150,100,255,0.2)', border: '1px solid rgba(150,100,255,0.5)', color: '#fff' }}
+                                  >
+                                    👁️ {safeT?.view || 'Ver'}
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (!window.confirm(confDel)) return
+                                    setRelatoriosExcluidosClientes(prev => {
+                                      const pastas = { ...prev.pastas }
+                                      const p = pastas[pastaKey]
+                                      if (!p) return prev
+                                      const itens = p.itens.filter(i => i.archiveId !== item.archiveId)
+                                      if (itens.length === 0) delete pastas[pastaKey]
+                                      else pastas[pastaKey] = { ...p, itens }
+                                      const next = { pastas }
+                                      saveData('nonato-relatorios-excluidos-clientes', next)
+                                      return next
+                                    })
+                                  }}
+                                  style={{ padding: '8px 14px', fontSize: '12px', background: 'rgba(255,68,68,0.15)', border: '1px solid rgba(255,68,68,0.5)', color: '#ff8888', cursor: 'pointer', borderRadius: '6px' }}
+                                >
+                                  🗑️ {tx.eliminarDefinitivoArquivo || 'Eliminar desta cópia'}
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {modalNotaExcluida && modalNotaExcluida.tipo === 'nota-equipamento' && (
+              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 99998, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }} onClick={() => setModalNotaExcluida(null)}>
+                <div style={{ background: '#1a1a1a', borderRadius: '14px', border: '2px solid #9966ff', maxWidth: '640px', width: '100%', maxHeight: '85vh', overflow: 'auto', padding: '22px' }} onClick={e => e.stopPropagation()}>
+                  <h3 style={{ color: '#c4a7ff', margin: '0 0 8px' }}>{modalNotaExcluida.relatorio.titulo}</h3>
+                  <p style={{ color: '#888', fontSize: '12px', margin: '0 0 12px' }}>{modalNotaExcluida.relatorio.dataGeracao}</p>
+                  <pre style={{ whiteSpace: 'pre-wrap', color: '#ddd', fontSize: '14px', margin: 0, fontFamily: 'inherit' }}>{modalNotaExcluida.relatorio.conteudo}</pre>
+                  <button type="button" className="btn-primary" onClick={() => setModalNotaExcluida(null)} style={{ marginTop: '18px', width: '100%' }}>{safeT?.close || 'Fechar'}</button>
+                </div>
+              </div>
+            )}
+          </>
+        )
+      }
+
       default:
         return (
           <div style={{ padding: '20px' }}>
@@ -40134,9 +40411,9 @@ A1;Peça exemplo;10'
       // Se não tem grupo definido, usa a lógica antiga para compatibilidade
       if (group === 'gestao-tecnica') {
         return ['gestores-default', 'clientes-default', 'fornecedores-default', 
-                'relatorio-servico-default', 'biblioteca-pecas-default', 'agenda-default'].includes(btn.id)
+                'relatorio-servico-default', 'biblioteca-pecas-default', 'biblioteca-relatorios-default', 'relatorios-excluidos-clientes-default', 'cadastro-servicos-default', 'agenda-default'].includes(btn.id)
       } else if (group === 'gestao-custos') {
-        return ['cadastro-servicos-default', 'fechamento-relatorios-servicos-default', 'biblioteca-relatorios-default', 'orcamentos-avulso-default', 'pedido-orcamentos-avulso-default', 'registro-despesas-default', 'mapa-visual-separacao-pecas-default'].includes(btn.id)
+        return ['fechamento-relatorios-servicos-default', 'orcamentos-avulso-default', 'pedido-orcamentos-avulso-default', 'registro-despesas-default', 'mapa-visual-separacao-pecas-default'].includes(btn.id)
       } else if (group === 'gestao-industrial') {
         // Incluir equipamentos-default e desmontados-default no grupo gestao-industrial
         // Excluir pre-checklist-default e checklist-default que agora estão no grupo checklist-group
@@ -40159,7 +40436,7 @@ A1;Peça exemplo;10'
         return ['almoxarifado-armazem-default'].includes(btn.id)
       } else {
         return !['gestores-default', 'equipamentos-default', 'clientes-default', 'fornecedores-default', 
-                 'relatorio-servico-default', 'biblioteca-pecas-default', 'agenda-default', 
+                 'relatorio-servico-default', 'biblioteca-pecas-default', 'biblioteca-relatorios-default', 'relatorios-excluidos-clientes-default', 'agenda-default', 
                  'desmontados-default', 'cadastro-servicos-default', 'fechamento-relatorios-servicos-default', 'gestao-tecnica-default', 
                  'gestao-custos-default', 'gestao-industrial-default', 'gestao-financeira-default',
                  'clientes-financeiro-default', 'comprovantes-despesas-default', 'pre-checklist-default', 'checklist-default', 'gestao-grupos-checklist-default', 'ordem-preparacao-default', 'formularios-checklist-tecnicos-default', 'verificacao-final-entrega-default',
@@ -43965,7 +44242,7 @@ A1;Peça exemplo;10'
         {getButtonsByGroup('gestao-tecnica').some((b) => canAccessAction(b.action)) && (
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
           <button
-            className="btn-primary"
+            className={`btn-primary${selectedSidebarButton === 'open-gestao-tecnica' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-tecnica')}
             style={{ 
               width: '100%', 
@@ -43973,7 +44250,7 @@ A1;Peça exemplo;10'
               padding: '12px', 
               marginBottom: '5px',
               backgroundColor: selectedSidebarButton === 'open-gestao-tecnica' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
-              border: selectedSidebarButton === 'open-gestao-tecnica' ? '1px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.35)',
+              border: selectedSidebarButton === 'open-gestao-tecnica' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
               boxShadow: selectedSidebarButton === 'open-gestao-tecnica' ? '0 0 12px rgba(0, 255, 0, 0.25)' : undefined,
               color: selectedSidebarButton === 'open-gestao-tecnica' ? '#00ff00' : '#ccc',
@@ -44007,7 +44284,7 @@ A1;Peça exemplo;10'
                 top: '8px',
                 right: '30px',
                 fontSize: '16px',
-                color: '#00ff00',
+                color: '#ffffff',
                 fontWeight: 'bold'
               }}>✓</span>
             )}
@@ -44109,7 +44386,7 @@ A1;Peça exemplo;10'
                           top: '5px',
                           right: '8px',
                           fontSize: '14px',
-                          color: '#00ff00',
+                          color: '#ffffff',
                           fontWeight: 'bold'
                         }}>✓</span>
                       )}
@@ -44125,7 +44402,7 @@ A1;Peça exemplo;10'
         {/* Grupo: GESTÃO DE CUSTOS — mesmo padrão de cores e contorno do botão GESTÃO TÉCNICA */}
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
           <button
-            className="btn-primary"
+            className={`btn-primary${selectedSidebarButton === 'open-gestao-custos' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-custos')}
             style={{ 
               width: '100%', 
@@ -44133,7 +44410,7 @@ A1;Peça exemplo;10'
               padding: '12px', 
               marginBottom: '5px',
               backgroundColor: selectedSidebarButton === 'open-gestao-custos' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
-              border: selectedSidebarButton === 'open-gestao-custos' ? '1px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.35)',
+              border: selectedSidebarButton === 'open-gestao-custos' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
               boxShadow: selectedSidebarButton === 'open-gestao-custos' ? '0 0 12px rgba(0, 255, 0, 0.25)' : undefined,
               color: selectedSidebarButton === 'open-gestao-custos' ? '#00ff00' : '#ccc',
@@ -44167,7 +44444,7 @@ A1;Peça exemplo;10'
                 top: '8px',
                 right: '30px',
                 fontSize: '16px',
-                color: '#00ff00',
+                color: '#ffffff',
                 fontWeight: 'bold'
               }}>✓</span>
             )}
@@ -44230,7 +44507,7 @@ A1;Peça exemplo;10'
                           top: '5px',
                           right: '8px',
                           fontSize: '14px',
-                          color: '#00ff00',
+                          color: '#ffffff',
                           fontWeight: 'bold'
                         }}>✓</span>
                       )}
@@ -44250,7 +44527,7 @@ A1;Peça exemplo;10'
         {/* Botão: COMUNICAÇÃO INTERNA C/ GESTORES E TECNICOS */}
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
           <button
-            className="btn-primary"
+            className={`btn-primary${selectedSidebarButton === 'open-comunicacao-interna' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-comunicacao-interna')}
             style={{ 
               width: '100%', 
@@ -44258,7 +44535,7 @@ A1;Peça exemplo;10'
               padding: '12px', 
               marginBottom: '5px',
               backgroundColor: selectedSidebarButton === 'open-comunicacao-interna' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
-              border: selectedSidebarButton === 'open-comunicacao-interna' ? '1px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.35)',
+              border: selectedSidebarButton === 'open-comunicacao-interna' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
               boxShadow: selectedSidebarButton === 'open-comunicacao-interna' ? '0 0 12px rgba(0, 255, 0, 0.25)' : undefined,
               color: selectedSidebarButton === 'open-comunicacao-interna' ? '#00ff00' : '#ccc',
@@ -44292,7 +44569,7 @@ A1;Peça exemplo;10'
                 top: '8px',
                 right: '30px',
                 fontSize: '16px',
-                color: '#00ff00',
+                color: '#ffffff',
                 fontWeight: 'bold'
               }}>✓</span>
             )}
@@ -44361,7 +44638,7 @@ A1;Peça exemplo;10'
                           top: '5px',
                           right: '8px',
                           fontSize: '14px',
-                          color: '#00ff00',
+                          color: '#ffffff',
                           fontWeight: 'bold'
                         }}>✓</span>
                       )}
@@ -44410,7 +44687,7 @@ A1;Peça exemplo;10'
                       top: '5px',
                       right: '8px',
                       fontSize: '14px',
-                      color: '#00ff00',
+                      color: '#ffffff',
                       fontWeight: 'bold'
                     }}>✓</span>
                   )}
@@ -44534,7 +44811,7 @@ A1;Peça exemplo;10'
                                   top: '5px',
                                   right: '8px',
                                   fontSize: '14px',
-                                  color: '#00ff00',
+                                  color: '#ffffff',
                                   fontWeight: 'bold'
                                 }}>✓</span>
                               )}
@@ -44555,7 +44832,7 @@ A1;Peça exemplo;10'
             const gestaoIndustrialActive = selectedSidebarButton === 'open-gestao-industrial' || getButtonsByGroup('gestao-industrial').some((b: SidebarButton) => b.id === selectedSidebarButton)
             return (
           <button
-            className="btn-primary"
+            className={`btn-primary${gestaoIndustrialActive ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-industrial')}
             style={{ 
               width: '100%', 
@@ -44563,7 +44840,7 @@ A1;Peça exemplo;10'
               padding: '12px', 
               marginBottom: '5px',
               backgroundColor: gestaoIndustrialActive ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
-              border: gestaoIndustrialActive ? '1px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.35)',
+              border: gestaoIndustrialActive ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
               boxShadow: gestaoIndustrialActive ? '0 0 12px rgba(0, 255, 0, 0.25)' : undefined,
               color: gestaoIndustrialActive ? '#00ff00' : '#ccc',
@@ -44777,7 +45054,7 @@ A1;Peça exemplo;10'
                           top: '5px',
                           right: '8px',
                           fontSize: '14px',
-                          color: '#00ff00',
+                          color: '#ffffff',
                           fontWeight: 'bold'
                         }}>✓</span>
                       )}
@@ -45031,7 +45308,7 @@ A1;Peça exemplo;10'
                           top: '5px',
                           right: '8px',
                           fontSize: '14px',
-                          color: '#00ff00',
+                          color: '#ffffff',
                           fontWeight: 'bold'
                         }}>✓</span>
                       )}
@@ -45222,7 +45499,7 @@ A1;Peça exemplo;10'
                     top: '5px',
                     right: '8px',
                     fontSize: '14px',
-                    color: '#00ff00',
+                    color: '#ffffff',
                     fontWeight: 'bold'
                   }}>✓</span>
                 )}
@@ -49921,7 +50198,7 @@ A1;Peça exemplo;10'
                     <p style={{ fontSize: '14px', opacity: 0.8, whiteSpace: 'pre-wrap' }}>{relatorio.conteudo}</p>
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
                       <button className="btn-primary" onClick={() => handleEditRelatorio(relatorio)} style={{ flex: 1, padding: '5px', fontSize: '12px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.6)', color: '#fff' }}>{safeT?.edit || 'Editar'}</button>
-                      <button className="btn-danger" onClick={() => handleDeleteRelatorio(relatorio.id)} style={{ flex: 1, padding: '5px', fontSize: '12px', backgroundColor: 'rgba(255, 68, 68, 0.2)', border: '1px solid rgba(255, 68, 68, 0.7)', color: '#fff' }}>{safeT?.delete || 'Excluir'}</button>
+                      <button className="btn-danger" onClick={() => handleDeleteRelatorio(relatorio.id)} style={{ flex: 1, padding: '5px', fontSize: '12px', backgroundColor: 'rgba(255, 68, 68, 0.2)', border: '1px solid rgba(255, 68, 68, 0.7)', color: '#fff' }} title={(safeT as any)?.confirmDeleteRelatorio}>{(safeT as any)?.deleteRelatorio || safeT?.delete || 'Excluir'}</button>
                     </div>
                   </div>
                 ))}
