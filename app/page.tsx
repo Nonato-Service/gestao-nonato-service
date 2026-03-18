@@ -2925,6 +2925,10 @@ export default function Dashboard() {
     assinaturaCliente: undefined,
     dataAssinaturaCliente: undefined
   })
+  /** Tradução IA (DeepSeek) no Relatório de Serviço: texto em PT/outro → idioma alvo */
+  const [relatorioDeepseekBusy, setRelatorioDeepseekBusy] = useState(false)
+  const [relatorioDeepseekSourceLang, setRelatorioDeepseekSourceLang] = useState<string>('pt-BR')
+  const [relatorioDeepseekTargetLang, setRelatorioDeepseekTargetLang] = useState<string>('en')
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false)
   /** Largura ≤1024px: menu em gaveta, conteúdo a largura total (tablet/telemóvel) */
   const [isCompactLayout, setIsCompactLayout] = useState(false)
@@ -3331,6 +3335,69 @@ export default function Dashboard() {
     }
 
     setQuickTranslating(false)
+  }
+
+  useEffect(() => {
+    if (showRelatorioServicoForm) {
+      setRelatorioDeepseekTargetLang(selectedLanguage)
+    }
+  }, [showRelatorioServicoForm, selectedLanguage])
+
+  const handleTraduzirRelatorioComDeepseek = async () => {
+    const src = relatorioDeepseekSourceLang
+    const tgt = relatorioDeepseekTargetLang
+    if (src === tgt) {
+      alert(safeT?.deepseekSameLang || 'Escolha idiomas diferentes (origem e destino).')
+      return
+    }
+    const fields: Record<string, string> = {}
+    if (relatorioServicoForm.observacoes.trim()) fields.observacoes = relatorioServicoForm.observacoes
+    if (relatorioServicoForm.pontosAberto.trim()) fields.pontosAberto = relatorioServicoForm.pontosAberto
+    if (relatorioServicoForm.tipoServico.trim()) fields.tipoServico = relatorioServicoForm.tipoServico
+    relatorioServicoForm.diasTrabalho.forEach((d, i) => {
+      if (d.descricaoTrabalho.trim()) fields[`dia_${i}`] = d.descricaoTrabalho
+    })
+    relatorioServicoForm.pecasSubstituicao.forEach((p, i) => {
+      if (p.descricao.trim()) fields[`peca_${i}`] = p.descricao
+    })
+    if (Object.keys(fields).length === 0) {
+      alert(safeT?.deepseekNoText || 'Preencha pelo menos um campo de texto (observações, pontos em aberto, tipo de serviço, descrição de dia ou de peça).')
+      return
+    }
+    setRelatorioDeepseekBusy(true)
+    try {
+      const res = await fetch('/api/translate-deepseek', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourceLang: src, targetLang: tgt, fields }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error((data as { error?: string }).error || `Erro ${res.status}`)
+      }
+      const out = (data as { translated?: Record<string, string> }).translated || {}
+      const newDias = relatorioServicoForm.diasTrabalho.map((d, i) => {
+        const k = `dia_${i}`
+        return out[k] !== undefined ? { ...d, descricaoTrabalho: out[k] } : d
+      })
+      const newPecas = relatorioServicoForm.pecasSubstituicao.map((p, i) => {
+        const k = `peca_${i}`
+        return out[k] !== undefined ? { ...p, descricao: out[k] } : p
+      })
+      setRelatorioServicoForm({
+        ...relatorioServicoForm,
+        observacoes: out.observacoes !== undefined ? out.observacoes : relatorioServicoForm.observacoes,
+        pontosAberto: out.pontosAberto !== undefined ? out.pontosAberto : relatorioServicoForm.pontosAberto,
+        tipoServico: out.tipoServico !== undefined ? out.tipoServico : relatorioServicoForm.tipoServico,
+        diasTrabalho: newDias,
+        pecasSubstituicao: newPecas,
+      })
+      alert(safeT?.deepseekDone || 'Tradução concluída. Reveja o texto antes de guardar.')
+    } catch (e) {
+      alert((e as Error).message || String(e))
+    } finally {
+      setRelatorioDeepseekBusy(false)
+    }
   }
 
   // Atualizar texto traduzido quando o resultado da tradução mudar
@@ -21069,6 +21136,51 @@ onKeyPress={(e) => {
             {showRelatorioServicoForm && (
               <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414', maxHeight: '90vh', overflowY: 'auto' }}>
                 <h3 style={{ marginBottom: '15px' }}>{editingRelatorioServico ? (safeT?.editRelatorioServico || 'Editar Relatório de Serviço') : (safeT?.addRelatorioServico || 'Adicionar Relatório de Serviço')}</h3>
+
+                <div style={{ marginBottom: '18px', padding: '14px', backgroundColor: '#1a1f1a', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.15)' }}>
+                  <div style={{ fontWeight: 'bold', color: '#fff', marginBottom: '6px' }}>{safeT?.deepseekPanelTitle || 'Tradução IA (DeepSeek)'}</div>
+                  <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.75)', marginBottom: '12px', lineHeight: 1.45 }}>
+                    {safeT?.deepseekPanelDesc || 'Preencha em português (ou noutro idioma) e traduza os textos descritivos do relatório para o idioma do cliente. O idioma «Traduzir para» sugere-se conforme o idioma da interface.'}
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#ccc' }}>
+                      <span>{safeT?.deepseekWrittenIn || 'Texto escrito em'}</span>
+                      <select
+                        value={relatorioDeepseekSourceLang}
+                        onChange={(e) => setRelatorioDeepseekSourceLang(e.target.value)}
+                        style={{ padding: '8px 10px', minWidth: '160px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '6px' }}
+                      >
+                        {getLanguages(safeT).map((lang) => (
+                          <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#ccc' }}>
+                      <span>{safeT?.deepseekTranslateTo || 'Traduzir para'}</span>
+                      <select
+                        value={relatorioDeepseekTargetLang}
+                        onChange={(e) => setRelatorioDeepseekTargetLang(e.target.value)}
+                        style={{ padding: '8px 10px', minWidth: '160px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '6px' }}
+                      >
+                        {getLanguages(safeT).map((lang) => (
+                          <option key={`t-${lang.code}`} value={lang.code}>{lang.flag} {lang.name}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      disabled={relatorioDeepseekBusy}
+                      onClick={() => void handleTraduzirRelatorioComDeepseek()}
+                      style={{ marginTop: '18px', padding: '10px 16px', fontSize: '13px' }}
+                    >
+                      {relatorioDeepseekBusy ? (safeT?.deepseekButtonBusy || 'A traduzir…') : (safeT?.deepseekButton || 'Traduzir campos de texto')}
+                    </button>
+                  </div>
+                  <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', marginTop: '10px', marginBottom: 0 }}>
+                    {safeT?.deepseekHint || 'Inclui: observações, pontos em aberto, tipo de serviço, descrições dos dias de trabalho e das peças. Configure DEEPSEEK_API_KEY no servidor (.env ou Railway).'}
+                  </p>
+                </div>
                 
                 {/* Informações Básicas */}
                 <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px' }}>
