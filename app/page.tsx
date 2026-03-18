@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { translations } from './translations'
 import { loadData, saveData, loadAllFromServer, loadFromServer } from './utils/dataStorage'
@@ -3212,7 +3212,8 @@ export default function Dashboard() {
     }
   }, [])
 
-  useEffect(() => {
+  // useLayoutEffect: definir layout compacto antes do primeiro paint para telemóvel/tablet
+  useLayoutEffect(() => {
     const q = () => {
       if (typeof window === 'undefined') return
       setIsCompactLayout(window.innerWidth <= 1024)
