@@ -26650,6 +26650,16 @@ onKeyPress={(e) => {
                 <p style={{ fontSize: '12px', marginBottom: '16px', color: '#888' }}>
                   {safeT?.importacaoNotaHomag || 'Nota: A loja Homag (shop.homag.com) carrega os dados por JavaScript; use antes exportação/ficheiro CSV ou JSON se tiver.'}
                 </p>
+                <div style={{ marginBottom: '16px', padding: '12px', borderRadius: '8px', border: '1px solid rgba(0,180,255,0.35)', backgroundColor: 'rgba(0,120,200,0.08)' }}>
+                  <div style={{ color: '#7cc8ff', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                    🧭 {(safeT as any)?.importacaoAssistenteHomagTitle || 'Assistente HOMAG (rápido e seguro)'}
+                  </div>
+                  <ol style={{ margin: 0, paddingLeft: '18px', color: '#bddfff', fontSize: '12px', lineHeight: 1.55 }}>
+                    <li>{(safeT as any)?.importacaoAssistenteHomagPasso1 || 'Na HOMAG, abra a página com login ativo.'}</li>
+                    <li>{(safeT as any)?.importacaoAssistenteHomagPasso2 || 'Exporte para CSV/JSON (ou copie os dados do Network > resposta da lista).'}</li>
+                    <li>{(safeT as any)?.importacaoAssistenteHomagPasso3 || 'Use "Carregar ficheiro CSV/JSON" ou cole o conteúdo no campo abaixo.'}</li>
+                  </ol>
+                </div>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '16px' }}>
                   <input
                     type="url"
@@ -26882,6 +26892,16 @@ A1;Peça exemplo;10'
               <p style={{ fontSize: '12px', marginBottom: '16px', color: '#888' }}>
                 {safeT?.importacaoNotaHomag || 'Nota: A loja Homag (shop.homag.com) carrega os dados por JavaScript; use antes exportação/ficheiro CSV ou JSON se tiver.'}
               </p>
+              <div style={{ marginBottom: '16px', padding: '12px', borderRadius: '8px', border: '1px solid rgba(0,180,255,0.35)', backgroundColor: 'rgba(0,120,200,0.08)' }}>
+                <div style={{ color: '#7cc8ff', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                  🧭 {(safeT as any)?.importacaoAssistenteHomagTitle || 'Assistente HOMAG (rápido e seguro)'}
+                </div>
+                <ol style={{ margin: 0, paddingLeft: '18px', color: '#bddfff', fontSize: '12px', lineHeight: 1.55 }}>
+                  <li>{(safeT as any)?.importacaoAssistenteHomagPasso1 || 'Na HOMAG, abra a página com login ativo.'}</li>
+                  <li>{(safeT as any)?.importacaoAssistenteHomagPasso2 || 'Exporte para CSV/JSON (ou copie os dados do Network > resposta da lista).'}</li>
+                  <li>{(safeT as any)?.importacaoAssistenteHomagPasso3 || 'Use "Carregar ficheiro CSV/JSON" ou cole o conteúdo no campo abaixo.'}</li>
+                </ol>
+              </div>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '16px' }}>
                 <input
                   type="url"
