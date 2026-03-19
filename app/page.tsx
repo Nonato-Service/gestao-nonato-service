@@ -2719,6 +2719,8 @@ export default function Dashboard() {
   const [importacaoUrlError, setImportacaoUrlError] = useState<string | null>(null)
   const [importacaoPreview, setImportacaoPreview] = useState<PecaBiblioteca[] | null>(null)
   const [importacaoTextoColado, setImportacaoTextoColado] = useState('')
+  const [showImportacaoGuiaHomag, setShowImportacaoGuiaHomag] = useState(false)
+  const [importacaoGuiaPlataforma, setImportacaoGuiaPlataforma] = useState<'windows' | 'android' | 'ipad'>('windows')
   const importacaoFileInputRef = useRef<HTMLInputElement>(null)
 
   // Estados para Clientes
@@ -14470,6 +14472,18 @@ export default function Dashboard() {
 
   const handleBuscarImportacaoUrl = useCallback(async () => {
     const url = urlImportacaoPecas.trim()
+    const isHomagUrl = /shop\.homag\.com/i.test(url)
+    const autoSelectGuiaPlataforma = () => {
+      if (typeof navigator === 'undefined') return
+      const ua = navigator.userAgent.toLowerCase()
+      if (ua.includes('ipad') || (ua.includes('macintosh') && 'ontouchend' in document)) {
+        setImportacaoGuiaPlataforma('ipad')
+      } else if (ua.includes('android')) {
+        setImportacaoGuiaPlataforma('android')
+      } else {
+        setImportacaoGuiaPlataforma('windows')
+      }
+    }
     if (!url) {
       setImportacaoUrlError(t?.importacaoUrlObrigatoria ?? 'Informe a URL da lista de peças.')
       return
@@ -14517,6 +14531,10 @@ export default function Dashboard() {
           return
         }
         setImportacaoUrlError(t?.importacaoErroJsonInvalido ?? 'O conteúdo da URL não é um JSON ou CSV válido.')
+        if (isHomagUrl) {
+          autoSelectGuiaPlataforma()
+          setShowImportacaoGuiaHomag(true)
+        }
         setImportacaoUrlLoading(false)
         return
       }
@@ -14544,6 +14562,10 @@ export default function Dashboard() {
         // Fallback direto falhou (ex.: CORS)
       }
       setImportacaoUrlError(String(apiError).toLowerCase().includes('fetch failed') ? (t?.importacaoErroFetchFailed ?? 'Não foi possível aceder à URL. Verifique o endereço e a ligação.') : apiError)
+      if (isHomagUrl) {
+        autoSelectGuiaPlataforma()
+        setShowImportacaoGuiaHomag(true)
+      }
     } catch (e: any) {
       // Falha ao chamar a API (rede, etc.) — tentar buscar a URL diretamente no browser
       try {
@@ -14563,6 +14585,10 @@ export default function Dashboard() {
       const msg = e?.message || String(e)
       const isNetwork = msg && String(msg).toLowerCase().includes('fetch failed')
       setImportacaoUrlError(isNetwork ? (t?.importacaoErroFetchFailed ?? 'Não foi possível aceder à URL. Verifique o endereço e a ligação.') : (msg || (t?.importacaoErroBusca ?? 'Erro ao buscar a URL.')))
+      if (isHomagUrl) {
+        autoSelectGuiaPlataforma()
+        setShowImportacaoGuiaHomag(true)
+      }
     } finally {
       setImportacaoUrlLoading(false)
     }
@@ -26659,6 +26685,16 @@ onKeyPress={(e) => {
                     <li>{(safeT as any)?.importacaoAssistenteHomagPasso2 || 'Exporte para CSV/JSON (ou copie os dados do Network > resposta da lista).'}</li>
                     <li>{(safeT as any)?.importacaoAssistenteHomagPasso3 || 'Use "Carregar ficheiro CSV/JSON" ou cole o conteúdo no campo abaixo.'}</li>
                   </ol>
+                  <div style={{ marginTop: '10px' }}>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={() => setShowImportacaoGuiaHomag(true)}
+                      style={{ padding: '8px 12px', fontSize: '12px' }}
+                    >
+                      {(safeT as any)?.importacaoAbrirGuia || 'Abrir guia passo a passo'}
+                    </button>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '16px' }}>
                   <input
@@ -26723,9 +26759,14 @@ onKeyPress={(e) => {
                   <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: 'rgba(200, 60, 60, 0.15)', border: '1px solid rgba(255, 80, 80, 0.5)', borderRadius: '8px', color: '#ff8888' }}>
                     {importacaoUrlError}
                     {importacaoUrlError.includes('Não foi possível aceder') && (
-                      <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: '#ffaa88' }}>
-                        Solução: abra a URL no navegador, copie o conteúdo (ou exporte CSV/JSON do site) e use <strong>«Colar conteúdo»</strong> abaixo ou <strong>«Carregar ficheiro»</strong>.
-                      </p>
+                      <div style={{ marginTop: '10px' }}>
+                        <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffaa88' }}>
+                          Solução: abra a URL no navegador, copie o conteúdo (ou exporte CSV/JSON do site) e use <strong>«Colar conteúdo»</strong> abaixo ou <strong>«Carregar ficheiro»</strong>.
+                        </p>
+                        <button type="button" className="btn-primary" style={{ padding: '8px 12px', fontSize: '12px' }} onClick={() => setShowImportacaoGuiaHomag(true)}>
+                          {(safeT as any)?.importacaoAbrirGuia || 'Abrir guia passo a passo'}
+                        </button>
+                      </div>
                     )}
                   </div>
                 )}
@@ -26901,6 +26942,16 @@ A1;Peça exemplo;10'
                   <li>{(safeT as any)?.importacaoAssistenteHomagPasso2 || 'Exporte para CSV/JSON (ou copie os dados do Network > resposta da lista).'}</li>
                   <li>{(safeT as any)?.importacaoAssistenteHomagPasso3 || 'Use "Carregar ficheiro CSV/JSON" ou cole o conteúdo no campo abaixo.'}</li>
                 </ol>
+                <div style={{ marginTop: '10px' }}>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => setShowImportacaoGuiaHomag(true)}
+                    style={{ padding: '8px 12px', fontSize: '12px' }}
+                  >
+                    {(safeT as any)?.importacaoAbrirGuia || 'Abrir guia passo a passo'}
+                  </button>
+                </div>
               </div>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '16px' }}>
                 <input
@@ -26965,9 +27016,14 @@ A1;Peça exemplo;10'
                 <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: 'rgba(200, 60, 60, 0.15)', border: '1px solid rgba(255, 80, 80, 0.5)', borderRadius: '8px', color: '#ff8888' }}>
                   {importacaoUrlError}
                   {importacaoUrlError.includes('Não foi possível aceder') && (
-                    <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: '#ffaa88' }}>
-                      Solução: abra a URL no navegador, copie o conteúdo (ou exporte CSV/JSON do site) e use <strong>«Colar conteúdo»</strong> abaixo ou <strong>«Carregar ficheiro»</strong>.
-                    </p>
+                    <div style={{ marginTop: '10px' }}>
+                      <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffaa88' }}>
+                        Solução: abra a URL no navegador, copie o conteúdo (ou exporte CSV/JSON do site) e use <strong>«Colar conteúdo»</strong> abaixo ou <strong>«Carregar ficheiro»</strong>.
+                      </p>
+                      <button type="button" className="btn-primary" style={{ padding: '8px 12px', fontSize: '12px' }} onClick={() => setShowImportacaoGuiaHomag(true)}>
+                        {(safeT as any)?.importacaoAbrirGuia || 'Abrir guia passo a passo'}
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
@@ -47051,6 +47107,89 @@ A1;Peça exemplo;10'
           </div>
         )
       })()}
+
+      {showImportacaoGuiaHomag && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowImportacaoGuiaHomag(false)}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10060, padding: '20px' }}
+        >
+          <div
+            className="modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '760px', width: '100%', maxHeight: '88vh', overflowY: 'auto' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+              <h2 style={{ margin: 0, fontSize: '20px', color: '#fff' }}>
+                🧭 {(safeT as any)?.importacaoGuiaHomagTitle || 'Guia HOMAG — passo a passo'}
+              </h2>
+              <button type="button" className="btn-primary" onClick={() => setShowImportacaoGuiaHomag(false)} style={{ padding: '8px 12px', fontSize: '12px' }}>
+                {safeT?.close || 'Fechar'}
+              </button>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+              {[
+                { id: 'windows', label: 'Windows' },
+                { id: 'android', label: 'Android' },
+                { id: 'ipad', label: 'iPad' }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => setImportacaoGuiaPlataforma(tab.id as 'windows' | 'android' | 'ipad')}
+                  style={{
+                    padding: '8px 12px',
+                    fontSize: '12px',
+                    backgroundColor: importacaoGuiaPlataforma === tab.id ? 'rgba(0,255,122,0.22)' : 'transparent',
+                    borderColor: importacaoGuiaPlataforma === tab.id ? '#00ff7a' : 'rgba(0,255,122,0.45)'
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gap: '10px' }}>
+              {(importacaoGuiaPlataforma === 'windows'
+                ? [
+                    (safeT as any)?.importacaoGuiaHomag1 || '1) Abra a HOMAG no navegador e faça login.',
+                    (safeT as any)?.importacaoGuiaHomag2 || '2) Vá para a lista de peças desejada.',
+                    (safeT as any)?.importacaoGuiaHomag3 || '3) Tente exportar CSV/JSON no próprio site.',
+                    (safeT as any)?.importacaoGuiaHomag4 || '4) Se não houver exportação, abra DevTools > Network e recarregue a página.',
+                    (safeT as any)?.importacaoGuiaHomag5 || '5) Filtre por XHR/Fetch e abra a resposta que contém lista de peças.',
+                    (safeT as any)?.importacaoGuiaHomag6 || '6) Copie o conteúdo da resposta (JSON/CSV).',
+                    (safeT as any)?.importacaoGuiaHomag7 || '7) No sistema, use "Carregar ficheiro CSV/JSON" ou cole o conteúdo no campo de texto.',
+                    (safeT as any)?.importacaoGuiaHomag8 || '8) Clique em "Importar do texto colado", valide o preview e depois "Adicionar à Biblioteca".'
+                  ]
+                : importacaoGuiaPlataforma === 'android'
+                  ? [
+                      '1) Abra a HOMAG no Chrome Android e faça login.',
+                      '2) Se houver opção de exportar, descarregue CSV/JSON.',
+                      '3) Se não houver exportar: no menu do navegador use "Site para computador".',
+                      '4) Tente exportar novamente e guarde o ficheiro no telemóvel.',
+                      '5) No sistema, use "Carregar ficheiro CSV/JSON" e selecione o ficheiro.',
+                      '6) Se necessário, abra o ficheiro e copie o conteúdo para o campo de texto.',
+                      '7) Clique em "Importar do texto colado".',
+                      '8) Confirme no preview e clique em "Adicionar à Biblioteca".'
+                    ]
+                  : [
+                      '1) Abra a HOMAG no Safari iPad e faça login.',
+                      '2) Use o botão "aA" > "Pedir site para computador".',
+                      '3) Tente exportar CSV/JSON da lista de peças.',
+                      '4) Se o ficheiro for descarregado, abra o sistema e use "Carregar ficheiro CSV/JSON".',
+                      '5) Se não houver exportação, use um computador para obter JSON/CSV via Network.',
+                      '6) Traga o ficheiro para o iPad (Arquivos/iCloud) ou copie o conteúdo.',
+                      '7) Cole no campo de texto e clique em "Importar do texto colado".',
+                      '8) Valide o preview e finalize em "Adicionar à Biblioteca".'
+                    ]).map((step, i) => (
+                <div key={i} style={{ padding: '10px 12px', border: '1px solid rgba(0,255,122,0.22)', borderRadius: '8px', background: 'rgba(0,255,122,0.06)', color: '#dfffe9', fontSize: '13px', lineHeight: 1.5 }}>
+                  {step}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Acesso ao Checklist - Área restrita (nome + senha do Gestor de Senhas) */}
       {showChecklistAccessModal && (
