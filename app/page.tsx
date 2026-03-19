@@ -745,7 +745,7 @@ type GrupoChecklist = {
   dataCriacao: string
 }
 
-type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-cadastral' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico'
+type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-cadastral' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa'
 
 type Tab = {
   id: string
@@ -1412,7 +1412,8 @@ export default function Dashboard() {
       'gestao-financeira': 'open-gestao-financeira',
       'clientes-financeiro': 'open-clientes-financeiro',
       'comprovantes-despesas': 'open-comprovantes-despesas',
-      'protocolos-servico': 'open-protocolos-servico'
+      'protocolos-servico': 'open-protocolos-servico',
+      'manual-programa': 'open-manual-programa'
     }
 
     const action = TAB_TO_SIDEBAR_ACTION[tab.type]
@@ -2600,7 +2601,8 @@ export default function Dashboard() {
       'tecnicos-internos': t?.tecnicosInternos || 'TÉCNICOS INTERNOS',
       'tecnicos-externos': t?.tecnicosExternos || 'TÉCNICOS EXTERNOS',
       'alerta-mensagens': t?.alertaMensagens || 'ALERTA DE MENSAGENS',
-      'protocolos-servico': (t as any)?.protocolosServicoTitle || 'Protocolos de Serviço'
+      'protocolos-servico': (t as any)?.protocolosServicoTitle || 'Protocolos de Serviço',
+      'manual-programa': (t as any)?.manualProgramaTitle || 'Manual do Programa'
     }
     return titles[type] || type
   }
@@ -14595,6 +14597,13 @@ export default function Dashboard() {
       setImportacaoUrlError(t?.importacaoUrlObrigatoria ?? 'Cole o conteúdo JSON ou CSV na caixa acima.')
       return
     }
+    if (/^https?:\/\//i.test(raw)) {
+      setImportacaoUrlError(
+        t?.importacaoColarUrlNaoSuportado ??
+        'Neste campo, cole o conteúdo JSON/CSV (não a URL). Para links, use "Buscar da URL".'
+      )
+      return
+    }
     setImportacaoUrlError(null)
     setImportacaoPreview(null)
     try {
@@ -14880,6 +14889,8 @@ export default function Dashboard() {
       openTab('relatorio-servico', getTabTitle('relatorio-servico'))
     } else if (action === 'open-protocolos-servico') {
       openTab('protocolos-servico', getTabTitle('protocolos-servico'))
+    } else if (action === 'open-manual-programa') {
+      openTab('manual-programa', getTabTitle('manual-programa'))
     } else if (action === 'open-biblioteca-hub') {
       // Um único botão: abre direto a tela com Cadastro de Peças | Biblioteca | Gerenciar Categorias | Importação
       openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
@@ -21575,6 +21586,41 @@ onKeyPress={(e) => {
                 )}
               </div>
             )}
+          </div>
+        )
+      }
+
+      case 'manual-programa': {
+        const mT = safeT as any
+        const manualTitle = mT?.manualProgramaTitle || 'Manual do Programa'
+        const sections: Array<{ title: string; body: string }> = [
+          { title: mT?.manualSecaoInicio || '1) Início rápido', body: mT?.manualSecaoInicioDesc || 'Faça login, escolha o idioma, confirme as permissões do utilizador e organize os botões no Organizador da Sidebar.' },
+          { title: mT?.manualSecaoCadastro || '2) Cadastro base', body: mT?.manualSecaoCadastroDesc || 'Cadastre Gestores, Equipamentos, Clientes e Fornecedores antes de iniciar os relatórios e solicitações.' },
+          { title: mT?.manualSecaoOperacao || '3) Operação técnica', body: mT?.manualSecaoOperacaoDesc || 'Use Relatório de Serviço, Protocolos de Serviço, Agenda e Checklist para controlar todo o ciclo do atendimento técnico.' },
+          { title: mT?.manualSecaoPecas || '4) Peças e biblioteca', body: mT?.manualSecaoPecasDesc || 'Registe peças na Biblioteca e use Importação (URL, ficheiro CSV/JSON ou texto colado) para ganho de produtividade.' },
+          { title: mT?.manualSecaoFinanceiro || '5) Financeiro', body: mT?.manualSecaoFinanceiroDesc || 'Acompanhe custos, despesas, comprovantes e clientes financeiros para fechar os serviços com rastreabilidade.' },
+          { title: mT?.manualSecaoAjuda || '6) Ajuda e suporte interno', body: mT?.manualSecaoAjudaDesc || 'Pressione F1 em qualquer tela para abrir a ajuda contextual. O botão HELP também abre o mesmo conteúdo.' },
+          { title: mT?.manualSecaoBoasPraticas || '7) Boas práticas profissionais', body: mT?.manualSecaoBoasPraticasDesc || 'Guarde dados com frequência, mantenha códigos de peças padronizados e use nomes consistentes para clientes/equipamentos.' },
+          { title: mT?.manualSecaoSeguranca || '8) Segurança e backup', body: mT?.manualSecaoSegurancaDesc || 'Use Atualizar com segurança para evitar perda de rascunhos e mantenha backups periódicos no Administrador.' }
+        ]
+        return (
+          <div style={{ padding: '30px', maxWidth: '1300px', margin: '0 auto' }} className="tab-content-wrapper">
+            <div className="mobile-sticky-toolbar">
+              <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>↶ {safeT?.voltar || 'Voltar'}</button>
+              <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
+            </div>
+            <div style={{ marginBottom: '20px', padding: '24px', borderRadius: '16px', border: '1px solid rgba(0,255,0,0.25)', background: 'linear-gradient(135deg, rgba(0,255,0,0.08), rgba(0,0,0,0.75))' }}>
+              <h1 style={{ margin: 0, color: '#00ff00', letterSpacing: '1px' }}>{manualTitle}</h1>
+              <p style={{ margin: '8px 0 0', color: '#ccc' }}>{mT?.manualProgramaSubtitle || 'Guia detalhado para uso profissional do sistema.'}</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
+              {sections.map((s, idx) => (
+                <div key={idx} style={{ background: '#141414', border: '1px solid rgba(0,255,0,0.2)', borderRadius: '12px', padding: '16px' }}>
+                  <h3 style={{ margin: '0 0 8px', color: '#00ff88', fontSize: '15px' }}>{s.title}</h3>
+                  <p style={{ margin: 0, color: '#d6d6d6', lineHeight: 1.6, fontSize: '13px' }}>{s.body}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )
       }
@@ -45111,6 +45157,40 @@ A1;Peça exemplo;10'
               <span style={{ flexShrink: 0 }}>📋</span>
               <span style={{ textTransform: 'uppercase', letterSpacing: '0.4px', lineHeight: 1.25 }}>
                 {(safeT as any)?.protocolosServicoTitle || 'Protocolos de Serviço'}
+              </span>
+            </span>
+            <span style={{ fontSize: '12px' }}>▶</span>
+          </button>
+        </div>
+
+        {/* Botão principal: Manual detalhado do programa */}
+        <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+          <button
+            type="button"
+            className={`btn-primary${selectedSidebarButton === 'open-manual-programa' ? ' sidebar-group-btn-selected' : ''}`}
+            onClick={() => handleButtonClick('open-manual-programa')}
+            style={{
+              width: '100%',
+              textAlign: 'left',
+              padding: '12px',
+              marginBottom: '5px',
+              backgroundColor: selectedSidebarButton === 'open-manual-programa' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
+              border: selectedSidebarButton === 'open-manual-programa' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
+              borderRadius: '8px',
+              color: selectedSidebarButton === 'open-manual-programa' ? '#00ff00' : '#ccc',
+              fontWeight: 'bold',
+              fontSize: '12px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              transition: 'all 0.3s ease',
+              position: 'relative'
+            }}
+          >
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+              <span style={{ flexShrink: 0 }}>📘</span>
+              <span style={{ textTransform: 'uppercase', letterSpacing: '0.4px', lineHeight: 1.25 }}>
+                {(safeT as any)?.manualProgramaTitle || 'Manual do Programa'}
               </span>
             </span>
             <span style={{ fontSize: '12px' }}>▶</span>
