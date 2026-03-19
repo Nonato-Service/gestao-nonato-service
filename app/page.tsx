@@ -2924,6 +2924,7 @@ export default function Dashboard() {
   const [protocolosServico, setProtocolosServico] = useState<ProtocoloServico[]>([])
   const [editingProtocoloServicoId, setEditingProtocoloServicoId] = useState<string | null>(null)
   const [protocoloServicoForm, setProtocoloServicoForm] = useState<{ clienteId: string; equipamentoNumeroSerie: string; textoInicial: string; blocos: ProtocoloBloco[]; pecasTrocadasCodigos: string[]; pdfModelo: number }>({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
+  const PROTOCOLO_SERVICO_DRAFT_KEY = 'nonato-protocolo-servico-draft'
   const [relatorioServicoForm, setRelatorioServicoForm] = useState<RelatorioServico>({
     id: '',
     numero: '',
@@ -3259,6 +3260,77 @@ export default function Dashboard() {
   useEffect(() => {
     if (isCompactLayout && activeTabId) setMobileMenuOpen(false)
   }, [isCompactLayout, activeTabId])
+
+  const atualizarAppComSeguranca = useCallback(() => {
+    if (typeof window === 'undefined') return
+    try {
+      if (editingProtocoloServicoId !== null) {
+        localStorage.setItem(PROTOCOLO_SERVICO_DRAFT_KEY, JSON.stringify(protocoloServicoForm))
+      }
+    } catch {
+      // Não bloquear atualização por erro de storage.
+    }
+    const msg = (safeT as any)?.confirmSafeRefresh || 'Atualizar agora de forma segura? Os rascunhos serão mantidos.'
+    if (!window.confirm(msg)) return
+    window.location.reload()
+  }, [editingProtocoloServicoId, protocoloServicoForm, safeT])
+
+  // Em telefone/tablet: reduzir pull-to-refresh acidental ao puxar para baixo no topo.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !isCompactLayout) return
+    let startY = 0
+    const onTouchStart = (e: TouchEvent) => {
+      startY = e.touches?.[0]?.clientY || 0
+    }
+    const onTouchMove = (e: TouchEvent) => {
+      const y = e.touches?.[0]?.clientY || 0
+      const delta = y - startY
+      const scrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0
+      if (scrollTop <= 0 && delta > 10) e.preventDefault()
+    }
+    window.addEventListener('touchstart', onTouchStart, { passive: true })
+    window.addEventListener('touchmove', onTouchMove, { passive: false })
+    return () => {
+      window.removeEventListener('touchstart', onTouchStart)
+      window.removeEventListener('touchmove', onTouchMove)
+    }
+  }, [isCompactLayout])
+
+  // Protocolos de serviço: autosave de rascunho para evitar perda em refresh acidental.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const raw = localStorage.getItem(PROTOCOLO_SERVICO_DRAFT_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw)
+      if (!parsed || typeof parsed !== 'object') return
+      setProtocoloServicoForm({
+        clienteId: typeof parsed.clienteId === 'string' ? parsed.clienteId : '',
+        equipamentoNumeroSerie: typeof parsed.equipamentoNumeroSerie === 'string' ? parsed.equipamentoNumeroSerie : '',
+        textoInicial: typeof parsed.textoInicial === 'string' ? parsed.textoInicial : '',
+        blocos: Array.isArray(parsed.blocos) ? parsed.blocos : [],
+        pecasTrocadasCodigos: Array.isArray(parsed.pecasTrocadasCodigos) ? parsed.pecasTrocadasCodigos : [],
+        pdfModelo: Math.min(6, Math.max(1, Number(parsed.pdfModelo) || 1))
+      })
+      const temConteudo = Boolean(parsed.clienteId || parsed.equipamentoNumeroSerie || parsed.textoInicial || (Array.isArray(parsed.blocos) && parsed.blocos.length) || (Array.isArray(parsed.pecasTrocadasCodigos) && parsed.pecasTrocadasCodigos.length))
+      if (temConteudo) setEditingProtocoloServicoId('new')
+    } catch {
+      // Ignora rascunho inválido no localStorage
+    }
+  }, [PROTOCOLO_SERVICO_DRAFT_KEY])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (editingProtocoloServicoId === null) return
+    const timer = window.setTimeout(() => {
+      try {
+        localStorage.setItem(PROTOCOLO_SERVICO_DRAFT_KEY, JSON.stringify(protocoloServicoForm))
+      } catch {
+        // Falha de storage não deve bloquear o uso da tela
+      }
+    }, 250)
+    return () => window.clearTimeout(timer)
+  }, [editingProtocoloServicoId, protocoloServicoForm, PROTOCOLO_SERVICO_DRAFT_KEY])
 
   // Garantir scroll quando o grupo checklist-group é expandido
   useEffect(() => {
@@ -14219,6 +14291,9 @@ export default function Dashboard() {
     }
   }
 
+  const normalizeImportKey = (v: any): string =>
+    String(v ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
+
   // Mapeia objeto genérico (JSON do site) para PecaBiblioteca
   const mapItemToPecaBiblioteca = (item: any, index: number): PecaBiblioteca => {
     const codigo = String(item?.codigo ?? item?.code ?? item?.partNumber ?? item?.numero ?? item?.id ?? item?.ref ?? '')
@@ -14243,7 +14318,125 @@ export default function Dashboard() {
   const parseRawToPecas = useCallback((raw: string): PecaBiblioteca[] => {
     const trimRaw = raw.trim()
     let itens: any[] = []
-    if (trimRaw.startsWith('[') || trimRaw.startsWith('{')) {
+    const pushIfValid = (obj: any) => {
+      if (!obj || typeof obj !== 'object') return
+      const maybeCodigo = String(obj?.codigo ?? obj?.code ?? obj?.partNumber ?? obj?.part_no ?? obj?.articleNumber ?? obj?.numero ?? obj?.id ?? obj?.ref ?? '').trim()
+      const maybeNome = String(obj?.nome ?? obj?.name ?? obj?.descricao ?? obj?.description ?? obj?.designation ?? obj?.title ?? '').trim()
+      if (maybeCodigo || maybeNome) itens.push(obj)
+    }
+    const csvSplit = (line: string, sep: string): string[] => {
+      const out: string[] = []
+      let cur = ''
+      let quoted = false
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i]
+        if (ch === '"') {
+          if (quoted && line[i + 1] === '"') {
+            cur += '"'
+            i++
+          } else {
+            quoted = !quoted
+          }
+        } else if (ch === sep && !quoted) {
+          out.push(cur)
+          cur = ''
+        } else {
+          cur += ch
+        }
+      }
+      out.push(cur)
+      return out.map(v => v.trim())
+    }
+
+    if (trimRaw.startsWith('<')) {
+      // Suporte a importação a partir de páginas HTML (tabelas/listas + JSON embutido em scripts)
+      try {
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(raw, 'text/html')
+
+        // 1) Tentar tabelas HTML comuns
+        const rows = Array.from(doc.querySelectorAll('table tr'))
+        rows.forEach((row) => {
+          const cells = Array.from(row.querySelectorAll('th,td')).map((c) => (c.textContent || '').trim())
+          if (cells.length < 2) return
+          const joined = cells.join(' ').toLowerCase()
+          if (joined.includes('código') || joined.includes('codigo') || joined.includes('part') || joined.includes('refer') || joined.includes('preço') || joined.includes('preco') || joined.includes('descr')) {
+            return // linha provável de cabeçalho
+          }
+          pushIfValid({
+            codigo: cells[0] || '',
+            nome: cells[1] || cells[0] || '',
+            descricao: cells[2] || cells[1] || '',
+            preco: cells.find(c => /(\d+[.,]\d{2})/.test(c)) || ''
+          })
+        })
+
+        // 2) Tentar estruturas comuns em cards/listas de e-commerce
+        if (itens.length === 0) {
+          const cardSelectors = [
+            '[data-part-number]',
+            '[data-product-code]',
+            '[data-sku]',
+            '.product-item',
+            '.product-card',
+            '.slds-card'
+          ]
+          const cards = Array.from(doc.querySelectorAll(cardSelectors.join(',')))
+          cards.forEach((card) => {
+            const codeAttr =
+              (card as HTMLElement).getAttribute('data-part-number') ||
+              (card as HTMLElement).getAttribute('data-product-code') ||
+              (card as HTMLElement).getAttribute('data-sku') ||
+              ''
+            const text = (card.textContent || '').replace(/\s+/g, ' ').trim()
+            const mCode = text.match(/\b([A-Z0-9][A-Z0-9\-_.\/]{3,})\b/)
+            const mPrice = text.match(/(\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{2})\s?(?:€|eur)?)/i)
+            const titleEl = card.querySelector('h1,h2,h3,h4,.title,.name,[data-name],[data-title]')
+            pushIfValid({
+              codigo: codeAttr || (mCode ? mCode[1] : ''),
+              nome: (titleEl?.textContent || '').trim() || text.slice(0, 140),
+              descricao: text,
+              preco: mPrice ? mPrice[1] : ''
+            })
+          })
+        }
+
+        // 3) Tentar scripts com JSON embutido
+        if (itens.length === 0) {
+          const scripts = Array.from(doc.querySelectorAll('script'))
+          scripts.forEach((s) => {
+            const txt = (s.textContent || '').trim()
+            if (!txt) return
+            // Captura candidatos JSON com chaves comuns de catálogo.
+            const candidates = [
+              ...(txt.match(/\{[\s\S]*?"(?:parts|items|products|pecas|data)"[\s\S]*?\}/gi) || []),
+              ...(txt.match(/\[[\s\S]*?\]/g) || [])
+            ]
+            for (const candidate of candidates) {
+              try {
+                const parsed = JSON.parse(candidate)
+                if (Array.isArray(parsed)) {
+                  parsed.forEach(pushIfValid)
+                } else if (parsed && typeof parsed === 'object') {
+                  const arr =
+                    (Array.isArray((parsed as any).pecas) && (parsed as any).pecas) ||
+                    (Array.isArray((parsed as any).parts) && (parsed as any).parts) ||
+                    (Array.isArray((parsed as any).items) && (parsed as any).items) ||
+                    (Array.isArray((parsed as any).products) && (parsed as any).products) ||
+                    (Array.isArray((parsed as any).data) && (parsed as any).data) ||
+                    null
+                  if (arr) arr.forEach(pushIfValid)
+                }
+              } catch {
+                // ignorar trecho não-JSON
+              }
+            }
+          })
+        }
+      } catch {
+        // segue para retorno vazio caso não consiga analisar HTML
+      }
+    } else if (trimRaw.startsWith('[') || trimRaw.startsWith('{')) {
       const parsed = JSON.parse(raw)
       if (Array.isArray(parsed)) itens = parsed
       else if (parsed && typeof parsed === 'object' && (Array.isArray(parsed.pecas) || Array.isArray(parsed.parts) || Array.isArray(parsed.items) || Array.isArray(parsed.data)))
@@ -14253,15 +14446,24 @@ export default function Dashboard() {
       const lines = raw.split(/\r?\n/).filter((l: string) => l.trim())
       if (lines.length < 2) return []
       const sep = lines[0].includes(';') ? ';' : ','
-      const headers = lines[0].split(sep).map((h: string) => h.trim().replace(/^["']|["']$/g, ''))
+      const headers = csvSplit(lines[0], sep).map((h: string) => h.trim().replace(/^["']|["']$/g, ''))
       for (let i = 1; i < lines.length; i++) {
-        const vals = lines[i].split(sep).map((v: string) => v.trim().replace(/^["']|["']$/g, ''))
+        const vals = csvSplit(lines[i], sep).map((v: string) => v.trim().replace(/^["']|["']$/g, ''))
         const obj: Record<string, string> = {}
         headers.forEach((h, j) => { obj[h] = vals[j] ?? '' })
         itens.push(obj)
       }
     }
-    return itens.map((item, idx) => mapItemToPecaBiblioteca(item, idx))
+    // Normaliza e remove duplicados da própria importação.
+    const mapped = itens.map((item, idx) => mapItemToPecaBiblioteca(item, idx))
+    const seen = new Set<string>()
+    return mapped.filter((p) => {
+      const key = normalizeImportKey(p.codigo) || `n:${normalizeImportKey(p.nome)}`
+      if (!key) return false
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
   }, [])
 
   const handleBuscarImportacaoUrl = useCallback(async () => {
@@ -14410,16 +14612,29 @@ export default function Dashboard() {
   const handleAdicionarImportacaoPreview = useCallback(() => {
     if (!importacaoPreview || importacaoPreview.length === 0) return
     const existentes = pecasBiblioteca
-    const novos: PecaBiblioteca[] = importacaoPreview.map((p, i) => ({
-      ...p,
-      id: `import-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 9)}`,
-      dataCriacao: new Date().toISOString()
-    }))
+    const existentesKeys = new Set(
+      existentes.map((e) => normalizeImportKey(e.codigo) || `n:${normalizeImportKey(e.nome)}`)
+    )
+    const novos: PecaBiblioteca[] = []
+    importacaoPreview.forEach((p, i) => {
+      const key = normalizeImportKey(p.codigo) || `n:${normalizeImportKey(p.nome)}`
+      if (!key || existentesKeys.has(key)) return
+      existentesKeys.add(key)
+      novos.push({
+        ...p,
+        id: `import-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 9)}`,
+        dataCriacao: new Date().toISOString()
+      })
+    })
     const atualizado = [...existentes, ...novos]
     setPecasBiblioteca(atualizado)
     localStorage.setItem('nonato-pecas-biblioteca', JSON.stringify(atualizado))
     setImportacaoPreview(null)
     setUrlImportacaoPecas('')
+    if (novos.length === 0) {
+      alert(t?.importacaoSemNovidades ?? 'Nenhuma peça nova para adicionar (itens já existentes na biblioteca).')
+      return
+    }
     alert(t?.importacaoSucesso ?? `${novos.length} peça(s) adicionada(s) à biblioteca.`)
   }, [importacaoPreview, pecasBiblioteca, t])
 
@@ -21323,10 +21538,11 @@ onKeyPress={(e) => {
                     const next = editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? protocolosServico.map(p => p.id === novo.id ? novo : p) : [...protocolosServico, novo]
                     setProtocolosServico(next)
                     saveData('nonato-protocolos-servico', next)
+                    if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY)
                     setEditingProtocoloServicoId(null)
                     setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
                   }} style={{ padding: '10px 20px' }}>💾 {protoT?.protocolosServicoGuardar || 'Guardar'}</button>
-                  <button type="button" className="btn-primary" style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.4)' }} onClick={() => { setEditingProtocoloServicoId(null); setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 }) }}>{protoT?.protocolosServicoCancelar || 'Cancelar'}</button>
+                  <button type="button" className="btn-primary" style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.4)' }} onClick={() => { if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY); setEditingProtocoloServicoId(null); setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 }) }}>{protoT?.protocolosServicoCancelar || 'Cancelar'}</button>
                 </div>
               </div>
             ) : (
@@ -44611,7 +44827,27 @@ A1;Peça exemplo;10'
             {mobileMenuOpen ? '✕' : '☰'}
           </button>
           <span className="mobile-app-header-title">NONATO SERVICE</span>
+          <button
+            type="button"
+            className="mobile-refresh-toggle"
+            onClick={atualizarAppComSeguranca}
+            aria-label={(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
+            title={(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
+          >
+            ↻
+          </button>
         </header>
+      )}
+      {!isCompactLayout && (
+        <button
+          type="button"
+          className="desktop-refresh-safe"
+          onClick={atualizarAppComSeguranca}
+          aria-label={(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
+          title={(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
+        >
+          ↻ {(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
+        </button>
       )}
       {/* Sidebar - em ecrã estreito: gaveta lateral (globals.css) */}
       <div className={`sidebar${isCompactLayout && mobileMenuOpen ? ' sidebar-mobile-open' : ''}`}>

@@ -31,13 +31,16 @@ export async function POST(request: NextRequest) {
 
     // Timeout compatível com Node 16 (AbortSignal.timeout só existe a partir do Node 17)
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 20000)
+    const timeoutId = setTimeout(() => controller.abort(), 30000)
 
     const response = await fetch(url, {
       method: 'GET',
       redirect: 'follow',
       headers: {
         'Accept': 'application/json, text/csv, text/plain, text/html; q=0.9, application/xml; q=0.8, */*; q=0.7',
+        'Accept-Language': 'it-IT,it;q=0.9,en;q=0.8,pt-BR;q=0.7',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       },
       signal: controller.signal
@@ -54,14 +57,6 @@ export async function POST(request: NextRequest) {
 
     const contentType = response.headers.get('content-type') || ''
     const text = await response.text()
-
-    // Se o site devolveu HTML (ex.: página de login ou loja com dados em JavaScript), avisar
-    if (contentType.includes('text/html') && text.trim().toLowerCase().startsWith('<!')) {
-      return NextResponse.json({
-        ok: false,
-        error: 'Esta URL devolve uma página web (HTML), não um ficheiro de dados. Sites como a loja Homag carregam as peças por JavaScript. Use a opção "Carregar ficheiro CSV/JSON" com uma exportação que tenha guardado, ou uma URL que aponte diretamente para um ficheiro .json ou .csv.'
-      }, { status: 400 })
-    }
 
     return NextResponse.json({
       ok: true,
