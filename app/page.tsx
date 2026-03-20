@@ -2680,8 +2680,8 @@ export default function Dashboard() {
   
   // Ficha Cadastral da Nonato Service (nome empresa, NIF, NIB, SWIFT, logo)
   const [fichaCadastral, setFichaCadastral] = useState<FichaCadastral>({ nomeEmpresa: '', nif: '', nib: '', swift: '' })
-  /** Destino opcional para envio do PDF (cadastro Nonato) — e-mail e WhatsApp do cliente */
-  const [cadastroNonatoEnvioCliente, setCadastroNonatoEnvioCliente] = useState({ emailDestino: '', telefoneWhats: '' })
+  /** Destino opcional para envio do PDF (cadastro Nonato) — e-mail e WhatsApp do cliente (manual ou a partir do cadastro) */
+  const [cadastroNonatoEnvioCliente, setCadastroNonatoEnvioCliente] = useState<{ emailDestino: string; telefoneWhats: string; clienteId: string }>({ emailDestino: '', telefoneWhats: '', clienteId: '' })
 
   // Estados para Biblioteca de Peças
   const [pecasBiblioteca, setPecasBiblioteca] = useState<PecaBiblioteca[]>([])
@@ -17630,13 +17630,44 @@ const nextF = familias.filter(x => x !== f)
                 <p style={{ fontSize: '12px', color: '#999', marginBottom: '14px', lineHeight: 1.5 }}>
                   {safeT?.cadastroNonatoEnvioAjuda || 'Primeiro use «Gerar PDF» e guarde/imprima o PDF a partir da janela que abre. Depois use os botões abaixo: o programa abre o seu e-mail ou o WhatsApp Web/App — o anexo do PDF é feito por si (o site não envia ficheiros sozinho, por limitação do navegador).'}
                 </p>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa', fontWeight: 600 }}>{safeT?.cadastroNonatoEnvioLabelCliente || 'Cliente'}</label>
+                  <select
+                    value={cadastroNonatoEnvioCliente.clienteId}
+                    onChange={e => {
+                      const id = e.target.value
+                      if (!id) {
+                        setCadastroNonatoEnvioCliente({ emailDestino: '', telefoneWhats: '', clienteId: '' })
+                        return
+                      }
+                      const c = clientes.find(x => x.id === id)
+                      if (!c) return
+                      const telRaw = (c.telefones || '').trim()
+                      const primeiroTel = telRaw.split(/[/|,;]/)[0].trim() || telRaw
+                      setCadastroNonatoEnvioCliente({
+                        clienteId: id,
+                        emailDestino: (c.email || '').trim(),
+                        telefoneWhats: primeiroTel
+                      })
+                    }}
+                    style={{ width: '100%', maxWidth: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '6px', cursor: 'pointer' }}
+                  >
+                    <option value="">{safeT?.cadastroNonatoEnvioPlaceholderCliente || '— Selecionar cliente do cadastro (preenche e-mail e telefone) —'}</option>
+                    {[...clientes].sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt', { sensitivity: 'base' })).map(cli => (
+                      <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
+                    ))}
+                  </select>
+                  <p style={{ fontSize: '11px', color: '#777', marginTop: '6px', marginBottom: 0 }}>
+                    {safeT?.cadastroNonatoEnvioHintCliente || 'Os dados vêm do separador Clientes. Pode ajustar e-mail e telefone nos campos abaixo; ao editar manualmente, a ligação ao cliente seleccionado deixa de ser usada.'}
+                  </p>
+                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
                   <div>
                     <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa', fontWeight: 600 }}>{safeT?.cadastroNonatoEnvioEmailCliente || 'E-mail do cliente (opcional)'}</label>
                     <input
                       type="email"
                       value={cadastroNonatoEnvioCliente.emailDestino}
-                      onChange={e => setCadastroNonatoEnvioCliente({ ...cadastroNonatoEnvioCliente, emailDestino: e.target.value })}
+                      onChange={e => setCadastroNonatoEnvioCliente({ ...cadastroNonatoEnvioCliente, emailDestino: e.target.value, clienteId: '' })}
                       placeholder="cliente@empresa.pt"
                       style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 150, 255, 0.35)', borderRadius: '6px' }}
                     />
@@ -17646,7 +17677,7 @@ const nextF = familias.filter(x => x !== f)
                     <input
                       type="tel"
                       value={cadastroNonatoEnvioCliente.telefoneWhats}
-                      onChange={e => setCadastroNonatoEnvioCliente({ ...cadastroNonatoEnvioCliente, telefoneWhats: e.target.value })}
+                      onChange={e => setCadastroNonatoEnvioCliente({ ...cadastroNonatoEnvioCliente, telefoneWhats: e.target.value, clienteId: '' })}
                       placeholder="+351 9XX XXX XXX"
                       style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(37, 211, 102, 0.35)', borderRadius: '6px' }}
                     />
@@ -41357,6 +41388,9 @@ A1;Peça exemplo;10'
     const [tipoOrcamento, setTipoOrcamento] = useState<'dados-fixos' | 'cliente-cadastrado' | 'orcamento-relatorio' | 'cliente-prioritario-fixo' | 'cliente-prioritario-valores' | 'orcamentos-gerados'>('dados-fixos')
     const [clienteSelecionado, setClienteSelecionado] = useState<Cliente | null>(null)
     const [buscaCliente, setBuscaCliente] = useState('')
+    /** Cliente Prioritário (Fixo): opcional — dados do cadastro geral para e-mail/WhatsApp neste orçamento */
+    const [clienteCadastroPrioritarioFixo, setClienteCadastroPrioritarioFixo] = useState<Cliente | null>(null)
+    const [buscaClientePrioritarioFixo, setBuscaClientePrioritarioFixo] = useState('')
     const [relatorioSelecionado, setRelatorioSelecionado] = useState<RelatorioServico | null>(null)
     const [buscaRelatorio, setBuscaRelatorio] = useState('')
     const [dadosOrcamento, setDadosOrcamento] = useState({
@@ -41402,6 +41436,9 @@ A1;Peça exemplo;10'
     const [orcamentoParaEnviar, setOrcamentoParaEnviar] = useState<any>(null)
     const [emailDestinatario, setEmailDestinatario] = useState('')
     const [telefoneDestinatario, setTelefoneDestinatario] = useState('')
+    /** Orçamentos gerados — envio e-mail/WhatsApp: busca e cliente seleccionado do cadastro */
+    const [buscaClienteEnvioOrcamento, setBuscaClienteEnvioOrcamento] = useState('')
+    const [clienteEnvioOrcamentoId, setClienteEnvioOrcamentoId] = useState('')
     const [orcamentosGerados, setOrcamentosGerados] = useState<Array<{
       id: string
       numeroOrcamento: string
@@ -41501,6 +41538,22 @@ A1;Peça exemplo;10'
       email: '',
       contato: ''
     }
+
+    const dadosNonatoParaExibicao =
+      tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo
+        ? {
+            nomeEmpresa: clienteCadastroPrioritarioFixo.nomeEmpresa || 'NONATO SERVICE',
+            morada: clienteCadastroPrioritarioFixo.morada || '',
+            localidade: clienteCadastroPrioritarioFixo.localidade || '',
+            conselho: clienteCadastroPrioritarioFixo.conselho || '',
+            pais: clienteCadastroPrioritarioFixo.pais || 'Portugal',
+            codigoPostal: clienteCadastroPrioritarioFixo.codigoPostal || '',
+            numeroContribuicaoFiscal: clienteCadastroPrioritarioFixo.numeroContribuicaoFiscal || '',
+            telefones: clienteCadastroPrioritarioFixo.telefones || '',
+            email: clienteCadastroPrioritarioFixo.email || '',
+            contato: clienteCadastroPrioritarioFixo.contato || ''
+          }
+        : dadosNonatoService
 
     const adicionarItem = (modo: 'biblioteca' | 'manual') => {
       setItemFormMode(modo)
@@ -41622,12 +41675,78 @@ A1;Peça exemplo;10'
       }, 0)
     }
 
+    const q = buscaCliente.toLowerCase().trim()
     const clientesFiltrados = clientes
-      .filter(cliente =>
-        cliente.nomeEmpresa.toLowerCase().includes(buscaCliente.toLowerCase()) ||
-        cliente.email?.toLowerCase().includes(buscaCliente.toLowerCase())
-      )
+      .filter(cliente => {
+        if (!q) return true
+        const nome = (cliente.nomeEmpresa || '').toLowerCase()
+        const email = (cliente.email || '').toLowerCase()
+        const tel = (cliente.telefones || '').toLowerCase()
+        const cont = (cliente.contato || '').toLowerCase()
+        return nome.includes(q) || email.includes(q) || tel.includes(q) || cont.includes(q)
+      })
       .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
+
+    const qPf = buscaClientePrioritarioFixo.toLowerCase().trim()
+    const clientesFiltradosPrioritarioFixo = clientes
+      .filter(cliente => {
+        if (!qPf) return true
+        const nome = (cliente.nomeEmpresa || '').toLowerCase()
+        const email = (cliente.email || '').toLowerCase()
+        const tel = (cliente.telefones || '').toLowerCase()
+        const cont = (cliente.contato || '').toLowerCase()
+        return nome.includes(qPf) || email.includes(qPf) || tel.includes(qPf) || cont.includes(qPf)
+      })
+      .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
+
+    const qEnvOrc = buscaClienteEnvioOrcamento.toLowerCase().trim()
+    const clientesFiltradosEnvioOrcamento = clientes
+      .filter(cliente => {
+        if (!qEnvOrc) return true
+        const nome = (cliente.nomeEmpresa || '').toLowerCase()
+        const email = (cliente.email || '').toLowerCase()
+        const tel = (cliente.telefones || '').toLowerCase()
+        const cont = (cliente.contato || '').toLowerCase()
+        return nome.includes(qEnvOrc) || email.includes(qEnvOrc) || tel.includes(qEnvOrc) || cont.includes(qEnvOrc)
+      })
+      .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
+
+    const aplicarClienteEnvioOrcamento = (c: Cliente) => {
+      setClienteEnvioOrcamentoId(c.id)
+      setEmailDestinatario((c.email || '').trim())
+      const primeiroTel = (c.telefones || '').trim().split(/[/|,;]/)[0].trim() || (c.telefones || '').trim()
+      let digits = primeiroTel.replace(/\D/g, '')
+      if (digits.length === 9 && digits.startsWith('9')) digits = '351' + digits
+      else if (digits.length > 0 && digits.length < 11 && !digits.startsWith('351')) digits = '351' + digits.replace(/^0+/, '')
+      setTelefoneDestinatario(digits)
+    }
+
+    const prepararEnvioOrcamentoComCliente = (orcamento: any) => {
+      setOrcamentoParaEnviar(orcamento)
+      setBuscaClienteEnvioOrcamento('')
+      const found = orcamento.clienteId ? clientes.find((x: Cliente) => x.id === orcamento.clienteId) : null
+      if (found) {
+        setClienteEnvioOrcamentoId(found.id)
+        setEmailDestinatario((found.email || '').trim())
+        const primeiroTel = (found.telefones || '').trim().split(/[/|,;]/)[0].trim() || (found.telefones || '').trim()
+        let digits = primeiroTel.replace(/\D/g, '')
+        if (digits.length === 9 && digits.startsWith('9')) digits = '351' + digits
+        else if (digits.length > 0 && digits.length < 11 && !digits.startsWith('351')) digits = '351' + digits.replace(/^0+/, '')
+        setTelefoneDestinatario(digits)
+      } else {
+        setClienteEnvioOrcamentoId('')
+        const dc = orcamento.dadosCliente || {}
+        setEmailDestinatario((dc.email || '').trim())
+        let t = String(dc.telefones || '').replace(/\D/g, '')
+        if (t.length === 9 && t.startsWith('9')) t = '351' + t
+        setTelefoneDestinatario(t)
+      }
+    }
+
+    const limparEstadoModalEnvioOrcamento = () => {
+      setBuscaClienteEnvioOrcamento('')
+      setClienteEnvioOrcamentoId('')
+    }
 
     const iniciarEdicaoItem = (orcamentoId: string, itemIndex: number) => {
       const orcamento = orcamentosGerados.find(o => o.id === orcamentoId)
@@ -41901,12 +42020,10 @@ A1;Peça exemplo;10'
       // Escutar mensagens do iframe
       window.addEventListener('message', (event) => {
         if (event.data.type === 'sendEmail' && event.data.orcamentoId === orcamento.id) {
-          setOrcamentoParaEnviar(orcamento)
-          setEmailDestinatario(clienteEmail)
+          prepararEnvioOrcamentoComCliente(orcamento)
           setShowEmailModal(true)
         } else if (event.data.type === 'sendWhatsApp' && event.data.orcamentoId === orcamento.id) {
-          setOrcamentoParaEnviar(orcamento)
-          setTelefoneDestinatario(clienteTelefone.replace(/\D/g, ''))
+          prepararEnvioOrcamentoComCliente(orcamento)
           setShowWhatsAppModal(true)
         }
       })
@@ -41927,6 +42044,7 @@ A1;Peça exemplo;10'
       setShowEmailModal(false)
       setOrcamentoParaEnviar(null)
       setEmailDestinatario('')
+      limparEstadoModalEnvioOrcamento()
       alert(safeT?.emailEnviado || 'Email enviado com sucesso!')
     }
 
@@ -41943,6 +42061,7 @@ A1;Peça exemplo;10'
       setShowWhatsAppModal(false)
       setOrcamentoParaEnviar(null)
       setTelefoneDestinatario('')
+      limparEstadoModalEnvioOrcamento()
       alert(safeT?.whatsappEnviado || 'WhatsApp aberto com sucesso!')
     }
 
@@ -41950,7 +42069,9 @@ A1;Peça exemplo;10'
     const prepararOrcamentoAtual = () => {
       // Determinar dados do cliente baseado no tipo
       let dadosClienteFinal: any = null
-      if (tipoOrcamento === 'dados-fixos' || tipoOrcamento === 'cliente-prioritario-fixo' || tipoOrcamento === 'cliente-prioritario-valores') {
+      if (tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo) {
+        dadosClienteFinal = clienteCadastroPrioritarioFixo
+      } else if (tipoOrcamento === 'dados-fixos' || tipoOrcamento === 'cliente-prioritario-fixo' || tipoOrcamento === 'cliente-prioritario-valores') {
         dadosClienteFinal = dadosNonatoService
       } else if (tipoOrcamento === 'cliente-cadastrado' && clienteSelecionado) {
         dadosClienteFinal = clienteSelecionado
@@ -41975,8 +42096,8 @@ A1;Peça exemplo;10'
         descricao: dadosOrcamento.descricao || '',
         observacoes: dadosOrcamento.observacoes || '',
         tipo: tipoOrcamento,
-        clienteId: clienteSelecionado?.id || relatorioSelecionado?.clienteId,
-        clienteNome: clienteSelecionado?.nomeEmpresa || relatorioSelecionado?.cliente || dadosNonatoService.nomeEmpresa,
+        clienteId: clienteSelecionado?.id || relatorioSelecionado?.clienteId || (tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo ? clienteCadastroPrioritarioFixo.id : undefined),
+        clienteNome: clienteSelecionado?.nomeEmpresa || relatorioSelecionado?.cliente || (tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo ? clienteCadastroPrioritarioFixo.nomeEmpresa : dadosNonatoService.nomeEmpresa),
         relatorioId: relatorioSelecionado?.id,
         relatorioNumero: relatorioSelecionado?.numero,
         dadosCliente: dadosClienteFinal,
@@ -42003,8 +42124,7 @@ A1;Peça exemplo;10'
         return
       }
       const orcamentoAtual = prepararOrcamentoAtual()
-      setOrcamentoParaEnviar(orcamentoAtual)
-      setEmailDestinatario(orcamentoAtual.dadosCliente?.email || '')
+      prepararEnvioOrcamentoComCliente(orcamentoAtual)
       setShowEmailModal(true)
     }
 
@@ -42014,8 +42134,7 @@ A1;Peça exemplo;10'
         return
       }
       const orcamentoAtual = prepararOrcamentoAtual()
-      setOrcamentoParaEnviar(orcamentoAtual)
-      setTelefoneDestinatario((orcamentoAtual.dadosCliente?.telefones || '').replace(/\D/g, ''))
+      prepararEnvioOrcamentoComCliente(orcamentoAtual)
       setShowWhatsAppModal(true)
     }
 
@@ -42103,9 +42222,9 @@ A1;Peça exemplo;10'
               <button
                 key={key}
                 onClick={() => {
-                  if (key === 'dados-fixos') { setTipoOrcamento('dados-fixos'); setClienteSelecionado(null); setRelatorioSelecionado(null) }
-                  else if (key === 'cliente-cadastrado') { setTipoOrcamento('cliente-cadastrado'); setRelatorioSelecionado(null) }
-                  else { setTipoOrcamento('orcamento-relatorio'); setClienteSelecionado(null) }
+                  if (key === 'dados-fixos') { setTipoOrcamento('dados-fixos'); setClienteSelecionado(null); setRelatorioSelecionado(null); setClienteCadastroPrioritarioFixo(null) }
+                  else if (key === 'cliente-cadastrado') { setTipoOrcamento('cliente-cadastrado'); setRelatorioSelecionado(null); setClienteCadastroPrioritarioFixo(null) }
+                  else { setTipoOrcamento('orcamento-relatorio'); setClienteSelecionado(null); setClienteCadastroPrioritarioFixo(null) }
                 }}
                 style={{
                   padding: '10px 20px',
@@ -42144,9 +42263,9 @@ A1;Peça exemplo;10'
               <button
                 key={key}
                 onClick={() => {
-                  if (key === 'orcamentos-gerados') setTipoOrcamento('orcamentos-gerados')
+                  if (key === 'orcamentos-gerados') { setTipoOrcamento('orcamentos-gerados'); setClienteCadastroPrioritarioFixo(null) }
                   else if (key === 'cliente-prioritario-fixo') { setTipoOrcamento('cliente-prioritario-fixo'); setClienteSelecionado(null); setRelatorioSelecionado(null) }
-                  else { setTipoOrcamento('cliente-prioritario-valores'); setClienteSelecionado(null); setRelatorioSelecionado(null) }
+                  else { setTipoOrcamento('cliente-prioritario-valores'); setClienteSelecionado(null); setRelatorioSelecionado(null); setClienteCadastroPrioritarioFixo(null) }
                 }}
                 style={{
                   padding: '10px 20px',
@@ -42265,7 +42384,7 @@ A1;Peça exemplo;10'
             </h3>
             <input
               type="text"
-              placeholder={safeT?.buscarCliente || 'Buscar cliente por nome ou email...'}
+              placeholder={safeT?.buscarClienteOrcamentoAvulso || safeT?.buscarCliente || 'Buscar por nome, e-mail, telefone ou nome de contacto...'}
               value={buscaCliente}
               onChange={(e) => setBuscaCliente(e.target.value)}
               style={{
@@ -42299,16 +42418,101 @@ A1;Peça exemplo;10'
                       transition: 'all 0.2s ease'
                     }}
                   >
-                    <div style={{ fontWeight: 'bold', color: '#66b3ff', marginBottom: '5px' }}>
-                      {cliente.nomeEmpresa}
+                    <div style={{ fontWeight: 'bold', color: '#66b3ff', marginBottom: '8px', fontSize: '15px' }}>
+                      {cliente.nomeEmpresa || '—'}
                     </div>
-                    <div style={{ fontSize: '12px', color: '#ccc' }}>
-                      {cliente.morada}, {cliente.localidade} - {cliente.email}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px', fontSize: '12px', color: '#ccc' }}>
+                      <div><span style={{ color: '#888' }}>{safeT?.contato || 'Contato'}:</span> {(cliente.contato || '').trim() || '—'}</div>
+                      <div><span style={{ color: '#888' }}>{safeT?.email || 'E-mail'}:</span> {(cliente.email || '').trim() || '—'}</div>
+                      <div style={{ gridColumn: '1 / -1' }}><span style={{ color: '#888' }}>{safeT?.telefone || 'Telefone'}:</span> {(cliente.telefones || '').trim() || '—'}</div>
+                      {(cliente.morada || cliente.localidade) && (
+                        <div style={{ gridColumn: '1 / -1', marginTop: '4px', paddingTop: '8px', borderTop: '1px solid rgba(100,100,100,0.35)', fontSize: '11px', color: '#999' }}>
+                          {[cliente.morada, cliente.localidade].filter(Boolean).join(' · ')}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))
               )}
             </div>
+          </div>
+        )}
+
+        {/* Cliente Prioritário (Fixo): opcional — cliente do cadastro para e-mail / WhatsApp */}
+        {tipoOrcamento === 'cliente-prioritario-fixo' && (
+          <div style={{
+            marginBottom: '30px',
+            padding: '20px',
+            backgroundColor: '#141414',
+            borderRadius: '12px',
+            border: '1px solid rgba(255, 165, 0, 0.35)'
+          }}>
+            <h3 style={{ color: '#ffa500', marginBottom: '8px', fontSize: '18px' }}>
+              {safeT?.orcamentoPrioritarioFixoSecaoCadastro || 'Cliente do cadastro (opcional)'}
+            </h3>
+            <p style={{ fontSize: '12px', color: '#aaa', marginBottom: '14px', lineHeight: 1.5 }}>
+              {safeT?.orcamentoPrioritarioFixoSecaoCadastroDesc || 'O orçamento continua a ser do tipo Cliente Prioritário (Fixo). Pode escolher um cliente da lista para usar o e-mail e telefone ao guardar e ao enviar. Se não escolher, usam-se os dados do cliente prioritário.'}
+            </p>
+            <input
+              type="text"
+              placeholder={safeT?.buscarClienteOrcamentoAvulso || safeT?.buscarCliente || 'Buscar...'}
+              value={buscaClientePrioritarioFixo}
+              onChange={(e) => setBuscaClientePrioritarioFixo(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                marginBottom: '12px',
+                backgroundColor: '#222222',
+                border: '1px solid rgba(255, 165, 0, 0.35)',
+                borderRadius: '6px',
+                color: '#fff',
+                fontSize: '14px'
+              }}
+            />
+            <div style={{ maxHeight: '240px', overflowY: 'auto', marginBottom: '12px' }}>
+              {clientesFiltradosPrioritarioFixo.length === 0 ? (
+                <p style={{ color: '#ccc', textAlign: 'center', padding: '16px' }}>{safeT?.nenhumClienteEncontrado || 'Nenhum cliente encontrado'}</p>
+              ) : (
+                clientesFiltradosPrioritarioFixo.map(cliente => (
+                  <div
+                    key={cliente.id}
+                    onClick={() => setClienteCadastroPrioritarioFixo(cliente)}
+                    style={{
+                      padding: '14px',
+                      marginBottom: '8px',
+                      backgroundColor: clienteCadastroPrioritarioFixo?.id === cliente.id ? 'rgba(255, 165, 0, 0.22)' : '#2a2a2a',
+                      border: `1px solid ${clienteCadastroPrioritarioFixo?.id === cliente.id ? 'rgba(255, 165, 0, 0.6)' : 'rgba(255, 165, 0, 0.2)'}`,
+                      borderRadius: '6px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{ fontWeight: 'bold', color: '#ffa500', marginBottom: '6px' }}>{cliente.nomeEmpresa || '—'}</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px', fontSize: '12px', color: '#ccc' }}>
+                      <div><span style={{ color: '#888' }}>{safeT?.contato || 'Contato'}:</span> {(cliente.contato || '').trim() || '—'}</div>
+                      <div><span style={{ color: '#888' }}>{safeT?.email || 'E-mail'}:</span> {(cliente.email || '').trim() || '—'}</div>
+                      <div style={{ gridColumn: '1 / -1' }}><span style={{ color: '#888' }}>{safeT?.telefone || 'Telefone'}:</span> {(cliente.telefones || '').trim() || '—'}</div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            {clienteCadastroPrioritarioFixo && (
+              <button
+                type="button"
+                onClick={() => setClienteCadastroPrioritarioFixo(null)}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  backgroundColor: 'rgba(100, 100, 100, 0.3)',
+                  border: '1px solid rgba(150, 150, 150, 0.5)',
+                  borderRadius: '6px',
+                  color: '#ccc',
+                  cursor: 'pointer'
+                }}
+              >
+                {safeT?.orcamentoPrioritarioFixoLimparClienteCadastro || 'Usar só dados do cliente prioritário'}
+              </button>
+            )}
           </div>
         )}
 
@@ -42338,15 +42542,23 @@ A1;Peça exemplo;10'
               </h4>
               {tipoOrcamento === 'dados-fixos' || tipoOrcamento === 'cliente-prioritario-fixo' || tipoOrcamento === 'cliente-prioritario-valores' ? (
                 <div style={{ color: '#ccc', fontSize: '14px' }}>
-                  <div><strong>{safeT?.empresa || 'Empresa'}:</strong> {dadosNonatoService.nomeEmpresa}</div>
-                  {dadosNonatoService.morada && <div><strong>{safeT?.morada || 'Morada'}:</strong> {dadosNonatoService.morada}</div>}
-                  {dadosNonatoService.localidade && <div><strong>{safeT?.localidade || 'Localidade'}:</strong> {dadosNonatoService.localidade}{dadosNonatoService.conselho ? `, ${dadosNonatoService.conselho}` : ''}</div>}
-                  {dadosNonatoService.codigoPostal && <div><strong>{safeT?.codigoPostal || 'Código Postal'}:</strong> {dadosNonatoService.codigoPostal}</div>}
-                  {dadosNonatoService.pais && <div><strong>{safeT?.pais || 'País'}:</strong> {dadosNonatoService.pais}</div>}
-                  {dadosNonatoService.numeroContribuicaoFiscal && <div><strong>{safeT?.contribuicaoFiscal || 'Nº Contribuição Fiscal'}:</strong> {dadosNonatoService.numeroContribuicaoFiscal}</div>}
-                  {dadosNonatoService.telefones && <div><strong>{safeT?.telefone || 'Telefone'}:</strong> {dadosNonatoService.telefones}</div>}
-                  {dadosNonatoService.email && <div><strong>{safeT?.email || 'Email'}:</strong> {dadosNonatoService.email}</div>}
-                  {dadosNonatoService.contato && <div><strong>{safeT?.contato || 'Contato'}:</strong> {dadosNonatoService.contato}</div>}
+                  {tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo && (
+                    <p style={{ fontSize: '12px', color: '#ffa500', marginBottom: '12px', fontWeight: 600 }}>{safeT?.orcamentoPrioritarioFixoUsandoClienteCadastro || 'A mostrar dados do cliente seleccionado no cadastro (e-mail e telefone para envio).'}</p>
+                  )}
+                  <div style={{ marginBottom: '14px', padding: '12px', backgroundColor: 'rgba(0, 100, 255, 0.12)', borderRadius: '8px', border: '1px solid rgba(0, 150, 255, 0.35)' }}>
+                    <div style={{ fontSize: '11px', color: '#66b3ff', fontWeight: 700, marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{safeT?.orcamentoResumoContactoCliente || 'Identificação e contacto'}</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px 20px' }}>
+                      <div><strong style={{ color: '#aaa' }}>{safeT?.empresa || 'Empresa'}:</strong><br /><span style={{ color: '#fff' }}>{dadosNonatoParaExibicao.nomeEmpresa || '—'}</span></div>
+                      <div><strong style={{ color: '#aaa' }}>{safeT?.contato || 'Contato'}:</strong><br /><span style={{ color: '#fff' }}>{(dadosNonatoParaExibicao.contato || '').trim() || '—'}</span></div>
+                      <div><strong style={{ color: '#aaa' }}>{safeT?.email || 'E-mail'}:</strong><br /><span style={{ color: '#fff' }}>{(dadosNonatoParaExibicao.email || '').trim() || '—'}</span></div>
+                      <div><strong style={{ color: '#aaa' }}>{safeT?.telefone || 'Telefone'}:</strong><br /><span style={{ color: '#fff' }}>{(dadosNonatoParaExibicao.telefones || '').trim() || '—'}</span></div>
+                    </div>
+                  </div>
+                  {dadosNonatoParaExibicao.morada && <div><strong>{safeT?.morada || 'Morada'}:</strong> {dadosNonatoParaExibicao.morada}</div>}
+                  {dadosNonatoParaExibicao.localidade && <div><strong>{safeT?.localidade || 'Localidade'}:</strong> {dadosNonatoParaExibicao.localidade}{dadosNonatoParaExibicao.conselho ? `, ${dadosNonatoParaExibicao.conselho}` : ''}</div>}
+                  {dadosNonatoParaExibicao.codigoPostal && <div><strong>{safeT?.codigoPostal || 'Código Postal'}:</strong> {dadosNonatoParaExibicao.codigoPostal}</div>}
+                  {dadosNonatoParaExibicao.pais && <div><strong>{safeT?.pais || 'País'}:</strong> {dadosNonatoParaExibicao.pais}</div>}
+                  {dadosNonatoParaExibicao.numeroContribuicaoFiscal && <div><strong>{safeT?.contribuicaoFiscal || 'Nº Contribuição Fiscal'}:</strong> {dadosNonatoParaExibicao.numeroContribuicaoFiscal}</div>}
                 </div>
               ) : tipoOrcamento === 'orcamento-relatorio' && relatorioSelecionado ? (
                 <div style={{ color: '#ccc', fontSize: '14px' }}>
@@ -42367,15 +42579,20 @@ A1;Peça exemplo;10'
               ) : (
                 clienteSelecionado && (
                   <div style={{ color: '#ccc', fontSize: '14px' }}>
-                    <div><strong>{safeT?.empresa || 'Empresa'}:</strong> {clienteSelecionado.nomeEmpresa}</div>
-                    <div><strong>{safeT?.morada || 'Morada'}:</strong> {clienteSelecionado.morada}</div>
-                    <div><strong>{safeT?.localidade || 'Localidade'}:</strong> {clienteSelecionado.localidade}, {clienteSelecionado.conselho}</div>
-                    <div><strong>{safeT?.codigoPostal || 'Código Postal'}:</strong> {clienteSelecionado.codigoPostal}</div>
-                    <div><strong>{safeT?.pais || 'País'}:</strong> {clienteSelecionado.pais}</div>
-                    <div><strong>{safeT?.contribuicaoFiscal || 'Nº Contribuição Fiscal'}:</strong> {clienteSelecionado.numeroContribuicaoFiscal}</div>
-                    <div><strong>{safeT?.telefone || 'Telefone'}:</strong> {clienteSelecionado.telefones}</div>
-                    <div><strong>{safeT?.email || 'Email'}:</strong> {clienteSelecionado.email}</div>
-                    <div><strong>{safeT?.contato || 'Contato'}:</strong> {clienteSelecionado.contato}</div>
+                    <div style={{ marginBottom: '14px', padding: '12px', backgroundColor: 'rgba(0, 100, 255, 0.12)', borderRadius: '8px', border: '1px solid rgba(0, 150, 255, 0.35)' }}>
+                      <div style={{ fontSize: '11px', color: '#66b3ff', fontWeight: 700, marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{safeT?.orcamentoResumoContactoCliente || 'Identificação e contacto'}</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px 20px' }}>
+                        <div><strong style={{ color: '#aaa' }}>{safeT?.empresa || 'Empresa'}:</strong><br /><span style={{ color: '#fff' }}>{clienteSelecionado.nomeEmpresa || '—'}</span></div>
+                        <div><strong style={{ color: '#aaa' }}>{safeT?.contato || 'Contato'}:</strong><br /><span style={{ color: '#fff' }}>{(clienteSelecionado.contato || '').trim() || '—'}</span></div>
+                        <div><strong style={{ color: '#aaa' }}>{safeT?.email || 'E-mail'}:</strong><br /><span style={{ color: '#fff' }}>{(clienteSelecionado.email || '').trim() || '—'}</span></div>
+                        <div><strong style={{ color: '#aaa' }}>{safeT?.telefone || 'Telefone'}:</strong><br /><span style={{ color: '#fff' }}>{(clienteSelecionado.telefones || '').trim() || '—'}</span></div>
+                      </div>
+                    </div>
+                    <div><strong>{safeT?.morada || 'Morada'}:</strong> {clienteSelecionado.morada || '—'}</div>
+                    <div><strong>{safeT?.localidade || 'Localidade'}:</strong> {[clienteSelecionado.localidade, clienteSelecionado.conselho].filter(Boolean).join(', ') || '—'}</div>
+                    <div><strong>{safeT?.codigoPostal || 'Código Postal'}:</strong> {clienteSelecionado.codigoPostal || '—'}</div>
+                    <div><strong>{safeT?.pais || 'País'}:</strong> {clienteSelecionado.pais || '—'}</div>
+                    <div><strong>{safeT?.contribuicaoFiscal || 'Nº Contribuição Fiscal'}:</strong> {clienteSelecionado.numeroContribuicaoFiscal || '—'}</div>
                   </div>
                 )
               )}
@@ -43165,7 +43382,9 @@ A1;Peça exemplo;10'
                   
                   // Determinar dados do cliente baseado no tipo
                   let dadosClienteFinal: any = null
-                  if (tipoOrcamento === 'dados-fixos' || tipoOrcamento === 'cliente-prioritario-fixo' || tipoOrcamento === 'cliente-prioritario-valores') {
+                  if (tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo) {
+                    dadosClienteFinal = clienteCadastroPrioritarioFixo
+                  } else if (tipoOrcamento === 'dados-fixos' || tipoOrcamento === 'cliente-prioritario-fixo' || tipoOrcamento === 'cliente-prioritario-valores') {
                     dadosClienteFinal = dadosNonatoService
                   } else if (tipoOrcamento === 'cliente-cadastrado' && clienteSelecionado) {
                     dadosClienteFinal = clienteSelecionado
@@ -43190,8 +43409,8 @@ A1;Peça exemplo;10'
                     descricao: dadosOrcamento.descricao,
                     observacoes: dadosOrcamento.observacoes,
                     tipo: tipoOrcamento,
-                    clienteId: clienteSelecionado?.id || relatorioSelecionado?.clienteId,
-                    clienteNome: clienteSelecionado?.nomeEmpresa || relatorioSelecionado?.cliente || dadosNonatoService.nomeEmpresa,
+                    clienteId: clienteSelecionado?.id || relatorioSelecionado?.clienteId || (tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo ? clienteCadastroPrioritarioFixo.id : undefined),
+                    clienteNome: clienteSelecionado?.nomeEmpresa || relatorioSelecionado?.cliente || (tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo ? clienteCadastroPrioritarioFixo.nomeEmpresa : dadosNonatoService.nomeEmpresa),
                     relatorioId: relatorioSelecionado?.id,
                     relatorioNumero: relatorioSelecionado?.numero,
                     dadosCliente: dadosClienteFinal,
@@ -43218,6 +43437,7 @@ A1;Peça exemplo;10'
                     })
                     setClienteSelecionado(null)
                     setRelatorioSelecionado(null)
+                    setClienteCadastroPrioritarioFixo(null)
                     setTipoOrcamento('dados-fixos')
                   } catch (error) {
                     console.error('Erro ao salvar orçamento:', error)
@@ -43681,8 +43901,7 @@ A1;Peça exemplo;10'
                           </button>
                           <button
                             onClick={() => {
-                              setOrcamentoParaEnviar(orcamento)
-                              setEmailDestinatario(orcamento.dadosCliente?.email || '')
+                              prepararEnvioOrcamentoComCliente(orcamento)
                               setShowEmailModal(true)
                             }}
                             style={{
@@ -43711,8 +43930,7 @@ A1;Peça exemplo;10'
                           </button>
                           <button
                             onClick={() => {
-                              setOrcamentoParaEnviar(orcamento)
-                              setTelefoneDestinatario((orcamento.dadosCliente?.telefones || '').replace(/\D/g, ''))
+                              prepararEnvioOrcamentoComCliente(orcamento)
                               setShowWhatsAppModal(true)
                             }}
                             style={{
@@ -44273,18 +44491,56 @@ A1;Peça exemplo;10'
             setShowEmailModal(false)
             setOrcamentoParaEnviar(null)
             setEmailDestinatario('')
+            limparEstadoModalEnvioOrcamento()
           }}>
             <div style={{
               backgroundColor: '#141414',
               padding: '30px',
               borderRadius: '12px',
               border: '2px solid rgba(0, 100, 255, 0.5)',
-              maxWidth: '500px',
+              maxWidth: '560px',
               width: '90%'
             }} onClick={(e) => e.stopPropagation()}>
               <h3 style={{ color: '#66b3ff', marginBottom: '20px' }}>
                 {safeT?.enviarPorEmail || 'Enviar por Email'}
               </h3>
+              <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)' }}>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#66b3ff', fontWeight: 700, fontSize: '13px' }}>
+                  {safeT?.envioOrcamentoClienteCadastro || 'Cliente do cadastro'}
+                </label>
+                <input
+                  type="text"
+                  value={buscaClienteEnvioOrcamento}
+                  onChange={(e) => setBuscaClienteEnvioOrcamento(e.target.value)}
+                  placeholder={safeT?.buscarClienteOrcamentoAvulso || safeT?.buscarCliente || 'Buscar...'}
+                  style={{ width: '100%', padding: '10px', backgroundColor: '#222', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', marginBottom: '8px', fontSize: '13px' }}
+                />
+                <div style={{ maxHeight: '160px', overflowY: 'auto', borderRadius: '6px', border: '1px solid rgba(0,100,255,0.25)' }}>
+                  {clientesFiltradosEnvioOrcamento.length === 0 ? (
+                    <p style={{ padding: '12px', color: '#888', fontSize: '12px', margin: 0 }}>{safeT?.nenhumClienteEncontrado || 'Nenhum cliente encontrado'}</p>
+                  ) : (
+                    clientesFiltradosEnvioOrcamento.map(c => (
+                      <div
+                        key={c.id}
+                        onClick={() => aplicarClienteEnvioOrcamento(c)}
+                        style={{
+                          padding: '10px 12px',
+                          cursor: 'pointer',
+                          backgroundColor: clienteEnvioOrcamentoId === c.id ? 'rgba(0,100,255,0.28)' : '#222',
+                          borderBottom: '1px solid rgba(0,0,0,0.3)'
+                        }}
+                      >
+                        <div style={{ fontWeight: 'bold', color: '#66b3ff', fontSize: '13px' }}>{c.nomeEmpresa}</div>
+                        {(c.contato || '').trim() ? (
+                          <div style={{ fontSize: '11px', color: '#bbb', marginTop: '3px' }}>{safeT?.contato || 'Contato'}: {(c.contato || '').trim()}</div>
+                        ) : null}
+                        <div style={{ fontSize: '11px', color: '#aaa', marginTop: '4px' }}>{safeT?.email || 'E-mail'}: {(c.email || '').trim() || '—'} · {safeT?.telefone || 'Tel.'}: {(c.telefones || '').trim() || '—'}</div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <p style={{ fontSize: '11px', color: '#777', marginTop: '8px', marginBottom: 0 }}>{safeT?.envioOrcamentoClienteCadastroHint || 'Seleccione um cliente para preencher e-mail e telefone (útil também para o WhatsApp).'}</p>
+              </div>
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', color: '#ccc' }}>
                   {safeT?.emailDestinatario || 'Email do Destinatário'} *
@@ -44292,7 +44548,7 @@ A1;Peça exemplo;10'
                 <input
                   type="email"
                   value={emailDestinatario}
-                  onChange={(e) => setEmailDestinatario(e.target.value)}
+                  onChange={(e) => { setEmailDestinatario(e.target.value); setClienteEnvioOrcamentoId('') }}
                   style={{
                     width: '100%',
                     padding: '10px',
@@ -44324,6 +44580,7 @@ A1;Peça exemplo;10'
                     setShowEmailModal(false)
                     setOrcamentoParaEnviar(null)
                     setEmailDestinatario('')
+                    limparEstadoModalEnvioOrcamento()
                   }}
                   style={{
                     flex: 1,
@@ -44360,18 +44617,56 @@ A1;Peça exemplo;10'
             setShowWhatsAppModal(false)
             setOrcamentoParaEnviar(null)
             setTelefoneDestinatario('')
+            limparEstadoModalEnvioOrcamento()
           }}>
             <div style={{
               backgroundColor: '#141414',
               padding: '30px',
               borderRadius: '12px',
               border: '2px solid rgba(37, 211, 102, 0.5)',
-              maxWidth: '500px',
+              maxWidth: '560px',
               width: '90%'
             }} onClick={(e) => e.stopPropagation()}>
               <h3 style={{ color: '#25D366', marginBottom: '20px' }}>
                 {safeT?.enviarPorWhatsApp || 'Enviar por WhatsApp'}
               </h3>
+              <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)' }}>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#25D366', fontWeight: 700, fontSize: '13px' }}>
+                  {safeT?.envioOrcamentoClienteCadastro || 'Cliente do cadastro'}
+                </label>
+                <input
+                  type="text"
+                  value={buscaClienteEnvioOrcamento}
+                  onChange={(e) => setBuscaClienteEnvioOrcamento(e.target.value)}
+                  placeholder={safeT?.buscarClienteOrcamentoAvulso || safeT?.buscarCliente || 'Buscar...'}
+                  style={{ width: '100%', padding: '10px', backgroundColor: '#222', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', marginBottom: '8px', fontSize: '13px' }}
+                />
+                <div style={{ maxHeight: '160px', overflowY: 'auto', borderRadius: '6px', border: '1px solid rgba(37,211,102,0.25)' }}>
+                  {clientesFiltradosEnvioOrcamento.length === 0 ? (
+                    <p style={{ padding: '12px', color: '#888', fontSize: '12px', margin: 0 }}>{safeT?.nenhumClienteEncontrado || 'Nenhum cliente encontrado'}</p>
+                  ) : (
+                    clientesFiltradosEnvioOrcamento.map(c => (
+                      <div
+                        key={c.id}
+                        onClick={() => aplicarClienteEnvioOrcamento(c)}
+                        style={{
+                          padding: '10px 12px',
+                          cursor: 'pointer',
+                          backgroundColor: clienteEnvioOrcamentoId === c.id ? 'rgba(37,211,102,0.22)' : '#222',
+                          borderBottom: '1px solid rgba(0,0,0,0.3)'
+                        }}
+                      >
+                        <div style={{ fontWeight: 'bold', color: '#25D366', fontSize: '13px' }}>{c.nomeEmpresa}</div>
+                        {(c.contato || '').trim() ? (
+                          <div style={{ fontSize: '11px', color: '#bbb', marginTop: '3px' }}>{safeT?.contato || 'Contato'}: {(c.contato || '').trim()}</div>
+                        ) : null}
+                        <div style={{ fontSize: '11px', color: '#aaa', marginTop: '4px' }}>{safeT?.email || 'E-mail'}: {(c.email || '').trim() || '—'} · {safeT?.telefone || 'Tel.'}: {(c.telefones || '').trim() || '—'}</div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <p style={{ fontSize: '11px', color: '#777', marginTop: '8px', marginBottom: 0 }}>{safeT?.envioOrcamentoClienteCadastroHint || 'Seleccione um cliente para preencher e-mail e telefone.'}</p>
+              </div>
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', color: '#ccc' }}>
                   {safeT?.telefoneDestinatario || 'Telefone do Destinatário'} *
@@ -44379,7 +44674,7 @@ A1;Peça exemplo;10'
                 <input
                   type="tel"
                   value={telefoneDestinatario}
-                  onChange={(e) => setTelefoneDestinatario(e.target.value.replace(/\D/g, ''))}
+                  onChange={(e) => { setTelefoneDestinatario(e.target.value.replace(/\D/g, '')); setClienteEnvioOrcamentoId('') }}
                   placeholder="351912345678"
                   style={{
                     width: '100%',
@@ -44415,6 +44710,7 @@ A1;Peça exemplo;10'
                     setShowWhatsAppModal(false)
                     setOrcamentoParaEnviar(null)
                     setTelefoneDestinatario('')
+                    limparEstadoModalEnvioOrcamento()
                   }}
                   style={{
                     flex: 1,
