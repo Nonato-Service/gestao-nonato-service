@@ -2680,7 +2680,9 @@ export default function Dashboard() {
   
   // Ficha Cadastral da Nonato Service (nome empresa, NIF, NIB, SWIFT, logo)
   const [fichaCadastral, setFichaCadastral] = useState<FichaCadastral>({ nomeEmpresa: '', nif: '', nib: '', swift: '' })
-  
+  /** Destino opcional para envio do PDF (cadastro Nonato) — e-mail e WhatsApp do cliente */
+  const [cadastroNonatoEnvioCliente, setCadastroNonatoEnvioCliente] = useState({ emailDestino: '', telefoneWhats: '' })
+
   // Estados para Biblioteca de Peças
   const [pecasBiblioteca, setPecasBiblioteca] = useState<PecaBiblioteca[]>([])
   const [categoriasPecas, setCategoriasPecas] = useState<CategoriaPeca[]>([])
@@ -17620,6 +17622,70 @@ const nextF = familias.filter(x => x !== f)
                 >
                   {safeT?.cadastroNonatoServiceGerarPdf || 'Gerar PDF para envio ao cliente'}
                 </button>
+              </div>
+              <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(0, 255, 0, 0.25)' }}>
+                <h3 style={{ margin: '0 0 8px', fontSize: '16px', color: '#00ff88', fontWeight: 700 }}>
+                  {safeT?.cadastroNonatoEnvioTitulo || 'Envio ao cliente (e-mail e WhatsApp)'}
+                </h3>
+                <p style={{ fontSize: '12px', color: '#999', marginBottom: '14px', lineHeight: 1.5 }}>
+                  {safeT?.cadastroNonatoEnvioAjuda || 'Primeiro use «Gerar PDF» e guarde/imprima o PDF a partir da janela que abre. Depois use os botões abaixo: o programa abre o seu e-mail ou o WhatsApp Web/App — o anexo do PDF é feito por si (o site não envia ficheiros sozinho, por limitação do navegador).'}
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa', fontWeight: 600 }}>{safeT?.cadastroNonatoEnvioEmailCliente || 'E-mail do cliente (opcional)'}</label>
+                    <input
+                      type="email"
+                      value={cadastroNonatoEnvioCliente.emailDestino}
+                      onChange={e => setCadastroNonatoEnvioCliente({ ...cadastroNonatoEnvioCliente, emailDestino: e.target.value })}
+                      placeholder="cliente@empresa.pt"
+                      style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 150, 255, 0.35)', borderRadius: '6px' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa', fontWeight: 600 }}>{safeT?.cadastroNonatoEnvioWhatsCliente || 'Telemóvel do cliente — WhatsApp (opcional)'}</label>
+                    <input
+                      type="tel"
+                      value={cadastroNonatoEnvioCliente.telefoneWhats}
+                      onChange={e => setCadastroNonatoEnvioCliente({ ...cadastroNonatoEnvioCliente, telefoneWhats: e.target.value })}
+                      placeholder="+351 9XX XXX XXX"
+                      style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(37, 211, 102, 0.35)', borderRadius: '6px' }}
+                    />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nome = fichaCadastral.nomeEmpresa || 'Nonato Service'
+                      const assunto = encodeURIComponent(`Dados bancários — ${nome}`)
+                      const corpo = encodeURIComponent(
+                        `Olá,\n\nSegue em anexo o PDF com os dados para depósito ou transferência de pagamento à ${nome}.\n\n(Gere o PDF no botão «Gerar PDF para envio ao cliente» e anexe o ficheiro a este e-mail.)\n\nCom os melhores cumprimentos.`
+                      )
+                      const to = cadastroNonatoEnvioCliente.emailDestino.trim()
+                      window.open(`mailto:${to ? to : ''}?subject=${assunto}&body=${corpo}`, '_blank', 'noopener,noreferrer')
+                    }}
+                    style={{ padding: '12px 20px', backgroundColor: 'rgba(0, 150, 255, 0.2)', border: '1px solid rgba(0, 150, 255, 0.55)', color: '#66b3ff', fontWeight: 'bold', borderRadius: '8px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                  >
+                    ✉️ {safeT?.cadastroNonatoEnvioBotaoEmail || 'Abrir e-mail'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nome = fichaCadastral.nomeEmpresa || 'Nonato Service'
+                      const texto = `Olá,\n\nSegue em anexo o PDF com os dados bancários da ${nome} para depósito ou transferência.\n\n(Gere o PDF no sistema e envie o ficheiro por aqui.)\n\nCumprimentos.`
+                      const raw = (cadastroNonatoEnvioCliente.telefoneWhats || '').replace(/\D/g, '')
+                      let wa = ''
+                      if (raw.length === 9 && raw.startsWith('9')) wa = '351' + raw
+                      else if (raw.length >= 9) wa = raw
+                      else if (raw.length > 0) wa = '351' + raw
+                      const url = wa.length >= 11 ? `https://wa.me/${wa}?text=${encodeURIComponent(texto)}` : `https://wa.me/?text=${encodeURIComponent(texto)}`
+                      window.open(url, '_blank', 'noopener,noreferrer')
+                    }}
+                    style={{ padding: '12px 20px', backgroundColor: 'rgba(37, 211, 102, 0.18)', border: '1px solid rgba(37, 211, 102, 0.55)', color: '#25d366', fontWeight: 'bold', borderRadius: '8px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                  >
+                    💬 {safeT?.cadastroNonatoEnvioBotaoWhats || 'Abrir WhatsApp'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
