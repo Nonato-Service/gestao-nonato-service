@@ -400,66 +400,181 @@ body {
   transform: translateY(0);
 }
 
-/* Barra inferior de abas - moderna, animada, laranja transparente - começa após a sidebar (280px) */
+@keyframes bottomBarFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Marca NONATO — variações por situação (mesmo PNG base, filtros CSS) */
+.ns-brand-logo {
+  display: inline-block;
+  vertical-align: middle;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  image-rendering: auto;
+}
+.ns-brand-logo--original {
+  filter: drop-shadow(0 0 10px rgba(0, 255, 130, 0.45));
+}
+.ns-brand-logo--sucesso {
+  filter: saturate(1.2) brightness(1.08) drop-shadow(0 0 12px rgba(57, 255, 20, 0.55));
+}
+.ns-brand-logo--alerta {
+  filter: hue-rotate(-72deg) saturate(1.35) brightness(1.05) drop-shadow(0 0 12px rgba(255, 200, 60, 0.5));
+}
+.ns-brand-logo--devedor {
+  filter: hue-rotate(-118deg) saturate(1.35) brightness(1.06) drop-shadow(0 0 14px rgba(255, 60, 60, 0.5));
+}
+.ns-brand-logo--financeiro {
+  filter: hue-rotate(42deg) saturate(1.15) brightness(1.04) drop-shadow(0 0 10px rgba(56, 189, 248, 0.45));
+}
+.ns-brand-logo--informacao {
+  filter: hue-rotate(152deg) saturate(0.95) brightness(1.05) drop-shadow(0 0 10px rgba(129, 140, 248, 0.45));
+}
+
+/* Barra inferior de abas — identidade NONATO (verde néon, alto contraste, impacto visual) */
 .bottom-tabs-bar {
   position: fixed;
   bottom: 0;
   left: 280px;
   right: 0;
-  height: 54px;
-  background: linear-gradient(180deg, rgba(255, 165, 0, 0.15) 0%, rgba(255, 140, 0, 0.08) 50%, rgba(20, 20, 20, 0.98) 100%);
-  border-top: 2px solid rgba(255, 165, 0, 0.7);
-  border-left: 1px solid rgba(255, 165, 0, 0.25);
-  border-right: 1px solid rgba(255, 165, 0, 0.25);
+  min-height: 60px;
+  height: auto;
+  padding: 0;
+  background:
+    linear-gradient(180deg, rgba(8, 12, 10, 0.97) 0%, rgba(6, 8, 7, 0.99) 100%);
+  border-top: 2px solid rgba(0, 255, 122, 0.55);
+  box-shadow:
+    0 -8px 32px rgba(0, 0, 0, 0.55),
+    0 -1px 0 rgba(0, 255, 122, 0.25),
+    inset 0 1px 0 rgba(0, 255, 122, 0.08);
   display: flex;
-  align-items: center;
-  padding: 0 12px;
-  gap: 8px;
+  align-items: stretch;
   z-index: 1000;
-  overflow-x: auto;
-  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4), 0 -2px 0 rgba(255, 165, 0, 0.5), 0 0 20px rgba(255, 165, 0, 0.12);
+  overflow: hidden;
   animation: bottomBarFadeIn 0.35s ease-out;
 }
-@keyframes bottomBarFadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+.bottom-tabs-brand {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-right: 1px solid rgba(0, 255, 122, 0.22);
+  background: radial-gradient(120% 180% at 50% 0%, rgba(0, 40, 24, 0.5) 0%, transparent 65%);
+}
+.bottom-tabs-brand-img {
+  height: 40px;
+  width: auto;
+  max-width: min(120px, 28vw);
+  object-fit: contain;
+}
+.bottom-tabs-scroll {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 122, 0.35) transparent;
+}
+.bottom-tabs-scroll::-webkit-scrollbar {
+  height: 5px;
+}
+.bottom-tabs-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 122, 0.35);
+  border-radius: 4px;
 }
 .bottom-tab-item {
-  min-width: 160px;
-  max-width: 220px;
-  height: 40px;
-  border-radius: 10px 10px 0 0;
+  min-width: 148px;
+  max-width: min(260px, 42vw);
+  min-height: 44px;
+  height: auto;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 12px;
+  gap: 8px;
+  padding: 8px 12px 8px 10px;
   cursor: pointer;
-  color: #fff;
+  color: #f0fff4;
   font-size: 13px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid transparent;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
+  line-height: 1.25;
 }
 .bottom-tab-item:not(.active) {
-  background: rgba(34, 34, 34, 0.9);
-  border-color: rgba(255, 165, 0, 0.2);
+  background: rgba(18, 22, 20, 0.92);
+  border-color: rgba(0, 255, 122, 0.12);
 }
 .bottom-tab-item:not(.active):hover {
-  background: rgba(255, 165, 0, 0.08);
-  border-color: rgba(255, 165, 0, 0.35);
+  background: rgba(0, 60, 36, 0.35);
+  border-color: rgba(0, 255, 122, 0.35);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 165, 0, 0.15);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 255, 122, 0.15);
 }
 .bottom-tab-item.active {
-  background: linear-gradient(180deg, rgba(255, 165, 0, 0.35) 0%, rgba(255, 140, 0, 0.2) 100%);
-  border: 1px solid rgba(255, 165, 0, 0.55);
-  font-weight: 600;
-  box-shadow: 0 -2px 12px rgba(255, 165, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  animation: tabActivePulse 2s ease-in-out infinite;
+  background: linear-gradient(145deg, rgba(0, 80, 48, 0.55) 0%, rgba(0, 45, 28, 0.85) 100%);
+  border: 1px solid rgba(0, 255, 122, 0.65);
+  font-weight: 700;
+  color: #e8fff0;
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 122, 0.2),
+    0 -2px 20px rgba(0, 255, 122, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  animation: bottomTabActiveGlow 2.4s ease-in-out infinite;
 }
-@keyframes tabActivePulse {
-  0%, 100% { box-shadow: 0 -2px 12px rgba(255, 165, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08); }
-  50% { box-shadow: 0 -2px 16px rgba(255, 165, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
+@keyframes bottomTabActiveGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(0, 255, 122, 0.2),
+      0 -2px 18px rgba(0, 255, 122, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(0, 255, 122, 0.35),
+      0 -4px 28px rgba(0, 255, 122, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  }
+}
+.bottom-tab-item--accent-finance:not(.active) {
+  border-color: rgba(56, 189, 248, 0.25);
+}
+.bottom-tab-item--accent-finance.active {
+  border-color: rgba(56, 189, 248, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(56, 189, 248, 0.2),
+    0 -2px 20px rgba(56, 189, 248, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.bottom-tab-item--accent-alert:not(.active) {
+  border-color: rgba(251, 191, 36, 0.2);
+}
+.bottom-tab-item--accent-alert.active {
+  border-color: rgba(251, 191, 36, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(251, 191, 36, 0.25),
+    0 -2px 22px rgba(251, 191, 36, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.bottom-tab-item--accent-check:not(.active) {
+  border-color: rgba(52, 211, 153, 0.2);
+}
+.bottom-tab-item--accent-check.active {
+  border-color: rgba(52, 211, 153, 0.55);
+}
+.bottom-tab-emoji {
+  flex-shrink: 0;
+  font-size: 16px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
 }
 
 /* Tela Famílias e Grupos: mesmo padrão Visualizar Equipamentos - 1px, texto branco */
@@ -848,10 +963,14 @@ html, body {
     margin-bottom: 4px !important;
   }
   .bottom-tab-item {
-    min-width: 65px !important;
-    max-width: 100px !important;
-    font-size: 10px !important;
-    padding: 4px 6px !important;
+    min-width: 100px !important;
+    max-width: min(46vw, 200px) !important;
+    font-size: 11px !important;
+    padding: 6px 8px !important;
+  }
+  .bottom-tabs-brand-img {
+    height: 32px !important;
+    max-width: min(90px, 22vw) !important;
   }
   .tab-content-wrapper {
     padding: 8px !important;
@@ -1479,4 +1598,71 @@ a:focus-visible {
   outline: 2px solid rgba(0, 255, 122, 0.8);
   outline-offset: 2px;
   box-shadow: 0 0 0 4px rgba(0, 255, 122, 0.18);
+}
+
+/* Alerta de devedor: destaque vermelho no cartão e no formulário de cliente */
+.cliente-card-alerta-devedor {
+  border: 2px solid #ff4444 !important;
+  box-shadow: 0 0 18px rgba(255, 0, 0, 0.4) !important;
+}
+
+.cliente-form-alerta-devedor {
+  border: 2px solid #ff4444 !important;
+  box-shadow: 0 0 22px rgba(255, 0, 0, 0.35) !important;
+  background-color: rgba(40, 0, 0, 0.35) !important;
+}
+
+.cliente-form-alerta-devedor label,
+.cliente-form-alerta-devedor h3,
+.cliente-form-alerta-devedor h4,
+.cliente-form-alerta-devedor p,
+.cliente-form-alerta-devedor span {
+  color: #ff8888 !important;
+}
+
+.cliente-form-alerta-devedor input,
+.cliente-form-alerta-devedor textarea,
+.cliente-form-alerta-devedor select {
+  color: #ffcccc !important;
+  border-color: #cc3333 !important;
+  background-color: #1a0a0a !important;
+}
+
+.cliente-form-alerta-devedor input::placeholder,
+.cliente-form-alerta-devedor textarea::placeholder {
+  color: rgba(255, 160, 160, 0.65) !important;
+}
+
+.cliente-form-alerta-devedor .btn-primary,
+.cliente-form-alerta-devedor .btn-danger,
+.cliente-form-alerta-devedor button {
+  color: #ffdddd !important;
+  border: 2px solid #ff5555 !important;
+  background: rgba(90, 0, 0, 0.55) !important;
+  box-shadow: 0 0 0 1px rgba(255, 60, 60, 0.35);
+}
+
+.cliente-form-alerta-devedor img[style*='border'] {
+  border-color: #ff5555 !important;
+}
+
+.cliente-form-alerta-devedor button:focus-visible,
+.cliente-form-alerta-devedor input:focus-visible,
+.cliente-form-alerta-devedor select:focus-visible,
+.cliente-form-alerta-devedor textarea:focus-visible {
+  outline: 2px solid rgba(255, 100, 100, 0.95) !important;
+  box-shadow: 0 0 0 4px rgba(255, 0, 0, 0.22) !important;
+}
+
+.cliente-card-alerta-devedor .btn-primary,
+.cliente-card-alerta-devedor .btn-danger,
+.cliente-card-alerta-devedor button {
+  color: #ffeeee !important;
+  border: 2px solid #ff5555 !important;
+  background: rgba(70, 0, 0, 0.5) !important;
+}
+
+.cliente-card-alerta-devedor button:focus-visible {
+  outline: 2px solid rgba(255, 100, 100, 0.95) !important;
+  box-shadow: 0 0 0 4px rgba(255, 0, 0, 0.2) !important;
 }

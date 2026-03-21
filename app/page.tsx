@@ -8,6 +8,7 @@ import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
 import { loadManuaisFamiliasGruposFromIdb, saveManuaisFamiliasGruposToIdb, getKv } from './utils/manuaisIndexedDb'
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
+import { NonatoBrandLogo } from './components/NonatoBrandLogo'
 
 /** Manuais: debounce/alerta — não usar useRef aqui: ManuaisInformacoesTabContent é chamado como função (return ManuaisInformacoesTabContent()), não como componente. */
 let manuaisSaveDebounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -969,6 +970,8 @@ export default function Dashboard() {
   const [logoFechamentoSelecionadoId, setLogoFechamentoSelecionadoId] = useState<string>('') // Logo escolhido para fechamentos
   const [logoOrcamentoSelecionadoId, setLogoOrcamentoSelecionadoId] = useState<string>('') // Logo escolhido para PDF de Orçamento
   const [logoProtocoloServicoSelecionadoId, setLogoProtocoloServicoSelecionadoId] = useState<string>('') // Logo para PDF de Protocolos de Serviço
+  /** true = um único logo para todos os PDFs; false = escolha por tipo (relatórios, fechamentos, orçamento, protocolo) */
+  const [pdfLogosModoUnificado, setPdfLogosModoUnificado] = useState(false)
   const [showPedidoOrcamentoModal, setShowPedidoOrcamentoModal] = useState(false) // Modal para pedido de orçamento
   const [pedidosOrcamento, setPedidosOrcamento] = useState<PedidoOrcamento[]>([]) // Lista de pedidos de orçamento
   const [showListaPecasOrcamento, setShowListaPecasOrcamento] = useState(false) // Controla exibição da lista de peças para orçamento
@@ -2625,6 +2628,70 @@ export default function Dashboard() {
     return titles[type] || type
   }
 
+  const getBottomTabEmoji = (type: TabType): string => {
+    const m: Partial<Record<TabType, string>> = {
+      administrador: '⚙️',
+      clientes: '👤',
+      fornecedores: '🏭',
+      'relatorio-servico': '📋',
+      'gestao-financeira': '💶',
+      'clientes-financeiro': '💳',
+      'comprovantes-despesas': '🧾',
+      'orcamentos-avulso': '📝',
+      'registro-despesas': '📊',
+      equipamentos: '🔧',
+      'biblioteca-pecas': '📦',
+      agenda: '📅',
+      checklist: '✅',
+      'pre-checklist': '☑️',
+      'alerta-mensagens': '🔔',
+      gestores: '👷',
+      'comunicacao-interna': '💬',
+      translator: '🌐',
+      'manual-programa': '📖',
+      'protocolos-servico': '📑',
+      desmontados: '♻️',
+      'almoxarifado-armazem': '🏪',
+      'fechamento-relatorios-servicos': '📎',
+      'biblioteca-relatorios': '📚',
+      'gestao-custos': '💰',
+      'cadastro-nonato-service': '🏢',
+      'ficha-cadastral': '📇',
+      'pecas-substituicao': '🔩',
+      'importacao-pecas': '📥',
+      'solicitacao-servico-tecnico': '🛠️',
+      'cadastro-servicos': '📜',
+      'estado-visual-tecnico': '👁️',
+      'informacoes-conhecimento-tecnicos': '📘',
+      'relatorios-excluidos-clientes': '🗂️',
+      'mapa-visual-separacao-pecas': '🗺️',
+      'ordem-preparacao': '📋',
+      'formularios-checklist-tecnicos': '📃',
+      'verificacao-final-entrega': '✔️',
+      'hub-comunicacao': '📡',
+      'mensagens-internas': '💼',
+      'mensagens-internas-tecnicos': '👷',
+      'tecnicos-internos': '🧑‍🔧',
+      'tecnicos-externos': '👨‍🔧',
+      'familias-grupos': '📂',
+      'familias-grupos-equipamentos': '📂',
+      'checklist-hub': '📑',
+      'gestao-grupos-checklist': '📋',
+      users: '👥',
+      extras: '➕',
+    }
+    return m[type] || '📄'
+  }
+
+  const getBottomTabAccentClass = (type: TabType): string => {
+    const fin: TabType[] = ['gestao-financeira', 'clientes-financeiro', 'comprovantes-despesas', 'orcamentos-avulso', 'pedido-orcamentos-avulso', 'registro-despesas']
+    if (fin.includes(type)) return 'bottom-tab-item--accent-finance'
+    if (type === 'alerta-mensagens') return 'bottom-tab-item--accent-alert'
+    const chk: TabType[] = ['pre-checklist', 'checklist', 'checklist-hub', 'gestao-grupos-checklist']
+    if (chk.includes(type)) return 'bottom-tab-item--accent-check'
+    return ''
+  }
+
   // Chave de tradução para o Help da seção (ex: equipamentos -> helpEquipamentos)
   const getHelpKey = (type: TabType): string => {
     const key = 'help' + type.split('-').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join('')
@@ -2769,6 +2836,10 @@ export default function Dashboard() {
   const [ordensServico, setOrdensServico] = useState<OrdemServico[]>([])
   const [faturasPecas, setFaturasPecas] = useState<FaturaPecas[]>([])
   const [clientesDevedores, setClientesDevedores] = useState<ClienteDevedor[]>([])
+  /** Ao acionar «Ver no cadastro» a partir de Clientes Devedores: destaca o cartão e o formulário em vermelho até encerrar o alerta. */
+  const [clienteCadastroAlertaDevedorId, setClienteCadastroAlertaDevedorId] = useState<string | null>(null)
+  /** Modal antes de ir ao cadastro: aviso e relatório da dívida */
+  const [modalClienteDivida, setModalClienteDivida] = useState<ClienteDevedor | null>(null)
   const isUpdatingDevedores = useRef(false) // Flag para evitar execuções simultâneas
   const lastClientesDevedoresHash = useRef<string>('') // Hash do último estado de clientes para evitar atualizações desnecessárias
   const [ivaControles, setIvaControles] = useState<IVAControle[]>([])
@@ -4165,6 +4236,23 @@ export default function Dashboard() {
       const savedLogoProtocoloServicoId = getData('nonato-protocolo-servico-logo-id')
       if (typeof savedLogoProtocoloServicoId === 'string') {
         setLogoProtocoloServicoSelecionadoId(savedLogoProtocoloServicoId)
+      }
+      const savedPdfLogosUnificado = getData('nonato-pdf-logos-unificado')
+      const unificadoPdf = savedPdfLogosUnificado === true || savedPdfLogosUnificado === 'true'
+      setPdfLogosModoUnificado(unificadoPdf)
+      if (unificadoPdf) {
+        const master =
+          typeof savedLogoRelatorioId === 'string'
+            ? savedLogoRelatorioId
+            : ''
+        setLogoRelatorioSelecionadoId(master)
+        setLogoFechamentoSelecionadoId(master)
+        setLogoOrcamentoSelecionadoId(master)
+        setLogoProtocoloServicoSelecionadoId(master)
+        saveData('nonato-relatorios-logo-id', master)
+        saveData('nonato-fechamentos-logo-id', master)
+        saveData('nonato-orcamento-logo-id', master)
+        saveData('nonato-protocolo-servico-logo-id', master)
       }
       
       // Carregar pedidos de orçamento
@@ -7639,6 +7727,28 @@ export default function Dashboard() {
     setShowClienteForm(true)
   }
 
+  const abrirClienteCadastroAlertaDevedor = (clienteId: string) => {
+    const cl = clientes.find(c => c.id === clienteId)
+    if (!cl) {
+      alert(safeT?.clienteNaoEncontrado || 'Cliente não encontrado.')
+      return
+    }
+    setClienteCadastroAlertaDevedorId(clienteId)
+    setBuscaCliente(cl.nomeEmpresa)
+    setClientesActiveTab('listar')
+    openTab('clientes', getTabTitle('clientes'))
+    setTimeout(() => {
+      document.querySelector(`[data-cliente-card-id="${clienteId}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 400)
+  }
+
+  const confirmarCadastroAlertaClienteDivida = () => {
+    if (!modalClienteDivida) return
+    const cid = modalClienteDivida.clienteId
+    setModalClienteDivida(null)
+    abrirClienteCadastroAlertaDevedor(cid)
+  }
+
   const handleClientePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !file.type.startsWith('image/')) {
@@ -9542,6 +9652,18 @@ export default function Dashboard() {
       if (entry?.type === 'image' && entry.data) return entry.data
     }
     return logoUrl && logoType !== 'video' ? logoUrl : null
+  }
+
+  /** Modo Administrador: um logo para relatórios, fechamentos, orçamentos e protocolos */
+  const aplicarLogoUnificadoTodosPdfs = (logoId: string) => {
+    setLogoRelatorioSelecionadoId(logoId)
+    setLogoFechamentoSelecionadoId(logoId)
+    setLogoOrcamentoSelecionadoId(logoId)
+    setLogoProtocoloServicoSelecionadoId(logoId)
+    saveData('nonato-relatorios-logo-id', logoId)
+    saveData('nonato-fechamentos-logo-id', logoId)
+    saveData('nonato-orcamento-logo-id', logoId)
+    saveData('nonato-protocolo-servico-logo-id', logoId)
   }
 
   const administradorAddBibliotecaLogo = (
@@ -18309,6 +18431,29 @@ const nextF = familias.filter(x => x !== f)
                       )}
                     </div>
                   </div>
+                  <div style={{ marginTop: '18px', paddingTop: '16px', borderTop: '1px solid rgba(0,255,122,0.18)' }}>
+                    <h5 style={{ color: '#00ff88', margin: '0 0 8px', fontSize: '13px', letterSpacing: '0.03em' }}>
+                      {(safeT as any)?.brandSituationsTitle || 'Marca NONATO — variações por situação'}
+                    </h5>
+                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', margin: '0 0 12px', lineHeight: 1.45 }}>
+                      {(safeT as any)?.brandSituationsDesc || 'Ficheiro base em /brand/nonato-logo-original.png; tons por contexto (CSS). Útil para alertas, financeiro, ecrãs de estado.'}
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', alignItems: 'flex-end' }}>
+                      {([
+                        ['original', (safeT as any)?.brandVariantOriginal || 'Original'],
+                        ['sucesso', (safeT as any)?.brandVariantSucesso || 'Sucesso'],
+                        ['alerta', (safeT as any)?.brandVariantAlerta || 'Alerta'],
+                        ['devedor', (safeT as any)?.brandVariantDevedor || 'Dívida / urgência'],
+                        ['financeiro', (safeT as any)?.brandVariantFinanceiro || 'Financeiro'],
+                        ['informacao', (safeT as any)?.brandVariantInformacao || 'Informação'],
+                      ] as const).map(([variant, label]) => (
+                        <div key={variant} style={{ textAlign: 'center', width: '92px' }}>
+                          <NonatoBrandLogo variant={variant} style={{ height: 42, width: 'auto', margin: '0 auto 6px', display: 'block' }} alt="" />
+                          <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.25, display: 'block' }}>{label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 {/* PDFs: biblioteca única + cartões por fase com pré-visualização */}
@@ -18319,6 +18464,45 @@ const nextF = familias.filter(x => x !== f)
                   <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '12px', margin: '0 0 16px 0', lineHeight: 1.5 }}>
                     {(safeT as any)?.adminLogosPdfDesc || 'Adicione imagens à biblioteca uma vez; em cada fase escolha o logo e veja a pré-visualização. «Logo principal» = imagem da barra lateral (vídeo não entra em PDF).'}
                   </p>
+                  <div style={{ marginBottom: '16px', padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(255, 180, 0, 0.35)' }}>
+                    <strong style={{ fontSize: '13px', color: '#fff', display: 'block', marginBottom: '10px' }}>
+                      {(safeT as any)?.pdfLogosModoTitulo || 'Modo dos logos nos PDFs'}
+                    </strong>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '13px', color: 'rgba(255,255,255,0.95)' }}>
+                        <input
+                          type="radio"
+                          name="pdf-logos-modo-ns"
+                          checked={pdfLogosModoUnificado}
+                          onChange={() => {
+                            if (pdfLogosModoUnificado) return
+                            setPdfLogosModoUnificado(true)
+                            saveData('nonato-pdf-logos-unificado', true)
+                            aplicarLogoUnificadoTodosPdfs(logoRelatorioSelecionadoId || '')
+                          }}
+                          style={{ width: '18px', height: '18px', accentColor: '#00ff00', marginTop: '2px', flexShrink: 0 }}
+                        />
+                        <span>{(safeT as any)?.pdfLogosModoUnificadoLabel || 'Um único logo para todos os documentos PDF (relatórios, fechamentos, orçamentos, protocolos)'}</span>
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '13px', color: 'rgba(255,255,255,0.95)' }}>
+                        <input
+                          type="radio"
+                          name="pdf-logos-modo-ns"
+                          checked={!pdfLogosModoUnificado}
+                          onChange={() => {
+                            if (!pdfLogosModoUnificado) return
+                            setPdfLogosModoUnificado(false)
+                            saveData('nonato-pdf-logos-unificado', false)
+                          }}
+                          style={{ width: '18px', height: '18px', accentColor: '#00ff00', marginTop: '2px', flexShrink: 0 }}
+                        />
+                        <span>{(safeT as any)?.pdfLogosModoPorTipoLabel || 'Logo diferente em cada tipo de documento'}</span>
+                      </label>
+                    </div>
+                    <p style={{ margin: '12px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.45 }}>
+                      {(safeT as any)?.pdfLogosModoAjuda || 'Use um logo comum para manter a identidade igual em tudo; ou defina imagens distintas quando precisar (por exemplo marca em relatórios e outra em orçamentos). A biblioteca de imagens é partilhada nos dois modos.'}
+                    </p>
+                  </div>
                   <div style={{ marginBottom: '18px', padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                       <strong style={{ fontSize: '13px', color: '#fff' }}>{safeT?.logosDisponiveisRelatorios || 'Biblioteca de imagens para PDFs'}</strong>
@@ -18384,6 +18568,60 @@ const nextF = familias.filter(x => x !== f)
                       </div>
                     )}
                   </div>
+                  {pdfLogosModoUnificado ? (
+                  <div style={{ padding: '16px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '2px solid rgba(0, 180, 90, 0.45)', marginBottom: '4px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>PDF · ÚNICO</span>
+                    <strong style={{ fontSize: '15px', color: '#fff' }}>{(safeT as any)?.pdfLogosUnificadoCabecalho || 'Logo único para todos os PDFs'}</strong>
+                    <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{(safeT as any)?.pdfLogosUnificadoSub || 'Relatórios de serviço, fechamentos de despesas, orçamentos e protocolos usam o mesmo cabeçalho de imagem.'}</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'rgba(255,255,255,0.9)' }}>
+                        <input
+                          type="checkbox"
+                          checked={incluirLogoNosRelatorios}
+                          onChange={(e) => {
+                            const v = e.target.checked
+                            setIncluirLogoNosRelatorios(v)
+                            saveData('nonato-relatorios-incluir-logo', v)
+                          }}
+                          style={{ width: '16px', height: '16px', accentColor: '#00ff00' }}
+                        />
+                        {safeT?.incluirLogoNosRelatorios || 'Incluir nos PDF'}
+                        <span style={{ color: '#888', fontSize: '11px' }}>· {safeT?.escolherLogoRelatorios || 'Relatórios'}</span>
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'rgba(255,255,255,0.9)' }}>
+                        <input
+                          type="checkbox"
+                          checked={incluirLogoFechamentosDespesas}
+                          onChange={(e) => {
+                            const v = e.target.checked
+                            setIncluirLogoFechamentosDespesas(v)
+                            saveData('nonato-fechamentos-incluir-logo', v)
+                          }}
+                          style={{ width: '16px', height: '16px', accentColor: '#00ff00' }}
+                        />
+                        {(safeT as any)?.incluirLogoFechamentosDespesasShort || 'Incluir nos PDF'}
+                        <span style={{ color: '#888', fontSize: '11px' }}>· {(safeT as any)?.escolherLogoFechamentos || 'Fechamentos'}</span>
+                      </label>
+                    </div>
+                    <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
+                      {administradorPreviewPdfLogo(logoRelatorioSelecionadoId) ? (
+                        <img src={administradorPreviewPdfLogo(logoRelatorioSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
+                      ) : (
+                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
+                      )}
+                    </div>
+                    <select
+                      value={logoRelatorioSelecionadoId}
+                      onChange={(e) => aplicarLogoUnificadoTodosPdfs(e.target.value)}
+                      style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
+                    >
+                      <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
+                      {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
+                        <option key={l.id} value={l.id}>{l.name || l.id}</option>
+                      ))}
+                    </select>
+                  </div>
+                  ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
                     {/* Fase PDF 1 — Relatórios */}
                     <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -18524,6 +18762,7 @@ const nextF = familias.filter(x => x !== f)
                       </select>
                     </div>
                   </div>
+                  )}
                 </div>
             </div>
 
@@ -24220,8 +24459,23 @@ onKeyPress={(e) => {
                 </button>
                 
                 {showClienteForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414' }}>
-                <h3 style={{ marginBottom: '15px' }}>{editingCliente ? (safeT?.editCliente || 'Editar Cliente') : (safeT?.addCliente || 'Adicionar Cliente')}</h3>
+              <div
+                className={editingCliente && clienteCadastroAlertaDevedorId === editingCliente.id ? 'cliente-form-alerta-devedor' : undefined}
+                style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414' }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', flexWrap: 'wrap', gap: '10px' }}>
+                  <h3 style={{ margin: 0 }}>{editingCliente ? (safeT?.editCliente || 'Editar Cliente') : (safeT?.addCliente || 'Adicionar Cliente')}</h3>
+                  {editingCliente && clienteCadastroAlertaDevedorId === editingCliente.id && (
+                    <button
+                      type="button"
+                      className="btn-danger"
+                      onClick={() => setClienteCadastroAlertaDevedorId(null)}
+                      style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap' }}
+                    >
+                      {safeT?.encerrarAlertaDevedorCadastro || 'Encerrar alerta de devedor'}
+                    </button>
+                  )}
+                </div>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
                   <div>
@@ -24488,10 +24742,13 @@ onKeyPress={(e) => {
                       const statusFaturas = getStatusFaturasCliente(cliente.id)
                       const statusText = statusFaturas === 'pago' ? 'Em Dia' : statusFaturas === 'pendente' ? 'Pendente' : statusFaturas === 'atrasado' ? 'Atrasado' : 'Sem Faturas'
                       const statusColor = statusFaturas === 'pago' ? '#00ff00' : statusFaturas === 'pendente' ? '#ffaa00' : statusFaturas === 'atrasado' ? '#ff0000' : '#888888'
+                      const alertaDevedor = clienteCadastroAlertaDevedorId === cliente.id
                       
                       return (
                         <div 
-                          key={cliente.id} 
+                          key={cliente.id}
+                          data-cliente-card-id={cliente.id}
+                          className={alertaDevedor ? 'cliente-card-alerta-devedor' : undefined}
                           style={{ 
                             backgroundColor: '#222222', 
                             padding: '8px', 
@@ -24553,7 +24810,7 @@ onKeyPress={(e) => {
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <h3 style={{ 
                                   margin: 0, 
-                                  color: '#fff', 
+                                  color: alertaDevedor ? '#ff6666' : '#fff', 
                                   fontSize: '14px',
                                   fontWeight: 'bold',
                                   whiteSpace: 'nowrap',
@@ -24564,7 +24821,7 @@ onKeyPress={(e) => {
                                 </h3>
                                 <p style={{ 
                                   margin: 0, 
-                                  color: '#888', 
+                                  color: alertaDevedor ? '#ff8888' : '#888', 
                                   fontSize: '11px',
                                   whiteSpace: 'nowrap',
                                   overflow: 'hidden',
@@ -24577,8 +24834,8 @@ onKeyPress={(e) => {
                               <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
                                 {/* Badge de Status */}
                                 <div style={{
-                                  backgroundColor: statusColor,
-                                  color: '#fff',
+                                  backgroundColor: alertaDevedor ? 'rgba(160, 0, 0, 0.9)' : statusColor,
+                                  color: alertaDevedor ? '#ffcccc' : '#fff',
                                   padding: '2px 6px',
                                   borderRadius: '10px',
                                   fontSize: '9px',
@@ -24594,7 +24851,7 @@ onKeyPress={(e) => {
                                 
                                 {/* Menu de Opções */}
                                 <div style={{ cursor: 'pointer', padding: '1px' }}>
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={alertaDevedor ? '#ff6666' : '#888'} strokeWidth="2">
                                     <circle cx="12" cy="5" r="1.5"/>
                                     <circle cx="12" cy="12" r="1.5"/>
                                     <circle cx="12" cy="19" r="1.5"/>
@@ -24606,8 +24863,8 @@ onKeyPress={(e) => {
                             {/* Endereço e NIF em linha */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
                               {(cliente.morada || cliente.localidade) && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#aaa', fontSize: '10px', flexWrap: 'wrap' }}>
-                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: alertaDevedor ? '#ff9999' : '#aaa', fontSize: '10px', flexWrap: 'wrap' }}>
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={alertaDevedor ? '#ff7777' : '#888'} strokeWidth="2">
                                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
                                   </svg>
@@ -24619,7 +24876,7 @@ onKeyPress={(e) => {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     title={(safeT as any)?.abrirGoogleMaps || 'Abrir no Google Maps'}
-                                    style={{ marginLeft: '4px', color: '#6ba3f6', textDecoration: 'none', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
+                                    style={{ marginLeft: '4px', color: alertaDevedor ? '#ff8888' : '#6ba3f6', textDecoration: 'none', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
                                   >
                                     🗺️ {(safeT as any)?.verNoMaps || 'Ver no Maps'}
                                   </a>
@@ -24627,8 +24884,8 @@ onKeyPress={(e) => {
                               )}
                               
                               {cliente.numeroContribuicaoFiscal && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#aaa', fontSize: '10px' }}>
-                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: alertaDevedor ? '#ff9999' : '#aaa', fontSize: '10px' }}>
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={alertaDevedor ? '#ff7777' : '#888'} strokeWidth="2">
                                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                                     <line x1="3" y1="10" x2="21" y2="10"></line>
                                     <line x1="7" y1="2" x2="7" y2="6"></line>
@@ -24641,6 +24898,16 @@ onKeyPress={(e) => {
                             
                             {/* Botões de Ação — sem encolher o texto (minWidth:0 cortava «Equipamentos do Cliente») */}
                             <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-start', width: '100%', boxSizing: 'border-box' }}>
+                              {alertaDevedor && (
+                                <button
+                                  type="button"
+                                  className="btn-danger"
+                                  onClick={() => setClienteCadastroAlertaDevedorId(null)}
+                                  style={{ padding: '6px 10px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.25', flex: '0 0 auto' }}
+                                >
+                                  {safeT?.encerrarAlertaDevedorCadastro || 'Encerrar alerta de devedor'}
+                                </button>
+                              )}
                               <button 
                                 className="btn-primary" 
                                 onClick={() => {
@@ -40414,6 +40681,25 @@ A1;Peça exemplo;10'
                               ))}
                             </div>
                           )}
+                          <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid rgba(255, 0, 0, 0.25)' }}>
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              onClick={() => setModalClienteDivida(devedor)}
+                              style={{
+                                padding: '10px 16px',
+                                fontSize: '13px',
+                                fontWeight: 'bold',
+                                width: '100%',
+                                maxWidth: '420px',
+                                border: '1px solid rgba(255, 80, 80, 0.9)',
+                                backgroundColor: 'rgba(80, 0, 0, 0.45)',
+                                color: '#ffaaaa'
+                              }}
+                            >
+                              {safeT?.verCadastroClienteDevedorAlerta || 'Ver no cadastro com alerta de devedor'}
+                            </button>
+                          </div>
                         </div>
                       ))}
                     {clientesDevedores.filter(cd => cd.isDevedor && cd.saldoPendente > 0).length === 0 && (
@@ -45518,7 +45804,7 @@ A1;Peça exemplo;10'
         minHeight: '100dvh',
         backgroundColor: '#1e1e1e',
         color: '#fff',
-        paddingBottom: openTabs.length > 0 ? 'calc(54px + env(safe-area-inset-bottom, 0px))' : '0',
+        paddingBottom: openTabs.length > 0 ? 'calc(72px + env(safe-area-inset-bottom, 0px))' : '0',
         paddingTop: isDemoMode && !isCompactLayout ? '48px' : undefined
       }}
     >
@@ -47628,50 +47914,64 @@ A1;Peça exemplo;10'
           )}
         </div>
 
-        {/* Barra de Abas na Parte Inferior - moderna, animada, laranja transparente */}
+        {/* Barra de Abas inferior — identidade NONATO, marca + ícones por secção */}
         {openTabs.length > 0 && (
           <div className="bottom-tabs-bar">
-            {openTabs.map((tab) => (
-              <div
-                key={tab.id}
-                className={`bottom-tab-item ${activeTabId === tab.id ? 'active' : ''}`}
-                onClick={() => setActiveTabId(tab.id)}
-              >
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                  {tab.title}
-                </span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    closeTab(tab.id)
-                  }}
-                  style={{
-                    marginLeft: '8px',
-                    background: 'transparent',
-                    border: 'none',
-                    color: 'rgba(255, 100, 100, 0.9)',
-                    cursor: 'pointer',
-                    fontSize: '18px',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 68, 68, 0.25)'
-                    e.currentTarget.style.color = '#ff6666'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent'
-                    e.currentTarget.style.color = 'rgba(255, 100, 100, 0.9)'
-                  }}
+            <div className="bottom-tabs-brand" title="NONATO SERVICE">
+              <NonatoBrandLogo variant="original" alt="" className="bottom-tabs-brand-img" aria-hidden />
+            </div>
+            <div className="bottom-tabs-scroll">
+              {openTabs.map((tab) => (
+                <div
+                  key={tab.id}
+                  className={`bottom-tab-item ${activeTabId === tab.id ? 'active' : ''} ${getBottomTabAccentClass(tab.type)}`}
+                  onClick={() => setActiveTabId(tab.id)}
+                  title={tab.title}
                 >
-                  ×
-                </button>
-              </div>
-            ))}
+                  <span className="bottom-tab-emoji" aria-hidden>{tab.icon || getBottomTabEmoji(tab.type)}</span>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                    {tab.title}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Fechar aba"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      closeTab(tab.id)
+                    }}
+                    style={{
+                      marginLeft: '4px',
+                      background: 'transparent',
+                      border: '1px solid rgba(255, 80, 80, 0.35)',
+                      color: 'rgba(255, 160, 160, 0.95)',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      lineHeight: 1,
+                      width: '26px',
+                      height: '26px',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s',
+                      flexShrink: 0
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 60, 60, 0.22)'
+                      e.currentTarget.style.borderColor = 'rgba(255, 100, 100, 0.6)'
+                      e.currentTarget.style.color = '#fff'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent'
+                      e.currentTarget.style.borderColor = 'rgba(255, 80, 80, 0.35)'
+                      e.currentTarget.style.color = 'rgba(255, 160, 160, 0.95)'
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -49962,8 +50262,23 @@ A1;Peça exemplo;10'
               {safeT?.addCliente || 'Adicionar Cliente'}
             </button>
             {showClienteForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
-                <h4>{editingCliente ? (safeT?.editCliente || 'Editar Cliente') : (safeT?.addCliente || 'Adicionar Cliente')}</h4>
+              <div
+                className={editingCliente && clienteCadastroAlertaDevedorId === editingCliente.id ? 'cliente-form-alerta-devedor' : undefined}
+                style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                  <h4 style={{ margin: 0 }}>{editingCliente ? (safeT?.editCliente || 'Editar Cliente') : (safeT?.addCliente || 'Adicionar Cliente')}</h4>
+                  {editingCliente && clienteCadastroAlertaDevedorId === editingCliente.id && (
+                    <button
+                      type="button"
+                      className="btn-danger"
+                      onClick={() => setClienteCadastroAlertaDevedorId(null)}
+                      style={{ padding: '6px 10px', fontSize: '11px', whiteSpace: 'nowrap' }}
+                    >
+                      {safeT?.encerrarAlertaDevedorCadastro || 'Encerrar alerta de devedor'}
+                    </button>
+                  )}
+                </div>
                 <input
                   type="text"
                   placeholder={safeT?.nomeEmpresa || 'Nome da Empresa'}
@@ -50104,10 +50419,13 @@ A1;Peça exemplo;10'
                   const statusFaturas = getStatusFaturasCliente(cliente.id)
                   const statusText = statusFaturas === 'pago' ? 'Em Dia' : statusFaturas === 'pendente' ? 'Pendente' : statusFaturas === 'atrasado' ? 'Atrasado' : 'Sem Faturas'
                   const statusColor = statusFaturas === 'pago' ? '#00ff00' : statusFaturas === 'pendente' ? '#ffaa00' : statusFaturas === 'atrasado' ? '#ff0000' : '#888888'
+                  const alertaDevedor = clienteCadastroAlertaDevedorId === cliente.id
                   
                   return (
                     <div 
-                      key={cliente.id} 
+                      key={cliente.id}
+                      data-cliente-card-id={cliente.id}
+                      className={alertaDevedor ? 'cliente-card-alerta-devedor' : undefined}
                       style={{ 
                         backgroundColor: '#222222', 
                         padding: '8px', 
@@ -50169,7 +50487,7 @@ A1;Peça exemplo;10'
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <h3 style={{ 
                               margin: 0, 
-                              color: '#fff', 
+                              color: alertaDevedor ? '#ff6666' : '#fff', 
                               fontSize: '14px',
                               fontWeight: 'bold',
                               whiteSpace: 'nowrap',
@@ -50180,7 +50498,7 @@ A1;Peça exemplo;10'
                             </h3>
                             <p style={{ 
                               margin: 0, 
-                              color: '#888', 
+                              color: alertaDevedor ? '#ff8888' : '#888', 
                               fontSize: '11px',
                               whiteSpace: 'nowrap',
                               overflow: 'hidden',
@@ -50193,8 +50511,8 @@ A1;Peça exemplo;10'
                           <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
                             {/* Badge de Status */}
                             <div style={{
-                              backgroundColor: statusColor,
-                              color: '#fff',
+                              backgroundColor: alertaDevedor ? 'rgba(160, 0, 0, 0.9)' : statusColor,
+                              color: alertaDevedor ? '#ffcccc' : '#fff',
                               padding: '2px 6px',
                               borderRadius: '10px',
                               fontSize: '9px',
@@ -50210,7 +50528,7 @@ A1;Peça exemplo;10'
                             
                             {/* Menu de Opções */}
                             <div style={{ cursor: 'pointer', padding: '1px' }}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={alertaDevedor ? '#ff6666' : '#888'} strokeWidth="2">
                                 <circle cx="12" cy="5" r="1.5"/>
                                 <circle cx="12" cy="12" r="1.5"/>
                                 <circle cx="12" cy="19" r="1.5"/>
@@ -50222,8 +50540,8 @@ A1;Peça exemplo;10'
                         {/* Endereço e NIF em linha */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
                           {(cliente.morada || cliente.localidade) && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#aaa', fontSize: '10px' }}>
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: alertaDevedor ? '#ff9999' : '#aaa', fontSize: '10px' }}>
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={alertaDevedor ? '#ff7777' : '#888'} strokeWidth="2">
                                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                                 <circle cx="12" cy="10" r="3"></circle>
                               </svg>
@@ -50234,8 +50552,8 @@ A1;Peça exemplo;10'
                           )}
                           
                           {cliente.numeroContribuicaoFiscal && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#aaa', fontSize: '10px' }}>
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: alertaDevedor ? '#ff9999' : '#aaa', fontSize: '10px' }}>
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={alertaDevedor ? '#ff7777' : '#888'} strokeWidth="2">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                                 <line x1="3" y1="10" x2="21" y2="10"></line>
                                 <line x1="7" y1="2" x2="7" y2="6"></line>
@@ -50248,6 +50566,16 @@ A1;Peça exemplo;10'
                         
                         {/* Botões de Ação — sem encolher o texto do terceiro botão */}
                         <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-start', width: '100%', boxSizing: 'border-box' }}>
+                          {alertaDevedor && (
+                            <button
+                              type="button"
+                              className="btn-danger"
+                              onClick={() => setClienteCadastroAlertaDevedorId(null)}
+                              style={{ padding: '6px 10px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.25', flex: '0 0 auto' }}
+                            >
+                              {safeT?.encerrarAlertaDevedorCadastro || 'Encerrar alerta de devedor'}
+                            </button>
+                          )}
                           <button className="btn-primary" onClick={() => handleEditCliente(cliente)} style={{ padding: '6px 12px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.25', flex: '0 0 auto' }}>
                             {safeT?.edit || 'Editar'}
                           </button>
@@ -50267,6 +50595,100 @@ A1;Peça exemplo;10'
             <button className="btn-primary" onClick={() => setShowClientesModal(false)} style={{ width: '100%', marginTop: '20px' }}>
               {safeT?.close || 'Fechar'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {modalClienteDivida && (
+        <div
+          className="modal-overlay"
+          style={{ zIndex: 10050 }} 
+          onClick={() => setModalClienteDivida(null)}
+        >
+          <div
+            className="modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '560px', width: '100%', border: '2px solid rgba(255, 60, 60, 0.55)', boxShadow: '0 0 28px rgba(255, 0, 0, 0.25)' }}
+          >
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <h2 style={{ margin: 0, color: '#ff4444', fontSize: '22px', letterSpacing: '0.5px' }}>
+                {safeT?.clienteComDividaTitulo || 'CLIENTE COM DÍVIDA'}
+              </h2>
+              <p style={{ margin: '10px 0 0', color: '#fff', fontSize: '16px', fontWeight: 'bold' }}>
+                {modalClienteDivida.clienteNome}
+              </p>
+            </div>
+            <div style={{ padding: '14px', borderRadius: '8px', backgroundColor: 'rgba(80, 0, 0, 0.35)', border: '1px solid rgba(255, 0, 0, 0.35)', marginBottom: '14px' }}>
+              <p style={{ margin: '0 0 6px', color: '#ffaaaa', fontSize: '12px', textTransform: 'uppercase' }}>
+                {safeT?.valorEmDividaSaldo || 'Valor em dívida (saldo pendente)'}
+              </p>
+              <p style={{ margin: 0, color: '#ff3333', fontSize: '28px', fontWeight: 'bold' }}>
+                €{modalClienteDivida.saldoPendente.toFixed(2)}
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '12px', fontSize: '13px', color: '#ccc' }}>
+                <div>
+                  <span style={{ color: '#888' }}>{safeT?.totalDevidoRelatorio || 'Total em aberto (faturado)'}:</span>{' '}
+                  <span style={{ color: '#ffcccc' }}>€{modalClienteDivida.totalDevido.toFixed(2)}</span>
+                </div>
+                <div>
+                  <span style={{ color: '#888' }}>{safeT?.totalPagoRelatorio || 'Total já pago'}:</span>{' '}
+                  <span style={{ color: '#ffcccc' }}>€{modalClienteDivida.totalPago.toFixed(2)}</span>
+                </div>
+                <div>
+                  <span style={{ color: '#888' }}>{safeT?.faturasPendentes || 'Faturas Pendentes'}:</span>{' '}
+                  <span style={{ color: '#ffff99' }}>{modalClienteDivida.numeroFaturasPendentes}</span>
+                </div>
+                <div>
+                  <span style={{ color: '#888' }}>{safeT?.faturasVencidas || 'Faturas Vencidas'}:</span>{' '}
+                  <span style={{ color: '#ff6666' }}>{modalClienteDivida.numeroFaturasVencidas}</span>
+                </div>
+              </div>
+            </div>
+            <div style={{ marginBottom: '14px' }}>
+              <p style={{ margin: '0 0 10px', color: '#00ff88', fontSize: '14px', fontWeight: 'bold' }}>
+                {safeT?.relatorioResumoDivida || 'Relatório da dívida — faturas em aberto'}
+              </p>
+              <div style={{ maxHeight: '220px', overflowY: 'auto', border: '1px solid rgba(255, 0, 0, 0.25)', borderRadius: '6px', padding: '8px', backgroundColor: '#141414' }}>
+                {modalClienteDivida.faturasPendentes.length === 0 ? (
+                  <p style={{ margin: 0, color: '#888', fontSize: '13px' }}>{safeT?.semFaturasDetalheRelatorio || 'Sem detalhe de faturas (saldo calculado por outras regras).'}</p>
+                ) : (
+                  modalClienteDivida.faturasPendentes.map((fatura) => (
+                    <div key={fatura.faturaId} style={{ marginBottom: '8px', padding: '8px', backgroundColor: '#1a0a0a', borderRadius: '4px', border: '1px solid rgba(255, 0, 0, 0.2)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ color: '#ddd', fontSize: '12px', fontWeight: 'bold' }}>{fatura.numeroFatura}</span>
+                        <span style={{ color: '#ff5555', fontSize: '14px', fontWeight: 'bold' }}>€{fatura.valor.toFixed(2)}</span>
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>
+                        {fatura.numeroOS && (
+                          <span>{safeT?.ordemServico || 'OS'}: {fatura.numeroOS} · </span>
+                        )}
+                        {fatura.dataVencimento && (
+                          <span>{safeT?.vencimento || 'Vencimento'}: {new Date(fatura.dataVencimento).toLocaleDateString()}</span>
+                        )}
+                        {fatura.diasVencido != null && fatura.diasVencido > 0 && (
+                          <span style={{ color: '#ff4444', fontWeight: 'bold' }}>
+                            {' '}· {fatura.diasVencido} {safeT?.diasVencido || 'dias vencido'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              <button type="button" className="btn-primary" onClick={() => setModalClienteDivida(null)} style={{ padding: '10px 16px' }}>
+                {safeT?.close || 'Fechar'}
+              </button>
+              <button
+                type="button"
+                className="btn-danger"
+                onClick={confirmarCadastroAlertaClienteDivida}
+                style={{ padding: '10px 16px', fontWeight: 'bold' }}
+              >
+                {safeT?.continuarCadastroComAlertaDivida || 'Continuar para o cadastro com alerta'}
+              </button>
+            </div>
           </div>
         </div>
       )}
