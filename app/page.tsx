@@ -9535,6 +9535,36 @@ export default function Dashboard() {
     return '';
   };
 
+  /** Pré-visualização no painel Administrador: logo da lista ou logo principal (barra), para PDFs */
+  const administradorPreviewPdfLogo = (selectedId: string): string | null => {
+    if (selectedId && logosRelatorios.length > 0) {
+      const entry = logosRelatorios.find((x) => x.id === selectedId)
+      if (entry?.type === 'image' && entry.data) return entry.data
+    }
+    return logoUrl && logoType !== 'video' ? logoUrl : null
+  }
+
+  const administradorAddBibliotecaLogo = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    afterAdd?: (id: string) => void
+  ) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const data = ev.target?.result as string
+      if (!data || !data.startsWith('data:image/')) return
+      const name = file.name.replace(/\.[^.]+$/, '') || `Logo ${logosRelatorios.length + 1}`
+      const id = `logo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+      const next = [...logosRelatorios, { id, name, data, type: 'image' as const }]
+      setLogosRelatorios(next)
+      saveData('nonato-logos-relatorios', next)
+      afterAdd?.(id)
+      e.target.value = ''
+    }
+    reader.readAsDataURL(file)
+  }
+
   /** PDF de fechamento de despesas a partir da Biblioteca */
   const imprimirPDFDespesasDaBiblioteca = (relatorio: RelatorioServico, itens: FechamentoItem[]) => {
     const st = translations[selectedLanguage as keyof typeof translations] || translations['pt-BR']
@@ -18213,24 +18243,175 @@ const nextF = familias.filter(x => x !== f)
                     </p>
                   </div>
                 </div>
-                <div style={{ marginTop: '18px', padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={incluirLogoNosRelatorios}
-                      onChange={(e) => {
-                        const v = e.target.checked
-                        setIncluirLogoNosRelatorios(v)
-                        saveData('nonato-relatorios-incluir-logo', v)
-                      }}
-                      style={{ width: '20px', height: '20px', accentColor: '#00ff00' }}
-                    />
-                    <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.95)' }}>{safeT?.incluirLogoNosRelatorios || 'Incluir logo nos relatórios gerados (PDF)'}</span>
-                  </label>
-                  <p style={{ margin: '8px 0 0 32px', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{safeT?.incluirLogoNosRelatoriosDesc || 'Quando ativo, o logo configurado acima aparece no cabeçalho dos relatórios de serviço exportados em PDF.'}</p>
-                  {incluirLogoNosRelatorios && (
-                    <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'rgba(255,255,255,0.95)' }}>{safeT?.escolherLogoRelatorios || 'Escolher logo para relatórios'}</label>
+              </div>
+
+                {/* Logos na interface (barra lateral + painel) — grelha padronizada */}
+                <div style={{ marginTop: '22px', padding: '18px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.25)' }}>
+                  <h4 style={{ color: '#00ff00', margin: '0 0 6px 0', fontSize: '15px', letterSpacing: '0.04em' }}>
+                    {(safeT as any)?.adminLogosInterfaceTitle || 'Logos na interface'}
+                  </h4>
+                  <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '12px', margin: '0 0 16px 0', lineHeight: 1.5 }}>
+                    {(safeT as any)?.adminLogosInterfaceDesc || 'Imagem ou vídeo MP4 para o menu lateral e para o ecrã inicial. A pré-visualização mostra o que está ativo em cada fase.'}
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                    <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                        <div>
+                          <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>UI · 01</span>
+                          <strong style={{ display: 'block', marginTop: '4px', fontSize: '14px', color: '#fff' }}>{(safeT as any)?.logoBarraLateral || 'Logo da barra lateral'}</strong>
+                          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)' }}>{safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece no menu lateral.'}</span>
+                        </div>
+                        <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '6px 12px', fontSize: '12px', flexShrink: 0 }}>
+                          {safeT?.changeLogo || 'Alterar'}
+                          <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeSidebarLogo} style={{ display: 'none' }} />
+                        </label>
+                      </div>
+                      <div style={{ minHeight: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px dashed rgba(0,255,0,0.25)', padding: '10px' }}>
+                        {logoUrl ? (
+                          logoType === 'video' ? (
+                            <video src={logoUrl} autoPlay loop muted style={{ maxWidth: '100%', maxHeight: '96px', borderRadius: '6px', objectFit: 'contain' }} />
+                          ) : (
+                            <img src={logoUrl} alt="" style={{ maxWidth: '100%', maxHeight: '96px', objectFit: 'contain', borderRadius: '6px' }} />
+                          )
+                        ) : (
+                          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>{(safeT as any)?.adminSemLogoPreview || 'Sem logo'}</span>
+                        )}
+                      </div>
+                      {logoUrl && (
+                        <button type="button" className="btn-danger" onClick={handleRemoveSidebarLogo} style={{ padding: '6px 12px', fontSize: '12px', alignSelf: 'flex-start' }}>{safeT?.removeLogo || 'Remover logo'}</button>
+                      )}
+                    </div>
+                    <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
+                        <div>
+                          <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>UI · 02</span>
+                          <strong style={{ display: 'block', marginTop: '4px', fontSize: '14px', color: '#fff' }}>{(safeT as any)?.logoDashboard || 'Logo do Dashboard'}</strong>
+                          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)' }}>{safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece na tela inicial (painel de controlo).'}</span>
+                        </div>
+                        <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '6px 12px', fontSize: '12px', flexShrink: 0 }}>
+                          {safeT?.changeLogo || 'Alterar'}
+                          <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeDashboardLogo} style={{ display: 'none' }} />
+                        </label>
+                      </div>
+                      <div style={{ minHeight: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px dashed rgba(0,255,0,0.25)', padding: '10px' }}>
+                        {logoUrlDashboard ? (
+                          logoTypeDashboard === 'video' ? (
+                            <video src={logoUrlDashboard} autoPlay loop muted style={{ maxWidth: '100%', maxHeight: '96px', borderRadius: '6px', objectFit: 'contain' }} />
+                          ) : (
+                            <img src={logoUrlDashboard} alt="" style={{ maxWidth: '100%', maxHeight: '96px', objectFit: 'contain', borderRadius: '6px' }} />
+                          )
+                        ) : (
+                          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>{(safeT as any)?.adminSemLogoPreview || 'Sem logo'}</span>
+                        )}
+                      </div>
+                      {logoUrlDashboard && (
+                        <button type="button" className="btn-danger" onClick={handleRemoveDashboardLogo} style={{ padding: '6px 12px', fontSize: '12px', alignSelf: 'flex-start' }}>{safeT?.removeLogo || 'Remover logo'}</button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* PDFs: biblioteca única + cartões por fase com pré-visualização */}
+                <div style={{ marginTop: '22px', padding: '18px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.25)' }}>
+                  <h4 style={{ color: '#00ff00', margin: '0 0 6px 0', fontSize: '15px', letterSpacing: '0.04em' }}>
+                    {(safeT as any)?.adminLogosPdfTitle || 'Logos nos documentos PDF'}
+                  </h4>
+                  <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '12px', margin: '0 0 16px 0', lineHeight: 1.5 }}>
+                    {(safeT as any)?.adminLogosPdfDesc || 'Adicione imagens à biblioteca uma vez; em cada fase escolha o logo e veja a pré-visualização. «Logo principal» = imagem da barra lateral (vídeo não entra em PDF).'}
+                  </p>
+                  <div style={{ marginBottom: '18px', padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                      <strong style={{ fontSize: '13px', color: '#fff' }}>{safeT?.logosDisponiveisRelatorios || 'Biblioteca de imagens para PDFs'}</strong>
+                      <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 14px', fontSize: '14px' }}>
+                        {safeT?.adicionarLogoRelatorios || 'Adicionar imagem à biblioteca'}
+                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => administradorAddBibliotecaLogo(e)} />
+                      </label>
+                    </div>
+                    {logosRelatorios.length === 0 ? (
+                      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', margin: 0 }}>{safeT?.nenhumLogoRelatorio || 'Nenhum logo adicional. Adicione imagens para além do logo principal.'}</p>
+                    ) : (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                        {logosRelatorios.map((l) => (
+                          <div
+                            key={l.id}
+                            style={{
+                              padding: '10px',
+                              backgroundColor: '#222',
+                              borderRadius: '8px',
+                              border: '1px solid rgba(0, 255, 0, 0.2)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '10px',
+                              maxWidth: '100%'
+                            }}
+                          >
+                            <div style={{ width: '56px', height: '40px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '4px', overflow: 'hidden' }}>
+                              {l.type === 'image' && l.data ? (
+                                <img src={l.data} alt={l.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                              ) : null}
+                            </div>
+                            <span style={{ fontSize: '12px', flex: 1, minWidth: '0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={l.name || l.id}>{l.name || l.id}</span>
+                            <button
+                              type="button"
+                              className="btn-danger"
+                              style={{ padding: '4px 8px', fontSize: '11px', flexShrink: 0 }}
+                              onClick={() => {
+                                const next = logosRelatorios.filter((x) => x.id !== l.id)
+                                setLogosRelatorios(next)
+                                saveData('nonato-logos-relatorios', next)
+                                if (logoRelatorioSelecionadoId === l.id) {
+                                  setLogoRelatorioSelecionadoId('')
+                                  saveData('nonato-relatorios-logo-id', '')
+                                }
+                                if (logoFechamentoSelecionadoId === l.id) {
+                                  setLogoFechamentoSelecionadoId('')
+                                  saveData('nonato-fechamentos-logo-id', '')
+                                }
+                                if (logoOrcamentoSelecionadoId === l.id) {
+                                  setLogoOrcamentoSelecionadoId('')
+                                  saveData('nonato-orcamento-logo-id', '')
+                                }
+                                if (logoProtocoloServicoSelecionadoId === l.id) {
+                                  setLogoProtocoloServicoSelecionadoId('')
+                                  saveData('nonato-protocolo-servico-logo-id', '')
+                                }
+                              }}
+                            >
+                              {safeT?.removeLogo || 'Remover'}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
+                    {/* Fase PDF 1 — Relatórios */}
+                    <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>PDF · 01</span>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'rgba(255,255,255,0.9)' }}>
+                          <input
+                            type="checkbox"
+                            checked={incluirLogoNosRelatorios}
+                            onChange={(e) => {
+                              const v = e.target.checked
+                              setIncluirLogoNosRelatorios(v)
+                              saveData('nonato-relatorios-incluir-logo', v)
+                            }}
+                            style={{ width: '16px', height: '16px', accentColor: '#00ff00' }}
+                          />
+                          {safeT?.incluirLogoNosRelatorios || 'Incluir nos PDF'}
+                        </label>
+                      </div>
+                      <strong style={{ fontSize: '14px', color: '#fff' }}>{safeT?.escolherLogoRelatorios || 'Relatórios de serviço'}</strong>
+                      <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.55)' }}>{safeT?.escolherLogoRelatoriosDesc || 'Cabeçalho dos relatórios de serviço exportados em PDF.'}</p>
+                      <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
+                        {administradorPreviewPdfLogo(logoRelatorioSelecionadoId) ? (
+                          <img src={administradorPreviewPdfLogo(logoRelatorioSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
+                        ) : (
+                          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
+                        )}
+                      </div>
                       <select
                         value={logoRelatorioSelecionadoId}
                         onChange={(e) => {
@@ -18238,288 +18419,112 @@ const nextF = familias.filter(x => x !== f)
                           setLogoRelatorioSelecionadoId(v)
                           saveData('nonato-relatorios-logo-id', v)
                         }}
-                        style={{ width: '100%', maxWidth: '320px', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                        style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
                       >
-                        <option value="">{safeT?.logoPrincipal || 'Logo principal'}</option>
+                        <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
                         {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
                           <option key={l.id} value={l.id}>{l.name || l.id}</option>
                         ))}
                       </select>
-                      <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{safeT?.escolherLogoRelatoriosDesc || 'Selecione o logo principal ou um dos logos adicionados abaixo para aparecer nos PDFs.'}</p>
-                      <div style={{ marginTop: '14px' }}>
-                        <strong style={{ display: 'block', marginBottom: '8px', fontSize: '13px' }}>{safeT?.logosDisponiveisRelatorios || 'Logos disponíveis para relatórios'}</strong>
-                        {logosRelatorios.length === 0 ? (
-                          <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{safeT?.nenhumLogoRelatorio || 'Nenhum logo adicional. Use "Adicionar logo" para incluir mais opções (apenas imagens).'}</p>
-                        ) : (
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                            {logosRelatorios.map((l) => (
-                              <div key={l.id} style={{ padding: '10px', backgroundColor: '#222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                {l.type === 'image' && l.data ? (
-                                  <img src={l.data} alt={l.name} style={{ maxWidth: '60px', maxHeight: '40px', objectFit: 'contain' }} />
-                                ) : null}
-                                <span style={{ fontSize: '12px', flex: 1, minWidth: '60px' }}>{l.name || l.id}</span>
-                                <button
-                                  type="button"
-                                  className="btn-primary"
-                                  style={{ padding: '4px 10px', fontSize: '11px' }}
-                                  onClick={() => {
-                                    setLogoRelatorioSelecionadoId(l.id)
-                                    saveData('nonato-relatorios-logo-id', l.id)
-                                  }}
-                                >
-                                  {safeT?.usarNosRelatorios || 'Usar nos relatórios'}
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn-danger"
-                                  style={{ padding: '4px 8px', fontSize: '11px' }}
-                                  onClick={() => {
-                                    const next = logosRelatorios.filter((x) => x.id !== l.id)
-                                    setLogosRelatorios(next)
-                                    saveData('nonato-logos-relatorios', next)
-                                    if (logoRelatorioSelecionadoId === l.id) {
-                                      setLogoRelatorioSelecionadoId('')
-                                      saveData('nonato-relatorios-logo-id', '')
-                                    }
-                                  }}
-                                >
-                                  {safeT?.removeLogo || 'Remover'}
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 14px', marginTop: '10px', fontSize: '13px' }}>
-                          {safeT?.adicionarLogoRelatorios || 'Adicionar logo'}
+                    </div>
+                    {/* Fase PDF 2 — Fechamentos */}
+                    <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>PDF · 02</span>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'rgba(255,255,255,0.9)' }}>
                           <input
-                            type="file"
-                            accept="image/*"
-                            style={{ display: 'none' }}
+                            type="checkbox"
+                            checked={incluirLogoFechamentosDespesas}
                             onChange={(e) => {
-                              const file = e.target.files?.[0]
-                              if (!file) return
-                              const reader = new FileReader()
-                              reader.onload = (ev) => {
-                                const data = ev.target?.result as string
-                                if (!data || !data.startsWith('data:image/')) return
-                                const name = file.name.replace(/\.[^.]+$/, '') || `Logo ${logosRelatorios.length + 1}`
-                                const id = `logo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-                                const next = [...logosRelatorios, { id, name, data, type: 'image' as const }]
-                                setLogosRelatorios(next)
-                                saveData('nonato-logos-relatorios', next)
-                                setLogoRelatorioSelecionadoId(id)
-                                saveData('nonato-relatorios-logo-id', id)
-                                e.target.value = ''
-                              }
-                              reader.readAsDataURL(file)
+                              const v = e.target.checked
+                              setIncluirLogoFechamentosDespesas(v)
+                              saveData('nonato-fechamentos-incluir-logo', v)
                             }}
+                            style={{ width: '16px', height: '16px', accentColor: '#00ff00' }}
                           />
+                          {(safeT as any)?.incluirLogoFechamentosDespesasShort || 'Incluir nos PDF'}
                         </label>
                       </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div style={{ marginTop: '18px', padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={incluirLogoFechamentosDespesas}
-                    onChange={(e) => {
-                      const v = e.target.checked
-                      setIncluirLogoFechamentosDespesas(v)
-                      saveData('nonato-fechamentos-incluir-logo', v)
-                    }}
-                    style={{ width: '20px', height: '20px', accentColor: '#00ff00' }}
-                  />
-                  <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.95)' }}>{(safeT as any)?.incluirLogoFechamentosDespesas || 'Incluir logo nos PDF de Fechamentos de Despesas dos Relatórios'}</span>
-                </label>
-                <p style={{ margin: '8px 0 0 32px', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{(safeT as any)?.incluirLogoFechamentosDespesasDesc || 'Quando ativo, o logo escolhido abaixo aparece nos documentos PDF de fechamento de despesas dos relatórios de serviço.'}</p>
-                {incluirLogoFechamentosDespesas && (
-                  <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'rgba(255,255,255,0.95)' }}>{(safeT as any)?.escolherLogoFechamentos || 'Escolher logo para fechamentos'}</label>
-                    <select
-                      value={logoFechamentoSelecionadoId}
-                      onChange={(e) => {
-                        const v = e.target.value
-                        setLogoFechamentoSelecionadoId(v)
-                        saveData('nonato-fechamentos-logo-id', v)
-                      }}
-                      style={{ width: '100%', maxWidth: '320px', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    >
-                      <option value="">{safeT?.logoPrincipal || 'Logo principal'}</option>
-                      {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
-                        <option key={l.id} value={l.id}>{l.name || l.id}</option>
-                      ))}
-                    </select>
-                    <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{(safeT as any)?.escolherLogoFechamentosDesc || 'Use o logo principal ou adicione um logo à lista abaixo.'}</p>
-                    <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '6px 12px', marginTop: '8px', fontSize: '12px' }}>
-                      {(safeT as any)?.adicionarLogoLista || 'Adicionar logo à lista'}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        style={{ display: 'none' }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0]
-                          if (!file) return
-                          const reader = new FileReader()
-                          reader.onload = (ev) => {
-                            const data = ev.target?.result as string
-                            if (!data || !data.startsWith('data:image/')) return
-                            const name = file.name.replace(/\.[^.]+$/, '') || `Logo ${logosRelatorios.length + 1}`
-                            const id = `logo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-                            const next = [...logosRelatorios, { id, name, data, type: 'image' as const }]
-                            setLogosRelatorios(next)
-                            saveData('nonato-logos-relatorios', next)
-                            setLogoFechamentoSelecionadoId(id)
-                            saveData('nonato-fechamentos-logo-id', id)
-                            e.target.value = ''
-                          }
-                          reader.readAsDataURL(file)
-                        }}
-                      />
-                    </label>
-                  </div>
-                )}
-                <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'rgba(255,255,255,0.95)' }}>{(safeT as any)?.escolherLogoOrcamento || 'Logo para Orçamento (PDF)'}</label>
-                  <select
-                    value={logoOrcamentoSelecionadoId}
-                    onChange={(e) => {
-                      const v = e.target.value
-                      setLogoOrcamentoSelecionadoId(v)
-                      saveData('nonato-orcamento-logo-id', v)
-                    }}
-                    style={{ width: '100%', maxWidth: '320px', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                  >
-                    <option value="">{safeT?.logoPrincipal || 'Logo principal'}</option>
-                    {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
-                      <option key={l.id} value={l.id}>{l.name || l.id}</option>
-                    ))}
-                  </select>
-                  <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{(safeT as any)?.escolherLogoOrcamentoDesc || 'Logo que aparece no cabeçalho do PDF de orçamentos (avulso e do relatório).'}</p>
-                  <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '6px 12px', marginTop: '8px', fontSize: '12px' }}>
-                    {(safeT as any)?.adicionarLogoLista || 'Adicionar logo à lista'}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (!file) return
-                        const reader = new FileReader()
-                        reader.onload = (ev) => {
-                          const data = ev.target?.result as string
-                          if (!data || !data.startsWith('data:image/')) return
-                          const name = file.name.replace(/\.[^.]+$/, '') || `Logo ${logosRelatorios.length + 1}`
-                          const id = `logo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-                          const next = [...logosRelatorios, { id, name, data, type: 'image' as const }]
-                          setLogosRelatorios(next)
-                          saveData('nonato-logos-relatorios', next)
-                          setLogoOrcamentoSelecionadoId(id)
-                          saveData('nonato-orcamento-logo-id', id)
-                          e.target.value = ''
-                        }
-                        reader.readAsDataURL(file)
-                      }}
-                    />
-                  </label>
-                </div>
-                <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'rgba(255,255,255,0.95)' }}>{(safeT as any)?.escolherLogoProtocoloServico || 'Logo para Protocolos de Serviço (PDF)'}</label>
-                  <select
-                    value={logoProtocoloServicoSelecionadoId}
-                    onChange={(e) => {
-                      const v = e.target.value
-                      setLogoProtocoloServicoSelecionadoId(v)
-                      saveData('nonato-protocolo-servico-logo-id', v)
-                    }}
-                    style={{ width: '100%', maxWidth: '320px', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                  >
-                    <option value="">{safeT?.logoPrincipal || 'Logo principal'}</option>
-                    {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
-                      <option key={l.id} value={l.id}>{l.name || l.id}</option>
-                    ))}
-                  </select>
-                  <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{(safeT as any)?.escolherLogoProtocoloServicoDesc || 'Logo que aparece no cabeçalho do PDF dos Protocolos de Serviço.'}</p>
-                  <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '6px 12px', marginTop: '8px', fontSize: '12px' }}>
-                    {(safeT as any)?.adicionarLogoLista || 'Adicionar logo à lista'}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (!file) return
-                        const reader = new FileReader()
-                        reader.onload = (ev) => {
-                          const data = ev.target?.result as string
-                          if (!data || !data.startsWith('data:image/')) return
-                          const name = file.name.replace(/\.[^.]+$/, '') || `Logo ${logosRelatorios.length + 1}`
-                          const id = `logo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-                          const next = [...logosRelatorios, { id, name, data, type: 'image' as const }]
-                          setLogosRelatorios(next)
-                          saveData('nonato-logos-relatorios', next)
-                          setLogoProtocoloServicoSelecionadoId(id)
-                          saveData('nonato-protocolo-servico-logo-id', id)
-                          e.target.value = ''
-                        }
-                        reader.readAsDataURL(file)
-                      }}
-                    />
-                  </label>
-                </div>
-              </div>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
-                    <div>
-                      <strong style={{ display: 'block', marginBottom: '5px' }}>{(safeT as any)?.logoBarraLateral || 'Logo da Barra Lateral'}</strong>
-                    <span style={{ fontSize: '12px', opacity: 0.7 }}>{safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece no menu lateral.'}</span>
-                  </div>
-                  <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 15px', margin: 0 }}>
-                    {safeT?.changeLogo || 'Alterar Logo'}
-                    <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeSidebarLogo} style={{ display: 'none' }} />
-                  </label>
-                </div>
-                {logoUrl && (
-                  <div style={{ padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
-                    <div style={{ marginBottom: '10px' }}>
-                      {logoType === 'video' ? (
-                        <video src={logoUrl} autoPlay loop muted style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
-                      ) : (
-                        <img src={logoUrl} alt="Logo barra lateral" style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
-                      )}
-                    </div>
-                    <button className="btn-danger" onClick={handleRemoveSidebarLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>{safeT?.removeLogo || 'Remover Logo'}</button>
-                  </div>
-                )}
-                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
-                    <div>
-                      <strong style={{ display: 'block', marginBottom: '5px' }}>{(safeT as any)?.logoDashboard || 'Logo do Dashboard'}</strong>
-                      <span style={{ fontSize: '12px', opacity: 0.7 }}>{safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece na tela inicial (painel de controlo).'}</span>
-                    </div>
-                    <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 15px', margin: 0 }}>
-                      {safeT?.changeLogo || 'Alterar Logo'}
-                      <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeDashboardLogo} style={{ display: 'none' }} />
-                    </label>
-                  </div>
-                  {logoUrlDashboard && (
-                    <div style={{ padding: '12px', backgroundColor: '#222222', borderRadius: '6px', marginTop: '10px' }}>
-                      <div style={{ marginBottom: '10px' }}>
-                        {logoTypeDashboard === 'video' ? (
-                          <video src={logoUrlDashboard} autoPlay loop muted style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
+                      <strong style={{ fontSize: '14px', color: '#fff' }}>{(safeT as any)?.escolherLogoFechamentos || 'Fechamentos de despesas'}</strong>
+                      <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.55)' }}>{(safeT as any)?.escolherLogoFechamentosDesc || 'PDF de fechamento de despesas dos relatórios.'}</p>
+                      <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
+                        {administradorPreviewPdfLogo(logoFechamentoSelecionadoId) ? (
+                          <img src={administradorPreviewPdfLogo(logoFechamentoSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
                         ) : (
-                          <img src={logoUrlDashboard} alt="Logo dashboard" style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
+                          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
                         )}
                       </div>
-                      <button className="btn-danger" onClick={handleRemoveDashboardLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>{safeT?.removeLogo || 'Remover Logo'}</button>
+                      <select
+                        value={logoFechamentoSelecionadoId}
+                        onChange={(e) => {
+                          const v = e.target.value
+                          setLogoFechamentoSelecionadoId(v)
+                          saveData('nonato-fechamentos-logo-id', v)
+                        }}
+                        style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
+                      >
+                        <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
+                        {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
+                          <option key={l.id} value={l.id}>{l.name || l.id}</option>
+                        ))}
+                      </select>
                     </div>
-                  )}
+                    {/* Fase PDF 3 — Orçamento */}
+                    <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>PDF · 03</span>
+                      <strong style={{ fontSize: '14px', color: '#fff' }}>{(safeT as any)?.escolherLogoOrcamento || 'Orçamentos'}</strong>
+                      <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.55)' }}>{(safeT as any)?.escolherLogoOrcamentoDesc || 'Cabeçalho do PDF de orçamentos.'}</p>
+                      <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
+                        {administradorPreviewPdfLogo(logoOrcamentoSelecionadoId) ? (
+                          <img src={administradorPreviewPdfLogo(logoOrcamentoSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
+                        ) : (
+                          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
+                        )}
+                      </div>
+                      <select
+                        value={logoOrcamentoSelecionadoId}
+                        onChange={(e) => {
+                          const v = e.target.value
+                          setLogoOrcamentoSelecionadoId(v)
+                          saveData('nonato-orcamento-logo-id', v)
+                        }}
+                        style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
+                      >
+                        <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
+                        {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
+                          <option key={l.id} value={l.id}>{l.name || l.id}</option>
+                        ))}
+                      </select>
+                    </div>
+                    {/* Fase PDF 4 — Protocolos */}
+                    <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>PDF · 04</span>
+                      <strong style={{ fontSize: '14px', color: '#fff' }}>{(safeT as any)?.escolherLogoProtocoloServico || 'Protocolos de serviço'}</strong>
+                      <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.55)' }}>{(safeT as any)?.escolherLogoProtocoloServicoDesc || 'Cabeçalho do PDF dos protocolos.'}</p>
+                      <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
+                        {administradorPreviewPdfLogo(logoProtocoloServicoSelecionadoId) ? (
+                          <img src={administradorPreviewPdfLogo(logoProtocoloServicoSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
+                        ) : (
+                          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
+                        )}
+                      </div>
+                      <select
+                        value={logoProtocoloServicoSelecionadoId}
+                        onChange={(e) => {
+                          const v = e.target.value
+                          setLogoProtocoloServicoSelecionadoId(v)
+                          saveData('nonato-protocolo-servico-logo-id', v)
+                        }}
+                        style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
+                      >
+                        <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
+                        {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
+                          <option key={l.id} value={l.id}>{l.name || l.id}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                 </div>
-              </div>
             </div>
 
             {/* SEÇÃO 2: GESTÃO DE USUÁRIOS */}
@@ -24634,29 +24639,29 @@ onKeyPress={(e) => {
                               )}
                             </div>
                             
-                            {/* Botões de Ação - Compactos na mesma linha */}
-                            <div style={{ display: 'flex', gap: '4px', marginTop: '3px', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'flex-start', width: '100%', maxWidth: '600px', marginLeft: '0', paddingLeft: '0' }}>
+                            {/* Botões de Ação — sem encolher o texto (minWidth:0 cortava «Equipamentos do Cliente») */}
+                            <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-start', width: '100%', boxSizing: 'border-box' }}>
                               <button 
                                 className="btn-primary" 
                                 onClick={() => {
                                   handleEditCliente(cliente)
                                   setClientesActiveTab('cadastrar')
                                 }} 
-                                style={{ padding: '5px 10px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.2', flexShrink: 0, flex: '0.6', minWidth: '0' }}
+                                style={{ padding: '6px 12px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.25', flex: '0 0 auto' }}
                               >
                                 {safeT?.edit || 'Editar'}
                               </button>
                               <button 
                                 className="btn-danger" 
                                 onClick={() => handleDeleteCliente(cliente.id)} 
-                                style={{ padding: '5px 10px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.2', flexShrink: 0, flex: '0.6', minWidth: '0' }}
+                                style={{ padding: '6px 12px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.25', flex: '0 0 auto' }}
                               >
                                 {safeT?.delete || 'Excluir'}
                               </button>
                               <button 
                                 className="btn-primary" 
                                 onClick={() => handleViewClienteEquipamentos(cliente)} 
-                                style={{ padding: '5px 12px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.2', flexShrink: 0, flex: '1.2', minWidth: '0' }}
+                                style={{ padding: '6px 14px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.25', flex: '1 1 auto', minWidth: 'min-content', flexShrink: 0, boxSizing: 'border-box' }}
                               >
                                 {safeT?.equipamentosDoCliente || 'Equipamentos'}
                               </button>
@@ -45549,27 +45554,68 @@ A1;Peça exemplo;10'
             {mobileMenuOpen ? '✕' : '☰'}
           </button>
           <span className="mobile-app-header-title">NONATO SERVICE</span>
+          <div className="mobile-header-right-actions">
+            {activeTabId ? (
+              <button
+                type="button"
+                className="mobile-help-f1"
+                onClick={() => setShowHelpModal(true)}
+                aria-label={safeT?.help || 'HELP'}
+                title={safeT?.helpTooltip || 'Pressione F1 para abrir a ajuda'}
+              >
+                <span aria-hidden>F1</span>
+                <span aria-hidden style={{ opacity: 0.85 }}>·</span>
+                <span style={{ fontSize: '10px', fontWeight: 800 }}>{safeT?.help || 'HELP'}</span>
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="mobile-refresh-toggle"
+              onClick={atualizarAppComSeguranca}
+              aria-label={(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
+              title={(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
+            >
+              ↻
+            </button>
+          </div>
+        </header>
+      )}
+      {!isCompactLayout && (
+        <div className="desktop-top-bar-actions">
           <button
             type="button"
-            className="mobile-refresh-toggle"
+            className="desktop-pagina-inicial-btn"
+            onClick={() => {
+              setLoginUser(null)
+              setShowSplashInicial(true)
+            }}
+            title={safeT?.voltarTelaInicial || 'Voltar à tela inicial'}
+          >
+            {safeT?.paginaInicial || 'Página Inicial'}
+          </button>
+          {activeTabId ? (
+            <button
+              type="button"
+              className="desktop-help-f1"
+              onClick={() => setShowHelpModal(true)}
+              aria-label={safeT?.helpTooltip || 'Pressione F1 para abrir a ajuda'}
+              title={safeT?.helpTooltip || 'Pressione F1 para abrir a ajuda'}
+            >
+              <span style={{ opacity: 0.9 }}>F1</span>
+              <span aria-hidden>—</span>
+              <span>{safeT?.help || 'HELP'}</span>
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="desktop-refresh-safe"
             onClick={atualizarAppComSeguranca}
             aria-label={(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
             title={(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
           >
-            ↻
+            ↻ {(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
           </button>
-        </header>
-      )}
-      {!isCompactLayout && (
-        <button
-          type="button"
-          className="desktop-refresh-safe"
-          onClick={atualizarAppComSeguranca}
-          aria-label={(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
-          title={(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
-        >
-          ↻ {(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
-        </button>
+        </div>
       )}
       {/* Sidebar - em ecrã estreito: gaveta lateral (globals.css) */}
       <div className={`sidebar${isCompactLayout && mobileMenuOpen ? ' sidebar-mobile-open' : ''}`}>
@@ -47130,69 +47176,43 @@ A1;Peça exemplo;10'
 
       {/* Área Principal */}
       <div className="main-app-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
-        {/* Botão pequeno: voltar à tela inicial */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 20px 0 0', flexShrink: 0 }}>
-          <button
-            type="button"
-            onClick={() => {
-              setLoginUser(null)
-              setShowSplashInicial(true)
-            }}
-            title={safeT?.voltarTelaInicial || 'Voltar à tela inicial'}
-            style={{
-              padding: '6px 12px',
-              fontSize: '12px',
-              fontWeight: '500',
-              color: '#00ff00',
-              backgroundColor: 'transparent',
-              border: '1px solid #00ff00',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent'
-            }}
-          >
-            {safeT?.paginaInicial || 'Página Inicial'}
-          </button>
-        </div>
+        {/* Página Inicial: no desktop está na barra fixa (.desktop-top-bar-actions); em layout compacto mantém-se aqui */}
+        {isCompactLayout ? (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 20px 0 0', flexShrink: 0 }}>
+            <button
+              type="button"
+              onClick={() => {
+                setLoginUser(null)
+                setShowSplashInicial(true)
+              }}
+              title={safeT?.voltarTelaInicial || 'Voltar à tela inicial'}
+              style={{
+                padding: '6px 12px',
+                fontSize: '12px',
+                fontWeight: '500',
+                color: '#00ff00',
+                backgroundColor: 'transparent',
+                border: '1px solid #00ff00',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent'
+              }}
+            >
+              {safeT?.paginaInicial || 'Página Inicial'}
+            </button>
+          </div>
+        ) : null}
         {/* Conteúdo da Aba Ativa ou Dashboard */}
         <div ref={mainContentAreaRef} className="main-content-area" style={{ flex: 1, padding: '30px', overflowY: 'auto', minWidth: 0, width: '100%', boxSizing: 'border-box', position: 'relative' }}>
           {activeTabId ? (
             <>
-              {/* Botão F1 - HELP (visível quando há aba ativa) */}
-              <button
-                type="button"
-                onClick={() => setShowHelpModal(true)}
-                style={{
-                  position: 'absolute',
-                  top: '20px',
-                  right: '30px',
-                  zIndex: 10,
-                  padding: '8px 14px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  color: 'rgba(0, 255, 0, 0.95)',
-                  background: 'rgba(0, 255, 0, 0.08)',
-                  border: '1px solid rgba(0, 255, 0, 0.35)',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-                }}
-                title={safeT?.helpTooltip || 'Pressione F1 para abrir a ajuda'}
-              >
-                <span style={{ opacity: 0.9 }}>F1</span>
-                <span>—</span>
-                <span>{safeT?.help || 'HELP'}</span>
-              </button>
-              {/* Renderizar conteúdo da aba ativa */}
+              {/* Renderizar conteúdo da aba ativa (F1 HELP está na barra fixa ao lado de Atualizar com segurança) */}
               <div className="tab-inner-scroll" style={{ height: '100%', width: '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
                 {(() => {
                   const activeTab = openTabs.find(t => t.id === activeTabId)
@@ -50226,15 +50246,15 @@ A1;Peça exemplo;10'
                           )}
                         </div>
                         
-                        {/* Botões de Ação - Compactos na mesma linha */}
-                        <div style={{ display: 'flex', gap: '4px', marginTop: '3px', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'flex-start', width: '100%', maxWidth: '600px', marginLeft: '0', paddingLeft: '0' }}>
-                          <button className="btn-primary" onClick={() => handleEditCliente(cliente)} style={{ padding: '5px 10px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.2', flexShrink: 0, flex: '0.6', minWidth: '0' }}>
+                        {/* Botões de Ação — sem encolher o texto do terceiro botão */}
+                        <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-start', width: '100%', boxSizing: 'border-box' }}>
+                          <button className="btn-primary" onClick={() => handleEditCliente(cliente)} style={{ padding: '6px 12px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.25', flex: '0 0 auto' }}>
                             {safeT?.edit || 'Editar'}
                           </button>
-                          <button className="btn-danger" onClick={() => handleDeleteCliente(cliente.id)} style={{ padding: '5px 10px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.2', flexShrink: 0, flex: '0.6', minWidth: '0' }}>
+                          <button className="btn-danger" onClick={() => handleDeleteCliente(cliente.id)} style={{ padding: '6px 12px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.25', flex: '0 0 auto' }}>
                             {safeT?.delete || 'Excluir'}
                           </button>
-                          <button className="btn-primary" onClick={() => handleViewClienteEquipamentos(cliente)} style={{ padding: '5px 12px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.2', flexShrink: 0, flex: '1.2', minWidth: '0' }}>
+                          <button className="btn-primary" onClick={() => handleViewClienteEquipamentos(cliente)} style={{ padding: '6px 14px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.25', flex: '1 1 auto', minWidth: 'min-content', flexShrink: 0, boxSizing: 'border-box' }}>
                             {safeT?.equipamentosDoCliente || 'Equipamentos'}
                           </button>
                         </div>
