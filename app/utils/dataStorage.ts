@@ -312,6 +312,7 @@ export async function saveAllToServer(data: Record<string, any>): Promise<boolea
 export async function saveData(key: string, value: any, saveToLocalStorage = true): Promise<void> {
   /** Manuais: IndexedDB primeiro (PDFs grandes); localStorage é opcional; não falhar se quota estourar */
   if (key === MANUAIS_KEY && typeof window !== 'undefined') {
+    /** IndexedDB é a fonte de verdade local; o servidor pode ser lento ou falhar (413, rede) — não bloquear a UI */
     await saveManuaisFamiliasGruposToIdb(value)
     if (saveToLocalStorage) {
       try {
@@ -325,7 +326,7 @@ export async function saveData(key: string, value: any, saveToLocalStorage = tru
         }
       }
     }
-    await saveToServer(key, value)
+    void saveToServer(key, value).catch(() => {})
     return
   }
 

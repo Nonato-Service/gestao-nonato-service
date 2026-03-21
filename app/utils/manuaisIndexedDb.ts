@@ -5,6 +5,8 @@
 const DB_NAME = 'nonato-gestao-tecnica-v1'
 const STORE = 'kv'
 const KEY = 'nonato-manuais-familias-grupos'
+/** Versão 2: garante onupgradeneeded em instalações antigas com base corrompida */
+const DB_VERSION = 2
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -12,7 +14,7 @@ function openDb(): Promise<IDBDatabase> {
       reject(new Error('indexedDB indisponível'))
       return
     }
-    const req = indexedDB.open(DB_NAME, 1)
+    const req = indexedDB.open(DB_NAME, DB_VERSION)
     req.onerror = () => reject(req.error ?? new Error('IDB open failed'))
     req.onsuccess = () => resolve(req.result)
     req.onupgradeneeded = () => {
@@ -39,12 +41,21 @@ export async function loadManuaisFamiliasGruposFromIdb(): Promise<any | null> {
 }
 
 export async function saveManuaisFamiliasGruposToIdb(data: any): Promise<void> {
+  /** Garante valor clonável pelo motor do IndexedDB (evita falhas silenciosas) */
+  let safe: any
+  try {
+    safe = JSON.parse(JSON.stringify(data))
+  } catch (e) {
+    throw new Error('Dados dos manuais não são serializáveis para guardar.')
+  }
   const db = await openDb()
   await new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STORE, 'readwrite')
-    tx.objectStore(STORE).put(data, KEY)
+    const store = tx.objectStore(STORE)
+    const req = store.put(safe, KEY)
+    req.onerror = () => reject(req.error ?? new Error('IDB put falhou'))
     tx.oncomplete = () => resolve()
-    tx.onerror = () => reject(tx.error)
-    tx.onabort = () => reject(tx.error)
+    tx.onerror = () => reject(tx.error ?? new Error('transação IDB falhou'))
+    tx.onabort = () => reject(tx.error ?? new Error('transação IDB abortada'))
   })
 }
