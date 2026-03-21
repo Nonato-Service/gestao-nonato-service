@@ -5,13 +5,25 @@ import { createPortal } from 'react-dom'
 import { translations } from './translations'
 import { loadData, saveData, loadAllFromServer, loadFromServer } from './utils/dataStorage'
 import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
-import { loadManuaisFamiliasGruposFromIdb, saveManuaisFamiliasGruposToIdb } from './utils/manuaisIndexedDb'
+import { loadManuaisFamiliasGruposFromIdb, saveManuaisFamiliasGruposToIdb, getKv } from './utils/manuaisIndexedDb'
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 
 /** Manuais: debounce/alerta — não usar useRef aqui: ManuaisInformacoesTabContent é chamado como função (return ManuaisInformacoesTabContent()), não como componente. */
 let manuaisSaveDebounceTimer: ReturnType<typeof setTimeout> | null = null
 let manuaisSaveAlertShownOnce = false
+
+/** Restaura manuais no localStorage e no IndexedDB a partir de um backup JSON (string JSON ou objeto). */
+async function restoreManuaisFamiliasGruposFromBackupPayload(raw: unknown): Promise<void> {
+  if (raw == null || raw === '') return
+  const s = typeof raw === 'string' ? raw : JSON.stringify(raw)
+  try {
+    localStorage.setItem('nonato-manuais-familias-grupos', s)
+    await saveManuaisFamiliasGruposToIdb(JSON.parse(s))
+  } catch {
+    /* ignorar */
+  }
+}
 
 type Language = {
   code: string
@@ -4002,8 +4014,18 @@ export default function Dashboard() {
         /* IDB pode falhar em modo privado; estado em memória mantém-se */
       }
 
-      // Carregar clientes
-      const savedClientes = getData('nonato-clientes')
+      // Carregar clientes (fallback IndexedDB se localStorage encheu só com cópia em IDB)
+      let savedClientes = getData('nonato-clientes')
+      if ((!savedClientes || !Array.isArray(savedClientes) || savedClientes.length === 0) && typeof window !== 'undefined') {
+        try {
+          const fromIdb = await getKv('nonato-clientes')
+          if (Array.isArray(fromIdb) && fromIdb.length > 0) {
+            savedClientes = fromIdb
+          }
+        } catch {
+          /* ignorar */
+        }
+      }
       if (savedClientes && Array.isArray(savedClientes) && savedClientes.length > 0) {
         setClientes(savedClientes)
         // Garantir que está salvo no servidor
@@ -6628,7 +6650,14 @@ export default function Dashboard() {
   // Função para criar backup completo
   const handleCreateBackup = async () => {
     try {
-      // Coletar TODOS os dados do localStorage
+      let manuaisFamiliasGrupos: string | null = null
+      try {
+        const idb = await loadManuaisFamiliasGruposFromIdb()
+        manuaisFamiliasGrupos = idb != null ? JSON.stringify(idb) : localStorage.getItem('nonato-manuais-familias-grupos')
+      } catch {
+        manuaisFamiliasGrupos = localStorage.getItem('nonato-manuais-familias-grupos')
+      }
+      // Coletar dados do localStorage + manuais (IndexedDB — PDFs grandes)
       const backupData = {
         version: '1.0.0',
         date: new Date().toISOString(),
@@ -6644,7 +6673,8 @@ export default function Dashboard() {
           clientes: localStorage.getItem('nonato-clientes'),
           clientePrioritario: localStorage.getItem('nonato-cliente-prioritario'),
           fornecedores: localStorage.getItem('nonato-fornecedores'),
-          sidebarButtons: localStorage.getItem('nonato-sidebar-buttons')
+          sidebarButtons: localStorage.getItem('nonato-sidebar-buttons'),
+          manuaisFamiliasGrupos
         }
       }
 
@@ -6740,7 +6770,7 @@ export default function Dashboard() {
   }
 
   // Função para criar backup automático (salva no localStorage)
-  const createAutoBackup = useCallback(() => {
+  const createAutoBackup = useCallback(async () => {
     try {
       const AUTO_BACKUP_STORAGE_KEY = 'nonato-auto-backups'
       const MAX_AUTO_BACKUPS = 3
@@ -6808,7 +6838,17 @@ export default function Dashboard() {
         return { ok: false, kept: 0 }
       }
 
-      // Coletar dados do localStorage (com proteção contra itens gigantes)
+      const manuaisForBackup = await (async () => {
+        try {
+          const idb = await loadManuaisFamiliasGruposFromIdb()
+          if (idb != null) return JSON.stringify(idb)
+        } catch {
+          /* ignorar */
+        }
+        return safeGet('nonato-manuais-familias-grupos')
+      })()
+
+      // Coletar dados do localStorage (com proteção contra itens gigantes) + manuais (IndexedDB)
       const backupData = {
         version: '1.0.0',
         date: new Date().toISOString(),
@@ -6832,7 +6872,8 @@ export default function Dashboard() {
           categoriasPecas: safeGet('nonato-categorias-pecas'),
           subcategoriasPecas: safeGet('nonato-subcategorias-pecas'),
           agendamentos: safeGet('nonato-agendamentos'),
-          sidebarButtons: safeGet('nonato-sidebar-buttons')
+          sidebarButtons: safeGet('nonato-sidebar-buttons'),
+          manuaisFamiliasGrupos: manuaisForBackup
         }
       }
 
@@ -6877,7 +6918,7 @@ export default function Dashboard() {
   }, [])
 
   // Função para restaurar backup automático
-  const restoreAutoBackup = (backup: { timestamp: number; data: any }) => {
+  const restoreAutoBackup = async (backup: { timestamp: number; data: any }) => {
     try {
       if (!backup || !backup.data || !backup.data.data) {
         alert(t.invalidBackup || 'Backup inválido')
@@ -6904,6 +6945,9 @@ export default function Dashboard() {
       if (backupData.subcategoriasPecas !== null) localStorage.setItem('nonato-subcategorias-pecas', backupData.subcategoriasPecas)
       if (backupData.agendamentos !== null) localStorage.setItem('nonato-agendamentos', backupData.agendamentos)
       if (backupData.sidebarButtons !== null) localStorage.setItem('nonato-sidebar-buttons', backupData.sidebarButtons)
+      if (backupData.manuaisFamiliasGrupos != null && String(backupData.manuaisFamiliasGrupos).length > 0) {
+        await restoreManuaisFamiliasGruposFromBackupPayload(backupData.manuaisFamiliasGrupos)
+      }
 
       alert(t.backupRestoredSuccess || 'Backup restaurado com sucesso! A página será recarregada.')
       window.location.reload()
@@ -7144,7 +7188,7 @@ export default function Dashboard() {
     }
 
     const reader = new FileReader()
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const content = event.target?.result as string
         const backupData = JSON.parse(content)
@@ -7213,6 +7257,10 @@ export default function Dashboard() {
         if (backupData.data.sidebarButtons) {
           localStorage.setItem('nonato-sidebar-buttons', backupData.data.sidebarButtons)
           setSidebarButtons(JSON.parse(backupData.data.sidebarButtons))
+        }
+
+        if (backupData.data.manuaisFamiliasGrupos != null && String(backupData.data.manuaisFamiliasGrupos).length > 0) {
+          await restoreManuaisFamiliasGruposFromBackupPayload(backupData.data.manuaisFamiliasGrupos)
         }
 
         alert(t.restoreSuccess)
@@ -8305,8 +8353,6 @@ export default function Dashboard() {
       return
     }
 
-    createAutoBackupBeforeOperation()
-
     let updatedClientes: Cliente[]
     if (editingCliente) {
       updatedClientes = clientes.map(c =>
@@ -8332,6 +8378,8 @@ export default function Dashboard() {
       alert((t as any).erroSalvar || 'Erro ao salvar. Tente novamente.')
       return
     }
+
+    createAutoBackupBeforeOperation()
 
     setShowClienteForm(false)
     setClienteForm({

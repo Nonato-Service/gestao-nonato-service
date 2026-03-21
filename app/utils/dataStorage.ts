@@ -1,10 +1,104 @@
 // Funções para salvar e carregar dados do servidor (com suporte offline)
 
 import { mergeManuaisFamiliasGrupos } from './manuaisMerge'
-import { saveManuaisFamiliasGruposToIdb, loadManuaisFamiliasGruposFromIdb } from './manuaisIndexedDb'
+import { saveManuaisFamiliasGruposToIdb, loadManuaisFamiliasGruposFromIdb, saveKv } from './manuaisIndexedDb'
 
 const API_BASE = '/api/data'
 const SYNC_QUEUE_KEY = 'nonato-sync-queue'
+/** Backups automáticos em localStorage — podem ser reduzidos se a quota estourar ao gravar dados críticos */
+const AUTO_BACKUP_STORAGE_KEY = 'nonato-auto-backups'
+
+function isQuotaExceededError(e: unknown): boolean {
+  if (typeof DOMException !== 'undefined' && e instanceof DOMException && e.name === 'QuotaExceededError') {
+    return true
+  }
+  if (e !== null && typeof e === 'object' && 'name' in e && (e as { name?: string }).name === 'QuotaExceededError') {
+    return true
+  }
+  const msg = e instanceof Error ? e.message : String(e)
+  return /quota|exceeded|storage is full|not enough space/i.test(msg)
+}
+
+/** Remove o backup automático mais antigo (ou todos) para libertar espaço no localStorage. */
+function trimAutoBackupsForQuota(removeAll: boolean): void {
+  if (typeof window === 'undefined') return
+  try {
+    const raw = localStorage.getItem(AUTO_BACKUP_STORAGE_KEY)
+    if (!raw) return
+    const backups = JSON.parse(raw) as unknown
+    if (!Array.isArray(backups) || backups.length === 0) return
+    if (removeAll) {
+      localStorage.removeItem(AUTO_BACKUP_STORAGE_KEY)
+      return
+    }
+    backups.pop()
+    if (backups.length === 0) {
+      localStorage.removeItem(AUTO_BACKUP_STORAGE_KEY)
+    } else {
+      try {
+        localStorage.setItem(AUTO_BACKUP_STORAGE_KEY, JSON.stringify(backups))
+      } catch {
+        localStorage.removeItem(AUTO_BACKUP_STORAGE_KEY)
+      }
+    }
+  } catch {
+    try {
+      localStorage.removeItem(AUTO_BACKUP_STORAGE_KEY)
+    } catch {
+      /* ignorar */
+    }
+  }
+}
+
+/**
+ * Grava string no localStorage; se falhar por quota, tenta libertar espaço (backups automáticos) e repetir.
+ */
+function setItemWithQuotaRecovery(key: string, serialized: string): void {
+  try {
+    localStorage.setItem(key, serialized)
+    return
+  } catch (error) {
+    if (!isQuotaExceededError(error)) throw error
+  }
+  for (let i = 0; i < 24; i++) {
+    trimAutoBackupsForQuota(false)
+    try {
+      localStorage.setItem(key, serialized)
+      return
+    } catch (error) {
+      if (!isQuotaExceededError(error)) throw error
+    }
+  }
+  trimAutoBackupsForQuota(true)
+  try {
+    localStorage.setItem(key, serialized)
+    return
+  } catch (error) {
+    if (!isQuotaExceededError(error)) throw error
+  }
+  console.warn(
+    '[saveData] localStorage sem espaço após libertar backups automáticos; a tentar fila de sync e código.'
+  )
+  try {
+    localStorage.removeItem('nonato-code-backups')
+  } catch {
+    /* ignorar */
+  }
+  try {
+    const q = getSyncQueue()
+    if (q.length > 0) {
+      setSyncQueue(q.slice(Math.floor(q.length / 2)))
+    }
+  } catch {
+    /* ignorar */
+  }
+  try {
+    localStorage.removeItem(SYNC_QUEUE_KEY)
+  } catch {
+    /* ignorar */
+  }
+  localStorage.setItem(key, serialized)
+}
 
 // Cache para evitar requisições duplicadas simultâneas
 const pendingRequests = new Map<string, Promise<boolean>>()
@@ -330,13 +424,23 @@ export async function saveData(key: string, value: any, saveToLocalStorage = tru
     return
   }
 
-  // Salvar no localStorage (para acesso rápido) - falha aqui deve ser reportada ao caller
+  // Salvar no localStorage (para acesso rápido) — quota: libertar backups automáticos e voltar a tentar; último recurso: IndexedDB
   if (saveToLocalStorage && typeof window !== 'undefined') {
+    const serialized = typeof value === 'string' ? value : JSON.stringify(value)
     try {
-      localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value))
+      setItemWithQuotaRecovery(key, serialized)
     } catch (error) {
       console.error(`Erro ao salvar no localStorage (${key}):`, error)
-      throw error
+      if (key === MANUAIS_KEY) {
+        throw error
+      }
+      try {
+        await saveKv(key, value)
+        console.warn(`[saveData] ${key} guardado em IndexedDB (localStorage sem espaço).`)
+      } catch (idbErr) {
+        console.error(`Erro ao salvar no IndexedDB (${key}):`, idbErr)
+        throw idbErr
+      }
     }
   }
 

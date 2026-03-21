@@ -40,6 +40,39 @@ export async function loadManuaisFamiliasGruposFromIdb(): Promise<any | null> {
   }
 }
 
+/** Chaves genéricas no mesmo object store (ex.: nonato-clientes quando localStorage enche). */
+export async function getKv(key: string): Promise<any | null> {
+  try {
+    const db = await openDb()
+    return await new Promise<any | null>((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readonly')
+      const r = tx.objectStore(STORE).get(key)
+      r.onsuccess = () => resolve(r.result ?? null)
+      r.onerror = () => reject(r.error)
+    })
+  } catch {
+    return null
+  }
+}
+
+export async function saveKv(key: string, value: unknown): Promise<void> {
+  let safe: any
+  try {
+    safe = JSON.parse(JSON.stringify(value))
+  } catch {
+    throw new Error('Valor não serializável para IndexedDB')
+  }
+  const db = await openDb()
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite')
+    const req = tx.objectStore(STORE).put(safe, key)
+    req.onerror = () => reject(req.error ?? new Error('IDB put falhou'))
+    tx.oncomplete = () => resolve()
+    tx.onerror = () => reject(tx.error ?? new Error('transação IDB falhou'))
+    tx.onabort = () => reject(tx.error ?? new Error('transação IDB abortada'))
+  })
+}
+
 export async function saveManuaisFamiliasGruposToIdb(data: any): Promise<void> {
   /** Garante valor clonável pelo motor do IndexedDB (evita falhas silenciosas) */
   let safe: any
