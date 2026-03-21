@@ -8,6 +8,10 @@ import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 
+/** Manuais: debounce/alerta — não usar useRef aqui: ManuaisInformacoesTabContent é chamado como função (return ManuaisInformacoesTabContent()), não como componente. */
+let manuaisSaveDebounceTimer: ReturnType<typeof setTimeout> | null = null
+let manuaisSaveAlertShownOnce = false
+
 type Language = {
   code: string
   name: string
@@ -16265,8 +16269,6 @@ export default function Dashboard() {
 
   // Componente para evitar erro de parser SWC no case 'manuais-informacoes-tecnicas'
   function ManuaisInformacoesTabContent() {
-    const manuaisSaveDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-    const manuaisSaveAlertOnceRef = useRef(false)
     const familias = Array.isArray(manuaisFamilias) ? manuaisFamilias : []
     const grupos = Array.isArray(manuaisGrupos) ? manuaisGrupos : []
     const modelos = Array.isArray(manuaisModelos) ? manuaisModelos : []
@@ -16881,27 +16883,27 @@ const nextF = familias.filter(x => x !== f)
                 const runSaveManuaisModelos = (next: ManuaisModelo[]) => {
                   saveData('nonato-manuais-familias-grupos', { familias, grupos, modelos: next })
                     .then(() => {
-                      manuaisSaveAlertOnceRef.current = false
+                      manuaisSaveAlertShownOnce = false
                     })
                     .catch((err) => {
                       console.error('Erro ao guardar manuais:', err)
-                      if (!manuaisSaveAlertOnceRef.current) {
-                        manuaisSaveAlertOnceRef.current = true
+                      if (!manuaisSaveAlertShownOnce) {
+                        manuaisSaveAlertShownOnce = true
                         alert((safeT as any)?.manuaisErroAoGuardar || 'Não foi possível guardar. O ficheiro pode ser grande demais para o navegador; tente um PDF mais pequeno ou exporte um backup.')
                       }
                     })
                 }
                 const persistModelosImmediate = (next: ManuaisModelo[]) => {
-                  if (manuaisSaveDebounceRef.current) {
-                    clearTimeout(manuaisSaveDebounceRef.current)
-                    manuaisSaveDebounceRef.current = null
+                  if (manuaisSaveDebounceTimer) {
+                    clearTimeout(manuaisSaveDebounceTimer)
+                    manuaisSaveDebounceTimer = null
                   }
                   runSaveManuaisModelos(next)
                 }
                 const persistModelosDebounced = (next: ManuaisModelo[]) => {
-                  if (manuaisSaveDebounceRef.current) clearTimeout(manuaisSaveDebounceRef.current)
-                  manuaisSaveDebounceRef.current = setTimeout(() => {
-                    manuaisSaveDebounceRef.current = null
+                  if (manuaisSaveDebounceTimer) clearTimeout(manuaisSaveDebounceTimer)
+                  manuaisSaveDebounceTimer = setTimeout(() => {
+                    manuaisSaveDebounceTimer = null
                     runSaveManuaisModelos(next)
                   }, 500)
                 }
