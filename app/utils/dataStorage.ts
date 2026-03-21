@@ -1,6 +1,7 @@
 // Funções para salvar e carregar dados do servidor (com suporte offline)
 
 import { mergeManuaisFamiliasGrupos } from './manuaisMerge'
+import { saveManuaisFamiliasGruposToIdb, loadManuaisFamiliasGruposFromIdb } from './manuaisIndexedDb'
 
 const API_BASE = '/api/data'
 const SYNC_QUEUE_KEY = 'nonato-sync-queue'
@@ -99,15 +100,28 @@ export function getPendingSyncCount(): number {
 }
 
 // Salvar diretamente no servidor (sem fila) - uso interno
+const MANUAIS_KEY = 'nonato-manuais-familias-grupos'
+
 async function _doSaveToServer(key: string, value: any): Promise<boolean> {
   try {
-    const isLargeString = typeof value === 'string' && value.length > 100000 && (value.startsWith('data:image/') || value.startsWith('data:video/'))
-    const endpoint = isLargeString ? `${API_BASE}/save-text` : `${API_BASE}/save`
+    const payloadStr = typeof value === 'string' ? value : JSON.stringify(value)
+    const isLargeString =
+      typeof value === 'string' &&
+      value.length > 100000 &&
+      (value.startsWith('data:image/') || value.startsWith('data:video/') || value.startsWith('data:application/pdf'))
+    /** Manuais com PDFs em base64: JSON grande — usar save-text para não estourar limites do /save */
+    const isLargeManuaisJson = key === MANUAIS_KEY && payloadStr.length > 80000
+    const useTextEndpoint = isLargeString || isLargeManuaisJson
+    const endpoint = useTextEndpoint ? `${API_BASE}/save-text` : `${API_BASE}/save`
+    const body =
+      isLargeManuaisJson && typeof value === 'object'
+        ? JSON.stringify({ key, value: payloadStr })
+        : JSON.stringify({ key, value })
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key, value }),
-      signal: createTimeoutSignal(5000)
+      body,
+      signal: createTimeoutSignal(isLargeManuaisJson ? 120000 : 5000)
     })
     if (response.ok) {
       serverOffline = false
@@ -296,6 +310,25 @@ export async function saveAllToServer(data: Record<string, any>): Promise<boolea
 
 // Função híbrida: salva no localStorage E no servidor
 export async function saveData(key: string, value: any, saveToLocalStorage = true): Promise<void> {
+  /** Manuais: IndexedDB primeiro (PDFs grandes); localStorage é opcional; não falhar se quota estourar */
+  if (key === MANUAIS_KEY && typeof window !== 'undefined') {
+    await saveManuaisFamiliasGruposToIdb(value)
+    if (saveToLocalStorage) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value))
+      } catch (e) {
+        console.warn(`localStorage cheio para ${key}; dados em IndexedDB`, e)
+        try {
+          localStorage.setItem(`${key}--idb`, '1')
+        } catch {
+          /* ignorar */
+        }
+      }
+    }
+    await saveToServer(key, value)
+    return
+  }
+
   // Salvar no localStorage (para acesso rápido) - falha aqui deve ser reportada ao caller
   if (saveToLocalStorage && typeof window !== 'undefined') {
     try {
@@ -314,15 +347,32 @@ export async function saveData(key: string, value: any, saveToLocalStorage = tru
 export async function loadData(key: string, parseJson = true): Promise<any | null> {
   // Tentar carregar do servidor primeiro (apenas se não estiver offline)
   if (!serverOffline) {
-    const serverData = await loadFromServer(key)
+    let serverData = await loadFromServer(key)
     if (serverData !== null) {
+      // Manuais guardados como JSON em .txt (payload grande)
+      if (key === MANUAIS_KEY && typeof serverData === 'string' && parseJson) {
+        try {
+          serverData = JSON.parse(serverData)
+        } catch {
+          serverData = null
+        }
+      }
       // Manuais: nunca substituir o local só pelo servidor — fundir para não perder PDFs
-      if (key === 'nonato-manuais-familias-grupos' && parseJson && typeof serverData === 'object' && !Array.isArray(serverData)) {
+      if (key === MANUAIS_KEY && parseJson && typeof serverData === 'object' && serverData !== null && !Array.isArray(serverData)) {
         const localRaw = typeof window !== 'undefined' ? localStorage.getItem(key) : null
+        let idbLocal: any = null
+        try {
+          idbLocal = await loadManuaisFamiliasGruposFromIdb()
+        } catch {
+          /* ignorar */
+        }
         if (localRaw !== null && localRaw !== '') {
           try {
             const local = JSON.parse(localRaw)
-            const merged = mergeManuaisFamiliasGrupos(serverData, local)
+            const merged = mergeManuaisFamiliasGrupos(
+              mergeManuaisFamiliasGrupos(serverData, idbLocal || {}),
+              local
+            )
             if (typeof window !== 'undefined') {
               try {
                 localStorage.setItem(key, JSON.stringify(merged))
@@ -330,22 +380,30 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
                 console.error(`Erro ao atualizar localStorage (${key}):`, error)
               }
             }
+            saveManuaisFamiliasGruposToIdb(merged).catch(() => {})
             saveToServer(key, merged).catch(() => {})
             return merged
           } catch {
             /* fallback abaixo */
           }
+        } else if (idbLocal && typeof idbLocal === 'object') {
+          const merged = mergeManuaisFamiliasGrupos(serverData, idbLocal)
+          saveManuaisFamiliasGruposToIdb(merged).catch(() => {})
+          saveToServer(key, merged).catch(() => {})
+          return merged
         }
       }
-      // Se encontrou no servidor, também atualizar o localStorage
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem(key, typeof serverData === 'string' ? serverData : JSON.stringify(serverData))
-        } catch (error) {
-          console.error(`Erro ao atualizar localStorage (${key}):`, error)
+      if (serverData !== null) {
+        // Se encontrou no servidor, também atualizar o localStorage
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(key, typeof serverData === 'string' ? serverData : JSON.stringify(serverData))
+          } catch (error) {
+            console.error(`Erro ao atualizar localStorage (${key}):`, error)
+          }
         }
+        return serverData
       }
-      return serverData
     }
   }
 
@@ -358,6 +416,19 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
           // Tentar fazer parse do JSON
           try {
             const parsed = JSON.parse(localData)
+            if (key === MANUAIS_KEY && typeof parsed === 'object' && parsed !== null) {
+              try {
+                const idb = await loadManuaisFamiliasGruposFromIdb()
+                const merged = mergeManuaisFamiliasGrupos(parsed, idb || {})
+                saveManuaisFamiliasGruposToIdb(merged).catch(() => {})
+                if (!serverOffline) {
+                  saveToServer(key, merged).catch(() => {})
+                }
+                return merged
+              } catch {
+                /* fallback ao parsed só com localStorage */
+              }
+            }
             // Se encontrou no localStorage e servidor está online, também salvar no servidor (migração)
             // Mas não bloquear se o servidor estiver offline
             if (!serverOffline) {
@@ -382,6 +453,17 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
       }
     } catch (error) {
       console.error(`Erro ao carregar do localStorage (${key}):`, error)
+    }
+  }
+
+  if (key === MANUAIS_KEY && typeof window !== 'undefined') {
+    try {
+      const idb = await loadManuaisFamiliasGruposFromIdb()
+      if (idb !== null && typeof idb === 'object') {
+        return idb
+      }
+    } catch {
+      /* ignorar */
     }
   }
 

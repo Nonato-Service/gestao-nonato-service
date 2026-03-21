@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { translations } from './translations'
 import { loadData, saveData, loadAllFromServer, loadFromServer } from './utils/dataStorage'
 import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
+import { loadManuaisFamiliasGruposFromIdb } from './utils/manuaisIndexedDb'
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 
@@ -3980,14 +3981,21 @@ export default function Dashboard() {
         }
       }
 
-      // Carregar famílias, grupos e modelos da secção Manuais e Informações Técnicas
+      // Carregar famílias, grupos e modelos (servidor + localStorage + IndexedDB — PDFs grandes)
       const savedManuaisFG = getData('nonato-manuais-familias-grupos')
-      if (savedManuaisFG && typeof savedManuaisFG === 'object') {
-        const m = savedManuaisFG as { familias?: string[]; grupos?: ManuaisGrupo[]; modelos?: ManuaisModelo[] }
-        if (Array.isArray(m.familias)) setManuaisFamilias(m.familias)
-        if (Array.isArray(m.grupos)) setManuaisGrupos(m.grupos)
-        if (Array.isArray(m.modelos)) setManuaisModelos(m.modelos)
+      let fromIdbManuais: { familias?: string[]; grupos?: ManuaisGrupo[]; modelos?: ManuaisModelo[] } | null = null
+      try {
+        fromIdbManuais = await loadManuaisFamiliasGruposFromIdb()
+      } catch {
+        /* ignorar */
       }
+      const mergedManuaisFG = mergeManuaisFamiliasGrupos(
+        savedManuaisFG && typeof savedManuaisFG === 'object' ? savedManuaisFG : {},
+        fromIdbManuais && typeof fromIdbManuais === 'object' ? fromIdbManuais : {}
+      )
+      setManuaisFamilias(Array.isArray(mergedManuaisFG.familias) ? mergedManuaisFG.familias : [])
+      setManuaisGrupos(Array.isArray(mergedManuaisFG.grupos) ? mergedManuaisFG.grupos : [])
+      setManuaisModelos(Array.isArray(mergedManuaisFG.modelos) ? mergedManuaisFG.modelos : [])
 
       // Carregar clientes
       const savedClientes = getData('nonato-clientes')
