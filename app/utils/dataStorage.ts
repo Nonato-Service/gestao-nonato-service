@@ -1,5 +1,7 @@
 // Funções para salvar e carregar dados do servidor (com suporte offline)
 
+import { mergeManuaisFamiliasGrupos } from './manuaisMerge'
+
 const API_BASE = '/api/data'
 const SYNC_QUEUE_KEY = 'nonato-sync-queue'
 
@@ -314,6 +316,27 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
   if (!serverOffline) {
     const serverData = await loadFromServer(key)
     if (serverData !== null) {
+      // Manuais: nunca substituir o local só pelo servidor — fundir para não perder PDFs
+      if (key === 'nonato-manuais-familias-grupos' && parseJson && typeof serverData === 'object' && !Array.isArray(serverData)) {
+        const localRaw = typeof window !== 'undefined' ? localStorage.getItem(key) : null
+        if (localRaw !== null && localRaw !== '') {
+          try {
+            const local = JSON.parse(localRaw)
+            const merged = mergeManuaisFamiliasGrupos(serverData, local)
+            if (typeof window !== 'undefined') {
+              try {
+                localStorage.setItem(key, JSON.stringify(merged))
+              } catch (error) {
+                console.error(`Erro ao atualizar localStorage (${key}):`, error)
+              }
+            }
+            saveToServer(key, merged).catch(() => {})
+            return merged
+          } catch {
+            /* fallback abaixo */
+          }
+        }
+      }
       // Se encontrou no servidor, também atualizar o localStorage
       if (typeof window !== 'undefined') {
         try {

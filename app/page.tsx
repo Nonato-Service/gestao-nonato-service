@@ -4,6 +4,7 @@ import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useR
 import { createPortal } from 'react-dom'
 import { translations } from './translations'
 import { loadData, saveData, loadAllFromServer, loadFromServer } from './utils/dataStorage'
+import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 
@@ -210,55 +211,6 @@ type ManuaisModelo = {
   infoMecanicas?: string
   infoEletricas?: string
   imagens?: ManuaisImagem[]
-}
-
-/** Une dados do servidor com os do localStorage para não perder manuais/PDFs quando o servidor está desatualizado. */
-function mergeManuaisFamiliasGrupos(
-  server: { familias?: string[]; grupos?: ManuaisGrupo[]; modelos?: ManuaisModelo[] },
-  local: { familias?: string[]; grupos?: ManuaisGrupo[]; modelos?: ManuaisModelo[] }
-): { familias: string[]; grupos: ManuaisGrupo[]; modelos: ManuaisModelo[] } {
-  const famSet = new Set<string>([...(server?.familias || []), ...(local?.familias || [])])
-  const familias = Array.from(famSet).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-
-  const gruposMap = new Map<string, ManuaisGrupo>()
-  for (const g of server?.grupos || []) gruposMap.set(g.id, { ...g })
-  for (const g of local?.grupos || []) gruposMap.set(g.id, { ...g })
-  const grupos = Array.from(gruposMap.values())
-
-  const mergeTexto = (a?: string, b?: string) => {
-    const A = a?.trim() ?? ''
-    const B = b?.trim() ?? ''
-    if (B.length >= A.length) return B || A
-    return A || B
-  }
-
-  const mergeModelo = (s: ManuaisModelo, l: ManuaisModelo): ManuaisModelo => {
-    const docMap = new Map<string, ManuaisDocumento>()
-    for (const d of s.documentos || []) docMap.set(d.id, d)
-    for (const d of l.documentos || []) docMap.set(d.id, d)
-    const imgMap = new Map<string, ManuaisImagem>()
-    for (const i of s.imagens || []) imgMap.set(i.id, i)
-    for (const i of l.imagens || []) imgMap.set(i.id, i)
-    return {
-      ...s,
-      ...l,
-      nome: l.nome || s.nome,
-      grupoId: l.grupoId || s.grupoId,
-      documentos: Array.from(docMap.values()),
-      imagens: Array.from(imgMap.values()),
-      infoTecnicas: mergeTexto(s.infoTecnicas, l.infoTecnicas),
-      infoMecanicas: mergeTexto(s.infoMecanicas, l.infoMecanicas),
-      infoEletricas: mergeTexto(s.infoEletricas, l.infoEletricas)
-    }
-  }
-
-  const modelosMap = new Map<string, ManuaisModelo>()
-  for (const m of server?.modelos || []) modelosMap.set(m.id, m)
-  for (const m of local?.modelos || []) {
-    const existing = modelosMap.get(m.id)
-    modelosMap.set(m.id, existing ? mergeModelo(existing, m) : m)
-  }
-  return { familias, grupos, modelos: Array.from(modelosMap.values()) }
 }
 
 /** Parte de equipamento composto (quando não é uma só parte) */
@@ -16313,6 +16265,8 @@ export default function Dashboard() {
 
   // Componente para evitar erro de parser SWC no case 'manuais-informacoes-tecnicas'
   function ManuaisInformacoesTabContent() {
+    const manuaisSaveDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const manuaisSaveAlertOnceRef = useRef(false)
     const familias = Array.isArray(manuaisFamilias) ? manuaisFamilias : []
     const grupos = Array.isArray(manuaisGrupos) ? manuaisGrupos : []
     const modelos = Array.isArray(manuaisModelos) ? manuaisModelos : []
@@ -16924,16 +16878,37 @@ const nextF = familias.filter(x => x !== f)
                 if (!modelo) return <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>Modelo não encontrado.</p>
                 const documentos = Array.isArray(modelo.documentos) ? modelo.documentos : []
                 const imagens = Array.isArray(modelo.imagens) ? modelo.imagens : []
-                const persistModelos = (next: ManuaisModelo[]) => {
-                  saveData('nonato-manuais-familias-grupos', { familias, grupos, modelos: next }).catch((err) => {
-                    console.error('Erro ao guardar manuais:', err)
-                    alert((safeT as any)?.manuaisErroAoGuardar || 'Não foi possível guardar. O ficheiro pode ser grande demais para o navegador; tente um PDF mais pequeno ou exporte um backup.')
-                  })
+                const runSaveManuaisModelos = (next: ManuaisModelo[]) => {
+                  saveData('nonato-manuais-familias-grupos', { familias, grupos, modelos: next })
+                    .then(() => {
+                      manuaisSaveAlertOnceRef.current = false
+                    })
+                    .catch((err) => {
+                      console.error('Erro ao guardar manuais:', err)
+                      if (!manuaisSaveAlertOnceRef.current) {
+                        manuaisSaveAlertOnceRef.current = true
+                        alert((safeT as any)?.manuaisErroAoGuardar || 'Não foi possível guardar. O ficheiro pode ser grande demais para o navegador; tente um PDF mais pequeno ou exporte um backup.')
+                      }
+                    })
+                }
+                const persistModelosImmediate = (next: ManuaisModelo[]) => {
+                  if (manuaisSaveDebounceRef.current) {
+                    clearTimeout(manuaisSaveDebounceRef.current)
+                    manuaisSaveDebounceRef.current = null
+                  }
+                  runSaveManuaisModelos(next)
+                }
+                const persistModelosDebounced = (next: ManuaisModelo[]) => {
+                  if (manuaisSaveDebounceRef.current) clearTimeout(manuaisSaveDebounceRef.current)
+                  manuaisSaveDebounceRef.current = setTimeout(() => {
+                    manuaisSaveDebounceRef.current = null
+                    runSaveManuaisModelos(next)
+                  }, 500)
                 }
                 const updateModelo = (updates: Partial<ManuaisModelo>) => {
                   setManuaisModelos(prev => {
                     const next = prev.map(mo => mo.id === modelo.id ? { ...mo, ...updates } : mo)
-                    persistModelos(next)
+                    persistModelosDebounced(next)
                     return next
                   })
                 }
@@ -16948,7 +16923,7 @@ const nextF = familias.filter(x => x !== f)
                         const docs = Array.isArray(mo.documentos) ? mo.documentos : []
                         return { ...mo, documentos: [...docs, novo] }
                       })
-                      persistModelos(next)
+                      persistModelosImmediate(next)
                       return next
                     })
                   }
@@ -16961,7 +16936,7 @@ const nextF = familias.filter(x => x !== f)
                       const docs = Array.isArray(mo.documentos) ? mo.documentos : []
                       return { ...mo, documentos: docs.filter(d => d.id !== docId) }
                     })
-                    persistModelos(next)
+                    persistModelosImmediate(next)
                     return next
                   })
                 }
@@ -16976,7 +16951,7 @@ const nextF = familias.filter(x => x !== f)
                         const imgs = Array.isArray(mo.imagens) ? mo.imagens : []
                         return { ...mo, imagens: [...imgs, novo] }
                       })
-                      persistModelos(next)
+                      persistModelosImmediate(next)
                       return next
                     })
                   }
@@ -16989,7 +16964,7 @@ const nextF = familias.filter(x => x !== f)
                       const imgs = Array.isArray(mo.imagens) ? mo.imagens : []
                       return { ...mo, imagens: imgs.filter(i => i.id !== imgId) }
                     })
-                    persistModelos(next)
+                    persistModelosImmediate(next)
                     return next
                   })
                 }
