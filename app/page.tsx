@@ -212,6 +212,55 @@ type ManuaisModelo = {
   imagens?: ManuaisImagem[]
 }
 
+/** Une dados do servidor com os do localStorage para não perder manuais/PDFs quando o servidor está desatualizado. */
+function mergeManuaisFamiliasGrupos(
+  server: { familias?: string[]; grupos?: ManuaisGrupo[]; modelos?: ManuaisModelo[] },
+  local: { familias?: string[]; grupos?: ManuaisGrupo[]; modelos?: ManuaisModelo[] }
+): { familias: string[]; grupos: ManuaisGrupo[]; modelos: ManuaisModelo[] } {
+  const famSet = new Set<string>([...(server?.familias || []), ...(local?.familias || [])])
+  const familias = Array.from(famSet).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+
+  const gruposMap = new Map<string, ManuaisGrupo>()
+  for (const g of server?.grupos || []) gruposMap.set(g.id, { ...g })
+  for (const g of local?.grupos || []) gruposMap.set(g.id, { ...g })
+  const grupos = Array.from(gruposMap.values())
+
+  const mergeTexto = (a?: string, b?: string) => {
+    const A = a?.trim() ?? ''
+    const B = b?.trim() ?? ''
+    if (B.length >= A.length) return B || A
+    return A || B
+  }
+
+  const mergeModelo = (s: ManuaisModelo, l: ManuaisModelo): ManuaisModelo => {
+    const docMap = new Map<string, ManuaisDocumento>()
+    for (const d of s.documentos || []) docMap.set(d.id, d)
+    for (const d of l.documentos || []) docMap.set(d.id, d)
+    const imgMap = new Map<string, ManuaisImagem>()
+    for (const i of s.imagens || []) imgMap.set(i.id, i)
+    for (const i of l.imagens || []) imgMap.set(i.id, i)
+    return {
+      ...s,
+      ...l,
+      nome: l.nome || s.nome,
+      grupoId: l.grupoId || s.grupoId,
+      documentos: Array.from(docMap.values()),
+      imagens: Array.from(imgMap.values()),
+      infoTecnicas: mergeTexto(s.infoTecnicas, l.infoTecnicas),
+      infoMecanicas: mergeTexto(s.infoMecanicas, l.infoMecanicas),
+      infoEletricas: mergeTexto(s.infoEletricas, l.infoEletricas)
+    }
+  }
+
+  const modelosMap = new Map<string, ManuaisModelo>()
+  for (const m of server?.modelos || []) modelosMap.set(m.id, m)
+  for (const m of local?.modelos || []) {
+    const existing = modelosMap.get(m.id)
+    modelosMap.set(m.id, existing ? mergeModelo(existing, m) : m)
+  }
+  return { familias, grupos, modelos: Array.from(modelosMap.values()) }
+}
+
 /** Parte de equipamento composto (quando não é uma só parte) */
 type PartEquipamento = {
   ordem: number
@@ -3585,6 +3634,31 @@ export default function Dashboard() {
                 return parsed
               }
             } catch (e) { /* ignorar */ }
+          }
+        }
+        // Manuais: fundir servidor + local para não perder PDFs/anexos quando o servidor ainda não sincronizou
+        if (key === 'nonato-manuais-familias-grupos' && typeof window !== 'undefined') {
+          const serverValue = serverData[key]
+          const localData = localStorage.getItem(key)
+          if (serverValue != null && typeof serverValue === 'object' && localData !== null && localData !== '') {
+            try {
+              const local = JSON.parse(localData) as { familias?: string[]; grupos?: ManuaisGrupo[]; modelos?: ManuaisModelo[] }
+              if (local && typeof local === 'object') {
+                const merged = mergeManuaisFamiliasGrupos(
+                  serverValue as { familias?: string[]; grupos?: ManuaisGrupo[]; modelos?: ManuaisModelo[] },
+                  local
+                )
+                try {
+                  localStorage.setItem(key, JSON.stringify(merged))
+                } catch (e) {
+                  console.error('Erro ao gravar manuais fundidos no localStorage:', e)
+                }
+                saveData(key, merged, false).catch(() => {})
+                return merged
+              }
+            } catch (e) {
+              /* continuar com a lógica normal */
+            }
           }
         }
         // Verificar dados do servidor primeiro
@@ -16850,31 +16924,75 @@ const nextF = familias.filter(x => x !== f)
                 if (!modelo) return <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>Modelo não encontrado.</p>
                 const documentos = Array.isArray(modelo.documentos) ? modelo.documentos : []
                 const imagens = Array.isArray(modelo.imagens) ? modelo.imagens : []
+                const persistModelos = (next: ManuaisModelo[]) => {
+                  saveData('nonato-manuais-familias-grupos', { familias, grupos, modelos: next }).catch((err) => {
+                    console.error('Erro ao guardar manuais:', err)
+                    alert((safeT as any)?.manuaisErroAoGuardar || 'Não foi possível guardar. O ficheiro pode ser grande demais para o navegador; tente um PDF mais pequeno ou exporte um backup.')
+                  })
+                }
                 const updateModelo = (updates: Partial<ManuaisModelo>) => {
-                  const next = manuaisModelos.map(mo => mo.id === modelo.id ? { ...mo, ...updates } : mo)
-                  setManuaisModelos(next)
-                  saveData('nonato-manuais-familias-grupos', { familias: familias, grupos: grupos, modelos: next })
+                  setManuaisModelos(prev => {
+                    const next = prev.map(mo => mo.id === modelo.id ? { ...mo, ...updates } : mo)
+                    persistModelos(next)
+                    return next
+                  })
                 }
                 const addDocumento = (file: File) => {
                   const reader = new FileReader()
                   reader.onload = () => {
                     const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `doc-${Date.now()}`
                     const novo: ManuaisDocumento = { id, nome: file.name, tipo: file.type, dados: reader.result as string }
-                    updateModelo({ documentos: [...documentos, novo] })
+                    setManuaisModelos(prev => {
+                      const next = prev.map(mo => {
+                        if (mo.id !== modelo.id) return mo
+                        const docs = Array.isArray(mo.documentos) ? mo.documentos : []
+                        return { ...mo, documentos: [...docs, novo] }
+                      })
+                      persistModelos(next)
+                      return next
+                    })
                   }
                   reader.readAsDataURL(file)
                 }
-                const removeDocumento = (id: string) => updateModelo({ documentos: documentos.filter(d => d.id !== id) })
+                const removeDocumento = (docId: string) => {
+                  setManuaisModelos(prev => {
+                    const next = prev.map(mo => {
+                      if (mo.id !== modelo.id) return mo
+                      const docs = Array.isArray(mo.documentos) ? mo.documentos : []
+                      return { ...mo, documentos: docs.filter(d => d.id !== docId) }
+                    })
+                    persistModelos(next)
+                    return next
+                  })
+                }
                 const addImagem = (file: File) => {
                   const reader = new FileReader()
                   reader.onload = () => {
                     const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `img-${Date.now()}`
                     const novo: ManuaisImagem = { id, nome: file.name, dados: reader.result as string }
-                    updateModelo({ imagens: [...imagens, novo] })
+                    setManuaisModelos(prev => {
+                      const next = prev.map(mo => {
+                        if (mo.id !== modelo.id) return mo
+                        const imgs = Array.isArray(mo.imagens) ? mo.imagens : []
+                        return { ...mo, imagens: [...imgs, novo] }
+                      })
+                      persistModelos(next)
+                      return next
+                    })
                   }
                   reader.readAsDataURL(file)
                 }
-                const removeImagem = (id: string) => updateModelo({ imagens: imagens.filter(i => i.id !== id) })
+                const removeImagem = (imgId: string) => {
+                  setManuaisModelos(prev => {
+                    const next = prev.map(mo => {
+                      if (mo.id !== modelo.id) return mo
+                      const imgs = Array.isArray(mo.imagens) ? mo.imagens : []
+                      return { ...mo, imagens: imgs.filter(i => i.id !== imgId) }
+                    })
+                    persistModelos(next)
+                    return next
+                  })
+                }
                 const cardStyle = { background: '#141414', border: '1px solid rgba(0,255,0,0.2)', borderRadius: '10px', padding: '14px 16px', marginBottom: '14px' }
                 const sectionTitle = { fontSize: '12px', fontWeight: 700, color: '#00ff00', marginBottom: '10px', letterSpacing: '0.5px', textTransform: 'uppercase' as const }
                 return (
@@ -26055,13 +26173,27 @@ onKeyPress={(e) => {
                       style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                       onKeyPress={(e) => {
                         if (e.key === 'Enter' && novaCategoriaNome.trim()) {
+                          const refId = pecaBibliotecaForm.categoriaId
+                          const idx = refId ? categoriasPecas.findIndex(c => c.id === refId) : -1
                           const newCategoria: CategoriaPeca = {
                             id: Date.now().toString(),
                             nome: novaCategoriaNome.trim()
                           }
-                          const updated = [...categoriasPecas, newCategoria]
+                          const updated =
+                            idx >= 0
+                              ? [...categoriasPecas.slice(0, idx + 1), newCategoria, ...categoriasPecas.slice(idx + 1)]
+                              : [...categoriasPecas, newCategoria]
                           setCategoriasPecas(updated)
                           saveData('nonato-categorias-pecas', updated)
+                          setUltimoGrupoSelecionado(newCategoria.id)
+                          setUltimoSubgrupoSelecionado('')
+                          setPecaBibliotecaForm({
+                            ...pecaBibliotecaForm,
+                            categoriaId: newCategoria.id,
+                            categoria: newCategoria.nome,
+                            subcategoriaId: '',
+                            subcategoria: ''
+                          })
                           setNovaCategoriaNome('')
                           setShowNovaCategoriaForm(false)
                               alert(safeT?.categoriaPecaSaved || 'Categoria criada com sucesso!')
@@ -26077,13 +26209,27 @@ onKeyPress={(e) => {
                               alert(safeT?.fillAllFields || 'Preencha o nome da categoria!')
                           return
                         }
+                        const refId = pecaBibliotecaForm.categoriaId
+                        const idx = refId ? categoriasPecas.findIndex(c => c.id === refId) : -1
                         const newCategoria: CategoriaPeca = {
                           id: Date.now().toString(),
                           nome: novaCategoriaNome.trim()
                         }
-                        const updated = [...categoriasPecas, newCategoria]
+                        const updated =
+                          idx >= 0
+                            ? [...categoriasPecas.slice(0, idx + 1), newCategoria, ...categoriasPecas.slice(idx + 1)]
+                            : [...categoriasPecas, newCategoria]
                         setCategoriasPecas(updated)
                         saveData('nonato-categorias-pecas', updated)
+                        setUltimoGrupoSelecionado(newCategoria.id)
+                        setUltimoSubgrupoSelecionado('')
+                        setPecaBibliotecaForm({
+                          ...pecaBibliotecaForm,
+                          categoriaId: newCategoria.id,
+                          categoria: newCategoria.nome,
+                          subcategoriaId: '',
+                          subcategoria: ''
+                        })
                         setNovaCategoriaNome('')
                         setShowNovaCategoriaForm(false)
                               alert(safeT?.categoriaPecaSaved || 'Categoria criada com sucesso!')
@@ -26167,14 +26313,41 @@ onKeyPress={(e) => {
                           style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                           onKeyPress={(e) => {
                             if (e.key === 'Enter' && novaSubcategoriaNome.trim() && pecaBibliotecaForm.categoriaId) {
+                              const categoriaId = pecaBibliotecaForm.categoriaId
+                              const prevSubId = pecaBibliotecaForm.subcategoriaId
                               const newSubcategoria: SubcategoriaPeca = {
                                 id: Date.now().toString(),
                                 nome: novaSubcategoriaNome.trim(),
-                                categoriaId: pecaBibliotecaForm.categoriaId
+                                categoriaId
                               }
-                              const updated = [...subcategoriasPecas, newSubcategoria]
+                              const prevIdx =
+                                prevSubId && subcategoriasPecas.some(s => s.id === prevSubId && s.categoriaId === categoriaId)
+                                  ? subcategoriasPecas.findIndex(s => s.id === prevSubId)
+                                  : -1
+                              let updated: SubcategoriaPeca[]
+                              if (prevIdx >= 0) {
+                                updated = [...subcategoriasPecas.slice(0, prevIdx + 1), newSubcategoria, ...subcategoriasPecas.slice(prevIdx + 1)]
+                              } else {
+                                let insertAt = subcategoriasPecas.length
+                                for (let i = subcategoriasPecas.length - 1; i >= 0; i--) {
+                                  if (subcategoriasPecas[i].categoriaId === categoriaId) {
+                                    insertAt = i + 1
+                                    break
+                                  }
+                                }
+                                updated = [...subcategoriasPecas.slice(0, insertAt), newSubcategoria, ...subcategoriasPecas.slice(insertAt)]
+                              }
                               setSubcategoriasPecas(updated)
                               saveData('nonato-subcategorias-pecas', updated)
+                              const catNome = categoriasPecas.find(c => c.id === categoriaId)?.nome ?? pecaBibliotecaForm.categoria
+                              setUltimoGrupoSelecionado(categoriaId)
+                              setUltimoSubgrupoSelecionado(newSubcategoria.id)
+                              setPecaBibliotecaForm({
+                                ...pecaBibliotecaForm,
+                                categoria: catNome,
+                                subcategoriaId: newSubcategoria.id,
+                                subcategoria: newSubcategoria.nome
+                              })
                               setNovaSubcategoriaNome('')
                               setShowNovaSubcategoriaForm(false)
                               alert(safeT?.subcategoriaPecaSaved || 'Subcategoria criada com sucesso!')
@@ -26194,14 +26367,41 @@ onKeyPress={(e) => {
                               alert(safeT?.selecioneCategoriaPrimeiro || 'Selecione uma categoria primeiro')
                               return
                             }
+                            const categoriaId = pecaBibliotecaForm.categoriaId
+                            const prevSubId = pecaBibliotecaForm.subcategoriaId
                             const newSubcategoria: SubcategoriaPeca = {
                               id: Date.now().toString(),
                               nome: novaSubcategoriaNome.trim(),
-                              categoriaId: pecaBibliotecaForm.categoriaId
+                              categoriaId
                             }
-                            const updated = [...subcategoriasPecas, newSubcategoria]
+                            const prevIdx =
+                              prevSubId && subcategoriasPecas.some(s => s.id === prevSubId && s.categoriaId === categoriaId)
+                                ? subcategoriasPecas.findIndex(s => s.id === prevSubId)
+                                : -1
+                            let updated: SubcategoriaPeca[]
+                            if (prevIdx >= 0) {
+                              updated = [...subcategoriasPecas.slice(0, prevIdx + 1), newSubcategoria, ...subcategoriasPecas.slice(prevIdx + 1)]
+                            } else {
+                              let insertAt = subcategoriasPecas.length
+                              for (let i = subcategoriasPecas.length - 1; i >= 0; i--) {
+                                if (subcategoriasPecas[i].categoriaId === categoriaId) {
+                                  insertAt = i + 1
+                                  break
+                                }
+                              }
+                              updated = [...subcategoriasPecas.slice(0, insertAt), newSubcategoria, ...subcategoriasPecas.slice(insertAt)]
+                            }
                             setSubcategoriasPecas(updated)
                             saveData('nonato-subcategorias-pecas', updated)
+                            const catNome = categoriasPecas.find(c => c.id === categoriaId)?.nome ?? pecaBibliotecaForm.categoria
+                            setUltimoGrupoSelecionado(categoriaId)
+                            setUltimoSubgrupoSelecionado(newSubcategoria.id)
+                            setPecaBibliotecaForm({
+                              ...pecaBibliotecaForm,
+                              categoria: catNome,
+                              subcategoriaId: newSubcategoria.id,
+                              subcategoria: newSubcategoria.nome
+                            })
                             setNovaSubcategoriaNome('')
                             setShowNovaSubcategoriaForm(false)
                             alert(safeT?.subcategoriaPecaSaved || 'Subgrupo criado com sucesso!')
