@@ -66,16 +66,19 @@ body {
   width: 100%;
   overflow-x: hidden;
   overscroll-behavior-y: none;
-  touch-action: manipulation;
+  /* pan-y + pinch: rolagem vertical com um dedo; pinch-zoom mantido. Evita só "manipulation" em body + área interna com pan-y (casos em que o scroll não era atribuído ao contentor certo). */
+  touch-action: pan-y pinch-zoom;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Área principal: rolagem em contentor interno. min-height:0 na cadeia flex permite o overflow-y: auto funcionar. */
-.main-content-area,
-.tab-inner-scroll {
+/* Área principal: rolagem só aqui (não duplicar overflow-y no .tab-inner-scroll — ver page.tsx). min-height:0 na cadeia flex permite o overflow-y: auto funcionar. */
+.main-content-area {
   min-height: 0;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
+}
+.tab-inner-scroll {
+  min-height: 0;
 }
 /* Suavização de fonte no Firefox macOS - ignorado por outros browsers */
 
@@ -1824,3 +1827,4 @@ a:focus-visible {
     padding: 14px !important;
   }
 }
+

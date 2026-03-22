@@ -47605,11 +47605,12 @@ A1;Peça exemplo;10'
           </div>
         ) : null}
         {/* Conteúdo da Aba Ativa ou Dashboard */}
-        <div ref={mainContentAreaRef} className="main-content-area" style={{ flex: 1, padding: '30px', overflowY: 'auto', minWidth: 0, width: '100%', boxSizing: 'border-box', position: 'relative' }}>
+        <div ref={mainContentAreaRef} className="main-content-area" style={{ flex: 1, minHeight: 0, padding: '30px', overflowY: 'auto', minWidth: 0, width: '100%', boxSizing: 'border-box', position: 'relative' }}>
           {activeTabId ? (
             <>
               {/* Renderizar conteúdo da aba ativa (F1 HELP está na barra fixa ao lado de Atualizar com segurança) */}
-              <div className="tab-inner-scroll" style={{ height: '100%', width: '100%', overflowY: 'auto', boxSizing: 'border-box' }}>
+              {/* Rolagem única no .main-content-area: evita dois overflow-y aninhados (scroll com um dedo falha em muitos tablets/telefones). */}
+              <div className="tab-inner-scroll" style={{ width: '100%', boxSizing: 'border-box', overflow: 'visible' }}>
                 {(() => {
                   const activeTab = openTabs.find(t => t.id === activeTabId)
                   if (!activeTab) return null
