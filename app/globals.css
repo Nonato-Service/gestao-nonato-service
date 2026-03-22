@@ -1334,6 +1334,16 @@ body {
 .app-compact-layout {
   flex-direction: column !important;
   padding-top: calc(52px + env(safe-area-inset-top, 0px)) !important;
+  /*
+   * Travar altura ao viewport: com só min-height no .app-layout, o flex crescia com o conteúdo e
+   * .main-content-area / .tab-inner-scroll com overflow-y:auto não tinham “caixa” limitada — no
+   * telefone/tablet a rolagem parecia “morta”. Com border-box (global *), padding entra nos 100dvh.
+   */
+  height: 100vh;
+  max-height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
 }
 .app-layout.app-layout-no-top-bar.app-compact-layout {
   padding-top: calc(52px + env(safe-area-inset-top, 0px)) !important;
