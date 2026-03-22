@@ -440,6 +440,8 @@ type Agendamento = {
   data: string
   hora: string
   duracaoEstimada: string // em dias
+  /** Datas (YYYY-MM-DD) escolhidas no calendário de duração; usado com duracaoEstimada = quantidade */
+  diasSelecionados?: string[]
   tipoServico: string
   observacoesTecnicas: string
   necessidadePecas: boolean
@@ -2723,6 +2725,7 @@ export default function Dashboard() {
     data: new Date().toISOString().split('T')[0],
     hora: '09:00',
     duracaoEstimada: '2',
+    diasSelecionados: undefined,
     tipoServico: '',
     observacoesTecnicas: '',
     necessidadePecas: false,
@@ -2738,6 +2741,9 @@ export default function Dashboard() {
   const [filtroTecnicoAgenda, setFiltroTecnicoAgenda] = useState('')
   const [filtroDataAgenda, setFiltroDataAgenda] = useState('')
   const [visualizacaoAgenda, setVisualizacaoAgenda] = useState<'lista' | 'calendario'>('lista')
+  const [agendaDiasRascunho, setAgendaDiasRascunho] = useState<string[]>([])
+  const [agendaPickerMes, setAgendaPickerMes] = useState(() => new Date().getMonth())
+  const [agendaPickerAno, setAgendaPickerAno] = useState(() => new Date().getFullYear())
   const [calendarioMes, setCalendarioMes] = useState(new Date().getMonth())
   const [calendarioAno, setCalendarioAno] = useState(new Date().getFullYear())
   const [tecnicoSelecionadoCalendario, setTecnicoSelecionadoCalendario] = useState<string | null>(null)
@@ -3371,14 +3377,34 @@ export default function Dashboard() {
     window.location.reload()
   }, [editingProtocoloServicoId, protocoloServicoForm, safeT])
 
-  // Em telefone/tablet: reduzir pull-to-refresh acidental ao puxar para baixo no topo.
+  // Em telefone/tablet: reduzir pull-to-refresh acidental ao puxar para baixo no topo da página.
+  // Importante: a rolagem real é em .main-content-area / .tab-inner-scroll (overflow-y: auto), não em window.
+  // Se usarmos só window.scrollY (sempre 0), preventDefault() quebra a rolagem com um dedo — o utilizador precisava de dois dedos.
   useEffect(() => {
     if (typeof window === 'undefined' || !isCompactLayout) return
     let startY = 0
+    const touchInsideScrollableOverflow = (target: EventTarget | null): boolean => {
+      let el = target instanceof Element ? target : null
+      while (el && el !== document.documentElement) {
+        const h = el as HTMLElement
+        const st = window.getComputedStyle(h)
+        const oy = st.overflowY
+        if (
+          (oy === 'auto' || oy === 'scroll' || oy === 'overlay') &&
+          h.scrollHeight > h.clientHeight + 1
+        ) {
+          return true
+        }
+        el = el.parentElement
+      }
+      return false
+    }
     const onTouchStart = (e: TouchEvent) => {
       startY = e.touches?.[0]?.clientY || 0
     }
     const onTouchMove = (e: TouchEvent) => {
+      // Deixar o browser tratar o scroll em qualquer painel com overflow (área principal, abas, modais, sidebar).
+      if (touchInsideScrollableOverflow(e.target)) return
       const y = e.touches?.[0]?.clientY || 0
       const delta = y - startY
       const scrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0
@@ -7885,6 +7911,7 @@ export default function Dashboard() {
       data: new Date().toISOString().split('T')[0],
       hora: '09:00',
       duracaoEstimada: '2',
+      diasSelecionados: undefined,
       tipoServico: '',
       observacoesTecnicas: '',
       necessidadePecas: false,
@@ -7896,12 +7923,29 @@ export default function Dashboard() {
       cidade: '',
       dataCriacao: new Date().toISOString()
     })
+    const hoje = new Date()
+    setAgendaPickerMes(hoje.getMonth())
+    setAgendaPickerAno(hoje.getFullYear())
+    setAgendaDiasRascunho([])
     setShowAgendaForm(true)
   }
 
   const handleEditAgendamento = (agendamento: Agendamento) => {
     setEditingAgendamento(agendamento)
     setAgendaForm(agendamento)
+    const dias = agendamento.diasSelecionados?.length
+      ? [...agendamento.diasSelecionados].sort()
+      : []
+    setAgendaDiasRascunho(dias)
+    if (dias.length > 0) {
+      const d = new Date(dias[0] + 'T12:00:00')
+      setAgendaPickerMes(d.getMonth())
+      setAgendaPickerAno(d.getFullYear())
+    } else {
+      const hoje = new Date()
+      setAgendaPickerMes(hoje.getMonth())
+      setAgendaPickerAno(hoje.getFullYear())
+    }
     setShowAgendaForm(true)
   }
 
@@ -7938,6 +7982,7 @@ export default function Dashboard() {
       data: new Date().toISOString().split('T')[0],
       hora: '09:00',
       duracaoEstimada: '2',
+      diasSelecionados: undefined,
       tipoServico: '',
       observacoesTecnicas: '',
       necessidadePecas: false,
@@ -7949,6 +7994,7 @@ export default function Dashboard() {
       cidade: '',
       dataCriacao: new Date().toISOString()
     })
+    setAgendaDiasRascunho([])
     alert(safeT?.saveSuccess || 'Agendamento salvo com sucesso!')
   }
 
@@ -7958,6 +8004,32 @@ export default function Dashboard() {
       setAgendamentos(updated)
       saveData('nonato-agendamentos', updated)
     }
+  }
+
+  const toggleAgendaDiaRascunho = (dateKey: string) => {
+    setAgendaDiasRascunho((prev) => {
+      if (prev.includes(dateKey)) return prev.filter((d) => d !== dateKey)
+      return [...prev, dateKey].sort()
+    })
+  }
+
+  const confirmarAgendaDiasCalendario = () => {
+    const sorted = [...agendaDiasRascunho].sort()
+    if (sorted.length === 0) {
+      alert(safeT?.agendaSelecioneUmDia || 'Selecione pelo menos um dia no calendário.')
+      return
+    }
+    setAgendaForm((f) => ({
+      ...f,
+      duracaoEstimada: String(sorted.length),
+      diasSelecionados: sorted,
+    }))
+  }
+
+  const goAgendaPickerMes = (delta: number) => {
+    const d = new Date(agendaPickerAno, agendaPickerMes + delta, 1)
+    setAgendaPickerMes(d.getMonth())
+    setAgendaPickerAno(d.getFullYear())
   }
 
   // Lembretes Agenda: agendamentos de hoje e amanhã (exclui cancelados)
@@ -28232,17 +28304,108 @@ A1;Peça exemplo;10'
                       style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
-                      {safeT?.duracaoEstimada || 'Duração Estimada (dias)'}
-                    </label>
-                    <input
-                      type="number"
-                      value={agendaForm.duracaoEstimada}
-                      onChange={(e) => setAgendaForm({ ...agendaForm, duracaoEstimada: e.target.value })}
-                      style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
+                </div>
+
+                <div style={{ marginBottom: '15px', padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.25)' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#00ff00' }}>
+                    {safeT?.duracaoEstimada || 'Duração Estimada (dias)'}
+                  </label>
+                  <p style={{ margin: '0 0 10px 0', fontSize: '12px', color: '#aaa' }}>
+                    {safeT?.agendaCalendarioDiasHint || 'Toque nos dias do calendário e confirme para definir quantos dias durará o serviço.'}
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => goAgendaPickerMes(-1)}
+                      style={{ padding: '6px 12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.35)', color: '#00ff00', borderRadius: '6px', cursor: 'pointer', fontSize: '16px' }}
+                    >
+                      ‹
+                    </button>
+                    <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff', textTransform: 'capitalize' }}>
+                      {new Date(agendaPickerAno, agendaPickerMes, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => goAgendaPickerMes(1)}
+                      style={{ padding: '6px 12px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.35)', color: '#00ff00', borderRadius: '6px', cursor: 'pointer', fontSize: '16px' }}
+                    >
+                      ›
+                    </button>
                   </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '4px', textAlign: 'center', fontSize: '11px', color: '#888', marginBottom: '4px' }}>
+                    {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((d) => (
+                      <div key={d} style={{ padding: '4px 0' }}>{d}</div>
+                    ))}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '4px' }}>
+                    {(() => {
+                      const diasNoMes = new Date(agendaPickerAno, agendaPickerMes + 1, 0).getDate()
+                      const primeiroDiaSemana = new Date(agendaPickerAno, agendaPickerMes, 1).getDay()
+                      const offsetSeg = (primeiroDiaSemana + 6) % 7
+                      const cells: React.ReactNode[] = []
+                      for (let i = 0; i < offsetSeg; i++) {
+                        cells.push(<div key={`e-${i}`} />)
+                      }
+                      const ym = `${agendaPickerAno}-${String(agendaPickerMes + 1).padStart(2, '0')}-`
+                      for (let day = 1; day <= diasNoMes; day++) {
+                        const dateKey = `${ym}${String(day).padStart(2, '0')}`
+                        const sel = agendaDiasRascunho.includes(dateKey)
+                        cells.push(
+                          <button
+                            key={dateKey}
+                            type="button"
+                            onClick={() => toggleAgendaDiaRascunho(dateKey)}
+                            style={{
+                              minHeight: '36px',
+                              padding: '4px',
+                              fontSize: '13px',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              border: sel ? '2px solid #00ff00' : '1px solid rgba(255,255,255,0.15)',
+                              backgroundColor: sel ? 'rgba(0, 255, 0, 0.25)' : '#222',
+                              color: '#fff',
+                              fontWeight: sel ? 'bold' : 'normal',
+                            }}
+                          >
+                            {day}
+                          </button>
+                        )
+                      }
+                      return cells
+                    })()}
+                  </div>
+                  <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={confirmarAgendaDiasCalendario}
+                      style={{ padding: '8px 16px', fontSize: '13px' }}
+                    >
+                      {safeT?.confirmarDiasAgenda || 'Confirmar dias'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAgendaDiasRascunho([])}
+                      style={{
+                        padding: '8px 14px',
+                        fontSize: '13px',
+                        backgroundColor: 'transparent',
+                        border: '1px solid rgba(255,255,255,0.25)',
+                        color: '#ccc',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {safeT?.limparSelecaoCalendario || 'Limpar seleção'}
+                    </button>
+                  </div>
+                  {agendaForm.diasSelecionados && agendaForm.diasSelecionados.length > 0 && (
+                    <p style={{ margin: '12px 0 0 0', fontSize: '15px', color: '#00ff00', fontWeight: 'bold' }}>
+                      {agendaForm.diasSelecionados.length === 1
+                        ? (safeT?.agendaUmDiaConfirmado || 'É 1 dia.')
+                        : `${safeT?.agendaSaoXDiasPrefix || 'São'} ${agendaForm.diasSelecionados.length} ${safeT?.dias || 'dias'}.`}
+                    </p>
+                  )}
                 </div>
 
                 <div style={{ marginBottom: '15px' }}>
@@ -28486,6 +28649,7 @@ A1;Peça exemplo;10'
                     onClick={() => { 
                       setShowAgendaForm(false); 
                       setEditingAgendamento(null); 
+                      setAgendaDiasRascunho([]);
                       setAgendaForm({ 
                         id: '', 
                         tipo: 'pre-agendamento', 
@@ -28497,6 +28661,7 @@ A1;Peça exemplo;10'
                         data: new Date().toISOString().split('T')[0], 
                         hora: '09:00', 
                         duracaoEstimada: '2', 
+                        diasSelecionados: undefined,
                         tipoServico: '', 
                         observacoesTecnicas: '', 
                         necessidadePecas: false,
@@ -51353,13 +51518,82 @@ A1;Peça exemplo;10'
                   onChange={(e) => setAgendaForm({ ...agendaForm, hora: e.target.value })}
                   style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
-                <input
-                  type="number"
-                  placeholder={safeT?.duracaoEstimada || 'Duração Estimada (dias)'}
-                  value={agendaForm.duracaoEstimada}
-                  onChange={(e) => setAgendaForm({ ...agendaForm, duracaoEstimada: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
+                <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.25)' }}>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '13px', color: '#00ff00' }}>
+                    {safeT?.duracaoEstimada || 'Duração Estimada (dias)'}
+                  </label>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: '#aaa' }}>
+                    {safeT?.agendaCalendarioDiasHint || 'Toque nos dias do calendário e confirme para definir quantos dias durará o serviço.'}
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '6px' }}>
+                    <button type="button" onClick={() => goAgendaPickerMes(-1)} style={{ padding: '4px 10px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.35)', color: '#00ff00', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>‹</button>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#fff', textTransform: 'capitalize' }}>
+                      {new Date(agendaPickerAno, agendaPickerMes, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                    </span>
+                    <button type="button" onClick={() => goAgendaPickerMes(1)} style={{ padding: '4px 10px', backgroundColor: '#2a2a2a', border: '1px solid rgba(0, 255, 0, 0.35)', color: '#00ff00', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>›</button>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '3px', textAlign: 'center', fontSize: '10px', color: '#888', marginBottom: '3px' }}>
+                    {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((d) => (
+                      <div key={d}>{d}</div>
+                    ))}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '3px' }}>
+                    {(() => {
+                      const diasNoMes = new Date(agendaPickerAno, agendaPickerMes + 1, 0).getDate()
+                      const primeiroDiaSemana = new Date(agendaPickerAno, agendaPickerMes, 1).getDay()
+                      const offsetSeg = (primeiroDiaSemana + 6) % 7
+                      const cells: React.ReactNode[] = []
+                      for (let i = 0; i < offsetSeg; i++) {
+                        cells.push(<div key={`em-${i}`} />)
+                      }
+                      const ym = `${agendaPickerAno}-${String(agendaPickerMes + 1).padStart(2, '0')}-`
+                      for (let day = 1; day <= diasNoMes; day++) {
+                        const dateKey = `${ym}${String(day).padStart(2, '0')}`
+                        const sel = agendaDiasRascunho.includes(dateKey)
+                        cells.push(
+                          <button
+                            key={dateKey}
+                            type="button"
+                            onClick={() => toggleAgendaDiaRascunho(dateKey)}
+                            style={{
+                              minHeight: '30px',
+                              padding: '2px',
+                              fontSize: '12px',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              border: sel ? '2px solid #00ff00' : '1px solid rgba(255,255,255,0.15)',
+                              backgroundColor: sel ? 'rgba(0, 255, 0, 0.25)' : '#222',
+                              color: '#fff',
+                              fontWeight: sel ? 'bold' : 'normal',
+                            }}
+                          >
+                            {day}
+                          </button>
+                        )
+                      }
+                      return cells
+                    })()}
+                  </div>
+                  <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+                    <button type="button" className="btn-primary" onClick={confirmarAgendaDiasCalendario} style={{ padding: '6px 12px', fontSize: '12px' }}>
+                      {safeT?.confirmarDiasAgenda || 'Confirmar dias'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAgendaDiasRascunho([])}
+                      style={{ padding: '6px 10px', fontSize: '12px', backgroundColor: 'transparent', border: '1px solid rgba(255,255,255,0.25)', color: '#ccc', borderRadius: '6px', cursor: 'pointer' }}
+                    >
+                      {safeT?.limparSelecaoCalendario || 'Limpar seleção'}
+                    </button>
+                  </div>
+                  {agendaForm.diasSelecionados && agendaForm.diasSelecionados.length > 0 && (
+                    <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#00ff00', fontWeight: 'bold' }}>
+                      {agendaForm.diasSelecionados.length === 1
+                        ? (safeT?.agendaUmDiaConfirmado || 'É 1 dia.')
+                        : `${safeT?.agendaSaoXDiasPrefix || 'São'} ${agendaForm.diasSelecionados.length} ${safeT?.dias || 'dias'}.`}
+                    </p>
+                  )}
+                </div>
                 <select
                   value={agendaForm.equipamentoId}
                   onChange={(e) => {
@@ -51397,7 +51631,7 @@ A1;Peça exemplo;10'
                   <button className="btn-primary" onClick={handleSaveAgendamento} style={{ flex: 1 }}>
                     {safeT?.save || 'Salvar'}
                   </button>
-                  <button className="btn-primary" onClick={() => { setShowAgendaForm(false); setEditingAgendamento(null); setAgendaForm({ id: '', tipo: 'pre-agendamento', tecnico: '', cliente: '', clienteId: '', equipamento: '', equipamentoId: '', data: new Date().toISOString().split('T')[0], hora: '09:00', duracaoEstimada: '2', tipoServico: '', observacoesTecnicas: '', necessidadePecas: false, codigoNotaFiscal: '', pecasAnexadas: [], status: 'pendente', telefone: '', endereco: '', cidade: '', dataCriacao: new Date().toISOString() }); }} style={{ flex: 1 }}>
+                  <button className="btn-primary" onClick={() => { setShowAgendaForm(false); setEditingAgendamento(null); setAgendaDiasRascunho([]); setAgendaForm({ id: '', tipo: 'pre-agendamento', tecnico: '', cliente: '', clienteId: '', equipamento: '', equipamentoId: '', data: new Date().toISOString().split('T')[0], hora: '09:00', duracaoEstimada: '2', diasSelecionados: undefined, tipoServico: '', observacoesTecnicas: '', necessidadePecas: false, codigoNotaFiscal: '', pecasAnexadas: [], status: 'pendente', telefone: '', endereco: '', cidade: '', dataCriacao: new Date().toISOString() }); }} style={{ flex: 1 }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>

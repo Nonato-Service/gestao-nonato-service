@@ -69,6 +69,13 @@ body {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
+
+/* Área principal: rolagem em contentor interno (não em window). Pan vertical explícito para toque/caneta em telemóvel. */
+.main-content-area,
+.tab-inner-scroll {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
 /* Suavização de fonte no Firefox macOS - ignorado por outros browsers */
 
 .container {
