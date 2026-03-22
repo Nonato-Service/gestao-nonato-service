@@ -20,6 +20,11 @@ export const metadata: Metadata = {
   title: 'Gestão Técnica da BOA TRADE',
   description: 'Sistema de Gestão Técnica — funciona no telefone, tablet e notebook',
   manifest: '/manifest.json',
+  /** Favicon / PWA: app/icon.svg + public/icon.svg (logo em public/brand/nonato-logo-original.png) */
+  icons: {
+    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    apple: [{ url: '/brand/nonato-logo-original.png', sizes: '180x180', type: 'image/png' }],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',

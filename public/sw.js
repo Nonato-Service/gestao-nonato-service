@@ -1,12 +1,10 @@
 // Service Worker - Gestão Técnica Nonato Service (PWA offline)
-// Bumpar CACHE_NAME ao atualizar layout mobile
-const CACHE_NAME = 'nonato-pwa-v7'
+// Bumpar CACHE_NAME ao atualizar ícones PWA / offline
+const CACHE_NAME = 'nonato-pwa-v8'
 
 const PRECACHE_ASSETS = [
   '/',
   '/icon.svg',
-  '/icon-192.png',
-  '/icon-512.png',
   '/manifest.json'
 ]
 
