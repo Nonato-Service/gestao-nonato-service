@@ -31,10 +31,10 @@ export async function GET(
       return new NextResponse('Documento não encontrado', { status: 404 })
     }
 
-    const t: Record<string, string> = {
+    const t: Record<string, Record<string, string>> = {
       'pt-BR': {
-        titulo: 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS',
-        subtitulo: 'Documento para envio / IRS',
+        titulo: 'REGISTRO DE DESPESAS',
+        subtitulo: 'Documento para envio',
         cliente: 'Cliente',
         relatorio: 'Relatório de Serviço',
         data: 'Data',
@@ -47,8 +47,68 @@ export async function GET(
         rodape: 'Documento gerado em',
         nonato: 'NONATO SERVICE'
       },
+      'es': {
+        titulo: 'REGISTRO DE GASTOS PAGADOS CON TARJETA PARA DECLARACIÓN DEL IRPF',
+        subtitulo: 'Documento para envío / IRPF',
+        cliente: 'Cliente',
+        relatorio: 'Informe de servicio',
+        data: 'Fecha',
+        tipo: 'Tipo',
+        valor: 'Importe',
+        descricao: 'Descripción',
+        codigoBarras: 'Código de barras',
+        comprovantes: 'Justificantes',
+        total: 'Total',
+        rodape: 'Documento generado el',
+        nonato: 'NONATO SERVICE'
+      },
+      'fr': {
+        titulo: 'REGISTRE DES DÉPENSES',
+        subtitulo: "Document d'envoi",
+        cliente: 'Client',
+        relatorio: 'Rapport de service',
+        data: 'Date',
+        tipo: 'Type',
+        valor: 'Montant',
+        descricao: 'Description',
+        codigoBarras: 'Code-barres',
+        comprovantes: 'Justificatifs',
+        total: 'Total',
+        rodape: 'Document généré le',
+        nonato: 'NONATO SERVICE'
+      },
+      'it': {
+        titulo: 'REGISTRO SPESE',
+        subtitulo: 'Documento per invio',
+        cliente: 'Cliente',
+        relatorio: 'Rapporto di servizio',
+        data: 'Data',
+        tipo: 'Tipo',
+        valor: 'Importo',
+        descricao: 'Descrizione',
+        codigoBarras: 'Codice a barre',
+        comprovantes: 'Giustificativi',
+        total: 'Totale',
+        rodape: 'Documento generato il',
+        nonato: 'NONATO SERVICE'
+      },
+      'de': {
+        titulo: 'KARTENZAHLUNGEN FÜR DIE STEUERERKLÄRUNG (AUSGABEN)',
+        subtitulo: 'Dokument zur Übergabe / Steuer',
+        cliente: 'Kunde',
+        relatorio: 'Servicebericht',
+        data: 'Datum',
+        tipo: 'Typ',
+        valor: 'Betrag',
+        descricao: 'Beschreibung',
+        codigoBarras: 'Barcode',
+        comprovantes: 'Belege',
+        total: 'Gesamt',
+        rodape: 'Dokument erstellt am',
+        nonato: 'NONATO SERVICE'
+      },
       'en': {
-        titulo: 'CARD-PAID EXPENSES LOG FOR TAX RETURN',
+        titulo: 'EXPENSE RECORD',
         subtitulo: 'Document for submission',
         cliente: 'Customer',
         relatorio: 'Service Report',

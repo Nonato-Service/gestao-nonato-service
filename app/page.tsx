@@ -2607,8 +2607,8 @@ export default function Dashboard() {
       'clientes-financeiro': t?.clientesFinanceiroTitle || 'Clientes / Financeiro',
       'orcamentos-avulso': t?.orcamentosAvulsoTitle || 'Orçamentos Avulso',
       'pedido-orcamentos-avulso': t?.pedidoOrcamentosAvulsoTitle || 'PEDIDO DE ORÇAMENTOS AVULSO',
-      'registro-despesas': t?.registroDespesasTitle || 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS',
-      'comprovantes-despesas': t?.comprovantesDespesasTitle || 'COMPROVANTES DE DESPESAS',
+      'registro-despesas': t?.registroDespesasTitle || 'REGISTRO DE DESPESAS',
+      'comprovantes-despesas': t?.comprovantesDespesasTitle || 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS',
       'mapa-visual-separacao-pecas': t?.mapaVisualSeparacaoPecasTitle || 'Mapa Visual de Separação de Peças / Cliente',
       'manuais-informacoes-tecnicas': t?.manuaisInformacoesTecnicasTitle || 'Manuais e Informações Técnica dos Equipamentos',
       'almoxarifado-armazem': t?.almoxarifadoArmazemTitle || 'Almoxarifado / Armazém',
@@ -4804,7 +4804,7 @@ export default function Dashboard() {
       if (!hasComprovantesDespesas) {
         const comprovantesDespesasButton: SidebarButton = {
           id: 'comprovantes-despesas-default',
-          name: 'COMPROVANTES DE DESPESAS',
+          name: 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS',
           action: 'open-comprovantes-despesas',
           order: buttons.length,
           translationKey: 'comprovantesDespesasTitle',
@@ -5250,7 +5250,7 @@ export default function Dashboard() {
       if (!hasRegistroDespesas) {
         const registroDespesasButton: SidebarButton = {
           id: 'registro-despesas-default',
-          name: 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS',
+          name: 'REGISTRO DE DESPESAS',
           action: 'open-registro-despesas',
           order: buttons.length,
           translationKey: 'registroDespesasTitle',

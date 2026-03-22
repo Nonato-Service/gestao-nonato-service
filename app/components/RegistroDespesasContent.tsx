@@ -206,10 +206,10 @@ export function RegistroDespesasContent({
         border: '2px solid rgba(0, 255, 0, 0.3)'
       }}>
         <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', color: '#00ff00', letterSpacing: '2px' }}>
-          {safeT?.registroDespesasTitle || 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS'}
+          {safeT?.registroDespesasTitle || 'REGISTRO DE DESPESAS'}
         </h1>
         <p style={{ margin: 0, opacity: 0.9, color: '#ccc' }}>
-          {safeT?.registroDespesasDesc || 'Registe despesas pagas com cartão para apoiar a declaração de IRS. Escaneie códigos de barras, tire fotos dos recibos e associe a relatórios de serviço e clientes quando aplicável.'}
+          {safeT?.registroDespesasDesc || 'Escaneie códigos de barras, tire fotos e vincule despesas a relatórios de serviço e clientes.'}
         </p>
       </div>
 
@@ -287,7 +287,7 @@ export function RegistroDespesasContent({
             onClick={iniciarNovoDocumento}
             style={{ padding: '12px 24px', fontSize: '16px' }}
           >
-            {safeT?.iniciarRegistroDespesas || 'Iniciar registo de despesas (cartão / IRS)'}
+            {safeT?.iniciarRegistroDespesas || 'Iniciar registo de despesas'}
           </button>
         </div>
       ) : (

@@ -37,7 +37,7 @@ function buildHtml(body: Body): string {
     tecnicoNome,
     periodo = '',
     labelPessoal = 'Despesas Pessoais',
-    tituloRelatorio = 'COMPROVANTES DE DESPESAS'
+    tituloRelatorio = 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS'
   } = body
 
   const dataGeracao = new Date().toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
