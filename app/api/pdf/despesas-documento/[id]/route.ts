@@ -33,8 +33,8 @@ export async function GET(
 
     const t: Record<string, string> = {
       'pt-BR': {
-        titulo: 'REGISTRO DE DESPESAS',
-        subtitulo: 'Documento para envio',
+        titulo: 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS',
+        subtitulo: 'Documento para envio / IRS',
         cliente: 'Cliente',
         relatorio: 'Relatório de Serviço',
         data: 'Data',
@@ -48,7 +48,7 @@ export async function GET(
         nonato: 'NONATO SERVICE'
       },
       'en': {
-        titulo: 'EXPENSE RECORD',
+        titulo: 'CARD-PAID EXPENSES LOG FOR TAX RETURN',
         subtitulo: 'Document for submission',
         cliente: 'Customer',
         relatorio: 'Service Report',

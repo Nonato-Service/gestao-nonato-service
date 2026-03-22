@@ -1125,8 +1125,10 @@ html, body {
   .header h1 {
     font-size: 11px !important;
   }
-  .sidebar {
-    max-height: 35vh !important;
+  /* Sidebar em gaveta: altura total + scroll interno (regra antiga 35vh cortava o menu no telefone) */
+  .app-compact-layout .sidebar {
+    max-height: 100dvh !important;
+    height: 100dvh !important;
   }
   .sidebar > div:first-child {
     height: 44px !important;
@@ -1159,11 +1161,13 @@ html, body {
   box-sizing: border-box;
 }
 
-/* Barra lateral: não encolher com o conteúdo da aba (ex.: Clientes > Listar com grelha larga).
-   Sem isto, min-width:0 no flex permite comprimir a sidebar e cortar texto dos botões. */
-.app-layout > .sidebar {
-  flex-shrink: 0;
-  min-width: 280px;
+/* Desktop: barra lateral fixa não encolhe com o conteúdo da aba (min-width:0 no flex).
+   No telemóvel o menu é gaveta (.app-compact-layout) — não aplicar aqui. */
+@media (min-width: 1025px) {
+  .app-layout > .sidebar {
+    flex-shrink: 0;
+    min-width: 280px;
+  }
 }
 
 /* Evitar scroll horizontal em ecrãs pequenos (não forçar width 100% para não quebrar scale no Firefox) */
@@ -1603,6 +1607,15 @@ body {
     left: 0 !important;
     right: 0 !important;
   }
+  /* Gaveta: só cabeçalhos de grupo (não os botões dentro de .sidebar-action-buttons) */
+  .app-compact-layout .sidebar > div:not(.sidebar-action-buttons) > button.btn-primary {
+    flex-wrap: wrap !important;
+    align-items: flex-start !important;
+    row-gap: 6px !important;
+    min-height: auto !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
 }
 
 /* ===== Professional visual system (global override) ===== */
@@ -1730,6 +1743,28 @@ a:focus-visible {
 .cliente-card-alerta-devedor button:focus-visible {
   outline: 2px solid rgba(255, 100, 100, 0.95) !important;
   box-shadow: 0 0 0 4px rgba(255, 0, 0, 0.2) !important;
+}
+
+/* Clientes > Listar — telemóvel: cartão não corta nome / estado à direita */
+@media (max-width: 480px) {
+  .cliente-lista-card {
+    align-items: flex-start !important;
+  }
+  .cliente-lista-card-header {
+    flex-wrap: wrap !important;
+    align-items: flex-start !important;
+    width: 100%;
+  }
+  .cliente-lista-card-header > div:first-child {
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+    max-width: 100%;
+  }
+  .cliente-lista-card-header > div:last-child {
+    flex: 1 1 auto !important;
+    justify-content: flex-end;
+    margin-left: 0;
+  }
 }
 
 /* ========== Relatório de Serviço — telemóvel: cabeçalho empilhado, texto proporcional ========== */

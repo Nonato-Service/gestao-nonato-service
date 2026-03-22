@@ -2607,7 +2607,7 @@ export default function Dashboard() {
       'clientes-financeiro': t?.clientesFinanceiroTitle || 'Clientes / Financeiro',
       'orcamentos-avulso': t?.orcamentosAvulsoTitle || 'Orçamentos Avulso',
       'pedido-orcamentos-avulso': t?.pedidoOrcamentosAvulsoTitle || 'PEDIDO DE ORÇAMENTOS AVULSO',
-      'registro-despesas': t?.registroDespesasTitle || 'Registro de Despesas',
+      'registro-despesas': t?.registroDespesasTitle || 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS',
       'comprovantes-despesas': t?.comprovantesDespesasTitle || 'COMPROVANTES DE DESPESAS',
       'mapa-visual-separacao-pecas': t?.mapaVisualSeparacaoPecasTitle || 'Mapa Visual de Separação de Peças / Cliente',
       'manuais-informacoes-tecnicas': t?.manuaisInformacoesTecnicasTitle || 'Manuais e Informações Técnica dos Equipamentos',
@@ -5250,7 +5250,7 @@ export default function Dashboard() {
       if (!hasRegistroDespesas) {
         const registroDespesasButton: SidebarButton = {
           id: 'registro-despesas-default',
-          name: 'REGISTRO DE DESPESAS',
+          name: 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS',
           action: 'open-registro-despesas',
           order: buttons.length,
           translationKey: 'registroDespesasTitle',
@@ -24763,7 +24763,7 @@ onKeyPress={(e) => {
                         <div 
                           key={cliente.id}
                           data-cliente-card-id={cliente.id}
-                          className={alertaDevedor ? 'cliente-card-alerta-devedor' : undefined}
+                          className={`cliente-lista-card${alertaDevedor ? ' cliente-card-alerta-devedor' : ''}`}
                           style={{ 
                             backgroundColor: '#222222', 
                             padding: '8px', 
@@ -24821,7 +24821,7 @@ onKeyPress={(e) => {
                           
                           {/* Informações do Cliente */}
                           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+                            <div className="cliente-lista-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <h3 style={{ 
                                   margin: 0, 
@@ -30722,7 +30722,11 @@ A1;Peça exemplo;10'
         }))).sort().reverse()
         const semanasDisponiveis = Array.from(new Set(comprovantesDespesas.map(c => getWeekKey(c.data)))).sort().reverse()
         const getClienteOuPessoal = (c: ComprovanteDespesa) => (c.tipo === 'pessoal' ? labelPessoal : c.cliente) || '—'
-        const clientesOuPessoalUnicos = Array.from(new Set(comprovantesDespesas.map(c => c.tipo === 'pessoal' ? labelPessoal : c.cliente).filter(Boolean))).sort((a, b) => (a === labelPessoal ? 1 : b === labelPessoal ? -1 : a.localeCompare(b)))
+        const nomesDosComprovantes = Array.from(new Set(comprovantesDespesas.map(c => (c.tipo === 'pessoal' ? labelPessoal : c.cliente)).filter(Boolean)))
+        const nomesCadastroClientes = clientes.map(c => c.nomeEmpresa).filter(Boolean)
+        const clientesOuPessoalUnicos = Array.from(new Set([...nomesCadastroClientes, ...nomesDosComprovantes])).sort((a, b) =>
+          (a === labelPessoal ? 1 : b === labelPessoal ? -1 : a.localeCompare(b, 'pt-BR'))
+        )
         const filtrados = comprovantesDespesas.filter(c => {
           const d = new Date(c.data)
           const mesAno = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
@@ -30751,6 +30755,17 @@ A1;Peça exemplo;10'
           return acc
         }, {} as Record<string, number>)
         const handleAddComprovante = () => {
+          if (formComp.tipo === 'cliente') {
+            const nome = formComp.cliente.trim()
+            if (!nome) {
+              alert((safeT as any)?.comprovantesSelecioneClienteAlert || 'Selecione um cliente na lista.')
+              return
+            }
+            if (!clientes.some(c => c.nomeEmpresa === nome)) {
+              alert((safeT as any)?.comprovantesClienteNaoCadastrado || 'Escolha um cliente cadastrado no sistema.')
+              return
+            }
+          }
           const valorTotal = formComp.valorUnitario * formComp.quantidade
           const novo: ComprovanteDespesa = {
             id: Date.now().toString(),
@@ -30933,7 +30948,27 @@ A1;Peça exemplo;10'
                     </div>
                   </div>
                   {formComp.tipo === 'cliente' && (
-                    <input placeholder={(safeT as any)?.comprovantesCliente || 'Cliente'} value={formComp.cliente} onChange={e => setFormComp(prev => ({ ...prev, cliente: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
+                    <div style={{ marginBottom: '10px' }}>
+                      <div style={{ color: '#00ff00', fontSize: '12px', marginBottom: '6px' }}>{(safeT as any)?.comprovantesCliente || 'Cliente'}</div>
+                      {clientes.length === 0 ? (
+                        <p style={{ color: '#ffaa66', fontSize: '13px', margin: 0, padding: '10px', background: '#1a1a1a', borderRadius: '6px', border: '1px solid rgba(255,170,102,0.35)' }}>
+                          {(safeT as any)?.comprovantesNenhumClienteCadastrado || 'Não há clientes cadastrados. Cadastre clientes em Gestão técnica → Clientes antes de adicionar comprovantes por cliente.'}
+                        </p>
+                      ) : (
+                        <select
+                          value={formComp.cliente}
+                          onChange={e => setFormComp(prev => ({ ...prev, cliente: e.target.value }))}
+                          style={{ width: '100%', padding: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }}
+                        >
+                          <option value="">{(safeT as any)?.comprovantesSelecioneClientePlaceholder || 'Selecione um cliente…'}</option>
+                          {[...clientes]
+                            .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
+                            .map(c => (
+                              <option key={c.id} value={c.nomeEmpresa}>{c.nomeEmpresa}</option>
+                            ))}
+                        </select>
+                      )}
+                    </div>
                   )}
                   <input type="date" value={formComp.data} onChange={e => setFormComp(prev => ({ ...prev, data: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
                   <input type="number" step={0.01} placeholder={(safeT as any)?.comprovantesValorUnitario || 'Valor unitário'} value={formComp.valorUnitario || ''} onChange={e => setFormComp(prev => ({ ...prev, valorUnitario: Number(e.target.value) || 0 }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
