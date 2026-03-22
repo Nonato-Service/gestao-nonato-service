@@ -71,7 +71,7 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Área principal: rolagem só aqui (não duplicar overflow-y no .tab-inner-scroll — ver page.tsx). min-height:0 na cadeia flex permite o overflow-y: auto funcionar. */
+/* Área principal: sem aba = rolar aqui. Com aba = overflow hidden aqui e rolar no .tab-inner-scroll (page.tsx). min-height:0 na cadeia flex permite overflow-y: auto. */
 .main-content-area {
   min-height: 0;
   -webkit-overflow-scrolling: touch;
@@ -79,6 +79,18 @@ body {
 }
 .tab-inner-scroll {
   min-height: 0;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+/* Com aba aberta: padding/overflow em media queries usavam !important e anulavam o layout de rolagem interna. */
+.main-content-area.main-content-area-tab-open {
+  padding: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 /* Suavização de fonte no Firefox macOS - ignorado por outros browsers */
 
@@ -998,11 +1010,10 @@ html, body {
     scroll-padding-inline: 8px;
     -webkit-overflow-scrolling: touch;
   }
+  /* Não usar flex:1 + min-height:0 aqui: quebrava a altura do conteúdo das abas no telefone (só o dashboard rolava). A rolagem das abas está no .tab-inner-scroll. */
   .tab-content-wrapper {
     padding: 8px !important;
     max-width: 100% !important;
-    flex: 1 !important;
-    min-height: 0 !important;
   }
   .main-content-area {
     padding: 8px !important;

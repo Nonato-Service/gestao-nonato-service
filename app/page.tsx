@@ -47605,12 +47605,40 @@ A1;Peça exemplo;10'
           </div>
         ) : null}
         {/* Conteúdo da Aba Ativa ou Dashboard */}
-        <div ref={mainContentAreaRef} className="main-content-area" style={{ flex: 1, minHeight: 0, padding: '30px', overflowY: 'auto', minWidth: 0, width: '100%', boxSizing: 'border-box', position: 'relative' }}>
+        <div
+          ref={mainContentAreaRef}
+          className={`main-content-area${activeTabId ? ' main-content-area-tab-open' : ''}`}
+          style={{
+            flex: 1,
+            minHeight: 0,
+            padding: activeTabId ? 0 : '30px',
+            /* Dashboard: rolar aqui. Com aba: rolar só no .tab-inner-scroll (cadeia flex + altura definida — senão o telefone/tablet não rola o conteúdo longo). */
+            overflowY: activeTabId ? 'hidden' : 'auto',
+            overflowX: 'hidden',
+            minWidth: 0,
+            width: '100%',
+            boxSizing: 'border-box',
+            position: 'relative',
+            display: activeTabId ? 'flex' : undefined,
+            flexDirection: activeTabId ? 'column' : undefined,
+          }}
+        >
           {activeTabId ? (
             <>
               {/* Renderizar conteúdo da aba ativa (F1 HELP está na barra fixa ao lado de Atualizar com segurança) */}
-              {/* Rolagem única no .main-content-area: evita dois overflow-y aninhados (scroll com um dedo falha em muitos tablets/telefones). */}
-              <div className="tab-inner-scroll" style={{ width: '100%', boxSizing: 'border-box', overflow: 'visible' }}>
+              <div
+                className="tab-inner-scroll"
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  width: '100%',
+                  overflowY: 'auto',
+                  overflowX: 'hidden',
+                  WebkitOverflowScrolling: 'touch',
+                  boxSizing: 'border-box',
+                  padding: isCompactLayout ? '8px' : '30px',
+                }}
+              >
                 {(() => {
                   const activeTab = openTabs.find(t => t.id === activeTabId)
                   if (!activeTab) return null
