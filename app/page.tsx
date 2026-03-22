@@ -24742,7 +24742,7 @@ onKeyPress={(e) => {
                 )}
                 
                 {clientesFiltrados.length > 0 && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '8px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: '8px' }}>
                     {clientesFiltrados.map(cliente => {
                       // Gerar iniciais do nome da empresa
                       const getIniciais = (nome: string) => {
@@ -24828,9 +24828,8 @@ onKeyPress={(e) => {
                                   color: alertaDevedor ? '#ff6666' : '#fff', 
                                   fontSize: '14px',
                                   fontWeight: 'bold',
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis'
+                                  wordBreak: 'break-word',
+                                  lineHeight: 1.25
                                 }}>
                                   {cliente.nomeEmpresa}
                                 </h3>
@@ -24838,9 +24837,8 @@ onKeyPress={(e) => {
                                   margin: 0, 
                                   color: alertaDevedor ? '#ff8888' : '#888', 
                                   fontSize: '11px',
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis'
+                                  wordBreak: 'break-word',
+                                  lineHeight: 1.3
                                 }}>
                                   {cliente.telefones || 'Sem telefone'}
                                 </p>
@@ -24883,7 +24881,7 @@ onKeyPress={(e) => {
                                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
                                   </svg>
-                                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  <span style={{ wordBreak: 'break-word', lineHeight: 1.35 }}>
                                     {[cliente.morada, cliente.localidade, cliente.codigoPostal].filter(Boolean).join(' ')}
                                   </span>
                                   <a

@@ -1159,6 +1159,13 @@ html, body {
   box-sizing: border-box;
 }
 
+/* Barra lateral: não encolher com o conteúdo da aba (ex.: Clientes > Listar com grelha larga).
+   Sem isto, min-width:0 no flex permite comprimir a sidebar e cortar texto dos botões. */
+.app-layout > .sidebar {
+  flex-shrink: 0;
+  min-width: 280px;
+}
+
 /* Evitar scroll horizontal em ecrãs pequenos (não forçar width 100% para não quebrar scale no Firefox) */
 @media (max-width: 900px) {
   html, body {
