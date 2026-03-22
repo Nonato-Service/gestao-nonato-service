@@ -3377,46 +3377,8 @@ export default function Dashboard() {
     window.location.reload()
   }, [editingProtocoloServicoId, protocoloServicoForm, safeT])
 
-  // Em telefone/tablet: reduzir pull-to-refresh acidental ao puxar para baixo no topo da página.
-  // Importante: a rolagem real é em .main-content-area / .tab-inner-scroll (overflow-y: auto), não em window.
-  // Se usarmos só window.scrollY (sempre 0), preventDefault() quebra a rolagem com um dedo — o utilizador precisava de dois dedos.
-  useEffect(() => {
-    if (typeof window === 'undefined' || !isCompactLayout) return
-    let startY = 0
-    const touchInsideScrollableOverflow = (target: EventTarget | null): boolean => {
-      let el = target instanceof Element ? target : null
-      while (el && el !== document.documentElement) {
-        const h = el as HTMLElement
-        const st = window.getComputedStyle(h)
-        const oy = st.overflowY
-        if (
-          (oy === 'auto' || oy === 'scroll' || oy === 'overlay') &&
-          h.scrollHeight > h.clientHeight + 1
-        ) {
-          return true
-        }
-        el = el.parentElement
-      }
-      return false
-    }
-    const onTouchStart = (e: TouchEvent) => {
-      startY = e.touches?.[0]?.clientY || 0
-    }
-    const onTouchMove = (e: TouchEvent) => {
-      // Deixar o browser tratar o scroll em qualquer painel com overflow (área principal, abas, modais, sidebar).
-      if (touchInsideScrollableOverflow(e.target)) return
-      const y = e.touches?.[0]?.clientY || 0
-      const delta = y - startY
-      const scrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0
-      if (scrollTop <= 0 && delta > 10) e.preventDefault()
-    }
-    window.addEventListener('touchstart', onTouchStart, { passive: true })
-    window.addEventListener('touchmove', onTouchMove, { passive: false })
-    return () => {
-      window.removeEventListener('touchstart', onTouchStart)
-      window.removeEventListener('touchmove', onTouchMove)
-    }
-  }, [isCompactLayout])
+  // Nota: não usar preventDefault global em touchmove (anti pull-to-refresh): em layouts com overflow
+  // interno + flex, isso pode bloquear toda a rolagem no telefone. overscroll-behavior em html/body já ajuda.
 
   // Protocolos de serviço: autosave de rascunho para evitar perda em refresh acidental.
   useEffect(() => {
@@ -47609,7 +47571,7 @@ A1;Peça exemplo;10'
       </div>
 
       {/* Área Principal */}
-      <div className="main-app-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+      <div className="main-app-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, minHeight: 0 }}>
         {/* Página Inicial: no desktop está na barra fixa (.desktop-top-bar-actions); em layout compacto mantém-se aqui */}
         {isCompactLayout ? (
           <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 20px 0 0', flexShrink: 0 }}>
