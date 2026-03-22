@@ -9,6 +9,7 @@ import { loadManuaisFamiliasGruposFromIdb, saveManuaisFamiliasGruposToIdb, getKv
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 import { NonatoBrandLogo } from './components/NonatoBrandLogo'
+import { HelpModalBody } from './components/HelpModalBody'
 
 /** Manuais: debounce/alerta — não usar useRef aqui: ManuaisInformacoesTabContent é chamado como função (return ManuaisInformacoesTabContent()), não como componente. */
 let manuaisSaveDebounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -48018,7 +48019,12 @@ A1;Peça exemplo;10'
                 </button>
               </div>
               <div style={{ flex: 1, overflowY: 'auto', padding: '24px', fontSize: '14px', lineHeight: '1.65', color: 'rgba(255,255,255,0.9)' }}>
-                {helpBody}
+                <HelpModalBody
+                  text={helpBody}
+                  titlePara={(safeT as any)?.helpSectionParaQueServe || 'Para que serve'}
+                  titleComo={(safeT as any)?.helpSectionComoFazer || 'Como fazer'}
+                  titleResumo={(safeT as any)?.helpSectionResumo || 'Informação'}
+                />
               </div>
               <div style={{ flexShrink: 0, padding: '16px 24px', borderTop: '1px solid rgba(0, 255, 0, 0.1)', background: 'rgba(0,0,0,0.2)' }}>
                 <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>{safeT?.helpShortcut || 'Pressione F1 em qualquer secção para abrir esta ajuda.'}</p>
