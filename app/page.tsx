@@ -22151,44 +22151,24 @@ onKeyPress={(e) => {
 
       case 'relatorio-servico':
         return (
-          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
-            {/* Cabeçalho Profissional — primeira página sem alteração de padrão */}
-            <div style={{
-              marginBottom: '40px',
-              padding: '30px',
-              background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-              borderRadius: '20px',
-              border: '2px solid rgba(0, 255, 0, 0.3)',
-              boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <div className="tab-content-wrapper relatorio-servico-root" style={{ maxWidth: '1600px', margin: '0 auto' }}>
+            {/* Cabeçalho — responsivo (CSS: globals.css .relatorio-servico-hero*) */}
+            <div className="relatorio-servico-hero">
+              <div className="relatorio-servico-hero-top">
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
                 </div>
-                <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 style={{
-                    margin: 0,
-                    fontSize: '32px',
-                    fontWeight: 'bold',
-                    color: '#00ff00',
-                    letterSpacing: '3px',
-                    textShadow: '0 0 20px rgba(0, 255, 0, 0.3)',
-                    marginBottom: '8px'
-                  }}>
+                <div className="relatorio-servico-hero-heading-wrap">
+                  <h1 className="relatorio-servico-hero-title">
                     {safeT?.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO'}
                   </h1>
                   {relatoriosServico.length > 0 && (
-                    <p style={{
-                      margin: 0,
-                      fontSize: '14px',
-                      color: '#ccc',
-                      opacity: 0.8
-                    }}>
+                    <p className="relatorio-servico-hero-meta">
                       {relatoriosServico.length} {safeT?.relatoriosCadastrados || 'relatório(s) cadastrado(s)'}
                     </p>
                   )}
                 </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div className="relatorio-servico-hero-actions">
                   <button 
                     className="btn-primary" 
                     onClick={() => openTab('biblioteca-relatorios', getTabTitle('biblioteca-relatorios'))} 
@@ -22217,7 +22197,7 @@ onKeyPress={(e) => {
                   >
                     ➕ {safeT?.addRelatorioServico || 'Adicionar Relatório de Serviço'}
                   </button>
-                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <div className="relatorio-servico-hero-actions-row">
                     <button 
                       onClick={() => closeTab(activeTabId || '')}
                       style={{ 
@@ -22288,7 +22268,7 @@ onKeyPress={(e) => {
                 {/* Informações Básicas */}
                 <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px' }}>
                   <h4 style={{ marginBottom: '15px', color: '#00ff00' }}>{safeT?.informacoesBasicas || 'Informações Básicas'}</h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
+                  <div className="relatorio-servico-form-grid-2" style={{ gap: '15px' }}>
                     <div>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.numeroRelatorio || 'Número do Relatório'}</label>
                       <input
@@ -45269,6 +45249,7 @@ A1;Peça exemplo;10'
     const dashboardLogoType = logoUrlDashboard ? logoTypeDashboard : logoType
     return (
       <div
+        className="ns-splash-root"
         style={{
           position: 'fixed',
           inset: 0,
@@ -45280,8 +45261,7 @@ A1;Peça exemplo;10'
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'flex-start',
-          padding: 'clamp(32px, 6vh, 64px) 20px clamp(32px, 8vh, 80px)'
+          justifyContent: 'flex-start'
         }}
       >
         <img
@@ -45303,7 +45283,7 @@ A1;Peça exemplo;10'
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '1100px' }}>
           {/* Logo do dashboard (ou barra lateral como fallback) */}
           {dashboardLogo && (
-            <div style={{ marginBottom: '28px', width: 'clamp(120px, 22vw, 200px)', height: 'clamp(80px, 14vw, 120px)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.25)', boxShadow: '0 4px 24px rgba(0, 255, 0, 0.08)' }}>
+            <div className="ns-splash-logo-box" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.25)', boxShadow: '0 4px 24px rgba(0, 255, 0, 0.08)' }}>
               {dashboardLogoType === 'video' ? (
                 <video src={dashboardLogo} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
               ) : (
@@ -45334,7 +45314,7 @@ A1;Peça exemplo;10'
             style={{
               margin: '0 0 12px 0',
               padding: 0,
-              fontSize: 'clamp(28px, 6vw, 48px)',
+              fontSize: 'clamp(20px, 5vw, 40px)',
               fontWeight: '800',
               color: '#00ff00',
               letterSpacing: '1px',
@@ -45351,7 +45331,7 @@ A1;Peça exemplo;10'
               margin: '0 0 8px 0',
               padding: '0 12px',
               maxWidth: '640px',
-              fontSize: 'clamp(15px, 2vw, 18px)',
+              fontSize: 'clamp(13px, 3.2vw, 16px)',
               fontWeight: '700',
               lineHeight: 1.35,
               color: '#fff',
@@ -45365,7 +45345,7 @@ A1;Peça exemplo;10'
               margin: '0 0 24px 0',
               padding: '0 16px',
               maxWidth: '600px',
-              fontSize: 'clamp(13px, 1.6vw, 15px)',
+              fontSize: 'clamp(12px, 2.8vw, 14px)',
               lineHeight: 1.5,
               color: 'rgba(255, 255, 255, 0.75)',
               textAlign: 'center'
@@ -45375,8 +45355,8 @@ A1;Peça exemplo;10'
           </p>
           <p
             style={{
-              margin: '0 0 28px 0',
-              fontSize: 'clamp(12px, 1.4vw, 14px)',
+              margin: '0 0 20px 0',
+              fontSize: 'clamp(11px, 2.6vw, 13px)',
               color: 'rgba(0, 255, 0, 0.85)',
               fontWeight: '600',
               letterSpacing: '0.5px',
@@ -45414,14 +45394,14 @@ A1;Peça exemplo;10'
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '12px',
-              padding: '18px 40px',
-              fontSize: 'clamp(15px, 2vw, 17px)',
+              gap: '8px',
+              padding: 'clamp(10px, 2.5vw, 16px) clamp(18px, 5vw, 32px)',
+              fontSize: 'clamp(13px, 3.2vw, 16px)',
               fontWeight: '700',
               color: '#000',
               backgroundColor: '#00ff00',
               border: '2px solid #00ff00',
-              borderRadius: '12px',
+              borderRadius: '10px',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
               boxShadow: '0 4px 20px rgba(0, 255, 0, 0.25)'
@@ -45437,18 +45417,18 @@ A1;Peça exemplo;10'
               e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 0, 0.25)'
             }}
           >
-            <span style={{ fontSize: '20px' }}>⚡</span>
+            <span style={{ fontSize: 'clamp(16px, 4vw, 20px)' }}>⚡</span>
             {safeT?.acessarSistema || 'Acessar Sistema'}
-            <span style={{ fontSize: '18px' }}>→</span>
+            <span style={{ fontSize: 'clamp(14px, 3.5vw, 18px)' }}>→</span>
           </button>
 
           {/* Métricas — mais informações */}
           <div
             style={{
-              marginTop: 'clamp(36px, 6vh, 56px)',
+              marginTop: 'clamp(22px, 4vh, 44px)',
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
-              gap: 'clamp(16px, 3vw, 28px)',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(88px, 1fr))',
+              gap: 'clamp(10px, 2.5vw, 20px)',
               width: '100%',
               maxWidth: '720px',
               padding: '0 16px'
@@ -45468,19 +45448,19 @@ A1;Peça exemplo;10'
                 minWidth: '100px'
               }}
             >
-              <div style={{ fontSize: '24px', marginBottom: '6px', color: '#00ff00' }}>{item.icon}</div>
-              <div style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: '700', color: '#fff' }}>{item.value}</div>
-              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>{item.label}</div>
+              <div style={{ fontSize: 'clamp(18px, 4.5vw, 22px)', marginBottom: '4px', color: '#00ff00' }}>{item.icon}</div>
+              <div style={{ fontSize: 'clamp(14px, 3.2vw, 17px)', fontWeight: '700', color: '#fff' }}>{item.value}</div>
+              <div style={{ fontSize: 'clamp(10px, 2.5vw, 12px)', color: 'rgba(255,255,255,0.7)' }}>{item.label}</div>
             </div>
           ))}
         </div>
 
         {/* Seção: Recursos que Fazem a Diferença (6 cards) */}
-        <div style={{ marginTop: 'clamp(48px, 10vh, 80px)', width: '100%', maxWidth: '1000px', padding: '0 20px' }}>
+        <div style={{ marginTop: 'clamp(28px, 6vh, 56px)', width: '100%', maxWidth: '1000px', padding: '0 16px' }}>
           <h2
             style={{
               margin: '0 0 12px 0',
-              fontSize: 'clamp(22px, 4vw, 28px)',
+              fontSize: 'clamp(17px, 3.5vw, 24px)',
               fontWeight: '800',
               color: '#fff',
               textAlign: 'center'
@@ -45490,8 +45470,8 @@ A1;Peça exemplo;10'
           </h2>
           <p
             style={{
-              margin: '0 0 28px 0',
-              fontSize: 'clamp(14px, 1.6vw, 16px)',
+              margin: '0 0 20px 0',
+              fontSize: 'clamp(12px, 2.8vw, 15px)',
               color: 'rgba(255,255,255,0.75)',
               textAlign: 'center',
               lineHeight: 1.5
@@ -45500,10 +45480,11 @@ A1;Peça exemplo;10'
             {(safeT as any)?.recursosQueFazemDiferencaDesc || 'Tudo o que precisa para comandar equipas, ativos e relatórios — num só lugar.'}
           </p>
           <div
+            className="ns-splash-cards-grid"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '20px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
+              gap: '14px',
               justifyContent: 'center'
             }}
           >
@@ -45517,8 +45498,9 @@ A1;Peça exemplo;10'
             ].map((card) => (
               <div
                 key={card.title}
+                className="ns-splash-card"
                 style={{
-                  padding: '24px',
+                  padding: '18px',
                   backgroundColor: 'rgba(30, 35, 30, 0.9)',
                   borderRadius: '12px',
                   border: '1px solid rgba(0, 255, 0, 0.2)',
@@ -45533,9 +45515,9 @@ A1;Peça exemplo;10'
                   e.currentTarget.style.boxShadow = 'none'
                 }}
               >
-                <div style={{ fontSize: '28px', marginBottom: '12px', color: '#00ff00' }}>{card.icon}</div>
-                <h3 style={{ margin: '0 0 10px 0', fontSize: '17px', fontWeight: '700', color: '#fff' }}>{card.title}</h3>
-                <p style={{ margin: 0, fontSize: '14px', lineHeight: 1.5, color: 'rgba(255,255,255,0.8)' }}>{card.desc}</p>
+                <div style={{ fontSize: 'clamp(22px, 5vw, 26px)', marginBottom: '8px', color: '#00ff00' }}>{card.icon}</div>
+                <h3 style={{ margin: '0 0 8px 0', fontSize: 'clamp(14px, 3.2vw, 17px)', fontWeight: '700', color: '#fff' }}>{card.title}</h3>
+                <p style={{ margin: 0, fontSize: 'clamp(12px, 2.8vw, 14px)', lineHeight: 1.45, color: 'rgba(255,255,255,0.8)' }}>{card.desc}</p>
               </div>
             ))}
           </div>

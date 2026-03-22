@@ -31,25 +31,25 @@ html {
   text-size-adjust: 100%;
 }
 
-/* Tablet e telemóvel: tipografia legível sem zoom (zoom quebra layout em iOS/Android) */
+/* Tablet e telemóvel: base mais compacta (menos “tudo enorme” em ecrã pequeno) */
 @media (max-width: 1024px) {
-  html {
-    font-size: 15px;
-  }
-}
-@media (max-width: 768px) {
   html {
     font-size: 14px;
   }
 }
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   html {
     font-size: 13px;
   }
 }
-@media (max-width: 360px) {
+@media (max-width: 480px) {
   html {
     font-size: 12px;
+  }
+}
+@media (max-width: 360px) {
+  html {
+    font-size: 11px;
   }
 }
 
@@ -1690,4 +1690,128 @@ a:focus-visible {
 .cliente-card-alerta-devedor button:focus-visible {
   outline: 2px solid rgba(255, 100, 100, 0.95) !important;
   box-shadow: 0 0 0 4px rgba(255, 0, 0, 0.2) !important;
+}
+
+/* ========== Relatório de Serviço — telemóvel: cabeçalho empilhado, texto proporcional ========== */
+.relatorio-servico-root {
+  padding: clamp(8px, 2.5vw, 28px) !important;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.relatorio-servico-hero {
+  margin-bottom: clamp(12px, 3vw, 36px);
+  padding: clamp(12px, 3.5vw, 28px);
+  background: linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%);
+  border-radius: clamp(10px, 2.5vw, 20px);
+  border: 2px solid rgba(0, 255, 0, 0.28);
+  box-shadow: 0 6px 24px rgba(0, 255, 0, 0.08);
+}
+
+.relatorio-servico-hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: clamp(10px, 2.5vw, 20px);
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.relatorio-servico-hero-heading-wrap {
+  text-align: center;
+  flex: 1;
+  min-width: min(100%, 280px);
+}
+
+.relatorio-servico-hero-title {
+  margin: 0 0 6px 0 !important;
+  font-size: clamp(1rem, 4.2vw, 1.85rem) !important;
+  font-weight: bold !important;
+  color: #00ff00 !important;
+  letter-spacing: 0.08em !important;
+  text-shadow: 0 0 14px rgba(0, 255, 0, 0.25) !important;
+  line-height: 1.2 !important;
+}
+
+.relatorio-servico-hero-meta {
+  margin: 0 !important;
+  font-size: clamp(12px, 3vw, 14px) !important;
+  color: #ccc !important;
+  opacity: 0.85 !important;
+}
+
+.relatorio-servico-hero-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.relatorio-servico-hero-actions-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.relatorio-servico-form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .relatorio-servico-hero-top {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .relatorio-servico-hero-heading-wrap {
+    order: -1;
+    min-width: 100%;
+  }
+  .relatorio-servico-hero-actions {
+    justify-content: center !important;
+    width: 100%;
+  }
+  .relatorio-servico-hero-actions .btn-primary {
+    flex: 1 1 calc(50% - 6px) !important;
+    min-width: 0 !important;
+    font-size: 11px !important;
+    padding: 8px 8px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .relatorio-servico-form-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .btn-primary,
+  .btn-danger,
+  .btn-administrador {
+    min-height: 36px !important;
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+  }
+}
+
+/* Tela inicial (splash) — classes usadas em page.tsx */
+.ns-splash-root {
+  padding: clamp(16px, 4vh, 48px) 14px clamp(20px, 5vh, 56px) !important;
+}
+.ns-splash-logo-box {
+  margin-bottom: clamp(14px, 3vh, 24px) !important;
+  width: clamp(88px, 36vw, 160px) !important;
+  height: clamp(56px, 22vw, 100px) !important;
+}
+@media (max-width: 480px) {
+  .ns-splash-cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .ns-splash-card {
+    padding: 14px !important;
+  }
 }
