@@ -1862,6 +1862,73 @@ a:focus-visible {
   }
 }
 
+/* Lista de cartões de relatórios — evita min-width fixo que corta metade do ecrã no telemóvel */
+.relatorio-servico-cards-grid {
+  display: grid;
+  gap: 15px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+}
+@media (max-width: 480px) {
+  .relatorio-servico-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Resumo numérico (6 caixas) — empilha no telemóvel */
+.relatorio-servico-resumo-totais-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+@media (max-width: 640px) {
+  .relatorio-servico-resumo-totais-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Linha modelo PDF + Editar: flex pode encolher sem cortar o botão */
+.relatorio-servico-card-acoes-linha {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+.relatorio-servico-card-acoes-linha > select {
+  flex: 1 1 140px;
+  min-width: 0;
+  max-width: 100%;
+}
+.relatorio-servico-card-acoes-linha > .btn-primary {
+  flex: 1 1 100px;
+  min-width: 0;
+}
+
+/* Modal relatórios equipamento: scroll confortável no telemóvel + safe area */
+.modal-relatorios-equipamento {
+  width: min(100%, 600px);
+  max-width: calc(100vw - 24px);
+}
+
+@media (max-width: 768px) {
+  .modal-overlay {
+    align-items: flex-start;
+    justify-content: center;
+    padding: max(10px, env(safe-area-inset-top, 0px)) max(10px, env(safe-area-inset-right, 0px))
+      max(14px, env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal.modal-relatorios-equipamento {
+    margin: 0 auto 16px;
+    max-height: none;
+  }
+}
+
 @media (max-width: 768px) {
   .btn-primary,
   .btn-danger,

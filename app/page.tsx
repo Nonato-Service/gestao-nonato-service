@@ -23593,7 +23593,7 @@ onKeyPress={(e) => {
                 {relatorioServicoForm.diasTrabalho && relatorioServicoForm.diasTrabalho.length > 0 ? (
                   <div style={{ marginBottom: '15px', marginTop: '15px' }}>
                     <h3 style={{ marginBottom: '10px', color: '#00ff00', fontSize: '14px', textAlign: 'center', fontWeight: 'bold' }}>{safeT?.resumoHorasDeslocamentos?.toUpperCase() || 'RESUMO DE HORAS, DESLOCAMENTOS E DIÁRIAS'}</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
+                    <div className="relatorio-servico-resumo-totais-grid">
                       <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                         <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasTrabalho || 'Horas de Trabalho'}</p>
                         <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasTrabalho}h</p>
@@ -23867,11 +23867,7 @@ onKeyPress={(e) => {
                 </p>
               </div>
             ) : (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-                gap: '15px'
-              }}>
+              <div className="relatorio-servico-cards-grid">
                 {relatoriosServico
                   .sort((a, b) => {
                     const dataA = new Date(a.data).getTime()
@@ -23895,7 +23891,9 @@ onKeyPress={(e) => {
                           border: '2px solid rgba(0, 255, 0, 0.3)',
                           transition: 'all 0.3s ease',
                           position: 'relative',
-                          overflow: 'hidden',
+                          overflow: 'visible',
+                          minWidth: 0,
+                          maxWidth: '100%',
                           boxShadow: '0 4px 12px rgba(0, 255, 0, 0.1)'
                         }}
                         onMouseEnter={(e) => {
@@ -24107,16 +24105,11 @@ onKeyPress={(e) => {
                           borderTop: '1px solid rgba(0, 255, 0, 0.2)'
                         }}>
                           {/* Primeira linha: Dropdown e Editar */}
-                          <div style={{ 
-                            display: 'flex',
-                            gap: '8px',
-                            width: '100%'
-                          }}>
+                          <div className="relatorio-servico-card-acoes-linha">
                             <select
                               value={selectedPDFModel}
                               onChange={(e) => setSelectedPDFModel(e.target.value)}
                               style={{
-                                flex: 1,
                                 padding: '8px',
                                 fontSize: '11px',
                                 backgroundColor: '#141414',
@@ -24144,9 +24137,9 @@ onKeyPress={(e) => {
                             </select>
                             <button 
                               className="btn-primary" 
+                              type="button"
                               onClick={() => handleEditRelatorioServico(relatorio)} 
                               style={{ 
-                                flex: 1,
                                 height: '36px',
                                 padding: '8px 6px', 
                                 fontSize: '11px',
@@ -24163,7 +24156,9 @@ onKeyPress={(e) => {
                                 cursor: 'pointer',
                                 transition: 'all 0.2s ease',
                                 boxSizing: 'border-box',
-                                letterSpacing: '0.5px'
+                                letterSpacing: '0.5px',
+                                WebkitTapHighlightColor: 'transparent',
+                                touchAction: 'manipulation'
                               }}
                               title={safeT?.edit || 'Editar'}
                               onMouseEnter={(e) => {
@@ -24181,16 +24176,12 @@ onKeyPress={(e) => {
                           </div>
                           
                           {/* Segunda linha: Ver e Gerar PDF */}
-                          <div style={{ 
-                            display: 'flex',
-                            gap: '8px',
-                            width: '100%'
-                          }}>
+                          <div className="relatorio-servico-card-acoes-linha">
                             <button 
                               className="btn-primary" 
+                              type="button"
                               onClick={() => setViewingRelatorioServico(relatorio)} 
                               style={{ 
-                                flex: 1,
                                 height: '36px',
                                 padding: '6px', 
                                 fontSize: '10px',
@@ -24224,9 +24215,9 @@ onKeyPress={(e) => {
                             </button>
                             <button 
                               className="btn-primary" 
+                              type="button"
                               onClick={() => handlePrintRelatorio(relatorio)} 
                               style={{ 
-                                flex: 1,
                                 height: '36px',
                                 padding: '6px', 
                                 fontSize: '10px',
@@ -52402,7 +52393,7 @@ A1;Peça exemplo;10'
       {/* Modal de Relatórios do Equipamento */}
       {showRelatoriosModal && selectedEquipamentoForRelatorio && (
         <div className="modal-overlay" onClick={() => { setShowRelatoriosModal(false); setSelectedEquipamentoForRelatorio(null); }}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal modal-relatorios-equipamento" onClick={(e) => e.stopPropagation()}>
             <h2>{safeT?.relatorios || 'Relatórios'} - {selectedEquipamentoForRelatorio.equipamento.modelo}</h2>
             <button className="btn-primary" onClick={handleAddRelatorio} style={{ marginBottom: '15px' }}>{safeT?.novoRelatorio || 'Novo Relatório'}</button>
             {showRelatorioForm && (
