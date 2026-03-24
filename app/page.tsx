@@ -3227,6 +3227,7 @@ export default function Dashboard() {
       'clientes-default', 
       'fornecedores-default',
       'relatorio-servico-default',
+      'biblioteca-relatorios-default',
       'biblioteca-pecas-default',
       'agenda-default',
       'cadastro-servicos-default',
@@ -3247,6 +3248,7 @@ export default function Dashboard() {
               b.id === 'clientes-default' ? 'clientesTitle' :
               b.id === 'fornecedores-default' ? 'fornecedoresTitle' :
               b.id === 'relatorio-servico-default' ? 'relatorioServicoTitle' :
+              b.id === 'biblioteca-relatorios-default' ? 'bibliotecaRelatoriosTitle' :
               b.id === 'biblioteca-pecas-default' ? 'cadastroPecasBibliotecaTitle' :
               b.id === 'agenda-default' ? 'agendaTitle' :
               b.id === 'cadastro-servicos-default' ? 'cadastroServicosTitle' : b.translationKey
@@ -4666,6 +4668,7 @@ export default function Dashboard() {
         'clientes-default', 
         'fornecedores-default',
         'relatorio-servico-default',
+        'biblioteca-relatorios-default',
         'biblioteca-pecas-default',
         'solicitacao-servico-tecnico-default',
         'agenda-default'
@@ -4676,6 +4679,7 @@ export default function Dashboard() {
         'clientes-default': 'clientesTitle',
         'fornecedores-default': 'fornecedoresTitle',
         'relatorio-servico-default': 'relatorioServicoTitle',
+        'biblioteca-relatorios-default': 'bibliotecaRelatoriosTitle',
         'biblioteca-pecas-default': 'cadastroPecasBibliotecaTitle',
         'solicitacao-servico-tecnico-default': 'solicitacaoServicoTecnicoTitle',
         'agenda-default': 'agendaTitle',
@@ -6221,6 +6225,7 @@ export default function Dashboard() {
       'clientes-default', 
       'fornecedores-default',
       'relatorio-servico-default',
+      'biblioteca-relatorios-default',
       'biblioteca-pecas-default',
       'solicitacao-servico-tecnico-default',
       'agenda-default',
@@ -6252,6 +6257,8 @@ export default function Dashboard() {
         return safeT?.fornecedoresTitle || button.name || ''
       } else if (button.id === 'relatorio-servico-default') {
         return safeT?.relatorioServicoTitle || button.name || ''
+      } else if (button.id === 'biblioteca-relatorios-default') {
+        return safeT?.bibliotecaRelatoriosTitle || button.name || ''
       } else if (button.id === 'biblioteca-pecas-default') {
         return safeT?.cadastroPecasBibliotecaTitle || button.name || ''
       } else if (button.id === 'solicitacao-servico-tecnico-default') {
@@ -14971,6 +14978,7 @@ export default function Dashboard() {
     'open-clientes': 'clientes',
     'open-fornecedores': 'fornecedores',
     'open-relatorio-servico': 'relatorioServico',
+    'open-biblioteca-relatorios': 'relatorioServico',
     'open-biblioteca-pecas': 'bibliotecaPecas',
     'open-importacao-pecas': 'bibliotecaPecas',
     'open-solicitacao-servico-tecnico': 'agenda',
@@ -45413,8 +45421,6 @@ A1;Peça exemplo;10'
         style={{
           position: 'fixed',
           inset: 0,
-          width: '100vw',
-          height: '100vh',
           backgroundColor: '#0a0a0a',
           zIndex: 99999,
           overflow: 'auto',
@@ -45755,21 +45761,20 @@ A1;Peça exemplo;10'
         style={{
           position: 'fixed',
           inset: 0,
-          width: '100vw',
-          height: '100vh',
           backgroundColor: '#1e1e1e',
           zIndex: 99999,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '20px'
+          padding:
+            'max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px))'
         }}
       >
         <div
           style={{
             maxWidth: '440px',
             width: '100%',
-            padding: '32px',
+            padding: 'clamp(20px, 5vw, 32px)',
             backgroundColor: '#0a0a0a',
             borderRadius: '12px',
             border: '2px solid rgba(255, 255, 255, 0.2)',
@@ -45879,21 +45884,20 @@ A1;Peça exemplo;10'
         style={{
           position: 'fixed',
           inset: 0,
-          width: '100vw',
-          height: '100vh',
           backgroundColor: '#1e1e1e',
           zIndex: 99999,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '20px'
+          padding:
+            'max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px))'
         }}
       >
         <div
           style={{
             maxWidth: '440px',
             width: '100%',
-            padding: '32px',
+            padding: 'clamp(20px, 5vw, 32px)',
             backgroundColor: '#0a0a0a',
             borderRadius: '12px',
             border: '2px solid rgba(255, 255, 255, 0.2)',
@@ -47610,11 +47614,8 @@ A1;Peça exemplo;10'
           <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 20px 0 0', flexShrink: 0 }}>
             <button
               type="button"
-              onClick={() => {
-                setLoginUser(null)
-                setShowSplashInicial(true)
-              }}
-              title={safeT?.voltarTelaInicial || 'Voltar à tela inicial'}
+              onClick={() => voltarPaginaInicial()}
+              title={safeT?.paginaInicial || 'Página Inicial'}
               style={{
                 padding: '6px 12px',
                 fontSize: '12px',

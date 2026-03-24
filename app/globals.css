@@ -1874,7 +1874,10 @@ a:focus-visible {
 
 /* Tela inicial (splash) — classes usadas em page.tsx */
 .ns-splash-root {
-  padding: clamp(16px, 4vh, 48px) 14px clamp(20px, 5vh, 56px) !important;
+  padding-top: max(clamp(16px, 4vh, 48px), env(safe-area-inset-top, 0px)) !important;
+  padding-right: max(14px, env(safe-area-inset-right, 0px)) !important;
+  padding-bottom: max(clamp(20px, 5vh, 56px), env(safe-area-inset-bottom, 0px)) !important;
+  padding-left: max(14px, env(safe-area-inset-left, 0px)) !important;
 }
 .ns-splash-logo-box {
   margin-bottom: clamp(14px, 3vh, 24px) !important;
