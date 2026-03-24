@@ -265,10 +265,18 @@ export const translations = {
     safeRefresh: 'Atualizar com segurança',
     confirmSafeRefresh: 'Atualizar agora de forma segura? Os rascunhos serão mantidos.',
     syncServerNewData:
-      'Outro equipamento guardou dados no servidor. Os números podem diferir até atualizar. Use «Carregar do servidor» para alinhar este aparelho (substitui os dados locais pelos do servidor).',
+      'O servidor tem uma versão mais recente que a que este aparelho aceitou. «Carregar do servidor» copia do servidor para aqui. Se AQUI é que está a informação certa (ex.: telefone), use «Enviar deste aparelho ao servidor» ou o botão ↑ no topo.',
     syncRevisionLabel: 'revisão',
     syncLoadFromServer: 'Carregar do servidor',
     syncLater: 'Mais tarde',
+    syncPushThisDevice: 'Enviar deste aparelho ao servidor',
+    syncPushThisDeviceShort: 'Enviar ao servidor',
+    syncPushThisDeviceTitle:
+      'Envia todos os dados guardados neste aparelho para o servidor. Use no telefone quando tiver a informação mais completa; depois nos outros aparelhos use «Carregar do servidor».',
+    syncPushConfirm:
+      'Substituir os dados no SERVIDOR pelos deste aparelho? Confirme se esta cópia é a que quer manter. Os outros equipamentos deverão depois carregar do servidor.',
+    syncPushOk: 'Dados enviados ao servidor. Nos outros aparelhos, abra a app e use «Carregar do servidor» (ou o aviso laranja) para ficarem iguais.',
+    syncPushFail: 'Não foi possível enviar. Verifique a ligação ao mesmo site/servidor em todos os aparelhos.',
     protocolosServicoModeloPDF: 'Modelo do PDF',
     protocolosServicoPdfModelo1: '1 — Clássico (verde)',
     protocolosServicoPdfModelo2: '2 — Minimalista (azul)',

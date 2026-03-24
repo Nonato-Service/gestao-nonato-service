@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { translations } from './translations'
-import { loadData, saveData, loadAllFromServer, loadFromServer } from './utils/dataStorage'
+import { loadData, saveData, loadAllFromServer, loadFromServer, pushAllLocalStorageToServer } from './utils/dataStorage'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData } from './utils/syncRevision'
 import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
 import { loadManuaisFamiliasGruposFromIdb, saveManuaisFamiliasGruposToIdb, getKv } from './utils/manuaisIndexedDb'
@@ -1119,6 +1119,7 @@ export default function Dashboard() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   /** Servidor tem revisão mais recente que a última aceite neste aparelho — mostrar barra «Atualizar do servidor». */
   const [syncPendingRemote, setSyncPendingRemote] = useState<{ revision: number } | null>(null)
+  const [syncPushLoading, setSyncPushLoading] = useState(false)
   const [showDashboardView, setShowDashboardView] = useState(true) // Dashboard central por padrão
   const [showTranslatorModal, setShowTranslatorModal] = useState(false)
   
@@ -3390,6 +3391,32 @@ export default function Dashboard() {
     window.location.reload()
   }, [syncPendingRemote])
 
+  const enviarEsteAparelhoParaServidor = useCallback(async () => {
+    if (typeof window === 'undefined') return
+    const msg =
+      (safeT as any)?.syncPushConfirm ||
+      'Isto vai SUBSTITUIR os dados no servidor pelos deste aparelho. Os outros equipamentos passarão a poder carregar esta versão. Continuar?'
+    if (!window.confirm(msg)) return
+    setSyncPushLoading(true)
+    try {
+      const r = await pushAllLocalStorageToServer()
+      if (!r.ok) {
+        window.alert(
+          (safeT as any)?.syncPushFail ||
+            (r.error === 'empty'
+              ? 'Não há dados locais para enviar.'
+              : 'Não foi possível enviar. Verifique a ligação ao servidor e tente de novo.')
+        )
+        return
+      }
+      window.alert((safeT as any)?.syncPushOk || 'Dados enviados ao servidor. Os outros aparelhos verão «Carregar do servidor» na próxima vez que abrirem a página.')
+      setSyncPendingRemote(null)
+      window.location.reload()
+    } finally {
+      setSyncPushLoading(false)
+    }
+  }, [safeT])
+
   // Nota: não usar preventDefault global em touchmove (anti pull-to-refresh): em layouts com overflow
   // interno + flex, isso pode bloquear toda a rolagem no telefone. overscroll-behavior em html/body já ajuda.
 
@@ -3662,8 +3689,9 @@ export default function Dashboard() {
         // Primeiro, tentar carregar tudo do servidor
         const serverData = await loadAllFromServer() || {}
 
-        /** Não misturar dados do servidor com os deste browser até o utilizador aceitar (evita sobrescrever outro equipamento). */
-        const deferServerMerge = serverRevision > lastAccepted && hasMeaningfulLocalData()
+        /** Só bloquear fusão se o servidor respondeu com revisão e ela é maior que a última aceite neste aparelho. */
+        const deferServerMerge =
+          syncSt !== null && serverRevision > lastAccepted && hasMeaningfulLocalData()
         const serverKeysWithData = Object.keys(serverData).filter(key => {
           const value = serverData[key]
           if (Array.isArray(value)) return value.length > 0
@@ -5848,7 +5876,7 @@ export default function Dashboard() {
       }
     } // Fim do if (savedButtons)
     } // Fim do if (!buttonsInitialized.current)
-      if (!deferServerMerge) {
+      if (!deferServerMerge && syncSt !== null) {
         setLastAcceptedRevision(serverRevision)
       }
       setSyncPendingRemote(deferServerMerge ? { revision: serverRevision } : null)
@@ -46023,6 +46051,25 @@ A1;Peça exemplo;10'
           </button>
           <button
             type="button"
+            disabled={syncPushLoading}
+            onClick={enviarEsteAparelhoParaServidor}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '8px',
+              border: '1px solid rgba(0, 255, 120, 0.75)',
+              background: 'rgba(0, 80, 40, 0.55)',
+              color: '#b6ffc8',
+              fontWeight: 700,
+              cursor: syncPushLoading ? 'wait' : 'pointer',
+              fontSize: '12px',
+              whiteSpace: 'nowrap',
+              opacity: syncPushLoading ? 0.7 : 1
+            }}
+          >
+            {syncPushLoading ? '…' : ((safeT as any)?.syncPushThisDevice || 'Enviar deste aparelho ao servidor')}
+          </button>
+          <button
+            type="button"
             onClick={() => setSyncPendingRemote(null)}
             style={{
               padding: '8px 12px',
@@ -46087,6 +46134,26 @@ A1;Peça exemplo;10'
               title={(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
             >
               ↻
+            </button>
+            <button
+              type="button"
+              disabled={syncPushLoading}
+              onClick={enviarEsteAparelhoParaServidor}
+              aria-label={(safeT as any)?.syncPushThisDeviceShort || 'Enviar dados ao servidor'}
+              title={(safeT as any)?.syncPushThisDeviceTitle || 'Envia todos os dados deste telefone/tablet para o servidor (para os outros aparelhos poderem carregar).'}
+              style={{
+                padding: '6px 8px',
+                fontSize: '11px',
+                fontWeight: 700,
+                borderRadius: '6px',
+                border: '1px solid rgba(0, 255, 120, 0.5)',
+                background: 'rgba(0, 60, 30, 0.5)',
+                color: '#9f9',
+                cursor: syncPushLoading ? 'wait' : 'pointer',
+                opacity: syncPushLoading ? 0.65 : 1
+              }}
+            >
+              {syncPushLoading ? '…' : '↑'}
             </button>
           </div>
         </header>

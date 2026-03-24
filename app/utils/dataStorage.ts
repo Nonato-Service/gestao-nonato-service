@@ -1,7 +1,7 @@
 // Funções para salvar e carregar dados do servidor (com suporte offline)
 
 import { mergeManuaisFamiliasGrupos } from './manuaisMerge'
-import { applyRevisionFromSaveResponse } from './syncRevision'
+import { applyRevisionFromSaveResponse, fetchSyncStatus } from './syncRevision'
 import { saveManuaisFamiliasGruposToIdb, loadManuaisFamiliasGruposFromIdb, saveKv } from './manuaisIndexedDb'
 
 const API_BASE = '/api/data'
@@ -361,8 +361,89 @@ export async function loadAllFromServer(): Promise<Record<string, any>> {
   }
 }
 
+const SKIP_KEYS_PUSH_SYNC = new Set([
+  'nonato-sync-last-accepted-revision',
+  'nonato-sync-queue',
+  'nonato-auto-backups',
+  'nonato-code-backups'
+])
+
+/**
+ * Junta tudo o que está neste browser (localStorage nonato-* + manuais no IndexedDB) para enviar ao servidor numa única operação.
+ */
+export async function collectAllLocalNonatoDataForSync(): Promise<Record<string, any>> {
+  const out: Record<string, any> = {}
+  if (typeof window === 'undefined') return out
+
+  const keys = new Set<string>()
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i)
+    if (k && k.startsWith('nonato-') && !SKIP_KEYS_PUSH_SYNC.has(k)) keys.add(k)
+  }
+
+  let manuaisMerged: any = null
+  if (keys.has(MANUAIS_KEY)) {
+    keys.delete(MANUAIS_KEY)
+    try {
+      const idb = await loadManuaisFamiliasGruposFromIdb()
+      const raw = localStorage.getItem(MANUAIS_KEY)
+      if (raw) {
+        const local = JSON.parse(raw) as { familias?: string[]; grupos?: unknown[]; modelos?: unknown[] }
+        manuaisMerged = idb && typeof idb === 'object' ? mergeManuaisFamiliasGrupos(idb as any, local) : local
+      } else if (idb && typeof idb === 'object') {
+        manuaisMerged = idb
+      }
+    } catch {
+      const raw = localStorage.getItem(MANUAIS_KEY)
+      if (raw) {
+        try {
+          manuaisMerged = JSON.parse(raw)
+        } catch {
+          /* ignorar */
+        }
+      }
+    }
+    if (manuaisMerged !== null && typeof manuaisMerged === 'object') {
+      out[MANUAIS_KEY] = manuaisMerged
+    }
+  }
+
+  for (const key of keys) {
+    const raw = localStorage.getItem(key)
+    if (raw === null || raw === '') continue
+    try {
+      out[key] = JSON.parse(raw)
+    } catch {
+      out[key] = raw
+    }
+  }
+  return out
+}
+
+/** Envia toda a cópia local para o servidor (substitui ficheiros no servidor pelos deste aparelho). Uma revisão. */
+export async function pushAllLocalStorageToServer(): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const data = await collectAllLocalNonatoDataForSync()
+    if (Object.keys(data).length === 0) {
+      return { ok: false, error: 'empty' }
+    }
+    const ok = await saveAllToServer(data, { timeoutMs: 180000 })
+    if (!ok) return { ok: false, error: 'network_or_server' }
+    const st = await fetchSyncStatus()
+    if (st) applyRevisionFromSaveResponse({ revision: st.revision })
+    return { ok: true }
+  } catch (e) {
+    console.error('[pushAllLocalStorageToServer]', e)
+    return { ok: false, error: 'exception' }
+  }
+}
+
 // Salvar todos os dados de uma vez
-export async function saveAllToServer(data: Record<string, any>): Promise<boolean> {
+export async function saveAllToServer(
+  data: Record<string, any>,
+  opts?: { timeoutMs?: number }
+): Promise<boolean> {
+  const timeoutMs = opts?.timeoutMs ?? 10000
   if (!isOnline()) {
     serverOffline = true
     for (const [key, value] of Object.entries(data)) {
@@ -384,7 +465,7 @@ export async function saveAllToServer(data: Record<string, any>): Promise<boolea
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
-      signal: createTimeoutSignal(10000) // Timeout de 10 segundos para operações grandes
+      signal: createTimeoutSignal(timeoutMs)
     })
 
     if (!response.ok) {
