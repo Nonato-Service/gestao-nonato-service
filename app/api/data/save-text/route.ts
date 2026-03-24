@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import { ensureDataDir } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
+import { bumpSyncMeta } from '../syncMeta'
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,9 +31,13 @@ export async function POST(request: NextRequest) {
     // Salvar como texto puro (para vídeos/imagens em base64)
     fs.writeFileSync(filePath, value, 'utf-8')
 
+    const meta = bumpSyncMeta(dataDir)
+
     return NextResponse.json({ 
       success: true, 
-      message: `Dados salvos com sucesso: ${key}` 
+      message: `Dados salvos com sucesso: ${key}`,
+      revision: meta.revision,
+      updatedAt: meta.updatedAt
     })
   } catch (error: any) {
     console.error('Erro ao salvar dados:', error)

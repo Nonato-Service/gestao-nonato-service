@@ -264,6 +264,11 @@ export const translations = {
     escolherLogoProtocoloServicoDesc: 'Logo que aparece no cabeçalho do PDF dos Protocolos de Serviço.',
     safeRefresh: 'Atualizar com segurança',
     confirmSafeRefresh: 'Atualizar agora de forma segura? Os rascunhos serão mantidos.',
+    syncServerNewData:
+      'Outro equipamento guardou dados no servidor. Os números podem diferir até atualizar. Use «Carregar do servidor» para alinhar este aparelho (substitui os dados locais pelos do servidor).',
+    syncRevisionLabel: 'revisão',
+    syncLoadFromServer: 'Carregar do servidor',
+    syncLater: 'Mais tarde',
     protocolosServicoModeloPDF: 'Modelo do PDF',
     protocolosServicoPdfModelo1: '1 — Clássico (verde)',
     protocolosServicoPdfModelo2: '2 — Minimalista (azul)',

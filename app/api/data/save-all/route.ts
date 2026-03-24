@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import { ensureDataDir } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
+import { bumpSyncMeta } from '../syncMeta'
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,11 +40,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const meta = bumpSyncMeta(dataDir)
+
     return NextResponse.json({ 
       success: true, 
       saved,
       errors: errors.length > 0 ? errors : undefined,
-      message: `Salvos ${saved.length} arquivo(s)` 
+      message: `Salvos ${saved.length} arquivo(s)`,
+      revision: meta.revision,
+      updatedAt: meta.updatedAt
     })
   } catch (error: any) {
     console.error('Erro ao salvar todos os dados:', error)

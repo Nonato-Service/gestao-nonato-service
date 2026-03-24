@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import { ensureDataDir } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
+import { bumpSyncMeta } from '../syncMeta'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -33,9 +34,13 @@ export async function POST(request: NextRequest) {
     // Salvar o arquivo
     fs.writeFileSync(filePath, JSON.stringify(value, null, 2), 'utf-8')
 
+    const meta = bumpSyncMeta(dataDir)
+
     return NextResponse.json({ 
       success: true, 
-      message: `Dados salvos com sucesso: ${key}` 
+      message: `Dados salvos com sucesso: ${key}`,
+      revision: meta.revision,
+      updatedAt: meta.updatedAt
     })
   } catch (error: any) {
     console.error('Erro ao salvar dados:', error)

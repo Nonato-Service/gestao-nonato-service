@@ -1,6 +1,7 @@
 // Funções para salvar e carregar dados do servidor (com suporte offline)
 
 import { mergeManuaisFamiliasGrupos } from './manuaisMerge'
+import { applyRevisionFromSaveResponse } from './syncRevision'
 import { saveManuaisFamiliasGruposToIdb, loadManuaisFamiliasGruposFromIdb, saveKv } from './manuaisIndexedDb'
 
 const API_BASE = '/api/data'
@@ -219,6 +220,13 @@ async function _doSaveToServer(key: string, value: any): Promise<boolean> {
     })
     if (response.ok) {
       serverOffline = false
+      try {
+        const cloned = response.clone()
+        const json = await cloned.json()
+        applyRevisionFromSaveResponse(json)
+      } catch {
+        /* resposta sem JSON */
+      }
       return true
     }
     return false
@@ -385,6 +393,12 @@ export async function saveAllToServer(data: Record<string, any>): Promise<boolea
     }
 
     serverOffline = false
+    try {
+      const json = await response.json()
+      applyRevisionFromSaveResponse(json)
+    } catch {
+      /* ignorar */
+    }
     return true
   } catch (error: any) {
     // Detectar erros de conexão

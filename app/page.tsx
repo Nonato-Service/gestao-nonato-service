@@ -4,6 +4,7 @@ import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useR
 import { createPortal } from 'react-dom'
 import { translations } from './translations'
 import { loadData, saveData, loadAllFromServer, loadFromServer } from './utils/dataStorage'
+import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData } from './utils/syncRevision'
 import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
 import { loadManuaisFamiliasGruposFromIdb, saveManuaisFamiliasGruposToIdb, getKv } from './utils/manuaisIndexedDb'
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
@@ -1116,6 +1117,8 @@ export default function Dashboard() {
   const [libraryEntryTarget, setLibraryEntryTarget] = useState('')
   const [expandedEquipamentos, setExpandedEquipamentos] = useState<Set<string>>(new Set())
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  /** Servidor tem revisão mais recente que a última aceite neste aparelho — mostrar barra «Atualizar do servidor». */
+  const [syncPendingRemote, setSyncPendingRemote] = useState<{ revision: number } | null>(null)
   const [showDashboardView, setShowDashboardView] = useState(true) // Dashboard central por padrão
   const [showTranslatorModal, setShowTranslatorModal] = useState(false)
   
@@ -3379,6 +3382,14 @@ export default function Dashboard() {
     window.location.reload()
   }, [editingProtocoloServicoId, protocoloServicoForm, safeT])
 
+  const aceitarSincronizacaoServidor = useCallback(() => {
+    if (typeof window === 'undefined') return
+    if (syncPendingRemote?.revision != null) {
+      setLastAcceptedRevision(syncPendingRemote.revision)
+    }
+    window.location.reload()
+  }, [syncPendingRemote])
+
   // Nota: não usar preventDefault global em touchmove (anti pull-to-refresh): em layouts com overflow
   // interno + flex, isso pode bloquear toda a rolagem no telefone. overscroll-behavior em html/body já ajuda.
 
@@ -3643,8 +3654,16 @@ export default function Dashboard() {
     
     const loadAllData = async () => {
       try {
+        const lastAccepted = getLastAcceptedRevision()
+        let serverRevision = lastAccepted
+        const syncSt = await fetchSyncStatus()
+        if (syncSt) serverRevision = syncSt.revision
+
         // Primeiro, tentar carregar tudo do servidor
         const serverData = await loadAllFromServer() || {}
+
+        /** Não misturar dados do servidor com os deste browser até o utilizador aceitar (evita sobrescrever outro equipamento). */
+        const deferServerMerge = serverRevision > lastAccepted && hasMeaningfulLocalData()
         const serverKeysWithData = Object.keys(serverData).filter(key => {
           const value = serverData[key]
           if (Array.isArray(value)) return value.length > 0
@@ -3668,7 +3687,7 @@ export default function Dashboard() {
           }
         }
         // Manuais: fundir servidor + local para não perder PDFs/anexos quando o servidor ainda não sincronizou
-        if (key === 'nonato-manuais-familias-grupos' && typeof window !== 'undefined') {
+        if (!deferServerMerge && key === 'nonato-manuais-familias-grupos' && typeof window !== 'undefined') {
           const serverValue = serverData[key]
           const localData = localStorage.getItem(key)
           if (serverValue != null && typeof serverValue === 'object' && localData !== null && localData !== '') {
@@ -3692,8 +3711,8 @@ export default function Dashboard() {
             }
           }
         }
-        // Verificar dados do servidor primeiro
-        if (serverData[key] !== undefined && serverData[key] !== null) {
+        // Verificar dados do servidor primeiro (ignorar servidor se há divergência não resolvida)
+        if (!deferServerMerge && serverData[key] !== undefined && serverData[key] !== null) {
           const serverValue = serverData[key]
           
           // Se for string vazia, array vazio ou objeto vazio, usar localStorage como fallback
@@ -3747,8 +3766,8 @@ export default function Dashboard() {
                   // Verificar se realmente tem dados (não é array/objeto vazio)
                   const hasData = Array.isArray(parsed) ? parsed.length > 0 : 
                                   (typeof parsed === 'object' ? Object.keys(parsed).length > 0 : parsed !== '')
-                  if (hasData) {
-                    // Salvar no servidor em background (não bloquear)
+                  if (hasData && !deferServerMerge) {
+                    // Salvar no servidor em background (não bloquear) — não enviar se há conflito multi-dispositivo por resolver
                     saveData(key, parsed, false).catch(() => {
                       // Ignorar erros de salvamento no servidor
                     })
@@ -5829,6 +5848,10 @@ export default function Dashboard() {
       }
     } // Fim do if (savedButtons)
     } // Fim do if (!buttonsInitialized.current)
+      if (!deferServerMerge) {
+        setLastAcceptedRevision(serverRevision)
+      }
+      setSyncPendingRemote(deferServerMerge ? { revision: serverRevision } : null)
       } catch (error) {
         console.error('Erro ao carregar dados iniciais:', error)
       }
@@ -45947,6 +45970,74 @@ A1;Peça exemplo;10'
           <a href="/api/demo/exit" style={{ color: '#fff', textDecoration: 'underline', fontWeight: '600' }}>{safeT?.exitDemoLink || 'Sair da demonstração (usar app normal)'}</a>
         </div>
       )}
+      {syncPendingRemote && (
+        <div
+          className="sync-pending-remote-banner"
+          style={{
+            position: 'fixed',
+            top: isDemoMode ? 44 : 0,
+            left: 0,
+            right: 0,
+            zIndex: 10002,
+            padding: '10px 14px',
+            paddingRight: 'max(14px, env(safe-area-inset-right))',
+            paddingLeft: 'max(14px, env(safe-area-inset-left))',
+            background: 'linear-gradient(90deg, rgba(255, 170, 0, 0.25) 0%, rgba(0, 40, 80, 0.92) 100%)',
+            borderBottom: '2px solid rgba(255, 170, 0, 0.65)',
+            color: '#fff',
+            fontSize: '13px',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px 14px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.35)'
+          }}
+          role="status"
+        >
+          <span style={{ textAlign: 'center', lineHeight: 1.35, maxWidth: 'min(100%, 560px)' }}>
+            {(safeT as any)?.syncServerNewData ||
+              'Outro equipamento guardou dados no servidor. Os números podem diferir até atualizar. Toque em «Carregar do servidor» para alinhar este aparelho (substitui os dados locais pelos do servidor).'}
+            {syncPendingRemote.revision > 0 ? (
+              <span style={{ opacity: 0.85, marginLeft: '8px' }}>
+                ({(safeT as any)?.syncRevisionLabel || 'revisão'} {syncPendingRemote.revision})
+              </span>
+            ) : null}
+          </span>
+          <button
+            type="button"
+            onClick={aceitarSincronizacaoServidor}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '8px',
+              border: '1px solid rgba(0, 200, 255, 0.85)',
+              background: 'rgba(0, 120, 200, 0.45)',
+              color: '#fff',
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontSize: '12px',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {(safeT as any)?.syncLoadFromServer || 'Carregar do servidor'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setSyncPendingRemote(null)}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.35)',
+              background: 'transparent',
+              color: '#ddd',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            {(safeT as any)?.syncLater || 'Mais tarde'}
+          </button>
+        </div>
+      )}
       {isCompactLayout && mobileMenuOpen && (
         <div
           className="mobile-sidebar-backdrop"
@@ -45960,7 +46051,9 @@ A1;Peça exemplo;10'
       {isCompactLayout && (
         <header
           className="mobile-app-header"
-          style={{ top: isDemoMode ? 44 : 0 }}
+          style={{
+            top: (isDemoMode ? 44 : 0) + (syncPendingRemote ? 56 : 0)
+          }}
         >
           <button
             type="button"
