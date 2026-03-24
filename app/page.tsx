@@ -3698,10 +3698,31 @@ export default function Dashboard() {
           if (typeof value === 'object' && value !== null) return Object.keys(value).length > 0
           return value !== null && value !== '' && value !== undefined
         })
+
+        /** Com divergência multi-dispositivo, só se bloqueia substituição onde **esta chave** já tem dados locais não vazios. Chaves vazias no tablet/PC recebem o servidor. */
+        const localStorageKeyHasNonEmptyData = (lsKey: string, parseJsonFlag: boolean): boolean => {
+          if (typeof window === 'undefined') return false
+          const raw = localStorage.getItem(lsKey)
+          if (raw === null || raw === '') return false
+          if (!parseJsonFlag) return raw.trim().length > 0
+          try {
+            const parsed = JSON.parse(raw) as unknown
+            if (parsed === null || parsed === undefined) return false
+            if (Array.isArray(parsed)) return parsed.length > 0
+            if (typeof parsed === 'object') return Object.keys(parsed as object).length > 0
+            if (typeof parsed === 'string') return parsed.length > 0
+            if (typeof parsed === 'number' || typeof parsed === 'boolean') return true
+            return false
+          } catch {
+            return raw.length > 3
+          }
+        }
       
       // Função auxiliar para obter dados (servidor primeiro, depois localStorage)
       // IMPORTANTE: Preservar dados do localStorage se servidor retornar vazio/null
       const getData = (key: string, parseJson = true): any => {
+        const shouldPreferServerForKey =
+          !deferServerMerge || !localStorageKeyHasNonEmptyData(key, parseJson)
         // Para sidebar-buttons: preferir localStorage quando tiver dados válidos (preserva organização do usuário)
         if (key === 'nonato-sidebar-buttons' && typeof window !== 'undefined') {
           const localData = localStorage.getItem(key)
@@ -3715,7 +3736,7 @@ export default function Dashboard() {
           }
         }
         // Manuais: fundir servidor + local para não perder PDFs/anexos quando o servidor ainda não sincronizou
-        if (!deferServerMerge && key === 'nonato-manuais-familias-grupos' && typeof window !== 'undefined') {
+        if (key === 'nonato-manuais-familias-grupos' && typeof window !== 'undefined') {
           const serverValue = serverData[key]
           const localData = localStorage.getItem(key)
           if (serverValue != null && typeof serverValue === 'object' && localData !== null && localData !== '') {
@@ -3739,8 +3760,8 @@ export default function Dashboard() {
             }
           }
         }
-        // Verificar dados do servidor primeiro (ignorar servidor se há divergência não resolvida)
-        if (!deferServerMerge && serverData[key] !== undefined && serverData[key] !== null) {
+        // Verificar dados do servidor primeiro (com divergência multi-dispositivo: só ignorar servidor nesta chave se o local já tem conteúdo)
+        if (shouldPreferServerForKey && serverData[key] !== undefined && serverData[key] !== null) {
           const serverValue = serverData[key]
           
           // Se for string vazia, array vazio ou objeto vazio, usar localStorage como fallback
