@@ -31,13 +31,20 @@ export async function POST(request: NextRequest) {
     // Salvar como texto puro (para vídeos/imagens em base64)
     fs.writeFileSync(filePath, value, 'utf-8')
 
-    const meta = bumpSyncMeta(dataDir)
+    let revision: number | undefined
+    let updatedAt: string | undefined
+    try {
+      const meta = bumpSyncMeta(dataDir)
+      revision = meta.revision
+      updatedAt = meta.updatedAt
+    } catch (e) {
+      console.error('bumpSyncMeta (save-text):', e)
+    }
 
     return NextResponse.json({ 
       success: true, 
       message: `Dados salvos com sucesso: ${key}`,
-      revision: meta.revision,
-      updatedAt: meta.updatedAt
+      ...(revision !== undefined ? { revision, updatedAt } : {})
     })
   } catch (error: any) {
     console.error('Erro ao salvar dados:', error)

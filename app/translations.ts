@@ -277,6 +277,11 @@ export const translations = {
       'Substituir os dados no SERVIDOR pelos deste aparelho? Confirme se esta cópia é a que quer manter. Os outros equipamentos deverão depois carregar do servidor.',
     syncPushOk: 'Dados enviados ao servidor. Nos outros aparelhos, abra a app e use «Carregar do servidor» (ou o aviso laranja) para ficarem iguais.',
     syncPushFail: 'Não foi possível enviar. Verifique a ligação ao mesmo site/servidor em todos os aparelhos.',
+    syncAdminJump: 'Sincronização entre aparelhos',
+    syncAdminSectionTitle: 'Sincronização entre aparelhos',
+    syncAdminSectionHint:
+      'Use o mesmo endereço do site em todos os equipamentos. «Carregar do servidor» traz a cópia do servidor para aqui. «Enviar deste aparelho» envia o que está neste aparelho para o servidor (para o portátil ou outro tablet carregarem depois).',
+    syncAdminPendingNote: 'O servidor tem uma versão mais recente do que a que este aparelho aceitou.',
     protocolosServicoModeloPDF: 'Modelo do PDF',
     protocolosServicoPdfModelo1: '1 — Clássico (verde)',
     protocolosServicoPdfModelo2: '2 — Minimalista (azul)',

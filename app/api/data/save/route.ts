@@ -34,13 +34,20 @@ export async function POST(request: NextRequest) {
     // Salvar o arquivo
     fs.writeFileSync(filePath, JSON.stringify(value, null, 2), 'utf-8')
 
-    const meta = bumpSyncMeta(dataDir)
+    let revision: number | undefined
+    let updatedAt: string | undefined
+    try {
+      const meta = bumpSyncMeta(dataDir)
+      revision = meta.revision
+      updatedAt = meta.updatedAt
+    } catch (e) {
+      console.error('bumpSyncMeta (save):', e)
+    }
 
     return NextResponse.json({ 
       success: true, 
       message: `Dados salvos com sucesso: ${key}`,
-      revision: meta.revision,
-      updatedAt: meta.updatedAt
+      ...(revision !== undefined ? { revision, updatedAt } : {})
     })
   } catch (error: any) {
     console.error('Erro ao salvar dados:', error)

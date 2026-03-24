@@ -40,15 +40,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const meta = bumpSyncMeta(dataDir)
+    let revision: number | undefined
+    let updatedAt: string | undefined
+    try {
+      const meta = bumpSyncMeta(dataDir)
+      revision = meta.revision
+      updatedAt = meta.updatedAt
+    } catch (e) {
+      console.error('bumpSyncMeta (save-all):', e)
+    }
 
     return NextResponse.json({ 
       success: true, 
       saved,
       errors: errors.length > 0 ? errors : undefined,
       message: `Salvos ${saved.length} arquivo(s)`,
-      revision: meta.revision,
-      updatedAt: meta.updatedAt
+      ...(revision !== undefined ? { revision, updatedAt } : {})
     })
   } catch (error: any) {
     console.error('Erro ao salvar todos os dados:', error)

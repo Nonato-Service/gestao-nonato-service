@@ -101,8 +101,10 @@ function setItemWithQuotaRecovery(key: string, serialized: string): void {
   localStorage.setItem(key, serialized)
 }
 
-// Cache para evitar requisições duplicadas simultâneas
-const pendingRequests = new Map<string, Promise<boolean>>()
+/** Pedido em curso por chave — várias chamadas seguidas partilham a mesma Promise mas o valor enviado é sempre o último (coalesce). */
+const pendingSaveByKey = new Map<string, Promise<boolean>>()
+/** Enquanto um POST está em curso para `key`, guarda o último valor pedido para enviar a seguir (last-write-wins). */
+const coalesceNextValueByKey = new Map<string, any>()
 
 // Flag para detectar se o servidor está offline
 let serverOffline = false
@@ -221,8 +223,7 @@ async function _doSaveToServer(key: string, value: any): Promise<boolean> {
     if (response.ok) {
       serverOffline = false
       try {
-        const cloned = response.clone()
-        const json = await cloned.json()
+        const json = await response.json()
         applyRevisionFromSaveResponse(json)
       } catch {
         /* resposta sem JSON */
@@ -238,45 +239,58 @@ async function _doSaveToServer(key: string, value: any): Promise<boolean> {
 // Salvar um item específico
 export async function saveToServer(key: string, value: any): Promise<boolean> {
   const requestKey = `save:${key}`
-  if (pendingRequests.has(requestKey)) return pendingRequests.get(requestKey)!
+  if (pendingSaveByKey.has(requestKey)) {
+    coalesceNextValueByKey.set(key, value)
+    return pendingSaveByKey.get(requestKey)!
+  }
 
   if (serverOffline) {
     const ok = await checkServerOnline()
     if (!ok) return false
   }
 
-  const requestPromise = (async () => {
-    if (!isOnline()) {
-      serverOffline = true
-      const queue = getSyncQueue()
-      queue.push({ key, value, timestamp: Date.now() })
-      setSyncQueue(queue)
-      setTimeout(() => pendingRequests.delete(requestKey), 500)
-      return false
-    }
+  const requestPromise = (async (): Promise<boolean> => {
+    let current: any = value
+    let lastOk = false
     try {
-      const ok = await _doSaveToServer(key, value)
-      if (ok) return true
-      serverOffline = true
-      const queue = getSyncQueue()
-      queue.push({ key, value, timestamp: Date.now() })
-      setSyncQueue(queue)
-      return false
-    } catch (error: any) {
-      const isNetworkError = error instanceof TypeError || error?.name === 'AbortError' ||
-        (error?.message && (error.message.includes('NetworkError') || error.message.includes('Failed to fetch') || error.message.includes('CONNECTION_REFUSED')))
-      if (isNetworkError) {
-        serverOffline = true
-        const queue = getSyncQueue()
-        queue.push({ key, value, timestamp: Date.now() })
-        setSyncQueue(queue)
+      while (true) {
+        if (!isOnline()) {
+          serverOffline = true
+          const queue = getSyncQueue()
+          queue.push({ key, value: current, timestamp: Date.now() })
+          setSyncQueue(queue)
+          return false
+        }
+        try {
+          lastOk = await _doSaveToServer(key, current)
+          if (!lastOk) {
+            serverOffline = true
+            const queue = getSyncQueue()
+            queue.push({ key, value: current, timestamp: Date.now() })
+            setSyncQueue(queue)
+          }
+        } catch (error: any) {
+          lastOk = false
+          const isNetworkError = error instanceof TypeError || error?.name === 'AbortError' ||
+            (error?.message && (error.message.includes('NetworkError') || error.message.includes('Failed to fetch') || error.message.includes('CONNECTION_REFUSED')))
+          if (isNetworkError) {
+            serverOffline = true
+            const queue = getSyncQueue()
+            queue.push({ key, value: current, timestamp: Date.now() })
+            setSyncQueue(queue)
+          }
+        }
+        const next = coalesceNextValueByKey.get(key)
+        coalesceNextValueByKey.delete(key)
+        if (next === undefined) break
+        current = next
       }
-      return false
+      return lastOk
     } finally {
-      setTimeout(() => pendingRequests.delete(requestKey), 1000)
+      pendingSaveByKey.delete(requestKey)
     }
   })()
-  pendingRequests.set(requestKey, requestPromise)
+  pendingSaveByKey.set(requestKey, requestPromise)
   return requestPromise
 }
 
@@ -539,8 +553,8 @@ export async function saveData(key: string, value: any, saveToLocalStorage = tru
     }
   }
 
-  // Salvar no servidor (para persistência)
-  await saveToServer(key, value)
+  // Servidor em segundo plano — o localStorage/IndexedDB já foi gravado; não bloquear a UI se a rede falhar
+  void saveToServer(key, value).catch(() => {})
 }
 
 // Função híbrida: carrega do servidor primeiro, depois do localStorage como fallback

@@ -18302,7 +18302,81 @@ const nextF = familias.filter(x => x !== f)
             {/* Atalho para Backup e segurança */}
             <p style={{ marginBottom: '20px', fontSize: '13px', opacity: 0.9 }}>
               <a href="#admin-backup-seguranca" style={{ color: '#00ff00', textDecoration: 'underline' }}>{safeT?.backupRestore || '▼ Ir para BACKUP E SEGURANÇA (backup do código e restauração)'}</a>
+              {' · '}
+              <a href="#admin-sync-multi" style={{ color: '#ffaa00', textDecoration: 'underline' }}>{(safeT as any)?.syncAdminJump || 'Sincronização entre aparelhos'}</a>
             </p>
+
+            {/* Sincronização multi-dispositivo — só neste ecrã, sem barra em cima da app */}
+            <div
+              id="admin-sync-multi"
+              style={{
+                marginBottom: '28px',
+                padding: '14px 16px',
+                backgroundColor: '#161616',
+                borderRadius: '10px',
+                border: '1px solid rgba(255, 170, 0, 0.4)',
+                maxWidth: '100%'
+              }}
+            >
+              <h3 style={{ margin: '0 0 8px', fontSize: '15px', color: '#ffaa00', fontWeight: 700 }}>
+                {(safeT as any)?.syncAdminSectionTitle || 'Sincronização entre aparelhos'}
+              </h3>
+              <p style={{ fontSize: '12px', color: '#999', margin: '0 0 12px', lineHeight: 1.45 }}>
+                {(safeT as any)?.syncAdminSectionHint ||
+                  'Use o mesmo endereço do site em todos os equipamentos. «Carregar do servidor» traz a cópia do servidor para este aparelho. «Enviar deste aparelho» envia a cópia local para o servidor (para os outros poderem carregar).'}
+              </p>
+              {syncPendingRemote ? (
+                <p style={{ fontSize: '12px', color: '#ddaa66', margin: '0 0 10px', padding: '8px 10px', background: 'rgba(255,170,0,0.08)', borderRadius: '6px', border: '1px solid rgba(255,170,0,0.25)' }}>
+                  {(safeT as any)?.syncAdminPendingNote || 'Há dados no servidor mais recentes do que os que este aparelho aceitou.'}{' '}
+                  <span style={{ opacity: 0.9 }}>
+                    ({(safeT as any)?.syncRevisionLabel || 'revisão'} {syncPendingRemote.revision})
+                  </span>
+                </p>
+              ) : null}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={aceitarSincronizacaoServidor}
+                  style={{ padding: '8px 12px', fontSize: '12px', fontWeight: 600 }}
+                >
+                  {(safeT as any)?.syncLoadFromServer || 'Carregar do servidor'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  disabled={syncPushLoading}
+                  onClick={enviarEsteAparelhoParaServidor}
+                  style={{
+                    padding: '8px 12px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    borderColor: 'rgba(0, 255, 120, 0.55)',
+                    color: '#c8ffd8',
+                    opacity: syncPushLoading ? 0.7 : 1
+                  }}
+                >
+                  {syncPushLoading ? '…' : ((safeT as any)?.syncPushThisDevice || 'Enviar deste aparelho ao servidor')}
+                </button>
+                {syncPendingRemote ? (
+                  <button
+                    type="button"
+                    onClick={() => setSyncPendingRemote(null)}
+                    style={{
+                      padding: '8px 12px',
+                      fontSize: '12px',
+                      borderRadius: '6px',
+                      border: '1px solid rgba(255,255,255,0.25)',
+                      background: 'transparent',
+                      color: '#aaa',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {(safeT as any)?.syncLater || 'Ignorar aviso'}
+                  </button>
+                ) : null}
+              </div>
+            </div>
 
             {/* SEÇÃO: CONTROLE DE ENVIO DO LINK PARA TESTE - Primeira secção para maior visibilidade */}
             <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', borderLeft: '4px solid #66b3ff' }}>
@@ -45998,93 +46072,6 @@ A1;Peça exemplo;10'
           <a href="/api/demo/exit" style={{ color: '#fff', textDecoration: 'underline', fontWeight: '600' }}>{safeT?.exitDemoLink || 'Sair da demonstração (usar app normal)'}</a>
         </div>
       )}
-      {syncPendingRemote && (
-        <div
-          className="sync-pending-remote-banner"
-          style={{
-            position: 'fixed',
-            top: isDemoMode ? 44 : 0,
-            left: 0,
-            right: 0,
-            zIndex: 10002,
-            padding: '10px 14px',
-            paddingRight: 'max(14px, env(safe-area-inset-right))',
-            paddingLeft: 'max(14px, env(safe-area-inset-left))',
-            background: 'linear-gradient(90deg, rgba(255, 170, 0, 0.25) 0%, rgba(0, 40, 80, 0.92) 100%)',
-            borderBottom: '2px solid rgba(255, 170, 0, 0.65)',
-            color: '#fff',
-            fontSize: '13px',
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '10px 14px',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.35)'
-          }}
-          role="status"
-        >
-          <span style={{ textAlign: 'center', lineHeight: 1.35, maxWidth: 'min(100%, 560px)' }}>
-            {(safeT as any)?.syncServerNewData ||
-              'Outro equipamento guardou dados no servidor. Os números podem diferir até atualizar. Toque em «Carregar do servidor» para alinhar este aparelho (substitui os dados locais pelos do servidor).'}
-            {syncPendingRemote.revision > 0 ? (
-              <span style={{ opacity: 0.85, marginLeft: '8px' }}>
-                ({(safeT as any)?.syncRevisionLabel || 'revisão'} {syncPendingRemote.revision})
-              </span>
-            ) : null}
-          </span>
-          <button
-            type="button"
-            onClick={aceitarSincronizacaoServidor}
-            style={{
-              padding: '8px 14px',
-              borderRadius: '8px',
-              border: '1px solid rgba(0, 200, 255, 0.85)',
-              background: 'rgba(0, 120, 200, 0.45)',
-              color: '#fff',
-              fontWeight: 700,
-              cursor: 'pointer',
-              fontSize: '12px',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            {(safeT as any)?.syncLoadFromServer || 'Carregar do servidor'}
-          </button>
-          <button
-            type="button"
-            disabled={syncPushLoading}
-            onClick={enviarEsteAparelhoParaServidor}
-            style={{
-              padding: '8px 14px',
-              borderRadius: '8px',
-              border: '1px solid rgba(0, 255, 120, 0.75)',
-              background: 'rgba(0, 80, 40, 0.55)',
-              color: '#b6ffc8',
-              fontWeight: 700,
-              cursor: syncPushLoading ? 'wait' : 'pointer',
-              fontSize: '12px',
-              whiteSpace: 'nowrap',
-              opacity: syncPushLoading ? 0.7 : 1
-            }}
-          >
-            {syncPushLoading ? '…' : ((safeT as any)?.syncPushThisDevice || 'Enviar deste aparelho ao servidor')}
-          </button>
-          <button
-            type="button"
-            onClick={() => setSyncPendingRemote(null)}
-            style={{
-              padding: '8px 12px',
-              borderRadius: '8px',
-              border: '1px solid rgba(255,255,255,0.35)',
-              background: 'transparent',
-              color: '#ddd',
-              cursor: 'pointer',
-              fontSize: '12px'
-            }}
-          >
-            {(safeT as any)?.syncLater || 'Mais tarde'}
-          </button>
-        </div>
-      )}
       {isCompactLayout && mobileMenuOpen && (
         <div
           className="mobile-sidebar-backdrop"
@@ -46099,7 +46086,7 @@ A1;Peça exemplo;10'
         <header
           className="mobile-app-header"
           style={{
-            top: (isDemoMode ? 44 : 0) + (syncPendingRemote ? 56 : 0)
+            top: isDemoMode ? 44 : 0
           }}
         >
           <button
@@ -46134,26 +46121,6 @@ A1;Peça exemplo;10'
               title={(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
             >
               ↻
-            </button>
-            <button
-              type="button"
-              disabled={syncPushLoading}
-              onClick={enviarEsteAparelhoParaServidor}
-              aria-label={(safeT as any)?.syncPushThisDeviceShort || 'Enviar dados ao servidor'}
-              title={(safeT as any)?.syncPushThisDeviceTitle || 'Envia todos os dados deste telefone/tablet para o servidor (para os outros aparelhos poderem carregar).'}
-              style={{
-                padding: '6px 8px',
-                fontSize: '11px',
-                fontWeight: 700,
-                borderRadius: '6px',
-                border: '1px solid rgba(0, 255, 120, 0.5)',
-                background: 'rgba(0, 60, 30, 0.5)',
-                color: '#9f9',
-                cursor: syncPushLoading ? 'wait' : 'pointer',
-                opacity: syncPushLoading ? 0.65 : 1
-              }}
-            >
-              {syncPushLoading ? '…' : '↑'}
             </button>
           </div>
         </header>
