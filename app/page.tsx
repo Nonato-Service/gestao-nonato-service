@@ -15021,7 +15021,10 @@ export default function Dashboard() {
     if (loginUser.isAdmin) return true
     const permKey = actionToPermission[action]
     if (!permKey) return true
-    return Boolean(loginUser.permissions?.[permKey])
+    const val = loginUser.permissions?.[permKey]
+    // Utilizadores/gravações antigas sem a chave: permitir relatórios (antes o sistema não bloqueava)
+    if (val === undefined && permKey === 'relatorioServico') return true
+    return Boolean(val)
   }, [loginUser])
 
   // Função para sair do sistema (fechar aplicação/aba)
