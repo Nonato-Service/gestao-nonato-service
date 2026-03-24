@@ -41222,30 +41222,15 @@ A1;Peça exemplo;10'
 
         return (
           <>
-          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
-            {/* Cabeçalho Profissional */}
-            <div style={{
-              marginBottom: '40px',
-              padding: '30px',
-              background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-              borderRadius: '20px',
-              border: '2px solid rgba(0, 255, 0, 0.3)',
-              boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="biblioteca-relatorios-root">
+            {/* Cabeçalho Profissional — responsivo (globals.css .biblioteca-relatorios-hero*) */}
+            <div className="biblioteca-relatorios-hero">
+              <div className="biblioteca-relatorios-hero-top">
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
                 </div>
-                <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 style={{
-                    margin: 0,
-                    fontSize: '32px',
-                    fontWeight: 'bold',
-                    color: '#00ff00',
-                    letterSpacing: '3px',
-                    textShadow: '0 0 20px rgba(0, 255, 0, 0.3)',
-                    marginBottom: '8px'
-                  }}>
+                <div className="biblioteca-relatorios-hero-heading">
+                  <h1 className="biblioteca-relatorios-hero-title">
                     {safeT?.bibliotecaRelatoriosTitle || 'BIBLIOTECA DE RELATÓRIOS'}
                   </h1>
                   {totalRelatorios > 0 ? (
@@ -41270,8 +41255,9 @@ A1;Peça exemplo;10'
                     </p>
                   )}
                 </div>
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <div className="biblioteca-relatorios-hero-actions">
                   <button 
+                    type="button"
                     onClick={() => closeTab(activeTabId || '')}
                     style={{ 
                       padding: '6px 8px', 
@@ -41301,6 +41287,7 @@ A1;Peça exemplo;10'
                     ↶
                   </button>
                   <button 
+                    type="button"
                     onClick={voltarPaginaInicial}
                     style={{ 
                       padding: '6px 8px', 
@@ -41350,7 +41337,7 @@ A1;Peça exemplo;10'
                 </p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '15px' }}>
+              <div className="biblioteca-relatorios-cards-grid">
                 {relatoriosPorCliente.map(({ cliente, equipamentos, despesas: despesasCliente }) => {
                   const totalRelatoriosCliente = equipamentos.reduce((sum, eq) => sum + eq.relatorios.length, 0)
                   return (
@@ -41361,7 +41348,9 @@ A1;Peça exemplo;10'
                         padding: '15px', 
                         borderRadius: '8px', 
                         border: '1px solid rgba(0, 255, 0, 0.3)',
-                        boxShadow: '0 2px 8px rgba(0, 255, 0, 0.1)'
+                        boxShadow: '0 2px 8px rgba(0, 255, 0, 0.1)',
+                        minWidth: 0,
+                        maxWidth: '100%'
                       }}
                     >
                       {/* Cabeçalho do Cliente + Excluir pasta */}
@@ -41678,11 +41667,12 @@ A1;Peça exemplo;10'
             const { relatorio: relV, itens: itensV } = modalVisualizarDespesasBiblioteca
             const totV = itensV.reduce((s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)), 0)
             return (
-              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.82)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }} onClick={() => setModalVisualizarDespesasBiblioteca(null)}>
-                <div style={{ background: '#1a1a1a', borderRadius: '16px', border: '2px solid #ffaa00', maxWidth: '920px', width: '100%', maxHeight: '88vh', overflow: 'auto', padding: '22px' }} onClick={e => e.stopPropagation()}>
-                  <h3 style={{ color: '#ffaa00', margin: '0 0 8px', fontSize: '18px' }}>{(safeT as any)?.fechamentoRelatorio || 'Fechamento'} {relV.numero}</h3>
-                  <p style={{ color: '#aaa', fontSize: '13px', margin: '0 0 16px' }}>{relV.cliente} · {relV.maquinaModelo} · {relV.data}</p>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: '#ddd' }}>
+              <div className="biblioteca-despesas-modal-overlay" onClick={() => setModalVisualizarDespesasBiblioteca(null)}>
+                <div className="biblioteca-despesas-modal-inner" onClick={e => e.stopPropagation()}>
+                  <h3 style={{ color: '#ffaa00', margin: '0 0 8px', fontSize: 'clamp(16px, 4vw, 18px)', wordBreak: 'break-word' }}>{(safeT as any)?.fechamentoRelatorio || 'Fechamento'} {relV.numero}</h3>
+                  <p style={{ color: '#aaa', fontSize: '13px', margin: '0 0 16px', wordBreak: 'break-word' }}>{relV.cliente} · {relV.maquinaModelo} · {relV.data}</p>
+                  <div className="biblioteca-despesas-modal-table-wrap">
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: '#ddd', minWidth: '520px' }}>
                     <thead>
                       <tr style={{ borderBottom: '2px solid #ffaa00' }}>
                         <th style={{ textAlign: 'left', padding: '10px 8px', color: '#ffaa00' }}>{(safeT as any)?.codigoOuCod || 'COD'}</th>
@@ -41710,6 +41700,7 @@ A1;Peça exemplo;10'
                       })}
                     </tbody>
                   </table>
+                  </div>
                   <div style={{ marginTop: '16px', fontSize: '18px', fontWeight: 'bold', color: '#00ff00', textAlign: 'right' }}>{(safeT as any)?.somaTotal || 'SOMA TOTAL'}: €{totV.toFixed(2)}</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
                     <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca(null)} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #666', background: '#333', color: '#fff', cursor: 'pointer' }}>{safeT?.close || 'Fechar'}</button>

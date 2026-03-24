@@ -1863,7 +1863,8 @@ a:focus-visible {
 }
 
 /* Lista de cartões de relatórios — evita min-width fixo que corta metade do ecrã no telemóvel */
-.relatorio-servico-cards-grid {
+.relatorio-servico-cards-grid,
+.biblioteca-relatorios-cards-grid {
   display: grid;
   gap: 15px;
   width: 100%;
@@ -1872,9 +1873,126 @@ a:focus-visible {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
 }
 @media (max-width: 480px) {
-  .relatorio-servico-cards-grid {
+  .relatorio-servico-cards-grid,
+  .biblioteca-relatorios-cards-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Biblioteca de Relatórios — raiz e cabeçalho empilham no telemóvel */
+.biblioteca-relatorios-root {
+  padding: clamp(8px, 2.5vw, 30px);
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.biblioteca-relatorios-hero {
+  margin-bottom: clamp(16px, 4vw, 40px);
+  padding: clamp(12px, 3vw, 30px);
+  background: linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%);
+  border-radius: clamp(10px, 2.5vw, 20px);
+  border: 2px solid rgba(0, 255, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 255, 0, 0.1);
+}
+
+.biblioteca-relatorios-hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.biblioteca-relatorios-hero-heading {
+  text-align: center;
+  flex: 1;
+  min-width: min(100%, 240px);
+}
+
+.biblioteca-relatorios-hero-title {
+  margin: 0 0 8px 0 !important;
+  font-size: clamp(1rem, 4.5vw, 2rem) !important;
+  font-weight: bold !important;
+  color: #00ff00 !important;
+  letter-spacing: clamp(0.05em, 0.5vw, 3px) !important;
+  text-shadow: 0 0 20px rgba(0, 255, 0, 0.3) !important;
+  line-height: 1.2 !important;
+  word-break: break-word;
+}
+
+.biblioteca-relatorios-hero-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .biblioteca-relatorios-hero-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .biblioteca-relatorios-hero-heading {
+    order: -1;
+    min-width: 100%;
+  }
+  .biblioteca-relatorios-hero-actions {
+    flex-direction: row;
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+/* Modal visualizar despesas (Biblioteca): scroll e tabela em faixa no telemóvel */
+.biblioteca-despesas-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  z-index: 99999;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: max(10px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px))
+    max(14px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+}
+
+@media (min-width: 769px) {
+  .biblioteca-despesas-modal-overlay {
+    align-items: center;
+  }
+}
+
+.biblioteca-despesas-modal-inner {
+  background: #1a1a1a;
+  border-radius: 16px;
+  border: 2px solid #ffaa00;
+  max-width: 920px;
+  width: 100%;
+  max-height: none;
+  min-width: 0;
+  overflow: visible;
+  padding: clamp(14px, 3vw, 22px);
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .biblioteca-despesas-modal-inner {
+    max-width: calc(100vw - 24px);
+    margin-bottom: 16px;
+  }
+}
+
+.biblioteca-despesas-modal-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 0 8px;
 }
 
 /* Resumo numérico (6 caixas) — empilha no telemóvel */
