@@ -3,7 +3,14 @@
 import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { translations } from './translations'
-import { loadData, saveData, loadAllFromServer, loadFromServer, pushAllLocalStorageToServer } from './utils/dataStorage'
+import {
+  loadData,
+  saveData,
+  loadAllFromServer,
+  loadFromServer,
+  pushAllLocalStorageToServer,
+  setBlockImplicitServerPushDuringBootstrap,
+} from './utils/dataStorage'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData } from './utils/syncRevision'
 import { collectLocalNonatoSnapshot, summarizeDataDiff } from './utils/syncDiff'
 import { assessPullServerRisk } from './utils/syncRisk'
@@ -22,6 +29,9 @@ import { HelpModalBody } from './components/HelpModalBody'
 /** Manuais: debounce/alerta — não usar useRef aqui: ManuaisInformacoesTabContent é chamado como função (return ManuaisInformacoesTabContent()), não como componente. */
 let manuaisSaveDebounceTimer: ReturnType<typeof setTimeout> | null = null
 let manuaisSaveAlertShownOnce = false
+
+/** Persistido até a carga terminar: se a flag for limpa cedo demais, o 2.º arranque (Strict Mode) deixa de fazer o wipe. */
+const NONATO_PENDING_FULL_SERVER_REPLACE_LS = 'nonato-pending-full-server-replace'
 
 /** Restaura manuais no localStorage e no IndexedDB a partir de um backup JSON (string JSON ou objeto). */
 async function restoreManuaisFamiliasGruposFromBackupPayload(raw: unknown): Promise<void> {
@@ -3475,6 +3485,7 @@ export default function Dashboard() {
       /** Próximo arranque: apagar cópia local misturada e repovoar só a partir do servidor (3 aparelhos iguais). */
       try {
         sessionStorage.setItem('nonato-sync-full-server-apply', '1')
+        localStorage.setItem(NONATO_PENDING_FULL_SERVER_REPLACE_LS, '1')
       } catch {
         /* ignorar */
       }
@@ -3783,13 +3794,21 @@ export default function Dashboard() {
   useEffect(() => {
     // Garantir que só executa no cliente
     if (typeof window === 'undefined') return
-    
+
     const loadAllData = async () => {
       setAppInitialLoading(true)
+      let preferServerOnlyAfterFullPullWipe = false
       if (typeof window !== 'undefined') {
         try {
-          if (sessionStorage.getItem('nonato-sync-full-server-apply')) {
-            sessionStorage.removeItem('nonato-sync-full-server-apply')
+          const sessionWantsFullPull = sessionStorage.getItem('nonato-sync-full-server-apply')
+          const lsWantsFullPull = localStorage.getItem(NONATO_PENDING_FULL_SERVER_REPLACE_LS)
+          if (sessionWantsFullPull || lsWantsFullPull) {
+            preferServerOnlyAfterFullPullWipe = true
+            try {
+              sessionStorage.removeItem('nonato-sync-full-server-apply')
+            } catch {
+              /* ignorar */
+            }
             await deleteAllNonatoKvFromIdb()
             const keepLocalOnFullPull = new Set([
               'nonato-sync-last-accepted-revision',
@@ -3822,6 +3841,7 @@ export default function Dashboard() {
       }
       const localSnapshotBeforeMerge = collectLocalNonatoSnapshot()
       try {
+        setBlockImplicitServerPushDuringBootstrap(true)
         const lastAccepted = getLastAcceptedRevision()
         let serverRevision = lastAccepted
         const syncSt = await fetchSyncStatus()
@@ -3830,9 +3850,10 @@ export default function Dashboard() {
         // Primeiro, tentar carregar tudo do servidor
         const serverData = await loadAllFromServer() || {}
 
-        /** Só bloquear fusão se o servidor respondeu com revisão e ela é maior que a última aceite neste aparelho. */
-        const deferServerMerge =
-          syncSt !== null && serverRevision > lastAccepted && hasMeaningfulLocalData()
+        /** Após wipe total, não bloquear por dados locais residuais; usar só servidor para sidebar/manuais nesta carga. */
+        const deferServerMerge = preferServerOnlyAfterFullPullWipe
+          ? false
+          : syncSt !== null && serverRevision > lastAccepted && hasMeaningfulLocalData()
         const serverKeysWithData = Object.keys(serverData).filter(key => {
           const value = serverData[key]
           if (Array.isArray(value)) return value.length > 0
@@ -3865,7 +3886,11 @@ export default function Dashboard() {
         const shouldPreferServerForKey =
           !deferServerMerge || !localStorageKeyHasNonEmptyData(key, parseJson)
         // Para sidebar-buttons: preferir localStorage quando tiver dados válidos (preserva organização do usuário)
-        if (key === 'nonato-sidebar-buttons' && typeof window !== 'undefined') {
+        if (
+          key === 'nonato-sidebar-buttons' &&
+          !preferServerOnlyAfterFullPullWipe &&
+          typeof window !== 'undefined'
+        ) {
           const localData = localStorage.getItem(key)
           if (localData !== null && localData !== '') {
             try {
@@ -3877,7 +3902,11 @@ export default function Dashboard() {
           }
         }
         // Manuais: fundir servidor + local para não perder PDFs/anexos quando o servidor ainda não sincronizou
-        if (key === 'nonato-manuais-familias-grupos' && typeof window !== 'undefined') {
+        if (
+          key === 'nonato-manuais-familias-grupos' &&
+          !preferServerOnlyAfterFullPullWipe &&
+          typeof window !== 'undefined'
+        ) {
           const serverValue = serverData[key]
           const localData = localStorage.getItem(key)
           if (serverValue != null && typeof serverValue === 'object' && localData !== null && localData !== '') {
@@ -6066,6 +6095,14 @@ export default function Dashboard() {
       } catch (error) {
         console.error('Erro ao carregar dados iniciais:', error)
       } finally {
+        setBlockImplicitServerPushDuringBootstrap(false)
+        if (preferServerOnlyAfterFullPullWipe) {
+          try {
+            localStorage.removeItem(NONATO_PENDING_FULL_SERVER_REPLACE_LS)
+          } catch {
+            /* ignorar */
+          }
+        }
         dataBootstrapCompleteRef.current = true
         setAppInitialLoading(false)
       }

@@ -6,6 +6,17 @@ import { saveManuaisFamiliasGruposToIdb, loadManuaisFamiliasGruposFromIdb, saveK
 
 const API_BASE = '/api/data'
 const SYNC_QUEUE_KEY = 'nonato-sync-queue'
+
+/** Durante a carga inicial da página: não enviar migrações «só servidor» (saveToLocalStorage=false) nem pushes implícitos em loadData — evita revisões e payloads diferentes por aparelho. */
+let blockImplicitServerPushDuringBootstrap = false
+
+export function setBlockImplicitServerPushDuringBootstrap(block: boolean): void {
+  blockImplicitServerPushDuringBootstrap = block
+}
+
+function shouldDeferImplicitServerPush(saveToLocalStorage: boolean): boolean {
+  return blockImplicitServerPushDuringBootstrap && saveToLocalStorage === false
+}
 /** Backups automáticos em localStorage — podem ser reduzidos se a quota estourar ao gravar dados críticos */
 const AUTO_BACKUP_STORAGE_KEY = 'nonato-auto-backups'
 
@@ -529,7 +540,9 @@ export async function saveData(key: string, value: any, saveToLocalStorage = tru
         }
       }
     }
-    void saveToServer(key, value).catch(() => {})
+    if (!shouldDeferImplicitServerPush(saveToLocalStorage)) {
+      void saveToServer(key, value).catch(() => {})
+    }
     if (typeof window !== 'undefined') {
       try {
         window.dispatchEvent(new CustomEvent('nonato-data-local-changed', { detail: { key } }))
@@ -561,7 +574,9 @@ export async function saveData(key: string, value: any, saveToLocalStorage = tru
   }
 
   // Servidor em segundo plano — o localStorage/IndexedDB já foi gravado; não bloquear a UI se a rede falhar
-  void saveToServer(key, value).catch(() => {})
+  if (!shouldDeferImplicitServerPush(saveToLocalStorage)) {
+    void saveToServer(key, value).catch(() => {})
+  }
 
   if (typeof window !== 'undefined' && saveToLocalStorage) {
     try {
@@ -610,7 +625,9 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
               }
             }
             saveManuaisFamiliasGruposToIdb(merged).catch(() => {})
-            saveToServer(key, merged).catch(() => {})
+            if (!blockImplicitServerPushDuringBootstrap) {
+              saveToServer(key, merged).catch(() => {})
+            }
             return merged
           } catch {
             /* fallback abaixo */
@@ -618,7 +635,9 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
         } else if (idbLocal && typeof idbLocal === 'object') {
           const merged = mergeManuaisFamiliasGrupos(serverData, idbLocal)
           saveManuaisFamiliasGruposToIdb(merged).catch(() => {})
-          saveToServer(key, merged).catch(() => {})
+          if (!blockImplicitServerPushDuringBootstrap) {
+            saveToServer(key, merged).catch(() => {})
+          }
           return merged
         }
       }
@@ -650,7 +669,7 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
                 const idb = await loadManuaisFamiliasGruposFromIdb()
                 const merged = mergeManuaisFamiliasGrupos(parsed, idb || {})
                 saveManuaisFamiliasGruposToIdb(merged).catch(() => {})
-                if (!serverOffline) {
+                if (!serverOffline && !blockImplicitServerPushDuringBootstrap) {
                   saveToServer(key, merged).catch(() => {})
                 }
                 return merged
@@ -660,7 +679,7 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
             }
             // Se encontrou no localStorage e servidor está online, também salvar no servidor (migração)
             // Mas não bloquear se o servidor estiver offline
-            if (!serverOffline) {
+            if (!serverOffline && !blockImplicitServerPushDuringBootstrap) {
               saveToServer(key, parsed).catch(() => {
                 // Ignorar erros de salvamento no servidor
               })
@@ -672,7 +691,7 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
           }
         } else {
           // Se encontrou no localStorage e servidor está online, também salvar no servidor (migração)
-          if (!serverOffline) {
+          if (!serverOffline && !blockImplicitServerPushDuringBootstrap) {
             saveToServer(key, localData).catch(() => {
               // Ignorar erros de salvamento no servidor
             })
