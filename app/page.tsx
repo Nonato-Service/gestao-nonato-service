@@ -1128,8 +1128,12 @@ export default function Dashboard() {
   const [syncDecisionModalOpen, setSyncDecisionModalOpen] = useState(false)
   const [mobileFullPushNudge, setMobileFullPushNudge] = useState(false)
   const mobileFullPushNudgeShownRef = useRef(false)
+  /** «Mais tarde» ou fundo: não reabrir o modal da mesma revisão até o utilizador pedir no Admin. */
+  const syncModalDismissedRevisionRef = useRef<number | null>(null)
   const [syncPushLoading, setSyncPushLoading] = useState(false)
   const [syncPullChecking, setSyncPullChecking] = useState(false)
+  /** Primeira carga: pedidos ao servidor + fusão de dados (evita parecer que «não termina»). */
+  const [appInitialLoading, setAppInitialLoading] = useState(true)
   const [showDashboardView, setShowDashboardView] = useState(true) // Dashboard central por padrão
   const [showTranslatorModal, setShowTranslatorModal] = useState(false)
   
@@ -3382,7 +3386,16 @@ export default function Dashboard() {
   const dataBootstrapCompleteRef = useRef(false)
 
   useEffect(() => {
-    if (syncPendingRemote) setSyncDecisionModalOpen(true)
+    if (!syncPendingRemote) {
+      syncModalDismissedRevisionRef.current = null
+      setSyncDecisionModalOpen(false)
+      return
+    }
+    if (syncModalDismissedRevisionRef.current === syncPendingRemote.revision) {
+      setSyncDecisionModalOpen(false)
+    } else {
+      setSyncDecisionModalOpen(true)
+    }
   }, [syncPendingRemote])
 
   useEffect(() => {
@@ -3412,6 +3425,7 @@ export default function Dashboard() {
           (safeT as any)?.syncPullServerUnreadable ||
             'Não foi possível ler o servidor. Não é seguro atualizar agora.'
         )
+        setSyncPullChecking(false)
         return
       }
       const { severity, lines } = assessPullServerRisk(serverNow || {}, localNow)
@@ -3420,13 +3434,17 @@ export default function Dashboard() {
           (safeT as any)?.syncPullRiskSevereIntro ||
           'ATENÇÃO: pode perder dados se continuar (cópia do servidor parece incompleta face a este aparelho).'
         const msg = lines.length ? `${intro}\n\n${lines.join('\n')}` : intro
-        if (!window.confirm(msg)) return
+        if (!window.confirm(msg)) {
+          setSyncPullChecking(false)
+          return
+        }
         if (
           !window.confirm(
             (safeT as any)?.syncPullRiskSevereSecond ||
               'Confirma substituir os dados deste aparelho pela cópia do servidor?'
           )
         ) {
+          setSyncPullChecking(false)
           return
         }
       } else if (severity === 'caution') {
@@ -3434,13 +3452,25 @@ export default function Dashboard() {
           (safeT as any)?.syncPullRiskCaution ||
           'A cópia do servidor parece mais pequena ou diferente. Continuar?'
         const msg = lines.length ? `${intro}\n\n${lines.join('\n')}` : intro
-        if (!window.confirm(msg)) return
+        if (!window.confirm(msg)) {
+          setSyncPullChecking(false)
+          return
+        }
       }
-      if (syncPendingRemote?.revision != null) {
-        setLastAcceptedRevision(syncPendingRemote.revision)
+      const stLatest = await fetchSyncStatus()
+      const rev = Math.max(syncPendingRemote?.revision ?? 0, stLatest?.revision ?? 0)
+      if (Number.isFinite(rev) && rev >= 0) {
+        setLastAcceptedRevision(rev)
       }
+      try {
+        localStorage.setItem('nonato-sync-last-accepted-revision', String(Math.floor(rev)))
+      } catch {
+        /* ignorar */
+      }
+      setSyncPullChecking(false)
+      await new Promise((r) => setTimeout(r, 80))
       window.location.reload()
-    } finally {
+    } catch {
       setSyncPullChecking(false)
     }
   }, [syncPendingRemote, safeT])
@@ -3465,6 +3495,16 @@ export default function Dashboard() {
       }
       window.alert((safeT as any)?.syncPushOk || 'Dados enviados ao servidor. Os outros aparelhos verão «Carregar do servidor» na próxima vez que abrirem a página.')
       setSyncPendingRemote(null)
+      const stAfterPush = await fetchSyncStatus()
+      if (stAfterPush) {
+        setLastAcceptedRevision(stAfterPush.revision)
+        try {
+          localStorage.setItem('nonato-sync-last-accepted-revision', String(Math.floor(stAfterPush.revision)))
+        } catch {
+          /* ignorar */
+        }
+      }
+      await new Promise((r) => setTimeout(r, 80))
       window.location.reload()
     } finally {
       setSyncPushLoading(false)
@@ -3735,6 +3775,7 @@ export default function Dashboard() {
     
     const loadAllData = async () => {
       const localSnapshotBeforeMerge = collectLocalNonatoSnapshot()
+      setAppInitialLoading(true)
       try {
         const lastAccepted = getLastAcceptedRevision()
         let serverRevision = lastAccepted
@@ -5952,14 +5993,27 @@ export default function Dashboard() {
       }
     } // Fim do if (savedButtons)
     } // Fim do if (!buttonsInitialized.current)
-      if (!deferServerMerge && syncSt !== null) {
-        setLastAcceptedRevision(serverRevision)
+      /**
+       * Cada POST /api/data/save incrementa a revisão no servidor. No arranque gravam-se muitas chaves
+       * e a revisão sobe várias vezes. Se gravarmos só a revisão «do início», o aviso de sync voltava.
+       * Alinhamos com a revisão atual do servidor no fim da carga quando não há conflito pendente.
+       */
+      const stFinal = await fetchSyncStatus()
+      if (!deferServerMerge && stFinal !== null) {
+        const cur = getLastAcceptedRevision()
+        setLastAcceptedRevision(Math.max(cur, stFinal.revision))
       }
+      const lastAccAfter = getLastAcceptedRevision()
+      const stForPending = stFinal ?? syncSt
+      const showSyncPending =
+        stForPending !== null &&
+        stForPending.revision > lastAccAfter &&
+        hasMeaningfulLocalData()
       setSyncPendingRemote(
-        deferServerMerge
+        showSyncPending
           ? {
-              revision: serverRevision,
-              updatedAt: syncSt?.updatedAt,
+              revision: stForPending.revision,
+              updatedAt: stForPending.updatedAt,
               summaryLines: summarizeDataDiff(serverData, localSnapshotBeforeMerge),
             }
           : null
@@ -5968,6 +6022,7 @@ export default function Dashboard() {
         console.error('Erro ao carregar dados iniciais:', error)
       } finally {
         dataBootstrapCompleteRef.current = true
+        setAppInitialLoading(false)
       }
     } // Fim do try-catch e da função loadAllData
 
@@ -18428,7 +18483,10 @@ const nextF = familias.filter(x => x !== f)
                   <button
                     type="button"
                     className="btn-primary"
-                    onClick={() => setSyncDecisionModalOpen(true)}
+                    onClick={() => {
+                      syncModalDismissedRevisionRef.current = null
+                      setSyncDecisionModalOpen(true)
+                    }}
                     style={{ padding: '8px 14px', fontSize: '12px', fontWeight: 600 }}
                   >
                     {(safeT as any)?.syncReopenModal || 'Abrir aviso de sincronização'}
@@ -45584,6 +45642,46 @@ A1;Peça exemplo;10'
     )
   }
 
+  const bootLoadingOverlay =
+    appInitialLoading ? (
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 100000002,
+          backgroundColor: 'rgba(0,0,0,0.58)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 16,
+          padding: 24,
+          boxSizing: 'border-box',
+        }}
+        aria-busy={true}
+        aria-live="polite"
+        role="status"
+      >
+        <div
+          className="ns-boot-spinner"
+          style={{
+            width: 44,
+            height: 44,
+            border: '3px solid rgba(0,255,122,0.22)',
+            borderTopColor: '#00ff88',
+            borderRadius: '50%',
+            flexShrink: 0,
+          }}
+        />
+        <p style={{ color: '#e8fff0', fontSize: 15, fontWeight: 700, textAlign: 'center', maxWidth: 320, margin: 0 }}>
+          {(safeT as any)?.syncInitialLoadTitle || 'A carregar dados do servidor…'}
+        </p>
+        <p style={{ color: '#9ab0a2', fontSize: 12, textAlign: 'center', maxWidth: 320, lineHeight: 1.45, margin: 0 }}>
+          {(safeT as any)?.syncInitialLoadHint || 'Aguarde até esta mensagem desaparecer.'}
+        </p>
+      </div>
+    ) : null
+
   // Tela inicial (dashboard): logo do dashboard, mensagem profissional e agressiva, métricas, CTA
   if (showSplashInicial) {
     const dashboardLogo = logoUrlDashboard || logoUrl
@@ -45862,6 +45960,7 @@ A1;Peça exemplo;10'
           </div>
         </div>
         </div>
+        {bootLoadingOverlay}
       </div>
     )
   }
@@ -46047,6 +46146,7 @@ A1;Peça exemplo;10'
             </button>
           </div>
         </div>
+        {bootLoadingOverlay}
       </div>
     )
   }
@@ -46098,6 +46198,7 @@ A1;Peça exemplo;10'
             </button>
           </div>
         </div>
+        {bootLoadingOverlay}
       </div>
     )
   }
@@ -46112,6 +46213,7 @@ A1;Peça exemplo;10'
         <a href="/" style={{ padding: '12px 24px', backgroundColor: '#00ff00', color: '#000', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold' }}>
           Voltar ao início
         </a>
+        {bootLoadingOverlay}
       </div>
     )
   }
@@ -46128,6 +46230,7 @@ A1;Peça exemplo;10'
         paddingTop: isDemoMode && !isCompactLayout ? '48px' : undefined
       }}
     >
+      {bootLoadingOverlay}
       {/* Barra superior: apenas em modo demo mostra aviso (botão Administrador / Backup está na barra lateral) */}
       {isDemoMode && (
         <div className="app-top-bar" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '8px 16px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '1px solid rgba(0, 255, 0, 0.4)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
@@ -48315,7 +48418,10 @@ A1;Peça exemplo;10'
           role="dialog"
           aria-modal="true"
           aria-labelledby="sync-decision-title"
-          onClick={() => setSyncDecisionModalOpen(false)}
+          onClick={() => {
+            if (syncPendingRemote) syncModalDismissedRevisionRef.current = syncPendingRemote.revision
+            setSyncDecisionModalOpen(false)
+          }}
           style={{
             position: 'fixed',
             inset: 0,
@@ -48416,7 +48522,10 @@ A1;Peça exemplo;10'
               </p>
               <button
                 type="button"
-                onClick={() => setSyncDecisionModalOpen(false)}
+                onClick={() => {
+                  if (syncPendingRemote) syncModalDismissedRevisionRef.current = syncPendingRemote.revision
+                  setSyncDecisionModalOpen(false)
+                }}
                 style={{
                   width: '100%',
                   padding: '10px',

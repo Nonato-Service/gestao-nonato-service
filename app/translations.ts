@@ -313,6 +313,9 @@ export const translations = {
     syncPullRiskCaution:
       'Antes de atualizar, verifique: a cópia do servidor parece mais pequena ou diferente neste aparelho.',
     syncPullChecking: 'A verificar servidor…',
+    syncInitialLoadTitle: 'A carregar dados do servidor…',
+    syncInitialLoadHint: 'Aguarde até esta mensagem desaparecer — depois o sistema fica pronto.',
+    syncReloadFlushing: 'A guardar e a recarregar…',
     protocolosServicoModeloPDF: 'Modelo do PDF',
     protocolosServicoPdfModelo1: '1 — Clássico (verde)',
     protocolosServicoPdfModelo2: '2 — Minimalista (azul)',

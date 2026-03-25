@@ -2099,6 +2099,15 @@ a:focus-visible {
   }
 }
 
+@keyframes ns-boot-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ns-boot-spinner {
+  animation: ns-boot-spin 0.85s linear infinite;
+}
+
 .ns-splash-root {
   padding-top: max(clamp(16px, 4vh, 48px), env(safe-area-inset-top, 0px)) !important;
   padding-right: max(14px, env(safe-area-inset-right, 0px)) !important;
