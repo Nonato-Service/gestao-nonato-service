@@ -3249,9 +3249,11 @@ export default function Dashboard() {
   // Forçar atualização dos botões quando o idioma mudar para garantir tradução
   useEffect(() => {
     if (typeof window === 'undefined') return
-    
-    // Usar loadData importado
-    const savedButtons = loadData('nonato-sidebar-buttons')
+    let cancelled = false
+    ;(async () => {
+    try {
+    const savedButtons = await loadData('nonato-sidebar-buttons')
+    if (cancelled) return
     if (!savedButtons || !Array.isArray(savedButtons)) return
     
     // IDs dos botões da gestão técnica que DEVEM ser traduzidos
@@ -3303,6 +3305,13 @@ export default function Dashboard() {
         saveData('nonato-sidebar-buttons', updatedButtons)
         setSidebarButtons(updatedButtons)
       }
+    }
+    } catch {
+      /* ignorar */
+    }
+    })()
+    return () => {
+      cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedLanguage]) // Removido sidebarButtons das dependências para evitar loop infinito
@@ -3427,6 +3436,58 @@ export default function Dashboard() {
     window.addEventListener('nonato-data-local-changed', handler)
     return () => window.removeEventListener('nonato-data-local-changed', handler)
   }, [isCompactLayout, loginUser, syncPendingRemote])
+
+  /** Servidor: rever revisão em fundo e ao voltar ao ecrã — evita depender de F5 para ver alterações noutro aparelho. */
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (appInitialLoading) return
+
+    let cancelled = false
+    const POLL_MS = 45_000
+
+    const runCheck = async () => {
+      if (cancelled) return
+      if (typeof navigator !== 'undefined' && !navigator.onLine) return
+      if (!dataBootstrapCompleteRef.current) return
+      try {
+        const st = await fetchSyncStatus()
+        if (cancelled || !st) return
+        const lastAcc = getLastAcceptedRevision()
+        if (st.revision <= lastAcc) return
+        if (!hasMeaningfulLocalData()) return
+        const serverData = (await loadAllFromServer()) || {}
+        if (cancelled) return
+        const localSnap = collectLocalNonatoSnapshot()
+        const lines = summarizeDataDiff(serverData, localSnap)
+        setSyncPendingRemote((prev) => {
+          if (prev && prev.revision === st.revision) return prev
+          return {
+            revision: st.revision,
+            updatedAt: st.updatedAt,
+            summaryLines: lines,
+          }
+        })
+      } catch {
+        /* ignorar rede / timeout */
+      }
+    }
+
+    const tid = window.setInterval(runCheck, POLL_MS)
+    const onVis = () => {
+      if (document.visibilityState === 'visible') void runCheck()
+    }
+    const onFocus = () => void runCheck()
+    document.addEventListener('visibilitychange', onVis)
+    window.addEventListener('focus', onFocus)
+    void runCheck()
+
+    return () => {
+      cancelled = true
+      window.clearInterval(tid)
+      document.removeEventListener('visibilitychange', onVis)
+      window.removeEventListener('focus', onFocus)
+    }
+  }, [appInitialLoading])
 
   const aceitarSincronizacaoServidor = useCallback(async () => {
     if (typeof window === 'undefined') return
@@ -3725,30 +3786,7 @@ export default function Dashboard() {
   }, [])
 
   // Carregar logo, idioma e usuários salvos ao iniciar
-  // Carregar mensagens de comunicação
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const loadMensagens = async () => {
-      try {
-        const mensagens = await loadData('nonato-mensagens-comunicacao')
-        if (mensagens && Array.isArray(mensagens)) {
-          setMensagensComunicacao(mensagens)
-        }
-      } catch (error) {
-        console.error('Erro ao carregar mensagens:', error)
-      }
-    }
-    const loadPecasSolicitadasArmazem = async () => {
-      try {
-        const data = await loadData('nonato-pecas-solicitadas-armazem')
-        if (data && Array.isArray(data)) setPecasSolicitadasArmazem(data)
-      } catch (e) {
-        console.error('Erro ao carregar peças solicitadas armazém:', e)
-      }
-    }
-    loadMensagens()
-    loadPecasSolicitadasArmazem()
-  }, [])
+  // Mensagens / peças armazém: carregadas em loadAllData com getData (mesmo snapshot que o resto) — não usar loadData em paralelo no arranque (causa resultados diferentes a cada F5).
 
   // Marcar como lidas as mensagens destinadas ao usuário atual do Hub quando ele abre uma conversa
   useEffect(() => {
@@ -4616,140 +4654,107 @@ export default function Dashboard() {
         setDemoLinkRecipients(savedDemoRecipients)
       }
 
+      /** Hub / armazém: mesmo snapshot `serverData` + getData que o resto (evita corrida com loadData em paralelo). */
+      const savedMensagensCom = getData('nonato-mensagens-comunicacao')
+      if (savedMensagensCom && Array.isArray(savedMensagensCom)) {
+        setMensagensComunicacao(savedMensagensCom)
+      }
+      const savedPecasSolicitadasArm = getData('nonato-pecas-solicitadas-armazem')
+      if (savedPecasSolicitadasArm && Array.isArray(savedPecasSolicitadasArm)) {
+        setPecasSolicitadasArmazem(savedPecasSolicitadasArm)
+      }
+
       // Criar primeiro backup automático ao iniciar
       createAutoBackup()
 
-      // Função para carregar pedidos de separação
-      const loadPedidosSeparacao = async () => {
-        try {
-          const dataFromLoadData = await loadData('nonato-pedidos-separacao')
-          if (dataFromLoadData && Array.isArray(dataFromLoadData)) {
-            // Migrar itens antigos que não têm status individual
-            const pedidosMigrados = dataFromLoadData.map((pedido: any) => ({
-              ...pedido,
-              itens: pedido.itens.map((item: any, index: number) => ({
-                ...item,
-                id: item.id || `item-${pedido.id}-${index}`,
-                status: item.status || 'aguardando-fornecedor'
-              }))
-            }))
-            setPedidosSeparacao(pedidosMigrados)
-            // Salvar versão migrada se houver mudanças
-            if (JSON.stringify(pedidosMigrados) !== JSON.stringify(dataFromLoadData)) {
-              await saveData('nonato-pedidos-separacao', pedidosMigrados)
-            }
-            return
-          }
-          
+      // Pedidos / ordens / formulários / checklist: só getData (uma leitura do servidor por arranque), com fallback raro se a chave não veio no bundle
+      try {
+        let dataPedidos = getData('nonato-pedidos-separacao')
+        if (!dataPedidos || !Array.isArray(dataPedidos)) {
           const response = await fetch('/api/data/load?key=nonato-pedidos-separacao')
           if (response.ok) {
             const data = await response.json()
-            const pedidosData = data && data.data && Array.isArray(data.data) ? data.data : (data && Array.isArray(data) ? data : [])
-            if (pedidosData.length > 0) {
-              // Migrar itens antigos
-              const pedidosMigrados = pedidosData.map((pedido: any) => ({
-                ...pedido,
-                itens: pedido.itens.map((item: any, index: number) => ({
-                  ...item,
-                  id: item.id || `item-${pedido.id}-${index}`,
-                  status: item.status || 'aguardando-fornecedor'
-                }))
-              }))
-              setPedidosSeparacao(pedidosMigrados)
-              // Salvar versão migrada se houver mudanças
-              if (JSON.stringify(pedidosMigrados) !== JSON.stringify(pedidosData)) {
-                await saveData('nonato-pedidos-separacao', pedidosMigrados)
-              }
-            }
+            dataPedidos =
+              data && data.data && Array.isArray(data.data) ? data.data : data && Array.isArray(data) ? data : []
           }
-        } catch (error) {
-          console.error('Erro ao carregar pedidos de separação:', error)
         }
+        if (dataPedidos && Array.isArray(dataPedidos)) {
+          const pedidosMigrados = dataPedidos.map((pedido: any) => ({
+            ...pedido,
+            itens: (pedido.itens || []).map((item: any, index: number) => ({
+              ...item,
+              id: item.id || `item-${pedido.id}-${index}`,
+              status: item.status || 'aguardando-fornecedor',
+            })),
+          }))
+          setPedidosSeparacao(pedidosMigrados)
+          if (JSON.stringify(pedidosMigrados) !== JSON.stringify(dataPedidos)) {
+            await saveData('nonato-pedidos-separacao', pedidosMigrados)
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar pedidos de separação:', error)
       }
 
-      // Carregar pedidos de separação ao iniciar
-      loadPedidosSeparacao()
-
-      // Carregar ordens de preparação
-      const loadOrdensPreparacao = async () => {
-        try {
-          const dataFromLoadData = await loadData('nonato-ordens-preparacao')
-          if (dataFromLoadData && Array.isArray(dataFromLoadData)) {
-            setOrdensPreparacaoSalvas(dataFromLoadData)
-            return
-          }
-          
+      try {
+        let dataOrdens = getData('nonato-ordens-preparacao')
+        if (!dataOrdens || !Array.isArray(dataOrdens)) {
           const response = await fetch('/api/data/load?key=nonato-ordens-preparacao')
           if (response.ok) {
             const data = await response.json()
-            const ordensData = data && data.data && Array.isArray(data.data) ? data.data : (data && Array.isArray(data) ? data : [])
-            if (ordensData.length > 0) {
-              setOrdensPreparacaoSalvas(ordensData)
-            }
+            dataOrdens =
+              data && data.data && Array.isArray(data.data) ? data.data : data && Array.isArray(data) ? data : []
           }
-        } catch (error) {
-          console.error('Erro ao carregar ordens de preparação:', error)
         }
+        if (dataOrdens && Array.isArray(dataOrdens)) {
+          setOrdensPreparacaoSalvas(dataOrdens)
+        }
+      } catch (error) {
+        console.error('Erro ao carregar ordens de preparação:', error)
       }
-      loadOrdensPreparacao()
 
-      // Carregar formulários e checklist para técnicos
-      const loadFormulariosChecklist = async () => {
-        try {
-          const dataFromLoadData = await loadData('nonato-formularios-checklist-tecnicos')
-          if (dataFromLoadData && Array.isArray(dataFromLoadData)) {
-            setFormulariosChecklistTecnicos(dataFromLoadData)
-            return
-          }
-          
+      try {
+        let dataForm = getData('nonato-formularios-checklist-tecnicos')
+        if (!dataForm || !Array.isArray(dataForm)) {
           const response = await fetch('/api/data/load?key=nonato-formularios-checklist-tecnicos')
           if (response.ok) {
             const data = await response.json()
-            const formulariosData = data && data.data && Array.isArray(data.data) ? data.data : (data && Array.isArray(data) ? data : [])
-            if (formulariosData.length > 0) {
-              setFormulariosChecklistTecnicos(formulariosData)
-            }
+            dataForm =
+              data && data.data && Array.isArray(data.data) ? data.data : data && Array.isArray(data) ? data : []
           }
-        } catch (error) {
-          console.error('Erro ao carregar formulários e checklist:', error)
+        }
+        if (dataForm && Array.isArray(dataForm)) {
+          setFormulariosChecklistTecnicos(dataForm)
+        }
+      } catch (error) {
+        console.error('Erro ao carregar formulários e checklist:', error)
+      }
+
+      const dataTemplates = getData('nonato-checklist-templates')
+      if (dataTemplates) setChecklistTemplates(dataTemplates)
+
+      const dataGruposCk = getData('nonato-grupos-checklist')
+      if (dataGruposCk && Array.isArray(dataGruposCk)) {
+        const gruposAtualizados = dataGruposCk.map((grupo: GrupoChecklist) => ({
+          ...grupo,
+          familia: grupo.familia || safeT?.semFamilia || 'Sem Família',
+          tipo: grupo.tipo || 'basico',
+        }))
+        setGruposChecklist(gruposAtualizados)
+        if (
+          gruposAtualizados.some(
+            (g: GrupoChecklist, i: number) => g.familia !== dataGruposCk[i]?.familia || g.tipo !== dataGruposCk[i]?.tipo
+          )
+        ) {
+          saveData('nonato-grupos-checklist', gruposAtualizados)
         }
       }
-      loadFormulariosChecklist()
 
+      const dataFamCk = getData('nonato-familias-checklist')
+      if (dataFamCk && Array.isArray(dataFamCk)) setFamiliasChecklist(dataFamCk)
 
-      // Carregar templates de checklist
-      loadData('nonato-checklist-templates').then(data => {
-        if (data) setChecklistTemplates(data)
-      })
-
-      // Carregar grupos de checklist
-      loadData('nonato-grupos-checklist').then(data => {
-        if (data) {
-          // Garantir que grupos antigos tenham família e tipo
-          const gruposAtualizados = data.map((grupo: GrupoChecklist) => ({
-            ...grupo,
-            familia: grupo.familia || safeT?.semFamilia || 'Sem Família',
-            tipo: grupo.tipo || 'basico' // Valor padrão para grupos antigos
-          }))
-          setGruposChecklist(gruposAtualizados)
-          // Salvar grupos atualizados se houver mudanças
-          if (gruposAtualizados.some((g: GrupoChecklist, i: number) => 
-            g.familia !== data[i]?.familia || g.tipo !== data[i]?.tipo
-          )) {
-            saveData('nonato-grupos-checklist', gruposAtualizados)
-          }
-        }
-      })
-
-      // Carregar famílias do checklist (cadastro separado do de equipamentos)
-      loadData('nonato-familias-checklist').then(data => {
-        if (data && Array.isArray(data)) setFamiliasChecklist(data)
-      })
-
-      // Carregar parentes do checklist (árvore: família → parentes, ex. Seccionadora → HPP 250)
-      loadData('nonato-parentes-checklist').then(data => {
-        if (data && Array.isArray(data)) setParentesChecklist(data)
-      })
+      const dataParentesCk = getData('nonato-parentes-checklist')
+      if (dataParentesCk && Array.isArray(dataParentesCk)) setParentesChecklist(dataParentesCk)
 
       // Carregar botões da sidebar
       // Evitar executar múltiplas vezes se já foi inicializado

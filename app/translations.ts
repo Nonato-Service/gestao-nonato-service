@@ -301,7 +301,7 @@ export const translations = {
     syncMobileNudgeSend: 'Enviar tudo agora',
     syncMobileNudgeClose: 'Já está sincronizado (ficheiro a ficheiro)',
     syncAdminSectionHintNew:
-      'O sistema avisa automaticamente quando o servidor foi atualizado noutro aparelho. Use sempre esse aviso para escolher «atualizar deste aparelho» ou «enviar para o servidor». Não é necessário outro botão de atualização.',
+      'O sistema verifica o servidor automaticamente (cerca de 45 em 45 segundos e ao voltar à app no telemóvel) — não precisa de F5 no Windows para aparecer o aviso. Use esse aviso para escolher «atualizar este aparelho» ou «enviar para o servidor».',
     syncReopenModal: 'Abrir aviso de sincronização',
     syncAdminNoPending: 'Neste momento não há diferença de revisão pendente de decisão.',
     syncPullServerUnreadable:
