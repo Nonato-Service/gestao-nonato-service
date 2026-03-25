@@ -8,7 +8,12 @@ import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasM
 import { collectLocalNonatoSnapshot, summarizeDataDiff } from './utils/syncDiff'
 import { assessPullServerRisk } from './utils/syncRisk'
 import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
-import { loadManuaisFamiliasGruposFromIdb, saveManuaisFamiliasGruposToIdb, getKv } from './utils/manuaisIndexedDb'
+import {
+  loadManuaisFamiliasGruposFromIdb,
+  saveManuaisFamiliasGruposToIdb,
+  getKv,
+  deleteAllNonatoKvFromIdb,
+} from './utils/manuaisIndexedDb'
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 import { NonatoBrandLogo } from './components/NonatoBrandLogo'
@@ -3467,6 +3472,12 @@ export default function Dashboard() {
       } catch {
         /* ignorar */
       }
+      /** Próximo arranque: apagar cópia local misturada e repovoar só a partir do servidor (3 aparelhos iguais). */
+      try {
+        sessionStorage.setItem('nonato-sync-full-server-apply', '1')
+      } catch {
+        /* ignorar */
+      }
       setSyncPullChecking(false)
       await new Promise((r) => setTimeout(r, 80))
       window.location.reload()
@@ -3774,8 +3785,42 @@ export default function Dashboard() {
     if (typeof window === 'undefined') return
     
     const loadAllData = async () => {
-      const localSnapshotBeforeMerge = collectLocalNonatoSnapshot()
       setAppInitialLoading(true)
+      if (typeof window !== 'undefined') {
+        try {
+          if (sessionStorage.getItem('nonato-sync-full-server-apply')) {
+            sessionStorage.removeItem('nonato-sync-full-server-apply')
+            await deleteAllNonatoKvFromIdb()
+            const keepLocalOnFullPull = new Set([
+              'nonato-sync-last-accepted-revision',
+              'nonato-language',
+              'nonato-protocolo-servico-draft',
+              'nonato-sync-queue',
+              'nonato-auto-backups',
+              'nonato-code-backups',
+              'nonato-last-code-backup-date',
+              'nonato-manuais-familias-grupos--idb',
+            ])
+            const toRemove: string[] = []
+            for (let i = 0; i < localStorage.length; i++) {
+              const k = localStorage.key(i)
+              if (k && k.startsWith('nonato-') && !keepLocalOnFullPull.has(k)) {
+                toRemove.push(k)
+              }
+            }
+            for (const k of toRemove) {
+              try {
+                localStorage.removeItem(k)
+              } catch {
+                /* ignorar */
+              }
+            }
+          }
+        } catch {
+          /* ignorar falha na limpeza; a carga continua */
+        }
+      }
+      const localSnapshotBeforeMerge = collectLocalNonatoSnapshot()
       try {
         const lastAccepted = getLastAcceptedRevision()
         let serverRevision = lastAccepted

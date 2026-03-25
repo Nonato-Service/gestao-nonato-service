@@ -73,6 +73,35 @@ export async function saveKv(key: string, value: unknown): Promise<void> {
   })
 }
 
+/** Remove do IndexedDB todas as entradas cuja chave começa por `nonato-` (dados espillados do localStorage). */
+export async function deleteAllNonatoKvFromIdb(): Promise<void> {
+  if (typeof indexedDB === 'undefined') return
+  try {
+    const db = await openDb()
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readwrite')
+      const store = tx.objectStore(STORE)
+      const req = store.openCursor()
+      req.onerror = () => reject(req.error ?? new Error('cursor'))
+      req.onsuccess = () => {
+        const c = req.result as IDBCursorWithValue | null
+        if (!c) {
+          return
+        }
+        const key = c.key
+        if (typeof key === 'string' && key.startsWith('nonato-')) {
+          c.delete()
+        }
+        c.continue()
+      }
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error ?? new Error('tx'))
+    })
+  } catch {
+    /* ignorar */
+  }
+}
+
 export async function saveManuaisFamiliasGruposToIdb(data: any): Promise<void> {
   /** Garante valor clonável pelo motor do IndexedDB (evita falhas silenciosas) */
   let safe: any

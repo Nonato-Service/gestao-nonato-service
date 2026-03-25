@@ -290,7 +290,7 @@ export const translations = {
     syncModalQuestion: 'O que deseja fazer?',
     syncModalLoadServer: 'Sim — atualizar este aparelho com o servidor',
     syncModalLoadServerHint:
-      'Antes de recarregar, o sistema compara o servidor com este aparelho: se a cópia do servidor parecer incompleta (menos registos, listas vazias, etc.), pede confirmação em dupla para não perder informação por engano.',
+      'Ao confirmar, na próxima abertura os dados de negócio neste aparelho são apagados e substituídos pela cópia completa do servidor (fica alinhado com quem também aceitou). Idioma, rascunhos e filas de sincronização mantêm-se. Antes disso o sistema avisa se a cópia do servidor parece incompleta.',
     syncModalPushDevice: 'Não — enviar deste aparelho para o servidor',
     syncModalPushDeviceHint: 'Substitui o servidor pela cópia deste aparelho (use se AQUI está a informação certa).',
     syncModalLater: 'Decidir mais tarde',
