@@ -3455,8 +3455,8 @@ export default function Dashboard() {
         const lastAcc = getLastAcceptedRevision()
         if (st.revision <= lastAcc) return
         if (!hasMeaningfulLocalData()) return
-        const serverData = (await loadAllFromServer()) || {}
-        if (cancelled) return
+        const { data: serverData, ok: pullOk } = await loadAllFromServer()
+        if (cancelled || !pullOk) return
         const localSnap = collectLocalNonatoSnapshot()
         const lines = summarizeDataDiff(serverData, localSnap)
         setSyncPendingRemote((prev) => {
@@ -3494,9 +3494,13 @@ export default function Dashboard() {
     setSyncPullChecking(true)
     try {
       const localNow = collectLocalNonatoSnapshot()
-      const serverNow = await loadAllFromServer()
+      const { data: serverNow, ok: serverPullOk } = await loadAllFromServer()
       const sk = Object.keys(serverNow || {}).filter((k) => k.startsWith('nonato-'))
-      if (sk.length === 0 && syncPendingRemote != null && syncPendingRemote.revision > 0) {
+      if (
+        (!serverPullOk || sk.length === 0) &&
+        syncPendingRemote != null &&
+        syncPendingRemote.revision > 0
+      ) {
         window.alert(
           (safeT as any)?.syncPullServerUnreadable ||
             'Não foi possível ler o servidor. Não é seguro atualizar agora.'
@@ -3836,42 +3840,58 @@ export default function Dashboard() {
     const loadAllData = async () => {
       setAppInitialLoading(true)
       let preferServerOnlyAfterFullPullWipe = false
+      /** Bundle já obtido antes do wipe (tablet/PC) — evita segundo fetch e evita wipe se a rede falhar. */
+      let serverDataFromFullPullPrefetch: Record<string, any> | null = null
       if (typeof window !== 'undefined') {
         try {
+          const compactNow = window.innerWidth <= 1024
           const sessionWantsFullPull = sessionStorage.getItem('nonato-sync-full-server-apply')
           const lsWantsFullPull = localStorage.getItem(NONATO_PENDING_FULL_SERVER_REPLACE_LS)
           if (sessionWantsFullPull || lsWantsFullPull) {
-            preferServerOnlyAfterFullPullWipe = true
             try {
               sessionStorage.removeItem('nonato-sync-full-server-apply')
             } catch {
               /* ignorar */
             }
-            await deleteAllNonatoKvFromIdb()
-            const keepLocalOnFullPull = new Set([
-              'nonato-sync-last-accepted-revision',
-              'nonato-language',
-              'nonato-protocolo-servico-draft',
-              'nonato-sync-queue',
-              'nonato-auto-backups',
-              'nonato-code-backups',
-              'nonato-last-code-backup-date',
-              'nonato-manuais-familias-grupos--idb',
-            ])
-            const toRemove: string[] = []
-            for (let i = 0; i < localStorage.length; i++) {
-              const k = localStorage.key(i)
-              if (k && k.startsWith('nonato-') && !keepLocalOnFullPull.has(k)) {
-                toRemove.push(k)
+            try {
+              localStorage.removeItem(NONATO_PENDING_FULL_SERVER_REPLACE_LS)
+            } catch {
+              /* ignorar */
+            }
+            // Tablet/notebook: só apagar local depois de ler o servidor com sucesso (evita dashboard a zeros).
+            if (!compactNow) {
+              const pre = await loadAllFromServer()
+              if (pre.ok) {
+                preferServerOnlyAfterFullPullWipe = true
+                serverDataFromFullPullPrefetch = pre.data
+                await deleteAllNonatoKvFromIdb()
+                const keepLocalOnFullPull = new Set([
+                  'nonato-sync-last-accepted-revision',
+                  'nonato-language',
+                  'nonato-protocolo-servico-draft',
+                  'nonato-sync-queue',
+                  'nonato-auto-backups',
+                  'nonato-code-backups',
+                  'nonato-last-code-backup-date',
+                  'nonato-manuais-familias-grupos--idb',
+                ])
+                const toRemove: string[] = []
+                for (let i = 0; i < localStorage.length; i++) {
+                  const k = localStorage.key(i)
+                  if (k && k.startsWith('nonato-') && !keepLocalOnFullPull.has(k)) {
+                    toRemove.push(k)
+                  }
+                }
+                for (const k of toRemove) {
+                  try {
+                    localStorage.removeItem(k)
+                  } catch {
+                    /* ignorar */
+                  }
+                }
               }
             }
-            for (const k of toRemove) {
-              try {
-                localStorage.removeItem(k)
-              } catch {
-                /* ignorar */
-              }
-            }
+            // Telemóvel: não wipe; flags já removidas acima.
           }
         } catch {
           /* ignorar falha na limpeza; a carga continua */
@@ -3885,8 +3905,11 @@ export default function Dashboard() {
         const syncSt = await fetchSyncStatus()
         if (syncSt) serverRevision = syncSt.revision
 
-        // Primeiro, tentar carregar tudo do servidor
-        const serverData = await loadAllFromServer() || {}
+        // Primeiro, tentar carregar tudo do servidor (ou reutilizar bundle do full-pull já obtido antes do wipe)
+        const serverData =
+          serverDataFromFullPullPrefetch !== null
+            ? serverDataFromFullPullPrefetch
+            : (await loadAllFromServer()).data
 
         /** Após wipe total, não bloquear por dados locais residuais; usar só servidor para sidebar/manuais nesta carga. */
         const deferServerMerge = preferServerOnlyAfterFullPullWipe
@@ -3921,6 +3944,12 @@ export default function Dashboard() {
       // Função auxiliar para obter dados (servidor primeiro, depois localStorage)
       // IMPORTANTE: Preservar dados do localStorage se servidor retornar vazio/null
       const getData = (key: string, parseJson = true): any => {
+        // Após wipe "full server": não misturar com localStorage para evitar diferenças entre aparelhos.
+        // Se a chave não existir no servidor, o consumidor deve aplicar defaults/migrações.
+        if (preferServerOnlyAfterFullPullWipe) {
+          if (Object.prototype.hasOwnProperty.call(serverData, key)) return serverData[key]
+          return null
+        }
         const shouldPreferServerForKey =
           !deferServerMerge || !localStorageKeyHasNonEmptyData(key, parseJson)
         // Para sidebar-buttons: preferir localStorage quando tiver dados válidos (preserva organização do usuário)

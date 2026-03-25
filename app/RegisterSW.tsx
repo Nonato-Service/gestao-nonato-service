@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { processSyncQueue } from './utils/dataStorage'
 
 // Bumpar este número em cada deploy para forçar atualização no telemóvel
-const SW_VERSION = 9
+const SW_VERSION = 10
 
 export function RegisterSW() {
   const [updateReady, setUpdateReady] = useState(false)

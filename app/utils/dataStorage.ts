@@ -14,8 +14,11 @@ export function setBlockImplicitServerPushDuringBootstrap(block: boolean): void 
   blockImplicitServerPushDuringBootstrap = block
 }
 
-function shouldDeferImplicitServerPush(saveToLocalStorage: boolean): boolean {
-  return blockImplicitServerPushDuringBootstrap && saveToLocalStorage === false
+function shouldDeferImplicitServerPush(): boolean {
+  // Durante bootstrap queremos 100% "read-only" no servidor:
+  // evitar que ações automáticas (backups/migrações/marcas) mudem a revisão do servidor
+  // enquanto o ecrã do utilizador ainda está a carregar.
+  return blockImplicitServerPushDuringBootstrap
 }
 /** Backups automáticos em localStorage — podem ser reduzidos se a quota estourar ao gravar dados críticos */
 const AUTO_BACKUP_STORAGE_KEY = 'nonato-auto-backups'
@@ -346,44 +349,57 @@ export async function loadFromServer(key: string): Promise<any | null> {
   }
 }
 
-// Carregar todos os dados
-export async function loadAllFromServer(): Promise<Record<string, any>> {
+/** Resultado de carregar o bundle completo: `ok` distingue rede/HTTP bem-sucedidos de falha (timeout, offline). */
+export type LoadAllFromServerResult = { data: Record<string, any>; ok: boolean }
+
+const LOAD_ALL_TIMEOUT_MS = 25_000
+
+async function loadAllFromServerOnce(): Promise<LoadAllFromServerResult> {
   if (!isOnline()) {
     serverOffline = true
-    return {}
-  }
-  if (serverOffline) {
-    const ok = await checkServerOnline()
-    if (!ok) return {}
+    return { data: {}, ok: false }
   }
 
   try {
+    // Não abortar aqui só porque `serverOffline` — evita ficar preso a `{}` durante ~30s após um timeout.
     const response = await fetch(`${API_BASE}/load`, {
-      signal: createTimeoutSignal(5000) // Timeout de 5 segundos
+      signal: createTimeoutSignal(LOAD_ALL_TIMEOUT_MS),
     })
-    
+
     if (!response.ok) {
       serverOffline = true
-      return {}
+      return { data: {}, ok: false }
     }
 
     const result = await response.json()
     serverOffline = false
-    return result.data || {}
+    return { data: result?.data && typeof result.data === 'object' ? result.data : {}, ok: true }
   } catch (error: any) {
-    // Detectar erros de conexão
     if (
-      error instanceof TypeError && 
-      (error.message.includes('NetworkError') || 
-       error.message.includes('Failed to fetch') ||
-       error.message.includes('CONNECTION_REFUSED') ||
-       error.name === 'AbortError')
+      error instanceof TypeError &&
+      (error.message.includes('NetworkError') ||
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('CONNECTION_REFUSED') ||
+        error.name === 'AbortError')
     ) {
       serverOffline = true
-      return {}
     }
-    return {}
+    return { data: {}, ok: false }
   }
+}
+
+/** Carrega todos os ficheiros do servidor com retry (payload grande pode exceder 5s). */
+export async function loadAllFromServer(): Promise<LoadAllFromServerResult> {
+  const delays = [0, 700, 1800]
+  let last: LoadAllFromServerResult = { data: {}, ok: false }
+  for (let i = 0; i < delays.length; i++) {
+    if (delays[i]! > 0) {
+      await new Promise((r) => setTimeout(r, delays[i]))
+    }
+    last = await loadAllFromServerOnce()
+    if (last.ok) return last
+  }
+  return last
 }
 
 const SKIP_KEYS_PUSH_SYNC = new Set([
@@ -540,7 +556,7 @@ export async function saveData(key: string, value: any, saveToLocalStorage = tru
         }
       }
     }
-    if (!shouldDeferImplicitServerPush(saveToLocalStorage)) {
+    if (!shouldDeferImplicitServerPush()) {
       void saveToServer(key, value).catch(() => {})
     }
     if (typeof window !== 'undefined') {
@@ -574,7 +590,7 @@ export async function saveData(key: string, value: any, saveToLocalStorage = tru
   }
 
   // Servidor em segundo plano — o localStorage/IndexedDB já foi gravado; não bloquear a UI se a rede falhar
-  if (!shouldDeferImplicitServerPush(saveToLocalStorage)) {
+  if (!shouldDeferImplicitServerPush()) {
     void saveToServer(key, value).catch(() => {})
   }
 
