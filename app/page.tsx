@@ -47778,7 +47778,7 @@ A1;Peça exemplo;10'
           style={{
             flex: 1,
             minHeight: 0,
-            padding: activeTabId ? 0 : '30px',
+            padding: activeTabId ? 0 : isCompactLayout ? '10px 8px' : '30px',
             /* Dashboard: rolar aqui. Com aba: rolar só no .tab-inner-scroll (cadeia flex + altura definida — senão o telefone/tablet não rola o conteúdo longo). */
             overflowY: activeTabId ? 'hidden' : 'auto',
             overflowX: 'hidden',
@@ -47815,46 +47815,48 @@ A1;Peça exemplo;10'
             </>
           ) : (
             // Dashboard Profissional
-            <div style={{ 
-              maxWidth: '1400px', 
-              margin: '0 auto', 
-              padding: '40px 20px',
+            <div
+              className={isCompactLayout ? 'ns-dashboard-root ns-dashboard-root--compact' : 'ns-dashboard-root'}
+              style={{
+              maxWidth: '1400px',
+              margin: '0 auto',
+              padding: isCompactLayout ? '12px 8px' : '40px 20px',
               minHeight: 'calc(100vh - 60px)'
             }}>
               {/* Hero Section com Logo */}
               <div style={{
                 textAlign: 'center',
-                marginBottom: '60px',
-                padding: '50px 30px',
+                marginBottom: isCompactLayout ? '20px' : '60px',
+                padding: isCompactLayout ? '16px 12px' : '50px 30px',
                 background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-                borderRadius: '20px',
+                borderRadius: isCompactLayout ? '12px' : '20px',
                 border: '2px solid rgba(0, 255, 0, 0.2)',
                 boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
               }}>
-                <div style={{ marginBottom: '30px' }}>
-                  <LogoComponent size="large" />
+                <div style={{ marginBottom: isCompactLayout ? '12px' : '30px' }}>
+                  <LogoComponent size={isCompactLayout ? 'small' : 'large'} />
                 </div>
                 <h1 style={{
-                  fontSize: '42px',
+                  fontSize: isCompactLayout ? '22px' : '42px',
                   fontWeight: 'bold',
                   color: '#ffffff',
                   marginBottom: '15px',
-                  letterSpacing: '3px',
+                  letterSpacing: isCompactLayout ? '1px' : '3px',
                   textShadow: '0 0 20px rgba(0, 255, 0, 0.3)'
                 }}>
                   {safeT?.title || 'GESTÃO TÉCNICA'}
                 </h1>
                 <p style={{
-                  fontSize: '18px',
+                  fontSize: isCompactLayout ? '14px' : '18px',
                   color: '#00ff00',
                   marginBottom: '10px',
                   fontWeight: '500',
-                  letterSpacing: '2px'
+                  letterSpacing: isCompactLayout ? '1px' : '2px'
                 }}>
                   {safeT?.welcome || 'Sistema de Gestão Completo'}
                 </p>
                 <p style={{
-                  fontSize: '14px',
+                  fontSize: isCompactLayout ? '12px' : '14px',
                   color: '#ccc',
                   maxWidth: '600px',
                   margin: '0 auto',

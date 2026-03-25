@@ -44,12 +44,12 @@ html {
 }
 @media (max-width: 480px) {
   html {
-    font-size: 12px;
+    font-size: 11px;
   }
 }
 @media (max-width: 360px) {
   html {
-    font-size: 11px;
+    font-size: 10px;
   }
 }
 
@@ -815,6 +815,37 @@ div[style*="border-bottom"][style*="255, 0, 0.2"] > div:last-child {
   flex-shrink: 0 !important;
 }
 
+/* Checklist por grupos: no telefone a caixa 200×200 ocupava o ecrã inteiro — empilhar e reduzir */
+@media (max-width: 640px) {
+  div[style*="border-bottom"][style*="255, 0, 0.2"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  div[style*="border-bottom"][style*="255, 0, 0.2"] > div:first-child {
+    flex-direction: row !important;
+    width: 100% !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+  }
+  div[style*="border-bottom"][style*="255, 0, 0.2"] > div:first-child > div:first-child {
+    width: 88px !important;
+    height: 88px !important;
+    min-width: 88px !important;
+    min-height: 88px !important;
+    font-size: 26px !important;
+  }
+  div[style*="border-bottom"][style*="255, 0, 0.2"] > div:first-child > div:last-child {
+    max-width: none !important;
+    flex: 1 !important;
+    font-size: 12px !important;
+  }
+  div[style*="border-bottom"][style*="255, 0, 0.2"] > div:last-child {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
 /* Almoxarifado: grupo completo piscando verde */
 @keyframes armazem-grupo-blink-verde {
   0%, 100% { background-color: rgba(0, 255, 0, 0.25); border-color: rgba(0, 255, 0, 0.7); box-shadow: 0 0 12px rgba(0, 255, 0, 0.3); }
@@ -1237,7 +1268,7 @@ body {
   }
   .mobile-sticky-toolbar {
     display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 112px), 1fr));
     gap: 8px;
     padding: 10px 10px;
     background: #141414;
@@ -2058,6 +2089,16 @@ a:focus-visible {
 }
 
 /* Tela inicial (splash) — classes usadas em page.tsx */
+/* Dashboard inicial: muitas caixas com font-size/padding em px — zoom reduz tudo no layout compacto (WebKit/Blink) */
+.app-compact-layout .ns-dashboard-root--compact {
+  zoom: 0.92;
+}
+@media (max-width: 480px) {
+  .app-compact-layout .ns-dashboard-root--compact {
+    zoom: 0.86;
+  }
+}
+
 .ns-splash-root {
   padding-top: max(clamp(16px, 4vh, 48px), env(safe-area-inset-top, 0px)) !important;
   padding-right: max(14px, env(safe-area-inset-right, 0px)) !important;
