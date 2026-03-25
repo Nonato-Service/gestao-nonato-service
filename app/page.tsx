@@ -13161,14 +13161,23 @@ export default function Dashboard() {
     }
   };
 
-  /** Só para impressão/PDF: indica claramente equipamento do armazém sem alterar o valor guardado. */
+  /** Só para impressão/PDF: armazém = ID + modelo + série numa linha lógica (dados em memória/cópia). */
   const relatorioParaImprimirPDF = (r: RelatorioServico): RelatorioServico => {
     if (r.equipamentoOrigem !== 'armazem') return r
-    const base = (r.maquinaModelo || '').trim()
-    const suffix = '(Equipamento: armazém — gestão industrial)'
+    const id = (r.equipamentoId || '').trim()
+    const modelo = (r.maquinaModelo || '').trim()
+    const serie = (r.numeroMaquina || '').trim()
+    const partes = [
+      id ? `ID: ${id}` : '',
+      modelo,
+      serie ? `N.º série: ${serie}` : '',
+    ].filter((x) => x.length > 0)
+    const linhaEquip = partes.join(' · ')
+    const tag = '(Armazém — gestão industrial)'
     return {
       ...r,
-      maquinaModelo: base.includes('gestão industrial') ? base : `${base} ${suffix}`.trim(),
+      maquinaModelo: [linhaEquip, tag].filter(Boolean).join(' ').trim() || tag,
+      numeroMaquina: '',
     }
   }
 
@@ -22885,8 +22894,8 @@ onKeyPress={(e) => {
                           </option>
                           {equipamentosAtivos.map(eq => (
                             <option key={eq.id} value={eq.id}>
-                              [Armazém] {eq.familia || '—'} · {eq.modelo} {eq.marca}
-                              {eq.numeroSerie ? ` (${eq.numeroSerie})` : ''}
+                              [Armazém] ID {eq.id} · {eq.familia || '—'} · {eq.modelo} {eq.marca}
+                              {eq.numeroSerie ? ` · S/N ${eq.numeroSerie}` : ''}
                             </option>
                           ))}
                         </select>
@@ -22918,6 +22927,32 @@ onKeyPress={(e) => {
                             ))}
                         </select>
                       )}
+                      {(relatorioServicoForm.equipamentoOrigem || 'cliente') === 'armazem' &&
+                        relatorioServicoForm.equipamentoId && (
+                          <p
+                            style={{
+                              marginTop: '10px',
+                              marginBottom: 0,
+                              fontSize: '12px',
+                              color: '#88ccff',
+                              lineHeight: 1.5,
+                              fontFamily: 'monospace',
+                            }}
+                          >
+                            <strong style={{ color: '#66b3ff' }}>ID (armazém):</strong> {relatorioServicoForm.equipamentoId}
+                            <span style={{ color: '#888' }}> · </span>
+                            <strong style={{ color: '#66b3ff' }}>
+                              {(safeT as any)?.equipamentoResumoArmazem || 'Equipamento'}
+                            </strong>{' '}
+                            {relatorioServicoForm.maquinaModelo || '—'}
+                            {relatorioServicoForm.numeroMaquina ? (
+                              <>
+                                <span style={{ color: '#888' }}> · </span>
+                                <strong style={{ color: '#66b3ff' }}>S/N:</strong> {relatorioServicoForm.numeroMaquina}
+                              </>
+                            ) : null}
+                          </p>
+                        )}
                     </div>
                     
                     {relatorioServicoForm.equipamentoId && (
@@ -24545,7 +24580,11 @@ onKeyPress={(e) => {
                                 {safeT?.maquinaModelo || 'Máquina/Modelo'}
                               </p>
                               <p style={{ fontSize: '13px', color: '#fff', fontWeight: '500' }}>
-                                {relatorio.maquinaModelo} {relatorio.numeroMaquina && `(${relatorio.numeroMaquina})`}
+                                {relatorio.equipamentoOrigem === 'armazem' && relatorio.equipamentoId && (
+                                  <span style={{ color: '#66b3ff' }}>ID {relatorio.equipamentoId} · </span>
+                                )}
+                                {relatorio.maquinaModelo}
+                                {relatorio.numeroMaquina && ` · S/N ${relatorio.numeroMaquina}`}
                               </p>
                             </div>
                           )}
@@ -51843,6 +51882,12 @@ A1;Peça exemplo;10'
                     </p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.tecnico || 'Técnico'}: {relatorio.tecnico}</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.data || 'Data'}: {new Date(relatorio.data).toLocaleDateString()}</p>
+                    {relatorio.equipamentoOrigem === 'armazem' && relatorio.equipamentoId && (
+                      <p style={{ fontSize: '12px', color: '#88ccff', marginTop: '6px', fontFamily: 'monospace' }}>
+                        ID {relatorio.equipamentoId} · {relatorio.maquinaModelo || '—'}
+                        {relatorio.numeroMaquina ? ` · S/N ${relatorio.numeroMaquina}` : ''}
+                      </p>
+                    )}
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
                       <button className="btn-primary" onClick={() => handleEditRelatorioServico(relatorio)} style={{ flex: 1, padding: '5px', fontSize: '12px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.6)', color: '#fff' }}>
                         {safeT?.edit || 'Editar'}
@@ -53720,14 +53765,30 @@ A1;Peça exemplo;10'
                   <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>{safeT?.data || 'Data'}</p>
                   <p style={{ fontSize: '14px' }}>{viewingRelatorioServico.data ? new Date(viewingRelatorioServico.data).toLocaleDateString('pt-BR') : '-'}</p>
                 </div>
-                <div>
+                <div style={{ gridColumn: viewingRelatorioServico.equipamentoOrigem === 'armazem' ? '1 / -1' : undefined }}>
                   <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>{safeT?.maquinaModelo || 'Máquina/Modelo'}</p>
-                  <p style={{ fontSize: '14px' }}>{viewingRelatorioServico.maquinaModelo || '-'}</p>
+                  <p style={{ fontSize: '14px', lineHeight: 1.45 }}>
+                    {viewingRelatorioServico.equipamentoOrigem === 'armazem' && viewingRelatorioServico.equipamentoId && (
+                      <span style={{ color: '#66b3ff', fontWeight: 'bold' }}>ID: {viewingRelatorioServico.equipamentoId}</span>
+                    )}
+                    {viewingRelatorioServico.equipamentoOrigem === 'armazem' && viewingRelatorioServico.equipamentoId && (
+                      <span style={{ color: '#888' }}> · </span>
+                    )}
+                    {viewingRelatorioServico.maquinaModelo || '-'}
+                    {viewingRelatorioServico.numeroMaquina ? (
+                      <>
+                        <span style={{ color: '#888' }}> · </span>
+                        <span style={{ color: '#ccc' }}>S/N: {viewingRelatorioServico.numeroMaquina}</span>
+                      </>
+                    ) : null}
+                  </p>
                 </div>
+                {viewingRelatorioServico.equipamentoOrigem !== 'armazem' && (
                 <div>
                   <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>{safeT?.numeroMaquina || 'Número da Máquina'}</p>
                   <p style={{ fontSize: '14px' }}>{viewingRelatorioServico.numeroMaquina || '-'}</p>
                 </div>
+                )}
                 <div>
                   <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>{safeT?.tipoServico || 'Tipo de Serviço'}</p>
                   <p style={{ fontSize: '14px' }}>{viewingRelatorioServico.tipoServico || '-'}</p>
