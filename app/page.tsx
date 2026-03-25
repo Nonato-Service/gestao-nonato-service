@@ -5,6 +5,8 @@ import { createPortal } from 'react-dom'
 import { translations } from './translations'
 import { loadData, saveData, loadAllFromServer, loadFromServer, pushAllLocalStorageToServer } from './utils/dataStorage'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData } from './utils/syncRevision'
+import { collectLocalNonatoSnapshot, summarizeDataDiff } from './utils/syncDiff'
+import { assessPullServerRisk } from './utils/syncRisk'
 import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
 import { loadManuaisFamiliasGruposFromIdb, saveManuaisFamiliasGruposToIdb, getKv } from './utils/manuaisIndexedDb'
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
@@ -1117,9 +1119,17 @@ export default function Dashboard() {
   const [libraryEntryTarget, setLibraryEntryTarget] = useState('')
   const [expandedEquipamentos, setExpandedEquipamentos] = useState<Set<string>>(new Set())
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  /** Servidor tem revisão mais recente que a última aceite neste aparelho — mostrar barra «Atualizar do servidor». */
-  const [syncPendingRemote, setSyncPendingRemote] = useState<{ revision: number } | null>(null)
+  /** Servidor tem revisão mais recente — modal único com resumo e escolha carregar / enviar. */
+  const [syncPendingRemote, setSyncPendingRemote] = useState<{
+    revision: number
+    updatedAt?: string
+    summaryLines: string[]
+  } | null>(null)
+  const [syncDecisionModalOpen, setSyncDecisionModalOpen] = useState(false)
+  const [mobileFullPushNudge, setMobileFullPushNudge] = useState(false)
+  const mobileFullPushNudgeShownRef = useRef(false)
   const [syncPushLoading, setSyncPushLoading] = useState(false)
+  const [syncPullChecking, setSyncPullChecking] = useState(false)
   const [showDashboardView, setShowDashboardView] = useState(true) // Dashboard central por padrão
   const [showTranslatorModal, setShowTranslatorModal] = useState(false)
   
@@ -3369,27 +3379,71 @@ export default function Dashboard() {
     if (isCompactLayout && activeTabId) setMobileMenuOpen(false)
   }, [isCompactLayout, activeTabId])
 
-  const atualizarAppComSeguranca = useCallback(() => {
-    if (typeof window === 'undefined') return
-    try {
-      if (editingProtocoloServicoId !== null) {
-        localStorage.setItem(PROTOCOLO_SERVICO_DRAFT_KEY, JSON.stringify(protocoloServicoForm))
-      }
-    } catch {
-      // Não bloquear atualização por erro de storage.
-    }
-    const msg = (safeT as any)?.confirmSafeRefresh || 'Atualizar agora de forma segura? Os rascunhos serão mantidos.'
-    if (!window.confirm(msg)) return
-    window.location.reload()
-  }, [editingProtocoloServicoId, protocoloServicoForm, safeT])
+  const dataBootstrapCompleteRef = useRef(false)
 
-  const aceitarSincronizacaoServidor = useCallback(() => {
-    if (typeof window === 'undefined') return
-    if (syncPendingRemote?.revision != null) {
-      setLastAcceptedRevision(syncPendingRemote.revision)
-    }
-    window.location.reload()
+  useEffect(() => {
+    if (syncPendingRemote) setSyncDecisionModalOpen(true)
   }, [syncPendingRemote])
+
+  useEffect(() => {
+    const handler = () => {
+      if (typeof window === 'undefined') return
+      if (!dataBootstrapCompleteRef.current) return
+      if (!isCompactLayout) return
+      if (!loginUser) return
+      if (syncPendingRemote) return
+      if (mobileFullPushNudgeShownRef.current) return
+      mobileFullPushNudgeShownRef.current = true
+      setMobileFullPushNudge(true)
+    }
+    window.addEventListener('nonato-data-local-changed', handler)
+    return () => window.removeEventListener('nonato-data-local-changed', handler)
+  }, [isCompactLayout, loginUser, syncPendingRemote])
+
+  const aceitarSincronizacaoServidor = useCallback(async () => {
+    if (typeof window === 'undefined') return
+    setSyncPullChecking(true)
+    try {
+      const localNow = collectLocalNonatoSnapshot()
+      const serverNow = await loadAllFromServer()
+      const sk = Object.keys(serverNow || {}).filter((k) => k.startsWith('nonato-'))
+      if (sk.length === 0 && syncPendingRemote != null && syncPendingRemote.revision > 0) {
+        window.alert(
+          (safeT as any)?.syncPullServerUnreadable ||
+            'Não foi possível ler o servidor. Não é seguro atualizar agora.'
+        )
+        return
+      }
+      const { severity, lines } = assessPullServerRisk(serverNow || {}, localNow)
+      if (severity === 'severe') {
+        const intro =
+          (safeT as any)?.syncPullRiskSevereIntro ||
+          'ATENÇÃO: pode perder dados se continuar (cópia do servidor parece incompleta face a este aparelho).'
+        const msg = lines.length ? `${intro}\n\n${lines.join('\n')}` : intro
+        if (!window.confirm(msg)) return
+        if (
+          !window.confirm(
+            (safeT as any)?.syncPullRiskSevereSecond ||
+              'Confirma substituir os dados deste aparelho pela cópia do servidor?'
+          )
+        ) {
+          return
+        }
+      } else if (severity === 'caution') {
+        const intro =
+          (safeT as any)?.syncPullRiskCaution ||
+          'A cópia do servidor parece mais pequena ou diferente. Continuar?'
+        const msg = lines.length ? `${intro}\n\n${lines.join('\n')}` : intro
+        if (!window.confirm(msg)) return
+      }
+      if (syncPendingRemote?.revision != null) {
+        setLastAcceptedRevision(syncPendingRemote.revision)
+      }
+      window.location.reload()
+    } finally {
+      setSyncPullChecking(false)
+    }
+  }, [syncPendingRemote, safeT])
 
   const enviarEsteAparelhoParaServidor = useCallback(async () => {
     if (typeof window === 'undefined') return
@@ -3680,6 +3734,7 @@ export default function Dashboard() {
     if (typeof window === 'undefined') return
     
     const loadAllData = async () => {
+      const localSnapshotBeforeMerge = collectLocalNonatoSnapshot()
       try {
         const lastAccepted = getLastAcceptedRevision()
         let serverRevision = lastAccepted
@@ -5900,9 +5955,19 @@ export default function Dashboard() {
       if (!deferServerMerge && syncSt !== null) {
         setLastAcceptedRevision(serverRevision)
       }
-      setSyncPendingRemote(deferServerMerge ? { revision: serverRevision } : null)
+      setSyncPendingRemote(
+        deferServerMerge
+          ? {
+              revision: serverRevision,
+              updatedAt: syncSt?.updatedAt,
+              summaryLines: summarizeDataDiff(serverData, localSnapshotBeforeMerge),
+            }
+          : null
+      )
       } catch (error) {
         console.error('Erro ao carregar dados iniciais:', error)
+      } finally {
+        dataBootstrapCompleteRef.current = true
       }
     } // Fim do try-catch e da função loadAllData
 
@@ -18343,60 +18408,37 @@ const nextF = familias.filter(x => x !== f)
                 {(safeT as any)?.syncAdminSectionTitle || 'Sincronização entre aparelhos'}
               </h3>
               <p style={{ fontSize: '12px', color: '#999', margin: '0 0 12px', lineHeight: 1.45 }}>
-                {(safeT as any)?.syncAdminSectionHint ||
-                  'Use o mesmo endereço do site em todos os equipamentos. «Carregar do servidor» traz a cópia do servidor para este aparelho. «Enviar deste aparelho» envia a cópia local para o servidor (para os outros poderem carregar).'}
+                {(safeT as any)?.syncAdminSectionHintNew ||
+                  (safeT as any)?.syncAdminSectionHint ||
+                  'O sistema mostra automaticamente um aviso com resumo quando o servidor foi atualizado noutro aparelho. Use sempre esse aviso para escolher atualizar ou enviar dados.'}
               </p>
               {syncPendingRemote ? (
-                <p style={{ fontSize: '12px', color: '#ddaa66', margin: '0 0 10px', padding: '8px 10px', background: 'rgba(255,170,0,0.08)', borderRadius: '6px', border: '1px solid rgba(255,170,0,0.25)' }}>
-                  {(safeT as any)?.syncAdminPendingNote || 'Há dados no servidor mais recentes do que os que este aparelho aceitou.'}{' '}
-                  <span style={{ opacity: 0.9 }}>
-                    ({(safeT as any)?.syncRevisionLabel || 'revisão'} {syncPendingRemote.revision})
-                  </span>
-                </p>
-              ) : null}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-                <button
-                  type="button"
-                  className="btn-primary"
-                  onClick={aceitarSincronizacaoServidor}
-                  style={{ padding: '8px 12px', fontSize: '12px', fontWeight: 600 }}
-                >
-                  {(safeT as any)?.syncLoadFromServer || 'Carregar do servidor'}
-                </button>
-                <button
-                  type="button"
-                  className="btn-primary"
-                  disabled={syncPushLoading}
-                  onClick={enviarEsteAparelhoParaServidor}
-                  style={{
-                    padding: '8px 12px',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    borderColor: 'rgba(0, 255, 120, 0.55)',
-                    color: '#c8ffd8',
-                    opacity: syncPushLoading ? 0.7 : 1
-                  }}
-                >
-                  {syncPushLoading ? '…' : ((safeT as any)?.syncPushThisDevice || 'Enviar deste aparelho ao servidor')}
-                </button>
-                {syncPendingRemote ? (
+                <>
+                  <p style={{ fontSize: '12px', color: '#ddaa66', margin: '0 0 8px', padding: '8px 10px', background: 'rgba(255,170,0,0.08)', borderRadius: '6px', border: '1px solid rgba(255,170,0,0.25)' }}>
+                    {(safeT as any)?.syncAdminPendingNote || 'Há dados no servidor mais recentes do que os que este aparelho aceitou.'}{' '}
+                    <span style={{ opacity: 0.9 }}>
+                      ({(safeT as any)?.syncRevisionLabel || 'revisão'} {syncPendingRemote.revision})
+                    </span>
+                  </p>
+                  <ul style={{ fontSize: '11px', color: '#bbb', margin: '0 0 12px', paddingLeft: '18px', lineHeight: 1.45, maxHeight: '160px', overflowY: 'auto' }}>
+                    {syncPendingRemote.summaryLines.map((line, i) => (
+                      <li key={i} style={{ marginBottom: '4px' }}>{line.startsWith('•') ? line.slice(1).trim() : line}</li>
+                    ))}
+                  </ul>
                   <button
                     type="button"
-                    onClick={() => setSyncPendingRemote(null)}
-                    style={{
-                      padding: '8px 12px',
-                      fontSize: '12px',
-                      borderRadius: '6px',
-                      border: '1px solid rgba(255,255,255,0.25)',
-                      background: 'transparent',
-                      color: '#aaa',
-                      cursor: 'pointer'
-                    }}
+                    className="btn-primary"
+                    onClick={() => setSyncDecisionModalOpen(true)}
+                    style={{ padding: '8px 14px', fontSize: '12px', fontWeight: 600 }}
                   >
-                    {(safeT as any)?.syncLater || 'Ignorar aviso'}
+                    {(safeT as any)?.syncReopenModal || 'Abrir aviso de sincronização'}
                   </button>
-                ) : null}
-              </div>
+                </>
+              ) : (
+                <p style={{ fontSize: '12px', color: '#666', margin: 0 }}>
+                  {(safeT as any)?.syncAdminNoPending || 'Neste momento não há diferença de revisão pendente de decisão.'}
+                </p>
+              )}
             </div>
 
             {/* SEÇÃO: CONTROLE DE ENVIO DO LINK PARA TESTE - Primeira secção para maior visibilidade */}
@@ -22316,7 +22358,7 @@ onKeyPress={(e) => {
           { title: mT?.manualSecaoFinanceiro || '5) Financeiro', body: mT?.manualSecaoFinanceiroDesc || 'Acompanhe custos, despesas, comprovantes e clientes financeiros para fechar os serviços com rastreabilidade.' },
           { title: mT?.manualSecaoAjuda || '6) Ajuda e suporte interno', body: mT?.manualSecaoAjudaDesc || 'Pressione F1 em qualquer tela para abrir a ajuda contextual. O botão HELP também abre o mesmo conteúdo.' },
           { title: mT?.manualSecaoBoasPraticas || '7) Boas práticas profissionais', body: mT?.manualSecaoBoasPraticasDesc || 'Guarde dados com frequência, mantenha códigos de peças padronizados e use nomes consistentes para clientes/equipamentos.' },
-          { title: mT?.manualSecaoSeguranca || '8) Segurança e backup', body: mT?.manualSecaoSegurancaDesc || 'Use Atualizar com segurança para evitar perda de rascunhos e mantenha backups periódicos no Administrador.' }
+          { title: mT?.manualSecaoSeguranca || '8) Segurança e backup', body: mT?.manualSecaoSegurancaDesc || 'A sincronização entre aparelhos é feita pelo aviso automático. Mantenha backups no Administrador.' }
         ]
         return (
           <div style={{ padding: '30px', maxWidth: '1300px', margin: '0 auto' }} className="tab-content-wrapper">
@@ -46134,15 +46176,6 @@ A1;Peça exemplo;10'
                 <span style={{ fontSize: '10px', fontWeight: 800 }}>{safeT?.help || 'HELP'}</span>
               </button>
             ) : null}
-            <button
-              type="button"
-              className="mobile-refresh-toggle"
-              onClick={atualizarAppComSeguranca}
-              aria-label={(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
-              title={(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
-            >
-              ↻
-            </button>
           </div>
         </header>
       )}
@@ -46172,15 +46205,6 @@ A1;Peça exemplo;10'
               <span>{safeT?.help || 'HELP'}</span>
             </button>
           ) : null}
-          <button
-            type="button"
-            className="desktop-refresh-safe"
-            onClick={atualizarAppComSeguranca}
-            aria-label={(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
-            title={(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
-          >
-            ↻ {(safeT as any)?.safeRefresh || 'Atualizar com segurança'}
-          </button>
         </div>
       )}
       {/* Sidebar - em ecrã estreito: gaveta lateral (globals.css) */}
@@ -47792,7 +47816,7 @@ A1;Peça exemplo;10'
         >
           {activeTabId ? (
             <>
-              {/* Renderizar conteúdo da aba ativa (F1 HELP está na barra fixa ao lado de Atualizar com segurança) */}
+              {/* Renderizar conteúdo da aba ativa (F1 HELP na barra fixa no desktop) */}
               <div
                 className="tab-inner-scroll"
                 style={{
@@ -48283,6 +48307,195 @@ A1;Peça exemplo;10'
           </div>
         )}
       </div>
+
+      {/* Sincronização multi-dispositivo: um único fluxo com resumo (sem botões «Atualizar com segurança»). */}
+      {syncDecisionModalOpen && syncPendingRemote && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="sync-decision-title"
+          onClick={() => setSyncDecisionModalOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.88)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10100,
+            padding: 'max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))',
+          }}
+        >
+          <div
+            className="modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: 520,
+              width: '100%',
+              maxHeight: '88vh',
+              overflowY: 'auto',
+              border: '2px solid rgba(255, 170, 0, 0.45)',
+              boxSizing: 'border-box',
+            }}
+          >
+            <h2 id="sync-decision-title" style={{ margin: '0 0 10px', fontSize: '18px', color: '#ffcc66' }}>
+              {(safeT as any)?.syncModalTitle || 'Alterações noutro aparelho'}
+            </h2>
+            <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#ccc', lineHeight: 1.5 }}>
+              {(safeT as any)?.syncModalIntro ||
+                'Outro equipamento gravou dados no servidor. Resumo em relação ao que estava neste aparelho:'}
+            </p>
+            {syncPendingRemote.updatedAt ? (
+              <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#888' }}>
+                {(safeT as any)?.syncModalUpdatedAt || 'Última gravação no servidor'}:{' '}
+                {new Date(syncPendingRemote.updatedAt).toLocaleString()}
+              </p>
+            ) : null}
+            <p style={{ margin: '0 0 6px', fontSize: '12px', color: '#aaa' }}>
+              {(safeT as any)?.syncRevisionLabel || 'revisão'} {syncPendingRemote.revision}
+            </p>
+            <ul
+              style={{
+                margin: '0 0 16px',
+                paddingLeft: '18px',
+                fontSize: '12px',
+                color: '#ddd',
+                lineHeight: 1.55,
+                maxHeight: 'min(40vh, 280px)',
+                overflowY: 'auto',
+              }}
+            >
+              {syncPendingRemote.summaryLines.map((line, i) => (
+                <li key={i} style={{ marginBottom: '6px' }}>
+                  {line.startsWith('•') ? line.slice(1).trim() : line}
+                </li>
+              ))}
+            </ul>
+            <p style={{ margin: '0 0 14px', fontSize: '13px', color: '#fff', fontWeight: 600 }}>
+              {(safeT as any)?.syncModalQuestion || 'O que deseja fazer?'}
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                type="button"
+                className="btn-primary"
+                disabled={syncPullChecking || syncPushLoading}
+                style={{ width: '100%', justifyContent: 'center', opacity: syncPullChecking ? 0.75 : 1 }}
+                onClick={() => void aceitarSincronizacaoServidor()}
+              >
+                {syncPullChecking
+                  ? (safeT as any)?.syncPullChecking || 'A verificar servidor…'
+                  : (safeT as any)?.syncModalLoadServer || 'Sim — atualizar este aparelho com o servidor'}
+              </button>
+              <p style={{ margin: '-4px 0 0', fontSize: '11px', color: '#888' }}>
+                {(safeT as any)?.syncModalLoadServerHint ||
+                  'Substitui aqui pelos dados do servidor se o outro equipamento tem a versão certa.'}
+              </p>
+              <button
+                type="button"
+                className="btn-primary"
+                style={{
+                  width: '100%',
+                  justifyContent: 'center',
+                  borderColor: 'rgba(56, 189, 248, 0.65)',
+                  color: '#e0f7ff',
+                }}
+                disabled={syncPushLoading}
+                onClick={() => {
+                  setSyncDecisionModalOpen(false)
+                  void enviarEsteAparelhoParaServidor()
+                }}
+              >
+                {syncPushLoading
+                  ? '…'
+                  : (safeT as any)?.syncModalPushDevice || 'Não — enviar deste aparelho para o servidor'}
+              </button>
+              <p style={{ margin: '-4px 0 0', fontSize: '11px', color: '#888' }}>
+                {(safeT as any)?.syncModalPushDeviceHint ||
+                  'Substitui o servidor pela cópia deste aparelho se AQUI está a informação certa.'}
+              </p>
+              <button
+                type="button"
+                onClick={() => setSyncDecisionModalOpen(false)}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255,255,255,0.25)',
+                  background: 'transparent',
+                  color: '#aaa',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                }}
+              >
+                {(safeT as any)?.syncModalLater || 'Decidir mais tarde'}
+              </button>
+              <p style={{ margin: '-4px 0 0', fontSize: '11px', color: '#666' }}>
+                {(safeT as any)?.syncModalLaterHint ||
+                  'Pode reabrir este aviso no Administrador → Sincronização entre aparelhos.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {mobileFullPushNudge && isCompactLayout && loginUser && !syncPendingRemote && (
+        <div
+          style={{
+            position: 'fixed',
+            left: 'max(10px, env(safe-area-inset-left))',
+            right: 'max(10px, env(safe-area-inset-right))',
+            bottom: openTabs.length
+              ? 'calc(76px + env(safe-area-inset-bottom, 0px))'
+              : 'max(12px, env(safe-area-inset-bottom, 0px))',
+            zIndex: 10080,
+            padding: '12px 14px',
+            borderRadius: '12px',
+            background: 'linear-gradient(180deg, #1a221c 0%, #121812 100%)',
+            border: '1px solid rgba(0, 255, 122, 0.45)',
+            boxShadow: '0 8px 28px rgba(0,0,0,0.45)',
+            boxSizing: 'border-box',
+          }}
+        >
+          <p style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: 700, color: '#00ff88' }}>
+            {(safeT as any)?.syncMobileNudgeTitle || 'Enviar tudo ao servidor?'}
+          </p>
+          <p style={{ margin: '0 0 12px', fontSize: '12px', color: '#ccc', lineHeight: 1.45 }}>
+            {(safeT as any)?.syncMobileNudgeBody ||
+              'Alteração guardada. Para o PC ou outro tablet verem tudo igual, envie a cópia completa para o servidor.'}
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <button
+              type="button"
+              className="btn-primary"
+              style={{ flex: '1 1 140px', fontSize: '12px', padding: '8px 12px' }}
+              disabled={syncPushLoading}
+              onClick={() => {
+                setMobileFullPushNudge(false)
+                void enviarEsteAparelhoParaServidor()
+              }}
+            >
+              {syncPushLoading ? '…' : (safeT as any)?.syncMobileNudgeSend || 'Enviar tudo agora'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileFullPushNudge(false)}
+              style={{
+                flex: '1 1 120px',
+                padding: '8px 12px',
+                fontSize: '12px',
+                borderRadius: '8px',
+                border: '1px solid rgba(255,255,255,0.2)',
+                background: 'transparent',
+                color: '#aaa',
+                cursor: 'pointer',
+              }}
+            >
+              {(safeT as any)?.syncMobileNudgeClose || 'Fechar'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal F1 - HELP (ajuda da seção ativa) */}
       {showHelpModal && activeTabId && (() => {

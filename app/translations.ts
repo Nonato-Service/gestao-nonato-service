@@ -225,7 +225,8 @@ export const translations = {
     manualSecaoBoasPraticas: '7) Boas práticas profissionais',
     manualSecaoBoasPraticasDesc: 'Guarde dados com frequência, mantenha códigos de peças padronizados e use nomes consistentes para clientes/equipamentos.',
     manualSecaoSeguranca: '8) Segurança e backup',
-    manualSecaoSegurancaDesc: 'Use Atualizar com segurança para evitar perda de rascunhos e mantenha backups periódicos no Administrador.',
+    manualSecaoSegurancaDesc:
+      'A sincronização entre aparelhos é feita pelo aviso automático (resumo e escolha). Para recarregar a página use o menu do navegador se necessário. Mantenha backups periódicos no Administrador.',
     protocolosServicoTitle: 'Protocolos de Serviço',
     protocolosServicoDesc: 'Consulte e gere os protocolos de serviço (antes/depois, imagens e peças trocadas).',
     protocolosServicoNovo: 'Novo protocolo',
@@ -282,6 +283,36 @@ export const translations = {
     syncAdminSectionHint:
       'Use o mesmo endereço do site em todos os equipamentos. «Carregar do servidor» traz a cópia do servidor para aqui. «Enviar deste aparelho» envia o que está neste aparelho para o servidor (para o portátil ou outro tablet carregarem depois).',
     syncAdminPendingNote: 'O servidor tem uma versão mais recente do que a que este aparelho aceitou.',
+    syncModalTitle: 'Alterações noutro aparelho',
+    syncModalIntro:
+      'Outro equipamento (telefone, tablet ou PC) gravou dados no servidor. Resumo do que detetámos em relação ao que estava neste aparelho antes de abrir:',
+    syncModalUpdatedAt: 'Última gravação no servidor',
+    syncModalQuestion: 'O que deseja fazer?',
+    syncModalLoadServer: 'Sim — atualizar este aparelho com o servidor',
+    syncModalLoadServerHint:
+      'Antes de recarregar, o sistema compara o servidor com este aparelho: se a cópia do servidor parecer incompleta (menos registos, listas vazias, etc.), pede confirmação em dupla para não perder informação por engano.',
+    syncModalPushDevice: 'Não — enviar deste aparelho para o servidor',
+    syncModalPushDeviceHint: 'Substitui o servidor pela cópia deste aparelho (use se AQUI está a informação certa).',
+    syncModalLater: 'Decidir mais tarde',
+    syncModalLaterHint: 'Continua a trabalhar; pode voltar ao aviso no menu Administrador → Sincronização.',
+    syncMobileNudgeTitle: 'Enviar tudo ao servidor?',
+    syncMobileNudgeBody:
+      'Alteração guardada neste aparelho. Para o PC ou outro tablet verem de imediato a mesma informação, envie a cópia completa para o servidor (recomendado após várias edições).',
+    syncMobileNudgeSend: 'Enviar tudo agora',
+    syncMobileNudgeClose: 'Já está sincronizado (ficheiro a ficheiro)',
+    syncAdminSectionHintNew:
+      'O sistema avisa automaticamente quando o servidor foi atualizado noutro aparelho. Use sempre esse aviso para escolher «atualizar deste aparelho» ou «enviar para o servidor». Não é necessário outro botão de atualização.',
+    syncReopenModal: 'Abrir aviso de sincronização',
+    syncAdminNoPending: 'Neste momento não há diferença de revisão pendente de decisão.',
+    syncPullServerUnreadable:
+      'Não foi possível ler os dados do servidor (resposta vazia). Não é seguro «atualizar» agora — verifique a ligação e tente de novo.',
+    syncPullRiskSevereIntro:
+      'ATENÇÃO: se continuar, este aparelho pode ficar com MENOS informação do que tem agora (dados podem ser apagados ou substituídos por uma cópia incompleta do servidor).',
+    syncPullRiskSevereSecond:
+      'Confirma mesmo que quer substituir os dados deste aparelho pela cópia do servidor, sabendo que pode perder o indicado acima?',
+    syncPullRiskCaution:
+      'Antes de atualizar, verifique: a cópia do servidor parece mais pequena ou diferente neste aparelho.',
+    syncPullChecking: 'A verificar servidor…',
     protocolosServicoModeloPDF: 'Modelo do PDF',
     protocolosServicoPdfModelo1: '1 — Clássico (verde)',
     protocolosServicoPdfModelo2: '2 — Minimalista (azul)',

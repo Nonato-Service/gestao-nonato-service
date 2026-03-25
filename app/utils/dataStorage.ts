@@ -530,6 +530,13 @@ export async function saveData(key: string, value: any, saveToLocalStorage = tru
       }
     }
     void saveToServer(key, value).catch(() => {})
+    if (typeof window !== 'undefined') {
+      try {
+        window.dispatchEvent(new CustomEvent('nonato-data-local-changed', { detail: { key } }))
+      } catch {
+        /* ignorar */
+      }
+    }
     return
   }
 
@@ -555,6 +562,14 @@ export async function saveData(key: string, value: any, saveToLocalStorage = tru
 
   // Servidor em segundo plano — o localStorage/IndexedDB já foi gravado; não bloquear a UI se a rede falhar
   void saveToServer(key, value).catch(() => {})
+
+  if (typeof window !== 'undefined' && saveToLocalStorage) {
+    try {
+      window.dispatchEvent(new CustomEvent('nonato-data-local-changed', { detail: { key } }))
+    } catch {
+      /* ignorar */
+    }
+  }
 }
 
 // Função híbrida: carrega do servidor primeiro, depois do localStorage como fallback
