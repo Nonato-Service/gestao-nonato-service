@@ -4472,27 +4472,64 @@ export default function Dashboard() {
         }
       }
 
-      // Carregar relatórios de serviço
-      const savedRelatoriosServico = getData('nonato-relatorios-servico')
-      if (savedRelatoriosServico) {
-        setRelatoriosServico(savedRelatoriosServico)
+      // Carregar relatórios de serviço — órfãos (cliente removido por sync / cópia antiga) alinham ao mesmo critério que handleDeleteCliente
+      const savedRelatoriosServicoRaw = getData('nonato-relatorios-servico')
+      const removedRelatorioIds = new Set<string>()
+      if (savedRelatoriosServicoRaw && Array.isArray(savedRelatoriosServicoRaw)) {
+        let relatoriosOk = savedRelatoriosServicoRaw as RelatorioServico[]
+        if (Array.isArray(savedClientes)) {
+          const idsCliente = new Set(savedClientes.map((c: Cliente) => c.id).filter(Boolean))
+          for (const r of relatoriosOk) {
+            // Só órfão quando há vínculo explícito a um cliente que já não existe (legado sem clienteId mantém-se)
+            if (r?.id && r.clienteId && !idsCliente.has(r.clienteId)) {
+              removedRelatorioIds.add(r.id)
+            }
+          }
+          relatoriosOk = relatoriosOk.filter(
+            (r: RelatorioServico) =>
+              r && (!r.clienteId || idsCliente.has(r.clienteId))
+          )
+          if (removedRelatorioIds.size > 0) {
+            saveData('nonato-relatorios-servico', relatoriosOk).catch(() => {})
+          }
+        }
+        setRelatoriosServico(relatoriosOk)
       }
+
       const savedFechamentosRelatorios = getData('nonato-fechamentos-relatorios')
+      let fechamentosParaEstado: Record<string, FechamentoItem[]> | null = null
       if (savedFechamentosRelatorios && typeof savedFechamentosRelatorios === 'object' && !Array.isArray(savedFechamentosRelatorios)) {
-        setFechamentosRelatorios(savedFechamentosRelatorios)
+        fechamentosParaEstado = { ...(savedFechamentosRelatorios as Record<string, FechamentoItem[]>) }
+        if (removedRelatorioIds.size > 0) {
+          for (const id of removedRelatorioIds) {
+            delete fechamentosParaEstado![id]
+          }
+          saveData('nonato-fechamentos-relatorios', fechamentosParaEstado).catch(() => {})
+        }
+        setFechamentosRelatorios(fechamentosParaEstado)
         const guardSaved = getData('nonato-fechamentos-guardados-biblioteca')
         if (guardSaved === undefined || guardSaved === null) {
-          const initialGuard = Object.keys(savedFechamentosRelatorios).filter(
-            k => Array.isArray((savedFechamentosRelatorios as Record<string, FechamentoItem[]>)[k]) && (savedFechamentosRelatorios as Record<string, FechamentoItem[]>)[k].length > 0
+          const initialGuard = Object.keys(fechamentosParaEstado).filter(
+            k => Array.isArray(fechamentosParaEstado![k]) && fechamentosParaEstado![k].length > 0
           )
           saveData('nonato-fechamentos-guardados-biblioteca', initialGuard)
           setFechamentosGuardadosBibliotecaIds(initialGuard)
         } else {
-          setFechamentosGuardadosBibliotecaIds(Array.isArray(guardSaved) ? guardSaved : [])
+          let guardArr = Array.isArray(guardSaved) ? [...guardSaved] : []
+          if (removedRelatorioIds.size > 0) {
+            guardArr = guardArr.filter((id: string) => !removedRelatorioIds.has(id))
+            saveData('nonato-fechamentos-guardados-biblioteca', guardArr).catch(() => {})
+          }
+          setFechamentosGuardadosBibliotecaIds(guardArr)
         }
       } else {
         const guardSaved = getData('nonato-fechamentos-guardados-biblioteca')
-        setFechamentosGuardadosBibliotecaIds(Array.isArray(guardSaved) ? guardSaved : [])
+        let guardArr = Array.isArray(guardSaved) ? [...guardSaved] : []
+        if (removedRelatorioIds.size > 0) {
+          guardArr = guardArr.filter((id: string) => !removedRelatorioIds.has(id))
+          saveData('nonato-fechamentos-guardados-biblioteca', guardArr).catch(() => {})
+        }
+        setFechamentosGuardadosBibliotecaIds(guardArr)
       }
 
       const savedRelExcl = getData('nonato-relatorios-excluidos-clientes') as RelatoriosExcluidosClientesStorage | null
