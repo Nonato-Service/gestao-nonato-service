@@ -382,8 +382,10 @@ type RelatorioServico = {
   observacoes: string
   pontosAberto: string
   pecasSubstituicao: PecaSubstituicao[]
-  equipamentoId?: string // Para associar ao equipamento do cliente
+  equipamentoId?: string // cliente: n.º série do equipamento do cliente; armazém: id do equipamento em nonato-equipamentos
   clienteId?: string // Para associar ao cliente
+  /** De onde veio o equipamento escolhido no relatório (distinção lógica cliente vs armazém industrial) */
+  equipamentoOrigem?: 'cliente' | 'armazem'
   /** Assinatura do cliente (base64), quando preenchida em tablet/telemóvel */
   assinaturaCliente?: string
   /** Data/hora em que o cliente assinou (ISO) */
@@ -3085,7 +3087,8 @@ export default function Dashboard() {
     pontosAberto: '',
     pecasSubstituicao: [],
     assinaturaCliente: undefined,
-    dataAssinaturaCliente: undefined
+    dataAssinaturaCliente: undefined,
+    equipamentoOrigem: 'cliente',
   })
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false)
   /** Largura ≤1024px: menu em gaveta, conteúdo a largura total (tablet/telemóvel) */
@@ -9837,7 +9840,8 @@ export default function Dashboard() {
       pontosAberto: '',
       pecasSubstituicao: [],
       assinaturaCliente: undefined,
-      dataAssinaturaCliente: undefined
+      dataAssinaturaCliente: undefined,
+      equipamentoOrigem: 'cliente',
     })
     setNovoDiaTrabalho({
       data: new Date().toISOString().split('T')[0], // Inicializar com a data de hoje
@@ -13157,53 +13161,65 @@ export default function Dashboard() {
     }
   };
 
+  /** Só para impressão/PDF: indica claramente equipamento do armazém sem alterar o valor guardado. */
+  const relatorioParaImprimirPDF = (r: RelatorioServico): RelatorioServico => {
+    if (r.equipamentoOrigem !== 'armazem') return r
+    const base = (r.maquinaModelo || '').trim()
+    const suffix = '(Equipamento: armazém — gestão industrial)'
+    return {
+      ...r,
+      maquinaModelo: base.includes('gestão industrial') ? base : `${base} ${suffix}`.trim(),
+    }
+  }
+
   // Função wrapper que usa o modelo selecionado
   const handlePrintRelatorio = (relatorio: RelatorioServico) => {
+    const r = relatorioParaImprimirPDF(relatorio)
     switch(selectedPDFModel) {
       case 'classico':
-        handlePrintRelatorioClassico(relatorio);
+        handlePrintRelatorioClassico(r);
         break;
       case 'detalhado':
-        handlePrintRelatorioDetalhado(relatorio);
+        handlePrintRelatorioDetalhado(r);
         break;
       case 'moderno':
-        handlePrintRelatorioModerno(relatorio);
+        handlePrintRelatorioModerno(r);
         break;
       case 'minimalista':
-        handlePrintRelatorioMinimalista(relatorio);
+        handlePrintRelatorioMinimalista(r);
         break;
       case 'tecnico':
-        handlePrintRelatorioTecnico(relatorio);
+        handlePrintRelatorioTecnico(r);
         break;
       case 'executivo':
-        handlePrintRelatorioExecutivo(relatorio);
+        handlePrintRelatorioExecutivo(r);
         break;
       case 'negro':
-        handlePrintRelatorioNegro(relatorio);
+        handlePrintRelatorioNegro(r);
         break;
       case 'compacto':
-        handlePrintRelatorioCompacto(relatorio);
+        handlePrintRelatorioCompacto(r);
         break;
       case 'ferwood':
-        handlePrintRelatorioFerwood(relatorio);
+        handlePrintRelatorioFerwood(r);
         break;
       case 'profissional':
-        handlePrintRelatorioProfissional(relatorio);
+        handlePrintRelatorioProfissional(r);
         break;
       case 'resumido':
-        handlePrintRelatorioResumido(relatorio);
+        handlePrintRelatorioResumido(r);
         break;
       case 'colorido':
-        handlePrintRelatorioColorido(relatorio);
+        handlePrintRelatorioColorido(r);
         break;
       case 'formal':
-        handlePrintRelatorioFormal(relatorio);
+        handlePrintRelatorioFormal(r);
         break;
       case 'lista':
-        handlePrintRelatorioLista(relatorio);
+        handlePrintRelatorioLista(r);
         break;
       default:
-        handlePrintRelatorioClassico(relatorio);
+        handlePrintRelatorioClassico(r);
     }
   };
 
@@ -14202,6 +14218,10 @@ export default function Dashboard() {
       alert(`Por favor, preencha os campos obrigatórios: ${camposFaltando.join(', ')}`)
       return
     }
+    if (relatorioServicoForm.equipamentoOrigem === 'armazem' && !relatorioServicoForm.equipamentoId) {
+      alert('Selecione o equipamento no armazém (gestão industrial) ou mude a origem para “Cliente”.')
+      return
+    }
 
     // Recalcular todos os dias antes de salvar
     const diasRecalculados = relatorioServicoForm.diasTrabalho.map(dia => atualizarCalculosDia(dia))
@@ -14236,8 +14256,12 @@ export default function Dashboard() {
     setRelatoriosServico(updatedRelatorios)
     saveData('nonato-relatorios-servico', updatedRelatorios)
     
-    // Salvar relatório no cliente/equipamento se houver clienteId e equipamentoId
-    if (relatorioToSave.clienteId && relatorioToSave.equipamentoId) {
+    // Biblioteca por cliente: só equipamento do cadastro do cliente (não duplicar chave com id de armazém)
+    if (
+      relatorioToSave.equipamentoOrigem !== 'armazem' &&
+      relatorioToSave.clienteId &&
+      relatorioToSave.equipamentoId
+    ) {
       const clienteIndex = clientes.findIndex(c => c.id === relatorioToSave.clienteId)
       if (clienteIndex !== -1) {
         const updatedClientes = [...clientes]
@@ -14300,7 +14324,8 @@ export default function Dashboard() {
       necessarioTrocaPecas: false,
       observacoes: '',
       pontosAberto: '',
-      pecasSubstituicao: []
+      pecasSubstituicao: [],
+      equipamentoOrigem: 'cliente',
     })
     setNovoDiaTrabalho({
       data: new Date().toISOString().split('T')[0], // Inicializar com a data de hoje
@@ -14334,6 +14359,10 @@ export default function Dashboard() {
       if (!relatorioServicoForm.data) camposFaltando.push('Data')
       if (!relatorioServicoForm.numero) camposFaltando.push('Número do Relatório')
       alert(`Por favor, preencha os campos obrigatórios: ${camposFaltando.join(', ')}`)
+      return
+    }
+    if (relatorioServicoForm.equipamentoOrigem === 'armazem' && !relatorioServicoForm.equipamentoId) {
+      alert('Selecione o equipamento no armazém (gestão industrial) ou mude a origem para “Cliente”.')
       return
     }
 
@@ -14372,8 +14401,11 @@ export default function Dashboard() {
     setRelatoriosServico(updatedRelatorios)
     saveData('nonato-relatorios-servico', updatedRelatorios)
     
-    // Salvar relatório no cliente/equipamento se houver clienteId e equipamentoId
-    if (relatorioToSave.clienteId && relatorioToSave.equipamentoId) {
+    if (
+      relatorioToSave.equipamentoOrigem !== 'armazem' &&
+      relatorioToSave.clienteId &&
+      relatorioToSave.equipamentoId
+    ) {
       const clienteIndex = clientes.findIndex(c => c.id === relatorioToSave.clienteId)
       if (clienteIndex !== -1) {
         const updatedClientes = [...clientes]
@@ -14436,7 +14468,8 @@ export default function Dashboard() {
       necessarioTrocaPecas: false,
       observacoes: '',
       pontosAberto: '',
-      pecasSubstituicao: []
+      pecasSubstituicao: [],
+      equipamentoOrigem: 'cliente',
     })
     setNovoDiaTrabalho({
       data: new Date().toISOString().split('T')[0],
@@ -14481,6 +14514,10 @@ export default function Dashboard() {
       alert(`Por favor, preencha os campos obrigatórios: ${camposFaltando.join(', ')}`)
       return
     }
+    if (relatorioServicoForm.equipamentoOrigem === 'armazem' && !relatorioServicoForm.equipamentoId) {
+      alert('Selecione o equipamento no armazém (gestão industrial) ou mude a origem para “Cliente”.')
+      return
+    }
     const diasRecalculados = relatorioServicoForm.diasTrabalho.map(dia => atualizarCalculosDia(dia))
     const totais = calcularTotais(diasRecalculados)
     const relatorioToSave: RelatorioServico = {
@@ -14501,7 +14538,11 @@ export default function Dashboard() {
     }
     setRelatoriosServico(updatedRelatorios)
     saveData('nonato-relatorios-servico', updatedRelatorios)
-    if (relatorioToSave.clienteId && relatorioToSave.equipamentoId) {
+    if (
+      relatorioToSave.equipamentoOrigem !== 'armazem' &&
+      relatorioToSave.clienteId &&
+      relatorioToSave.equipamentoId
+    ) {
       const clienteIndex = clientes.findIndex(c => c.id === relatorioToSave.clienteId)
       if (clienteIndex !== -1) {
         const updatedClientes = [...clientes]
@@ -14537,7 +14578,8 @@ export default function Dashboard() {
           data: new Date().toISOString().split('T')[0], maquinaModelo: '', numeroMaquina: '', tipoServico: '',
           diasTrabalho: [], horasTrabalho: '', kmsPercorridos: '', horasViagem: '',
           servicoConcluido: false, retornoNecessario: false, entregaDocumentacao: false, liberacaoProducao: false,
-          instrucaoFuncionarios: false, necessarioTrocaPecas: false, observacoes: '', pontosAberto: '', pecasSubstituicao: []
+          instrucaoFuncionarios: false, necessarioTrocaPecas: false, observacoes: '', pontosAberto: '', pecasSubstituicao: [],
+          equipamentoOrigem: 'cliente',
         })
         setNovoDiaTrabalho({
           data: new Date().toISOString().split('T')[0], idaHora: '', idaChegada: '', idaDuracao: '', horasInicio: '', horasFim: '', horasDuracao: '',
@@ -14581,7 +14623,8 @@ export default function Dashboard() {
         pontosAberto: '',
         pecasSubstituicao: [],
         clienteId: '',
-        equipamentoId: ''
+        equipamentoId: '',
+        equipamentoOrigem: 'cliente',
       })
       setNovoDiaTrabalho({
         data: new Date().toISOString().split('T')[0],
@@ -22747,6 +22790,37 @@ onKeyPress={(e) => {
                         ))}
                       </select>
                     </div>
+
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={{ display: 'block', marginBottom: '5px', color: '#66b3ff' }}>
+                        {(safeT as any)?.relatorioEquipamentoOrigem || 'Origem do equipamento no relatório'}
+                      </label>
+                      <select
+                        value={relatorioServicoForm.equipamentoOrigem || 'cliente'}
+                        onChange={(e) => {
+                          const v = e.target.value === 'armazem' ? 'armazem' : 'cliente'
+                          setRelatorioServicoForm(prev => ({
+                            ...prev,
+                            equipamentoOrigem: v,
+                            equipamentoId: '',
+                            numeroMaquina: '',
+                            maquinaModelo: v === 'armazem' ? '' : prev.maquinaModelo,
+                          }))
+                        }}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 150, 255, 0.45)', borderRadius: '4px' }}
+                      >
+                        <option value="cliente">
+                          {(safeT as any)?.relatorioEquipOrigemCliente || 'Cliente — equipamentos do cadastro de clientes (assistência)'}
+                        </option>
+                        <option value="armazem">
+                          {(safeT as any)?.relatorioEquipOrigemArmazem || 'Armazém — cadastro de equipamentos (gestão industrial)'}
+                        </option>
+                      </select>
+                      <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#888', lineHeight: 1.4 }}>
+                        {(safeT as any)?.relatorioEquipOrigemAjuda ||
+                          'Use “Cliente” para máquinas do cliente. Use “Armazém” para equipamentos registados em Gestão industrial → Cadastro de equipamentos.'}
+                      </p>
+                    </div>
                     
                     <div>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.selecioneCliente || 'Cliente'}</label>
@@ -22754,13 +22828,16 @@ onKeyPress={(e) => {
                         value={relatorioServicoForm.clienteId || ''}
                         onChange={(e) => {
                           const selectedClient = clientes.find(c => c.id === e.target.value);
-                          setRelatorioServicoForm({
-                            ...relatorioServicoForm,
+                          setRelatorioServicoForm(prev => ({
+                            ...prev,
                             cliente: selectedClient?.nomeEmpresa || '',
                             clienteId: selectedClient?.id || '',
                             cidade: selectedClient?.localidade || '',
                             telefone: selectedClient?.telefones || '',
-                          });
+                            ...(prev.equipamentoOrigem !== 'armazem'
+                              ? { equipamentoId: '', numeroMaquina: '', maquinaModelo: '' }
+                              : {}),
+                          }))
                         }}
                         style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                       >
@@ -22783,32 +22860,64 @@ onKeyPress={(e) => {
                     </div>
                     
                     <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.equipamento || safeT?.selecioneEquipamento || 'Equipamento'}</label>
-                      <select
-                        value={relatorioServicoForm.equipamentoId || ''}
-                        onChange={(e) => {
-                          const selectedEquipamento = clientes
-                            .find(c => c.id === relatorioServicoForm.clienteId)
-                            ?.equipamentos?.find(eq => eq.numeroSerie === e.target.value)
-                          setRelatorioServicoForm({
-                            ...relatorioServicoForm,
-                            equipamentoId: e.target.value,
-                            numeroMaquina: selectedEquipamento?.numeroSerie || '',
-                            maquinaModelo: selectedEquipamento ? `${selectedEquipamento.modelo} ${selectedEquipamento.marca}`.trim() : relatorioServicoForm.maquinaModelo
-                          })
-                        }}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                        disabled={!relatorioServicoForm.clienteId}
-                      >
-                        <option value="">{safeT?.selecioneEquipamento || 'Selecione o equipamento'}</option>
-                        {relatorioServicoForm.clienteId && clientes
-                          .find(c => c.id === relatorioServicoForm.clienteId)
-                          ?.equipamentos?.map((eq, idx) => (
-                            <option key={idx} value={eq.numeroSerie || idx.toString()}>
-                              {eq.modelo} {eq.marca} {eq.numeroSerie && `(${eq.numeroSerie})`}
+                      <label style={{ display: 'block', marginBottom: '5px' }}>
+                        {(relatorioServicoForm.equipamentoOrigem || 'cliente') === 'armazem'
+                          ? ((safeT as any)?.equipamentoArmazemRelatorio || 'Equipamento do armazém')
+                          : (safeT?.equipamento || safeT?.selecioneEquipamento || 'Equipamento')}
+                      </label>
+                      {(relatorioServicoForm.equipamentoOrigem || 'cliente') === 'armazem' ? (
+                        <select
+                          value={relatorioServicoForm.equipamentoId || ''}
+                          onChange={(e) => {
+                            const eq = equipamentosAtivos.find(x => x.id === e.target.value)
+                            setRelatorioServicoForm({
+                              ...relatorioServicoForm,
+                              equipamentoOrigem: 'armazem',
+                              equipamentoId: eq?.id || '',
+                              numeroMaquina: eq?.numeroSerie || '',
+                              maquinaModelo: eq ? `${eq.modelo} ${eq.marca}`.trim() : relatorioServicoForm.maquinaModelo,
+                            })
+                          }}
+                          style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 150, 255, 0.45)', borderRadius: '4px' }}
+                        >
+                          <option value="">
+                            {(safeT as any)?.selecioneEquipamentoArmazem || 'Selecione equipamento do armazém (gestão industrial)'}
+                          </option>
+                          {equipamentosAtivos.map(eq => (
+                            <option key={eq.id} value={eq.id}>
+                              [Armazém] {eq.familia || '—'} · {eq.modelo} {eq.marca}
+                              {eq.numeroSerie ? ` (${eq.numeroSerie})` : ''}
                             </option>
                           ))}
-                      </select>
+                        </select>
+                      ) : (
+                        <select
+                          value={relatorioServicoForm.equipamentoId || ''}
+                          onChange={(e) => {
+                            const selectedEquipamento = clientes
+                              .find(c => c.id === relatorioServicoForm.clienteId)
+                              ?.equipamentos?.find(eq => eq.numeroSerie === e.target.value)
+                            setRelatorioServicoForm({
+                              ...relatorioServicoForm,
+                              equipamentoOrigem: 'cliente',
+                              equipamentoId: e.target.value,
+                              numeroMaquina: selectedEquipamento?.numeroSerie || '',
+                              maquinaModelo: selectedEquipamento ? `${selectedEquipamento.modelo} ${selectedEquipamento.marca}`.trim() : relatorioServicoForm.maquinaModelo
+                            })
+                          }}
+                          style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                          disabled={!relatorioServicoForm.clienteId}
+                        >
+                          <option value="">{safeT?.selecioneEquipamento || 'Selecione o equipamento'}</option>
+                          {relatorioServicoForm.clienteId && clientes
+                            .find(c => c.id === relatorioServicoForm.clienteId)
+                            ?.equipamentos?.map((eq, idx) => (
+                              <option key={idx} value={eq.numeroSerie || idx.toString()}>
+                                {eq.modelo} {eq.marca} {eq.numeroSerie && `(${eq.numeroSerie})`}
+                              </option>
+                            ))}
+                        </select>
+                      )}
                     </div>
                     
                     {relatorioServicoForm.equipamentoId && (
@@ -24353,6 +24462,19 @@ onKeyPress={(e) => {
                               boxShadow: '0 2px 8px rgba(255, 68, 68, 0.3)'
                             }}>
                               ⚙ {safeT?.pecas || 'Peças'}
+                            </span>
+                          )}
+                          {relatorio.equipamentoOrigem === 'armazem' && (
+                            <span style={{
+                              padding: '3px 8px',
+                              backgroundColor: 'rgba(0, 150, 255, 0.25)',
+                              color: '#66b3ff',
+                              borderRadius: '10px',
+                              fontSize: '9px',
+                              fontWeight: 'bold',
+                              border: '1px solid rgba(0, 150, 255, 0.5)'
+                            }}>
+                              {(safeT as any)?.badgeEquipamentoArmazem || '🏭 Armazém'}
                             </span>
                           )}
                         </div>
@@ -51699,7 +51821,7 @@ A1;Peça exemplo;10'
                   <button className="btn-primary" onClick={handleSaveRelatorioServico} style={{ flex: 1 }}>
                     {safeT?.save || 'Salvar'}
                   </button>
-                  <button className="btn-primary" onClick={() => { setShowRelatorioServicoForm(false); setEditingRelatorioServico(null); setRelatorioServicoForm({ id: '', numero: '', tecnico: '', cliente: '', cidade: '', telefone: '', data: new Date().toISOString().split('T')[0], maquinaModelo: '', numeroMaquina: '', tipoServico: '', diasTrabalho: [], horasTrabalho: '', kmsPercorridos: '', horasViagem: '', servicoConcluido: false, retornoNecessario: false, entregaDocumentacao: false, liberacaoProducao: false, instrucaoFuncionarios: false, necessarioTrocaPecas: false, observacoes: '', pontosAberto: '', pecasSubstituicao: [] }); }} style={{ flex: 1 }}>
+                  <button className="btn-primary" onClick={() => { setShowRelatorioServicoForm(false); setEditingRelatorioServico(null); setRelatorioServicoForm({ id: '', numero: '', tecnico: '', cliente: '', cidade: '', telefone: '', data: new Date().toISOString().split('T')[0], maquinaModelo: '', numeroMaquina: '', tipoServico: '', diasTrabalho: [], horasTrabalho: '', kmsPercorridos: '', horasViagem: '', servicoConcluido: false, retornoNecessario: false, entregaDocumentacao: false, liberacaoProducao: false, instrucaoFuncionarios: false, necessarioTrocaPecas: false, observacoes: '', pontosAberto: '', pecasSubstituicao: [], equipamentoOrigem: 'cliente' }); }} style={{ flex: 1 }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>
@@ -51711,7 +51833,14 @@ A1;Peça exemplo;10'
               <ul style={{ listStyle: 'none', padding: 0, marginTop: '20px' }}>
                 {relatoriosServico.map(relatorio => (
                   <li key={relatorio.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
-                    <p><strong>{relatorio.numero}</strong> - {relatorio.cliente}</p>
+                    <p>
+                      <strong>{relatorio.numero}</strong> — {relatorio.cliente}
+                      {relatorio.equipamentoOrigem === 'armazem' && (
+                        <span style={{ marginLeft: '8px', fontSize: '11px', color: '#66b3ff', fontWeight: 'bold' }}>
+                          {(safeT as any)?.badgeEquipamentoArmazem || '[Armazém]'}
+                        </span>
+                      )}
+                    </p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.tecnico || 'Técnico'}: {relatorio.tecnico}</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.data || 'Data'}: {new Date(relatorio.data).toLocaleDateString()}</p>
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
