@@ -41942,16 +41942,17 @@ A1;Peça exemplo;10'
 
       case 'biblioteca-relatorios':
         // Uma pasta por cliente: Relatórios de Serviço + Relatórios de Despesas (fechamentos). Todos os clientes aparecem.
-        // Cores no mesmo tom que o tema (verde/laranja/azul), com saturação reduzida para menos cansaço visual.
+        // Paleta muito suave (quase acinzentada): mesma família de cor, pouca saturação. Texto dos botões: branco.
         const bib = {
-          g: '#5cb972',
-          gRgba: (a: number) => `rgba(92, 185, 114, ${a})`,
-          o: '#c9a14a',
-          oRgba: (a: number) => `rgba(201, 161, 74, ${a})`,
-          b: '#7aa8d4',
-          bRgba: (a: number) => `rgba(95, 150, 205, ${a})`,
-          p: '#a894cc',
-          pRgba: (a: number) => `rgba(155, 140, 200, ${a})`,
+          g: '#6f7f74',
+          gRgba: (a: number) => `rgba(111, 127, 116, ${a})`,
+          o: '#908670',
+          oRgba: (a: number) => `rgba(144, 134, 112, ${a})`,
+          b: '#7d8fa0',
+          bRgba: (a: number) => `rgba(125, 143, 160, ${a})`,
+          p: '#8f8898',
+          pRgba: (a: number) => `rgba(143, 136, 152, ${a})`,
+          btnLabel: '#ffffff',
         }
         const relatoriosPorCliente: Array<{
           cliente: Cliente,
@@ -42068,9 +42069,9 @@ A1;Peça exemplo;10'
                       padding: '6px 8px', 
                       fontSize: '16px',
                       backgroundColor: 'transparent',
-                      border: `1px solid ${bib.gRgba(0.32)}`,
+                      border: `1px solid ${bib.gRgba(0.24)}`,
                       borderRadius: '4px',
-                      color: bib.g,
+                      color: bib.btnLabel,
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -42081,12 +42082,12 @@ A1;Peça exemplo;10'
                     }}
                     title={safeT?.voltar || 'Voltar'}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = bib.gRgba(0.1)
-                      e.currentTarget.style.borderColor = bib.gRgba(0.48)
+                      e.currentTarget.style.backgroundColor = bib.gRgba(0.12)
+                      e.currentTarget.style.borderColor = bib.gRgba(0.38)
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = bib.gRgba(0.32)
+                      e.currentTarget.style.borderColor = bib.gRgba(0.24)
                     }}
                   >
                     ↶
@@ -42098,9 +42099,9 @@ A1;Peça exemplo;10'
                       padding: '6px 8px', 
                       fontSize: '16px',
                       backgroundColor: 'transparent',
-                      border: `1px solid ${bib.bRgba(0.35)}`,
+                      border: `1px solid ${bib.bRgba(0.26)}`,
                       borderRadius: '4px',
-                      color: bib.b,
+                      color: bib.btnLabel,
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -42112,11 +42113,11 @@ A1;Peça exemplo;10'
                     title={safeT?.paginaInicial || 'Página Inicial'}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor = bib.bRgba(0.12)
-                      e.currentTarget.style.borderColor = bib.bRgba(0.5)
+                      e.currentTarget.style.borderColor = bib.bRgba(0.4)
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = bib.bRgba(0.35)
+                      e.currentTarget.style.borderColor = bib.bRgba(0.26)
                     }}
                   >
                     🏠
@@ -42130,7 +42131,7 @@ A1;Peça exemplo;10'
                 padding: '60px 40px', 
                 backgroundColor: '#141414', 
                 borderRadius: '12px', 
-                border: `2px solid ${bib.gRgba(0.28)}`,
+                border: `2px solid ${bib.gRgba(0.2)}`,
                 textAlign: 'center'
               }}>
                 <div style={{ fontSize: '48px', marginBottom: '20px' }}>📋</div>
@@ -42152,8 +42153,8 @@ A1;Peça exemplo;10'
                         backgroundColor: '#141414', 
                         padding: '15px', 
                         borderRadius: '8px', 
-                        border: `1px solid ${bib.gRgba(0.28)}`,
-                        boxShadow: `0 2px 8px ${bib.gRgba(0.08)}`,
+                        border: `1px solid ${bib.gRgba(0.22)}`,
+                        boxShadow: `0 2px 8px ${bib.gRgba(0.06)}`,
                         minWidth: 0,
                         maxWidth: '100%'
                       }}
@@ -42162,7 +42163,7 @@ A1;Peça exemplo;10'
                       <div style={{ 
                         marginBottom: '12px', 
                         paddingBottom: '10px',
-                        borderBottom: `1px solid ${bib.gRgba(0.35)}`
+                        borderBottom: `1px solid ${bib.gRgba(0.28)}`
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', flexWrap: 'wrap', gap: '8px' }}>
                           <h3 style={{ margin: 0, color: bib.g, fontSize: '16px', fontWeight: 'bold', flex: 1, minWidth: 0 }}>
@@ -42170,8 +42171,8 @@ A1;Peça exemplo;10'
                           </h3>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ 
-                              backgroundColor: bib.gRgba(0.14), 
-                              color: bib.g,
+                              backgroundColor: bib.gRgba(0.1), 
+                              color: '#c5ccc7',
                               padding: '2px 8px',
                               borderRadius: '8px',
                               fontSize: '10px',
@@ -42185,9 +42186,9 @@ A1;Peça exemplo;10'
                               style={{
                                 padding: '4px 10px',
                                 fontSize: '10px',
-                                backgroundColor: 'rgba(255, 68, 68, 0.2)',
-                                border: '1px solid rgba(255, 68, 68, 0.6)',
-                                color: '#ff8888',
+                                backgroundColor: 'rgba(140, 95, 95, 0.22)',
+                                border: '1px solid rgba(140, 95, 95, 0.4)',
+                                color: bib.btnLabel,
                                 borderRadius: '6px',
                                 cursor: 'pointer',
                                 fontWeight: 'bold'
@@ -42329,8 +42330,8 @@ A1;Peça exemplo;10'
                                           padding: '4px',
                                           fontSize: '9px',
                                           backgroundColor: '#141414',
-                                          color: bib.b,
-                                          border: `1px solid ${bib.bRgba(0.42)}`,
+                                          color: '#e8e8e8',
+                                          border: `1px solid ${bib.bRgba(0.28)}`,
                                           borderRadius: '3px',
                                           cursor: 'pointer'
                                         }}
@@ -42360,8 +42361,8 @@ A1;Peça exemplo;10'
                                             padding: '6px 10px', 
                                             fontSize: '10px',
                                             backgroundColor: bib.gRgba(0.14),
-                                            border: `1px solid ${bib.gRgba(0.45)}`,
-                                            color: '#e8e8e8'
+                                            border: `1px solid ${bib.gRgba(0.32)}`,
+                                            color: bib.btnLabel
                                           }}
                                         >
                                           👁️ {safeT?.view || 'Ver'}
@@ -42374,9 +42375,9 @@ A1;Peça exemplo;10'
                                             minWidth: '60px',
                                             padding: '6px 10px', 
                                             fontSize: '10px', 
-                                            backgroundColor: bib.bRgba(0.16), 
-                                            border: `1px solid ${bib.bRgba(0.42)}`,
-                                            color: bib.b
+                                            backgroundColor: bib.bRgba(0.14), 
+                                            border: `1px solid ${bib.bRgba(0.3)}`,
+                                            color: bib.btnLabel
                                           }}
                                         >
                                           📄 {safeT?.gerarPDF || 'PDF'}
@@ -42389,9 +42390,9 @@ A1;Peça exemplo;10'
                                             minWidth: '60px',
                                             padding: '6px 10px', 
                                             fontSize: '10px', 
-                                            backgroundColor: 'rgba(255, 68, 68, 0.2)', 
-                                            border: '1px solid rgba(255, 68, 68, 0.5)',
-                                            color: '#ff8888',
+                                            backgroundColor: 'rgba(140, 95, 95, 0.22)', 
+                                            border: '1px solid rgba(140, 95, 95, 0.4)',
+                                            color: bib.btnLabel,
                                             borderRadius: '4px',
                                             cursor: 'pointer'
                                           }}
@@ -42442,16 +42443,16 @@ A1;Peça exemplo;10'
                                       </div>
                                     </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                                      <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens })} style={{ ...btnBase, backgroundColor: bib.gRgba(0.14), border: `1px solid ${bib.gRgba(0.42)}`, color: bib.g }}>
+                                      <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens })} style={{ ...btnBase, backgroundColor: bib.gRgba(0.14), border: `1px solid ${bib.gRgba(0.3)}`, color: bib.btnLabel }}>
                                         👁️ {(safeT as any)?.visualizarDespesasBiblioteca ?? safeT?.view ?? 'View'}
                                       </button>
-                                      <button type="button" onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)} style={{ ...btnBase, backgroundColor: bib.bRgba(0.18), border: `1px solid ${bib.bRgba(0.45)}`, color: bib.b }}>
+                                      <button type="button" onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)} style={{ ...btnBase, backgroundColor: bib.bRgba(0.14), border: `1px solid ${bib.bRgba(0.3)}`, color: bib.btnLabel }}>
                                         ✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}
                                       </button>
-                                      <button type="button" onClick={() => imprimirPDFDespesasDaBiblioteca(relatorio, itens)} style={{ ...btnBase, backgroundColor: bib.pRgba(0.14), border: `1px solid ${bib.pRgba(0.4)}`, color: bib.p }}>
+                                      <button type="button" onClick={() => imprimirPDFDespesasDaBiblioteca(relatorio, itens)} style={{ ...btnBase, backgroundColor: bib.pRgba(0.12), border: `1px solid ${bib.pRgba(0.32)}`, color: bib.btnLabel }}>
                                         📄 {(safeT as any)?.gerarPDF || 'PDF'}
                                       </button>
-                                      <button type="button" onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(255, 68, 68, 0.2)', border: '1px solid rgba(255, 68, 68, 0.55)', color: '#ff8888' }}>
+                                      <button type="button" onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(140, 95, 95, 0.22)', border: '1px solid rgba(140, 95, 95, 0.4)', color: bib.btnLabel }}>
                                         🗑️ {safeT?.delete || 'Excluir'}
                                       </button>
                                     </div>
@@ -42509,8 +42510,8 @@ A1;Peça exemplo;10'
                   <div style={{ marginTop: '16px', fontSize: '18px', fontWeight: 'bold', color: bib.g, textAlign: 'right' }}>{(safeT as any)?.somaTotal || 'SOMA TOTAL'}: €{totV.toFixed(2)}</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
                     <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca(null)} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #666', background: '#333', color: '#fff', cursor: 'pointer' }}>{safeT?.close || 'Fechar'}</button>
-                    <button type="button" onClick={() => { imprimirPDFDespesasDaBiblioteca(relV, itensV) }} style={{ padding: '10px 20px', borderRadius: '8px', border: `1px solid ${bib.p}`, background: bib.pRgba(0.14), color: bib.p, cursor: 'pointer', fontWeight: 600 }}>📄 {(safeT as any)?.gerarPDF || 'PDF'}</button>
-                    <button type="button" onClick={() => { setModalVisualizarDespesasBiblioteca(null); handleEditarDespesasNaBiblioteca(relV.id) }} style={{ padding: '10px 20px', borderRadius: '8px', border: `1px solid ${bib.b}`, background: bib.bRgba(0.18), color: bib.b, cursor: 'pointer', fontWeight: 600 }}>✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}</button>
+                    <button type="button" onClick={() => { imprimirPDFDespesasDaBiblioteca(relV, itensV) }} style={{ padding: '10px 20px', borderRadius: '8px', border: `1px solid ${bib.pRgba(0.45)}`, background: bib.pRgba(0.14), color: bib.btnLabel, cursor: 'pointer', fontWeight: 600 }}>📄 {(safeT as any)?.gerarPDF || 'PDF'}</button>
+                    <button type="button" onClick={() => { setModalVisualizarDespesasBiblioteca(null); handleEditarDespesasNaBiblioteca(relV.id) }} style={{ padding: '10px 20px', borderRadius: '8px', border: `1px solid ${bib.bRgba(0.38)}`, background: bib.bRgba(0.14), color: bib.btnLabel, cursor: 'pointer', fontWeight: 600 }}>✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}</button>
                   </div>
                 </div>
               </div>
