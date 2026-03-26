@@ -41942,18 +41942,6 @@ A1;Peça exemplo;10'
 
       case 'biblioteca-relatorios':
         // Uma pasta por cliente: Relatórios de Serviço + Relatórios de Despesas (fechamentos). Todos os clientes aparecem.
-        // Paleta muito suave (quase acinzentada): mesma família de cor, pouca saturação. Texto dos botões: branco.
-        const bib = {
-          g: '#6f7f74',
-          gRgba: (a: number) => `rgba(111, 127, 116, ${a})`,
-          o: '#908670',
-          oRgba: (a: number) => `rgba(144, 134, 112, ${a})`,
-          b: '#7d8fa0',
-          bRgba: (a: number) => `rgba(125, 143, 160, ${a})`,
-          p: '#8f8898',
-          pRgba: (a: number) => `rgba(143, 136, 152, ${a})`,
-          btnLabel: '#ffffff',
-        }
         const relatoriosPorCliente: Array<{
           cliente: Cliente,
           equipamentos: Array<{
@@ -42069,9 +42057,9 @@ A1;Peça exemplo;10'
                       padding: '6px 8px', 
                       fontSize: '16px',
                       backgroundColor: 'transparent',
-                      border: `1px solid ${bib.gRgba(0.24)}`,
+                      border: '1px solid rgba(0, 255, 0, 0.3)',
                       borderRadius: '4px',
-                      color: bib.btnLabel,
+                      color: '#00ff00',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -42082,12 +42070,12 @@ A1;Peça exemplo;10'
                     }}
                     title={safeT?.voltar || 'Voltar'}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = bib.gRgba(0.12)
-                      e.currentTarget.style.borderColor = bib.gRgba(0.38)
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = bib.gRgba(0.24)
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
                     }}
                   >
                     ↶
@@ -42099,9 +42087,9 @@ A1;Peça exemplo;10'
                       padding: '6px 8px', 
                       fontSize: '16px',
                       backgroundColor: 'transparent',
-                      border: `1px solid ${bib.bRgba(0.26)}`,
+                      border: '1px solid rgba(0, 150, 255, 0.3)',
                       borderRadius: '4px',
-                      color: bib.btnLabel,
+                      color: '#66b3ff',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -42112,12 +42100,12 @@ A1;Peça exemplo;10'
                     }}
                     title={safeT?.paginaInicial || 'Página Inicial'}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = bib.bRgba(0.12)
-                      e.currentTarget.style.borderColor = bib.bRgba(0.4)
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.1)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.5)'
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = bib.bRgba(0.26)
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.3)'
                     }}
                   >
                     🏠
@@ -42131,7 +42119,7 @@ A1;Peça exemplo;10'
                 padding: '60px 40px', 
                 backgroundColor: '#141414', 
                 borderRadius: '12px', 
-                border: `2px solid ${bib.gRgba(0.2)}`,
+                border: '2px solid rgba(0, 255, 0, 0.3)',
                 textAlign: 'center'
               }}>
                 <div style={{ fontSize: '48px', marginBottom: '20px' }}>📋</div>
@@ -42153,8 +42141,8 @@ A1;Peça exemplo;10'
                         backgroundColor: '#141414', 
                         padding: '15px', 
                         borderRadius: '8px', 
-                        border: `1px solid ${bib.gRgba(0.22)}`,
-                        boxShadow: `0 2px 8px ${bib.gRgba(0.06)}`,
+                        border: '1px solid rgba(0, 255, 0, 0.3)',
+                        boxShadow: '0 2px 8px rgba(0, 255, 0, 0.1)',
                         minWidth: 0,
                         maxWidth: '100%'
                       }}
@@ -42163,16 +42151,16 @@ A1;Peça exemplo;10'
                       <div style={{ 
                         marginBottom: '12px', 
                         paddingBottom: '10px',
-                        borderBottom: `1px solid ${bib.gRgba(0.28)}`
+                        borderBottom: '1px solid rgba(0, 255, 0, 0.4)'
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', flexWrap: 'wrap', gap: '8px' }}>
-                          <h3 style={{ margin: 0, color: bib.g, fontSize: '16px', fontWeight: 'bold', flex: 1, minWidth: 0 }}>
+                          <h3 style={{ margin: 0, color: '#00ff00', fontSize: '16px', fontWeight: 'bold', flex: 1, minWidth: 0 }}>
                             📋 {cliente.nomeEmpresa}
                           </h3>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ 
-                              backgroundColor: bib.gRgba(0.1), 
-                              color: '#c5ccc7',
+                              backgroundColor: 'rgba(0, 255, 0, 0.2)', 
+                              color: '#00ff00',
                               padding: '2px 8px',
                               borderRadius: '8px',
                               fontSize: '10px',
@@ -42186,9 +42174,9 @@ A1;Peça exemplo;10'
                               style={{
                                 padding: '4px 10px',
                                 fontSize: '10px',
-                                backgroundColor: 'rgba(140, 95, 95, 0.22)',
-                                border: '1px solid rgba(140, 95, 95, 0.4)',
-                                color: bib.btnLabel,
+                                backgroundColor: 'rgba(255, 68, 68, 0.2)',
+                                border: '1px solid rgba(255, 68, 68, 0.6)',
+                                color: '#ff8888',
                                 borderRadius: '6px',
                                 cursor: 'pointer',
                                 fontWeight: 'bold'
@@ -42208,7 +42196,7 @@ A1;Peça exemplo;10'
 
                       {/* Secção: Relatórios de Serviço */}
                       <div style={{ marginBottom: '8px' }}>
-                        <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: bib.g, fontWeight: 'bold' }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#00ff00', fontWeight: 'bold' }}>
                           {(safeT as any)?.relatoriosServicoTitle || 'Relatórios de Serviço'}
                         </h4>
                         {equipamentos.length === 0 && (
@@ -42227,11 +42215,11 @@ A1;Peça exemplo;10'
                               padding: '12px', 
                               backgroundColor: '#222222', 
                               borderRadius: '6px', 
-                              border: `1px solid ${bib.gRgba(0.2)}`
+                              border: '1px solid rgba(0, 255, 0, 0.2)'
                             }}
                           >
                             {/* Cabeçalho do Equipamento */}
-                            <div style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: `1px solid ${bib.gRgba(0.22)}` }}>
+                            <div style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)' }}>
                               <h4 style={{ margin: 0, color: '#ffffff', fontSize: '13px', fontWeight: 'bold', marginBottom: '3px' }}>
                                 🔧 {equipamento.modelo} {equipamento.marca}
                               </h4>
@@ -42258,15 +42246,15 @@ A1;Peça exemplo;10'
                                       padding: '10px', 
                                       backgroundColor: '#141414', 
                                       borderRadius: '4px', 
-                                      border: `1px solid ${bib.gRgba(0.16)}`,
+                                      border: '1px solid rgba(0, 255, 0, 0.15)',
                                       transition: 'all 0.2s ease'
                                     }}
                                     onMouseEnter={(e) => {
-                                      e.currentTarget.style.borderColor = bib.gRgba(0.38)
+                                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.4)'
                                       e.currentTarget.style.backgroundColor = '#222'
                                     }}
                                     onMouseLeave={(e) => {
-                                      e.currentTarget.style.borderColor = bib.gRgba(0.16)
+                                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.15)'
                                       e.currentTarget.style.backgroundColor = '#141414'
                                     }}
                                   >
@@ -42274,7 +42262,7 @@ A1;Peça exemplo;10'
                                     <div style={{ marginBottom: '8px' }}>
                                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '5px' }}>
                                         <div style={{ flex: 1 }}>
-                                          <p style={{ margin: 0, fontWeight: 'bold', color: bib.g, fontSize: '13px', marginBottom: '2px' }}>
+                                          <p style={{ margin: 0, fontWeight: 'bold', color: '#00ff00', fontSize: '13px', marginBottom: '2px' }}>
                                             {relatorio.numero}
                                           </p>
                                           {relatorio.tipoServico && (
@@ -42284,8 +42272,8 @@ A1;Peça exemplo;10'
                                           )}
                                         </div>
                                         <span style={{ 
-                                          backgroundColor: bib.gRgba(0.12), 
-                                          color: bib.g,
+                                          backgroundColor: 'rgba(0, 255, 0, 0.15)', 
+                                          color: '#00ff00',
                                           padding: '2px 6px',
                                           borderRadius: '3px',
                                           fontSize: '10px',
@@ -42304,17 +42292,17 @@ A1;Peça exemplo;10'
                                         opacity: 0.8
                                       }}>
                                         <div>
-                                          <strong style={{ color: bib.g }}>Téc:</strong> {relatorio.tecnico}
+                                          <strong style={{ color: '#00ff00' }}>Téc:</strong> {relatorio.tecnico}
                                         </div>
                                         <div>
-                                          <strong style={{ color: bib.g }}>H:</strong> {totais.horasTrabalho}h
+                                          <strong style={{ color: '#00ff00' }}>H:</strong> {totais.horasTrabalho}h
                                         </div>
                                         <div>
-                                          <strong style={{ color: bib.g }}>KM:</strong> {totais.kmsPercorridos}
+                                          <strong style={{ color: '#00ff00' }}>KM:</strong> {totais.kmsPercorridos}
                                         </div>
                                         {relatorio.servicoConcluido && (
                                           <div>
-                                            <span style={{ color: bib.g }}>✓ OK</span>
+                                            <span style={{ color: '#00ff00' }}>✓ OK</span>
                                           </div>
                                         )}
                                       </div>
@@ -42330,8 +42318,8 @@ A1;Peça exemplo;10'
                                           padding: '4px',
                                           fontSize: '9px',
                                           backgroundColor: '#141414',
-                                          color: '#e8e8e8',
-                                          border: `1px solid ${bib.bRgba(0.28)}`,
+                                          color: '#66b3ff',
+                                          border: '1px solid rgba(0, 150, 255, 0.5)',
                                           borderRadius: '3px',
                                           cursor: 'pointer'
                                         }}
@@ -42360,9 +42348,9 @@ A1;Peça exemplo;10'
                                             minWidth: '60px',
                                             padding: '6px 10px', 
                                             fontSize: '10px',
-                                            backgroundColor: bib.gRgba(0.14),
-                                            border: `1px solid ${bib.gRgba(0.32)}`,
-                                            color: bib.btnLabel
+                                            backgroundColor: 'rgba(0, 255, 0, 0.2)',
+                                            border: '1px solid rgba(0, 255, 0, 0.6)',
+                                            color: '#fff'
                                           }}
                                         >
                                           👁️ {safeT?.view || 'Ver'}
@@ -42375,9 +42363,9 @@ A1;Peça exemplo;10'
                                             minWidth: '60px',
                                             padding: '6px 10px', 
                                             fontSize: '10px', 
-                                            backgroundColor: bib.bRgba(0.14), 
-                                            border: `1px solid ${bib.bRgba(0.3)}`,
-                                            color: bib.btnLabel
+                                            backgroundColor: 'rgba(0, 150, 255, 0.2)', 
+                                            borderColor: 'rgba(0, 150, 255, 0.5)',
+                                            color: '#66b3ff'
                                           }}
                                         >
                                           📄 {safeT?.gerarPDF || 'PDF'}
@@ -42390,9 +42378,9 @@ A1;Peça exemplo;10'
                                             minWidth: '60px',
                                             padding: '6px 10px', 
                                             fontSize: '10px', 
-                                            backgroundColor: 'rgba(140, 95, 95, 0.22)', 
-                                            border: '1px solid rgba(140, 95, 95, 0.4)',
-                                            color: bib.btnLabel,
+                                            backgroundColor: 'rgba(255, 68, 68, 0.2)', 
+                                            border: '1px solid rgba(255, 68, 68, 0.5)',
+                                            color: '#ff8888',
                                             borderRadius: '4px',
                                             cursor: 'pointer'
                                           }}
@@ -42410,8 +42398,8 @@ A1;Peça exemplo;10'
                         ))}
 
                         {/* Secção: Relatórios de Despesas (fechamentos) */}
-                        <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: `1px solid ${bib.gRgba(0.22)}` }}>
-                          <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: bib.o, fontWeight: 'bold' }}>
+                        <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid rgba(0, 255, 0, 0.25)' }}>
+                          <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffaa00', fontWeight: 'bold' }}>
                             {(safeT as any)?.relatoriosDespesasTitle || 'Relatórios de Despesas'}
                           </h4>
                           {despesasCliente.length === 0 ? (
@@ -42430,29 +42418,29 @@ A1;Peça exemplo;10'
                                       padding: '14px 16px', 
                                       backgroundColor: '#1a1a1a', 
                                       borderRadius: '10px', 
-                                      border: `2px solid ${bib.oRgba(0.38)}`,
+                                      border: '2px solid rgba(255, 170, 0, 0.45)',
                                       width: '100%'
                                     }}
                                   >
                                     <div style={{ marginBottom: '12px' }}>
-                                      <div style={{ fontWeight: 'bold', color: bib.o, fontSize: '15px' }}>
+                                      <div style={{ fontWeight: 'bold', color: '#ffaa00', fontSize: '15px' }}>
                                         {(safeT as any)?.fechamentoRelatorio || 'Fechamento'} {relatorio.numero}
                                       </div>
                                       <div style={{ fontSize: '12px', color: '#aaa', marginTop: '4px' }}>
-                                        {relatorio.cliente} · {relatorio.maquinaModelo} · {(safeT as any)?.total || 'Total'}: <strong style={{ color: bib.g }}>€{totalCobranca.toFixed(2)}</strong>
+                                        {relatorio.cliente} · {relatorio.maquinaModelo} · {(safeT as any)?.total || 'Total'}: <strong style={{ color: '#00ff00' }}>€{totalCobranca.toFixed(2)}</strong>
                                       </div>
                                     </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                                      <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens })} style={{ ...btnBase, backgroundColor: bib.gRgba(0.14), border: `1px solid ${bib.gRgba(0.3)}`, color: bib.btnLabel }}>
+                                      <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens })} style={{ ...btnBase, backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00' }}>
                                         👁️ {(safeT as any)?.visualizarDespesasBiblioteca ?? safeT?.view ?? 'View'}
                                       </button>
-                                      <button type="button" onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)} style={{ ...btnBase, backgroundColor: bib.bRgba(0.14), border: `1px solid ${bib.bRgba(0.3)}`, color: bib.btnLabel }}>
+                                      <button type="button" onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(0, 150, 255, 0.25)', border: '1px solid rgba(0, 150, 255, 0.6)', color: '#66b3ff' }}>
                                         ✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}
                                       </button>
-                                      <button type="button" onClick={() => imprimirPDFDespesasDaBiblioteca(relatorio, itens)} style={{ ...btnBase, backgroundColor: bib.pRgba(0.12), border: `1px solid ${bib.pRgba(0.32)}`, color: bib.btnLabel }}>
+                                      <button type="button" onClick={() => imprimirPDFDespesasDaBiblioteca(relatorio, itens)} style={{ ...btnBase, backgroundColor: 'rgba(150, 100, 255, 0.2)', border: '1px solid rgba(150, 100, 255, 0.5)', color: '#c4a7ff' }}>
                                         📄 {(safeT as any)?.gerarPDF || 'PDF'}
                                       </button>
-                                      <button type="button" onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(140, 95, 95, 0.22)', border: '1px solid rgba(140, 95, 95, 0.4)', color: bib.btnLabel }}>
+                                      <button type="button" onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(255, 68, 68, 0.2)', border: '1px solid rgba(255, 68, 68, 0.55)', color: '#ff8888' }}>
                                         🗑️ {safeT?.delete || 'Excluir'}
                                       </button>
                                     </div>
@@ -42475,17 +42463,17 @@ A1;Peça exemplo;10'
             return (
               <div className="biblioteca-despesas-modal-overlay" onClick={() => setModalVisualizarDespesasBiblioteca(null)}>
                 <div className="biblioteca-despesas-modal-inner" onClick={e => e.stopPropagation()}>
-                  <h3 style={{ color: bib.o, margin: '0 0 8px', fontSize: 'clamp(16px, 4vw, 18px)', wordBreak: 'break-word' }}>{(safeT as any)?.fechamentoRelatorio || 'Fechamento'} {relV.numero}</h3>
+                  <h3 style={{ color: '#ffaa00', margin: '0 0 8px', fontSize: 'clamp(16px, 4vw, 18px)', wordBreak: 'break-word' }}>{(safeT as any)?.fechamentoRelatorio || 'Fechamento'} {relV.numero}</h3>
                   <p style={{ color: '#aaa', fontSize: '13px', margin: '0 0 16px', wordBreak: 'break-word' }}>{relV.cliente} · {relV.maquinaModelo} · {relV.data}</p>
                   <div className="biblioteca-despesas-modal-table-wrap">
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: '#ddd', minWidth: '520px' }}>
                     <thead>
-                      <tr style={{ borderBottom: `2px solid ${bib.o}` }}>
-                        <th style={{ textAlign: 'left', padding: '10px 8px', color: bib.o }}>{(safeT as any)?.codigoOuCod || 'COD'}</th>
-                        <th style={{ textAlign: 'left', padding: '10px 8px', color: bib.o }}>{(safeT as any)?.descricao || 'Descrição'}</th>
-                        <th style={{ textAlign: 'right', padding: '10px 8px', color: bib.o }}>{(safeT as any)?.quantidade || 'Qtd'}</th>
-                        <th style={{ textAlign: 'right', padding: '10px 8px', color: bib.o }}>{(safeT as any)?.valorUnitario || 'Unit.'}</th>
-                        <th style={{ textAlign: 'right', padding: '10px 8px', color: bib.o }}>{(safeT as any)?.total || 'Total'}</th>
+                      <tr style={{ borderBottom: '2px solid #ffaa00' }}>
+                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#ffaa00' }}>{(safeT as any)?.codigoOuCod || 'COD'}</th>
+                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#ffaa00' }}>{(safeT as any)?.descricao || 'Descrição'}</th>
+                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#ffaa00' }}>{(safeT as any)?.quantidade || 'Qtd'}</th>
+                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#ffaa00' }}>{(safeT as any)?.valorUnitario || 'Unit.'}</th>
+                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#ffaa00' }}>{(safeT as any)?.total || 'Total'}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -42496,7 +42484,7 @@ A1;Peça exemplo;10'
                         const linTot = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
                         return (
                           <tr key={item.id} style={{ borderBottom: '1px solid #333' }}>
-                            <td style={{ padding: '10px 8px', color: bib.g, fontWeight: 600 }}>{cod}</td>
+                            <td style={{ padding: '10px 8px', color: '#00ff00', fontWeight: 600 }}>{cod}</td>
                             <td style={{ padding: '10px 8px' }}>{item.descricao || '—'}</td>
                             <td style={{ padding: '10px 8px', textAlign: 'right' }}>{qtd}</td>
                             <td style={{ padding: '10px 8px', textAlign: 'right' }}>{item.valorUnitario.toFixed(2)} €</td>
@@ -42507,11 +42495,11 @@ A1;Peça exemplo;10'
                     </tbody>
                   </table>
                   </div>
-                  <div style={{ marginTop: '16px', fontSize: '18px', fontWeight: 'bold', color: bib.g, textAlign: 'right' }}>{(safeT as any)?.somaTotal || 'SOMA TOTAL'}: €{totV.toFixed(2)}</div>
+                  <div style={{ marginTop: '16px', fontSize: '18px', fontWeight: 'bold', color: '#00ff00', textAlign: 'right' }}>{(safeT as any)?.somaTotal || 'SOMA TOTAL'}: €{totV.toFixed(2)}</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
                     <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca(null)} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #666', background: '#333', color: '#fff', cursor: 'pointer' }}>{safeT?.close || 'Fechar'}</button>
-                    <button type="button" onClick={() => { imprimirPDFDespesasDaBiblioteca(relV, itensV) }} style={{ padding: '10px 20px', borderRadius: '8px', border: `1px solid ${bib.pRgba(0.45)}`, background: bib.pRgba(0.14), color: bib.btnLabel, cursor: 'pointer', fontWeight: 600 }}>📄 {(safeT as any)?.gerarPDF || 'PDF'}</button>
-                    <button type="button" onClick={() => { setModalVisualizarDespesasBiblioteca(null); handleEditarDespesasNaBiblioteca(relV.id) }} style={{ padding: '10px 20px', borderRadius: '8px', border: `1px solid ${bib.bRgba(0.38)}`, background: bib.bRgba(0.14), color: bib.btnLabel, cursor: 'pointer', fontWeight: 600 }}>✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}</button>
+                    <button type="button" onClick={() => { imprimirPDFDespesasDaBiblioteca(relV, itensV) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #9966ff', background: 'rgba(150,100,255,0.2)', color: '#c4a7ff', cursor: 'pointer', fontWeight: 600 }}>📄 {(safeT as any)?.gerarPDF || 'PDF'}</button>
+                    <button type="button" onClick={() => { setModalVisualizarDespesasBiblioteca(null); handleEditarDespesasNaBiblioteca(relV.id) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid #66b3ff', background: 'rgba(0,150,255,0.25)', color: '#66b3ff', cursor: 'pointer', fontWeight: 600 }}>✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}</button>
                   </div>
                 </div>
               </div>

@@ -2088,10 +2088,10 @@ a:focus-visible {
 .biblioteca-relatorios-hero {
   margin-bottom: clamp(16px, 4vw, 40px);
   padding: clamp(12px, 3vw, 30px);
-  background: linear-gradient(135deg, rgba(111, 127, 116, 0.05) 0%, rgba(0, 0, 0, 0.85) 100%);
+  background: linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%);
   border-radius: clamp(10px, 2.5vw, 20px);
-  border: 2px solid rgba(111, 127, 116, 0.22);
-  box-shadow: 0 8px 32px rgba(111, 127, 116, 0.05);
+  border: 2px solid rgba(0, 255, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 255, 0, 0.1);
 }
 
 .biblioteca-relatorios-hero-top {
@@ -2112,9 +2112,9 @@ a:focus-visible {
   margin: 0 0 8px 0 !important;
   font-size: clamp(1rem, 4.5vw, 2rem) !important;
   font-weight: bold !important;
-  color: #8a9a90 !important;
+  color: #00ff00 !important;
   letter-spacing: clamp(0.05em, 0.5vw, 3px) !important;
-  text-shadow: none !important;
+  text-shadow: 0 0 20px rgba(0, 255, 0, 0.3) !important;
   line-height: 1.2 !important;
   word-break: break-word;
 }
@@ -2167,7 +2167,7 @@ a:focus-visible {
 .biblioteca-despesas-modal-inner {
   background: #1a1a1a;
   border-radius: 16px;
-  border: 2px solid rgba(144, 134, 112, 0.35);
+  border: 2px solid #ffaa00;
   max-width: 920px;
   width: 100%;
   max-height: none;
