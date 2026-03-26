@@ -49619,52 +49619,124 @@ A1;Peça exemplo;10'
             </div>
 
             {/* SEÇÃO 3: ORGANIZAÇÃO DA INTERFACE */}
-            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
-                <h3 style={{ color: '#00ff00', fontSize: '18px', margin: 0 }}>
+            <div
+              style={{
+                marginBottom: '40px',
+                padding: '22px',
+                background: 'radial-gradient(circle at top left, rgba(0,255,122,0.06), transparent 55%) #141414',
+                borderRadius: '14px',
+                border: '1px solid rgba(0, 255, 0, 0.3)',
+                boxShadow: '0 16px 40px rgba(0,0,0,0.6)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '18px',
+                  borderBottom: '1px solid rgba(0, 255, 0, 0.25)',
+                  paddingBottom: '10px',
+                  gap: '12px',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <h3 style={{ color: '#00ff7a', fontSize: '18px', margin: 0, letterSpacing: '0.08em' }}>
                   {safeT?.buttonOrganizer || 'ORGANIZAÇÃO DA INTERFACE'}
                 </h3>
-                <button className="btn-primary" onClick={() => setShowButtonForm(true)} style={{ padding: '8px 15px' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <button
+                    className="btn-primary"
+                    onClick={() => setShowButtonForm(true)}
+                    style={{ padding: '8px 14px', fontSize: '12px' }}
+                  >
                   {safeT?.addButton || 'Adicionar Botão'}
-                </button>
+                  </button>
+                </div>
               </div>
               
-              <p style={{ marginBottom: '15px', fontSize: '13px', opacity: 0.7, fontStyle: 'italic' }}>
-                {safeT?.dragToReorder || 'Arraste os botões para reorganizá-los. Use o menu de cada botão para mover entre grupos.'}
+              <p style={{ marginBottom: '16px', fontSize: '12px', opacity: 0.78, fontStyle: 'italic' }}>
+                {safeT?.dragToReorder ||
+                  'Arraste para ordenar. Use o menu à direita para mudar o grupo, renomear ou ocultar um botão da barra lateral.'}
               </p>
 
               {/* Seção: TODOS OS BOTÕES - Organização livre por grupo */}
-              <div style={{ marginBottom: '30px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
-                <h4 style={{ color: '#00ff00', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>
+              <div
+                style={{
+                  marginBottom: '24px',
+                  padding: '16px',
+                  backgroundColor: '#0a0f0a',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(0, 255, 0, 0.35)',
+                }}
+              >
+                <h4 style={{ color: '#00ff7a', marginBottom: '6px', fontSize: '14px', fontWeight: 700 }}>
                   {safeT?.manageButtonGroups || 'ORGANIZAR BOTÕES POR GRUPO'}
                 </h4>
-                <p style={{ fontSize: '12px', opacity: 0.85, marginBottom: '15px', lineHeight: 1.5 }}>
-                  {(safeT as any)?.organizeButtonsFreeGroupDesc || 'Pode mover qualquer botão para qualquer grupo. Ex.: um botão da Gestão Técnica pode passar para Gestão Industrial. Use o menu ao lado de cada botão para escolher o grupo.'}
+                <p style={{ fontSize: '12px', opacity: 0.85, marginBottom: '12px', lineHeight: 1.5 }}>
+                  {(safeT as any)?.organizeButtonsFreeGroupDesc ||
+                    'Pode mover qualquer botão para qualquer grupo. Ex.: um botão da Gestão Técnica pode passar para Gestão Industrial. Use o menu ao lado de cada botão para escolher o grupo.'}
                 </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '600px', overflowY: 'auto' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    maxHeight: '540px',
+                    overflowY: 'auto',
+                  }}
+                >
                   {sidebarButtons
                     .sort((a, b) => a.order - b.order)
                     .map((button) => {
                       const isMainButton = button.id === 'gestao-tecnica-default' || button.id === 'gestao-industrial-default' || button.id === 'administrador-default' || button.id === 'extras-default'
                       return (
-                        <div 
+                        <div
                           key={button.id}
-                          style={{ 
-                            display: 'flex', 
-                            justifyContent: 'space-between', 
-                            alignItems: 'center', 
-                            padding: '12px', 
-                            backgroundColor: '#141414', 
-                            borderRadius: '6px',
-                            border: '1px solid rgba(0, 255, 0, 0.2)'
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '10px 12px',
+                            background: 'linear-gradient(135deg, #141914 0%, #111311 100%)',
+                            borderRadius: '10px',
+                            border: '1px solid rgba(0, 255, 0, 0.22)',
+                            boxShadow: '0 6px 18px rgba(0,0,0,0.55)',
                           }}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
-                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '13px' }}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '10px',
+                              flex: 1,
+                              minWidth: 0,
+                            }}
+                          >
+                            <span
+                              style={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                fontSize: '13px',
+                                fontWeight: isMainButton ? 600 : 500,
+                                color: isMainButton ? '#e0ffe8' : '#f4fff7',
+                              }}
+                            >
                               {getButtonName(button)}
                             </span>
                             {!isMainButton && (
-                              <span style={{ fontSize: '11px', opacity: 0.6, fontStyle: 'italic' }}>
+                              <span
+                                style={{
+                                  fontSize: '10px',
+                                  opacity: 0.7,
+                                  fontStyle: 'italic',
+                                  padding: '2px 8px',
+                                  borderRadius: '999px',
+                                  border: '1px solid rgba(0,255,122,0.35)',
+                                  background: 'rgba(0,40,24,0.9)',
+                                }}
+                              >
                                 ({button.group === 'gestao-tecnica' ? (safeT?.gestaoTecnicaTitle || 'GESTÃO TÉCNICA') : 
                                   button.group === 'gestao-custos' ? (safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS') :
                                   button.group === 'gestao-industrial' ? (safeT?.gestaoIndustrialTitle || 'GESTÃO INDUSTRIAL') : 
