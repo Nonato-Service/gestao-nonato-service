@@ -18637,38 +18637,18 @@ const nextF = familias.filter(x => x !== f)
       
       case 'administrador':
         return (
-          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
-            {/* Cabeçalho Profissional */}
-            <div style={{
-              marginBottom: '40px',
-              padding: '30px',
-              background: 'linear-gradient(135deg, rgba(255, 68, 68, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-              borderRadius: '20px',
-              border: '2px solid rgba(255, 68, 68, 0.3)',
-              boxShadow: '0 8px 32px rgba(255, 68, 68, 0.1)'
-            }}>
+          <div className="admin-shell">
+            {/* Cabeçalho */}
+            <div className="admin-hero">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
                 </div>
                 <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 style={{
-                    margin: 0,
-                    fontSize: '32px',
-                    fontWeight: 'bold',
-                    color: '#ff4444',
-                    letterSpacing: '3px',
-                    textShadow: '0 0 20px rgba(255, 68, 68, 0.3)',
-                    marginBottom: '8px'
-                  }}>
+                  <h1 className="admin-hero-title">
                     {safeT?.administrador || 'ADMINISTRADOR'}
                   </h1>
-                  <p style={{
-                    margin: 0,
-                    fontSize: '14px',
-                    color: '#ccc',
-                    opacity: 0.8
-                  }}>
+                  <p className="admin-hero-sub">
                     {safeT?.configuracoesSistema || 'Configurações do Sistema'}
                   </p>
                 </div>
@@ -18735,26 +18715,19 @@ const nextF = familias.filter(x => x !== f)
               </div>
             </div>
 
-            {/* Atalho para Backup e segurança */}
-            <p style={{ marginBottom: '20px', fontSize: '13px', opacity: 0.9 }}>
-              <a href="#admin-backup-seguranca" style={{ color: '#00ff00', textDecoration: 'underline' }}>{safeT?.backupRestore || '▼ Ir para BACKUP E SEGURANÇA (backup do código e restauração)'}</a>
-              {' · '}
-              <a href="#admin-sync-multi" style={{ color: '#ffaa00', textDecoration: 'underline' }}>{(safeT as any)?.syncAdminJump || 'Sincronização entre aparelhos'}</a>
-            </p>
+            {/* Atalhos rápidos */}
+            <div className="admin-quick-nav">
+              <a href="#admin-backup-seguranca">{safeT?.backupRestore || '▼ Ir para BACKUP E SEGURANÇA (backup do código e restauração)'}</a>
+              <span style={{ opacity: 0.35 }}>·</span>
+              <a href="#admin-sync-multi">{(safeT as any)?.syncAdminJump || 'Sincronização entre aparelhos'}</a>
+            </div>
 
             {/* Sincronização multi-dispositivo — só neste ecrã, sem barra em cima da app */}
             <div
               id="admin-sync-multi"
-              style={{
-                marginBottom: '28px',
-                padding: '14px 16px',
-                backgroundColor: '#161616',
-                borderRadius: '10px',
-                border: '1px solid rgba(255, 170, 0, 0.4)',
-                maxWidth: '100%'
-              }}
+              className="admin-sync-card"
             >
-              <h3 style={{ margin: '0 0 8px', fontSize: '15px', color: '#ffaa00', fontWeight: 700 }}>
+              <h3>
                 {(safeT as any)?.syncAdminSectionTitle || 'Sincronização entre aparelhos'}
               </h3>
               <p style={{ fontSize: '12px', color: '#999', margin: '0 0 12px', lineHeight: 1.45 }}>
@@ -18795,8 +18768,8 @@ const nextF = familias.filter(x => x !== f)
             </div>
 
             {/* SEÇÃO: CONTROLE DE ENVIO DO LINK PARA TESTE - Primeira secção para maior visibilidade */}
-            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', borderLeft: '4px solid #66b3ff' }}>
-              <h3 style={{ color: '#66b3ff', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(102, 179, 255, 0.3)', paddingBottom: '10px' }}>
+            <div className="admin-section admin-section--cyan">
+              <h3 className="admin-section-title admin-section-title--cyan">
                 📤 Controle de Envio do Link para Teste
               </h3>
               <p style={{ fontSize: '13px', opacity: 0.8, marginBottom: '15px' }}>
@@ -18908,8 +18881,8 @@ const nextF = familias.filter(x => x !== f)
             </div>
             
             {/* SEÇÃO 1: CONFIGURAÇÕES GERAIS */}
-            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-              <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
+            <div className="admin-section admin-section--violet">
+              <h3 className="admin-section-title admin-section-title--violet">
                 {safeT?.configuracoesGerais || 'CONFIGURAÇÕES GERAIS'}
               </h3>
               
@@ -19354,8 +19327,8 @@ const nextF = familias.filter(x => x !== f)
             </div>
 
             {/* SEÇÃO 1.1: LOGOS PDF POR FASE (modo compacto) */}
-            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-              <h3 style={{ color: '#00ff00', marginBottom: '12px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
+            <div className="admin-section admin-section--emerald">
+              <h3 className="admin-section-title">
                 {(safeT as any)?.adminLogosPdfTitle || 'LOGOS NOS DOCUMENTOS PDF'}
               </h3>
               <p style={{ margin: '0 0 14px', fontSize: '12px', opacity: 0.75, lineHeight: 1.45 }}>
@@ -19500,9 +19473,9 @@ const nextF = familias.filter(x => x !== f)
             </div>
 
             {/* SEÇÃO 2: GESTÃO DE USUÁRIOS */}
-            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
-                <h3 style={{ color: '#00ff00', fontSize: '18px', margin: 0 }}>
+            <div className="admin-section">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(0, 255, 136, 0.2)', paddingBottom: '10px' }}>
+                <h3 className="admin-section-title" style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>
                   {safeT?.userManagement || 'GESTÃO DE USUÁRIOS'}
                 </h3>
                 <button className="btn-primary" onClick={handleAddUser} style={{ padding: '8px 15px' }}>
@@ -19655,9 +19628,9 @@ const nextF = familias.filter(x => x !== f)
             </div>
 
             {/* SEÇÃO 3: CADASTRO DE CLIENTE PRIORITÁRIO */}
-            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(255, 215, 0, 0.2)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(255, 215, 0, 0.2)', paddingBottom: '10px' }}>
-                <h3 style={{ color: '#ffd700', fontSize: '18px', margin: 0 }}>
+            <div className="admin-section admin-section--amber">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(255, 215, 0, 0.25)', paddingBottom: '10px' }}>
+                <h3 className="admin-section-title admin-section-title--gold" style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>
                   {safeT?.clientePrioritarioTitle || 'CADASTRO DE CLIENTE PRIORITÁRIO'}
                 </h3>
                 <div style={{ display: 'flex', gap: '10px' }}>
@@ -19910,9 +19883,9 @@ const nextF = familias.filter(x => x !== f)
             </div>
 
             {/* SEÇÃO 4: ORGANIZAÇÃO DA INTERFACE */}
-            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
-                <h3 style={{ color: '#00ff00', fontSize: '18px', margin: 0 }}>
+            <div className="admin-section admin-section--ui">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(0, 255, 136, 0.22)', paddingBottom: '10px' }}>
+                <h3 className="admin-section-title" style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>
                   {safeT?.buttonOrganizer || 'ORGANIZAÇÃO DA INTERFACE'}
                 </h3>
                 <div style={{ display: 'flex', gap: '10px' }}>
@@ -19937,7 +19910,7 @@ const nextF = familias.filter(x => x !== f)
               </div>
 
               {/* Grupo: GESTÃO TÉCNICA */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div className="admin-group-panel">
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.gestaoTecnicaTitle || 'GESTÃO TÉCNICA'}
                 </h4>
@@ -19994,7 +19967,7 @@ const nextF = familias.filter(x => x !== f)
               </div>
 
               {/* Grupo: GESTÃO INDUSTRIAL */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div className="admin-group-panel">
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.gestaoIndustrialTitle || 'GESTÃO INDUSTRIAL'}
                 </h4>
@@ -20051,7 +20024,7 @@ const nextF = familias.filter(x => x !== f)
               </div>
 
               {/* Grupo: GESTÃO DE CUSTOS (Orçamentos/Custos) */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div className="admin-group-panel">
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS (Orçamentos/Custos)'}
                 </h4>
@@ -20097,7 +20070,7 @@ const nextF = familias.filter(x => x !== f)
               </div>
 
               {/* Grupo: GESTÃO DOS CHECKLIST */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div className="admin-group-panel">
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.checklistGroupTitle || 'GESTÃO DOS CHECKLIST'}
                 </h4>
@@ -20143,7 +20116,7 @@ const nextF = familias.filter(x => x !== f)
               </div>
 
               {/* Grupo: GESTÃO FINANCEIRA */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 150, 255, 0.3)' }}>
+              <div className="admin-group-panel admin-group-panel--blue">
                 <h4 style={{ color: '#66b3ff', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}
                 </h4>
@@ -20190,7 +20163,7 @@ const nextF = familias.filter(x => x !== f)
 
               {/* Outros Botões */}
               {getButtonsByGroup('outros').length > 0 && (
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                <div className="admin-group-panel admin-group-panel--soft">
                   <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                     {safeT?.outrosBotoes || 'OUTROS BOTÕES'}
                   </h4>
@@ -20243,8 +20216,8 @@ const nextF = familias.filter(x => x !== f)
             </div>
 
             {/* SEÇÃO 4: GESTOR DE SENHAS */}
-            <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-              <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px', display: 'flex', alignItems: 'center' }}>
+            <div className="admin-section admin-section--violet">
+              <h3 className="admin-section-title admin-section-title--violet" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="password-manager-lock">🔒</span>
                 {safeT?.passwordManagerTitle || 'GESTOR DE SENHAS'}
               </h3>
@@ -20445,8 +20418,8 @@ const nextF = familias.filter(x => x !== f)
             </div>
 
             {/* SEÇÃO 5: BACKUP E SEGURANÇA - Sempre visível; em modo DEMO mostra aviso */}
-            <div id="admin-backup-seguranca" style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-              <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
+            <div id="admin-backup-seguranca" className="admin-section admin-section--emerald">
+              <h3 className="admin-section-title">
                 {safeT?.backupRestore || 'BACKUP E SEGURANÇA'}
               </h3>
               {!isDemoMode && (
@@ -49467,14 +49440,14 @@ A1;Peça exemplo;10'
       {/* Modal de Extras - Só mostra se não houver aba de administrador aberta */}
       {showModal && !openTabs.some(tab => tab.type === 'administrador') && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '900px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 style={{ marginBottom: '30px', borderBottom: '2px solid rgba(0, 255, 0, 0.3)', paddingBottom: '15px' }}>
+          <div className="modal admin-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '900px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h2 className="admin-modal-title">
               {safeT?.administrador || 'ADMINISTRADOR'}
             </h2>
 
             {/* CONTROLE DE ENVIO DO LINK PARA TESTE - Primeiro para maior visibilidade */}
-            <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', borderLeft: '4px solid #66b3ff' }}>
-              <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '18px', borderBottom: '1px solid rgba(102, 179, 255, 0.3)', paddingBottom: '10px' }}>
+            <div className="admin-section admin-section--cyan" style={{ marginBottom: '24px' }}>
+              <h3 className="admin-section-title admin-section-title--cyan">
                 📤 Controle de Envio do Link para Teste
               </h3>
               <p style={{ fontSize: '12px', opacity: 0.8, marginBottom: '12px' }}>Registe as pessoas a quem enviou o link de demonstração.</p>
@@ -49528,8 +49501,8 @@ A1;Peça exemplo;10'
             </div>
             
             {/* SEÇÃO 1: CONFIGURAÇÕES GERAIS */}
-            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-              <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
+            <div className="admin-section admin-section--violet">
+              <h3 className="admin-section-title admin-section-title--violet">
                 {safeT?.configuracoesGerais || 'CONFIGURAÇÕES GERAIS'}
               </h3>
               
@@ -49584,9 +49557,9 @@ A1;Peça exemplo;10'
             </div>
 
             {/* SEÇÃO 2: GESTÃO DE USUÁRIOS */}
-            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
-                <h3 style={{ color: '#00ff00', fontSize: '18px', margin: 0 }}>
+            <div className="admin-section">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(0, 255, 136, 0.2)', paddingBottom: '10px' }}>
+                <h3 className="admin-section-title" style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>
                   {safeT?.userManagement || 'GESTÃO DE USUÁRIOS'}
                 </h3>
                 <button className="btn-primary" onClick={handleAddUser} style={{ padding: '8px 15px' }}>
@@ -49619,29 +49592,20 @@ A1;Peça exemplo;10'
             </div>
 
             {/* SEÇÃO 3: ORGANIZAÇÃO DA INTERFACE */}
-            <div
-              style={{
-                marginBottom: '40px',
-                padding: '22px',
-                background: 'radial-gradient(circle at top left, rgba(0,255,122,0.06), transparent 55%) #141414',
-                borderRadius: '14px',
-                border: '1px solid rgba(0, 255, 0, 0.3)',
-                boxShadow: '0 16px 40px rgba(0,0,0,0.6)',
-              }}
-            >
+            <div className="admin-section admin-section--ui">
               <div
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   marginBottom: '18px',
-                  borderBottom: '1px solid rgba(0, 255, 0, 0.25)',
+                  borderBottom: '1px solid rgba(0, 255, 136, 0.22)',
                   paddingBottom: '10px',
                   gap: '12px',
                   flexWrap: 'wrap',
                 }}
               >
-                <h3 style={{ color: '#00ff7a', fontSize: '18px', margin: 0, letterSpacing: '0.08em' }}>
+                <h3 className="admin-section-title" style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>
                   {safeT?.buttonOrganizer || 'ORGANIZAÇÃO DA INTERFACE'}
                 </h3>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -49661,15 +49625,7 @@ A1;Peça exemplo;10'
               </p>
 
               {/* Seção: TODOS OS BOTÕES - Organização livre por grupo */}
-              <div
-                style={{
-                  marginBottom: '24px',
-                  padding: '16px',
-                  backgroundColor: '#0a0f0a',
-                  borderRadius: '10px',
-                  border: '1px solid rgba(0, 255, 0, 0.35)',
-                }}
-              >
+              <div className="admin-group-panel" style={{ marginBottom: '24px' }}>
                 <h4 style={{ color: '#00ff7a', marginBottom: '6px', fontSize: '14px', fontWeight: 700 }}>
                   {safeT?.manageButtonGroups || 'ORGANIZAR BOTÕES POR GRUPO'}
                 </h4>
@@ -49791,7 +49747,7 @@ A1;Peça exemplo;10'
               </div>
               
               {/* Grupo: GESTÃO TÉCNICA */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div className="admin-group-panel">
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.gestaoTecnicaTitle || 'GESTÃO TÉCNICA'}
                 </h4>
@@ -49849,7 +49805,7 @@ A1;Peça exemplo;10'
               </div>
 
               {/* Grupo: GESTÃO INDUSTRIAL */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div className="admin-group-panel">
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.gestaoIndustrialTitle || 'GESTÃO INDUSTRIAL'}
                 </h4>
@@ -49907,7 +49863,7 @@ A1;Peça exemplo;10'
               </div>
 
               {/* Grupo: GESTÃO DE CUSTOS (Orçamentos/Custos) */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div className="admin-group-panel">
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS (Orçamentos/Custos)'}
                 </h4>
@@ -49964,7 +49920,7 @@ A1;Peça exemplo;10'
               </div>
 
               {/* Grupo: GESTÃO DOS CHECKLIST */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div className="admin-group-panel">
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.checklistGroupTitle || 'GESTÃO DOS CHECKLIST'}
                 </h4>
@@ -50021,7 +49977,7 @@ A1;Peça exemplo;10'
               </div>
 
               {/* Grupo: COMUNICAÇÃO INTERNA */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div className="admin-group-panel">
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {(safeT as any)?.comunicacaoInternaTitle || 'COMUNICAÇÃO INTERNA'}
                 </h4>
@@ -50054,7 +50010,7 @@ A1;Peça exemplo;10'
               </div>
 
               {/* Grupo: MANUAIS E INFORMAÇÕES TÉCNICAS */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div className="admin-group-panel">
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {(safeT as any)?.manuaisInformacoesTecnicasTitle || 'MANUAIS E INFORMAÇÕES TÉCNICAS'}
                 </h4>
@@ -50087,7 +50043,7 @@ A1;Peça exemplo;10'
               </div>
 
               {/* Grupo: ALMOXARIFADO / ARMAZÉM */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+              <div className="admin-group-panel">
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {(safeT as any)?.almoxarifadoArmazemTitle || 'ALMOXARIFADO / ARMAZÉM'}
                 </h4>
@@ -50120,7 +50076,7 @@ A1;Peça exemplo;10'
               </div>
 
               {/* Grupo: GESTÃO FINANCEIRA */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 150, 255, 0.3)' }}>
+              <div className="admin-group-panel admin-group-panel--blue">
                 <h4 style={{ color: '#66b3ff', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                   {safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}
                 </h4>
@@ -50179,7 +50135,7 @@ A1;Peça exemplo;10'
 
               {/* Outros Botões */}
               {getButtonsByGroup('outros').length > 0 && (
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#0a0a0a', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                <div className="admin-group-panel admin-group-panel--soft">
                   <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
                     {safeT?.outrosBotoes || 'OUTROS BOTÕES'}
                   </h4>
@@ -50234,8 +50190,8 @@ A1;Peça exemplo;10'
             </div>
 
             {/* SEÇÃO 5: BACKUP E SEGURANÇA */}
-            <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-              <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
+            <div className="admin-section admin-section--emerald" style={{ marginBottom: '24px' }}>
+              <h3 className="admin-section-title">
                 {safeT?.backupRestore || 'BACKUP E SEGURANÇA'}
               </h3>
               {!isDemoMode && (
