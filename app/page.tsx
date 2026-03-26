@@ -19074,7 +19074,13 @@ const nextF = familias.filter(x => x !== f)
                     {logosRelatorios.length === 0 ? (
                       <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', margin: 0 }}>{safeT?.nenhumLogoRelatorio || 'Nenhum logo adicional. Adicione imagens para além do logo principal.'}</p>
                     ) : (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))',
+                          gap: '10px',
+                        }}
+                      >
                         {logosRelatorios.map((l) => (
                           <div
                             key={l.id}
@@ -19086,7 +19092,10 @@ const nextF = familias.filter(x => x !== f)
                               display: 'flex',
                               alignItems: 'center',
                               gap: '10px',
-                              maxWidth: '100%'
+                              minWidth: 0,
+                              maxWidth: '100%',
+                              overflow: 'hidden',
+                              boxSizing: 'border-box',
                             }}
                           >
                             <div style={{ width: '56px', height: '40px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '4px', overflow: 'hidden' }}>
@@ -19094,11 +19103,11 @@ const nextF = familias.filter(x => x !== f)
                                 <img src={l.data} alt={l.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                               ) : null}
                             </div>
-                            <span style={{ fontSize: '12px', flex: 1, minWidth: '0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={l.name || l.id}>{l.name || l.id}</span>
+                            <span style={{ fontSize: '12px', flex: '1 1 0%', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={l.name || l.id}>{l.name || l.id}</span>
                             <button
                               type="button"
                               className="btn-danger"
-                              style={{ padding: '4px 8px', fontSize: '11px', flexShrink: 0 }}
+                              style={{ padding: '4px 8px', fontSize: '11px', flexShrink: 0, whiteSpace: 'nowrap' }}
                               onClick={() => {
                                 const next = logosRelatorios.filter((x) => x.id !== l.id)
                                 setLogosRelatorios(next)
@@ -46836,7 +46845,7 @@ A1;Peça exemplo;10'
       {/* Sidebar - em ecrã estreito: gaveta lateral (globals.css) */}
       <div className={`sidebar${isCompactLayout && mobileMenuOpen ? ' sidebar-mobile-open' : ''}`}>
         {/* Logo NONATO SERVICE — logo ocupa 100% do contorno verde, borda mantida */}
-        <div style={{ marginBottom: '25px', textAlign: 'center', padding: 0, overflow: 'hidden', backgroundColor: '#0a0a0a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', height: '150px' }}>
+        <div className="sidebar-brand" style={{ marginBottom: '25px', textAlign: 'center', padding: 0, overflow: 'hidden', backgroundColor: '#0a0a0a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', height: '150px' }}>
           {logoUrl ? (
             logoType === 'video' ? (
               <video src={logoUrl} autoPlay loop muted style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -46892,7 +46901,7 @@ A1;Peça exemplo;10'
         {getButtonsByGroup('gestao-tecnica').some((b) => canAccessAction(b.action)) && (
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
           <button
-            className={`btn-primary${selectedSidebarButton === 'open-gestao-tecnica' ? ' sidebar-group-btn-selected' : ''}`}
+            className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-gestao-tecnica' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-tecnica')}
             style={{ 
               width: '100%', 
@@ -46961,7 +46970,7 @@ A1;Peça exemplo;10'
                     return (
                       <button
                         key={button.id}
-                        className="btn-primary sidebar-action-btn"
+                        className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
                         onClick={() => handleButtonClick('open-biblioteca-hub')}
                         style={{ 
                           textAlign: 'center', 
@@ -47000,7 +47009,7 @@ A1;Peça exemplo;10'
                       key={button.id}
                       type="button"
                       data-sidebar-nav-action={button.action}
-                      className="btn-primary sidebar-action-btn"
+                      className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
                       onClick={() => handleButtonClick(button.action)}
                       style={{ 
                         textAlign: 'center', 
@@ -47053,7 +47062,7 @@ A1;Peça exemplo;10'
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
           <button
             type="button"
-            className={`btn-primary${selectedSidebarButton === 'open-protocolos-servico' ? ' sidebar-group-btn-selected' : ''}`}
+            className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-protocolos-servico' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-protocolos-servico')}
             style={{
               width: '100%',
@@ -47105,7 +47114,7 @@ A1;Peça exemplo;10'
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
           <button
             type="button"
-            className={`btn-primary${selectedSidebarButton === 'open-manual-programa' ? ' sidebar-group-btn-selected' : ''}`}
+            className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-manual-programa' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-manual-programa')}
             style={{
               width: '100%',
@@ -47138,7 +47147,7 @@ A1;Peça exemplo;10'
         {/* Grupo: GESTÃO DE CUSTOS — mesmo padrão de cores e contorno do botão GESTÃO TÉCNICA */}
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
           <button
-            className={`btn-primary${selectedSidebarButton === 'open-gestao-custos' ? ' sidebar-group-btn-selected' : ''}`}
+            className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-gestao-custos' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-custos')}
             style={{ 
               width: '100%', 
@@ -47207,7 +47216,7 @@ A1;Peça exemplo;10'
                       key={button.id}
                       type="button"
                       data-sidebar-nav-action={button.action}
-                      className="btn-primary sidebar-action-btn"
+                      className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
                       onClick={() => handleButtonClick(button.action)}
                       style={{ 
                         textAlign: 'center', 
@@ -47263,7 +47272,7 @@ A1;Peça exemplo;10'
         {/* Botão: COMUNICAÇÃO INTERNA C/ GESTORES E TECNICOS */}
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
           <button
-            className={`btn-primary${selectedSidebarButton === 'open-comunicacao-interna' ? ' sidebar-group-btn-selected' : ''}`}
+            className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-comunicacao-interna' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-comunicacao-interna')}
             style={{ 
               width: '100%', 
@@ -47338,7 +47347,7 @@ A1;Peça exemplo;10'
                   return (
                     <button
                       key={id}
-                      className="btn-primary sidebar-action-btn"
+                      className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
                       onClick={() => handleButtonClick(action)}
                       style={{ 
                         textAlign: 'center', 
@@ -47443,7 +47452,7 @@ A1;Peça exemplo;10'
               return (
                 <div key={button.id} style={{ marginBottom: '5px' }}>
                   <button
-                    className={`btn-primary${isSelected ? ' sidebar-group-btn-selected' : ''}`}
+                    className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
                     onClick={() => handleButtonClick(button.action)}
                     style={{ 
                       width: '100%', 
@@ -47501,7 +47510,7 @@ A1;Peça exemplo;10'
                     <span style={{ fontSize: '12px' }}>{expandedGroups.has('checklist-group') ? '▼' : '▶'}</span>
                   </button>
                   {expandedGroups.has('checklist-group') && (
-                    <div style={{ marginTop: '5px', marginBottom: '5px' }}>
+                    <div className="sidebar-action-buttons" style={{ marginTop: '5px', marginBottom: '5px' }}>
                       {getButtonsByGroup('checklist-group')
                         .sort((a, b) => a.order - b.order)
                         .map((subButton) => {
@@ -47509,7 +47518,7 @@ A1;Peça exemplo;10'
                           return (
                             <button
                               key={subButton.id}
-                              className="btn-primary"
+                              className={`btn-primary sidebar-action-btn${isSubSelected ? ' sidebar-action-btn-active' : ''}`}
                               data-button-action={subButton.action}
                               onClick={() => handleButtonClick(subButton.action)}
                               style={{ 
@@ -47568,7 +47577,7 @@ A1;Peça exemplo;10'
             const gestaoIndustrialActive = selectedSidebarButton === 'open-gestao-industrial' || getButtonsByGroup('gestao-industrial').some((b: SidebarButton) => b.id === selectedSidebarButton)
             return (
           <button
-            className={`btn-primary${gestaoIndustrialActive ? ' sidebar-group-btn-selected' : ''}`}
+            className={`btn-primary sidebar-group-header${gestaoIndustrialActive ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-industrial')}
             style={{ 
               width: '100%', 
@@ -47638,7 +47647,7 @@ A1;Peça exemplo;10'
                     return (
                       <div key={button.id} style={{ marginBottom: '5px' }}>
                         <button
-                          className="btn-primary sidebar-action-btn"
+                          className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
                           onClick={() => handleButtonClick(button.action)}
                           style={{ 
                             textAlign: 'left', 
@@ -47695,7 +47704,7 @@ A1;Peça exemplo;10'
                                 return (
                                   <button
                                     key={subButton.id}
-                                    className="btn-primary sidebar-action-btn"
+                                    className={`btn-primary sidebar-action-btn${isSubSelected ? ' sidebar-action-btn-active' : ''}`}
                                     data-button-action={subButton.action}
                                     onClick={() => handleButtonClick(subButton.action)}
                                     style={{ 
@@ -47752,7 +47761,7 @@ A1;Peça exemplo;10'
                   return (
                     <button
                       key={button.id}
-                      className="btn-primary sidebar-action-btn"
+                      className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
                       onClick={() => handleButtonClick(button.action, button.id)}
                       style={{ 
                         textAlign: 'center', 
@@ -47815,7 +47824,7 @@ A1;Peça exemplo;10'
             return (
               <button
                 key={button.id}
-                className={`btn-primary${isSelected ? ' sidebar-group-btn-selected' : ''}`}
+                className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
                 onClick={() => handleButtonClick(button.action)}
                 style={{
                   width: '100%',
@@ -47879,7 +47888,7 @@ A1;Peça exemplo;10'
             return (
               <button
                 key={button.id}
-                className={`btn-primary${isSelected ? ' sidebar-group-btn-selected' : ''}`}
+                className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
                 onClick={() => handleButtonClick(button.action)}
                 style={{ 
                   width: '100%', 
@@ -47943,7 +47952,7 @@ A1;Peça exemplo;10'
         {/* Grupo: GESTÃO FINANCEIRA */}
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
           <button
-            className={`btn-primary${selectedSidebarButton === 'open-gestao-financeira' ? ' sidebar-group-btn-selected' : ''}`}
+            className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-gestao-financeira' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-financeira')}
             style={{ 
               width: '100%', 
@@ -48010,7 +48019,7 @@ A1;Peça exemplo;10'
                   return (
                     <button
                       key={button.id}
-                      className="btn-primary sidebar-action-btn"
+                      className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
                       onClick={() => handleButtonClick(button.action)}
                       style={{ 
                         textAlign: 'center', 
@@ -48066,7 +48075,7 @@ A1;Peça exemplo;10'
         {/* Botão CADASTRO DA NONATO SERVICE - Sempre visível acima do EXTRAS */}
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
           <button
-            className={`btn-primary${selectedSidebarButton === 'open-cadastro-nonato-service' ? ' sidebar-group-btn-selected' : ''}`}
+            className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-cadastro-nonato-service' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-cadastro-nonato-service')}
             style={{
               width: '100%',
@@ -48122,7 +48131,7 @@ A1;Peça exemplo;10'
         {/* Grupo: EXTRA */}
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
           <button
-            className={`btn-primary${selectedSidebarButton === 'open-extra' ? ' sidebar-group-btn-selected' : ''}`}
+            className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-extra' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-extra')}
             style={{ 
               width: '100%', 
@@ -48201,7 +48210,7 @@ A1;Peça exemplo;10'
 
               {/* Botão Tradutor de Idiomas */}
               <button
-                className="btn-primary sidebar-action-btn"
+                className={`btn-primary sidebar-action-btn${selectedSidebarButton === 'open-translator' ? ' sidebar-action-btn-active' : ''}`}
                 onClick={() => handleButtonClick('open-translator')}
                 style={{ 
                   textAlign: 'center', 
@@ -48307,7 +48316,7 @@ A1;Peça exemplo;10'
           return (
             <button
               key={adminBtn.id}
-              className={`btn-administrador${isSelected ? ' sidebar-group-btn-selected' : ''}`}
+              className={`btn-administrador sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
               onClick={() => handleButtonClick(adminBtn.action)}
               style={{ 
                 width: '100%', 

@@ -95,6 +95,18 @@ body,
   touch-action: pan-y;
 }
 
+/* Desktop com rato: touch-action: pan-y em contentores com overflow pode, em alguns Chromium/Windows,
+   atrapalhar a roda do rato no contentor de rolagem. Em pointer fino usamos auto; em touch mantém-se pan-y. */
+@media (pointer: fine) {
+  .main-content-area:not(.main-content-area-tab-open) {
+    touch-action: auto;
+  }
+  .tab-inner-scroll {
+    touch-action: auto;
+    overscroll-behavior-y: auto;
+  }
+}
+
 /* Com aba aberta: padding/overflow em media queries usavam !important e anulavam o layout de rolagem interna. */
 .main-content-area.main-content-area-tab-open {
   padding: 0 !important;
@@ -191,16 +203,113 @@ body,
   box-shadow: 0 0 10px rgba(0, 255, 0, 0.25);
 }
 
+/* Barra lateral — identificação forte: trilho, grupos, submenu, estado ativo */
 .sidebar {
-  background-color: #1e1e1e;
+  --sidebar-rail: #00ff88;
+  --sidebar-dim: rgba(0, 255, 136, 0.12);
   width: 280px;
-  min-height: 100vh;
-  padding: 30px 20px;
+  min-width: 280px;
+  min-height: 0;
+  max-height: 100vh;
+  max-height: 100dvh;
+  align-self: stretch;
+  padding: 22px 14px 28px;
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  border-right: 1px solid rgba(0, 255, 0, 0.1);
-  box-shadow: 2px 0 15px rgba(0, 0, 0, 0.3);
+  gap: 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  background:
+    linear-gradient(180deg, rgba(0, 255, 122, 0.06) 0%, transparent 28%),
+    linear-gradient(180deg, #070b09 0%, #0c1210 45%, #101a14 100%);
+  border-right: 3px solid rgba(0, 255, 122, 0.28);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 255, 122, 0.08),
+    12px 0 40px rgba(0, 0, 0, 0.55);
+  position: relative;
+}
+.sidebar::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #00ff88 0%, rgba(0, 200, 120, 0.45) 40%, rgba(0, 80, 50, 0.35) 100%);
+  opacity: 0.85;
+  pointer-events: none;
+  border-radius: 0 2px 2px 0;
+}
+.sidebar > * {
+  position: relative;
+  z-index: 1;
+}
+.sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+.sidebar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 8px;
+}
+.sidebar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(0, 255, 136, 0.35), rgba(0, 120, 70, 0.45));
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+}
+.sidebar-brand {
+  flex-shrink: 0;
+  border-radius: 12px !important;
+  border: 1px solid rgba(0, 255, 122, 0.35) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 8px 28px rgba(0, 255, 122, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+/* Cabeçalhos de grupo (▼ Gestão técnica): mais “peso” que os itens de submenu */
+.sidebar .sidebar-group-header:not(.sidebar-group-btn-selected) {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  border-left: 3px solid rgba(0, 255, 122, 0.35) !important;
+  padding-left: 10px !important;
+}
+.sidebar .btn-administrador.sidebar-group-header:not(.sidebar-group-btn-selected) {
+  border-left-color: rgba(255, 100, 120, 0.55) !important;
+}
+/* Itens dentro do grupo — “gaveta” visual */
+.sidebar .sidebar-action-buttons {
+  margin-top: 4px !important;
+  margin-bottom: 12px !important;
+  padding: 10px 8px 10px 12px;
+  border-radius: 0 12px 12px 0;
+  border-left: 3px solid rgba(0, 255, 122, 0.22);
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.45) 0%, rgba(12, 18, 14, 0.35) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.sidebar .sidebar-action-buttons > button.sidebar-action-btn {
+  padding-left: 14px !important;
+  border-left: 3px solid rgba(0, 40, 28, 0.9) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+}
+.sidebar .sidebar-action-buttons > button.sidebar-action-btn:hover {
+  border-left-color: rgba(0, 255, 122, 0.45) !important;
+}
+/* Botão do submenu que está aberto / ativo — faixa néon + brilho */
+.sidebar .sidebar-action-btn.sidebar-action-btn-active {
+  border-left: 4px solid #00ffaa !important;
+  background: linear-gradient(90deg, rgba(0, 255, 136, 0.22) 0%, rgba(8, 22, 16, 0.92) 100%) !important;
+  color: #e8fff4 !important;
+  font-weight: 800 !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 122, 0.35),
+    0 0 22px rgba(0, 255, 122, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  text-shadow: 0 0 14px rgba(0, 255, 136, 0.35);
 }
 
 /* Sidebar botão verde: mesmo padrão Visualizar Equipamentos */
@@ -234,10 +343,31 @@ body,
   box-shadow: 0 0 14px rgba(0, 255, 0, 0.45);
 }
 
-/* Botão principal da sidebar selecionado: destaque estático (sem contorno giratório) */
+/* Grupo ou botão principal ativo — faixa lateral + néon verde (prioridade sobre estilos inline) */
+.sidebar .sidebar-group-btn-selected,
 .sidebar-group-btn-selected {
-  border: 2px solid rgba(255, 255, 255, 0.35) !important;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(0, 255, 136, 0.75) !important;
+  border-left: 5px solid #00ffaa !important;
+  background: linear-gradient(90deg, rgba(0, 255, 136, 0.28) 0%, rgba(0, 55, 36, 0.88) 52%, rgba(10, 20, 16, 0.75) 100%) !important;
+  color: #f0fff6 !important;
+  font-weight: 800 !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 136, 0.35),
+    0 0 32px rgba(0, 255, 136, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  text-shadow: 0 0 16px rgba(0, 255, 136, 0.45);
+  transform: none !important;
+}
+.sidebar .btn-administrador.sidebar-group-btn-selected {
+  border: 1px solid rgba(255, 100, 120, 0.95) !important;
+  border-left: 5px solid #ff6b81 !important;
+  background: linear-gradient(90deg, rgba(255, 80, 100, 0.3) 0%, rgba(50, 12, 20, 0.95) 100%) !important;
+  color: #fff !important;
+  text-shadow: 0 0 18px rgba(255, 100, 120, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(255, 100, 120, 0.4),
+    0 0 36px rgba(255, 70, 90, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
 /* Sidebar padrão verde: igual Visualizar Equipamentos */
