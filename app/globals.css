@@ -203,10 +203,10 @@ body,
   box-shadow: 0 0 10px rgba(0, 255, 0, 0.25);
 }
 
-/* Barra lateral — verde acinzentado suave, texto dos botões branco (alinha a sbUi no page.tsx) */
+/* Barra lateral — identificação forte: trilho, grupos, submenu, estado ativo */
 .sidebar {
-  --sidebar-rail: #7a8f82;
-  --sidebar-dim: rgba(111, 127, 116, 0.12);
+  --sidebar-rail: #00ff88;
+  --sidebar-dim: rgba(0, 255, 136, 0.12);
   width: 280px;
   min-width: 280px;
   min-height: 0;
@@ -222,11 +222,11 @@ body,
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
   background:
-    linear-gradient(180deg, rgba(111, 127, 116, 0.05) 0%, transparent 28%),
+    linear-gradient(180deg, rgba(0, 255, 122, 0.06) 0%, transparent 28%),
     linear-gradient(180deg, #070b09 0%, #0c1210 45%, #101a14 100%);
-  border-right: 3px solid rgba(111, 127, 116, 0.22);
+  border-right: 3px solid rgba(0, 255, 122, 0.28);
   box-shadow:
-    inset 0 0 0 1px rgba(111, 127, 116, 0.07),
+    inset 0 0 0 1px rgba(0, 255, 122, 0.08),
     12px 0 40px rgba(0, 0, 0, 0.55);
   position: relative;
 }
@@ -237,8 +237,8 @@ body,
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, rgba(111, 127, 116, 0.85) 0%, rgba(90, 110, 95, 0.45) 40%, rgba(45, 55, 48, 0.4) 100%);
-  opacity: 0.9;
+  background: linear-gradient(180deg, #00ff88 0%, rgba(0, 200, 120, 0.45) 40%, rgba(0, 80, 50, 0.35) 100%);
+  opacity: 0.85;
   pointer-events: none;
   border-radius: 0 2px 2px 0;
 }
@@ -254,17 +254,17 @@ body,
   border-radius: 8px;
 }
 .sidebar::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(111, 127, 116, 0.35), rgba(70, 88, 78, 0.5));
+  background: linear-gradient(180deg, rgba(0, 255, 136, 0.35), rgba(0, 120, 70, 0.45));
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.4);
 }
 .sidebar-brand {
   flex-shrink: 0;
   border-radius: 12px !important;
-  border: 1px solid rgba(111, 127, 116, 0.28) !important;
+  border: 1px solid rgba(0, 255, 122, 0.35) !important;
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.5),
-    0 8px 28px rgba(111, 127, 116, 0.08),
+    0 8px 28px rgba(0, 255, 122, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 /* Cabeçalhos de grupo (▼ Gestão técnica): mais “peso” que os itens de submenu */
@@ -273,11 +273,11 @@ body,
   text-transform: uppercase;
   font-size: 11px !important;
   font-weight: 800 !important;
-  border-left: 3px solid rgba(111, 127, 116, 0.32) !important;
+  border-left: 3px solid rgba(0, 255, 122, 0.35) !important;
   padding-left: 10px !important;
 }
 .sidebar .btn-administrador.sidebar-group-header:not(.sidebar-group-btn-selected) {
-  border-left-color: rgba(180, 110, 118, 0.45) !important;
+  border-left-color: rgba(255, 100, 120, 0.55) !important;
 }
 /* Itens dentro do grupo — “gaveta” visual */
 .sidebar .sidebar-action-buttons {
@@ -285,40 +285,40 @@ body,
   margin-bottom: 12px !important;
   padding: 10px 8px 10px 12px;
   border-radius: 0 12px 12px 0;
-  border-left: 3px solid rgba(111, 127, 116, 0.2);
+  border-left: 3px solid rgba(0, 255, 122, 0.22);
   background: linear-gradient(90deg, rgba(0, 0, 0, 0.45) 0%, rgba(12, 18, 14, 0.35) 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 .sidebar .sidebar-action-buttons > button.sidebar-action-btn {
   padding-left: 14px !important;
-  border-left: 3px solid rgba(35, 48, 40, 0.95) !important;
+  border-left: 3px solid rgba(0, 40, 28, 0.9) !important;
   font-size: 12px !important;
   font-weight: 600 !important;
   border-radius: 10px !important;
 }
 .sidebar .sidebar-action-buttons > button.sidebar-action-btn:hover {
-  border-left-color: rgba(111, 127, 116, 0.4) !important;
+  border-left-color: rgba(0, 255, 122, 0.45) !important;
 }
-/* Botão do submenu ativo — realce suave */
+/* Botão do submenu que está aberto / ativo — faixa néon + brilho */
 .sidebar .sidebar-action-btn.sidebar-action-btn-active {
-  border-left: 4px solid rgba(130, 155, 138, 0.95) !important;
-  background: linear-gradient(90deg, rgba(111, 127, 116, 0.16) 0%, rgba(8, 18, 14, 0.92) 100%) !important;
-  color: #ffffff !important;
+  border-left: 4px solid #00ffaa !important;
+  background: linear-gradient(90deg, rgba(0, 255, 136, 0.22) 0%, rgba(8, 22, 16, 0.92) 100%) !important;
+  color: #e8fff4 !important;
   font-weight: 800 !important;
   box-shadow:
-    0 0 0 1px rgba(111, 127, 116, 0.25),
-    0 0 16px rgba(111, 127, 116, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
-  text-shadow: none;
+    0 0 0 1px rgba(0, 255, 122, 0.35),
+    0 0 22px rgba(0, 255, 122, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  text-shadow: 0 0 14px rgba(0, 255, 136, 0.35);
 }
 
-/* Sidebar botão: contorno suave, texto branco */
+/* Sidebar botão verde: mesmo padrão Visualizar Equipamentos */
 .sidebar .btn-primary {
   width: 100%;
   text-align: center;
   background-color: transparent;
-  border: 1px solid rgba(111, 127, 116, 0.45);
-  color: #ffffff !important;
+  border: 1px solid rgba(0, 255, 0, 0.95);
+  color: #ffffff;
   box-shadow: none;
   transition: box-shadow 0.2s ease, filter 0.2s ease;
 }
@@ -329,64 +329,64 @@ body,
 }
 
 .sidebar .btn-primary:hover {
-  background-color: rgba(111, 127, 116, 0.1);
-  border: 1px solid rgba(111, 127, 116, 0.55);
-  color: #ffffff !important;
-  box-shadow: 0 0 12px rgba(111, 127, 116, 0.18);
-  filter: brightness(1.06);
+  background-color: rgba(0, 255, 0, 0.12);
+  border: 1px solid #00ff00;
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(0, 255, 0, 0.45);
+  filter: brightness(1.15);
 }
 
 .sidebar .btn-primary:active {
-  background-color: rgba(111, 127, 116, 0.16);
-  border-color: rgba(111, 127, 116, 0.6);
-  color: #ffffff !important;
-  box-shadow: 0 0 10px rgba(111, 127, 116, 0.2);
+  background-color: rgba(0, 255, 0, 0.2);
+  border-color: #00ff00;
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(0, 255, 0, 0.45);
 }
 
-/* Grupo ou botão principal ativo */
+/* Grupo ou botão principal ativo — faixa lateral + néon verde (prioridade sobre estilos inline) */
 .sidebar .sidebar-group-btn-selected,
 .sidebar-group-btn-selected {
-  border: 1px solid rgba(111, 127, 116, 0.45) !important;
-  border-left: 5px solid rgba(130, 155, 138, 0.9) !important;
-  background: linear-gradient(90deg, rgba(111, 127, 116, 0.2) 0%, rgba(28, 38, 32, 0.92) 52%, rgba(12, 18, 15, 0.88) 100%) !important;
-  color: #ffffff !important;
+  border: 1px solid rgba(0, 255, 136, 0.75) !important;
+  border-left: 5px solid #00ffaa !important;
+  background: linear-gradient(90deg, rgba(0, 255, 136, 0.28) 0%, rgba(0, 55, 36, 0.88) 52%, rgba(10, 20, 16, 0.75) 100%) !important;
+  color: #f0fff6 !important;
   font-weight: 800 !important;
   box-shadow:
-    0 0 0 1px rgba(111, 127, 116, 0.2),
-    0 0 20px rgba(111, 127, 116, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-  text-shadow: none;
+    0 0 0 1px rgba(0, 255, 136, 0.35),
+    0 0 32px rgba(0, 255, 136, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  text-shadow: 0 0 16px rgba(0, 255, 136, 0.45);
   transform: none !important;
 }
 .sidebar .btn-administrador.sidebar-group-btn-selected {
-  border: 1px solid rgba(180, 110, 118, 0.55) !important;
-  border-left: 5px solid rgba(200, 130, 140, 0.85) !important;
-  background: linear-gradient(90deg, rgba(160, 90, 100, 0.22) 0%, rgba(45, 18, 22, 0.95) 100%) !important;
+  border: 1px solid rgba(255, 100, 120, 0.95) !important;
+  border-left: 5px solid #ff6b81 !important;
+  background: linear-gradient(90deg, rgba(255, 80, 100, 0.3) 0%, rgba(50, 12, 20, 0.95) 100%) !important;
   color: #fff !important;
-  text-shadow: none;
+  text-shadow: 0 0 18px rgba(255, 100, 120, 0.55);
   box-shadow:
-    0 0 0 1px rgba(180, 100, 110, 0.25),
-    0 0 22px rgba(120, 50, 60, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+    0 0 0 1px rgba(255, 100, 120, 0.4),
+    0 0 36px rgba(255, 70, 90, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
-/* Sidebar padrão verde (classe legada) */
+/* Sidebar padrão verde: igual Visualizar Equipamentos */
 .sidebar .sidebar-padrao-verde {
   background-color: transparent !important;
-  border: 1px solid rgba(111, 127, 116, 0.45) !important;
+  border: 1px solid rgba(0, 255, 0, 0.95) !important;
   color: #ffffff !important;
 }
 .sidebar .sidebar-padrao-verde:hover {
-  background-color: rgba(111, 127, 116, 0.1) !important;
-  border: 1px solid rgba(111, 127, 116, 0.55) !important;
+  background-color: rgba(0, 255, 0, 0.12) !important;
+  border: 1px solid #00ff00 !important;
   color: #ffffff !important;
-  box-shadow: 0 0 12px rgba(111, 127, 116, 0.18) !important;
-  filter: brightness(1.06) !important;
+  box-shadow: 0 0 14px rgba(0, 255, 0, 0.45) !important;
+  filter: brightness(1.15) !important;
 }
 .sidebar .sidebar-padrao-verde.active-padrao {
-  background-color: rgba(111, 127, 116, 0.14) !important;
-  border: 1px solid rgba(111, 127, 116, 0.6) !important;
-  box-shadow: 0 0 12px rgba(111, 127, 116, 0.2) !important;
+  background-color: rgba(0, 255, 0, 0.15) !important;
+  border: 1px solid #00ff00 !important;
+  box-shadow: 0 0 14px rgba(0, 255, 0, 0.45) !important;
   color: #ffffff !important;
 }
 
@@ -877,29 +877,29 @@ body,
   margin-right: 10px;
 }
 
-/* Sidebar Administrador: vermelho suave, texto branco */
+/* Sidebar botão vermelho: transparente, contorno fino vermelho visível, texto branco, hover iluminado */
 .sidebar .btn-administrador {
   width: 100%;
   text-align: center;
   background-color: transparent;
-  border: 1px solid rgba(170, 95, 100, 0.55);
-  color: #ffffff !important;
+  border: 1px solid rgba(255, 68, 68, 0.9);
+  color: #ffffff;
   box-shadow: none;
 }
 
 .sidebar .btn-administrador:hover {
-  background-color: rgba(160, 85, 92, 0.14);
-  border: 1px solid rgba(190, 110, 118, 0.65);
-  color: #ffffff !important;
-  box-shadow: 0 0 12px rgba(130, 60, 68, 0.22);
-  filter: brightness(1.05);
+  background-color: rgba(255, 68, 68, 0.15);
+  border: 1px solid #ff4444;
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(255, 70, 70, 0.5);
+  filter: brightness(1.15);
 }
 
 .sidebar .btn-administrador:active {
-  background-color: rgba(160, 85, 92, 0.22);
-  border-color: rgba(200, 120, 128, 0.75);
-  color: #ffffff !important;
-  box-shadow: 0 0 14px rgba(130, 60, 68, 0.25);
+  background-color: rgba(255, 68, 68, 0.25);
+  border-color: #ff4444;
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(255, 68, 68, 0.5);
   transform: translateY(0);
 }
 

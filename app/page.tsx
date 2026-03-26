@@ -959,11 +959,6 @@ export default function Dashboard() {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set()) // Nenhum grupo expandido por padrão
   const [gestaoCustosButtons, setGestaoCustosButtons] = useState<SidebarButton[]>([]) // Botões do grupo GESTÃO DE CUSTOS
   const [selectedSidebarButton, setSelectedSidebarButton] = useState<string | null>(null) // Botão selecionado na sidebar
-  /** Barra lateral: acentos verdes suaves + texto sempre branco nos botões */
-  const sbUi = {
-    g: (a: number) => `rgba(111, 127, 116, ${a})`,
-    txt: '#ffffff' as const,
-  }
   const [familiasGruposModalVariant, setFamiliasGruposModalVariant] = useState<'checklist' | 'equipamentos'>('checklist') // Título do modal Famílias e Grupos
   const [showSplashInicial, setShowSplashInicial] = useState(true) // Tela inicial preta com logo (verde transparente)
   const [openOrcamentosGeradosView, setOpenOrcamentosGeradosView] = useState(false) // Ao gerar pedido avulso, abrir Orçamentos > Orçamentos Gerados
@@ -10204,7 +10199,7 @@ export default function Dashboard() {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
-      .replace(/\n|\r|\n/g, '<br/>')
+      .replace(/\r\n|\r|\n/g, '<br/>')
 
   // Função para gerar PDF/Imprimir Relatório - Formato Clássico (baseado na imagem)
   const handlePrintRelatorioClassico = (relatorio: RelatorioServico) => {
@@ -46878,7 +46873,7 @@ A1;Peça exemplo;10'
       {/* Sidebar - em ecrã estreito: gaveta lateral (globals.css) */}
       <div className={`sidebar${isCompactLayout && mobileMenuOpen ? ' sidebar-mobile-open' : ''}`}>
         {/* Logo NONATO SERVICE — logo ocupa 100% do contorno verde, borda mantida */}
-        <div className="sidebar-brand" style={{ marginBottom: '25px', textAlign: 'center', padding: '8px', overflow: 'hidden', backgroundColor: '#0a0a0a', borderRadius: '8px', border: `1px solid ${sbUi.g(0.2)}`, minHeight: '120px', maxHeight: 'min(28vh, 200px)', height: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
+        <div className="sidebar-brand" style={{ marginBottom: '25px', textAlign: 'center', padding: '8px', overflow: 'hidden', backgroundColor: '#0a0a0a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', minHeight: '120px', maxHeight: 'min(28vh, 200px)', height: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
           {logoUrl ? (
             logoType === 'video' ? (
               <video src={logoUrl} autoPlay loop muted style={{ width: '100%', maxHeight: 'min(26vh, 184px)', objectFit: 'contain', display: 'block' }} />
@@ -46891,37 +46886,37 @@ A1;Peça exemplo;10'
               <div style={{ position: 'relative', width: '120px', height: '120px', marginBottom: '10px' }}>
                 <svg width="120" height="120" viewBox="0 0 120 120" style={{ position: 'absolute', top: 0, left: 0 }}>
                   {/* Círculo externo */}
-                  <circle cx="60" cy="60" r="55" fill="none" stroke="#7a8f82" strokeWidth="2" strokeDasharray="8 4" opacity="0.8" />
+                  <circle cx="60" cy="60" r="55" fill="none" stroke="#00ff00" strokeWidth="2" strokeDasharray="8 4" opacity="0.8" />
                   {/* Engrenagem maior */}
                   <g transform="translate(40, 45)">
-                    <circle cx="20" cy="20" r="18" fill="#7a8f82" opacity="0.9" />
+                    <circle cx="20" cy="20" r="18" fill="#00ff00" opacity="0.9" />
                     <circle cx="20" cy="20" r="8" fill="#000" />
-                    <rect x="18" y="2" width="4" height="8" fill="#7a8f82" />
-                    <rect x="18" y="30" width="4" height="8" fill="#7a8f82" />
-                    <rect x="2" y="18" width="8" height="4" fill="#7a8f82" />
-                    <rect x="30" y="18" width="8" height="4" fill="#7a8f82" />
-                    <rect x="8" y="8" width="4" height="4" fill="#7a8f82" transform="rotate(45 10 10)" />
-                    <rect x="28" y="28" width="4" height="4" fill="#7a8f82" transform="rotate(45 30 30)" />
-                    <rect x="28" y="8" width="4" height="4" fill="#7a8f82" transform="rotate(-45 30 10)" />
-                    <rect x="8" y="28" width="4" height="4" fill="#7a8f82" transform="rotate(-45 10 30)" />
+                    <rect x="18" y="2" width="4" height="8" fill="#00ff00" />
+                    <rect x="18" y="30" width="4" height="8" fill="#00ff00" />
+                    <rect x="2" y="18" width="8" height="4" fill="#00ff00" />
+                    <rect x="30" y="18" width="8" height="4" fill="#00ff00" />
+                    <rect x="8" y="8" width="4" height="4" fill="#00ff00" transform="rotate(45 10 10)" />
+                    <rect x="28" y="28" width="4" height="4" fill="#00ff00" transform="rotate(45 30 30)" />
+                    <rect x="28" y="8" width="4" height="4" fill="#00ff00" transform="rotate(-45 30 10)" />
+                    <rect x="8" y="28" width="4" height="4" fill="#00ff00" transform="rotate(-45 10 30)" />
                   </g>
                   {/* Engrenagem menor */}
                   <g transform="translate(65, 35)">
-                    <circle cx="15" cy="15" r="12" fill="#7a8f82" opacity="0.9" />
+                    <circle cx="15" cy="15" r="12" fill="#00ff00" opacity="0.9" />
                     <circle cx="15" cy="15" r="6" fill="#000" />
-                    <rect x="13.5" y="3" width="3" height="6" fill="#7a8f82" />
-                    <rect x="13.5" y="21" width="3" height="6" fill="#7a8f82" />
-                    <rect x="3" y="13.5" width="6" height="3" fill="#7a8f82" />
-                    <rect x="21" y="13.5" width="6" height="3" fill="#7a8f82" />
+                    <rect x="13.5" y="3" width="3" height="6" fill="#00ff00" />
+                    <rect x="13.5" y="21" width="3" height="6" fill="#00ff00" />
+                    <rect x="3" y="13.5" width="6" height="3" fill="#00ff00" />
+                    <rect x="21" y="13.5" width="6" height="3" fill="#00ff00" />
                   </g>
                 </svg>
               </div>
               {/* Texto NONATO */}
               <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff', letterSpacing: '2px', fontFamily: 'Arial, sans-serif' }}>
-                NONA<span style={{ color: '#7a8f82', fontSize: '28px', verticalAlign: 'middle' }}>T</span>O
+                NONA<span style={{ color: '#00ff00', fontSize: '28px', verticalAlign: 'middle' }}>T</span>O
               </div>
               {/* Texto SERVICE */}
-              <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#7a8f82', letterSpacing: '3px', fontFamily: 'Arial, sans-serif' }}>
+              <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#00ff00', letterSpacing: '3px', fontFamily: 'Arial, sans-serif' }}>
                 SERVICE
               </div>
             </div>
@@ -46941,10 +46936,10 @@ A1;Peça exemplo;10'
               textAlign: 'left', 
               padding: '12px', 
               marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-gestao-tecnica' ? sbUi.g(0.2) : sbUi.g(0.08),
-              border: selectedSidebarButton === 'open-gestao-tecnica' ? '2px solid transparent' : `1px solid ${sbUi.g(0.35)}`,
+              backgroundColor: selectedSidebarButton === 'open-gestao-tecnica' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
+              border: selectedSidebarButton === 'open-gestao-tecnica' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
-              color: sbUi.txt,
+              color: selectedSidebarButton === 'open-gestao-tecnica' ? '#00ff00' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
               display: 'flex',
@@ -46956,15 +46951,15 @@ A1;Peça exemplo;10'
             }}
             onMouseEnter={(e) => {
               if (selectedSidebarButton !== 'open-gestao-tecnica') {
-                e.currentTarget.style.backgroundColor = sbUi.g(0.15)
-                e.currentTarget.style.border = `1px solid ${sbUi.g(0.55)}`
-                e.currentTarget.style.boxShadow = `0 0 14px ${sbUi.g(0.45)}, 0 0 24px ${sbUi.g(0.2)}`
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.15)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.55)'
+                e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.45), 0 0 24px rgba(0, 255, 0, 0.2)'
               }
             }}
             onMouseLeave={(e) => {
               if (selectedSidebarButton !== 'open-gestao-tecnica') {
-                e.currentTarget.style.backgroundColor = sbUi.g(0.08)
-                e.currentTarget.style.border = `1px solid ${sbUi.g(0.35)}`
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.08)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.35)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
@@ -47010,24 +47005,24 @@ A1;Peça exemplo;10'
                           padding: '12px', 
                           marginBottom: '6px',
                           fontSize: '13px',
-                          backgroundColor: isSelected ? sbUi.g(0.25) : 'rgba(30, 35, 30, 0.9)',
-                          border: isSelected ? `2px solid ${sbUi.g(0.6)}` : `1px solid ${sbUi.g(0.2)}`,
+                          backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.25)' : 'rgba(30, 35, 30, 0.9)',
+                          border: isSelected ? '2px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.2)',
                           borderRadius: '12px',
-                          boxShadow: isSelected ? `0 0 12px ${sbUi.g(0.35)}` : 'none',
-                          color: sbUi.txt,
+                          boxShadow: isSelected ? '0 0 12px rgba(0, 255, 0, 0.35)' : 'none',
+                          color: isSelected ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
                           fontWeight: '500',
                           transition: 'all 0.3s ease',
                           position: 'relative'
                         }}
                         onMouseEnter={(e) => {
                           if (!isSelected) {
-                            e.currentTarget.style.borderColor = sbUi.g(0.45)
-                            e.currentTarget.style.boxShadow = `0 4px 20px ${sbUi.g(0.12)}`
+                            e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
+                            e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 0, 0.12)'
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (!isSelected) {
-                            e.currentTarget.style.borderColor = sbUi.g(0.2)
+                            e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.2)'
                             e.currentTarget.style.boxShadow = 'none'
                           }
                         }}
@@ -47049,11 +47044,11 @@ A1;Peça exemplo;10'
                         padding: '12px', 
                         marginBottom: '6px',
                         fontSize: '13px',
-                        backgroundColor: isSelected ? sbUi.g(0.25) : 'rgba(30, 35, 30, 0.9)',
-                        border: isSelected ? `2px solid ${sbUi.g(0.6)}` : `1px solid ${sbUi.g(0.2)}`,
+                        backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.25)' : 'rgba(30, 35, 30, 0.9)',
+                        border: isSelected ? '2px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.2)',
                         borderRadius: '12px',
-                        boxShadow: isSelected ? `0 0 12px ${sbUi.g(0.35)}` : 'none',
-                        color: sbUi.txt,
+                        boxShadow: isSelected ? '0 0 12px rgba(0, 255, 0, 0.35)' : 'none',
+                        color: isSelected ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
                         fontWeight: isSelected ? 'bold' : '500',
                         transform: isSelected ? 'scale(1.02)' : undefined,
                         transition: 'all 0.3s ease',
@@ -47061,13 +47056,13 @@ A1;Peça exemplo;10'
                       }}
                       onMouseEnter={(e) => {
                         if (!isSelected) {
-                          e.currentTarget.style.borderColor = sbUi.g(0.45)
-                          e.currentTarget.style.boxShadow = `0 4px 20px ${sbUi.g(0.12)}`
+                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
+                          e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 0, 0.12)'
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (!isSelected) {
-                          e.currentTarget.style.borderColor = sbUi.g(0.2)
+                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.2)'
                           e.currentTarget.style.boxShadow = 'none'
                         }
                       }}
@@ -47102,10 +47097,10 @@ A1;Peça exemplo;10'
               textAlign: 'left',
               padding: '12px',
               marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-protocolos-servico' ? sbUi.g(0.2) : sbUi.g(0.08),
-              border: selectedSidebarButton === 'open-protocolos-servico' ? '2px solid transparent' : `1px solid ${sbUi.g(0.35)}`,
+              backgroundColor: selectedSidebarButton === 'open-protocolos-servico' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
+              border: selectedSidebarButton === 'open-protocolos-servico' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
-              color: sbUi.txt,
+              color: selectedSidebarButton === 'open-protocolos-servico' ? '#00ff00' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
               display: 'flex',
@@ -47117,15 +47112,15 @@ A1;Peça exemplo;10'
             }}
             onMouseEnter={(e) => {
               if (selectedSidebarButton !== 'open-protocolos-servico') {
-                e.currentTarget.style.backgroundColor = sbUi.g(0.15)
-                e.currentTarget.style.border = `1px solid ${sbUi.g(0.55)}`
-                e.currentTarget.style.boxShadow = `0 0 14px ${sbUi.g(0.45)}, 0 0 24px ${sbUi.g(0.2)}`
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.15)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.55)'
+                e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.45), 0 0 24px rgba(0, 255, 0, 0.2)'
               }
             }}
             onMouseLeave={(e) => {
               if (selectedSidebarButton !== 'open-protocolos-servico') {
-                e.currentTarget.style.backgroundColor = sbUi.g(0.08)
-                e.currentTarget.style.border = `1px solid ${sbUi.g(0.35)}`
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.08)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.35)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
@@ -47154,10 +47149,10 @@ A1;Peça exemplo;10'
               textAlign: 'left',
               padding: '12px',
               marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-manual-programa' ? sbUi.g(0.2) : sbUi.g(0.08),
-              border: selectedSidebarButton === 'open-manual-programa' ? '2px solid transparent' : `1px solid ${sbUi.g(0.35)}`,
+              backgroundColor: selectedSidebarButton === 'open-manual-programa' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
+              border: selectedSidebarButton === 'open-manual-programa' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
-              color: sbUi.txt,
+              color: selectedSidebarButton === 'open-manual-programa' ? '#00ff00' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
               display: 'flex',
@@ -47187,10 +47182,10 @@ A1;Peça exemplo;10'
               textAlign: 'left', 
               padding: '12px', 
               marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-gestao-custos' ? sbUi.g(0.2) : sbUi.g(0.08),
-              border: selectedSidebarButton === 'open-gestao-custos' ? '2px solid transparent' : `1px solid ${sbUi.g(0.35)}`,
+              backgroundColor: selectedSidebarButton === 'open-gestao-custos' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
+              border: selectedSidebarButton === 'open-gestao-custos' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
-              color: sbUi.txt,
+              color: selectedSidebarButton === 'open-gestao-custos' ? '#00ff00' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
               display: 'flex',
@@ -47202,15 +47197,15 @@ A1;Peça exemplo;10'
             }}
             onMouseEnter={(e) => {
               if (selectedSidebarButton !== 'open-gestao-custos') {
-                e.currentTarget.style.backgroundColor = sbUi.g(0.15)
-                e.currentTarget.style.border = `1px solid ${sbUi.g(0.55)}`
-                e.currentTarget.style.boxShadow = `0 0 14px ${sbUi.g(0.45)}, 0 0 24px ${sbUi.g(0.2)}`
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.15)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.55)'
+                e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.45), 0 0 24px rgba(0, 255, 0, 0.2)'
               }
             }}
             onMouseLeave={(e) => {
               if (selectedSidebarButton !== 'open-gestao-custos') {
-                e.currentTarget.style.backgroundColor = sbUi.g(0.08)
-                e.currentTarget.style.border = `1px solid ${sbUi.g(0.35)}`
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.08)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.35)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
@@ -47256,11 +47251,11 @@ A1;Peça exemplo;10'
                         padding: '12px', 
                         marginBottom: '6px',
                         fontSize: '13px',
-                        backgroundColor: isSelected ? sbUi.g(0.25) : 'rgba(30, 35, 30, 0.9)',
-                        border: isSelected ? `2px solid ${sbUi.g(0.6)}` : `1px solid ${sbUi.g(0.2)}`,
+                        backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.25)' : 'rgba(30, 35, 30, 0.9)',
+                        border: isSelected ? '2px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.2)',
                         borderRadius: '12px',
-                        boxShadow: isSelected ? `0 0 12px ${sbUi.g(0.35)}` : 'none',
-                        color: sbUi.txt,
+                        boxShadow: isSelected ? '0 0 12px rgba(0, 255, 0, 0.35)' : 'none',
+                        color: isSelected ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
                         fontWeight: isSelected ? 'bold' : '500',
                         transform: isSelected ? 'scale(1.02)' : undefined,
                         transition: 'all 0.3s ease',
@@ -47268,13 +47263,13 @@ A1;Peça exemplo;10'
                       }}
                       onMouseEnter={(e) => {
                         if (!isSelected) {
-                          e.currentTarget.style.borderColor = sbUi.g(0.45)
-                          e.currentTarget.style.boxShadow = `0 4px 20px ${sbUi.g(0.12)}`
+                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
+                          e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 0, 0.12)'
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (!isSelected) {
-                          e.currentTarget.style.borderColor = sbUi.g(0.2)
+                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.2)'
                           e.currentTarget.style.boxShadow = 'none'
                         }
                       }}
@@ -47312,10 +47307,10 @@ A1;Peça exemplo;10'
               textAlign: 'left', 
               padding: '12px', 
               marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-comunicacao-interna' ? sbUi.g(0.2) : sbUi.g(0.08),
-              border: selectedSidebarButton === 'open-comunicacao-interna' ? '2px solid transparent' : `1px solid ${sbUi.g(0.35)}`,
+              backgroundColor: selectedSidebarButton === 'open-comunicacao-interna' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
+              border: selectedSidebarButton === 'open-comunicacao-interna' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
-              color: sbUi.txt,
+              color: selectedSidebarButton === 'open-comunicacao-interna' ? '#00ff00' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
               display: 'flex',
@@ -47327,15 +47322,15 @@ A1;Peça exemplo;10'
             }}
             onMouseEnter={(e) => {
               if (selectedSidebarButton !== 'open-comunicacao-interna') {
-                e.currentTarget.style.backgroundColor = sbUi.g(0.15)
-                e.currentTarget.style.border = `1px solid ${sbUi.g(0.55)}`
-                e.currentTarget.style.boxShadow = `0 0 14px ${sbUi.g(0.45)}, 0 0 24px ${sbUi.g(0.2)}`
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.15)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.55)'
+                e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.45), 0 0 24px rgba(0, 255, 0, 0.2)'
               }
             }}
             onMouseLeave={(e) => {
               if (selectedSidebarButton !== 'open-comunicacao-interna') {
-                e.currentTarget.style.backgroundColor = sbUi.g(0.08)
-                e.currentTarget.style.border = `1px solid ${sbUi.g(0.35)}`
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.08)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.35)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
@@ -47387,11 +47382,11 @@ A1;Peça exemplo;10'
                         padding: '12px', 
                         marginBottom: '6px',
                         fontSize: '13px',
-                        backgroundColor: isSelected ? sbUi.g(0.25) : 'rgba(30, 35, 30, 0.9)',
-                        border: isSelected ? `2px solid ${sbUi.g(0.6)}` : `1px solid ${sbUi.g(0.2)}`,
+                        backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.25)' : 'rgba(30, 35, 30, 0.9)',
+                        border: isSelected ? '2px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.2)',
                         borderRadius: '12px',
-                        boxShadow: isSelected ? `0 0 12px ${sbUi.g(0.35)}` : 'none',
-                        color: sbUi.txt,
+                        boxShadow: isSelected ? '0 0 12px rgba(0, 255, 0, 0.35)' : 'none',
+                        color: isSelected ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
                         fontWeight: isSelected ? 'bold' : '500',
                         transform: isSelected ? 'scale(1.02)' : undefined,
                         transition: 'all 0.3s ease',
@@ -47399,13 +47394,13 @@ A1;Peça exemplo;10'
                       }}
                       onMouseEnter={(e) => {
                         if (!isSelected) {
-                          e.currentTarget.style.borderColor = sbUi.g(0.45)
-                          e.currentTarget.style.boxShadow = `0 4px 20px ${sbUi.g(0.12)}`
+                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
+                          e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 0, 0.12)'
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (!isSelected) {
-                          e.currentTarget.style.borderColor = sbUi.g(0.2)
+                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.2)'
                           e.currentTarget.style.boxShadow = 'none'
                         }
                       }}
@@ -47436,11 +47431,11 @@ A1;Peça exemplo;10'
                     padding: '12px', 
                     marginBottom: '6px',
                     fontSize: '13px',
-                    backgroundColor: selectedSidebarButton === 'open-mensagens-internas' ? sbUi.g(0.25) : 'rgba(30, 35, 30, 0.9)',
-                    border: selectedSidebarButton === 'open-mensagens-internas' ? `2px solid ${sbUi.g(0.6)}` : `1px solid ${sbUi.g(0.2)}`,
+                    backgroundColor: selectedSidebarButton === 'open-mensagens-internas' ? 'rgba(0, 255, 0, 0.25)' : 'rgba(30, 35, 30, 0.9)',
+                    border: selectedSidebarButton === 'open-mensagens-internas' ? '2px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.2)',
                     borderRadius: '12px',
-                    boxShadow: selectedSidebarButton === 'open-mensagens-internas' ? `0 0 12px ${sbUi.g(0.35)}` : 'none',
-                    color: sbUi.txt,
+                    boxShadow: selectedSidebarButton === 'open-mensagens-internas' ? '0 0 12px rgba(0, 255, 0, 0.35)' : 'none',
+                    color: selectedSidebarButton === 'open-mensagens-internas' ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
                     fontWeight: selectedSidebarButton === 'open-mensagens-internas' ? 'bold' : '500',
                     transform: selectedSidebarButton === 'open-mensagens-internas' ? 'scale(1.02)' : undefined,
                     transition: 'all 0.3s ease',
@@ -47448,13 +47443,13 @@ A1;Peça exemplo;10'
                   }}
                   onMouseEnter={(e) => {
                     if (selectedSidebarButton !== 'open-mensagens-internas') {
-                      e.currentTarget.style.borderColor = sbUi.g(0.45)
-                      e.currentTarget.style.boxShadow = `0 4px 20px ${sbUi.g(0.12)}`
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
+                      e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 0, 0.12)'
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (selectedSidebarButton !== 'open-mensagens-internas') {
-                      e.currentTarget.style.borderColor = sbUi.g(0.2)
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.2)'
                       e.currentTarget.style.boxShadow = 'none'
                     }
                   }}
@@ -47493,10 +47488,10 @@ A1;Peça exemplo;10'
                       padding: '12px', 
                       marginBottom: '5px',
                       fontSize: '12px',
-                      backgroundColor: isSelected ? sbUi.g(0.2) : sbUi.g(0.08),
-                      border: isSelected ? '2px solid transparent' : `1px solid ${sbUi.g(0.35)}`,
+                      backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
+                      border: isSelected ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
                       borderRadius: '8px',
-                      color: sbUi.txt,
+                      color: isSelected ? '#00ff00' : '#ccc',
                       fontWeight: 'bold',
                       transform: isSelected ? 'scale(1.02)' : undefined,
                       transition: 'all 0.3s ease',
@@ -47507,15 +47502,15 @@ A1;Peça exemplo;10'
                     }}
                     onMouseEnter={(e) => {
                       if (!isSelected) {
-                        e.currentTarget.style.backgroundColor = sbUi.g(0.15)
-                        e.currentTarget.style.border = `1px solid ${sbUi.g(0.55)}`
-                        e.currentTarget.style.boxShadow = `0 0 14px ${sbUi.g(0.45)}, 0 0 24px ${sbUi.g(0.2)}`
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.15)'
+                        e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.55)'
+                        e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.45), 0 0 24px rgba(0, 255, 0, 0.2)'
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isSelected) {
-                        e.currentTarget.style.backgroundColor = sbUi.g(0.08)
-                        e.currentTarget.style.border = `1px solid ${sbUi.g(0.35)}`
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.08)'
+                        e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.35)'
                         e.currentTarget.style.boxShadow = 'none'
                       }
                     }}
@@ -47560,11 +47555,11 @@ A1;Peça exemplo;10'
                                 padding: '12px', 
                                 marginBottom: '6px',
                                 fontSize: '13px',
-                                backgroundColor: isSubSelected ? sbUi.g(0.25) : 'rgba(30, 35, 30, 0.9)',
-                                border: isSubSelected ? `2px solid ${sbUi.g(0.6)}` : `1px solid ${sbUi.g(0.2)}`,
+                                backgroundColor: isSubSelected ? 'rgba(0, 255, 0, 0.25)' : 'rgba(30, 35, 30, 0.9)',
+                                border: isSubSelected ? '2px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.2)',
                                 borderRadius: '12px',
-                                boxShadow: isSubSelected ? `0 0 12px ${sbUi.g(0.35)}` : 'none',
-                                color: sbUi.txt,
+                                boxShadow: isSubSelected ? '0 0 12px rgba(0, 255, 0, 0.35)' : 'none',
+                                color: isSubSelected ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
                                 fontWeight: isSubSelected ? 'bold' : '500',
                                 transform: isSubSelected ? 'scale(1.02)' : undefined,
                                 transition: 'all 0.3s ease',
@@ -47572,13 +47567,13 @@ A1;Peça exemplo;10'
                               }}
                               onMouseEnter={(e) => {
                                 if (!isSubSelected) {
-                                  e.currentTarget.style.borderColor = sbUi.g(0.45)
-                                  e.currentTarget.style.boxShadow = `0 4px 20px ${sbUi.g(0.12)}`
+                                  e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
+                                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 0, 0.12)'
                                 }
                               }}
                               onMouseLeave={(e) => {
                                 if (!isSubSelected) {
-                                  e.currentTarget.style.borderColor = sbUi.g(0.2)
+                                  e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.2)'
                                   e.currentTarget.style.boxShadow = 'none'
                                 }
                               }}
@@ -47617,10 +47612,10 @@ A1;Peça exemplo;10'
               textAlign: 'left', 
               padding: '12px', 
               marginBottom: '5px',
-              backgroundColor: gestaoIndustrialActive ? sbUi.g(0.2) : sbUi.g(0.08),
-              border: gestaoIndustrialActive ? '2px solid transparent' : `1px solid ${sbUi.g(0.35)}`,
+              backgroundColor: gestaoIndustrialActive ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
+              border: gestaoIndustrialActive ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
-              color: sbUi.txt,
+              color: gestaoIndustrialActive ? '#00ff00' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
               display: 'flex',
@@ -47632,15 +47627,15 @@ A1;Peça exemplo;10'
             }}
             onMouseEnter={(e) => {
               if (!gestaoIndustrialActive) {
-                e.currentTarget.style.backgroundColor = sbUi.g(0.15)
-                e.currentTarget.style.border = `1px solid ${sbUi.g(0.55)}`
-                e.currentTarget.style.boxShadow = `0 0 14px ${sbUi.g(0.45)}, 0 0 24px ${sbUi.g(0.2)}`
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.15)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.55)'
+                e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.45), 0 0 24px rgba(0, 255, 0, 0.2)'
               }
             }}
             onMouseLeave={(e) => {
               if (!gestaoIndustrialActive) {
-                e.currentTarget.style.backgroundColor = sbUi.g(0.08)
-                e.currentTarget.style.border = `1px solid ${sbUi.g(0.35)}`
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.08)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.35)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
@@ -47687,11 +47682,11 @@ A1;Peça exemplo;10'
                             padding: '12px', 
                             marginBottom: '6px',
                             fontSize: '13px',
-                            backgroundColor: isSelected ? sbUi.g(0.25) : 'rgba(30, 35, 30, 0.9)',
-                            border: isSelected ? `2px solid ${sbUi.g(0.6)}` : `1px solid ${sbUi.g(0.2)}`,
+                            backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.25)' : 'rgba(30, 35, 30, 0.9)',
+                            border: isSelected ? '2px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.2)',
                             borderRadius: '12px',
-                            boxShadow: isSelected ? `0 0 12px ${sbUi.g(0.35)}` : 'none',
-                            color: sbUi.txt,
+                            boxShadow: isSelected ? '0 0 12px rgba(0, 255, 0, 0.35)' : 'none',
+                            color: isSelected ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
                             fontWeight: isSelected ? 'bold' : '500',
                             transform: isSelected ? 'scale(1.02)' : undefined,
                             transition: 'all 0.3s ease',
@@ -47702,15 +47697,15 @@ A1;Peça exemplo;10'
                           }}
                           onMouseEnter={(e) => {
                             if (!isSelected) {
-                              e.currentTarget.style.backgroundColor = sbUi.g(0.12)
-                              e.currentTarget.style.borderColor = sbUi.g(0.45)
-                              e.currentTarget.style.boxShadow = `0 0 14px ${sbUi.g(0.4)}`
+                              e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.12)'
+                              e.currentTarget.style.borderColor = '#00ff00'
+                              e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.4)'
                             }
                           }}
                           onMouseLeave={(e) => {
                             if (!isSelected) {
                               e.currentTarget.style.backgroundColor = 'rgba(30, 35, 30, 0.9)'
-                              e.currentTarget.style.borderColor = sbUi.g(0.2)
+                              e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.2)'
                               e.currentTarget.style.boxShadow = 'none'
                             }
                           }}
@@ -47721,7 +47716,7 @@ A1;Peça exemplo;10'
                               top: '5px',
                               right: '30px',
                               fontSize: '14px',
-                              color: sbUi.txt,
+                              color: '#00ff00',
                               fontWeight: 'bold'
                             }}>✓</span>
                           )}
@@ -47745,11 +47740,11 @@ A1;Peça exemplo;10'
                                       padding: '10px', 
                                       marginBottom: '5px',
                                       fontSize: '12px',
-                                      backgroundColor: isSubSelected ? sbUi.g(0.25) : 'rgba(30, 35, 30, 0.9)',
-                                      border: isSubSelected ? `2px solid ${sbUi.g(0.6)}` : `1px solid ${sbUi.g(0.2)}`,
+                                      backgroundColor: isSubSelected ? 'rgba(0, 255, 0, 0.25)' : 'rgba(30, 35, 30, 0.9)',
+                                      border: isSubSelected ? '2px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.2)',
                                       borderRadius: '12px',
-                                      boxShadow: isSubSelected ? `0 0 12px ${sbUi.g(0.35)}` : 'none',
-                                      color: sbUi.txt,
+                                      boxShadow: isSubSelected ? '0 0 12px rgba(0, 255, 0, 0.35)' : 'none',
+                                      color: isSubSelected ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
                                       fontWeight: isSubSelected ? 'bold' : '500',
                                       transform: isSubSelected ? 'scale(1.02)' : undefined,
                                       transition: 'all 0.3s ease',
@@ -47757,15 +47752,15 @@ A1;Peça exemplo;10'
                                     }}
                                     onMouseEnter={(e) => {
                                       if (!isSubSelected) {
-                                        e.currentTarget.style.backgroundColor = sbUi.g(0.12)
-                                        e.currentTarget.style.borderColor = sbUi.g(0.45)
-                                        e.currentTarget.style.boxShadow = `0 0 14px ${sbUi.g(0.4)}`
+                                        e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.12)'
+                                        e.currentTarget.style.borderColor = '#00ff00'
+                                        e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.4)'
                                       }
                                     }}
                                     onMouseLeave={(e) => {
                                       if (!isSubSelected) {
                                         e.currentTarget.style.backgroundColor = 'rgba(30, 35, 30, 0.9)'
-                                        e.currentTarget.style.borderColor = sbUi.g(0.2)
+                                        e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.2)'
                                         e.currentTarget.style.boxShadow = 'none'
                                       }
                                     }}
@@ -47776,7 +47771,7 @@ A1;Peça exemplo;10'
                                         top: '3px',
                                         right: '8px',
                                         fontSize: '12px',
-                                        color: sbUi.txt,
+                                        color: '#00ff00',
                                         fontWeight: 'bold'
                                       }}>✓</span>
                                     )}
@@ -47801,11 +47796,11 @@ A1;Peça exemplo;10'
                         padding: '12px', 
                         marginBottom: '6px',
                         fontSize: '13px',
-                        backgroundColor: isSelected ? sbUi.g(0.25) : 'rgba(30, 35, 30, 0.9)',
-                        border: isSelected ? `2px solid ${sbUi.g(0.6)}` : `1px solid ${sbUi.g(0.2)}`,
+                        backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.25)' : 'rgba(30, 35, 30, 0.9)',
+                        border: isSelected ? '2px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.2)',
                         borderRadius: '12px',
-                        boxShadow: isSelected ? `0 0 12px ${sbUi.g(0.35)}` : 'none',
-                        color: sbUi.txt,
+                        boxShadow: isSelected ? '0 0 12px rgba(0, 255, 0, 0.35)' : 'none',
+                        color: isSelected ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
                         fontWeight: isSelected ? 'bold' : '500',
                         transform: isSelected ? 'scale(1.02)' : undefined,
                         transition: 'all 0.3s ease',
@@ -47813,15 +47808,15 @@ A1;Peça exemplo;10'
                       }}
                       onMouseEnter={(e) => {
                         if (!isSelected) {
-                          e.currentTarget.style.backgroundColor = sbUi.g(0.12)
-                                        e.currentTarget.style.borderColor = sbUi.g(0.45)
-                          e.currentTarget.style.boxShadow = `0 0 14px ${sbUi.g(0.4)}`
+                          e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.12)'
+                          e.currentTarget.style.borderColor = '#00ff00'
+                          e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.4)'
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (!isSelected) {
                           e.currentTarget.style.backgroundColor = 'rgba(30, 35, 30, 0.9)'
-                          e.currentTarget.style.borderColor = sbUi.g(0.2)
+                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.2)'
                           e.currentTarget.style.boxShadow = 'none'
                         }
                       }}
@@ -47865,10 +47860,10 @@ A1;Peça exemplo;10'
                   padding: '12px',
                   marginTop: '10px',
                   marginBottom: '10px',
-                  backgroundColor: isSelected ? sbUi.g(0.2) : sbUi.g(0.08),
-                  border: isSelected ? '2px solid transparent' : `1px solid ${sbUi.g(0.35)}`,
+                  backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
+                  border: isSelected ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
                   borderRadius: '8px',
-                  color: sbUi.txt,
+                  color: isSelected ? '#00ff00' : '#ccc',
                   fontWeight: 'bold',
                   fontSize: '12px',
                   display: 'flex',
@@ -47880,15 +47875,15 @@ A1;Peça exemplo;10'
                 }}
                 onMouseEnter={(e) => {
                   if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = sbUi.g(0.15)
-                    e.currentTarget.style.border = `1px solid ${sbUi.g(0.55)}`
-                    e.currentTarget.style.boxShadow = `0 0 14px ${sbUi.g(0.45)}, 0 0 24px ${sbUi.g(0.2)}`
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.15)'
+                    e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.55)'
+                    e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.45), 0 0 24px rgba(0, 255, 0, 0.2)'
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = sbUi.g(0.08)
-                    e.currentTarget.style.border = `1px solid ${sbUi.g(0.35)}`
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.08)'
+                    e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.35)'
                     e.currentTarget.style.boxShadow = 'none'
                   }
                 }}
@@ -47929,10 +47924,10 @@ A1;Peça exemplo;10'
                   padding: '12px', 
                   marginTop: '10px',
                   marginBottom: '10px',
-                  backgroundColor: isSelected ? sbUi.g(0.2) : sbUi.g(0.08),
-                  border: isSelected ? '2px solid transparent' : `1px solid ${sbUi.g(0.35)}`,
+                  backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
+                  border: isSelected ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
                   borderRadius: '8px',
-                  color: sbUi.txt,
+                  color: isSelected ? '#00ff00' : '#ccc',
                   fontWeight: 'bold',
                   fontSize: '12px',
                   display: 'flex',
@@ -47944,15 +47939,15 @@ A1;Peça exemplo;10'
                 }}
                 onMouseEnter={(e) => {
                   if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = sbUi.g(0.15)
-                    e.currentTarget.style.border = `1px solid ${sbUi.g(0.55)}`
-                    e.currentTarget.style.boxShadow = `0 0 14px ${sbUi.g(0.45)}, 0 0 24px ${sbUi.g(0.2)}`
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.15)'
+                    e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.55)'
+                    e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.45), 0 0 24px rgba(0, 255, 0, 0.2)'
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = sbUi.g(0.08)
-                    e.currentTarget.style.border = `1px solid ${sbUi.g(0.35)}`
+                    e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.08)'
+                    e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.35)'
                     e.currentTarget.style.boxShadow = 'none'
                   }
                 }}
@@ -47992,10 +47987,10 @@ A1;Peça exemplo;10'
               textAlign: 'left', 
               padding: '12px', 
               marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-gestao-financeira' ? sbUi.g(0.2) : sbUi.g(0.08),
-              border: selectedSidebarButton === 'open-gestao-financeira' ? '2px solid transparent' : `1px solid ${sbUi.g(0.35)}`,
+              backgroundColor: selectedSidebarButton === 'open-gestao-financeira' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
+              border: selectedSidebarButton === 'open-gestao-financeira' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
-              color: sbUi.txt,
+              color: selectedSidebarButton === 'open-gestao-financeira' ? '#00ff00' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
               display: 'flex',
@@ -48007,15 +48002,15 @@ A1;Peça exemplo;10'
             }}
             onMouseEnter={(e) => {
               if (selectedSidebarButton !== 'open-gestao-financeira') {
-                e.currentTarget.style.backgroundColor = sbUi.g(0.15)
-                e.currentTarget.style.border = `1px solid ${sbUi.g(0.55)}`
-                e.currentTarget.style.boxShadow = `0 0 14px ${sbUi.g(0.45)}, 0 0 24px ${sbUi.g(0.2)}`
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.15)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.55)'
+                e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.45), 0 0 24px rgba(0, 255, 0, 0.2)'
               }
             }}
             onMouseLeave={(e) => {
               if (selectedSidebarButton !== 'open-gestao-financeira') {
-                e.currentTarget.style.backgroundColor = sbUi.g(0.08)
-                e.currentTarget.style.border = `1px solid ${sbUi.g(0.35)}`
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.08)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.35)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
@@ -48059,11 +48054,11 @@ A1;Peça exemplo;10'
                         padding: '12px', 
                         marginBottom: '6px',
                         fontSize: '13px',
-                        backgroundColor: isSelected ? sbUi.g(0.25) : 'rgba(30, 35, 30, 0.9)',
-                        border: isSelected ? `2px solid ${sbUi.g(0.6)}` : `1px solid ${sbUi.g(0.2)}`,
+                        backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.25)' : 'rgba(30, 35, 30, 0.9)',
+                        border: isSelected ? '2px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.2)',
                         borderRadius: '12px',
-                        boxShadow: isSelected ? `0 0 12px ${sbUi.g(0.35)}` : 'none',
-                        color: sbUi.txt,
+                        boxShadow: isSelected ? '0 0 12px rgba(0, 255, 0, 0.35)' : 'none',
+                        color: isSelected ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
                         fontWeight: isSelected ? 'bold' : '500',
                         transform: isSelected ? 'scale(1.02)' : undefined,
                         transition: 'all 0.3s ease',
@@ -48071,13 +48066,13 @@ A1;Peça exemplo;10'
                       }}
                       onMouseEnter={(e) => {
                         if (!isSelected) {
-                          e.currentTarget.style.borderColor = sbUi.g(0.45)
-                          e.currentTarget.style.boxShadow = `0 4px 20px ${sbUi.g(0.12)}`
+                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
+                          e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 0, 0.12)'
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (!isSelected) {
-                          e.currentTarget.style.borderColor = sbUi.g(0.2)
+                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.2)'
                           e.currentTarget.style.boxShadow = 'none'
                         }
                       }}
@@ -48115,10 +48110,10 @@ A1;Peça exemplo;10'
               textAlign: 'left',
               padding: '12px',
               marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-cadastro-nonato-service' ? sbUi.g(0.2) : sbUi.g(0.08),
-              border: selectedSidebarButton === 'open-cadastro-nonato-service' ? '2px solid transparent' : `1px solid ${sbUi.g(0.35)}`,
+              backgroundColor: selectedSidebarButton === 'open-cadastro-nonato-service' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
+              border: selectedSidebarButton === 'open-cadastro-nonato-service' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
-              color: sbUi.txt,
+              color: selectedSidebarButton === 'open-cadastro-nonato-service' ? '#00ff00' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
               display: 'flex',
@@ -48130,15 +48125,15 @@ A1;Peça exemplo;10'
             }}
             onMouseEnter={(e) => {
               if (selectedSidebarButton !== 'open-cadastro-nonato-service') {
-                e.currentTarget.style.backgroundColor = sbUi.g(0.15)
-                e.currentTarget.style.border = `1px solid ${sbUi.g(0.55)}`
-                e.currentTarget.style.boxShadow = `0 0 14px ${sbUi.g(0.45)}, 0 0 24px ${sbUi.g(0.2)}`
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.15)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.55)'
+                e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.45), 0 0 24px rgba(0, 255, 0, 0.2)'
               }
             }}
             onMouseLeave={(e) => {
               if (selectedSidebarButton !== 'open-cadastro-nonato-service') {
-                e.currentTarget.style.backgroundColor = sbUi.g(0.08)
-                e.currentTarget.style.border = `1px solid ${sbUi.g(0.35)}`
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.08)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.35)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
@@ -48171,10 +48166,10 @@ A1;Peça exemplo;10'
               textAlign: 'left', 
               padding: '12px', 
               marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-extra' ? sbUi.g(0.2) : sbUi.g(0.08),
-              border: selectedSidebarButton === 'open-extra' ? '2px solid transparent' : `1px solid ${sbUi.g(0.35)}`,
+              backgroundColor: selectedSidebarButton === 'open-extra' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(0, 255, 0, 0.08)',
+              border: selectedSidebarButton === 'open-extra' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.35)',
               borderRadius: '8px',
-              color: sbUi.txt,
+              color: selectedSidebarButton === 'open-extra' ? '#00ff00' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
               display: 'flex',
@@ -48186,15 +48181,15 @@ A1;Peça exemplo;10'
             }}
             onMouseEnter={(e) => {
               if (selectedSidebarButton !== 'open-extra') {
-                e.currentTarget.style.backgroundColor = sbUi.g(0.15)
-                e.currentTarget.style.border = `1px solid ${sbUi.g(0.55)}`
-                e.currentTarget.style.boxShadow = `0 0 14px ${sbUi.g(0.45)}, 0 0 24px ${sbUi.g(0.2)}`
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.15)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.55)'
+                e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.45), 0 0 24px rgba(0, 255, 0, 0.2)'
               }
             }}
             onMouseLeave={(e) => {
               if (selectedSidebarButton !== 'open-extra') {
-                e.currentTarget.style.backgroundColor = sbUi.g(0.08)
-                e.currentTarget.style.border = `1px solid ${sbUi.g(0.35)}`
+                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.08)'
+                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.35)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
@@ -48233,7 +48228,7 @@ A1;Peça exemplo;10'
                     setSelectedLanguage(e.target.value)
                     handleLanguageChange(e.target.value)
                   }}
-                  style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: `1px solid ${sbUi.g(0.3)}`, borderRadius: '4px' }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 >
                   {getLanguages(safeT).map(lang => (
                     <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
@@ -48250,11 +48245,11 @@ A1;Peça exemplo;10'
                   padding: '12px', 
                   marginBottom: '6px',
                   fontSize: '13px',
-                  backgroundColor: selectedSidebarButton === 'open-translator' ? sbUi.g(0.25) : 'rgba(30, 35, 30, 0.9)',
-                  border: selectedSidebarButton === 'open-translator' ? `2px solid ${sbUi.g(0.6)}` : `1px solid ${sbUi.g(0.2)}`,
+                  backgroundColor: selectedSidebarButton === 'open-translator' ? 'rgba(0, 255, 0, 0.25)' : 'rgba(30, 35, 30, 0.9)',
+                  border: selectedSidebarButton === 'open-translator' ? '2px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.2)',
                   borderRadius: '12px',
-                  boxShadow: selectedSidebarButton === 'open-translator' ? `0 0 12px ${sbUi.g(0.35)}` : 'none',
-                  color: sbUi.txt,
+                  boxShadow: selectedSidebarButton === 'open-translator' ? '0 0 12px rgba(0, 255, 0, 0.35)' : 'none',
+                  color: selectedSidebarButton === 'open-translator' ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
                   fontWeight: selectedSidebarButton === 'open-translator' ? 'bold' : '500',
                   transform: selectedSidebarButton === 'open-translator' ? 'scale(1.02)' : undefined,
                   transition: 'all 0.3s ease',
@@ -48262,13 +48257,13 @@ A1;Peça exemplo;10'
                 }}
                 onMouseEnter={(e) => {
                   if (selectedSidebarButton !== 'open-translator') {
-                    e.currentTarget.style.borderColor = sbUi.g(0.45)
-                    e.currentTarget.style.boxShadow = `0 4px 20px ${sbUi.g(0.12)}`
+                    e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
+                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 0, 0.12)'
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (selectedSidebarButton !== 'open-translator') {
-                    e.currentTarget.style.borderColor = sbUi.g(0.2)
+                    e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.2)'
                     e.currentTarget.style.boxShadow = 'none'
                   }
                 }}
@@ -48296,11 +48291,11 @@ A1;Peça exemplo;10'
                   padding: '12px', 
                   marginBottom: '6px',
                   fontSize: '13px',
-                  backgroundColor: selectedSidebarButton === 'open-manual-gestor' ? sbUi.g(0.25) : 'rgba(30, 35, 30, 0.9)',
-                  border: selectedSidebarButton === 'open-manual-gestor' ? `2px solid ${sbUi.g(0.6)}` : `1px solid ${sbUi.g(0.2)}`,
+                  backgroundColor: selectedSidebarButton === 'open-manual-gestor' ? 'rgba(0, 255, 0, 0.25)' : 'rgba(30, 35, 30, 0.9)',
+                  border: selectedSidebarButton === 'open-manual-gestor' ? '2px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.2)',
                   borderRadius: '12px',
-                  boxShadow: selectedSidebarButton === 'open-manual-gestor' ? `0 0 12px ${sbUi.g(0.35)}` : 'none',
-                  color: sbUi.txt,
+                  boxShadow: selectedSidebarButton === 'open-manual-gestor' ? '0 0 12px rgba(0, 255, 0, 0.35)' : 'none',
+                  color: selectedSidebarButton === 'open-manual-gestor' ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
                   fontWeight: selectedSidebarButton === 'open-manual-gestor' ? 'bold' : '500',
                   transform: selectedSidebarButton === 'open-manual-gestor' ? 'scale(1.02)' : undefined,
                   transition: 'all 0.3s ease',
@@ -48308,13 +48303,13 @@ A1;Peça exemplo;10'
                 }}
                 onMouseEnter={(e) => {
                   if (selectedSidebarButton !== 'open-manual-gestor') {
-                    e.currentTarget.style.borderColor = sbUi.g(0.45)
-                    e.currentTarget.style.boxShadow = `0 4px 20px ${sbUi.g(0.12)}`
+                    e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
+                    e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 0, 0.12)'
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (selectedSidebarButton !== 'open-manual-gestor') {
-                    e.currentTarget.style.borderColor = sbUi.g(0.2)
+                    e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.2)'
                     e.currentTarget.style.boxShadow = 'none'
                   }
                 }}
@@ -48325,7 +48320,7 @@ A1;Peça exemplo;10'
                     top: '8px',
                     right: '30px',
                     fontSize: '16px',
-                                        color: sbUi.txt,
+                    color: '#00ff00',
                     fontWeight: 'bold'
                   }}>✓</span>
                 )}
@@ -48357,9 +48352,9 @@ A1;Peça exemplo;10'
                 padding: '12px', 
                 marginTop: 'auto',
                 marginBottom: '20px',
-                backgroundColor: isSelected ? sbUi.g(0.3) : undefined,
+                backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.3)' : undefined,
                 border: isSelected ? '2px solid transparent' : undefined,
-                color: isSelected ? sbUi.txt : undefined,
+                color: isSelected ? '#00ff00' : undefined,
                 fontWeight: isSelected ? 'bold' : undefined,
                 transform: isSelected ? 'scale(1.02)' : undefined,
                 transition: 'all 0.3s ease',
@@ -48406,7 +48401,7 @@ A1;Peça exemplo;10'
             fontSize: '13px',
             fontWeight: '600',
             letterSpacing: '0.5px',
-            color: sbUi.txt,
+            color: 'rgba(255, 255, 255, 0.9)',
             backgroundColor: 'rgba(255, 255, 255, 0.04)',
             border: '1px solid rgba(255, 255, 255, 0.12)',
             borderRadius: '10px',
