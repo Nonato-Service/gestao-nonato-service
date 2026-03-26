@@ -21,6 +21,7 @@
 html {
   width: 100%;
   overflow-x: hidden;
+  overscroll-behavior: none;
   overscroll-behavior-y: none;
   font-size: 16px;
 }
@@ -65,10 +66,21 @@ body {
   line-height: 1.6;
   width: 100%;
   overflow-x: hidden;
+  overscroll-behavior: none;
   overscroll-behavior-y: none;
   /* pan-y + pinch: rolagem vertical com um dedo; pinch-zoom mantido. Evita só "manipulation" em body + área interna com pan-y (casos em que o scroll não era atribuído ao contentor certo). */
   touch-action: pan-y pinch-zoom;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Scroll normal, sem gesto de "puxar para atualizar" no topo */
+html,
+body,
+.app-layout,
+.main-app-column,
+.main-content-area,
+.tab-inner-scroll {
+  overscroll-behavior-y: none;
 }
 
 /* Área principal: sem aba = rolar aqui. Com aba = overflow hidden aqui e rolar no .tab-inner-scroll (page.tsx). min-height:0 na cadeia flex permite overflow-y: auto. */
@@ -1591,6 +1603,11 @@ body {
 }
 
 @media (max-width: 1024px) {
+  html,
+  body {
+    overscroll-behavior: none !important;
+    overscroll-behavior-y: none !important;
+  }
   .app-compact-layout .sidebar {
     position: fixed !important;
     top: 0 !important;

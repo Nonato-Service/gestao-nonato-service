@@ -3516,7 +3516,11 @@ export default function Dashboard() {
         const intro =
           (safeT as any)?.syncPullRiskSevereIntro ||
           'ATENÇÃO: pode perder dados se continuar (cópia do servidor parece incompleta face a este aparelho).'
-        const msg = lines.length ? `${intro}\n\n${lines.join('\n')}` : intro
+        const previewLines = lines.slice(0, 6)
+        const hasMore = lines.length > previewLines.length
+        const msg = lines.length
+          ? `${intro}\n\n${previewLines.join('\n')}${hasMore ? '\n• ...' : ''}`
+          : intro
         if (!window.confirm(msg)) {
           setSyncPullChecking(false)
           return
@@ -3534,7 +3538,11 @@ export default function Dashboard() {
         const intro =
           (safeT as any)?.syncPullRiskCaution ||
           'A cópia do servidor parece mais pequena ou diferente. Continuar?'
-        const msg = lines.length ? `${intro}\n\n${lines.join('\n')}` : intro
+        const previewLines = lines.slice(0, 6)
+        const hasMore = lines.length > previewLines.length
+        const msg = lines.length
+          ? `${intro}\n\n${previewLines.join('\n')}${hasMore ? '\n• ...' : ''}`
+          : intro
         if (!window.confirm(msg)) {
           setSyncPullChecking(false)
           return
@@ -3567,6 +3575,25 @@ export default function Dashboard() {
 
   const enviarEsteAparelhoParaServidor = useCallback(async () => {
     if (typeof window === 'undefined') return
+    const lastAcc = getLastAcceptedRevision()
+    const stBeforePush = await fetchSyncStatus()
+    if (stBeforePush && stBeforePush.revision > lastAcc) {
+      const { data: serverData } = await loadAllFromServer()
+      const localSnap = collectLocalNonatoSnapshot()
+      setSyncPendingRemote({
+        revision: stBeforePush.revision,
+        updatedAt: stBeforePush.updatedAt || '',
+        summaryLines: summarizeDataDiff(serverData, localSnap),
+      })
+      setSyncDecisionModalOpen(true)
+      window.alert(
+        `${(safeT as any)?.syncModalTitle || 'Alterações noutro aparelho'}: ${
+          (safeT as any)?.syncAdminPendingNote ||
+          'O servidor tem uma versão mais recente do que a que este aparelho aceitou.'
+        }`
+      )
+      return
+    }
     const msg =
       (safeT as any)?.syncPushConfirm ||
       'Isto vai SUBSTITUIR os dados no servidor pelos deste aparelho. Os outros equipamentos passarão a poder carregar esta versão. Continuar?'
@@ -4853,7 +4880,7 @@ export default function Dashboard() {
           'cadastro-nonato-service-default': { translationKey: 'cadastroNonatoServiceTitle', group: 'outros' },
           'ficha-cadastral-default': { translationKey: 'fichaCadastralTitle', group: 'outros' },
           'gestores-default': { translationKey: 'gestoresTitle', group: 'gestao-tecnica' },
-          'familias-grupos-default': { translationKey: 'familiasGruposTitle', group: 'gestao-industrial' },
+          'familias-grupos-default': { translationKey: 'familiasGruposTitle', group: 'checklist-group' },
           'familias-grupos-equipamentos-default': { translationKey: 'familiasGruposEquipamentosTitle', group: 'gestao-industrial' },
           'equipamentos-default': { translationKey: 'equipamentosTitle', group: 'gestao-industrial' },
           'checklist-group-default': { translationKey: 'checklistGroupTitle', group: undefined },
@@ -5025,9 +5052,13 @@ export default function Dashboard() {
       const hasGestores = buttons.some((b: SidebarButton) => b.id === 'gestores-default')
       const hasEquipamentos = buttons.some((b: SidebarButton) => b.id === 'equipamentos-default')
       
-      // Migrar botões pre-checklist e checklist para o grupo checklist-group se ainda estiverem no grupo gestao-industrial
+      // Migrar botões de checklist para o grupo checklist-group (inclui Cadastro de Famílias e Grupos).
       let buttonsMigrated = false
       buttons = buttons.map((b: SidebarButton) => {
+        if (b.id === 'familias-grupos-default' && b.group !== 'checklist-group') {
+          buttonsMigrated = true
+          return { ...b, group: 'checklist-group', translationKey: 'familiasGruposTitle' }
+        }
         if (b.id === 'pre-checklist-default' && (b.group === 'gestao-industrial' || !b.group)) {
           buttonsMigrated = true
           return { ...b, group: 'checklist-group', translationKey: 'preChecklistSubTitle' }
@@ -5038,6 +5069,21 @@ export default function Dashboard() {
         }
         return b
       })
+      // Garantir a ordem pedida: Cadastro de Famílias e Grupos acima de Pré-Checklist.
+      const preChecklistBtn = buttons.find((b: SidebarButton) => b.id === 'pre-checklist-default')
+      const familiasChecklistBtn = buttons.find((b: SidebarButton) => b.id === 'familias-grupos-default')
+      if (preChecklistBtn && familiasChecklistBtn) {
+        const preOrder = Number(preChecklistBtn.order ?? 0)
+        const famOrder = Number(familiasChecklistBtn.order ?? 0)
+        if (!Number.isFinite(famOrder) || famOrder >= preOrder) {
+          buttonsMigrated = true
+          buttons = buttons.map((b: SidebarButton) =>
+            b.id === 'familias-grupos-default'
+              ? { ...b, order: preOrder - 0.5, group: 'checklist-group', translationKey: 'familiasGruposTitle' }
+              : b
+          )
+        }
+      }
 
       // Biblioteca de Relatórios e Cadastro de Serviços: ficam dentro de Gestão Técnica
       buttons = buttons.map((b: SidebarButton) => {
@@ -5848,7 +5894,7 @@ export default function Dashboard() {
           action: 'open-familias-grupos',
           order: eqIdx >= 0 ? (filteredButtons[eqIdx].order ?? 3) - 1 : filteredButtons.length,
           translationKey: 'familiasGruposTitle',
-          group: 'gestao-industrial' as const
+          group: 'checklist-group' as const
         }
         if (eqIdx >= 0) filteredButtons.splice(eqIdx, 0, familiasGruposBtn)
         else filteredButtons.push(familiasGruposBtn)
@@ -6031,7 +6077,7 @@ export default function Dashboard() {
           action: 'open-familias-grupos',
           order: 2,
           translationKey: 'familiasGruposTitle',
-          group: 'gestao-industrial'
+          group: 'checklist-group'
         },
         {
           id: 'familias-grupos-equipamentos-default',
@@ -10130,6 +10176,15 @@ export default function Dashboard() {
     printWin.document.close()
   }
 
+  /** Texto livre nos PDFs: escapa HTML e preserva quebras de linha. */
+  const escapePdfHtml = (s: string | undefined | null) =>
+    String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/\r\n|\r|\n/g, '<br/>')
+
   // Função para gerar PDF/Imprimir Relatório - Formato Clássico (baseado na imagem)
   const handlePrintRelatorioClassico = (relatorio: RelatorioServico) => {
     try {
@@ -10374,6 +10429,7 @@ export default function Dashboard() {
                       <td><strong>${diaCalc.kmTotal || '0'}</strong></td>
                       <td>${dia.tempoPausa || dia.pausa || '0:00'}</td>
                     </tr>
+                    ${(dia.descricaoTrabalho || '').trim() !== '' ? `<tr><td colspan="14" style="text-align:left;padding:6px 8px;font-size:9px;border:1px solid #000;background:#f9f9f9;vertical-align:top;"><strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>` : ''}
                   `;
                 }).join('')}
               </tbody>
@@ -10704,6 +10760,7 @@ export default function Dashboard() {
                       <td>${diaCalc.retornoDuracao || '-'}</td>
                       <td>${diaCalc.kmTotal || '0'}</td>
                     </tr>
+                    ${(dia.descricaoTrabalho || '').trim() !== '' ? `<tr><td colspan="5" style="text-align:left;padding:6px 8px;font-size:9px;border:1px solid #000;background:#f9f9f9;vertical-align:top;"><strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>` : ''}
                   `;
                 }).join('')}
               </tbody>
@@ -11069,10 +11126,10 @@ export default function Dashboard() {
                       <td><strong>${diaCalc.kmTotal || '0'}</strong></td>
                       <td>${dia.tempoPausa || dia.pausa || '0:00'}</td>
                     </tr>
-                    ${dia.descricaoTrabalho ? `
+                    ${(dia.descricaoTrabalho || '').trim() !== '' ? `
                     <tr>
-                      <td colspan="14" class="descricao-trabalho">
-                        <strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${dia.descricaoTrabalho}
+                      <td colspan="14" class="descricao-trabalho" style="text-align:left;vertical-align:top;">
+                        <strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${escapePdfHtml(dia.descricaoTrabalho)}
                       </td>
                     </tr>
                     ` : ''}
@@ -11471,6 +11528,7 @@ export default function Dashboard() {
                       <td><strong>${diaCalc.kmTotal || '0'}</strong></td>
                       <td>${dia.tempoPausa || dia.pausa || '0:00'}</td>
                     </tr>
+                    ${(dia.descricaoTrabalho || '').trim() !== '' ? `<tr><td colspan="14" style="text-align:left;padding:8px 10px;font-size:9px;border:1px solid #ddd;background:#f8f9fa;vertical-align:top;"><strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>` : ''}
                   `;
                 }).join('')}
               </tbody>
@@ -11846,6 +11904,7 @@ export default function Dashboard() {
                       <td><strong>${diaCalc.kmTotal || '0'}</strong></td>
                       <td>${dia.tempoPausa || dia.pausa || '0:00'}</td>
                     </tr>
+                    ${(dia.descricaoTrabalho || '').trim() !== '' ? `<tr><td colspan="14" style="text-align:left;padding:6px 8px;font-size:9px;border:1px solid #ccc;background:#fafafa;vertical-align:top;"><strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>` : ''}
                   `;
                 }).join('')}
               </tbody>
@@ -12235,6 +12294,7 @@ export default function Dashboard() {
                         <td><strong>${diaCalc.kmTotal || '0'}</strong></td>
                         <td>${dia.tempoPausa || dia.pausa || '0:00'}</td>
                       </tr>
+                      ${(dia.descricaoTrabalho || '').trim() !== '' ? `<tr><td colspan="14" style="text-align:left;padding:6px 8px;font-size:9px;border:1px solid #444;background:#1a1a1a;color:#e0e0e0;vertical-align:top;"><strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>` : ''}
                     `;
                   }).join('')}
                 </tbody>
@@ -12625,6 +12685,7 @@ export default function Dashboard() {
                       <td><strong>${diaCalc.kmTotal || '0'}</strong></td>
                       <td>${dia.tempoPausa || dia.pausa || '0:00'}</td>
                     </tr>
+                    ${(dia.descricaoTrabalho || '').trim() !== '' ? `<tr><td colspan="14" style="text-align:left;padding:8px 12px;font-size:9px;border:1px solid #c5a572;background:#faf8f5;vertical-align:top;"><strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>` : ''}
                   `;
                 }).join('')}
               </tbody>
@@ -13035,6 +13096,7 @@ export default function Dashboard() {
                         <td><strong>${diaCalc.kmTotal || '0'}</strong></td>
                         <td>${dia.tempoPausa || dia.pausa || '0:00'}</td>
                       </tr>
+                      ${(dia.descricaoTrabalho || '').trim() !== '' ? `<tr><td colspan="14" style="text-align:left;padding:6px 8px;font-size:9px;border:1px solid #555;background:#2a2a2a;color:#e5e5e5;vertical-align:top;"><strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>` : ''}
                     `;
                   }).join('')}
                 </tbody>
@@ -13744,7 +13806,11 @@ export default function Dashboard() {
           ${relatorio.diasTrabalho.map((dia: DiaTrabalho) => {
             const diaCalc = atualizarCalculosDia(dia);
             const df = dia.data ? new Date(dia.data + 'T00:00:00').toLocaleDateString(localeReport, { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-';
-            return `<tr><td>${df}</td><td>${diaCalc.idaDuracao || '-'}</td><td>${diaCalc.horasDuracao || '-'}</td><td>${diaCalc.retornoDuracao || '-'}</td><td>${diaCalc.kmTotal || '0'}</td></tr>`;
+            const linha = `<tr><td>${df}</td><td>${diaCalc.idaDuracao || '-'}</td><td>${diaCalc.horasDuracao || '-'}</td><td>${diaCalc.retornoDuracao || '-'}</td><td>${diaCalc.kmTotal || '0'}</td></tr>`;
+            const desc = (dia.descricaoTrabalho || '').trim() !== ''
+              ? `<tr><td colspan="5" style="text-align:left;padding:6px 8px;font-size:9px;vertical-align:top;background:#f5f5f5;"><strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>`
+              : '';
+            return linha + desc;
           }).join('')}
         </tbody>
       </table>
@@ -19261,6 +19327,152 @@ const nextF = familias.filter(x => x !== f)
                   </div>
                   )}
                 </div>
+            </div>
+
+            {/* SEÇÃO 1.1: LOGOS PDF POR FASE (modo compacto) */}
+            <div style={{ marginBottom: '40px', padding: '20px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+              <h3 style={{ color: '#00ff00', marginBottom: '12px', fontSize: '18px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)', paddingBottom: '10px' }}>
+                {(safeT as any)?.adminLogosPdfTitle || 'LOGOS NOS DOCUMENTOS PDF'}
+              </h3>
+              <p style={{ margin: '0 0 14px', fontSize: '12px', opacity: 0.75, lineHeight: 1.45 }}>
+                {(safeT as any)?.adminLogosPdfDesc || 'Escolha o logo para cada fase e veja a pré-visualização antes de gerar o PDF.'}
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>PDF · 01</span>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'rgba(255,255,255,0.9)' }}>
+                      <input
+                        type="checkbox"
+                        checked={incluirLogoNosRelatorios}
+                        onChange={(e) => {
+                          const v = e.target.checked
+                          setIncluirLogoNosRelatorios(v)
+                          saveData('nonato-relatorios-incluir-logo', v)
+                        }}
+                        style={{ width: '16px', height: '16px', accentColor: '#00ff00' }}
+                      />
+                      {safeT?.incluirLogoNosRelatorios || 'Incluir nos PDF'}
+                    </label>
+                  </div>
+                  <strong style={{ fontSize: '14px', color: '#fff' }}>{safeT?.escolherLogoRelatorios || 'Relatórios de serviço'}</strong>
+                  <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
+                    {administradorPreviewPdfLogo(logoRelatorioSelecionadoId) ? (
+                      <img src={administradorPreviewPdfLogo(logoRelatorioSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
+                    ) : (
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
+                    )}
+                  </div>
+                  <select
+                    value={logoRelatorioSelecionadoId}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      setLogoRelatorioSelecionadoId(v)
+                      saveData('nonato-relatorios-logo-id', v)
+                    }}
+                    style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
+                  >
+                    <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
+                    {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
+                      <option key={l.id} value={l.id}>{l.name || l.id}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>PDF · 02</span>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'rgba(255,255,255,0.9)' }}>
+                      <input
+                        type="checkbox"
+                        checked={incluirLogoFechamentosDespesas}
+                        onChange={(e) => {
+                          const v = e.target.checked
+                          setIncluirLogoFechamentosDespesas(v)
+                          saveData('nonato-fechamentos-incluir-logo', v)
+                        }}
+                        style={{ width: '16px', height: '16px', accentColor: '#00ff00' }}
+                      />
+                      {(safeT as any)?.incluirLogoFechamentosDespesasShort || 'Incluir nos PDF'}
+                    </label>
+                  </div>
+                  <strong style={{ fontSize: '14px', color: '#fff' }}>{(safeT as any)?.escolherLogoFechamentos || 'Fechamentos de despesas'}</strong>
+                  <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
+                    {administradorPreviewPdfLogo(logoFechamentoSelecionadoId) ? (
+                      <img src={administradorPreviewPdfLogo(logoFechamentoSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
+                    ) : (
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
+                    )}
+                  </div>
+                  <select
+                    value={logoFechamentoSelecionadoId}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      setLogoFechamentoSelecionadoId(v)
+                      saveData('nonato-fechamentos-logo-id', v)
+                    }}
+                    style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
+                  >
+                    <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
+                    {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
+                      <option key={l.id} value={l.id}>{l.name || l.id}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>PDF · 03</span>
+                  <strong style={{ fontSize: '14px', color: '#fff' }}>{(safeT as any)?.escolherLogoOrcamento || 'Orçamentos'}</strong>
+                  <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
+                    {administradorPreviewPdfLogo(logoOrcamentoSelecionadoId) ? (
+                      <img src={administradorPreviewPdfLogo(logoOrcamentoSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
+                    ) : (
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
+                    )}
+                  </div>
+                  <select
+                    value={logoOrcamentoSelecionadoId}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      setLogoOrcamentoSelecionadoId(v)
+                      saveData('nonato-orcamento-logo-id', v)
+                    }}
+                    style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
+                  >
+                    <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
+                    {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
+                      <option key={l.id} value={l.id}>{l.name || l.id}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>PDF · 04</span>
+                  <strong style={{ fontSize: '14px', color: '#fff' }}>{(safeT as any)?.escolherLogoProtocoloServico || 'Protocolos de serviço'}</strong>
+                  <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
+                    {administradorPreviewPdfLogo(logoProtocoloServicoSelecionadoId) ? (
+                      <img src={administradorPreviewPdfLogo(logoProtocoloServicoSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
+                    ) : (
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
+                    )}
+                  </div>
+                  <select
+                    value={logoProtocoloServicoSelecionadoId}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      setLogoProtocoloServicoSelecionadoId(v)
+                      saveData('nonato-protocolo-servico-logo-id', v)
+                    }}
+                    style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
+                  >
+                    <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
+                    {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
+                      <option key={l.id} value={l.id}>{l.name || l.id}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
 
             {/* SEÇÃO 2: GESTÃO DE USUÁRIOS */}
@@ -48782,8 +48994,10 @@ A1;Peça exemplo;10'
                 fontSize: '12px',
                 color: '#ddd',
                 lineHeight: 1.55,
-                maxHeight: 'min(40vh, 280px)',
+                maxHeight: 'min(52vh, 360px)',
                 overflowY: 'auto',
+                paddingRight: '6px',
+                whiteSpace: 'pre-wrap',
               }}
             >
               {syncPendingRemote.summaryLines.map((line, i) => (
