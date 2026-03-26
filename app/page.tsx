@@ -48980,7 +48980,10 @@ A1;Peça exemplo;10'
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 10100,
-            padding: 'max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))',
+              // Em telefone/tablet queremos quase largura total; em desktops mantemos um "respiro" maior.
+              padding: isCompactLayout
+                ? 'max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left))'
+                : 'max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left))',
           }}
         >
           <div
