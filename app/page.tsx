@@ -15050,21 +15050,31 @@ export default function Dashboard() {
 
   // Mapeia objeto genérico (JSON do site) para PecaBiblioteca
   const mapItemToPecaBiblioteca = (item: any, index: number): PecaBiblioteca => {
-    const codigo = String(item?.codigo ?? item?.code ?? item?.partNumber ?? item?.numero ?? item?.id ?? item?.ref ?? '')
-    const nome = String(item?.nome ?? item?.name ?? item?.descricao ?? item?.description ?? item?.designation ?? '')
-    const descricao = String(item?.descricao ?? item?.description ?? item?.designation ?? (nome || ''))
+    const codigo = String(item?.codigo ?? item?.code ?? item?.partNumber ?? item?.sku ?? item?.numero ?? item?.id ?? item?.ref ?? '').trim()
+    let nome = String(item?.nome ?? item?.name ?? '').trim()
+    const descricao = String(item?.descricao ?? item?.description ?? item?.designation ?? '').trim()
+    if (!nome) {
+      nome = descricao
+        ? descricao.length > 220
+          ? `${descricao.slice(0, 220)}…`
+          : descricao
+        : codigo || `Peça ${index + 1}`
+    }
     const preco = item?.preco != null ? String(item.preco) : (item?.price != null ? String(item.price) : (item?.precoUnitario != null ? String(item.precoUnitario) : ''))
+    const imagem = String(
+      item?.imagem ?? item?.image ?? item?.img ?? item?.imagem_url ?? item?.imageUrl ?? item?.photo ?? item?.urlImagem ?? ''
+    ).trim()
     return {
       id: item?.id && typeof item.id === 'string' ? item.id : `import-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 9)}`,
       nome: nome || codigo || `Peça ${index + 1}`,
       codigo: codigo || `IMP-${index + 1}`,
       preco: preco || '',
-      descricao: descricao || '',
+      descricao: descricao || nome,
       categoria: item?.categoria ?? item?.category ?? item?.grupo ?? '',
       categoriaId: item?.categoriaId ?? item?.categoryId ?? '',
       subcategoria: item?.subcategoria ?? item?.subcategory ?? '',
       subcategoriaId: item?.subcategoriaId ?? item?.subcategoryId ?? '',
-      imagem: item?.imagem ?? item?.image ?? item?.img ?? '',
+      imagem,
       dataCriacao: new Date().toISOString()
     }
   }
@@ -15193,8 +15203,21 @@ export default function Dashboard() {
     } else if (trimRaw.startsWith('[') || trimRaw.startsWith('{')) {
       const parsed = JSON.parse(raw)
       if (Array.isArray(parsed)) itens = parsed
-      else if (parsed && typeof parsed === 'object' && (Array.isArray(parsed.pecas) || Array.isArray(parsed.parts) || Array.isArray(parsed.items) || Array.isArray(parsed.data)))
-        itens = parsed.pecas ?? parsed.parts ?? parsed.items ?? parsed.data
+      else if (
+        parsed &&
+        typeof parsed === 'object' &&
+        (Array.isArray((parsed as any).pecas) ||
+          Array.isArray((parsed as any).parts) ||
+          Array.isArray((parsed as any).items) ||
+          Array.isArray((parsed as any).data) ||
+          Array.isArray((parsed as any).itens))
+      )
+        itens =
+          (parsed as any).pecas ??
+          (parsed as any).parts ??
+          (parsed as any).items ??
+          (parsed as any).data ??
+          (parsed as any).itens
       else itens = [parsed]
     } else {
       const lines = raw.split(/\r?\n/).filter((l: string) => l.trim())
@@ -15385,7 +15408,7 @@ export default function Dashboard() {
     try {
       const pecas = parseRawToPecas(raw)
       if (pecas.length === 0) {
-        setImportacaoUrlError(t?.importacaoNenhumaLinha ?? 'Nenhuma lista encontrada. Use JSON (array ou objeto com .pecas/.parts/.items/.data) ou CSV (1ª linha = cabeçalhos).')
+        setImportacaoUrlError(t?.importacaoNenhumaLinha ?? 'Nenhuma lista encontrada. Use JSON (array ou objeto com .pecas/.parts/.items/.data/.itens) ou CSV (1ª linha = cabeçalhos).')
         return
       }
       setImportacaoPreview(pecas)
@@ -15414,6 +15437,7 @@ export default function Dashboard() {
     const atualizado = [...existentes, ...novos]
     setPecasBiblioteca(atualizado)
     localStorage.setItem('nonato-pecas-biblioteca', JSON.stringify(atualizado))
+    void saveData('nonato-pecas-biblioteca', atualizado)
     setImportacaoPreview(null)
     setUrlImportacaoPecas('')
     if (novos.length === 0) {

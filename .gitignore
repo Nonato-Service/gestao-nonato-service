@@ -39,3 +39,7 @@ next-env.d.ts
 
 # backups de código (evitar commit de pastas grandes)
 /backups
+
+# importação local HOMAG / catálogo (imagens e JSON gerados)
+/scripts/homag-import/out/
+scripts/homag-import/config.json

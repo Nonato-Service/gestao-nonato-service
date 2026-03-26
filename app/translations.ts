@@ -1216,11 +1216,14 @@ export const translations = {
     importacaoUrlDesc: 'Cole a URL de uma página ou ficheiro que contenha a lista de peças (JSON ou CSV). O sistema busca o conteúdo e converte para a Biblioteca.',
     importacaoUrlPlaceholder: 'https://exemplo.com/lista-pecas.json',
     importacaoCarregarFicheiro: 'Carregar ficheiro CSV/JSON',
-    importacaoNotaHomag: 'Nota: A loja Homag (shop.homag.com) carrega os dados por JavaScript; use antes exportação/ficheiro CSV ou JSON se tiver.',
+    importacaoNotaHomag:
+      'JSON: use arrays ou .pecas / .parts / .items / .data / .itens. Campos: codigo, nome ou descricao, imagem (URL https ou data:image). No PC: npm run homag:import gera scripts/homag-import/out/export.json com fotos para carregar aqui.',
     importacaoAssistenteHomagTitle: 'Assistente HOMAG (rápido e seguro)',
     importacaoAssistenteHomagPasso1: 'Na HOMAG, abra a página com login ativo.',
-    importacaoAssistenteHomagPasso2: 'Exporte para CSV/JSON (ou copie os dados do Network > resposta da lista).',
-    importacaoAssistenteHomagPasso3: 'Use "Carregar ficheiro CSV/JSON" ou cole o conteúdo no campo abaixo.',
+    importacaoAssistenteHomagPasso2:
+      'No projeto, configure scripts/homag-import/config.json e execute: npm run homag:import (ou HOMAG_MANUAL=1 para login no browser).',
+    importacaoAssistenteHomagPasso3:
+      'Carregue scripts/homag-import/out/export.json em "Carregar ficheiro" ou cole o JSON; confirme a pré-visualização e adicione à biblioteca.',
     importacaoAbrirGuia: 'Abrir guia passo a passo',
     importacaoGuiaHomagTitle: 'Guia HOMAG — passo a passo',
     importacaoGuiaHomag1: '1) Abra a HOMAG no navegador e faça login.',
@@ -3220,7 +3223,8 @@ export const translations = {
     importacaoUrlDesc: 'Pegue la URL de una página o archivo con la lista de piezas (JSON o CSV). El sistema obtiene el contenido y lo convierte a la Biblioteca.',
     importacaoUrlPlaceholder: 'https://ejemplo.com/lista-piezas.json',
     importacaoCarregarFicheiro: 'Cargar archivo CSV/JSON',
-    importacaoNotaHomag: 'Nota: La tienda Homag (shop.homag.com) carga los datos por JavaScript; use exportación/archivo CSV o JSON si lo tiene.',
+    importacaoNotaHomag:
+      'JSON: arrays o .pecas / .parts / .items / .data / .itens. Campos: codigo, nombre o descripcion, imagen (URL o data:image). En el PC: npm run homag:import genera export.json con fotos para cargar aquí.',
     importacaoBuscarUrl: 'Obtener desde URL',
     importacaoBuscando: 'Obteniendo...',
     importacaoUrlObrigatoria: 'Indique la URL de la lista de piezas.',
@@ -5119,7 +5123,8 @@ export const translations = {
     importacaoUrlDesc: 'Collez l\'URL d\'une page ou d\'un fichier contenant la liste des pièces (JSON ou CSV). Le système récupère le contenu et le convertit pour la Bibliothèque.',
     importacaoUrlPlaceholder: 'https://exemple.com/liste-pieces.json',
     importacaoCarregarFicheiro: 'Charger fichier CSV/JSON',
-    importacaoNotaHomag: 'Note : La boutique Homag (shop.homag.com) charge les données en JavaScript ; utilisez l\'export/fichier CSV ou JSON si disponible.',
+    importacaoNotaHomag:
+      'JSON : tableaux ou .pecas / .parts / .items / .data / .itens. Champs : code, nom ou description, image (URL ou data:image). Sur le PC : npm run homag:import produit export.json avec photos à importer ici.',
     importacaoBuscarUrl: 'Récupérer depuis l\'URL',
     importacaoBuscando: 'Récupération...',
     importacaoUrlObrigatoria: 'Indiquez l\'URL de la liste des pièces.',
@@ -7025,7 +7030,8 @@ export const translations = {
     importacaoUrlDesc: 'Incolla l\'URL di una pagina o file con l\'elenco dei pezzi (JSON o CSV). Il sistema recupera il contenuto e lo converte per la Biblioteca.',
     importacaoUrlPlaceholder: 'https://esempio.com/lista-pezzi.json',
     importacaoCarregarFicheiro: 'Carica file CSV/JSON',
-    importacaoNotaHomag: 'Nota: Lo shop Homag (shop.homag.com) carica i dati via JavaScript; usare export/file CSV o JSON se disponibile.',
+    importacaoNotaHomag:
+      'JSON: array o .pecas / .parts / .items / .data / .itens. Campi: codice, nome o descrizione, immagine (URL o data:image). Sul PC: npm run homag:import crea export.json con foto da caricare qui.',
     importacaoBuscarUrl: 'Recupera da URL',
     importacaoBuscando: 'Recupero...',
     importacaoUrlObrigatoria: 'Inserisci l\'URL dell\'elenco pezzi.',
@@ -8946,7 +8952,8 @@ export const translations = {
     importacaoUrlDesc: 'Fügen Sie die URL einer Seite oder Datei mit der Teileliste ein (JSON oder CSV). Das System ruft den Inhalt ab und konvertiert ihn für die Bibliothek.',
     importacaoUrlPlaceholder: 'https://beispiel.com/teileliste.json',
     importacaoCarregarFicheiro: 'Datei CSV/JSON laden',
-    importacaoNotaHomag: 'Hinweis: Der Homag-Shop (shop.homag.com) lädt Daten per JavaScript; Export/CSV- oder JSON-Datei verwenden, falls vorhanden.',
+    importacaoNotaHomag:
+      'JSON: Arrays oder .pecas / .parts / .items / .data / .itens. Felder: codigo, Name/Beschreibung, Bild (URL oder data:image). Lokal: npm run homag:import erzeugt export.json mit Fotos zum Import hier.',
     importacaoBuscarUrl: 'Von URL abrufen',
     importacaoBuscando: 'Wird abgerufen...',
     importacaoUrlObrigatoria: 'Geben Sie die URL der Teileliste an.',
@@ -10845,7 +10852,8 @@ export const translations = {
     importacaoUrlDesc: 'Paste the URL of a page or file containing the parts list (JSON or CSV). The system fetches the content and converts it for the Library.',
     importacaoUrlPlaceholder: 'https://example.com/parts-list.json',
     importacaoCarregarFicheiro: 'Load CSV/JSON file',
-    importacaoNotaHomag: 'Note: The Homag shop (shop.homag.com) loads data via JavaScript; use export/CSV or JSON file if available.',
+    importacaoNotaHomag:
+      'JSON: root array or .pecas / .parts / .items / .data / .itens. Fields: code, name/description, image (URL or data:image). On your PC run npm run homag:import to build export.json with photos, then load it here.',
     importacaoBuscarUrl: 'Fetch from URL',
     importacaoBuscando: 'Fetching...',
     importacaoUrlObrigatoria: 'Enter the URL of the parts list.',

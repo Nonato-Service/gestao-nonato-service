@@ -1,0 +1,18 @@
+{
+  "startUrl": "https://shop.homag.com/s/?language=it",
+  "maxPages": 20,
+  "login": {
+    "userSelector": "#username",
+    "passSelector": "#password",
+    "submitSelector": "button[type=\"submit\"]"
+  },
+  "list": {
+    "itemSelector": "[data-product], .product-tile, tr[data-row]",
+    "codeSelector": ".sku, [data-sku]",
+    "descSelector": ".title, .description, td:nth-child(2)",
+    "imgSelector": "img"
+  },
+  "pagination": {
+    "nextSelector": "a[rel=\"next\"], button[aria-label=\"Next\"], .pagination .next:not(.disabled)"
+  }
+}
