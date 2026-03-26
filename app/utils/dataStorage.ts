@@ -228,11 +228,12 @@ async function _doSaveToServer(key: string, value: any): Promise<boolean> {
       isLargeManuaisJson && typeof value === 'object'
         ? JSON.stringify({ key, value: payloadStr })
         : JSON.stringify({ key, value })
+    const payloadNeedsSlowUpload = isLargeManuaisJson || isLargeString
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body,
-      signal: createTimeoutSignal(isLargeManuaisJson ? 120000 : 5000)
+      signal: createTimeoutSignal(payloadNeedsSlowUpload ? 120000 : 5000)
     })
     if (response.ok) {
       serverOffline = false

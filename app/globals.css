@@ -1194,11 +1194,17 @@ html, body {
     min-height: 50vh !important;
     overflow-y: auto !important;
   }
-  .sidebar > div:first-child {
-    height: 60px !important;
-    min-height: 60px !important;
-    margin-bottom: 6px !important;
+  /* Logo da barra lateral — não esmagar (antes 60px cortava a imagem) */
+  .sidebar > div:first-child.sidebar-brand,
+  .sidebar .sidebar-brand {
+    height: auto !important;
+    min-height: 88px !important;
+    max-height: min(32vh, 180px) !important;
+    margin-bottom: 10px !important;
     flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
   .sidebar button {
     padding: 6px 8px !important;
@@ -1239,10 +1245,11 @@ html, body {
   .app-layout:not(.app-compact-layout) .sidebar {
     padding: 6px 4px !important;
   }
-  .sidebar > div:first-child {
-    height: 50px !important;
-    min-height: 50px !important;
-    margin-bottom: 4px !important;
+  .sidebar > div:first-child.sidebar-brand,
+  .sidebar .sidebar-brand {
+    min-height: 80px !important;
+    max-height: min(30vh, 160px) !important;
+    margin-bottom: 8px !important;
   }
   .container {
     margin: 4px !important;
@@ -1303,9 +1310,14 @@ html, body {
     max-height: 100dvh !important;
     height: 100dvh !important;
   }
-  .sidebar > div:first-child {
+  .sidebar > div:first-child:not(.sidebar-brand) {
     height: 44px !important;
     min-height: 44px !important;
+  }
+  .sidebar .sidebar-brand {
+    height: auto !important;
+    min-height: 72px !important;
+    max-height: min(30vh, 180px) !important;
   }
   .sidebar .sidebar-action-buttons > button {
     width: 100% !important;
@@ -1766,10 +1778,16 @@ body {
   .app-compact-layout .sidebar.sidebar-mobile-open {
     transform: translate3d(0, 0, 0) !important;
   }
-  .app-compact-layout .sidebar > div:first-child {
-    height: 88px !important;
+  /* Não fixar altura do logo (88–100px cortava imagem/vídeo no tablet na gaveta) */
+  .app-compact-layout .sidebar > div:first-child.sidebar-brand,
+  .app-compact-layout .sidebar .sidebar-brand {
+    height: auto !important;
     min-height: 88px !important;
-    max-height: 100px !important;
+    max-height: min(34vh, 220px) !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
   .app-compact-layout .main-app-column {
     width: 100% !important;

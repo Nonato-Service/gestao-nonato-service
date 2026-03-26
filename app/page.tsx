@@ -4124,33 +4124,47 @@ export default function Dashboard() {
         }
       }
       
-      // Para logos, sempre tentar carregar do servidor primeiro (especialmente vídeos)
+      // Logos: respeitar nonato-logo-type (imagem vs vídeo). Antes o MP4 no disco ganhava sempre e ignorava uma imagem nova no servidor.
       try {
-        // Primeiro, verificar se existe um arquivo de vídeo binário no servidor
-        const videoResponse = await fetch('/api/video/logo')
-        if (videoResponse.ok) {
-          // Vídeo binário existe, usar URL da API
-          savedLogo = '/api/video/logo'
-          savedLogoType = 'video'
+        let serverLogoTypePref: string | null = await loadFromServer('nonato-logo-type')
+        if (typeof window !== 'undefined' && (serverLogoTypePref === null || serverLogoTypePref === '')) {
+          serverLogoTypePref = localStorage.getItem('nonato-logo-type')
+        }
+
+        if (serverLogoTypePref === 'image') {
+          const serverLogo = await loadFromServer('nonato-logo')
+          if (serverLogo && typeof serverLogo === 'string' && serverLogo.startsWith('data:image/')) {
+            savedLogo = serverLogo
+            savedLogoType = 'image'
+          }
+        } else if (serverLogoTypePref === 'video') {
+          const videoResponse = await fetch('/api/video/logo')
+          if (videoResponse.ok) {
+            savedLogo = '/api/video/logo'
+            savedLogoType = 'video'
+          }
         } else {
-          // Se não encontrou vídeo binário, tentar carregar base64 (apenas para imagens)
-          const serverLogoType = await loadFromServer('nonato-logo-type')
-          
-          // Se o tipo for 'video', não tentar carregar base64 (vídeos devem ser binários)
-          if (serverLogoType !== 'video') {
-            const serverLogo = await loadFromServer('nonato-logo')
-            if (serverLogo && typeof serverLogo === 'string' && serverLogo.startsWith('data:image/')) {
-              savedLogo = serverLogo
-              savedLogoType = serverLogoType || 'image'
-            }
+          // Legado: tipo desconhecido — tentar MP4 no disco; senão imagem base64 no servidor
+          const videoResponse = await fetch('/api/video/logo')
+          if (videoResponse.ok) {
+            savedLogo = '/api/video/logo'
+            savedLogoType = 'video'
           } else {
-            // Tipo é 'video' mas não existe arquivo binário - limpar dados antigos
-            console.warn('Vídeo antigo (base64) detectado, mas arquivo binário não existe. Limpando dados antigos...')
-            await saveData('nonato-logo', '', false)
-            await saveData('nonato-logo-type', '', false)
-            if (typeof window !== 'undefined') {
-              localStorage.removeItem('nonato-logo')
-              localStorage.removeItem('nonato-logo-type')
+            const serverLogoType = await loadFromServer('nonato-logo-type')
+            if (serverLogoType !== 'video') {
+              const serverLogo = await loadFromServer('nonato-logo')
+              if (serverLogo && typeof serverLogo === 'string' && serverLogo.startsWith('data:image/')) {
+                savedLogo = serverLogo
+                savedLogoType = serverLogoType || 'image'
+              }
+            } else {
+              console.warn('Vídeo antigo (base64) detectado, mas arquivo binário não existe. Limpando dados antigos...')
+              await saveData('nonato-logo', '', false)
+              await saveData('nonato-logo-type', '', false)
+              if (typeof window !== 'undefined') {
+                localStorage.removeItem('nonato-logo')
+                localStorage.removeItem('nonato-logo-type')
+              }
             }
           }
         }
@@ -6284,6 +6298,8 @@ export default function Dashboard() {
         try {
           await saveData('nonato-logo', result, true)
           await saveData('nonato-logo-type', 'image', false)
+          // Remover MP4 antigo no servidor para outros aparelhos não mostrarem vídeo em vez da imagem nova
+          await fetch('/api/video/logo', { method: 'DELETE' }).catch(() => {})
           alert(t.logoUpdatedSuccess || 'Logo atualizado com sucesso!')
         } catch {
           alert(t.logoLoadedButError || 'Logo carregado, mas houve um problema ao salvar.')
@@ -46845,12 +46861,12 @@ A1;Peça exemplo;10'
       {/* Sidebar - em ecrã estreito: gaveta lateral (globals.css) */}
       <div className={`sidebar${isCompactLayout && mobileMenuOpen ? ' sidebar-mobile-open' : ''}`}>
         {/* Logo NONATO SERVICE — logo ocupa 100% do contorno verde, borda mantida */}
-        <div className="sidebar-brand" style={{ marginBottom: '25px', textAlign: 'center', padding: 0, overflow: 'hidden', backgroundColor: '#0a0a0a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', height: '150px' }}>
+        <div className="sidebar-brand" style={{ marginBottom: '25px', textAlign: 'center', padding: '8px', overflow: 'hidden', backgroundColor: '#0a0a0a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', minHeight: '120px', maxHeight: 'min(28vh, 200px)', height: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
           {logoUrl ? (
             logoType === 'video' ? (
-              <video src={logoUrl} autoPlay loop muted style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              <video src={logoUrl} autoPlay loop muted style={{ width: '100%', maxHeight: 'min(26vh, 184px)', objectFit: 'contain', display: 'block' }} />
             ) : (
-              <img src={logoUrl} alt="NONATO SERVICE" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              <img src={logoUrl} alt="NONATO SERVICE" style={{ width: '100%', maxHeight: 'min(26vh, 184px)', objectFit: 'contain', display: 'block' }} />
             )
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', height: '100%', padding: '10px', boxSizing: 'border-box' }}>
