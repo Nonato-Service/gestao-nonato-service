@@ -288,33 +288,48 @@ body,
 }
 .sidebar .sidebar-action-buttons > button.sidebar-action-btn {
   padding-left: 14px !important;
-  border-left: 3px solid rgba(0, 255, 0, 0.72) !important;
+  border-left: 3px solid rgba(0, 255, 0, 0.4) !important;
   font-size: 12px !important;
   font-weight: 600 !important;
   border-radius: 10px !important;
 }
-.sidebar .sidebar-action-buttons > button.sidebar-action-btn:hover {
-  border-left-color: #00ff00 !important;
+/* Subitens: verde translúcido (vê-se o cinza por baixo) */
+.sidebar .sidebar-action-buttons > button.sidebar-action-btn:not(.sidebar-action-btn-active) {
+  background-color: rgba(0, 255, 0, 0.18) !important;
+  border: 1px solid rgba(0, 255, 0, 0.3) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: none !important;
 }
-/* Submenu ativo: fundo opaco, sem halo nem text-shadow */
+.sidebar .sidebar-action-buttons > button.sidebar-action-btn:not(.sidebar-action-btn-active):hover {
+  background-color: rgba(0, 255, 0, 0.28) !important;
+  border-color: rgba(0, 255, 0, 0.48) !important;
+  border-left-color: rgba(0, 255, 0, 0.75) !important;
+  box-shadow: 0 0 14px rgba(0, 255, 0, 0.18) !important;
+}
+/* Submenu ativo: verde um pouco mais denso, ainda com transparência */
 .sidebar .sidebar-action-btn.sidebar-action-btn-active {
-  border-left: 4px solid #00ff00 !important;
-  background: linear-gradient(90deg, rgba(0, 255, 0, 0.8) 0%, rgba(2, 62, 2, 0.99) 100%) !important;
+  border-left: 4px solid rgba(0, 255, 0, 0.85) !important;
+  background: linear-gradient(180deg, rgba(0, 255, 0, 0.45) 0%, rgba(0, 95, 48, 0.38) 100%) !important;
   color: #00ff00 !important;
   font-weight: 800 !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
   text-shadow: none !important;
 }
 
-/* Sidebar botão verde: mesmo padrão Visualizar Equipamentos */
+/* Cabeçalhos / botões na sidebar (incl. principais): base mais opaca que os subitens */
 .sidebar .btn-primary {
   width: 100%;
   text-align: center;
-  background-color: rgba(0, 255, 0, 0.48);
+  background-color: rgba(0, 255, 0, 0.55);
   border: 1px solid rgba(0, 255, 0, 0.92);
   color: #ffffff;
   box-shadow: none;
   transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+/* Só subitens com .sidebar-action-btn: retirar a base opaca do .btn-primary (o verde translúcido vem abaixo com !important) */
+.sidebar .sidebar-action-buttons > button.btn-primary.sidebar-action-btn {
+  background-color: transparent;
+  border: none;
 }
 
 /* Desktop: botões dentro de sidebar-action-buttons mantêm 100% (media queries alteram em tablet/mobile) */
@@ -323,7 +338,7 @@ body,
 }
 
 .sidebar .btn-primary:hover {
-  background-color: rgba(0, 255, 0, 0.63);
+  background-color: rgba(0, 255, 0, 0.68);
   border: 1px solid #00ff00;
   color: #ffffff;
   box-shadow: none;
@@ -331,19 +346,19 @@ body,
 }
 
 .sidebar .btn-primary:active {
-  background-color: rgba(0, 255, 0, 0.74);
+  background-color: rgba(0, 255, 0, 0.8);
   border-color: #00ff00;
   color: #ffffff;
   box-shadow: none;
   filter: none;
 }
 
-/* Grupo ativo: opaco, contorno definido, sem brilho difuso */
+/* Botões principais (grupo): bem opacos */
 .sidebar .sidebar-group-btn-selected,
 .sidebar-group-btn-selected {
-  border: 1px solid rgba(0, 255, 0, 0.95) !important;
+  border: 1px solid rgba(0, 255, 0, 0.98) !important;
   border-left: 5px solid #00ff00 !important;
-  background: linear-gradient(90deg, rgba(0, 255, 0, 0.82) 0%, rgba(0, 82, 0, 0.99) 52%, rgba(6, 52, 6, 0.98) 100%) !important;
+  background: linear-gradient(90deg, rgba(0, 255, 0, 0.92) 0%, rgba(0, 95, 0, 0.99) 52%, rgba(8, 58, 8, 0.99) 100%) !important;
   color: #00ff00 !important;
   font-weight: 800 !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
