@@ -206,7 +206,7 @@ body,
 /* Barra lateral — verde mais opaco e menos “lavado” (overlay com mais cor) */
 .sidebar {
   --sidebar-rail: #00ff00;
-  --sidebar-dim: rgba(0, 255, 0, 0.52);
+  --sidebar-dim: rgba(0, 255, 0, 0.72);
   width: 280px;
   min-width: 280px;
   min-height: 0;
@@ -222,11 +222,11 @@ body,
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
   background:
-    linear-gradient(180deg, rgba(0, 120, 52, 0.58) 0%, rgba(0, 70, 32, 0.32) 42%, rgba(0, 35, 18, 0.12) 70%, transparent 100%),
-    linear-gradient(180deg, #040c06 0%, #08120a 45%, #0c1810 100%);
+    linear-gradient(180deg, rgba(0, 95, 44, 0.82) 0%, rgba(0, 62, 30, 0.58) 35%, rgba(0, 42, 22, 0.38) 62%, rgba(0, 28, 15, 0.22) 100%),
+    linear-gradient(180deg, #031005 0%, #061408 45%, #0a1812 100%);
   border-right: 3px solid rgba(0, 255, 0, 0.82);
   box-shadow:
-    inset 0 0 0 1px rgba(0, 255, 0, 0.52),
+    inset 0 0 0 1px rgba(0, 255, 0, 0.68),
     12px 0 32px rgba(0, 0, 0, 0.6);
   position: relative;
 }
@@ -286,7 +286,7 @@ body,
   padding: 10px 8px 10px 12px;
   border-radius: 0 12px 12px 0;
   border-left: 4px solid rgba(0, 255, 0, 0.72);
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.68) 0%, rgba(0, 58, 28, 0.62) 50%, rgba(6, 38, 18, 0.68) 100%);
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.78) 0%, rgba(0, 72, 36, 0.78) 50%, rgba(4, 48, 24, 0.82) 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 .sidebar .sidebar-action-buttons > button.sidebar-action-btn {
@@ -302,7 +302,7 @@ body,
 /* Submenu ativo: fundo opaco, sem halo nem text-shadow */
 .sidebar .sidebar-action-btn.sidebar-action-btn-active {
   border-left: 4px solid #00ff00 !important;
-  background: linear-gradient(90deg, rgba(0, 255, 0, 0.52) 0%, rgba(2, 42, 2, 0.98) 100%) !important;
+  background: linear-gradient(90deg, rgba(0, 255, 0, 0.65) 0%, rgba(2, 52, 2, 0.99) 100%) !important;
   color: #00ff00 !important;
   font-weight: 800 !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
@@ -313,7 +313,7 @@ body,
 .sidebar .btn-primary {
   width: 100%;
   text-align: center;
-  background-color: rgba(0, 255, 0, 0.22);
+  background-color: rgba(0, 255, 0, 0.34);
   border: 1px solid rgba(0, 255, 0, 0.92);
   color: #ffffff;
   box-shadow: none;
@@ -326,7 +326,7 @@ body,
 }
 
 .sidebar .btn-primary:hover {
-  background-color: rgba(0, 255, 0, 0.32);
+  background-color: rgba(0, 255, 0, 0.46);
   border: 1px solid #00ff00;
   color: #ffffff;
   box-shadow: none;
@@ -334,7 +334,7 @@ body,
 }
 
 .sidebar .btn-primary:active {
-  background-color: rgba(0, 255, 0, 0.42);
+  background-color: rgba(0, 255, 0, 0.56);
   border-color: #00ff00;
   color: #ffffff;
   box-shadow: none;
@@ -346,7 +346,7 @@ body,
 .sidebar-group-btn-selected {
   border: 1px solid rgba(0, 255, 0, 0.95) !important;
   border-left: 5px solid #00ff00 !important;
-  background: linear-gradient(90deg, rgba(0, 255, 0, 0.55) 0%, rgba(0, 62, 0, 0.96) 52%, rgba(8, 34, 8, 0.92) 100%) !important;
+  background: linear-gradient(90deg, rgba(0, 255, 0, 0.68) 0%, rgba(0, 72, 0, 0.98) 52%, rgba(6, 42, 6, 0.96) 100%) !important;
   color: #00ff00 !important;
   font-weight: 800 !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
@@ -369,14 +369,14 @@ body,
   color: #ffffff !important;
 }
 .sidebar .sidebar-padrao-verde:hover {
-  background-color: rgba(0, 255, 0, 0.34) !important;
+  background-color: rgba(0, 255, 0, 0.48) !important;
   border: 1px solid #00ff00 !important;
   color: #ffffff !important;
   box-shadow: none !important;
   filter: none !important;
 }
 .sidebar .sidebar-padrao-verde.active-padrao {
-  background-color: rgba(0, 255, 0, 0.44) !important;
+  background-color: rgba(0, 255, 0, 0.58) !important;
   border: 1px solid #00ff00 !important;
   box-shadow: none !important;
   color: #ffffff !important;
@@ -1761,7 +1761,7 @@ body {
     padding: 12px 10px 24px !important;
     padding-top: max(12px, env(safe-area-inset-top)) !important;
     padding-bottom: max(24px, env(safe-area-inset-bottom)) !important;
-    border-right: 2px solid rgba(0, 255, 0, 0.5) !important;
+    border-right: 2px solid rgba(0, 255, 0, 0.72) !important;
     box-shadow: 8px 0 32px rgba(0, 0, 0, 0.55) !important;
     flex-shrink: 0 !important;
     display: flex !important;
