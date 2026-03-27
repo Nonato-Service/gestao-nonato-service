@@ -13,5 +13,7 @@ ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN npm run build
 
 # Railway usa PORT; o script start-server.js já lê process.env.PORT
+ENV NODE_ENV=production
 EXPOSE 3000
-CMD ["npm", "start"]
+# Evita npm como PID 1 (SIGTERM/restarts no Railway ficam mais limpos que com "npm start")
+CMD ["node", "scripts/start-server.js"]
