@@ -46924,10 +46924,10 @@ A1;Peça exemplo;10'
               textAlign: 'left', 
               padding: '12px', 
               marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-gestao-tecnica' ? 'rgba(0, 255, 0, 0.92)' : 'rgba(0, 255, 0, 0.78)',
-              border: selectedSidebarButton === 'open-gestao-tecnica' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.58)',
+              backgroundColor: selectedSidebarButton === 'open-gestao-tecnica' ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
+              border: selectedSidebarButton === 'open-gestao-tecnica' ? '2px solid transparent' : '1px solid rgba(42, 95, 52, 0.72)',
               borderRadius: '8px',
-              color: selectedSidebarButton === 'open-gestao-tecnica' ? '#00ff00' : '#ccc',
+              color: selectedSidebarButton === 'open-gestao-tecnica' ? '#7dd68a' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
               display: 'flex',
@@ -46938,15 +46938,15 @@ A1;Peça exemplo;10'
             }}
             onMouseEnter={(e) => {
               if (selectedSidebarButton !== 'open-gestao-tecnica') {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.88)'
-                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.95)'
+                e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
+                e.currentTarget.style.border = '1px solid rgba(52, 112, 62, 0.85)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
             onMouseLeave={(e) => {
               if (selectedSidebarButton !== 'open-gestao-tecnica') {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.78)'
-                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.58)'
+                e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
+                e.currentTarget.style.border = '1px solid rgba(42, 95, 52, 0.72)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
@@ -47083,10 +47083,10 @@ A1;Peça exemplo;10'
               textAlign: 'left',
               padding: '12px',
               marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-protocolos-servico' ? 'rgba(0, 255, 0, 0.92)' : 'rgba(0, 255, 0, 0.78)',
-              border: selectedSidebarButton === 'open-protocolos-servico' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.58)',
+              backgroundColor: selectedSidebarButton === 'open-protocolos-servico' ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
+              border: selectedSidebarButton === 'open-protocolos-servico' ? '2px solid transparent' : '1px solid rgba(42, 95, 52, 0.72)',
               borderRadius: '8px',
-              color: selectedSidebarButton === 'open-protocolos-servico' ? '#00ff00' : '#ccc',
+              color: selectedSidebarButton === 'open-protocolos-servico' ? '#7dd68a' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
               display: 'flex',
@@ -47097,15 +47097,15 @@ A1;Peça exemplo;10'
             }}
             onMouseEnter={(e) => {
               if (selectedSidebarButton !== 'open-protocolos-servico') {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.88)'
-                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.95)'
+                e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
+                e.currentTarget.style.border = '1px solid rgba(52, 112, 62, 0.85)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
             onMouseLeave={(e) => {
               if (selectedSidebarButton !== 'open-protocolos-servico') {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.78)'
-                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.58)'
+                e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
+                e.currentTarget.style.border = '1px solid rgba(42, 95, 52, 0.72)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
@@ -47134,10 +47134,10 @@ A1;Peça exemplo;10'
               textAlign: 'left',
               padding: '12px',
               marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-manual-programa' ? 'rgba(0, 255, 0, 0.92)' : 'rgba(0, 255, 0, 0.78)',
-              border: selectedSidebarButton === 'open-manual-programa' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.58)',
+              backgroundColor: selectedSidebarButton === 'open-manual-programa' ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
+              border: selectedSidebarButton === 'open-manual-programa' ? '2px solid transparent' : '1px solid rgba(42, 95, 52, 0.72)',
               borderRadius: '8px',
-              color: selectedSidebarButton === 'open-manual-programa' ? '#00ff00' : '#ccc',
+              color: selectedSidebarButton === 'open-manual-programa' ? '#7dd68a' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
               display: 'flex',
@@ -47167,10 +47167,10 @@ A1;Peça exemplo;10'
               textAlign: 'left', 
               padding: '12px', 
               marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-gestao-custos' ? 'rgba(0, 255, 0, 0.92)' : 'rgba(0, 255, 0, 0.78)',
-              border: selectedSidebarButton === 'open-gestao-custos' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.58)',
+              backgroundColor: selectedSidebarButton === 'open-gestao-custos' ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
+              border: selectedSidebarButton === 'open-gestao-custos' ? '2px solid transparent' : '1px solid rgba(42, 95, 52, 0.72)',
               borderRadius: '8px',
-              color: selectedSidebarButton === 'open-gestao-custos' ? '#00ff00' : '#ccc',
+              color: selectedSidebarButton === 'open-gestao-custos' ? '#7dd68a' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
               display: 'flex',
@@ -47181,15 +47181,15 @@ A1;Peça exemplo;10'
             }}
             onMouseEnter={(e) => {
               if (selectedSidebarButton !== 'open-gestao-custos') {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.88)'
-                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.95)'
+                e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
+                e.currentTarget.style.border = '1px solid rgba(52, 112, 62, 0.85)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
             onMouseLeave={(e) => {
               if (selectedSidebarButton !== 'open-gestao-custos') {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.78)'
-                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.58)'
+                e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
+                e.currentTarget.style.border = '1px solid rgba(42, 95, 52, 0.72)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
@@ -47290,10 +47290,10 @@ A1;Peça exemplo;10'
               textAlign: 'left', 
               padding: '12px', 
               marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-comunicacao-interna' ? 'rgba(0, 255, 0, 0.92)' : 'rgba(0, 255, 0, 0.78)',
-              border: selectedSidebarButton === 'open-comunicacao-interna' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.58)',
+              backgroundColor: selectedSidebarButton === 'open-comunicacao-interna' ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
+              border: selectedSidebarButton === 'open-comunicacao-interna' ? '2px solid transparent' : '1px solid rgba(42, 95, 52, 0.72)',
               borderRadius: '8px',
-              color: selectedSidebarButton === 'open-comunicacao-interna' ? '#00ff00' : '#ccc',
+              color: selectedSidebarButton === 'open-comunicacao-interna' ? '#7dd68a' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
               display: 'flex',
@@ -47304,15 +47304,15 @@ A1;Peça exemplo;10'
             }}
             onMouseEnter={(e) => {
               if (selectedSidebarButton !== 'open-comunicacao-interna') {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.88)'
-                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.95)'
+                e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
+                e.currentTarget.style.border = '1px solid rgba(52, 112, 62, 0.85)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
             onMouseLeave={(e) => {
               if (selectedSidebarButton !== 'open-comunicacao-interna') {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.78)'
-                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.58)'
+                e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
+                e.currentTarget.style.border = '1px solid rgba(42, 95, 52, 0.72)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
@@ -47468,10 +47468,10 @@ A1;Peça exemplo;10'
                       padding: '12px', 
                       marginBottom: '5px',
                       fontSize: '12px',
-                      backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.92)' : 'rgba(0, 255, 0, 0.78)',
-                      border: isSelected ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.58)',
+                      backgroundColor: isSelected ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
+                      border: isSelected ? '2px solid transparent' : '1px solid rgba(42, 95, 52, 0.72)',
                       borderRadius: '8px',
-                      color: isSelected ? '#00ff00' : '#ccc',
+                      color: isSelected ? '#7dd68a' : '#ccc',
                       fontWeight: 'bold',
                       transition: 'all 0.3s ease',
                       display: 'flex',
@@ -47481,15 +47481,15 @@ A1;Peça exemplo;10'
                     }}
                     onMouseEnter={(e) => {
                       if (!isSelected) {
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.88)'
-                        e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.95)'
+                        e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
+                        e.currentTarget.style.border = '1px solid rgba(52, 112, 62, 0.85)'
                         e.currentTarget.style.boxShadow = 'none'
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isSelected) {
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.78)'
-                        e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.58)'
+                        e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
+                        e.currentTarget.style.border = '1px solid rgba(42, 95, 52, 0.72)'
                         e.currentTarget.style.boxShadow = 'none'
                       }
                     }}
@@ -47590,10 +47590,10 @@ A1;Peça exemplo;10'
               textAlign: 'left', 
               padding: '12px', 
               marginBottom: '5px',
-              backgroundColor: gestaoIndustrialActive ? 'rgba(0, 255, 0, 0.92)' : 'rgba(0, 255, 0, 0.78)',
-              border: gestaoIndustrialActive ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.58)',
+              backgroundColor: gestaoIndustrialActive ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
+              border: gestaoIndustrialActive ? '2px solid transparent' : '1px solid rgba(42, 95, 52, 0.72)',
               borderRadius: '8px',
-              color: gestaoIndustrialActive ? '#00ff00' : '#ccc',
+              color: gestaoIndustrialActive ? '#7dd68a' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
               display: 'flex',
@@ -47604,15 +47604,15 @@ A1;Peça exemplo;10'
             }}
             onMouseEnter={(e) => {
               if (!gestaoIndustrialActive) {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.88)'
-                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.95)'
+                e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
+                e.currentTarget.style.border = '1px solid rgba(52, 112, 62, 0.85)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
             onMouseLeave={(e) => {
               if (!gestaoIndustrialActive) {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.78)'
-                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.58)'
+                e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
+                e.currentTarget.style.border = '1px solid rgba(42, 95, 52, 0.72)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
@@ -47792,10 +47792,10 @@ A1;Peça exemplo;10'
                   padding: '12px',
                   marginTop: '10px',
                   marginBottom: '10px',
-                  backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.92)' : 'rgba(0, 255, 0, 0.78)',
-                  border: isSelected ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.58)',
+                  backgroundColor: isSelected ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
+                  border: isSelected ? '2px solid transparent' : '1px solid rgba(42, 95, 52, 0.72)',
                   borderRadius: '8px',
-                  color: isSelected ? '#00ff00' : '#ccc',
+                  color: isSelected ? '#7dd68a' : '#ccc',
                   fontWeight: 'bold',
                   fontSize: '12px',
                   display: 'flex',
@@ -47806,15 +47806,15 @@ A1;Peça exemplo;10'
                 }}
                 onMouseEnter={(e) => {
                   if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.88)'
-                    e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.95)'
+                    e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
+                    e.currentTarget.style.border = '1px solid rgba(52, 112, 62, 0.85)'
                     e.currentTarget.style.boxShadow = 'none'
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.78)'
-                    e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.58)'
+                    e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
+                    e.currentTarget.style.border = '1px solid rgba(42, 95, 52, 0.72)'
                     e.currentTarget.style.boxShadow = 'none'
                   }
                 }}
@@ -47855,10 +47855,10 @@ A1;Peça exemplo;10'
                   padding: '12px', 
                   marginTop: '10px',
                   marginBottom: '10px',
-                  backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.92)' : 'rgba(0, 255, 0, 0.78)',
-                  border: isSelected ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.58)',
+                  backgroundColor: isSelected ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
+                  border: isSelected ? '2px solid transparent' : '1px solid rgba(42, 95, 52, 0.72)',
                   borderRadius: '8px',
-                  color: isSelected ? '#00ff00' : '#ccc',
+                  color: isSelected ? '#7dd68a' : '#ccc',
                   fontWeight: 'bold',
                   fontSize: '12px',
                   display: 'flex',
@@ -47869,15 +47869,15 @@ A1;Peça exemplo;10'
                 }}
                 onMouseEnter={(e) => {
                   if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.88)'
-                    e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.95)'
+                    e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
+                    e.currentTarget.style.border = '1px solid rgba(52, 112, 62, 0.85)'
                     e.currentTarget.style.boxShadow = 'none'
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.78)'
-                    e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.58)'
+                    e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
+                    e.currentTarget.style.border = '1px solid rgba(42, 95, 52, 0.72)'
                     e.currentTarget.style.boxShadow = 'none'
                   }
                 }}
@@ -47917,10 +47917,10 @@ A1;Peça exemplo;10'
               textAlign: 'left', 
               padding: '12px', 
               marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-gestao-financeira' ? 'rgba(0, 255, 0, 0.92)' : 'rgba(0, 255, 0, 0.78)',
-              border: selectedSidebarButton === 'open-gestao-financeira' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.58)',
+              backgroundColor: selectedSidebarButton === 'open-gestao-financeira' ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
+              border: selectedSidebarButton === 'open-gestao-financeira' ? '2px solid transparent' : '1px solid rgba(42, 95, 52, 0.72)',
               borderRadius: '8px',
-              color: selectedSidebarButton === 'open-gestao-financeira' ? '#00ff00' : '#ccc',
+              color: selectedSidebarButton === 'open-gestao-financeira' ? '#7dd68a' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
               display: 'flex',
@@ -47931,15 +47931,15 @@ A1;Peça exemplo;10'
             }}
             onMouseEnter={(e) => {
               if (selectedSidebarButton !== 'open-gestao-financeira') {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.88)'
-                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.95)'
+                e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
+                e.currentTarget.style.border = '1px solid rgba(52, 112, 62, 0.85)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
             onMouseLeave={(e) => {
               if (selectedSidebarButton !== 'open-gestao-financeira') {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.78)'
-                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.58)'
+                e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
+                e.currentTarget.style.border = '1px solid rgba(42, 95, 52, 0.72)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
@@ -48038,10 +48038,10 @@ A1;Peça exemplo;10'
               textAlign: 'left',
               padding: '12px',
               marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-cadastro-nonato-service' ? 'rgba(0, 255, 0, 0.92)' : 'rgba(0, 255, 0, 0.78)',
-              border: selectedSidebarButton === 'open-cadastro-nonato-service' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.58)',
+              backgroundColor: selectedSidebarButton === 'open-cadastro-nonato-service' ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
+              border: selectedSidebarButton === 'open-cadastro-nonato-service' ? '2px solid transparent' : '1px solid rgba(42, 95, 52, 0.72)',
               borderRadius: '8px',
-              color: selectedSidebarButton === 'open-cadastro-nonato-service' ? '#00ff00' : '#ccc',
+              color: selectedSidebarButton === 'open-cadastro-nonato-service' ? '#7dd68a' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
               display: 'flex',
@@ -48052,15 +48052,15 @@ A1;Peça exemplo;10'
             }}
             onMouseEnter={(e) => {
               if (selectedSidebarButton !== 'open-cadastro-nonato-service') {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.88)'
-                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.95)'
+                e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
+                e.currentTarget.style.border = '1px solid rgba(52, 112, 62, 0.85)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
             onMouseLeave={(e) => {
               if (selectedSidebarButton !== 'open-cadastro-nonato-service') {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.78)'
-                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.58)'
+                e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
+                e.currentTarget.style.border = '1px solid rgba(42, 95, 52, 0.72)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
@@ -48093,10 +48093,10 @@ A1;Peça exemplo;10'
               textAlign: 'left', 
               padding: '12px', 
               marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-extra' ? 'rgba(0, 255, 0, 0.92)' : 'rgba(0, 255, 0, 0.78)',
-              border: selectedSidebarButton === 'open-extra' ? '2px solid transparent' : '1px solid rgba(0, 255, 0, 0.58)',
+              backgroundColor: selectedSidebarButton === 'open-extra' ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
+              border: selectedSidebarButton === 'open-extra' ? '2px solid transparent' : '1px solid rgba(42, 95, 52, 0.72)',
               borderRadius: '8px',
-              color: selectedSidebarButton === 'open-extra' ? '#00ff00' : '#ccc',
+              color: selectedSidebarButton === 'open-extra' ? '#7dd68a' : '#ccc',
               fontWeight: 'bold',
               fontSize: '12px',
               display: 'flex',
@@ -48107,15 +48107,15 @@ A1;Peça exemplo;10'
             }}
             onMouseEnter={(e) => {
               if (selectedSidebarButton !== 'open-extra') {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.88)'
-                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.95)'
+                e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
+                e.currentTarget.style.border = '1px solid rgba(52, 112, 62, 0.85)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
             onMouseLeave={(e) => {
               if (selectedSidebarButton !== 'open-extra') {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.78)'
-                e.currentTarget.style.border = '1px solid rgba(0, 255, 0, 0.58)'
+                e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
+                e.currentTarget.style.border = '1px solid rgba(42, 95, 52, 0.72)'
                 e.currentTarget.style.boxShadow = 'none'
               }
             }}
@@ -48276,9 +48276,9 @@ A1;Peça exemplo;10'
                 padding: '12px', 
                 marginTop: 'auto',
                 marginBottom: '20px',
-                backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.9)' : undefined,
+                backgroundColor: isSelected ? 'rgba(34, 82, 44, 0.98)' : undefined,
                 border: isSelected ? '2px solid transparent' : undefined,
-                color: isSelected ? '#00ff00' : undefined,
+                color: isSelected ? '#7dd68a' : undefined,
                 fontWeight: isSelected ? 'bold' : undefined,
                 transition: 'all 0.3s ease',
                 position: 'relative'

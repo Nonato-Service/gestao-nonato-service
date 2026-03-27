@@ -270,7 +270,7 @@ body,
   text-transform: uppercase;
   font-size: 11px !important;
   font-weight: 800 !important;
-  border-left: 3px solid rgba(0, 255, 0, 0.85) !important;
+  border-left: 3px solid rgba(52, 112, 62, 0.72) !important;
   padding-left: 10px !important;
 }
 .sidebar .btn-administrador.sidebar-group-header:not(.sidebar-group-btn-selected) {
@@ -282,46 +282,46 @@ body,
   margin-bottom: 12px !important;
   padding: 10px 8px 10px 12px;
   border-radius: 0 12px 12px 0;
-  border-left: 3px solid rgba(0, 255, 0, 0.55);
+  border-left: 3px solid rgba(0, 255, 0, 0.32);
   background: linear-gradient(90deg, rgba(28, 28, 28, 0.98) 0%, rgba(22, 22, 22, 0.99) 50%, rgba(26, 26, 26, 0.98) 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 .sidebar .sidebar-action-buttons > button.sidebar-action-btn {
   padding-left: 14px !important;
-  border-left: 3px solid rgba(0, 255, 0, 0.4) !important;
+  border-left: 3px solid rgba(0, 255, 0, 0.22) !important;
   font-size: 12px !important;
   font-weight: 600 !important;
   border-radius: 10px !important;
 }
-/* Subitens: verde translúcido (vê-se o cinza por baixo) */
+/* Subitens: verde bem transparente (vidro sobre o cinza) */
 .sidebar .sidebar-action-buttons > button.sidebar-action-btn:not(.sidebar-action-btn-active) {
-  background-color: rgba(0, 255, 0, 0.18) !important;
-  border: 1px solid rgba(0, 255, 0, 0.3) !important;
-  color: rgba(255, 255, 255, 0.95) !important;
+  background-color: rgba(0, 255, 0, 0.055) !important;
+  border: 1px solid rgba(0, 255, 0, 0.18) !important;
+  color: rgba(198, 232, 204, 0.92) !important;
   box-shadow: none !important;
 }
 .sidebar .sidebar-action-buttons > button.sidebar-action-btn:not(.sidebar-action-btn-active):hover {
-  background-color: rgba(0, 255, 0, 0.28) !important;
-  border-color: rgba(0, 255, 0, 0.48) !important;
-  border-left-color: rgba(0, 255, 0, 0.75) !important;
-  box-shadow: 0 0 14px rgba(0, 255, 0, 0.18) !important;
+  background-color: rgba(0, 255, 0, 0.1) !important;
+  border-color: rgba(0, 255, 0, 0.28) !important;
+  border-left-color: rgba(0, 255, 0, 0.38) !important;
+  box-shadow: 0 0 12px rgba(0, 255, 0, 0.07) !important;
 }
-/* Submenu ativo: verde um pouco mais denso, ainda com transparência */
+/* Submenu ativo: ainda translúcido, só um pouco mais denso */
 .sidebar .sidebar-action-btn.sidebar-action-btn-active {
-  border-left: 4px solid rgba(0, 255, 0, 0.85) !important;
-  background: linear-gradient(180deg, rgba(0, 255, 0, 0.45) 0%, rgba(0, 95, 48, 0.38) 100%) !important;
-  color: #00ff00 !important;
+  border-left: 4px solid rgba(0, 255, 0, 0.42) !important;
+  background: linear-gradient(180deg, rgba(0, 255, 0, 0.16) 0%, rgba(0, 70, 36, 0.14) 100%) !important;
+  color: rgba(130, 230, 145, 0.98) !important;
   font-weight: 800 !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
   text-shadow: none !important;
 }
 
-/* Cabeçalhos / botões na sidebar (incl. principais): base mais opaca que os subitens */
+/* Cabeçalhos / botões na sidebar (incl. principais): verde apagado, base opaca */
 .sidebar .btn-primary {
   width: 100%;
   text-align: center;
-  background-color: rgba(0, 255, 0, 0.55);
-  border: 1px solid rgba(0, 255, 0, 0.92);
+  background-color: rgba(26, 62, 34, 0.88);
+  border: 1px solid rgba(42, 95, 52, 0.78);
   color: #ffffff;
   box-shadow: none;
   transition: background-color 0.2s ease, border-color 0.2s ease;
@@ -338,30 +338,30 @@ body,
 }
 
 .sidebar .btn-primary:hover {
-  background-color: rgba(0, 255, 0, 0.68);
-  border: 1px solid #00ff00;
+  background-color: rgba(30, 72, 40, 0.94);
+  border: 1px solid rgba(52, 112, 62, 0.85);
   color: #ffffff;
   box-shadow: none;
   filter: none;
 }
 
 .sidebar .btn-primary:active {
-  background-color: rgba(0, 255, 0, 0.8);
-  border-color: #00ff00;
+  background-color: rgba(34, 82, 44, 0.96);
+  border-color: rgba(58, 118, 68, 0.9);
   color: #ffffff;
   box-shadow: none;
   filter: none;
 }
 
-/* Botões principais (grupo): bem opacos */
+/* Botões principais (grupo): verde apagado e bem opaco */
 .sidebar .sidebar-group-btn-selected,
 .sidebar-group-btn-selected {
-  border: 1px solid rgba(0, 255, 0, 0.98) !important;
-  border-left: 5px solid #00ff00 !important;
-  background: linear-gradient(90deg, rgba(0, 255, 0, 0.92) 0%, rgba(0, 95, 0, 0.99) 52%, rgba(8, 58, 8, 0.99) 100%) !important;
-  color: #00ff00 !important;
+  border: 1px solid rgba(48, 105, 58, 0.88) !important;
+  border-left: 5px solid rgba(62, 128, 74, 0.92) !important;
+  background: linear-gradient(90deg, rgba(34, 82, 44, 0.98) 0%, rgba(22, 52, 30, 0.99) 52%, rgba(16, 40, 22, 0.99) 100%) !important;
+  color: #7dd68a !important;
   font-weight: 800 !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
   text-shadow: none !important;
   transform: none !important;
 }
