@@ -203,10 +203,10 @@ body,
   box-shadow: 0 0 10px rgba(0, 255, 0, 0.25);
 }
 
-/* Barra lateral — identificação forte: trilho, grupos, submenu, estado ativo */
+/* Barra lateral — verde mais opaco, pouco brilho (sem néon / halo) */
 .sidebar {
   --sidebar-rail: #00ff00;
-  --sidebar-dim: rgba(0, 255, 0, 0.18);
+  --sidebar-dim: rgba(0, 255, 0, 0.34);
   width: 280px;
   min-width: 280px;
   min-height: 0;
@@ -222,12 +222,12 @@ body,
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
   background:
-    linear-gradient(180deg, rgba(0, 255, 0, 0.11) 0%, transparent 30%),
-    linear-gradient(180deg, #070b07 0%, #0c120c 45%, #101a10 100%);
-  border-right: 3px solid rgba(0, 255, 0, 0.5);
+    linear-gradient(180deg, rgba(0, 255, 0, 0.24) 0%, transparent 38%),
+    linear-gradient(180deg, #060a06 0%, #0b100b 45%, #0f1810 100%);
+  border-right: 3px solid rgba(0, 255, 0, 0.82);
   box-shadow:
-    inset 0 0 0 1px rgba(0, 255, 0, 0.2),
-    12px 0 40px rgba(0, 0, 0, 0.55);
+    inset 0 0 0 1px rgba(0, 255, 0, 0.42),
+    12px 0 32px rgba(0, 0, 0, 0.6);
   position: relative;
 }
 .sidebar::before {
@@ -237,8 +237,9 @@ body,
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, #00ff00 0%, rgba(0, 230, 0, 0.65) 45%, rgba(0, 100, 0, 0.55) 100%);
-  opacity: 0.96;
+  /* Faixa lateral mate (menos brilho que #00ff00 puro em gradiente longo) */
+  background: linear-gradient(180deg, #00b800 0%, #006e00 55%, #004a00 100%);
+  opacity: 1;
   pointer-events: none;
   border-radius: 0 2px 2px 0;
 }
@@ -254,17 +255,16 @@ body,
   border-radius: 8px;
 }
 .sidebar::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(0, 255, 0, 0.55), rgba(0, 140, 0, 0.62));
+  background: linear-gradient(180deg, #1a6b1a 0%, #0d3d0d 100%);
   border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 255, 0, 0.35);
 }
 .sidebar-brand {
   flex-shrink: 0;
   border-radius: 12px !important;
-  border: 1px solid rgba(0, 255, 0, 0.55) !important;
+  border: 1px solid rgba(0, 255, 0, 0.82) !important;
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.5),
-    0 8px 28px rgba(0, 255, 0, 0.24),
+    0 0 0 1px rgba(0, 0, 0, 0.55),
     inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 /* Cabeçalhos de grupo (▼ Gestão técnica): mais “peso” que os itens de submenu */
@@ -273,7 +273,7 @@ body,
   text-transform: uppercase;
   font-size: 11px !important;
   font-weight: 800 !important;
-  border-left: 3px solid rgba(0, 255, 0, 0.58) !important;
+  border-left: 3px solid rgba(0, 255, 0, 0.85) !important;
   padding-left: 10px !important;
 }
 .sidebar .btn-administrador.sidebar-group-header:not(.sidebar-group-btn-selected) {
@@ -285,42 +285,39 @@ body,
   margin-bottom: 12px !important;
   padding: 10px 8px 10px 12px;
   border-radius: 0 12px 12px 0;
-  border-left: 3px solid rgba(0, 255, 0, 0.45);
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.52) 0%, rgba(0, 28, 0, 0.22) 42%, rgba(10, 24, 10, 0.48) 100%);
+  border-left: 4px solid rgba(0, 255, 0, 0.72);
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 48, 0, 0.52) 50%, rgba(8, 32, 8, 0.62) 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 .sidebar .sidebar-action-buttons > button.sidebar-action-btn {
   padding-left: 14px !important;
-  border-left: 3px solid rgba(0, 255, 0, 0.48) !important;
+  border-left: 3px solid rgba(0, 255, 0, 0.72) !important;
   font-size: 12px !important;
   font-weight: 600 !important;
   border-radius: 10px !important;
 }
 .sidebar .sidebar-action-buttons > button.sidebar-action-btn:hover {
-  border-left-color: rgba(0, 255, 0, 0.88) !important;
+  border-left-color: #00ff00 !important;
 }
-/* Botão do submenu ativo — verde #00ff00 alinhado ao restante do sistema */
+/* Submenu ativo: fundo opaco, sem halo nem text-shadow */
 .sidebar .sidebar-action-btn.sidebar-action-btn-active {
   border-left: 4px solid #00ff00 !important;
-  background: linear-gradient(90deg, rgba(0, 255, 0, 0.34) 0%, rgba(6, 32, 6, 0.94) 100%) !important;
+  background: linear-gradient(90deg, rgba(0, 255, 0, 0.52) 0%, rgba(2, 42, 2, 0.98) 100%) !important;
   color: #00ff00 !important;
   font-weight: 800 !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 255, 0, 0.52),
-    0 0 24px rgba(0, 255, 0, 0.48),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-  text-shadow: 0 0 14px rgba(0, 255, 0, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  text-shadow: none !important;
 }
 
 /* Sidebar botão verde: mesmo padrão Visualizar Equipamentos */
 .sidebar .btn-primary {
   width: 100%;
   text-align: center;
-  background-color: transparent;
-  border: 1px solid rgba(0, 255, 0, 0.95);
+  background-color: rgba(0, 255, 0, 0.14);
+  border: 1px solid rgba(0, 255, 0, 0.92);
   color: #ffffff;
   box-shadow: none;
-  transition: box-shadow 0.2s ease, filter 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 /* Desktop: botões dentro de sidebar-action-buttons mantêm 100% (media queries alteram em tablet/mobile) */
@@ -329,45 +326,40 @@ body,
 }
 
 .sidebar .btn-primary:hover {
-  background-color: rgba(0, 255, 0, 0.18);
+  background-color: rgba(0, 255, 0, 0.32);
   border: 1px solid #00ff00;
   color: #ffffff;
-  box-shadow: 0 0 16px rgba(0, 255, 0, 0.55);
-  filter: brightness(1.15);
+  box-shadow: none;
+  filter: none;
 }
 
 .sidebar .btn-primary:active {
-  background-color: rgba(0, 255, 0, 0.28);
+  background-color: rgba(0, 255, 0, 0.42);
   border-color: #00ff00;
   color: #ffffff;
-  box-shadow: 0 0 16px rgba(0, 255, 0, 0.55);
+  box-shadow: none;
+  filter: none;
 }
 
-/* Grupo ou botão principal ativo — faixa lateral + néon verde #00ff00 */
+/* Grupo ativo: opaco, contorno definido, sem brilho difuso */
 .sidebar .sidebar-group-btn-selected,
 .sidebar-group-btn-selected {
-  border: 1px solid rgba(0, 255, 0, 0.88) !important;
+  border: 1px solid rgba(0, 255, 0, 0.95) !important;
   border-left: 5px solid #00ff00 !important;
-  background: linear-gradient(90deg, rgba(0, 255, 0, 0.36) 0%, rgba(0, 52, 0, 0.9) 52%, rgba(10, 26, 10, 0.82) 100%) !important;
+  background: linear-gradient(90deg, rgba(0, 255, 0, 0.55) 0%, rgba(0, 62, 0, 0.96) 52%, rgba(8, 34, 8, 0.92) 100%) !important;
   color: #00ff00 !important;
   font-weight: 800 !important;
-  box-shadow:
-    0 0 0 1px rgba(0, 255, 0, 0.52),
-    0 0 36px rgba(0, 255, 0, 0.48),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
-  text-shadow: 0 0 16px rgba(0, 255, 0, 0.58);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  text-shadow: none !important;
   transform: none !important;
 }
 .sidebar .btn-administrador.sidebar-group-btn-selected {
   border: 1px solid rgba(255, 100, 120, 0.95) !important;
   border-left: 5px solid #ff6b81 !important;
-  background: linear-gradient(90deg, rgba(255, 80, 100, 0.3) 0%, rgba(50, 12, 20, 0.95) 100%) !important;
+  background: linear-gradient(90deg, rgba(255, 80, 100, 0.38) 0%, rgba(50, 12, 20, 0.96) 100%) !important;
   color: #fff !important;
-  text-shadow: 0 0 18px rgba(255, 100, 120, 0.55);
-  box-shadow:
-    0 0 0 1px rgba(255, 100, 120, 0.4),
-    0 0 36px rgba(255, 70, 90, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  text-shadow: none !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
 }
 
 /* Sidebar padrão verde: igual Visualizar Equipamentos */
@@ -377,16 +369,16 @@ body,
   color: #ffffff !important;
 }
 .sidebar .sidebar-padrao-verde:hover {
-  background-color: rgba(0, 255, 0, 0.18) !important;
+  background-color: rgba(0, 255, 0, 0.34) !important;
   border: 1px solid #00ff00 !important;
   color: #ffffff !important;
-  box-shadow: 0 0 16px rgba(0, 255, 0, 0.55) !important;
-  filter: brightness(1.15) !important;
+  box-shadow: none !important;
+  filter: none !important;
 }
 .sidebar .sidebar-padrao-verde.active-padrao {
-  background-color: rgba(0, 255, 0, 0.24) !important;
+  background-color: rgba(0, 255, 0, 0.44) !important;
   border: 1px solid #00ff00 !important;
-  box-shadow: 0 0 16px rgba(0, 255, 0, 0.55) !important;
+  box-shadow: none !important;
   color: #ffffff !important;
 }
 
