@@ -203,10 +203,10 @@ body,
   box-shadow: 0 0 10px rgba(0, 255, 0, 0.25);
 }
 
-/* Barra lateral — verde mais opaco, pouco brilho (sem néon / halo) */
+/* Barra lateral — verde mais opaco e menos “lavado” (overlay com mais cor) */
 .sidebar {
   --sidebar-rail: #00ff00;
-  --sidebar-dim: rgba(0, 255, 0, 0.34);
+  --sidebar-dim: rgba(0, 255, 0, 0.52);
   width: 280px;
   min-width: 280px;
   min-height: 0;
@@ -222,11 +222,11 @@ body,
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
   background:
-    linear-gradient(180deg, rgba(0, 255, 0, 0.24) 0%, transparent 38%),
-    linear-gradient(180deg, #060a06 0%, #0b100b 45%, #0f1810 100%);
+    linear-gradient(180deg, rgba(0, 120, 52, 0.58) 0%, rgba(0, 70, 32, 0.32) 42%, rgba(0, 35, 18, 0.12) 70%, transparent 100%),
+    linear-gradient(180deg, #040c06 0%, #08120a 45%, #0c1810 100%);
   border-right: 3px solid rgba(0, 255, 0, 0.82);
   box-shadow:
-    inset 0 0 0 1px rgba(0, 255, 0, 0.42),
+    inset 0 0 0 1px rgba(0, 255, 0, 0.52),
     12px 0 32px rgba(0, 0, 0, 0.6);
   position: relative;
 }
@@ -286,7 +286,7 @@ body,
   padding: 10px 8px 10px 12px;
   border-radius: 0 12px 12px 0;
   border-left: 4px solid rgba(0, 255, 0, 0.72);
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.62) 0%, rgba(0, 48, 0, 0.52) 50%, rgba(8, 32, 8, 0.62) 100%);
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.68) 0%, rgba(0, 58, 28, 0.62) 50%, rgba(6, 38, 18, 0.68) 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 .sidebar .sidebar-action-buttons > button.sidebar-action-btn {
@@ -313,7 +313,7 @@ body,
 .sidebar .btn-primary {
   width: 100%;
   text-align: center;
-  background-color: rgba(0, 255, 0, 0.14);
+  background-color: rgba(0, 255, 0, 0.22);
   border: 1px solid rgba(0, 255, 0, 0.92);
   color: #ffffff;
   box-shadow: none;
@@ -1761,7 +1761,7 @@ body {
     padding: 12px 10px 24px !important;
     padding-top: max(12px, env(safe-area-inset-top)) !important;
     padding-bottom: max(24px, env(safe-area-inset-bottom)) !important;
-    border-right: 1px solid rgba(0, 255, 0, 0.25) !important;
+    border-right: 2px solid rgba(0, 255, 0, 0.5) !important;
     box-shadow: 8px 0 32px rgba(0, 0, 0, 0.55) !important;
     flex-shrink: 0 !important;
     display: flex !important;
