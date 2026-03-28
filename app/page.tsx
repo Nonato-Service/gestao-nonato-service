@@ -712,7 +712,7 @@ type OrdemServico = {
 type FaturaPecas = {
   id: string
   numeroFatura: string
-  ordemServicoId: string // ID da OS à qual está anexada
+  ordemServicoId: string // ID da OS à qual está anexada (vazio se só cliente)
   numeroOS: string // Número da OS (para exibição)
   clienteId: string
   clienteNome: string
@@ -732,7 +732,12 @@ type FaturaPecas = {
     codigoPeca?: string
   }>
   observacoes?: string
-  arquivoAnexo?: string // URL ou base64 do arquivo anexado
+  /** PDF ou imagem (base64 data URL) */
+  arquivoAnexo?: string
+  nomeArquivoOriginal?: string
+  tipoArquivo?: string
+  /** Indica se já foram enviados ao cliente os dados de conta / IBAN para pagamento */
+  contaPagamentoEnviada?: boolean
 }
 
 type ClienteDevedor = {
@@ -3040,6 +3045,12 @@ export default function Dashboard() {
     taxaIVA: 23,
     status: 'pendente' as 'pendente' | 'paga' | 'vencida' | 'cancelada',
     observacoes: '',
+    arquivoAnexo: '',
+    nomeArquivoOriginal: '',
+    tipoArquivo: '',
+    contaPagamentoEnviada: false,
+    /** Valor sem IVA quando não há linhas de itens (ex.: fatura só digital) */
+    valorManualSemIVA: '',
     itens: [] as Array<{
       id: string
       descricao: string
@@ -9325,35 +9336,124 @@ export default function Dashboard() {
     alert(safeT?.osSalva || 'Ordem de serviço salva com sucesso!')
   }
 
+  const MAX_FATURA_ANEXO_BYTES = 4 * 1024 * 1024
+
+  const resetFaturaFormState = () => ({
+    numeroFatura: '',
+    ordemServicoId: '',
+    numeroOS: '',
+    clienteId: '',
+    clienteNome: '',
+    dataEmissao: new Date().toISOString().split('T')[0],
+    dataVencimento: '',
+    taxaIVA: 23,
+    status: 'pendente' as 'pendente' | 'paga' | 'vencida' | 'cancelada',
+    observacoes: '',
+    arquivoAnexo: '',
+    nomeArquivoOriginal: '',
+    tipoArquivo: '',
+    contaPagamentoEnviada: false,
+    valorManualSemIVA: '',
+    itens: [] as Array<{
+      id: string
+      descricao: string
+      quantidade: number
+      precoUnitario: number
+      codigoPeca?: string
+    }>
+  })
+
+  const handleFaturaAnexoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const ft = safeT as Record<string, string | undefined>
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > MAX_FATURA_ANEXO_BYTES) {
+      alert(ft?.faturaAnexoGrande || 'Ficheiro demasiado grande (máx. 4 MB).')
+      e.target.value = ''
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result as string
+      setFaturaForm(prev => ({
+        ...prev,
+        arquivoAnexo: dataUrl,
+        nomeArquivoOriginal: file.name,
+        tipoArquivo: file.type || ''
+      }))
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const fecharModalFaturaPecas = () => {
+    setShowFaturaForm(false)
+    setEditingFatura(null)
+    setFaturaForm(resetFaturaFormState())
+  }
+
   const handleSaveFatura = () => {
-    if (!faturaForm.numeroFatura || !faturaForm.clienteId || faturaForm.itens.length === 0) {
-      alert(safeT?.preencherTodosCampos || 'Por favor, preencha todos os campos obrigatórios')
+    const ft = safeT as Record<string, string | undefined>
+    if (!faturaForm.numeroFatura?.trim() || !faturaForm.clienteId) {
+      alert(ft?.preencherTodosCampos || 'Preencha o número da fatura e o cliente.')
+      return
+    }
+
+    const itensComValor = faturaForm.itens.filter(i => (i.quantidade || 0) > 0 && (i.precoUnitario || 0) > 0)
+    const valorPorItens = itensComValor.reduce((sum, item) => sum + (item.quantidade || 0) * (item.precoUnitario || 0), 0)
+    const manual = parseFloat(String(faturaForm.valorManualSemIVA || '').replace(',', '.')) || 0
+    const valorSemIVA = valorPorItens > 0 ? valorPorItens : manual
+
+    if (valorSemIVA <= 0) {
+      alert(ft?.faturaErroValor || 'Indique o valor sem IVA (manual) ou adicione linhas de itens com quantidade e preço.')
       return
     }
 
     createAutoBackupBeforeOperation()
 
-    const valorSemIVA = faturaForm.itens.reduce((sum, item) => sum + (item.quantidade * item.precoUnitario), 0)
     const valorIVA = valorSemIVA * (faturaForm.taxaIVA / 100)
     const valorTotal = valorSemIVA + valorIVA
+
+    const itensSalvos =
+      itensComValor.length > 0
+        ? itensComValor.map(item => ({
+            ...item,
+            valorTotal: (item.quantidade || 0) * (item.precoUnitario || 0)
+          }))
+        : [
+            {
+              id: `digital-${Date.now()}`,
+              descricao: ft?.faturaItemDigitalDesc || 'Fatura digital (anexo)',
+              quantidade: 1,
+              precoUnitario: valorSemIVA,
+              valorTotal: valorSemIVA
+            }
+          ]
+
+    const basePayload = {
+      numeroFatura: faturaForm.numeroFatura.trim(),
+      ordemServicoId: faturaForm.ordemServicoId || '',
+      numeroOS: faturaForm.numeroOS || '',
+      clienteId: faturaForm.clienteId,
+      clienteNome: faturaForm.clienteNome,
+      dataEmissao: faturaForm.dataEmissao,
+      dataVencimento: faturaForm.dataVencimento || undefined,
+      valorTotal,
+      valorIVA,
+      valorSemIVA,
+      taxaIVA: faturaForm.taxaIVA,
+      status: faturaForm.status,
+      itens: itensSalvos,
+      observacoes: faturaForm.observacoes || undefined,
+      arquivoAnexo: faturaForm.arquivoAnexo || undefined,
+      nomeArquivoOriginal: faturaForm.nomeArquivoOriginal || undefined,
+      tipoArquivo: faturaForm.arquivoAnexo ? (faturaForm.tipoArquivo || undefined) : undefined,
+      contaPagamentoEnviada: Boolean(faturaForm.contaPagamentoEnviada)
+    }
 
     if (editingFatura) {
       const updatedFatura: FaturaPecas = {
         ...editingFatura,
-        numeroFatura: faturaForm.numeroFatura,
-        ordemServicoId: faturaForm.ordemServicoId,
-        numeroOS: faturaForm.numeroOS,
-        clienteId: faturaForm.clienteId,
-        clienteNome: faturaForm.clienteNome,
-        dataEmissao: faturaForm.dataEmissao,
-        dataVencimento: faturaForm.dataVencimento || undefined,
-        valorTotal,
-        valorIVA,
-        valorSemIVA,
-        taxaIVA: faturaForm.taxaIVA,
-        status: faturaForm.status,
-        itens: faturaForm.itens.map(item => ({ ...item, valorTotal: (item.quantidade || 0) * (item.precoUnitario || 0) })),
-        observacoes: faturaForm.observacoes
+        ...basePayload
       }
       const updatedFaturas = faturasPecas.map(f => f.id === editingFatura.id ? updatedFatura : f)
       setFaturasPecas(updatedFaturas)
@@ -9361,30 +9461,16 @@ export default function Dashboard() {
     } else {
       const newFatura: FaturaPecas = {
         id: Date.now().toString(),
-        numeroFatura: faturaForm.numeroFatura,
-        ordemServicoId: faturaForm.ordemServicoId,
-        numeroOS: faturaForm.numeroOS,
-        clienteId: faturaForm.clienteId,
-        clienteNome: faturaForm.clienteNome,
-        dataEmissao: faturaForm.dataEmissao,
-        dataVencimento: faturaForm.dataVencimento || undefined,
-        valorTotal,
-        valorIVA,
-        valorSemIVA,
-        taxaIVA: faturaForm.taxaIVA,
-        status: faturaForm.status,
-        itens: faturaForm.itens.map(item => ({ ...item, valorTotal: (item.quantidade || 0) * (item.precoUnitario || 0) })),
-        observacoes: faturaForm.observacoes
+        ...basePayload
       }
       const updatedFaturas = [...faturasPecas, newFatura]
       setFaturasPecas(updatedFaturas)
       saveData('nonato-faturas-pecas', updatedFaturas)
 
-      // Atualizar OS para incluir a fatura
       if (faturaForm.ordemServicoId) {
         const updatedOSList = ordensServico.map(os => {
           if (os.id === faturaForm.ordemServicoId) {
-            return { ...os, faturasPecas: [...os.faturasPecas, newFatura.id] }
+            return { ...os, faturasPecas: [...(os.faturasPecas || []), newFatura.id] }
           }
           return os
         })
@@ -9394,19 +9480,7 @@ export default function Dashboard() {
     }
 
     setShowFaturaForm(false)
-    setFaturaForm({
-      numeroFatura: '',
-      ordemServicoId: '',
-      numeroOS: '',
-      clienteId: '',
-      clienteNome: '',
-      dataEmissao: new Date().toISOString().split('T')[0],
-      dataVencimento: '',
-      taxaIVA: 23,
-      status: 'pendente',
-      observacoes: '',
-      itens: []
-    })
+    setFaturaForm(resetFaturaFormState())
     setEditingFatura(null)
     atualizarClientesDevedores()
     alert(safeT?.faturaSalva || 'Fatura salva com sucesso!')
@@ -41699,19 +41773,7 @@ A1;Peça exemplo;10'
                     <button
                       className="btn-primary"
                       onClick={() => {
-                        setFaturaForm({
-                          numeroFatura: `FAT-${Date.now()}`,
-                          ordemServicoId: '',
-                          numeroOS: '',
-                          clienteId: '',
-                          clienteNome: '',
-                          dataEmissao: new Date().toISOString().split('T')[0],
-                          dataVencimento: '',
-                          taxaIVA: 23,
-                          status: 'pendente',
-                          observacoes: '',
-                          itens: []
-                        })
+                        setFaturaForm({ ...resetFaturaFormState(), numeroFatura: `FAT-${Date.now()}` })
                         setEditingFatura(null)
                         setShowFaturaForm(true)
                       }}
@@ -41737,7 +41799,7 @@ A1;Peça exemplo;10'
                           borderRadius: '8px'
                         }}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px', gap: '12px', flexWrap: 'wrap' }}>
                           <div>
                             <h3 style={{ color: '#00ff00', margin: 0, fontSize: '18px' }}>{fatura.numeroFatura}</h3>
                             {fatura.numeroOS && (
@@ -41746,17 +41808,65 @@ A1;Peça exemplo;10'
                               </p>
                             )}
                           </div>
-                          <span style={{
-                            padding: '4px 12px',
-                            backgroundColor: fatura.status === 'paga' ? 'rgba(0, 255, 0, 0.2)' : fatura.status === 'vencida' ? 'rgba(255, 0, 0, 0.2)' : 'rgba(255, 255, 0, 0.2)',
-                            border: `1px solid ${fatura.status === 'paga' ? 'rgba(0, 255, 0, 0.5)' : fatura.status === 'vencida' ? 'rgba(255, 0, 0, 0.5)' : 'rgba(255, 255, 0, 0.5)'}`,
-                            borderRadius: '4px',
-                            color: fatura.status === 'paga' ? '#00ff00' : fatura.status === 'vencida' ? '#ff0000' : '#ffff00',
-                            fontSize: '12px',
-                            textTransform: 'uppercase'
-                          }}>
-                            {fatura.status}
-                          </span>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', justifyContent: 'flex-end' }}>
+                            <span style={{
+                              padding: '4px 10px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: '600',
+                              backgroundColor: fatura.contaPagamentoEnviada ? 'rgba(0, 255, 0, 0.15)' : 'rgba(255, 180, 0, 0.15)',
+                              border: `1px solid ${fatura.contaPagamentoEnviada ? 'rgba(0, 255, 0, 0.45)' : 'rgba(255, 200, 0, 0.45)'}`,
+                              color: fatura.contaPagamentoEnviada ? '#88ff88' : '#ffcc66'
+                            }}>
+                              {fatura.contaPagamentoEnviada ? (safeT as any)?.faturaBadgeContaEnviada || 'IBAN enviado' : (safeT as any)?.faturaBadgeContaPendente || 'IBAN por enviar'}
+                            </span>
+                            <span style={{
+                              padding: '4px 12px',
+                              backgroundColor: fatura.status === 'paga' ? 'rgba(0, 255, 0, 0.2)' : fatura.status === 'vencida' ? 'rgba(255, 0, 0, 0.2)' : 'rgba(255, 255, 0, 0.2)',
+                              border: `1px solid ${fatura.status === 'paga' ? 'rgba(0, 255, 0, 0.5)' : fatura.status === 'vencida' ? 'rgba(255, 0, 0, 0.5)' : 'rgba(255, 255, 0, 0.5)'}`,
+                              borderRadius: '4px',
+                              color: fatura.status === 'paga' ? '#00ff00' : fatura.status === 'vencida' ? '#ff0000' : '#ffff00',
+                              fontSize: '12px',
+                              textTransform: 'uppercase'
+                            }}>
+                              {fatura.status}
+                            </span>
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              onClick={() => {
+                                setEditingFatura(fatura)
+                                setFaturaForm({
+                                  numeroFatura: fatura.numeroFatura,
+                                  ordemServicoId: fatura.ordemServicoId || '',
+                                  numeroOS: fatura.numeroOS || '',
+                                  clienteId: fatura.clienteId,
+                                  clienteNome: fatura.clienteNome,
+                                  dataEmissao: (fatura.dataEmissao && String(fatura.dataEmissao).slice(0, 10)) || new Date().toISOString().split('T')[0],
+                                  dataVencimento: fatura.dataVencimento ? String(fatura.dataVencimento).slice(0, 10) : '',
+                                  taxaIVA: fatura.taxaIVA,
+                                  status: fatura.status,
+                                  observacoes: fatura.observacoes || '',
+                                  arquivoAnexo: fatura.arquivoAnexo || '',
+                                  nomeArquivoOriginal: fatura.nomeArquivoOriginal || '',
+                                  tipoArquivo: fatura.tipoArquivo || '',
+                                  contaPagamentoEnviada: Boolean(fatura.contaPagamentoEnviada),
+                                  valorManualSemIVA: '',
+                                  itens: fatura.itens.map(i => ({
+                                    id: i.id,
+                                    descricao: i.descricao,
+                                    quantidade: i.quantidade,
+                                    precoUnitario: i.precoUnitario,
+                                    codigoPeca: i.codigoPeca
+                                  }))
+                                })
+                                setShowFaturaForm(true)
+                              }}
+                              style={{ padding: '6px 14px', fontSize: '12px' }}
+                            >
+                              {safeT?.edit || 'Editar'}
+                            </button>
+                          </div>
                         </div>
                         <p style={{ color: '#ccc', margin: '5px 0', fontSize: '14px' }}>
                           {safeT?.cliente || 'Cliente'}: {fatura.clienteNome}
@@ -41775,6 +41885,18 @@ A1;Peça exemplo;10'
                         <p style={{ color: '#ccc', margin: '5px 0', fontSize: '14px' }}>
                           {safeT?.valorSemIVA || 'Valor sem IVA'}: €{fatura.valorSemIVA.toFixed(2)} | {safeT?.IVA || 'IVA'}: €{fatura.valorIVA.toFixed(2)} ({fatura.taxaIVA}%)
                         </p>
+                        {fatura.arquivoAnexo && (
+                          <div style={{ marginTop: '12px' }}>
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              onClick={() => { try { window.open(fatura.arquivoAnexo, '_blank', 'noopener,noreferrer') } catch (_) {} }}
+                              style={{ padding: '8px 14px', fontSize: '13px' }}
+                            >
+                              {(safeT as any)?.faturaAbrirAnexo || 'Ver anexo'}{fatura.nomeArquivoOriginal ? ` (${fatura.nomeArquivoOriginal})` : ''}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                     {faturasPecas.length === 0 && (
@@ -53681,6 +53803,176 @@ A1;Peça exemplo;10'
               <p>{safeT?.nenhumaFatura || 'Nenhuma fatura encontrada.'}</p>
             )}
             <button className="btn-primary" onClick={() => setSelectedFornecedorForFatura(null)} style={{ width: '100%', marginTop: '20px' }}>{safeT?.close || 'Fechar'}</button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Fatura de Peças — cliente, anexo PDF/imagem, estado de pagamento, dados de conta enviados */}
+      {showFaturaForm && (
+        <div
+          className="modal-overlay"
+          onClick={fecharModalFaturaPecas}
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.88)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10065, padding: '20px' }}
+        >
+          <div
+            className="modal"
+            onClick={e => e.stopPropagation()}
+            style={{ maxWidth: '640px', width: '100%', maxHeight: '92vh', overflowY: 'auto', backgroundColor: '#1a1a1a', border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '10px', padding: '22px' }}
+          >
+            <h2 style={{ marginTop: 0, color: '#00ff00', fontSize: '20px' }}>
+              {editingFatura ? ((safeT as any)?.faturaModalTituloEditar || 'Editar fatura de peças') : ((safeT as any)?.faturaModalTituloNova || 'Nova fatura de peças')}
+            </h2>
+            <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '13px', marginBottom: '16px' }}>
+              {(safeT as any)?.faturaModalSubtitulo || 'Associe ao cliente, anexe o documento digital e registe o estado de pagamento e se já enviou os dados de conta ao cliente.'}
+            </p>
+
+            <label style={{ color: '#aaa', fontSize: '12px', display: 'block' }}>{safeT?.numeroFatura || 'Número da fatura'}</label>
+            <input type="text" value={faturaForm.numeroFatura} onChange={e => setFaturaForm({ ...faturaForm, numeroFatura: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+
+            <label style={{ color: '#aaa', fontSize: '12px', display: 'block' }}>{safeT?.selecioneCliente || 'Cliente'} *</label>
+            <select
+              value={faturaForm.clienteId}
+              onChange={e => {
+                const id = e.target.value
+                const cli = clientes.find(c => c.id === id)
+                setFaturaForm(prev => {
+                  let next = { ...prev, clienteId: id, clienteNome: cli?.nomeEmpresa || '' }
+                  if (prev.ordemServicoId) {
+                    const os = ordensServico.find(o => o.id === prev.ordemServicoId)
+                    if (os && os.clienteId !== id) {
+                      next = { ...next, ordemServicoId: '', numeroOS: '' }
+                    }
+                  }
+                  return next
+                })
+              }}
+              style={{ width: '100%', padding: '8px', marginBottom: '12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+            >
+              <option value="">{(safeT as any)?.faturaSelecioneCliente || '— Selecione o cliente —'}</option>
+              {clientes.map(cli => (
+                <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
+              ))}
+            </select>
+
+            <label style={{ color: '#aaa', fontSize: '12px', display: 'block' }}>{(safeT as any)?.faturaOsOpcional || 'Ordem de serviço (opcional)'}</label>
+            <select
+              value={faturaForm.ordemServicoId}
+              onChange={e => {
+                const id = e.target.value
+                const os = ordensServico.find(o => o.id === id)
+                setFaturaForm({ ...faturaForm, ordemServicoId: id, numeroOS: os?.numeroOS || '' })
+              }}
+              style={{ width: '100%', padding: '8px', marginBottom: '12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+            >
+              <option value="">{(safeT as any)?.faturaSemOS || 'Nenhuma (só cliente)'}</option>
+              {ordensServico.filter(os => !faturaForm.clienteId || os.clienteId === faturaForm.clienteId).map(os => (
+                <option key={os.id} value={os.id}>{os.numeroOS}</option>
+              ))}
+            </select>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div>
+                <label style={{ color: '#aaa', fontSize: '12px', display: 'block' }}>{safeT?.dataEmissao || 'Data emissão'}</label>
+                <input type="date" value={faturaForm.dataEmissao} onChange={e => setFaturaForm({ ...faturaForm, dataEmissao: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '4px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+              </div>
+              <div>
+                <label style={{ color: '#aaa', fontSize: '12px', display: 'block' }}>{safeT?.dataVencimento || 'Data vencimento'}</label>
+                <input type="date" value={faturaForm.dataVencimento} onChange={e => setFaturaForm({ ...faturaForm, dataVencimento: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '4px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '8px' }}>
+              <div>
+                <label style={{ color: '#aaa', fontSize: '12px', display: 'block' }}>{safeT?.IVA || 'IVA'} (%)</label>
+                <input type="number" min={0} max={100} step={0.5} value={faturaForm.taxaIVA} onChange={e => setFaturaForm({ ...faturaForm, taxaIVA: parseFloat(e.target.value) || 0 })} style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+              </div>
+              <div>
+                <label style={{ color: '#aaa', fontSize: '12px', display: 'block' }}>{safeT?.status || 'Estado'}</label>
+                <select value={faturaForm.status} onChange={e => setFaturaForm({ ...faturaForm, status: e.target.value as 'pendente' | 'paga' | 'vencida' | 'cancelada' })} style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}>
+                  <option value="pendente">{safeT?.pendente || 'Pendente'}</option>
+                  <option value="paga">{safeT?.paga || 'Paga'}</option>
+                  <option value="vencida">{safeT?.vencida || 'Vencida'}</option>
+                  <option value="cancelada">{(safeT as any)?.cancelada || 'Cancelada'}</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ marginTop: '16px', padding: '12px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.15)', backgroundColor: 'rgba(0,0,0,0.25)' }}>
+              <label style={{ color: '#00cc66', fontSize: '13px', fontWeight: '600', display: 'block', marginBottom: '8px' }}>{(safeT as any)?.faturaAnexoLabel || 'Anexar fatura (PDF, imagem, etc.)'}</label>
+              <input type="file" accept=".pdf,application/pdf,image/*" onChange={handleFaturaAnexoFileChange} style={{ marginBottom: '8px', color: '#ccc' }} />
+              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', margin: '0 0 8px 0' }}>{(safeT as any)?.faturaAnexoHint || 'Máx. 4 MB. Guardado localmente no navegador.'}</p>
+              {faturaForm.arquivoAnexo && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ color: '#ccc', fontSize: '13px' }}>{faturaForm.nomeArquivoOriginal || 'anexo'}</span>
+                  <button type="button" className="btn-primary" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => setFaturaForm({ ...faturaForm, arquivoAnexo: '', nomeArquivoOriginal: '', tipoArquivo: '' })}>
+                    {(safeT as any)?.faturaRemoverAnexo || 'Remover anexo'}
+                  </button>
+                  <button type="button" className="btn-primary" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => { try { window.open(faturaForm.arquivoAnexo, '_blank', 'noopener,noreferrer') } catch (_) {} }}>
+                    {(safeT as any)?.faturaAbrirAnexo || 'Pré-visualizar'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginTop: '14px', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255, 200, 0, 0.2)', backgroundColor: 'rgba(40, 35, 0, 0.2)' }}>
+              <p style={{ color: '#eee', fontSize: '13px', margin: '0 0 10px 0', fontWeight: '600' }}>{(safeT as any)?.faturaContaPagamentoLabel || 'Dados de conta / IBAN para pagamento já enviados ao cliente?'}</p>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#ccc', cursor: 'pointer', marginBottom: '8px' }}>
+                <input type="radio" name="contaPagamentoFatura" checked={faturaForm.contaPagamentoEnviada === true} onChange={() => setFaturaForm({ ...faturaForm, contaPagamentoEnviada: true })} />
+                {(safeT as any)?.faturaContaEnviadaSim || 'Sim, já enviados'}
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#ccc', cursor: 'pointer' }}>
+                <input type="radio" name="contaPagamentoFatura" checked={faturaForm.contaPagamentoEnviada === false} onChange={() => setFaturaForm({ ...faturaForm, contaPagamentoEnviada: false })} />
+                {(safeT as any)?.faturaContaEnviadaNao || 'Ainda não'}
+              </label>
+            </div>
+
+            <label style={{ color: '#aaa', fontSize: '12px', display: 'block', marginTop: '14px' }}>{(safeT as any)?.faturaValorManualSemIVA || 'Valor sem IVA (use se não preencher linhas abaixo)'}</label>
+            <input type="text" inputMode="decimal" placeholder="0,00" value={faturaForm.valorManualSemIVA} onChange={e => setFaturaForm({ ...faturaForm, valorManualSemIVA: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+
+            <div style={{ marginTop: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ color: '#00ff88', fontSize: '14px', fontWeight: '600' }}>{(safeT as any)?.faturaLinhasItens || 'Linhas de itens (opcional)'}</span>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  style={{ padding: '6px 12px', fontSize: '12px' }}
+                  onClick={() => setFaturaForm({
+                    ...faturaForm,
+                    itens: [...faturaForm.itens, { id: `pec-${Date.now()}`, descricao: '', quantidade: 1, precoUnitario: 0 }]
+                  })}
+                >
+                  + {(safeT as any)?.faturaAdicionarLinha || 'Linha'}
+                </button>
+              </div>
+              {faturaForm.itens.map((item, idx) => (
+                <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '2fr 70px 90px 36px', gap: '8px', alignItems: 'end', marginBottom: '8px' }}>
+                  <input type="text" placeholder={(safeT as any)?.faturaDescricaoItem || 'Descrição'} value={item.descricao} onChange={e => {
+                    const next = [...faturaForm.itens]
+                    next[idx] = { ...next[idx], descricao: e.target.value }
+                    setFaturaForm({ ...faturaForm, itens: next })
+                  }} style={{ padding: '6px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '4px', fontSize: '12px' }} />
+                  <input type="number" min={0} step={1} placeholder={(safeT as any)?.faturaQtd || 'Qtd'} value={item.quantidade || ''} onChange={e => {
+                    const next = [...faturaForm.itens]
+                    next[idx] = { ...next[idx], quantidade: parseFloat(e.target.value) || 0 }
+                    setFaturaForm({ ...faturaForm, itens: next })
+                  }} style={{ padding: '6px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '4px', fontSize: '12px' }} />
+                  <input type="number" min={0} step={0.01} placeholder={(safeT as any)?.faturaPrecoUnit || 'Preço'} value={item.precoUnitario || ''} onChange={e => {
+                    const next = [...faturaForm.itens]
+                    next[idx] = { ...next[idx], precoUnitario: parseFloat(e.target.value) || 0 }
+                    setFaturaForm({ ...faturaForm, itens: next })
+                  }} style={{ padding: '6px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '4px', fontSize: '12px' }} />
+                  <button type="button" className="btn-danger" style={{ padding: '6px', fontSize: '11px' }} onClick={() => setFaturaForm({ ...faturaForm, itens: faturaForm.itens.filter((_, i) => i !== idx) })} title={(safeT as any)?.faturaRemoverLinha || 'Remover'}>×</button>
+                </div>
+              ))}
+            </div>
+
+            <label style={{ color: '#aaa', fontSize: '12px', display: 'block', marginTop: '12px' }}>{safeT?.observacoes || 'Observações'}</label>
+            <textarea value={faturaForm.observacoes} onChange={e => setFaturaForm({ ...faturaForm, observacoes: e.target.value })} rows={3} style={{ width: '100%', padding: '10px', marginBottom: '16px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+              <button type="button" className="btn-primary" onClick={handleSaveFatura} style={{ flex: 1, padding: '12px', fontWeight: '600' }}>{safeT?.save || 'Guardar'}</button>
+              <button type="button" className="btn-primary" onClick={fecharModalFaturaPecas} style={{ flex: 1, padding: '12px', backgroundColor: 'transparent', border: '1px solid rgba(0,255,0,0.4)', color: '#00ff00' }}>{safeT?.cancel || 'Cancelar'}</button>
+            </div>
           </div>
         </div>
       )}
