@@ -323,17 +323,39 @@ function getSequenciaEtiquetasArmazem(eq: Equipamento): {
 function openPrintEtiquetasArmazem(eq: Equipamento, t: { titulo: string; subtitulo: string; serie: string; clienteOuCarga?: string }) {
   const { total, linhas } = getSequenciaEtiquetasArmazem(eq)
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  const idEquip = (eq.id || '').trim() || '—'
+  const numEquip = (eq.numeroSerie || '').trim() || '—'
+  const modeloMarca = [eq.modelo, eq.marca].filter(Boolean).join(' · ')
+  const familiaGrupo = [eq.familia, eq.grupo].filter(Boolean).join(' / ')
   const cards = linhas
     .map(l => {
       const sub = l.isPrincipal
         ? [eq.marca, eq.numeroSerie].filter(Boolean).join(' · ') || ''
         : ''
+      const nomeVolume = esc(l.nome)
       return `
     <div class="etq-card">
+      <div class="etq-banner">
+        <div class="etq-banner-row">
+          <span class="etq-banner-lbl">ID equipamento</span>
+          <span class="etq-id-val">${esc(idEquip)}</span>
+        </div>
+        <div class="etq-banner-row etq-banner-mid">
+          <span class="etq-vol-lbl">Volumes (total)</span>
+          <span class="etq-vol-val">${total}</span>
+        </div>
+        <div class="etq-banner-row">
+          <span class="etq-banner-lbl">N.º equipamento (S/N)</span>
+          <span class="etq-sn-val">${esc(numEquip)}</span>
+        </div>
+      </div>
       <div class="etq-frac">${esc(l.rotulo)}</div>
-      <div class="etq-nome">${esc(l.nome)}</div>
-      ${sub ? `<div class="etq-sub">${esc(sub)}</div>` : ''}
-      <div class="etq-peq">${esc(t.titulo)} · ${esc(t.subtitulo)}${total > 1 ? ` · ${total} vol.` : ''}</div>
+      <div class="etq-nome">${nomeVolume}</div>
+      ${sub && l.isPrincipal ? `<div class="etq-sub">${esc(sub)}</div>` : ''}
+      ${!l.isPrincipal ? `<div class="etq-extra">Volume incluso · mesmo equipamento</div>` : ''}
+      ${modeloMarca ? `<div class="etq-meta">${esc(modeloMarca)}</div>` : ''}
+      ${familiaGrupo ? `<div class="etq-meta2">${esc(familiaGrupo)}</div>` : ''}
+      <div class="etq-peq">${esc(t.titulo)} · ${esc(t.subtitulo)}</div>
     </div>`
     })
     .join('')
@@ -341,17 +363,31 @@ function openPrintEtiquetasArmazem(eq: Equipamento, t: { titulo: string; subtitu
   <style>
     * { box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; padding: 16px; background: #fff; color: #111; }
-    h1 { font-size: 14px; margin: 0 0 12px; font-weight: 700; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-    .etq-card { border: 2px solid #0a0; border-radius: 10px; padding: 14px; text-align: center; break-inside: avoid; page-break-inside: avoid; }
-    .etq-frac { font-size: 32px; font-weight: 800; color: #060; letter-spacing: 0.02em; }
-    .etq-nome { font-size: 13px; font-weight: 600; margin-top: 8px; word-break: break-word; }
-    .etq-sub { font-size: 11px; color: #444; margin-top: 4px; }
-    .etq-peq { font-size: 9px; color: #666; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.04em; }
-    @media print { body { padding: 8px; } .etq-card { border-color: #000; } }
+    h1 { font-size: 15px; margin: 0 0 8px; font-weight: 800; }
+    .resumo { font-size: 13px; margin: 0 0 6px; font-weight: 700; color: #000; }
+    .resumo span { color: #060; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+    .etq-card { border: 3px solid #060; border-radius: 12px; padding: 12px; text-align: center; break-inside: avoid; page-break-inside: avoid; background: #fafefa; }
+    .etq-banner { background: linear-gradient(180deg, #e8ffe8 0%, #f5fff5 100%); border: 2px solid #0a0; border-radius: 8px; padding: 10px 8px; margin-bottom: 10px; text-align: left; }
+    .etq-banner-row { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
+    .etq-banner-row:last-child { margin-bottom: 0; }
+    .etq-banner-mid { padding-bottom: 8px; border-bottom: 1px dashed #0a6; margin-bottom: 8px; }
+    .etq-banner-lbl, .etq-vol-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: #035; font-weight: 700; }
+    .etq-id-val { font-size: 18px; font-weight: 900; color: #000; font-family: Consolas, 'Courier New', monospace; word-break: break-all; line-height: 1.15; }
+    .etq-vol-val { font-size: 26px; font-weight: 900; color: #060; line-height: 1; }
+    .etq-sn-val { font-size: 20px; font-weight: 800; color: #000; font-family: Consolas, 'Courier New', monospace; word-break: break-all; line-height: 1.15; }
+    .etq-frac { font-size: 34px; font-weight: 900; color: #060; letter-spacing: 0.02em; margin-top: 4px; }
+    .etq-nome { font-size: 13px; font-weight: 700; margin-top: 8px; word-break: break-word; color: #111; }
+    .etq-sub { font-size: 11px; color: #333; margin-top: 4px; font-weight: 600; }
+    .etq-extra { font-size: 10px; color: #444; margin-top: 4px; font-style: italic; }
+    .etq-meta { font-size: 11px; color: #222; margin-top: 8px; font-weight: 600; }
+    .etq-meta2 { font-size: 10px; color: #555; margin-top: 4px; }
+    .etq-peq { font-size: 8px; color: #555; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.04em; border-top: 1px solid #ccc; padding-top: 8px; }
+    @media print { body { padding: 8px; } .etq-card { border-color: #000; background: #fff; } .etq-banner { border-color: #000; } }
   </style></head><body>
   <h1>${esc(t.titulo)} — ${esc(t.subtitulo)}</h1>
-  <p style="font-size:12px;margin:0 0 16px;color:#333">${esc(t.serie)}${t.clienteOuCarga ? ` · ${esc(t.clienteOuCarga)}` : ''}</p>
+  <p class="resumo">ID: <span>${esc(idEquip)}</span> · Volumes: <span>${total}</span> · S/N: <span>${esc(numEquip)}</span></p>
+  <p style="font-size:12px;margin:0 0 14px;color:#333;line-height:1.4">${esc(t.serie)}${t.clienteOuCarga ? ` · ${esc(t.clienteOuCarga)}` : ''}</p>
   <div class="grid">${cards}</div>
   <script>window.onload=function(){window.print();}</script>
   </body></html>`
@@ -22521,28 +22557,50 @@ onKeyPress={(e) => {
                               {etqT?.totalVolumes || 'Total de volumes'}: <strong style={{ color: '#00ff00' }}>{seqEtq.total}</strong>
                             </span>
                           </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
+                          <p style={{ marginBottom: '14px', fontSize: '14px', fontWeight: 700, color: '#fff' }}>
+                            {etqT?.etiquetaResumoArmazem || 'Resumo'}: ID <span style={{ color: '#00ff00', fontFamily: 'Consolas, monospace' }}>{viewingEquipamento.id}</span>
+                            {' · '}{etqT?.totalVolumes || 'Volumes'}: <span style={{ color: '#00ff00' }}>{seqEtq.total}</span>
+                            {' · '}{etqT?.numeroEquipamentoSN || 'S/N'}: <span style={{ color: '#00ff00', fontFamily: 'Consolas, monospace' }}>{(viewingEquipamento.numeroSerie || '').trim() || '—'}</span>
+                          </p>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
                             {seqEtq.linhas.map((linha) => (
                               <div
                                 key={linha.id}
                                 style={{
-                                  border: '2px solid rgba(0, 255, 0, 0.35)',
-                                  borderRadius: '10px',
-                                  padding: '14px',
+                                  border: '3px solid rgba(0, 255, 0, 0.45)',
+                                  borderRadius: '12px',
+                                  padding: '12px',
                                   textAlign: 'center',
-                                  backgroundColor: 'rgba(0, 40, 0, 0.2)'
+                                  backgroundColor: 'rgba(0, 35, 0, 0.35)'
                                 }}
                               >
-                                <div style={{ fontSize: '28px', fontWeight: 800, color: '#00ff00', fontFamily: 'Consolas, monospace' }}>{linha.rotulo}</div>
-                                <div style={{ fontSize: '13px', fontWeight: 600, marginTop: '8px', color: '#fff', wordBreak: 'break-word' }}>
+                                <div style={{ textAlign: 'left', backgroundColor: 'rgba(0, 60, 0, 0.35)', border: '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '8px', padding: '10px 10px', marginBottom: '10px' }}>
+                                  <div style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(200,255,200,0.9)', fontWeight: 700 }}>{etqT?.labelIdEquipamentoEtq || 'ID equipamento'}</div>
+                                  <div style={{ fontSize: '17px', fontWeight: 900, color: '#fff', fontFamily: 'Consolas, monospace', wordBreak: 'break-all', lineHeight: 1.15 }}>{viewingEquipamento.id}</div>
+                                  <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px dashed rgba(0,255,0,0.35)' }}>
+                                    <div style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(200,255,200,0.9)', fontWeight: 700 }}>{etqT?.labelVolumesTotalEtq || 'Volumes (total)'}</div>
+                                    <div style={{ fontSize: '26px', fontWeight: 900, color: '#00ff00', lineHeight: 1 }}>{seqEtq.total}</div>
+                                  </div>
+                                  <div style={{ marginTop: '8px' }}>
+                                    <div style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(200,255,200,0.9)', fontWeight: 700 }}>{etqT?.labelNumeroEquipamentoEtq || 'N.º equipamento (S/N)'}</div>
+                                    <div style={{ fontSize: '19px', fontWeight: 800, color: '#fff', fontFamily: 'Consolas, monospace', wordBreak: 'break-all', lineHeight: 1.15 }}>{(viewingEquipamento.numeroSerie || '').trim() || '—'}</div>
+                                  </div>
+                                </div>
+                                <div style={{ fontSize: '32px', fontWeight: 900, color: '#00ff00', fontFamily: 'Consolas, monospace' }}>{linha.rotulo}</div>
+                                <div style={{ fontSize: '13px', fontWeight: 700, marginTop: '8px', color: '#fff', wordBreak: 'break-word' }}>
                                   {linha.isPrincipal ? (etqT?.maquinaPrincipalOuEquipamento || 'Equipamento (máquina principal)') : linha.nome}
                                 </div>
                                 {linha.isPrincipal ? (
-                                  <div style={{ fontSize: '11px', color: '#888', marginTop: '6px', lineHeight: 1.35 }}>
+                                  <div style={{ fontSize: '11px', color: '#aaa', marginTop: '6px', lineHeight: 1.35 }}>
                                     {linha.nome}
                                     <br />
-                                    {[viewingEquipamento.marca, viewingEquipamento.numeroSerie].filter(Boolean).join(' · ')}
+                                    {[viewingEquipamento.marca, viewingEquipamento.modelo].filter(Boolean).join(' · ')}
                                   </div>
+                                ) : (
+                                  <div style={{ fontSize: '10px', color: '#999', marginTop: '6px', fontStyle: 'italic' }}>{etqT?.volumeInclusoMesmoEquip || 'Volume incluso · mesmo equipamento'}</div>
+                                )}
+                                {([viewingEquipamento.familia, viewingEquipamento.grupo].filter(Boolean).join(' / ')) ? (
+                                  <div style={{ fontSize: '10px', color: '#888', marginTop: '8px' }}>{[viewingEquipamento.familia, viewingEquipamento.grupo].filter(Boolean).join(' / ')}</div>
                                 ) : null}
                               </div>
                             ))}
