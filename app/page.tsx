@@ -288,6 +288,82 @@ type Equipamento = {
   modeloManuaisId?: string
 }
 
+/** Máquina (principal) = T/T; cada item incluso = T/(T−1), T/(T−2), … até T/1 */
+function getSequenciaEtiquetasArmazem(eq: Equipamento): {
+  total: number
+  linhas: Array<{ id: string; nome: string; rotulo: string; imagem?: string; isPrincipal: boolean }>
+} {
+  const extras = (eq.itemsIncluded || []).map((raw, idx) =>
+    typeof raw === 'string' ? { id: `legacy-${idx}-${String(raw).slice(0, 20)}`, nome: raw } : raw
+  )
+  const total = Math.max(1, 1 + extras.length)
+  const nomePrincipal = [eq.tipoEquipamento, eq.modelo].filter(Boolean).join(' — ').trim() || eq.modelo || 'Equipamento'
+  const linhas: Array<{ id: string; nome: string; rotulo: string; imagem?: string; isPrincipal: boolean }> = [
+    {
+      id: '__principal_armazem__',
+      nome: nomePrincipal,
+      rotulo: `${total}/${total}`,
+      isPrincipal: true,
+      imagem: eq.coverPhoto || eq.photo
+    }
+  ]
+  extras.forEach((ex, k) => {
+    const denom = total - 1 - k
+    linhas.push({
+      id: ex.id,
+      nome: ex.nome,
+      rotulo: `${total}/${Math.max(1, denom)}`,
+      imagem: ex.imagem,
+      isPrincipal: false
+    })
+  })
+  return { total, linhas }
+}
+
+function openPrintEtiquetasArmazem(eq: Equipamento, t: { titulo: string; subtitulo: string; serie: string; clienteOuCarga?: string }) {
+  const { total, linhas } = getSequenciaEtiquetasArmazem(eq)
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  const cards = linhas
+    .map(l => {
+      const sub = l.isPrincipal
+        ? [eq.marca, eq.numeroSerie].filter(Boolean).join(' · ') || ''
+        : ''
+      return `
+    <div class="etq-card">
+      <div class="etq-frac">${esc(l.rotulo)}</div>
+      <div class="etq-nome">${esc(l.nome)}</div>
+      ${sub ? `<div class="etq-sub">${esc(sub)}</div>` : ''}
+      <div class="etq-peq">${esc(t.titulo)} · ${esc(t.subtitulo)}${total > 1 ? ` · ${total} vol.` : ''}</div>
+    </div>`
+    })
+    .join('')
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>${esc(t.titulo)}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; padding: 16px; background: #fff; color: #111; }
+    h1 { font-size: 14px; margin: 0 0 12px; font-weight: 700; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    .etq-card { border: 2px solid #0a0; border-radius: 10px; padding: 14px; text-align: center; break-inside: avoid; page-break-inside: avoid; }
+    .etq-frac { font-size: 32px; font-weight: 800; color: #060; letter-spacing: 0.02em; }
+    .etq-nome { font-size: 13px; font-weight: 600; margin-top: 8px; word-break: break-word; }
+    .etq-sub { font-size: 11px; color: #444; margin-top: 4px; }
+    .etq-peq { font-size: 9px; color: #666; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.04em; }
+    @media print { body { padding: 8px; } .etq-card { border-color: #000; } }
+  </style></head><body>
+  <h1>${esc(t.titulo)} — ${esc(t.subtitulo)}</h1>
+  <p style="font-size:12px;margin:0 0 16px;color:#333">${esc(t.serie)}${t.clienteOuCarga ? ` · ${esc(t.clienteOuCarga)}` : ''}</p>
+  <div class="grid">${cards}</div>
+  <script>window.onload=function(){window.print();}</script>
+  </body></html>`
+  const w = window.open('', '_blank')
+  if (!w) {
+    alert('Permita pop-ups para imprimir as etiquetas.')
+    return
+  }
+  w.document.write(html)
+  w.document.close()
+}
+
 type RelatorioEquipamento = {
   id: string
   titulo: string
@@ -1066,7 +1142,7 @@ export default function Dashboard() {
   const [showEquipamentoForm, setShowEquipamentoForm] = useState(false)
   const [editingEquipamento, setEditingEquipamento] = useState<Equipamento | null>(null)
   const [viewingEquipamento, setViewingEquipamento] = useState<Equipamento | null>(null)
-  const [equipamentoDetailTab, setEquipamentoDetailTab] = useState<'historico' | 'documentos' | 'fotos' | 'itens'>('historico')
+  const [equipamentoDetailTab, setEquipamentoDetailTab] = useState<'historico' | 'documentos' | 'fotos' | 'itens' | 'etiquetas'>('historico')
   const [historicoForm, setHistoricoForm] = useState<{ tipo: string; descricao: string; responsavel: string; observacoes: string }>({ tipo: 'outro', descricao: '', responsavel: '', observacoes: '' })
   const [newItemIncluded, setNewItemIncluded] = useState('')
   const [editingItemIncluded, setEditingItemIncluded] = useState<ItemIncluso | null>(null)
@@ -22116,8 +22192,14 @@ onKeyPress={(e) => {
                   {/* Abas */}
                   <div style={{ marginBottom: '20px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)' }}>
                     <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                      {['historico', 'documentos', 'fotos', 'itens'].map((tab) => {
-                        const labels = { historico: '📜 ' + (t.historico || 'Histórico'), documentos: '📄 ' + (t.documentoPDF || 'Documentos PDF'), fotos: '📷 ' + (t.albumFotos || 'Álbum de Fotos'), itens: '📦 ' + (t.itensInclusos || 'Itens Inclusos') }
+                      {(['historico', 'documentos', 'fotos', 'itens', 'etiquetas'] as const).map((tab) => {
+                        const labels = {
+                          historico: '📜 ' + (t.historico || 'Histórico'),
+                          documentos: '📄 ' + (t.documentoPDF || 'Documentos PDF'),
+                          fotos: '📷 ' + (t.albumFotos || 'Álbum de Fotos'),
+                          itens: '📦 ' + (t.itensInclusos || 'Itens Inclusos'),
+                          etiquetas: '🏷️ ' + ((safeT as any)?.gestorEtiquetasArmazem || 'Etiquetas (carga)')
+                        }
                         const isActive = equipamentoDetailTab === tab
                         return (
                           <button
@@ -22406,9 +22488,95 @@ onKeyPress={(e) => {
                       </div>
                     )}
 
-                    {equipamentoDetailTab === 'itens' && (
+                    {equipamentoDetailTab === 'etiquetas' && (() => {
+                      const seqEtq = getSequenciaEtiquetasArmazem(viewingEquipamento)
+                      const etqT = safeT as any
+                      const tituloEtq = etqT?.gestorEtiquetasArmazem || 'Etiquetas (carga)'
+                      const subtitEtq = etqT?.armazemOrigemEtiqueta || 'Armazém — saída antes do camião'
+                      const imprimirEtiquetas = () => {
+                        openPrintEtiquetasArmazem(viewingEquipamento, {
+                          titulo: tituloEtq,
+                          subtitulo: subtitEtq,
+                          serie: [viewingEquipamento.modelo, viewingEquipamento.marca, viewingEquipamento.numeroSerie].filter(Boolean).join(' · ')
+                        })
+                      }
+                      return (
+                        <div>
+                          <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>{tituloEtq}</h3>
+                          <p style={{ marginBottom: '16px', fontSize: '13px', color: '#aaa', lineHeight: 1.5 }}>
+                            {etqT?.gestorEtiquetasArmazemDesc || 'As etiquetas seguem automaticamente a sequência de volumes (máquina T/T e itens inclusos T/(T−1)… T/1). Imprima e cole em cada volume antes da carga no camião.'}
+                          </p>
+                          <div style={{ marginBottom: '18px', display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              onClick={imprimirEtiquetas}
+                              style={{ padding: '10px 18px', fontWeight: 600, transition: 'box-shadow 0.2s ease, filter 0.2s ease' }}
+                              onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 0 14px rgba(0, 255, 0, 0.45)'; e.currentTarget.style.filter = 'brightness(1.15)' }}
+                              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = ''; e.currentTarget.style.filter = 'brightness(1)' }}
+                            >
+                              🖨️ {etqT?.imprimirEtiquetas || 'Imprimir etiquetas'}
+                            </button>
+                            <span style={{ fontSize: '13px', color: '#ccc' }}>
+                              {etqT?.totalVolumes || 'Total de volumes'}: <strong style={{ color: '#00ff00' }}>{seqEtq.total}</strong>
+                            </span>
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
+                            {seqEtq.linhas.map((linha) => (
+                              <div
+                                key={linha.id}
+                                style={{
+                                  border: '2px solid rgba(0, 255, 0, 0.35)',
+                                  borderRadius: '10px',
+                                  padding: '14px',
+                                  textAlign: 'center',
+                                  backgroundColor: 'rgba(0, 40, 0, 0.2)'
+                                }}
+                              >
+                                <div style={{ fontSize: '28px', fontWeight: 800, color: '#00ff00', fontFamily: 'Consolas, monospace' }}>{linha.rotulo}</div>
+                                <div style={{ fontSize: '13px', fontWeight: 600, marginTop: '8px', color: '#fff', wordBreak: 'break-word' }}>
+                                  {linha.isPrincipal ? (etqT?.maquinaPrincipalOuEquipamento || 'Equipamento (máquina principal)') : linha.nome}
+                                </div>
+                                {linha.isPrincipal ? (
+                                  <div style={{ fontSize: '11px', color: '#888', marginTop: '6px', lineHeight: 1.35 }}>
+                                    {linha.nome}
+                                    <br />
+                                    {[viewingEquipamento.marca, viewingEquipamento.numeroSerie].filter(Boolean).join(' · ')}
+                                  </div>
+                                ) : null}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })()}
+
+                    {equipamentoDetailTab === 'itens' && (() => {
+                      const seqArm = getSequenciaEtiquetasArmazem(viewingEquipamento)
+                      return (
                       <div>
                         <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>{t.itemsIncluded || 'Itens que Vieram com o Equipamento'}</h3>
+                        <div style={{ marginBottom: '16px', padding: '12px 14px', backgroundColor: 'rgba(0, 255, 0, 0.08)', border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '8px', fontSize: '13px', color: '#ccc' }}>
+                          <strong style={{ color: '#00ff00' }}>{(safeT as any)?.sequenciaCargaArmazem || 'Sequência da carga (saída do cliente → camião)'}</strong>
+                          <p style={{ margin: '8px 0 0', lineHeight: 1.45 }}>
+                            {(safeT as any)?.sequenciaCargaArmazemDesc || 'A máquina é o volume 1. Cada item incluso que adicionar entra na sequência. Formato automático: T/T para a máquina; cada embalagem/peça extra fica T/(T−1), T/(T−2)… até T/1.'}
+                          </p>
+                          <p style={{ margin: '10px 0 0', fontSize: '15px', fontWeight: 700, color: '#fff' }}>
+                            {(safeT as any)?.totalVolumes || 'Total de volumes'}: <span style={{ color: '#00ff00' }}>{seqArm.total}</span>
+                            {seqArm.total > 1 ? ` (1 ${(safeT as any)?.maquinaVolume || 'máquina'} + ${seqArm.total - 1} ${(safeT as any)?.itensExtrasInclusos || 'itens inclusos'})` : ''}
+                          </p>
+                        </div>
+
+                        {/* Volume principal = máquina */}
+                        <div style={{ padding: '12px 14px', backgroundColor: 'rgba(20, 40, 24, 0.6)', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.35)', marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                            <span style={{ fontSize: '22px', fontWeight: 800, color: '#00ff00', fontFamily: 'Consolas, monospace' }}>{seqArm.linhas[0]?.rotulo}</span>
+                            <div>
+                              <div style={{ fontSize: '14px', fontWeight: 600, color: '#fff' }}>🔧 {(safeT as any)?.maquinaPrincipalOuEquipamento || 'Equipamento (máquina principal)'}</div>
+                              <div style={{ fontSize: '12px', color: '#aaa', marginTop: '2px' }}>{[viewingEquipamento.tipoEquipamento, viewingEquipamento.modelo].filter(Boolean).join(' — ')} · {viewingEquipamento.marca}{viewingEquipamento.numeroSerie ? ` · S/N ${viewingEquipamento.numeroSerie}` : ''}</div>
+                            </div>
+                          </div>
+                        </div>
                         
                         {/* Formulário de Adicionar/Editar Item */}
                         {(editingItemIncluded || !editingItemIncluded) && (
@@ -22563,7 +22731,10 @@ onKeyPress={(e) => {
                                         onClick={() => window.open(itemObj.imagem, '_blank')}
                                       />
                                     )}
-                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                                      <span style={{ fontSize: '18px', fontWeight: 800, color: '#00ff00', fontFamily: 'Consolas, monospace', flexShrink: 0 }}>
+                                        {seqArm.linhas[index + 1]?.rotulo ?? '—'}
+                                      </span>
                                       <span style={{ fontSize: '14px', wordBreak: 'break-word' }}>📦 {itemObj.nome}</span>
                                     </div>
                                     <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
@@ -22611,7 +22782,8 @@ onKeyPress={(e) => {
                           )}
                         </div>
                       </div>
-                    )}
+                    )
+                    })()}
                   </div>
                 </div>
               </div>
