@@ -664,11 +664,14 @@ type FaturaFornecedor = {
   numeroFatura: string
   mes: string // Formato: "YYYY-MM" (ex: "2024-01")
   valor: number
-  clienteId: string // ID do cliente
-  clienteNome: string // Nome do cliente (para exibição)
+  /** ID do cliente OU do fornecedor (ver entidadeOrigem); nome em clienteNome */
+  clienteId: string
+  clienteNome: string
   dataVencimento?: string
   status: 'pendente' | 'paga' | 'vencida'
   observacoes?: string
+  /** Legado: omitido = tratado como cliente */
+  entidadeOrigem?: 'cliente' | 'fornecedor'
 }
 
 type Fornecedor = {
@@ -3131,7 +3134,8 @@ export default function Dashboard() {
     clienteNome: '',
     dataVencimento: '',
     status: 'pendente' as 'pendente' | 'paga' | 'vencida',
-    observacoes: ''
+    observacoes: '',
+    entidadeOrigem: 'fornecedor' as 'fornecedor' | 'cliente'
   })
   const [showFaturasAPagarModal, setShowFaturasAPagarModal] = useState(false)
   const [showFaturasGeralModal, setShowFaturasGeralModal] = useState(false)
@@ -8859,6 +8863,13 @@ export default function Dashboard() {
     setSelectedFornecedorForFatura(fornecedor)
   }
 
+  const inferFaturaFornecedorEntidadeOrigem = (f: FaturaFornecedor): 'cliente' | 'fornecedor' => {
+    if (f.entidadeOrigem === 'fornecedor' || f.entidadeOrigem === 'cliente') return f.entidadeOrigem
+    if (clientes.some(c => c.id === f.clienteId)) return 'cliente'
+    if (fornecedores.some(x => x.id === f.clienteId)) return 'fornecedor'
+    return 'cliente'
+  }
+
   const handleAddFatura = (fornecedor: Fornecedor) => {
     setSelectedFornecedorForFatura(fornecedor)
     setEditingFaturaFornecedor(null)
@@ -8870,7 +8881,8 @@ export default function Dashboard() {
       clienteNome: '',
       dataVencimento: '',
       status: 'pendente' as 'pendente' | 'paga' | 'vencida',
-      observacoes: ''
+      observacoes: '',
+      entidadeOrigem: 'fornecedor'
     })
     setShowFaturaFornecedorForm(true)
   }
@@ -8886,7 +8898,8 @@ export default function Dashboard() {
       clienteNome: fatura.clienteNome,
       dataVencimento: fatura.dataVencimento || '',
       status: fatura.status,
-      observacoes: fatura.observacoes || ''
+      observacoes: fatura.observacoes || '',
+      entidadeOrigem: inferFaturaFornecedorEntidadeOrigem(fatura)
     })
     setShowFaturaFornecedorForm(true)
   }
@@ -8905,10 +8918,22 @@ export default function Dashboard() {
       return
     }
 
-    const cliente = clientes.find(c => c.id === faturaFornecedorForm.clienteId)
-    if (!cliente) {
-      alert(t.clientNotFound || 'Cliente não encontrado!')
-      return
+    const origem = faturaFornecedorForm.entidadeOrigem
+    let nomeEntidade = ''
+    if (origem === 'fornecedor') {
+      const forn = fornecedores.find(x => x.id === faturaFornecedorForm.clienteId)
+      if (!forn) {
+        alert((t as Record<string, string | undefined>).faturaFornecedorNaoEncontrado || 'Fornecedor não encontrado!')
+        return
+      }
+      nomeEntidade = forn.nomeEmpresa
+    } else {
+      const cliente = clientes.find(c => c.id === faturaFornecedorForm.clienteId)
+      if (!cliente) {
+        alert(t.clientNotFound || 'Cliente não encontrado!')
+        return
+      }
+      nomeEntidade = cliente.nomeEmpresa
     }
 
     const updatedFornecedores = fornecedores.map(f => {
@@ -8923,7 +8948,8 @@ export default function Dashboard() {
                   mes: faturaFornecedorForm.mes,
                   valor: valor,
                   clienteId: faturaFornecedorForm.clienteId,
-                  clienteNome: cliente.nomeEmpresa,
+                  clienteNome: nomeEntidade,
+                  entidadeOrigem: origem,
                   dataVencimento: faturaFornecedorForm.dataVencimento || undefined,
                   status: faturaFornecedorForm.status,
                   observacoes: faturaFornecedorForm.observacoes || undefined
@@ -8939,7 +8965,8 @@ export default function Dashboard() {
             mes: faturaFornecedorForm.mes,
             valor: valor,
             clienteId: faturaFornecedorForm.clienteId,
-            clienteNome: cliente.nomeEmpresa,
+            clienteNome: nomeEntidade,
+            entidadeOrigem: origem,
             dataVencimento: faturaFornecedorForm.dataVencimento || undefined,
             status: faturaFornecedorForm.status,
             observacoes: faturaFornecedorForm.observacoes || undefined
@@ -8951,7 +8978,7 @@ export default function Dashboard() {
     })
 
     setFornecedores(updatedFornecedores)
-    localStorage.setItem('nonato-fornecedores', JSON.stringify(updatedFornecedores))
+    saveData('nonato-fornecedores', updatedFornecedores)
 
     setShowFaturaFornecedorForm(false)
     setFaturaFornecedorForm({
@@ -8962,7 +8989,8 @@ export default function Dashboard() {
       clienteNome: '',
       dataVencimento: '',
       status: 'pendente',
-      observacoes: ''
+      observacoes: '',
+      entidadeOrigem: 'fornecedor'
     })
     setEditingFaturaFornecedor(null)
     setSelectedFornecedorForFatura(null)
@@ -53856,10 +53884,58 @@ A1;Peça exemplo;10'
                 <input type="text" placeholder={safeT?.numeroFatura || 'Número da Fatura'} value={faturaFornecedorForm.numeroFatura} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, numeroFatura: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                 <input type="month" placeholder={safeT?.mes || 'Mês'} value={faturaFornecedorForm.mes} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, mes: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                 <input type="number" placeholder={safeT?.valorFatura || 'Valor'} value={faturaFornecedorForm.valor} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, valor: parseFloat(e.target.value) || 0 })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
-                <select value={faturaFornecedorForm.clienteId} onChange={(e) => { const cliente = clientes.find(c => c.id === e.target.value); setFaturaFornecedorForm({ ...faturaFornecedorForm, clienteId: e.target.value, clienteNome: cliente?.nomeEmpresa || '' }); }} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}>
-                  <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
-                  {clientes.map(cli => <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>)}
-                </select>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: '0 0 8px 0', lineHeight: 1.45 }}>
+                  {(safeT as any)?.faturaFornecedorHint || 'Por defeito: só fornecedores. Se a pessoa já está em Clientes, escolha «Cliente» para reutilizar o cadastro.'}
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '10px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ccc', cursor: 'pointer', fontSize: '13px' }}>
+                    <input
+                      type="radio"
+                      name="origemFaturaFornecedor"
+                      checked={faturaFornecedorForm.entidadeOrigem === 'fornecedor'}
+                      onChange={() => setFaturaFornecedorForm({ ...faturaFornecedorForm, entidadeOrigem: 'fornecedor', clienteId: '', clienteNome: '' })}
+                    />
+                    {(safeT as any)?.faturaFornecedorOrigemFornecedor || 'Fornecedor (cadastro de fornecedores)'}
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ccc', cursor: 'pointer', fontSize: '13px' }}>
+                    <input
+                      type="radio"
+                      name="origemFaturaFornecedor"
+                      checked={faturaFornecedorForm.entidadeOrigem === 'cliente'}
+                      onChange={() => setFaturaFornecedorForm({ ...faturaFornecedorForm, entidadeOrigem: 'cliente', clienteId: '', clienteNome: '' })}
+                    />
+                    {(safeT as any)?.faturaFornecedorOrigemCliente || 'Cliente (cadastro de clientes)'}
+                  </label>
+                </div>
+                {faturaFornecedorForm.entidadeOrigem === 'fornecedor' ? (
+                  <select
+                    value={faturaFornecedorForm.clienteId}
+                    onChange={e => {
+                      const id = e.target.value
+                      const forn = fornecedores.find(x => x.id === id)
+                      setFaturaFornecedorForm({ ...faturaFornecedorForm, clienteId: id, clienteNome: forn?.nomeEmpresa || '' })
+                    }}
+                    style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  >
+                    <option value="">{(safeT as any)?.faturaFornecedorSelecioneFornecedor || 'Selecione o fornecedor'}</option>
+                    {fornecedores.map(f => (
+                      <option key={f.id} value={f.id}>{f.nomeEmpresa}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <select
+                    value={faturaFornecedorForm.clienteId}
+                    onChange={e => {
+                      const id = e.target.value
+                      const cli = clientes.find(c => c.id === id)
+                      setFaturaFornecedorForm({ ...faturaFornecedorForm, clienteId: id, clienteNome: cli?.nomeEmpresa || '' })
+                    }}
+                    style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  >
+                    <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
+                    {clientes.map(cli => <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>)}
+                  </select>
+                )}
                 <input type="date" placeholder={safeT?.dataVencimento || 'Data de Vencimento'} value={faturaFornecedorForm.dataVencimento} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, dataVencimento: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                 <select value={faturaFornecedorForm.status} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, status: e.target.value as 'pendente' | 'paga' | 'vencida' })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}>
                   <option value="pendente">{safeT?.pendente || 'Pendente'}</option>
@@ -53879,7 +53955,16 @@ A1;Peça exemplo;10'
                   <div key={fatura.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
                     <p><strong>{fatura.numeroFatura}</strong> - {formatarMes(fatura.mes)}</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.valorFatura || 'Valor'}: {fatura.valor}€</p>
-                    <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.cliente || 'Cliente'}: {fatura.clienteNome}</p>
+                    <p style={{ fontSize: '14px', opacity: 0.8 }}>
+                      {(safeT as any)?.faturaFornecedorLigadoA || 'Ligado a'}: {fatura.clienteNome}
+                      <span style={{ opacity: 0.75, fontSize: '12px', marginLeft: '6px' }}>
+                        (
+                        {inferFaturaFornecedorEntidadeOrigem(fatura) === 'fornecedor'
+                          ? ((safeT as any)?.faturaFornecedorTagFornecedor || 'cadastro fornecedor')
+                          : ((safeT as any)?.faturaFornecedorTagCliente || 'cadastro cliente')}
+                        )
+                      </span>
+                    </p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.status || 'Status'}: {fatura.status}</p>
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
                       <button className="btn-primary" onClick={() => handleEditFatura(selectedFornecedorForFatura, fatura)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>{safeT?.edit || 'Editar'}</button>
