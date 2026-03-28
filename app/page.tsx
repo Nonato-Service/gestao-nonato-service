@@ -15628,7 +15628,13 @@ export default function Dashboard() {
     'open-formularios-checklist-tecnicos': 'extras',
     'open-verificacao-final-entrega': 'extras',
     'open-clientes-financeiro': 'extras',
-    'open-relatorios-excluidos-clientes': 'clientes'
+    'open-relatorios-excluidos-clientes': 'clientes',
+    'open-protocolos-servico': 'relatorioServico',
+    'open-manuais-informacoes-tecnicas': 'equipamentos',
+    'open-almoxarifado-armazem': 'extras',
+    'open-quick-gestao-custos': 'cadastroServicos',
+    'open-quick-gestao-financeira': 'extras',
+    'open-quick-biblioteca-pecas': 'bibliotecaPecas'
   }
 
   const canAccessAction = useCallback((action: string): boolean => {
@@ -15856,6 +15862,15 @@ export default function Dashboard() {
       openTab('manuais-informacoes-tecnicas', getTabTitle('manuais-informacoes-tecnicas'))
     } else if (action === 'open-almoxarifado-armazem') {
       openTab('almoxarifado-armazem', getTabTitle('almoxarifado-armazem'))
+    } else if (action === 'open-quick-gestao-custos') {
+      setExpandedGroups(prev => new Set(prev).add('gestao-custos'))
+      openTab('gestao-custos', getTabTitle('gestao-custos'))
+    } else if (action === 'open-quick-gestao-financeira') {
+      setExpandedGroups(prev => new Set(prev).add('gestao-financeira'))
+      openTab('gestao-financeira', getTabTitle('gestao-financeira'))
+    } else if (action === 'open-quick-biblioteca-pecas') {
+      setExpandedGroups(prev => new Set(prev).add('gestao-tecnica'))
+      openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
     } else if (action === 'open-gestao-tecnica') {
       // Toggle do grupo GESTÃO TÉCNICA
       setExpandedGroups(prev => {
@@ -48826,7 +48841,41 @@ A1;Peça exemplo;10'
                 </div>
               </div>
 
-              {/* Cards de Acesso Rápido */}
+              {/* Cards de Acesso Rápido — cores distintas por item; respeita permissões */}
+              {(() => {
+                const tr = safeT as Record<string, string | undefined>
+                const qaColors = [
+                  { border: 'rgba(0, 255, 100, 0.38)', borderH: 'rgba(0, 255, 120, 0.75)', shadow: 'rgba(0, 255, 100, 0.28)', glow: 'rgba(0, 255, 100, 0.14)', title: '#66ff99' },
+                  { border: 'rgba(56, 189, 248, 0.42)', borderH: 'rgba(56, 189, 248, 0.78)', shadow: 'rgba(56, 189, 248, 0.3)', glow: 'rgba(56, 189, 248, 0.15)', title: '#7dd3fc' },
+                  { border: 'rgba(167, 139, 250, 0.45)', borderH: 'rgba(167, 139, 250, 0.82)', shadow: 'rgba(167, 139, 250, 0.32)', glow: 'rgba(167, 139, 250, 0.16)', title: '#c4b5fd' },
+                  { border: 'rgba(251, 146, 60, 0.45)', borderH: 'rgba(251, 146, 60, 0.82)', shadow: 'rgba(251, 146, 60, 0.3)', glow: 'rgba(251, 146, 60, 0.15)', title: '#fdba74' },
+                  { border: 'rgba(45, 212, 191, 0.42)', borderH: 'rgba(45, 212, 191, 0.8)', shadow: 'rgba(45, 212, 191, 0.28)', glow: 'rgba(45, 212, 191, 0.14)', title: '#5eead4' },
+                  { border: 'rgba(244, 114, 182, 0.42)', borderH: 'rgba(244, 114, 182, 0.78)', shadow: 'rgba(244, 114, 182, 0.28)', glow: 'rgba(244, 114, 182, 0.14)', title: '#f9a8d4' },
+                  { border: 'rgba(250, 204, 21, 0.45)', borderH: 'rgba(250, 204, 21, 0.85)', shadow: 'rgba(250, 204, 21, 0.28)', glow: 'rgba(250, 204, 21, 0.14)', title: '#fde047' },
+                  { border: 'rgba(232, 121, 249, 0.42)', borderH: 'rgba(232, 121, 249, 0.8)', shadow: 'rgba(232, 121, 249, 0.3)', glow: 'rgba(232, 121, 249, 0.15)', title: '#f0abfc' },
+                  { border: 'rgba(34, 211, 238, 0.42)', borderH: 'rgba(34, 211, 238, 0.8)', shadow: 'rgba(34, 211, 238, 0.28)', glow: 'rgba(34, 211, 238, 0.14)', title: '#67e8f9' },
+                  { border: 'rgba(163, 230, 53, 0.4)', borderH: 'rgba(163, 230, 53, 0.78)', shadow: 'rgba(163, 230, 53, 0.28)', glow: 'rgba(163, 230, 53, 0.14)', title: '#bef264' }
+                ]
+                const quickAccessItems: Array<{
+                  action: string
+                  titleKey: string
+                  descKey: string
+                  icon: string
+                  titleFallback: string
+                  descFallback: string
+                }> = [
+                  { action: 'open-relatorio-servico', titleKey: 'relatorioServicoTitle', descKey: 'relatorioServicoSubtitle', icon: '📋', titleFallback: 'RELATÓRIO DE SERVIÇO', descFallback: 'Gestão de Relatórios de Serviço' },
+                  { action: 'open-biblioteca-relatorios', titleKey: 'bibliotecaRelatoriosTitle', descKey: 'quickAccessBibliotecaRelatoriosDesc', icon: '📚', titleFallback: 'BIBLIOTECA DE RELATÓRIOS', descFallback: 'Visualize relatórios por cliente.' },
+                  { action: 'open-protocolos-servico', titleKey: 'protocolosServicoTitle', descKey: 'protocolosServicoDesc', icon: '📑', titleFallback: 'Protocolos de Serviço', descFallback: 'Protocolos antes/depois e peças.' },
+                  { action: 'open-quick-gestao-custos', titleKey: 'gestaoCustosTitle', descKey: 'quickAccessGestaoCustosDesc', icon: '💰', titleFallback: 'GESTÃO DE CUSTOS', descFallback: 'Orçamentos, despesas e mapas.' },
+                  { action: 'open-quick-biblioteca-pecas', titleKey: 'bibliotecaPecasTitle', descKey: 'quickAccessBibliotecaPecasDesc', icon: '🔩', titleFallback: 'BIBLIOTECA DE PEÇAS', descFallback: 'Cadastro e biblioteca de peças.' },
+                  { action: 'open-manuais-informacoes-tecnicas', titleKey: 'manuaisInformacoesTecnicasTitle', descKey: 'quickAccessManuaisDesc', icon: '📖', titleFallback: 'MANUAIS E INFORMAÇÕES TÉCNICAS', descFallback: 'Manuais por família, grupo e modelo.' },
+                  { action: 'open-almoxarifado-armazem', titleKey: 'almoxarifadoArmazemTitle', descKey: 'quickAccessAlmoxarifadoDesc', icon: '🏪', titleFallback: 'ALMOXARIFADO / ARMAZÉM', descFallback: 'Stock, pedidos e armazém.' },
+                  { action: 'open-quick-gestao-financeira', titleKey: 'gestaoFinanceiraTitle', descKey: 'gestaoFinanceiraDesc', icon: '📊', titleFallback: 'GESTÃO FINANCEIRA', descFallback: 'Finanças e controlo.' },
+                  { action: 'open-hub-comunicacao', titleKey: 'hubComunicacao', descKey: 'hubComunicacaoDesc', icon: '💬', titleFallback: 'HUB DE COMUNICAÇÃO', descFallback: 'Mensagens e participantes.' },
+                  { action: 'open-agenda', titleKey: 'agendaTitle', descKey: 'quickAccessAgendaDesc', icon: '📅', titleFallback: 'AGENDA TÉCNICA', descFallback: 'Agenda técnica e agendamentos.' }
+                ]
+                return (
               <div style={{ marginBottom: '50px' }}>
                 <h2 style={{
                   fontSize: '24px',
@@ -48837,19 +48886,26 @@ A1;Peça exemplo;10'
                   letterSpacing: '2px',
                   textTransform: 'uppercase'
                 }}>
-                  {safeT?.acessoRapido || 'ACESSO RÁPIDO'}
+                  {tr?.acessoRapido || 'ACESSO RÁPIDO'}
                 </h2>
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
                   gap: '20px'
                 }}>
-                  {/* Card Relatório de Serviço */}
-                  <div style={{
+                  {quickAccessItems.map((item, idx) => {
+                    if (!canAccessAction(item.action)) return null
+                    const c = qaColors[idx % qaColors.length]
+                    const title = String(tr[item.titleKey] ?? item.titleFallback)
+                    const desc = String(tr[item.descKey] ?? item.descFallback)
+                    return (
+                  <div
+                    key={item.action}
+                    style={{
                     padding: '30px',
                     backgroundColor: '#141414',
                     borderRadius: '16px',
-                    border: '2px solid rgba(0, 255, 0, 0.3)',
+                    border: `2px solid ${c.border}`,
                     transition: 'all 0.3s ease',
                     cursor: 'pointer',
                     position: 'relative',
@@ -48857,15 +48913,15 @@ A1;Peça exemplo;10'
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)'
-                    e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.6)'
-                    e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 255, 0, 0.25)'
+                    e.currentTarget.style.borderColor = c.borderH
+                    e.currentTarget.style.boxShadow = `0 12px 40px ${c.shadow}`
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                    e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
+                    e.currentTarget.style.borderColor = c.border
                     e.currentTarget.style.boxShadow = 'none'
                   }}
-                  onClick={() => handleButtonClick('open-relatorio-servico')}
+                  onClick={() => handleButtonClick(item.action)}
                   >
                     <div style={{
                       position: 'absolute',
@@ -48873,19 +48929,19 @@ A1;Peça exemplo;10'
                       right: '-20px',
                       width: '100px',
                       height: '100px',
-                      background: 'radial-gradient(circle, rgba(0, 255, 0, 0.1) 0%, transparent 70%)',
+                      background: `radial-gradient(circle, ${c.glow} 0%, transparent 70%)`,
                       borderRadius: '50%'
                     }}></div>
-                    <div style={{ fontSize: '48px', marginBottom: '15px', position: 'relative', zIndex: 1 }}>📋</div>
+                    <div style={{ fontSize: '48px', marginBottom: '15px', position: 'relative', zIndex: 1 }}>{item.icon}</div>
                     <h3 style={{
-                      color: '#00ff00',
+                      color: c.title,
                       fontSize: '18px',
                       fontWeight: 'bold',
                       marginBottom: '10px',
                       position: 'relative',
                       zIndex: 1
                     }}>
-                      {safeT?.relatorioServicoTitle || 'Relatório de Serviço'}
+                      {title}
                     </h3>
                     <p style={{
                       color: '#ccc',
@@ -48894,119 +48950,15 @@ A1;Peça exemplo;10'
                       position: 'relative',
                       zIndex: 1
                     }}>
-                      {safeT?.relatorioServicoDesc || 'Crie e gerencie relatórios de serviço completos'}
+                      {desc}
                     </p>
                   </div>
-
-                  {/* Card Biblioteca de Relatórios */}
-                  <div style={{
-                    padding: '30px',
-                    backgroundColor: '#141414',
-                    borderRadius: '16px',
-                    border: '2px solid rgba(0, 255, 0, 0.3)',
-                    transition: 'all 0.3s ease',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)'
-                    e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.6)'
-                    e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 150, 255, 0.25)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                    e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.3)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
-                  onClick={() => handleButtonClick('open-biblioteca-relatorios')}
-                  >
-                    <div style={{
-                      position: 'absolute',
-                      top: '-20px',
-                      right: '-20px',
-                      width: '100px',
-                      height: '100px',
-                      background: 'radial-gradient(circle, rgba(0, 150, 255, 0.1) 0%, transparent 70%)',
-                      borderRadius: '50%'
-                    }}></div>
-                    <div style={{ fontSize: '48px', marginBottom: '15px', position: 'relative', zIndex: 1 }}>📚</div>
-                    <h3 style={{
-                      color: '#66b3ff',
-                      fontSize: '18px',
-                      fontWeight: 'bold',
-                      marginBottom: '10px',
-                      position: 'relative',
-                      zIndex: 1
-                    }}>
-                      {safeT?.bibliotecaRelatoriosTitle || 'Biblioteca de Relatórios'}
-                    </h3>
-                    <p style={{
-                      color: '#ccc',
-                      fontSize: '13px',
-                      lineHeight: '1.6',
-                      position: 'relative',
-                      zIndex: 1
-                    }}>
-                      {safeT?.bibliotecaRelatoriosDesc || 'Visualize todos os relatórios salvos organizados'}
-                    </p>
-                  </div>
-
-                  {/* Card Gestão de Custos */}
-                  <div style={{
-                    padding: '30px',
-                    backgroundColor: '#141414',
-                    borderRadius: '16px',
-                    border: '2px solid rgba(0, 255, 0, 0.3)',
-                    transition: 'all 0.3s ease',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)'
-                    e.currentTarget.style.borderColor = 'rgba(255, 165, 0, 0.6)'
-                    e.currentTarget.style.boxShadow = '0 12px 40px rgba(255, 165, 0, 0.25)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                    e.currentTarget.style.borderColor = 'rgba(255, 165, 0, 0.3)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
-                  onClick={() => handleButtonClick('open-gestao-custos')}
-                  >
-                    <div style={{
-                      position: 'absolute',
-                      top: '-20px',
-                      right: '-20px',
-                      width: '100px',
-                      height: '100px',
-                      background: 'radial-gradient(circle, rgba(255, 165, 0, 0.1) 0%, transparent 70%)',
-                      borderRadius: '50%'
-                    }}></div>
-                    <div style={{ fontSize: '48px', marginBottom: '15px', position: 'relative', zIndex: 1 }}>💰</div>
-                    <h3 style={{
-                      color: '#ffaa00',
-                      fontSize: '18px',
-                      fontWeight: 'bold',
-                      marginBottom: '10px',
-                      position: 'relative',
-                      zIndex: 1
-                    }}>
-                      {safeT?.gestaoCustosTitle || 'Gestão de Custos'}
-                    </h3>
-                    <p style={{
-                      color: '#ccc',
-                      fontSize: '13px',
-                      lineHeight: '1.6',
-                      position: 'relative',
-                      zIndex: 1
-                    }}>
-                      {safeT?.gestaoCustosDesc || 'Gerencie pedidos de orçamento e custos'}
-                    </p>
-                  </div>
+                    )
+                  })}
                 </div>
               </div>
+                )
+              })()}
 
               {/* Inventário do Armazém */}
               <div style={{
