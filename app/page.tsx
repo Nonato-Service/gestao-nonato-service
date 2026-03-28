@@ -9391,7 +9391,7 @@ export default function Dashboard() {
     setFaturaForm(resetFaturaFormState())
   }
 
-  const getSinalPagamentoFaturaPecas = (f: FaturaPecas): 'pago' | 'pendente' | 'atrasado' | 'cancelada' => {
+  const getSinalPagamentoFaturaPecas = (f: Pick<FaturaPecas, 'status' | 'dataVencimento'>): 'pago' | 'pendente' | 'atrasado' | 'cancelada' => {
     const hoje = new Date()
     hoje.setHours(0, 0, 0, 0)
     if (f.status === 'paga') return 'pago'
@@ -53985,6 +53985,64 @@ A1;Peça exemplo;10'
                 </select>
               </div>
             </div>
+
+            {(() => {
+              const sinalPrev = getSinalPagamentoFaturaPecas({
+                status: faturaForm.status,
+                dataVencimento: faturaForm.dataVencimento || undefined
+              })
+              const ftPrev = safeT as Record<string, string | undefined>
+              const labelPrev =
+                sinalPrev === 'pago'
+                  ? (ftPrev.faturaSignalPago || 'Pago')
+                  : sinalPrev === 'cancelada'
+                    ? (ftPrev.faturaSignalCancelada || 'Cancelada')
+                    : sinalPrev === 'atrasado'
+                      ? (ftPrev.faturaSignalAtrasado || 'Atrasado')
+                      : (ftPrev.faturaSignalPendente || 'Pendente')
+              const corPrev =
+                sinalPrev === 'pago'
+                  ? '#22c55e'
+                  : sinalPrev === 'cancelada'
+                    ? '#6b7280'
+                    : sinalPrev === 'atrasado'
+                      ? '#ef4444'
+                      : '#eab308'
+              const pulsePrev =
+                sinalPrev === 'cancelada'
+                  ? ''
+                  : sinalPrev === 'pago'
+                    ? 'ns-fatura-sphere--pulse-soft'
+                    : sinalPrev === 'atrasado'
+                      ? 'ns-fatura-sphere--pulse-fast'
+                      : 'ns-fatura-sphere--pulse-mid'
+              const devedorPrev = Boolean(faturaForm.clienteId) && clienteFaturaEhDevedor(faturaForm.clienteId)
+              return (
+                <div style={{ marginTop: '14px', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(0, 255, 136, 0.22)', backgroundColor: 'rgba(0, 0, 0, 0.4)' }}>
+                  <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '11px', margin: '0 0 10px 0', lineHeight: 1.4 }}>
+                    {(safeT as any)?.faturaModalIndicadorHint || 'Indicador na lista (após guardar): bolinha = estado do pagamento; roxa = cliente em dívida.'}
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} title={labelPrev}>
+                      <span
+                        className={pulsePrev ? `ns-fatura-sphere ${pulsePrev}` : 'ns-fatura-sphere'}
+                        style={{ color: corPrev, backgroundColor: corPrev, boxShadow: `0 0 10px ${corPrev}` }}
+                      />
+                      <span style={{ color: '#e5e5e5', fontSize: '13px', fontWeight: 700 }}>{labelPrev}</span>
+                    </div>
+                    {devedorPrev && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} title={ftPrev.faturaSignalDevedor || 'Cliente devedor'}>
+                        <span
+                          className="ns-fatura-sphere ns-fatura-sphere--pulse-fast"
+                          style={{ color: '#c026d3', backgroundColor: '#c026d3', boxShadow: '0 0 12px rgba(192, 38, 211, 0.95)' }}
+                        />
+                        <span style={{ color: '#e879f9', fontSize: '13px', fontWeight: 700 }}>{ftPrev.faturaSignalDevedor || 'Devedor'}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
 
             <div style={{ marginTop: '16px', padding: '12px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.15)', backgroundColor: 'rgba(0,0,0,0.25)' }}>
               <label style={{ color: '#00cc66', fontSize: '13px', fontWeight: '600', display: 'block', marginBottom: '8px' }}>{(safeT as any)?.faturaAnexoLabel || 'Anexar fatura (PDF, imagem, etc.)'}</label>
