@@ -8870,6 +8870,20 @@ export default function Dashboard() {
     return 'cliente'
   }
 
+  /** Verde = pago, amarelo = por pagar, vermelho = devendo (vencida ou vencimento passado) */
+  const getSinalPagamentoFaturaFornecedor = (f: Pick<FaturaFornecedor, 'status' | 'dataVencimento'>): 'pago' | 'pendente' | 'atrasado' => {
+    const hoje = new Date()
+    hoje.setHours(0, 0, 0, 0)
+    if (f.status === 'paga') return 'pago'
+    if (f.status === 'vencida') return 'atrasado'
+    if (f.dataVencimento) {
+      const dv = new Date(f.dataVencimento)
+      dv.setHours(0, 0, 0, 0)
+      if (dv < hoje) return 'atrasado'
+    }
+    return 'pendente'
+  }
+
   const handleAddFatura = (fornecedor: Fornecedor) => {
     setSelectedFornecedorForFatura(fornecedor)
     setEditingFaturaFornecedor(null)
@@ -53942,6 +53956,29 @@ A1;Peça exemplo;10'
                   <option value="paga">{safeT?.paga || 'Paga'}</option>
                   <option value="vencida">{safeT?.vencida || 'Vencida'}</option>
                 </select>
+                {(() => {
+                  const sPr = getSinalPagamentoFaturaFornecedor({
+                    status: faturaFornecedorForm.status,
+                    dataVencimento: faturaFornecedorForm.dataVencimento || undefined
+                  })
+                  const ftPr = safeT as Record<string, string | undefined>
+                  const lb =
+                    sPr === 'pago'
+                      ? (ftPr.faturaFornecedorLabelPago || ftPr.faturaSignalPago || 'Pago')
+                      : sPr === 'atrasado'
+                        ? (ftPr.faturaFornecedorLabelDevendo || ftPr.faturaSignalAtrasado || 'Devendo')
+                        : (ftPr.faturaFornecedorLabelPorPagar || ftPr.faturaSignalPendente || 'Por pagar')
+                  const cr = sPr === 'pago' ? '#22c55e' : sPr === 'atrasado' ? '#ef4444' : '#eab308'
+                  const pl =
+                    sPr === 'pago' ? 'ns-fatura-sphere--pulse-soft' : sPr === 'atrasado' ? 'ns-fatura-sphere--pulse-fast' : 'ns-fatura-sphere--pulse-mid'
+                  return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', padding: '10px', borderRadius: '8px', border: '1px solid rgba(0,255,136,0.2)', backgroundColor: 'rgba(0,0,0,0.35)' }}>
+                      <span className={`ns-fatura-sphere ${pl}`} style={{ color: cr, backgroundColor: cr, boxShadow: `0 0 10px ${cr}` }} />
+                      <span style={{ color: '#ddd', fontSize: '13px', fontWeight: 700 }}>{lb}</span>
+                      <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px' }}>{(safeT as any)?.faturaFornecedorPreviewLista || '(como na lista)'}</span>
+                    </div>
+                  )
+                })()}
                 <textarea placeholder={safeT?.observacoes || 'Observações'} value={faturaFornecedorForm.observacoes} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, observacoes: e.target.value })} rows={3} style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}></textarea>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button className="btn-primary" onClick={() => handleSaveFaturaFornecedor()} style={{ flex: 1 }}>{safeT?.save || 'Salvar'}</button>
@@ -53951,9 +53988,51 @@ A1;Peça exemplo;10'
             )}
             {selectedFornecedorForFatura.faturas && selectedFornecedorForFatura.faturas.length > 0 ? (
               <div style={{ marginTop: '20px' }}>
-                {selectedFornecedorForFatura.faturas.map(fatura => (
-                  <div key={fatura.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
-                    <p><strong>{fatura.numeroFatura}</strong> - {formatarMes(fatura.mes)}</p>
+                {selectedFornecedorForFatura.faturas.map(fatura => {
+                  const sinalFf = getSinalPagamentoFaturaFornecedor(fatura)
+                  const ftFf = safeT as Record<string, string | undefined>
+                  const labelFf =
+                    sinalFf === 'pago'
+                      ? (ftFf.faturaFornecedorLabelPago || ftFf.faturaSignalPago || 'Pago')
+                      : sinalFf === 'atrasado'
+                        ? (ftFf.faturaFornecedorLabelDevendo || ftFf.faturaSignalAtrasado || 'Devendo')
+                        : (ftFf.faturaFornecedorLabelPorPagar || ftFf.faturaSignalPendente || 'Por pagar')
+                  const corFf = sinalFf === 'pago' ? '#22c55e' : sinalFf === 'atrasado' ? '#ef4444' : '#eab308'
+                  const pulseFf =
+                    sinalFf === 'pago'
+                      ? 'ns-fatura-sphere--pulse-soft'
+                      : sinalFf === 'atrasado'
+                        ? 'ns-fatura-sphere--pulse-fast'
+                        : 'ns-fatura-sphere--pulse-mid'
+                  const borderFf =
+                    sinalFf === 'atrasado'
+                      ? '1px solid rgba(239, 68, 68, 0.45)'
+                      : '1px solid rgba(0, 255, 0, 0.2)'
+                  const shadowFf = sinalFf === 'atrasado' ? '0 0 16px rgba(239, 68, 68, 0.14)' : undefined
+                  return (
+                  <div
+                    key={fatura.id}
+                    style={{
+                      backgroundColor: '#141414',
+                      padding: '15px',
+                      borderRadius: '8px',
+                      border: borderFf,
+                      marginBottom: '10px',
+                      boxShadow: shadowFf
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                      <p style={{ margin: 0 }}>
+                        <strong>{fatura.numeroFatura}</strong> - {formatarMes(fatura.mes)}
+                      </p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} title={labelFf}>
+                        <span
+                          className={`ns-fatura-sphere ${pulseFf}`}
+                          style={{ color: corFf, backgroundColor: corFf, boxShadow: `0 0 10px ${corFf}` }}
+                        />
+                        <span style={{ color: '#e5e5e5', fontSize: '13px', fontWeight: 700 }}>{labelFf}</span>
+                      </div>
+                    </div>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.valorFatura || 'Valor'}: {fatura.valor}€</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>
                       {(safeT as any)?.faturaFornecedorLigadoA || 'Ligado a'}: {fatura.clienteNome}
@@ -53965,13 +54044,13 @@ A1;Peça exemplo;10'
                         )
                       </span>
                     </p>
-                    <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.status || 'Status'}: {fatura.status}</p>
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
                       <button className="btn-primary" onClick={() => handleEditFatura(selectedFornecedorForFatura, fatura)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>{safeT?.edit || 'Editar'}</button>
                       <button className="btn-danger" onClick={() => handleDeleteFatura(selectedFornecedorForFatura.id, fatura.id)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>{safeT?.delete || 'Excluir'}</button>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             ) : (
               <p>{safeT?.nenhumaFatura || 'Nenhuma fatura encontrada.'}</p>
@@ -54321,10 +54400,23 @@ A1;Peça exemplo;10'
                             {/* Lista detalhada de faturas */}
                             <div style={{ marginTop: '10px' }}>
                               {faturas.map(fatura => {
-                                const statusColor = fatura.status === 'paga' ? '#00ff00' : 
-                                                   fatura.status === 'vencida' ? '#ff0000' : 
-                                                   (fatura.dataVencimento && new Date(fatura.dataVencimento) < hoje) ? '#ff0000' : '#ffd700'
-                                
+                                const sinalGeral = getSinalPagamentoFaturaFornecedor(fatura)
+                                const ftG = safeT as Record<string, string | undefined>
+                                const labelGeral =
+                                  sinalGeral === 'pago'
+                                    ? (ftG.faturaFornecedorLabelPago || ftG.faturaSignalPago || 'Pago')
+                                    : sinalGeral === 'atrasado'
+                                      ? (ftG.faturaFornecedorLabelDevendo || ftG.faturaSignalAtrasado || 'Devendo')
+                                      : (ftG.faturaFornecedorLabelPorPagar || ftG.faturaSignalPendente || 'Por pagar')
+                                const corGeral = sinalGeral === 'pago' ? '#22c55e' : sinalGeral === 'atrasado' ? '#ef4444' : '#eab308'
+                                const pulseGeral =
+                                  sinalGeral === 'pago'
+                                    ? 'ns-fatura-sphere--pulse-soft'
+                                    : sinalGeral === 'atrasado'
+                                      ? 'ns-fatura-sphere--pulse-fast'
+                                      : 'ns-fatura-sphere--pulse-mid'
+                                const statusColor = corGeral
+
                                 return (
                                   <div key={fatura.id} style={{ 
                                     padding: '10px', 
@@ -54333,7 +54425,7 @@ A1;Peça exemplo;10'
                                     borderRadius: '4px',
                                     borderLeft: `4px solid ${statusColor}`
                                   }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                                       <div>
                                         <strong style={{ color: statusColor }}>{fatura.numeroFatura}</strong>
                                         <span style={{ fontSize: '12px', marginLeft: '10px', opacity: 0.7 }}>
@@ -54345,7 +54437,12 @@ A1;Peça exemplo;10'
                                           </span>
                                         )}
                                       </div>
-                                      <div style={{ display: 'flex', gap: '5px' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span
+                                          className={`ns-fatura-sphere ${pulseGeral}`}
+                                          style={{ color: corGeral, backgroundColor: corGeral, boxShadow: `0 0 10px ${corGeral}` }}
+                                        />
+                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#ddd' }}>{labelGeral}</span>
                                         <button 
                                           className="btn-primary" 
                                           onClick={() => {
