@@ -1378,6 +1378,27 @@ html, body {
     flex-shrink: 0;
     min-width: 280px;
   }
+  /*
+   * Travar a app ao viewport (igual ao .app-compact-layout no telemóvel). Sem isto, o flex
+   * crescia com o conteúdo, a coluna central não tinha caixa limitada e a roda do rato não
+   * rolava o .main-content-area / .tab-inner-scroll — só a barra lateral (com overflow próprio).
+   */
+  .app-layout:not(.app-compact-layout) {
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+  .app-layout:not(.app-compact-layout) > .sidebar {
+    align-self: stretch;
+    min-height: 0;
+    max-height: none;
+    height: auto;
+  }
+  .app-layout:not(.app-compact-layout) > .main-app-column {
+    min-height: 0;
+  }
 }
 
 /* Evitar scroll horizontal em ecrãs pequenos (não forçar width 100% para não quebrar scale no Firefox) */
