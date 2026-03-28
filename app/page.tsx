@@ -9450,6 +9450,92 @@ export default function Dashboard() {
   const clienteFaturaEhDevedor = (clienteId: string) =>
     clientesDevedores.some(cd => cd.clienteId === clienteId && cd.isDevedor && cd.saldoPendente > 0)
 
+  const primeiroTelefoneSoDigitosCliente = (telefones: string): string => {
+    const partes = (telefones || '')
+      .split(/[/,;]+/)
+      .map(p => p.trim())
+      .filter(Boolean)
+    const raw = (partes[0] || telefones || '').replace(/\D/g, '')
+    return raw.slice(0, 18)
+  }
+
+  const digitosWhatsAppFromTelefonesCliente = (telefones: string): string => {
+    const raw = primeiroTelefoneSoDigitosCliente(telefones)
+    if (raw.length === 9 && raw.startsWith('9')) return '351' + raw
+    if (raw.length >= 9) return raw
+    if (raw.length > 0) return '351' + raw
+    return ''
+  }
+
+  const buildCorpoEnvioIbanFaturaPecas = (fatura: FaturaPecas): string => {
+    const fc = fichaCadastral
+    const nome = (fc.nomeEmpresa || 'NONATO SERVICE').trim()
+    const lines: string[] = [
+      'Olá,',
+      '',
+      `Seguem os dados para pagamento da fatura ${fatura.numeroFatura} (${fatura.clienteNome}).`,
+      `Valor total: €${fatura.valorTotal.toFixed(2)} (com IVA).`,
+      '',
+      `${nome} — dados bancários:`,
+    ]
+    if (fc.nif) lines.push(`NIF: ${fc.nif}`)
+    if (fc.nib) lines.push(`NIB: ${fc.nib}`)
+    if (fc.iban) lines.push(`IBAN: ${fc.iban}`)
+    if (fc.swift) lines.push(`SWIFT/BIC: ${fc.swift}`)
+    if (fc.nomeBanco) lines.push(`Banco: ${fc.nomeBanco}`)
+    if (fc.telefone) lines.push(`Contacto: ${fc.telefone}`)
+    if (fc.email) lines.push(`Email: ${fc.email}`)
+    if (fc.morada) lines.push(`Morada: ${fc.morada}`)
+    lines.push('')
+    lines.push('Obrigado.')
+    return lines.join('\n')
+  }
+
+  const marcarContaPagamentoEnviadaFaturaPecas = (faturaId: string) => {
+    createAutoBackupBeforeOperation()
+    const updated = faturasPecas.map(f => (f.id === faturaId ? { ...f, contaPagamentoEnviada: true } : f))
+    setFaturasPecas(updated)
+    saveData('nonato-faturas-pecas', updated)
+    atualizarClientesDevedores(updated)
+  }
+
+  const handleEnvioDadosPagamentoFaturaPecas = (canal: 'email' | 'whatsapp' | 'sms', fatura: FaturaPecas) => {
+    const ft = safeT as Record<string, string | undefined>
+    const cliente = clientes.find(c => c.id === fatura.clienteId)
+    const corpo = buildCorpoEnvioIbanFaturaPecas(fatura)
+    const assunto = encodeURIComponent(`${ft.faturaEnvioAssunto || 'Dados para pagamento'} — ${fatura.numeroFatura}`)
+
+    if (canal === 'email') {
+      const to = (cliente?.email || '').trim()
+      window.open(
+        `mailto:${to}?subject=${assunto}&body=${encodeURIComponent(corpo)}`,
+        '_blank',
+        'noopener,noreferrer'
+      )
+    } else if (canal === 'whatsapp') {
+      const wa = digitosWhatsAppFromTelefonesCliente(cliente?.telefones || '')
+      const url =
+        wa.length >= 11
+          ? `https://wa.me/${wa}?text=${encodeURIComponent(corpo)}`
+          : `https://wa.me/?text=${encodeURIComponent(corpo)}`
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } else {
+      const d = primeiroTelefoneSoDigitosCliente(cliente?.telefones || '')
+      if (d.length >= 9) {
+        try {
+          window.open(`sms:${d}?body=${encodeURIComponent(corpo)}`, '_blank', 'noopener,noreferrer')
+        } catch (_) {
+          void navigator.clipboard?.writeText(corpo)
+          alert(ft.faturaEnvioMsgCopiado || 'Texto copiado. Cole na mensagem SMS.')
+        }
+      } else {
+        void navigator.clipboard?.writeText(corpo)
+        alert(ft.faturaEnvioSemTelefone || 'Defina telefone no cadastro do cliente. Texto copiado para colar na mensagem.')
+      }
+    }
+    marcarContaPagamentoEnviadaFaturaPecas(fatura.id)
+  }
+
   const handleSaveFatura = () => {
     const ft = safeT as Record<string, string | undefined>
     if (!faturaForm.numeroFatura?.trim() || !faturaForm.clienteId) {
@@ -9545,14 +9631,15 @@ export default function Dashboard() {
     alert(safeT?.faturaSalva || 'Fatura salva com sucesso!')
   }
 
-  const atualizarClientesDevedores = () => {
+  const atualizarClientesDevedores = (faturasOverride?: FaturaPecas[]) => {
+    const lista = faturasOverride ?? faturasPecas
     const hoje = new Date()
     hoje.setHours(0, 0, 0, 0)
 
     const devedoresMap = new Map<string, ClienteDevedor>()
 
     // Processar faturas pendentes e vencidas
-    faturasPecas.forEach(fatura => {
+    lista.forEach(fatura => {
       if (fatura.status === 'pendente' || fatura.status === 'vencida') {
         const clienteId = fatura.clienteId
         if (!devedoresMap.has(clienteId)) {
@@ -9594,7 +9681,7 @@ export default function Dashboard() {
     })
 
     // Processar faturas pagas
-    faturasPecas.forEach(fatura => {
+    lista.forEach(fatura => {
       if (fatura.status === 'paga') {
         const clienteId = fatura.clienteId
         if (devedoresMap.has(clienteId)) {
@@ -41876,6 +41963,41 @@ A1;Peça exemplo;10'
                             : sinalPag === 'atrasado'
                               ? 'ns-fatura-sphere--pulse-fast'
                               : 'ns-fatura-sphere--pulse-mid'
+                      const faturaPecasToolbarChipBase: React.CSSProperties = {
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: '32px',
+                        padding: '0 12px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        lineHeight: 1.25,
+                        boxSizing: 'border-box',
+                        whiteSpace: 'nowrap',
+                      }
+                      const faturaPecasToolbarEditarBtn: React.CSSProperties = {
+                        ...faturaPecasToolbarChipBase,
+                        border: '1px solid rgba(0, 255, 0, 0.5)',
+                        backgroundColor: 'rgba(0, 55, 0, 0.4)',
+                        color: '#b8ffc8',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                      }
+                      const faturaPecasAcaoBtnBase: React.CSSProperties = {
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: '32px',
+                        padding: '0 14px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        lineHeight: 1.25,
+                        boxSizing: 'border-box',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                      }
                       return (
                       <div
                         key={fatura.id}
@@ -41939,31 +42061,32 @@ A1;Peça exemplo;10'
                             )}
                           </div>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', justifyContent: 'flex-end' }}>
-                            <span style={{
-                              padding: '4px 10px',
-                              borderRadius: '4px',
-                              fontSize: '11px',
-                              fontWeight: '600',
-                              backgroundColor: fatura.contaPagamentoEnviada ? 'rgba(0, 255, 0, 0.15)' : 'rgba(255, 180, 0, 0.15)',
-                              border: `1px solid ${fatura.contaPagamentoEnviada ? 'rgba(0, 255, 0, 0.45)' : 'rgba(255, 200, 0, 0.45)'}`,
-                              color: fatura.contaPagamentoEnviada ? '#88ff88' : '#ffcc66'
-                            }}>
+                            {fatura.arquivoAnexo && (
+                            <span
+                              style={{
+                                ...faturaPecasToolbarChipBase,
+                                backgroundColor: fatura.contaPagamentoEnviada ? 'rgba(0, 255, 0, 0.15)' : 'rgba(255, 180, 0, 0.15)',
+                                border: `1px solid ${fatura.contaPagamentoEnviada ? 'rgba(0, 255, 0, 0.45)' : 'rgba(255, 200, 0, 0.45)'}`,
+                                color: fatura.contaPagamentoEnviada ? '#88ff88' : '#ffcc66',
+                              }}
+                            >
                               {fatura.contaPagamentoEnviada ? (safeT as any)?.faturaBadgeContaEnviada || 'IBAN enviado' : (safeT as any)?.faturaBadgeContaPendente || 'IBAN por enviar'}
                             </span>
-                            <span style={{
-                              padding: '4px 12px',
-                              backgroundColor: sinalPag === 'paga' ? 'rgba(0, 255, 0, 0.2)' : sinalPag === 'atrasado' ? 'rgba(255, 0, 0, 0.22)' : sinalPag === 'cancelada' ? 'rgba(107, 114, 128, 0.25)' : 'rgba(255, 255, 0, 0.2)',
-                              border: `1px solid ${sinalPag === 'paga' ? 'rgba(0, 255, 0, 0.5)' : sinalPag === 'atrasado' ? 'rgba(255, 0, 0, 0.55)' : sinalPag === 'cancelada' ? 'rgba(156, 163, 175, 0.5)' : 'rgba(255, 255, 0, 0.5)'}`,
-                              borderRadius: '4px',
-                              color: sinalPag === 'paga' ? '#00ff00' : sinalPag === 'atrasado' ? '#ff6666' : sinalPag === 'cancelada' ? '#9ca3af' : '#ffff00',
-                              fontSize: '12px',
-                              textTransform: 'uppercase'
-                            }}>
+                            )}
+                            <span
+                              style={{
+                                ...faturaPecasToolbarChipBase,
+                                backgroundColor: sinalPag === 'paga' ? 'rgba(0, 255, 0, 0.2)' : sinalPag === 'atrasado' ? 'rgba(255, 0, 0, 0.22)' : sinalPag === 'cancelada' ? 'rgba(107, 114, 128, 0.25)' : 'rgba(255, 255, 0, 0.2)',
+                                border: `1px solid ${sinalPag === 'paga' ? 'rgba(0, 255, 0, 0.5)' : sinalPag === 'atrasado' ? 'rgba(255, 0, 0, 0.55)' : sinalPag === 'cancelada' ? 'rgba(156, 163, 175, 0.5)' : 'rgba(255, 255, 0, 0.5)'}`,
+                                color: sinalPag === 'paga' ? '#00ff00' : sinalPag === 'atrasado' ? '#ff6666' : sinalPag === 'cancelada' ? '#9ca3af' : '#ffff00',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.04em',
+                              }}
+                            >
                               {labelSinal}
                             </span>
                             <button
                               type="button"
-                              className="btn-primary"
                               onClick={() => {
                                 setEditingFatura(fatura)
                                 setFaturaForm({
@@ -41992,7 +42115,7 @@ A1;Peça exemplo;10'
                                 })
                                 setShowFaturaForm(true)
                               }}
-                              style={{ padding: '6px 14px', fontSize: '12px' }}
+                              style={faturaPecasToolbarEditarBtn}
                             >
                               {safeT?.edit || 'Editar'}
                             </button>
@@ -42019,12 +42142,64 @@ A1;Peça exemplo;10'
                           <div style={{ marginTop: '12px' }}>
                             <button
                               type="button"
-                              className="btn-primary"
                               onClick={() => { try { window.open(fatura.arquivoAnexo, '_blank', 'noopener,noreferrer') } catch (_) {} }}
-                              style={{ padding: '8px 14px', fontSize: '13px' }}
+                              style={{
+                                ...faturaPecasAcaoBtnBase,
+                                border: '1px solid rgba(0, 255, 0, 0.45)',
+                                backgroundColor: 'rgba(0, 50, 0, 0.35)',
+                                color: '#c8ffd4',
+                              }}
                             >
                               {(safeT as any)?.faturaAbrirAnexo || 'Ver anexo'}{fatura.nomeArquivoOriginal ? ` (${fatura.nomeArquivoOriginal})` : ''}
                             </button>
+                            {!fatura.contaPagamentoEnviada && (
+                              <div style={{ marginTop: '14px', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255, 200, 0, 0.35)', backgroundColor: 'rgba(40, 32, 0, 0.35)' }}>
+                                <p style={{ color: 'rgba(255,255,220,0.95)', fontSize: '12px', margin: '0 0 10px 0', lineHeight: 1.45 }}>
+                                  {(safeT as any)?.faturaEnvioIbanTitulo || 'Enviar dados bancários (Cadastro NONATO SERVICE) ao cliente:'}
+                                </p>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleEnvioDadosPagamentoFaturaPecas('email', fatura)}
+                                    style={{
+                                      ...faturaPecasAcaoBtnBase,
+                                      border: '1px solid rgba(0, 150, 255, 0.55)',
+                                      backgroundColor: 'rgba(0, 150, 255, 0.18)',
+                                      color: '#66b3ff',
+                                    }}
+                                  >
+                                    ✉ {(safeT as any)?.faturaEnvioEmail || 'E-mail'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleEnvioDadosPagamentoFaturaPecas('whatsapp', fatura)}
+                                    style={{
+                                      ...faturaPecasAcaoBtnBase,
+                                      border: '1px solid rgba(37, 211, 102, 0.55)',
+                                      backgroundColor: 'rgba(37, 211, 102, 0.15)',
+                                      color: '#25d366',
+                                    }}
+                                  >
+                                    {(safeT as any)?.faturaEnvioWhats || 'WhatsApp'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleEnvioDadosPagamentoFaturaPecas('sms', fatura)}
+                                    style={{
+                                      ...faturaPecasAcaoBtnBase,
+                                      border: '1px solid rgba(250, 204, 21, 0.5)',
+                                      backgroundColor: 'rgba(250, 204, 21, 0.12)',
+                                      color: '#facc15',
+                                    }}
+                                  >
+                                    {(safeT as any)?.faturaEnvioMsg || 'Msg'}
+                                  </button>
+                                </div>
+                                <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '10px', margin: '10px 0 0 0' }}>
+                                  {(safeT as any)?.faturaEnvioIbanNota || 'Os dados vêm de «Cadastro da NONATO SERVICE». Ao usar um canal, a fatura fica marcada como «IBAN enviado».'}
+                                </p>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
