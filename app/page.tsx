@@ -9391,6 +9391,23 @@ export default function Dashboard() {
     setFaturaForm(resetFaturaFormState())
   }
 
+  const getSinalPagamentoFaturaPecas = (f: FaturaPecas): 'pago' | 'pendente' | 'atrasado' | 'cancelada' => {
+    const hoje = new Date()
+    hoje.setHours(0, 0, 0, 0)
+    if (f.status === 'paga') return 'pago'
+    if (f.status === 'cancelada') return 'cancelada'
+    if (f.status === 'vencida') return 'atrasado'
+    if (f.dataVencimento) {
+      const dv = new Date(f.dataVencimento)
+      dv.setHours(0, 0, 0, 0)
+      if (dv < hoje) return 'atrasado'
+    }
+    return 'pendente'
+  }
+
+  const clienteFaturaEhDevedor = (clienteId: string) =>
+    clientesDevedores.some(cd => cd.clienteId === clienteId && cd.isDevedor && cd.saldoPendente > 0)
+
   const handleSaveFatura = () => {
     const ft = safeT as Record<string, string | undefined>
     if (!faturaForm.numeroFatura?.trim() || !faturaForm.clienteId) {
@@ -41789,21 +41806,92 @@ A1;Peça exemplo;10'
 
                   {/* Lista de Faturas — padrão Visualizar Equipamento (card #2a2a2a, borda 1px verde) */}
                   <div style={{ display: 'grid', gap: '15px' }}>
-                    {faturasPecas.map((fatura) => (
+                    {faturasPecas.map((fatura) => {
+                      const sinalPag = getSinalPagamentoFaturaPecas(fatura)
+                      const devedorCliente = clienteFaturaEhDevedor(fatura.clienteId)
+                      const ftSig = safeT as Record<string, string | undefined>
+                      const labelSinal =
+                        sinalPag === 'pago'
+                          ? (ftSig.faturaSignalPago || 'Pago')
+                          : sinalPag === 'cancelada'
+                            ? (ftSig.faturaSignalCancelada || 'Cancelada')
+                            : sinalPag === 'atrasado'
+                              ? (ftSig.faturaSignalAtrasado || 'Atrasado')
+                              : (ftSig.faturaSignalPendente || 'Pendente')
+                      const corSinal =
+                        sinalPag === 'pago'
+                          ? '#22c55e'
+                          : sinalPag === 'cancelada'
+                            ? '#6b7280'
+                            : sinalPag === 'atrasado'
+                              ? '#ef4444'
+                              : '#eab308'
+                      const pulseSinal =
+                        sinalPag === 'cancelada'
+                          ? ''
+                          : sinalPag === 'pago'
+                            ? 'ns-fatura-sphere--pulse-soft'
+                            : sinalPag === 'atrasado'
+                              ? 'ns-fatura-sphere--pulse-fast'
+                              : 'ns-fatura-sphere--pulse-mid'
+                      return (
                       <div
                         key={fatura.id}
                         style={{
                           padding: '20px',
                           backgroundColor: '#222222',
-                          border: '1px solid rgba(0, 255, 0, 0.2)',
-                          borderRadius: '8px'
+                          border:
+                            sinalPag === 'atrasado'
+                              ? '1px solid rgba(239, 68, 68, 0.5)'
+                              : '1px solid rgba(0, 255, 0, 0.2)',
+                          borderRadius: '8px',
+                          boxShadow:
+                            sinalPag === 'atrasado'
+                              ? '0 0 22px rgba(239, 68, 68, 0.18), inset 0 0 0 1px rgba(239, 68, 68, 0.08)'
+                              : devedorCliente
+                                ? '0 0 18px rgba(192, 38, 211, 0.12)'
+                                : undefined
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px', gap: '12px', flexWrap: 'wrap' }}>
                           <div>
                             <h3 style={{ color: '#00ff00', margin: 0, fontSize: '18px' }}>{fatura.numeroFatura}</h3>
+                            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginTop: '10px' }}>
+                              <div
+                                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                                title={labelSinal}
+                              >
+                                <span
+                                  className={pulseSinal ? `ns-fatura-sphere ${pulseSinal}` : 'ns-fatura-sphere'}
+                                  style={{
+                                    color: corSinal,
+                                    backgroundColor: corSinal,
+                                    boxShadow: `0 0 10px ${corSinal}`
+                                  }}
+                                />
+                                <span style={{ color: '#e5e5e5', fontSize: '13px', fontWeight: 700 }}>{labelSinal}</span>
+                              </div>
+                              {devedorCliente && (
+                                <div
+                                  style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                                  title={ftSig.faturaSignalDevedor || 'Cliente com saldo em dívida'}
+                                >
+                                  <span
+                                    className="ns-fatura-sphere ns-fatura-sphere--pulse-fast"
+                                    style={{
+                                      color: '#c026d3',
+                                      backgroundColor: '#c026d3',
+                                      boxShadow: '0 0 12px rgba(192, 38, 211, 0.95)'
+                                    }}
+                                  />
+                                  <span style={{ color: '#e879f9', fontSize: '13px', fontWeight: 700 }}>
+                                    {ftSig.faturaSignalDevedor || 'Devedor'}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                             {fatura.numeroOS && (
-                              <p style={{ color: '#ccc', margin: '5px 0', fontSize: '14px' }}>
+                              <p style={{ color: '#ccc', margin: '8px 0 0', fontSize: '14px' }}>
                                 {safeT?.ordemServico || 'OS'}: {fatura.numeroOS}
                               </p>
                             )}
@@ -41822,14 +41910,14 @@ A1;Peça exemplo;10'
                             </span>
                             <span style={{
                               padding: '4px 12px',
-                              backgroundColor: fatura.status === 'paga' ? 'rgba(0, 255, 0, 0.2)' : fatura.status === 'vencida' ? 'rgba(255, 0, 0, 0.2)' : 'rgba(255, 255, 0, 0.2)',
-                              border: `1px solid ${fatura.status === 'paga' ? 'rgba(0, 255, 0, 0.5)' : fatura.status === 'vencida' ? 'rgba(255, 0, 0, 0.5)' : 'rgba(255, 255, 0, 0.5)'}`,
+                              backgroundColor: sinalPag === 'paga' ? 'rgba(0, 255, 0, 0.2)' : sinalPag === 'atrasado' ? 'rgba(255, 0, 0, 0.22)' : sinalPag === 'cancelada' ? 'rgba(107, 114, 128, 0.25)' : 'rgba(255, 255, 0, 0.2)',
+                              border: `1px solid ${sinalPag === 'paga' ? 'rgba(0, 255, 0, 0.5)' : sinalPag === 'atrasado' ? 'rgba(255, 0, 0, 0.55)' : sinalPag === 'cancelada' ? 'rgba(156, 163, 175, 0.5)' : 'rgba(255, 255, 0, 0.5)'}`,
                               borderRadius: '4px',
-                              color: fatura.status === 'paga' ? '#00ff00' : fatura.status === 'vencida' ? '#ff0000' : '#ffff00',
+                              color: sinalPag === 'paga' ? '#00ff00' : sinalPag === 'atrasado' ? '#ff6666' : sinalPag === 'cancelada' ? '#9ca3af' : '#ffff00',
                               fontSize: '12px',
                               textTransform: 'uppercase'
                             }}>
-                              {fatura.status}
+                              {labelSinal}
                             </span>
                             <button
                               type="button"
@@ -41898,7 +41986,8 @@ A1;Peça exemplo;10'
                           </div>
                         )}
                       </div>
-                    ))}
+                    );
+                    })}
                     {faturasPecas.length === 0 && (
                       <div style={{ textAlign: 'center', padding: '40px', color: '#ccc' }}>
                         {safeT?.nenhumaFatura || 'Nenhuma fatura cadastrada'}
