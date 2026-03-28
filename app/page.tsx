@@ -3258,6 +3258,8 @@ export default function Dashboard() {
   const [protocolosServico, setProtocolosServico] = useState<ProtocoloServico[]>([])
   const [editingProtocoloServicoId, setEditingProtocoloServicoId] = useState<string | null>(null)
   const [protocoloServicoForm, setProtocoloServicoForm] = useState<{ clienteId: string; equipamentoNumeroSerie: string; textoInicial: string; blocos: ProtocoloBloco[]; pecasTrocadasCodigos: string[]; pdfModelo: number }>({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
+  /** Filtro da lista na área Protocolos de Serviço (sem alterar dados guardados) */
+  const [protocoloServicoFiltroLista, setProtocoloServicoFiltroLista] = useState('')
   const PROTOCOLO_SERVICO_DRAFT_KEY = 'nonato-protocolo-servico-draft'
   const [relatorioServicoForm, setRelatorioServicoForm] = useState<RelatorioServico>({
     id: '',
@@ -23361,137 +23363,299 @@ onKeyPress={(e) => {
           window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank')
         }
         const mostrarFormulario = editingProtocoloServicoId !== null
+        const filtroLista = protocoloServicoFiltroLista.trim().toLowerCase()
+        const protocolosOrdenados = protocolosServico.slice().reverse()
+        const protocolosFiltrados = filtroLista
+          ? protocolosOrdenados.filter(p => {
+              const cl = clientes.find(c => c.id === p.clienteId)
+              const eq = cl?.equipamentos?.find(e => e.numeroSerie === p.equipamentoNumeroSerie)
+              const hay = [cl?.nomeEmpresa, eq?.tipoEquipamento, eq?.modelo, eq?.numeroSerie, eq?.marca].filter(Boolean).join(' ').toLowerCase()
+              return hay.includes(filtroLista)
+            })
+          : protocolosOrdenados
+        const inputBase = {
+          width: '100%',
+          padding: '11px 14px',
+          backgroundColor: '#0d0d0d',
+          color: '#fff',
+          border: '1px solid rgba(0, 255, 136, 0.28)',
+          borderRadius: '10px',
+          fontSize: '14px',
+          outline: 'none' as const,
+        }
+        const secCard = {
+          marginBottom: '22px',
+          padding: '22px 22px 20px',
+          borderRadius: '14px',
+          border: '1px solid rgba(0, 255, 136, 0.22)',
+          background: 'linear-gradient(165deg, rgba(18, 22, 20, 0.95) 0%, rgba(10, 12, 11, 0.98) 100%)',
+          boxShadow: '0 4px 28px rgba(0, 0, 0, 0.35)',
+        }
+        const secTitle = {
+          margin: '0 0 16px',
+          fontSize: '13px',
+          color: '#00ff88',
+          fontWeight: 700 as const,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase' as const,
+          borderBottom: '1px solid rgba(0, 255, 136, 0.15)',
+          paddingBottom: '10px',
+        }
         return (
-          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }} className="tab-content-wrapper">
+          <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto' }} className="tab-content-wrapper">
             <div className="mobile-sticky-toolbar">
               <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>↶ {safeT?.voltar || 'Voltar'}</button>
               <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
             </div>
-            <div style={{ marginBottom: '24px', padding: '24px', background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)', borderRadius: '20px', border: '2px solid rgba(0, 255, 0, 0.3)', boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+            <div style={{ marginBottom: '22px', padding: '22px 26px', background: 'linear-gradient(135deg, rgba(0, 255, 136, 0.07) 0%, rgba(0, 0, 0, 0.88) 100%)', borderRadius: '18px', border: '1px solid rgba(0, 255, 136, 0.28)', boxShadow: '0 10px 40px rgba(0, 0, 0, 0.45)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flex: '1 1 280px' }}>
                   <LogoComponent size="small" />
-                </div>
-                <div style={{ textAlign: 'center', flex: 1, minWidth: '200px' }}>
-                  <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 'bold', color: '#00ff00', letterSpacing: '2px' }}>{tituloProto}</h1>
-                  <p style={{ margin: '8px 0 0', fontSize: '14px', color: '#ccc' }}>{descProto}</p>
+                  <div>
+                    <h1 style={{ margin: 0, fontSize: 'clamp(20px, 2.5vw, 26px)', fontWeight: 800, color: '#00ff88', letterSpacing: '0.06em' }}>{tituloProto}</h1>
+                    <p style={{ margin: '8px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.55, maxWidth: '520px' }}>{descProto}</p>
+                  </div>
                 </div>
                 {!mostrarFormulario && (
-                  <button className="btn-primary" onClick={() => { setEditingProtocoloServicoId('new'); setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 }) }} style={{ padding: '10px 20px' }}>
-                    ➕ {protoT?.protocolosServicoNovo || 'Novo protocolo'}
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => {
+                      setEditingProtocoloServicoId('new')
+                      setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
+                    }}
+                    style={{ padding: '12px 22px', fontWeight: 700, borderRadius: '10px', whiteSpace: 'nowrap' }}
+                  >
+                    {protoT?.protocolosServicoNovo || 'Novo protocolo'}
                   </button>
                 )}
               </div>
             </div>
 
             {mostrarFormulario ? (
-              <div style={{ padding: '20px', backgroundColor: '#141414', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                <div style={{ display: 'grid', gap: '16px', marginBottom: '20px' }}>
-                  <label style={{ display: 'block', color: '#ccc', fontSize: '13px' }}>{protoT?.protocolosServicoCliente || 'Cliente'}</label>
-                  <select value={protocoloServicoForm.clienteId} onChange={(e) => { const v = e.target.value; setProtocoloServicoForm(prev => ({ ...prev, clienteId: v, equipamentoNumeroSerie: '' })) }} style={{ width: '100%', maxWidth: '400px', padding: '10px 12px', backgroundColor: '#0a0a0a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px' }}>
-                    <option value="">— {protoT?.protocolosServicoSelecionarCliente || 'Selecionar cliente'}</option>
-                    {clientes.map(c => <option key={c.id} value={c.id}>{c.nomeEmpresa}</option>)}
-                  </select>
-                  <label style={{ display: 'block', color: '#ccc', fontSize: '13px' }}>{protoT?.protocolosServicoEquipamento || 'Equipamento'}</label>
-                  <select value={protocoloServicoForm.equipamentoNumeroSerie} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, equipamentoNumeroSerie: e.target.value }))} style={{ width: '100%', maxWidth: '400px', padding: '10px 12px', backgroundColor: '#0a0a0a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px' }} disabled={!clienteProto?.equipamentos?.length}>
-                    <option value="">— {protoT?.protocolosServicoSelecionarEquipamento || 'Selecionar equipamento'}</option>
-                    {(clienteProto?.equipamentos || []).map(eq => <option key={eq.numeroSerie} value={eq.numeroSerie}>{eq.tipoEquipamento} — {eq.modelo} ({eq.numeroSerie})</option>)}
-                  </select>
-                  <label style={{ display: 'block', color: '#ccc', fontSize: '13px' }}>{protoT?.protocolosServicoModeloPDF || 'Modelo do PDF'}</label>
-                  <select value={String(protocoloServicoForm.pdfModelo)} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, pdfModelo: Math.min(6, Math.max(1, parseInt(e.target.value, 10) || 1)) }))} style={{ width: '100%', maxWidth: '520px', padding: '10px 12px', backgroundColor: '#0a0a0a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px' }}>
-                    {[1, 2, 3, 4, 5, 6].map((n) => (
-                      <option key={n} value={n}>{(protoT as Record<string, string>)?.[`protocolosServicoPdfModelo${n}`] || `Modelo ${n}`}</option>
-                    ))}
-                  </select>
-                  <label style={{ display: 'block', color: '#ccc', fontSize: '13px' }}>{protoT?.protocolosServicoTextoInicial || 'Texto inicial'}</label>
-                  <textarea value={protocoloServicoForm.textoInicial} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, textoInicial: e.target.value }))} placeholder={protoT?.protocolosServicoTextoInicialPlaceholder || 'Texto introdutório do protocolo...'} rows={4} style={{ width: '100%', maxWidth: '600px', padding: '12px', backgroundColor: '#0a0a0a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', resize: 'vertical' }} />
-                </div>
-
-                {protocoloServicoForm.blocos.map((bloco, idx) => (
-                  <div key={idx} style={{ marginBottom: '20px', padding: '16px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                      <span style={{ color: '#00ff00', fontSize: '13px' }}>{bloco.tipo === 'texto' ? (protoT?.protocolosServicoBlocoTexto || 'Bloco de texto') : (protoT?.protocolosServicoBlocoImagens || 'Bloco de imagens (máx. 2)')}</span>
-                      <button type="button" className="btn-danger" style={{ padding: '6px 10px', fontSize: '12px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.filter((_, i) => i !== idx) }))}>{protoT?.protocolosServicoRemoverBloco || 'Remover'}</button>
-                    </div>
-                    {bloco.tipo === 'texto' ? (
-                      <textarea value={bloco.texto || ''} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, i) => i === idx ? { ...b, texto: e.target.value } : b) }))} rows={3} style={{ width: '100%', padding: '10px', backgroundColor: '#0a0a0a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.2)', borderRadius: '6px', resize: 'vertical' }} />
-                    ) : (
-                      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                        {(bloco.imagens || []).slice(0, 2).map((src, i) => (
-                          <div key={i} style={{ position: 'relative' }}>
-                            <img src={src} alt="" style={{ maxWidth: '200px', maxHeight: '150px', objectFit: 'contain', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.3)' }} />
-                            <button type="button" style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(200,0,0,0.9)', color: '#fff', border: 'none', borderRadius: '4px', width: '24px', height: '24px', cursor: 'pointer', fontSize: '14px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, bi) => bi === idx ? { ...b, imagens: (b.imagens || []).filter((_, j) => j !== i) } : b) }))}>×</button>
-                          </div>
-                        ))}
-                        {(bloco.imagens || []).length < 2 && (
-                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                            <label style={{ padding: '10px 14px', border: '2px solid rgba(0,255,0,0.4)', borderRadius: '8px', cursor: 'pointer', color: '#00ff00', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                              📁 {protoT?.protocolosServicoBuscarImagem || 'Buscar imagem'}
-                              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, bi) => bi === idx ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b) })); ev.target.value = '' }; r.readAsDataURL(f) }} />
-                            </label>
-                            <label style={{ padding: '10px 14px', border: '2px solid rgba(0,255,0,0.4)', borderRadius: '8px', cursor: 'pointer', color: '#00ff00', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                              📷 {protoT?.protocolosServicoTirarFoto || 'Tirar foto'}
-                              <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, bi) => bi === idx ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b) })); ev.target.value = '' }; r.readAsDataURL(f) }} />
-                            </label>
-                          </div>
-                        )}
-                      </div>
-                    )}
+              <div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '18px' }}>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: '18px', color: '#fff', fontWeight: 700 }}>
+                      {editingProtocoloServicoId === 'new'
+                        ? protoT?.protocolosServicoFormTituloNovo || protoT?.protocolosServicoNovo || 'Novo protocolo de serviço'
+                        : protoT?.protocolosServicoFormTituloEditar || protoT?.protocolosServicoEditar || 'Editar protocolo'}
+                    </h2>
+                    <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#888' }}>{protoT?.protocolosServicoFormSub || 'Preencha por secções. Guarde ao final para ficar na lista.'}</p>
                   </div>
-                ))}
-                <div style={{ marginBottom: '16px' }}>
-                  <button type="button" className="btn-primary" style={{ marginRight: '8px', marginBottom: '8px', padding: '8px 14px', fontSize: '13px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: [...prev.blocos, { tipo: 'texto', texto: '' }] }))}>➕ {protoT?.protocolosServicoAdicionarTexto || 'Adicionar bloco de texto'}</button>
-                  <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '13px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: [...prev.blocos, { tipo: 'imagens', imagens: [] }] }))}>🖼️ {protoT?.protocolosServicoAdicionarImagens || 'Adicionar bloco de imagens'}</button>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.35)', color: '#ccc', padding: '10px 18px' }}
+                    onClick={() => {
+                      if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY)
+                      setEditingProtocoloServicoId(null)
+                      setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
+                    }}
+                  >
+                    ← {protoT?.protocolosServicoVoltarLista || 'Voltar à lista'}
+                  </button>
                 </div>
 
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', color: '#ccc', fontSize: '13px', marginBottom: '8px' }}>{protoT?.protocolosServicoPecasTrocadas || 'Peças trocadas (códigos)'}</label>
-                  {protocoloServicoForm.pecasTrocadasCodigos.map((cod, i) => (
-                    <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
-                      <input type="text" value={cod} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, pecasTrocadasCodigos: prev.pecasTrocadasCodigos.map((c, j) => j === i ? e.target.value : c) }))} placeholder={protoT?.protocolosServicoCodigoPeca || 'Código da peça'} style={{ width: '200px', padding: '8px 12px', backgroundColor: '#0a0a0a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} />
-                      <button type="button" className="btn-danger" style={{ padding: '6px 10px', fontSize: '12px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, pecasTrocadasCodigos: prev.pecasTrocadasCodigos.filter((_, j) => j !== i) }))}>{safeT?.delete || 'Excluir'}</button>
+                <div style={secCard}>
+                  <h3 style={secTitle}>{protoT?.protocolosServicoSecIdentificacao || 'Identificação'}</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '18px' }}>
+                    <div>
+                      <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>{protoT?.protocolosServicoCliente || 'Cliente'}</label>
+                      <select value={protocoloServicoForm.clienteId} onChange={(e) => { const v = e.target.value; setProtocoloServicoForm(prev => ({ ...prev, clienteId: v, equipamentoNumeroSerie: '' })) }} style={inputBase}>
+                        <option value="">— {protoT?.protocolosServicoSelecionarCliente || 'Selecionar cliente'}</option>
+                        {clientes.map(c => <option key={c.id} value={c.id}>{c.nomeEmpresa}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>{protoT?.protocolosServicoEquipamento || 'Equipamento'}</label>
+                      <select value={protocoloServicoForm.equipamentoNumeroSerie} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, equipamentoNumeroSerie: e.target.value }))} style={{ ...inputBase, opacity: clienteProto?.equipamentos?.length ? 1 : 0.6 }} disabled={!clienteProto?.equipamentos?.length}>
+                        <option value="">— {protoT?.protocolosServicoSelecionarEquipamento || 'Selecionar equipamento'}</option>
+                        {(clienteProto?.equipamentos || []).map(eq => <option key={eq.numeroSerie} value={eq.numeroSerie}>{eq.tipoEquipamento} — {eq.modelo} ({eq.numeroSerie})</option>)}
+                      </select>
+                    </div>
+                    <div style={{ gridColumn: '1 / -1', maxWidth: '560px' }}>
+                      <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>{protoT?.protocolosServicoSecPdf || 'Modelo do PDF'}</label>
+                      <select value={String(protocoloServicoForm.pdfModelo)} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, pdfModelo: Math.min(6, Math.max(1, parseInt(e.target.value, 10) || 1)) }))} style={inputBase}>
+                        {[1, 2, 3, 4, 5, 6].map((n) => (
+                          <option key={n} value={n}>{(protoT as Record<string, string>)?.[`protocolosServicoPdfModelo${n}`] || `Modelo ${n}`}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={secCard}>
+                  <h3 style={secTitle}>{protoT?.protocolosServicoSecConteudo || 'Relatório visual (texto e imagens)'}</h3>
+                  <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>{protoT?.protocolosServicoTextoInicial || 'Texto inicial'}</label>
+                  <textarea value={protocoloServicoForm.textoInicial} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, textoInicial: e.target.value }))} placeholder={protoT?.protocolosServicoTextoInicialPlaceholder || 'Texto introdutório do protocolo...'} rows={4} style={{ ...inputBase, resize: 'vertical' as const, marginBottom: '20px', maxWidth: '100%' }} />
+                  {protocoloServicoForm.blocos.map((bloco, idx) => (
+                    <div key={idx} style={{ marginBottom: '16px', padding: '16px 18px', backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: '12px', border: '1px solid rgba(0, 255, 136, 0.14)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                        <span style={{ color: '#7dffb3', fontSize: '12px', fontWeight: 700 }}>
+                          #{idx + 1} · {bloco.tipo === 'texto' ? (protoT?.protocolosServicoBlocoTexto || 'Bloco de texto') : (protoT?.protocolosServicoBlocoImagens || 'Bloco de imagens (máx. 2)')}
+                        </span>
+                        <button type="button" className="btn-danger" style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.filter((_, i) => i !== idx) }))}>{protoT?.protocolosServicoRemoverBloco || 'Remover'}</button>
+                      </div>
+                      {bloco.tipo === 'texto' ? (
+                        <textarea value={bloco.texto || ''} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, i) => i === idx ? { ...b, texto: e.target.value } : b) }))} rows={3} style={{ ...inputBase, resize: 'vertical' as const }} />
+                      ) : (
+                        <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                          {(bloco.imagens || []).slice(0, 2).map((src, i) => (
+                            <div key={i} style={{ position: 'relative' }}>
+                              <img src={src} alt="" style={{ maxWidth: '220px', maxHeight: '165px', objectFit: 'contain', borderRadius: '10px', border: '1px solid rgba(0,255,136,0.25)', background: '#111' }} />
+                              <button type="button" aria-label="Remover imagem" style={{ position: 'absolute', top: '6px', right: '6px', background: 'rgba(180,30,30,0.95)', color: '#fff', border: 'none', borderRadius: '6px', width: '28px', height: '28px', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, bi) => bi === idx ? { ...b, imagens: (b.imagens || []).filter((_, j) => j !== i) } : b) }))}>×</button>
+                            </div>
+                          ))}
+                          {(bloco.imagens || []).length < 2 && (
+                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                              <label style={{ padding: '10px 16px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)' }}>
+                                {protoT?.protocolosServicoBuscarImagem || 'Buscar imagem'}
+                                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, bi) => bi === idx ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b) })); ev.target.value = '' }; r.readAsDataURL(f) }} />
+                              </label>
+                              <label style={{ padding: '10px 16px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)' }}>
+                                {protoT?.protocolosServicoTirarFoto || 'Tirar foto'}
+                                <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, bi) => bi === idx ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b) })); ev.target.value = '' }; r.readAsDataURL(f) }} />
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))}
-                  <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '13px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, pecasTrocadasCodigos: [...prev.pecasTrocadasCodigos, ''] }))}>➕ {protoT?.protocolosServicoAdicionarPeca || 'Adicionar código de peça'}</button>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '8px' }}>
+                    <button type="button" className="btn-primary" style={{ padding: '10px 16px', fontSize: '13px', borderRadius: '10px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: [...prev.blocos, { tipo: 'texto', texto: '' }] }))}>
+                      + {protoT?.protocolosServicoAdicionarTexto || 'Bloco de texto'}
+                    </button>
+                    <button type="button" className="btn-primary" style={{ padding: '10px 16px', fontSize: '13px', borderRadius: '10px', backgroundColor: 'rgba(0, 180, 120, 0.15)', borderColor: 'rgba(0, 200, 140, 0.45)' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: [...prev.blocos, { tipo: 'imagens', imagens: [] }] }))}>
+                      + {protoT?.protocolosServicoAdicionarImagens || 'Bloco de imagens'}
+                    </button>
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '24px' }}>
-                  <button className="btn-primary" onClick={() => {
-                    if (!protocoloServicoForm.clienteId || !protocoloServicoForm.equipamentoNumeroSerie) { alert(protoT?.protocolosServicoSelecionarClienteEquipamento || 'Selecione o cliente e o equipamento.'); return }
-                    const dataCriacao = editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? (protocolosServico.find(pr => pr.id === editingProtocoloServicoId)?.dataCriacao || new Date().toISOString()) : new Date().toISOString()
-                    const novo: ProtocoloServico = { id: editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? editingProtocoloServicoId : `proto-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, clienteId: protocoloServicoForm.clienteId, equipamentoNumeroSerie: protocoloServicoForm.equipamentoNumeroSerie, textoInicial: protocoloServicoForm.textoInicial, blocos: protocoloServicoForm.blocos, pecasTrocadasCodigos: protocoloServicoForm.pecasTrocadasCodigos.filter(c => c.trim()), dataCriacao, pdfModelo: Math.min(6, Math.max(1, Number(protocoloServicoForm.pdfModelo) || 1)) }
-                    const next = editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? protocolosServico.map(p => p.id === novo.id ? novo : p) : [...protocolosServico, novo]
-                    setProtocolosServico(next)
-                    saveData('nonato-protocolos-servico', next)
-                    if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY)
-                    setEditingProtocoloServicoId(null)
-                    setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
-                  }} style={{ padding: '10px 20px' }}>💾 {protoT?.protocolosServicoGuardar || 'Guardar'}</button>
-                  <button type="button" className="btn-primary" style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.4)' }} onClick={() => { if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY); setEditingProtocoloServicoId(null); setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 }) }}>{protoT?.protocolosServicoCancelar || 'Cancelar'}</button>
+                <div style={secCard}>
+                  <h3 style={secTitle}>{protoT?.protocolosServicoSecPecas || 'Peças substituídas'}</h3>
+                  <p style={{ margin: '0 0 14px', fontSize: '12px', color: '#777' }}>{protoT?.protocolosServicoSecPecasHint || 'Códigos alinhados à biblioteca de peças (opcional).'}</p>
+                  {protocoloServicoForm.pecasTrocadasCodigos.map((cod, i) => (
+                    <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap' }}>
+                      <input type="text" value={cod} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, pecasTrocadasCodigos: prev.pecasTrocadasCodigos.map((c, j) => j === i ? e.target.value : c) }))} placeholder={protoT?.protocolosServicoCodigoPeca || 'Código da peça'} style={{ ...inputBase, maxWidth: '280px' }} />
+                      <button type="button" className="btn-danger" style={{ padding: '8px 12px', fontSize: '12px', borderRadius: '8px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, pecasTrocadasCodigos: prev.pecasTrocadasCodigos.filter((_, j) => j !== i) }))}>{safeT?.delete || 'Excluir'}</button>
+                    </div>
+                  ))}
+                  <button type="button" className="btn-primary" style={{ padding: '10px 16px', fontSize: '13px', borderRadius: '10px', marginTop: '4px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, pecasTrocadasCodigos: [...prev.pecasTrocadasCodigos, ''] }))}>
+                    + {protoT?.protocolosServicoAdicionarPeca || 'Código de peça'}
+                  </button>
+                </div>
+
+                <div style={{ position: 'sticky', bottom: 0, zIndex: 5, marginTop: '8px', padding: '16px 0 8px', background: 'linear-gradient(180deg, transparent 0%, #0a0a0a 35%)' }}>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', padding: '16px 20px', borderRadius: '14px', border: '1px solid rgba(0, 255, 136, 0.25)', background: 'rgba(12, 14, 13, 0.96)' }}>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={() => {
+                        if (!protocoloServicoForm.clienteId || !protocoloServicoForm.equipamentoNumeroSerie) { alert(protoT?.protocolosServicoSelecionarClienteEquipamento || 'Selecione o cliente e o equipamento.'); return }
+                        const dataCriacao = editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? (protocolosServico.find(pr => pr.id === editingProtocoloServicoId)?.dataCriacao || new Date().toISOString()) : new Date().toISOString()
+                        const novo: ProtocoloServico = { id: editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? editingProtocoloServicoId : `proto-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, clienteId: protocoloServicoForm.clienteId, equipamentoNumeroSerie: protocoloServicoForm.equipamentoNumeroSerie, textoInicial: protocoloServicoForm.textoInicial, blocos: protocoloServicoForm.blocos, pecasTrocadasCodigos: protocoloServicoForm.pecasTrocadasCodigos.filter(c => c.trim()), dataCriacao, pdfModelo: Math.min(6, Math.max(1, Number(protocoloServicoForm.pdfModelo) || 1)) }
+                        const next = editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? protocolosServico.map(p => p.id === novo.id ? novo : p) : [...protocolosServico, novo]
+                        setProtocolosServico(next)
+                        saveData('nonato-protocolos-servico', next)
+                        if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY)
+                        setEditingProtocoloServicoId(null)
+                        setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
+                      }}
+                      style={{ padding: '12px 28px', fontWeight: 700, borderRadius: '10px' }}
+                    >
+                      {protoT?.protocolosServicoGuardar || 'Guardar protocolo'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.35)', color: '#bbb', padding: '12px 22px', borderRadius: '10px' }}
+                      onClick={() => { if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY); setEditingProtocoloServicoId(null); setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 }) }}
+                    >
+                      {protoT?.protocolosServicoCancelar || 'Cancelar'}
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
-              <div style={{ padding: '20px', backgroundColor: '#141414', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+              <div style={{ padding: '22px 24px', backgroundColor: '#121212', borderRadius: '16px', border: '1px solid rgba(0, 255, 136, 0.2)' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '14px', marginBottom: '20px' }}>
+                  <div>
+                    <h2 style={{ margin: 0, fontSize: '16px', color: '#fff', fontWeight: 700 }}>{protoT?.protocolosServicoListaTitulo || 'Protocolos registados'}</h2>
+                    <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#777' }}>
+                      {(protoT?.protocolosServicoListaContagem || '{n} na lista').replace('{n}', String(protocolosFiltrados.length))}
+                      {filtroLista ? ` · ${protocolosOrdenados.length} ${protoT?.protocolosServicoListaTotal || 'no total'}` : ''}
+                    </p>
+                  </div>
+                  <input
+                    type="search"
+                    value={protocoloServicoFiltroLista}
+                    onChange={(e) => setProtocoloServicoFiltroLista(e.target.value)}
+                    placeholder={protoT?.protocolosServicoBuscaPlaceholder || 'Pesquisar por cliente, equipamento, série…'}
+                    style={{ ...inputBase, maxWidth: '340px', minWidth: '200px' }}
+                  />
+                </div>
                 {protocolosServico.length === 0 ? (
-                  <p style={{ color: '#ccc', lineHeight: 1.6 }}>{protoT?.protocolosServicoSemProtocolos || 'Ainda não há protocolos. Clique em "Novo protocolo" para criar um (cliente, equipamento, texto, imagens antes/depois e peças trocadas).'}</p>
+                  <div style={{ padding: '32px 20px', textAlign: 'center', borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.25)' }}>
+                    <p style={{ color: 'rgba(255,255,255,0.75)', lineHeight: 1.65, margin: 0, maxWidth: '480px', marginLeft: 'auto', marginRight: 'auto', fontSize: '14px' }}>{protoT?.protocolosServicoSemProtocolos || 'Ainda não há protocolos.'}</p>
+                  </div>
+                ) : protocolosFiltrados.length === 0 ? (
+                  <p style={{ color: '#999', padding: '20px 0' }}>{protoT?.protocolosServicoListaVaziaFiltro || 'Nenhum protocolo corresponde à pesquisa.'}</p>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {protocolosServico.slice().reverse().map(p => {
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    {protocolosFiltrados.map(p => {
                       const cl = clientes.find(c => c.id === p.clienteId)
                       const eq = cl?.equipamentos?.find(e => e.numeroSerie === p.equipamentoNumeroSerie)
+                      const dataStr = new Date(p.dataCriacao).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'en' ? 'en-GB' : selectedLanguage)
+                      const modeloLabel = (protoT as any)?.[`protocolosServicoPdfModelo${Math.min(6, Math.max(1, p.pdfModelo || 1))}`] || `M${p.pdfModelo || 1}`
+                      const nBlocos = p.blocos?.length ?? 0
+                      const nPecas = p.pecasTrocadasCodigos?.filter(c => c.trim()).length ?? 0
                       return (
-                        <div key={p.id} style={{ padding: '16px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                          <div>
-                            <strong style={{ color: '#fff' }}>{cl?.nomeEmpresa || '—'}</strong>
-                            <span style={{ color: '#888', marginLeft: '8px' }}>{eq ? `${eq.tipoEquipamento} — ${eq.numeroSerie}` : ''}</span>
-                            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>{new Date(p.dataCriacao).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'en' ? 'en-GB' : selectedLanguage)} · PDF: {(protoT as any)?.[`protocolosServicoPdfModelo${Math.min(6, Math.max(1, p.pdfModelo || 1))}`] || `M${p.pdfModelo || 1}`}</div>
+                        <div
+                          key={p.id}
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr auto',
+                            gap: '16px',
+                            alignItems: 'start',
+                            padding: '18px 20px',
+                            background: 'linear-gradient(135deg, rgba(22, 26, 24, 0.98) 0%, rgba(14, 16, 15, 0.99) 100%)',
+                            borderRadius: '14px',
+                            border: '1px solid rgba(0, 255, 136, 0.2)',
+                            borderLeft: '4px solid rgba(0, 255, 136, 0.55)',
+                            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.35)',
+                          }}
+                        >
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '8px 12px', marginBottom: '8px' }}>
+                              <strong style={{ color: '#fff', fontSize: '16px', fontWeight: 700 }}>{cl?.nomeEmpresa || '—'}</strong>
+                              <span style={{ fontSize: '11px', fontWeight: 700, color: '#0a3d2e', background: 'rgba(0, 255, 136, 0.35)', padding: '4px 10px', borderRadius: '999px' }}>{modeloLabel}</span>
+                            </div>
+                            {eq ? (
+                              <p style={{ margin: 0, color: 'rgba(255,255,255,0.82)', fontSize: '14px', lineHeight: 1.5 }}>
+                                <span style={{ color: '#7dffb3' }}>{eq.tipoEquipamento}</span>
+                                {eq.marca ? <span style={{ color: '#888' }}> · {eq.marca}</span> : null}
+                                {eq.modelo ? <span style={{ color: '#888' }}> · {eq.modelo}</span> : null}
+                              </p>
+                            ) : null}
+                            <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#666', fontFamily: 'ui-monospace, monospace' }}>{eq?.numeroSerie || p.equipamentoNumeroSerie || '—'}</p>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '10px', fontSize: '11px', color: '#888' }}>
+                              <span>{dataStr}</span>
+                              <span>{(protoT?.protocolosServicoResumoBlocos || '{n} blocos').replace('{n}', String(nBlocos))}</span>
+                              <span>{(protoT?.protocolosServicoResumoPecas || '{n} peças').replace('{n}', String(nPecas))}</span>
+                            </div>
                           </div>
-                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px' }} onClick={() => gerarPDFProtocolo(p)}>📄 {protoT?.protocolosServicoGerarPDF || 'Gerar PDF'}</button>
-                            <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px', backgroundColor: 'rgba(0, 150, 255, 0.2)', borderColor: 'rgba(0, 150, 255, 0.5)' }} onClick={() => enviarEmailProtocolo(p)}>✉️ {protoT?.protocolosServicoEnviarEmail || 'Email'}</button>
-                            <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px', backgroundColor: 'rgba(37, 211, 102, 0.2)', borderColor: 'rgba(37, 211, 102, 0.6)' }} onClick={() => enviarWhatsAppProtocolo(p)}>💬 {protoT?.protocolosServicoEnviarWhatsApp || 'WhatsApp'}</button>
-                            <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px' }} onClick={() => { const pr = protocolosServico.find(x => x.id === p.id); if (pr) { setProtocoloServicoForm({ clienteId: pr.clienteId, equipamentoNumeroSerie: pr.equipamentoNumeroSerie, textoInicial: pr.textoInicial, blocos: pr.blocos, pecasTrocadasCodigos: pr.pecasTrocadasCodigos, pdfModelo: Math.min(6, Math.max(1, pr.pdfModelo || 1)) }); setEditingProtocoloServicoId(pr.id) } }}>✏️ {protoT?.protocolosServicoEditar || 'Editar'}</button>
-                            <button type="button" className="btn-danger" style={{ padding: '8px 14px', fontSize: '12px' }} onClick={() => { if (window.confirm(protoT?.protocolosServicoConfirmarExcluir || 'Excluir este protocolo?')) { const next = protocolosServico.filter(x => x.id !== p.id); setProtocolosServico(next); saveData('nonato-protocolos-servico', next) } }}>🗑️ {protoT?.protocolosServicoExcluir || 'Excluir'}</button>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'stretch' }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'flex-end' }}>
+                              <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', fontWeight: 600 }} onClick={() => gerarPDFProtocolo(p)}>{protoT?.protocolosServicoGerarPDF || 'PDF'}</button>
+                              <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', backgroundColor: 'rgba(0, 150, 255, 0.22)', borderColor: 'rgba(0, 150, 255, 0.5)', fontWeight: 600 }} onClick={() => enviarEmailProtocolo(p)}>{protoT?.protocolosServicoEnviarEmail || 'Email'}</button>
+                              <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', backgroundColor: 'rgba(37, 211, 102, 0.2)', borderColor: 'rgba(37, 211, 102, 0.55)', fontWeight: 600 }} onClick={() => enviarWhatsAppProtocolo(p)}>{protoT?.protocolosServicoEnviarWhatsApp || 'WhatsApp'}</button>
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'flex-end' }}>
+                              <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', background: 'transparent', borderColor: 'rgba(255,255,255,0.3)', color: '#ccc' }} onClick={() => { const pr = protocolosServico.find(x => x.id === p.id); if (pr) { setProtocoloServicoForm({ clienteId: pr.clienteId, equipamentoNumeroSerie: pr.equipamentoNumeroSerie, textoInicial: pr.textoInicial, blocos: pr.blocos, pecasTrocadasCodigos: pr.pecasTrocadasCodigos, pdfModelo: Math.min(6, Math.max(1, pr.pdfModelo || 1)) }); setEditingProtocoloServicoId(pr.id) } }}>{protoT?.protocolosServicoEditar || 'Editar'}</button>
+                              <button type="button" className="btn-danger" style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px' }} onClick={() => { if (window.confirm(protoT?.protocolosServicoConfirmarExcluir || 'Excluir este protocolo?')) { const next = protocolosServico.filter(x => x.id !== p.id); setProtocolosServico(next); saveData('nonato-protocolos-servico', next) } }}>{protoT?.protocolosServicoExcluir || 'Excluir'}</button>
+                            </div>
                           </div>
                         </div>
                       )
