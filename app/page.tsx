@@ -42057,7 +42057,7 @@ A1;Peça exemplo;10'
                       padding: '6px 8px', 
                       fontSize: '16px',
                       backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 255, 0, 0.24)',
+                      border: '1px solid rgba(0, 255, 0, 0.34)',
                       borderRadius: '4px',
                       color: '#00ff00',
                       cursor: 'pointer',
@@ -42075,7 +42075,7 @@ A1;Peça exemplo;10'
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.24)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.34)'
                     }}
                   >
                     ↶
@@ -42087,7 +42087,7 @@ A1;Peça exemplo;10'
                       padding: '6px 8px', 
                       fontSize: '16px',
                       backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 150, 255, 0.24)',
+                      border: '1px solid rgba(0, 150, 255, 0.34)',
                       borderRadius: '4px',
                       color: '#66b3ff',
                       cursor: 'pointer',
@@ -42105,7 +42105,7 @@ A1;Peça exemplo;10'
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.24)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.34)'
                     }}
                   >
                     🏠
@@ -42117,9 +42117,9 @@ A1;Peça exemplo;10'
             {relatoriosPorCliente.length === 0 ? (
               <div style={{ 
                 padding: '60px 40px', 
-                backgroundColor: 'rgba(20, 20, 20, 0.82)', 
+                backgroundColor: 'rgba(20, 20, 20, 0.94)', 
                 borderRadius: '12px', 
-                border: '2px solid rgba(0, 255, 0, 0.24)',
+                border: '2px solid rgba(0, 255, 0, 0.34)',
                 textAlign: 'center'
               }}>
                 <div style={{ fontSize: '48px', marginBottom: '20px' }}>📋</div>
@@ -42138,11 +42138,11 @@ A1;Peça exemplo;10'
                     <div 
                       key={cliente.id} 
                       style={{ 
-                        backgroundColor: 'rgba(20, 20, 20, 0.82)', 
+                        backgroundColor: 'rgba(20, 20, 20, 0.94)', 
                         padding: '15px', 
                         borderRadius: '8px', 
-                        border: '1px solid rgba(0, 255, 0, 0.24)',
-                        boxShadow: '0 2px 8px rgba(0, 255, 0, 0.07)',
+                        border: '1px solid rgba(0, 255, 0, 0.34)',
+                        boxShadow: '0 2px 8px rgba(0, 255, 0, 0.12)',
                         minWidth: 0,
                         maxWidth: '100%'
                       }}
@@ -42151,7 +42151,7 @@ A1;Peça exemplo;10'
                       <div style={{ 
                         marginBottom: '12px', 
                         paddingBottom: '10px',
-                        borderBottom: '1px solid rgba(0, 255, 0, 0.32)'
+                        borderBottom: '1px solid rgba(0, 255, 0, 0.4)'
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', flexWrap: 'wrap', gap: '8px' }}>
                           <h3 style={{ margin: 0, color: '#00ff00', fontSize: '16px', fontWeight: 'bold', flex: 1, minWidth: 0 }}>
@@ -42159,7 +42159,7 @@ A1;Peça exemplo;10'
                           </h3>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ 
-                              backgroundColor: 'rgba(0, 255, 0, 0.16)', 
+                              backgroundColor: 'rgba(0, 255, 0, 0.24)', 
                               color: '#00ff00',
                               padding: '2px 8px',
                               borderRadius: '8px',
@@ -42174,7 +42174,7 @@ A1;Peça exemplo;10'
                               style={{
                                 padding: '4px 10px',
                                 fontSize: '10px',
-                                backgroundColor: 'rgba(255, 68, 68, 0.16)',
+                                backgroundColor: 'rgba(255, 68, 68, 0.24)',
                                 border: '1px solid rgba(255, 68, 68, 0.5)',
                                 color: '#ff8888',
                                 borderRadius: '6px',
@@ -42213,13 +42213,13 @@ A1;Peça exemplo;10'
                             key={equipamento.numeroSerie || equipamento.modelo} 
                             style={{ 
                               padding: '12px', 
-                              backgroundColor: 'rgba(34, 34, 34, 0.82)', 
+                              backgroundColor: 'rgba(34, 34, 34, 0.94)', 
                               borderRadius: '6px', 
-                              border: '1px solid rgba(0, 255, 0, 0.16)'
+                              border: '1px solid rgba(0, 255, 0, 0.24)'
                             }}
                           >
                             {/* Cabeçalho do Equipamento */}
-                            <div style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid rgba(0, 255, 0, 0.16)' }}>
+                            <div style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid rgba(0, 255, 0, 0.24)' }}>
                               <h4 style={{ margin: 0, color: '#ffffff', fontSize: '13px', fontWeight: 'bold', marginBottom: '3px' }}>
                                 🔧 {equipamento.modelo} {equipamento.marca}
                               </h4>
@@ -42244,18 +42244,18 @@ A1;Peça exemplo;10'
                                     key={relatorio.id} 
                                     style={{ 
                                       padding: '10px', 
-                                      backgroundColor: 'rgba(20, 20, 20, 0.82)', 
+                                      backgroundColor: 'rgba(20, 20, 20, 0.94)', 
                                       borderRadius: '4px', 
-                                      border: '1px solid rgba(0, 255, 0, 0.12)',
+                                      border: '1px solid rgba(0, 255, 0, 0.2)',
                                       transition: 'all 0.2s ease'
                                     }}
                                     onMouseEnter={(e) => {
                                       e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.4)'
-                                      e.currentTarget.style.backgroundColor = 'rgba(34, 34, 34, 0.88)'
+                                      e.currentTarget.style.backgroundColor = 'rgba(34, 34, 34, 0.97)'
                                     }}
                                     onMouseLeave={(e) => {
-                                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.12)'
-                                      e.currentTarget.style.backgroundColor = 'rgba(20, 20, 20, 0.82)'
+                                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.2)'
+                                      e.currentTarget.style.backgroundColor = 'rgba(20, 20, 20, 0.94)'
                                     }}
                                   >
                                     {/* Informações do Relatório */}
@@ -42272,7 +42272,7 @@ A1;Peça exemplo;10'
                                           )}
                                         </div>
                                         <span style={{ 
-                                          backgroundColor: 'rgba(0, 255, 0, 0.12)', 
+                                          backgroundColor: 'rgba(0, 255, 0, 0.2)', 
                                           color: '#00ff00',
                                           padding: '2px 6px',
                                           borderRadius: '3px',
@@ -42317,9 +42317,9 @@ A1;Peça exemplo;10'
                                           width: '100%',
                                           padding: '4px',
                                           fontSize: '9px',
-                                          backgroundColor: 'rgba(20, 20, 20, 0.82)',
+                                          backgroundColor: 'rgba(20, 20, 20, 0.94)',
                                           color: '#66b3ff',
-                                          border: '1px solid rgba(0, 150, 255, 0.42)',
+                                          border: '1px solid rgba(0, 150, 255, 0.55)',
                                           borderRadius: '3px',
                                           cursor: 'pointer'
                                         }}
@@ -42348,7 +42348,7 @@ A1;Peça exemplo;10'
                                             minWidth: '60px',
                                             padding: '6px 10px', 
                                             fontSize: '10px',
-                                            backgroundColor: 'rgba(0, 255, 0, 0.16)',
+                                            backgroundColor: 'rgba(0, 255, 0, 0.24)',
                                             border: '1px solid rgba(0, 255, 0, 0.48)',
                                             color: '#fff'
                                           }}
@@ -42363,8 +42363,8 @@ A1;Peça exemplo;10'
                                             minWidth: '60px',
                                             padding: '6px 10px', 
                                             fontSize: '10px', 
-                                            backgroundColor: 'rgba(0, 150, 255, 0.16)', 
-                                            borderColor: 'rgba(0, 150, 255, 0.42)',
+                                            backgroundColor: 'rgba(0, 150, 255, 0.26)', 
+                                            borderColor: 'rgba(0, 150, 255, 0.55)',
                                             color: '#66b3ff'
                                           }}
                                         >
@@ -42378,7 +42378,7 @@ A1;Peça exemplo;10'
                                             minWidth: '60px',
                                             padding: '6px 10px', 
                                             fontSize: '10px', 
-                                            backgroundColor: 'rgba(255, 68, 68, 0.16)', 
+                                            backgroundColor: 'rgba(255, 68, 68, 0.24)', 
                                             border: '1px solid rgba(255, 68, 68, 0.42)',
                                             color: '#ff8888',
                                             borderRadius: '4px',
@@ -42398,7 +42398,7 @@ A1;Peça exemplo;10'
                         ))}
 
                         {/* Secção: Relatórios de Despesas (fechamentos) */}
-                        <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                        <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid rgba(0, 255, 0, 0.3)' }}>
                           <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffaa00', fontWeight: 'bold' }}>
                             {(safeT as any)?.relatoriosDespesasTitle || 'Relatórios de Despesas'}
                           </h4>
@@ -42416,9 +42416,9 @@ A1;Peça exemplo;10'
                                     key={relatorio.id} 
                                     style={{ 
                                       padding: '14px 16px', 
-                                      backgroundColor: 'rgba(26, 26, 26, 0.84)', 
+                                      backgroundColor: 'rgba(26, 26, 26, 0.95)', 
                                       borderRadius: '10px', 
-                                      border: '2px solid rgba(255, 170, 0, 0.38)',
+                                      border: '2px solid rgba(255, 170, 0, 0.5)',
                                       width: '100%'
                                     }}
                                   >
@@ -42431,16 +42431,16 @@ A1;Peça exemplo;10'
                                       </div>
                                     </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                                      <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens })} style={{ ...btnBase, backgroundColor: 'rgba(0, 255, 0, 0.16)', border: '1px solid rgba(0, 255, 0, 0.42)', color: '#00ff00' }}>
+                                      <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens })} style={{ ...btnBase, backgroundColor: 'rgba(0, 255, 0, 0.28)', border: '1px solid rgba(0, 255, 0, 0.52)', color: '#00ff00' }}>
                                         👁️ {(safeT as any)?.visualizarDespesasBiblioteca ?? safeT?.view ?? 'View'}
                                       </button>
-                                      <button type="button" onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(0, 150, 255, 0.18)', border: '1px solid rgba(0, 150, 255, 0.48)', color: '#66b3ff' }}>
+                                      <button type="button" onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(0, 150, 255, 0.28)', border: '1px solid rgba(0, 150, 255, 0.58)', color: '#66b3ff' }}>
                                         ✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}
                                       </button>
-                                      <button type="button" onClick={() => imprimirPDFDespesasDaBiblioteca(relatorio, itens)} style={{ ...btnBase, backgroundColor: 'rgba(150, 100, 255, 0.16)', border: '1px solid rgba(150, 100, 255, 0.42)', color: '#c4a7ff' }}>
+                                      <button type="button" onClick={() => imprimirPDFDespesasDaBiblioteca(relatorio, itens)} style={{ ...btnBase, backgroundColor: 'rgba(150, 100, 255, 0.24)', border: '1px solid rgba(150, 100, 255, 0.52)', color: '#c4a7ff' }}>
                                         📄 {(safeT as any)?.gerarPDF || 'PDF'}
                                       </button>
-                                      <button type="button" onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(255, 68, 68, 0.16)', border: '1px solid rgba(255, 68, 68, 0.45)', color: '#ff8888' }}>
+                                      <button type="button" onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(255, 68, 68, 0.28)', border: '1px solid rgba(255, 68, 68, 0.55)', color: '#ff8888' }}>
                                         🗑️ {safeT?.delete || 'Excluir'}
                                       </button>
                                     </div>
@@ -42497,9 +42497,9 @@ A1;Peça exemplo;10'
                   </div>
                   <div style={{ marginTop: '16px', fontSize: '18px', fontWeight: 'bold', color: '#00ff00', textAlign: 'right' }}>{(safeT as any)?.somaTotal || 'SOMA TOTAL'}: €{totV.toFixed(2)}</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
-                    <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca(null)} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(102, 102, 102, 0.85)', background: 'rgba(51, 51, 51, 0.88)', color: '#fff', cursor: 'pointer' }}>{safeT?.close || 'Fechar'}</button>
-                    <button type="button" onClick={() => { imprimirPDFDespesasDaBiblioteca(relV, itensV) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(153, 102, 255, 0.55)', background: 'rgba(150,100,255,0.16)', color: '#c4a7ff', cursor: 'pointer', fontWeight: 600 }}>📄 {(safeT as any)?.gerarPDF || 'PDF'}</button>
-                    <button type="button" onClick={() => { setModalVisualizarDespesasBiblioteca(null); handleEditarDespesasNaBiblioteca(relV.id) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(102, 179, 255, 0.55)', background: 'rgba(0,150,255,0.18)', color: '#66b3ff', cursor: 'pointer', fontWeight: 600 }}>✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}</button>
+                    <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca(null)} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(102, 102, 102, 0.92)', background: 'rgba(51, 51, 51, 0.96)', color: '#fff', cursor: 'pointer' }}>{safeT?.close || 'Fechar'}</button>
+                    <button type="button" onClick={() => { imprimirPDFDespesasDaBiblioteca(relV, itensV) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(153, 102, 255, 0.65)', background: 'rgba(150,100,255,0.26)', color: '#c4a7ff', cursor: 'pointer', fontWeight: 600 }}>📄 {(safeT as any)?.gerarPDF || 'PDF'}</button>
+                    <button type="button" onClick={() => { setModalVisualizarDespesasBiblioteca(null); handleEditarDespesasNaBiblioteca(relV.id) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(102, 179, 255, 0.65)', background: 'rgba(0,150,255,0.28)', color: '#66b3ff', cursor: 'pointer', fontWeight: 600 }}>✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}</button>
                   </div>
                 </div>
               </div>

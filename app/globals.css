@@ -2098,18 +2098,18 @@ a:focus-visible {
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  /* Leve transparência no contentor — deixa respirar o fundo da área principal */
-  background: rgba(0, 0, 0, 0.12);
+  /* Fundo um pouco mais opaco — leitura mais sólida */
+  background: rgba(0, 0, 0, 0.38);
   border-radius: clamp(8px, 1.5vw, 16px);
 }
 
 .biblioteca-relatorios-hero {
   margin-bottom: clamp(16px, 4vw, 40px);
   padding: clamp(12px, 3vw, 30px);
-  background: linear-gradient(135deg, rgba(0, 255, 0, 0.045) 0%, rgba(0, 0, 0, 0.58) 100%);
+  background: linear-gradient(135deg, rgba(0, 255, 0, 0.055) 0%, rgba(0, 0, 0, 0.78) 100%);
   border-radius: clamp(10px, 2.5vw, 20px);
-  border: 2px solid rgba(0, 255, 0, 0.22);
-  box-shadow: 0 8px 32px rgba(0, 255, 0, 0.07);
+  border: 2px solid rgba(0, 255, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 255, 0, 0.1);
 }
 
 .biblioteca-relatorios-hero-top {
@@ -2164,7 +2164,7 @@ a:focus-visible {
 .biblioteca-despesas-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.72);
+  background: rgba(0, 0, 0, 0.86);
   z-index: 99999;
   display: flex;
   align-items: flex-start;
@@ -2183,9 +2183,9 @@ a:focus-visible {
 }
 
 .biblioteca-despesas-modal-inner {
-  background: rgba(26, 26, 26, 0.88);
+  background: rgba(26, 26, 26, 0.96);
   border-radius: 16px;
-  border: 2px solid rgba(255, 170, 0, 0.72);
+  border: 2px solid rgba(255, 170, 0, 0.88);
   max-width: 920px;
   width: 100%;
   max-height: none;
