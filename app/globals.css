@@ -96,14 +96,24 @@ body,
 }
 
 /* Desktop com rato: touch-action: pan-y em contentores com overflow pode, em alguns Chromium/Windows,
-   atrapalhar a roda do rato no contentor de rolagem. Em pointer fino usamos auto; em touch mantém-se pan-y. */
+   atrapalhar a roda do rato no contentor de rolagem. Em pointer fino usamos auto; em touch mantém-se pan-y.
+   overscroll-behavior: contain evita encadear o scroll ao documento (menos “saltos” e gestos que parecem atualizar a página). */
 @media (pointer: fine) {
   .main-content-area:not(.main-content-area-tab-open) {
+    touch-action: auto;
+    overscroll-behavior-y: contain;
+  }
+  /* Com aba aberta o scroll é só no filho — o pai flex também precisa de touch-action:auto para a roda não ficar “presa”. */
+  .main-content-area.main-content-area-tab-open {
     touch-action: auto;
   }
   .tab-inner-scroll {
     touch-action: auto;
-    overscroll-behavior-y: auto;
+    overscroll-behavior-y: contain;
+    overscroll-behavior-x: none;
+  }
+  .main-app-column {
+    touch-action: auto;
   }
 }
 
