@@ -2929,6 +2929,76 @@ export default function Dashboard() {
   const [fichaCadastral, setFichaCadastral] = useState<FichaCadastral>({ nomeEmpresa: '', nif: '', nib: '', swift: '' })
   /** Destino opcional para envio do PDF (cadastro Nonato) — e-mail e WhatsApp do cliente (manual ou a partir do cadastro) */
   const [cadastroNonatoEnvioCliente, setCadastroNonatoEnvioCliente] = useState<{ emailDestino: string; telefoneWhats: string; clienteId: string }>({ emailDestino: '', telefoneWhats: '', clienteId: '' })
+  /** Último HTML do documento de dados de depósito guardado para anexar no envio (localStorage + blob URL) */
+  const [cadastroNonatoDocGeradoEm, setCadastroNonatoDocGeradoEm] = useState<string | null>(null)
+  const [cadastroNonatoDocBlobUrl, setCadastroNonatoDocBlobUrl] = useState<string | null>(null)
+  const [cadastroNonatoDocGerando, setCadastroNonatoDocGerando] = useState(false)
+  const cadastroNonatoDocBlobUrlRef = useRef<string | null>(null)
+
+  const aplicarDocumentoCadastroNonatoGuardado = (html: string) => {
+    const em = new Date().toISOString()
+    try {
+      localStorage.setItem('nonato-cadastro-doc-html', html)
+      localStorage.setItem('nonato-cadastro-doc-em', em)
+    } catch {
+      /* quota */
+    }
+    if (cadastroNonatoDocBlobUrlRef.current) {
+      URL.revokeObjectURL(cadastroNonatoDocBlobUrlRef.current)
+      cadastroNonatoDocBlobUrlRef.current = null
+    }
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    cadastroNonatoDocBlobUrlRef.current = url
+    setCadastroNonatoDocBlobUrl(url)
+    setCadastroNonatoDocGeradoEm(em)
+  }
+
+  const limparDocumentoCadastroNonato = () => {
+    try {
+      localStorage.removeItem('nonato-cadastro-doc-html')
+      localStorage.removeItem('nonato-cadastro-doc-em')
+    } catch {
+      /* */
+    }
+    if (cadastroNonatoDocBlobUrlRef.current) {
+      URL.revokeObjectURL(cadastroNonatoDocBlobUrlRef.current)
+      cadastroNonatoDocBlobUrlRef.current = null
+    }
+    setCadastroNonatoDocBlobUrl(null)
+    setCadastroNonatoDocGeradoEm(null)
+  }
+
+  const gerarDocumentoCadastroNonatoParaEnvio = async (abrirPreVisualizacao: boolean) => {
+    setCadastroNonatoDocGerando(true)
+    try {
+      await saveData('nonato-ficha-cadastral', fichaCadastral)
+      const r = await fetch('/api/pdf/dados-deposito-nonato', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fichaCadastral),
+      })
+      if (!r.ok) {
+        window.alert(
+          safeT?.cadastroNonatoGeradoErro ||
+            'Não foi possível gerar o documento. Verifique a ligação e tente novamente.'
+        )
+        return
+      }
+      const html = await r.text()
+      aplicarDocumentoCadastroNonatoGuardado(html)
+      if (abrirPreVisualizacao && cadastroNonatoDocBlobUrlRef.current) {
+        window.open(cadastroNonatoDocBlobUrlRef.current, '_blank', 'noopener,noreferrer,width=800,height=900')
+      }
+    } catch {
+      window.alert(
+        safeT?.cadastroNonatoGeradoErro ||
+          'Não foi possível gerar o documento. Verifique a ligação e tente novamente.'
+      )
+    } finally {
+      setCadastroNonatoDocGerando(false)
+    }
+  }
 
   // Estados para Biblioteca de Peças
   const [pecasBiblioteca, setPecasBiblioteca] = useState<PecaBiblioteca[]>([])
@@ -3374,6 +3444,27 @@ export default function Dashboard() {
       porMarca: Object.entries(porMarca).sort(sortDesc)
     }
   }, [equipamentosAtivos, equipamentos.length, t])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const html = localStorage.getItem('nonato-cadastro-doc-html')
+    const em = localStorage.getItem('nonato-cadastro-doc-em')
+    if (!html || html.length < 10) return
+    if (cadastroNonatoDocBlobUrlRef.current) {
+      URL.revokeObjectURL(cadastroNonatoDocBlobUrlRef.current)
+    }
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    cadastroNonatoDocBlobUrlRef.current = url
+    setCadastroNonatoDocBlobUrl(url)
+    setCadastroNonatoDocGeradoEm(em)
+    return () => {
+      if (cadastroNonatoDocBlobUrlRef.current) {
+        URL.revokeObjectURL(cadastroNonatoDocBlobUrlRef.current)
+        cadastroNonatoDocBlobUrlRef.current = null
+      }
+    }
+  }, [])
 
   // Sistema de tradução rápida (contextual)
   // Forçar atualização dos botões quando o idioma mudar para garantir tradução
@@ -18816,23 +18907,109 @@ const nextF = familias.filter(x => x !== f)
                   {safeT?.fichaCadastralGuardar || safeT?.save || 'Guardar'}
                 </button>
                 <button
-                  onClick={() => {
-                    saveData('nonato-ficha-cadastral', fichaCadastral).then(() => {
-                      const url = '/api/pdf/dados-deposito-nonato'
-                      window.open(url, '_blank', 'noopener,noreferrer,width=800,height=900')
-                    })
+                  type="button"
+                  disabled={cadastroNonatoDocGerando}
+                  onClick={() => void gerarDocumentoCadastroNonatoParaEnvio(true)}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: cadastroNonatoDocGerando ? 'rgba(80, 80, 80, 0.4)' : 'rgba(0, 150, 255, 0.25)',
+                    border: '1px solid rgba(0, 150, 255, 0.5)',
+                    color: cadastroNonatoDocGerando ? '#888' : '#66b3ff',
+                    fontWeight: 'bold',
+                    borderRadius: '8px',
+                    cursor: cadastroNonatoDocGerando ? 'not-allowed' : 'pointer',
                   }}
-                  style={{ padding: '12px 24px', backgroundColor: 'rgba(0, 150, 255, 0.25)', border: '1px solid rgba(0, 150, 255, 0.5)', color: '#66b3ff', fontWeight: 'bold', borderRadius: '8px', cursor: 'pointer' }}
                 >
-                  {safeT?.cadastroNonatoServiceGerarPdf || 'Gerar PDF para envio ao cliente'}
+                  {cadastroNonatoDocGerando
+                    ? safeT?.cadastroNonatoGeradoGerando || 'A gerar…'
+                    : safeT?.cadastroNonatoServiceGerarPdf || 'Gerar PDF para envio ao cliente'}
                 </button>
+              </div>
+              <div
+                style={{
+                  marginTop: '22px',
+                  padding: '18px 20px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(0, 255, 136, 0.35)',
+                  background: 'linear-gradient(145deg, rgba(0, 40, 30, 0.5) 0%, rgba(20, 20, 20, 0.95) 100%)',
+                }}
+              >
+                <h3 style={{ margin: '0 0 6px', fontSize: '15px', color: '#00ff88', fontWeight: 700, letterSpacing: '0.04em' }}>
+                  {safeT?.cadastroNonatoGeradoTitulo || 'Cadastro gerado (documento para envio)'}
+                </h3>
+                <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.78)', marginBottom: '12px', lineHeight: 1.55 }}>
+                  {safeT?.cadastroNonatoGeradoDescricao ||
+                    'O documento que gera com o botão acima fica guardado aqui. Ao usar «Envio ao cliente», abrimos esse documento para poder imprimir/guardar PDF ou anexar o ficheiro HTML descarregado abaixo.'}
+                </p>
+                <p style={{ fontSize: '12px', color: '#aaa', marginBottom: '12px', lineHeight: 1.45 }}>
+                  {cadastroNonatoDocGeradoEm
+                    ? `${safeT?.cadastroNonatoGeradoUltimo || 'Último documento gerado:'} ${new Date(cadastroNonatoDocGeradoEm).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}`
+                    : safeT?.cadastroNonatoGeradoNenhum || 'Ainda não há documento guardado neste browser. Use «Gerar PDF para envio ao cliente» para criar e guardar.'}
+                </p>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    disabled={!cadastroNonatoDocBlobUrl}
+                    onClick={() => {
+                      if (cadastroNonatoDocBlobUrl) window.open(cadastroNonatoDocBlobUrl, '_blank', 'noopener,noreferrer,width=800,height=900')
+                    }}
+                    style={{
+                      padding: '10px 16px',
+                      backgroundColor: !cadastroNonatoDocBlobUrl ? 'rgba(60,60,60,0.5)' : 'rgba(0, 255, 136, 0.12)',
+                      border: '1px solid rgba(0, 255, 136, 0.45)',
+                      color: !cadastroNonatoDocBlobUrl ? '#666' : '#00ff88',
+                      fontWeight: 600,
+                      borderRadius: '8px',
+                      cursor: !cadastroNonatoDocBlobUrl ? 'not-allowed' : 'pointer',
+                      fontSize: '13px',
+                    }}
+                  >
+                    {safeT?.cadastroNonatoGeradoVer || 'Ver documento'}
+                  </button>
+                  {cadastroNonatoDocBlobUrl ? (
+                    <a
+                      href={cadastroNonatoDocBlobUrl}
+                      download="nonato-dados-deposito.html"
+                      style={{
+                        padding: '10px 16px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        color: '#e0e0e0',
+                        fontWeight: 600,
+                        borderRadius: '8px',
+                        fontSize: '13px',
+                        textDecoration: 'none',
+                        display: 'inline-block',
+                      }}
+                    >
+                      {safeT?.cadastroNonatoGeradoDescarregar || 'Descarregar HTML'}
+                    </a>
+                  ) : null}
+                  <button
+                    type="button"
+                    disabled={!cadastroNonatoDocBlobUrl}
+                    onClick={() => limparDocumentoCadastroNonato()}
+                    style={{
+                      padding: '10px 16px',
+                      backgroundColor: 'transparent',
+                      border: '1px solid rgba(255, 100, 100, 0.45)',
+                      color: !cadastroNonatoDocBlobUrl ? '#555' : '#ff8888',
+                      fontWeight: 600,
+                      borderRadius: '8px',
+                      cursor: !cadastroNonatoDocBlobUrl ? 'not-allowed' : 'pointer',
+                      fontSize: '13px',
+                    }}
+                  >
+                    {safeT?.cadastroNonatoGeradoLimpar || 'Limpar documento guardado'}
+                  </button>
+                </div>
               </div>
               <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(0, 255, 0, 0.25)' }}>
                 <h3 style={{ margin: '0 0 8px', fontSize: '16px', color: '#00ff88', fontWeight: 700 }}>
                   {safeT?.cadastroNonatoEnvioTitulo || 'Envio ao cliente (e-mail e WhatsApp)'}
                 </h3>
                 <p style={{ fontSize: '12px', color: '#999', marginBottom: '14px', lineHeight: 1.5 }}>
-                  {safeT?.cadastroNonatoEnvioAjuda || 'Primeiro use «Gerar PDF» e guarde/imprima o PDF a partir da janela que abre. Depois use os botões abaixo: o programa abre o seu e-mail ou o WhatsApp Web/App — o anexo do PDF é feito por si (o site não envia ficheiros sozinho, por limitação do navegador).'}
+                  {safeT?.cadastroNonatoEnvioAjuda || 'Use a secção «Cadastro gerado» para o ficheiro a anexar. Os botões abaixo abrem o e-mail ou o WhatsApp; ao clicar, o documento guardado abre noutro separador para imprimir/guardar PDF ou anexar o HTML.'}
                 </p>
                 <div style={{ marginBottom: '16px' }}>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa', fontWeight: 600 }}>{safeT?.cadastroNonatoEnvioLabelCliente || 'Cliente'}</label>
@@ -18891,10 +19068,19 @@ const nextF = familias.filter(x => x !== f)
                   <button
                     type="button"
                     onClick={() => {
+                      if (cadastroNonatoDocBlobUrl) {
+                        window.open(cadastroNonatoDocBlobUrl, '_blank', 'noopener,noreferrer,width=800,height=900')
+                      }
                       const nome = fichaCadastral.nomeEmpresa || 'Nonato Service'
                       const assunto = encodeURIComponent(`Dados bancários — ${nome}`)
+                      const hint =
+                        cadastroNonatoDocBlobUrl
+                          ? safeT?.cadastroNonatoEnvioHintCorpoComDoc ||
+                            '(O documento oficial acabou de abrir noutro separador — use Imprimir / Guardar como PDF ou anexe o ficheiro HTML descarregado da secção «Cadastro gerado».)'
+                          : safeT?.cadastroNonatoEnvioHintCorpoSemDoc ||
+                            '(Gere e guarde o documento com «Gerar PDF para envio ao cliente» antes de enviar; depois anexe o ficheiro a este e-mail.)'
                       const corpo = encodeURIComponent(
-                        `Olá,\n\nSegue em anexo o PDF com os dados para depósito ou transferência de pagamento à ${nome}.\n\n(Gere o PDF no botão «Gerar PDF para envio ao cliente» e anexe o ficheiro a este e-mail.)\n\nCom os melhores cumprimentos.`
+                        `Olá,\n\nSegue em anexo o documento com os dados para depósito ou transferência de pagamento à ${nome}.\n\n${hint}\n\nCom os melhores cumprimentos.`
                       )
                       const to = cadastroNonatoEnvioCliente.emailDestino.trim()
                       window.open(`mailto:${to ? to : ''}?subject=${assunto}&body=${corpo}`, '_blank', 'noopener,noreferrer')
@@ -18906,8 +19092,17 @@ const nextF = familias.filter(x => x !== f)
                   <button
                     type="button"
                     onClick={() => {
+                      if (cadastroNonatoDocBlobUrl) {
+                        window.open(cadastroNonatoDocBlobUrl, '_blank', 'noopener,noreferrer,width=800,height=900')
+                      }
                       const nome = fichaCadastral.nomeEmpresa || 'Nonato Service'
-                      const texto = `Olá,\n\nSegue em anexo o PDF com os dados bancários da ${nome} para depósito ou transferência.\n\n(Gere o PDF no sistema e envie o ficheiro por aqui.)\n\nCumprimentos.`
+                      const hint =
+                        cadastroNonatoDocBlobUrl
+                          ? safeT?.cadastroNonatoEnvioHintCorpoComDoc ||
+                            '(O documento oficial acabou de abrir noutro separador — envie o PDF ou o ficheiro HTML da secção «Cadastro gerado».)'
+                          : safeT?.cadastroNonatoEnvioHintCorpoSemDoc ||
+                            '(Gere e guarde o documento com «Gerar PDF para envio ao cliente» antes de enviar.)'
+                      const texto = `Olá,\n\nSegue em anexo o documento com os dados bancários da ${nome} para depósito ou transferência.\n\n${hint}\n\nCumprimentos.`
                       const raw = (cadastroNonatoEnvioCliente.telefoneWhats || '').replace(/\D/g, '')
                       let wa = ''
                       if (raw.length === 9 && raw.startsWith('9')) wa = '351' + raw

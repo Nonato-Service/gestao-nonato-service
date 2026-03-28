@@ -27,41 +27,23 @@ function escapeHtml(s: string | undefined): string {
     .replace(/"/g, '&quot;')
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    const { isDemo, expired, dataDir } = getDemoContext(request)
-    if (isDemo && expired) {
-      return new NextResponse('Demonstração expirada.', { status: 403 })
-    }
+function buildDepositoHtml(data: FichaCadastral, isDemo: boolean): string {
+  const nomeEmpresa = escapeHtml(data.nomeEmpresa)
+  const nif = escapeHtml(data.nif)
+  const nib = escapeHtml(data.nib)
+  const iban = escapeHtml(data.iban)
+  const swift = escapeHtml(data.swift)
+  const nomeBanco = escapeHtml(data.nomeBanco)
+  const telefone = escapeHtml(data.telefone)
+  const email = escapeHtml(data.email)
+  const morada = escapeHtml(data.morada)
+  const logo = data.logo && data.logo.startsWith('data:') ? data.logo : ''
 
-    const filePath = path.join(dataDir, 'nonato-ficha-cadastral.json')
-    let data: FichaCadastral = {}
+  const titulo = 'Dados para depósito / transferência de pagamento'
+  const subtitulo = 'Utilize os dados abaixo para efetuar o pagamento à Nonato Service.'
+  const rodape = `Documento gerado em ${new Date().toLocaleString('pt-PT')}${isDemo ? ' — Modo demonstração' : ''}.`
 
-    if (fs.existsSync(filePath)) {
-      try {
-        const raw = fs.readFileSync(filePath, 'utf-8')
-        if (raw && raw.trim()) data = JSON.parse(raw) as FichaCadastral
-      } catch {
-        // manter data vazio
-      }
-    }
-
-    const nomeEmpresa = escapeHtml(data.nomeEmpresa)
-    const nif = escapeHtml(data.nif)
-    const nib = escapeHtml(data.nib)
-    const iban = escapeHtml(data.iban)
-    const swift = escapeHtml(data.swift)
-    const nomeBanco = escapeHtml(data.nomeBanco)
-    const telefone = escapeHtml(data.telefone)
-    const email = escapeHtml(data.email)
-    const morada = escapeHtml(data.morada)
-    const logo = data.logo && data.logo.startsWith('data:') ? data.logo : ''
-
-    const titulo = 'Dados para depósito / transferência de pagamento'
-    const subtitulo = 'Utilize os dados abaixo para efetuar o pagamento à Nonato Service.'
-    const rodape = `Documento gerado em ${new Date().toLocaleString('pt-PT')}${isDemo ? ' — Modo demonstração' : ''}.`
-
-    const html = `
+  return `
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
@@ -285,7 +267,57 @@ export async function GET(request: NextRequest) {
   </div>
 </body>
 </html>
-    `.trim()
+  `.trim()
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const { isDemo, expired } = getDemoContext(request)
+    if (isDemo && expired) {
+      return new NextResponse('Demonstração expirada.', { status: 403 })
+    }
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch {
+      return new NextResponse('JSON inválido.', { status: 400 })
+    }
+    if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+      return new NextResponse('Corpo inválido.', { status: 400 })
+    }
+    const data = body as FichaCadastral
+    const html = buildDepositoHtml(data, isDemo)
+    return new NextResponse(html, {
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+      },
+    })
+  } catch (error: unknown) {
+    console.error('Erro ao gerar PDF dados depósito (POST):', error)
+    return new NextResponse('Erro ao gerar documento.', { status: 500 })
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const { isDemo, expired, dataDir } = getDemoContext(request)
+    if (isDemo && expired) {
+      return new NextResponse('Demonstração expirada.', { status: 403 })
+    }
+
+    const filePath = path.join(dataDir, 'nonato-ficha-cadastral.json')
+    let data: FichaCadastral = {}
+
+    if (fs.existsSync(filePath)) {
+      try {
+        const raw = fs.readFileSync(filePath, 'utf-8')
+        if (raw && raw.trim()) data = JSON.parse(raw) as FichaCadastral
+      } catch {
+        // manter data vazio
+      }
+    }
+
+    const html = buildDepositoHtml(data, isDemo)
 
     return new NextResponse(html, {
       headers: {
