@@ -48854,7 +48854,9 @@ A1;Peça exemplo;10'
                   { border: 'rgba(250, 204, 21, 0.45)', borderH: 'rgba(250, 204, 21, 0.85)', shadow: 'rgba(250, 204, 21, 0.28)', glow: 'rgba(250, 204, 21, 0.14)', title: '#fde047' },
                   { border: 'rgba(232, 121, 249, 0.42)', borderH: 'rgba(232, 121, 249, 0.8)', shadow: 'rgba(232, 121, 249, 0.3)', glow: 'rgba(232, 121, 249, 0.15)', title: '#f0abfc' },
                   { border: 'rgba(34, 211, 238, 0.42)', borderH: 'rgba(34, 211, 238, 0.8)', shadow: 'rgba(34, 211, 238, 0.28)', glow: 'rgba(34, 211, 238, 0.14)', title: '#67e8f9' },
-                  { border: 'rgba(163, 230, 53, 0.4)', borderH: 'rgba(163, 230, 53, 0.78)', shadow: 'rgba(163, 230, 53, 0.28)', glow: 'rgba(163, 230, 53, 0.14)', title: '#bef264' }
+                  { border: 'rgba(163, 230, 53, 0.4)', borderH: 'rgba(163, 230, 53, 0.78)', shadow: 'rgba(163, 230, 53, 0.28)', glow: 'rgba(163, 230, 53, 0.14)', title: '#bef264' },
+                  { border: 'rgba(99, 102, 241, 0.45)', borderH: 'rgba(99, 102, 241, 0.82)', shadow: 'rgba(99, 102, 241, 0.3)', glow: 'rgba(99, 102, 241, 0.15)', title: '#a5b4fc' },
+                  { border: 'rgba(52, 211, 153, 0.42)', borderH: 'rgba(52, 211, 153, 0.8)', shadow: 'rgba(52, 211, 153, 0.28)', glow: 'rgba(52, 211, 153, 0.14)', title: '#6ee7b7' }
                 ]
                 const quickAccessItems: Array<{
                   action: string
@@ -48873,7 +48875,9 @@ A1;Peça exemplo;10'
                   { action: 'open-almoxarifado-armazem', titleKey: 'almoxarifadoArmazemTitle', descKey: 'quickAccessAlmoxarifadoDesc', icon: '🏪', titleFallback: 'ALMOXARIFADO / ARMAZÉM', descFallback: 'Stock, pedidos e armazém.' },
                   { action: 'open-quick-gestao-financeira', titleKey: 'gestaoFinanceiraTitle', descKey: 'gestaoFinanceiraDesc', icon: '📊', titleFallback: 'GESTÃO FINANCEIRA', descFallback: 'Finanças e controlo.' },
                   { action: 'open-hub-comunicacao', titleKey: 'hubComunicacao', descKey: 'hubComunicacaoDesc', icon: '💬', titleFallback: 'HUB DE COMUNICAÇÃO', descFallback: 'Mensagens e participantes.' },
-                  { action: 'open-agenda', titleKey: 'agendaTitle', descKey: 'quickAccessAgendaDesc', icon: '📅', titleFallback: 'AGENDA TÉCNICA', descFallback: 'Agenda técnica e agendamentos.' }
+                  { action: 'open-agenda', titleKey: 'agendaTitle', descKey: 'quickAccessAgendaDesc', icon: '📅', titleFallback: 'AGENDA TÉCNICA', descFallback: 'Agenda técnica e agendamentos.' },
+                  { action: 'open-translator', titleKey: 'translator', descKey: 'quickAccessTranslatorDesc', icon: '🌐', titleFallback: 'Tradutor', descFallback: 'Tradução rápida entre idiomas.' },
+                  { action: 'open-checklist-hub', titleKey: 'checklistGroupTitle', descKey: 'quickAccessChecklistHubDesc', icon: '✅', titleFallback: 'GESTÃO DOS CHECKLIST', descFallback: 'Hub de checklists, pré-checklist e montagem.' }
                 ]
                 return (
               <div style={{ marginBottom: '50px' }}>
