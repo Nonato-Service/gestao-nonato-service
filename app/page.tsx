@@ -3356,6 +3356,7 @@ export default function Dashboard() {
     categoria: 'servico' | 'despesa'
   }>>([])
   const [showServicoForm, setShowServicoForm] = useState(false)
+  const [servicosActiveTab, setServicosActiveTab] = useState<'cadastrar' | 'listar'>('cadastrar')
   const [editingServico, setEditingServico] = useState<{
     id: string
     cod?: string
@@ -30884,9 +30885,28 @@ A1;Peça exemplo;10'
       
       case 'cadastro-servicos':
         return (
-          <div className="tab-content-wrapper tab-glass-root">
-            {/* Cabeçalho Profissional */}
-            <div className="tab-glass-hero">
+          <div className="tab-content-wrapper tab-glass-root tab-glass-root--wide">
+            <div className="mobile-sticky-toolbar">
+              <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>
+                ↶ {safeT?.voltar || 'Voltar'}
+              </button>
+              <button
+                className={`mobile-toolbar-btn ${servicosActiveTab === 'cadastrar' ? 'active' : ''}`}
+                onClick={() => setServicosActiveTab('cadastrar')}
+              >
+                ➕ {safeT?.adicionarServico || 'Novo Serviço'}
+              </button>
+              <button
+                className={`mobile-toolbar-btn ${servicosActiveTab === 'listar' ? 'active' : ''}`}
+                onClick={() => setServicosActiveTab('listar')}
+              >
+                📋 {safeT?.servicosCadastrados || 'Serviços'} ({servicos.length})
+              </button>
+              <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>
+                🏠
+              </button>
+            </div>
+            <div className="tab-header-desktop tab-glass-hero">
               <div className="tab-glass-hero-top">
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
@@ -30900,20 +30920,6 @@ A1;Peça exemplo;10'
                   </p>
                 </div>
                 <div className="tab-glass-hero-actions">
-                  <button 
-                    className="btn-primary" 
-                    onClick={handleAddServico} 
-                    style={{ 
-                      padding: '10px 20px',
-                      backgroundColor: 'rgba(18, 38, 62, 0.96)',
-                      border: '1px solid rgba(80, 160, 255, 0.55)',
-                      color: '#ffffff',
-                      fontWeight: 'bold',
-                      fontSize: '13px'
-                    }}
-                  >
-                    ➕ {safeT?.adicionarServico || 'Novo Serviço'}
-                  </button>
                   <div className="tab-glass-hero-actions-row">
                     <button 
                       onClick={() => closeTab(activeTabId || '')}
@@ -30977,6 +30983,53 @@ A1;Peça exemplo;10'
                 </div>
               </div>
             </div>
+
+            <div className="tab-nav-desktop tab-glass-nav">
+              <button 
+                className="btn-primary"
+                type="button"
+                onClick={() => setServicosActiveTab('cadastrar')}
+                style={{
+                  padding: '12px 24px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  border: '1px solid',
+                  borderColor: servicosActiveTab === 'cadastrar' ? 'rgba(0, 200, 80, 0.55)' : 'rgba(0, 255, 0, 0.22)',
+                  backgroundColor: servicosActiveTab === 'cadastrar' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
+                  color: '#ffffff',
+                  transition: 'border-color 0.2s ease, background-color 0.2s ease',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                ➕ {safeT?.adicionarServico || 'Novo Serviço'}
+              </button>
+              <button 
+                className="btn-primary"
+                type="button"
+                onClick={() => setServicosActiveTab('listar')}
+                style={{
+                  padding: '12px 24px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  border: '1px solid',
+                  borderColor: servicosActiveTab === 'listar' ? 'rgba(0, 200, 80, 0.55)' : 'rgba(0, 255, 0, 0.22)',
+                  backgroundColor: servicosActiveTab === 'listar' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
+                  color: '#ffffff',
+                  transition: 'border-color 0.2s ease, background-color 0.2s ease',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                📋 {safeT?.servicosCadastrados || 'Serviços cadastrados'} ({servicos.length})
+              </button>
+            </div>
+
+            {servicosActiveTab === 'cadastrar' ? (
+              <div>
+                <button className="btn-primary" onClick={handleAddServico} style={{ marginBottom: '20px' }}>
+                  {safeT?.adicionarServico || 'Adicionar Serviço ou Despesa'}
+                </button>
             {showServicoForm && (
               <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '15px' }}>
                 <h4 style={{ color: '#ffffff' }}>{editingServico ? (safeT?.editarServico || 'Editar Serviço') : (safeT?.adicionarServico || 'Adicionar Serviço ou Despesa')}</h4>
@@ -31038,6 +31091,9 @@ A1;Peça exemplo;10'
                 </div>
               </div>
             )}
+              </div>
+            ) : (
+              <div>
             {servicos.length === 0 ? (
               <p style={{ color: 'rgba(255,255,255,0.55)' }}>{safeT?.noServicos || 'Nenhum serviço ou despesa cadastrado.'}</p>
             ) : (
@@ -31052,7 +31108,12 @@ A1;Peça exemplo;10'
                       <p style={{ fontSize: '13px', opacity: 0.7, marginBottom: '10px', fontStyle: 'italic' }}>{servico.descricao}</p>
                     )}
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
-                      <button className="btn-primary cadastro-servico-btn-editar" onClick={() => handleEditServico(servico)} style={{ flex: 1, padding: '8px', fontSize: '12px' }}>
+                      <button
+                        className="btn-primary"
+                        type="button"
+                        onClick={() => { setServicosActiveTab('cadastrar'); handleEditServico(servico); }}
+                        style={{ flex: 1, padding: '8px', fontSize: '12px', backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff' }}
+                      >
                         {safeT?.edit || 'Editar'}
                       </button>
                       <button className="btn-danger" onClick={() => handleDeleteServico(servico.id)} style={{ flex: 1, padding: '8px', fontSize: '12px', backgroundColor: 'rgba(52, 22, 22, 0.96)', border: '1px solid rgba(255, 100, 100, 0.5)', color: '#ffffff' }}>
@@ -31061,6 +31122,8 @@ A1;Peça exemplo;10'
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
               </div>
             )}
           </div>
@@ -53855,7 +53918,12 @@ A1;Peça exemplo;10'
                     <p><strong>{servico.cod ? `${servico.cod} – ` : ''}{servico.nome}</strong> - {servico.valor}€ ({servico.tipoCobranca})</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.tipo || 'Tipo'}: {servico.categoria}</p>
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
-                      <button className="btn-primary cadastro-servico-btn-editar" onClick={() => handleEditServico(servico)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
+                      <button
+                        className="btn-primary"
+                        type="button"
+                        onClick={() => handleEditServico(servico)}
+                        style={{ flex: 1, padding: '5px', fontSize: '12px', backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff' }}
+                      >
                         {safeT?.edit || 'Editar'}
                       </button>
                       <button className="btn-danger" onClick={() => handleDeleteServico(servico.id)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
