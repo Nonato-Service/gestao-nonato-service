@@ -47846,7 +47846,7 @@ A1;Peça exemplo;10'
 
   return (
     <div
-      className={`app-layout${!isDemoMode ? ' app-layout-no-top-bar' : ''}${isCompactLayout ? ' app-compact-layout' : ''}${isCompactLayout && isDemoMode ? ' app-compact-with-demo' : ''}`}
+      className={`app-layout${!isDemoMode ? ' app-layout-no-top-bar' : ''}${isCompactLayout ? ' app-compact-layout' : ''}${isCompactLayout && isDemoMode ? ' app-compact-with-demo' : ''}${openTabs.length > 0 ? ' app-has-bottom-tabs' : ''}`}
       style={{
         display: 'flex',
         minHeight: '100dvh',
