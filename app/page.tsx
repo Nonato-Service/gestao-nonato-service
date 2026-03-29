@@ -43144,7 +43144,7 @@ A1;Peça exemplo;10'
 
             {relatoriosPorCliente.length === 0 ? (
               <div style={{ 
-                ...glassCardStyle(ACCENT_GREEN, { padding: '60px 40px', radius: '12px', borderAlpha: 0.34, borderWidth: '2px' }),
+                ...glassCardStyle(ACCENT_GREEN, { padding: '60px 40px', radius: '12px', borderAlpha: 0.2, borderWidth: '1px' }),
                 textAlign: 'center'
               }}>
                 <div style={{ fontSize: '48px', marginBottom: '20px' }}>📋</div>
@@ -43163,12 +43163,12 @@ A1;Peça exemplo;10'
                     <div 
                       key={cliente.id} 
                       style={{ 
-                        ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.28 }),
+                        ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }),
                         minWidth: 0,
                         maxWidth: '100%'
                       }}
-                      onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true, 0.28, 0.52)}
-                      onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false, 0.28, 0.52)}
+                      onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)}
+                      onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}
                     >
                       {/* Cabeçalho do Cliente + Excluir pasta */}
                       <div style={{ 
@@ -47499,21 +47499,9 @@ A1;Peça exemplo;10'
               <div
                 key={card.title}
                 className="ns-splash-card"
-                style={{
-                  padding: '18px',
-                  backgroundColor: 'rgba(30, 35, 30, 0.9)',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(0, 255, 0, 0.2)',
-                  transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.2)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
+                style={glassCardStyle(ACCENT_GREEN)}
+                onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)}
+                onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}
               >
                 <div style={{ fontSize: 'clamp(22px, 5vw, 26px)', marginBottom: '8px', color: '#00ff00' }}>{card.icon}</div>
                 <h3 style={{ margin: '0 0 8px 0', fontSize: 'clamp(14px, 3.2vw, 17px)', fontWeight: '700', color: '#fff' }}>{card.title}</h3>
