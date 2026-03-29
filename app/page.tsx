@@ -18301,7 +18301,7 @@ const nextF = familias.filter(x => x !== f)
     switch (tab.type) {
       case 'gestores':
         return (
-          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto', width: '100%' }} className="tab-content-wrapper">
+          <div className="tab-content-wrapper tab-glass-root">
             {/* Barra fixa mobile */}
             <div className="mobile-sticky-toolbar">
               <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>↶ {safeT?.voltar || 'Voltar'}</button>
@@ -18310,49 +18310,30 @@ const nextF = familias.filter(x => x !== f)
               <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
             </div>
             {/* Cabeçalho - oculto em mobile */}
-            <div className="tab-header-desktop" style={{
-              marginBottom: '40px',
-              padding: '30px',
-              background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-              borderRadius: '20px',
-              border: '2px solid rgba(0, 255, 0, 0.3)',
-              boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="tab-header-desktop tab-glass-hero">
+              <div className="tab-glass-hero-top">
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
                 </div>
-                <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 style={{
-                    margin: 0,
-                    fontSize: '32px',
-                    fontWeight: 'bold',
-                    color: '#00ff00',
-                    letterSpacing: '3px',
-                    textShadow: '0 0 20px rgba(0, 255, 0, 0.3)',
-                    marginBottom: '8px'
-                  }}>
+                <div className="tab-glass-hero-heading">
+                  <h1 className="tab-glass-hero-title">
                     {safeT?.gestoresTitle || 'GESTORES E TÉCNICOS'}
                   </h1>
-                  <p style={{
-                    margin: 0,
-                    fontSize: '14px',
-                    color: '#ccc',
-                    opacity: 0.8
-                  }}>
+                  <p className="tab-glass-hero-meta">
                     {gestores.length + tecnicos.length} {safeT?.totalCadastrados || 'cadastrado(s)'}
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <div className="tab-glass-hero-actions">
+                  <div className="tab-glass-hero-actions-row">
                   <button 
                     onClick={() => closeTab(activeTabId || '')}
                     style={{ 
                       padding: '6px 8px', 
                       fontSize: '16px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 255, 0, 0.3)',
+                      backgroundColor: 'rgba(0, 255, 0, 0.06)',
+                      border: '1px solid rgba(0, 255, 0, 0.55)',
                       borderRadius: '4px',
-                      color: '#00ff00',
+                      color: '#ffffff',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -18363,12 +18344,12 @@ const nextF = familias.filter(x => x !== f)
                     }}
                     title={safeT?.voltar || 'Voltar'}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.12)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.72)'
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.06)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.55)'
                     }}
                   >
                     ↶
@@ -18378,10 +18359,10 @@ const nextF = familias.filter(x => x !== f)
                     style={{ 
                       padding: '6px 8px', 
                       fontSize: '16px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 150, 255, 0.3)',
+                      backgroundColor: 'rgba(0, 150, 255, 0.06)',
+                      border: '1px solid rgba(0, 150, 255, 0.55)',
                       borderRadius: '4px',
-                      color: '#66b3ff',
+                      color: '#ffffff',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -18392,28 +18373,23 @@ const nextF = familias.filter(x => x !== f)
                     }}
                     title={safeT?.paginaInicial || 'Página Inicial'}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.1)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.5)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.12)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.72)'
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.3)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.06)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.55)'
                     }}
                   >
                     🏠
                   </button>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Abas de Navegação - ocultas em mobile */}
-            <div className="tab-nav-desktop" style={{
-              display: 'flex',
-              gap: '10px',
-              marginBottom: '30px',
-              paddingBottom: '15px',
-              borderBottom: '1px solid rgba(0, 255, 0, 0.3)'
-            }}>
+            <div className="tab-nav-desktop tab-glass-nav">
               <button 
                 className="btn-primary"
                 onClick={() => setGestoresActiveTab('gestores')}
@@ -18422,10 +18398,12 @@ const nextF = familias.filter(x => x !== f)
                   fontSize: '14px',
                   fontWeight: 'bold',
                   border: '1px solid',
-                  borderColor: gestoresActiveTab === 'gestores' ? 'rgba(0, 255, 0, 0.5)' : 'rgba(0, 255, 0, 0.2)',
-                  backgroundColor: gestoresActiveTab === 'gestores' ? 'rgba(0, 255, 0, 0.2)' : '#2a2a2a',
-                  color: gestoresActiveTab === 'gestores' ? '#00ff00' : '#fff',
-                  transition: 'all 0.3s ease'
+                  borderColor: gestoresActiveTab === 'gestores' ? 'rgba(0, 200, 80, 0.55)' : 'rgba(0, 255, 0, 0.22)',
+                  backgroundColor: gestoresActiveTab === 'gestores' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
+                  color: '#ffffff',
+                  transition: 'border-color 0.2s ease, background-color 0.2s ease',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
                 }}
               >
                 👨‍💼 {safeT?.gestoresTab || 'Gestores'} ({gestores.length})
@@ -18438,10 +18416,12 @@ const nextF = familias.filter(x => x !== f)
                   fontSize: '14px',
                   fontWeight: 'bold',
                   border: '1px solid',
-                  borderColor: gestoresActiveTab === 'tecnicos' ? 'rgba(0, 255, 0, 0.5)' : 'rgba(0, 255, 0, 0.2)',
-                  backgroundColor: gestoresActiveTab === 'tecnicos' ? 'rgba(0, 255, 0, 0.2)' : '#2a2a2a',
-                  color: gestoresActiveTab === 'tecnicos' ? '#00ff00' : '#fff',
-                  transition: 'all 0.3s ease'
+                  borderColor: gestoresActiveTab === 'tecnicos' ? 'rgba(0, 200, 80, 0.55)' : 'rgba(0, 255, 0, 0.22)',
+                  backgroundColor: gestoresActiveTab === 'tecnicos' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
+                  color: '#ffffff',
+                  transition: 'border-color 0.2s ease, background-color 0.2s ease',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
                 }}
               >
                 🔧 {safeT?.tecnicosTab || 'Técnicos'} ({tecnicos.length})
@@ -18452,23 +18432,19 @@ const nextF = familias.filter(x => x !== f)
               <div>
                 {/* Banner destacado para gerenciar tipos */}
                 <div style={{ 
+                  ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }),
                   marginBottom: '25px', 
-                  padding: '20px', 
-                  backgroundColor: 'rgba(0, 255, 0, 0.08)', 
-                  borderRadius: '10px', 
-                  border: '1px solid rgba(0, 255, 0, 0.3)',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   flexWrap: 'wrap',
-                  gap: '20px',
-                  boxShadow: '0 2px 10px rgba(0, 255, 0, 0.1)'
+                  gap: '20px'
                 }}>
                   <div style={{ flex: 1, minWidth: '250px' }}>
-                    <h3 style={{ margin: 0, marginBottom: '8px', color: '#00ff00', fontSize: '18px', fontWeight: 'bold' }}>
+                    <h3 style={{ margin: 0, marginBottom: '8px', color: '#ffffff', fontSize: '18px', fontWeight: 'bold' }}>
                       ⚙️ Gerenciar Áreas de Atuação
                     </h3>
-                    <p style={{ margin: 0, fontSize: '13px', color: '#ddd', lineHeight: '1.5' }}>
+                    <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.82)', lineHeight: '1.5' }}>
                       Adicione novos tipos de gestores (ex: Gestor de Qualidade, Gestor de Vendas, etc.) ou edite os existentes. Clique no botão ao lado para começar.
                     </p>
                   </div>
@@ -18478,23 +18454,13 @@ const nextF = familias.filter(x => x !== f)
                     style={{
                       padding: '14px 28px',
                       fontSize: '16px',
-                      border: '1px solid rgba(0, 255, 0, 0.5)',
-                      backgroundColor: 'rgba(0, 255, 0, 0.2)',
-                      color: '#00ff00',
+                      border: '1px solid rgba(0, 200, 80, 0.55)',
+                      backgroundColor: 'rgba(18, 52, 24, 0.96)',
+                      color: '#ffffff',
                       fontWeight: 'bold',
                       whiteSpace: 'nowrap',
                       cursor: 'pointer',
-                      boxShadow: '0 2px 8px rgba(0, 255, 0, 0.15)'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.25)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.6)'
-                      e.currentTarget.style.transform = 'scale(1.02)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.2)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
-                      e.currentTarget.style.transform = 'scale(1)'
+                      borderRadius: '8px'
                     }}
                   >
                     ➕ Gerenciar Tipos de Gestores
@@ -18531,7 +18497,7 @@ const nextF = familias.filter(x => x !== f)
                 </div>
                 
                 {showGestorForm && !editingGestor && (
-                  <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414' }}>
+                  <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}>
                     <h3 style={{ marginBottom: '15px' }}>{safeT?.addGestor || 'Adicionar Gestor'}</h3>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.name || 'Nome'}</label>
@@ -18594,7 +18560,7 @@ const nextF = familias.filter(x => x !== f)
                     {gestores
                       .filter(gestor => filtroAreaGestor === 'todas' || gestor.area === filtroAreaGestor)
                       .map(gestor => (
-                      <div key={gestor.id} style={{ padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                      <div key={gestor.id} style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }), height: 'fit-content' }} onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)} onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}>
                         {gestor.photo && (
                           <img src={gestor.photo} alt={gestor.name} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
                         )}
@@ -18722,7 +18688,7 @@ const nextF = familias.filter(x => x !== f)
                 </button>
                 
                 {showTecnicoForm && (
-                  <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414' }}>
+                  <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}>
                     <h3 style={{ marginBottom: '15px' }}>{editingTecnico ? (safeT?.editTecnico || 'Editar Técnico') : (safeT?.addTecnico || 'Adicionar Técnico')}</h3>
                     <div style={{ marginBottom: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.name || 'Nome'}</label>
@@ -18797,7 +18763,7 @@ const nextF = familias.filter(x => x !== f)
                   return (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
                       {tecnicosFiltrados.map(tecnico => (
-                        <div key={tecnico.id} style={{ padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                        <div key={tecnico.id} style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }), height: 'fit-content' }} onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)} onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}>
                           {tecnico.photo && (
                             <img src={tecnico.photo} alt={tecnico.name} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
                           )}
@@ -25861,7 +25827,7 @@ onKeyPress={(e) => {
           .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
         
         return (
-          <div style={{ padding: '30px', maxWidth: '1800px', margin: '0 auto', width: '100%' }} className="tab-content-wrapper">
+          <div className="tab-content-wrapper tab-glass-root tab-glass-root--wide">
             {/* Barra fixa no topo para mobile - Voltar + Cadastrar + Listar sempre visíveis */}
             <div className="mobile-sticky-toolbar">
               <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>
@@ -25884,49 +25850,30 @@ onKeyPress={(e) => {
               </button>
             </div>
             {/* Cabeçalho Profissional - oculto em mobile (toolbar substitui) */}
-            <div className="tab-header-desktop" style={{
-              marginBottom: '40px',
-              padding: '30px',
-              background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-              borderRadius: '20px',
-              border: '2px solid rgba(0, 255, 0, 0.3)',
-              boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div className="tab-header-desktop tab-glass-hero">
+              <div className="tab-glass-hero-top">
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
                 </div>
-                <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 style={{
-                    margin: 0,
-                    fontSize: '32px',
-                    fontWeight: 'bold',
-                    color: '#00ff00',
-                    letterSpacing: '3px',
-                    textShadow: '0 0 20px rgba(0, 255, 0, 0.3)',
-                    marginBottom: '8px'
-                  }}>
+                <div className="tab-glass-hero-heading">
+                  <h1 className="tab-glass-hero-title">
                     {safeT?.clientesTitle || 'CLIENTES'}
                   </h1>
-                  <p style={{
-                    margin: 0,
-                    fontSize: '14px',
-                    color: '#ccc',
-                    opacity: 0.8
-                  }}>
+                  <p className="tab-glass-hero-meta">
                     {clientes.length} {safeT?.clientesCadastrados || 'cliente(s) cadastrado(s)'}
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <div className="tab-glass-hero-actions">
+                  <div className="tab-glass-hero-actions-row">
                   <button 
                     onClick={() => closeTab(activeTabId || '')}
                     style={{ 
                       padding: '6px 8px', 
                       fontSize: '16px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 255, 0, 0.3)',
+                      backgroundColor: 'rgba(0, 255, 0, 0.06)',
+                      border: '1px solid rgba(0, 255, 0, 0.55)',
                       borderRadius: '4px',
-                      color: '#00ff00',
+                      color: '#ffffff',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -25937,12 +25884,12 @@ onKeyPress={(e) => {
                     }}
                     title={safeT?.voltar || 'Voltar'}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.12)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.72)'
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.06)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.55)'
                     }}
                   >
                     ↶
@@ -25952,10 +25899,10 @@ onKeyPress={(e) => {
                     style={{ 
                       padding: '6px 8px', 
                       fontSize: '16px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 150, 255, 0.3)',
+                      backgroundColor: 'rgba(0, 150, 255, 0.06)',
+                      border: '1px solid rgba(0, 150, 255, 0.55)',
                       borderRadius: '4px',
-                      color: '#66b3ff',
+                      color: '#ffffff',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -25966,28 +25913,23 @@ onKeyPress={(e) => {
                     }}
                     title={safeT?.paginaInicial || 'Página Inicial'}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.1)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.5)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.12)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.72)'
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.3)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.06)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.55)'
                     }}
                   >
                     🏠
                   </button>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Abas de Navegação - ocultas em mobile (toolbar tem Cadastrar/Listar) */}
-            <div className="tab-nav-desktop" style={{
-              display: 'flex',
-              gap: '10px',
-              marginBottom: '30px',
-              paddingBottom: '15px',
-              borderBottom: '2px solid rgba(0, 255, 0, 0.3)'
-            }}>
+            <div className="tab-nav-desktop tab-glass-nav">
               <button 
                 className="btn-primary"
                 onClick={() => setClientesActiveTab('cadastrar')}
@@ -25995,10 +25937,13 @@ onKeyPress={(e) => {
                   padding: '12px 24px',
                   fontSize: '14px',
                   fontWeight: 'bold',
-                  backgroundColor: clientesActiveTab === 'cadastrar' ? 'rgba(0, 255, 0, 0.3)' : '#2a2a2a',
-                  borderColor: clientesActiveTab === 'cadastrar' ? 'rgba(0, 255, 0, 0.6)' : 'rgba(0, 255, 0, 0.3)',
-                  color: clientesActiveTab === 'cadastrar' ? '#00ff00' : '#fff',
-                  transition: 'all 0.3s ease'
+                  border: '1px solid',
+                  borderColor: clientesActiveTab === 'cadastrar' ? 'rgba(0, 200, 80, 0.55)' : 'rgba(0, 255, 0, 0.22)',
+                  backgroundColor: clientesActiveTab === 'cadastrar' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
+                  color: '#ffffff',
+                  transition: 'border-color 0.2s ease, background-color 0.2s ease',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
                 }}
               >
                 ➕ {safeT?.cadastrarCliente || 'Cadastrar Cliente'}
@@ -26010,10 +25955,13 @@ onKeyPress={(e) => {
                   padding: '12px 24px',
                   fontSize: '14px',
                   fontWeight: 'bold',
-                  backgroundColor: clientesActiveTab === 'listar' ? 'rgba(0, 255, 0, 0.3)' : '#2a2a2a',
-                  borderColor: clientesActiveTab === 'listar' ? 'rgba(0, 255, 0, 0.6)' : 'rgba(0, 255, 0, 0.3)',
-                  color: clientesActiveTab === 'listar' ? '#00ff00' : '#fff',
-                  transition: 'all 0.3s ease'
+                  border: '1px solid',
+                  borderColor: clientesActiveTab === 'listar' ? 'rgba(0, 200, 80, 0.55)' : 'rgba(0, 255, 0, 0.22)',
+                  backgroundColor: clientesActiveTab === 'listar' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
+                  color: '#ffffff',
+                  transition: 'border-color 0.2s ease, background-color 0.2s ease',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
                 }}
               >
                 📋 {safeT?.clientesCadastrados || 'Clientes Cadastrados'} ({clientes.length})
@@ -26029,7 +25977,7 @@ onKeyPress={(e) => {
                 {showClienteForm && (
               <div
                 className={editingCliente && clienteCadastroAlertaDevedorId === editingCliente.id ? 'cliente-form-alerta-devedor' : undefined}
-                style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414' }}
+                style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', flexWrap: 'wrap', gap: '10px' }}>
                   <h3 style={{ margin: 0 }}>{editingCliente ? (safeT?.editCliente || 'Editar Cliente') : (safeT?.addCliente || 'Adicionar Cliente')}</h3>
@@ -26520,7 +26468,7 @@ onKeyPress={(e) => {
         )
         
         return (
-          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto', width: '100%' }} className="tab-content-wrapper">
+          <div className="tab-content-wrapper tab-glass-root">
             {/* Barra fixa mobile */}
             <div className="mobile-sticky-toolbar">
               <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>↶ {safeT?.voltar || 'Voltar'}</button>
@@ -26528,64 +26476,44 @@ onKeyPress={(e) => {
               <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
             </div>
             {/* Cabeçalho - oculto em mobile */}
-            <div className="tab-header-desktop" style={{
-              marginBottom: '40px',
-              padding: '30px',
-              background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-              borderRadius: '20px',
-              border: '2px solid rgba(0, 255, 0, 0.3)',
-              boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div className="tab-header-desktop tab-glass-hero">
+              <div className="tab-glass-hero-top">
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
                 </div>
-                <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 style={{
-                    margin: 0,
-                    fontSize: '32px',
-                    fontWeight: 'bold',
-                    color: '#00ff00',
-                    letterSpacing: '3px',
-                    textShadow: '0 0 20px rgba(0, 255, 0, 0.3)',
-                    marginBottom: '8px'
-                  }}>
+                <div className="tab-glass-hero-heading">
+                  <h1 className="tab-glass-hero-title">
                     {safeT?.fornecedoresTitle || 'FORNECEDORES'}
                   </h1>
-                  <p style={{
-                    margin: 0,
-                    fontSize: '14px',
-                    color: '#ccc',
-                    opacity: 0.8
-                  }}>
+                  <p className="tab-glass-hero-meta">
                     {fornecedores.length} {safeT?.fornecedoresCadastrados || 'fornecedor(es) cadastrado(s)'}
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div className="tab-glass-hero-actions">
                   <button 
                     className="btn-primary" 
                     onClick={handleAddFornecedor} 
                     style={{ 
                       padding: '10px 20px',
-                      backgroundColor: 'rgba(255, 165, 0, 0.2)',
-                      borderColor: 'rgba(255, 165, 0, 0.5)',
-                      color: '#ffaa00',
+                      backgroundColor: 'rgba(18, 52, 24, 0.96)',
+                      border: '1px solid rgba(0, 200, 80, 0.55)',
+                      color: '#ffffff',
                       fontWeight: 'bold',
                       fontSize: '13px'
                     }}
                   >
                     ➕ {safeT?.addFornecedor || 'Novo Fornecedor'}
                   </button>
-                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <div className="tab-glass-hero-actions-row">
                     <button 
                       onClick={() => closeTab(activeTabId || '')}
                       style={{ 
                         padding: '6px 8px', 
                         fontSize: '16px',
-                        backgroundColor: 'transparent',
-                        border: '1px solid rgba(0, 255, 0, 0.3)',
+                        backgroundColor: 'rgba(0, 255, 0, 0.06)',
+                        border: '1px solid rgba(0, 255, 0, 0.55)',
                         borderRadius: '4px',
-                        color: '#00ff00',
+                        color: '#ffffff',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         display: 'flex',
@@ -26596,12 +26524,12 @@ onKeyPress={(e) => {
                       }}
                       title={safeT?.voltar || 'Voltar'}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
-                        e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.12)'
+                        e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.72)'
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent'
-                        e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.06)'
+                        e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.55)'
                       }}
                     >
                       ↶
@@ -26611,10 +26539,10 @@ onKeyPress={(e) => {
                       style={{ 
                         padding: '6px 8px', 
                         fontSize: '16px',
-                        backgroundColor: 'transparent',
-                        border: '1px solid rgba(0, 150, 255, 0.3)',
+                        backgroundColor: 'rgba(0, 150, 255, 0.06)',
+                        border: '1px solid rgba(0, 150, 255, 0.55)',
                         borderRadius: '4px',
-                        color: '#66b3ff',
+                        color: '#ffffff',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         display: 'flex',
@@ -26625,12 +26553,12 @@ onKeyPress={(e) => {
                       }}
                       title={safeT?.paginaInicial || 'Página Inicial'}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.1)'
-                        e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.5)'
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.12)'
+                        e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.72)'
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent'
-                        e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.3)'
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.06)'
+                        e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.55)'
                       }}
                     >
                       🏠
@@ -26643,11 +26571,8 @@ onKeyPress={(e) => {
             {/* Barra de Busca */}
             {fornecedores.length > 0 && (
               <div style={{
-                marginBottom: '30px',
-                padding: '20px',
-                backgroundColor: '#141414',
-                borderRadius: '12px',
-                border: '1px solid rgba(255, 165, 0, 0.2)'
+                ...glassCardStyle(ACCENT_AMBER, { padding: '20px', radius: '12px', borderAlpha: 0.25 }),
+                marginBottom: '30px'
               }}>
                 <div style={{ position: 'relative' }}>
                   <input
@@ -26678,7 +26603,7 @@ onKeyPress={(e) => {
             )}
             
             {showFornecedorForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414' }}>
+              <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}>
                 <h3 style={{ marginBottom: '15px' }}>{editingFornecedor ? (safeT?.editFornecedor || 'Editar Fornecedor') : (safeT?.addFornecedor || 'Adicionar Fornecedor')}</h3>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
@@ -27380,51 +27305,32 @@ onKeyPress={(e) => {
       
       case 'biblioteca-pecas':
         return (
-          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto', width: '100%', overflow: 'visible', boxSizing: 'border-box' }}>
+          <div className="tab-content-wrapper tab-glass-root" style={{ overflow: 'visible' }}>
             {/* Cabeçalho Profissional */}
-            <div style={{
-              marginBottom: '16px',
-              padding: '12px 20px',
-              background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-              borderRadius: '12px',
-              border: '1px solid rgba(0, 255, 0, 0.25)',
-              boxShadow: '0 2px 12px rgba(0, 255, 0, 0.08)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="tab-glass-hero tab-glass-hero--compact">
+              <div className="tab-glass-hero-top" style={{ marginBottom: 0 }}>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
                 </div>
-                <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 style={{
-                    margin: 0,
-                    fontSize: '18px',
-                    fontWeight: 'bold',
-                    color: '#00ff00',
-                    letterSpacing: '1px',
-                    textShadow: '0 0 12px rgba(0, 255, 0, 0.2)',
-                    marginBottom: '2px'
-                  }}>
+                <div className="tab-glass-hero-heading">
+                  <h1 className="tab-glass-hero-title" style={{ fontSize: 'clamp(1rem, 3.5vw, 1.15rem)' }}>
                     {safeT?.cadastroPecasBibliotecaTitle || 'BIBLIOTECA DE PEÇAS'}
                   </h1>
-                  <p style={{
-                    margin: 0,
-                    fontSize: '12px',
-                    color: '#aaa',
-                    opacity: 0.9
-                  }}>
+                  <p className="tab-glass-hero-meta" style={{ fontSize: '12px', opacity: 0.92 }}>
                     {pecasBiblioteca.length} {safeT?.pecasCadastradas || 'peça(s) cadastrada(s)'}
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                <div className="tab-glass-hero-actions">
+                  <div className="tab-glass-hero-actions-row">
                   <button 
                     onClick={() => closeTab(activeTabId || '')}
                     style={{ 
-                      padding: '4px 6px', 
-                      fontSize: '14px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 255, 0, 0.3)',
+                      padding: '6px 8px', 
+                      fontSize: '16px',
+                      backgroundColor: 'rgba(0, 255, 0, 0.06)',
+                      border: '1px solid rgba(0, 255, 0, 0.55)',
                       borderRadius: '4px',
-                      color: '#00ff00',
+                      color: '#ffffff',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -27435,12 +27341,12 @@ onKeyPress={(e) => {
                     }}
                     title={safeT?.voltar || 'Voltar'}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.12)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.72)'
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.06)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.55)'
                     }}
                   >
                     ↶
@@ -27448,32 +27354,33 @@ onKeyPress={(e) => {
                   <button 
                     onClick={voltarPaginaInicial}
                     style={{ 
-                      padding: '4px 6px', 
-                      fontSize: '14px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 150, 255, 0.3)',
+                      padding: '6px 8px', 
+                      fontSize: '16px',
+                      backgroundColor: 'rgba(0, 150, 255, 0.06)',
+                      border: '1px solid rgba(0, 150, 255, 0.55)',
                       borderRadius: '4px',
-                      color: '#66b3ff',
+                      color: '#ffffff',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      width: '28px',
-                      height: '28px'
+                      width: '32px',
+                      height: '32px'
                     }}
                     title={safeT?.paginaInicial || 'Página Inicial'}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.1)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.5)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.12)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.72)'
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.3)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.06)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.55)'
                     }}
                   >
                     🏠
                   </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -27486,83 +27393,53 @@ onKeyPress={(e) => {
               marginBottom: '16px'
             }}>
               <div style={{
-                padding: '10px 12px',
-                backgroundColor: '#141414',
-                borderRadius: '8px',
-                border: '1px solid rgba(0, 255, 0, 0.25)',
+                ...glassCardStyle(ACCENT_GREEN, { padding: '10px 12px', radius: '10px', borderAlpha: 0.2 }),
                 textAlign: 'center',
-                transition: 'all 0.2s ease',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
                 justifyContent: 'center'
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(0, 100, 255, 0.5)'
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 100, 255, 0.15)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.25)'
-                e.currentTarget.style.boxShadow = 'none'
-              }}
+              onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)}
+              onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}
               >
                 <span style={{ fontSize: '18px', opacity: 0.9 }}>⚙️</span>
                 <div style={{ textAlign: 'left' }}>
-                  <div style={{ color: '#66b3ff', fontSize: '11px', fontWeight: '600', lineHeight: 1.2 }}>{safeT?.quantidadePecas || 'Peças'}</div>
+                  <div style={{ color: '#ffffff', fontSize: '11px', fontWeight: '600', lineHeight: 1.2, opacity: 0.9 }}>{safeT?.quantidadePecas || 'Peças'}</div>
                   <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>{pecasBiblioteca.length}</div>
                 </div>
               </div>
               <div style={{
-                padding: '10px 12px',
-                backgroundColor: '#141414',
-                borderRadius: '8px',
-                border: '1px solid rgba(0, 255, 0, 0.25)',
+                ...glassCardStyle(ACCENT_GREEN, { padding: '10px 12px', radius: '10px', borderAlpha: 0.2 }),
                 textAlign: 'center',
-                transition: 'all 0.2s ease',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
                 justifyContent: 'center'
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(0, 100, 255, 0.5)'
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 100, 255, 0.15)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.25)'
-                e.currentTarget.style.boxShadow = 'none'
-              }}
+              onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)}
+              onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}
               >
                 <span style={{ fontSize: '18px', opacity: 0.9 }}>📁</span>
                 <div style={{ textAlign: 'left' }}>
-                  <div style={{ color: '#66b3ff', fontSize: '11px', fontWeight: '600', lineHeight: 1.2 }}>{safeT?.quantidadeCategorias || 'Categorias'}</div>
+                  <div style={{ color: '#ffffff', fontSize: '11px', fontWeight: '600', lineHeight: 1.2, opacity: 0.9 }}>{safeT?.quantidadeCategorias || 'Categorias'}</div>
                   <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>{categoriasPecas.length}</div>
                 </div>
               </div>
               <div style={{
-                padding: '10px 12px',
-                backgroundColor: '#141414',
-                borderRadius: '8px',
-                border: '1px solid rgba(0, 255, 0, 0.25)',
+                ...glassCardStyle(ACCENT_GREEN, { padding: '10px 12px', radius: '10px', borderAlpha: 0.2 }),
                 textAlign: 'center',
-                transition: 'all 0.2s ease',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
                 justifyContent: 'center'
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(0, 100, 255, 0.5)'
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 100, 255, 0.15)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.25)'
-                e.currentTarget.style.boxShadow = 'none'
-              }}
+              onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)}
+              onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}
               >
                 <span style={{ fontSize: '18px', opacity: 0.9 }}>📂</span>
                 <div style={{ textAlign: 'left' }}>
-                  <div style={{ color: '#66b3ff', fontSize: '11px', fontWeight: '600', lineHeight: 1.2 }}>{safeT?.quantidadeSubcategorias || 'Subcategorias'}</div>
+                  <div style={{ color: '#ffffff', fontSize: '11px', fontWeight: '600', lineHeight: 1.2, opacity: 0.9 }}>{safeT?.quantidadeSubcategorias || 'Subcategorias'}</div>
                   <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>{subcategoriasPecas.length}</div>
                 </div>
               </div>
@@ -27575,20 +27452,20 @@ onKeyPress={(e) => {
               gap: '8px',
               marginBottom: '16px',
               paddingBottom: '12px',
-              borderBottom: '1px solid rgba(0, 255, 0, 0.25)'
+              borderBottom: '1px solid rgba(0, 255, 0, 0.24)'
             }}>
               <button
                 onClick={() => setAbaBibliotecaPecas('cadastro')}
                 style={{
                   padding: '8px 14px',
-                  backgroundColor: abaBibliotecaPecas === 'cadastro' ? 'rgba(0, 255, 0, 0.18)' : 'rgba(30, 35, 30, 0.9)',
-                  border: abaBibliotecaPecas === 'cadastro' ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.35)',
-                  color: abaBibliotecaPecas === 'cadastro' ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
+                  backgroundColor: abaBibliotecaPecas === 'cadastro' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
+                  border: abaBibliotecaPecas === 'cadastro' ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 255, 0, 0.22)',
+                  color: '#ffffff',
                   cursor: 'pointer',
                   fontSize: '13px',
                   fontWeight: abaBibliotecaPecas === 'cadastro' ? 'bold' : '500',
                   borderRadius: '8px',
-                  transition: 'all 0.2s ease'
+                  transition: 'border-color 0.2s ease, background-color 0.2s ease'
                 }}
               >
                 {safeT?.cadastroPecas || 'Cadastro de Peças'}
@@ -27597,14 +27474,14 @@ onKeyPress={(e) => {
                 onClick={() => setAbaBibliotecaPecas('biblioteca')}
                 style={{
                   padding: '8px 14px',
-                  backgroundColor: abaBibliotecaPecas === 'biblioteca' ? 'rgba(0, 255, 0, 0.18)' : 'rgba(30, 35, 30, 0.9)',
-                  border: abaBibliotecaPecas === 'biblioteca' ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.35)',
-                  color: abaBibliotecaPecas === 'biblioteca' ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
+                  backgroundColor: abaBibliotecaPecas === 'biblioteca' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
+                  border: abaBibliotecaPecas === 'biblioteca' ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 255, 0, 0.22)',
+                  color: '#ffffff',
                   cursor: 'pointer',
                   fontSize: '13px',
                   fontWeight: abaBibliotecaPecas === 'biblioteca' ? 'bold' : '500',
                   borderRadius: '8px',
-                  transition: 'all 0.2s ease'
+                  transition: 'border-color 0.2s ease, background-color 0.2s ease'
                 }}
               >
                 {safeT?.bibliotecaPecas || 'Biblioteca'}
@@ -27613,14 +27490,14 @@ onKeyPress={(e) => {
                 onClick={() => setAbaBibliotecaPecas('grupos')}
                 style={{
                   padding: '8px 14px',
-                  backgroundColor: abaBibliotecaPecas === 'grupos' ? 'rgba(0, 255, 0, 0.18)' : 'rgba(30, 35, 30, 0.9)',
-                  border: abaBibliotecaPecas === 'grupos' ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.35)',
-                  color: abaBibliotecaPecas === 'grupos' ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
+                  backgroundColor: abaBibliotecaPecas === 'grupos' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
+                  border: abaBibliotecaPecas === 'grupos' ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 255, 0, 0.22)',
+                  color: '#ffffff',
                   cursor: 'pointer',
                   fontSize: '13px',
                   fontWeight: abaBibliotecaPecas === 'grupos' ? 'bold' : '500',
                   borderRadius: '8px',
-                  transition: 'all 0.2s ease'
+                  transition: 'border-color 0.2s ease, background-color 0.2s ease'
                 }}
               >
                 {safeT?.gerenciarCategorias || 'Gerenciar Categorias'}
@@ -27629,14 +27506,14 @@ onKeyPress={(e) => {
                 onClick={() => setAbaBibliotecaPecas('importacao')}
                 style={{
                   padding: '8px 14px',
-                  backgroundColor: abaBibliotecaPecas === 'importacao' ? 'rgba(0, 255, 0, 0.18)' : 'rgba(30, 35, 30, 0.9)',
-                  border: abaBibliotecaPecas === 'importacao' ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.35)',
-                  color: abaBibliotecaPecas === 'importacao' ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
+                  backgroundColor: abaBibliotecaPecas === 'importacao' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
+                  border: abaBibliotecaPecas === 'importacao' ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 255, 0, 0.22)',
+                  color: '#ffffff',
                   cursor: 'pointer',
                   fontSize: '13px',
                   fontWeight: abaBibliotecaPecas === 'importacao' ? 'bold' : '500',
                   borderRadius: '8px',
-                  transition: 'all 0.2s ease'
+                  transition: 'border-color 0.2s ease, background-color 0.2s ease'
                 }}
               >
                 📥 {safeT?.importacaoPecas || 'Importação de Peças'}
@@ -27761,7 +27638,7 @@ onKeyPress={(e) => {
             </button>
             
             {showBibliotecaPecasForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414' }}>
+              <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}>
                 <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>
                   {editingPecaBiblioteca ? (safeT?.editPecaBiblioteca || 'Editar Peça') : (safeT?.novaPecaBiblioteca || 'Nova Peça')}
                 </h3>
@@ -29360,46 +29237,41 @@ A1;Peça exemplo;10'
           saveData('nonato-solicitacoes-servico-tecnico', list)
         }
         return (
-          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
-            <div style={{
-              marginBottom: '24px',
-              padding: '30px',
-              background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-              borderRadius: '20px',
-              border: '2px solid rgba(0, 255, 0, 0.3)',
-              boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="tab-content-wrapper tab-glass-root">
+            <div className="tab-glass-hero">
+              <div className="tab-glass-hero-top">
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
                 </div>
-                <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#00ff00', letterSpacing: '3px', textShadow: '0 0 20px rgba(0, 255, 0, 0.3)', marginBottom: '8px' }}>
+                <div className="tab-glass-hero-heading">
+                  <h1 className="tab-glass-hero-title">
                     {safeT?.solicitacaoServicoTecnicoTitle || 'SOLICITAÇÃO DE SERVIÇO TÉCNICO'}
                   </h1>
-                  <p style={{ margin: 0, fontSize: '14px', color: '#ccc', opacity: 0.8 }}>
+                  <p className="tab-glass-hero-meta">
                     {safeT?.solicitacaoServicoTecnicoSubtitle || 'Formulário para enviar ao cliente. O cliente preenche, assina e reenvia por e-mail ou WhatsApp.'}
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div className="tab-glass-hero-actions">
                   {!showSolicitacaoServicoTecnicoForm && (
-                    <button className="btn-primary" onClick={() => { setShowSolicitacaoServicoTecnicoForm(true); setEditingSolicitacaoServicoTecnico(null); setSolicitacaoServicoTecnicoForm({ nomeCliente: '', tipoEquipamento: '', marca: '', modelo: '', numeroSerie: '', problemasApresentados: '', endereco: '', telefone: '', responsavel: '', assinaturaCliente: undefined, dataAssinaturaCliente: undefined, dataRecebimento: undefined }); }} style={{ padding: '10px 20px', backgroundColor: 'rgba(0, 255, 0, 0.2)', borderColor: 'rgba(0, 255, 0, 0.5)', color: '#00ff00', fontWeight: 'bold' }}>
+                    <button className="btn-primary" onClick={() => { setShowSolicitacaoServicoTecnicoForm(true); setEditingSolicitacaoServicoTecnico(null); setSolicitacaoServicoTecnicoForm({ nomeCliente: '', tipoEquipamento: '', marca: '', modelo: '', numeroSerie: '', problemasApresentados: '', endereco: '', telefone: '', responsavel: '', assinaturaCliente: undefined, dataAssinaturaCliente: undefined, dataRecebimento: undefined }); }} style={{ padding: '10px 20px', backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff', fontWeight: 'bold' }}>
                       ➕ {safeT?.solicitacaoServicoTecnicoNovaSolicitacao || 'Nova solicitação'}
                     </button>
                   )}
-                  <button onClick={() => closeTab(activeTabId || '')} style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'transparent', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', color: '#00ff00', cursor: 'pointer' }} title={safeT?.voltar || 'Voltar'}>↶</button>
-                  <button onClick={voltarPaginaInicial} style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'transparent', border: '1px solid rgba(0, 150, 255, 0.3)', borderRadius: '4px', color: '#66b3ff', cursor: 'pointer' }} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
+                  <div className="tab-glass-hero-actions-row">
+                  <button onClick={() => closeTab(activeTabId || '')} style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'rgba(0, 255, 0, 0.06)', border: '1px solid rgba(0, 255, 0, 0.55)', borderRadius: '4px', color: '#ffffff', cursor: 'pointer', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={safeT?.voltar || 'Voltar'}>↶</button>
+                  <button onClick={voltarPaginaInicial} style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'rgba(0, 150, 255, 0.06)', border: '1px solid rgba(0, 150, 255, 0.55)', borderRadius: '4px', color: '#ffffff', cursor: 'pointer', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div style={{ marginBottom: '24px', padding: '16px 20px', backgroundColor: 'rgba(255, 193, 7, 0.1)', border: '1px solid rgba(255, 193, 7, 0.4)', borderRadius: '12px', color: '#ffc107', fontSize: '14px' }}>
-              <strong>{safeT?.solicitacaoServicoTecnicoNotice || 'Após receber esta solicitação preenchida e assinada pelo cliente, será feito o pré-agendamento e na mesma solicitação será aplicado o nível de urgência.'}</strong>
+            <div style={{ ...glassCardStyle(ACCENT_AMBER, { padding: '16px 20px', radius: '12px', borderAlpha: 0.35 }), marginBottom: '24px', color: '#ffffff', fontSize: '14px' }}>
+              <strong style={{ opacity: 0.95 }}>{safeT?.solicitacaoServicoTecnicoNotice || 'Após receber esta solicitação preenchida e assinada pelo cliente, será feito o pré-agendamento e na mesma solicitação será aplicado o nível de urgência.'}</strong>
             </div>
 
             {showSolicitacaoServicoTecnicoForm && (
-              <div style={{ marginBottom: '32px', padding: '24px', backgroundColor: '#2a2a2a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
-                <h3 style={{ marginBottom: '20px', color: '#00ff00' }}>{editingSolicitacaoServicoTecnico ? (safeT?.editar || 'Editar') : (safeT?.solicitacaoServicoTecnicoNovaSolicitacao || 'Nova solicitação')}</h3>
+              <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '24px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '32px' }}>
+                <h3 style={{ marginBottom: '20px', color: '#ffffff' }}>{editingSolicitacaoServicoTecnico ? (safeT?.editar || 'Editar') : (safeT?.solicitacaoServicoTecnicoNovaSolicitacao || 'Nova solicitação')}</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px', marginBottom: '16px' }}>
                   {[
                     { key: 'nomeCliente', label: safeT?.solicitacaoServicoTecnicoNomeCliente },
@@ -29423,8 +29295,8 @@ A1;Peça exemplo;10'
                   <textarea value={solicitacaoServicoTecnicoForm.problemasApresentados} onChange={e => setSolicitacaoServicoTecnicoForm({ ...solicitacaoServicoTecnicoForm, problemasApresentados: e.target.value })} rows={3} style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} />
                 </div>
 
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
-                  <h4 style={{ marginBottom: '8px', color: '#00ff00' }}>{safeT?.solicitacaoServicoTecnicoAssinaturaCliente}</h4>
+                <div style={{ ...glassNestedStyle(ACCENT_GREEN), marginBottom: '20px' }}>
+                  <h4 style={{ marginBottom: '8px', color: '#ffffff' }}>{safeT?.solicitacaoServicoTecnicoAssinaturaCliente}</h4>
                   <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', marginBottom: '12px' }}>{safeT?.solicitacaoServicoTecnicoAssinaturaDesc}</p>
                   {solicitacaoServicoTecnicoForm.assinaturaCliente && !mostrarCanvasAssinaturaSolicitacao ? (
                     <div>
@@ -29451,22 +29323,22 @@ A1;Peça exemplo;10'
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                  <button className="btn-primary" onClick={handleGuardarSolicitacao} style={{ padding: '10px 20px', backgroundColor: 'rgba(0, 255, 0, 0.2)', borderColor: 'rgba(0, 255, 0, 0.5)', color: '#00ff00' }}>{safeT?.solicitacaoServicoTecnicoGuardar}</button>
-                  <button onClick={() => handleEnviarEmail()} style={{ padding: '10px 20px', border: '1px solid rgba(0, 150, 255, 0.5)', color: '#66b3ff', background: 'rgba(0, 150, 255, 0.15)', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>📧 {safeT?.solicitacaoServicoTecnicoEnviarPorEmail}</button>
-                  <button onClick={() => handleEnviarWhatsApp()} style={{ padding: '10px 20px', border: '1px solid rgba(37, 211, 102, 0.5)', color: '#25d366', background: 'rgba(37, 211, 102, 0.15)', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>💬 {safeT?.solicitacaoServicoTecnicoEnviarPorWhatsApp}</button>
-                  <button onClick={() => { setShowSolicitacaoServicoTecnicoForm(false); setEditingSolicitacaoServicoTecnico(null); }} style={{ padding: '10px 20px', border: '1px solid #666', color: '#ccc', background: '#333', borderRadius: '6px', cursor: 'pointer' }}>{safeT?.close || 'Fechar'}</button>
+                  <button className="btn-primary" onClick={handleGuardarSolicitacao} style={{ padding: '10px 20px', backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff' }}>{safeT?.solicitacaoServicoTecnicoGuardar}</button>
+                  <button onClick={() => handleEnviarEmail()} style={{ padding: '10px 20px', border: '1px solid rgba(80, 160, 255, 0.55)', color: '#ffffff', background: 'rgba(18, 38, 62, 0.96)', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>📧 {safeT?.solicitacaoServicoTecnicoEnviarPorEmail}</button>
+                  <button onClick={() => handleEnviarWhatsApp()} style={{ padding: '10px 20px', border: '1px solid rgba(37, 211, 102, 0.55)', color: '#ffffff', background: 'rgba(18, 52, 32, 0.92)', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>💬 {safeT?.solicitacaoServicoTecnicoEnviarPorWhatsApp}</button>
+                  <button onClick={() => { setShowSolicitacaoServicoTecnicoForm(false); setEditingSolicitacaoServicoTecnico(null); }} style={{ padding: '10px 20px', border: '1px solid rgba(255,255,255,0.25)', color: '#ffffff', background: 'rgba(30,30,30,0.9)', borderRadius: '6px', cursor: 'pointer' }}>{safeT?.close || 'Fechar'}</button>
                 </div>
               </div>
             )}
 
-            <div style={{ padding: '20px', backgroundColor: '#2a2a2a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-              <h3 style={{ marginBottom: '16px', color: '#00ff00' }}>{safeT?.solicitacaoServicoTecnicoLista}</h3>
+            <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }) }}>
+              <h3 style={{ marginBottom: '16px', color: '#ffffff' }}>{safeT?.solicitacaoServicoTecnicoLista}</h3>
               {solicitacoesServicoTecnico.length === 0 ? (
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>{safeT?.solicitacaoServicoTecnicoNenhuma}</p>
+                <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '14px' }}>{safeT?.solicitacaoServicoTecnicoNenhuma}</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {solicitacoesServicoTecnico.map(s => (
-                    <div key={s.id} style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid #333' }}>
+                    <div key={s.id} style={{ ...glassInnerRowStyle(ACCENT_GREEN), padding: '14px' }} onMouseEnter={(e) => glassInnerRowHover(e.currentTarget, ACCENT_GREEN, true)} onMouseLeave={(e) => glassInnerRowHover(e.currentTarget, ACCENT_GREEN, false)}>
                       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
                         <div>
                           <strong style={{ color: '#fff' }}>{s.nomeCliente || '-'}</strong>
@@ -29731,7 +29603,7 @@ A1;Peça exemplo;10'
 
             {/* Formulário de Agendamento */}
             {showAgendaForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414' }}>
+              <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}>
                 <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>
                   {editingAgendamento ? (safeT?.editarAgendamento || 'Editar Agendamento') : (safeT?.novoAgendamento || 'Novo Agendamento')}
                 </h3>
@@ -30675,51 +30547,32 @@ A1;Peça exemplo;10'
 
       case 'estado-visual-tecnico':
         return (
-          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
+          <div className="tab-content-wrapper tab-glass-root">
             {/* Cabeçalho Profissional */}
-            <div style={{
-              marginBottom: '40px',
-              padding: '30px',
-              background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-              borderRadius: '20px',
-              border: '2px solid rgba(0, 255, 0, 0.3)',
-              boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="tab-glass-hero">
+              <div className="tab-glass-hero-top">
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
                 </div>
-                <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 style={{
-                    margin: 0,
-                    fontSize: '32px',
-                    fontWeight: 'bold',
-                    color: '#00ff00',
-                    letterSpacing: '3px',
-                    textShadow: '0 0 20px rgba(0, 255, 0, 0.3)',
-                    marginBottom: '8px'
-                  }}>
+                <div className="tab-glass-hero-heading">
+                  <h1 className="tab-glass-hero-title">
                     {safeT?.estadoVisualTecnico || 'ESTADO VISUAL DO TÉCNICO'}
                   </h1>
-                  <p style={{
-                    margin: 0,
-                    fontSize: '14px',
-                    color: '#ccc',
-                    opacity: 0.8
-                  }}>
+                  <p className="tab-glass-hero-meta">
                     {tecnicos.length} {safeT?.tecnicosCadastrados || 'técnico(s) cadastrado(s)'}
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <div className="tab-glass-hero-actions">
+                  <div className="tab-glass-hero-actions-row">
                   <button 
                     onClick={() => closeTab(activeTabId || '')}
                     style={{ 
                       padding: '6px 8px', 
                       fontSize: '16px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 255, 0, 0.3)',
+                      backgroundColor: 'rgba(0, 255, 0, 0.06)',
+                      border: '1px solid rgba(0, 255, 0, 0.55)',
                       borderRadius: '4px',
-                      color: '#00ff00',
+                      color: '#ffffff',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -30730,12 +30583,12 @@ A1;Peça exemplo;10'
                     }}
                     title={safeT?.voltar || 'Voltar'}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.12)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.72)'
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.06)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.55)'
                     }}
                   >
                     ↶
@@ -30745,10 +30598,10 @@ A1;Peça exemplo;10'
                     style={{ 
                       padding: '6px 8px', 
                       fontSize: '16px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 150, 255, 0.3)',
+                      backgroundColor: 'rgba(0, 150, 255, 0.06)',
+                      border: '1px solid rgba(0, 150, 255, 0.55)',
                       borderRadius: '4px',
-                      color: '#66b3ff',
+                      color: '#ffffff',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -30759,21 +30612,22 @@ A1;Peça exemplo;10'
                     }}
                     title={safeT?.paginaInicial || 'Página Inicial'}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.1)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.5)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.12)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.72)'
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.3)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.06)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.55)'
                     }}
                   >
                     🏠
                   </button>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+            <div className="tab-glass-cards-grid" style={{ gap: '20px' }}>
               {tecnicos.map(tecnico => {
                 // Buscar agendamentos do técnico para hoje e futuros
                 const hoje = new Date().toISOString().split('T')[0]
@@ -30864,13 +30718,13 @@ A1;Peça exemplo;10'
                   <div 
                     key={tecnico.id} 
                     style={{ 
-                      backgroundColor: '#141414', 
-                      padding: '20px', 
-                      borderRadius: '12px', 
-                      border: '2px solid rgba(0, 255, 0, 0.3)',
+                      ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }),
                       position: 'relative',
-                      overflow: 'hidden'
+                      overflow: 'hidden',
+                      height: 'fit-content'
                     }}
+                    onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)}
+                    onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}
                   >
                     {/* Boneco Animado */}
                     <div style={{ 
@@ -30914,7 +30768,7 @@ A1;Peça exemplo;10'
 
                     {/* Informações do Técnico */}
                     <div style={{ textAlign: 'center', marginBottom: '15px' }}>
-                      <h3 style={{ margin: 0, fontSize: '18px', color: '#00ff00', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                      <h3 style={{ margin: 0, fontSize: '18px', color: '#ffffff', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                         {tecnico.name.toUpperCase()}
                       </h3>
                       <p style={{ margin: 0, fontSize: '14px', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -30928,13 +30782,10 @@ A1;Peça exemplo;10'
                     {/* Informações da Agenda */}
                     {(agendamentosHoje.length > 0 || agendamentosFuturos.length > 0) && (
                       <div style={{ 
-                        marginTop: '15px', 
-                        padding: '15px', 
-                        backgroundColor: '#222222', 
-                        borderRadius: '8px',
-                        border: '1px solid rgba(0, 255, 0, 0.2)'
+                        ...glassNestedStyle(ACCENT_GREEN),
+                        marginTop: '15px'
                       }}>
-                        <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#00ff00', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                           {(safeT?.agendaTecnica || safeT?.agendaTitle || 'Agenda Técnica').toUpperCase()}
                         </h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -30992,14 +30843,12 @@ A1;Peça exemplo;10'
 
                     {agendamentosHoje.length === 0 && agendamentosFuturos.length === 0 && (
                       <div style={{ 
-                        marginTop: '15px', 
-                        padding: '15px', 
-                        backgroundColor: '#222222', 
-                        borderRadius: '8px',
+                        ...glassNestedStyle(ACCENT_GREEN),
+                        marginTop: '15px',
                         textAlign: 'center',
-                        opacity: 0.6
+                        opacity: 0.85
                       }}>
-                        <p style={{ margin: 0, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        <p style={{ margin: 0, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#ffffff' }}>
                           {(safeT?.semAgendamentosHoje || 'Sem agendamentos para hoje').toUpperCase()}
                         </p>
                       </div>
@@ -31035,66 +30884,46 @@ A1;Peça exemplo;10'
       
       case 'cadastro-servicos':
         return (
-          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
+          <div className="tab-content-wrapper tab-glass-root">
             {/* Cabeçalho Profissional */}
-            <div style={{
-              marginBottom: '40px',
-              padding: '30px',
-              background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-              borderRadius: '20px',
-              border: '2px solid rgba(0, 255, 0, 0.3)',
-              boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="tab-glass-hero">
+              <div className="tab-glass-hero-top">
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
                 </div>
-                <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 style={{
-                    margin: 0,
-                    fontSize: '32px',
-                    fontWeight: 'bold',
-                    color: '#00ff00',
-                    letterSpacing: '3px',
-                    textShadow: '0 0 20px rgba(0, 255, 0, 0.3)',
-                    marginBottom: '8px'
-                  }}>
+                <div className="tab-glass-hero-heading">
+                  <h1 className="tab-glass-hero-title">
                     {safeT?.cadastroServicosTitle || 'CADASTRO DE SERVIÇOS'}
                   </h1>
-                  <p style={{
-                    margin: 0,
-                    fontSize: '14px',
-                    color: '#ccc',
-                    opacity: 0.8
-                  }}>
+                  <p className="tab-glass-hero-meta">
                     {servicos.length} {safeT?.servicosCadastrados || 'serviço(s) cadastrado(s)'}
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div className="tab-glass-hero-actions">
                   <button 
                     className="btn-primary" 
                     onClick={handleAddServico} 
                     style={{ 
                       padding: '10px 20px',
-                      backgroundColor: 'rgba(0, 100, 255, 0.2)',
-                      borderColor: 'rgba(0, 100, 255, 0.5)',
-                      color: '#66b3ff',
+                      backgroundColor: 'rgba(18, 38, 62, 0.96)',
+                      border: '1px solid rgba(80, 160, 255, 0.55)',
+                      color: '#ffffff',
                       fontWeight: 'bold',
                       fontSize: '13px'
                     }}
                   >
                     ➕ {safeT?.adicionarServico || 'Novo Serviço'}
                   </button>
-                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <div className="tab-glass-hero-actions-row">
                     <button 
                       onClick={() => closeTab(activeTabId || '')}
                       style={{ 
                         padding: '6px 8px', 
                         fontSize: '16px',
-                        backgroundColor: 'transparent',
-                        border: '1px solid rgba(0, 255, 0, 0.3)',
+                        backgroundColor: 'rgba(0, 255, 0, 0.06)',
+                        border: '1px solid rgba(0, 255, 0, 0.55)',
                         borderRadius: '4px',
-                        color: '#00ff00',
+                        color: '#ffffff',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         display: 'flex',
@@ -31105,12 +30934,12 @@ A1;Peça exemplo;10'
                       }}
                       title={safeT?.voltar || 'Voltar'}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
-                        e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.12)'
+                        e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.72)'
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent'
-                        e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.06)'
+                        e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.55)'
                       }}
                     >
                       ↶
@@ -31120,10 +30949,10 @@ A1;Peça exemplo;10'
                       style={{ 
                         padding: '6px 8px', 
                         fontSize: '16px',
-                        backgroundColor: 'transparent',
-                        border: '1px solid rgba(0, 150, 255, 0.3)',
+                        backgroundColor: 'rgba(0, 150, 255, 0.06)',
+                        border: '1px solid rgba(0, 150, 255, 0.55)',
                         borderRadius: '4px',
-                        color: '#66b3ff',
+                        color: '#ffffff',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         display: 'flex',
@@ -31134,12 +30963,12 @@ A1;Peça exemplo;10'
                       }}
                       title={safeT?.paginaInicial || 'Página Inicial'}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.1)'
-                        e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.5)'
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.12)'
+                        e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.72)'
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent'
-                        e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.3)'
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.06)'
+                        e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.55)'
                       }}
                     >
                       🏠
@@ -31149,8 +30978,8 @@ A1;Peça exemplo;10'
               </div>
             </div>
             {showServicoForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px', backgroundColor: '#141414' }}>
-                <h4>{editingServico ? (safeT?.editarServico || 'Editar Serviço') : (safeT?.adicionarServico || 'Adicionar Serviço ou Despesa')}</h4>
+              <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '15px' }}>
+                <h4 style={{ color: '#ffffff' }}>{editingServico ? (safeT?.editarServico || 'Editar Serviço') : (safeT?.adicionarServico || 'Adicionar Serviço ou Despesa')}</h4>
                 <select
                   value={servicoForm.categoria}
                   onChange={(e) => setServicoForm({ ...servicoForm, categoria: e.target.value as 'servico' | 'despesa' })}
@@ -31200,22 +31029,22 @@ A1;Peça exemplo;10'
                   <option value="extras">{safeT?.tipoCobrancaExtras || 'Extras'}</option>
                 </select>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                  <button className="btn-primary" onClick={handleSaveServico} style={{ flex: 1 }}>
+                  <button className="btn-primary" onClick={handleSaveServico} style={{ flex: 1, backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff' }}>
                     {safeT?.save || 'Salvar'}
                   </button>
-                  <button className="btn-primary" onClick={() => { setShowServicoForm(false); setEditingServico(null); setServicoForm({ cod: '', nome: '', descricao: '', valor: 0, categoria: 'servico', tipoCobranca: 'valor-fixo' }); }} style={{ flex: 1 }}>
+                  <button className="btn-primary" onClick={() => { setShowServicoForm(false); setEditingServico(null); setServicoForm({ cod: '', nome: '', descricao: '', valor: 0, categoria: 'servico', tipoCobranca: 'valor-fixo' }); }} style={{ flex: 1, backgroundColor: 'rgba(22, 28, 28, 0.88)', border: '1px solid rgba(0, 255, 0, 0.22)', color: '#ffffff' }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>
               </div>
             )}
             {servicos.length === 0 ? (
-              <p>{safeT?.noServicos || 'Nenhum serviço ou despesa cadastrado.'}</p>
+              <p style={{ color: 'rgba(255,255,255,0.55)' }}>{safeT?.noServicos || 'Nenhum serviço ou despesa cadastrado.'}</p>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '15px', marginTop: '20px' }}>
+              <div className="tab-glass-cards-grid" style={{ marginTop: '20px' }}>
                 {servicos.map(servico => (
-                  <div key={servico.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                    <h3 style={{ marginBottom: '10px', color: '#00ff00' }}>{servico.cod ? `${servico.cod} – ` : ''}{servico.nome}</h3>
+                  <div key={servico.id} style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }), height: 'fit-content' }} onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)} onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}>
+                    <h3 style={{ marginBottom: '10px', color: '#ffffff' }}>{servico.cod ? `${servico.cod} – ` : ''}{servico.nome}</h3>
                     <p style={{ fontSize: '14px', marginBottom: '5px' }}><strong>{safeT?.valorServico || 'Valor'}:</strong> {servico.valor}€</p>
                     <p style={{ fontSize: '14px', marginBottom: '5px' }}><strong>{safeT?.tipoCobranca || 'Tipo de Cobrança'}:</strong> {servico.tipoCobranca}</p>
                     <p style={{ fontSize: '14px', marginBottom: '5px', opacity: 0.8 }}><strong>{safeT?.tipo || 'Tipo'}:</strong> {servico.categoria}</p>
@@ -31223,10 +31052,10 @@ A1;Peça exemplo;10'
                       <p style={{ fontSize: '13px', opacity: 0.7, marginBottom: '10px', fontStyle: 'italic' }}>{servico.descricao}</p>
                     )}
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
-                      <button className="btn-primary" onClick={() => handleEditServico(servico)} style={{ flex: 1, padding: '8px', fontSize: '12px' }}>
+                      <button className="btn-primary" onClick={() => handleEditServico(servico)} style={{ flex: 1, padding: '8px', fontSize: '12px', backgroundColor: 'rgba(26, 28, 26, 0.92)', border: '2px solid rgba(255, 170, 0, 0.75)', color: '#ffaa00' }}>
                         {safeT?.edit || 'Editar'}
                       </button>
-                      <button className="btn-danger" onClick={() => handleDeleteServico(servico.id)} style={{ flex: 1, padding: '8px', fontSize: '12px' }}>
+                      <button className="btn-danger" onClick={() => handleDeleteServico(servico.id)} style={{ flex: 1, padding: '8px', fontSize: '12px', backgroundColor: 'rgba(52, 22, 22, 0.96)', border: '1px solid rgba(255, 100, 100, 0.5)', color: '#ffffff' }}>
                         {safeT?.delete || 'Excluir'}
                       </button>
                     </div>
@@ -40960,34 +40789,29 @@ A1;Peça exemplo;10'
             saveData('nonato-conhecimento-tecnicos', next).catch(() => {})
           }
           return (
-            <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto', minHeight: '480px', backgroundColor: '#0d0d0d' }}>
-              <div style={{
-                marginBottom: '24px',
-                padding: '16px 24px',
-                background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-                borderRadius: '12px',
-                border: '1px solid rgba(0, 255, 0, 0.25)',
-                boxShadow: '0 2px 12px rgba(0, 255, 0, 0.08)'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="tab-content-wrapper tab-glass-root" style={{ minHeight: '480px' }}>
+              <div className="tab-glass-hero tab-glass-hero--compact">
+                <div className="tab-glass-hero-top" style={{ marginBottom: 0 }}>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <LogoComponent size="small" />
                   </div>
-                  <div style={{ textAlign: 'center', flex: 1 }}>
-                    <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#00ff00', letterSpacing: '1px', marginBottom: '4px' }}>
+                  <div className="tab-glass-hero-heading">
+                    <h1 className="tab-glass-hero-title" style={{ fontSize: 'clamp(1rem, 3.5vw, 1.15rem)' }}>
                       {(safeT as any)?.informacoesConhecimentoTecnicosTitle || 'INFORMAÇÕES DE CONHECIMENTO DOS TÉCNICOS'}
                     </h1>
-                    <p style={{ margin: 0, fontSize: '12px', color: '#aaa' }}>
+                    <p className="tab-glass-hero-meta" style={{ fontSize: '12px' }}>
                       {(safeT as any)?.informacoesConhecimentoTecnicosDesc || 'Área para registar e consultar informações de conhecimento dos técnicos.'}
                     </p>
                   </div>
-                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                    <button onClick={() => closeTab(activeTabId || '')} style={{ padding: '4px 6px', fontSize: '14px', backgroundColor: 'transparent', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', color: '#00ff00', cursor: 'pointer' }} title={safeT?.voltar || 'Voltar'}>↶</button>
-                    <button onClick={voltarPaginaInicial} style={{ padding: '4px 6px', fontSize: '14px', backgroundColor: 'transparent', border: '1px solid rgba(0, 150, 255, 0.3)', borderRadius: '4px', color: '#66b3ff', cursor: 'pointer' }} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
+                  <div className="tab-glass-hero-actions">
+                    <div className="tab-glass-hero-actions-row">
+                    <button onClick={() => closeTab(activeTabId || '')} style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'rgba(0, 255, 0, 0.06)', border: '1px solid rgba(0, 255, 0, 0.55)', borderRadius: '4px', color: '#ffffff', cursor: 'pointer', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={safeT?.voltar || 'Voltar'}>↶</button>
+                    <button onClick={voltarPaginaInicial} style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'rgba(0, 150, 255, 0.06)', border: '1px solid rgba(0, 150, 255, 0.55)', borderRadius: '4px', color: '#ffffff', cursor: 'pointer', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
+                    </div>
                   </div>
                 </div>
               </div>
-              <p style={{ color: '#aaa', fontSize: '13px', marginBottom: '16px' }}>
+              <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '13px', marginBottom: '16px' }}>
                 {(safeT as any)?.informacoesConhecimentoTecnicosSelecioneTecnico || 'Selecione um técnico abaixo para gerir os tipos de equipamento e os conhecimentos (mecânico, elétrico, software e programação) por equipamento.'}
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px', marginBottom: '28px' }}>
@@ -40998,12 +40822,13 @@ A1;Peça exemplo;10'
                     onClick={() => setTecnicoConhecimentoSelecionado(tecnico.id)}
                     style={{
                       padding: '12px',
-                      backgroundColor: tecnicoConhecimentoSelecionado === tecnico.id ? 'rgba(0, 255, 0, 0.15)' : '#141414',
+                      backgroundColor: tecnicoConhecimentoSelecionado === tecnico.id ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
                       borderRadius: '10px',
-                      border: tecnicoConhecimentoSelecionado === tecnico.id ? '2px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.2)',
+                      border: tecnicoConhecimentoSelecionado === tecnico.id ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 255, 0, 0.22)',
                       cursor: 'pointer',
                       textAlign: 'center',
-                      transition: 'all 0.2s ease'
+                      transition: 'border-color 0.2s ease, background-color 0.2s ease',
+                      color: '#ffffff'
                     }}
                   >
                     <div style={{ width: '64px', height: '64px', margin: '0 auto 8px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#222222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -51292,23 +51117,19 @@ A1;Peça exemplo;10'
               <div>
                 {/* Banner destacado para gerenciar tipos */}
                 <div style={{ 
+                  ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }),
                   marginBottom: '25px', 
-                  padding: '20px', 
-                  backgroundColor: 'rgba(0, 255, 0, 0.08)', 
-                  borderRadius: '10px', 
-                  border: '1px solid rgba(0, 255, 0, 0.3)',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   flexWrap: 'wrap',
-                  gap: '20px',
-                  boxShadow: '0 2px 10px rgba(0, 255, 0, 0.1)'
+                  gap: '20px'
                 }}>
                   <div style={{ flex: 1, minWidth: '250px' }}>
-                    <h3 style={{ margin: 0, marginBottom: '8px', color: '#00ff00', fontSize: '18px', fontWeight: 'bold' }}>
+                    <h3 style={{ margin: 0, marginBottom: '8px', color: '#ffffff', fontSize: '18px', fontWeight: 'bold' }}>
                       ⚙️ Gerenciar Áreas de Atuação
                     </h3>
-                    <p style={{ margin: 0, fontSize: '13px', color: '#ddd', lineHeight: '1.5' }}>
+                    <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.82)', lineHeight: '1.5' }}>
                       Adicione novos tipos de gestores (ex: Gestor de Qualidade, Gestor de Vendas, etc.) ou edite os existentes. Clique no botão ao lado para começar.
                     </p>
                   </div>
@@ -51318,23 +51139,13 @@ A1;Peça exemplo;10'
                     style={{
                       padding: '14px 28px',
                       fontSize: '16px',
-                      border: '1px solid rgba(0, 255, 0, 0.5)',
-                      backgroundColor: 'rgba(0, 255, 0, 0.2)',
-                      color: '#00ff00',
+                      border: '1px solid rgba(0, 200, 80, 0.55)',
+                      backgroundColor: 'rgba(18, 52, 24, 0.96)',
+                      color: '#ffffff',
                       fontWeight: 'bold',
                       whiteSpace: 'nowrap',
                       cursor: 'pointer',
-                      boxShadow: '0 2px 8px rgba(0, 255, 0, 0.15)'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.25)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.6)'
-                      e.currentTarget.style.transform = 'scale(1.02)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.2)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
-                      e.currentTarget.style.transform = 'scale(1)'
+                      borderRadius: '8px'
                     }}
                   >
                     ➕ Gerenciar Tipos de Gestores
@@ -51378,7 +51189,7 @@ A1;Peça exemplo;10'
                     {gestores
                       .filter(gestor => filtroAreaGestor === 'todas' || gestor.area === filtroAreaGestor)
                       .map(gestor => (
-                      <div key={gestor.id} style={{ padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                      <div key={gestor.id} style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }), height: 'fit-content' }} onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)} onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}>
                         {gestor.photo && (
                           <img src={gestor.photo} alt={gestor.name} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
                         )}
@@ -51526,7 +51337,7 @@ A1;Peça exemplo;10'
                   return (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
                       {tecnicosFiltrados.map(tecnico => (
-                        <div key={tecnico.id} style={{ padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                        <div key={tecnico.id} style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }), height: 'fit-content' }} onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)} onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}>
                           {tecnico.photo && (
                             <img src={tecnico.photo} alt={tecnico.name} style={{ width: '100%', maxHeight: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }} />
                           )}
