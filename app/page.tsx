@@ -30070,7 +30070,21 @@ A1;Peça exemplo;10'
                   return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                       {agendamentosFiltrados.map(agendamento => (
-                        <div key={agendamento.id} style={{ backgroundColor: '#141414', padding: '20px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                        <div
+                          key={agendamento.id}
+                          style={{
+                            backgroundColor: '#141414',
+                            padding: '20px',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(0, 255, 0, 0.2)',
+                            borderLeft:
+                              agendamento.tipo === 'pre-agendamento'
+                                ? '5px solid rgba(255, 160, 0, 0.95)'
+                                : agendamento.status === 'concluido'
+                                  ? '5px solid rgba(0, 210, 90, 0.9)'
+                                  : '5px solid rgba(55, 130, 235, 0.92)',
+                          }}
+                        >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
                             <div style={{ flex: 1 }}>
                               <h3 style={{ marginBottom: '8px', fontSize: '18px', color: '#00ff00' }}>
@@ -30326,6 +30340,44 @@ A1;Peça exemplo;10'
                        calendarioAno === hoje.getFullYear()
               }
 
+              const agendamentosUnicosDoDia = (lista: Agendamento[]) =>
+                Array.from(new Map(lista.map((a) => [a.id, a])).values())
+
+              const corFundoCelulaDia = (lista: Agendamento[], diaEhHoje: boolean) => {
+                const u = agendamentosUnicosDoDia(lista)
+                if (u.length === 0) {
+                  return diaEhHoje ? 'rgba(0, 255, 0, 0.08)' : '#141414'
+                }
+                const todosConcluidos = u.every((a) => a.status === 'concluido')
+                if (todosConcluidos) return 'rgba(0, 190, 70, 0.26)'
+                return 'rgba(35, 95, 220, 0.24)'
+              }
+
+              const estiloChipAgendaCalendario = (ag: Agendamento): React.CSSProperties => {
+                if (ag.tipo === 'pre-agendamento') {
+                  return {
+                    backgroundColor: 'rgba(255, 145, 0, 0.5)',
+                    border: '1px solid rgba(255, 200, 80, 0.95)',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                  }
+                }
+                if (ag.status === 'concluido') {
+                  return {
+                    backgroundColor: 'rgba(0, 200, 85, 0.45)',
+                    border: '1px solid rgba(0, 255, 140, 0.85)',
+                    color: '#fff',
+                    fontWeight: 600,
+                  }
+                }
+                return {
+                  backgroundColor: 'rgba(45, 115, 235, 0.42)',
+                  border: '1px solid rgba(140, 185, 255, 0.95)',
+                  color: '#fff',
+                  fontWeight: 600,
+                }
+              }
+
               return (
                 <div>
                   {/* Controles de navegação */}
@@ -30399,7 +30451,10 @@ A1;Peça exemplo;10'
                         const dia = index + 1
                         const dataKey = `${calendarioAno}-${String(calendarioMes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
                         const agendamentosDoDia = agendamentosPorData[dataKey] || []
+                        const agDiaUnicos = agendamentosUnicosDoDia(agendamentosDoDia)
                         const hojeDia = isHoje(dia)
+                        const fundoCelula = corFundoCelulaDia(agendamentosDoDia, hojeDia)
+                        const diaSoConcluidos = agDiaUnicos.length > 0 && agDiaUnicos.every((a) => a.status === 'concluido')
 
                         return (
                           <div
@@ -30409,7 +30464,8 @@ A1;Peça exemplo;10'
                               padding: '8px',
                               borderRight: (diaSemanaAjustado + dia) % 7 !== 0 ? '1px solid rgba(0, 255, 0, 0.1)' : 'none',
                               borderBottom: '1px solid rgba(0, 255, 0, 0.1)',
-                              backgroundColor: hojeDia ? 'rgba(0, 255, 0, 0.1)' : '#141414',
+                              backgroundColor: fundoCelula,
+                              boxShadow: hojeDia ? 'inset 0 0 0 1px rgba(0, 255, 122, 0.45)' : undefined,
                               position: 'relative',
                               cursor: agendamentosDoDia.length > 0 ? 'pointer' : 'default'
                             }}
@@ -30432,10 +30488,10 @@ A1;Peça exemplo;10'
                             <div
                               style={{
                                 fontWeight: hojeDia ? 'bold' : 'normal',
-                                color: hojeDia ? '#00ff00' : '#fff',
+                                color: hojeDia ? '#b8ffc8' : '#fff',
                                 fontSize: '14px',
                                 marginBottom: '5px',
-                                borderBottom: hojeDia ? '2px solid #00ff00' : 'none',
+                                borderBottom: hojeDia ? '2px solid rgba(0, 255, 122, 0.75)' : 'none',
                                 paddingBottom: '2px'
                               }}
                             >
@@ -30444,20 +30500,16 @@ A1;Peça exemplo;10'
 
                             {/* Agendamentos do dia */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                              {agendamentosDoDia.slice(0, 3).map((ag, idx) => (
+                              {agDiaUnicos.slice(0, 3).map((ag) => (
                                 <div
-                                  key={ag.id}
+                                  key={`${ag.id}-${dataKey}`}
                                   id={`agendamento-${ag.id}`}
                                   title={`${ag.cliente} - ${ag.hora}`}
                                   style={{
                                     fontSize: '10px',
                                     padding: '4px 6px',
                                     borderRadius: '3px',
-                                    backgroundColor: ag.tipo === 'pre-agendamento' 
-                                      ? 'rgba(255, 165, 0, 0.3)' 
-                                      : 'rgba(0, 255, 0, 0.2)',
-                                    border: `1px solid ${ag.tipo === 'pre-agendamento' ? 'rgba(255, 165, 0, 0.5)' : 'rgba(0, 255, 0, 0.4)'}`,
-                                    color: '#fff',
+                                    ...estiloChipAgendaCalendario(ag),
                                     overflow: 'hidden',
                                     textOverflow: 'ellipsis',
                                     whiteSpace: 'nowrap',
@@ -30471,14 +30523,15 @@ A1;Peça exemplo;10'
                                   <strong>{ag.hora}</strong> {ag.cliente.substring(0, 15)}{ag.cliente.length > 15 ? '...' : ''}
                                 </div>
                               ))}
-                              {agendamentosDoDia.length > 3 && (
+                              {agDiaUnicos.length > 3 && (
                                 <div
                                   style={{
                                     fontSize: '10px',
                                     padding: '4px 6px',
                                     borderRadius: '3px',
-                                    backgroundColor: 'rgba(0, 255, 0, 0.1)',
-                                    color: '#00ff00',
+                                    backgroundColor: diaSoConcluidos ? 'rgba(0, 200, 90, 0.2)' : 'rgba(50, 110, 220, 0.2)',
+                                    color: diaSoConcluidos ? '#8cffb0' : '#a8c8ff',
+                                    border: `1px solid ${diaSoConcluidos ? 'rgba(0, 255, 140, 0.35)' : 'rgba(120, 170, 255, 0.45)'}`,
                                     textAlign: 'center',
                                     cursor: 'pointer'
                                   }}
@@ -30488,7 +30541,7 @@ A1;Peça exemplo;10'
                                     setVisualizacaoAgenda('lista')
                                   }}
                                 >
-                                  +{agendamentosDoDia.length - 3} {safeT?.mais || 'mais'}
+                                  +{agDiaUnicos.length - 3} {safeT?.mais || 'mais'}
                                 </div>
                               )}
                             </div>
@@ -30503,18 +30556,30 @@ A1;Peça exemplo;10'
                     <h4 style={{ marginBottom: '10px', fontSize: '14px', color: '#00ff00' }}>
                       {safeT?.legenda || 'Legenda'}
                     </h4>
-                    <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '20px', height: '20px', backgroundColor: 'rgba(255, 165, 0, 0.3)', border: '1px solid rgba(255, 165, 0, 0.5)', borderRadius: '3px' }}></div>
-                        <span style={{ fontSize: '13px' }}>{safeT?.preAgendamento || 'Pré-Agendamento'}</span>
+                        <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(255, 145, 0, 0.5)', border: '1px solid rgba(255, 200, 80, 0.95)', borderRadius: '4px' }} />
+                        <span style={{ fontSize: '12px' }}>{safeT?.preAgendamento || 'Pré-Agendamento'} (laranja)</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '20px', height: '20px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.4)', borderRadius: '3px' }}></div>
-                        <span style={{ fontSize: '13px' }}>{safeT?.agendamentoTecnico || 'Agendamento Técnico'}</span>
+                        <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(45, 115, 235, 0.42)', border: '1px solid rgba(140, 185, 255, 0.95)', borderRadius: '4px' }} />
+                        <span style={{ fontSize: '12px' }}>{safeT?.agendamentoTecnico || 'Agendamento'} / {(safeT as any)?.emAndamento || 'em curso'} (azul)</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ width: '20px', height: '20px', backgroundColor: 'rgba(0, 255, 0, 0.1)', border: '2px solid #00ff00', borderRadius: '3px' }}></div>
-                        <span style={{ fontSize: '13px' }}>{safeT?.diaAtual || 'Dia Atual'}</span>
+                        <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(0, 200, 85, 0.45)', border: '1px solid rgba(0, 255, 140, 0.85)', borderRadius: '4px' }} />
+                        <span style={{ fontSize: '12px' }}>{safeT?.concluido || 'Concluído'} (verde)</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(35, 95, 220, 0.24)', border: '1px solid rgba(100, 150, 255, 0.4)', borderRadius: '4px' }} />
+                        <span style={{ fontSize: '12px' }}>{(safeT as any)?.diaComServicoAgendado || 'Dia com serviço agendado (fundo azul)'}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(0, 190, 70, 0.26)', border: '1px solid rgba(0, 255, 140, 0.35)', borderRadius: '4px' }} />
+                        <span style={{ fontSize: '12px' }}>{(safeT as any)?.diaServicoConcluido || 'Dia concluído (fundo verde)'}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(0, 255, 0, 0.08)', border: '2px solid rgba(0, 255, 122, 0.5)', borderRadius: '4px' }} />
+                        <span style={{ fontSize: '12px' }}>{safeT?.diaAtual || 'Dia atual'} (contorno)</span>
                       </div>
                     </div>
                   </div>
@@ -30693,6 +30758,31 @@ A1;Peça exemplo;10'
                 // Verificar se é interno ou externo
                 const isInterno = tecnico.type === 'internal'
 
+                const estiloCardAgendaEstadoVisual = (ag: Agendamento): React.CSSProperties => {
+                  if (ag.tipo === 'pre-agendamento') {
+                    return {
+                      padding: '10px',
+                      backgroundColor: 'rgba(255, 150, 0, 0.22)',
+                      borderRadius: '6px',
+                      border: '1px solid rgba(255, 180, 60, 0.7)',
+                    }
+                  }
+                  if (ag.status === 'concluido') {
+                    return {
+                      padding: '10px',
+                      backgroundColor: 'rgba(0, 200, 80, 0.14)',
+                      borderRadius: '6px',
+                      border: '1px solid rgba(0, 255, 130, 0.45)',
+                    }
+                  }
+                  return {
+                    padding: '10px',
+                    backgroundColor: 'rgba(40, 100, 220, 0.2)',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(120, 170, 255, 0.55)',
+                  }
+                }
+
                 return (
                   <div 
                     key={tecnico.id} 
@@ -30771,12 +30861,7 @@ A1;Peça exemplo;10'
                           {agendamentosHoje.map(ag => (
                             <div 
                               key={ag.id}
-                              style={{
-                                padding: '10px',
-                                backgroundColor: ag.tipo === 'pre-agendamento' ? 'rgba(255, 215, 0, 0.1)' : 'rgba(0, 255, 0, 0.1)',
-                                borderRadius: '6px',
-                                border: `1px solid ${ag.tipo === 'pre-agendamento' ? 'rgba(255, 215, 0, 0.3)' : 'rgba(0, 255, 0, 0.3)'}`
-                              }}
+                              style={estiloCardAgendaEstadoVisual(ag)}
                             >
                               <p style={{ margin: 0, fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                 {ag.cliente.toUpperCase()}
@@ -30795,13 +30880,7 @@ A1;Peça exemplo;10'
                           {agendamentosFuturos.filter(ag => ag.data !== hoje).slice(0, 5).map(ag => (
                             <div 
                               key={ag.id}
-                              style={{
-                                padding: '10px',
-                                backgroundColor: ag.tipo === 'pre-agendamento' ? 'rgba(255, 215, 0, 0.1)' : 'rgba(0, 255, 0, 0.1)',
-                                borderRadius: '6px',
-                                border: `1px solid ${ag.tipo === 'pre-agendamento' ? 'rgba(255, 215, 0, 0.3)' : 'rgba(0, 255, 0, 0.3)'}`,
-                                opacity: 0.8
-                              }}
+                              style={{ ...estiloCardAgendaEstadoVisual(ag), opacity: 0.88 }}
                             >
                               <p style={{ margin: 0, fontSize: '13px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                 {ag.cliente.toUpperCase()}
