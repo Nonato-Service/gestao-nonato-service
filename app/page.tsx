@@ -639,21 +639,42 @@ function normalizeStatusAgendamento(ag: { status?: string }): Agendamento['statu
   return 'pendente'
 }
 
+/** Normaliza chave YYYY-MM-DD (evita falha em includes por zeros à esquerda). */
+function normalizeDataKeyAgenda(s: string): string {
+  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(s ?? '').trim())
+  if (!m) return String(s ?? '').trim()
+  return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`
+}
+
+/**
+ * Interpreta data do agendamento no fuso local.
+ * `new Date('YYYY-MM-DD')` é meia-noite UTC e desloca o dia (ex.: Brasil → dia anterior), quebrando período e cor dos chips.
+ */
+function parseDataAgendaLocal(dataStr: string): Date {
+  const norm = normalizeDataKeyAgenda(dataStr)
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(norm)
+  if (!m) return new Date(dataStr)
+  return new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10))
+}
+
+function formatDataYYYYMMDDLocal(d: Date): string {
+  const ano = d.getFullYear()
+  const mes = String(d.getMonth() + 1).padStart(2, '0')
+  const dia = String(d.getDate()).padStart(2, '0')
+  return `${ano}-${mes}-${dia}`
+}
+
 /** Datas YYYY-MM-DD do período do agendamento (diasSelecionados ou data + duração). */
 function getDatasPeriodoAgendamento(ag: Agendamento): string[] {
   if (ag.diasSelecionados && ag.diasSelecionados.length > 0) {
-    return [...new Set(ag.diasSelecionados.map((d) => String(d).trim()))].sort()
+    return [...new Set(ag.diasSelecionados.map((d) => normalizeDataKeyAgenda(String(d))))].sort()
   }
-  const dataInicio = new Date(ag.data)
+  const dataInicio = parseDataAgendaLocal(ag.data)
   const duracaoDias = parseInt(String(ag.duracaoEstimada || '1'), 10) || 1
   const keys: string[] = []
   for (let i = 0; i < duracaoDias; i++) {
-    const dataAtual = new Date(dataInicio)
-    dataAtual.setDate(dataInicio.getDate() + i)
-    const ano = dataAtual.getFullYear()
-    const mes = String(dataAtual.getMonth() + 1).padStart(2, '0')
-    const dia = String(dataAtual.getDate()).padStart(2, '0')
-    keys.push(`${ano}-${mes}-${dia}`)
+    const dataAtual = new Date(dataInicio.getFullYear(), dataInicio.getMonth(), dataInicio.getDate() + i)
+    keys.push(formatDataYYYYMMDDLocal(dataAtual))
   }
   return keys
 }
@@ -30476,10 +30497,12 @@ A1;Peça exemplo;10'
                   }
                 }
                 const tipo = normalizeTipoAgendamento(ag)
+                const dataKeyNorm = normalizeDataKeyAgenda(dataKeyCelula)
                 const datasPeriodo = getDatasPeriodoAgendamento(ag)
-                const celulaNoPeriodo = datasPeriodo.includes(dataKeyCelula)
+                const celulaNoPeriodo = datasPeriodo.includes(dataKeyNorm)
+                /** Hoje e dias passados no período contam como trabalhados (verde); só futuros ficam azuis. */
                 const diaJaTrabalhado =
-                  celulaNoPeriodo && dataKeyCelula < hojeKeyCalendario
+                  celulaNoPeriodo && dataKeyNorm <= hojeKeyCalendario
                 const ativoConfirmado =
                   st === 'confirmado' || st === 'em-andamento'
 
