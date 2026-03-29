@@ -620,6 +620,25 @@ function normalizeTipoAgendamento(ag: { tipo?: string }): 'pre-agendamento' | 'a
   return 'pre-agendamento'
 }
 
+/** Normaliza status para UI (localStorage antigo pode trazer texto livre ou acentos). */
+function normalizeStatusAgendamento(ag: { status?: string }): Agendamento['status'] {
+  const raw = String(ag.status ?? '').trim()
+  const s = raw
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+  if (s === 'concluido') return 'concluido'
+  if (s === 'cancelado') return 'cancelado'
+  if (s === 'em-andamento' || s === 'em andamento') return 'em-andamento'
+  if (s === 'confirmado') return 'confirmado'
+  if (s === 'pendente') return 'pendente'
+  if (s.includes('conclu')) return 'concluido'
+  if (s.includes('cancel')) return 'cancelado'
+  if (s.includes('andamento')) return 'em-andamento'
+  if (s.includes('confirm')) return 'confirmado'
+  return 'pendente'
+}
+
 type EquipamentoCliente = {
   tipoEquipamento: string
   modelo: string
@@ -4925,6 +4944,7 @@ export default function Dashboard() {
           savedAgendamentos.map((a: Agendamento) => ({
             ...a,
             tipo: normalizeTipoAgendamento(a),
+            status: normalizeStatusAgendamento(a),
           }))
         )
       }
@@ -8570,7 +8590,11 @@ export default function Dashboard() {
 
   const handleEditAgendamento = (agendamento: Agendamento) => {
     setEditingAgendamento(agendamento)
-    setAgendaForm(agendamento)
+    setAgendaForm({
+      ...agendamento,
+      tipo: normalizeTipoAgendamento(agendamento),
+      status: normalizeStatusAgendamento(agendamento),
+    })
     const dias = agendamento.diasSelecionados?.length
       ? [...agendamento.diasSelecionados].sort()
       : []
@@ -8593,14 +8617,20 @@ export default function Dashboard() {
       return
     }
 
+    const formSanitizado: Agendamento = {
+      ...agendaForm,
+      tipo: normalizeTipoAgendamento(agendaForm),
+      status: normalizeStatusAgendamento(agendaForm),
+    }
+
     if (editingAgendamento) {
-      const updated = agendamentos.map(a => a.id === editingAgendamento.id ? agendaForm : a)
+      const updated = agendamentos.map((a) => (a.id === editingAgendamento.id ? formSanitizado : a))
       setAgendamentos(updated)
       saveData('nonato-agendamentos', updated)
     } else {
       const newAgendamento: Agendamento = {
-        ...agendaForm,
-        id: Date.now().toString()
+        ...formSanitizado,
+        id: Date.now().toString(),
       }
       const updated = [...agendamentos, newAgendamento]
       setAgendamentos(updated)
@@ -29692,6 +29722,28 @@ A1;Peça exemplo;10'
                   </div>
                 </div>
 
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+                    {safeT?.status || 'Status'}
+                  </label>
+                  <select
+                    value={agendaForm.status}
+                    onChange={(e) =>
+                      setAgendaForm({
+                        ...agendaForm,
+                        status: e.target.value as Agendamento['status'],
+                      })
+                    }
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  >
+                    <option value="pendente">{safeT?.pendente || 'Pendente'}</option>
+                    <option value="confirmado">{safeT?.confirmado || 'Confirmado'}</option>
+                    <option value="em-andamento">{safeT?.emAndamento || 'Em Andamento'}</option>
+                    <option value="concluido">{safeT?.concluido || 'Concluído'}</option>
+                    <option value="cancelado">{safeT?.cancelado || 'Cancelado'}</option>
+                  </select>
+                </div>
+
                 <div style={{ marginBottom: '15px', padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.25)' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#00ff00' }}>
                     {safeT?.duracaoEstimada || 'Duração Estimada (dias)'}
@@ -30378,7 +30430,8 @@ A1;Peça exemplo;10'
                 ag: Agendamento,
                 dataKeyCelula: string
               ): React.CSSProperties => {
-                if (ag.status === 'cancelado') {
+                const st = normalizeStatusAgendamento(ag)
+                if (st === 'cancelado') {
                   return {
                     backgroundColor: 'rgba(90, 90, 98, 0.5)',
                     border: '1px solid rgba(140, 140, 150, 0.55)',
@@ -30387,12 +30440,13 @@ A1;Peça exemplo;10'
                     textDecoration: 'line-through',
                   }
                 }
-                if (ag.status === 'concluido') {
+                if (st === 'concluido') {
                   return {
-                    backgroundColor: 'rgba(0, 200, 85, 0.55)',
-                    border: '1px solid rgba(0, 255, 140, 0.9)',
-                    color: '#fff',
-                    fontWeight: 600,
+                    backgroundColor: 'rgba(0, 220, 95, 0.92)',
+                    border: '2px solid rgba(0, 255, 160, 1)',
+                    color: '#04210c',
+                    fontWeight: 700,
+                    boxShadow: '0 0 12px rgba(0, 255, 130, 0.35)',
                   }
                 }
                 const tipo = normalizeTipoAgendamento(ag)
@@ -30496,6 +30550,12 @@ A1;Peça exemplo;10'
                         const agendamentosDoDia = agendamentosPorData[dataKey] || []
                         const agDiaUnicos = agendamentosUnicosDoDia(agendamentosDoDia)
                         const hojeDia = isHoje(dia)
+                        const ativosDia = agDiaUnicos.filter((a) => normalizeStatusAgendamento(a) !== 'cancelado')
+                        const diaTodoServicosConcluidos =
+                          ativosDia.length > 0 && ativosDia.every((a) => normalizeStatusAgendamento(a) === 'concluido')
+                        const fundoCelulaDia = diaTodoServicosConcluidos
+                          ? 'rgba(0, 210, 88, 0.38)'
+                          : '#141414'
 
                         return (
                           <div
@@ -30505,8 +30565,12 @@ A1;Peça exemplo;10'
                               padding: '8px',
                               borderRight: (diaSemanaAjustado + dia) % 7 !== 0 ? '1px solid rgba(0, 255, 0, 0.1)' : 'none',
                               borderBottom: '1px solid rgba(0, 255, 0, 0.1)',
-                              backgroundColor: '#141414',
-                              boxShadow: hojeDia ? 'inset 0 0 0 1px rgba(0, 255, 122, 0.45)' : undefined,
+                              backgroundColor: fundoCelulaDia,
+                              boxShadow: hojeDia
+                                ? `inset 0 0 0 2px rgba(0, 255, 160, ${diaTodoServicosConcluidos ? 0.75 : 0.45})`
+                                : diaTodoServicosConcluidos
+                                  ? 'inset 0 0 0 1px rgba(0, 255, 140, 0.35)'
+                                  : undefined,
                               position: 'relative',
                               cursor: agendamentosDoDia.length > 0 ? 'pointer' : 'default'
                             }}
@@ -30600,7 +30664,7 @@ A1;Peça exemplo;10'
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.45 }}>
                         {(safeT as any)?.legendaFundoNeutro ||
-                          'O quadrado do dia fica neutro; as cores aparecem só nos marcadores (hora + cliente).'}
+                          'Fundo neutro nos dias em curso; fundo verde suave quando todos os serviços do dia estão concluídos (cancelados não contam). Marcadores: hora + cliente.'}
                       </div>
                       <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                         {(safeT as any)?.legendaMarcadores || 'Marcadores (hora + cliente)'}
@@ -53426,6 +53490,22 @@ A1;Peça exemplo;10'
                   onChange={(e) => setAgendaForm({ ...agendaForm, hora: e.target.value })}
                   style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
+                <select
+                  value={agendaForm.status}
+                  onChange={(e) =>
+                    setAgendaForm({
+                      ...agendaForm,
+                      status: e.target.value as Agendamento['status'],
+                    })
+                  }
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                >
+                  <option value="pendente">{safeT?.pendente || 'Pendente'}</option>
+                  <option value="confirmado">{safeT?.confirmado || 'Confirmado'}</option>
+                  <option value="em-andamento">{safeT?.emAndamento || 'Em Andamento'}</option>
+                  <option value="concluido">{safeT?.concluido || 'Concluído'}</option>
+                  <option value="cancelado">{safeT?.cancelado || 'Cancelado'}</option>
+                </select>
                 <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.25)' }}>
                   <label style={{ display: 'block', marginBottom: '4px', fontSize: '13px', color: '#00ff00' }}>
                     {safeT?.duracaoEstimada || 'Duração Estimada (dias)'}
