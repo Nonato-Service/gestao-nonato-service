@@ -31052,7 +31052,7 @@ A1;Peça exemplo;10'
                       <p style={{ fontSize: '13px', opacity: 0.7, marginBottom: '10px', fontStyle: 'italic' }}>{servico.descricao}</p>
                     )}
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
-                      <button className="btn-primary" onClick={() => handleEditServico(servico)} style={{ flex: 1, padding: '8px', fontSize: '12px', backgroundColor: 'rgba(26, 28, 26, 0.92)', border: '2px solid rgba(255, 170, 0, 0.75)', color: '#ffaa00' }}>
+                      <button className="btn-primary cadastro-servico-btn-editar" onClick={() => handleEditServico(servico)} style={{ flex: 1, padding: '8px', fontSize: '12px' }}>
                         {safeT?.edit || 'Editar'}
                       </button>
                       <button className="btn-danger" onClick={() => handleDeleteServico(servico.id)} style={{ flex: 1, padding: '8px', fontSize: '12px', backgroundColor: 'rgba(52, 22, 22, 0.96)', border: '1px solid rgba(255, 100, 100, 0.5)', color: '#ffffff' }}>
@@ -53855,7 +53855,7 @@ A1;Peça exemplo;10'
                     <p><strong>{servico.cod ? `${servico.cod} – ` : ''}{servico.nome}</strong> - {servico.valor}€ ({servico.tipoCobranca})</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.tipo || 'Tipo'}: {servico.categoria}</p>
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
-                      <button className="btn-primary" onClick={() => handleEditServico(servico)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
+                      <button className="btn-primary cadastro-servico-btn-editar" onClick={() => handleEditServico(servico)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
                         {safeT?.edit || 'Editar'}
                       </button>
                       <button className="btn-danger" onClick={() => handleDeleteServico(servico.id)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>

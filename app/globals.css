@@ -2296,6 +2296,25 @@ a:focus-visible {
   align-items: start;
 }
 
+/* Cadastro de Serviços: Editar = contorno âmbar fino (1px), alinhado ao Excluir — sem borda «grossa» do estilo antigo */
+.tab-glass-root .cadastro-servico-btn-editar,
+.modal .cadastro-servico-btn-editar {
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: rgba(255, 170, 0, 0.48) !important;
+  background: rgba(26, 28, 26, 0.92) !important;
+  color: #ffaa00 !important;
+  box-shadow: none !important;
+}
+.tab-glass-root .cadastro-servico-btn-editar:hover,
+.modal .cadastro-servico-btn-editar:hover {
+  background: rgba(38, 34, 26, 0.96) !important;
+  border-color: rgba(255, 170, 0, 0.62) !important;
+  color: #ffcc66 !important;
+  box-shadow: 0 0 12px rgba(255, 170, 0, 0.18) !important;
+  filter: brightness(1.04) !important;
+}
+
 @media (max-width: 768px) {
   .tab-glass-hero-top {
     flex-direction: column !important;
