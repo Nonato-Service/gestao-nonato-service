@@ -23724,9 +23724,9 @@ onKeyPress={(e) => {
                     onClick={() => openTab('biblioteca-relatorios', getTabTitle('biblioteca-relatorios'))} 
                     style={{ 
                       padding: '10px 20px',
-                      backgroundColor: 'rgba(0, 150, 255, 0.2)',
-                      borderColor: 'rgba(0, 150, 255, 0.5)',
-                      color: '#66b3ff',
+                      backgroundColor: 'rgba(0, 150, 255, 0.1)',
+                      border: '1px solid rgba(0, 150, 255, 0.58)',
+                      color: '#ffffff',
                       fontWeight: 'bold',
                       fontSize: '13px'
                     }}
@@ -23738,9 +23738,9 @@ onKeyPress={(e) => {
                     onClick={handleAddRelatorioServico} 
                     style={{ 
                       padding: '10px 20px',
-                      backgroundColor: 'rgba(0, 255, 0, 0.2)',
-                      borderColor: 'rgba(0, 255, 0, 0.5)',
-                      color: '#00ff00',
+                      backgroundColor: 'rgba(18, 52, 24, 0.96)',
+                      border: '1px solid rgba(0, 200, 80, 0.55)',
+                      color: '#ffffff',
                       fontWeight: 'bold',
                       fontSize: '13px'
                     }}
@@ -23753,10 +23753,10 @@ onKeyPress={(e) => {
                       style={{ 
                         padding: '6px 8px', 
                         fontSize: '16px',
-                        backgroundColor: 'transparent',
-                        border: '1px solid rgba(0, 255, 0, 0.3)',
+                        backgroundColor: 'rgba(0, 255, 0, 0.06)',
+                        border: '1px solid rgba(0, 255, 0, 0.55)',
                         borderRadius: '4px',
-                        color: '#00ff00',
+                        color: '#ffffff',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         display: 'flex',
@@ -23767,12 +23767,12 @@ onKeyPress={(e) => {
                       }}
                       title={safeT?.voltar || 'Voltar'}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
-                        e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.12)'
+                        e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.72)'
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent'
-                        e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.06)'
+                        e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.55)'
                       }}
                     >
                       ↶
@@ -23782,10 +23782,10 @@ onKeyPress={(e) => {
                       style={{ 
                         padding: '6px 8px', 
                         fontSize: '16px',
-                        backgroundColor: 'transparent',
-                        border: '1px solid rgba(0, 150, 255, 0.3)',
+                        backgroundColor: 'rgba(0, 150, 255, 0.06)',
+                        border: '1px solid rgba(0, 150, 255, 0.55)',
                         borderRadius: '4px',
-                        color: '#66b3ff',
+                        color: '#ffffff',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
                         display: 'flex',
@@ -23796,12 +23796,12 @@ onKeyPress={(e) => {
                       }}
                       title={safeT?.paginaInicial || 'Página Inicial'}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.1)'
-                        e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.5)'
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.12)'
+                        e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.72)'
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent'
-                        e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.3)'
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.06)'
+                        e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.55)'
                       }}
                     >
                       🏠
@@ -23812,7 +23812,7 @@ onKeyPress={(e) => {
             </div>
             
             {showRelatorioServicoForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#141414', maxHeight: '90vh', overflowY: 'auto' }}>
+              <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px', maxHeight: '90vh', overflowY: 'auto' }}>
                 <h3 style={{ marginBottom: '15px' }}>{editingRelatorioServico ? (safeT?.editRelatorioServico || 'Editar Relatório de Serviço') : (safeT?.addRelatorioServico || 'Adicionar Relatório de Serviço')}</h3>
                 
                 {/* Informações Básicas */}
@@ -25367,10 +25367,7 @@ onKeyPress={(e) => {
                 marginBottom: '20px'
               }}>
                 <div style={{
-                  padding: '12px 15px',
-                  backgroundColor: '#141414',
-                  borderRadius: '8px',
-                  border: '2px solid rgba(0, 255, 0, 0.3)',
+                  ...glassCardStyle(ACCENT_GREEN, { padding: '12px 15px', radius: '10px', borderAlpha: 0.2 }),
                   textAlign: 'center',
                   minHeight: '100px',
                   display: 'flex',
@@ -25379,16 +25376,13 @@ onKeyPress={(e) => {
                   alignItems: 'center'
                 }}>
                   <div style={{ fontSize: '20px', marginBottom: '6px' }}>📋</div>
-                  <h3 style={{ color: '#00ff00', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold', lineHeight: '1.3' }}>
+                  <h3 style={{ color: '#ffffff', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold', lineHeight: '1.3', opacity: 0.95 }}>
                     {safeT?.totalRelatorios || 'Total de Relatórios'}
                   </h3>
                   <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff', margin: 0 }}>{relatoriosServico.length}</p>
                 </div>
                 <div style={{
-                  padding: '12px 15px',
-                  backgroundColor: '#141414',
-                  borderRadius: '8px',
-                  border: '2px solid rgba(0, 255, 0, 0.3)',
+                  ...glassCardStyle(ACCENT_GREEN, { padding: '12px 15px', radius: '10px', borderAlpha: 0.2 }),
                   textAlign: 'center',
                   minHeight: '100px',
                   display: 'flex',
@@ -25397,7 +25391,7 @@ onKeyPress={(e) => {
                   alignItems: 'center'
                 }}>
                   <div style={{ fontSize: '20px', marginBottom: '6px' }}>✅</div>
-                  <h3 style={{ color: '#00ff00', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold', lineHeight: '1.3' }}>
+                  <h3 style={{ color: '#ffffff', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold', lineHeight: '1.3', opacity: 0.95 }}>
                     {safeT?.concluidos || 'Concluídos'}
                   </h3>
                   <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff', margin: 0 }}>
@@ -25405,10 +25399,7 @@ onKeyPress={(e) => {
                   </p>
                 </div>
                 <div style={{
-                  padding: '12px 15px',
-                  backgroundColor: '#141414',
-                  borderRadius: '8px',
-                  border: '2px solid rgba(0, 255, 0, 0.3)',
+                  ...glassCardStyle(ACCENT_AMBER, { padding: '12px 15px', radius: '10px', borderAlpha: 0.25 }),
                   textAlign: 'center',
                   minHeight: '100px',
                   display: 'flex',
@@ -25417,7 +25408,7 @@ onKeyPress={(e) => {
                   alignItems: 'center'
                 }}>
                   <div style={{ fontSize: '20px', marginBottom: '6px' }}>↻</div>
-                  <h3 style={{ color: '#ffaa00', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold', lineHeight: '1.3' }}>
+                  <h3 style={{ color: '#ffffff', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold', lineHeight: '1.3', opacity: 0.95 }}>
                     {safeT?.retornoNecessario || 'Retorno Necessário'}
                   </h3>
                   <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff', margin: 0 }}>
@@ -25425,10 +25416,7 @@ onKeyPress={(e) => {
                   </p>
                 </div>
                 <div style={{
-                  padding: '12px 15px',
-                  backgroundColor: '#141414',
-                  borderRadius: '8px',
-                  border: '2px solid rgba(255, 68, 68, 0.3)',
+                  ...glassCardStyle({ r: 220, g: 72, b: 72 }, { padding: '12px 15px', radius: '10px', borderAlpha: 0.28 }),
                   textAlign: 'center',
                   minHeight: '100px',
                   display: 'flex',
@@ -25437,7 +25425,7 @@ onKeyPress={(e) => {
                   alignItems: 'center'
                 }}>
                   <div style={{ fontSize: '20px', marginBottom: '6px' }}>⚙️</div>
-                  <h3 style={{ color: '#ff4444', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold', lineHeight: '1.3' }}>
+                  <h3 style={{ color: '#ffffff', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold', lineHeight: '1.3', opacity: 0.95 }}>
                     {safeT?.comPecas || 'Com Peças'}
                   </h3>
                   <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffffff', margin: 0 }}>
@@ -25449,17 +25437,14 @@ onKeyPress={(e) => {
 
             {relatoriosServico.length === 0 ? (
               <div style={{
-                padding: '60px 40px',
-                backgroundColor: '#141414',
-                borderRadius: '16px',
-                border: '2px solid rgba(0, 255, 0, 0.3)',
+                ...glassCardStyle(ACCENT_GREEN, { padding: '60px 40px', radius: '12px', borderAlpha: 0.2, borderWidth: '1px' }),
                 textAlign: 'center'
               }}>
                 <div style={{ fontSize: '64px', marginBottom: '20px' }}>📋</div>
-                <p style={{ fontSize: '18px', opacity: 0.8, marginBottom: '10px', color: '#ffffff' }}>
+                <p style={{ fontSize: '18px', marginBottom: '10px', color: '#ffffff', opacity: 0.95 }}>
                   {safeT?.noRelatoriosServico || 'Nenhum relatório de serviço cadastrado.'}
                 </p>
-                <p style={{ fontSize: '14px', opacity: 0.6, color: '#ccc' }}>
+                <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.55)' }}>
                   {safeT?.criePrimeiroRelatorio || 'Clique em "Adicionar Relatório de Serviço" para começar.'}
                 </p>
               </div>
@@ -25482,27 +25467,16 @@ onKeyPress={(e) => {
                       <div 
                         key={relatorio.id} 
                         style={{ 
-                          backgroundColor: '#141414', 
-                          padding: '15px', 
-                          borderRadius: '12px', 
-                          border: '2px solid rgba(0, 255, 0, 0.3)',
-                          transition: 'all 0.3s ease',
+                          ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }),
                           position: 'relative',
                           overflow: 'visible',
                           minWidth: 0,
                           maxWidth: '100%',
-                          boxShadow: '0 4px 12px rgba(0, 255, 0, 0.1)'
+                          height: 'fit-content',
+                          alignSelf: 'start'
                         }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-5px)'
-                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.6)'
-                          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 255, 0, 0.2)'
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)'
-                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
-                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 255, 0, 0.1)'
-                        }}
+                        onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)}
+                        onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}
                       >
                         {/* Indicador de Status */}
                         <div style={{
@@ -25556,12 +25530,12 @@ onKeyPress={(e) => {
                           {relatorio.equipamentoOrigem === 'armazem' && (
                             <span style={{
                               padding: '3px 8px',
-                              backgroundColor: 'rgba(0, 150, 255, 0.25)',
-                              color: '#66b3ff',
+                              backgroundColor: 'rgba(0, 150, 255, 0.1)',
+                              color: '#ffffff',
                               borderRadius: '10px',
                               fontSize: '9px',
                               fontWeight: 'bold',
-                              border: '1px solid rgba(0, 150, 255, 0.5)'
+                              border: '1px solid rgba(0, 150, 255, 0.58)'
                             }}>
                               {(safeT as any)?.badgeEquipamentoArmazem || '🏭 Armazém'}
                             </span>
@@ -25572,12 +25546,12 @@ onKeyPress={(e) => {
                         <div style={{
                           marginBottom: '15px',
                           paddingBottom: '12px',
-                          borderBottom: '2px solid rgba(0, 255, 0, 0.3)'
+                          borderBottom: '1px solid rgba(0, 255, 0, 0.24)'
                         }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                             <h3 style={{
                               margin: 0,
-                              color: '#00ff00',
+                              color: '#ffffff',
                               fontSize: '20px',
                               fontWeight: 'bold',
                               letterSpacing: '1px'
@@ -25585,14 +25559,14 @@ onKeyPress={(e) => {
                               {relatorio.numero}
                             </h3>
                             <span style={{
-                              backgroundColor: 'rgba(0, 255, 0, 0.15)',
-                              color: '#00ff00',
+                              backgroundColor: 'rgba(0, 255, 0, 0.08)',
+                              color: '#ffffff',
                               padding: '4px 10px',
                               borderRadius: '5px',
                               fontSize: '12px',
                               fontWeight: 'bold',
                               whiteSpace: 'nowrap',
-                              border: '1px solid rgba(0, 255, 0, 0.3)'
+                              border: '1px solid rgba(0, 255, 0, 0.52)'
                             }}>
                               {dataFormatada}
                             </span>
@@ -25647,19 +25621,17 @@ onKeyPress={(e) => {
                         {/* Resumo de Trabalho */}
                         {relatorio.diasTrabalho.length > 0 && (
                           <div style={{
-                            padding: '12px',
-                            backgroundColor: '#222222',
-                            borderRadius: '8px',
-                            marginBottom: '15px',
-                            border: '1px solid rgba(0, 255, 0, 0.2)'
+                            ...glassNestedStyle(ACCENT_GREEN),
+                            marginBottom: '15px'
                           }}>
                             <p style={{
                               fontSize: '11px',
-                              color: '#00ff00',
+                              color: '#ffffff',
                               marginBottom: '10px',
                               fontWeight: 'bold',
                               textTransform: 'uppercase',
-                              letterSpacing: '1px'
+                              letterSpacing: '1px',
+                              opacity: 0.95
                             }}>
                               {safeT?.resumoTrabalho || 'Resumo de Trabalho'}
                             </p>
@@ -25670,20 +25642,20 @@ onKeyPress={(e) => {
                               textAlign: 'center'
                             }}>
                               <div>
-                                <p style={{ fontSize: '9px', color: '#999', marginBottom: '3px' }}>Dias</p>
-                                <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#00ff00' }}>{relatorio.diasTrabalho.length}</p>
+                                <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.55)', marginBottom: '3px' }}>Dias</p>
+                                <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#ffffff' }}>{relatorio.diasTrabalho.length}</p>
                               </div>
                               <div>
-                                <p style={{ fontSize: '9px', color: '#999', marginBottom: '3px' }}>Horas</p>
-                                <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#00ff00' }}>{totais.horasTrabalho}h</p>
+                                <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.55)', marginBottom: '3px' }}>Horas</p>
+                                <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#ffffff' }}>{totais.horasTrabalho}h</p>
                               </div>
                               <div>
-                                <p style={{ fontSize: '9px', color: '#999', marginBottom: '3px' }}>Viagem</p>
-                                <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#00ff00' }}>{totais.horasViagem}h</p>
+                                <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.55)', marginBottom: '3px' }}>Viagem</p>
+                                <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#ffffff' }}>{totais.horasViagem}h</p>
                               </div>
                               <div>
-                                <p style={{ fontSize: '9px', color: '#999', marginBottom: '3px' }}>KM</p>
-                                <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#00ff00' }}>{totais.kmsPercorridos}</p>
+                                <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.55)', marginBottom: '3px' }}>KM</p>
+                                <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#ffffff' }}>{totais.kmsPercorridos}</p>
                               </div>
                             </div>
                           </div>
@@ -25692,17 +25664,15 @@ onKeyPress={(e) => {
                         {/* Peças Substituídas */}
                         {relatorio.pecasSubstituicao.length > 0 && (
                           <div style={{
-                            padding: '10px',
-                            backgroundColor: 'rgba(255, 68, 68, 0.1)',
-                            borderRadius: '6px',
-                            marginBottom: '15px',
-                            border: '1px solid rgba(255, 68, 68, 0.3)'
+                            ...glassCardStyle({ r: 220, g: 72, b: 72 }, { padding: '10px', radius: '8px', borderAlpha: 0.32 }),
+                            marginBottom: '15px'
                           }}>
                             <p style={{
                               fontSize: '11px',
-                              color: '#ff4444',
+                              color: '#ffffff',
                               fontWeight: 'bold',
-                              margin: 0
+                              margin: 0,
+                              opacity: 0.95
                             }}>
                               ⚙️ {relatorio.pecasSubstituicao.length} {safeT?.pecasSubstituicao || 'Peça(s) Substituída(s)'}
                             </p>
@@ -25716,7 +25686,7 @@ onKeyPress={(e) => {
                           gap: '8px',
                           marginTop: '15px',
                           paddingTop: '15px',
-                          borderTop: '1px solid rgba(0, 255, 0, 0.2)'
+                          borderTop: '1px solid rgba(0, 255, 0, 0.24)'
                         }}>
                           {/* Primeira linha: Dropdown e Editar */}
                           <div className="relatorio-servico-card-acoes-linha">
@@ -25726,9 +25696,9 @@ onKeyPress={(e) => {
                               style={{
                                 padding: '8px',
                                 fontSize: '11px',
-                                backgroundColor: '#141414',
-                                color: '#66b3ff',
-                                border: '1px solid rgba(0, 150, 255, 0.5)',
+                                backgroundColor: 'rgba(20, 20, 20, 0.45)',
+                                color: '#ffffff',
+                                border: '1px solid rgba(0, 150, 255, 0.65)',
                                 borderRadius: '4px',
                                 cursor: 'pointer'
                               }}
@@ -25758,9 +25728,9 @@ onKeyPress={(e) => {
                                 padding: '8px 6px', 
                                 fontSize: '11px',
                                 fontWeight: 'bold',
-                                backgroundColor: 'rgba(0, 255, 0, 0.2)',
-                                border: '1px solid rgba(0, 255, 0, 0.6)',
-                                color: '#fff',
+                                backgroundColor: 'rgba(26, 28, 26, 0.92)',
+                                border: '2px solid rgba(255, 170, 0, 0.75)',
+                                color: '#ffaa00',
                                 display: 'flex',
                                 flexDirection: 'row',
                                 alignItems: 'center',
@@ -25768,24 +25738,16 @@ onKeyPress={(e) => {
                                 gap: '6px',
                                 borderRadius: '6px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease',
+                                transition: 'border-color 0.2s ease, background-color 0.2s ease',
                                 boxSizing: 'border-box',
                                 letterSpacing: '0.5px',
                                 WebkitTapHighlightColor: 'transparent',
                                 touchAction: 'manipulation'
                               }}
                               title={safeT?.edit || 'Editar'}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.35)'
-                                e.currentTarget.style.transform = 'scale(1.02)'
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.2)'
-                                e.currentTarget.style.transform = 'scale(1)'
-                              }}
                             >
                               <span style={{ fontSize: '16px', lineHeight: '1' }}>✏️</span>
-                              <span style={{ lineHeight: '1.3', whiteSpace: 'nowrap', fontSize: '11px', fontWeight: 'bold', color: '#fff' }}>{safeT?.edit || 'Editar'}</span>
+                              <span style={{ lineHeight: '1.3', whiteSpace: 'nowrap', fontSize: '11px', fontWeight: 'bold', color: '#ffaa00' }}>{safeT?.edit || 'Editar'}</span>
                             </button>
                           </div>
                           
@@ -25800,9 +25762,9 @@ onKeyPress={(e) => {
                                 padding: '6px', 
                                 fontSize: '10px',
                                 fontWeight: 'bold',
-                                backgroundColor: 'rgba(0, 255, 0, 0.2)',
-                                border: '1px solid rgba(0, 255, 0, 0.6)',
-                                color: '#fff',
+                                backgroundColor: 'rgba(18, 52, 24, 0.96)',
+                                border: '1px solid rgba(0, 200, 80, 0.55)',
+                                color: '#ffffff',
                                 display: 'flex',
                                 flexDirection: 'row',
                                 alignItems: 'center',
@@ -25810,22 +25772,14 @@ onKeyPress={(e) => {
                                 gap: '5px',
                                 borderRadius: '4px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease',
+                                transition: 'border-color 0.2s ease, background-color 0.2s ease',
                                 boxSizing: 'border-box',
                                 letterSpacing: '0.5px'
                               }}
                               title={safeT?.view || 'Ver'}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.35)'
-                                e.currentTarget.style.transform = 'scale(1.02)'
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.2)'
-                                e.currentTarget.style.transform = 'scale(1)'
-                              }}
                             >
                               <span style={{ fontSize: '14px', lineHeight: '1' }}>👁️</span>
-                              <span style={{ lineHeight: '1.3', whiteSpace: 'nowrap', fontSize: '10px', fontWeight: 'bold', color: '#fff' }}>{safeT?.view || 'Ver'}</span>
+                              <span style={{ lineHeight: '1.3', whiteSpace: 'nowrap', fontSize: '10px', fontWeight: 'bold', color: '#ffffff' }}>{safeT?.view || 'Ver'}</span>
                             </button>
                             <button 
                               className="btn-primary" 
@@ -25836,9 +25790,9 @@ onKeyPress={(e) => {
                                 padding: '6px', 
                                 fontSize: '10px',
                                 fontWeight: 'bold',
-                                backgroundColor: 'rgba(0, 150, 255, 0.2)',
-                                borderColor: 'rgba(0, 150, 255, 0.5)',
-                                color: '#66b3ff',
+                                backgroundColor: 'rgba(18, 38, 62, 0.96)',
+                                border: '1px solid rgba(80, 160, 255, 0.55)',
+                                color: '#ffffff',
                                 display: 'flex',
                                 flexDirection: 'row',
                                 alignItems: 'center',
@@ -25846,23 +25800,14 @@ onKeyPress={(e) => {
                                 gap: '5px',
                                 borderRadius: '4px',
                                 cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                border: '2px solid rgba(0, 150, 255, 0.5)',
+                                transition: 'border-color 0.2s ease, background-color 0.2s ease',
                                 boxSizing: 'border-box',
                                 letterSpacing: '0.5px'
                               }}
                               title={safeT?.gerarPDF || 'Gerar PDF'}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.3)'
-                                e.currentTarget.style.transform = 'scale(1.02)'
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.2)'
-                                e.currentTarget.style.transform = 'scale(1)'
-                              }}
                             >
                               <span style={{ fontSize: '14px', lineHeight: '1' }}>📄</span>
-                              <span style={{ lineHeight: '1.3', whiteSpace: 'nowrap', fontSize: '10px', fontWeight: 'bold', color: '#66b3ff' }}>{safeT?.gerarPDF || 'Gerar PDF'}</span>
+                              <span style={{ lineHeight: '1.3', whiteSpace: 'nowrap', fontSize: '10px', fontWeight: 'bold', color: '#ffffff' }}>{safeT?.gerarPDF || 'Gerar PDF'}</span>
                             </button>
                           </div>
                           
@@ -25876,9 +25821,9 @@ onKeyPress={(e) => {
                               padding: '6px', 
                               fontSize: '10px',
                               fontWeight: 'bold',
-                              backgroundColor: 'rgba(255, 68, 68, 0.2)',
-                              border: '1px solid rgba(255, 68, 68, 0.7)',
-                              color: '#fff',
+                              backgroundColor: 'rgba(52, 22, 22, 0.96)',
+                              border: '1px solid rgba(255, 100, 100, 0.5)',
+                              color: '#ffffff',
                               display: 'flex',
                               flexDirection: 'row',
                               alignItems: 'center',
@@ -25886,22 +25831,14 @@ onKeyPress={(e) => {
                               gap: '5px',
                               borderRadius: '4px',
                               cursor: 'pointer',
-                              transition: 'all 0.2s ease',
+                              transition: 'border-color 0.2s ease, background-color 0.2s ease',
                               boxSizing: 'border-box',
                               letterSpacing: '0.5px'
                             }}
                             title={safeT?.delete || 'Excluir'}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = 'rgba(255, 68, 68, 0.35)'
-                              e.currentTarget.style.transform = 'scale(1.02)'
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = 'rgba(255, 68, 68, 0.2)'
-                              e.currentTarget.style.transform = 'scale(1)'
-                            }}
                           >
                             <span style={{ fontSize: '14px', lineHeight: '1' }}>🗑️</span>
-                            <span style={{ lineHeight: '1.3', whiteSpace: 'nowrap', fontSize: '10px', fontWeight: 'bold', color: '#fff' }}>{safeT?.delete || 'Excluir'}</span>
+                            <span style={{ lineHeight: '1.3', whiteSpace: 'nowrap', fontSize: '10px', fontWeight: 'bold', color: '#ffffff' }}>{safeT?.delete || 'Excluir'}</span>
                           </button>
                         </div>
                       </div>

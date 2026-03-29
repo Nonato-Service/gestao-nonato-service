@@ -2009,20 +2009,25 @@ a:focus-visible {
   }
 }
 
-/* ========== Relatório de Serviço — telemóvel: cabeçalho empilhado, texto proporcional ========== */
+/* ========== Relatório de Serviço — alinhado à Biblioteca de Relatórios (fundo / bordas) ========== */
 .relatorio-servico-root {
-  padding: clamp(8px, 2.5vw, 28px) !important;
+  padding: clamp(8px, 2.5vw, 30px) !important;
   box-sizing: border-box;
-  max-width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+  min-width: 0;
+  background: rgba(0, 0, 0, 0.38);
+  border-radius: clamp(8px, 1.5vw, 16px);
 }
 
 .relatorio-servico-hero {
-  margin-bottom: clamp(12px, 3vw, 36px);
-  padding: clamp(12px, 3.5vw, 28px);
-  background: linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%);
+  margin-bottom: clamp(16px, 4vw, 40px);
+  padding: clamp(12px, 3vw, 30px);
+  background: linear-gradient(135deg, rgba(0, 255, 0, 0.055) 0%, rgba(0, 0, 0, 0.78) 100%);
   border-radius: clamp(10px, 2.5vw, 20px);
-  border: 2px solid rgba(0, 255, 0, 0.28);
-  box-shadow: 0 6px 24px rgba(0, 255, 0, 0.08);
+  border: 2px solid rgba(0, 255, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 255, 0, 0.1);
 }
 
 .relatorio-servico-hero-top {
@@ -2044,17 +2049,17 @@ a:focus-visible {
   margin: 0 0 6px 0 !important;
   font-size: clamp(1rem, 4.2vw, 1.85rem) !important;
   font-weight: bold !important;
-  color: #00ff00 !important;
+  color: #ffffff !important;
   letter-spacing: 0.08em !important;
-  text-shadow: 0 0 14px rgba(0, 255, 0, 0.25) !important;
+  text-shadow: 0 0 14px rgba(255, 255, 255, 0.12) !important;
   line-height: 1.2 !important;
 }
 
 .relatorio-servico-hero-meta {
   margin: 0 !important;
   font-size: clamp(12px, 3vw, 14px) !important;
-  color: #ccc !important;
-  opacity: 0.85 !important;
+  color: #ffffff !important;
+  opacity: 0.95 !important;
 }
 
 .relatorio-servico-hero-actions {
@@ -2114,8 +2119,9 @@ a:focus-visible {
   box-sizing: border-box;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
 }
-/* Biblioteca: cartões com altura ao conteúdo (evita blocos vazios quando um título é longo) */
-.biblioteca-relatorios-cards-grid {
+/* Biblioteca e Relatório de Serviço: cartões com altura ao conteúdo */
+.biblioteca-relatorios-cards-grid,
+.relatorio-servico-cards-grid {
   align-items: start;
 }
 @media (max-width: 480px) {
