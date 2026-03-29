@@ -24,7 +24,7 @@ function isAmber(a: AccentRgb): boolean {
   return a.r === 255 && a.g === 170 && a.b === 0
 }
 
-/** Âmbar: fundo escuro quente + borda âmbar nos mesmos α que o verde da splash */
+/** Âmbar: fundo escuro quente + borda âmbar (cartão despesas) */
 const SPLASH_CARD_BG_AMBER = 'rgba(38, 32, 22, 0.92)'
 
 export type GlassCardOpts = {

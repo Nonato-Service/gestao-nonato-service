@@ -43084,8 +43084,8 @@ A1;Peça exemplo;10'
                     style={{ 
                       padding: '6px 8px', 
                       fontSize: '16px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 255, 0, 0.34)',
+                      backgroundColor: 'rgba(0, 255, 0, 0.06)',
+                      border: '1px solid rgba(0, 255, 0, 0.55)',
                       borderRadius: '4px',
                       color: '#00ff00',
                       cursor: 'pointer',
@@ -43098,12 +43098,12 @@ A1;Peça exemplo;10'
                     }}
                     title={safeT?.voltar || 'Voltar'}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.08)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.12)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.72)'
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.34)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.06)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.55)'
                     }}
                   >
                     ↶
@@ -43114,8 +43114,8 @@ A1;Peça exemplo;10'
                     style={{ 
                       padding: '6px 8px', 
                       fontSize: '16px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 150, 255, 0.34)',
+                      backgroundColor: 'rgba(0, 150, 255, 0.06)',
+                      border: '1px solid rgba(0, 150, 255, 0.55)',
                       borderRadius: '4px',
                       color: '#66b3ff',
                       cursor: 'pointer',
@@ -43128,12 +43128,12 @@ A1;Peça exemplo;10'
                     }}
                     title={safeT?.paginaInicial || 'Página Inicial'}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.08)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.45)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.12)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.72)'
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.34)'
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.06)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.55)'
                     }}
                   >
                     🏠
@@ -43182,7 +43182,8 @@ A1;Peça exemplo;10'
                           </h3>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ 
-                              backgroundColor: 'rgba(0, 255, 0, 0.24)', 
+                              backgroundColor: 'rgba(0, 255, 0, 0.1)', 
+                              border: '1px solid rgba(0, 255, 0, 0.55)',
                               color: '#00ff00',
                               padding: '2px 8px',
                               borderRadius: '8px',
@@ -43197,8 +43198,8 @@ A1;Peça exemplo;10'
                               style={{
                                 padding: '4px 10px',
                                 fontSize: '10px',
-                                backgroundColor: 'rgba(255, 68, 68, 0.24)',
-                                border: '1px solid rgba(255, 68, 68, 0.5)',
+                                backgroundColor: 'rgba(255, 68, 68, 0.1)',
+                                border: '1px solid rgba(255, 68, 68, 0.58)',
                                 color: '#ff8888',
                                 borderRadius: '6px',
                                 cursor: 'pointer',
@@ -43278,7 +43279,8 @@ A1;Peça exemplo;10'
                                           )}
                                         </div>
                                         <span style={{ 
-                                          backgroundColor: 'rgba(0, 255, 0, 0.2)', 
+                                          backgroundColor: 'rgba(0, 255, 0, 0.08)', 
+                                          border: '1px solid rgba(0, 255, 0, 0.52)',
                                           color: '#00ff00',
                                           padding: '2px 6px',
                                           borderRadius: '3px',
@@ -43323,9 +43325,9 @@ A1;Peça exemplo;10'
                                           width: '100%',
                                           padding: '4px',
                                           fontSize: '9px',
-                                          backgroundColor: 'rgba(20, 20, 20, 0.94)',
+                                          backgroundColor: 'rgba(20, 20, 20, 0.45)',
                                           color: '#66b3ff',
-                                          border: '1px solid rgba(0, 150, 255, 0.55)',
+                                          border: '1px solid rgba(0, 150, 255, 0.65)',
                                           borderRadius: '3px',
                                           cursor: 'pointer'
                                         }}
@@ -43354,8 +43356,8 @@ A1;Peça exemplo;10'
                                             minWidth: '60px',
                                             padding: '6px 10px', 
                                             fontSize: '10px',
-                                            backgroundColor: 'rgba(0, 255, 0, 0.24)',
-                                            border: '1px solid rgba(0, 255, 0, 0.48)',
+                                            backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                                            border: '1px solid rgba(0, 255, 0, 0.58)',
                                             color: '#fff'
                                           }}
                                         >
@@ -43369,8 +43371,8 @@ A1;Peça exemplo;10'
                                             minWidth: '60px',
                                             padding: '6px 10px', 
                                             fontSize: '10px', 
-                                            backgroundColor: 'rgba(0, 150, 255, 0.26)', 
-                                            borderColor: 'rgba(0, 150, 255, 0.55)',
+                                            backgroundColor: 'rgba(0, 150, 255, 0.1)', 
+                                            border: '1px solid rgba(0, 150, 255, 0.62)',
                                             color: '#66b3ff'
                                           }}
                                         >
@@ -43384,8 +43386,8 @@ A1;Peça exemplo;10'
                                             minWidth: '60px',
                                             padding: '6px 10px', 
                                             fontSize: '10px', 
-                                            backgroundColor: 'rgba(255, 68, 68, 0.24)', 
-                                            border: '1px solid rgba(255, 68, 68, 0.42)',
+                                            backgroundColor: 'rgba(255, 68, 68, 0.1)', 
+                                            border: '1px solid rgba(255, 68, 68, 0.58)',
                                             color: '#ff8888',
                                             borderRadius: '4px',
                                             cursor: 'pointer'
@@ -43426,7 +43428,6 @@ A1;Peça exemplo;10'
                                         radius: '12px',
                                         borderAlpha: 0.42,
                                         borderWidth: '2px',
-                                        bgAlpha: 0.9,
                                       }),
                                       width: '100%'
                                     }}
@@ -43442,16 +43443,16 @@ A1;Peça exemplo;10'
                                       </div>
                                     </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                                      <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens })} style={{ ...btnBase, backgroundColor: 'rgba(0, 255, 0, 0.28)', border: '1px solid rgba(0, 255, 0, 0.52)', color: '#00ff00' }}>
+                                      <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens })} style={{ ...btnBase, backgroundColor: 'rgba(0, 255, 0, 0.1)', border: '1px solid rgba(0, 255, 0, 0.6)', color: '#00ff00' }}>
                                         👁️ {(safeT as any)?.visualizarDespesasBiblioteca ?? safeT?.view ?? 'View'}
                                       </button>
-                                      <button type="button" onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(0, 150, 255, 0.28)', border: '1px solid rgba(0, 150, 255, 0.58)', color: '#66b3ff' }}>
+                                      <button type="button" onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(0, 150, 255, 0.1)', border: '1px solid rgba(0, 150, 255, 0.62)', color: '#66b3ff' }}>
                                         ✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}
                                       </button>
-                                      <button type="button" onClick={() => imprimirPDFDespesasDaBiblioteca(relatorio, itens)} style={{ ...btnBase, backgroundColor: 'rgba(150, 100, 255, 0.24)', border: '1px solid rgba(150, 100, 255, 0.52)', color: '#c4a7ff' }}>
+                                      <button type="button" onClick={() => imprimirPDFDespesasDaBiblioteca(relatorio, itens)} style={{ ...btnBase, backgroundColor: 'rgba(150, 100, 255, 0.1)', border: '1px solid rgba(150, 100, 255, 0.58)', color: '#c4a7ff' }}>
                                         📄 {(safeT as any)?.gerarPDF || 'PDF'}
                                       </button>
-                                      <button type="button" onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(255, 68, 68, 0.28)', border: '1px solid rgba(255, 68, 68, 0.55)', color: '#ff8888' }}>
+                                      <button type="button" onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(255, 68, 68, 0.1)', border: '1px solid rgba(255, 68, 68, 0.6)', color: '#ff8888' }}>
                                         🗑️ {safeT?.delete || 'Excluir'}
                                       </button>
                                     </div>
@@ -43509,8 +43510,8 @@ A1;Peça exemplo;10'
                   <div style={{ marginTop: '16px', fontSize: '18px', fontWeight: 'bold', color: '#00ff00', textAlign: 'right' }}>{(safeT as any)?.somaTotal || 'SOMA TOTAL'}: €{totV.toFixed(2)}</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
                     <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca(null)} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(102, 102, 102, 0.92)', background: 'rgba(51, 51, 51, 0.96)', color: '#fff', cursor: 'pointer' }}>{safeT?.close || 'Fechar'}</button>
-                    <button type="button" onClick={() => { imprimirPDFDespesasDaBiblioteca(relV, itensV) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(153, 102, 255, 0.65)', background: 'rgba(150,100,255,0.26)', color: '#c4a7ff', cursor: 'pointer', fontWeight: 600 }}>📄 {(safeT as any)?.gerarPDF || 'PDF'}</button>
-                    <button type="button" onClick={() => { setModalVisualizarDespesasBiblioteca(null); handleEditarDespesasNaBiblioteca(relV.id) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(102, 179, 255, 0.65)', background: 'rgba(0,150,255,0.28)', color: '#66b3ff', cursor: 'pointer', fontWeight: 600 }}>✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}</button>
+                    <button type="button" onClick={() => { imprimirPDFDespesasDaBiblioteca(relV, itensV) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(153, 102, 255, 0.62)', background: 'rgba(150,100,255,0.1)', color: '#c4a7ff', cursor: 'pointer', fontWeight: 600 }}>📄 {(safeT as any)?.gerarPDF || 'PDF'}</button>
+                    <button type="button" onClick={() => { setModalVisualizarDespesasBiblioteca(null); handleEditarDespesasNaBiblioteca(relV.id) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(102, 179, 255, 0.62)', background: 'rgba(0,150,255,0.1)', color: '#66b3ff', cursor: 'pointer', fontWeight: 600 }}>✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}</button>
                   </div>
                 </div>
               </div>
