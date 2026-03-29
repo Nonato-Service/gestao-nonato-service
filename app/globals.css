@@ -184,17 +184,17 @@ body,
   margin: 0 auto;
 }
 
-/* Padrão igual Visualizar Equipamentos: contorno fino, verde opaco, texto branco, hover só brilho */
+/* Padrão Visualizar Equipamentos / ações principais: botão sólido verde escuro, contorno 1px, texto branco */
 .btn-primary {
-  background: transparent;
-  border: 1px solid rgba(0, 255, 0, 0.95);
+  background: rgba(18, 52, 24, 0.96);
+  border: 1px solid rgba(0, 200, 80, 0.55);
   color: #fff !important;
   padding: 14px 28px;
   border-radius: 8px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: box-shadow 0.2s ease, filter 0.2s ease;
+  transition: box-shadow 0.2s ease, filter 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
   position: relative;
   letter-spacing: 0.5px;
   box-shadow: none;
@@ -202,11 +202,11 @@ body,
 }
 
 .btn-primary:hover {
-  background: rgba(0, 255, 0, 0.12);
-  border: 1px solid #00ff00;
+  background: rgba(22, 62, 34, 0.98);
+  border: 1px solid rgba(0, 220, 95, 0.72);
   color: #fff !important;
-  box-shadow: 0 0 14px rgba(0, 255, 0, 0.45);
-  filter: brightness(1.15);
+  box-shadow: 0 0 16px rgba(0, 255, 0, 0.35);
+  filter: brightness(1.06);
 }
 
 .btn-primary:active {
