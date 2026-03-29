@@ -43224,13 +43224,14 @@ A1;Peça exemplo;10'
                           {(safeT as any)?.relatoriosServicoTitle || 'Relatórios de Serviço'}
                         </h4>
                         {equipamentos.length === 0 && (
-                          <p style={{ margin: 0, fontSize: '11px', opacity: 0.88, color: '#ffffff' }}>
+                          <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)' }}>
                             {(safeT as any)?.nenhumRelatorioServicoCliente || 'Nenhum relatório de serviço'}
                           </p>
                         )}
                       </div>
                       
-                      {/* Equipamentos */}
+                      {/* Equipamentos — só cartões com relatórios (sem blocos vazios nem botões) */}
+                      {equipamentos.length > 0 && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {equipamentos.map(({ equipamento, relatorios }) => (
                           <div 
@@ -43357,9 +43358,9 @@ A1;Peça exemplo;10'
                                             minWidth: '60px',
                                             padding: '6px 10px', 
                                             fontSize: '10px',
-                                            backgroundColor: 'rgba(0, 255, 0, 0.1)',
-                                            border: '1px solid rgba(0, 255, 0, 0.58)',
-                                            color: '#fff'
+                                            backgroundColor: 'rgba(18, 52, 24, 0.96)',
+                                            border: '1px solid rgba(0, 200, 80, 0.55)',
+                                            color: '#ffffff'
                                           }}
                                         >
                                           👁️ {safeT?.view || 'Ver'}
@@ -43372,8 +43373,8 @@ A1;Peça exemplo;10'
                                             minWidth: '60px',
                                             padding: '6px 10px', 
                                             fontSize: '10px', 
-                                            backgroundColor: 'rgba(0, 150, 255, 0.1)', 
-                                            border: '1px solid rgba(0, 150, 255, 0.62)',
+                                            backgroundColor: 'rgba(18, 38, 62, 0.96)', 
+                                            border: '1px solid rgba(80, 160, 255, 0.55)',
                                             color: '#ffffff'
                                           }}
                                         >
@@ -43387,8 +43388,8 @@ A1;Peça exemplo;10'
                                             minWidth: '60px',
                                             padding: '6px 10px', 
                                             fontSize: '10px', 
-                                            backgroundColor: 'rgba(255, 68, 68, 0.1)', 
-                                            border: '1px solid rgba(255, 68, 68, 0.58)',
+                                            backgroundColor: 'rgba(52, 22, 22, 0.96)', 
+                                            border: '1px solid rgba(255, 100, 100, 0.5)',
                                             color: '#ffffff',
                                             borderRadius: '4px',
                                             cursor: 'pointer'
@@ -43405,6 +43406,8 @@ A1;Peça exemplo;10'
                             </div>
                           </div>
                         ))}
+                      </div>
+                      )}
 
                         {/* Secção: Relatórios de Despesas (fechamentos) */}
                         <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid rgba(0, 255, 0, 0.3)' }}>
@@ -43412,7 +43415,7 @@ A1;Peça exemplo;10'
                             {(safeT as any)?.relatoriosDespesasTitle || 'Relatórios de Despesas'}
                           </h4>
                           {despesasCliente.length === 0 ? (
-                            <p style={{ margin: 0, fontSize: '11px', opacity: 0.88, color: '#ffffff' }}>
+                            <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)' }}>
                               {(safeT as any)?.nenhumRelatorioDespesas || 'Nenhum fechamento de despesas'}
                             </p>
                           ) : (
@@ -43444,16 +43447,16 @@ A1;Peça exemplo;10'
                                       </div>
                                     </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                                      <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens })} style={{ ...btnBase, backgroundColor: 'rgba(0, 255, 0, 0.1)', border: '1px solid rgba(0, 255, 0, 0.6)', color: '#ffffff' }}>
+                                      <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens })} style={{ ...btnBase, backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff' }}>
                                         👁️ {(safeT as any)?.visualizarDespesasBiblioteca ?? safeT?.view ?? 'View'}
                                       </button>
-                                      <button type="button" onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(0, 150, 255, 0.1)', border: '1px solid rgba(0, 150, 255, 0.62)', color: '#ffffff' }}>
+                                      <button type="button" onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(26, 28, 26, 0.92)', border: '2px solid rgba(255, 170, 0, 0.75)', color: '#ffaa00' }}>
                                         ✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}
                                       </button>
-                                      <button type="button" onClick={() => imprimirPDFDespesasDaBiblioteca(relatorio, itens)} style={{ ...btnBase, backgroundColor: 'rgba(150, 100, 255, 0.1)', border: '1px solid rgba(150, 100, 255, 0.58)', color: '#ffffff' }}>
+                                      <button type="button" onClick={() => imprimirPDFDespesasDaBiblioteca(relatorio, itens)} style={{ ...btnBase, backgroundColor: 'rgba(40, 26, 52, 0.96)', border: '1px solid rgba(180, 130, 255, 0.5)', color: '#ffffff' }}>
                                         📄 {(safeT as any)?.gerarPDF || 'PDF'}
                                       </button>
-                                      <button type="button" onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(255, 68, 68, 0.1)', border: '1px solid rgba(255, 68, 68, 0.6)', color: '#ffffff' }}>
+                                      <button type="button" onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(52, 22, 22, 0.96)', border: '1px solid rgba(255, 100, 100, 0.5)', color: '#ffffff' }}>
                                         🗑️ {safeT?.delete || 'Excluir'}
                                       </button>
                                     </div>
@@ -43463,7 +43466,6 @@ A1;Peça exemplo;10'
                             </div>
                           )}
                         </div>
-                      </div>
                     </div>
                   )
                 })}
@@ -43511,8 +43513,8 @@ A1;Peça exemplo;10'
                   <div style={{ marginTop: '16px', fontSize: '18px', fontWeight: 'bold', color: '#ffffff', textAlign: 'right' }}>{(safeT as any)?.somaTotal || 'SOMA TOTAL'}: €{totV.toFixed(2)}</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
                     <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca(null)} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(102, 102, 102, 0.92)', background: 'rgba(51, 51, 51, 0.96)', color: '#ffffff', cursor: 'pointer' }}>{safeT?.close || 'Fechar'}</button>
-                    <button type="button" onClick={() => { imprimirPDFDespesasDaBiblioteca(relV, itensV) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(153, 102, 255, 0.62)', background: 'rgba(150,100,255,0.1)', color: '#ffffff', cursor: 'pointer', fontWeight: 600 }}>📄 {(safeT as any)?.gerarPDF || 'PDF'}</button>
-                    <button type="button" onClick={() => { setModalVisualizarDespesasBiblioteca(null); handleEditarDespesasNaBiblioteca(relV.id) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(102, 179, 255, 0.62)', background: 'rgba(0,150,255,0.1)', color: '#ffffff', cursor: 'pointer', fontWeight: 600 }}>✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}</button>
+                    <button type="button" onClick={() => { imprimirPDFDespesasDaBiblioteca(relV, itensV) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(180, 130, 255, 0.5)', background: 'rgba(40, 26, 52, 0.96)', color: '#ffffff', cursor: 'pointer', fontWeight: 600 }}>📄 {(safeT as any)?.gerarPDF || 'PDF'}</button>
+                    <button type="button" onClick={() => { setModalVisualizarDespesasBiblioteca(null); handleEditarDespesasNaBiblioteca(relV.id) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '2px solid rgba(255, 170, 0, 0.75)', background: 'rgba(26, 28, 26, 0.92)', color: '#ffaa00', cursor: 'pointer', fontWeight: 600 }}>✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}</button>
                   </div>
                 </div>
               </div>
