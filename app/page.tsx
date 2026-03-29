@@ -47403,22 +47403,26 @@ A1;Peça exemplo;10'
               fontSize: 'clamp(13px, 3.2vw, 16px)',
               fontWeight: '700',
               color: '#000',
-              backgroundColor: '#00ff00',
-              border: '2px solid #00ff00',
+              backgroundColor: 'rgba(0, 255, 0, 0.18)',
+              border: '2px solid rgba(0, 255, 0, 0.65)',
               borderRadius: '10px',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
-              boxShadow: '0 4px 20px rgba(0, 255, 0, 0.25)'
+              boxShadow: '0 4px 24px rgba(0, 255, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.9)'
+              e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.32)'
+              e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.9)'
               e.currentTarget.style.transform = 'scale(1.03)'
-              e.currentTarget.style.boxShadow = '0 6px 28px rgba(0, 255, 0, 0.35)'
+              e.currentTarget.style.boxShadow = '0 6px 32px rgba(0, 255, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18)'
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#00ff00'
+              e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.18)'
+              e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.65)'
               e.currentTarget.style.transform = 'scale(1)'
-              e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 255, 0, 0.25)'
+              e.currentTarget.style.boxShadow = '0 4px 24px rgba(0, 255, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12)'
             }}
           >
             <span style={{ fontSize: 'clamp(16px, 4vw, 20px)' }}>⚡</span>
