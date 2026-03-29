@@ -639,6 +639,25 @@ function normalizeStatusAgendamento(ag: { status?: string }): Agendamento['statu
   return 'pendente'
 }
 
+/** Datas YYYY-MM-DD do período do agendamento (diasSelecionados ou data + duração). */
+function getDatasPeriodoAgendamento(ag: Agendamento): string[] {
+  if (ag.diasSelecionados && ag.diasSelecionados.length > 0) {
+    return [...new Set(ag.diasSelecionados.map((d) => String(d).trim()))].sort()
+  }
+  const dataInicio = new Date(ag.data)
+  const duracaoDias = parseInt(String(ag.duracaoEstimada || '1'), 10) || 1
+  const keys: string[] = []
+  for (let i = 0; i < duracaoDias; i++) {
+    const dataAtual = new Date(dataInicio)
+    dataAtual.setDate(dataInicio.getDate() + i)
+    const ano = dataAtual.getFullYear()
+    const mes = String(dataAtual.getMonth() + 1).padStart(2, '0')
+    const dia = String(dataAtual.getDate()).padStart(2, '0')
+    keys.push(`${ano}-${mes}-${dia}`)
+  }
+  return keys
+}
+
 type EquipamentoCliente = {
   tipoEquipamento: string
   modelo: string
@@ -30154,7 +30173,8 @@ A1;Peça exemplo;10'
                             borderLeft:
                               agendamento.status === 'concluido'
                                 ? '5px solid rgba(0, 210, 90, 0.9)'
-                                : agendamento.tipo === 'pre-agendamento'
+                                : normalizeTipoAgendamento(agendamento) === 'pre-agendamento' &&
+                                    normalizeStatusAgendamento(agendamento) === 'pendente'
                                   ? '5px solid rgba(255, 160, 0, 0.95)'
                                   : '5px solid rgba(55, 130, 235, 0.92)',
                           }}
@@ -30356,28 +30376,14 @@ A1;Peça exemplo;10'
 
               // Agrupar agendamentos por data (incluindo todos os dias do período)
               const agendamentosPorData: Record<string, Agendamento[]> = {}
-              agendamentosFiltrados.forEach(ag => {
-                // Data de início do agendamento
-                const dataInicio = new Date(ag.data)
-                // Duração em dias (converter string para número)
-                const duracaoDias = parseInt(ag.duracaoEstimada) || 1
-                
-                // Adicionar o agendamento em todos os dias do período
-                for (let i = 0; i < duracaoDias; i++) {
-                  const dataAtual = new Date(dataInicio)
-                  dataAtual.setDate(dataInicio.getDate() + i)
-                  
-                  // Formatar data como YYYY-MM-DD
-                  const ano = dataAtual.getFullYear()
-                  const mes = String(dataAtual.getMonth() + 1).padStart(2, '0')
-                  const dia = String(dataAtual.getDate()).padStart(2, '0')
-                  const dataKey = `${ano}-${mes}-${dia}`
-                  
+              agendamentosFiltrados.forEach((ag) => {
+                const datasPeriodo = getDatasPeriodoAgendamento(ag)
+                datasPeriodo.forEach((dataKey) => {
                   if (!agendamentosPorData[dataKey]) {
                     agendamentosPorData[dataKey] = []
                   }
                   agendamentosPorData[dataKey].push(ag)
-                }
+                })
               })
 
               // Função para navegar meses
@@ -30421,11 +30427,31 @@ A1;Peça exemplo;10'
               const hojeKeyCalendario = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`
 
               /**
-               * Cores só no chip (hora + cliente). Célula do dia fica neutra.
-               * Concluído → verde. Cancelado → cinza.
-               * Técnico em curso → azul.
-               * Pré-agendamento: laranja se a data da célula ainda é futura; a partir do início do dia (célula ≤ hoje) → azul até concluir.
+               * Cores só no chip (hora + cliente).
+               * Pré-agendamento pendente → laranja (qualquer dia).
+               * Confirmado (pré ou técnico): azul no dia atual e futuros; verde em cada dia do período já passado (dia trabalhado).
+               * Concluído → verde forte. Cancelado → cinza.
                */
+              const estiloVerdeDiaTrabalhado: React.CSSProperties = {
+                backgroundColor: 'rgba(0, 200, 88, 0.88)',
+                border: '2px solid rgba(0, 255, 150, 0.95)',
+                color: '#04210c',
+                fontWeight: 700,
+                boxShadow: '0 0 10px rgba(0, 255, 120, 0.28)',
+              }
+              const estiloAzulConfirmado: React.CSSProperties = {
+                backgroundColor: 'rgba(45, 115, 235, 0.55)',
+                border: '1px solid rgba(160, 200, 255, 1)',
+                color: '#fff',
+                fontWeight: 600,
+              }
+              const estiloLaranjaPrePendente: React.CSSProperties = {
+                backgroundColor: 'rgba(255, 130, 0, 0.65)',
+                border: '1px solid rgba(255, 210, 100, 1)',
+                color: '#1a0f00',
+                fontWeight: 700,
+              }
+
               const estiloChipAgendaCalendario = (
                 ag: Agendamento,
                 dataKeyCelula: string
@@ -30450,29 +30476,37 @@ A1;Peça exemplo;10'
                   }
                 }
                 const tipo = normalizeTipoAgendamento(ag)
-                if (tipo === 'agendamento-tecnico') {
-                  return {
-                    backgroundColor: 'rgba(45, 115, 235, 0.55)',
-                    border: '1px solid rgba(160, 200, 255, 1)',
-                    color: '#fff',
-                    fontWeight: 600,
+                const datasPeriodo = getDatasPeriodoAgendamento(ag)
+                const celulaNoPeriodo = datasPeriodo.includes(dataKeyCelula)
+                const diaJaTrabalhado =
+                  celulaNoPeriodo && dataKeyCelula < hojeKeyCalendario
+                const ativoConfirmado =
+                  st === 'confirmado' || st === 'em-andamento'
+
+                if (tipo === 'pre-agendamento') {
+                  if (st === 'pendente') {
+                    return estiloLaranjaPrePendente
                   }
-                }
-                // pré-agendamento ainda não concluído
-                if (dataKeyCelula > hojeKeyCalendario) {
-                  return {
-                    backgroundColor: 'rgba(255, 130, 0, 0.65)',
-                    border: '1px solid rgba(255, 210, 100, 1)',
-                    color: '#1a0f00',
-                    fontWeight: 700,
+                  if (ativoConfirmado && diaJaTrabalhado) {
+                    return estiloVerdeDiaTrabalhado
                   }
+                  if (ativoConfirmado) {
+                    return estiloAzulConfirmado
+                  }
+                  return estiloLaranjaPrePendente
                 }
-                return {
-                  backgroundColor: 'rgba(45, 115, 235, 0.55)',
-                  border: '1px solid rgba(160, 200, 255, 1)',
-                  color: '#fff',
-                  fontWeight: 600,
+
+                // agendamento-tecnico
+                if (st === 'pendente') {
+                  return estiloAzulConfirmado
                 }
+                if (ativoConfirmado && diaJaTrabalhado) {
+                  return estiloVerdeDiaTrabalhado
+                }
+                if (ativoConfirmado) {
+                  return estiloAzulConfirmado
+                }
+                return estiloAzulConfirmado
               }
 
               return (
@@ -30678,14 +30712,21 @@ A1;Peça exemplo;10'
                           <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(255, 145, 0, 0.5)', border: '1px solid rgba(255, 200, 80, 0.95)', borderRadius: '4px' }} />
                           <span style={{ fontSize: '12px' }}>
                             {(safeT as any)?.legendaPreFuturo ||
-                              'Pré-agendamento com data futura (ainda não começou o dia) — laranja'}
+                              'Pré-agendamento pendente (ainda não confirmado) — laranja'}
                           </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(45, 115, 235, 0.42)', border: '1px solid rgba(140, 185, 255, 0.95)', borderRadius: '4px' }} />
                           <span style={{ fontSize: '12px' }}>
                             {(safeT as any)?.legendaAzulEmCurso ||
-                              'Agendamento técnico em curso, ou pré no dia atual / já iniciado — azul até concluir'}
+                              'Confirmado: pré ou agendamento técnico — azul no dia atual e nos dias futuros do período'}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(0, 200, 88, 0.55)', border: '1px solid rgba(0, 255, 150, 0.85)', borderRadius: '4px' }} />
+                          <span style={{ fontSize: '12px' }}>
+                            {(safeT as any)?.legendaVerdeDiaTrabalhado ||
+                              'Cada dia do período já trabalhado (data passada) — verde'}
                           </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
