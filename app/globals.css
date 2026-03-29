@@ -2161,9 +2161,9 @@ a:focus-visible {
   margin: 0 0 8px 0 !important;
   font-size: clamp(1rem, 4.5vw, 2rem) !important;
   font-weight: bold !important;
-  color: #00ff00 !important;
+  color: #ffffff !important;
   letter-spacing: clamp(0.05em, 0.5vw, 3px) !important;
-  text-shadow: 0 0 18px rgba(0, 255, 0, 0.22) !important;
+  text-shadow: 0 0 14px rgba(255, 255, 255, 0.12) !important;
   line-height: 1.2 !important;
   word-break: break-word;
 }

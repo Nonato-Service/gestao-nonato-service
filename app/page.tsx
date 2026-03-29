@@ -43059,8 +43059,8 @@ A1;Peça exemplo;10'
                     <p style={{
                       margin: 0,
                       fontSize: '14px',
-                      color: '#ccc',
-                      opacity: 0.8
+                      color: '#ffffff',
+                      opacity: 0.95
                     }}>
                       {totalRelatorios} {safeT?.relatorios || 'relatório(s)'} em {relatoriosPorCliente.length} {safeT?.clientes || 'cliente(s)'}
                     </p>
@@ -43068,8 +43068,8 @@ A1;Peça exemplo;10'
                     <p style={{
                       margin: 0,
                       fontSize: '14px',
-                      color: '#ccc',
-                      opacity: 0.8
+                      color: '#ffffff',
+                      opacity: 0.95
                     }}>
                       {relatoriosPorCliente.length === 0
                         ? (safeT?.nenhumClienteCadastrado || 'Nenhum cliente cadastrado. Crie um cliente para ver a pasta na biblioteca.')
@@ -43087,7 +43087,7 @@ A1;Peça exemplo;10'
                       backgroundColor: 'rgba(0, 255, 0, 0.06)',
                       border: '1px solid rgba(0, 255, 0, 0.55)',
                       borderRadius: '4px',
-                      color: '#00ff00',
+                      color: '#ffffff',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -43117,7 +43117,7 @@ A1;Peça exemplo;10'
                       backgroundColor: 'rgba(0, 150, 255, 0.06)',
                       border: '1px solid rgba(0, 150, 255, 0.55)',
                       borderRadius: '4px',
-                      color: '#66b3ff',
+                      color: '#ffffff',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
                       display: 'flex',
@@ -43148,10 +43148,10 @@ A1;Peça exemplo;10'
                 textAlign: 'center'
               }}>
                 <div style={{ fontSize: '48px', marginBottom: '20px' }}>📋</div>
-                <p style={{ opacity: 0.7, fontSize: '18px', marginBottom: '10px' }}>
+                <p style={{ color: '#ffffff', opacity: 0.95, fontSize: '18px', marginBottom: '10px' }}>
                   {safeT?.nenhumRelatorioSalvo || 'Nenhum relatório salvo ainda.'}
                 </p>
-                <p style={{ opacity: 0.5, fontSize: '14px' }}>
+                <p style={{ color: '#ffffff', opacity: 0.88, fontSize: '14px' }}>
                   {safeT?.relatoriosOrganizadosPorCliente || 'Crie um cliente em Gestão Técnica → Clientes; cada cliente terá aqui uma pasta com Relatórios de Serviço e Relatórios de Despesas.'}
                 </p>
               </div>
@@ -43177,14 +43177,14 @@ A1;Peça exemplo;10'
                         borderBottom: '1px solid rgba(0, 255, 0, 0.4)'
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', flexWrap: 'wrap', gap: '8px' }}>
-                          <h3 style={{ margin: 0, color: '#00ff00', fontSize: '16px', fontWeight: 'bold', flex: 1, minWidth: 0 }}>
+                          <h3 style={{ margin: 0, color: '#ffffff', fontSize: '16px', fontWeight: 'bold', flex: 1, minWidth: 0 }}>
                             📋 {cliente.nomeEmpresa}
                           </h3>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ 
                               backgroundColor: 'rgba(0, 255, 0, 0.1)', 
                               border: '1px solid rgba(0, 255, 0, 0.55)',
-                              color: '#00ff00',
+                              color: '#ffffff',
                               padding: '2px 8px',
                               borderRadius: '8px',
                               fontSize: '10px',
@@ -43200,7 +43200,7 @@ A1;Peça exemplo;10'
                                 fontSize: '10px',
                                 backgroundColor: 'rgba(255, 68, 68, 0.1)',
                                 border: '1px solid rgba(255, 68, 68, 0.58)',
-                                color: '#ff8888',
+                                color: '#ffffff',
                                 borderRadius: '6px',
                                 cursor: 'pointer',
                                 fontWeight: 'bold'
@@ -43212,7 +43212,7 @@ A1;Peça exemplo;10'
                           </div>
                         </div>
                         {cliente.localidade && (
-                          <p style={{ margin: 0, fontSize: '11px', opacity: 0.7, color: '#ccc' }}>
+                          <p style={{ margin: 0, fontSize: '11px', opacity: 0.9, color: '#ffffff' }}>
                             📍 {cliente.localidade}
                           </p>
                         )}
@@ -43220,11 +43220,11 @@ A1;Peça exemplo;10'
 
                       {/* Secção: Relatórios de Serviço */}
                       <div style={{ marginBottom: '8px' }}>
-                        <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#00ff00', fontWeight: 'bold' }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffffff', fontWeight: 'bold' }}>
                           {(safeT as any)?.relatoriosServicoTitle || 'Relatórios de Serviço'}
                         </h4>
                         {equipamentos.length === 0 && (
-                          <p style={{ margin: 0, fontSize: '11px', opacity: 0.7, color: '#888' }}>
+                          <p style={{ margin: 0, fontSize: '11px', opacity: 0.88, color: '#ffffff' }}>
                             {(safeT as any)?.nenhumRelatorioServicoCliente || 'Nenhum relatório de serviço'}
                           </p>
                         )}
@@ -43243,7 +43243,7 @@ A1;Peça exemplo;10'
                                 🔧 {equipamento.modelo} {equipamento.marca}
                               </h4>
                               {equipamento.numeroSerie && (
-                                <p style={{ margin: 0, fontSize: '10px', opacity: 0.7, color: '#ccc' }}>
+                                <p style={{ margin: 0, fontSize: '10px', opacity: 0.9, color: '#ffffff' }}>
                                   {equipamento.numeroSerie}
                                 </p>
                               )}
@@ -43269,11 +43269,11 @@ A1;Peça exemplo;10'
                                     <div style={{ marginBottom: '8px' }}>
                                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '5px' }}>
                                         <div style={{ flex: 1 }}>
-                                          <p style={{ margin: 0, fontWeight: 'bold', color: '#00ff00', fontSize: '13px', marginBottom: '2px' }}>
+                                          <p style={{ margin: 0, fontWeight: 'bold', color: '#ffffff', fontSize: '13px', marginBottom: '2px' }}>
                                             {relatorio.numero}
                                           </p>
                                           {relatorio.tipoServico && (
-                                            <p style={{ margin: 0, fontSize: '11px', color: '#fff', opacity: 0.9 }}>
+                                            <p style={{ margin: 0, fontSize: '11px', color: '#ffffff', opacity: 0.95 }}>
                                               {relatorio.tipoServico}
                                             </p>
                                           )}
@@ -43281,7 +43281,7 @@ A1;Peça exemplo;10'
                                         <span style={{ 
                                           backgroundColor: 'rgba(0, 255, 0, 0.08)', 
                                           border: '1px solid rgba(0, 255, 0, 0.52)',
-                                          color: '#00ff00',
+                                          color: '#ffffff',
                                           padding: '2px 6px',
                                           borderRadius: '3px',
                                           fontSize: '10px',
@@ -43297,20 +43297,21 @@ A1;Peça exemplo;10'
                                         gridTemplateColumns: 'repeat(2, 1fr)', 
                                         gap: '4px',
                                         fontSize: '10px',
-                                        opacity: 0.8
+                                        color: '#ffffff',
+                                        opacity: 0.95
                                       }}>
                                         <div>
-                                          <strong style={{ color: '#00ff00' }}>Téc:</strong> {relatorio.tecnico}
+                                          <strong style={{ color: '#ffffff' }}>Téc:</strong> {relatorio.tecnico}
                                         </div>
                                         <div>
-                                          <strong style={{ color: '#00ff00' }}>H:</strong> {totais.horasTrabalho}h
+                                          <strong style={{ color: '#ffffff' }}>H:</strong> {totais.horasTrabalho}h
                                         </div>
                                         <div>
-                                          <strong style={{ color: '#00ff00' }}>KM:</strong> {totais.kmsPercorridos}
+                                          <strong style={{ color: '#ffffff' }}>KM:</strong> {totais.kmsPercorridos}
                                         </div>
                                         {relatorio.servicoConcluido && (
                                           <div>
-                                            <span style={{ color: '#00ff00' }}>✓ OK</span>
+                                            <span style={{ color: '#ffffff' }}>✓ OK</span>
                                           </div>
                                         )}
                                       </div>
@@ -43326,7 +43327,7 @@ A1;Peça exemplo;10'
                                           padding: '4px',
                                           fontSize: '9px',
                                           backgroundColor: 'rgba(20, 20, 20, 0.45)',
-                                          color: '#66b3ff',
+                                          color: '#ffffff',
                                           border: '1px solid rgba(0, 150, 255, 0.65)',
                                           borderRadius: '3px',
                                           cursor: 'pointer'
@@ -43373,7 +43374,7 @@ A1;Peça exemplo;10'
                                             fontSize: '10px', 
                                             backgroundColor: 'rgba(0, 150, 255, 0.1)', 
                                             border: '1px solid rgba(0, 150, 255, 0.62)',
-                                            color: '#66b3ff'
+                                            color: '#ffffff'
                                           }}
                                         >
                                           📄 {safeT?.gerarPDF || 'PDF'}
@@ -43388,7 +43389,7 @@ A1;Peça exemplo;10'
                                             fontSize: '10px', 
                                             backgroundColor: 'rgba(255, 68, 68, 0.1)', 
                                             border: '1px solid rgba(255, 68, 68, 0.58)',
-                                            color: '#ff8888',
+                                            color: '#ffffff',
                                             borderRadius: '4px',
                                             cursor: 'pointer'
                                           }}
@@ -43407,11 +43408,11 @@ A1;Peça exemplo;10'
 
                         {/* Secção: Relatórios de Despesas (fechamentos) */}
                         <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid rgba(0, 255, 0, 0.3)' }}>
-                          <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffaa00', fontWeight: 'bold' }}>
+                          <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffffff', fontWeight: 'bold' }}>
                             {(safeT as any)?.relatoriosDespesasTitle || 'Relatórios de Despesas'}
                           </h4>
                           {despesasCliente.length === 0 ? (
-                            <p style={{ margin: 0, fontSize: '11px', opacity: 0.7, color: '#888' }}>
+                            <p style={{ margin: 0, fontSize: '11px', opacity: 0.88, color: '#ffffff' }}>
                               {(safeT as any)?.nenhumRelatorioDespesas || 'Nenhum fechamento de despesas'}
                             </p>
                           ) : (
@@ -43435,24 +43436,24 @@ A1;Peça exemplo;10'
                                     onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_AMBER, false, 0.42, 0.62)}
                                   >
                                     <div style={{ marginBottom: '12px' }}>
-                                      <div style={{ fontWeight: 'bold', color: '#ffaa00', fontSize: '15px' }}>
+                                      <div style={{ fontWeight: 'bold', color: '#ffffff', fontSize: '15px' }}>
                                         {(safeT as any)?.fechamentoRelatorio || 'Fechamento'} {relatorio.numero}
                                       </div>
-                                      <div style={{ fontSize: '12px', color: '#aaa', marginTop: '4px' }}>
-                                        {relatorio.cliente} · {relatorio.maquinaModelo} · {(safeT as any)?.total || 'Total'}: <strong style={{ color: '#00ff00' }}>€{totalCobranca.toFixed(2)}</strong>
+                                      <div style={{ fontSize: '12px', color: '#ffffff', opacity: 0.92, marginTop: '4px' }}>
+                                        {relatorio.cliente} · {relatorio.maquinaModelo} · {(safeT as any)?.total || 'Total'}: <strong style={{ color: '#ffffff' }}>€{totalCobranca.toFixed(2)}</strong>
                                       </div>
                                     </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                                      <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens })} style={{ ...btnBase, backgroundColor: 'rgba(0, 255, 0, 0.1)', border: '1px solid rgba(0, 255, 0, 0.6)', color: '#00ff00' }}>
+                                      <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens })} style={{ ...btnBase, backgroundColor: 'rgba(0, 255, 0, 0.1)', border: '1px solid rgba(0, 255, 0, 0.6)', color: '#ffffff' }}>
                                         👁️ {(safeT as any)?.visualizarDespesasBiblioteca ?? safeT?.view ?? 'View'}
                                       </button>
-                                      <button type="button" onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(0, 150, 255, 0.1)', border: '1px solid rgba(0, 150, 255, 0.62)', color: '#66b3ff' }}>
+                                      <button type="button" onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(0, 150, 255, 0.1)', border: '1px solid rgba(0, 150, 255, 0.62)', color: '#ffffff' }}>
                                         ✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}
                                       </button>
-                                      <button type="button" onClick={() => imprimirPDFDespesasDaBiblioteca(relatorio, itens)} style={{ ...btnBase, backgroundColor: 'rgba(150, 100, 255, 0.1)', border: '1px solid rgba(150, 100, 255, 0.58)', color: '#c4a7ff' }}>
+                                      <button type="button" onClick={() => imprimirPDFDespesasDaBiblioteca(relatorio, itens)} style={{ ...btnBase, backgroundColor: 'rgba(150, 100, 255, 0.1)', border: '1px solid rgba(150, 100, 255, 0.58)', color: '#ffffff' }}>
                                         📄 {(safeT as any)?.gerarPDF || 'PDF'}
                                       </button>
-                                      <button type="button" onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(255, 68, 68, 0.1)', border: '1px solid rgba(255, 68, 68, 0.6)', color: '#ff8888' }}>
+                                      <button type="button" onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(255, 68, 68, 0.1)', border: '1px solid rgba(255, 68, 68, 0.6)', color: '#ffffff' }}>
                                         🗑️ {safeT?.delete || 'Excluir'}
                                       </button>
                                     </div>
@@ -43475,17 +43476,17 @@ A1;Peça exemplo;10'
             return (
               <div className="biblioteca-despesas-modal-overlay" onClick={() => setModalVisualizarDespesasBiblioteca(null)}>
                 <div className="biblioteca-despesas-modal-inner" onClick={e => e.stopPropagation()}>
-                  <h3 style={{ color: '#ffaa00', margin: '0 0 8px', fontSize: 'clamp(16px, 4vw, 18px)', wordBreak: 'break-word' }}>{(safeT as any)?.fechamentoRelatorio || 'Fechamento'} {relV.numero}</h3>
-                  <p style={{ color: '#aaa', fontSize: '13px', margin: '0 0 16px', wordBreak: 'break-word' }}>{relV.cliente} · {relV.maquinaModelo} · {relV.data}</p>
+                  <h3 style={{ color: '#ffffff', margin: '0 0 8px', fontSize: 'clamp(16px, 4vw, 18px)', wordBreak: 'break-word' }}>{(safeT as any)?.fechamentoRelatorio || 'Fechamento'} {relV.numero}</h3>
+                  <p style={{ color: '#ffffff', opacity: 0.92, fontSize: '13px', margin: '0 0 16px', wordBreak: 'break-word' }}>{relV.cliente} · {relV.maquinaModelo} · {relV.data}</p>
                   <div className="biblioteca-despesas-modal-table-wrap">
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: '#ddd', minWidth: '520px' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: '#ffffff', minWidth: '520px' }}>
                     <thead>
-                      <tr style={{ borderBottom: '2px solid #ffaa00' }}>
-                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#ffaa00' }}>{(safeT as any)?.codigoOuCod || 'COD'}</th>
-                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#ffaa00' }}>{(safeT as any)?.descricao || 'Descrição'}</th>
-                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#ffaa00' }}>{(safeT as any)?.quantidade || 'Qtd'}</th>
-                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#ffaa00' }}>{(safeT as any)?.valorUnitario || 'Unit.'}</th>
-                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#ffaa00' }}>{(safeT as any)?.total || 'Total'}</th>
+                      <tr style={{ borderBottom: '2px solid rgba(255, 170, 0, 0.75)' }}>
+                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#ffffff' }}>{(safeT as any)?.codigoOuCod || 'COD'}</th>
+                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#ffffff' }}>{(safeT as any)?.descricao || 'Descrição'}</th>
+                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#ffffff' }}>{(safeT as any)?.quantidade || 'Qtd'}</th>
+                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#ffffff' }}>{(safeT as any)?.valorUnitario || 'Unit.'}</th>
+                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#ffffff' }}>{(safeT as any)?.total || 'Total'}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -43496,22 +43497,22 @@ A1;Peça exemplo;10'
                         const linTot = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
                         return (
                           <tr key={item.id} style={{ borderBottom: '1px solid #333' }}>
-                            <td style={{ padding: '10px 8px', color: '#00ff00', fontWeight: 600 }}>{cod}</td>
-                            <td style={{ padding: '10px 8px' }}>{item.descricao || '—'}</td>
-                            <td style={{ padding: '10px 8px', textAlign: 'right' }}>{qtd}</td>
-                            <td style={{ padding: '10px 8px', textAlign: 'right' }}>{item.valorUnitario.toFixed(2)} €</td>
-                            <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 700 }}>{linTot.toFixed(2)} €</td>
+                            <td style={{ padding: '10px 8px', color: '#ffffff', fontWeight: 600 }}>{cod}</td>
+                            <td style={{ padding: '10px 8px', color: '#ffffff' }}>{item.descricao || '—'}</td>
+                            <td style={{ padding: '10px 8px', textAlign: 'right', color: '#ffffff' }}>{qtd}</td>
+                            <td style={{ padding: '10px 8px', textAlign: 'right', color: '#ffffff' }}>{item.valorUnitario.toFixed(2)} €</td>
+                            <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 700, color: '#ffffff' }}>{linTot.toFixed(2)} €</td>
                           </tr>
                         )
                       })}
                     </tbody>
                   </table>
                   </div>
-                  <div style={{ marginTop: '16px', fontSize: '18px', fontWeight: 'bold', color: '#00ff00', textAlign: 'right' }}>{(safeT as any)?.somaTotal || 'SOMA TOTAL'}: €{totV.toFixed(2)}</div>
+                  <div style={{ marginTop: '16px', fontSize: '18px', fontWeight: 'bold', color: '#ffffff', textAlign: 'right' }}>{(safeT as any)?.somaTotal || 'SOMA TOTAL'}: €{totV.toFixed(2)}</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
-                    <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca(null)} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(102, 102, 102, 0.92)', background: 'rgba(51, 51, 51, 0.96)', color: '#fff', cursor: 'pointer' }}>{safeT?.close || 'Fechar'}</button>
-                    <button type="button" onClick={() => { imprimirPDFDespesasDaBiblioteca(relV, itensV) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(153, 102, 255, 0.62)', background: 'rgba(150,100,255,0.1)', color: '#c4a7ff', cursor: 'pointer', fontWeight: 600 }}>📄 {(safeT as any)?.gerarPDF || 'PDF'}</button>
-                    <button type="button" onClick={() => { setModalVisualizarDespesasBiblioteca(null); handleEditarDespesasNaBiblioteca(relV.id) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(102, 179, 255, 0.62)', background: 'rgba(0,150,255,0.1)', color: '#66b3ff', cursor: 'pointer', fontWeight: 600 }}>✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}</button>
+                    <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca(null)} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(102, 102, 102, 0.92)', background: 'rgba(51, 51, 51, 0.96)', color: '#ffffff', cursor: 'pointer' }}>{safeT?.close || 'Fechar'}</button>
+                    <button type="button" onClick={() => { imprimirPDFDespesasDaBiblioteca(relV, itensV) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(153, 102, 255, 0.62)', background: 'rgba(150,100,255,0.1)', color: '#ffffff', cursor: 'pointer', fontWeight: 600 }}>📄 {(safeT as any)?.gerarPDF || 'PDF'}</button>
+                    <button type="button" onClick={() => { setModalVisualizarDespesasBiblioteca(null); handleEditarDespesasNaBiblioteca(relV.id) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(102, 179, 255, 0.62)', background: 'rgba(0,150,255,0.1)', color: '#ffffff', cursor: 'pointer', fontWeight: 600 }}>✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}</button>
                   </div>
                 </div>
               </div>
