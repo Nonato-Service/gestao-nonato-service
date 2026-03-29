@@ -30500,11 +30500,17 @@ A1;Peça exemplo;10'
                 const dataKeyNorm = normalizeDataKeyAgenda(dataKeyCelula)
                 const datasPeriodo = getDatasPeriodoAgendamento(ag)
                 const celulaNoPeriodo = datasPeriodo.includes(dataKeyNorm)
+                /** Data da célula é hoje ou já passou: tratar como dia concluído (verde), inclusive pendente técnico / pré sem marcar concluído */
+                const dataCelulaJaPassouOuEhHoje = dataKeyNorm <= hojeKeyCalendario
                 /** Hoje e dias passados no período contam como trabalhados (verde); só futuros ficam azuis. */
                 const diaJaTrabalhado =
                   celulaNoPeriodo && dataKeyNorm <= hojeKeyCalendario
                 const ativoConfirmado =
                   st === 'confirmado' || st === 'em-andamento'
+
+                if (dataCelulaJaPassouOuEhHoje) {
+                  return estiloVerdeDiaTrabalhado
+                }
 
                 if (tipo === 'pre-agendamento') {
                   if (st === 'pendente') {
@@ -30610,9 +30616,15 @@ A1;Peça exemplo;10'
                         const ativosDia = agDiaUnicos.filter((a) => normalizeStatusAgendamento(a) !== 'cancelado')
                         const diaTodoServicosConcluidos =
                           ativosDia.length > 0 && ativosDia.every((a) => normalizeStatusAgendamento(a) === 'concluido')
-                        const fundoCelulaDia = diaTodoServicosConcluidos
-                          ? 'rgba(0, 210, 88, 0.38)'
-                          : '#141414'
+                        /** Dia da célula já passou (ou é hoje): com agendamento ativo → fundo verde como dia concluído, sem exigir status manual */
+                        const diaAgendadoJaPassouOuEhHoje =
+                          ativosDia.length > 0 && dataKey <= hojeKeyCalendario
+                        const fundoCelulaDia =
+                          diaTodoServicosConcluidos || diaAgendadoJaPassouOuEhHoje
+                            ? 'rgba(0, 210, 88, 0.38)'
+                            : '#141414'
+                        const celulaVerdeConcluidaOuDiaPassado =
+                          diaTodoServicosConcluidos || diaAgendadoJaPassouOuEhHoje
 
                         return (
                           <div
@@ -30624,8 +30636,8 @@ A1;Peça exemplo;10'
                               borderBottom: '1px solid rgba(0, 255, 0, 0.1)',
                               backgroundColor: fundoCelulaDia,
                               boxShadow: hojeDia
-                                ? `inset 0 0 0 2px rgba(0, 255, 160, ${diaTodoServicosConcluidos ? 0.75 : 0.45})`
-                                : diaTodoServicosConcluidos
+                                ? `inset 0 0 0 2px rgba(0, 255, 160, ${celulaVerdeConcluidaOuDiaPassado ? 0.75 : 0.45})`
+                                : celulaVerdeConcluidaOuDiaPassado
                                   ? 'inset 0 0 0 1px rgba(0, 255, 140, 0.35)'
                                   : undefined,
                               position: 'relative',
