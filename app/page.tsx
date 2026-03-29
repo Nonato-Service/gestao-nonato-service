@@ -603,6 +603,23 @@ type Agendamento = {
   dataConfirmacao?: string
 }
 
+/** Normaliza tipo para o calendário: dados antigos podem vir sem `tipo` ou com texto diferente — antes ficava tudo azul. */
+function normalizeTipoAgendamento(ag: { tipo?: string }): 'pre-agendamento' | 'agendamento-tecnico' {
+  const raw = ag.tipo
+  if (raw === 'pre-agendamento') return 'pre-agendamento'
+  if (raw === 'agendamento-tecnico') return 'agendamento-tecnico'
+  const s = String(raw ?? '')
+    .trim()
+    .toLowerCase()
+  if (s === 'pre-agendamento' || s.startsWith('pre') || s.includes('pré') || s.includes('preagendamento')) {
+    return 'pre-agendamento'
+  }
+  if (s === 'agendamento-tecnico' || s.includes('tecnico') || s.includes('técnico')) {
+    return 'agendamento-tecnico'
+  }
+  return 'pre-agendamento'
+}
+
 type EquipamentoCliente = {
   tipoEquipamento: string
   modelo: string
@@ -4901,10 +4918,15 @@ export default function Dashboard() {
         setSubcategoriasPecas(savedSubcategoriasPecas)
       }
 
-      // Carregar agendamentos
+      // Carregar agendamentos (migra tipo para cores do calendário funcionarem)
       const savedAgendamentos = getData('nonato-agendamentos')
-      if (savedAgendamentos) {
-        setAgendamentos(savedAgendamentos)
+      if (savedAgendamentos && Array.isArray(savedAgendamentos)) {
+        setAgendamentos(
+          savedAgendamentos.map((a: Agendamento) => ({
+            ...a,
+            tipo: normalizeTipoAgendamento(a),
+          }))
+        )
       }
 
       // Carregar solicitações de serviço técnico
@@ -30346,47 +30368,56 @@ A1;Peça exemplo;10'
               const agendamentoPendente = (a: Agendamento) =>
                 a.status !== 'concluido' && a.status !== 'cancelado'
 
-              /** Fundo da célula: vazio → cinza; tudo concluído → verde; pré ainda pendente → laranja; técnico em curso → azul */
+              /**
+               * Fundo da célula: vazio → cinza; tudo concluído (ignorando cancelados) → verde;
+               * pré pendente → laranja; técnico em curso → azul.
+               * Cancelados não contam para “pendente” nem bloqueiam o verde do dia.
+               */
               const corFundoCelulaDia = (lista: Agendamento[], diaEhHoje: boolean) => {
                 const u = agendamentosUnicosDoDia(lista)
-                if (u.length === 0) {
-                  return diaEhHoje ? 'rgba(0, 255, 0, 0.08)' : '#141414'
+                const ativos = u.filter((a) => a.status !== 'cancelado')
+                if (ativos.length === 0) {
+                  return diaEhHoje ? 'rgba(0, 255, 0, 0.1)' : '#141414'
                 }
-                if (u.every((a) => a.status === 'concluido')) {
-                  return 'rgba(0, 190, 70, 0.28)'
+                if (ativos.every((a) => a.status === 'concluido')) {
+                  return 'rgba(0, 200, 90, 0.42)'
                 }
-                const temPrePendente = u.some((a) => a.tipo === 'pre-agendamento' && agendamentoPendente(a))
+                const temPrePendente = ativos.some(
+                  (a) => normalizeTipoAgendamento(a) === 'pre-agendamento' && agendamentoPendente(a)
+                )
                 if (temPrePendente) {
-                  return 'rgba(255, 150, 0, 0.24)'
+                  return 'rgba(255, 120, 0, 0.45)'
                 }
-                const temTecnicoPendente = u.some((a) => a.tipo === 'agendamento-tecnico' && agendamentoPendente(a))
+                const temTecnicoPendente = ativos.some(
+                  (a) => normalizeTipoAgendamento(a) === 'agendamento-tecnico' && agendamentoPendente(a)
+                )
                 if (temTecnicoPendente) {
-                  return 'rgba(35, 95, 220, 0.26)'
+                  return 'rgba(35, 105, 255, 0.4)'
                 }
-                return 'rgba(35, 95, 220, 0.22)'
+                return 'rgba(120, 120, 130, 0.35)'
               }
 
               /** Chip: concluído → verde (primeiro); pré pendente → laranja; técnico em curso → azul */
               const estiloChipAgendaCalendario = (ag: Agendamento): React.CSSProperties => {
                 if (ag.status === 'concluido') {
                   return {
-                    backgroundColor: 'rgba(0, 200, 85, 0.45)',
-                    border: '1px solid rgba(0, 255, 140, 0.85)',
+                    backgroundColor: 'rgba(0, 200, 85, 0.55)',
+                    border: '1px solid rgba(0, 255, 140, 0.9)',
                     color: '#fff',
                     fontWeight: 600,
                   }
                 }
-                if (ag.tipo === 'pre-agendamento') {
+                if (normalizeTipoAgendamento(ag) === 'pre-agendamento') {
                   return {
-                    backgroundColor: 'rgba(255, 145, 0, 0.5)',
-                    border: '1px solid rgba(255, 200, 80, 0.95)',
-                    color: '#ffffff',
+                    backgroundColor: 'rgba(255, 130, 0, 0.65)',
+                    border: '1px solid rgba(255, 210, 100, 1)',
+                    color: '#1a0f00',
                     fontWeight: 700,
                   }
                 }
                 return {
-                  backgroundColor: 'rgba(45, 115, 235, 0.42)',
-                  border: '1px solid rgba(140, 185, 255, 0.95)',
+                  backgroundColor: 'rgba(45, 115, 235, 0.55)',
+                  border: '1px solid rgba(160, 200, 255, 1)',
                   color: '#fff',
                   fontWeight: 600,
                 }
@@ -30468,9 +30499,11 @@ A1;Peça exemplo;10'
                         const agDiaUnicos = agendamentosUnicosDoDia(agendamentosDoDia)
                         const hojeDia = isHoje(dia)
                         const fundoCelula = corFundoCelulaDia(agendamentosDoDia, hojeDia)
-                        const diaSoConcluidos = agDiaUnicos.length > 0 && agDiaUnicos.every((a) => a.status === 'concluido')
+                        const ativosDia = agDiaUnicos.filter((a) => a.status !== 'cancelado')
+                        const diaSoConcluidos =
+                          ativosDia.length > 0 && ativosDia.every((a) => a.status === 'concluido')
                         const temPrePendenteDia = agDiaUnicos.some(
-                          (a) => a.tipo === 'pre-agendamento' && agendamentoPendente(a)
+                          (a) => normalizeTipoAgendamento(a) === 'pre-agendamento' && agendamentoPendente(a)
                         )
 
                         return (
@@ -30589,15 +30622,15 @@ A1;Peça exemplo;10'
                       </div>
                       <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(0, 190, 70, 0.28)', border: '1px solid rgba(0, 255, 140, 0.4)', borderRadius: '4px' }} />
+                          <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(0, 200, 90, 0.42)', border: '1px solid rgba(0, 255, 140, 0.45)', borderRadius: '4px' }} />
                           <span style={{ fontSize: '12px' }}>{(safeT as any)?.legendaDiaTudoConcluido || 'Dia com todos os serviços concluídos'}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(255, 150, 0, 0.24)', border: '1px solid rgba(255, 190, 80, 0.45)', borderRadius: '4px' }} />
+                          <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(255, 120, 0, 0.45)', border: '1px solid rgba(255, 190, 80, 0.5)', borderRadius: '4px' }} />
                           <span style={{ fontSize: '12px' }}>{(safeT as any)?.legendaDiaPrePendente || 'Dia com pré-agendamento por concluir (laranja)'}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(35, 95, 220, 0.26)', border: '1px solid rgba(120, 170, 255, 0.45)', borderRadius: '4px' }} />
+                          <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(35, 105, 255, 0.4)', border: '1px solid rgba(120, 170, 255, 0.5)', borderRadius: '4px' }} />
                           <span style={{ fontSize: '12px' }}>{(safeT as any)?.legendaDiaTecnicoCurso || 'Dia com agendamento técnico em curso (azul)'}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
