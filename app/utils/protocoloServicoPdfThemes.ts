@@ -29,37 +29,38 @@ function escAttr(s: string): string {
     .replace(/"/g, '&quot;')
 }
 
-/** Layout do cabeçalho: igual em todos os modelos (distribuição estável na impressão) */
+/** Layout do cabeçalho: tabela para impressão estável; visual tipo papel timbrado */
 const HDR_LAYOUT_CSS = `
-.pdf-header.hdr-doc{margin:0 0 20px;padding:0;background:#fff;}
+.pdf-header.hdr-doc{margin:0 0 22px;padding:0;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-sizing:border-box;}
 .hdr-table{width:100%;border-collapse:collapse;table-layout:fixed;margin:0;}
-.hdr-table td{vertical-align:middle;padding:0;}
-.hdr-td-logo{width:32%;padding:12px 16px 12px 0;border-right:1px solid #e2e8f8;box-sizing:border-box;}
-.hdr-td-main{padding:12px 0 12px 20px;box-sizing:border-box;}
-.hdr-logo-box{min-height:40px;display:flex;align-items:center;}
-.hdr-logo-box img{max-height:40px;max-width:160px;width:auto;height:auto;object-fit:contain;display:block;}
-.logo-fallback{font-family:'Segoe UI',system-ui,sans-serif;font-size:11px;font-weight:700;color:#475569;letter-spacing:0.06em;line-height:1.2;display:block;}
-.hdr-empresa{margin:8px 0 0;font-size:7.5pt;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#94a3b8;line-height:1.35;}
-.hdr-etiq{margin:0 0 3px;font-size:7.5pt;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;}
-.hdr-titulo{margin:0;font-size:13.5pt;font-weight:700;color:#0f172a;line-height:1.28;letter-spacing:-0.015em;}
-.hdr-data{margin:5px 0 0;font-size:9pt;color:#64748b;font-weight:500;}
-.hdr-linha{height:2px;margin-top:12px;width:100%;clear:both;}
+.hdr-table td{vertical-align:top;padding:0;}
+.hdr-td-logo{width:34%;padding:18px 18px 18px 20px;border-right:1px solid #e2e8f0;box-sizing:border-box;}
+.hdr-td-main{padding:18px 22px 18px 22px;box-sizing:border-box;}
+.hdr-logo-box{min-height:48px;display:flex;align-items:center;justify-content:flex-start;}
+.hdr-logo-box img{max-height:52px;max-width:200px;width:auto;height:auto;object-fit:contain;display:block;}
+.logo-fallback{font-family:'Segoe UI',system-ui,sans-serif;font-size:12px;font-weight:800;color:#334155;letter-spacing:0.08em;line-height:1.25;display:block;}
+.hdr-empresa{margin:10px 0 0;font-size:8pt;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#64748b;line-height:1.4;}
+.hdr-etiq{margin:0 0 6px;font-size:8pt;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#64748b;}
+.hdr-titulo{margin:0;font-size:15.5pt;font-weight:700;color:#0f172a;line-height:1.22;letter-spacing:-0.02em;}
+.hdr-data{margin:10px 0 0;font-size:9.5pt;color:#475569;font-weight:500;}
+.hdr-data .hdr-data-lbl{font-weight:600;color:#64748b;margin-right:6px;}
+.hdr-linha{height:3px;margin:0;width:100%;clear:both;border:0;}
 `
 
-/** Por modelo: fundo suave na coluna do logo, cor da linha inferior e da divisória */
+/** Por modelo: faixa superior, coluna do logo, linha inferior e acentos de texto */
 const HDR_VARIANT_CSS: string[] = [
-  '.hdr-v1 .hdr-td-logo{background:#f7faf7;border-radius:6px 0 0 6px;padding-left:12px;border-right-color:#bbf7d0;}.hdr-v1 .hdr-linha{background:#15803d;}.hdr-v1 .hdr-etiq{color:#166534;}',
-  '.hdr-v2 .hdr-td-logo{background:#f8fafc;border-radius:6px 0 0 6px;padding-left:12px;border-right-color:#bfdbfe;}.hdr-v2 .hdr-linha{background:#2563eb;}.hdr-v2 .hdr-titulo{color:#1e3a8a;}',
-  '.hdr-v3 .hdr-td-logo{background:#fff7ed;border-radius:6px 0 0 6px;padding-left:12px;border-right-color:#fed7aa;}.hdr-v3 .hdr-linha{background:#c2410c;}.hdr-v3 .hdr-etiq{color:#9a3412;}',
-  '.hdr-v4 .hdr-td-logo{background:#f0fdfa;border-radius:6px 0 0 6px;padding-left:12px;border-right-color:#99f6e4;}.hdr-v4 .hdr-linha{background:#0d9488;}.hdr-v4 .hdr-titulo{color:#115e59;}',
-  '.hdr-v5 .hdr-td-logo{background:#f9fafb;border-radius:6px 0 0 6px;padding-left:12px;border-right-color:#d1d5db;}.hdr-v5 .hdr-linha{background:#374151;}.hdr-v5 .hdr-titulo{font-family:Consolas,ui-monospace,monospace;font-size:12.5pt;}',
-  '.hdr-v6 .hdr-td-logo{background:#fffbeb;border-radius:6px 0 0 6px;padding-left:12px;border-right-color:#fde68a;}.hdr-v6 .hdr-linha{background:#b45309;}.hdr-v6 .hdr-titulo{font-family:Georgia,ui-serif,serif;color:#78350f;}',
-  '.hdr-v7 .hdr-td-logo{background:#f1f5f9;border-radius:6px 0 0 6px;padding-left:12px;border-right-color:#cbd5e1;}.hdr-v7 .hdr-linha{background:#334155;}.hdr-v7 .hdr-etiq{color:#475569;}',
-  '.hdr-v8 .hdr-td-logo{background:#fff;border-radius:0;padding-left:12px;border-right:2px solid #1e293b;}.hdr-v8 .hdr-linha{background:#1e293b;height:3px;}.hdr-v8 .hdr-table{outline:1px solid #cbd5e1;outline-offset:4px;}',
-  '.hdr-v9 .hdr-td-logo{background:#eff6ff;border-radius:6px 0 0 6px;padding-left:12px;border-right-color:#93c5fd;}.hdr-v9 .hdr-linha{background:#1d4ed8;}.hdr-v9 .hdr-titulo{color:#1e40af;}',
-  '.hdr-v10 .hdr-td-logo{background:#fafafa;border-radius:6px 0 0 6px;padding-left:12px;border-right-color:#d4d4d8;}.hdr-v10 .hdr-linha{background:linear-gradient(90deg,#a16207,#ca8a04,#a16207);height:3px;}.hdr-v10 .hdr-titulo{color:#18181b;}',
-  '.hdr-v11 .hdr-td-logo{background:#eef2ff;border-radius:6px 0 0 6px;padding-left:12px;border-right-color:#c7d2fe;}.hdr-v11 .hdr-linha{background:#4f46e5;}.hdr-v11 .hdr-titulo{color:#312e81;}',
-  '.hdr-v12 .hdr-td-logo{background:#f9fafb;border-radius:0;padding-left:12px;border-right-color:#9ca3af;}.hdr-v12 .hdr-linha{background:#111827;}.hdr-v12 .hdr-titulo,.hdr-v12 .hdr-data,.hdr-v12 .hdr-etiq,.hdr-v12 .hdr-empresa{font-family:Consolas,ui-monospace,monospace;}.hdr-v12 .hdr-titulo{font-size:12pt;}',
+  '.hdr-v1.pdf-header.hdr-doc{border-color:#cbd5e1;border-top:4px solid #15803d;}.hdr-v1 .hdr-td-logo{background:linear-gradient(180deg,#f0fdf4 0%,#ecfdf5 100%);border-right-color:#86efac;}.hdr-v1 .hdr-linha{background:linear-gradient(90deg,#15803d,#22c55e,#15803d);}.hdr-v1 .hdr-etiq{color:#166534;}',
+  '.hdr-v2.pdf-header.hdr-doc{border-color:#bfdbfe;border-top:4px solid #2563eb;}.hdr-v2 .hdr-td-logo{background:linear-gradient(180deg,#f8fafc 0%,#eff6ff 100%);border-right-color:#93c5fd;}.hdr-v2 .hdr-linha{background:linear-gradient(90deg,#1d4ed8,#3b82f6,#1d4ed8);}.hdr-v2 .hdr-titulo{color:#1e3a8a;}',
+  '.hdr-v3.pdf-header.hdr-doc{border-color:#fed7aa;border-top:4px solid #ea580c;}.hdr-v3 .hdr-td-logo{background:linear-gradient(180deg,#fffbeb 0%,#ffedd5 100%);border-right-color:#fdba74;}.hdr-v3 .hdr-linha{background:linear-gradient(90deg,#9a3412,#ea580c,#9a3412);}.hdr-v3 .hdr-etiq{color:#9a3412;}',
+  '.hdr-v4.pdf-header.hdr-doc{border-color:#99f6e4;border-top:4px solid #0d9488;}.hdr-v4 .hdr-td-logo{background:linear-gradient(180deg,#f0fdfa 0%,#ccfbf1 100%);border-right-color:#5eead4;}.hdr-v4 .hdr-linha{background:linear-gradient(90deg,#0f766e,#14b8a6,#0f766e);}.hdr-v4 .hdr-titulo{color:#115e59;}',
+  '.hdr-v5.pdf-header.hdr-doc{border-color:#d1d5db;border-top:4px solid #374151;}.hdr-v5 .hdr-td-logo{background:#f3f4f6;border-right-color:#9ca3af;}.hdr-v5 .hdr-linha{background:#1f2937;}.hdr-v5 .hdr-titulo{font-family:Consolas,ui-monospace,monospace;font-size:13pt;letter-spacing:-0.03em;}',
+  '.hdr-v6.pdf-header.hdr-doc{border-color:#e7d5c4;border-top:4px solid #b45309;}.hdr-v6 .hdr-td-logo{background:linear-gradient(180deg,#fffbeb 0%,#fef3c7 100%);border-right-color:#fcd34d;}.hdr-v6 .hdr-linha{background:linear-gradient(90deg,#92400e,#d97706,#92400e);}.hdr-v6 .hdr-titulo{font-family:Georgia,ui-serif,serif;color:#78350f;font-size:15pt;}',
+  '.hdr-v7.pdf-header.hdr-doc{border-color:#cbd5e1;border-top:4px solid #475569;}.hdr-v7 .hdr-td-logo{background:linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%);border-right-color:#94a3b8;}.hdr-v7 .hdr-linha{background:#475569;}.hdr-v7 .hdr-etiq{color:#475569;}',
+  '.hdr-v8.pdf-header.hdr-doc{border:2px solid #334155;border-top:6px solid #1e293b;border-radius:8px;}.hdr-v8 .hdr-td-logo{background:#fff;border-right:2px solid #1e293b;padding-left:18px;}.hdr-v8 .hdr-linha{background:#0f172a;height:4px;}.hdr-v8 .hdr-titulo{letter-spacing:-0.025em;}',
+  '.hdr-v9.pdf-header.hdr-doc{border-color:#93c5fd;border-top:4px solid #1d4ed8;}.hdr-v9 .hdr-td-logo{background:linear-gradient(180deg,#eff6ff 0%,#dbeafe 100%);border-right-color:#60a5fa;}.hdr-v9 .hdr-linha{background:linear-gradient(90deg,#1e40af,#2563eb,#1e40af);}.hdr-v9 .hdr-titulo{color:#1e40af;}',
+  '.hdr-v10.pdf-header.hdr-doc{border-color:#d4d4d8;border-top:4px solid #ca8a04;background:linear-gradient(180deg,#fafafa 0%,#fff 12%);}.hdr-v10 .hdr-td-logo{background:#f4f4f5;border-right-color:#a1a1aa;}.hdr-v10 .hdr-linha{background:linear-gradient(90deg,#713f12,#ca8a04,#713f12);height:4px;}.hdr-v10 .hdr-titulo{color:#18181b;}',
+  '.hdr-v11.pdf-header.hdr-doc{border-color:#c7d2fe;border-top:4px solid #4f46e5;}.hdr-v11 .hdr-td-logo{background:linear-gradient(135deg,#eef2ff 0%,#e0e7ff 100%);border-right-color:#a5b4fc;}.hdr-v11 .hdr-linha{background:linear-gradient(90deg,#3730a3,#6366f1,#3730a3);}.hdr-v11 .hdr-titulo{color:#312e81;}',
+  '.hdr-v12.pdf-header.hdr-doc{border-color:#9ca3af;border-top:4px solid #111827;border-radius:4px;}.hdr-v12 .hdr-td-logo{background:#f9fafb;border-right:1px solid #6b7280;}.hdr-v12 .hdr-linha{background:#111827;}.hdr-v12 .hdr-titulo,.hdr-v12 .hdr-data,.hdr-v12 .hdr-etiq,.hdr-v12 .hdr-empresa{font-family:Consolas,ui-monospace,monospace;}.hdr-v12 .hdr-titulo{font-size:12.5pt;}',
 ]
 
 function buildHeaderHtml(variantIndex: number, o: HeaderOpts): string {
@@ -67,7 +68,7 @@ function buildHeaderHtml(variantIndex: number, o: HeaderOpts): string {
   const d = escAttr(o.dataDoc)
   const L = logoOrName(o.logoHtml)
   const v = variantIndex + 1
-  return `<header class="pdf-header hdr-doc hdr-v${v}" role="banner"><table class="hdr-table" role="presentation"><tr><td class="hdr-td-logo"><div class="hdr-logo-box">${L}</div><p class="hdr-empresa">Nonato Service</p></td><td class="hdr-td-main"><p class="hdr-etiq">Protocolo de serviço</p><h1 class="hdr-titulo">${t}</h1><p class="hdr-data">Emitido em ${d}</p></td></tr></table><div class="hdr-linha" aria-hidden="true"></div></header>`
+  return `<header class="pdf-header hdr-doc hdr-v${v}" role="banner"><table class="hdr-table" role="presentation"><tr><td class="hdr-td-logo"><div class="hdr-logo-box">${L}</div><p class="hdr-empresa">Nonato Service</p></td><td class="hdr-td-main"><p class="hdr-etiq">Protocolo de serviço</p><h1 class="hdr-titulo">${t}</h1><p class="hdr-data"><span class="hdr-data-lbl">Emitido em</span>${d}</p></td></tr></table><div class="hdr-linha" aria-hidden="true"></div></header>`
 }
 
 function buildHeaderFragments(o: HeaderOpts): string[] {
