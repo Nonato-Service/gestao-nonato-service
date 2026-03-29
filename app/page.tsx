@@ -32,6 +32,15 @@ import {
   PROTOCOLO_PDF_IMG_RADIUS,
   buildProtocoloServicoPrintHtml,
 } from './utils/protocoloServicoPdfThemes'
+import {
+  ACCENT_GREEN,
+  ACCENT_AMBER,
+  glassCardStyle,
+  glassNestedStyle,
+  glassInnerRowStyle,
+  glassCardHover,
+  glassInnerRowHover,
+} from './utils/accentGlassCard'
 
 /** Manuais: debounce/alerta — não usar useRef aqui: ManuaisInformacoesTabContent é chamado como função (return ManuaisInformacoesTabContent()), não como componente. */
 let manuaisSaveDebounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -43135,10 +43144,7 @@ A1;Peça exemplo;10'
 
             {relatoriosPorCliente.length === 0 ? (
               <div style={{ 
-                padding: '60px 40px', 
-                backgroundColor: 'rgba(20, 20, 20, 0.94)', 
-                borderRadius: '12px', 
-                border: '2px solid rgba(0, 255, 0, 0.34)',
+                ...glassCardStyle(ACCENT_GREEN, { padding: '60px 40px', radius: '12px', borderAlpha: 0.34, borderWidth: '2px' }),
                 textAlign: 'center'
               }}>
                 <div style={{ fontSize: '48px', marginBottom: '20px' }}>📋</div>
@@ -43157,14 +43163,12 @@ A1;Peça exemplo;10'
                     <div 
                       key={cliente.id} 
                       style={{ 
-                        backgroundColor: 'rgba(20, 20, 20, 0.94)', 
-                        padding: '15px', 
-                        borderRadius: '8px', 
-                        border: '1px solid rgba(0, 255, 0, 0.34)',
-                        boxShadow: '0 2px 8px rgba(0, 255, 0, 0.12)',
+                        ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.28 }),
                         minWidth: 0,
                         maxWidth: '100%'
                       }}
+                      onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true, 0.28, 0.52)}
+                      onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false, 0.28, 0.52)}
                     >
                       {/* Cabeçalho do Cliente + Excluir pasta */}
                       <div style={{ 
@@ -43230,12 +43234,7 @@ A1;Peça exemplo;10'
                         {equipamentos.map(({ equipamento, relatorios }) => (
                           <div 
                             key={equipamento.numeroSerie || equipamento.modelo} 
-                            style={{ 
-                              padding: '12px', 
-                              backgroundColor: 'rgba(34, 34, 34, 0.94)', 
-                              borderRadius: '6px', 
-                              border: '1px solid rgba(0, 255, 0, 0.24)'
-                            }}
+                            style={glassNestedStyle(ACCENT_GREEN)}
                           >
                             {/* Cabeçalho do Equipamento */}
                             <div style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid rgba(0, 255, 0, 0.24)' }}>
@@ -43261,21 +43260,9 @@ A1;Peça exemplo;10'
                                 return (
                                   <div 
                                     key={relatorio.id} 
-                                    style={{ 
-                                      padding: '10px', 
-                                      backgroundColor: 'rgba(20, 20, 20, 0.94)', 
-                                      borderRadius: '4px', 
-                                      border: '1px solid rgba(0, 255, 0, 0.2)',
-                                      transition: 'all 0.2s ease'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.4)'
-                                      e.currentTarget.style.backgroundColor = 'rgba(34, 34, 34, 0.97)'
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.2)'
-                                      e.currentTarget.style.backgroundColor = 'rgba(20, 20, 20, 0.94)'
-                                    }}
+                                    style={{ ...glassInnerRowStyle(ACCENT_GREEN), transition: 'border-color 0.2s ease, background-color 0.2s ease' }}
+                                    onMouseEnter={(e) => glassInnerRowHover(e.currentTarget, ACCENT_GREEN, true)}
+                                    onMouseLeave={(e) => glassInnerRowHover(e.currentTarget, ACCENT_GREEN, false)}
                                   >
                                     {/* Informações do Relatório */}
                                     <div style={{ marginBottom: '8px' }}>
@@ -43434,12 +43421,17 @@ A1;Peça exemplo;10'
                                   <div 
                                     key={relatorio.id} 
                                     style={{ 
-                                      padding: '14px 16px', 
-                                      backgroundColor: 'rgba(26, 26, 26, 0.95)', 
-                                      borderRadius: '10px', 
-                                      border: '2px solid rgba(255, 170, 0, 0.5)',
+                                      ...glassCardStyle(ACCENT_AMBER, {
+                                        padding: '14px 16px',
+                                        radius: '12px',
+                                        borderAlpha: 0.42,
+                                        borderWidth: '2px',
+                                        bgAlpha: 0.9,
+                                      }),
                                       width: '100%'
                                     }}
+                                    onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_AMBER, true, 0.42, 0.62)}
+                                    onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_AMBER, false, 0.42, 0.62)}
                                   >
                                     <div style={{ marginBottom: '12px' }}>
                                       <div style={{ fontWeight: 'bold', color: '#ffaa00', fontSize: '15px' }}>
