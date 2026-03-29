@@ -25,6 +25,13 @@ import { RegistroDespesasContent } from './components/RegistroDespesasContent'
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 import { NonatoBrandLogo } from './components/NonatoBrandLogo'
 import { HelpModalBody } from './components/HelpModalBody'
+import {
+  PROTOCOLO_SERVICO_PDF_MODELOS_MAX,
+  clampProtocoloPdfModelo,
+  PROTOCOLO_PDF_BLOCO_STYLES,
+  PROTOCOLO_PDF_IMG_RADIUS,
+  buildProtocoloServicoPrintHtml,
+} from './utils/protocoloServicoPdfThemes'
 
 /** Manuais: debounce/alerta — não usar useRef aqui: ManuaisInformacoesTabContent é chamado como função (return ManuaisInformacoesTabContent()), não como componente. */
 let manuaisSaveDebounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -637,7 +644,7 @@ type ProtocoloServico = {
   blocos: ProtocoloBloco[]
   pecasTrocadasCodigos: string[]
   dataCriacao: string
-  /** 1–6: modelo visual do PDF */
+  /** 1–12: modelo visual do PDF (impressão / Guardar como PDF) */
   pdfModelo?: number
 }
 
@@ -3865,7 +3872,7 @@ export default function Dashboard() {
         textoInicial: typeof parsed.textoInicial === 'string' ? parsed.textoInicial : '',
         blocos: Array.isArray(parsed.blocos) ? parsed.blocos : [],
         pecasTrocadasCodigos: Array.isArray(parsed.pecasTrocadasCodigos) ? parsed.pecasTrocadasCodigos : [],
-        pdfModelo: Math.min(6, Math.max(1, Number(parsed.pdfModelo) || 1))
+        pdfModelo: clampProtocoloPdfModelo(Number(parsed.pdfModelo))
       })
       const temConteudo = Boolean(parsed.clienteId || parsed.equipamentoNumeroSerie || parsed.textoInicial || (Array.isArray(parsed.blocos) && parsed.blocos.length) || (Array.isArray(parsed.pecasTrocadasCodigos) && parsed.pecasTrocadasCodigos.length))
       if (temConteudo) setEditingProtocoloServicoId('new')
@@ -4862,7 +4869,7 @@ export default function Dashboard() {
       if (Array.isArray(savedProtocolosServico)) {
         setProtocolosServico(savedProtocolosServico.map((pr: ProtocoloServico) => {
           const m = Number(pr.pdfModelo)
-          return { ...pr, pdfModelo: m >= 1 && m <= 6 ? m : 1 }
+          return { ...pr, pdfModelo: m >= 1 && m <= PROTOCOLO_SERVICO_PDF_MODELOS_MAX ? m : 1 }
         }))
       }
 
@@ -23293,28 +23300,25 @@ onKeyPress={(e) => {
           const esc = (s: string) => (s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/\n/g, '<br/>')
           const logoHtml = getLogoHtmlForProtocoloServico()
           const lab = (key: string, fallback: string) => (protoT && protoT[key]) || fallback
-          const modelo = Math.min(6, Math.max(1, Number(p.pdfModelo) || 1))
-          const bt = [
-            'margin:12px 0;padding:10px;background:#f5f5f5;border-radius:6px;',
-            'margin:12px 0;padding:12px;background:#f1f5f9;border-radius:4px;border-left:3px solid #2563eb;',
-            'margin:12px 0;padding:12px;background:#e2e8f0;border-radius:6px;border:1px solid #94a3b8;',
-            'margin:12px 0;padding:14px;background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(13,148,136,0.1);',
-            'margin:12px 0;padding:10px;background:#fff;border:1px dashed #64748b;border-radius:2px;font-family:Consolas,monospace;font-size:11px;',
-            'margin:12px 0;padding:14px;background:#fefce8;border-radius:4px;border:1px solid #d4af37;font-family:Georgia,serif;font-size:12px;'
-          ]
-          const imgR = [8, 6, 8, 12, 4, 6][modelo - 1]
+          const modelo = clampProtocoloPdfModelo(p.pdfModelo)
+          const idx = modelo - 1
+          const bts = PROTOCOLO_PDF_BLOCO_STYLES[idx] || PROTOCOLO_PDF_BLOCO_STYLES[0]
+          const imgR = PROTOCOLO_PDF_IMG_RADIUS[idx] ?? 8
           let blocosHtml = ''
-          const bts = bt[modelo - 1]
           p.blocos.forEach(b => {
             if (b.tipo === 'texto' && b.texto) blocosHtml += `<div style="${bts}">${esc(b.texto)}</div>`
             if (b.tipo === 'imagens' && b.imagens?.length) {
-              blocosHtml += '<div style="display:flex;gap:12px;margin:12px 0;flex-wrap:wrap;justify-content:center;align-items:center;width:100%;box-sizing:border-box;">'
-              b.imagens.slice(0, 2).forEach(src => { blocosHtml += `<img src="${(src || '').replace(/"/g, '&quot;')}" alt="Foto" style="max-width:280px;max-height:200px;object-fit:contain;border-radius:${imgR}px;" />` })
+              blocosHtml += '<div style="display:flex;gap:14px;margin:14px 0;flex-wrap:wrap;justify-content:center;align-items:center;width:100%;box-sizing:border-box;">'
+              b.imagens.slice(0, 2).forEach(src => { blocosHtml += `<img src="${(src || '').replace(/"/g, '&quot;')}" alt="" style="max-width:300px;max-height:220px;object-fit:contain;border-radius:${imgR}px;box-shadow:0 2px 12px rgba(15,23,42,0.12);border:1px solid rgba(0,0,0,0.06);" />` })
               blocosHtml += '</div>'
             }
           })
-          const pecasStrong = p.pecasTrocadasCodigos.length ? `<div class="pecas-line" style="margin-top:16px;"><strong>${protoT?.protocolosServicoPecasTrocadas || 'Peças trocadas'}:</strong> ${p.pecasTrocadasCodigos.join(', ')}</div>` : ''
+          const pecasList = p.pecasTrocadasCodigos.filter(c => c.trim())
+          const pecasStrong = pecasList.length
+            ? `<div class="pecas-line" style="margin-top:18px;padding:14px 16px;border-radius:10px;font-size:11px;line-height:1.5;background:rgba(241,245,249,0.9);border:1px solid #e2e8f0;"><strong style="display:block;margin-bottom:6px;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:#475569;">${protoT?.protocolosServicoPecasTrocadas || 'Peças trocadas'}</strong><span style="color:#0f172a;">${esc(pecasList.join(', '))}</span></div>`
+            : ''
           const dataDoc = new Date(p.dataCriacao).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'en' ? 'en-GB' : selectedLanguage)
+          const refDoc = `REF-${String(p.id).replace(/[^a-zA-Z0-9]/g, '').slice(-12).toUpperCase() || 'NS'}`
           const clientRows: string[] = []
           if (cl) {
             if (cl.nomeEmpresa) clientRows.push(`<tr><td class="cl-label">${lab('nomeEmpresa', 'Nome da empresa')}</td><td class="cl-value">${esc(cl.nomeEmpresa)}</td></tr>`)
@@ -23329,27 +23333,10 @@ onKeyPress={(e) => {
             ? `<div class="sec"><h3 class="sec-title">${protoT?.protocolosServicoInformacaoEquipamento || 'Informação do equipamento'}</h3><table class="cl-table"><tr><td class="cl-label">${lab('tipoEquipamento', 'Tipo')}</td><td class="cl-value">${esc(eq.tipoEquipamento)}</td></tr><tr><td class="cl-label">${lab('modelo', 'Modelo')}</td><td class="cl-value">${esc(eq.modelo)}</td></tr><tr><td class="cl-label">${lab('marca', 'Marca')}</td><td class="cl-value">${esc(eq.marca)}</td></tr><tr><td class="cl-label">${protoT?.numeroSerie || 'Nº Série'}</td><td class="cl-value">${esc(eq.numeroSerie)}</td></tr></table></div>`
             : ''
           const textoSection = p.textoInicial ? `<div class="sec"><h3 class="sec-title">${protoT?.protocolosServicoTextoInicial || 'Texto inicial'}</h3><p style="margin:0;white-space:pre-wrap;" class="texto-inicial">${esc(p.textoInicial)}</p></div>` : ''
-          const bodyInner = `${clienteSection}${equipSection}${textoSection}${blocosHtml}${pecasStrong}<p class="footer-date" style="margin:24px 24px 0;font-size:11px;">${dataDoc}</p>`
-          const logoOrName = logoHtml || '<span class="logo-fallback">NONATO SERVICE</span>'
-          const headers: string[] = [
-            `<div class="pdf-header m1"><div class="pdf-header-inner"><div class="pdf-header-logo">${logoOrName}</div><div class="pdf-header-text"><div class="pdf-header-company">NONATO SERVICE</div><div class="pdf-header-doc">${tituloProto}</div><div class="pdf-header-meta">${dataDoc}</div></div></div></div>`,
-            `<div class="pdf-header m2"><div class="m2-row"><div class="m2-logo">${logoHtml || '<span style="font-size:18px;font-weight:700;color:#1e40af;">NONATO SERVICE</span>'}</div><div class="m2-right"><div class="m2-brand">NONATO SERVICE</div><div class="m2-title">${tituloProto}</div><div class="m2-date">${dataDoc}</div></div></div></div>`,
-            `<div class="pdf-header m3"><div class="m3-inner"><div class="m3-logo">${logoHtml || ''}<div class="m3-name">NONATO SERVICE</div></div><div class="m3-doc"><div class="m3-title">${tituloProto}</div><div class="m3-date">${dataDoc}</div></div></div></div>`,
-            `<div class="pdf-header m4"><div class="m4-inner"><div class="m4-accent"></div><div class="m4-content"><div class="m4-logo">${logoOrName}</div><div><div class="m4-company">NONATO SERVICE</div><div class="m4-doc">${tituloProto}</div><div class="m4-date">${dataDoc}</div></div></div></div></div>`,
-            `<div class="pdf-header m5"><div class="m5-bar">═══ SERVICE PROTOCOL ═══</div><div class="m5-row"><span class="m5-logo">${logoHtml || 'NONATO SERVICE'}</span><span class="m5-meta">${tituloProto} · ${dataDoc}</span></div></div>`,
-            `<div class="pdf-header m6"><div class="m6-gold"></div><div class="m6-inner"><div class="m6-serif">NONATO SERVICE</div><div class="m6-sub">${tituloProto}</div><div class="m6-row"><span class="m6-logo">${logoHtml || ''}</span><span class="m6-date">${dataDoc}</span></div></div></div>`
-          ]
-          const cssBlocks: string[] = [
-            `body{font-family:'Segoe UI',Arial,sans-serif;padding:0;margin:0;color:#1a1a1a;font-size:12px;line-height:1.4;}.pdf-header.m1{background:linear-gradient(180deg,#0d2d0d 0%,#0a220a 100%);color:#fff;padding:20px 24px;border-bottom:3px solid #00aa00;}.pdf-header-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}.pdf-header-logo img{max-height:52px;max-width:180px;object-fit:contain;}.logo-fallback{font-size:24px;font-weight:700;color:#00dd00;}.pdf-header-company{font-size:22px;font-weight:700;letter-spacing:1px;margin:0 0 4px;color:#00dd00;}.pdf-header-doc{font-size:14px;opacity:0.95;margin:0 0 6px;}.pdf-header-meta{font-size:11px;opacity:0.8;}.body-wrap{padding-bottom:24px;}.sec{margin:20px 24px;padding:16px;background:#f8f9fa;border-radius:8px;border:1px solid #e0e0e0;}.sec-title{margin:0 0 12px;color:#006600;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}.cl-table{width:100%;border-collapse:collapse;}.cl-table .cl-label{width:130px;padding:6px 10px 6px 0;vertical-align:top;font-weight:600;color:#333;font-size:11px;}.cl-table .cl-value{padding:6px 0;}.footer-date{color:#666;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.pdf-header.m1{background:#0a220a!important;}}`,
-            `body{font-family:'Segoe UI',Arial,sans-serif;padding:0;margin:0;color:#0f172a;font-size:12px;line-height:1.45;background:#fff;}.pdf-header.m2{padding:22px 26px;border-bottom:4px solid #2563eb;background:#fff;}.m2-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}.m2-logo img{max-height:48px;max-width:170px;object-fit:contain;}.m2-right{text-align:right;}.m2-brand{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:3px;margin-bottom:4px;}.m2-title{font-size:20px;color:#1e40af;font-weight:700;}.m2-date{font-size:11px;color:#94a3b8;margin-top:6px;}.body-wrap{background:#fff;}.sec{margin:18px 26px;padding:14px 16px;background:#f8fafc;border-radius:6px;border-left:4px solid #3b82f6;}.sec-title{margin:0 0 10px;color:#1e40af;font-size:12px;font-weight:700;text-transform:uppercase;}.cl-table{width:100%;border-collapse:collapse;}.cl-table .cl-label{width:120px;padding:5px 8px 5px 0;font-weight:600;color:#475569;font-size:11px;}.cl-table .cl-value{color:#0f172a;}.footer-date{color:#64748b;margin-left:26px!important;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}`,
-            `body{font-family:'Segoe UI',Arial,sans-serif;padding:0;margin:0;color:#1e293b;font-size:12px;line-height:1.45;background:#f1f5f9;}.pdf-header.m3{background:#0f172a;color:#e2e8f0;padding:0;border-left:6px solid #ea580c;}.m3-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;padding:20px 24px 20px 18px;}.m3-logo img{max-height:44px;max-width:160px;object-fit:contain;display:block;}.m3-name{font-size:18px;font-weight:700;color:#fb923c;margin-top:6px;}.m3-doc{text-align:right;}.m3-title{font-size:15px;font-weight:600;color:#f8fafc;}.m3-date{font-size:11px;color:#94a3b8;margin-top:8px;}.body-wrap{background:#f1f5f9;}.sec{margin:16px 22px;padding:16px;background:#fff;border-radius:8px;border:1px solid #cbd5e1;box-shadow:0 1px 3px rgba(0,0,0,0.06);}.sec-title{margin:0 0 10px;color:#c2410c;font-size:12px;font-weight:700;text-transform:uppercase;}.cl-table .cl-label{color:#64748b;font-weight:600;width:120px;padding:5px 8px 5px 0;font-size:11px;}.cl-table .cl-value{color:#0f172a;}.footer-date{color:#64748b;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.pdf-header.m3{background:#0f172a!important;}}`,
-            `body{font-family:'Segoe UI',Arial,sans-serif;padding:0;margin:0;color:#134e4a;font-size:12px;background:#eef2f7;}.pdf-header.m4{background:linear-gradient(135deg,#0d9488 0%,#115e59 100%);color:#fff;padding:0;}.m4-inner{position:relative;padding:24px 28px;}.m4-accent{position:absolute;top:0;left:0;right:0;height:4px;background:#5eead4;}.m4-content{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px;}.m4-logo img{max-height:50px;max-width:175px;object-fit:contain;}.logo-fallback{color:#ccfbf1;font-size:22px;font-weight:700;}.m4-company{font-size:20px;font-weight:800;letter-spacing:0.5px;}.m4-doc{font-size:14px;opacity:0.95;margin-top:6px;}.m4-date{font-size:11px;opacity:0.85;margin-top:8px;}.body-wrap{padding-bottom:20px;}.sec{margin:18px 24px;padding:18px;background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(13,148,136,0.12);border:1px solid #ccfbf1;}.sec-title{margin:0 0 12px;color:#0f766e;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;}.cl-table .cl-label{color:#0d9488;font-weight:700;width:118px;font-size:11px;}.cl-table .cl-value{color:#134e4a;}.footer-date{color:#64748b;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}`,
-            `body{font-family:Consolas,'Courier New',monospace;padding:0;margin:0;color:#374151;font-size:11px;line-height:1.5;background:#f9fafb;}.pdf-header.m5{background:#374151;color:#e5e7eb;border:2px solid #6b7280;padding:0;}.m5-bar{background:#1f2937;padding:8px 16px;font-size:10px;letter-spacing:2px;color:#9ca3af;text-align:center;}.m5-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:14px 18px;}.m5-logo img{max-height:40px;max-width:150px;object-fit:contain;vertical-align:middle;}.m5-meta{font-size:10px;color:#d1d5db;max-width:55%;text-align:right;}.body-wrap{}.sec{margin:14px 18px;padding:12px 14px;background:#fff;border:1px dashed #6b7280;border-radius:2px;}.sec-title{margin:0 0 8px;color:#111827;font-size:11px;font-weight:700;text-transform:uppercase;border-bottom:1px dashed #9ca3af;padding-bottom:6px;}.cl-table .cl-label{width:110px;font-weight:700;color:#4b5563;}.cl-table .cl-value{color:#111827;}.footer-date{color:#6b7280;font-family:Consolas,monospace;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}`,
-            `body{font-family:Georgia,'Times New Roman',serif;padding:0;margin:0;color:#422006;font-size:12px;line-height:1.5;background:#fff;}.pdf-header.m6{background:#fff;border-bottom:5px solid #7f1d1d;padding:0;}.m6-gold{height:3px;background:linear-gradient(90deg,#ca8a04,#fde68a,#ca8a04);}.m6-inner{padding:22px 28px 18px;}.m6-serif{font-size:28px;font-weight:700;color:#7f1d1d;letter-spacing:1px;}.m6-sub{font-size:15px;color:#78350f;margin-top:6px;font-style:italic;}.m6-row{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-top:14px;}.m6-logo img{max-height:46px;max-width:165px;object-fit:contain;}.m6-date{font-size:11px;color:#92400e;font-family:Georgia,serif;}.body-wrap{}.sec{margin:18px 26px;padding:16px 18px;background:#fffbf5;border:1px solid #e7d5c4;border-radius:2px;}.sec-title{margin:0 0 10px;color:#7f1d1d;font-size:12px;font-weight:700;text-transform:uppercase;border-left:3px solid #ca8a04;padding-left:10px;}.cl-table .cl-label{width:125px;color:#78350f;font-weight:700;font-size:11px;font-family:Georgia,serif;}.cl-table .cl-value{font-family:Georgia,serif;}.texto-inicial{font-family:Georgia,serif!important;}.footer-date{color:#92400e;font-family:Georgia,serif;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}`
-          ]
-          const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>${tituloProto}</title><style>${cssBlocks[modelo - 1]}</style></head><body>${headers[modelo - 1]}<div class="body-wrap">${bodyInner}</div></body></html>`
+          const bodyInner = `${clienteSection}${equipSection}${textoSection}${blocosHtml}${pecasStrong}<div class="footer-bar"><span class="footer-date">${dataDoc}</span><span class="doc-ref">${refDoc}</span></div>`
+          const html = buildProtocoloServicoPrintHtml(idx, { tituloProto, dataDoc, logoHtml }, bodyInner)
           const w = window.open('', '_blank')
-          if (w) { w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 400) }
+          if (w) { w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 450) }
         }
         const enviarEmailProtocolo = (p: ProtocoloServico) => {
           const cl = clientes.find(c => c.id === p.clienteId)
@@ -23476,8 +23463,8 @@ onKeyPress={(e) => {
                     </div>
                     <div style={{ gridColumn: '1 / -1', maxWidth: '560px' }}>
                       <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>{protoT?.protocolosServicoSecPdf || 'Modelo do PDF'}</label>
-                      <select value={String(protocoloServicoForm.pdfModelo)} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, pdfModelo: Math.min(6, Math.max(1, parseInt(e.target.value, 10) || 1)) }))} style={inputBase}>
-                        {[1, 2, 3, 4, 5, 6].map((n) => (
+                      <select value={String(protocoloServicoForm.pdfModelo)} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, pdfModelo: clampProtocoloPdfModelo(parseInt(e.target.value, 10) || 1) }))} style={inputBase}>
+                        {Array.from({ length: PROTOCOLO_SERVICO_PDF_MODELOS_MAX }, (_, i) => i + 1).map((n) => (
                           <option key={n} value={n}>{(protoT as Record<string, string>)?.[`protocolosServicoPdfModelo${n}`] || `Modelo ${n}`}</option>
                         ))}
                       </select>
@@ -23555,7 +23542,7 @@ onKeyPress={(e) => {
                       onClick={() => {
                         if (!protocoloServicoForm.clienteId || !protocoloServicoForm.equipamentoNumeroSerie) { alert(protoT?.protocolosServicoSelecionarClienteEquipamento || 'Selecione o cliente e o equipamento.'); return }
                         const dataCriacao = editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? (protocolosServico.find(pr => pr.id === editingProtocoloServicoId)?.dataCriacao || new Date().toISOString()) : new Date().toISOString()
-                        const novo: ProtocoloServico = { id: editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? editingProtocoloServicoId : `proto-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, clienteId: protocoloServicoForm.clienteId, equipamentoNumeroSerie: protocoloServicoForm.equipamentoNumeroSerie, textoInicial: protocoloServicoForm.textoInicial, blocos: protocoloServicoForm.blocos, pecasTrocadasCodigos: protocoloServicoForm.pecasTrocadasCodigos.filter(c => c.trim()), dataCriacao, pdfModelo: Math.min(6, Math.max(1, Number(protocoloServicoForm.pdfModelo) || 1)) }
+                        const novo: ProtocoloServico = { id: editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? editingProtocoloServicoId : `proto-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, clienteId: protocoloServicoForm.clienteId, equipamentoNumeroSerie: protocoloServicoForm.equipamentoNumeroSerie, textoInicial: protocoloServicoForm.textoInicial, blocos: protocoloServicoForm.blocos, pecasTrocadasCodigos: protocoloServicoForm.pecasTrocadasCodigos.filter(c => c.trim()), dataCriacao, pdfModelo: clampProtocoloPdfModelo(protocoloServicoForm.pdfModelo) }
                         const next = editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? protocolosServico.map(p => p.id === novo.id ? novo : p) : [...protocolosServico, novo]
                         setProtocolosServico(next)
                         saveData('nonato-protocolos-servico', next)
@@ -23608,7 +23595,7 @@ onKeyPress={(e) => {
                       const cl = clientes.find(c => c.id === p.clienteId)
                       const eq = cl?.equipamentos?.find(e => e.numeroSerie === p.equipamentoNumeroSerie)
                       const dataStr = new Date(p.dataCriacao).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'en' ? 'en-GB' : selectedLanguage)
-                      const modeloLabel = (protoT as any)?.[`protocolosServicoPdfModelo${Math.min(6, Math.max(1, p.pdfModelo || 1))}`] || `M${p.pdfModelo || 1}`
+                      const modeloLabel = (protoT as any)?.[`protocolosServicoPdfModelo${clampProtocoloPdfModelo(p.pdfModelo)}`] || `M${p.pdfModelo || 1}`
                       const nBlocos = p.blocos?.length ?? 0
                       const nPecas = p.pecasTrocadasCodigos?.filter(c => c.trim()).length ?? 0
                       return (
@@ -23653,7 +23640,7 @@ onKeyPress={(e) => {
                               <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', backgroundColor: 'rgba(37, 211, 102, 0.2)', borderColor: 'rgba(37, 211, 102, 0.55)', fontWeight: 600 }} onClick={() => enviarWhatsAppProtocolo(p)}>{protoT?.protocolosServicoEnviarWhatsApp || 'WhatsApp'}</button>
                             </div>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'flex-end' }}>
-                              <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', background: 'transparent', borderColor: 'rgba(255,255,255,0.3)', color: '#ccc' }} onClick={() => { const pr = protocolosServico.find(x => x.id === p.id); if (pr) { setProtocoloServicoForm({ clienteId: pr.clienteId, equipamentoNumeroSerie: pr.equipamentoNumeroSerie, textoInicial: pr.textoInicial, blocos: pr.blocos, pecasTrocadasCodigos: pr.pecasTrocadasCodigos, pdfModelo: Math.min(6, Math.max(1, pr.pdfModelo || 1)) }); setEditingProtocoloServicoId(pr.id) } }}>{protoT?.protocolosServicoEditar || 'Editar'}</button>
+                              <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', background: 'transparent', borderColor: 'rgba(255,255,255,0.3)', color: '#ccc' }} onClick={() => { const pr = protocolosServico.find(x => x.id === p.id); if (pr) { setProtocoloServicoForm({ clienteId: pr.clienteId, equipamentoNumeroSerie: pr.equipamentoNumeroSerie, textoInicial: pr.textoInicial, blocos: pr.blocos, pecasTrocadasCodigos: pr.pecasTrocadasCodigos, pdfModelo: clampProtocoloPdfModelo(pr.pdfModelo) }); setEditingProtocoloServicoId(pr.id) } }}>{protoT?.protocolosServicoEditar || 'Editar'}</button>
                               <button type="button" className="btn-danger" style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px' }} onClick={() => { if (window.confirm(protoT?.protocolosServicoConfirmarExcluir || 'Excluir este protocolo?')) { const next = protocolosServico.filter(x => x.id !== p.id); setProtocolosServico(next); saveData('nonato-protocolos-servico', next) } }}>{protoT?.protocolosServicoExcluir || 'Excluir'}</button>
                             </div>
                           </div>
