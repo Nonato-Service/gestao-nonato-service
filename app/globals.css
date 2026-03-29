@@ -2114,6 +2114,10 @@ a:focus-visible {
   box-sizing: border-box;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
 }
+/* Biblioteca: cartões com altura ao conteúdo (evita blocos vazios quando um título é longo) */
+.biblioteca-relatorios-cards-grid {
+  align-items: start;
+}
 @media (max-width: 480px) {
   .relatorio-servico-cards-grid,
   .biblioteca-relatorios-cards-grid {

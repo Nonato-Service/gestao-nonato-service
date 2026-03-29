@@ -43163,24 +43163,26 @@ A1;Peça exemplo;10'
                     <div 
                       key={cliente.id} 
                       style={{ 
-                        ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }),
+                        ...glassCardStyle(ACCENT_GREEN, { padding: '12px 14px', radius: '12px', borderAlpha: 0.2 }),
                         minWidth: 0,
-                        maxWidth: '100%'
+                        maxWidth: '100%',
+                        height: 'fit-content',
+                        alignSelf: 'start'
                       }}
                       onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)}
                       onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}
                     >
                       {/* Cabeçalho do Cliente + Excluir pasta */}
                       <div style={{ 
-                        marginBottom: '12px', 
-                        paddingBottom: '10px',
+                        marginBottom: '8px', 
+                        paddingBottom: '8px',
                         borderBottom: '1px solid rgba(0, 255, 0, 0.4)'
                       }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', flexWrap: 'wrap', gap: '8px' }}>
-                          <h3 style={{ margin: 0, color: '#ffffff', fontSize: '16px', fontWeight: 'bold', flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2px', flexWrap: 'wrap', gap: '8px' }}>
+                          <h3 style={{ margin: 0, color: '#ffffff', fontSize: '15px', fontWeight: 'bold', flex: '1 1 140px', minWidth: 0, lineHeight: 1.25 }}>
                             📋 {cliente.nomeEmpresa}
                           </h3>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, paddingTop: '1px' }}>
                             <span style={{ 
                               backgroundColor: 'rgba(0, 255, 0, 0.1)', 
                               border: '1px solid rgba(0, 255, 0, 0.55)',
@@ -43219,8 +43221,8 @@ A1;Peça exemplo;10'
                       </div>
 
                       {/* Secção: Relatórios de Serviço */}
-                      <div style={{ marginBottom: '8px' }}>
-                        <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffffff', fontWeight: 'bold' }}>
+                      <div style={{ marginBottom: '6px' }}>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#ffffff', fontWeight: 'bold' }}>
                           {(safeT as any)?.relatoriosServicoTitle || 'Relatórios de Serviço'}
                         </h4>
                         {equipamentos.length === 0 && (
@@ -43410,8 +43412,8 @@ A1;Peça exemplo;10'
                       )}
 
                         {/* Secção: Relatórios de Despesas (fechamentos) */}
-                        <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid rgba(0, 255, 0, 0.3)' }}>
-                          <h4 style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#ffffff', fontWeight: 'bold' }}>
+                        <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(0, 255, 0, 0.3)' }}>
+                          <h4 style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#ffffff', fontWeight: 'bold' }}>
                             {(safeT as any)?.relatoriosDespesasTitle || 'Relatórios de Despesas'}
                           </h4>
                           {despesasCliente.length === 0 ? (
