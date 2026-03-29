@@ -24708,7 +24708,7 @@ onKeyPress={(e) => {
                               <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }} colSpan={3}>{safeT?.retorno || 'RETORNO'}</th>
                               <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }} colSpan={3}>{safeT?.km || 'KM'}</th>
                               <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: '50px' }} rowSpan={2}>{safeT?.pausa || 'PAUSA'}</th>
-                              <th style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px', fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: '148px', width: '1%' }} rowSpan={2}>{safeT?.acao || 'AÇÃO'}</th>
+                              <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '8px', fontWeight: 'bold', whiteSpace: 'nowrap', minWidth: '112px', width: '1%' }} rowSpan={2}>{safeT?.acao || 'AÇÃO'}</th>
                             </tr>
                             <tr style={{ backgroundColor: 'rgba(0, 255, 0, 0.12)', borderBottom: '2px solid rgba(0, 255, 0, 0.35)' }}>
                               <th style={{ padding: '4px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.25)', color: '#ffffff', fontSize: '9px', whiteSpace: 'nowrap', minWidth: '45px' }}>{safeT?.saida || 'Saída'}</th>
@@ -24747,11 +24747,11 @@ onKeyPress={(e) => {
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '10px', whiteSpace: 'nowrap' }}>{dia.kmRetorno || '0'}</td>
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '10px', fontWeight: 'bold', color: '#ffffff', whiteSpace: 'nowrap' }}>{diaCalculado.kmTotal || '0'}</td>
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '10px', color: '#ffffff', whiteSpace: 'nowrap' }} rowSpan={temDescricao ? 2 : 1}>{dia.pausa || '0'}</td>
-                                    <td style={{ padding: '4px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', verticalAlign: 'middle', minWidth: '148px' }} rowSpan={temDescricao ? 2 : 1}>
-                                      <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', flexWrap: 'nowrap', alignItems: 'stretch' }}>
+                                    <td style={{ padding: '2px 2px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', verticalAlign: 'middle', minWidth: '112px' }} rowSpan={temDescricao ? 2 : 1}>
+                                      <div style={{ display: 'flex', gap: '3px', justifyContent: 'center', flexWrap: 'nowrap', alignItems: 'center' }}>
                                         <button
                                           type="button"
-                                          className="btn-primary"
+                                          className="dia-trabalho-acao-btn dia-trabalho-acao-btn--edit"
                                           onClick={() => {
                                             setNovoDiaTrabalho({
                                               id: dia.id,
@@ -24774,55 +24774,17 @@ onKeyPress={(e) => {
                                             })
                                             setEditingDiaTrabalhoIndex(index)
                                           }}
-                                          style={{
-                                            padding: '3px 6px',
-                                            fontSize: '9px',
-                                            fontWeight: '600',
-                                            whiteSpace: 'nowrap',
-                                            borderRadius: '4px',
-                                            width: 'auto',
-                                            boxSizing: 'border-box',
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '3px',
-                                            flex: '0 0 auto',
-                                            backgroundColor: 'rgba(18, 52, 24, 0.96)',
-                                            border: '1px solid rgba(0, 200, 80, 0.55)',
-                                            color: '#ffffff',
-                                            lineHeight: 1.15
-                                          }}
                                           title={(safeT as any)?.editar || safeT?.edit || 'Editar'}
                                         >
-                                          <span aria-hidden style={{ fontSize: '10px', lineHeight: 1 }}>✏️</span>
-                                          <span>{(safeT as any)?.editar || safeT?.edit || 'Editar'}</span>
+                                          {(safeT as any)?.editar || safeT?.edit || 'Editar'}
                                         </button>
                                         <button
                                           type="button"
-                                          className="btn-danger"
+                                          className="dia-trabalho-acao-btn dia-trabalho-acao-btn--del"
                                           onClick={() => handleRemoveDiaTrabalho(index)}
-                                          style={{
-                                            padding: '3px 6px',
-                                            fontSize: '9px',
-                                            fontWeight: '600',
-                                            whiteSpace: 'nowrap',
-                                            borderRadius: '4px',
-                                            width: 'auto',
-                                            boxSizing: 'border-box',
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '3px',
-                                            flex: '0 0 auto',
-                                            backgroundColor: 'rgba(52, 22, 22, 0.96)',
-                                            border: '1px solid rgba(255, 100, 100, 0.55)',
-                                            color: '#ffffff',
-                                            lineHeight: 1.15
-                                          }}
                                           title={safeT?.delete || 'Excluir'}
                                         >
-                                          <span aria-hidden style={{ fontSize: '10px', lineHeight: 1 }}>🗑️</span>
-                                          <span>{safeT?.delete || 'Excluir'}</span>
+                                          {safeT?.delete || 'Excluir'}
                                         </button>
                                       </div>
                                     </td>

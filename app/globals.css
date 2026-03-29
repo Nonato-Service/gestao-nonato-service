@@ -2296,6 +2296,48 @@ a:focus-visible {
   align-items: start;
 }
 
+/* Relatório — tabela «Controle de horas»: AÇÃO compacta (globals .btn-primary usa 14px/40px !important) */
+button.dia-trabalho-acao-btn {
+  min-height: 0 !important;
+  height: auto !important;
+  font-size: 8px !important;
+  font-weight: 600 !important;
+  padding: 1px 4px !important;
+  border-radius: 3px !important;
+  line-height: 1.2 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  white-space: nowrap !important;
+  flex: 0 0 auto !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  transform: none !important;
+  transition: filter 0.15s ease, border-color 0.15s ease !important;
+}
+button.dia-trabalho-acao-btn:hover {
+  transform: none !important;
+}
+button.dia-trabalho-acao-btn--edit {
+  background: rgba(18, 52, 24, 0.96) !important;
+  border: 1px solid rgba(0, 200, 80, 0.48) !important;
+  color: #fff !important;
+}
+button.dia-trabalho-acao-btn--edit:hover {
+  filter: brightness(1.1);
+  border-color: rgba(0, 200, 80, 0.72) !important;
+}
+button.dia-trabalho-acao-btn--del {
+  background: rgba(52, 22, 22, 0.96) !important;
+  border: 1px solid rgba(255, 100, 100, 0.48) !important;
+  color: #fff !important;
+}
+button.dia-trabalho-acao-btn--del:hover {
+  filter: brightness(1.1);
+  border-color: rgba(255, 140, 120, 0.72) !important;
+}
+
 @media (max-width: 768px) {
   .tab-glass-hero-top {
     flex-direction: column !important;
