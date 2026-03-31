@@ -2748,6 +2748,16 @@ button.dia-trabalho-acao-btn--del:hover {
   max-width: calc(100vw - 24px);
 }
 
+.modal-relatorios-equipamento-body {
+  max-height: min(82vh, 760px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-relatorios-equipamento-form {
+  scroll-margin-top: 8px;
+}
+
 @media (max-width: 768px) {
   .modal-overlay {
     align-items: flex-start;
@@ -2758,8 +2768,18 @@ button.dia-trabalho-acao-btn--del:hover {
     -webkit-overflow-scrolling: touch;
   }
   .modal.modal-relatorios-equipamento {
-    margin: 0 auto 16px;
+    width: calc(100vw - 6px) !important;
+    max-width: calc(100vw - 6px) !important;
+    margin: 0 auto 8px;
     max-height: none;
+    padding: 10px !important;
+  }
+  .modal-relatorios-equipamento-body {
+    max-height: none;
+    overflow-y: visible;
+  }
+  .modal-relatorios-equipamento-form {
+    padding: 10px !important;
   }
 }
 

@@ -3286,6 +3286,7 @@ export default function Dashboard() {
     iban: ''
   })
   const [selectedFornecedorForFatura, setSelectedFornecedorForFatura] = useState<Fornecedor | null>(null)
+  const relatoriosEquipamentoModalBodyRef = useRef<HTMLDivElement | null>(null)
   const [showFaturaFornecedorForm, setShowFaturaFornecedorForm] = useState(false)
   const [editingFaturaFornecedor, setEditingFaturaFornecedor] = useState<FaturaFornecedor | null>(null)
   const [faturaFornecedorForm, setFaturaFornecedorForm] = useState({
@@ -10260,18 +10261,27 @@ export default function Dashboard() {
   const handleOpenRelatorios = (cliente: Cliente, equipamento: EquipamentoCliente, index: number) => {
     setSelectedEquipamentoForRelatorio({ cliente, equipamento, index })
     setShowRelatoriosModal(true)
+    requestAnimationFrame(() => {
+      relatoriosEquipamentoModalBodyRef.current?.scrollTo({ top: 0, behavior: 'auto' })
+    })
   }
 
   const handleAddRelatorio = () => {
     setEditingRelatorio(null)
     setRelatorioForm({ titulo: '', conteudo: '' })
     setShowRelatorioForm(true)
+    requestAnimationFrame(() => {
+      relatoriosEquipamentoModalBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+    })
   }
 
   const handleEditRelatorio = (relatorio: RelatorioEquipamento) => {
     setEditingRelatorio(relatorio)
     setRelatorioForm({ titulo: relatorio.titulo, conteudo: relatorio.conteudo })
     setShowRelatorioForm(true)
+    requestAnimationFrame(() => {
+      relatoriosEquipamentoModalBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+    })
   }
 
   const handleDeleteRelatorio = (relatorioId: string) => {
@@ -54390,10 +54400,11 @@ A1;Peça exemplo;10'
       {showRelatoriosModal && selectedEquipamentoForRelatorio && (
         <div className="modal-overlay" onClick={() => { setShowRelatoriosModal(false); setSelectedEquipamentoForRelatorio(null); }}>
           <div className="modal modal-relatorios-equipamento" onClick={(e) => e.stopPropagation()}>
+            <div ref={relatoriosEquipamentoModalBodyRef} className="modal-relatorios-equipamento-body">
             <h2>{safeT?.relatorios || 'Relatórios'} - {selectedEquipamentoForRelatorio.equipamento.modelo}</h2>
             <button className="btn-primary" onClick={handleAddRelatorio} style={{ marginBottom: '15px' }}>{safeT?.novoRelatorio || 'Novo Relatório'}</button>
             {showRelatorioForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
+              <div className="modal-relatorios-equipamento-form" style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
                 <h4>{editingRelatorio ? (safeT?.editarRelatorio || 'Editar Relatório') : (safeT?.novoRelatorio || 'Novo Relatório')}</h4>
                 <input type="text" placeholder={safeT?.tituloRelatorio || 'Título'} value={relatorioForm.titulo} onChange={(e) => setRelatorioForm({ ...relatorioForm, titulo: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                 <textarea placeholder={safeT?.conteudoRelatorio || 'Conteúdo'} value={relatorioForm.conteudo} onChange={(e) => setRelatorioForm({ ...relatorioForm, conteudo: e.target.value })} rows={5} style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}></textarea>
@@ -54420,6 +54431,7 @@ A1;Peça exemplo;10'
               <p>{safeT?.nenhumRelatorio || 'Nenhum relatório encontrado.'}</p>
             )}
             <button className="btn-primary" onClick={() => { setShowRelatoriosModal(false); setSelectedEquipamentoForRelatorio(null); }} style={{ width: '100%', marginTop: '20px' }}>{safeT?.close || 'Fechar'}</button>
+            </div>
           </div>
         </div>
       )}
