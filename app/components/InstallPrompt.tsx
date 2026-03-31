@@ -5,13 +5,14 @@ import { useEffect, useState, useRef } from 'react'
 const STORAGE_KEY = 'nonato-install-prompt-dismissed'
 const DISMISS_DAYS = 7
 
-const texts: Record<string, { installApp: string; installDesc: string; installNow: string; addToHome: string; iosHint: string; androidHint: string; desktopHint: string; later: string; close: string }> = {
+const texts: Record<string, { installApp: string; installDesc: string; installNow: string; addToHome: string; iosHint: string; iosSafariHint: string; androidHint: string; desktopHint: string; later: string; close: string }> = {
   pt: {
     installApp: 'Instalar a app',
     installDesc: 'Use no telemóvel, tablet ou computador. Funciona no Firefox, Chrome e Edge.',
     installNow: 'Instalar agora',
     addToHome: 'Adicionar ao ecrã inicial',
     iosHint: 'No iPhone/iPad: Safari → Partilhar (□↑) → "Adicionar ao Ecrã Inicial"',
+    iosSafariHint: 'No iPhone/iPad, use o Safari para adicionar à tela inicial e ter a melhor compatibilidade.',
     androidHint: 'No Android: Firefox ou Chrome → Menu (⋮) → "Instalar app" ou "Adicionar ao ecrã inicial"',
     desktopHint: 'No computador: Firefox, Chrome ou Edge → menu (⋮) → "Instalar" ou "Guardar como"',
     later: 'Agora não',
@@ -23,6 +24,7 @@ const texts: Record<string, { installApp: string; installDesc: string; installNo
     installNow: 'Install now',
     addToHome: 'Add to home screen',
     iosHint: 'On iPhone/iPad: Safari → Share (□↑) → "Add to Home Screen"',
+    iosSafariHint: 'On iPhone/iPad, use Safari to add it to the home screen and get the best compatibility.',
     androidHint: 'On Android: Firefox or Chrome → Menu (⋮) → "Install app" or "Add to home screen"',
     desktopHint: 'On computer: Firefox, Chrome or Edge → menu (⋮) → "Install" or "Save as"',
     later: 'Not now',
@@ -34,6 +36,7 @@ const texts: Record<string, { installApp: string; installDesc: string; installNo
     installNow: 'Instalar ahora',
     addToHome: 'Añadir a la pantalla de inicio',
     iosHint: 'En iPhone/iPad: Safari → Compartir (□↑) → "Añadir a la pantalla de inicio"',
+    iosSafariHint: 'En iPhone/iPad, usa Safari para añadirla a la pantalla de inicio y tener la mejor compatibilidad.',
     androidHint: 'En Android: Firefox o Chrome → Menú (⋮) → "Instalar aplicación" o "Añadir a la pantalla de inicio"',
     desktopHint: 'En ordenador: Firefox, Chrome o Edge → menú (⋮) → "Instalar" o "Guardar como"',
     later: 'Ahora no',
@@ -45,6 +48,7 @@ const texts: Record<string, { installApp: string; installDesc: string; installNo
     installNow: 'Installer',
     addToHome: 'Ajouter à l\'écran d\'accueil',
     iosHint: 'Sur iPhone/iPad : Safari → Partager (□↑) → "Sur l\'écran d\'accueil"',
+    iosSafariHint: 'Sur iPhone/iPad, utilisez Safari pour l’ajouter à l’écran d’accueil et obtenir la meilleure compatibilité.',
     androidHint: 'Sur Android : Firefox ou Chrome → Menu (⋮) → "Installer l\'application"',
     desktopHint: 'Sur ordinateur : Firefox, Chrome ou Edge → menu (⋮) → "Installer"',
     later: 'Plus tard',
@@ -56,6 +60,7 @@ const texts: Record<string, { installApp: string; installDesc: string; installNo
     installNow: 'Installa ora',
     addToHome: 'Aggiungi alla schermata Home',
     iosHint: 'Su iPhone/iPad: Safari → Condividi (□↑) → "Aggiungi a Home"',
+    iosSafariHint: 'Su iPhone/iPad, usa Safari per aggiungerla alla schermata Home e avere la migliore compatibilità.',
     androidHint: 'Su Android: Firefox o Chrome → Menu (⋮) → "Installa app"',
     desktopHint: 'Su computer: Firefox, Chrome o Edge → menu (⋮) → "Installa"',
     later: 'Ora no',
@@ -67,6 +72,7 @@ const texts: Record<string, { installApp: string; installDesc: string; installNo
     installNow: 'Jetzt installieren',
     addToHome: 'Zum Startbildschirm',
     iosHint: 'Auf iPhone/iPad: Safari → Teilen (□↑) → "Zum Home-Bildschirm"',
+    iosSafariHint: 'Auf iPhone/iPad Safari verwenden, um die App zum Startbildschirm hinzuzufügen und die beste Kompatibilität zu erhalten.',
     androidHint: 'Auf Android: Firefox oder Chrome → Menü (⋮) → "App installieren"',
     desktopHint: 'Am Computer: Firefox, Chrome oder Edge → Menü (⋮) → "Installieren"',
     later: 'Später',
@@ -92,6 +98,8 @@ export function InstallPrompt() {
   const [isStandalone, setIsStandalone] = useState(false)
   const [installed, setInstalled] = useState(false)
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false)
+  const [isIos, setIsIos] = useState(false)
+  const [isSafari, setIsSafari] = useState(false)
   const mounted = useRef(false)
 
   useEffect(() => {
@@ -109,6 +117,11 @@ export function InstallPrompt() {
     const standalone = (window.matchMedia('(display-mode: standalone)').matches) ||
       (navigator as any).standalone === true ||
       document.referrer.includes('android-app://')
+    const ua = window.navigator.userAgent || ''
+    const ios = /iPad|iPhone|iPod/.test(ua) || ((navigator.platform === 'MacIntel') && navigator.maxTouchPoints > 1)
+    const safari = /^((?!chrome|android).)*safari/i.test(ua)
+    setIsIos(ios)
+    setIsSafari(safari)
     setIsStandalone(standalone)
     if (standalone) {
       setCanShow(false)
@@ -246,8 +259,16 @@ export function InstallPrompt() {
                 <p style={{ color: '#00ff00', fontSize: 13, marginBottom: 8, fontWeight: 600 }}>{t.addToHome}</p>
                 {isMobileOrTablet ? (
                   <>
-                    <p style={{ color: '#aaa', fontSize: 12, marginBottom: 8 }}>{t.iosHint}</p>
-                    <p style={{ color: '#aaa', fontSize: 12, marginBottom: 16 }}>{t.androidHint}</p>
+                    {isIos ? (
+                      <>
+                        {!isSafari && (
+                          <p style={{ color: '#ffd166', fontSize: 12, marginBottom: 8 }}>{t.iosSafariHint}</p>
+                        )}
+                        <p style={{ color: '#aaa', fontSize: 12, marginBottom: 16 }}>{t.iosHint}</p>
+                      </>
+                    ) : (
+                      <p style={{ color: '#aaa', fontSize: 12, marginBottom: 16 }}>{t.androidHint}</p>
+                    )}
                   </>
                 ) : (
                   <p style={{ color: '#aaa', fontSize: 12, marginBottom: 16 }}>{t.desktopHint}</p>

@@ -3,6 +3,7 @@
   "short_name": "NONATO SERVICE",
   "description": "Sistema de Gestão Técnica - funciona offline no telemóvel e tablet",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#00ff00",
