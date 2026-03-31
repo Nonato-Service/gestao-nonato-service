@@ -1038,7 +1038,8 @@ const getLanguages = (t: any): Language[] => {
     { code: 'fr', name: t?.languageFrench || ptBR?.languageFrench || 'Francês', flag: '🇫🇷' },
     { code: 'it', name: t?.languageItalian || ptBR?.languageItalian || 'Italiano', flag: '🇮🇹' },
     { code: 'de', name: t?.languageGerman || ptBR?.languageGerman || 'Alemão', flag: '🇩🇪' },
-    { code: 'en', name: t?.languageEnglish || ptBR?.languageEnglish || 'Inglês', flag: '🇬🇧' }
+    { code: 'en', name: t?.languageEnglish || ptBR?.languageEnglish || 'Inglês', flag: '🇬🇧' },
+    { code: 'en-US', name: t?.languageEnglishUS || ptBR?.languageEnglishUS || 'Inglês (EUA)', flag: '🇺🇸' }
   ]
 }
 
@@ -4023,12 +4024,13 @@ export default function Dashboard() {
     'fr': 'fr',
     'it': 'it',
     'de': 'de',
-    'en': 'en'
+    'en': 'en',
+    'en-US': 'en'
   }
 
   const handleQuickTranslate = async (text: string, fromLang?: string, toLang?: string) => {
     const from = fromLang || selectedLanguage
-    const to = toLang || (selectedLanguage === 'pt-BR' ? 'en' : 'pt-BR') // Traduzir para português ou inglês por padrão
+    const to = toLang || (selectedLanguage === 'pt-BR' ? 'en-US' : 'pt-BR') // Traduzir para português ou inglês por padrão
     
     if (from === to) {
       setQuickTranslateResult(text)
