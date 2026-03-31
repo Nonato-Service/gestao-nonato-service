@@ -54154,7 +54154,7 @@ A1;Peça exemplo;10'
       {/* Modal de Equipamentos do Cliente - Layout profissional com imagem */}
       {selectedClienteForEquipamento && (
         <div className="modal-overlay" onClick={() => { setSelectedClienteForEquipamento(null); setShowEquipamentoClienteForm(false); }}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '920px', width: '96%', maxHeight: '94vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #151515 0%, #0a0a0a 100%)', borderRadius: '20px', border: '1px solid rgba(0, 255, 0, 0.2)', boxShadow: '0 32px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,255,0,0.06)' }}>
+          <div className="modal modal-equipamentos-cliente" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '920px', width: '96%', maxHeight: '94vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #151515 0%, #0a0a0a 100%)', borderRadius: '20px', border: '1px solid rgba(0, 255, 0, 0.2)', boxShadow: '0 32px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,255,0,0.06)' }}>
             {/* Cabeçalho */}
             <div style={{ flexShrink: 0, padding: '24px 28px', borderBottom: '1px solid rgba(0, 255, 0, 0.12)', background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.06) 0%, transparent 100%)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
@@ -54176,7 +54176,7 @@ A1;Peça exemplo;10'
             </div>
 
             {/* Conteúdo com scroll */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
+            <div className="equipamentos-cliente-modal-body" style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
               {/* Formulário Adicionar/Editar - layout melhorado com imagem em destaque */}
               {showEquipamentoClienteForm && (
                 <div style={{ marginBottom: '28px', borderRadius: '18px', overflow: 'hidden', border: '1px solid rgba(0, 255, 0, 0.2)', background: 'linear-gradient(180deg, rgba(0, 255, 0, 0.04) 0%, rgba(0, 0, 0, 0.4) 100%)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)' }}>
@@ -54275,13 +54275,14 @@ A1;Peça exemplo;10'
 
               {/* Lista de equipamentos - visualização melhorada */}
               {selectedClienteForEquipamento.equipamentos && selectedClienteForEquipamento.equipamentos.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div className="equipamentos-cliente-lista" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   {selectedClienteForEquipamento.equipamentos.map((equipamento, index) => {
                     const equipamentoId = equipamento.numeroSerie || equipamento.modelo || index.toString()
                     const relatoriosServicoEquipamento = selectedClienteForEquipamento.relatorios?.[equipamentoId] || []
                     const equipamentoPhoto = equipamento.photo || equipamento.coverPhoto
                     return (
                       <div
+                        className="equipamento-cliente-card"
                         key={index}
                         style={{
                           borderRadius: '18px',
@@ -54300,9 +54301,9 @@ A1;Peça exemplo;10'
                           e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.25)'
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'stretch', minHeight: '0' }}>
+                        <div className="equipamento-cliente-card-shell" style={{ display: 'flex', alignItems: 'stretch', minHeight: '0' }}>
                           {/* Área da imagem - mais destacada */}
-                          <div style={{ width: '140px', minWidth: '140px', minHeight: '140px', background: 'rgba(0, 255, 0, 0.04)', borderRight: '1px solid rgba(0, 255, 0, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+                          <div className="equipamento-cliente-card-media" style={{ width: '140px', minWidth: '140px', minHeight: '140px', background: 'rgba(0, 255, 0, 0.04)', borderRight: '1px solid rgba(0, 255, 0, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
                             {equipamentoPhoto ? (
                               <img src={equipamentoPhoto} alt="" style={{ maxWidth: '100%', maxHeight: '120px', width: 'auto', height: 'auto', objectFit: 'contain', borderRadius: '10px' }} />
                             ) : (
@@ -54312,7 +54313,7 @@ A1;Peça exemplo;10'
                             )}
                           </div>
                           {/* Conteúdo */}
-                          <div style={{ flex: 1, minWidth: 0, padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
+                          <div className="equipamento-cliente-card-content" style={{ flex: 1, minWidth: 0, padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
                             <div>
                               <p style={{ margin: 0, fontSize: '11px', fontWeight: '600', color: 'rgba(0, 255, 0, 0.95)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{equipamento.tipoEquipamento}</p>
                               <h3 style={{ margin: '10px 0 8px', fontSize: '19px', fontWeight: '700', color: '#fff', letterSpacing: '0.02em', lineHeight: '1.25' }}>{equipamento.modelo}</h3>
@@ -54357,10 +54358,10 @@ A1;Peça exemplo;10'
                             )}
 
                             {/* Botões de acção */}
-                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                              <button className="btn-primary" onClick={() => handleEditEquipamentoCliente(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '11px 18px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(0, 255, 0, 0.4)', background: 'rgba(0, 255, 0, 0.12)', color: '#00ff00', flex: 1, minWidth: '100px' }}>✏️ {safeT?.edit || 'Editar'}</button>
-                              <button className="btn-primary" onClick={() => handleOpenRelatorios(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '11px 18px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(0, 255, 0, 0.35)', background: 'rgba(0, 255, 0, 0.08)', color: '#00ff00', flex: 1, minWidth: '100px' }}>📋 {safeT?.relatorios || 'Relatórios'}</button>
-                              <button className="btn-danger" onClick={() => handleDeleteEquipamentoCliente(selectedClienteForEquipamento.id, index)} style={{ padding: '11px 18px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', flex: 1, minWidth: '100px' }}>🗑️ {safeT?.delete || 'Excluir'}</button>
+                            <div className="equipamento-cliente-card-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                              <button className="btn-primary equipamento-cliente-card-action" onClick={() => handleEditEquipamentoCliente(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '11px 18px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(0, 255, 0, 0.4)', background: 'rgba(0, 255, 0, 0.12)', color: '#00ff00', flex: 1, minWidth: '100px' }}>✏️ {safeT?.edit || 'Editar'}</button>
+                              <button className="btn-primary equipamento-cliente-card-action" onClick={() => handleOpenRelatorios(selectedClienteForEquipamento, equipamento, index)} style={{ padding: '11px 18px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', border: '1px solid rgba(0, 255, 0, 0.35)', background: 'rgba(0, 255, 0, 0.08)', color: '#00ff00', flex: 1, minWidth: '100px' }}>📋 {safeT?.relatorios || 'Relatórios'}</button>
+                              <button className="btn-danger equipamento-cliente-card-action" onClick={() => handleDeleteEquipamentoCliente(selectedClienteForEquipamento.id, index)} style={{ padding: '11px 18px', fontSize: '13px', borderRadius: '12px', fontWeight: '600', flex: 1, minWidth: '100px' }}>🗑️ {safeT?.delete || 'Excluir'}</button>
                             </div>
                           </div>
                         </div>
