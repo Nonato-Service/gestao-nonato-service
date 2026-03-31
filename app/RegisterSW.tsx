@@ -4,12 +4,13 @@ import { useEffect, useState, useRef } from 'react'
 import { processSyncQueue } from './utils/dataStorage'
 
 // Bumpar este número em cada deploy para forçar atualização no telemóvel
-const SW_VERSION = 10
+const SW_VERSION = 11
 
 export function RegisterSW() {
   const [updateReady, setUpdateReady] = useState(false)
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null)
   const reloadHandled = useRef(false)
+  const updateTriggered = useRef(false)
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
@@ -19,7 +20,14 @@ export function RegisterSW() {
         .register(`/sw.js?v=${SW_VERSION}`)
         .then((reg) => {
           setRegistration(reg)
-          if (reg.waiting) setUpdateReady(true)
+          const activateWaitingWorker = () => {
+            if (!reg.waiting || updateTriggered.current) return
+            updateTriggered.current = true
+            setUpdateReady(true)
+            reg.waiting.postMessage({ type: 'SKIP_WAITING' })
+          }
+
+          if (reg.waiting) activateWaitingWorker()
           // Verificar atualizações imediatamente e quando voltar ao app (importante no mobile)
           reg.update()
           reg.addEventListener('updatefound', () => {
@@ -27,7 +35,7 @@ export function RegisterSW() {
             if (!newWorker) return
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                setUpdateReady(true)
+                activateWaitingWorker()
               }
             })
           })
@@ -50,12 +58,19 @@ export function RegisterSW() {
     }
     document.addEventListener('visibilitychange', onVisibilityChange)
 
+    const interval = window.setInterval(() => {
+      if (navigator.onLine) {
+        navigator.serviceWorker.ready.then((reg) => reg.update()).catch(() => {})
+      }
+    }, 60_000)
+
     if (navigator.onLine) {
       processSyncQueue().then(() => {})
     }
 
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange)
+      window.clearInterval(interval)
     }
   }, [])
 
