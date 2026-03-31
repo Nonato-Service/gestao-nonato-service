@@ -88,14 +88,158 @@ type User = {
   }
 }
 
+type SidebarGroup = 'gestao-tecnica' | 'gestao-custos' | 'gestao-industrial' | 'gestao-financeira' | 'checklist-group' | 'comunicacao-interna' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'outros'
+
 type SidebarButton = {
   id: string
   name: string
   action: string
   order: number
   translationKey?: string // Chave de tradução opcional
-  group?: 'gestao-tecnica' | 'gestao-custos' | 'gestao-industrial' | 'gestao-financeira' | 'checklist-group' | 'comunicacao-interna' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'outros' // Grupo ao qual o botão pertence
+  group?: SidebarGroup // Grupo ao qual o botão pertence
   customName?: boolean // Indica se o nome foi customizado pelo usuário (não muda com idioma)
+}
+
+const SIDEBAR_GROUPS: SidebarGroup[] = [
+  'gestao-tecnica',
+  'gestao-custos',
+  'checklist-group',
+  'gestao-industrial',
+  'comunicacao-interna',
+  'manuais-informacoes-tecnicas',
+  'almoxarifado-armazem',
+  'gestao-financeira',
+  'outros',
+]
+
+const SIDEBAR_GROUP_LAUNCHER_IDS = new Set([
+  'gestao-tecnica-default',
+  'gestao-custos-default',
+  'gestao-industrial-default',
+  'gestao-financeira-default',
+  'administrador-default',
+  'extras-default',
+])
+
+const SIDEBAR_PINNED_IDS = new Set([
+  'cadastro-nonato-service-default',
+  'ficha-cadastral-default',
+])
+
+const SIDEBAR_TRANSLATION_KEY_BY_ID: Record<string, string> = {
+  'extras-default': 'administrador',
+  'cadastro-nonato-service-default': 'cadastroNonatoServiceTitle',
+  'ficha-cadastral-default': 'fichaCadastralTitle',
+  'gestores-default': 'gestoresTitle',
+  'familias-grupos-default': 'familiasGruposTitle',
+  'familias-grupos-equipamentos-default': 'familiasGruposEquipamentosTitle',
+  'equipamentos-default': 'equipamentosTitle',
+  'checklist-group-default': 'checklistGroupTitle',
+  'pre-checklist-default': 'preChecklistSubTitle',
+  'checklist-default': 'checklistSubTitle',
+  'verificacao-final-entrega-default': 'verificacaoFinalEntregaTitle',
+  'clientes-default': 'clientesTitle',
+  'fornecedores-default': 'fornecedoresTitle',
+  'relatorio-servico-default': 'relatorioServicoTitle',
+  'biblioteca-pecas-default': 'cadastroPecasBibliotecaTitle',
+  'solicitacao-servico-tecnico-default': 'solicitacaoServicoTecnicoTitle',
+  'agenda-default': 'agendaTitle',
+  'estado-visual-tecnico-default': 'estadoVisualTecnico',
+  'informacoes-conhecimento-tecnicos-default': 'informacoesConhecimentoTecnicosTitle',
+  'biblioteca-relatorios-default': 'bibliotecaRelatoriosTitle',
+  'relatorios-excluidos-clientes-default': 'relatoriosExcluidosClientesTitle',
+  'cadastro-servicos-default': 'cadastroServicosTitle',
+  'fechamento-relatorios-servicos-default': 'fechamentoRelatoriosServicosTitle',
+  'orcamentos-avulso-default': 'orcamentosAvulsoTitle',
+  'pedido-orcamentos-avulso-default': 'pedidoOrcamentosAvulsoTitle',
+  'registro-despesas-default': 'registroDespesasTitle',
+  'mapa-visual-separacao-pecas-default': 'mapaVisualSeparacaoPecasTitle',
+  'desmontados-default': 'desmontadosTitle',
+  'manuais-informacoes-tecnicas-default': 'manuaisInformacoesTecnicasTitle',
+  'almoxarifado-armazem-default': 'almoxarifadoArmazemTitle',
+  'gestao-tecnica-default': 'gestaoTecnicaTitle',
+  'gestao-industrial-default': 'gestaoIndustrialTitle',
+  'gestao-financeira-default': 'gestaoFinanceiraTitle',
+  'gestao-custos-default': 'gestaoCustosTitle',
+  'comunicacao-interna-default': 'comunicacaoInternaTitle',
+  'hub-comunicacao-default': 'hubComunicacao',
+  'mensagens-internas-default': 'mensagensInternas',
+  'mensagens-internas-tecnicos-default': 'mensagensInternasTecnicos',
+  'tecnicos-internos-default': 'tecnicosInternos',
+  'tecnicos-externos-default': 'tecnicosExternos',
+  'alerta-mensagens-default': 'alertaMensagens',
+  'clientes-financeiro-default': 'clientesFinanceiroTitle',
+  'comprovantes-despesas-default': 'comprovantesDespesasTitle',
+  'administrador-default': 'administrador',
+}
+
+function getDefaultSidebarGroup(buttonId: string): SidebarGroup {
+  if ([
+    'gestores-default',
+    'clientes-default',
+    'fornecedores-default',
+    'relatorio-servico-default',
+    'biblioteca-pecas-default',
+    'biblioteca-relatorios-default',
+    'relatorios-excluidos-clientes-default',
+    'cadastro-servicos-default',
+    'agenda-default',
+  ].includes(buttonId)) return 'gestao-tecnica'
+
+  if ([
+    'fechamento-relatorios-servicos-default',
+    'orcamentos-avulso-default',
+    'pedido-orcamentos-avulso-default',
+    'registro-despesas-default',
+    'mapa-visual-separacao-pecas-default',
+  ].includes(buttonId)) return 'gestao-custos'
+
+  if ([
+    'equipamentos-default',
+    'desmontados-default',
+    'familias-grupos-equipamentos-default',
+  ].includes(buttonId)) return 'gestao-industrial'
+
+  if ([
+    'pre-checklist-default',
+    'checklist-default',
+    'gestao-grupos-checklist-default',
+    'ordem-preparacao-default',
+    'formularios-checklist-tecnicos-default',
+    'verificacao-final-entrega-default',
+    'familias-grupos-default',
+  ].includes(buttonId)) return 'checklist-group'
+
+  if (['clientes-financeiro-default'].includes(buttonId)) return 'gestao-financeira'
+  if (['hub-comunicacao-default', 'mensagens-internas-default', 'mensagens-internas-tecnicos-default', 'alerta-mensagens-default'].includes(buttonId)) return 'comunicacao-interna'
+  if (['manuais-informacoes-tecnicas-default'].includes(buttonId)) return 'manuais-informacoes-tecnicas'
+  if (['almoxarifado-armazem-default'].includes(buttonId)) return 'almoxarifado-armazem'
+  return 'outros'
+}
+
+function isSidebarButtonLocked(button: SidebarButton): boolean {
+  return SIDEBAR_GROUP_LAUNCHER_IDS.has(button.id)
+}
+
+function normalizeSidebarButtons(buttons: SidebarButton[]): SidebarButton[] {
+  const sorted = [...buttons].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+  const grouped = new Map<SidebarGroup, SidebarButton[]>()
+  for (const group of SIDEBAR_GROUPS) grouped.set(group, [])
+
+  for (const button of sorted) {
+    if (isSidebarButtonLocked(button)) continue
+    const group = button.group || getDefaultSidebarGroup(button.id)
+    grouped.get(group)!.push({ ...button, group })
+  }
+
+  const normalizedMovable = SIDEBAR_GROUPS.flatMap((group) => grouped.get(group) || [])
+  const movableById = new Map(normalizedMovable.map((button) => [button.id, button]))
+
+  return sorted.map((button) => {
+    if (isSidebarButtonLocked(button)) return button
+    const normalized = movableById.get(button.id)
+    return normalized ? { ...normalized, order: normalizedMovable.findIndex((entry) => entry.id === button.id) } : button
+  })
 }
 
 type TipoGestor = {
@@ -1165,6 +1309,7 @@ export default function Dashboard() {
   const buttonsInitialized = useRef(false) // Flag para garantir que os botões sejam criados apenas uma vez
   const [showButtonForm, setShowButtonForm] = useState(false)
   const [showSidebarButtonOrganizer, setShowSidebarButtonOrganizer] = useState(false)
+  const [sidebarOrganizerSearch, setSidebarOrganizerSearch] = useState('')
   const [editingButton, setEditingButton] = useState<SidebarButton | null>(null)
   const [buttonForm, setButtonForm] = useState({ name: '', action: '' })
   const [draggedButton, setDraggedButton] = useState<string | null>(null)
@@ -1356,8 +1501,6 @@ export default function Dashboard() {
     summaryLines: string[]
   } | null>(null)
   const [syncDecisionModalOpen, setSyncDecisionModalOpen] = useState(false)
-  const [mobileFullPushNudge, setMobileFullPushNudge] = useState(false)
-  const mobileFullPushNudgeShownRef = useRef(false)
   /** «Mais tarde» ou fundo: não reabrir o modal da mesma revisão até o utilizador pedir no Admin. */
   const syncModalDismissedRevisionRef = useRef<number | null>(null)
   const [syncPushLoading, setSyncPushLoading] = useState(false)
@@ -3731,29 +3874,8 @@ export default function Dashboard() {
     if (!syncPendingRemote) {
       syncModalDismissedRevisionRef.current = null
       setSyncDecisionModalOpen(false)
-      return
-    }
-    if (syncModalDismissedRevisionRef.current === syncPendingRemote.revision) {
-      setSyncDecisionModalOpen(false)
-    } else {
-      setSyncDecisionModalOpen(true)
     }
   }, [syncPendingRemote])
-
-  useEffect(() => {
-    const handler = () => {
-      if (typeof window === 'undefined') return
-      if (!dataBootstrapCompleteRef.current) return
-      if (!isCompactLayout) return
-      if (!loginUser) return
-      if (syncPendingRemote) return
-      if (mobileFullPushNudgeShownRef.current) return
-      mobileFullPushNudgeShownRef.current = true
-      setMobileFullPushNudge(true)
-    }
-    window.addEventListener('nonato-data-local-changed', handler)
-    return () => window.removeEventListener('nonato-data-local-changed', handler)
-  }, [isCompactLayout, loginUser, syncPendingRemote])
 
   /** Servidor: rever revisão em fundo e ao voltar ao ecrã — evita depender de F5 para ver alterações noutro aparelho. */
   useEffect(() => {
@@ -7139,19 +7261,28 @@ export default function Dashboard() {
   }
 
   const handleMoveButton = (buttonId: string, direction: 'up' | 'down') => {
-    const index = sidebarButtons.findIndex(b => b.id === buttonId)
+    const normalized = normalizeSidebarButtons(sidebarButtons)
+    const button = normalized.find((entry) => entry.id === buttonId)
+    if (!button) return
+    const group = button.group || getDefaultSidebarGroup(button.id)
+    const groupButtons = getButtonsByGroup(group)
+    const index = groupButtons.findIndex((entry) => entry.id === buttonId)
     if (index === -1) return
-
     const newIndex = direction === 'up' ? index - 1 : index + 1
-    if (newIndex < 0 || newIndex >= sidebarButtons.length) return
+    if (newIndex < 0 || newIndex >= groupButtons.length) return
+    handleMoveButtonToGroup(buttonId, group, newIndex)
+  }
 
-    const updatedButtons = [...sidebarButtons]
-    const [moved] = updatedButtons.splice(index, 1)
-    updatedButtons.splice(newIndex, 0, moved)
-    
-    const reordered = updatedButtons.map((btn, idx) => ({ ...btn, order: idx }))
-    setSidebarButtons(reordered)
-    saveData('nonato-sidebar-buttons', reordered)
+  const handleMoveButtonAcrossGroups = (buttonId: string, direction: 'left' | 'right') => {
+    const normalized = normalizeSidebarButtons(sidebarButtons)
+    const button = normalized.find((entry) => entry.id === buttonId)
+    if (!button) return
+    const currentGroup = button.group || getDefaultSidebarGroup(button.id)
+    const currentGroupIndex = SIDEBAR_GROUPS.indexOf(currentGroup)
+    if (currentGroupIndex === -1) return
+    const nextGroupIndex = direction === 'left' ? currentGroupIndex - 1 : currentGroupIndex + 1
+    if (nextGroupIndex < 0 || nextGroupIndex >= SIDEBAR_GROUPS.length) return
+    handleMoveButtonToGroup(buttonId, SIDEBAR_GROUPS[nextGroupIndex]!)
   }
 
   const handleDragStart = (buttonId: string) => {
@@ -7171,8 +7302,7 @@ export default function Dashboard() {
     e.preventDefault()
     if (!draggedButton) return
 
-    // Ordenar botões por ordem atual antes de calcular índices
-    const sortedButtons = [...sidebarButtons].sort((a, b) => a.order - b.order)
+    const sortedButtons = normalizeSidebarButtons(sidebarButtons).filter((btn) => !isSidebarButtonLocked(btn))
     const dragIndex = sortedButtons.findIndex(b => b.id === draggedButton)
     
     if (dragIndex === -1 || dragIndex === dropIndex) {
@@ -7188,28 +7318,25 @@ export default function Dashboard() {
     
     // Atualizar a propriedade order de todos os botões
     const reordered = updatedButtons.map((btn, idx) => ({ ...btn, order: idx }))
-    setSidebarButtons(reordered)
-    
-    // Salvar
-    if (typeof window !== 'undefined') {
-      try { localStorage.setItem('nonato-sidebar-buttons', JSON.stringify(reordered)) } catch (e) {}
-    }
-    saveData('nonato-sidebar-buttons', reordered).catch(() => {})
+    const locked = normalizeSidebarButtons(sidebarButtons).filter((btn) => isSidebarButtonLocked(btn))
+    persistSidebarButtons([...locked, ...reordered])
     
     setDraggedButton(null)
     setDragOverIndex(null)
   }
 
   // Ao soltar: se for em grupo diferente, move o botão; se for no mesmo grupo, reordena
-  const handleDropWithGroup = (e: React.DragEvent, dropIndex: number, targetGroup: 'gestao-tecnica' | 'gestao-custos' | 'gestao-industrial' | 'gestao-financeira' | 'checklist-group' | 'comunicacao-interna' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'outros') => {
+  const handleDropWithGroup = (e: React.DragEvent, dropIndex: number, targetGroup: SidebarGroup) => {
     e.preventDefault()
     if (!draggedButton) return
-    const draggedBtn = sidebarButtons.find(b => b.id === draggedButton)
-    const isSameGroup = draggedBtn && (draggedBtn.group || 'outros') === targetGroup
+    const draggedBtn = normalizeSidebarButtons(sidebarButtons).find((b) => b.id === draggedButton)
+    const isSameGroup = draggedBtn && (draggedBtn.group || getDefaultSidebarGroup(draggedBtn.id)) === targetGroup
     if (isSameGroup) {
-      handleDrop(e, dropIndex)
+      handleMoveButtonToGroup(draggedButton, targetGroup, dropIndex)
+      setDraggedButton(null)
+      setDragOverIndex(null)
     } else {
-      handleMoveButtonToGroup(draggedButton, targetGroup)
+      handleMoveButtonToGroup(draggedButton, targetGroup, dropIndex)
       setDraggedButton(null)
       setDragOverIndex(null)
     }
@@ -20488,338 +20615,7 @@ const nextF = familias.filter(x => x !== f)
               )}
             </div>
 
-            {/* SEÇÃO 4: ORGANIZAÇÃO DA INTERFACE */}
-            <div className="admin-section admin-section--ui">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(0, 255, 136, 0.22)', paddingBottom: '10px' }}>
-                <h3 className="admin-section-title" style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>
-                  {safeT?.buttonOrganizer || 'ORGANIZAÇÃO DA INTERFACE'}
-                </h3>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button 
-                    className="btn-primary" 
-                    onClick={() => setShowSidebarButtonOrganizer(!showSidebarButtonOrganizer)} 
-                    style={{ 
-                      padding: '8px 15px',
-                      backgroundColor: showSidebarButtonOrganizer ? 'rgba(0, 255, 0, 0.3)' : 'rgba(0, 255, 0, 0.1)',
-                      border: '1px solid rgba(0, 255, 0, 0.5)'
-                    }}
-                  >
-                    {showSidebarButtonOrganizer 
-                      ? (safeT?.hideSidebarOrganizer || 'Ocultar Organização') 
-                      : (safeT?.organizeSidebarButtons || 'Organizar Botões da Barra Lateral')
-                    }
-                  </button>
-                  <button className="btn-primary" onClick={() => setShowButtonForm(true)} style={{ padding: '8px 15px' }}>
-                    {safeT?.addButton || 'Adicionar Botão'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Grupo: GESTÃO TÉCNICA */}
-              <div className="admin-group-panel">
-                <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                  {safeT?.gestaoTecnicaTitle || 'GESTÃO TÉCNICA'}
-                </h4>
-                {getButtonsByGroup('gestao-tecnica').length === 0 ? (
-                  <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center' }}>
-                    {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {getButtonsByGroup('gestao-tecnica')
-                      .sort((a, b) => a.order - b.order)
-                      .map((button, index) => {
-                        const globalIndex = sidebarButtons.findIndex(b => b.id === button.id)
-                        return (
-                          <div 
-                            key={button.id}
-                            draggable
-                            onDragStart={() => handleDragStart(button.id)}
-                            onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => {
-                              e.preventDefault()
-                              const targetIndex = globalIndex >= 0 ? globalIndex : index
-                              handleDropWithGroup(e, targetIndex, 'gestao-tecnica')
-                            }}
-                            onDragEnd={handleDragEnd}
-                            style={{ 
-                              display: 'flex', 
-                              justifyContent: 'space-between', 
-                              alignItems: 'center', 
-                              padding: '10px', 
-                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', 
-                              borderRadius: '4px',
-                              cursor: 'move',
-                              border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
-                              transition: 'all 0.2s ease',
-                              marginLeft: '10px'
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                              <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '5px 12px', fontSize: '11px', whiteSpace: 'nowrap', minWidth: '60px' }}>
-                                {safeT?.edit || 'Editar'}
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                )}
-              </div>
-
-              {/* Grupo: GESTÃO INDUSTRIAL */}
-              <div className="admin-group-panel">
-                <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                  {safeT?.gestaoIndustrialTitle || 'GESTÃO INDUSTRIAL'}
-                </h4>
-                {getButtonsByGroup('gestao-industrial').length === 0 ? (
-                  <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center' }}>
-                    {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {getButtonsByGroup('gestao-industrial')
-                      .sort((a, b) => a.order - b.order)
-                      .map((button, index) => {
-                        const globalIndex = sidebarButtons.findIndex(b => b.id === button.id)
-                        return (
-                          <div 
-                            key={button.id}
-                            draggable
-                            onDragStart={() => handleDragStart(button.id)}
-                            onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => {
-                              e.preventDefault()
-                              const targetIndex = globalIndex >= 0 ? globalIndex : index
-                              handleDropWithGroup(e, targetIndex, 'gestao-industrial')
-                            }}
-                            onDragEnd={handleDragEnd}
-                            style={{ 
-                              display: 'flex', 
-                              justifyContent: 'space-between', 
-                              alignItems: 'center', 
-                              padding: '10px', 
-                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', 
-                              borderRadius: '4px',
-                              cursor: 'move',
-                              border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
-                              transition: 'all 0.2s ease',
-                              marginLeft: '10px'
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                              <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '5px 12px', fontSize: '11px', whiteSpace: 'nowrap', minWidth: '60px' }}>
-                                {safeT?.edit || 'Editar'}
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                )}
-              </div>
-
-              {/* Grupo: GESTÃO DE CUSTOS (Orçamentos/Custos) */}
-              <div className="admin-group-panel">
-                <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                  {safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS (Orçamentos/Custos)'}
-                </h4>
-                {getButtonsByGroup('gestao-custos').length === 0 ? (
-                  <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center' }}>
-                    {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {getButtonsByGroup('gestao-custos')
-                      .sort((a, b) => a.order - b.order)
-                      .map((button, index) => {
-                        const globalIndex = sidebarButtons.findIndex(b => b.id === button.id)
-                        return (
-                          <div 
-                            key={button.id}
-                            draggable
-                            onDragStart={() => handleDragStart(button.id)}
-                            onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => {
-                              e.preventDefault()
-                              const targetIndex = globalIndex >= 0 ? globalIndex : index
-                              handleDropWithGroup(e, targetIndex, 'gestao-custos')
-                            }}
-                            onDragEnd={handleDragEnd}
-                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                              <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '5px 12px', fontSize: '11px', whiteSpace: 'nowrap', minWidth: '60px' }}>
-                                {safeT?.edit || 'Editar'}
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                )}
-              </div>
-
-              {/* Grupo: GESTÃO DOS CHECKLIST */}
-              <div className="admin-group-panel">
-                <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                  {safeT?.checklistGroupTitle || 'GESTÃO DOS CHECKLIST'}
-                </h4>
-                {getButtonsByGroup('checklist-group').length === 0 ? (
-                  <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center' }}>
-                    {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {getButtonsByGroup('checklist-group')
-                      .sort((a, b) => a.order - b.order)
-                      .map((button, index) => {
-                        const globalIndex = sidebarButtons.findIndex(b => b.id === button.id)
-                        return (
-                          <div 
-                            key={button.id}
-                            draggable
-                            onDragStart={() => handleDragStart(button.id)}
-                            onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => {
-                              e.preventDefault()
-                              const targetIndex = globalIndex >= 0 ? globalIndex : index
-                              handleDropWithGroup(e, targetIndex, 'checklist-group')
-                            }}
-                            onDragEnd={handleDragEnd}
-                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                              <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '5px 12px', fontSize: '11px', whiteSpace: 'nowrap', minWidth: '60px' }}>
-                                {safeT?.edit || 'Editar'}
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                )}
-              </div>
-
-              {/* Grupo: GESTÃO FINANCEIRA */}
-              <div className="admin-group-panel admin-group-panel--blue">
-                <h4 style={{ color: '#66b3ff', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                  {safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}
-                </h4>
-                {getButtonsByGroup('gestao-financeira').length === 0 ? (
-                  <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center' }}>
-                    {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {getButtonsByGroup('gestao-financeira')
-                      .sort((a, b) => a.order - b.order)
-                      .map((button, index) => {
-                        const globalIndex = sidebarButtons.findIndex(b => b.id === button.id)
-                        return (
-                          <div 
-                            key={button.id}
-                            draggable
-                            onDragStart={() => handleDragStart(button.id)}
-                            onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => {
-                              e.preventDefault()
-                              const targetIndex = globalIndex >= 0 ? globalIndex : index
-                              handleDropWithGroup(e, targetIndex, 'gestao-financeira')
-                            }}
-                            onDragEnd={handleDragEnd}
-                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                              <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '5px 12px', fontSize: '11px', whiteSpace: 'nowrap', minWidth: '60px' }}>
-                                {safeT?.edit || 'Editar'}
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                )}
-              </div>
-
-              {/* Outros Botões */}
-              {getButtonsByGroup('outros').length > 0 && (
-                <div className="admin-group-panel admin-group-panel--soft">
-                  <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                    {safeT?.outrosBotoes || 'OUTROS BOTÕES'}
-                  </h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '450px', overflowY: 'auto' }}>
-                    {getButtonsByGroup('outros')
-                      .sort((a, b) => a.order - b.order)
-                      .map((button, index) => {
-                        const globalIndex = sidebarButtons.findIndex(b => b.id === button.id)
-                        return (
-                          <div 
-                            key={button.id}
-                            draggable
-                            onDragStart={() => handleDragStart(button.id)}
-                            onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => {
-                              e.preventDefault()
-                              const targetIndex = globalIndex >= 0 ? globalIndex : index
-                              handleDropWithGroup(e, targetIndex, 'outros')
-                            }}
-                            onDragEnd={handleDragEnd}
-                            style={{ 
-                              display: 'flex', 
-                              justifyContent: 'space-between', 
-                              alignItems: 'center', 
-                              padding: '10px', 
-                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', 
-                              borderRadius: '4px',
-                              cursor: 'move',
-                              border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
-                              transition: 'all 0.2s ease',
-                              marginLeft: '10px'
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                              <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '6px 15px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '70px' }}>
-                                {safeT?.edit || 'Editar'}
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                </div>
-              )}
-            </div>
+            {renderSidebarButtonOrganizer()}
 
             {/* SEÇÃO 4: GESTOR DE SENHAS */}
             <div className="admin-section admin-section--violet">
@@ -43756,84 +43552,347 @@ A1;Peça exemplo;10'
   }
 
   // Função para obter os botões de cada grupo
-  const getButtonsByGroup = (group: 'gestao-tecnica' | 'gestao-custos' | 'gestao-industrial' | 'gestao-financeira' | 'checklist-group' | 'comunicacao-interna' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'outros'): SidebarButton[] => {
-    const filtered = sidebarButtons.filter(btn => {
-      // Botões principais de grupos não aparecem na lista de botões do grupo
-      if (btn.id === 'gestao-tecnica-default' || btn.id === 'gestao-custos-default' || btn.id === 'gestao-industrial-default' || btn.id === 'gestao-financeira-default') {
-        return false
-      }
-      // Para o grupo "outros", incluir o botão ADMINISTRADOR e GESTÃO FINANCEIRA
-      if (group === 'outros') {
-        if (btn.id === 'administrador-default' || btn.id === 'extras-default' || btn.id === 'cadastro-nonato-service-default' || btn.id === 'gestao-financeira-default' || btn.id === 'ficha-cadastral-default') {
-          return true
-        }
-      } else {
-        // Para outros grupos, excluir o botão ADMINISTRADOR e GESTÃO FINANCEIRA
-        if (btn.id === 'administrador-default' || btn.id === 'extras-default' || btn.id === 'cadastro-nonato-service-default' || btn.id === 'gestao-financeira-default' || btn.id === 'ficha-cadastral-default') {
-          return false
-        }
-      }
-      // Se o botão tem grupo definido, usa o grupo
-      if (btn.group) {
-        return btn.group === group
-      }
-      // Se não tem grupo definido, usa a lógica antiga para compatibilidade
-      if (group === 'gestao-tecnica') {
-        return ['gestores-default', 'clientes-default', 'fornecedores-default', 
-                'relatorio-servico-default', 'biblioteca-pecas-default', 'biblioteca-relatorios-default', 'relatorios-excluidos-clientes-default', 'cadastro-servicos-default', 'agenda-default'].includes(btn.id)
-      } else if (group === 'gestao-custos') {
-        return ['fechamento-relatorios-servicos-default', 'orcamentos-avulso-default', 'pedido-orcamentos-avulso-default', 'registro-despesas-default', 'mapa-visual-separacao-pecas-default'].includes(btn.id)
-      } else if (group === 'gestao-industrial') {
-        // Incluir equipamentos-default e desmontados-default no grupo gestao-industrial
-        // Excluir pre-checklist-default e checklist-default que agora estão no grupo checklist-group
-        // Também incluir qualquer botão que tenha sido explicitamente movido para este grupo (btn.group === 'gestao-industrial')
-        // A verificação btn.group === group já foi feita acima (linha 23900), então aqui só precisamos lidar com os botões padrão
-        // ou botões sem grupo definido que devem pertencer a este grupo por padrão/compatibilidade
-        return ['equipamentos-default', 'desmontados-default'].includes(btn.id) && 
-               !['pre-checklist-default', 'checklist-default', 'checklist-group-default'].includes(btn.id)
-      } else if (group === 'checklist-group') {
-        // Botões do grupo checklist (sub-botões)
-        // A verificação btn.group === group já foi feita acima, então aqui só lidamos com os padrões
-        return ['pre-checklist-default', 'checklist-default', 'gestao-grupos-checklist-default', 'ordem-preparacao-default', 'formularios-checklist-tecnicos-default', 'verificacao-final-entrega-default'].includes(btn.id)
-      } else if (group === 'gestao-financeira') {
-        return ['clientes-financeiro-default'].includes(btn.id)
-      } else if (group === 'comunicacao-interna') {
-        return ['hub-comunicacao-default', 'mensagens-internas-default', 'mensagens-internas-tecnicos-default', 'alerta-mensagens-default'].includes(btn.id)
-      } else if (group === 'manuais-informacoes-tecnicas') {
-        return ['manuais-informacoes-tecnicas-default'].includes(btn.id)
-      } else if (group === 'almoxarifado-armazem') {
-        return ['almoxarifado-armazem-default'].includes(btn.id)
-      } else {
-        return !['gestores-default', 'equipamentos-default', 'clientes-default', 'fornecedores-default', 
-                 'relatorio-servico-default', 'biblioteca-pecas-default', 'biblioteca-relatorios-default', 'relatorios-excluidos-clientes-default', 'agenda-default', 
-                 'desmontados-default', 'cadastro-servicos-default', 'fechamento-relatorios-servicos-default', 'gestao-tecnica-default', 
-                 'gestao-custos-default', 'gestao-industrial-default', 'gestao-financeira-default',
-                 'clientes-financeiro-default', 'comprovantes-despesas-default', 'pre-checklist-default', 'checklist-default', 'gestao-grupos-checklist-default', 'ordem-preparacao-default', 'formularios-checklist-tecnicos-default', 'verificacao-final-entrega-default',
-                 'hub-comunicacao-default', 'mensagens-internas-default', 'mensagens-internas-tecnicos-default', 'alerta-mensagens-default', 'manuais-informacoes-tecnicas-default', 'almoxarifado-armazem-default'].includes(btn.id)
-      }
-    })
-    // Garantir que CADASTRO DA NONATO SERVICE aparece sempre no grupo "outros", acima do Extras (produção e localStorage antigo)
-    if (group === 'outros' && !filtered.some(b => b.id === 'cadastro-nonato-service-default')) {
-      return [cadastroNonatoServiceButton, ...filtered]
+  const getButtonsByGroup = (group: SidebarGroup): SidebarButton[] => {
+    const normalized = normalizeSidebarButtons(sidebarButtons)
+      .filter((btn) => !isSidebarButtonLocked(btn))
+      .filter((btn) => (btn.group || getDefaultSidebarGroup(btn.id)) === group)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+
+    if (group === 'outros' && !normalized.some((b) => b.id === 'cadastro-nonato-service-default')) {
+      return [cadastroNonatoServiceButton, ...normalized]
     }
-    return filtered
+    return normalized
+  }
+
+  const getSidebarGroupLabel = (group: SidebarGroup) => {
+    switch (group) {
+      case 'gestao-tecnica':
+        return safeT?.gestaoTecnicaTitle || 'GESTÃO TÉCNICA'
+      case 'gestao-custos':
+        return safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS'
+      case 'gestao-industrial':
+        return safeT?.gestaoIndustrialTitle || 'GESTÃO INDUSTRIAL'
+      case 'gestao-financeira':
+        return safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'
+      case 'checklist-group':
+        return safeT?.checklistGroupTitle || 'GESTÃO DOS CHECKLIST'
+      case 'comunicacao-interna':
+        return (safeT as any)?.comunicacaoInternaTitle || 'COMUNICAÇÃO INTERNA'
+      case 'manuais-informacoes-tecnicas':
+        return (safeT as any)?.manuaisInformacoesTecnicasTitle || 'MANUAIS E INFORMAÇÕES TÉCNICAS'
+      case 'almoxarifado-armazem':
+        return (safeT as any)?.almoxarifadoArmazemTitle || 'ALMOXARIFADO / ARMAZÉM'
+      default:
+        return safeT?.outrosBotoes || 'OUTROS'
+    }
+  }
+
+  const renderSidebarButtonOrganizer = () => {
+    const normalizedButtons = normalizeSidebarButtons(sidebarButtons)
+    const coreButtons = normalizedButtons.filter((button) => isSidebarButtonLocked(button))
+    const searchTerm = sidebarOrganizerSearch.trim().toLowerCase()
+
+    return (
+      <div className="admin-section admin-section--ui sidebar-organizer-shell">
+        <div className="sidebar-organizer-hero">
+          <div>
+            <h3 className="admin-section-title sidebar-organizer-title">
+              {safeT?.buttonOrganizer || 'ORGANIZAÇÃO DA INTERFACE'}
+            </h3>
+            <p className="sidebar-organizer-subtitle">
+              {(safeT as any)?.organizeButtonsFreeGroupDesc ||
+                'Pode mover qualquer botão para qualquer grupo. Ex.: um botão da Gestão Técnica pode passar para Gestão Industrial. Use o menu ao lado de cada botão para escolher o grupo.'}
+            </p>
+          </div>
+          <div className="sidebar-organizer-actions">
+            <button
+              className="btn-primary"
+              onClick={handleRestoreSidebarOrganizerDefaults}
+              style={{ padding: '10px 16px', fontSize: '12px' }}
+            >
+              {(safeT as any)?.sidebarOrganizerRestore || 'Restaurar padrão'}
+            </button>
+            <button
+              className="btn-primary"
+              onClick={() => setShowSidebarButtonOrganizer(!showSidebarButtonOrganizer)}
+              style={{ padding: '10px 16px', fontSize: '12px' }}
+            >
+              {showSidebarButtonOrganizer
+                ? ((safeT as any)?.hideSidebarOrganizer || 'Ocultar Organizador')
+                : ((safeT as any)?.organizeSidebarButtons || 'Abrir Organizador Moderno')}
+            </button>
+            <button
+              className="btn-primary"
+              onClick={() => setShowButtonForm(true)}
+              style={{ padding: '10px 16px', fontSize: '12px' }}
+            >
+              {safeT?.addButton || 'Adicionar Botão'}
+            </button>
+          </div>
+        </div>
+
+        <div className="sidebar-organizer-summary">
+          <div className="sidebar-organizer-stat">
+            <span className="sidebar-organizer-stat-value">{normalizedButtons.filter((button) => !isSidebarButtonLocked(button)).length}</span>
+            <span className="sidebar-organizer-stat-label">Botões organizáveis</span>
+          </div>
+          <div className="sidebar-organizer-stat">
+            <span className="sidebar-organizer-stat-value">{SIDEBAR_GROUPS.length}</span>
+            <span className="sidebar-organizer-stat-label">Áreas da barra lateral</span>
+          </div>
+          <div className="sidebar-organizer-stat">
+            <span className="sidebar-organizer-stat-value">{coreButtons.length}</span>
+            <span className="sidebar-organizer-stat-label">Botões principais protegidos</span>
+          </div>
+        </div>
+
+        {coreButtons.length > 0 && (
+          <div className="sidebar-organizer-core-strip">
+            <span className="sidebar-organizer-core-label">{safeT?.mainButton || 'Botão Principal'}:</span>
+            {coreButtons.map((button) => (
+              <span key={button.id} className="sidebar-organizer-core-chip">
+                {getButtonName(button)}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {showSidebarButtonOrganizer && (
+          <>
+            <p className="sidebar-organizer-hint">
+              {safeT?.dragToReorder ||
+                'Arraste os botões para reorganizá-los'}
+              {' '}
+              Use também os controlos do card para mover dentro da coluna ou enviar para outra área.
+            </p>
+
+            <div className="sidebar-organizer-toolbar">
+              <input
+                type="text"
+                value={sidebarOrganizerSearch}
+                onChange={(e) => setSidebarOrganizerSearch(e.target.value)}
+                className="sidebar-organizer-search"
+                placeholder={(safeT as any)?.sidebarOrganizerSearchPlaceholder || 'Buscar botão por nome...'}
+              />
+            </div>
+
+            <div className="sidebar-organizer-board">
+              {SIDEBAR_GROUPS.map((group) => {
+                const groupButtons = getButtonsByGroup(group).filter((button) => {
+                  if (!searchTerm) return true
+                  const name = getButtonName(button).toLowerCase()
+                  return name.includes(searchTerm)
+                })
+                return (
+                  <div
+                    key={group}
+                    className="sidebar-organizer-column"
+                    onDragOver={(e) => {
+                      e.preventDefault()
+                      setDragOverIndex(groupButtons.length)
+                    }}
+                    onDrop={(e) => handleDropWithGroup(e, groupButtons.length, group)}
+                  >
+                    <div className="sidebar-organizer-column-head">
+                      <div>
+                        <h4>{getSidebarGroupLabel(group)}</h4>
+                        <p>{groupButtons.length} botão{groupButtons.length === 1 ? '' : 'ões'}</p>
+                      </div>
+                      <span className="sidebar-organizer-column-badge">{groupButtons.length}</span>
+                    </div>
+
+                    <div className="sidebar-organizer-column-body">
+                      {groupButtons.length === 0 ? (
+                        <div className="sidebar-organizer-empty">
+                          {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
+                        </div>
+                      ) : (
+                        groupButtons.map((button, index) => {
+                          const currentGroup = button.group || getDefaultSidebarGroup(button.id)
+                          const currentGroupIndex = SIDEBAR_GROUPS.indexOf(currentGroup)
+                          return (
+                            <div
+                              key={button.id}
+                              className={`sidebar-organizer-card${draggedButton === button.id ? ' is-dragging' : ''}${dragOverIndex === index ? ' is-drop-target' : ''}`}
+                              draggable
+                              onDragStart={() => handleDragStart(button.id)}
+                              onDragOver={(e) => handleDragOver(e, index)}
+                              onDragLeave={handleDragLeave}
+                              onDrop={(e) => handleDropWithGroup(e, index, group)}
+                              onDragEnd={handleDragEnd}
+                            >
+                              <div className="sidebar-organizer-card-main">
+                                <div className="sidebar-organizer-card-topline">
+                                  <span className="sidebar-organizer-card-grip">::</span>
+                                  <span className="sidebar-organizer-card-name" title={getButtonName(button)}>
+                                    {getButtonName(button)}
+                                  </span>
+                                </div>
+                                <div className="sidebar-organizer-card-meta">
+                                  <span>{getSidebarGroupLabel(currentGroup)}</span>
+                                  {SIDEBAR_PINNED_IDS.has(button.id) && (
+                                    <span>Fixo recomendado</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="sidebar-organizer-card-controls">
+                                <select
+                                  value={currentGroup}
+                                  onChange={(e) => handleMoveButtonToGroup(button.id, e.target.value as SidebarGroup)}
+                                  className="sidebar-organizer-select"
+                                >
+                                  {SIDEBAR_GROUPS.map((groupOption) => (
+                                    <option key={groupOption} value={groupOption}>
+                                      {getSidebarGroupLabel(groupOption)}
+                                    </option>
+                                  ))}
+                                </select>
+
+                                <div className="sidebar-organizer-card-actions-row">
+                                  <button
+                                    type="button"
+                                    className="sidebar-organizer-mini-btn"
+                                    onClick={() => handleMoveButton(button.id, 'up')}
+                                    disabled={index === 0}
+                                    title={safeT?.moveUp || 'Mover para Cima'}
+                                  >
+                                    ↑
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="sidebar-organizer-mini-btn"
+                                    onClick={() => handleMoveButton(button.id, 'down')}
+                                    disabled={index === groupButtons.length - 1}
+                                    title={safeT?.moveDown || 'Mover para Baixo'}
+                                  >
+                                    ↓
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="sidebar-organizer-mini-btn"
+                                    onClick={() => handleMoveButtonAcrossGroups(button.id, 'left')}
+                                    disabled={currentGroupIndex <= 0}
+                                    title="Mover para a área anterior"
+                                  >
+                                    ←
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="sidebar-organizer-mini-btn"
+                                    onClick={() => handleMoveButtonAcrossGroups(button.id, 'right')}
+                                    disabled={currentGroupIndex >= SIDEBAR_GROUPS.length - 1}
+                                    title="Mover para a próxima área"
+                                  >
+                                    →
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn-primary"
+                                    onClick={() => {
+                                      setEditingButton(button)
+                                      setButtonForm({ name: button.name, action: button.action })
+                                      setShowButtonForm(true)
+                                    }}
+                                    style={{ padding: '8px 12px', fontSize: '11px', whiteSpace: 'nowrap' }}
+                                  >
+                                    {safeT?.edit || 'Editar'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn-danger"
+                                    onClick={() => handleDeleteButton(button.id)}
+                                    style={{ padding: '8px 12px', fontSize: '11px', whiteSpace: 'nowrap' }}
+                                  >
+                                    {safeT?.delete || 'Excluir'}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        )}
+      </div>
+    )
   }
 
   // Função para mover botão entre grupos
-  const handleMoveButtonToGroup = (buttonId: string, targetGroup: 'gestao-tecnica' | 'gestao-custos' | 'gestao-industrial' | 'gestao-financeira' | 'checklist-group' | 'comunicacao-interna' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'outros') => {
-    const updatedButtons = sidebarButtons.map(btn => 
-      btn.id === buttonId ? { ...btn, group: targetGroup as 'gestao-tecnica' | 'gestao-custos' | 'gestao-industrial' | 'gestao-financeira' | 'checklist-group' | 'comunicacao-interna' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'outros' } : btn
-    ) as SidebarButton[]
-    setSidebarButtons(updatedButtons)
-    // Salvar no localStorage IMEDIATAMENTE (síncrono) para garantir persistência
+  const persistSidebarButtons = (updatedButtons: SidebarButton[]) => {
+    const normalized = normalizeSidebarButtons(updatedButtons)
+    setSidebarButtons(normalized)
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem('nonato-sidebar-buttons', JSON.stringify(updatedButtons))
+        localStorage.setItem('nonato-sidebar-buttons', JSON.stringify(normalized))
       } catch (e) {
         console.error('Erro ao salvar no localStorage:', e)
       }
     }
-    saveData('nonato-sidebar-buttons', updatedButtons).catch(() => {})
+    saveData('nonato-sidebar-buttons', normalized).catch(() => {})
+  }
+
+  const handleMoveButtonToGroup = (buttonId: string, targetGroup: SidebarGroup, targetIndex?: number) => {
+    const normalized = normalizeSidebarButtons(sidebarButtons)
+    const movable = normalized.filter((btn) => !isSidebarButtonLocked(btn))
+    const locked = normalized.filter((btn) => isSidebarButtonLocked(btn))
+    const sourceIndex = movable.findIndex((btn) => btn.id === buttonId)
+    if (sourceIndex === -1) return
+
+    const [moved] = movable.splice(sourceIndex, 1)
+    const nextMoved = { ...moved, group: targetGroup }
+    const targetGroupButtons = movable.filter((btn) => (btn.group || getDefaultSidebarGroup(btn.id)) === targetGroup)
+    const boundedIndex = Math.max(0, Math.min(targetIndex ?? targetGroupButtons.length, targetGroupButtons.length))
+
+    let inserted = false
+    const regrouped: SidebarButton[] = []
+    for (const group of SIDEBAR_GROUPS) {
+      const groupButtons = group === targetGroup
+        ? [...movable.filter((btn) => (btn.group || getDefaultSidebarGroup(btn.id)) === group)]
+        : movable.filter((btn) => (btn.group || getDefaultSidebarGroup(btn.id)) === group)
+
+      if (group === targetGroup) {
+        groupButtons.splice(boundedIndex, 0, nextMoved)
+        inserted = true
+      }
+      regrouped.push(...groupButtons)
+    }
+
+    if (!inserted) regrouped.push(nextMoved)
+    const finalButtons = [...locked, ...regrouped].map((btn, idx) => ({ ...btn, order: idx }))
+    persistSidebarButtons(finalButtons)
+  }
+
+  const handleRestoreSidebarOrganizerDefaults = () => {
+    const msg =
+      (safeT as any)?.sidebarOrganizerRestoreConfirm ||
+      'Restaurar a organização padrão da barra lateral? Isso volta grupos e ordem ao modelo original, mas mantém os botões e nomes personalizados.'
+    if (typeof window !== 'undefined' && !window.confirm(msg)) return
+
+    const restored = sidebarButtons.map((button, index) => {
+      const defaultGroup = isSidebarButtonLocked(button) ? button.group : getDefaultSidebarGroup(button.id)
+      const translationKey = SIDEBAR_TRANSLATION_KEY_BY_ID[button.id] || button.translationKey
+      return {
+        ...button,
+        group: defaultGroup,
+        translationKey,
+        order: index,
+      }
+    })
+
+    persistSidebarButtons(restored)
+    setSidebarOrganizerSearch('')
+    if (typeof window !== 'undefined') {
+      window.alert(
+        (safeT as any)?.sidebarOrganizerRestoreSuccess ||
+          'Organização padrão restaurada com sucesso.'
+      )
+    }
   }
 
   // Componente para Orçamentos Avulso
@@ -50017,64 +50076,6 @@ A1;Peça exemplo;10'
         </div>
       )}
 
-      {mobileFullPushNudge && isCompactLayout && loginUser && !syncPendingRemote && (
-        <div
-          style={{
-            position: 'fixed',
-            left: 'max(10px, env(safe-area-inset-left))',
-            right: 'max(10px, env(safe-area-inset-right))',
-            bottom: openTabs.length
-              ? 'calc(76px + env(safe-area-inset-bottom, 0px))'
-              : 'max(12px, env(safe-area-inset-bottom, 0px))',
-            zIndex: 10080,
-            padding: '12px 14px',
-            borderRadius: '12px',
-            background: 'linear-gradient(180deg, #1a221c 0%, #121812 100%)',
-            border: '1px solid rgba(0, 255, 122, 0.45)',
-            boxShadow: '0 8px 28px rgba(0,0,0,0.45)',
-            boxSizing: 'border-box',
-          }}
-        >
-          <p style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: 700, color: '#00ff88' }}>
-            {(safeT as any)?.syncMobileNudgeTitle || 'Enviar tudo ao servidor?'}
-          </p>
-          <p style={{ margin: '0 0 12px', fontSize: '12px', color: '#ccc', lineHeight: 1.45 }}>
-            {(safeT as any)?.syncMobileNudgeBody ||
-              'Alteração guardada. Para o PC ou outro tablet verem tudo igual, envie a cópia completa para o servidor.'}
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            <button
-              type="button"
-              className="btn-primary"
-              style={{ flex: '1 1 140px', fontSize: '12px', padding: '8px 12px' }}
-              disabled={syncPushLoading}
-              onClick={() => {
-                setMobileFullPushNudge(false)
-                void enviarEsteAparelhoParaServidor()
-              }}
-            >
-              {syncPushLoading ? '…' : (safeT as any)?.syncMobileNudgeSend || 'Enviar tudo agora'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setMobileFullPushNudge(false)}
-              style={{
-                flex: '1 1 120px',
-                padding: '8px 12px',
-                fontSize: '12px',
-                borderRadius: '8px',
-                border: '1px solid rgba(255,255,255,0.2)',
-                background: 'transparent',
-                color: '#aaa',
-                cursor: 'pointer',
-              }}
-            >
-              {(safeT as any)?.syncMobileNudgeClose || 'Fechar'}
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Modal F1 - HELP (ajuda da seção ativa) */}
       {showHelpModal && activeTabId && (() => {
         const activeTab = openTabs.find(t => t.id === activeTabId)
@@ -50533,7 +50534,9 @@ A1;Peça exemplo;10'
             </div>
 
             {/* SEÇÃO 3: ORGANIZAÇÃO DA INTERFACE */}
-            <div className="admin-section admin-section--ui">
+            {renderSidebarButtonOrganizer()}
+            {/* BLOCO ANTIGO DO ORGANIZADOR REMOVIDO */}
+            <div style={{ display: 'none' }}>
               <div
                 style={{
                   display: 'flex',
