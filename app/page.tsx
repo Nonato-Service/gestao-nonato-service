@@ -1038,7 +1038,7 @@ const getLanguages = (t: any): Language[] => {
     { code: 'fr', name: t?.languageFrench || ptBR?.languageFrench || 'Francês', flag: '🇫🇷' },
     { code: 'it', name: t?.languageItalian || ptBR?.languageItalian || 'Italiano', flag: '🇮🇹' },
     { code: 'de', name: t?.languageGerman || ptBR?.languageGerman || 'Alemão', flag: '🇩🇪' },
-    { code: 'en', name: t?.languageEnglish || ptBR?.languageEnglish || 'Inglês', flag: '🇬🇧' },
+    { code: 'en', name: t?.languageEnglishUK || t?.languageEnglish || ptBR?.languageEnglishUK || ptBR?.languageEnglish || 'Inglês (Reino Unido)', flag: '🇬🇧' },
     { code: 'en-US', name: t?.languageEnglishUS || ptBR?.languageEnglishUS || 'Inglês (EUA)', flag: '🇺🇸' }
   ]
 }
