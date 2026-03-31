@@ -1,6 +1,6 @@
 {
-  "name": "Gestão Técnica Nonato Service",
-  "short_name": "Nonato Service",
+  "name": "NONATO SERVICE",
+  "short_name": "NONATO SERVICE",
   "description": "Sistema de Gestão Técnica - funciona offline no telemóvel e tablet",
   "start_url": "/",
   "display": "standalone",

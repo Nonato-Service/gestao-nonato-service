@@ -18,7 +18,7 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Gestão Técnica da BOA TRADE',
+  title: 'NONATO SERVICE',
   description: 'Sistema de Gestão Técnica — funciona no telefone, tablet e notebook',
   manifest: '/manifest.json',
   /** Favicon / PWA: app/icon.svg + public/icon.svg (logo em public/brand/nonato-logo-original.png) */
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'BOA TRADE',
+    title: 'NONATO SERVICE',
   },
 }
 
@@ -47,7 +47,7 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="BOA TRADE" />
+        <meta name="apple-mobile-web-app-title" content="NONATO SERVICE" />
         <meta name="format-detection" content="telephone=no" />
       </head>
       <body suppressHydrationWarning>
