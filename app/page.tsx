@@ -6790,32 +6790,46 @@ export default function Dashboard() {
       return
     }
 
+    const savedUser: User = editingUser
+      ? users.find(u => u.id === editingUser.id)!
+      : {
+          id: Date.now().toString(),
+          name: userForm.name,
+          email: userForm.email,
+          role: userForm.role,
+          password: userForm.password,
+          isAdmin: userForm.isAdmin,
+          permissions: userForm.permissions
+        }
+
     if (editingUser) {
+      const updatedUser: User = {
+        ...savedUser,
+        name: userForm.name,
+        email: userForm.email,
+        role: userForm.role,
+        password: userForm.password || savedUser.password,
+        isAdmin: userForm.isAdmin,
+        permissions: userForm.permissions
+      }
       const updatedUsers = users.map(u => 
         u.id === editingUser.id 
-          ? { 
-              ...u, 
-              name: userForm.name, 
-              email: userForm.email, 
-              role: userForm.role,
-              password: userForm.password || u.password, // Manter senha antiga se não fornecida
-              isAdmin: userForm.isAdmin,
-              permissions: userForm.permissions
-            }
+          ? updatedUser
           : u
       )
       setUsers(updatedUsers)
       saveData('nonato-users', updatedUsers)
+      setEditingUser(updatedUser)
+      setUserForm({
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        password: '',
+        isAdmin: updatedUser.isAdmin,
+        permissions: updatedUser.permissions
+      })
     } else {
-      const newUser: User = {
-        id: Date.now().toString(),
-        name: userForm.name,
-        email: userForm.email,
-        role: userForm.role,
-        password: userForm.password,
-        isAdmin: userForm.isAdmin,
-        permissions: userForm.permissions
-      }
+      const newUser: User = savedUser
       const updatedUsers = [...users, newUser]
       setUsers(updatedUsers)
       saveData('nonato-users', updatedUsers)
@@ -6832,29 +6846,16 @@ export default function Dashboard() {
         setManagedPasswords(updatedPasswords)
         saveData('nonato-managed-passwords', updatedPasswords)
       }
+      setEditingUser(newUser)
+      setUserForm({
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        password: '',
+        isAdmin: newUser.isAdmin,
+        permissions: newUser.permissions
+      })
     }
-
-    setShowUserForm(false)
-    setUserForm({ 
-      name: '', 
-      email: '', 
-      role: '', 
-      password: '', 
-      isAdmin: false,
-      permissions: {
-        gestores: false,
-        equipamentos: false,
-        clientes: false,
-        fornecedores: false,
-        relatorioServico: false,
-        bibliotecaPecas: false,
-        agenda: false,
-        desmontados: false,
-        cadastroServicos: false,
-        extras: false
-      }
-    })
-    setEditingUser(null)
   }
 
   // Função para gerar senha automaticamente
@@ -6903,7 +6904,6 @@ export default function Dashboard() {
     setManagedPasswords(updatedPasswords)
     saveData('nonato-managed-passwords', updatedPasswords)
     setPasswordForm({ tecnicoName: '', password: '' })
-    setShowPasswordForm(false)
     alert(safeT?.passwordSaved || 'Senha salva com sucesso!')
   }
 
@@ -7100,37 +7100,39 @@ export default function Dashboard() {
     // Isso permite que o nome customizado seja preservado mesmo ao mudar de idioma
     const isCustomName = !translationKey || !defaultTranslation || buttonForm.name !== defaultTranslation
 
+    const savedButton: SidebarButton = editingButton
+      ? {
+          ...editingButton,
+          name: buttonForm.name,
+          action: buttonForm.action,
+          translationKey: translationKey || editingButton.translationKey,
+          customName: isCustomName
+        }
+      : {
+          id: Date.now().toString(),
+          name: buttonForm.name,
+          action: buttonForm.action,
+          order: sidebarButtons.length,
+          translationKey,
+          customName: isCustomName
+        }
+
     if (editingButton) {
       const updatedButtons = sidebarButtons.map(b => 
         b.id === editingButton.id 
-          ? { 
-              ...b, 
-              name: buttonForm.name, 
-              action: buttonForm.action, 
-              translationKey: translationKey || b.translationKey, // Manter translationKey se existir
-              customName: isCustomName // Marcar se é nome customizado
-            }
+          ? savedButton
           : b
       )
       setSidebarButtons(updatedButtons)
       saveData('nonato-sidebar-buttons', updatedButtons)
     } else {
-      const newButton: SidebarButton = {
-        id: Date.now().toString(),
-        name: buttonForm.name,
-        action: buttonForm.action,
-        order: sidebarButtons.length,
-        translationKey: translationKey,
-        customName: isCustomName
-      }
+      const newButton: SidebarButton = savedButton
       const updatedButtons = [...sidebarButtons, newButton]
       setSidebarButtons(updatedButtons)
       saveData('nonato-sidebar-buttons', updatedButtons)
     }
-
-    setShowButtonForm(false)
-    setButtonForm({ name: '', action: '' })
-    setEditingButton(null)
+    setButtonForm({ name: savedButton.name, action: savedButton.action })
+    setEditingButton(savedButton)
   }
 
   const handleMoveButton = (buttonId: string, direction: 'up' | 'down') => {
@@ -7269,28 +7271,29 @@ export default function Dashboard() {
       return
     }
 
+    const savedGestor: Gestor = editingGestor
+      ? { ...editingGestor, ...gestorForm }
+      : {
+          id: Date.now().toString(),
+          ...gestorForm
+        }
+
     if (editingGestor) {
       const updatedGestores = gestores.map(g => 
         g.id === editingGestor.id 
-          ? { ...g, ...gestorForm }
+          ? savedGestor
           : g
       )
       setGestores(updatedGestores)
       saveData('nonato-gestores', updatedGestores)
     } else {
-      const newGestor: Gestor = {
-        id: Date.now().toString(),
-        ...gestorForm
-      }
+      const newGestor: Gestor = savedGestor
       const updatedGestores = [...gestores, newGestor]
       setGestores(updatedGestores)
       saveData('nonato-gestores', updatedGestores)
     }
-
-    setShowGestorForm(false)
-    const primeiroTipo = tiposGestores.length > 0 ? tiposGestores[0].id : 'assistencia-tecnica'
-    setGestorForm({ name: '', email: '', phone: '', address: '', area: primeiroTipo, photo: '' })
-    setEditingGestor(null)
+    setGestorForm({ name: savedGestor.name, email: savedGestor.email, phone: savedGestor.phone, address: savedGestor.address, area: savedGestor.area, photo: savedGestor.photo || '' })
+    setEditingGestor(savedGestor)
   }
 
   // Funções para gerenciar tipos de gestores
@@ -7338,11 +7341,12 @@ export default function Dashboard() {
       return
     }
 
+    const savedTipoGestor: TipoGestor = { ...tipoGestorForm }
     let updatedTipos: TipoGestor[]
     if (editingTipoGestor) {
       // Atualizar tipo existente
       updatedTipos = tiposGestores.map(t => 
-        t.id === editingTipoGestor.id ? tipoGestorForm : t
+        t.id === editingTipoGestor.id ? savedTipoGestor : t
       )
       // Se o ID mudou, atualizar todos os gestores que usam esse tipo
       if (editingTipoGestor.id !== tipoGestorForm.id) {
@@ -7359,9 +7363,8 @@ export default function Dashboard() {
 
     setTiposGestores(updatedTipos)
     saveData('nonato-tipos-gestores', updatedTipos)
-    setShowGerenciarTiposGestores(false)
-    setEditingTipoGestor(null)
-    setTipoGestorForm({ id: '', nome: '', cor: '#00ff00', icone: '👤', ordem: 0 })
+    setEditingTipoGestor(savedTipoGestor)
+    setTipoGestorForm(savedTipoGestor)
   }
 
   // Função auxiliar para obter informações do tipo de gestor
@@ -7424,19 +7427,23 @@ export default function Dashboard() {
       return
     }
 
+    const savedTecnico: Tecnico = editingTecnico
+      ? { ...editingTecnico, ...tecnicoForm }
+      : {
+          id: Date.now().toString(),
+          ...tecnicoForm
+        }
+
     if (editingTecnico) {
       const updatedTecnicos = tecnicos.map(t => 
         t.id === editingTecnico.id 
-          ? { ...t, ...tecnicoForm }
+          ? savedTecnico
           : t
       )
       setTecnicos(updatedTecnicos)
       saveData('nonato-tecnicos', updatedTecnicos)
     } else {
-      const newTecnico: Tecnico = {
-        id: Date.now().toString(),
-        ...tecnicoForm
-      }
+      const newTecnico: Tecnico = savedTecnico
       const updatedTecnicos = [...tecnicos, newTecnico]
       setTecnicos(updatedTecnicos)
       saveData('nonato-tecnicos', updatedTecnicos)
@@ -7454,10 +7461,8 @@ export default function Dashboard() {
         setComunicacaoTecnicoActiveTab('enviar')
       }, 100)
     }
-
-    setShowTecnicoForm(false)
-    setTecnicoForm({ name: '', email: '', phone: '', address: '', type: 'internal', photo: '' })
-    setEditingTecnico(null)
+    setTecnicoForm({ name: savedTecnico.name, email: savedTecnico.email, phone: savedTecnico.phone, address: savedTecnico.address, type: savedTecnico.type, photo: savedTecnico.photo || '' })
+    setEditingTecnico(savedTecnico)
   }
 
   // Função para criar backup completo
@@ -8326,49 +8331,29 @@ export default function Dashboard() {
       dataBaixa: editingEquipamento?.dataBaixa
     }
 
+    const savedEquipamento: Equipamento = editingEquipamento
+      ? { ...equipamentoPayload }
+      : {
+          ...equipamentoPayload,
+          status: 'ativo'
+        }
+
     if (editingEquipamento) {
       const updatedEquipamentos = equipamentos.map(e => 
         e.id === editingEquipamento.id 
-          ? { ...equipamentoPayload }
+          ? savedEquipamento
           : e
       )
       setEquipamentos(updatedEquipamentos)
       await saveData('nonato-equipamentos', updatedEquipamentos)
     } else {
-      const newEquipamento: Equipamento = {
-        ...equipamentoPayload,
-        status: 'ativo'
-      }
+      const newEquipamento: Equipamento = savedEquipamento
       const updatedEquipamentos = [...equipamentos, newEquipamento]
       setEquipamentos(updatedEquipamentos)
       await saveData('nonato-equipamentos', updatedEquipamentos)
     }
-
-    // Limpar formulário e fechar
-    setEquipamentoForm({ 
-      id: '',
-      tipoEquipamento: '', 
-      modelo: '', 
-      marca: '', 
-      numeroSerie: '', 
-      familia: '', 
-      grupo: '',
-      peso: '',
-      umaParteSo: true,
-      quantidadePartes: 1,
-      partes: [],
-      photo: '',
-      coverPhoto: '',
-      photoLibrary: [],
-      manualPdf: '',
-      documentosPdf: [],
-      itemsIncluded: [],
-      historico: [],
-      modeloManuaisId: ''
-    })
-    setNewItem('')
-    setEditingEquipamento(null)
-    setShowEquipamentoForm(false)
+    setEquipamentoForm(savedEquipamento)
+    setEditingEquipamento(savedEquipamento)
     
     // Mostrar mensagem de sucesso
     alert((t as any).equipamentoSaved || 'Equipamento salvo com sucesso!')
@@ -8546,18 +8531,20 @@ export default function Dashboard() {
     createAutoBackupBeforeOperation()
 
     let updatedServicos: typeof servicos
+    let savedServico: typeof servicos[number]
     if (editingServico) {
+      savedServico = {
+        ...editingServico,
+        cod: servicoForm.cod || undefined,
+        nome: servicoForm.nome,
+        descricao: servicoForm.descricao || undefined,
+        valor: servicoForm.valor,
+        tipoCobranca: servicoForm.tipoCobranca,
+        categoria: servicoForm.categoria
+      }
       updatedServicos = servicos.map(s =>
         s.id === editingServico.id
-          ? {
-              ...s,
-              cod: servicoForm.cod || undefined,
-              nome: servicoForm.nome,
-              descricao: servicoForm.descricao || undefined,
-              valor: servicoForm.valor,
-              tipoCobranca: servicoForm.tipoCobranca,
-              categoria: servicoForm.categoria
-            }
+          ? savedServico
           : s
       )
     } else {
@@ -8570,6 +8557,7 @@ export default function Dashboard() {
         tipoCobranca: servicoForm.tipoCobranca,
         categoria: servicoForm.categoria
       }
+      savedServico = newServico
       updatedServicos = [...servicos, newServico]
     }
     setServicos(updatedServicos)
@@ -8582,16 +8570,15 @@ export default function Dashboard() {
       return
     }
 
-    setShowServicoForm(false)
     setServicoForm({
-      cod: '',
-      nome: '',
-      descricao: '',
-      valor: 0,
-      tipoCobranca: 'unidade',
-      categoria: 'servico'
+      cod: savedServico.cod || '',
+      nome: savedServico.nome,
+      descricao: savedServico.descricao || '',
+      valor: savedServico.valor,
+      tipoCobranca: savedServico.tipoCobranca,
+      categoria: savedServico.categoria
     })
-    setEditingServico(null)
+    setEditingServico(savedServico)
     alert((t as any).servicoSalvo || 'Serviço salvo com sucesso!')
   }
 
@@ -8663,46 +8650,26 @@ export default function Dashboard() {
       status: normalizeStatusAgendamento(agendaForm),
     }
 
+    const savedAgendamento: Agendamento = editingAgendamento
+      ? { ...formSanitizado, id: editingAgendamento.id }
+      : {
+          ...formSanitizado,
+          id: Date.now().toString(),
+        }
+
     if (editingAgendamento) {
-      const updated = agendamentos.map((a) => (a.id === editingAgendamento.id ? formSanitizado : a))
+      const updated = agendamentos.map((a) => (a.id === editingAgendamento.id ? savedAgendamento : a))
       setAgendamentos(updated)
       saveData('nonato-agendamentos', updated)
     } else {
-      const newAgendamento: Agendamento = {
-        ...formSanitizado,
-        id: Date.now().toString(),
-      }
+      const newAgendamento: Agendamento = savedAgendamento
       const updated = [...agendamentos, newAgendamento]
       setAgendamentos(updated)
       saveData('nonato-agendamentos', updated)
     }
-
-    setShowAgendaForm(false)
-    setEditingAgendamento(null)
-    setAgendaForm({
-      id: '',
-      tipo: 'pre-agendamento',
-      tecnico: '',
-      cliente: '',
-      clienteId: '',
-      equipamento: '',
-      equipamentoId: '',
-      data: new Date().toISOString().split('T')[0],
-      hora: '09:00',
-      duracaoEstimada: '2',
-      diasSelecionados: undefined,
-      tipoServico: '',
-      observacoesTecnicas: '',
-      necessidadePecas: false,
-      codigoNotaFiscal: '',
-      pecasAnexadas: [],
-      status: 'pendente',
-      telefone: '',
-      endereco: '',
-      cidade: '',
-      dataCriacao: new Date().toISOString()
-    })
-    setAgendaDiasRascunho([])
+    setEditingAgendamento(savedAgendamento)
+    setAgendaForm(savedAgendamento)
+    setAgendaDiasRascunho(savedAgendamento.diasSelecionados?.length ? [...savedAgendamento.diasSelecionados].sort() : [])
     alert(safeT?.saveSuccess || 'Agendamento salvo com sucesso!')
   }
 
@@ -8848,36 +8815,38 @@ export default function Dashboard() {
       return
     }
 
+    const savedGrupoDesmontado: GrupoDesmontado = editingGrupoDesmontado
+      ? {
+          ...editingGrupoDesmontado,
+          ...grupoDesmontadoForm,
+          nome: grupoDesmontadoForm.numeroGrupo
+        }
+      : {
+          id: Date.now().toString(),
+          ...grupoDesmontadoForm,
+          nome: grupoDesmontadoForm.numeroGrupo,
+          dataCriacao: new Date().toISOString()
+        }
+
     if (editingGrupoDesmontado) {
-      const updated = gruposDesmontados.map(g => g.id === editingGrupoDesmontado.id ? {
-        ...editingGrupoDesmontado,
-        ...grupoDesmontadoForm,
-        nome: grupoDesmontadoForm.numeroGrupo
-      } : g)
+      const updated = gruposDesmontados.map(g => g.id === editingGrupoDesmontado.id ? savedGrupoDesmontado : g)
       setGruposDesmontados(updated)
       saveData('nonato-desmontados-grupos', updated)
     } else {
-      const newGrupo: GrupoDesmontado = {
-        id: Date.now().toString(),
-        ...grupoDesmontadoForm,
-        nome: grupoDesmontadoForm.numeroGrupo,
-        dataCriacao: new Date().toISOString()
-      }
+      const newGrupo: GrupoDesmontado = savedGrupoDesmontado
       const updated = [...gruposDesmontados, newGrupo]
       setGruposDesmontados(updated)
       saveData('nonato-desmontados-grupos', updated)
     }
-
-    setShowGrupoDesmontadoForm(false)
-    setEditingGrupoDesmontado(null)
+    setEditingGrupoDesmontado(savedGrupoDesmontado)
     setGrupoDesmontadoForm({ 
-      numeroGrupo: '', 
-      familia: '', 
-      idFabricante: '', 
-      imagem: '',
-      localizacao: { rua: '', numeroEspaco: '', numeroGrupoPrateleira: '' },
-      nome: '', 
-      descricao: '' 
+      numeroGrupo: savedGrupoDesmontado.numeroGrupo, 
+      familia: savedGrupoDesmontado.familia, 
+      idFabricante: savedGrupoDesmontado.idFabricante || '', 
+      imagem: savedGrupoDesmontado.imagem || '',
+      localizacao: savedGrupoDesmontado.localizacao,
+      nome: savedGrupoDesmontado.nome || '', 
+      descricao: savedGrupoDesmontado.descricao || '' 
     })
     alert(safeT?.saveSuccess || 'Grupo salvo com sucesso!')
   }
@@ -8945,46 +8914,48 @@ export default function Dashboard() {
       return
     }
 
+    const savedPecaDesmontada: PecaDesmontada = editingPecaDesmontada
+      ? {
+          ...editingPecaDesmontada,
+          ...pecaDesmontadaForm,
+          grupoNome: gruposDesmontados.find(g => g.id === pecaDesmontadaForm.grupoId)?.numeroGrupo || ''
+        }
+      : {
+          id: Date.now().toString(),
+          ...pecaDesmontadaForm,
+          grupoNome: gruposDesmontados.find(g => g.id === pecaDesmontadaForm.grupoId)?.numeroGrupo || '',
+          dataCriacao: new Date().toISOString()
+        }
+
     if (editingPecaDesmontada) {
-      const updated = pecasDesmontadas.map(p => p.id === editingPecaDesmontada.id ? {
-        ...editingPecaDesmontada,
-        ...pecaDesmontadaForm,
-        grupoNome: gruposDesmontados.find(g => g.id === pecaDesmontadaForm.grupoId)?.numeroGrupo || ''
-      } : p)
+      const updated = pecasDesmontadas.map(p => p.id === editingPecaDesmontada.id ? savedPecaDesmontada : p)
       setPecasDesmontadas(updated)
       saveData('nonato-desmontados-pecas', updated)
     } else {
-      const newPeca: PecaDesmontada = {
-        id: Date.now().toString(),
-        ...pecaDesmontadaForm,
-        grupoNome: gruposDesmontados.find(g => g.id === pecaDesmontadaForm.grupoId)?.numeroGrupo || '',
-        dataCriacao: new Date().toISOString()
-      }
+      const newPeca: PecaDesmontada = savedPecaDesmontada
       const updated = [...pecasDesmontadas, newPeca]
       setPecasDesmontadas(updated)
       saveData('nonato-desmontados-pecas', updated)
     }
-
-    setShowPecaDesmontadaForm(false)
-    setEditingPecaDesmontada(null)
+    setEditingPecaDesmontada(savedPecaDesmontada)
     setPecaDesmontadaForm({
-      numeroPeca: '',
-      familia: '',
-      grupoId: '',
-      nome: '',
-      codigo: '',
-      marca: '',
-      modelo: '',
-      tipoEquipamento: '',
-      observacoes: '',
-      quantidade: 1,
-      imagens: [],
-      statusFuncional: 'nao-testado',
-      foiRecuperada: false,
-      foiTestada: false,
-      tecnicoTeste: '',
-      descricaoTeste: '',
-      localizacao: { rua: '', numeroEspaco: '', numeroGrupoPrateleira: '' }
+      numeroPeca: savedPecaDesmontada.numeroPeca,
+      familia: savedPecaDesmontada.familia,
+      grupoId: savedPecaDesmontada.grupoId,
+      nome: savedPecaDesmontada.nome,
+      codigo: savedPecaDesmontada.codigo || '',
+      marca: savedPecaDesmontada.marca || '',
+      modelo: savedPecaDesmontada.modelo || '',
+      tipoEquipamento: savedPecaDesmontada.tipoEquipamento || '',
+      observacoes: savedPecaDesmontada.observacoes || '',
+      quantidade: savedPecaDesmontada.quantidade,
+      imagens: savedPecaDesmontada.imagens || [],
+      statusFuncional: savedPecaDesmontada.statusFuncional || 'nao-testado',
+      foiRecuperada: savedPecaDesmontada.foiRecuperada || false,
+      foiTestada: savedPecaDesmontada.foiTestada || false,
+      tecnicoTeste: savedPecaDesmontada.tecnicoTeste || '',
+      descricaoTeste: savedPecaDesmontada.descricaoTeste || '',
+      localizacao: savedPecaDesmontada.localizacao
     })
     alert(safeT?.saveSuccess || 'Peça salva com sucesso!')
   }
@@ -9152,13 +9123,14 @@ export default function Dashboard() {
       nomeEntidade = cliente.nomeEmpresa
     }
 
+    let savedFaturaFornecedor: FaturaFornecedor | null = null
     const updatedFornecedores = fornecedores.map(f => {
       if (f.id === selectedFornecedorForFatura.id) {
         if (editingFaturaFornecedor) {
           // Editar fatura existente
           const updatedFaturas = f.faturas.map(fat =>
             fat.id === editingFaturaFornecedor.id
-              ? {
+              ? (savedFaturaFornecedor = {
                   ...fat,
                   numeroFatura: faturaFornecedorForm.numeroFatura,
                   mes: faturaFornecedorForm.mes,
@@ -9169,13 +9141,13 @@ export default function Dashboard() {
                   dataVencimento: faturaFornecedorForm.dataVencimento || undefined,
                   status: faturaFornecedorForm.status,
                   observacoes: faturaFornecedorForm.observacoes || undefined
-                }
+                })!
               : fat
           )
           return { ...f, faturas: updatedFaturas }
         } else {
           // Adicionar nova fatura
-          const newFatura: FaturaFornecedor = {
+          const newFatura: FaturaFornecedor = savedFaturaFornecedor = {
             id: Date.now().toString(),
             numeroFatura: faturaFornecedorForm.numeroFatura,
             mes: faturaFornecedorForm.mes,
@@ -9195,21 +9167,20 @@ export default function Dashboard() {
 
     setFornecedores(updatedFornecedores)
     saveData('nonato-fornecedores', updatedFornecedores)
-
-    setShowFaturaFornecedorForm(false)
-    setFaturaFornecedorForm({
-      numeroFatura: '',
-      mes: new Date().toISOString().slice(0, 7),
-      valor: 0,
-      clienteId: '',
-      clienteNome: '',
-      dataVencimento: '',
-      status: 'pendente',
-      observacoes: '',
-      entidadeOrigem: 'fornecedor'
-    })
-    setEditingFaturaFornecedor(null)
-    setSelectedFornecedorForFatura(null)
+    if (savedFaturaFornecedor) {
+      setFaturaFornecedorForm({
+        numeroFatura: savedFaturaFornecedor.numeroFatura,
+        mes: savedFaturaFornecedor.mes,
+        valor: savedFaturaFornecedor.valor,
+        clienteId: savedFaturaFornecedor.clienteId,
+        clienteNome: savedFaturaFornecedor.clienteNome,
+        dataVencimento: savedFaturaFornecedor.dataVencimento || '',
+        status: savedFaturaFornecedor.status,
+        observacoes: savedFaturaFornecedor.observacoes || '',
+        entidadeOrigem: inferFaturaFornecedorEntidadeOrigem(savedFaturaFornecedor)
+      })
+      setEditingFaturaFornecedor(savedFaturaFornecedor)
+    }
     alert(t.invoiceSavedSuccess || 'Fatura salva com sucesso!')
   }
 
@@ -9283,14 +9254,16 @@ export default function Dashboard() {
     }
 
     let updatedClientes: Cliente[]
+    let savedCliente: Cliente
     if (editingCliente) {
+      savedCliente = { ...editingCliente, ...clienteForm }
       updatedClientes = clientes.map(c =>
         c.id === editingCliente.id
-          ? { ...c, ...clienteForm }
+          ? savedCliente
           : c
       )
     } else {
-      const newCliente: Cliente = {
+      const newCliente: Cliente = savedCliente = {
         id: Date.now().toString(),
         ...clienteForm,
         equipamentos: [],
@@ -9309,24 +9282,21 @@ export default function Dashboard() {
     }
 
     createAutoBackupBeforeOperation()
-
-    setShowClienteForm(false)
     setClienteForm({
-      nomeEmpresa: '',
-      morada: '',
-      localidade: '',
-      conselho: '',
-      pais: '',
-      codigoPostal: '',
-      freguesia: '',
-      numeroContribuicaoFiscal: '',
-      telefones: '',
-      email: '',
-      contato: '',
-      photo: ''
+      nomeEmpresa: savedCliente.nomeEmpresa,
+      morada: savedCliente.morada,
+      localidade: savedCliente.localidade,
+      conselho: savedCliente.conselho,
+      pais: savedCliente.pais,
+      codigoPostal: savedCliente.codigoPostal,
+      freguesia: savedCliente.freguesia,
+      numeroContribuicaoFiscal: savedCliente.numeroContribuicaoFiscal || '',
+      telefones: savedCliente.telefones,
+      email: savedCliente.email,
+      contato: savedCliente.contato,
+      photo: savedCliente.photo || ''
     })
-    setEditingCliente(null)
-    setClientesActiveTab('listar')
+    setEditingCliente(savedCliente)
     alert((t as any).clienteSaved || 'Cliente salvo com sucesso!')
   }
 
@@ -9406,8 +9376,9 @@ export default function Dashboard() {
 
     createAutoBackupBeforeOperation()
 
+    let savedClientePrioritario: ClientePrioritario
     if (editingClientePrioritario) {
-      const updatedClientePrioritario: ClientePrioritario = {
+      const updatedClientePrioritario: ClientePrioritario = savedClientePrioritario = {
         ...editingClientePrioritario,
         ...clientePrioritarioForm,
         equipamentos: editingClientePrioritario.equipamentos || [],
@@ -9421,7 +9392,7 @@ export default function Dashboard() {
         alert((t as any).clientePrioritarioLimitado || 'Apenas um cliente prioritário pode ser cadastrado. Edite o existente ou exclua antes de adicionar um novo.')
         return
       }
-      const newClientePrioritario: ClientePrioritario = {
+      const newClientePrioritario: ClientePrioritario = savedClientePrioritario = {
         id: Date.now().toString(),
         ...clientePrioritarioForm,
         equipamentos: [],
@@ -9431,22 +9402,21 @@ export default function Dashboard() {
       saveData('nonato-cliente-prioritario', newClientePrioritario)
     }
 
-    setShowClientePrioritarioForm(false)
     setClientePrioritarioForm({
-      nomeEmpresa: '',
-      morada: '',
-      localidade: '',
-      conselho: '',
-      pais: '',
-      codigoPostal: '',
-      freguesia: '',
-      numeroContribuicaoFiscal: '',
-      telefones: '',
-      email: '',
-      contato: '',
-      photo: ''
+      nomeEmpresa: savedClientePrioritario.nomeEmpresa,
+      morada: savedClientePrioritario.morada,
+      localidade: savedClientePrioritario.localidade,
+      conselho: savedClientePrioritario.conselho,
+      pais: savedClientePrioritario.pais,
+      codigoPostal: savedClientePrioritario.codigoPostal,
+      freguesia: savedClientePrioritario.freguesia,
+      numeroContribuicaoFiscal: savedClientePrioritario.numeroContribuicaoFiscal || '',
+      telefones: savedClientePrioritario.telefones,
+      email: savedClientePrioritario.email,
+      contato: savedClientePrioritario.contato,
+      photo: savedClientePrioritario.photo || ''
     })
-    setEditingClientePrioritario(null)
+    setEditingClientePrioritario(savedClientePrioritario)
     alert((t as any).clientePrioritarioSaved || 'Cliente prioritário salvo com sucesso!')
   }
 
@@ -9463,8 +9433,9 @@ export default function Dashboard() {
     const valorIVA = valorSemIVA * (osForm.taxaIVA / 100)
     const valorTotal = valorSemIVA + valorIVA
 
+    let savedOS: OrdemServico
     if (editingOS) {
-      const updatedOS: OrdemServico = {
+      const updatedOS: OrdemServico = savedOS = {
         ...editingOS,
         numeroOS: osForm.numeroOS,
         clienteId: osForm.clienteId,
@@ -9512,7 +9483,7 @@ export default function Dashboard() {
         }
       }
     } else {
-      const newOS: OrdemServico = {
+      const newOS: OrdemServico = savedOS = {
         id: Date.now().toString(),
         numeroOS: osForm.numeroOS,
         clienteId: osForm.clienteId,
@@ -9560,22 +9531,20 @@ export default function Dashboard() {
         }
       }
     }
-
-    setShowOSForm(false)
     setOSForm({
-      numeroOS: '',
-      clienteId: '',
-      clienteNome: '',
-      dataAbertura: new Date().toISOString().split('T')[0],
-      status: 'aberta',
-      valorServico: 0,
-      valorPecas: 0,
-      taxaIVA: 23,
-      observacoes: '',
-      tecnicoResponsavel: '',
-      equipamentoId: ''
+      numeroOS: savedOS.numeroOS,
+      clienteId: savedOS.clienteId,
+      clienteNome: savedOS.clienteNome,
+      dataAbertura: savedOS.dataAbertura,
+      status: savedOS.status,
+      valorServico: savedOS.valorServico,
+      valorPecas: savedOS.valorPecas,
+      taxaIVA: savedOS.taxaIVA,
+      observacoes: savedOS.observacoes,
+      tecnicoResponsavel: savedOS.tecnicoResponsavel || '',
+      equipamentoId: savedOS.equipamentoId || ''
     })
-    setEditingOS(null)
+    setEditingOS(savedOS)
     atualizarClientesDevedores()
     alert(safeT?.osSalva || 'Ordem de serviço salva com sucesso!')
   }
@@ -9797,8 +9766,9 @@ export default function Dashboard() {
       contaPagamentoEnviada: Boolean(faturaForm.contaPagamentoEnviada)
     }
 
+    let savedFatura: FaturaPecas
     if (editingFatura) {
-      const updatedFatura: FaturaPecas = {
+      const updatedFatura: FaturaPecas = savedFatura = {
         ...editingFatura,
         ...basePayload
       }
@@ -9806,7 +9776,7 @@ export default function Dashboard() {
       setFaturasPecas(updatedFaturas)
       saveData('nonato-faturas-pecas', updatedFaturas)
     } else {
-      const newFatura: FaturaPecas = {
+      const newFatura: FaturaPecas = savedFatura = {
         id: Date.now().toString(),
         ...basePayload
       }
@@ -9825,10 +9795,31 @@ export default function Dashboard() {
         saveData('nonato-ordens-servico', updatedOSList)
       }
     }
-
-    setShowFaturaForm(false)
-    setFaturaForm(resetFaturaFormState())
-    setEditingFatura(null)
+    setFaturaForm({
+      numeroFatura: savedFatura.numeroFatura,
+      ordemServicoId: savedFatura.ordemServicoId || '',
+      numeroOS: savedFatura.numeroOS || '',
+      clienteId: savedFatura.clienteId,
+      clienteNome: savedFatura.clienteNome,
+      dataEmissao: savedFatura.dataEmissao,
+      dataVencimento: savedFatura.dataVencimento || '',
+      taxaIVA: savedFatura.taxaIVA,
+      status: savedFatura.status,
+      observacoes: savedFatura.observacoes || '',
+      arquivoAnexo: savedFatura.arquivoAnexo || '',
+      nomeArquivoOriginal: savedFatura.nomeArquivoOriginal || '',
+      tipoArquivo: savedFatura.tipoArquivo || '',
+      contaPagamentoEnviada: Boolean(savedFatura.contaPagamentoEnviada),
+      valorManualSemIVA: savedFatura.valorSemIVA ? String(savedFatura.valorSemIVA) : '',
+      itens: (savedFatura.itens || []).map(item => ({
+        id: item.id,
+        descricao: item.descricao,
+        quantidade: item.quantidade,
+        precoUnitario: item.precoUnitario,
+        codigoPeca: item.codigoPeca
+      }))
+    })
+    setEditingFatura(savedFatura)
     atualizarClientesDevedores()
     alert(safeT?.faturaSalva || 'Fatura salva com sucesso!')
   }
@@ -9937,41 +9928,43 @@ export default function Dashboard() {
 
     createAutoBackupBeforeOperation()
 
+    const savedFornecedor: Fornecedor = editingFornecedor
+      ? { ...editingFornecedor, ...fornecedorForm }
+      : {
+          id: Date.now().toString(),
+          ...fornecedorForm,
+          faturas: []
+        }
+
     if (editingFornecedor) {
       const updatedFornecedores = fornecedores.map(f => 
         f.id === editingFornecedor.id 
-          ? { ...f, ...fornecedorForm }
+          ? savedFornecedor
           : f
       )
       setFornecedores(updatedFornecedores)
       saveData('nonato-fornecedores', updatedFornecedores)
     } else {
-      const newFornecedor: Fornecedor = {
-        id: Date.now().toString(),
-        ...fornecedorForm,
-        faturas: []
-      }
+      const newFornecedor: Fornecedor = savedFornecedor
       const updatedFornecedores = [...fornecedores, newFornecedor]
       setFornecedores(updatedFornecedores)
       saveData('nonato-fornecedores', updatedFornecedores)
     }
-
-    setShowFornecedorForm(false)
     setFornecedorForm({
-      nomeEmpresa: '',
-      morada: '',
-      localidade: '',
-      conselho: '',
-      pais: '',
-      codigoPostal: '',
-      freguesia: '',
-      numeroContribuicaoFiscal: '',
-      telefones: '',
-      email: '',
-      contato: '',
-      iban: ''
+      nomeEmpresa: savedFornecedor.nomeEmpresa,
+      morada: savedFornecedor.morada,
+      localidade: savedFornecedor.localidade,
+      conselho: savedFornecedor.conselho,
+      pais: savedFornecedor.pais,
+      codigoPostal: savedFornecedor.codigoPostal,
+      freguesia: savedFornecedor.freguesia,
+      numeroContribuicaoFiscal: savedFornecedor.numeroContribuicaoFiscal || '',
+      telefones: savedFornecedor.telefones,
+      email: savedFornecedor.email,
+      contato: savedFornecedor.contato,
+      iban: savedFornecedor.iban || ''
     })
-    setEditingFornecedor(null)
+    setEditingFornecedor(savedFornecedor)
     alert(t.supplierSavedSuccess || 'Fornecedor salvo com sucesso!')
   }
 
@@ -10152,6 +10145,10 @@ export default function Dashboard() {
       return
     }
 
+    let savedEquipamentoCliente: EquipamentoCliente = editingEquipamentoCliente
+      ? { ...editingEquipamentoCliente, ...equipamentoClienteForm }
+      : equipamentoClienteForm
+
     const updatedClientes = clientes.map(c => {
       if (c.id === selectedClienteForEquipamento.id) {
         if (editingEquipamentoCliente) {
@@ -10161,11 +10158,11 @@ export default function Dashboard() {
           )
           const updatedEquipamentos = [...c.equipamentos]
           if (index >= 0) {
-            updatedEquipamentos[index] = equipamentoClienteForm
+            updatedEquipamentos[index] = savedEquipamentoCliente
           }
           return { ...c, equipamentos: updatedEquipamentos }
         } else {
-          return { ...c, equipamentos: [...c.equipamentos, equipamentoClienteForm] }
+          return { ...c, equipamentos: [...c.equipamentos, savedEquipamentoCliente] }
         }
       }
       return c
@@ -10174,24 +10171,9 @@ export default function Dashboard() {
     setClientes(updatedClientes)
     localStorage.setItem('nonato-clientes', JSON.stringify(updatedClientes))
     saveData('nonato-clientes', updatedClientes)
-
-    setShowEquipamentoClienteForm(false)
-    setEquipamentoClienteForm({
-      tipoEquipamento: '',
-      modelo: '',
-      marca: '',
-      numeroSerie: '',
-      familia: '',
-      grupo: '',
-      photo: '',
-      coverPhoto: '',
-      photoLibrary: [],
-      manualPdf: '',
-      itemsIncluded: []
-    })
+    setEquipamentoClienteForm(savedEquipamentoCliente)
+    setEditingEquipamentoCliente(savedEquipamentoCliente)
     setNewItemCliente('')
-    setEditingEquipamentoCliente(null)
-    setSelectedClienteForEquipamento(null)
     alert((t as any).equipamentoClienteSaved || 'Equipamento adicionado ao cliente com sucesso!')
   }
 
@@ -10351,24 +10333,23 @@ export default function Dashboard() {
       const equipamento = cliente.equipamentos[selectedEquipamentoForRelatorio.index]
       if (equipamento) {
         const relatorios = equipamento.relatorios || []
-        let updatedRelatorios: RelatorioEquipamento[]
+        const savedRelatorio: RelatorioEquipamento = editingRelatorio
+          ? { ...editingRelatorio, titulo: relatorioForm.titulo, conteudo: relatorioForm.conteudo }
+          : {
+              id: Date.now().toString(),
+              titulo: relatorioForm.titulo,
+              conteudo: relatorioForm.conteudo,
+              dataGeracao: new Date().toLocaleString('pt-BR'),
+              equipamentoId: equipamento.numeroSerie
+            }
 
-        if (editingRelatorio) {
-          updatedRelatorios = relatorios.map(r => 
-            r.id === editingRelatorio.id
-              ? { ...r, titulo: relatorioForm.titulo, conteudo: relatorioForm.conteudo }
-              : r
-          )
-        } else {
-          const newRelatorio: RelatorioEquipamento = {
-            id: Date.now().toString(),
-            titulo: relatorioForm.titulo,
-            conteudo: relatorioForm.conteudo,
-            dataGeracao: new Date().toLocaleString('pt-BR'),
-            equipamentoId: equipamento.numeroSerie
-          }
-          updatedRelatorios = [...relatorios, newRelatorio]
-        }
+        const updatedRelatorios: RelatorioEquipamento[] = editingRelatorio
+          ? relatorios.map(r =>
+              r.id === editingRelatorio.id
+                ? savedRelatorio
+                : r
+            )
+          : [...relatorios, savedRelatorio]
 
         const updatedEquipamento = { ...equipamento, relatorios: updatedRelatorios }
         const updatedEquipamentos = [...cliente.equipamentos]
@@ -10381,9 +10362,8 @@ export default function Dashboard() {
         setClientes(updatedClientes)
         saveData('nonato-clientes', updatedClientes)
         setSelectedEquipamentoForRelatorio({ ...selectedEquipamentoForRelatorio, equipamento: updatedEquipamento })
-        setShowRelatorioForm(false)
-        setRelatorioForm({ titulo: '', conteudo: '' })
-        setEditingRelatorio(null)
+        setRelatorioForm({ titulo: savedRelatorio.titulo, conteudo: savedRelatorio.conteudo })
+        setEditingRelatorio(savedRelatorio)
         alert((t as any).relatorioSaved || 'Relatório salvo com sucesso!')
       }
     }
@@ -14925,33 +14905,7 @@ export default function Dashboard() {
       }
     }
 
-    setShowRelatorioServicoForm(false)
-    setRelatorioServicoForm({
-      id: '',
-      numero: '',
-      tecnico: '',
-      cliente: '',
-      cidade: '',
-      telefone: '',
-      data: new Date().toISOString().split('T')[0],
-      maquinaModelo: '',
-      numeroMaquina: '',
-      tipoServico: '',
-      diasTrabalho: [],
-      horasTrabalho: '',
-      kmsPercorridos: '',
-      horasViagem: '',
-      servicoConcluido: false,
-      retornoNecessario: false,
-      entregaDocumentacao: false,
-      liberacaoProducao: false,
-      instrucaoFuncionarios: false,
-      necessarioTrocaPecas: false,
-      observacoes: '',
-      pontosAberto: '',
-      pecasSubstituicao: [],
-      equipamentoOrigem: 'cliente',
-    })
+    setRelatorioServicoForm(savedRelatorio)
     setNovoDiaTrabalho({
       data: new Date().toISOString().split('T')[0], // Inicializar com a data de hoje
       idaHora: '',
@@ -14970,7 +14924,7 @@ export default function Dashboard() {
       tempoPausa: '',
       descricaoTrabalho: ''
     })
-    setEditingRelatorioServico(null)
+    setEditingRelatorioServico(savedRelatorio)
     alert(t.relatorioServicoSaved || 'Relatório de serviço salvo com sucesso!')
   }
 
@@ -15188,6 +15142,8 @@ export default function Dashboard() {
         saveData('nonato-clientes', updatedClientes)
       }
     }
+    setRelatorioServicoForm(savedRelatorio)
+    setEditingRelatorioServico(savedRelatorio)
     handlePrintRelatorio(savedRelatorio)
   }
 
@@ -17379,10 +17335,8 @@ export default function Dashboard() {
 
     setChecklistTemplates(newTemplates)
     saveData('nonato-checklist-templates', newTemplates)
-    
-    setChecklistTemplateForm({ nome: '', descricao: '', itens: [] })
-    setEditingChecklistTemplate(null)
-    setShowChecklistTemplateForm(false)
+    setChecklistTemplateForm({ nome: newTemplate.nome, descricao: newTemplate.descricao || '', itens: newTemplate.itens })
+    setEditingChecklistTemplate(newTemplate)
     alert(safeT?.modeloSalvoSucesso || 'Modelo salvo com sucesso!')
   }
 
@@ -17443,12 +17397,9 @@ export default function Dashboard() {
 
     setGruposChecklist(newGrupos)
     saveData('nonato-grupos-checklist', newGrupos)
-    setShowGrupoChecklistForm(false)
-    setEditingGrupoChecklist(null)
-    setGrupoChecklistForm({ numeroGrupo: '', nomeGrupo: '', familia: '', tipo: 'basico', imagem: undefined, trabalhosASeremExecutados: '' })
-    setNovaFamiliaGrupo('')
-    setGrupoChecklistModoIdentificacao('numero-grupo')
-    setGrupoChecklistEquipamentoSelecionadoId('')
+    setEditingGrupoChecklist(newGrupo)
+    setGrupoChecklistForm({ numeroGrupo: newGrupo.numeroGrupo, nomeGrupo: newGrupo.nomeGrupo, familia: newGrupo.familia, tipo: newGrupo.tipo, imagem: newGrupo.imagem, trabalhosASeremExecutados: newGrupo.trabalhosASeremExecutados || '' })
+    setNovaFamiliaGrupo(newGrupo.familia)
     alert(safeT?.grupoSalvoSucesso || 'Grupo salvo com sucesso!')
   }
 
@@ -17496,16 +17447,15 @@ export default function Dashboard() {
 
     setGruposChecklist(newGrupos)
     saveData('nonato-grupos-checklist', newGrupos)
-    setShowManutencaoForm(false)
-    setEditingManutencao(null)
-    setGrupoSelecionadoParaManutencao(null)
+    setEditingManutencao(newManutencao)
+    setGrupoSelecionadoParaManutencao(grupoAtualizado)
     setManutencaoForm({
-      nome: '',
-      avaliacaoFeitaVisual: false,
-      testeMecanico: false,
-      testeEletrico: false,
-      testeOperacional: false,
-      pecas: []
+      nome: newManutencao.nome,
+      avaliacaoFeitaVisual: newManutencao.avaliacaoFeitaVisual,
+      testeMecanico: newManutencao.testeMecanico,
+      testeEletrico: newManutencao.testeEletrico,
+      testeOperacional: newManutencao.testeOperacional,
+      pecas: newManutencao.pecas || []
     })
     alert(safeT?.manutencaoSalvaSucesso || 'Manutenção salva com sucesso!')
   }
