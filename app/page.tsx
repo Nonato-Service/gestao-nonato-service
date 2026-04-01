@@ -15714,10 +15714,11 @@ export default function Dashboard() {
     }
   }
 
-  const normalizeImportKey = (v: any): string =>
-    String(v ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
+  function normalizeImportKey(v: any): string {
+    return String(v ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
+  }
 
-  const buildImportedPecaDescricao = (nome: string, codigo: string, descricaoOriginal: string): string => {
+  function buildImportedPecaDescricao(nome: string, codigo: string, descricaoOriginal: string): string {
     const nomeLimpo = String(nome || '').trim()
     const codigoLimpo = String(codigo || '').trim()
     const descricaoLimpa = String(descricaoOriginal || '').trim()
@@ -15739,7 +15740,7 @@ export default function Dashboard() {
   }
 
   // Mapeia objeto genérico (JSON do site) para PecaBiblioteca
-  const mapItemToPecaBiblioteca = (item: any, index: number): PecaBiblioteca => {
+  function mapItemToPecaBiblioteca(item: any, index: number): PecaBiblioteca {
     const codigo = String(item?.codigo ?? item?.code ?? item?.partNumber ?? item?.sku ?? item?.numero ?? item?.id ?? item?.ref ?? '').trim()
     let nome = String(item?.nome ?? item?.name ?? '').trim()
     const descricao = String(item?.descricao ?? item?.description ?? item?.designation ?? '').trim()
@@ -16217,18 +16218,25 @@ export default function Dashboard() {
     setPecasBiblioteca(atualizado)
     localStorage.setItem('nonato-pecas-biblioteca', JSON.stringify(atualizado))
     void saveData('nonato-pecas-biblioteca', atualizado)
-    setImportacaoPreview(null)
-    setUrlImportacaoPecas('')
     if (novos.length === 0) {
       alert(t?.importacaoSemNovidades ?? 'Nenhuma peça nova para adicionar (itens já existentes na biblioteca).')
       return
     }
     const mensagemBase = t?.importacaoSucesso ?? `${novos.length} peça(s) adicionada(s) à biblioteca.`
-    if (classificadosAutomaticamente.alteradas > 0) {
-      alert(`${mensagemBase} ${classificadosAutomaticamente.alteradas} já foram classificadas automaticamente.`)
-      return
+    const mensagemFinal =
+      classificadosAutomaticamente.alteradas > 0
+        ? `${mensagemBase} ${classificadosAutomaticamente.alteradas} já foram classificadas automaticamente.`
+        : mensagemBase
+
+    const desejaLimparLista = window.confirm(
+      `${mensagemFinal}\n\n${t?.importacaoConfirmarLimparLista ?? 'Deseja limpar a lista importada agora? Clique em OK para limpar ou em Cancelar para manter e conferir.'}`
+    )
+
+    if (desejaLimparLista) {
+      setImportacaoPreview(null)
+      setImportacaoTextoColado('')
+      setUrlImportacaoPecas('')
     }
-    alert(mensagemBase)
   }, [aplicarRegrasClassificacaoEmLista, importacaoPreview, pecasBiblioteca, t])
 
   const persistPecasBiblioteca = useCallback((next: PecaBiblioteca[]) => {
