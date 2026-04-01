@@ -16483,6 +16483,7 @@ export default function Dashboard() {
     if (isCompactLayout) {
       const keepDrawerOpen = new Set([
         'open-gestao-tecnica', 'open-gestao-custos', 'open-comunicacao-interna',
+        'open-checklist-group',
         'open-gestao-industrial', 'open-gestao-financeira', 'open-extra'
       ])
       if (!keepDrawerOpen.has(action)) setMobileMenuOpen(false)
