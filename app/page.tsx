@@ -15665,8 +15665,19 @@ export default function Dashboard() {
       updatedPecas = [...pecasBiblioteca, novaPeca]
     }
 
-    setPecasBiblioteca(updatedPecas)
-    localStorage.setItem('nonato-pecas-biblioteca', JSON.stringify(updatedPecas))
+    persistPecasBiblioteca(updatedPecas)
+
+    const grupoParaManter = novaPeca.categoriaId || ultimoGrupoSelecionado || ''
+    const subgrupoParaManter =
+      novaPeca.subcategoriaId &&
+      subcategoriasPecas.some((sub) => sub.id === novaPeca.subcategoriaId && sub.categoriaId === grupoParaManter)
+        ? novaPeca.subcategoriaId
+        : ''
+    const categoriaSelecionada = categoriasPecas.find(c => c.id === grupoParaManter)
+    const subcategoriaSelecionada = subcategoriasPecas.find(s => s.id === subgrupoParaManter)
+
+    setUltimoGrupoSelecionado(grupoParaManter)
+    setUltimoSubgrupoSelecionado(subgrupoParaManter)
     
     setShowBibliotecaPecasForm(false)
     setPecaBibliotecaForm({
@@ -15675,10 +15686,10 @@ export default function Dashboard() {
       codigo: '',
       preco: '',
       descricao: '',
-      categoria: '',
-      categoriaId: '',
-      subcategoria: '',
-      subcategoriaId: '',
+      categoria: categoriaSelecionada?.nome || '',
+      categoriaId: grupoParaManter,
+      subcategoria: subcategoriaSelecionada?.nome || '',
+      subcategoriaId: subgrupoParaManter,
       imagem: '',
       dataCriacao: new Date().toISOString()
     })
@@ -15689,6 +15700,8 @@ export default function Dashboard() {
   const handleEditPecaBiblioteca = (peca: PecaBiblioteca) => {
     setEditingPecaBiblioteca(peca)
     setPecaBibliotecaForm({ ...peca })
+    setUltimoGrupoSelecionado(peca.categoriaId || '')
+    setUltimoSubgrupoSelecionado(peca.subcategoriaId || '')
     setShowBibliotecaPecasForm(true)
   }
 
