@@ -4286,23 +4286,6 @@ export default function Dashboard() {
   // Carregar logo, idioma e usuários salvos ao iniciar
   // Mensagens / peças armazém: carregadas em loadAllData com getData (mesmo snapshot que o resto) — não usar loadData em paralelo no arranque (causa resultados diferentes a cada F5).
 
-  // Marcar como lidas as mensagens destinadas ao usuário atual do Hub quando ele abre uma conversa
-  useEffect(() => {
-    const hubIdentity = currentCommunicationIdentity || hubUsuarioAtual
-    if (typeof window === 'undefined' || !hubIdentity || hubDestinatarioSelecionado.length === 0) return
-    const userId = hubIdentity.id
-    const agora = new Date().toISOString()
-    setMensagensComunicacao(prev => {
-      let changed = false
-      const next = prev.map(m => {
-        if (m.destinatarioId === userId && !m.lida) { changed = true; return { ...m, lida: true, dataLeitura: agora } }
-        return m
-      })
-      if (changed) saveData('nonato-mensagens-comunicacao', next)
-      return next
-    })
-  }, [currentCommunicationIdentity?.id, hubUsuarioAtual?.id, hubDestinatarioSelecionado.join(',')])
-
   // Atualizar clientes devedores quando faturas mudarem
   // DESABILITADO TEMPORARIAMENTE para evitar loop infinito
   // A função será chamada manualmente quando necessário (ex: ao salvar fatura)
@@ -16662,6 +16645,23 @@ export default function Dashboard() {
   )
 
   const comunicacaoUnreadCount = mensagensComunicacaoNaoLidas.length
+
+  // Marcar como lidas as mensagens destinadas ao usuário atual do Hub quando ele abre uma conversa
+  useEffect(() => {
+    const hubIdentity = currentCommunicationIdentity || hubUsuarioAtual
+    if (typeof window === 'undefined' || !hubIdentity || hubDestinatarioSelecionado.length === 0) return
+    const userId = hubIdentity.id
+    const agora = new Date().toISOString()
+    setMensagensComunicacao(prev => {
+      let changed = false
+      const next = prev.map(m => {
+        if (m.destinatarioId === userId && !m.lida) { changed = true; return { ...m, lida: true, dataLeitura: agora } }
+        return m
+      })
+      if (changed) saveData('nonato-mensagens-comunicacao', next)
+      return next
+    })
+  }, [currentCommunicationIdentity?.id, hubUsuarioAtual?.id, hubDestinatarioSelecionado.join(',')])
 
   // Função para sair do sistema (fechar aplicação/aba)
   const handleSairDoSistema = useCallback(() => {
