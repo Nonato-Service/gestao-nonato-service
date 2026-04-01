@@ -622,6 +622,16 @@ type PecaBiblioteca = {
   dataCriacao?: string
 }
 
+type RegraClassificacaoPeca = {
+  id: string
+  palavras: string[]
+  categoriaId: string
+  categoria: string
+  subcategoriaId?: string
+  subcategoria?: string
+  createdAt: string
+}
+
 type PasswordEntry = {
   id: string
   tecnicoName: string
@@ -3268,6 +3278,12 @@ export default function Dashboard() {
   const [showNovaSubcategoriaForm, setShowNovaSubcategoriaForm] = useState(false)
   const [novaSubcategoriaNome, setNovaSubcategoriaNome] = useState('')
   const [subcategoriasPecas, setSubcategoriasPecas] = useState<SubcategoriaPeca[]>([])
+  const [selecaoPecasBibliotecaIds, setSelecaoPecasBibliotecaIds] = useState<string[]>([])
+  const [classificacaoLoteCategoriaId, setClassificacaoLoteCategoriaId] = useState('')
+  const [classificacaoLoteSubcategoriaId, setClassificacaoLoteSubcategoriaId] = useState('')
+  const [classificacaoLotePalavras, setClassificacaoLotePalavras] = useState('')
+  const [classificacaoLoteSomenteSemGrupo, setClassificacaoLoteSomenteSemGrupo] = useState(true)
+  const [regrasClassificacaoPecas, setRegrasClassificacaoPecas] = useState<RegraClassificacaoPeca[]>([])
   // Importação de peças por URL (lista de um site)
   const [urlImportacaoPecas, setUrlImportacaoPecas] = useState('')
   const [importacaoUrlLoading, setImportacaoUrlLoading] = useState(false)
@@ -5100,6 +5116,11 @@ export default function Dashboard() {
       const savedSubcategoriasPecas = getData('nonato-subcategorias-pecas')
       if (savedSubcategoriasPecas) {
         setSubcategoriasPecas(savedSubcategoriasPecas)
+      }
+
+      const savedRegrasClassificacaoPecas = getData('nonato-regras-classificacao-pecas')
+      if (Array.isArray(savedRegrasClassificacaoPecas)) {
+        setRegrasClassificacaoPecas(savedRegrasClassificacaoPecas)
       }
 
       // Carregar agendamentos (migra tipo para cores do calendário funcionarem)
@@ -16163,7 +16184,8 @@ export default function Dashboard() {
         dataCriacao: new Date().toISOString()
       })
     })
-    const atualizado = [...existentes, ...novos]
+    const classificadosAutomaticamente = aplicarRegrasClassificacaoEmLista(novos, true)
+    const atualizado = [...existentes, ...classificadosAutomaticamente.lista]
     setPecasBiblioteca(atualizado)
     localStorage.setItem('nonato-pecas-biblioteca', JSON.stringify(atualizado))
     void saveData('nonato-pecas-biblioteca', atualizado)
@@ -16173,8 +16195,279 @@ export default function Dashboard() {
       alert(t?.importacaoSemNovidades ?? 'Nenhuma peça nova para adicionar (itens já existentes na biblioteca).')
       return
     }
-    alert(t?.importacaoSucesso ?? `${novos.length} peça(s) adicionada(s) à biblioteca.`)
-  }, [importacaoPreview, pecasBiblioteca, t])
+    const mensagemBase = t?.importacaoSucesso ?? `${novos.length} peça(s) adicionada(s) à biblioteca.`
+    if (classificadosAutomaticamente.alteradas > 0) {
+      alert(`${mensagemBase} ${classificadosAutomaticamente.alteradas} já foram classificadas automaticamente.`)
+      return
+    }
+    alert(mensagemBase)
+  }, [aplicarRegrasClassificacaoEmLista, importacaoPreview, pecasBiblioteca, t])
+
+  const persistPecasBiblioteca = useCallback((next: PecaBiblioteca[]) => {
+    setPecasBiblioteca(next)
+    localStorage.setItem('nonato-pecas-biblioteca', JSON.stringify(next))
+    void saveData('nonato-pecas-biblioteca', next)
+  }, [])
+
+  const persistRegrasClassificacaoPecas = useCallback((next: RegraClassificacaoPeca[]) => {
+    setRegrasClassificacaoPecas(next)
+    localStorage.setItem('nonato-regras-classificacao-pecas', JSON.stringify(next))
+    void saveData('nonato-regras-classificacao-pecas', next)
+  }, [])
+
+  const aplicarRegrasClassificacaoEmLista = useCallback((lista: PecaBiblioteca[], somenteSemGrupo = true) => {
+    if (regrasClassificacaoPecas.length === 0) return { lista, alteradas: 0 }
+
+    let alteradas = 0
+    const updated = lista.map((peca) => {
+      if (somenteSemGrupo && peca.categoriaId) return peca
+
+      const textoBase = `${peca.nome} ${peca.codigo} ${peca.descricao || ''}`.toLowerCase()
+      const regra = regrasClassificacaoPecas.find((item) =>
+        item.palavras.some((palavra) => textoBase.includes(palavra.toLowerCase()))
+      )
+
+      if (!regra) return peca
+
+      const proximaPeca: PecaBiblioteca = {
+        ...peca,
+        categoriaId: regra.categoriaId,
+        categoria: regra.categoria,
+        subcategoriaId: regra.subcategoriaId || '',
+        subcategoria: regra.subcategoria || ''
+      }
+
+      if (
+        proximaPeca.categoriaId === (peca.categoriaId || '') &&
+        proximaPeca.subcategoriaId === (peca.subcategoriaId || '')
+      ) {
+        return peca
+      }
+
+      alteradas++
+      return proximaPeca
+    })
+
+    return { lista: updated, alteradas }
+  }, [regrasClassificacaoPecas])
+
+  const handleAplicarClassificacaoLote = useCallback((ids: string[]) => {
+    if (ids.length === 0) {
+      alert('Selecione pelo menos uma peça.')
+      return
+    }
+
+    const categoriaIdFinal =
+      classificacaoLoteCategoriaId ||
+      subcategoriasPecas.find((sub) => sub.id === classificacaoLoteSubcategoriaId)?.categoriaId ||
+      ''
+
+    const categoriaSelecionada = categoriasPecas.find((cat) => cat.id === categoriaIdFinal)
+    const subcategoriaSelecionada = subcategoriasPecas.find(
+      (sub) => sub.id === classificacaoLoteSubcategoriaId && sub.categoriaId === categoriaIdFinal
+    )
+
+    if (!categoriaSelecionada && !subcategoriaSelecionada) {
+      alert('Escolha um grupo ou subgrupo para aplicar.')
+      return
+    }
+
+    let alteradas = 0
+    const idSet = new Set(ids)
+    const updated = pecasBiblioteca.map((peca) => {
+      if (!idSet.has(peca.id)) return peca
+      if (classificacaoLoteSomenteSemGrupo && peca.categoriaId) return peca
+
+      const proximaPeca: PecaBiblioteca = {
+        ...peca,
+        categoriaId: categoriaSelecionada?.id || '',
+        categoria: categoriaSelecionada?.nome || '',
+        subcategoriaId: subcategoriaSelecionada?.id || '',
+        subcategoria: subcategoriaSelecionada?.nome || ''
+      }
+
+      if (
+        proximaPeca.categoriaId === (peca.categoriaId || '') &&
+        proximaPeca.subcategoriaId === (peca.subcategoriaId || '')
+      ) {
+        return peca
+      }
+
+      alteradas++
+      return proximaPeca
+    })
+
+    if (alteradas === 0) {
+      alert(classificacaoLoteSomenteSemGrupo
+        ? 'Nenhuma peça precisou mudar. Talvez elas já tenham grupo.'
+        : 'Nenhuma peça precisou mudar.')
+      return
+    }
+
+    persistPecasBiblioteca(updated)
+    setSelecaoPecasBibliotecaIds((prev) => prev.filter((id) => !idSet.has(id)))
+    alert(`${alteradas} peça(s) classificadas em lote.`)
+  }, [
+    categoriasPecas,
+    classificacaoLoteCategoriaId,
+    classificacaoLoteSomenteSemGrupo,
+    classificacaoLoteSubcategoriaId,
+    pecasBiblioteca,
+    persistPecasBiblioteca,
+    subcategoriasPecas
+  ])
+
+  const handleAplicarPalavrasClassificacaoLote = useCallback((ids: string[]) => {
+    if (ids.length === 0) {
+      alert('Selecione ou filtre peças para classificar.')
+      return
+    }
+
+    const palavras = classificacaoLotePalavras
+      .split(/[\n,;]+/)
+      .map((item) => item.trim().toLowerCase())
+      .filter(Boolean)
+
+    if (palavras.length === 0) {
+      alert('Digite uma ou mais palavras-chave.')
+      return
+    }
+
+    const categoriaIdFinal =
+      classificacaoLoteCategoriaId ||
+      subcategoriasPecas.find((sub) => sub.id === classificacaoLoteSubcategoriaId)?.categoriaId ||
+      ''
+
+    const categoriaSelecionada = categoriasPecas.find((cat) => cat.id === categoriaIdFinal)
+    const subcategoriaSelecionada = subcategoriasPecas.find(
+      (sub) => sub.id === classificacaoLoteSubcategoriaId && sub.categoriaId === categoriaIdFinal
+    )
+
+    if (!categoriaSelecionada && !subcategoriaSelecionada) {
+      alert('Escolha o grupo ou subgrupo de destino antes de aplicar por palavras.')
+      return
+    }
+
+    const idSet = new Set(ids)
+    let alteradas = 0
+    const updated = pecasBiblioteca.map((peca) => {
+      if (!idSet.has(peca.id)) return peca
+      if (classificacaoLoteSomenteSemGrupo && peca.categoriaId) return peca
+
+      const textoBase = `${peca.nome} ${peca.codigo} ${peca.descricao || ''}`.toLowerCase()
+      const combina = palavras.some((palavra) => textoBase.includes(palavra))
+      if (!combina) return peca
+
+      const proximaPeca: PecaBiblioteca = {
+        ...peca,
+        categoriaId: categoriaSelecionada?.id || '',
+        categoria: categoriaSelecionada?.nome || '',
+        subcategoriaId: subcategoriaSelecionada?.id || '',
+        subcategoria: subcategoriaSelecionada?.nome || ''
+      }
+
+      if (
+        proximaPeca.categoriaId === (peca.categoriaId || '') &&
+        proximaPeca.subcategoriaId === (peca.subcategoriaId || '')
+      ) {
+        return peca
+      }
+
+      alteradas++
+      return proximaPeca
+    })
+
+    if (alteradas === 0) {
+      alert('Nenhuma peça combinou com as palavras-chave informadas.')
+      return
+    }
+
+    persistPecasBiblioteca(updated)
+    alert(`${alteradas} peça(s) classificadas pelas palavras-chave.`)
+  }, [
+    categoriasPecas,
+    classificacaoLoteCategoriaId,
+    classificacaoLotePalavras,
+    classificacaoLoteSomenteSemGrupo,
+    classificacaoLoteSubcategoriaId,
+    pecasBiblioteca,
+    persistPecasBiblioteca,
+    subcategoriasPecas
+  ])
+
+  const handleSalvarRegraClassificacaoLote = useCallback(() => {
+    const palavras = classificacaoLotePalavras
+      .split(/[\n,;]+/)
+      .map((item) => item.trim().toLowerCase())
+      .filter(Boolean)
+
+    if (palavras.length === 0) {
+      alert('Digite as palavras-chave antes de salvar a regra.')
+      return
+    }
+
+    const categoriaIdFinal =
+      classificacaoLoteCategoriaId ||
+      subcategoriasPecas.find((sub) => sub.id === classificacaoLoteSubcategoriaId)?.categoriaId ||
+      ''
+
+    const categoriaSelecionada = categoriasPecas.find((cat) => cat.id === categoriaIdFinal)
+    const subcategoriaSelecionada = subcategoriasPecas.find(
+      (sub) => sub.id === classificacaoLoteSubcategoriaId && sub.categoriaId === categoriaIdFinal
+    )
+
+    if (!categoriaSelecionada && !subcategoriaSelecionada) {
+      alert('Escolha o destino da regra antes de salvar.')
+      return
+    }
+
+    const regra: RegraClassificacaoPeca = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      palavras,
+      categoriaId: categoriaSelecionada?.id || '',
+      categoria: categoriaSelecionada?.nome || '',
+      subcategoriaId: subcategoriaSelecionada?.id || '',
+      subcategoria: subcategoriaSelecionada?.nome || '',
+      createdAt: new Date().toISOString()
+    }
+
+    persistRegrasClassificacaoPecas([regra, ...regrasClassificacaoPecas])
+    alert('Regra salva. As próximas importações já podem ser classificadas automaticamente.')
+  }, [
+    categoriasPecas,
+    classificacaoLoteCategoriaId,
+    classificacaoLotePalavras,
+    classificacaoLoteSubcategoriaId,
+    persistRegrasClassificacaoPecas,
+    regrasClassificacaoPecas,
+    subcategoriasPecas
+  ])
+
+  const handleAplicarRegrasSalvas = useCallback((ids: string[]) => {
+    if (ids.length === 0) {
+      alert('Selecione ou filtre peças para aplicar as regras salvas.')
+      return
+    }
+
+    const idSet = new Set(ids)
+    const alvo = pecasBiblioteca.filter((peca) => idSet.has(peca.id))
+    const resultado = aplicarRegrasClassificacaoEmLista(alvo, classificacaoLoteSomenteSemGrupo)
+
+    if (resultado.alteradas === 0) {
+      alert('Nenhuma regra combinou com as peças selecionadas.')
+      return
+    }
+
+    const mapaAtualizado = new Map(resultado.lista.map((peca) => [peca.id, peca]))
+    const updated = pecasBiblioteca.map((peca) => mapaAtualizado.get(peca.id) || peca)
+    persistPecasBiblioteca(updated)
+    alert(`${resultado.alteradas} peça(s) classificadas pelas regras salvas.`)
+  }, [
+    aplicarRegrasClassificacaoEmLista,
+    classificacaoLoteSomenteSemGrupo,
+    pecasBiblioteca,
+    persistPecasBiblioteca
+  ])
 
   // ===== Funções para Biblioteca de Grupos/Peças Desmontados =====
   const saveGruposDesmontados = (next: GrupoDesmontado[]) => {
@@ -28112,6 +28405,168 @@ onKeyPress={(e) => {
                 </div>
               ) : (
                 <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', minHeight: '320px' }}>
+                  <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '16px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: '15px', color: '#00ff00', fontWeight: '600' }}>
+                          Classificação rápida em lote
+                        </h3>
+                        <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#b9c3b9' }}>
+                          Selecione peças ou use os filtros acima. Depois aplique grupo/subgrupo de uma vez.
+                        </p>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          onClick={() => setSelecaoPecasBibliotecaIds(pecasFiltradas.map((peca) => peca.id))}
+                          style={{ padding: '8px 12px', fontSize: '12px' }}
+                        >
+                          Selecionar visíveis ({pecasFiltradas.length})
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          onClick={() => setSelecaoPecasBibliotecaIds([])}
+                          style={{ padding: '8px 12px', fontSize: '12px' }}
+                        >
+                          Limpar seleção ({selecaoPecasBibliotecaIds.length})
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', marginBottom: '12px' }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', opacity: 0.85 }}>
+                          Grupo de destino
+                        </label>
+                        <select
+                          value={classificacaoLoteCategoriaId}
+                          onChange={(e) => {
+                            setClassificacaoLoteCategoriaId(e.target.value)
+                            setClassificacaoLoteSubcategoriaId('')
+                          }}
+                          style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
+                        >
+                          <option value="">Escolher grupo</option>
+                          {categoriasPecas.map((cat) => (
+                            <option key={cat.id} value={cat.id}>{cat.nome}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', opacity: 0.85 }}>
+                          Subgrupo de destino
+                        </label>
+                        <select
+                          value={classificacaoLoteSubcategoriaId}
+                          onChange={(e) => {
+                            const subId = e.target.value
+                            const sub = subcategoriasPecas.find((item) => item.id === subId)
+                            if (sub?.categoriaId) setClassificacaoLoteCategoriaId(sub.categoriaId)
+                            setClassificacaoLoteSubcategoriaId(subId)
+                          }}
+                          style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
+                        >
+                          <option value="">Escolher subgrupo</option>
+                          {subcategoriasPecas
+                            .filter((sub) => !classificacaoLoteCategoriaId || sub.categoriaId === classificacaoLoteCategoriaId)
+                            .map((sub) => (
+                              <option key={sub.id} value={sub.id}>{sub.nome}</option>
+                            ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#d7e2d7' }}>
+                        <input
+                          type="checkbox"
+                          checked={classificacaoLoteSomenteSemGrupo}
+                          onChange={(e) => setClassificacaoLoteSomenteSemGrupo(e.target.checked)}
+                        />
+                        Aplicar somente às peças sem grupo
+                      </label>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(260px, 1fr) auto auto', gap: '10px', alignItems: 'end' }}>
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', opacity: 0.85 }}>
+                          Palavras-chave para classificação automática
+                        </label>
+                        <input
+                          type="text"
+                          value={classificacaoLotePalavras}
+                          onChange={(e) => setClassificacaoLotePalavras(e.target.value)}
+                          placeholder="Ex: suction cup, o-ring, cylinder, clamp"
+                          style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() => handleAplicarClassificacaoLote(selecaoPecasBibliotecaIds.length > 0 ? selecaoPecasBibliotecaIds : pecasFiltradas.map((peca) => peca.id))}
+                        style={{ padding: '10px 14px', fontSize: '12px' }}
+                      >
+                        Aplicar em lote
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() => handleAplicarPalavrasClassificacaoLote(selecaoPecasBibliotecaIds.length > 0 ? selecaoPecasBibliotecaIds : pecasFiltradas.map((peca) => peca.id))}
+                        style={{ padding: '10px 14px', fontSize: '12px' }}
+                      >
+                        Aplicar por palavras
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '12px' }}>
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={handleSalvarRegraClassificacaoLote}
+                        style={{ padding: '9px 12px', fontSize: '12px' }}
+                      >
+                        Salvar regra automática
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() => handleAplicarRegrasSalvas(selecaoPecasBibliotecaIds.length > 0 ? selecaoPecasBibliotecaIds : pecasFiltradas.map((peca) => peca.id))}
+                        style={{ padding: '9px 12px', fontSize: '12px' }}
+                      >
+                        Aplicar regras salvas
+                      </button>
+                    </div>
+
+                    {regrasClassificacaoPecas.length > 0 && (
+                      <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ fontSize: '12px', color: '#9fd89f' }}>
+                          Regras salvas ({regrasClassificacaoPecas.length})
+                        </div>
+                        {regrasClassificacaoPecas.slice(0, 6).map((regra) => (
+                          <div
+                            key={regra.id}
+                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', padding: '8px 10px', borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(0,255,0,0.12)', flexWrap: 'wrap' }}
+                          >
+                            <div style={{ fontSize: '12px', color: '#dce7dc' }}>
+                              <strong>{regra.palavras.join(', ')}</strong> -> {[regra.categoria, regra.subcategoria].filter(Boolean).join(' > ')}
+                            </div>
+                            <button
+                              type="button"
+                              className="btn-danger"
+                              onClick={() => persistRegrasClassificacaoPecas(regrasClassificacaoPecas.filter((item) => item.id !== regra.id))}
+                              style={{ padding: '6px 10px', fontSize: '11px' }}
+                            >
+                              Excluir regra
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -28140,6 +28595,7 @@ onKeyPress={(e) => {
                       {pecasFiltradas.map(peca => {
                         const grupoNome = peca.categoriaId ? categoriasPecas.find(c => c.id === peca.categoriaId)?.nome : null
                         const subgrupoNome = peca.subcategoriaId ? subcategoriasPecas.find(s => s.id === peca.subcategoriaId)?.nome : null
+                        const selecionada = selecaoPecasBibliotecaIds.includes(peca.id)
                         return (
                           <div
                             key={peca.id}
@@ -28162,6 +28618,21 @@ onKeyPress={(e) => {
                               e.currentTarget.style.boxShadow = 'none'
                             }}
                           >
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', fontSize: '12px', color: selecionada ? '#00ff00' : '#d6d6d6' }}>
+                              <input
+                                type="checkbox"
+                                checked={selecionada}
+                                onChange={(e) => {
+                                  const isChecked = e.target.checked
+                                  setSelecaoPecasBibliotecaIds((prev) =>
+                                    isChecked
+                                      ? Array.from(new Set([...prev, peca.id]))
+                                      : prev.filter((id) => id !== peca.id)
+                                  )
+                                }}
+                              />
+                              Selecionar para lote
+                            </label>
                             {peca.imagem ? (
                               <div style={{ width: '100%', height: '120px', marginBottom: '12px', borderRadius: '6px', overflow: 'hidden', flexShrink: 0 }}>
                                 <img
