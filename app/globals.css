@@ -333,6 +333,44 @@ body,
   box-shadow: 0 0 0 3px rgba(0, 255, 122, 0.12);
 }
 
+@media (max-width: 768px) {
+  .checklist-editor-root {
+    padding: 8px 6px 14px !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .checklist-editor-hero,
+  .checklist-editor-search-card,
+  .checklist-editor-info-card,
+  .checklist-editor-montagem-card,
+  .checklist-editor-montagem-filter-card {
+    padding: 12px !important;
+    border-radius: 10px !important;
+  }
+
+  .checklist-editor-search-row,
+  .checklist-editor-search-actions,
+  .checklist-editor-montagem-filters {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
+
+  .checklist-editor-search-field,
+  .checklist-editor-montagem-field {
+    min-width: 0 !important;
+    width: 100% !important;
+    flex: 1 1 auto !important;
+  }
+
+  .checklist-editor-info-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+}
+
 .sidebar-organizer-board {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

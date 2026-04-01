@@ -37434,9 +37434,9 @@ A1;Peça exemplo;10'
 
       case 'checklist':
         return (
-          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
+          <div className="checklist-editor-root" style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
             {/* Cabeçalho — padrão Visualizar Equipamento (Equipamentos / Pré-Checklist) */}
-            <div style={{
+            <div className="checklist-editor-hero" style={{
               marginBottom: '20px',
               padding: '16px 24px',
               background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
@@ -37533,7 +37533,7 @@ A1;Peça exemplo;10'
             </div>
 
             {/* Buscador de Equipamentos — padrão Visualizar Equipamento (card #2a2a2a, borda 1px) */}
-            <div style={{ 
+            <div className="checklist-editor-search-card" style={{ 
               marginBottom: '20px',
               padding: '20px', 
               backgroundColor: '#222222', 
@@ -37543,8 +37543,8 @@ A1;Peça exemplo;10'
               <h3 style={{ color: '#00ff00', marginBottom: '20px', fontSize: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 🔍 {safeT?.buscarEquipamento || 'Buscar Equipamento'}
               </h3>
-              <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                <div style={{ flex: '0 0 auto', minWidth: '150px' }}>
+              <div className="checklist-editor-search-row" style={{ display: 'flex', gap: '15px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                <div className="checklist-editor-search-field checklist-editor-search-field--type" style={{ flex: '0 0 auto', minWidth: '150px' }}>
                   <label style={{ display: 'block', color: '#ccc', marginBottom: '8px', fontSize: '14px' }}>
                     {safeT?.buscarPor || 'Buscar por'}
                   </label>
@@ -37570,7 +37570,7 @@ A1;Peça exemplo;10'
                     <option value="numero">{safeT?.numeroSerie || 'Número de Série'}</option>
                   </select>
                 </div>
-                <div style={{ flex: '1 1 300px', minWidth: '200px' }}>
+                <div className="checklist-editor-search-field checklist-editor-search-field--input" style={{ flex: '1 1 300px', minWidth: '200px' }}>
                   <label style={{ display: 'block', color: '#ccc', marginBottom: '8px', fontSize: '14px' }}>
                     {checklistBuscaTipo === 'id' ? (safeT?.idEquipamento || 'ID do Equipamento') : (safeT?.numeroSerie || 'Número de Série')}
                   </label>
@@ -37601,7 +37601,7 @@ A1;Peça exemplo;10'
                     }}
                   />
                 </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div className="checklist-editor-search-actions" style={{ display: 'flex', gap: '10px' }}>
                   <button
                     className="btn-primary"
                     onClick={handleBuscarEquipamentoChecklist}
@@ -37636,7 +37636,7 @@ A1;Peça exemplo;10'
 
             {/* Criação do Checklist — padrão Visualizar Equipamento (card #2a2a2a, borda 1px) */}
             {checklistEquipamentoSelecionado && (
-              <div style={{ 
+              <div className="checklist-editor-info-card" style={{ 
                 marginBottom: '20px',
                 padding: '20px', 
                 backgroundColor: '#222222', 
@@ -37655,7 +37655,7 @@ A1;Peça exemplo;10'
                 }}>
                   📋 {safeT?.criacaoChecklist || 'Criação do Checklist'}
                 </h3>
-                <div style={{ 
+                <div className="checklist-editor-info-grid" style={{ 
                   display: 'grid', 
                   gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
                   gap: '20px',
@@ -37719,7 +37719,7 @@ A1;Peça exemplo;10'
                   }}>
                     {safeT?.detalhesChecklist || 'Detalhes do Checklist'}
                   </h4>
-                  <div style={{ 
+                  <div className="checklist-editor-info-grid" style={{ 
                     display: 'grid', 
                     gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
                     gap: '20px',
@@ -37790,7 +37790,7 @@ A1;Peça exemplo;10'
 
             {/* Gestão de Montagem do Checklist por Grupo */}
             {checklistEquipamentoSelecionado && (
-              <div style={{ 
+              <div className="checklist-editor-montagem-card" style={{ 
                 marginBottom: '30px',
                 padding: '25px', 
                 backgroundColor: '#141414', 
@@ -37802,9 +37802,9 @@ A1;Peça exemplo;10'
                 </h3>
 
                 {/* Selecionar família | Selecionar parente */}
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: '24px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '220px' }}>
+                <div className="checklist-editor-montagem-filter-card" style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <div className="checklist-editor-montagem-filters" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: '24px' }}>
+                    <div className="checklist-editor-montagem-field" style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '220px' }}>
                       <label style={{ fontSize: '13px', fontWeight: 600, color: '#00ff00' }}>{safeT?.selecionarFamilia || 'Selecionar família'}</label>
                       <select
                         value={checklistMontagemFamilia}
@@ -37821,7 +37821,7 @@ A1;Peça exemplo;10'
                         })()}
                       </select>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '220px' }}>
+                    <div className="checklist-editor-montagem-field" style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '220px' }}>
                       <label style={{ fontSize: '13px', fontWeight: 600, color: '#00ff00' }}>{safeT?.selecionarParente || 'Selecionar parente'}</label>
                       <select
                         value={checklistMontagemParenteId}
