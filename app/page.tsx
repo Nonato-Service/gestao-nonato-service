@@ -1178,7 +1178,7 @@ type GrupoChecklist = {
   dataCriacao: string
 }
 
-type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-cadastral' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa'
+type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-cadastral' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'gestao-demos' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa'
 
 type Tab = {
   id: string
@@ -1186,6 +1186,8 @@ type Tab = {
   title: string
   icon?: string
 }
+
+type DemoModuleMode = 'active' | 'teaser' | 'hidden'
 
 type ComprovanteDespesa = {
   id: string
@@ -1323,8 +1325,20 @@ export default function Dashboard() {
   const [isDemoMode, setIsDemoMode] = useState(false)
   const [demoExpired, setDemoExpired] = useState(false)
   const [demoDaysLeft, setDemoDaysLeft] = useState<number | null>(null)
-  const [demoLinkRecipients, setDemoLinkRecipients] = useState<Array<{ id: string; nome: string; email: string; dataEnvio: string; observacoes?: string }>>([])
-  const [demoLinkForm, setDemoLinkForm] = useState({ nome: '', email: '', observacoes: '' })
+  const [demoLinkRecipients, setDemoLinkRecipients] = useState<Array<{
+    id: string
+    nome: string
+    email: string
+    dataEnvio: string
+    dataExpiracao?: string
+    observacoes?: string
+    firstAccessAt?: string
+    lastAccessAt?: string
+    activationCount?: number
+    demoModules?: Record<string, DemoModuleMode>
+    demoPreset?: string
+  }>>([])
+  const [demoModuleConfig, setDemoModuleConfig] = useState<Record<string, DemoModuleMode>>({})
   const [userForm, setUserForm] = useState<UserFormState>(createEmptyUserForm())
   const [sidebarButtons, setSidebarButtons] = useState<SidebarButton[]>([])
   const buttonsInitialized = useRef(false) // Flag para garantir que os botões sejam criados apenas uma vez
@@ -3010,6 +3024,7 @@ export default function Dashboard() {
       'fechamento-relatorios-servicos': t?.fechamentoRelatoriosServicosTitle || 'Fechamento dos Relatórios de Serviços',
       'translator': t?.translator || 'Tradutor de Idiomas',
       'administrador': t?.administrador || 'Administrador',
+      'gestao-demos': 'Gestão de Demonstrações',
       'estado-visual-tecnico': t?.estadoVisualTecnico || 'Estado Visual do Técnico',
       'informacoes-conhecimento-tecnicos': t?.informacoesConhecimentoTecnicosTitle || 'Informações de Conhecimento dos Técnicos',
       'gestao-custos': t?.gestaoCustosTitle || 'Gestão de Custos',
@@ -3046,6 +3061,7 @@ export default function Dashboard() {
   const getBottomTabEmoji = (type: TabType): string => {
     const m: Partial<Record<TabType, string>> = {
       administrador: '⚙️',
+      'gestao-demos': '🎯',
       clientes: '👤',
       fornecedores: '🏭',
       'relatorio-servico': '📋',
@@ -3294,6 +3310,7 @@ export default function Dashboard() {
   const [classificacaoLoteSubcategoriaId, setClassificacaoLoteSubcategoriaId] = useState('')
   const [classificacaoLotePalavras, setClassificacaoLotePalavras] = useState('')
   const [classificacaoLoteSomenteSemGrupo, setClassificacaoLoteSomenteSemGrupo] = useState(true)
+  const [classificacaoLoteExpanded, setClassificacaoLoteExpanded] = useState(true)
   const [regrasClassificacaoPecas, setRegrasClassificacaoPecas] = useState<RegraClassificacaoPeca[]>([])
   // Importação de peças por URL (lista de um site)
   const [urlImportacaoPecas, setUrlImportacaoPecas] = useState('')
@@ -3305,6 +3322,163 @@ export default function Dashboard() {
   const [importacaoGuiaPlataforma, setImportacaoGuiaPlataforma] = useState<'windows' | 'android' | 'ipad'>('windows')
   const [filtroImportacaoPendente, setFiltroImportacaoPendente] = useState<'todos' | 'sem-grupo' | 'sem-subgrupo'>('todos')
   const importacaoFileInputRef = useRef<HTMLInputElement>(null)
+  const [demoStatusFilter, setDemoStatusFilter] = useState<'todos' | 'pendente' | 'ativo' | 'a-expirar' | 'expirado'>('todos')
+
+  const DEMO_DAYS_UI = 15
+  const demoLinkBaseUrl = typeof window !== 'undefined' ? `${window.location.origin}/demo` : '/demo'
+  const DEMO_MODULE_CATALOG = useMemo(
+    () => [
+      { action: 'open-gestores', label: 'Gestores e Técnicos' },
+      { action: 'open-equipamentos', label: 'Equipamentos' },
+      { action: 'open-clientes', label: 'Clientes' },
+      { action: 'open-fornecedores', label: 'Fornecedores' },
+      { action: 'open-relatorio-servico', label: 'Relatório de Serviço' },
+      { action: 'open-biblioteca-pecas', label: 'Biblioteca de Peças' },
+      { action: 'open-importacao-pecas', label: 'Importação de Peças' },
+      { action: 'open-agenda', label: 'Agenda' },
+      { action: 'open-checklist-hub', label: 'Hub do Checklist' },
+      { action: 'open-checklist', label: 'Checklist' },
+      { action: 'open-desmontados', label: 'Desmontados' },
+      { action: 'open-protocolos-servico', label: 'Protocolos de Serviço' },
+      { action: 'open-gestao-industrial', label: 'Gestão Industrial' },
+      { action: 'open-gestao-custos', label: 'Gestão de Custos' },
+      { action: 'open-gestao-financeira', label: 'Gestão Financeira' },
+      { action: 'open-comunicacao-interna', label: 'Comunicação Interna' },
+    ],
+    []
+  )
+  const DEMO_HIDDEN_ACTIONS = useMemo(
+    () => new Set([
+      'open-extra',
+      'open-administrador',
+      'open-cadastro-nonato-service',
+      'open-ficha-cadastral',
+      'open-translator',
+      'open-manual-gestor',
+      'open-gestao-demos',
+    ]),
+    []
+  )
+  const DEMO_ALLOWED_ACTIONS = useMemo(
+    () => new Set([
+      'open-clientes',
+      'open-fornecedores',
+      'open-relatorio-servico',
+      'open-biblioteca-pecas',
+      'open-importacao-pecas',
+      'open-solicitacao-servico-tecnico',
+      'open-agenda',
+      'open-biblioteca-relatorios',
+      'open-checklist-hub',
+      'open-pre-checklist',
+      'open-checklist',
+      'open-familias-grupos',
+      'open-familias-grupos-equipamentos',
+      'open-equipamentos',
+      'open-desmontados',
+      'open-cadastro-servicos',
+      'open-fechamento-relatorios-servicos',
+      'open-gestores',
+      'open-gestao-industrial',
+      'open-gestao-tecnica',
+      'open-ordem-preparacao',
+      'open-formularios-checklist-tecnicos',
+      'open-verificacao-final-entrega',
+      'open-protocolos-servico',
+    ]),
+    []
+  )
+  const isActionVisibleInDemo = useCallback((action: string): boolean => {
+    if (!isDemoMode) return true
+    const configuredMode = demoModuleConfig[action]
+    if (configuredMode) return configuredMode !== 'hidden'
+    return !DEMO_HIDDEN_ACTIONS.has(action)
+  }, [DEMO_HIDDEN_ACTIONS, demoModuleConfig, isDemoMode])
+  const isActionAllowedInDemo = useCallback((action: string): boolean => {
+    if (!isDemoMode) return true
+    const configuredMode = demoModuleConfig[action]
+    if (configuredMode) return configuredMode === 'active'
+    return DEMO_ALLOWED_ACTIONS.has(action)
+  }, [DEMO_ALLOWED_ACTIONS, demoModuleConfig, isDemoMode])
+  const isDemoTeaserAction = useCallback((action: string): boolean => {
+    if (!isDemoMode) return false
+    return isActionVisibleInDemo(action) && !isActionAllowedInDemo(action)
+  }, [isActionAllowedInDemo, isActionVisibleInDemo, isDemoMode])
+  const buildDemoModulesFromPreset = useCallback((preset: 'basic' | 'commercial' | 'technical' | 'partial') => {
+    const activeByPreset: Record<'basic' | 'commercial' | 'technical' | 'partial', string[]> = {
+      basic: ['open-clientes', 'open-fornecedores', 'open-relatorio-servico'],
+      commercial: ['open-clientes', 'open-fornecedores', 'open-relatorio-servico', 'open-biblioteca-pecas', 'open-agenda'],
+      technical: ['open-gestores', 'open-equipamentos', 'open-checklist-hub', 'open-checklist', 'open-desmontados', 'open-protocolos-servico'],
+      partial: ['open-clientes', 'open-fornecedores', 'open-relatorio-servico', 'open-biblioteca-pecas', 'open-importacao-pecas', 'open-agenda', 'open-checklist-hub', 'open-protocolos-servico'],
+    }
+
+    return Object.fromEntries(
+      DEMO_MODULE_CATALOG.map(({ action }) => {
+        if (DEMO_HIDDEN_ACTIONS.has(action)) return [action, 'hidden' as DemoModuleMode]
+        if (activeByPreset[preset].includes(action)) return [action, 'active' as DemoModuleMode]
+        return [action, 'teaser' as DemoModuleMode]
+      })
+    ) as Record<string, DemoModuleMode>
+  }, [DEMO_HIDDEN_ACTIONS, DEMO_MODULE_CATALOG])
+  const getDemoPresetLabel = useCallback((preset?: string) => {
+    switch (preset) {
+      case 'basic':
+        return 'Demo básica'
+      case 'commercial':
+        return 'Demo comercial'
+      case 'technical':
+        return 'Demo técnica'
+      case 'partial':
+        return 'Demo parcial'
+      case 'custom':
+        return 'Personalizada'
+      default:
+        return 'Padrão'
+    }
+  }, [])
+  const createDefaultDemoLinkForm = useCallback(() => {
+    const demoModules = Object.fromEntries(
+      DEMO_MODULE_CATALOG.map(({ action }) => {
+        const mode: DemoModuleMode =
+          DEMO_HIDDEN_ACTIONS.has(action)
+            ? 'hidden'
+            : DEMO_ALLOWED_ACTIONS.has(action)
+              ? 'active'
+              : 'teaser'
+        return [action, mode]
+      })
+    ) as Record<string, DemoModuleMode>
+    return { nome: '', email: '', observacoes: '', demoModules, demoPreset: 'custom' }
+  }, [DEMO_ALLOWED_ACTIONS, DEMO_HIDDEN_ACTIONS, DEMO_MODULE_CATALOG])
+  const [demoLinkForm, setDemoLinkForm] = useState(createDefaultDemoLinkForm)
+  const demoRecipientsComEstado = useMemo(() => {
+    const agora = Date.now()
+    return demoLinkRecipients.map((recipient) => {
+      const link = `${demoLinkBaseUrl}?rid=${encodeURIComponent(recipient.id)}`
+      const dataBaseAtivacao = recipient.firstAccessAt || recipient.dataEnvio
+      const dataBaseMs = new Date(dataBaseAtivacao).getTime()
+      const dataExpiracao =
+        recipient.dataExpiracao ||
+        (dataBaseMs ? new Date(dataBaseMs + DEMO_DAYS_UI * 24 * 60 * 60 * 1000).toISOString() : undefined)
+      const expiracaoMs = dataExpiracao ? new Date(dataExpiracao).getTime() : NaN
+      const diffMs = isNaN(expiracaoMs) ? NaN : expiracaoMs - agora
+      const daysLeft = isNaN(diffMs) ? null : Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
+      const status = !recipient.firstAccessAt
+        ? 'pendente'
+        : (diffMs <= 0 ? 'expirado' : (daysLeft !== null && daysLeft <= 3 ? 'a-expirar' : 'ativo'))
+      return {
+        ...recipient,
+        link,
+        dataExpiracao,
+        daysLeft,
+        status,
+      }
+    }).sort((a, b) => new Date(b.dataEnvio).getTime() - new Date(a.dataEnvio).getTime())
+  }, [DEMO_DAYS_UI, demoLinkBaseUrl, demoLinkRecipients])
+  const demoRecipientsFiltrados = useMemo(() => {
+    if (demoStatusFilter === 'todos') return demoRecipientsComEstado
+    return demoRecipientsComEstado.filter((item) => item.status === demoStatusFilter)
+  }, [demoRecipientsComEstado, demoStatusFilter])
 
   // Estados para Clientes
   const [clientes, setClientes] = useState<Cliente[]>([])
@@ -4273,13 +4447,16 @@ export default function Dashboard() {
     if (typeof window === 'undefined') return
     fetch('/api/demo/status', { credentials: 'include' })
       .then(r => r.json())
-      .then((d: { isDemo: boolean; expired: boolean; daysLeft: number | null }) => {
+      .then((d: { isDemo: boolean; expired: boolean; daysLeft: number | null; demoModules?: Record<string, DemoModuleMode> }) => {
         setIsDemoMode(d.isDemo)
         setDemoExpired(d.expired)
         setDemoDaysLeft(d.daysLeft)
+        setDemoModuleConfig(d.demoModules || {})
         if (d.expired) {
           document.cookie = 'nonato_demo=; path=/; max-age=0'
           document.cookie = 'nonato_demo_start=; path=/; max-age=0'
+          document.cookie = 'nonato_demo_recipient=; path=/; max-age=0'
+          document.cookie = 'nonato_demo_modules=; path=/; max-age=0'
         }
       })
       .catch(() => {})
@@ -13967,6 +14144,48 @@ export default function Dashboard() {
       case 'lista':
         handlePrintRelatorioLista(r);
         break;
+      case 'gestao-demos':
+        return (
+          <div className="admin-shell">
+            <div className="admin-hero">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                  <LogoComponent size="small" />
+                </div>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  <h1 className="admin-hero-title">GESTÃO DE DEMONSTRAÇÕES</h1>
+                  <p className="admin-hero-sub">Controlo comercial da versão demo por cliente</p>
+                </div>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <button
+                    onClick={() => openTab('administrador', getTabTitle('administrador'))}
+                    style={{ padding: '6px 10px', fontSize: '12px', backgroundColor: 'transparent', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', color: '#00ff00', cursor: 'pointer' }}
+                  >
+                    Administrador
+                  </button>
+                  <button
+                    onClick={() => closeTab(activeTabId || '')}
+                    style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'transparent', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', color: '#00ff00', cursor: 'pointer', width: '32px', height: '32px' }}
+                    title={safeT?.voltar || 'Voltar'}
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="admin-quick-nav">
+              <button
+                type="button"
+                onClick={() => openTab('administrador', getTabTitle('administrador'))}
+                style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0, textDecoration: 'underline', font: 'inherit' }}
+              >
+                Voltar ao Administrador
+              </button>
+            </div>
+            {renderGestaoDemosContent(false)}
+          </div>
+        )
+
       default:
         handlePrintRelatorioClassico(r);
     }
@@ -16287,6 +16506,340 @@ export default function Dashboard() {
     return pecasImportadasPendentes
   }, [filtroImportacaoPendente, pecasImportadasPendentes])
 
+  const handleAddDemoRecipient = useCallback(() => {
+    if (!demoLinkForm.nome.trim()) {
+      alert('Indique o nome da pessoa.')
+      return
+    }
+    const dataEnvio = new Date().toISOString()
+    const novo = {
+      id: 'demo-' + Date.now(),
+      nome: demoLinkForm.nome.trim(),
+      email: demoLinkForm.email.trim(),
+      dataEnvio,
+      observacoes: demoLinkForm.observacoes.trim() || undefined,
+      demoModules: demoLinkForm.demoModules,
+      demoPreset: demoLinkForm.demoPreset || 'custom'
+    }
+    const updated = [...demoLinkRecipients, novo]
+    setDemoLinkRecipients(updated)
+    saveData('nonato-demo-link-recipients', updated)
+    setDemoLinkForm(createDefaultDemoLinkForm())
+  }, [createDefaultDemoLinkForm, demoLinkForm, demoLinkRecipients])
+
+  const handleCopyDemoLink = useCallback(async (link?: string) => {
+    const finalLink = link || demoLinkBaseUrl
+    try {
+      await navigator.clipboard.writeText(finalLink)
+      alert('Link copiado: ' + finalLink)
+    } catch {
+      alert('Não foi possível copiar automaticamente. Link: ' + finalLink)
+    }
+  }, [demoLinkBaseUrl])
+
+  const handleDeleteDemoRecipient = useCallback((id: string) => {
+    if (!window.confirm('Remover este registo?')) return
+    const updated = demoLinkRecipients.filter((x) => x.id !== id)
+    setDemoLinkRecipients(updated)
+    saveData('nonato-demo-link-recipients', updated)
+  }, [demoLinkRecipients])
+
+  const handleRenewDemoRecipient = useCallback((id: string) => {
+    if (!window.confirm('Renovar esta demo por mais 15 dias a partir de agora?')) return
+    const agora = new Date().toISOString()
+    const dataExpiracao = new Date(Date.now() + DEMO_DAYS_UI * 24 * 60 * 60 * 1000).toISOString()
+    const updated = demoLinkRecipients.map((item) =>
+      item.id === id
+        ? {
+            ...item,
+            firstAccessAt: agora,
+            lastAccessAt: agora,
+            dataExpiracao,
+          }
+        : item
+    )
+    setDemoLinkRecipients(updated)
+    saveData('nonato-demo-link-recipients', updated)
+  }, [DEMO_DAYS_UI, demoLinkRecipients])
+
+  const handleResetDemoRecipient = useCallback((id: string) => {
+    if (!window.confirm('Resetar esta demo para o estado inicial e aguardar novo primeiro acesso?')) return
+    const updated = demoLinkRecipients.map((item) =>
+      item.id === id
+        ? {
+            ...item,
+            firstAccessAt: undefined,
+            lastAccessAt: undefined,
+            activationCount: 0,
+            dataExpiracao: undefined,
+          }
+        : item
+    )
+    setDemoLinkRecipients(updated)
+    saveData('nonato-demo-link-recipients', updated)
+  }, [demoLinkRecipients])
+
+  const renderGestaoDemosContent = (compact = false) => (
+    <div className="admin-section admin-section--cyan" style={compact ? { marginBottom: '24px' } : undefined}>
+      <h3 className="admin-section-title admin-section-title--cyan">
+        🎯 Gestão de Demonstrações
+      </h3>
+      <p style={{ fontSize: compact ? '12px' : '13px', opacity: 0.8, marginBottom: '15px', lineHeight: 1.5 }}>
+        Área própria para registar clientes em teste, acompanhar primeiro acesso, renovar prazos e reenviar links individuais.
+      </p>
+
+      <div style={{ display: 'grid', gridTemplateColumns: compact ? 'repeat(auto-fit, minmax(120px, 1fr))' : 'repeat(auto-fit, minmax(170px, 1fr))', gap: compact ? '8px' : '10px', marginBottom: '16px' }}>
+        <div style={{ padding: compact ? '10px' : '12px', borderRadius: '8px', background: 'rgba(0,255,255,0.08)', border: '1px solid rgba(0,255,255,0.18)' }}>
+          <strong style={{ display: 'block', fontSize: compact ? '18px' : '22px', color: '#9be7ff' }}>{demoRecipientsComEstado.length}</strong>
+          <span style={{ fontSize: compact ? '11px' : '12px', opacity: 0.78 }}>Demos registadas</span>
+        </div>
+        <div style={{ padding: compact ? '10px' : '12px', borderRadius: '8px', background: 'rgba(140,140,255,0.08)', border: '1px solid rgba(140,140,255,0.18)' }}>
+          <strong style={{ display: 'block', fontSize: compact ? '18px' : '22px', color: '#bdbdff' }}>{demoRecipientsComEstado.filter((item) => item.status === 'pendente').length}</strong>
+          <span style={{ fontSize: compact ? '11px' : '12px', opacity: 0.78 }}>Aguardando entrada</span>
+        </div>
+        <div style={{ padding: compact ? '10px' : '12px', borderRadius: '8px', background: 'rgba(0,255,0,0.08)', border: '1px solid rgba(0,255,0,0.18)' }}>
+          <strong style={{ display: 'block', fontSize: compact ? '18px' : '22px', color: '#7dffb3' }}>{demoRecipientsComEstado.filter((item) => item.status === 'ativo').length}</strong>
+          <span style={{ fontSize: compact ? '11px' : '12px', opacity: 0.78 }}>Ativas</span>
+        </div>
+        <div style={{ padding: compact ? '10px' : '12px', borderRadius: '8px', background: 'rgba(255,180,0,0.08)', border: '1px solid rgba(255,180,0,0.18)' }}>
+          <strong style={{ display: 'block', fontSize: compact ? '18px' : '22px', color: '#ffd36a' }}>{demoRecipientsComEstado.filter((item) => item.status === 'a-expirar').length}</strong>
+          <span style={{ fontSize: compact ? '11px' : '12px', opacity: 0.78 }}>A expirar</span>
+        </div>
+        <div style={{ padding: compact ? '10px' : '12px', borderRadius: '8px', background: 'rgba(255,80,80,0.08)', border: '1px solid rgba(255,80,80,0.18)' }}>
+          <strong style={{ display: 'block', fontSize: compact ? '18px' : '22px', color: '#ff9b9b' }}>{demoRecipientsComEstado.filter((item) => item.status === 'expirado').length}</strong>
+          <span style={{ fontSize: compact ? '11px' : '12px', opacity: 0.78 }}>Expiradas</span>
+        </div>
+      </div>
+
+      <div style={{ marginBottom: '20px', padding: compact ? '12px' : '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+          <input
+            type="text"
+            placeholder="Nome"
+            value={demoLinkForm.nome}
+            onChange={(e) => setDemoLinkForm(f => ({ ...f, nome: e.target.value }))}
+            style={{ flex: 1, minWidth: '120px', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+          />
+          <input
+            type="text"
+            placeholder="Email"
+            value={demoLinkForm.email}
+            onChange={(e) => setDemoLinkForm(f => ({ ...f, email: e.target.value }))}
+            style={{ flex: 1, minWidth: '160px', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+          />
+          <input
+            type="text"
+            placeholder="Observações (opcional)"
+            value={demoLinkForm.observacoes}
+            onChange={(e) => setDemoLinkForm(f => ({ ...f, observacoes: e.target.value }))}
+            style={{ flex: 1, minWidth: '160px', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '10px' }}>
+          <button className="btn-primary" onClick={handleAddDemoRecipient} style={{ padding: '8px 16px' }}>
+            + Adicionar
+          </button>
+          <button
+            className="btn-primary"
+            onClick={() => handleCopyDemoLink()}
+            style={{ padding: '8px 16px', backgroundColor: 'rgba(0, 150, 255, 0.2)', borderColor: '#66b3ff', color: '#66b3ff' }}
+          >
+            📋 Copiar link /demo
+          </button>
+        </div>
+        <div style={{ fontSize: compact ? '11px' : '12px', opacity: 0.72, lineHeight: 1.5 }}>
+          <div><strong>Link base:</strong> {demoLinkBaseUrl}</div>
+          <div><strong>Regra:</strong> a contagem começa quando a pessoa entra na demo e aceita o acesso.</div>
+        </div>
+      </div>
+
+      <div style={{ marginBottom: '20px', padding: compact ? '12px' : '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 180, 255, 0.18)' }}>
+        <div style={{ fontSize: compact ? '12px' : '13px', fontWeight: 700, color: '#8cd8ff', marginBottom: '10px' }}>
+          Módulos da demo
+        </div>
+        <div style={{ fontSize: compact ? '11px' : '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
+          Escolhe agora o comportamento de cada módulo para o link que estás a criar.
+        </div>
+        <div style={{ fontSize: compact ? '11px' : '12px', color: '#d7f4ff', marginBottom: '10px' }}>
+          <strong>Perfil atual:</strong> {getDemoPresetLabel(demoLinkForm.demoPreset)}
+        </div>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '14px' }}>
+          {[
+            { id: 'basic', label: 'Demo básica' },
+            { id: 'commercial', label: 'Demo comercial' },
+            { id: 'technical', label: 'Demo técnica' },
+            { id: 'partial', label: 'Demo parcial' },
+          ].map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              className="btn-primary"
+              onClick={() => setDemoLinkForm((prev) => ({
+                ...prev,
+                demoPreset: preset.id,
+                demoModules: buildDemoModulesFromPreset(preset.id as 'basic' | 'commercial' | 'technical' | 'partial')
+              }))}
+              style={{
+                padding: compact ? '6px 10px' : '8px 12px',
+                fontSize: compact ? '11px' : '12px',
+                backgroundColor: 'rgba(0, 180, 255, 0.14)',
+                borderColor: 'rgba(0, 180, 255, 0.34)',
+                color: '#8cd8ff'
+              }}
+            >
+              {preset.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => setDemoLinkForm(createDefaultDemoLinkForm())}
+            style={{
+              padding: compact ? '6px 10px' : '8px 12px',
+              fontSize: compact ? '11px' : '12px',
+              backgroundColor: 'rgba(255,255,255,0.08)',
+              borderColor: 'rgba(255,255,255,0.16)',
+              color: '#f3f3f3'
+            }}
+          >
+            Restaurar padrão
+          </button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: compact ? '1fr' : 'repeat(auto-fit, minmax(260px, 1fr))', gap: '10px' }}>
+          {DEMO_MODULE_CATALOG.map((module) => (
+            <div key={module.action} style={{ padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ fontSize: compact ? '11px' : '12px', fontWeight: 600, marginBottom: '8px', color: '#f2f2f2' }}>
+                {module.label}
+              </div>
+              <select
+                value={demoLinkForm.demoModules[module.action] || 'teaser'}
+                onChange={(e) => setDemoLinkForm((prev) => ({
+                  ...prev,
+                  demoPreset: 'custom',
+                  demoModules: {
+                    ...prev.demoModules,
+                    [module.action]: e.target.value as DemoModuleMode,
+                  }
+                }))}
+                style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 180, 255, 0.26)', borderRadius: '6px' }}
+              >
+                <option value="active">Ativo</option>
+                <option value="teaser">Mostrar bloqueado</option>
+                <option value="hidden">Esconder</option>
+              </select>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '14px' }}>
+        {[
+          { id: 'todos', label: `Todos (${demoRecipientsComEstado.length})` },
+          { id: 'pendente', label: `Pendentes (${demoRecipientsComEstado.filter((item) => item.status === 'pendente').length})` },
+          { id: 'ativo', label: `Ativos (${demoRecipientsComEstado.filter((item) => item.status === 'ativo').length})` },
+          { id: 'a-expirar', label: `A expirar (${demoRecipientsComEstado.filter((item) => item.status === 'a-expirar').length})` },
+          { id: 'expirado', label: `Expirados (${demoRecipientsComEstado.filter((item) => item.status === 'expirado').length})` },
+        ].map((filter) => (
+          <button
+            key={filter.id}
+            type="button"
+            onClick={() => setDemoStatusFilter(filter.id as typeof demoStatusFilter)}
+            style={{
+              padding: '7px 12px',
+              borderRadius: '999px',
+              border: demoStatusFilter === filter.id ? '1px solid rgba(0,255,140,0.45)' : '1px solid rgba(255,255,255,0.12)',
+              background: demoStatusFilter === filter.id ? 'rgba(0,255,140,0.1)' : 'rgba(255,255,255,0.04)',
+              color: demoStatusFilter === filter.id ? '#7dffb3' : 'rgba(255,255,255,0.82)',
+              fontSize: compact ? '11px' : '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            {filter.label}
+          </button>
+        ))}
+      </div>
+
+      {demoRecipientsComEstado.length === 0 ? (
+        <p style={{ textAlign: 'center', opacity: 0.6, padding: '20px' }}>Nenhuma pessoa registada</p>
+      ) : demoRecipientsFiltrados.length === 0 ? (
+        <p style={{ textAlign: 'center', opacity: 0.6, padding: '20px' }}>Nenhuma demonstração encontrada neste filtro</p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: compact ? '6px' : '10px', maxHeight: compact ? '280px' : 'none', overflowY: compact ? 'auto' : 'visible' }}>
+          {demoRecipientsFiltrados.map((r) => {
+            const badgeStyle =
+              r.status === 'pendente'
+                ? { color: '#bdbdff', border: '1px solid rgba(160,160,255,0.35)', background: 'rgba(120,120,255,0.08)' }
+                : r.status === 'expirado'
+                  ? { color: '#ff9b9b', border: '1px solid rgba(255,120,120,0.35)', background: 'rgba(255,80,80,0.08)' }
+                  : r.status === 'a-expirar'
+                    ? { color: '#ffd36a', border: '1px solid rgba(255,180,0,0.35)', background: 'rgba(255,180,0,0.08)' }
+                    : { color: '#7dffb3', border: '1px solid rgba(0,255,140,0.35)', background: 'rgba(0,255,140,0.08)' }
+            return (
+              <div
+                key={r.id}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: '12px',
+                  flexWrap: 'wrap',
+                  padding: compact ? '10px' : '14px',
+                  backgroundColor: '#222222',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(0, 255, 0, 0.1)'
+                }}
+              >
+                <div style={{ flex: 1, minWidth: compact ? '180px' : '220px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
+                    <strong>{r.nome}</strong>
+                    <span style={{ padding: '3px 8px', borderRadius: '999px', fontSize: compact ? '10px' : '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', ...badgeStyle }}>
+                      {r.status === 'pendente' ? 'Aguardando entrada' : r.status === 'expirado' ? 'Expirado' : r.status === 'a-expirar' ? 'A expirar' : 'Ativo'}
+                    </span>
+                    <span style={{ padding: '3px 8px', borderRadius: '999px', fontSize: compact ? '10px' : '11px', fontWeight: 700, background: 'rgba(0,180,255,0.12)', border: '1px solid rgba(0,180,255,0.28)', color: '#8cd8ff' }}>
+                      {getDemoPresetLabel(r.demoPreset)}
+                    </span>
+                  </div>
+                  {r.email && <span style={{ fontSize: compact ? '11px' : '12px', opacity: 0.8, display: 'block' }}>{r.email}</span>}
+                  <span style={{ fontSize: compact ? '10px' : '11px', opacity: 0.72, display: 'block', marginTop: '6px', lineHeight: 1.5 }}>
+                    Enviado em: {new Date(r.dataEnvio).toLocaleString('pt-BR')}
+                    {r.firstAccessAt ? <> {' • '}Primeiro acesso: {new Date(r.firstAccessAt).toLocaleString('pt-BR')}</> : <> {' • '}Ainda não entrou</>}
+                    {r.dataExpiracao ? <> {' • '}Expira em: {new Date(r.dataExpiracao).toLocaleString('pt-BR')}</> : null}
+                    {' • '}
+                    {r.status === 'pendente'
+                      ? 'A contagem dos 15 dias começa quando o cliente clicar em "Aceitar e entrar"'
+                      : r.status === 'expirado'
+                        ? 'Demo bloqueada'
+                        : `${r.daysLeft} dia${r.daysLeft === 1 ? '' : 's'} restante${r.daysLeft === 1 ? '' : 's'}`}
+                    {typeof r.activationCount === 'number' && r.activationCount > 0 ? ` • acessos: ${r.activationCount}` : ''}
+                    {r.observacoes ? ' • ' + r.observacoes : ''}
+                  </span>
+                  <div style={{ fontSize: compact ? '10px' : '11px', opacity: 0.64, marginTop: '6px', wordBreak: 'break-all' }}>
+                    Link individual: {r.link}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <button className="btn-primary" onClick={() => handleCopyDemoLink(r.link)} style={{ padding: compact ? '4px 8px' : '6px 12px', fontSize: compact ? '11px' : '12px', backgroundColor: 'rgba(0, 150, 255, 0.14)', borderColor: 'rgba(102, 179, 255, 0.45)', color: '#8cc8ff' }}>
+                    Copiar link
+                  </button>
+                  <button className="btn-primary" onClick={() => handleRenewDemoRecipient(r.id)} style={{ padding: compact ? '4px 8px' : '6px 12px', fontSize: compact ? '11px' : '12px', backgroundColor: 'rgba(0,255,140,0.12)', borderColor: 'rgba(0,255,140,0.34)', color: '#7dffb3' }}>
+                    Renovar 15 dias
+                  </button>
+                  <button className="btn-primary" onClick={() => handleResetDemoRecipient(r.id)} style={{ padding: compact ? '4px 8px' : '6px 12px', fontSize: compact ? '11px' : '12px', backgroundColor: 'rgba(255,180,0,0.12)', borderColor: 'rgba(255,180,0,0.34)', color: '#ffd36a' }}>
+                    Resetar demo
+                  </button>
+                  <button className="btn-danger" onClick={() => handleDeleteDemoRecipient(r.id)} style={{ padding: compact ? '4px 8px' : '6px 12px', fontSize: compact ? '11px' : '12px' }}>
+                    Excluir
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+
   function aplicarRegrasClassificacaoEmLista(lista: PecaBiblioteca[], somenteSemGrupo = true) {
     if (regrasClassificacaoPecas.length === 0) return { lista, alteradas: 0 }
 
@@ -16742,6 +17295,10 @@ export default function Dashboard() {
   // Função para lidar com cliques nos botões da sidebar (buttonId opcional: quando dois botões abrem a mesma aba, usar id para só um ficar ativo)
   const handleButtonClick = useCallback((action: string, buttonId?: string) => {
     const groupToggles = ['open-gestao-tecnica', 'open-gestao-custos', 'open-comunicacao-interna', 'open-gestao-industrial', 'open-gestao-financeira', 'open-extra', 'open-biblioteca-hub']
+    if (isDemoTeaserAction(action) && !groupToggles.includes(action)) {
+      window.alert('Este modulo aparece na demonstração apenas como pré-visualização. Para usar esta função, peça a ativação completa.')
+      return
+    }
     if (!groupToggles.includes(action) && !canAccessAction(action)) {
       window.alert('Você não tem permissão para acessar esta função.')
       return
@@ -17039,7 +17596,7 @@ export default function Dashboard() {
       ])
       if (!keepDrawerOpen.has(action)) setMobileMenuOpen(false)
     }
-  }, [expandedGroups, openTab, getTabTitle, canAccessAction, safeT, scrollMainContentToTop, isCompactLayout])
+  }, [expandedGroups, openTab, getTabTitle, canAccessAction, isDemoTeaserAction, safeT, scrollMainContentToTop, isCompactLayout])
 
   // ===== Funções PRE CHECKLIST =====
   const handleBuscarEquipamentoPreCheck = () => {
@@ -19996,6 +20553,22 @@ const nextF = familias.filter(x => x !== f)
               <a href="#admin-backup-seguranca">{safeT?.backupRestore || '▼ Ir para BACKUP E SEGURANÇA (backup do código e restauração)'}</a>
               <span style={{ opacity: 0.35 }}>·</span>
               <a href="#admin-sync-multi">{(safeT as any)?.syncAdminJump || 'Sincronização entre aparelhos'}</a>
+              <span style={{ opacity: 0.35 }}>·</span>
+              <button
+                type="button"
+                onClick={() => openTab('gestao-demos', getTabTitle('gestao-demos'))}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'inherit',
+                  cursor: 'pointer',
+                  padding: 0,
+                  textDecoration: 'underline',
+                  font: 'inherit'
+                }}
+              >
+                Abrir Gestão de Demonstrações
+              </button>
             </div>
 
             {/* Sincronização multi-dispositivo — só neste ecrã, sem barra em cima da app */}
@@ -20048,10 +20621,34 @@ const nextF = familias.filter(x => x !== f)
               <h3 className="admin-section-title admin-section-title--cyan">
                 📤 Controle de Envio do Link para Teste
               </h3>
-              <p style={{ fontSize: '13px', opacity: 0.8, marginBottom: '15px' }}>
-                Registe aqui as pessoas a quem enviou o link de demonstração (15 dias, dados isolados).
+              <p style={{ fontSize: '13px', opacity: 0.8, marginBottom: '15px', lineHeight: 1.5 }}>
+                Registe aqui a quem enviou a demonstração. Cada acesso de demo dura `15 dias`, usa dados isolados e depois fica bloqueado automaticamente.
               </p>
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '10px', marginBottom: '16px' }}>
+                <div style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,255,255,0.08)', border: '1px solid rgba(0,255,255,0.18)' }}>
+                  <strong style={{ display: 'block', fontSize: '22px', color: '#9be7ff' }}>{demoRecipientsComEstado.length}</strong>
+                  <span style={{ fontSize: '12px', opacity: 0.78 }}>Demos registadas</span>
+                </div>
+                <div style={{ padding: '12px', borderRadius: '8px', background: 'rgba(140,140,255,0.08)', border: '1px solid rgba(140,140,255,0.18)' }}>
+                  <strong style={{ display: 'block', fontSize: '22px', color: '#bdbdff' }}>{demoRecipientsComEstado.filter((item) => item.status === 'pendente').length}</strong>
+                  <span style={{ fontSize: '12px', opacity: 0.78 }}>Aguardando entrada</span>
+                </div>
+                <div style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,255,0,0.08)', border: '1px solid rgba(0,255,0,0.18)' }}>
+                  <strong style={{ display: 'block', fontSize: '22px', color: '#7dffb3' }}>{demoRecipientsComEstado.filter((item) => item.status === 'ativo').length}</strong>
+                  <span style={{ fontSize: '12px', opacity: 0.78 }}>Ativas</span>
+                </div>
+                <div style={{ padding: '12px', borderRadius: '8px', background: 'rgba(255,180,0,0.08)', border: '1px solid rgba(255,180,0,0.18)' }}>
+                  <strong style={{ display: 'block', fontSize: '22px', color: '#ffd36a' }}>{demoRecipientsComEstado.filter((item) => item.status === 'a-expirar').length}</strong>
+                  <span style={{ fontSize: '12px', opacity: 0.78 }}>A expirar</span>
+                </div>
+                <div style={{ padding: '12px', borderRadius: '8px', background: 'rgba(255,80,80,0.08)', border: '1px solid rgba(255,80,80,0.18)' }}>
+                  <strong style={{ display: 'block', fontSize: '22px', color: '#ff9b9b' }}>{demoRecipientsComEstado.filter((item) => item.status === 'expirado').length}</strong>
+                  <span style={{ fontSize: '12px', opacity: 0.78 }}>Expiradas</span>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
                   <input
                     type="text"
@@ -20075,83 +20672,159 @@ const nextF = familias.filter(x => x !== f)
                     style={{ flex: 1, minWidth: '160px', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '10px' }}>
                   <button
                     className="btn-primary"
-                    onClick={() => {
-                      if (!demoLinkForm.nome.trim()) {
-                        alert('Indique o nome da pessoa.')
-                        return
-                      }
-                      const novo = {
-                        id: 'demo-' + Date.now(),
-                        nome: demoLinkForm.nome.trim(),
-                        email: demoLinkForm.email.trim(),
-                        dataEnvio: new Date().toISOString(),
-                        observacoes: demoLinkForm.observacoes.trim() || undefined
-                      }
-                      const updated = [...demoLinkRecipients, novo]
-                      setDemoLinkRecipients(updated)
-                      saveData('nonato-demo-link-recipients', updated)
-                      setDemoLinkForm({ nome: '', email: '', observacoes: '' })
-                    }}
+                    onClick={handleAddDemoRecipient}
                     style={{ padding: '8px 16px' }}
                   >
                     + Adicionar
                   </button>
                   <button
                     className="btn-primary"
-                    onClick={() => {
-                      const url = (typeof window !== 'undefined' ? window.location.origin : '') + '/demo'
-                      navigator.clipboard.writeText(url)
-                      alert('Link copiado: ' + url)
-                    }}
+                    onClick={handleCopyDemoLink}
                     style={{ padding: '8px 16px', backgroundColor: 'rgba(0, 150, 255, 0.2)', borderColor: '#66b3ff', color: '#66b3ff' }}
                   >
                     📋 Copiar link /demo
                   </button>
                 </div>
+                <div style={{ fontSize: '12px', opacity: 0.72, lineHeight: 1.5 }}>
+                  <div><strong>Link:</strong> {demoLinkBaseUrl}</div>
+                  <div><strong>Regra:</strong> a contagem começa quando a pessoa entra na demo e aceita o acesso.</div>
+                </div>
               </div>
-              {demoLinkRecipients.length === 0 ? (
+
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '14px' }}>
+                {[
+                  { id: 'todos', label: `Todos (${demoRecipientsComEstado.length})` },
+                  { id: 'pendente', label: `Pendentes (${demoRecipientsComEstado.filter((item) => item.status === 'pendente').length})` },
+                  { id: 'ativo', label: `Ativos (${demoRecipientsComEstado.filter((item) => item.status === 'ativo').length})` },
+                  { id: 'a-expirar', label: `A expirar (${demoRecipientsComEstado.filter((item) => item.status === 'a-expirar').length})` },
+                  { id: 'expirado', label: `Expirados (${demoRecipientsComEstado.filter((item) => item.status === 'expirado').length})` },
+                ].map((filter) => (
+                  <button
+                    key={filter.id}
+                    type="button"
+                    onClick={() => setDemoStatusFilter(filter.id as typeof demoStatusFilter)}
+                    style={{
+                      padding: '7px 12px',
+                      borderRadius: '999px',
+                      border: demoStatusFilter === filter.id ? '1px solid rgba(0,255,140,0.45)' : '1px solid rgba(255,255,255,0.12)',
+                      background: demoStatusFilter === filter.id ? 'rgba(0,255,140,0.1)' : 'rgba(255,255,255,0.04)',
+                      color: demoStatusFilter === filter.id ? '#7dffb3' : 'rgba(255,255,255,0.82)',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+
+              {demoRecipientsComEstado.length === 0 ? (
                 <p style={{ textAlign: 'center', opacity: 0.6, padding: '20px' }}>Nenhuma pessoa registada</p>
+              ) : demoRecipientsFiltrados.length === 0 ? (
+                <p style={{ textAlign: 'center', opacity: 0.6, padding: '20px' }}>Nenhuma demonstração encontrada neste filtro</p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '280px', overflowY: 'auto' }}>
-                  {demoLinkRecipients.map((r) => (
-                    <div
-                      key={r.id}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '12px',
-                        backgroundColor: '#222222',
-                        borderRadius: '6px',
-                        border: '1px solid rgba(0, 255, 0, 0.1)'
-                      }}
-                    >
-                      <div>
-                        <strong style={{ display: 'block', marginBottom: '2px' }}>{r.nome}</strong>
-                        {r.email && <span style={{ fontSize: '12px', opacity: 0.8 }}>{r.email}</span>}
-                        <span style={{ fontSize: '11px', opacity: 0.6, display: 'block', marginTop: '4px' }}>
-                          Enviado em: {new Date(r.dataEnvio).toLocaleString(selectedLanguage === 'pt-BR' ? 'pt-BR' : 'pt-BR')}
-                          {r.observacoes ? ' • ' + r.observacoes : ''}
-                        </span>
-                      </div>
-                      <button
-                        className="btn-danger"
-                        onClick={() => {
-                          if (window.confirm('Remover este registo?')) {
-                            const updated = demoLinkRecipients.filter(x => x.id !== r.id)
-                            setDemoLinkRecipients(updated)
-                            saveData('nonato-demo-link-recipients', updated)
-                          }
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '360px', overflowY: 'auto' }}>
+                  {demoRecipientsFiltrados.map((r) => {
+                    const badgeStyle =
+                      r.status === 'pendente'
+                        ? { color: '#bdbdff', border: '1px solid rgba(160,160,255,0.35)', background: 'rgba(120,120,255,0.08)' }
+                        : r.status === 'expirado'
+                        ? { color: '#ff9b9b', border: '1px solid rgba(255,120,120,0.35)', background: 'rgba(255,80,80,0.08)' }
+                        : r.status === 'a-expirar'
+                          ? { color: '#ffd36a', border: '1px solid rgba(255,180,0,0.35)', background: 'rgba(255,180,0,0.08)' }
+                          : { color: '#7dffb3', border: '1px solid rgba(0,255,140,0.35)', background: 'rgba(0,255,140,0.08)' }
+                    return (
+                      <div
+                        key={r.id}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: '12px',
+                          flexWrap: 'wrap',
+                          padding: '14px',
+                          backgroundColor: '#222222',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(0, 255, 0, 0.1)'
                         }}
-                        style={{ padding: '6px 12px', fontSize: '12px' }}
                       >
-                        Excluir
-                      </button>
-                    </div>
-                  ))}
+                        <div style={{ flex: 1, minWidth: '220px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
+                            <strong>{r.nome}</strong>
+                            <span style={{ padding: '3px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', ...badgeStyle }}>
+                              {r.status === 'pendente' ? 'Aguardando entrada' : r.status === 'expirado' ? 'Expirado' : r.status === 'a-expirar' ? 'A expirar' : 'Ativo'}
+                            </span>
+                          </div>
+                          {r.email && <span style={{ fontSize: '12px', opacity: 0.8, display: 'block' }}>{r.email}</span>}
+                          <span style={{ fontSize: '11px', opacity: 0.72, display: 'block', marginTop: '6px', lineHeight: 1.5 }}>
+                            Enviado em: {new Date(r.dataEnvio).toLocaleString('pt-BR')}
+                            {r.firstAccessAt ? (
+                              <>
+                                {' • '}
+                                Primeiro acesso: {new Date(r.firstAccessAt).toLocaleString('pt-BR')}
+                              </>
+                            ) : (
+                              <>
+                                {' • '}
+                                Ainda não entrou
+                              </>
+                            )}
+                            {r.dataExpiracao ? (
+                              <>
+                                {' • '}
+                                Expira em: {new Date(r.dataExpiracao).toLocaleString('pt-BR')}
+                              </>
+                            ) : null}
+                            {' • '}
+                            {r.status === 'pendente'
+                              ? 'A contagem dos 15 dias começa quando o cliente clicar em "Aceitar e entrar"'
+                              : r.status === 'expirado'
+                                ? 'Demo bloqueada'
+                                : `${r.daysLeft} dia${r.daysLeft === 1 ? '' : 's'} restante${r.daysLeft === 1 ? '' : 's'}`}
+                            {typeof r.activationCount === 'number' && r.activationCount > 0 ? ` • acessos: ${r.activationCount}` : ''}
+                            {r.observacoes ? ' • ' + r.observacoes : ''}
+                          </span>
+                          <div style={{ fontSize: '11px', opacity: 0.64, marginTop: '6px', wordBreak: 'break-all' }}>
+                            Link individual: {r.link}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          <button
+                            className="btn-primary"
+                            onClick={() => handleCopyDemoLink(r.link)}
+                            style={{ padding: '6px 12px', fontSize: '12px', backgroundColor: 'rgba(0, 150, 255, 0.14)', borderColor: 'rgba(102, 179, 255, 0.45)', color: '#8cc8ff' }}
+                          >
+                            Copiar link
+                          </button>
+                          <button
+                            className="btn-primary"
+                            onClick={() => handleRenewDemoRecipient(r.id)}
+                            style={{ padding: '6px 12px', fontSize: '12px', backgroundColor: 'rgba(0,255,140,0.12)', borderColor: 'rgba(0,255,140,0.34)', color: '#7dffb3' }}
+                          >
+                            Renovar 15 dias
+                          </button>
+                          <button
+                            className="btn-primary"
+                            onClick={() => handleResetDemoRecipient(r.id)}
+                            style={{ padding: '6px 12px', fontSize: '12px', backgroundColor: 'rgba(255,180,0,0.12)', borderColor: 'rgba(255,180,0,0.34)', color: '#ffd36a' }}
+                          >
+                            Resetar demo
+                          </button>
+                          <button
+                            className="btn-danger"
+                            onClick={() => handleDeleteDemoRecipient(r.id)}
+                            style={{ padding: '6px 12px', fontSize: '12px' }}
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -28596,16 +29269,39 @@ onKeyPress={(e) => {
               ) : (
                 <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', minHeight: '320px' }}>
                   <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '16px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '12px' }}>
-                      <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'stretch', gap: '12px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setClassificacaoLoteExpanded((prev) => !prev)}
+                        title={classificacaoLoteExpanded ? 'Retrair classificação rápida em lote' : 'Expandir classificação rápida em lote'}
+                        style={{
+                          flex: 1,
+                          minWidth: '220px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: '12px',
+                          padding: '10px 12px',
+                          borderRadius: '10px',
+                          border: '1px solid rgba(0, 255, 0, 0.14)',
+                          background: 'rgba(255,255,255,0.025)',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                        }}
+                      >
+                        <div>
                         <h3 style={{ margin: 0, fontSize: '15px', color: '#00ff00', fontWeight: '600' }}>
                           Classificação rápida em lote
                         </h3>
                         <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#b9c3b9' }}>
                           Selecione peças ou use os filtros acima. Depois aplique grupo/subgrupo de uma vez.
                         </p>
-                      </div>
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        </div>
+                        <span style={{ color: '#00ff00', fontSize: '14px', fontWeight: 700, minWidth: '18px', textAlign: 'center' }}>
+                          {classificacaoLoteExpanded ? '▲' : '▼'}
+                        </span>
+                      </button>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                         <button
                           type="button"
                           className="btn-secondary"
@@ -28625,6 +29321,8 @@ onKeyPress={(e) => {
                       </div>
                     </div>
 
+                    {classificacaoLoteExpanded && (
+                    <>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', marginBottom: '12px' }}>
                       <div>
                         <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', opacity: 0.85 }}>
@@ -28741,7 +29439,7 @@ onKeyPress={(e) => {
                             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', padding: '8px 10px', borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(0,255,0,0.12)', flexWrap: 'wrap' }}
                           >
                             <div style={{ fontSize: '12px', color: '#dce7dc' }}>
-                              <strong>{regra.palavras.join(', ')}</strong> -> {[regra.categoria, regra.subcategoria].filter(Boolean).join(' > ')}
+                              <strong>{regra.palavras.join(', ')}</strong> {'->'} {[regra.categoria, regra.subcategoria].filter(Boolean).join(' > ')}
                             </div>
                             <button
                               type="button"
@@ -28754,6 +29452,8 @@ onKeyPress={(e) => {
                           </div>
                         ))}
                       </div>
+                    )}
+                    </>
                     )}
                   </div>
 
@@ -33024,6 +33724,7 @@ A1;Peça exemplo;10`}
             )}
           </div>
         );
+
         return fechamentoJsx
       }
 
@@ -44675,9 +45376,10 @@ A1;Peça exemplo;10`}
     const normalized = normalizeSidebarButtons(sidebarButtons)
       .filter((btn) => !isSidebarButtonLocked(btn))
       .filter((btn) => (btn.group || getDefaultSidebarGroup(btn.id)) === group)
+      .filter((btn) => isActionVisibleInDemo(btn.action))
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 
-    if (group === 'outros' && !normalized.some((b) => b.id === 'cadastro-nonato-service-default')) {
+    if (!isDemoMode && group === 'outros' && !normalized.some((b) => b.id === 'cadastro-nonato-service-default')) {
       return [cadastroNonatoServiceButton, ...normalized]
     }
     return normalized
@@ -48521,6 +49223,49 @@ A1;Peça exemplo;10`}
             {safeT?.sistemaCompletoGestao || 'Sistema Completo de Gestão'}
           </div>
 
+          <div
+            style={{
+              width: 'min(100%, 920px)',
+              marginBottom: '18px',
+              padding: '16px 18px',
+              borderRadius: '16px',
+              background: 'linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(255,255,255,0.04) 100%)',
+              border: '1px solid rgba(255,215,0,0.26)',
+              boxShadow: '0 12px 34px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.06)',
+              color: 'rgba(255,255,255,0.9)',
+              textAlign: 'center',
+              lineHeight: 1.55,
+              fontSize: 'clamp(11px, 1.5vw, 14px)',
+            }}
+          >
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginBottom: '10px',
+                padding: '6px 10px',
+                borderRadius: '999px',
+                background: 'rgba(255,215,0,0.12)',
+                border: '1px solid rgba(255,215,0,0.25)',
+                color: '#ffd76a',
+                fontSize: 'clamp(10px, 1.2vw, 12px)',
+                fontWeight: 800,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+              }}
+            >
+              <span>■</span>
+              <span>Propriedade Intelectual Protegida</span>
+            </div>
+            <div>
+            Este programa pertence a <strong style={{ color: '#00ff00' }}>NONATO SERVICE</strong> e ao seu criador
+            {' '}<strong style={{ color: '#00ff00' }}>Nonato</strong>. Todos os direitos reservados. A reprodução,
+            cópia, distribuição, modificação, cedência ou utilização sem autorização expressa é proibida e poderá
+            originar medidas legais.
+            </div>
+          </div>
+
           <h1
             style={{
               margin: '0 0 12px 0',
@@ -50275,6 +51020,7 @@ A1;Peça exemplo;10`}
         </div>
 
         {/* Botão CADASTRO DA NONATO SERVICE - Sempre visível acima do EXTRAS */}
+        {!isDemoMode && (
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-cadastro-nonato-service' ? ' sidebar-group-btn-selected' : ''}`}
@@ -50328,8 +51074,10 @@ A1;Peça exemplo;10`}
             </span>
           </button>
         </div>
+        )}
 
         {/* Grupo: EXTRA */}
+        {!isDemoMode && (
         <div style={{ marginTop: '10px', marginBottom: '10px' }}>
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-extra' ? ' sidebar-group-btn-selected' : ''}`}
@@ -50500,9 +51248,10 @@ A1;Peça exemplo;10`}
             </div>
           )}
         </div>
+        )}
 
         {/* Botão ADMINISTRADOR - Sempre visível no final (fallback se a lista estiver vazia após deploy) */}
-        {(() => {
+        {!isDemoMode && (() => {
           const adminBtn = getButtonsByGroup('outros').find(b => b.id === 'administrador-default') || {
             id: 'administrador-default',
             name: 'ADMINISTRADOR',
@@ -51539,7 +52288,27 @@ A1;Peça exemplo;10`}
               <h3 className="admin-section-title admin-section-title--cyan">
                 📤 Controle de Envio do Link para Teste
               </h3>
-              <p style={{ fontSize: '12px', opacity: 0.8, marginBottom: '12px' }}>Registe as pessoas a quem enviou o link de demonstração.</p>
+              <p style={{ fontSize: '12px', opacity: 0.8, marginBottom: '12px', lineHeight: 1.45 }}>
+                Registe as pessoas a quem enviou o link de demonstração e acompanhe se ainda está ativa ou já expirou.
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px', marginBottom: '12px' }}>
+                <div style={{ padding: '10px', borderRadius: '6px', background: 'rgba(0,255,255,0.08)', border: '1px solid rgba(0,255,255,0.18)' }}>
+                  <strong style={{ display: 'block', fontSize: '18px', color: '#9be7ff' }}>{demoRecipientsComEstado.length}</strong>
+                  <span style={{ fontSize: '11px', opacity: 0.75 }}>Registos</span>
+                </div>
+                <div style={{ padding: '10px', borderRadius: '6px', background: 'rgba(140,140,255,0.08)', border: '1px solid rgba(140,140,255,0.18)' }}>
+                  <strong style={{ display: 'block', fontSize: '18px', color: '#bdbdff' }}>{demoRecipientsComEstado.filter((item) => item.status === 'pendente').length}</strong>
+                  <span style={{ fontSize: '11px', opacity: 0.75 }}>Pendentes</span>
+                </div>
+                <div style={{ padding: '10px', borderRadius: '6px', background: 'rgba(0,255,0,0.08)', border: '1px solid rgba(0,255,0,0.18)' }}>
+                  <strong style={{ display: 'block', fontSize: '18px', color: '#7dffb3' }}>{demoRecipientsComEstado.filter((item) => item.status === 'ativo').length}</strong>
+                  <span style={{ fontSize: '11px', opacity: 0.75 }}>Ativas</span>
+                </div>
+                <div style={{ padding: '10px', borderRadius: '6px', background: 'rgba(255,80,80,0.08)', border: '1px solid rgba(255,80,80,0.18)' }}>
+                  <strong style={{ display: 'block', fontSize: '18px', color: '#ff9b9b' }}>{demoRecipientsComEstado.filter((item) => item.status === 'expirado').length}</strong>
+                  <span style={{ fontSize: '11px', opacity: 0.75 }}>Expiradas</span>
+                </div>
+              </div>
               <div style={{ marginBottom: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <input
                   type="text"
@@ -51557,32 +52326,39 @@ A1;Peça exemplo;10`}
                 />
                 <button
                   className="btn-primary"
-                  onClick={() => {
-                    if (!demoLinkForm.nome.trim()) { alert('Indique o nome.'); return }
-                    const novo = { id: 'demo-' + Date.now(), nome: demoLinkForm.nome.trim(), email: demoLinkForm.email.trim(), dataEnvio: new Date().toISOString(), observacoes: demoLinkForm.observacoes.trim() || undefined }
-                    const updated = [...demoLinkRecipients, novo]
-                    setDemoLinkRecipients(updated)
-                    saveData('nonato-demo-link-recipients', updated)
-                    setDemoLinkForm({ nome: '', email: '', observacoes: '' })
-                  }}
+                  onClick={handleAddDemoRecipient}
                   style={{ padding: '8px 16px' }}
                 >
                   + Adicionar
                 </button>
                 <button
                   className="btn-primary"
-                  onClick={() => { const url = (typeof window !== 'undefined' ? window.location.origin : '') + '/demo'; navigator.clipboard.writeText(url); alert('Link copiado!'); }}
+                  onClick={handleCopyDemoLink}
                   style={{ padding: '8px 16px', backgroundColor: 'rgba(0, 150, 255, 0.2)', borderColor: '#66b3ff', color: '#66b3ff' }}
                 >
                   📋 Copiar link
                 </button>
               </div>
-              {demoLinkRecipients.length > 0 && (
+              <div style={{ fontSize: '11px', opacity: 0.72, marginBottom: '10px' }}>
+                Link atual: {demoLinkBaseUrl}
+              </div>
+              {demoRecipientsComEstado.length > 0 && (
                 <div style={{ maxHeight: '180px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {demoLinkRecipients.map((r) => (
+                  {demoRecipientsFiltrados.slice(0, 12).map((r) => (
                     <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', backgroundColor: '#222222', borderRadius: '4px' }}>
-                      <span><strong>{r.nome}</strong>{r.email ? ' • ' + r.email : ''} <span style={{ fontSize: '10px', opacity: 0.6 }}>({new Date(r.dataEnvio).toLocaleDateString('pt-BR')})</span></span>
-                      <button className="btn-danger" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => { if (window.confirm('Remover?')) { const u = demoLinkRecipients.filter(x => x.id !== r.id); setDemoLinkRecipients(u); saveData('nonato-demo-link-recipients', u) } }}>Excluir</button>
+                      <span style={{ lineHeight: 1.35 }}>
+                        <strong>{r.nome}</strong>
+                        {r.email ? ' • ' + r.email : ''}
+                        <span style={{ fontSize: '10px', opacity: 0.7, display: 'block' }}>
+                          {r.status === 'pendente' ? 'Aguardando acesso' : r.status === 'expirado' ? 'Expirado' : r.status === 'a-expirar' ? 'A expirar' : 'Ativo'}
+                          {r.dataExpiracao ? ` • expira em ${new Date(r.dataExpiracao).toLocaleDateString('pt-BR')}` : ''}
+                        </span>
+                      </span>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        <button className="btn-primary" style={{ padding: '4px 8px', fontSize: '11px', backgroundColor: 'rgba(0, 150, 255, 0.2)', borderColor: '#66b3ff', color: '#66b3ff' }} onClick={() => handleCopyDemoLink(r.link)}>Copiar</button>
+                        <button className="btn-primary" style={{ padding: '4px 8px', fontSize: '11px', backgroundColor: 'rgba(0,255,140,0.12)', borderColor: 'rgba(0,255,140,0.34)', color: '#7dffb3' }} onClick={() => handleRenewDemoRecipient(r.id)}>Renovar</button>
+                        <button className="btn-danger" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => handleDeleteDemoRecipient(r.id)}>Excluir</button>
+                      </div>
                     </div>
                   ))}
                 </div>
