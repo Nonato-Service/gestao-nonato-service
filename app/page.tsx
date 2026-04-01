@@ -644,6 +644,7 @@ type PecaBiblioteca = {
   imagem?: string
   quantidade?: number
   dataCriacao?: string
+  importacaoPendente?: boolean
 }
 
 type RegraClassificacaoPeca = {
@@ -3302,6 +3303,7 @@ export default function Dashboard() {
   const [importacaoTextoColado, setImportacaoTextoColado] = useState('')
   const [showImportacaoGuiaHomag, setShowImportacaoGuiaHomag] = useState(false)
   const [importacaoGuiaPlataforma, setImportacaoGuiaPlataforma] = useState<'windows' | 'android' | 'ipad'>('windows')
+  const [filtroImportacaoPendente, setFiltroImportacaoPendente] = useState<'todos' | 'sem-grupo' | 'sem-subgrupo'>('todos')
   const importacaoFileInputRef = useRef<HTMLInputElement>(null)
 
   // Estados para Clientes
@@ -15652,7 +15654,8 @@ export default function Dashboard() {
     const novaPeca: PecaBiblioteca = {
       ...pecaBibliotecaForm,
       id: editingPecaBiblioteca?.id || Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      dataCriacao: editingPecaBiblioteca?.dataCriacao || new Date().toISOString()
+      dataCriacao: editingPecaBiblioteca?.dataCriacao || new Date().toISOString(),
+      importacaoPendente: editingPecaBiblioteca?.importacaoPendente || false
     }
 
     let updatedPecas: PecaBiblioteca[]
@@ -15722,6 +15725,14 @@ export default function Dashboard() {
     return descricaoLimpa
   }
 
+  function normalizePecaBibliotecaImportacaoStatus(peca: PecaBiblioteca): PecaBiblioteca {
+    if (!peca.importacaoPendente) return { ...peca, importacaoPendente: false }
+    if (peca.categoriaId || peca.subcategoriaId) {
+      return { ...peca, importacaoPendente: false }
+    }
+    return { ...peca, importacaoPendente: true }
+  }
+
   // Mapeia objeto genérico (JSON do site) para PecaBiblioteca
   function mapItemToPecaBiblioteca(item: any, index: number): PecaBiblioteca {
     const codigo = String(item?.codigo ?? item?.code ?? item?.partNumber ?? item?.sku ?? item?.numero ?? item?.id ?? item?.ref ?? '').trim()
@@ -15748,6 +15759,7 @@ export default function Dashboard() {
       categoriaId: item?.categoriaId ?? item?.categoryId ?? '',
       subcategoria: item?.subcategoria ?? item?.subcategory ?? '',
       subcategoriaId: item?.subcategoriaId ?? item?.subcategoryId ?? '',
+      importacaoPendente: Boolean(item?.importacaoPendente),
       imagem,
       dataCriacao: new Date().toISOString()
     }
@@ -16193,14 +16205,16 @@ export default function Dashboard() {
       novos.push({
         ...p,
         id: `import-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 9)}`,
-        dataCriacao: new Date().toISOString()
+        dataCriacao: new Date().toISOString(),
+        importacaoPendente: true
       })
     })
     const classificadosAutomaticamente = aplicarRegrasClassificacaoEmLista(novos, true)
     const atualizado = [...existentes, ...classificadosAutomaticamente.lista]
-    setPecasBiblioteca(atualizado)
-    localStorage.setItem('nonato-pecas-biblioteca', JSON.stringify(atualizado))
-    void saveData('nonato-pecas-biblioteca', atualizado)
+    const atualizadoNormalizado = atualizado.map((peca) => normalizePecaBibliotecaImportacaoStatus(peca))
+    setPecasBiblioteca(atualizadoNormalizado)
+    localStorage.setItem('nonato-pecas-biblioteca', JSON.stringify(atualizadoNormalizado))
+    void saveData('nonato-pecas-biblioteca', atualizadoNormalizado)
     if (novos.length === 0) {
       alert(t?.importacaoSemNovidades ?? 'Nenhuma peça nova para adicionar (itens já existentes na biblioteca).')
       return
@@ -16223,9 +16237,10 @@ export default function Dashboard() {
   }, [aplicarRegrasClassificacaoEmLista, importacaoPreview, pecasBiblioteca, t])
 
   const persistPecasBiblioteca = useCallback((next: PecaBiblioteca[]) => {
-    setPecasBiblioteca(next)
-    localStorage.setItem('nonato-pecas-biblioteca', JSON.stringify(next))
-    void saveData('nonato-pecas-biblioteca', next)
+    const normalizado = next.map((peca) => normalizePecaBibliotecaImportacaoStatus(peca))
+    setPecasBiblioteca(normalizado)
+    localStorage.setItem('nonato-pecas-biblioteca', JSON.stringify(normalizado))
+    void saveData('nonato-pecas-biblioteca', normalizado)
   }, [])
 
   const persistRegrasClassificacaoPecas = useCallback((next: RegraClassificacaoPeca[]) => {
@@ -16233,6 +16248,31 @@ export default function Dashboard() {
     localStorage.setItem('nonato-regras-classificacao-pecas', JSON.stringify(next))
     void saveData('nonato-regras-classificacao-pecas', next)
   }, [])
+
+  const pecasImportadasPendentes = useMemo(
+    () => pecasBiblioteca.filter((peca) => peca.importacaoPendente),
+    [pecasBiblioteca]
+  )
+
+  const pecasImportadasSemGrupoCount = useMemo(
+    () => pecasImportadasPendentes.filter((peca) => !peca.categoriaId).length,
+    [pecasImportadasPendentes]
+  )
+
+  const pecasImportadasSemSubgrupoCount = useMemo(
+    () => pecasImportadasPendentes.filter((peca) => !!peca.categoriaId && !peca.subcategoriaId).length,
+    [pecasImportadasPendentes]
+  )
+
+  const pecasImportadasPendentesFiltradas = useMemo(() => {
+    if (filtroImportacaoPendente === 'sem-grupo') {
+      return pecasImportadasPendentes.filter((peca) => !peca.categoriaId)
+    }
+    if (filtroImportacaoPendente === 'sem-subgrupo') {
+      return pecasImportadasPendentes.filter((peca) => !!peca.categoriaId && !peca.subcategoriaId)
+    }
+    return pecasImportadasPendentes
+  }, [filtroImportacaoPendente, pecasImportadasPendentes])
 
   function aplicarRegrasClassificacaoEmLista(lista: PecaBiblioteca[], somenteSemGrupo = true) {
     if (regrasClassificacaoPecas.length === 0) return { lista, alteradas: 0 }
@@ -28168,17 +28208,16 @@ onKeyPress={(e) => {
                         return
                       }
                       if (editingPecaBiblioteca) {
-                        const updated = pecasBiblioteca.map(p => p.id === editingPecaBiblioteca.id ? { ...pecaBibliotecaForm, id: editingPecaBiblioteca.id } : p)
-                        setPecasBiblioteca(updated)
-                        saveData('nonato-pecas-biblioteca', updated)
+                        const updated = pecasBiblioteca.map(p => p.id === editingPecaBiblioteca.id ? { ...pecaBibliotecaForm, id: editingPecaBiblioteca.id, importacaoPendente: p.importacaoPendente || false } : p)
+                        persistPecasBiblioteca(updated)
                       } else {
                         const newPeca: PecaBiblioteca = {
                           ...pecaBibliotecaForm,
-                          id: Date.now().toString()
+                          id: Date.now().toString(),
+                          importacaoPendente: false
                         }
                         const updated = [...pecasBiblioteca, newPeca]
-                        setPecasBiblioteca(updated)
-                        saveData('nonato-pecas-biblioteca', updated)
+                        persistPecasBiblioteca(updated)
                       }
                       setShowBibliotecaPecasForm(false)
                       setEditingPecaBiblioteca(null)
@@ -29328,6 +29367,64 @@ onKeyPress={(e) => {
                     📁 {safeT?.importacaoCarregarFicheiro || 'Carregar ficheiro CSV/JSON'}
                   </button>
                 </div>
+                <div style={{ marginBottom: '20px', padding: '16px', borderRadius: '10px', border: '1px solid rgba(255, 193, 7, 0.35)', backgroundColor: 'rgba(255, 193, 7, 0.08)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                    <div>
+                      <div style={{ color: '#ffdc73', fontSize: '14px', fontWeight: 700 }}>
+                        {(safeT as any)?.importacaoPendentesTitle || 'Fila de importações pendentes'}
+                      </div>
+                      <div style={{ color: '#f5e7b5', fontSize: '12px', marginTop: '4px' }}>
+                        {(safeT as any)?.importacaoPendentesDesc || 'As peças importadas aparecem aqui até receberem grupo ou subgrupo. Depois somem desta lista automaticamente.'}
+                      </div>
+                    </div>
+                    <div style={{ padding: '6px 10px', borderRadius: '999px', backgroundColor: 'rgba(255, 193, 7, 0.18)', color: '#fff2bf', fontSize: '12px', fontWeight: 700 }}>
+                      {pecasImportadasPendentes.length} {(safeT as any)?.importacaoPendentesCount || 'pendente(s)'}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                    <button type="button" className="btn-secondary" onClick={() => setFiltroImportacaoPendente('todos')} style={{ padding: '6px 10px', fontSize: '12px', opacity: filtroImportacaoPendente === 'todos' ? 1 : 0.82 }}>
+                      Todos ({pecasImportadasPendentes.length})
+                    </button>
+                    <button type="button" className="btn-secondary" onClick={() => setFiltroImportacaoPendente('sem-grupo')} style={{ padding: '6px 10px', fontSize: '12px', opacity: filtroImportacaoPendente === 'sem-grupo' ? 1 : 0.82 }}>
+                      Sem grupo ({pecasImportadasSemGrupoCount})
+                    </button>
+                    <button type="button" className="btn-secondary" onClick={() => setFiltroImportacaoPendente('sem-subgrupo')} style={{ padding: '6px 10px', fontSize: '12px', opacity: filtroImportacaoPendente === 'sem-subgrupo' ? 1 : 0.82 }}>
+                      Sem subgrupo ({pecasImportadasSemSubgrupoCount})
+                    </button>
+                  </div>
+                  {pecasImportadasPendentesFiltradas.length === 0 ? (
+                    <div style={{ fontSize: '12px', color: '#d9d9d9', opacity: 0.85 }}>
+                      {(safeT as any)?.importacaoPendentesEmpty || 'Nenhuma peça importada pendente neste momento.'}
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px', maxHeight: '240px', overflowY: 'auto', paddingRight: '4px' }}>
+                      {pecasImportadasPendentesFiltradas.map((peca) => (
+                        <div key={peca.id} style={{ padding: '12px', borderRadius: '8px', backgroundColor: 'rgba(20, 20, 20, 0.9)', border: '1px solid rgba(255, 193, 7, 0.22)' }}>
+                          <div style={{ color: '#ffffff', fontSize: '13px', fontWeight: 700, marginBottom: '4px' }}>{peca.nome}</div>
+                          <div style={{ color: '#ffdc73', fontSize: '12px', marginBottom: '6px' }}>{peca.codigo}</div>
+                          <div style={{ color: '#bfbfbf', fontSize: '12px' }}>
+                            {(safeT as any)?.importacaoPendentesStatus || 'À espera de grupo/subgrupo'}
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              onClick={() => {
+                                setAbaBibliotecaPecas('cadastro')
+                                setEditingPecaBiblioteca(peca)
+                                setPecaBibliotecaForm(peca)
+                                setShowBibliotecaPecasForm(true)
+                              }}
+                              style={{ padding: '6px 10px', fontSize: '12px' }}
+                            >
+                              Editar peça
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 {importacaoUrlError && (
                   <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: 'rgba(200, 60, 60, 0.15)', border: '1px solid rgba(255, 80, 80, 0.5)', borderRadius: '8px', color: '#ff8888' }}>
                     {importacaoUrlError}
@@ -29525,6 +29622,64 @@ A1;Peça exemplo;10'
                     {(safeT as any)?.importacaoAbrirGuia || 'Abrir guia passo a passo'}
                   </button>
                 </div>
+              </div>
+              <div style={{ marginBottom: '20px', padding: '16px', borderRadius: '10px', border: '1px solid rgba(255, 193, 7, 0.35)', backgroundColor: 'rgba(255, 193, 7, 0.08)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                  <div>
+                    <div style={{ color: '#ffdc73', fontSize: '14px', fontWeight: 700 }}>
+                      {(safeT as any)?.importacaoPendentesTitle || 'Fila de importações pendentes'}
+                    </div>
+                    <div style={{ color: '#f5e7b5', fontSize: '12px', marginTop: '4px' }}>
+                      {(safeT as any)?.importacaoPendentesDesc || 'As peças importadas aparecem aqui até receberem grupo ou subgrupo. Depois somem desta lista automaticamente.'}
+                    </div>
+                  </div>
+                  <div style={{ padding: '6px 10px', borderRadius: '999px', backgroundColor: 'rgba(255, 193, 7, 0.18)', color: '#fff2bf', fontSize: '12px', fontWeight: 700 }}>
+                    {pecasImportadasPendentes.length} {(safeT as any)?.importacaoPendentesCount || 'pendente(s)'}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                  <button type="button" className="btn-secondary" onClick={() => setFiltroImportacaoPendente('todos')} style={{ padding: '6px 10px', fontSize: '12px', opacity: filtroImportacaoPendente === 'todos' ? 1 : 0.82 }}>
+                    Todos ({pecasImportadasPendentes.length})
+                  </button>
+                  <button type="button" className="btn-secondary" onClick={() => setFiltroImportacaoPendente('sem-grupo')} style={{ padding: '6px 10px', fontSize: '12px', opacity: filtroImportacaoPendente === 'sem-grupo' ? 1 : 0.82 }}>
+                    Sem grupo ({pecasImportadasSemGrupoCount})
+                  </button>
+                  <button type="button" className="btn-secondary" onClick={() => setFiltroImportacaoPendente('sem-subgrupo')} style={{ padding: '6px 10px', fontSize: '12px', opacity: filtroImportacaoPendente === 'sem-subgrupo' ? 1 : 0.82 }}>
+                    Sem subgrupo ({pecasImportadasSemSubgrupoCount})
+                  </button>
+                </div>
+                {pecasImportadasPendentesFiltradas.length === 0 ? (
+                  <div style={{ fontSize: '12px', color: '#d9d9d9', opacity: 0.85 }}>
+                    {(safeT as any)?.importacaoPendentesEmpty || 'Nenhuma peça importada pendente neste momento.'}
+                  </div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px', maxHeight: '240px', overflowY: 'auto', paddingRight: '4px' }}>
+                    {pecasImportadasPendentesFiltradas.map((peca) => (
+                      <div key={peca.id} style={{ padding: '12px', borderRadius: '8px', backgroundColor: 'rgba(20, 20, 20, 0.9)', border: '1px solid rgba(255, 193, 7, 0.22)' }}>
+                        <div style={{ color: '#ffffff', fontSize: '13px', fontWeight: 700, marginBottom: '4px' }}>{peca.nome}</div>
+                        <div style={{ color: '#ffdc73', fontSize: '12px', marginBottom: '6px' }}>{peca.codigo}</div>
+                        <div style={{ color: '#bfbfbf', fontSize: '12px' }}>
+                          {(safeT as any)?.importacaoPendentesStatus || 'À espera de grupo/subgrupo'}
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={() => {
+                              setEditingPecaBiblioteca(peca)
+                              setPecaBibliotecaForm(peca)
+                              setShowBibliotecaPecasForm(true)
+                              openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
+                            }}
+                            style={{ padding: '6px 10px', fontSize: '12px' }}
+                          >
+                            Editar peça
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '16px' }}>
                 <input
@@ -54158,17 +54313,16 @@ A1;Peça exemplo;10`}
                       return
                     }
                     if (editingPecaBiblioteca) {
-                      const updated = pecasBiblioteca.map(p => p.id === editingPecaBiblioteca.id ? { ...pecaBibliotecaForm, id: editingPecaBiblioteca.id } : p)
-                      setPecasBiblioteca(updated)
-                      saveData('nonato-pecas-biblioteca', updated)
+                      const updated = pecasBiblioteca.map(p => p.id === editingPecaBiblioteca.id ? { ...pecaBibliotecaForm, id: editingPecaBiblioteca.id, importacaoPendente: p.importacaoPendente || false } : p)
+                      persistPecasBiblioteca(updated)
                     } else {
                       const newPeca: PecaBiblioteca = {
                         ...pecaBibliotecaForm,
-                        id: Date.now().toString()
+                        id: Date.now().toString(),
+                        importacaoPendente: false
                       }
                       const updated = [...pecasBiblioteca, newPeca]
-                      setPecasBiblioteca(updated)
-                      saveData('nonato-pecas-biblioteca', updated)
+                      persistPecasBiblioteca(updated)
                     }
                     setShowBibliotecaPecasForm(false)
                     setEditingPecaBiblioteca(null)
