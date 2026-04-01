@@ -16215,7 +16215,7 @@ export default function Dashboard() {
     void saveData('nonato-regras-classificacao-pecas', next)
   }, [])
 
-  const aplicarRegrasClassificacaoEmLista = useCallback((lista: PecaBiblioteca[], somenteSemGrupo = true) => {
+  function aplicarRegrasClassificacaoEmLista(lista: PecaBiblioteca[], somenteSemGrupo = true) {
     if (regrasClassificacaoPecas.length === 0) return { lista, alteradas: 0 }
 
     let alteradas = 0
@@ -16249,7 +16249,7 @@ export default function Dashboard() {
     })
 
     return { lista: updated, alteradas }
-  }, [regrasClassificacaoPecas])
+  }
 
   const handleAplicarClassificacaoLote = useCallback((ids: string[]) => {
     if (ids.length === 0) {
