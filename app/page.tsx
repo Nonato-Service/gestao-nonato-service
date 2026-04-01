@@ -37950,32 +37950,33 @@ A1;Peça exemplo;10'
                                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setChecklistMontagemGruposNecessitamPecas(prev => { const next = new Set(prev); if (next.has(gr.id)) next.delete(gr.id); else next.add(gr.id); return next; }); } }}
                                   style={{
                                     position: 'absolute',
-                                    top: '16px',
-                                    right: '16px',
+                                    top: isCompactLayout ? '10px' : '16px',
+                                    right: isCompactLayout ? '10px' : '16px',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '8px',
+                                    gap: isCompactLayout ? '6px' : '8px',
                                     cursor: 'pointer',
-                                    padding: '8px 12px',
-                                    borderRadius: '8px',
+                                    padding: isCompactLayout ? '5px 8px' : '8px 12px',
+                                    borderRadius: isCompactLayout ? '999px' : '8px',
                                     backgroundColor: 'rgba(0,0,0,0.3)',
-                                    border: '1px solid rgba(0, 255, 0, 0.2)'
+                                    border: '1px solid rgba(0, 255, 0, 0.2)',
+                                    maxWidth: isCompactLayout ? 'calc(100% - 20px)' : 'none'
                                   }}
                                 >
                                   <div style={{
-                                    width: '20px',
-                                    height: '20px',
+                                    width: isCompactLayout ? '16px' : '20px',
+                                    height: isCompactLayout ? '16px' : '20px',
                                     borderRadius: '50%',
-                                    border: '2px solid #00ff00',
+                                    border: isCompactLayout ? '1.5px solid #00ff00' : '2px solid #00ff00',
                                     backgroundColor: checklistMontagemGruposNecessitamPecas.has(gr.id) ? '#00ff00' : 'transparent',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     flexShrink: 0
                                   }}>
-                                    {checklistMontagemGruposNecessitamPecas.has(gr.id) && <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#000' }} />}
+                                    {checklistMontagemGruposNecessitamPecas.has(gr.id) && <span style={{ width: isCompactLayout ? '5px' : '6px', height: isCompactLayout ? '5px' : '6px', borderRadius: '50%', backgroundColor: '#000' }} />}
                                   </div>
-                                  <span style={{ fontSize: '13px', color: checklistMontagemGruposNecessitamPecas.has(gr.id) ? '#00ff00' : '#999', whiteSpace: 'nowrap' }}>{safeT?.necessitaPecasGrupo ?? 'Necessita peças'}</span>
+                                  <span style={{ fontSize: isCompactLayout ? '11px' : '13px', color: checklistMontagemGruposNecessitamPecas.has(gr.id) ? '#00ff00' : '#999', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{safeT?.necessitaPecasGrupo ?? 'Necessita peças'}</span>
                                 </div>
                               </div>
                               <div style={{ padding: '16px' }}>
