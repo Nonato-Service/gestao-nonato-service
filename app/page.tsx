@@ -72,6 +72,8 @@ type User = {
   name: string
   email: string
   role: string
+  linkedProfileType?: 'gestor' | 'tecnico' | ''
+  linkedProfileId?: string
   password?: string
   isAdmin?: boolean
   permissions?: {
@@ -85,6 +87,28 @@ type User = {
     desmontados?: boolean
     cadastroServicos?: boolean
     extras?: boolean
+  }
+}
+
+type UserFormState = {
+  name: string
+  email: string
+  role: string
+  linkedProfileType: 'gestor' | 'tecnico' | ''
+  linkedProfileId: string
+  password: string
+  isAdmin: boolean
+  permissions: {
+    gestores: boolean
+    equipamentos: boolean
+    clientes: boolean
+    fornecedores: boolean
+    relatorioServico: boolean
+    bibliotecaPecas: boolean
+    agenda: boolean
+    desmontados: boolean
+    cadastroServicos: boolean
+    extras: boolean
   }
 }
 
@@ -1198,6 +1222,28 @@ const getLanguages = (t: any): Language[] => {
 }
 
 export default function Dashboard() {
+  const createEmptyUserForm = (): UserFormState => ({
+    name: '',
+    email: '',
+    role: '',
+    linkedProfileType: '',
+    linkedProfileId: '',
+    password: '',
+    isAdmin: false,
+    permissions: {
+      gestores: false,
+      equipamentos: false,
+      clientes: false,
+      fornecedores: false,
+      relatorioServico: false,
+      bibliotecaPecas: false,
+      agenda: false,
+      desmontados: false,
+      cadastroServicos: false,
+      extras: false
+    }
+  })
+
   const [showModal, setShowModal] = useState(false)
   const [showGestoresModal, setShowGestoresModal] = useState(false)
   const [gestoresActiveTab, setGestoresActiveTab] = useState<'gestores' | 'tecnicos'>('gestores')
@@ -1278,43 +1324,7 @@ export default function Dashboard() {
   const [demoDaysLeft, setDemoDaysLeft] = useState<number | null>(null)
   const [demoLinkRecipients, setDemoLinkRecipients] = useState<Array<{ id: string; nome: string; email: string; dataEnvio: string; observacoes?: string }>>([])
   const [demoLinkForm, setDemoLinkForm] = useState({ nome: '', email: '', observacoes: '' })
-  const [userForm, setUserForm] = useState<{
-    name: string
-    email: string
-    role: string
-    password: string
-    isAdmin: boolean
-    permissions: {
-      gestores: boolean
-      equipamentos: boolean
-      clientes: boolean
-      fornecedores: boolean
-      relatorioServico: boolean
-      bibliotecaPecas: boolean
-      agenda: boolean
-      desmontados: boolean
-      cadastroServicos: boolean
-      extras: boolean
-    }
-  }>({ 
-    name: '', 
-    email: '', 
-    role: '', 
-    password: '', 
-    isAdmin: false,
-    permissions: {
-      gestores: false,
-      equipamentos: false,
-      clientes: false,
-      fornecedores: false,
-      relatorioServico: false,
-      bibliotecaPecas: false,
-      agenda: false,
-      desmontados: false,
-      cadastroServicos: false,
-      extras: false
-    }
-  })
+  const [userForm, setUserForm] = useState<UserFormState>(createEmptyUserForm())
   const [sidebarButtons, setSidebarButtons] = useState<SidebarButton[]>([])
   const buttonsInitialized = useRef(false) // Flag para garantir que os botões sejam criados apenas uma vez
   const [showButtonForm, setShowButtonForm] = useState(false)
@@ -4278,8 +4288,9 @@ export default function Dashboard() {
 
   // Marcar como lidas as mensagens destinadas ao usuário atual do Hub quando ele abre uma conversa
   useEffect(() => {
-    if (typeof window === 'undefined' || !hubUsuarioAtual || hubDestinatarioSelecionado.length === 0) return
-    const userId = hubUsuarioAtual.id
+    const hubIdentity = currentCommunicationIdentity || hubUsuarioAtual
+    if (typeof window === 'undefined' || !hubIdentity || hubDestinatarioSelecionado.length === 0) return
+    const userId = hubIdentity.id
     const agora = new Date().toISOString()
     setMensagensComunicacao(prev => {
       let changed = false
@@ -4290,7 +4301,7 @@ export default function Dashboard() {
       if (changed) saveData('nonato-mensagens-comunicacao', next)
       return next
     })
-  }, [hubUsuarioAtual?.id, hubDestinatarioSelecionado.join(',')])
+  }, [currentCommunicationIdentity?.id, hubUsuarioAtual?.id, hubDestinatarioSelecionado.join(',')])
 
   // Atualizar clientes devedores quando faturas mudarem
   // DESABILITADO TEMPORARIAMENTE para evitar loop infinito
@@ -6869,25 +6880,7 @@ export default function Dashboard() {
 
   const handleAddUser = () => {
     setEditingUser(null)
-    setUserForm({ 
-      name: '', 
-      email: '', 
-      role: '', 
-      password: '', 
-      isAdmin: false,
-      permissions: {
-        gestores: false,
-        equipamentos: false,
-        clientes: false,
-        fornecedores: false,
-        relatorioServico: false,
-        bibliotecaPecas: false,
-        agenda: false,
-        desmontados: false,
-        cadastroServicos: false,
-        extras: false
-      }
-    })
+    setUserForm(createEmptyUserForm())
     setShowUserForm(true)
   }
 
@@ -6898,6 +6891,8 @@ export default function Dashboard() {
       name: user.name, 
       email: user.email, 
       role: user.role,
+      linkedProfileType: user.linkedProfileType || '',
+      linkedProfileId: user.linkedProfileId || '',
       password: user.password || '',
       isAdmin: user.isAdmin || false,
       permissions: {
@@ -6943,6 +6938,8 @@ export default function Dashboard() {
           name: userForm.name,
           email: userForm.email,
           role: userForm.role,
+          linkedProfileType: userForm.linkedProfileType || '',
+          linkedProfileId: userForm.linkedProfileId || '',
           password: userForm.password,
           isAdmin: userForm.isAdmin,
           permissions: userForm.permissions
@@ -6954,6 +6951,8 @@ export default function Dashboard() {
         name: userForm.name,
         email: userForm.email,
         role: userForm.role,
+        linkedProfileType: userForm.linkedProfileType || '',
+        linkedProfileId: userForm.linkedProfileId || '',
         password: userForm.password || savedUser.password,
         isAdmin: userForm.isAdmin,
         permissions: userForm.permissions
@@ -6970,6 +6969,8 @@ export default function Dashboard() {
         name: updatedUser.name,
         email: updatedUser.email,
         role: updatedUser.role,
+        linkedProfileType: updatedUser.linkedProfileType || '',
+        linkedProfileId: updatedUser.linkedProfileId || '',
         password: '',
         isAdmin: updatedUser.isAdmin,
         permissions: updatedUser.permissions
@@ -6997,6 +6998,8 @@ export default function Dashboard() {
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,
+        linkedProfileType: newUser.linkedProfileType || '',
+        linkedProfileId: newUser.linkedProfileId || '',
         password: '',
         isAdmin: newUser.isAdmin,
         permissions: newUser.permissions
@@ -15714,6 +15717,27 @@ export default function Dashboard() {
   const normalizeImportKey = (v: any): string =>
     String(v ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
 
+  const buildImportedPecaDescricao = (nome: string, codigo: string, descricaoOriginal: string): string => {
+    const nomeLimpo = String(nome || '').trim()
+    const codigoLimpo = String(codigo || '').trim()
+    const descricaoLimpa = String(descricaoOriginal || '').trim()
+
+    const partesBase = [nomeLimpo, codigoLimpo ? `COD: ${codigoLimpo}` : ''].filter(Boolean)
+    const base = partesBase.join(' | ').trim()
+
+    if (!descricaoLimpa) return base || nomeLimpo || codigoLimpo
+
+    const descricaoNorm = normalizeImportKey(descricaoLimpa)
+    const nomeNorm = normalizeImportKey(nomeLimpo)
+    const codigoNorm = normalizeImportKey(codigoLimpo)
+    const temNome = !!nomeNorm && descricaoNorm.includes(nomeNorm)
+    const temCodigo = !!codigoNorm && descricaoNorm.includes(codigoNorm)
+
+    if (temNome && temCodigo) return descricaoLimpa
+    if (base) return `${base} | ${descricaoLimpa}`
+    return descricaoLimpa
+  }
+
   // Mapeia objeto genérico (JSON do site) para PecaBiblioteca
   const mapItemToPecaBiblioteca = (item: any, index: number): PecaBiblioteca => {
     const codigo = String(item?.codigo ?? item?.code ?? item?.partNumber ?? item?.sku ?? item?.numero ?? item?.id ?? item?.ref ?? '').trim()
@@ -15735,7 +15759,7 @@ export default function Dashboard() {
       nome: nome || codigo || `Peça ${index + 1}`,
       codigo: codigo || `IMP-${index + 1}`,
       preco: preco || '',
-      descricao: descricao || nome,
+      descricao: buildImportedPecaDescricao(nome || codigo || `Peça ${index + 1}`, codigo || `IMP-${index + 1}`, descricao || nome),
       categoria: item?.categoria ?? item?.category ?? item?.grupo ?? '',
       categoriaId: item?.categoriaId ?? item?.categoryId ?? '',
       subcategoria: item?.subcategoria ?? item?.subcategory ?? '',
@@ -15955,8 +15979,12 @@ export default function Dashboard() {
             normalizedLine.split(' ').length <= 3
 
           if (isLikelyCodeLine) {
-            flushCurrent()
-            current = { codigo: normalizedLine }
+            if (current && !current.codigo && (current.nome || current.descricao)) {
+              current.codigo = normalizedLine
+            } else {
+              flushCurrent()
+              current = { codigo: normalizedLine }
+            }
             continue
           }
 
@@ -16541,6 +16569,91 @@ export default function Dashboard() {
     if (val === undefined && permKey === 'relatorioServico') return true
     return Boolean(val)
   }, [loginUser])
+
+  const currentCommunicationIdentity = useMemo(() => {
+    if (!loginUser || loginUser.isAdmin) return null
+    const loginEmail = (loginUser.email || '').trim().toLowerCase()
+    const loginNome = (loginUser.name || '').trim().toLowerCase()
+
+    if (loginUser.linkedProfileType === 'gestor' && loginUser.linkedProfileId) {
+      const gestorById = gestores.find((g) => g.id === loginUser.linkedProfileId)
+      if (gestorById) {
+        return {
+          tipo: 'gestor' as const,
+          id: gestorById.id,
+          nome: gestorById.name,
+          area: gestorById.area || 'assistencia-tecnica',
+          foto: gestorById.photo || ''
+        }
+      }
+    }
+
+    if (loginUser.linkedProfileType === 'tecnico' && loginUser.linkedProfileId) {
+      const tecnicoById = tecnicos.find((t) => t.id === loginUser.linkedProfileId)
+      if (tecnicoById) {
+        return {
+          tipo: 'tecnico' as const,
+          id: tecnicoById.id,
+          nome: tecnicoById.name,
+          area: tecnicoById.type === 'armazem' ? 'armazem' : undefined,
+          foto: tecnicoById.photo || '',
+          tecnicoTipo: tecnicoById.type
+        }
+      }
+    }
+
+    const gestor = gestores.find((g) =>
+      (loginEmail && (g.email || '').trim().toLowerCase() === loginEmail) ||
+      (loginNome && (g.name || '').trim().toLowerCase() === loginNome)
+    )
+    if (gestor) {
+      return {
+        tipo: 'gestor' as const,
+        id: gestor.id,
+        nome: gestor.name,
+        area: gestor.area || 'assistencia-tecnica',
+        foto: gestor.photo || ''
+      }
+    }
+
+    const tecnico = tecnicos.find((t) =>
+      (loginEmail && (t.email || '').trim().toLowerCase() === loginEmail) ||
+      (loginNome && (t.name || '').trim().toLowerCase() === loginNome)
+    )
+    if (tecnico) {
+      return {
+        tipo: 'tecnico' as const,
+        id: tecnico.id,
+        nome: tecnico.name,
+        area: tecnico.type === 'armazem' ? 'armazem' : undefined,
+        foto: tecnico.photo || '',
+        tecnicoTipo: tecnico.type
+      }
+    }
+
+    return null
+  }, [gestores, loginUser, tecnicos])
+
+  const isMensagemVisivelParaUsuario = useCallback((mensagem: MensagemComunicacao): boolean => {
+    if (loginUser?.isAdmin) return true
+    if (!currentCommunicationIdentity) return false
+    return mensagem.remetenteId === currentCommunicationIdentity.id || mensagem.destinatarioId === currentCommunicationIdentity.id
+  }, [currentCommunicationIdentity, loginUser?.isAdmin])
+
+  const mensagensComunicacaoVisiveis = useMemo(
+    () => mensagensComunicacao.filter(isMensagemVisivelParaUsuario),
+    [isMensagemVisivelParaUsuario, mensagensComunicacao]
+  )
+
+  const mensagensComunicacaoNaoLidas = useMemo(
+    () =>
+      mensagensComunicacaoVisiveis.filter(
+        (mensagem) => !!currentCommunicationIdentity && mensagem.destinatarioId === currentCommunicationIdentity.id && !mensagem.lida
+      ),
+    [currentCommunicationIdentity, mensagensComunicacaoVisiveis]
+  )
+
+  const comunicacaoUnreadCount = mensagensComunicacaoNaoLidas.length
 
   // Função para sair do sistema (fechar aplicação/aba)
   const handleSairDoSistema = useCallback(() => {
@@ -19364,7 +19477,7 @@ const nextF = familias.filter(x => x !== f)
       case 'cadastro-nonato-service':
         return (
           <div style={{ padding: '30px', maxWidth: '920px', margin: '0 auto' }}>
-            <div style={{
+            <div className="alerta-mensagens-hero" style={{
               marginBottom: '24px',
               padding: '24px',
               background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.08) 0%, rgba(0, 0, 0, 0.85) 100%)',
@@ -20640,6 +20753,41 @@ const nextF = familias.filter(x => x !== f)
                       style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
+
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Vincular com</label>
+                    <select
+                      value={userForm.linkedProfileType}
+                      onChange={(e) => setUserForm({ ...userForm, linkedProfileType: e.target.value as 'gestor' | 'tecnico' | '', linkedProfileId: '' })}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    >
+                      <option value="">Sem vínculo direto</option>
+                      <option value="gestor">{safeT?.gestores || 'Gestores'}</option>
+                      <option value="tecnico">{safeT?.tecnicos || 'Técnicos'}</option>
+                    </select>
+                  </div>
+
+                  {userForm.linkedProfileType && (
+                    <div style={{ marginBottom: '15px' }}>
+                      <label style={{ display: 'block', marginBottom: '5px' }}>
+                        {userForm.linkedProfileType === 'gestor' ? (safeT?.selecionarGestor || 'Selecionar Gestor') : (safeT?.selecionarTecnico || 'Selecionar Técnico')}
+                      </label>
+                      <select
+                        value={userForm.linkedProfileId}
+                        onChange={(e) => setUserForm({ ...userForm, linkedProfileId: e.target.value })}
+                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      >
+                        <option value="">{userForm.linkedProfileType === 'gestor' ? (safeT?.selecionarGestor || 'Selecionar Gestor') : (safeT?.selecionarTecnico || 'Selecionar Técnico')}</option>
+                        {(userForm.linkedProfileType === 'gestor' ? gestores : tecnicos).map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {'area' in item
+                              ? `${item.name} (${item.area || '-'})`
+                              : `${item.name} (${item.type === 'internal' ? (safeT?.tecnicoInterno || 'Interno') : item.type === 'external' ? (safeT?.tecnicoExterno || 'Externo') : (safeT?.armazem || 'Armazém')})`}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   
                   <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
@@ -20688,25 +20836,7 @@ const nextF = familias.filter(x => x !== f)
                     <button className="btn-primary" onClick={() => { 
                       setShowUserForm(false); 
                       setEditingUser(null); 
-                      setUserForm({ 
-                        name: '', 
-                        email: '', 
-                        role: '', 
-                        password: '', 
-                        isAdmin: false,
-                        permissions: {
-                          gestores: false,
-                          equipamentos: false,
-                          clientes: false,
-                          fornecedores: false,
-                          relatorioServico: false,
-                          bibliotecaPecas: false,
-                          agenda: false,
-                          desmontados: false,
-                          cadastroServicos: false,
-                          extras: false
-                        }
-                      }); 
+                      setUserForm(createEmptyUserForm()); 
                     }} style={{ flex: 1 }}>
                       {safeT?.cancel || 'Cancelar'}
                     </button>
@@ -29777,7 +29907,7 @@ A1;Peça exemplo;10`}
         return (
           <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
             {/* Cabeçalho Profissional */}
-            <div style={{
+            <div className="alerta-mensagens-hero" style={{
               marginBottom: '40px',
               padding: '30px',
               background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
@@ -40064,6 +40194,28 @@ A1;Peça exemplo;10`}
       }
 
       case 'comunicacao-interna':
+        if (currentCommunicationIdentity && !loginUser?.isAdmin) {
+          return (
+            <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto' }}>
+              <div style={{ padding: '28px', borderRadius: '18px', border: '2px solid rgba(0,255,0,0.28)', background: 'linear-gradient(135deg, rgba(0,255,0,0.05) 0%, rgba(0,0,0,0.82) 100%)' }}>
+                <h2 style={{ margin: '0 0 10px 0', color: '#00ff00' }}>{safeT?.comunicacaoInternaTitle || 'COMUNICAÇÃO INTERNA'}</h2>
+                <p style={{ margin: 0, color: '#d0d0d0', fontSize: '14px' }}>
+                  {safeT?.hubComunicacaoDesc || 'Para proteger a privacidade, a comunicação do utilizador logado fica disponível no Hub de Comunicação.'}
+                </p>
+                <div style={{ marginTop: '18px' }}>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => handleButtonClick('open-hub-comunicacao')}
+                    style={{ padding: '10px 16px', fontSize: '13px' }}
+                  >
+                    {safeT?.hubComunicacao || 'HUB DE COMUNICAÇÃO'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        }
         return (
           <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
             {/* Cabeçalho Profissional */}
@@ -40335,10 +40487,17 @@ A1;Peça exemplo;10`}
 
       case 'hub-comunicacao': {
         const gestoresLista = gestores
+        const gestoresAssistencia = gestores.filter(g => (g.area || '') === 'assistencia-tecnica')
+        const gestoresIndustrial = gestores.filter(g => (g.area || '') === 'industrial')
+        const gestoresArmazem = gestores.filter(g => (g.area || '') === 'armazem')
         const todosTecnicos = tecnicos
         const tecnicosInternos = tecnicos.filter(t => t.type === 'internal')
         const tecnicosExternos = tecnicos.filter(t => t.type === 'external')
         const tecnicosArmazem = tecnicos.filter(t => t.type === 'armazem')
+        const getGestorClasse = (gestor?: Gestor | null) =>
+          gestor?.area === 'industrial' ? 'gestor-industrial' : gestor?.area === 'armazem' ? 'armazem' : 'gestor'
+        const getTecnicoClasse = (tecnico?: Tecnico | null) =>
+          tecnico?.type === 'internal' ? 'tecnico-interno' : tecnico?.type === 'external' ? 'tecnico-externo' : 'armazem'
         const getAvatarStyle = (tipo: 'gestor' | 'interno' | 'externo' | 'armazem') => {
           const styles: Record<string, React.CSSProperties> = {
             gestor: { background: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%)' },
@@ -40349,10 +40508,42 @@ A1;Peça exemplo;10`}
           return { width: '44px', height: '44px', borderRadius: '50%', ...styles[tipo], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold', fontSize: '18px', flexShrink: 0 }
         }
         const getTecnicoTipo = (t: Tecnico): 'interno' | 'externo' | 'armazem' => t.type === 'internal' ? 'interno' : t.type === 'external' ? 'externo' : 'armazem'
-        const mensagensDaConversa = hubUsuarioAtual && hubDestinatarioSelecionado.length > 0
+        const renderPessoaAvatar = (
+          nome: string,
+          foto: string | undefined,
+          tipo: 'gestor' | 'interno' | 'externo' | 'armazem'
+        ) => foto ? (
+          <img
+            src={foto}
+            alt={nome}
+            style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.18)', flexShrink: 0 }}
+          />
+        ) : (
+          <div style={getAvatarStyle(tipo)}>{(nome || '?').charAt(0).toUpperCase()}</div>
+        )
+        const usuarioAutenticadoHub = currentCommunicationIdentity
+        const hubUsuarioEfetivo = usuarioAutenticadoHub || hubUsuarioAtual
+        const podeEscolherManualHub = !usuarioAutenticadoHub
+        const totalContatosHub =
+          gestoresAssistencia.length +
+          gestoresIndustrial.length +
+          gestoresArmazem.length +
+          todosTecnicos.length
+        const getUnreadCountFromPessoa = (pessoaId: string) =>
+          hubUsuarioEfetivo
+            ? mensagensComunicacao.filter((m) => m.remetenteId === pessoaId && m.destinatarioId === hubUsuarioEfetivo.id && !m.lida).length
+            : 0
+        const toggleGrupoDestinatarios = (ids: string[]) => {
+          setHubDestinatarioSelecionado((prev) => {
+            const allSelected = ids.every((id) => prev.includes(id))
+            if (allSelected) return prev.filter((id) => !ids.includes(id))
+            return Array.from(new Set([...prev, ...ids]))
+          })
+        }
+        const mensagensDaConversa = hubUsuarioEfetivo && hubDestinatarioSelecionado.length > 0
           ? mensagensComunicacao.filter(m => {
               if (m.remetenteId === 'sistema') return false
-              const eu = hubUsuarioAtual.id
+              const eu = hubUsuarioEfetivo.id
               const dests = hubDestinatarioSelecionado
               const remEu = m.remetenteId === eu
               const destEu = m.destinatarioId === eu
@@ -40362,28 +40553,35 @@ A1;Peça exemplo;10`}
             }).sort((a, b) => new Date(a.dataEnvio).getTime() - new Date(b.dataEnvio).getTime())
           : []
         const enviarMensagemPrivada = () => {
-          if (!hubUsuarioAtual || hubDestinatarioSelecionado.length === 0 || !hubAssunto.trim() || !hubMensagemTexto.trim()) return
+          if (!hubUsuarioEfetivo || hubDestinatarioSelecionado.length === 0 || !hubAssunto.trim() || !hubMensagemTexto.trim()) return
           const assunto = hubAssunto.trim()
           const texto = hubMensagemTexto.trim()
-          const remetenteNome = hubUsuarioAtual.nome
-          const remetenteTipo = hubUsuarioAtual.tipo === 'gestor' ? 'gestor' as const : 'tecnico' as const
-          const remetenteClasse = hubUsuarioAtual.tipo === 'gestor' ? 'gestor' as const : (tecnicos.find(x => x.id === hubUsuarioAtual!.id)?.type === 'internal' ? 'tecnico-interno' as const : 'tecnico-externo' as const)
+          const remetenteNome = hubUsuarioEfetivo.nome
+          const remetenteTipo = hubUsuarioEfetivo.tipo === 'gestor' ? 'gestor' as const : 'tecnico' as const
+          const remetenteClasse =
+            hubUsuarioEfetivo.tipo === 'gestor'
+              ? getGestorClasse(gestores.find(x => x.id === hubUsuarioEfetivo.id))
+              : getTecnicoClasse(tecnicos.find(x => x.id === hubUsuarioEfetivo.id))
           const novas: MensagemComunicacao[] = hubDestinatarioSelecionado.map(destId => {
             const destGestor = gestores.find(g => g.id === destId)
             const destTecnico = tecnicos.find(t => t.id === destId)
+            if (hubUsuarioEfetivo.tipo === 'tecnico' && !destGestor) {
+              throw new Error('Técnicos só podem conversar com gestores.')
+            }
             const destinatarioNome = destGestor?.name ?? destTecnico?.name ?? ''
             const destinatarioTipo = destGestor ? 'gestor' as const : 'tecnico' as const
-            const destinatarioClasse = destGestor ? 'gestor' as const : (destTecnico?.type === 'internal' ? 'tecnico-interno' as const : destTecnico?.type === 'external' ? 'tecnico-externo' as const : 'armazem' as const)
+            const destinatarioClasse = destGestor ? getGestorClasse(destGestor) : getTecnicoClasse(destTecnico)
             return {
               id: `${Date.now()}-${destId}-${Math.random().toString(36).slice(2)}`,
-              remetenteId: hubUsuarioAtual!.id,
+              remetenteId: hubUsuarioEfetivo.id,
               remetenteNome,
               remetenteTipo,
-              remetenteClasse,
+              remetenteClasse: remetenteClasse as any,
+              remetenteArea: hubUsuarioEfetivo.tipo === 'gestor' ? (hubUsuarioEfetivo.area as any) : undefined,
               destinatarioId: destId,
               destinatarioNome,
               destinatarioTipo,
-              destinatarioClasse,
+              destinatarioClasse: destinatarioClasse as any,
               assunto,
               mensagem: texto,
               dataEnvio: new Date().toISOString(),
@@ -40402,8 +40600,8 @@ A1;Peça exemplo;10`}
           setHubDestinatarioSelecionado(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
         }
         return (
-          <div style={{ padding: '30px', maxWidth: '1800px', margin: '0 auto' }}>
-            <div style={{ marginBottom: '24px', padding: '24px', background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.06) 0%, rgba(0, 0, 0, 0.85) 100%)', borderRadius: '20px', border: '2px solid rgba(0, 255, 0, 0.35)' }}>
+          <div className="hub-comunicacao-shell" style={{ padding: isCompactLayout ? '12px 8px' : '30px', maxWidth: '1800px', margin: '0 auto' }}>
+            <div className="hub-comunicacao-hero" style={{ marginBottom: '24px', padding: isCompactLayout ? '18px 14px' : '24px', background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.06) 0%, rgba(0, 0, 0, 0.85) 100%)', borderRadius: '20px', border: '2px solid rgba(0, 255, 0, 0.35)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
@@ -40413,11 +40611,25 @@ A1;Peça exemplo;10`}
                     {safeT?.hubComunicacao || 'HUB DE COMUNICAÇÃO'}
                   </h1>
                   <p style={{ margin: 0, fontSize: '13px', color: '#aaa' }}>
-                    {safeT?.hubComunicacaoDesc || 'Técnico vê só gestores e escolhe um. Gestor vê todos os técnicos e pode escolher um ou vários para conversar.'}
+                    {safeT?.hubComunicacaoDesc || 'Comunicação privada entre gestores e técnicos. Técnico fala só com gestores; gestor pode falar com gestores, técnicos e grupos.'}
                   </p>
+                  <div className="hub-comunicacao-summary">
+                    <div className="hub-comunicacao-stat-card">
+                      <span className="hub-comunicacao-stat-value">{comunicacaoUnreadCount}</span>
+                      <span className="hub-comunicacao-stat-label">{safeT?.mensagensNaoLidas || 'Não lidas'}</span>
+                    </div>
+                    <div className="hub-comunicacao-stat-card">
+                      <span className="hub-comunicacao-stat-value">{mensagensComunicacaoVisiveis.length}</span>
+                      <span className="hub-comunicacao-stat-label">{safeT?.totalMensagens || 'Total'}</span>
+                    </div>
+                    <div className="hub-comunicacao-stat-card">
+                      <span className="hub-comunicacao-stat-value">{totalContatosHub}</span>
+                      <span className="hub-comunicacao-stat-label">{safeT?.comunicacaoInternaTitle || 'Comunicação'}</span>
+                    </div>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  {hubUsuarioAtual && (
+                <div className="hub-comunicacao-hero-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  {podeEscolherManualHub && hubUsuarioEfetivo && (
                     <button onClick={() => { setHubUsuarioAtual(null); setHubDestinatarioSelecionado([]); setHubAssunto(''); setHubMensagemTexto('') }} style={{ padding: '8px 14px', backgroundColor: 'rgba(255,100,100,0.2)', border: '1px solid rgba(255,100,100,0.5)', borderRadius: '8px', color: '#ff9999', cursor: 'pointer', fontSize: '13px' }}>
                       {safeT?.trocarUsuario || 'Trocar quem está usando'}
                     </button>
@@ -40428,20 +40640,31 @@ A1;Peça exemplo;10`}
               </div>
             </div>
 
-            {!hubUsuarioAtual ? (
-              <div style={{ background: '#141414', borderRadius: '16px', border: '2px solid rgba(0, 255, 0, 0.25)', padding: '28px' }}>
+            {!hubUsuarioEfetivo ? (
+              <div className="hub-comunicacao-empty" style={{ background: '#141414', borderRadius: '16px', border: '2px solid rgba(0, 255, 0, 0.25)', padding: isCompactLayout ? '18px 14px' : '28px' }}>
                 <h3 style={{ margin: '0 0 20px 0', color: '#00ff00', fontSize: '18px' }}>
-                  {safeT?.quemEstaUsando || 'Quem está usando agora?'}
+                  {podeEscolherManualHub ? (safeT?.quemEstaUsando || 'Quem está usando agora?') : 'Acesso à comunicação'}
                 </h3>
                 <p style={{ color: '#999', marginBottom: '24px', fontSize: '14px' }}>
-                  {safeT?.selecioneParaVerConversas || 'Selecione um gestor ou um técnico. O técnico só verá gestores para conversar. O gestor verá todos os técnicos e poderá escolher um ou vários.'}
+                  {podeEscolherManualHub
+                    ? (safeT?.selecioneParaVerConversas || 'Selecione um gestor ou um técnico. O técnico só verá gestores para conversar. O gestor verá todos os técnicos e poderá escolher um ou vários.')
+                    : 'Entre com um usuário ligado a um gestor ou técnico para abrir a comunicação privada.'}
                 </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
+                {podeEscolherManualHub && <div className="hub-comunicacao-selector-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
                   <div style={{ marginBottom: '16px' }}>
-                    <div style={{ color: '#66b3ff', fontSize: '12px', fontWeight: 'bold', marginBottom: '10px' }}>{safeT?.gestores || 'GESTORES'}</div>
-                    {gestoresLista.length === 0 ? <div style={{ color: '#888', fontSize: '13px' }}>{safeT?.nenhumGestorArea || 'Nenhum gestor cadastrado'}</div> : gestoresLista.map(g => (
+                    <div style={{ color: '#66b3ff', fontSize: '12px', fontWeight: 'bold', marginBottom: '10px' }}>{safeT?.gestorAssistenciaTecnica || 'Gestor Assistência Técnica'}</div>
+                    {gestoresAssistencia.length === 0 ? <div style={{ color: '#888', fontSize: '13px' }}>{safeT?.nenhumGestorArea || 'Nenhum gestor cadastrado'}</div> : gestoresAssistencia.map(g => (
                       <button key={g.id} type="button" onClick={() => { setHubUsuarioAtual({ tipo: 'gestor', id: g.id, nome: g.name }); setHubDestinatarioSelecionado([]) }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px', borderRadius: '12px', background: 'rgba(102, 179, 255, 0.08)', border: '1px solid rgba(102, 179, 255, 0.25)', marginBottom: '8px', width: '100%', cursor: 'pointer', textAlign: 'left' }}>
-                        <div style={getAvatarStyle('gestor')}>{(g.name || 'G').charAt(0).toUpperCase()}</div>
+                        {renderPessoaAvatar(g.name, g.photo, 'gestor')}
+                        <span style={{ color: '#e0e0e0', fontSize: '14px', fontWeight: '500' }}>{g.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div>
+                    <div style={{ color: '#7dd3fc', fontSize: '12px', fontWeight: 'bold', marginBottom: '10px' }}>{safeT?.gestorIndustrial || 'Gestor Industrial'}</div>
+                    {gestoresIndustrial.map(g => (
+                      <button key={g.id} type="button" onClick={() => { setHubUsuarioAtual({ tipo: 'gestor', id: g.id, nome: g.name }); setHubDestinatarioSelecionado([]) }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px', borderRadius: '12px', background: 'rgba(125, 211, 252, 0.08)', border: '1px solid rgba(125, 211, 252, 0.25)', marginBottom: '8px', width: '100%', cursor: 'pointer', textAlign: 'left' }}>
+                        {renderPessoaAvatar(g.name, g.photo, 'gestor')}
                         <span style={{ color: '#e0e0e0', fontSize: '14px', fontWeight: '500' }}>{g.name}</span>
                       </button>
                     ))}
@@ -40450,7 +40673,7 @@ A1;Peça exemplo;10`}
                     <div style={{ color: '#4ade80', fontSize: '12px', fontWeight: 'bold', marginBottom: '10px' }}>{safeT?.tecnicosInternos || 'TÉCNICOS INTERNOS'}</div>
                     {tecnicosInternos.map(t => (
                       <button key={t.id} type="button" onClick={() => { setHubUsuarioAtual({ tipo: 'tecnico', id: t.id, nome: t.name }); setHubDestinatarioSelecionado([]) }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px', borderRadius: '12px', background: 'rgba(74, 222, 128, 0.08)', border: '1px solid rgba(74, 222, 128, 0.25)', marginBottom: '8px', width: '100%', cursor: 'pointer', textAlign: 'left' }}>
-                        <div style={getAvatarStyle('interno')}>{(t.name || 'T').charAt(0).toUpperCase()}</div>
+                        {renderPessoaAvatar(t.name, t.photo, 'interno')}
                         <span style={{ color: '#e0e0e0', fontSize: '14px', fontWeight: '500' }}>{t.name}</span>
                       </button>
                     ))}
@@ -40459,53 +40682,93 @@ A1;Peça exemplo;10`}
                     <div style={{ color: '#fbbf24', fontSize: '12px', fontWeight: 'bold', marginBottom: '10px' }}>{safeT?.tecnicosExternos || 'TÉCNICOS EXTERNOS'}</div>
                     {tecnicosExternos.map(t => (
                       <button key={t.id} type="button" onClick={() => { setHubUsuarioAtual({ tipo: 'tecnico', id: t.id, nome: t.name }); setHubDestinatarioSelecionado([]) }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.25)', marginBottom: '8px', width: '100%', cursor: 'pointer', textAlign: 'left' }}>
-                        <div style={getAvatarStyle('externo')}>{(t.name || 'T').charAt(0).toUpperCase()}</div>
+                        {renderPessoaAvatar(t.name, t.photo, 'externo')}
                         <span style={{ color: '#e0e0e0', fontSize: '14px', fontWeight: '500' }}>{t.name}</span>
                       </button>
                     ))}
                   </div>
                   <div>
-                    <div style={{ color: '#a78bfa', fontSize: '12px', fontWeight: 'bold', marginBottom: '10px' }}>{safeT?.armazemPecas || 'ARMAZÉM DE PEÇAS'}</div>
-                    {tecnicosArmazem.map(t => (
-                      <button key={t.id} type="button" onClick={() => { setHubUsuarioAtual({ tipo: 'tecnico', id: t.id, nome: t.name }); setHubDestinatarioSelecionado([]) }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px', borderRadius: '12px', background: 'rgba(167, 139, 250, 0.08)', border: '1px solid rgba(167, 139, 250, 0.25)', marginBottom: '8px', width: '100%', cursor: 'pointer', textAlign: 'left' }}>
-                        <div style={getAvatarStyle('armazem')}>{(t.name || 'A').charAt(0).toUpperCase()}</div>
-                        <span style={{ color: '#e0e0e0', fontSize: '14px', fontWeight: '500' }}>{t.name}</span>
+                    <div style={{ color: '#a78bfa', fontSize: '12px', fontWeight: 'bold', marginBottom: '10px' }}>{safeT?.armazemPecas || 'MAGAZINE / ARMAZÉM'}</div>
+                    {[...gestoresArmazem, ...tecnicosArmazem].map((item) => (
+                      'type' in item ? (
+                      <button key={item.id} type="button" onClick={() => { setHubUsuarioAtual({ tipo: 'tecnico', id: item.id, nome: item.name }); setHubDestinatarioSelecionado([]) }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px', borderRadius: '12px', background: 'rgba(167, 139, 250, 0.08)', border: '1px solid rgba(167, 139, 250, 0.25)', marginBottom: '8px', width: '100%', cursor: 'pointer', textAlign: 'left' }}>
+                        {renderPessoaAvatar(item.name, item.photo, 'armazem')}
+                        <span style={{ color: '#e0e0e0', fontSize: '14px', fontWeight: '500' }}>{item.name}</span>
                       </button>
+                      ) : (
+                        <button key={item.id} type="button" onClick={() => { setHubUsuarioAtual({ tipo: 'gestor', id: item.id, nome: item.name }); setHubDestinatarioSelecionado([]) }} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px', borderRadius: '12px', background: 'rgba(167, 139, 250, 0.08)', border: '1px solid rgba(167, 139, 250, 0.25)', marginBottom: '8px', width: '100%', cursor: 'pointer', textAlign: 'left' }}>
+                          {renderPessoaAvatar(item.name, item.photo, 'armazem')}
+                          <span style={{ color: '#e0e0e0', fontSize: '14px', fontWeight: '500' }}>{item.name}</span>
+                        </button>
+                      )
                     ))}
                   </div>
-                </div>
+                </div>}
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 340px) 1fr', gap: '24px', alignItems: 'start' }}>
-                <div style={{ background: '#141414', borderRadius: '16px', border: '2px solid rgba(0, 255, 0, 0.25)', padding: '20px', position: 'sticky', top: '20px' }}>
+              <div className="hub-comunicacao-layout" style={{ display: 'grid', gridTemplateColumns: isCompactLayout ? '1fr' : 'minmax(280px, 340px) 1fr', gap: '24px', alignItems: 'start' }}>
+                <div className="hub-comunicacao-sidebar" style={{ background: '#141414', borderRadius: '16px', border: '2px solid rgba(0, 255, 0, 0.25)', padding: isCompactLayout ? '16px 12px' : '20px', position: isCompactLayout ? 'static' : 'sticky', top: '20px' }}>
                   <div style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)' }}>
                     <span style={{ color: '#888', fontSize: '12px' }}>{safeT?.voceEstaComo || 'Você está como'}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>
-                      <div style={getAvatarStyle(hubUsuarioAtual.tipo === 'gestor' ? 'gestor' : getTecnicoTipo(tecnicos.find(t => t.id === hubUsuarioAtual.id) || { type: 'internal' } as Tecnico))}>
-                        {(hubUsuarioAtual.nome || '?').charAt(0).toUpperCase()}
+                      {renderPessoaAvatar(
+                        hubUsuarioEfetivo.nome,
+                        usuarioAutenticadoHub?.foto || gestores.find((g) => g.id === hubUsuarioEfetivo.id)?.photo || tecnicos.find((t) => t.id === hubUsuarioEfetivo.id)?.photo,
+                        hubUsuarioEfetivo.tipo === 'gestor' ? 'gestor' : getTecnicoTipo(tecnicos.find(t => t.id === hubUsuarioEfetivo.id) || { type: 'internal' } as Tecnico)
+                      )}
+                      <div>
+                        <span style={{ color: '#00ff00', fontWeight: 'bold', fontSize: '15px', display: 'block' }}>{hubUsuarioEfetivo.nome}</span>
+                        <span style={{ color: '#9ca3af', fontSize: '12px' }}>
+                          {hubUsuarioEfetivo.tipo === 'gestor'
+                            ? (gestores.find((g) => g.id === hubUsuarioEfetivo.id)?.area === 'industrial'
+                              ? (safeT?.gestorIndustrial || 'Gestor Industrial')
+                              : gestores.find((g) => g.id === hubUsuarioEfetivo.id)?.area === 'armazem'
+                                ? (safeT?.gestorArmazem || 'Gestor de Armazém')
+                                : (safeT?.gestorAssistenciaTecnica || 'Gestor Assistência Técnica'))
+                            : (tecnicos.find((t) => t.id === hubUsuarioEfetivo.id)?.type === 'external'
+                              ? (safeT?.tecnicoExterno || 'Técnico Externo')
+                              : tecnicos.find((t) => t.id === hubUsuarioEfetivo.id)?.type === 'armazem'
+                                ? (safeT?.armazemPecas || 'Armazém')
+                                : (safeT?.tecnicoInterno || 'Técnico Interno'))}
+                        </span>
                       </div>
-                      <span style={{ color: '#00ff00', fontWeight: 'bold', fontSize: '15px' }}>{hubUsuarioAtual.nome}</span>
                     </div>
                   </div>
-                  {hubUsuarioAtual.tipo === 'tecnico' ? (
+                  {hubUsuarioEfetivo.tipo === 'tecnico' ? (
                     <>
                       <h3 style={{ margin: '0 0 12px 0', color: '#66b3ff', fontSize: '14px' }}>{safeT?.selecioneGestorParaFalar || 'Selecione o gestor para falar (só ele recebe)'}</h3>
-                      {gestoresLista.length === 0 ? <div style={{ color: '#888', fontSize: '13px' }}>{safeT?.nenhumGestorArea || 'Nenhum gestor cadastrado'}</div> : gestoresLista.map(g => {
+                      {[{ titulo: safeT?.gestorAssistenciaTecnica || 'Gestor Assistência Técnica', itens: gestoresAssistencia }, { titulo: safeT?.gestorIndustrial || 'Gestor Industrial', itens: gestoresIndustrial }, { titulo: safeT?.gestorArmazem || 'Gestor de Armazém', itens: gestoresArmazem }].map((grupo) => (
+                        <div key={grupo.titulo} style={{ marginBottom: '12px' }}>
+                          <div style={{ color: '#9ca3af', fontSize: '11px', fontWeight: 'bold', marginBottom: '8px' }}>{grupo.titulo}</div>
+                          {grupo.itens.map(g => {
                         const sel = hubDestinatarioSelecionado.includes(g.id)
+                        const unreadCount = getUnreadCountFromPessoa(g.id)
                         return (
-                          <button key={g.id} type="button" onClick={() => setHubDestinatarioSelecionado(sel ? [] : [g.id])} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderRadius: '12px', marginBottom: '8px', width: '100%', cursor: 'pointer', textAlign: 'left', border: sel ? '2px solid #00ff00' : '1px solid rgba(102, 179, 255, 0.2)', background: sel ? 'rgba(0, 255, 0, 0.1)' : 'rgba(102, 179, 255, 0.06)' }}>
-                            <div style={getAvatarStyle('gestor')}>{(g.name || 'G').charAt(0).toUpperCase()}</div>
-                            <span style={{ color: '#e0e0e0', fontSize: '14px', fontWeight: '500' }}>{g.name}</span>
+                          <button className={`hub-comunicacao-person-btn hub-comunicacao-person-btn--gestor${sel ? ' hub-comunicacao-person-btn-selected' : ''}`} key={g.id} type="button" onClick={() => setHubDestinatarioSelecionado(sel ? [] : [g.id])} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderRadius: '12px', marginBottom: '8px', width: '100%', cursor: 'pointer', textAlign: 'left', border: sel ? '2px solid #00ff00' : '1px solid rgba(102, 179, 255, 0.2)', background: sel ? 'rgba(0, 255, 0, 0.1)' : 'rgba(102, 179, 255, 0.06)' }}>
+                            {renderPessoaAvatar(g.name, g.photo, 'gestor')}
+                            <span style={{ color: '#e0e0e0', fontSize: '14px', fontWeight: '500', flex: 1, minWidth: 0 }}>{g.name}</span>
+                            {unreadCount > 0 && <span className="hub-comunicacao-menu-badge">{unreadCount}</span>}
                             {sel && <span style={{ color: '#00ff00', fontSize: '12px' }}>✓</span>}
                           </button>
                         )
                       })}
+                        </div>
+                      ))}
                     </>
                   ) : (
                     <>
-                      <h3 style={{ margin: '0 0 12px 0', color: '#4ade80', fontSize: '14px' }}>{safeT?.selecioneTecnicosParaFalar || 'Selecione 1 ou mais técnicos (todos recebem e leem a mesma mensagem)'}</h3>
+                      <h3 style={{ margin: '0 0 12px 0', color: '#4ade80', fontSize: '14px' }}>{safeT?.selecioneTecnicosParaFalar || 'Selecione pessoas ou grupos para falar'}</h3>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+                        {gestoresAssistencia.length > 0 && <button type="button" className="btn-secondary hub-comunicacao-group-chip" onClick={() => toggleGrupoDestinatarios(gestoresAssistencia.map((g) => g.id))} style={{ padding: '8px 10px', fontSize: '11px' }}>{safeT?.gestorAssistenciaTecnica || 'Gestor Assistência Técnica'}</button>}
+                        {gestoresIndustrial.length > 0 && <button type="button" className="btn-secondary hub-comunicacao-group-chip" onClick={() => toggleGrupoDestinatarios(gestoresIndustrial.map((g) => g.id))} style={{ padding: '8px 10px', fontSize: '11px' }}>{safeT?.gestorIndustrial || 'Gestor Industrial'}</button>}
+                        {tecnicosInternos.length > 0 && <button type="button" className="btn-secondary hub-comunicacao-group-chip" onClick={() => toggleGrupoDestinatarios(tecnicosInternos.map((t) => t.id))} style={{ padding: '8px 10px', fontSize: '11px' }}>{safeT?.tecnicosInternos || 'Técnicos Internos'}</button>}
+                        {tecnicosExternos.length > 0 && <button type="button" className="btn-secondary hub-comunicacao-group-chip" onClick={() => toggleGrupoDestinatarios(tecnicosExternos.map((t) => t.id))} style={{ padding: '8px 10px', fontSize: '11px' }}>{safeT?.tecnicosExternos || 'Técnicos Externos'}</button>}
+                        {todosTecnicos.filter((t) => t.type === 'armazem').length > 0 && <button type="button" className="btn-secondary hub-comunicacao-group-chip" onClick={() => toggleGrupoDestinatarios(todosTecnicos.filter((t) => t.type === 'armazem').map((t) => t.id))} style={{ padding: '8px 10px', fontSize: '11px' }}>{safeT?.armazemPecas || 'Magazine / Armazém'}</button>}
+                      </div>
                       <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                         {[
+                          { label: safeT?.gestorAssistenciaTecnica || 'Gestor Assistência Técnica', list: gestoresAssistencia, tipo: 'gestor' as const },
+                          { label: safeT?.gestorIndustrial || 'Gestor Industrial', list: gestoresIndustrial, tipo: 'gestor' as const },
                           { label: safeT?.tecnicosInternos || 'TÉCNICOS INTERNOS', list: tecnicosInternos, tipo: 'interno' as const },
                           { label: safeT?.tecnicosExternos || 'TÉCNICOS EXTERNOS', list: tecnicosExternos, tipo: 'externo' as const },
                           { label: safeT?.armazemPecas || 'ARMAZÉM DE PEÇAS', list: tecnicosArmazem, tipo: 'armazem' as const }
@@ -40514,10 +40777,12 @@ A1;Peça exemplo;10`}
                             <div style={{ color: '#aaa', fontSize: '11px', fontWeight: 'bold', marginBottom: '8px' }}>{label}</div>
                             {list.map(t => {
                               const sel = hubDestinatarioSelecionado.includes(t.id)
+                              const unreadCount = getUnreadCountFromPessoa(t.id)
                               return (
-                                <button key={t.id} type="button" onClick={() => toggleDestinatario(t.id)} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '10px', marginBottom: '6px', width: '100%', cursor: 'pointer', textAlign: 'left', border: sel ? '2px solid #00ff00' : '1px solid rgba(0,255,0,0.2)', background: sel ? 'rgba(0, 255, 0, 0.1)' : 'transparent' }}>
-                                  <div style={getAvatarStyle(tipo)}>{(t.name || 'T').charAt(0).toUpperCase()}</div>
+                                <button className={`hub-comunicacao-person-btn hub-comunicacao-person-btn--${tipo === 'gestor' ? 'gestor' : tipo}${sel ? ' hub-comunicacao-person-btn-selected' : ''}`} key={t.id} type="button" onClick={() => toggleDestinatario(t.id)} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '10px', marginBottom: '6px', width: '100%', cursor: 'pointer', textAlign: 'left', border: sel ? '2px solid #00ff00' : '1px solid rgba(0,255,0,0.2)', background: sel ? 'rgba(0, 255, 0, 0.1)' : 'transparent' }}>
+                                  {renderPessoaAvatar(t.name, t.photo, tipo === 'gestor' ? 'gestor' : tipo)}
                                   <span style={{ color: '#e0e0e0', fontSize: '13px', flex: 1 }}>{t.name}</span>
+                                  {unreadCount > 0 && <span className="hub-comunicacao-menu-badge">{unreadCount}</span>}
                                   {sel && <span style={{ color: '#00ff00', fontSize: '12px' }}>✓</span>}
                                 </button>
                               )
@@ -40529,44 +40794,50 @@ A1;Peça exemplo;10`}
                   )}
                 </div>
 
-                <div style={{ background: '#141414', borderRadius: '16px', border: '2px solid rgba(0, 255, 0, 0.25)', padding: '24px', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
+                <div className="hub-comunicacao-chat" style={{ background: '#141414', borderRadius: '16px', border: '2px solid rgba(0, 255, 0, 0.25)', padding: isCompactLayout ? '16px 12px' : '24px', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
                   {hubDestinatarioSelecionado.length === 0 ? (
                     <div style={{ color: '#888', textAlign: 'center', padding: '48px 24px' }}>
-                      {hubUsuarioAtual.tipo === 'tecnico' ? (safeT?.selecioneUmGestor || 'Selecione um gestor na lista ao lado para ver e enviar mensagens. Só esse gestor receberá e lerá.') : (safeT?.selecioneUmOuMaisTecnicos || 'Selecione um ou mais técnicos na lista ao lado. A mensagem será enviada para todos selecionados e todos leem da mesma forma.')}
+                      {hubUsuarioEfetivo.tipo === 'tecnico' ? (safeT?.selecioneUmGestor || 'Selecione um gestor na lista ao lado para ver e enviar mensagens. Só esse gestor receberá e lerá.') : (safeT?.selecioneUmOuMaisTecnicos || 'Selecione um ou mais destinatários ou um grupo na lista ao lado.')}
                     </div>
                   ) : (
                     <>
                       <div style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid rgba(0, 255, 0, 0.2)' }}>
                         <h3 style={{ margin: 0, color: '#00ff00', fontSize: '16px' }}>
-                          {hubUsuarioAtual.tipo === 'tecnico'
+                          {hubUsuarioEfetivo.tipo === 'tecnico'
                             ? (safeT?.conversaCom || 'Conversa com') + ' ' + (gestores.find(g => g.id === hubDestinatarioSelecionado[0])?.name || '')
                             : (safeT?.conversaCom || 'Conversa com') + ' ' + hubDestinatarioSelecionado.map(id => tecnicos.find(t => t.id === id)?.name || gestores.find(g => g.id === id)?.name || id).join(', ')}
                         </h3>
-                        {hubUsuarioAtual.tipo === 'gestor' && hubDestinatarioSelecionado.length > 1 && (
+                        {hubUsuarioEfetivo.tipo === 'gestor' && hubDestinatarioSelecionado.length > 1 && (
                           <p style={{ margin: '6px 0 0 0', color: '#888', fontSize: '12px' }}>{safeT?.todosRecebemMesmaMensagem || 'Todos recebem e leem a mesma mensagem.'}</p>
                         )}
                       </div>
-                      <div style={{ flex: 1, maxHeight: '380px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                      <div className="hub-comunicacao-messages" style={{ flex: 1, maxHeight: isCompactLayout ? 'none' : '380px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
                         {mensagensDaConversa.length === 0 ? (
                           <div style={{ color: '#888', textAlign: 'center', padding: '24px' }}>{safeT?.nenhumaMensagemAinda || 'Nenhuma mensagem nesta conversa.'}</div>
                         ) : mensagensDaConversa.map(m => {
-                          const souRemetente = m.remetenteId === hubUsuarioAtual.id
+                          const souRemetente = m.remetenteId === hubUsuarioEfetivo.id
+                          const mensagemNaoLidaParaMim = !souRemetente && m.destinatarioId === hubUsuarioEfetivo.id && !m.lida
                           return (
-                            <div key={m.id} style={{ alignSelf: souRemetente ? 'flex-end' : 'flex-start', maxWidth: '85%', padding: '12px 16px', borderRadius: '12px', border: souRemetente ? '1px solid rgba(0, 255, 0, 0.4)' : '1px solid rgba(102, 179, 255, 0.3)', background: souRemetente ? 'rgba(0, 255, 0, 0.08)' : 'rgba(102, 179, 255, 0.08)' }}>
+                            <div className={`hub-comunicacao-bubble${souRemetente ? ' hub-comunicacao-bubble-own' : ''}${mensagemNaoLidaParaMim ? ' hub-comunicacao-bubble-unread' : ''}`} key={m.id} style={{ alignSelf: souRemetente ? 'flex-end' : 'flex-start', maxWidth: isCompactLayout ? '100%' : '85%', padding: '12px 16px', borderRadius: '12px', border: souRemetente ? '1px solid rgba(0, 255, 0, 0.4)' : mensagemNaoLidaParaMim ? '1px solid rgba(255, 193, 7, 0.55)' : '1px solid rgba(102, 179, 255, 0.3)', background: souRemetente ? 'rgba(0, 255, 0, 0.08)' : mensagemNaoLidaParaMim ? 'rgba(255, 193, 7, 0.08)' : 'rgba(102, 179, 255, 0.08)' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                                 <span style={{ color: souRemetente ? '#00ff00' : '#66b3ff', fontWeight: 'bold', fontSize: '12px' }}>{m.remetenteNome}</span>
                                 <span style={{ color: '#666', fontSize: '11px' }}>{new Date(m.dataEnvio).toLocaleString('pt-BR')} {m.lida && '✓'}</span>
                               </div>
+                              {mensagemNaoLidaParaMim && (
+                                <div className="hub-comunicacao-status-pill" style={{ marginBottom: '6px', color: '#ffc107', fontSize: '11px', fontWeight: 700 }}>
+                                  NOVA MENSAGEM
+                                </div>
+                              )}
                               <div style={{ color: '#ccc', fontSize: '13px', marginBottom: '4px' }}>{m.assunto}</div>
                               <div style={{ color: '#e0e0e0', fontSize: '13px' }}>{m.mensagem}</div>
                             </div>
                           )
                         })}
                       </div>
-                      <div style={{ borderTop: '1px solid rgba(0, 255, 0, 0.2)', paddingTop: '16px' }}>
-                        <input type="text" placeholder={safeT?.assunto || 'Assunto'} value={hubAssunto} onChange={e => setHubAssunto(e.target.value)} style={{ width: '100%', padding: '10px 14px', marginBottom: '10px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
-                        <textarea placeholder={safeT?.mensagem || 'Mensagem'} value={hubMensagemTexto} onChange={e => setHubMensagemTexto(e.target.value)} rows={3} style={{ width: '100%', padding: '10px 14px', marginBottom: '12px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px', resize: 'vertical' }} />
-                        <button type="button" onClick={enviarMensagemPrivada} disabled={!hubAssunto.trim() || !hubMensagemTexto.trim()} style={{ padding: '12px 24px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '2px solid rgba(0, 255, 0, 0.5)', borderRadius: '10px', color: '#00ff00', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
+                      <div className="hub-comunicacao-composer" style={{ borderTop: '1px solid rgba(0, 255, 0, 0.2)', paddingTop: '16px' }}>
+                        <input className="hub-comunicacao-input" type="text" placeholder={safeT?.assunto || 'Assunto'} value={hubAssunto} onChange={e => setHubAssunto(e.target.value)} style={{ width: '100%', padding: '10px 14px', marginBottom: '10px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
+                        <textarea className="hub-comunicacao-textarea" placeholder={safeT?.mensagem || 'Mensagem'} value={hubMensagemTexto} onChange={e => setHubMensagemTexto(e.target.value)} rows={3} style={{ width: '100%', padding: '10px 14px', marginBottom: '12px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px', resize: 'vertical' }} />
+                        <button className="hub-comunicacao-send-btn" type="button" onClick={enviarMensagemPrivada} disabled={!hubAssunto.trim() || !hubMensagemTexto.trim()} style={{ padding: '12px 24px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '2px solid rgba(0, 255, 0, 0.5)', borderRadius: '10px', color: '#00ff00', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', width: isCompactLayout ? '100%' : 'auto' }}>
                           {safeT?.enviar || 'Enviar'}
                         </button>
                       </div>
@@ -40580,6 +40851,28 @@ A1;Peça exemplo;10`}
       }
 
       case 'mensagens-internas':
+        if (currentCommunicationIdentity && !loginUser?.isAdmin) {
+          return (
+            <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto' }}>
+              <div style={{ padding: '28px', borderRadius: '18px', border: '2px solid rgba(0,255,0,0.28)', background: 'linear-gradient(135deg, rgba(0,255,0,0.05) 0%, rgba(0,0,0,0.82) 100%)' }}>
+                <h2 style={{ margin: '0 0 10px 0', color: '#00ff00' }}>{safeT?.mensagensInternas || 'MENSAGENS INTERNAS'}</h2>
+                <p style={{ margin: 0, color: '#d0d0d0', fontSize: '14px' }}>
+                  {safeT?.selecioneUmGestor || 'Use o Hub de Comunicação para ver e responder apenas às suas mensagens autorizadas.'}
+                </p>
+                <div style={{ marginTop: '18px' }}>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => handleButtonClick('open-hub-comunicacao')}
+                    style={{ padding: '10px 16px', fontSize: '13px' }}
+                  >
+                    {safeT?.hubComunicacao || 'HUB DE COMUNICAÇÃO'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        }
         return (
           <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
             {/* Cabeçalho Profissional */}
@@ -40737,6 +41030,50 @@ A1;Peça exemplo;10`}
         )
 
       case 'alerta-mensagens':
+        if (currentCommunicationIdentity && !loginUser?.isAdmin) {
+          return (
+            <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto' }}>
+              <div style={{ padding: '26px', borderRadius: '18px', border: '2px solid rgba(0,255,0,0.28)', background: 'linear-gradient(135deg, rgba(0,255,0,0.05) 0%, rgba(0,0,0,0.82) 100%)' }}>
+                <h2 style={{ margin: '0 0 10px 0', color: '#00ff00' }}>{safeT?.alertaMensagens || 'ALERTA DE MENSAGENS'}</h2>
+                <p style={{ margin: 0, color: '#cfcfcf', fontSize: '14px' }}>
+                  {safeT?.hubComunicacaoDesc || 'Use o Hub de Comunicação para ver e responder apenas às suas mensagens privadas.'}
+                </p>
+                <div style={{ marginTop: '18px' }}>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => handleButtonClick('open-hub-comunicacao')}
+                    style={{ padding: '10px 16px', fontSize: '13px' }}
+                  >
+                    {safeT?.hubComunicacao || 'HUB DE COMUNICAÇÃO'}
+                  </button>
+                </div>
+                <div style={{ marginTop: '18px', padding: '14px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(0,255,0,0.12)' }}>
+                  <div style={{ color: '#9fd89f', fontSize: '12px', marginBottom: '8px' }}>
+                    {safeT?.voceEstaComo || 'Você está como'}
+                  </div>
+                  <div style={{ color: '#fff', fontSize: '15px', fontWeight: 700 }}>{currentCommunicationIdentity.nome}</div>
+                  <div style={{ color: '#b8c3b8', fontSize: '13px', marginTop: '4px' }}>
+                    {currentCommunicationIdentity.tipo === 'gestor'
+                      ? (currentCommunicationIdentity.area === 'industrial'
+                        ? (safeT?.gestorIndustrial || 'Gestor Industrial')
+                        : currentCommunicationIdentity.area === 'armazem'
+                          ? (safeT?.gestorArmazem || 'Gestor de Armazém')
+                          : (safeT?.gestorAssistenciaTecnica || 'Gestor Assistência Técnica'))
+                      : (currentCommunicationIdentity.tecnicoTipo === 'external'
+                        ? (safeT?.tecnicoExterno || 'Técnico Externo')
+                        : currentCommunicationIdentity.tecnicoTipo === 'armazem'
+                          ? (safeT?.armazemPecas || 'Armazém')
+                          : (safeT?.tecnicoInterno || 'Técnico Interno'))}
+                  </div>
+                  <div style={{ color: '#9aa3aa', fontSize: '12px', marginTop: '10px' }}>
+                    {mensagensComunicacaoVisiveis.length} mensagem(ns) visível(is) para este usuário.
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        }
         // Agrupar gestores por área
         const gestoresPorArea: { [key: string]: Gestor[] } = {}
         gestores.forEach(gestor => {
@@ -40754,8 +41091,13 @@ A1;Peça exemplo;10`}
           'outros': 'Outros'
         }
 
+        const tecnicosInternosLista = tecnicos.filter((t: Tecnico) => t.type === 'internal')
+        const tecnicosExternosLista = tecnicos.filter((t: Tecnico) => t.type === 'external')
+        const totalAlertasNaoLidos = mensagensComunicacaoVisiveis.filter((m: MensagemComunicacao) => !m.lida).length
+        const totalDestinatariosMonitorados = gestores.length + tecnicosInternosLista.length + tecnicosExternosLista.length
+
         return (
-          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
+          <div className="alerta-mensagens-shell" style={{ padding: isCompactLayout ? '12px 8px' : '30px', maxWidth: '1600px', margin: '0 auto' }}>
             {/* Cabeçalho Profissional */}
             <div style={{
               marginBottom: '40px',
@@ -40765,7 +41107,7 @@ A1;Peça exemplo;10`}
               border: '2px solid rgba(0, 255, 0, 0.3)',
               boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                 <div>
                   <h1 style={{ 
                     fontSize: '32px', 
@@ -40780,8 +41122,22 @@ A1;Peça exemplo;10`}
                   <p style={{ color: '#00ff00', fontSize: '16px', margin: 0 }}>
                     {safeT?.alertaMensagensDesc || 'Gestores, Técnicos Internos e Técnicos Externos organizados por grupo'}
                   </p>
+                  <div className="alerta-mensagens-summary">
+                    <div className="alerta-mensagens-stat-card">
+                      <span className="alerta-mensagens-stat-value">{totalAlertasNaoLidos}</span>
+                      <span className="alerta-mensagens-stat-label">{safeT?.mensagensNaoLidas || 'Não lidas'}</span>
+                    </div>
+                    <div className="alerta-mensagens-stat-card">
+                      <span className="alerta-mensagens-stat-value">{mensagensComunicacaoVisiveis.length}</span>
+                      <span className="alerta-mensagens-stat-label">{safeT?.totalMensagens || 'Total'}</span>
+                    </div>
+                    <div className="alerta-mensagens-stat-card">
+                      <span className="alerta-mensagens-stat-value">{totalDestinatariosMonitorados}</span>
+                      <span className="alerta-mensagens-stat-label">{safeT?.gestores || 'Gestores'} / {safeT?.tecnicosInternos || 'Técnicos'}</span>
+                    </div>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div className="alerta-mensagens-hero-actions" style={{ display: 'flex', gap: '10px' }}>
                   <button 
                     onClick={() => {
                       const tab = openTabs.find(t => t.type === activeTabId)
@@ -40853,9 +41209,9 @@ A1;Peça exemplo;10`}
             </div>
 
             {/* Conteúdo organizado: Gestores, Técnicos Internos, Técnicos Externos */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+            <div className="alerta-mensagens-layout" style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
               {/* ========== SEÇÃO GESTORES ========== */}
-              <div style={{ padding: '30px', backgroundColor: '#141414', borderRadius: '12px', border: '2px solid rgba(0, 255, 0, 0.3)' }}>
+              <div className="alerta-mensagens-section">
                 <h2 style={{ color: '#66b3ff', fontSize: '22px', marginBottom: '25px', textTransform: 'uppercase', letterSpacing: '2px', borderBottom: '2px solid rgba(0, 100, 255, 0.3)', paddingBottom: '10px' }}>
                   {safeT?.gestores || 'GESTORES'}
                 </h2>
@@ -40868,19 +41224,20 @@ A1;Peça exemplo;10`}
                     {nomesAreas[area] || area}
                   </h3>
                   
-                  <div style={{
+                  <div className="alerta-mensagens-grid" style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
                     gap: '20px'
                   }}>
                     {gestoresPorArea[area].map(gestor => {
-                      const mensagensGestor = mensagensComunicacao.filter((m: MensagemComunicacao) => m.destinatarioId === gestor.id)
+                      const mensagensGestor = mensagensComunicacaoVisiveis.filter((m: MensagemComunicacao) => m.destinatarioId === gestor.id)
                       const totalMensagens = mensagensGestor.length
                       const mensagensLidas = mensagensGestor.filter((m: MensagemComunicacao) => m.lida).length
                       const mensagensNaoLidas = totalMensagens - mensagensLidas
                       const temNovaMensagem = mensagensNaoLidas > 0
                       return (
                       <div
+                        className={`alerta-mensagens-person-card alerta-mensagens-person-card--gestor${temNovaMensagem ? ' alerta-mensagens-person-card-unread' : ''}${gestorAlertaSelecionado?.id === gestor.id ? ' alerta-mensagens-person-card-selected' : ''}`}
                         key={gestor.id}
                         onClick={() => { setGestorAlertaSelecionado(gestor); setTecnicoAlertaSelecionado(null) }}
                         style={{
@@ -40986,19 +41343,20 @@ A1;Peça exemplo;10`}
               </div>
 
               {/* ========== SEÇÃO TÉCNICOS INTERNOS ========== */}
-              <div style={{ padding: '30px', backgroundColor: '#141414', borderRadius: '12px', border: '2px solid rgba(0, 255, 100, 0.3)' }}>
+              <div className="alerta-mensagens-section">
                 <h2 style={{ color: '#00ff64', fontSize: '22px', marginBottom: '25px', textTransform: 'uppercase', letterSpacing: '2px', borderBottom: '2px solid rgba(0, 255, 100, 0.3)', paddingBottom: '10px' }}>
                   {safeT?.tecnicosInternos || 'TÉCNICOS INTERNOS'}
                 </h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '20px' }}>
-                  {tecnicos.filter((t: Tecnico) => t.type === 'internal').map((tecnico: Tecnico) => {
-                    const mensagensTecnico = mensagensComunicacao.filter((m: MensagemComunicacao) => m.destinatarioId === tecnico.id)
+                <div className="alerta-mensagens-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '20px' }}>
+                  {tecnicosInternosLista.map((tecnico: Tecnico) => {
+                    const mensagensTecnico = mensagensComunicacaoVisiveis.filter((m: MensagemComunicacao) => m.destinatarioId === tecnico.id)
                     const totalMensagens = mensagensTecnico.length
                     const mensagensLidas = mensagensTecnico.filter((m: MensagemComunicacao) => m.lida).length
                     const mensagensNaoLidas = totalMensagens - mensagensLidas
                     const temNovaMensagem = mensagensNaoLidas > 0
                     return (
                       <div
+                        className={`alerta-mensagens-person-card alerta-mensagens-person-card--interno${temNovaMensagem ? ' alerta-mensagens-person-card-unread' : ''}${tecnicoAlertaSelecionado?.id === tecnico.id ? ' alerta-mensagens-person-card-selected' : ''}`}
                         key={tecnico.id}
                         onClick={() => { setTecnicoAlertaSelecionado(tecnico); setGestorAlertaSelecionado(null) }}
                         style={{
@@ -41038,25 +41396,26 @@ A1;Peça exemplo;10`}
                     )
                   })}
                 </div>
-                {tecnicos.filter((t: Tecnico) => t.type === 'internal').length === 0 && (
+                {tecnicosInternosLista.length === 0 && (
                   <p style={{ color: '#888', fontSize: '14px', marginTop: '15px', marginBottom: 0 }}>{safeT?.nenhumTecnicoInterno || 'Nenhum técnico interno cadastrado'}</p>
                 )}
               </div>
 
               {/* ========== SEÇÃO TÉCNICOS EXTERNOS ========== */}
-              <div style={{ padding: '30px', backgroundColor: '#141414', borderRadius: '12px', border: '2px solid rgba(0, 255, 0, 0.3)' }}>
+              <div className="alerta-mensagens-section">
                 <h2 style={{ color: '#ffa500', fontSize: '22px', marginBottom: '25px', textTransform: 'uppercase', letterSpacing: '2px', borderBottom: '2px solid rgba(255, 165, 0, 0.3)', paddingBottom: '10px' }}>
                   {safeT?.tecnicosExternos || 'TÉCNICOS EXTERNOS'}
                 </h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '20px' }}>
-                  {tecnicos.filter((t: Tecnico) => t.type === 'external').map((tecnico: Tecnico) => {
-                    const mensagensTecnico = mensagensComunicacao.filter((m: MensagemComunicacao) => m.destinatarioId === tecnico.id)
+                <div className="alerta-mensagens-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '20px' }}>
+                  {tecnicosExternosLista.map((tecnico: Tecnico) => {
+                    const mensagensTecnico = mensagensComunicacaoVisiveis.filter((m: MensagemComunicacao) => m.destinatarioId === tecnico.id)
                     const totalMensagens = mensagensTecnico.length
                     const mensagensLidas = mensagensTecnico.filter((m: MensagemComunicacao) => m.lida).length
                     const mensagensNaoLidas = totalMensagens - mensagensLidas
                     const temNovaMensagem = mensagensNaoLidas > 0
                     return (
                       <div
+                        className={`alerta-mensagens-person-card alerta-mensagens-person-card--externo${temNovaMensagem ? ' alerta-mensagens-person-card-unread' : ''}${tecnicoAlertaSelecionado?.id === tecnico.id ? ' alerta-mensagens-person-card-selected' : ''}`}
                         key={tecnico.id}
                         onClick={() => { setTecnicoAlertaSelecionado(tecnico); setGestorAlertaSelecionado(null) }}
                         style={{
@@ -41096,14 +41455,14 @@ A1;Peça exemplo;10`}
                     )
                   })}
                 </div>
-                {tecnicos.filter((t: Tecnico) => t.type === 'external').length === 0 && (
+                {tecnicosExternosLista.length === 0 && (
                   <p style={{ color: '#888', fontSize: '14px', marginTop: '15px', marginBottom: 0 }}>{safeT?.nenhumTecnicoExterno || 'Nenhum técnico externo cadastrado'}</p>
                 )}
               </div>
 
               {/* Painel Recebimento de solicitação de peças (por checklist ID) - ao selecionar gestor */}
               {gestorAlertaSelecionado && (
-                <div style={{
+                <div className="alerta-mensagens-detail-panel" style={{
                   marginTop: '30px',
                   padding: '25px',
                   backgroundColor: '#141414',
@@ -41115,6 +41474,7 @@ A1;Peça exemplo;10`}
                       📥 {safeT?.recebimentoSolicitacaoPecas || 'Recebimento de solicitação de peças'} — {gestorAlertaSelecionado.name}
                     </h3>
                     <button
+                      className="alerta-mensagens-action-btn alerta-mensagens-action-btn-neutral"
                       onClick={() => setGestorAlertaSelecionado(null)}
                       style={{ padding: '8px 16px', backgroundColor: '#444', color: '#fff', border: '1px solid #555', borderRadius: '6px', cursor: 'pointer' }}
                     >
@@ -41122,7 +41482,7 @@ A1;Peça exemplo;10`}
                     </button>
                   </div>
                   {(() => {
-                    const mensagensSolicitacao = mensagensComunicacao.filter(
+                    const mensagensSolicitacao = mensagensComunicacaoVisiveis.filter(
                       (m: MensagemComunicacao) => m.destinatarioId === gestorAlertaSelecionado.id && (m.tipoMensagem === 'solicitacao-pecas' || m.pecasSolicitadas)
                     )
                     if (mensagensSolicitacao.length === 0) {
@@ -41135,7 +41495,7 @@ A1;Peça exemplo;10`}
                       porChecklistId[cid].push(m)
                     })
                     return (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '500px', overflowY: 'auto' }}>
+                      <div className="alerta-mensagens-detail-list" style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: '500px', overflowY: 'auto' }}>
                         {Object.entries(porChecklistId).map(([checklistId, msgs]) => {
                           const msg = msgs[0]
                           const pecas = msg.pecasSolicitadas || []
@@ -41145,7 +41505,7 @@ A1;Peça exemplo;10`}
                           const isAceite = statusSolicitacao === 'aceite'
                           const isEnviadoArmazem = statusSolicitacao === 'enviado-armazem'
                           return (
-                            <div key={checklistId} style={{
+                            <div className={`alerta-mensagens-message-card${naoLida ? ' alerta-mensagens-message-card-unread' : ''}`} key={checklistId} style={{
                               padding: '18px',
                               backgroundColor: naoLida ? 'rgba(255, 193, 7, 0.08)' : '#2a2a2a',
                               borderRadius: '8px',
@@ -41170,6 +41530,7 @@ A1;Peça exemplo;10`}
                                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                                   {naoLida && (
                                     <button
+                                      className="alerta-mensagens-action-btn alerta-mensagens-action-btn-info"
                                       onClick={async () => {
                                         const idsLer = msgs.map((x: MensagemComunicacao) => x.id)
                                         setMensagensComunicacao(prev => {
@@ -41186,6 +41547,7 @@ A1;Peça exemplo;10`}
                                     </button>
                                   )}
                                   <button
+                                    className="alerta-mensagens-action-btn alerta-mensagens-action-btn-danger"
                                     onClick={async () => {
                                       if (!confirm(safeT?.confirmarExcluirMensagem || 'Tem certeza que deseja excluir esta mensagem?')) return
                                       const idsRemover = msgs.map((x: MensagemComunicacao) => x.id)
@@ -41201,6 +41563,7 @@ A1;Peça exemplo;10`}
                                   </button>
                                   {isPendente && (
                                     <button
+                                      className="alerta-mensagens-action-btn alerta-mensagens-action-btn-success"
                                       onClick={async () => {
                                         const dataAceite = new Date().toISOString()
                                         const idsAceite = msgs.map((x: MensagemComunicacao) => x.id)
@@ -41223,6 +41586,7 @@ A1;Peça exemplo;10`}
                                   )}
                                   {isAceite && (
                                     <button
+                                      className="alerta-mensagens-action-btn alerta-mensagens-action-btn-info"
                                       onClick={async () => {
                                         const dataEnvioArmazem = new Date().toISOString()
                                         const idsEnvio = msgs.map((x: MensagemComunicacao) => x.id)
@@ -41259,7 +41623,7 @@ A1;Peça exemplo;10`}
                                     </button>
                                   )}
                                   {isEnviadoArmazem && (
-                                    <span style={{ padding: '6px 12px', backgroundColor: 'rgba(0, 150, 255, 0.15)', color: '#66b3ff', borderRadius: '6px', fontSize: '13px' }}>
+                                    <span className="alerta-mensagens-status-chip" style={{ padding: '6px 12px', backgroundColor: 'rgba(0, 150, 255, 0.15)', color: '#66b3ff', borderRadius: '6px', fontSize: '13px' }}>
                                       ✓ {safeT?.enviadoParaArmazem || 'Enviado para armazém'}
                                     </span>
                                   )}
@@ -41289,12 +41653,13 @@ A1;Peça exemplo;10`}
 
               {/* Painel Mensagens do Técnico selecionado (Alerta) */}
               {tecnicoAlertaSelecionado && (
-                <div style={{ marginTop: '30px', padding: '25px', backgroundColor: '#141414', borderRadius: '12px', border: tecnicoAlertaSelecionado.type === 'internal' ? '2px solid rgba(0, 255, 100, 0.4)' : '2px solid rgba(255, 165, 0, 0.4)' }}>
+                <div className="alerta-mensagens-detail-panel" style={{ marginTop: '30px', padding: '25px', backgroundColor: '#141414', borderRadius: '12px', border: tecnicoAlertaSelecionado.type === 'internal' ? '2px solid rgba(0, 255, 100, 0.4)' : '2px solid rgba(255, 165, 0, 0.4)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
                     <h3 style={{ color: tecnicoAlertaSelecionado.type === 'internal' ? '#00ff64' : '#ffa500', margin: 0, fontSize: '20px' }}>
                       📬 {safeT?.mensagensRecebidas || 'Mensagens recebidas'} — {tecnicoAlertaSelecionado.name}
                     </h3>
                     <button
+                      className="alerta-mensagens-action-btn alerta-mensagens-action-btn-neutral"
                       onClick={() => setTecnicoAlertaSelecionado(null)}
                       style={{ padding: '8px 16px', backgroundColor: '#444', color: '#fff', border: '1px solid #555', borderRadius: '6px', cursor: 'pointer' }}
                     >
@@ -41302,14 +41667,14 @@ A1;Peça exemplo;10`}
                     </button>
                   </div>
                   {(() => {
-                    const msgsTecnico = mensagensComunicacao.filter((m: MensagemComunicacao) => m.destinatarioId === tecnicoAlertaSelecionado.id).sort((a: MensagemComunicacao, b: MensagemComunicacao) => new Date(b.dataEnvio).getTime() - new Date(a.dataEnvio).getTime())
+                    const msgsTecnico = mensagensComunicacaoVisiveis.filter((m: MensagemComunicacao) => m.destinatarioId === tecnicoAlertaSelecionado.id).sort((a: MensagemComunicacao, b: MensagemComunicacao) => new Date(b.dataEnvio).getTime() - new Date(a.dataEnvio).getTime())
                     if (msgsTecnico.length === 0) {
                       return <p style={{ color: '#888' }}>{safeT?.nenhumaMensagemRecebida || 'Nenhuma mensagem recebida.'}</p>
                     }
                     return (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '400px', overflowY: 'auto' }}>
+                      <div className="alerta-mensagens-detail-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '400px', overflowY: 'auto' }}>
                         {msgsTecnico.map((msg: MensagemComunicacao) => (
-                          <div key={msg.id} style={{ padding: '14px', backgroundColor: msg.lida ? '#2a2a2a' : 'rgba(255, 193, 7, 0.08)', borderRadius: '8px', border: `1px solid ${msg.lida ? '#333' : 'rgba(255, 193, 7, 0.4)'}`, borderLeft: `4px solid ${msg.lida ? '#555' : '#ffc107'}` }}>
+                          <div className={`alerta-mensagens-message-card${msg.lida ? '' : ' alerta-mensagens-message-card-unread'}`} key={msg.id} style={{ padding: '14px', backgroundColor: msg.lida ? '#2a2a2a' : 'rgba(255, 193, 7, 0.08)', borderRadius: '8px', border: `1px solid ${msg.lida ? '#333' : 'rgba(255, 193, 7, 0.4)'}`, borderLeft: `4px solid ${msg.lida ? '#555' : '#ffc107'}` }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <strong style={{ color: '#ccc' }}>{msg.assunto}</strong>
@@ -41319,6 +41684,7 @@ A1;Peça exemplo;10`}
                               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                                 {!msg.lida && (
                                   <button
+                                    className="alerta-mensagens-action-btn alerta-mensagens-action-btn-info"
                                     onClick={async () => {
                                       const idLer = msg.id
                                       setMensagensComunicacao(prev => {
@@ -41333,6 +41699,7 @@ A1;Peça exemplo;10`}
                                   </button>
                                 )}
                                 <button
+                                  className="alerta-mensagens-action-btn alerta-mensagens-action-btn-danger"
                                   onClick={async () => {
                                     if (!confirm(safeT?.confirmarExcluirMensagem || 'Tem certeza que deseja excluir esta mensagem?')) return
                                     const idRemover = msg.id
@@ -49012,6 +49379,11 @@ A1;Peça exemplo;10`}
               </span>
               {safeT?.comunicacaoInternaTitle || 'COMUNICAÇÃO INTERNA C/ GESTORES E TECNICOS'}
             </span>
+            {comunicacaoUnreadCount > 0 && (
+              <span className="hub-comunicacao-menu-badge" style={{ marginLeft: '8px', padding: '2px 8px', borderRadius: '999px', backgroundColor: '#ff5f5f', color: '#fff', fontSize: '11px', fontWeight: 800 }}>
+                {comunicacaoUnreadCount}
+              </span>
+            )}
             <span style={{ fontSize: '12px' }}>{expandedGroups.has('comunicacao-interna') ? '▼' : '▶'}</span>
           </button>
           
@@ -49029,6 +49401,9 @@ A1;Peça exemplo;10`}
                   const saved = sidebarButtons.find(btn => btn.id === id)
                   const button = saved || { id, name: (safeT && translationKey in safeT ? (safeT as Record<string, string>)[translationKey] : '') || id, action }
                   const isSelected = selectedSidebarButton === action
+                  const shouldShowUnreadBadge =
+                    comunicacaoUnreadCount > 0 &&
+                    (action === 'open-hub-comunicacao' || action === 'open-alerta-mensagens')
                   return (
                     <button
                       key={id}
@@ -49070,6 +49445,26 @@ A1;Peça exemplo;10`}
                           color: '#ffffff',
                           fontWeight: 'bold'
                         }}>✓</span>
+                      )}
+                      {shouldShowUnreadBadge && (
+                        <span className="hub-comunicacao-menu-badge" style={{
+                          position: 'absolute',
+                          top: '5px',
+                          left: '8px',
+                          minWidth: '20px',
+                          height: '20px',
+                          padding: '0 6px',
+                          borderRadius: '999px',
+                          backgroundColor: '#ff5f5f',
+                          color: '#fff',
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          {comunicacaoUnreadCount}
+                        </span>
                       )}
                       {getButtonName(button)}
                     </button>
@@ -51759,25 +52154,7 @@ A1;Peça exemplo;10`}
         <div className="modal-overlay" onClick={() => { 
           setShowUserForm(false); 
           setEditingUser(null); 
-          setUserForm({ 
-            name: '', 
-            email: '', 
-            role: '', 
-            password: '', 
-            isAdmin: false,
-            permissions: {
-              gestores: false,
-              equipamentos: false,
-              clientes: false,
-              fornecedores: false,
-              relatorioServico: false,
-              bibliotecaPecas: false,
-              agenda: false,
-              desmontados: false,
-              cadastroServicos: false,
-              extras: false
-            }
-          }); 
+          setUserForm(createEmptyUserForm()); 
         }}>
           <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
             <h2>{editingUser ? safeT?.editUser : safeT?.addUser}</h2>
@@ -51824,6 +52201,41 @@ A1;Peça exemplo;10`}
                 style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
               />
             </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>Vincular com</label>
+              <select
+                value={userForm.linkedProfileType}
+                onChange={(e) => setUserForm({ ...userForm, linkedProfileType: e.target.value as 'gestor' | 'tecnico' | '', linkedProfileId: '' })}
+                style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+              >
+                <option value="">Sem vínculo direto</option>
+                <option value="gestor">{safeT?.gestores || 'Gestores'}</option>
+                <option value="tecnico">{safeT?.tecnicos || 'Técnicos'}</option>
+              </select>
+            </div>
+
+            {userForm.linkedProfileType && (
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px' }}>
+                  {userForm.linkedProfileType === 'gestor' ? (safeT?.selecionarGestor || 'Selecionar Gestor') : (safeT?.selecionarTecnico || 'Selecionar Técnico')}
+                </label>
+                <select
+                  value={userForm.linkedProfileId}
+                  onChange={(e) => setUserForm({ ...userForm, linkedProfileId: e.target.value })}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                >
+                  <option value="">{userForm.linkedProfileType === 'gestor' ? (safeT?.selecionarGestor || 'Selecionar Gestor') : (safeT?.selecionarTecnico || 'Selecionar Técnico')}</option>
+                  {(userForm.linkedProfileType === 'gestor' ? gestores : tecnicos).map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {'area' in item
+                        ? `${item.name} (${item.area || '-'})`
+                        : `${item.name} (${item.type === 'internal' ? (safeT?.tecnicoInterno || 'Interno') : item.type === 'external' ? (safeT?.tecnicoExterno || 'Externo') : (safeT?.armazem || 'Armazém')})`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             
             <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
@@ -51872,25 +52284,7 @@ A1;Peça exemplo;10`}
               <button className="btn-primary" onClick={() => { 
                 setShowUserForm(false); 
                 setEditingUser(null); 
-                setUserForm({ 
-                  name: '', 
-                  email: '', 
-                  role: '', 
-                  password: '', 
-                  isAdmin: false,
-                  permissions: {
-                    gestores: false,
-                    equipamentos: false,
-                    clientes: false,
-                    fornecedores: false,
-                    relatorioServico: false,
-                    bibliotecaPecas: false,
-                    agenda: false,
-                    desmontados: false,
-                    cadastroServicos: false,
-                    extras: false
-                  }
-                }); 
+                setUserForm(createEmptyUserForm()); 
               }} style={{ flex: 1 }}>
                 {safeT?.cancel || 'Cancelar'}
               </button>
