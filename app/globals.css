@@ -369,6 +369,41 @@ body,
     grid-template-columns: 1fr !important;
     gap: 12px !important;
   }
+
+  .checklist-editor-pecas-box {
+    padding: 10px !important;
+  }
+
+  .checklist-editor-pecas-form-row {
+    display: grid !important;
+    grid-template-columns: 1fr 88px;
+    gap: 8px !important;
+    align-items: end !important;
+  }
+
+  .checklist-editor-pecas-field {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .checklist-editor-pecas-input {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 34px !important;
+    font-size: 12px !important;
+  }
+
+  .checklist-editor-pecas-input--qty {
+    width: 88px !important;
+  }
+
+  .checklist-editor-pecas-add-btn {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: 34px !important;
+    font-size: 12px !important;
+    padding: 6px 10px !important;
+  }
 }
 
 .sidebar-organizer-board {
