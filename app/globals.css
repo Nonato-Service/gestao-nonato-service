@@ -333,6 +333,79 @@ body,
   box-shadow: 0 0 0 3px rgba(0, 255, 122, 0.12);
 }
 
+.importacao-pecas-paste-box {
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 255, 122, 0.26);
+  background:
+    radial-gradient(circle at top right, rgba(0, 255, 122, 0.1), transparent 30%),
+    linear-gradient(180deg, rgba(18, 24, 19, 0.98), rgba(12, 16, 13, 0.98));
+}
+
+.importacao-pecas-paste-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.importacao-pecas-paste-head h4 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: #00ff88;
+}
+
+.importacao-pecas-paste-head p {
+  margin: 0;
+  max-width: 760px;
+  font-size: 13px;
+  color: #c7d1c9;
+  line-height: 1.55;
+}
+
+.importacao-pecas-paste-steps {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.importacao-pecas-paste-steps span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: #dfffe9;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.importacao-pecas-paste-textarea {
+  min-height: 200px !important;
+  resize: vertical;
+}
+
+@media (max-width: 768px) {
+  .importacao-pecas-paste-box {
+    padding: 12px;
+  }
+
+  .importacao-pecas-paste-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .importacao-pecas-paste-head .btn-primary {
+    width: 100%;
+  }
+
+  .importacao-pecas-paste-textarea {
+    min-height: 180px !important;
+  }
+}
+
 @media (max-width: 768px) {
   .checklist-editor-root {
     padding: 8px 6px 14px !important;

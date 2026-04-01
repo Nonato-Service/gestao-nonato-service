@@ -15865,15 +15865,99 @@ export default function Dashboard() {
           (parsed as any).itens
       else itens = [parsed]
     } else {
-      const lines = raw.split(/\r?\n/).filter((l: string) => l.trim())
+      const lines = raw.split(/\r?\n/).map((l: string) => l.trim()).filter(Boolean)
       if (lines.length < 2) return []
-      const sep = lines[0].includes(';') ? ';' : ','
-      const headers = csvSplit(lines[0], sep).map((h: string) => h.trim().replace(/^["']|["']$/g, ''))
-      for (let i = 1; i < lines.length; i++) {
-        const vals = csvSplit(lines[i], sep).map((v: string) => v.trim().replace(/^["']|["']$/g, ''))
-        const obj: Record<string, string> = {}
-        headers.forEach((h, j) => { obj[h] = vals[j] ?? '' })
-        itens.push(obj)
+
+      const looksLikeDelimitedTable =
+        (lines[0].includes(';') || lines[0].includes(',')) &&
+        /codigo|código|nome|descri|pre[cç]o|price|sku|code/i.test(lines[0])
+
+      if (looksLikeDelimitedTable) {
+        const sep = lines[0].includes(';') ? ';' : ','
+        const headers = csvSplit(lines[0], sep).map((h: string) => h.trim().replace(/^["']|["']$/g, ''))
+        for (let i = 1; i < lines.length; i++) {
+          const vals = csvSplit(lines[i], sep).map((v: string) => v.trim().replace(/^["']|["']$/g, ''))
+          const obj: Record<string, string> = {}
+          headers.forEach((h, j) => { obj[h] = vals[j] ?? '' })
+          itens.push(obj)
+        }
+      } else {
+        const codeRegex = /\b[A-Z0-9][A-Z0-9\-_.\/]{3,}\b/i
+        const numericCodeRegex = /^\d{7,}$/
+        const priceRegex = /(\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{2})\s?(?:€|eur|usd|us\$|r\$)?)$/i
+        let current: { codigo?: string; nome?: string; descricao?: string; preco?: string } | null = null
+
+        const flushCurrent = () => {
+          if (!current) return
+          if (current.codigo || current.nome || current.descricao) itens.push(current)
+          current = null
+        }
+
+        const blocks = raw
+          .split(/\r?\n\s*\r?\n/g)
+          .map((block: string) => block.split(/\r?\n/).map((line: string) => line.trim()).filter(Boolean))
+          .filter((block: string[]) => block.length > 0)
+
+        const looksLikeTrailingCodeCatalog =
+          blocks.length >= 2 &&
+          blocks.filter((block: string[]) => numericCodeRegex.test(block[block.length - 1] || '')).length >= Math.max(2, Math.ceil(blocks.length * 0.6))
+
+        if (looksLikeTrailingCodeCatalog) {
+          blocks.forEach((block: string[]) => {
+            const lastLine = block[block.length - 1] || ''
+            if (!numericCodeRegex.test(lastLine)) return
+
+            const contentLines = block.slice(0, -1)
+            const precoIndex = contentLines.findIndex((line: string) => priceRegex.test(line))
+            const preco = precoIndex >= 0 ? (contentLines[precoIndex].match(priceRegex)?.[1] || '') : ''
+            const textLines = precoIndex >= 0
+              ? contentLines.filter((_, index) => index !== precoIndex)
+              : contentLines
+
+            const nome = textLines[0] || lastLine
+            const descricao = textLines.slice(1).join(' ').trim()
+
+            itens.push({
+              codigo: lastLine,
+              nome,
+              descricao: descricao || nome,
+              preco
+            })
+          })
+        } else for (const line of lines) {
+          const priceMatch = line.match(priceRegex)
+          const normalizedLine = line.replace(/\s+/g, ' ').trim()
+          const isLikelyCodeLine =
+            !!normalizedLine.match(codeRegex) &&
+            normalizedLine.length <= 60 &&
+            !/\s{2,}/.test(normalizedLine) &&
+            normalizedLine.split(' ').length <= 3
+
+          if (isLikelyCodeLine) {
+            flushCurrent()
+            current = { codigo: normalizedLine }
+            continue
+          }
+
+          if (!current) {
+            current = {}
+          }
+
+          if (priceMatch && !current.preco) {
+            current.preco = priceMatch[1]
+            const withoutPrice = normalizedLine.replace(priceRegex, '').trim()
+            if (withoutPrice) {
+              if (!current.nome) current.nome = withoutPrice
+              else current.descricao = current.descricao ? `${current.descricao} ${withoutPrice}` : withoutPrice
+            }
+            continue
+          }
+
+          if (!current.nome) current.nome = normalizedLine
+          else current.descricao = current.descricao ? `${current.descricao} ${normalizedLine}` : normalizedLine
+        }
+
+        flushCurrent()
       }
     }
     // Normaliza e remove duplicados da própria importação.
@@ -28907,47 +28991,66 @@ A1;Peça exemplo;10'
                   )}
                 </div>
               )}
-              <p style={{ fontSize: '13px', margin: '16px 0 8px 0', color: '#aaa' }}>
-                {safeT?.importacaoColarDesc || 'Ou cole aqui o conteúdo JSON ou CSV (ex.: copiado do site ou de um ficheiro):'}
-              </p>
-              <textarea
-                value={importacaoTextoColado}
-                onChange={(e) => { setImportacaoTextoColado(e.target.value); setImportacaoUrlError(null) }}
-                placeholder='[{"codigo":"A1","nome":"Peça exemplo","preco":"10"}]
+              <div className="importacao-pecas-paste-box">
+                <div className="importacao-pecas-paste-head">
+                  <div>
+                    <h4>{(safeT as any)?.importacaoColarCatalogoTitle || 'Colar catálogo do site'}</h4>
+                    <p>{(safeT as any)?.importacaoColarCatalogoDesc || 'Copie várias peças da página do fornecedor e cole tudo aqui de uma vez. O sistema tenta separar código, nome, descrição e preço automaticamente.'}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={handleImportacaoColarTexto}
+                    style={{ padding: '10px 16px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                  >
+                    {(safeT as any)?.importacaoImportarCatalogo || safeT?.importacaoImportarDoTexto || 'Importar do texto colado'}
+                  </button>
+                </div>
+
+                <div className="importacao-pecas-paste-steps">
+                  <span>{(safeT as any)?.importacaoColarCatalogoPasso1 || '1. Copie várias linhas do site'}</span>
+                  <span>{(safeT as any)?.importacaoColarCatalogoPasso2 || '2. Cole tudo na caixa abaixo'}</span>
+                  <span>{(safeT as any)?.importacaoColarCatalogoPasso3 || '3. Veja a pré-visualização antes de salvar'}</span>
+                </div>
+
+                <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: '#aaa' }}>
+                  {safeT?.importacaoColarDesc || 'Ou cole aqui o conteúdo JSON ou CSV (ex.: copiado do site ou de um ficheiro):'}
+                </p>
+                <textarea
+                  value={importacaoTextoColado}
+                  onChange={(e) => { setImportacaoTextoColado(e.target.value); setImportacaoUrlError(null) }}
+                  placeholder={(safeT as any)?.importacaoColarCatalogoPlaceholder || `Exemplo de colagem rápida:
+
+COD-001
+Motor ventilador 220V
+34,90 €
+
+COD-002
+Sensor térmico
+12,50 €
+
+ou
+[{"codigo":"A1","nome":"Peça exemplo","preco":"10"}]
+
 ou
 codigo;nome;preco
-A1;Peça exemplo;10'
-                style={{
-                  width: '100%',
-                  minHeight: '100px',
-                  padding: '12px',
-                  backgroundColor: '#141414',
-                  border: '1px solid rgba(0, 255, 0, 0.3)',
-                  borderRadius: '8px',
-                  color: '#fff',
-                  fontSize: '13px',
-                  fontFamily: 'monospace',
-                  marginBottom: '8px',
-                  boxSizing: 'border-box'
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleImportacaoColarTexto}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: 'rgba(0, 200, 100, 0.2)',
-                  border: '1px solid rgba(0, 200, 100, 0.6)',
-                  borderRadius: '8px',
-                  color: '#7feb9f',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '13px',
-                  marginBottom: '20px'
-                }}
-              >
-                {safeT?.importacaoImportarDoTexto || 'Importar do texto colado'}
-              </button>
+A1;Peça exemplo;10`}
+                  className="importacao-pecas-paste-textarea"
+                  style={{
+                    width: '100%',
+                    minHeight: '180px',
+                    padding: '12px',
+                    backgroundColor: '#141414',
+                    border: '1px solid rgba(0, 255, 0, 0.3)',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontSize: '13px',
+                    fontFamily: 'monospace',
+                    marginBottom: '8px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
               {importacaoPreview && importacaoPreview.length > 0 && (
                 <div style={{ marginTop: '20px' }}>
                   <p style={{ fontSize: '14px', marginBottom: '12px', color: '#00ff00' }}>
