@@ -17020,6 +17020,153 @@ export default function Dashboard() {
     saveData('nonato-demo-link-recipients', updated)
   }, [demoLinkRecipients])
 
+  /** Pacote de demo (lista + atalhos) — visível no Administrador e em Gestão de Demonstrações. */
+  const renderDemoPackageSelector = useCallback(
+    (opts: { compact?: boolean; showOpenGestaoDemos?: boolean; title?: string }) => {
+      const compact = opts.compact ?? false
+      const title = opts.title ?? 'Módulos da demo'
+      return (
+        <div
+          style={{
+            marginBottom: compact ? '16px' : '20px',
+            padding: compact ? '12px' : '15px',
+            backgroundColor: '#222222',
+            borderRadius: '8px',
+            border: '1px solid rgba(0, 180, 255, 0.18)',
+          }}
+        >
+          <div style={{ fontSize: compact ? '12px' : '13px', fontWeight: 700, color: '#8cd8ff', marginBottom: '10px' }}>{title}</div>
+          <div style={{ fontSize: compact ? '11px' : '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
+            Escolha um <strong>pacote</strong> antes de «Adicionar» o destinatário. Define o que essa pessoa pode usar na demo (ativo), ver bloqueado ou não ver.
+            {opts.showOpenGestaoDemos ? (
+              <>
+                {' '}
+                A grelha com <strong>cada módulo</strong> está no ecrã <strong>Gestão de Demonstrações</strong> (botão abaixo).
+              </>
+            ) : null}
+          </div>
+          <div style={{ marginBottom: '14px' }}>
+            <label style={{ display: 'block', fontSize: compact ? '11px' : '12px', color: '#b8e6ff', marginBottom: '6px', fontWeight: 600 }}>
+              Pacote de demonstração
+            </label>
+            <select
+              value={
+                ['basic', 'commercial', 'technical', 'partial', 'gestao-nucleo', 'tecnica-clientes'].includes(
+                  String(demoLinkForm.demoPreset || '')
+                )
+                  ? String(demoLinkForm.demoPreset)
+                  : 'custom'
+              }
+              onChange={(e) => {
+                const v = e.target.value as DemoPackagePreset | 'custom'
+                if (v === 'custom') {
+                  setDemoLinkForm((p) => ({ ...p, demoPreset: 'custom' }))
+                  return
+                }
+                const strict = v === 'gestao-nucleo' || v === 'tecnica-clientes'
+                setDemoLinkForm((prev) => ({
+                  ...prev,
+                  demoPreset: v,
+                  demoModules: buildDemoModulesFromPreset(v, strict ? 'strict-hidden' : 'legacy-teaser'),
+                }))
+              }}
+              style={{
+                width: '100%',
+                maxWidth: '560px',
+                padding: compact ? '8px 10px' : '10px 12px',
+                backgroundColor: '#141414',
+                color: '#fff',
+                border: '1px solid rgba(0, 180, 255, 0.35)',
+                borderRadius: '8px',
+                fontSize: compact ? '12px' : '13px',
+              }}
+            >
+              <option value="custom">Personalizada (ajustar na grelha em Gestão de Demonstrações)</option>
+              <option value="basic">Comercial mínimo (3 funções na área técnica)</option>
+              <option value="commercial">Comercial (clientes, peças, agenda…)</option>
+              <option value="technical">Técnica / operação (equip., checklist, protocolos…)</option>
+              <option value="partial">Mista (parcial)</option>
+              <option value="gestao-nucleo">Só gestão: Custos, Financeiro, Industrial, Comunicação (resto oculto)</option>
+              <option value="tecnica-clientes">Gestão técnica + clientes e operações (resto oculto)</option>
+            </select>
+          </div>
+          <div style={{ fontSize: compact ? '11px' : '12px', color: '#d7f4ff', marginBottom: '10px' }}>
+            <strong>Perfil atual:</strong> {getDemoPresetLabel(demoLinkForm.demoPreset)}
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: opts.showOpenGestaoDemos ? '6px' : '0' }}>
+            {(
+              [
+                { id: 'basic' as const, label: 'Demo básica', mode: 'legacy-teaser' as const },
+                { id: 'commercial' as const, label: 'Demo comercial', mode: 'legacy-teaser' as const },
+                { id: 'technical' as const, label: 'Demo técnica', mode: 'legacy-teaser' as const },
+                { id: 'partial' as const, label: 'Demo parcial', mode: 'legacy-teaser' as const },
+                { id: 'gestao-nucleo' as const, label: 'Só gestão (4 áreas)', mode: 'strict-hidden' as const },
+                { id: 'tecnica-clientes' as const, label: 'Técnica + clientes', mode: 'strict-hidden' as const },
+              ] as const
+            ).map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                className="btn-primary"
+                onClick={() =>
+                  setDemoLinkForm((prev) => ({
+                    ...prev,
+                    demoPreset: preset.id,
+                    demoModules: buildDemoModulesFromPreset(preset.id, preset.mode),
+                  }))
+                }
+                style={{
+                  padding: compact ? '6px 10px' : '8px 12px',
+                  fontSize: compact ? '11px' : '12px',
+                  backgroundColor: 'rgba(0, 180, 255, 0.14)',
+                  borderColor: 'rgba(0, 180, 255, 0.34)',
+                  color: '#8cd8ff',
+                }}
+              >
+                {preset.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => setDemoLinkForm(createDefaultDemoLinkForm())}
+              style={{
+                padding: compact ? '6px 10px' : '8px 12px',
+                fontSize: compact ? '11px' : '12px',
+                backgroundColor: 'rgba(255,255,255,0.08)',
+                borderColor: 'rgba(255,255,255,0.16)',
+                color: '#f3f3f3',
+              }}
+            >
+              Restaurar padrão
+            </button>
+          </div>
+          {opts.showOpenGestaoDemos ? (
+            <div style={{ marginTop: '12px' }}>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => openTab('gestao-demos', getTabTitle('gestao-demos'))}
+                style={{
+                  padding: '8px 14px',
+                  fontSize: '12px',
+                  border: '1px solid rgba(0, 255, 140, 0.35)',
+                  borderRadius: '8px',
+                  background: 'rgba(0, 255, 140, 0.08)',
+                  color: '#7dffb3',
+                  cursor: 'pointer',
+                }}
+              >
+                Abrir «Gestão de Demonstrações» — grelha de todos os módulos
+              </button>
+            </div>
+          ) : null}
+        </div>
+      )
+    },
+    [buildDemoModulesFromPreset, createDefaultDemoLinkForm, demoLinkForm.demoPreset, getDemoPresetLabel, openTab]
+  )
+
   const renderGestaoDemosContent = (compact = false) => (
     <div className="admin-section admin-section--cyan" style={compact ? { marginBottom: '24px' } : undefined}>
       <h3 className="admin-section-title admin-section-title--cyan">
@@ -17094,104 +17241,10 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div style={{ marginBottom: '20px', padding: compact ? '12px' : '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 180, 255, 0.18)' }}>
+      {renderDemoPackageSelector({ compact })}
+      <div style={{ marginBottom: '20px', padding: compact ? '12px' : '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 180, 255, 0.12)' }}>
         <div style={{ fontSize: compact ? '12px' : '13px', fontWeight: 700, color: '#8cd8ff', marginBottom: '10px' }}>
-          Módulos da demo
-        </div>
-        <div style={{ fontSize: compact ? '11px' : '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
-          Escolhe um <strong>pacote</strong> (rápido) ou ajusta cada módulo abaixo. O pacote define o que o destinatário pode usar no link (ativo), ver bloqueado (pré-visualização) ou não ver.
-        </div>
-        <div style={{ marginBottom: '14px' }}>
-          <label style={{ display: 'block', fontSize: compact ? '11px' : '12px', color: '#b8e6ff', marginBottom: '6px', fontWeight: 600 }}>
-            Pacote de demonstração
-          </label>
-          <select
-            value={
-              ['basic', 'commercial', 'technical', 'partial', 'gestao-nucleo', 'tecnica-clientes'].includes(
-                String(demoLinkForm.demoPreset || '')
-              )
-                ? String(demoLinkForm.demoPreset)
-                : 'custom'
-            }
-            onChange={(e) => {
-              const v = e.target.value as DemoPackagePreset | 'custom'
-              if (v === 'custom') {
-                setDemoLinkForm((p) => ({ ...p, demoPreset: 'custom' }))
-                return
-              }
-              const strict = v === 'gestao-nucleo' || v === 'tecnica-clientes'
-              setDemoLinkForm((prev) => ({
-                ...prev,
-                demoPreset: v,
-                demoModules: buildDemoModulesFromPreset(v, strict ? 'strict-hidden' : 'legacy-teaser'),
-              }))
-            }}
-            style={{
-              width: '100%',
-              maxWidth: '520px',
-              padding: compact ? '8px 10px' : '10px 12px',
-              backgroundColor: '#141414',
-              color: '#fff',
-              border: '1px solid rgba(0, 180, 255, 0.35)',
-              borderRadius: '8px',
-              fontSize: compact ? '12px' : '13px',
-            }}
-          >
-            <option value="custom">Personalizada (usar grelha abaixo)</option>
-            <option value="basic">Comercial mínimo (3 funções na área técnica)</option>
-            <option value="commercial">Comercial (clientes, peças, agenda…)</option>
-            <option value="technical">Técnica / operação (equip., checklist, protocolos…)</option>
-            <option value="partial">Mista (parcial)</option>
-            <option value="gestao-nucleo">Só gestão: Custos, Financeiro, Industrial, Comunicação (resto oculto)</option>
-            <option value="tecnica-clientes">Gestão técnica + clientes e operações (resto oculto)</option>
-          </select>
-        </div>
-        <div style={{ fontSize: compact ? '11px' : '12px', color: '#d7f4ff', marginBottom: '10px' }}>
-          <strong>Perfil atual:</strong> {getDemoPresetLabel(demoLinkForm.demoPreset)}
-        </div>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '14px' }}>
-          {([
-            { id: 'basic' as const, label: 'Demo básica', mode: 'legacy-teaser' as const },
-            { id: 'commercial' as const, label: 'Demo comercial', mode: 'legacy-teaser' as const },
-            { id: 'technical' as const, label: 'Demo técnica', mode: 'legacy-teaser' as const },
-            { id: 'partial' as const, label: 'Demo parcial', mode: 'legacy-teaser' as const },
-            { id: 'gestao-nucleo' as const, label: 'Só gestão (4 áreas)', mode: 'strict-hidden' as const },
-            { id: 'tecnica-clientes' as const, label: 'Técnica + clientes', mode: 'strict-hidden' as const },
-          ]).map((preset) => (
-            <button
-              key={preset.id}
-              type="button"
-              className="btn-primary"
-              onClick={() => setDemoLinkForm((prev) => ({
-                ...prev,
-                demoPreset: preset.id,
-                demoModules: buildDemoModulesFromPreset(preset.id, preset.mode),
-              }))}
-              style={{
-                padding: compact ? '6px 10px' : '8px 12px',
-                fontSize: compact ? '11px' : '12px',
-                backgroundColor: 'rgba(0, 180, 255, 0.14)',
-                borderColor: 'rgba(0, 180, 255, 0.34)',
-                color: '#8cd8ff'
-              }}
-            >
-              {preset.label}
-            </button>
-          ))}
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={() => setDemoLinkForm(createDefaultDemoLinkForm())}
-            style={{
-              padding: compact ? '6px 10px' : '8px 12px',
-              fontSize: compact ? '11px' : '12px',
-              backgroundColor: 'rgba(255,255,255,0.08)',
-              borderColor: 'rgba(255,255,255,0.16)',
-              color: '#f3f3f3'
-            }}
-          >
-            Restaurar padrão
-          </button>
+          Ajuste módulo a módulo (opcional)
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: compact ? '1fr' : 'repeat(auto-fit, minmax(260px, 1fr))', gap: '10px' }}>
           {DEMO_MODULE_CATALOG.map((module) => (
@@ -21137,6 +21190,12 @@ const nextF = familias.filter(x => x !== f)
                   <span style={{ fontSize: '12px', opacity: 0.78 }}>Expiradas</span>
                 </div>
               </div>
+
+              {renderDemoPackageSelector({
+                compact: false,
+                showOpenGestaoDemos: true,
+                title: 'O que esta demonstração pode mostrar',
+              })}
 
               <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
@@ -52863,6 +52922,11 @@ A1;Peça exemplo;10`}
                   <span style={{ fontSize: '11px', opacity: 0.75 }}>Expiradas</span>
                 </div>
               </div>
+              {renderDemoPackageSelector({
+                compact: true,
+                showOpenGestaoDemos: true,
+                title: 'Pacote de demonstração',
+              })}
               <div style={{ marginBottom: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <input
                   type="text"
