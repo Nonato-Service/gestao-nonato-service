@@ -20920,6 +20920,8 @@ const nextF = familias.filter(x => x !== f)
               </h3>
               <p style={{ fontSize: '13px', opacity: 0.8, marginBottom: '15px', lineHeight: 1.5 }}>
                 Registe aqui a quem enviou a demonstração. Cada acesso de demo dura `15 dias`, usa dados isolados e depois fica bloqueado automaticamente.
+                {' '}
+                <strong style={{ color: '#9be7ff' }}>O sistema não envia e-mail automaticamente:</strong> depois de «Adicionar», use «Copiar link» na linha dessa pessoa (link com <code style={{ fontSize: '11px' }}>?rid=…</code>) e envie por WhatsApp, e-mail, etc. O botão «Copiar link /demo» só copia a página inicial da demo, sem identificar a pessoa.
               </p>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '10px', marginBottom: '16px' }}>

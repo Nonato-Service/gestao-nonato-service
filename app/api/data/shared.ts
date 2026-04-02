@@ -21,3 +21,14 @@ export function ensureDataDir(): void {
     throw e
   }
 }
+
+/**
+ * Chaves guardadas sempre na raiz de DATA_DIR (não em data/demo/*).
+ * `nonato-demo-link-recipients` tem de coincidir com o ficheiro que `/api/demo/activate` lê para aplicar módulos e contagem por `rid`.
+ */
+export const DATA_KEYS_ALWAYS_GLOBAL = new Set<string>(['nonato-demo-link-recipients'])
+
+export function resolveDataDirForKey(key: string, sessionDataDir: string): string {
+  if (DATA_KEYS_ALWAYS_GLOBAL.has(key)) return DATA_DIR
+  return sessionDataDir
+}

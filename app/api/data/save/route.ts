@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import { ensureDataDir } from '../shared'
+import { ensureDataDir, resolveDataDirForKey } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 import { bumpSyncMeta } from '../syncMeta'
 
@@ -18,7 +18,6 @@ export async function POST(request: NextRequest) {
       )
     }
     ensureDataDir()
-    ensureDemoDataDir(dataDir)
     const body = await request.json()
     const { key, value } = body
 
@@ -29,7 +28,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const filePath = path.join(dataDir, `${key}.json`)
+    const targetDir = resolveDataDirForKey(key, dataDir)
+    ensureDemoDataDir(targetDir)
+    const filePath = path.join(targetDir, `${key}.json`)
     
     // Salvar o arquivo
     fs.writeFileSync(filePath, JSON.stringify(value, null, 2), 'utf-8')
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
     let revision: number | undefined
     let updatedAt: string | undefined
     try {
-      const meta = bumpSyncMeta(dataDir)
+      const meta = bumpSyncMeta(targetDir)
       revision = meta.revision
       updatedAt = meta.updatedAt
     } catch (e) {

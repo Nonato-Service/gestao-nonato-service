@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import { ensureDataDir } from '../shared'
+import { DATA_DIR, ensureDataDir, resolveDataDirForKey } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 
 export const runtime = 'nodejs'
@@ -43,6 +43,18 @@ export async function GET(request: NextRequest) {
           // Continuar mesmo se houver erro em um arquivo
         }
       }
+      // Lista de destinatários demo: sempre a cópia global (mesma que /api/demo/activate usa)
+      const globalRecipientsPath = path.join(DATA_DIR, 'nonato-demo-link-recipients.json')
+      if (fs.existsSync(globalRecipientsPath)) {
+        try {
+          const gr = fs.readFileSync(globalRecipientsPath, 'utf-8')
+          if (gr && gr.trim() !== '') {
+            allData['nonato-demo-link-recipients'] = JSON.parse(gr)
+          }
+        } catch (e) {
+          console.error('Erro ao ler nonato-demo-link-recipients global:', e)
+        }
+      }
       
       // Carregar arquivos TXT (para vídeos/imagens grandes)
       for (const file of txtFiles) {
@@ -65,7 +77,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Carregar um arquivo específico
-    const filePath = path.join(dataDir, `${key}.json`)
+    const targetDir = resolveDataDirForKey(key, dataDir)
+    const filePath = path.join(targetDir, `${key}.json`)
     
     if (!fs.existsSync(filePath)) {
       return NextResponse.json({ 

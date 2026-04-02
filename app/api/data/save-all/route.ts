@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import { ensureDataDir } from '../shared'
+import { ensureDataDir, resolveDataDirForKey } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 import { bumpSyncMeta } from '../syncMeta'
 
@@ -28,12 +28,17 @@ export async function POST(request: NextRequest) {
     const saved: string[] = []
     const errors: string[] = []
 
+    const bumpedDirs = new Set<string>()
+
     // Salvar cada item
     for (const [key, value] of Object.entries(allData)) {
       try {
-        const filePath = path.join(dataDir, `${key}.json`)
+        const targetDir = resolveDataDirForKey(key, dataDir)
+        ensureDemoDataDir(targetDir)
+        const filePath = path.join(targetDir, `${key}.json`)
         fs.writeFileSync(filePath, JSON.stringify(value, null, 2), 'utf-8')
         saved.push(key)
+        bumpedDirs.add(targetDir)
       } catch (error: any) {
         console.error(`Erro ao salvar ${key}:`, error)
         errors.push(`${key}: ${error.message}`)
@@ -43,9 +48,11 @@ export async function POST(request: NextRequest) {
     let revision: number | undefined
     let updatedAt: string | undefined
     try {
-      const meta = bumpSyncMeta(dataDir)
-      revision = meta.revision
-      updatedAt = meta.updatedAt
+      for (const dir of bumpedDirs) {
+        const meta = bumpSyncMeta(dir)
+        revision = meta.revision
+        updatedAt = meta.updatedAt
+      }
     } catch (e) {
       console.error('bumpSyncMeta (save-all):', e)
     }
