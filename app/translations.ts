@@ -1298,6 +1298,11 @@ export const translations = {
     importacaoColarCatalogoPasso2: '2. Cole tudo na caixa abaixo',
     importacaoColarCatalogoPasso3: '3. Veja a pré-visualização antes de salvar',
     importacaoColarCatalogoPlaceholder: 'Exemplo de colagem rápida:\n\nCOD-001\nMotor ventilador 220V\n34,90 €\n\nCOD-002\nSensor térmico\n12,50 €\n\nou\n[{"codigo":"A1","nome":"Peça exemplo","preco":"10"}]\n\nou\ncodigo;nome;preco\nA1;Peça exemplo;10',
+    importacaoLojaBaseUrlLabel: 'URL base da loja (opcional)',
+    importacaoLojaBaseUrlPlaceholder: 'https://shop.homag.com',
+    importacaoLojaBaseUrlHint:
+      'Para imagens com src relativo (ex.: /s/sfsites/c/cms/... na Homag/Salesforce), indique o site da loja. Sem isto, o navegador tenta carregar a foto a partir do endereço da sua app e falha.',
+    importacaoPreviewColImagem: 'Img',
     importacaoPecasEmBreve: 'Aqui você poderá importar peças em lote (planilha Excel, CSV) para a Biblioteca de Peças. Em breve mais opções.',
     cadastroPecas: 'Cadastro de Peças',
     bibliotecaPecas: 'Biblioteca',

@@ -3318,6 +3318,8 @@ export default function Dashboard() {
   const [importacaoUrlError, setImportacaoUrlError] = useState<string | null>(null)
   const [importacaoPreview, setImportacaoPreview] = useState<PecaBiblioteca[] | null>(null)
   const [importacaoTextoColado, setImportacaoTextoColado] = useState('')
+  /** Origem da loja (ex. https://shop.homag.com) para completar src relativos tipo /s/sfsites/... (Salesforce B2B) */
+  const [importacaoLojaBaseUrl, setImportacaoLojaBaseUrl] = useState('')
   const [showImportacaoGuiaHomag, setShowImportacaoGuiaHomag] = useState(false)
   const [importacaoGuiaPlataforma, setImportacaoGuiaPlataforma] = useState<'windows' | 'android' | 'ipad'>('windows')
   const [filtroImportacaoPendente, setFiltroImportacaoPendente] = useState<'todos' | 'sem-grupo' | 'sem-subgrupo'>('todos')
@@ -16073,8 +16075,19 @@ export default function Dashboard() {
     }
   }
 
-  const parseRawToPecas = useCallback((raw: string): PecaBiblioteca[] => {
+  const parseRawToPecas = useCallback((raw: string, lojaBaseUrl = ''): PecaBiblioteca[] => {
     const trimRaw = raw.trim()
+    const lojaOrigin = (() => {
+      const s = String(lojaBaseUrl || '').trim()
+      if (!s) return ''
+      try {
+        const u = new URL(s.includes('://') ? s : `https://${s}`)
+        if (u.protocol !== 'http:' && u.protocol !== 'https:') return ''
+        return u.origin
+      } catch {
+        return ''
+      }
+    })()
     let itens: any[] = []
     const pushIfValid = (obj: any) => {
       if (!obj || typeof obj !== 'object') return
@@ -16204,6 +16217,7 @@ export default function Dashboard() {
           try {
             if (baseHref) return new URL(u, baseHref).href
             if (u.startsWith('//')) return `https:${u}`
+            if (u.startsWith('/') && lojaOrigin) return new URL(u, `${lojaOrigin}/`).href
             if (u.startsWith('/')) return u
             return u
           } catch {
@@ -16232,6 +16246,13 @@ export default function Dashboard() {
               if (proto) {
                 imagem = resolveUrl(`https:${proto[0]}`)
                 break
+              }
+              const srcRel = html.match(/\bsrc\s*=\s*["']([^"']+)["']/i)
+              if (srcRel?.[1]) {
+                const cand = srcRel[1].replace(/&amp;/g, '&').trim()
+                if (cand.startsWith('/') && !cand.startsWith('//')) imagem = resolveUrl(cand)
+                else if (/^https?:\/\//i.test(cand) || cand.startsWith('//')) imagem = resolveUrl(cand.startsWith('//') ? `https:${cand}` : cand)
+                if (imagem) break
               }
             }
           }
@@ -16502,7 +16523,19 @@ export default function Dashboard() {
       }
     }
     // Normaliza e remove duplicados da própria importação.
-    const mapped = itens.map((item, idx) => mapItemToPecaBiblioteca(item, idx))
+    const absolutizeImagem = (p: PecaBiblioteca): PecaBiblioteca => {
+      const im = (p.imagem || '').trim()
+      if (!im || !lojaOrigin) return p
+      if (im.startsWith('/') && !im.startsWith('//')) {
+        try {
+          return { ...p, imagem: new URL(im, `${lojaOrigin}/`).href }
+        } catch {
+          return p
+        }
+      }
+      return p
+    }
+    const mapped = itens.map((item, idx) => absolutizeImagem(mapItemToPecaBiblioteca(item, idx)))
     const seen = new Set<string>()
     return mapped.filter((p) => {
       const key = normalizeImportKey(p.codigo) || `n:${normalizeImportKey(p.nome)}`
@@ -16541,7 +16574,7 @@ export default function Dashboard() {
 
     const tryParseAndPreview = (raw: string): boolean => {
       try {
-        const pecas = parseRawToPecas(raw)
+        const pecas = parseRawToPecas(raw, importacaoLojaBaseUrl)
         if (pecas.length === 0) return false
         setImportacaoPreview(pecas)
         setImportacaoUrlError(null)
@@ -16635,7 +16668,7 @@ export default function Dashboard() {
     } finally {
       setImportacaoUrlLoading(false)
     }
-  }, [urlImportacaoPecas, t, parseRawToPecas])
+  }, [urlImportacaoPecas, t, parseRawToPecas, importacaoLojaBaseUrl])
 
   const handleImportacaoFicheiro = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -16646,7 +16679,7 @@ export default function Dashboard() {
     reader.onload = () => {
       try {
         const raw = String(reader.result ?? '')
-        const pecas = parseRawToPecas(raw)
+        const pecas = parseRawToPecas(raw, importacaoLojaBaseUrl)
         if (pecas.length === 0) {
           setImportacaoUrlError(t?.importacaoNenhumaLinha ?? 'Nenhuma lista encontrada no ficheiro. Use CSV (1ª linha = cabeçalhos) ou JSON.')
           return
@@ -16658,7 +16691,7 @@ export default function Dashboard() {
     }
     reader.readAsText(file, 'UTF-8')
     e.target.value = ''
-  }, [parseRawToPecas, t])
+  }, [parseRawToPecas, t, importacaoLojaBaseUrl])
 
   const handleImportacaoColarTexto = useCallback(() => {
     const raw = importacaoTextoColado.trim()
@@ -16676,7 +16709,7 @@ export default function Dashboard() {
     setImportacaoUrlError(null)
     setImportacaoPreview(null)
     try {
-      const pecas = parseRawToPecas(raw)
+      const pecas = parseRawToPecas(raw, importacaoLojaBaseUrl)
       if (pecas.length === 0) {
         setImportacaoUrlError(t?.importacaoNenhumaLinha ?? 'Nenhuma lista encontrada. Use JSON (array ou objeto com .pecas/.parts/.items/.data/.itens) ou CSV (1ª linha = cabeçalhos).')
         return
@@ -16685,7 +16718,7 @@ export default function Dashboard() {
     } catch (err: any) {
       setImportacaoUrlError(err?.message || (t?.importacaoErroJsonInvalido ?? 'Conteúdo inválido. Use JSON ou CSV com cabeçalhos na primeira linha.'))
     }
-  }, [importacaoTextoColado, parseRawToPecas, t])
+  }, [importacaoTextoColado, parseRawToPecas, t, importacaoLojaBaseUrl])
 
   const handleAdicionarImportacaoPreview = useCallback(() => {
     if (!importacaoPreview || importacaoPreview.length === 0) return
@@ -29792,6 +29825,7 @@ onKeyPress={(e) => {
                                 <img
                                   src={peca.imagem}
                                   alt={peca.nome}
+                                  referrerPolicy="no-referrer"
                                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 />
                               </div>
@@ -30417,6 +30451,32 @@ onKeyPress={(e) => {
                     )}
                   </div>
                 )}
+                <div style={{ marginBottom: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#aaa', marginBottom: '6px' }}>
+                    {(safeT as any)?.importacaoLojaBaseUrlLabel || 'URL base da loja (opcional)'}
+                  </label>
+                  <input
+                    type="url"
+                    value={importacaoLojaBaseUrl}
+                    onChange={(e) => setImportacaoLojaBaseUrl(e.target.value)}
+                    placeholder={(safeT as any)?.importacaoLojaBaseUrlPlaceholder || 'https://shop.homag.com'}
+                    style={{
+                      width: '100%',
+                      maxWidth: '480px',
+                      padding: '10px 14px',
+                      backgroundColor: '#141414',
+                      border: '1px solid rgba(0, 255, 0, 0.25)',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      fontSize: '13px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                  <p style={{ fontSize: '11px', color: '#777', margin: '6px 0 0', maxWidth: '640px', lineHeight: 1.45 }}>
+                    {(safeT as any)?.importacaoLojaBaseUrlHint ||
+                      'Se o HTML tiver src="/s/... (Salesforce/Homag), preencha com o site da loja para a foto abrir na biblioteca.'}
+                  </p>
+                </div>
                 <p style={{ fontSize: '13px', margin: '16px 0 8px 0', color: '#aaa' }}>
                   {safeT?.importacaoColarDesc || 'Ou cole aqui o conteúdo JSON ou CSV (ex.: copiado do site ou de um ficheiro):'}
                 </p>
@@ -30754,6 +30814,33 @@ A1;Peça exemplo;10'
                   <span>{(safeT as any)?.importacaoColarCatalogoPasso3 || '3. Veja a pré-visualização antes de salvar'}</span>
                 </div>
 
+                <div style={{ marginBottom: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#aaa', marginBottom: '6px' }}>
+                    {(safeT as any)?.importacaoLojaBaseUrlLabel || 'URL base da loja (opcional)'}
+                  </label>
+                  <input
+                    type="url"
+                    value={importacaoLojaBaseUrl}
+                    onChange={(e) => setImportacaoLojaBaseUrl(e.target.value)}
+                    placeholder={(safeT as any)?.importacaoLojaBaseUrlPlaceholder || 'https://shop.homag.com'}
+                    style={{
+                      width: '100%',
+                      maxWidth: '480px',
+                      padding: '10px 14px',
+                      backgroundColor: '#141414',
+                      border: '1px solid rgba(0, 255, 0, 0.25)',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      fontSize: '13px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                  <p style={{ fontSize: '11px', color: '#777', margin: '6px 0 0', maxWidth: '640px', lineHeight: 1.45 }}>
+                    {(safeT as any)?.importacaoLojaBaseUrlHint ||
+                      'Se o HTML tiver src="/s/... (Salesforce/Homag), preencha com o site da loja para a foto abrir na biblioteca.'}
+                  </p>
+                </div>
+
                 <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: '#aaa' }}>
                   {safeT?.importacaoColarDesc || 'Ou cole aqui o conteúdo JSON ou CSV (ex.: copiado do site ou de um ficheiro):'}
                 </p>
@@ -30804,6 +30891,7 @@ A1;Peça exemplo;10`}
                           <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 255, 0, 0.3)' }}>{safeT?.codigo || 'Código'}</th>
                           <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 255, 0, 0.3)' }}>{safeT?.nome || 'Nome'}</th>
                           <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(0, 255, 0, 0.3)' }}>{safeT?.preco || 'Preço'}</th>
+                          <th style={{ padding: '10px', textAlign: 'center', borderBottom: '1px solid rgba(0, 255, 0, 0.3)', width: '56px' }}>{(safeT as any)?.importacaoPreviewColImagem || 'Img'}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -30812,6 +30900,13 @@ A1;Peça exemplo;10`}
                             <td style={{ padding: '8px 10px' }}>{p.codigo || '-'}</td>
                             <td style={{ padding: '8px 10px' }}>{(p.nome || p.descricao || '').slice(0, 50)}{(p.nome || p.descricao || '').length > 50 ? '…' : ''}</td>
                             <td style={{ padding: '8px 10px' }}>{p.preco || '-'}</td>
+                            <td style={{ padding: '6px', textAlign: 'center', verticalAlign: 'middle' }}>
+                              {p.imagem ? (
+                                <img src={p.imagem} alt="" referrerPolicy="no-referrer" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }} />
+                              ) : (
+                                <span style={{ color: '#666', fontSize: '12px' }}>—</span>
+                              )}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
