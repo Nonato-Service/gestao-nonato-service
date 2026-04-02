@@ -1189,7 +1189,7 @@ type Tab = {
 
 type DemoModuleMode = 'active' | 'teaser' | 'hidden'
 
-/** Pacotes pré-definidos para o link de demonstração (Administrador / Gestão de Demonstrações). */
+/** Pacotes pré-definidos para o link de demonstração (ecrã «Gestão de envio de demonstrações»). */
 type DemoPackagePreset =
   | 'basic'
   | 'commercial'
@@ -3161,7 +3161,7 @@ export default function Dashboard() {
       'fechamento-relatorios-servicos': t?.fechamentoRelatoriosServicosTitle || 'Fechamento dos Relatórios de Serviços',
       'translator': t?.translator || 'Tradutor de Idiomas',
       'administrador': t?.administrador || 'Administrador',
-      'gestao-demos': 'Gestão de Demonstrações',
+      'gestao-demos': 'Gestão de envio de demonstrações',
       'estado-visual-tecnico': t?.estadoVisualTecnico || 'Estado Visual do Técnico',
       'informacoes-conhecimento-tecnicos': t?.informacoesConhecimentoTecnicosTitle || 'Informações de Conhecimento dos Técnicos',
       'gestao-custos': t?.gestaoCustosTitle || 'Gestão de Custos',
@@ -14443,8 +14443,10 @@ export default function Dashboard() {
                   <LogoComponent size="small" />
                 </div>
                 <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 className="admin-hero-title">GESTÃO DE DEMONSTRAÇÕES</h1>
-                  <p className="admin-hero-sub">Controlo comercial da versão demo por cliente</p>
+                  <h1 className="admin-hero-title" style={{ letterSpacing: '0.02em' }}>
+                    {getTabTitle('gestao-demos').toUpperCase()}
+                  </h1>
+                  <p className="admin-hero-sub">Registo de destinatários, pacotes de módulos e links de teste</p>
                 </div>
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                   <button
@@ -17398,7 +17400,7 @@ export default function Dashboard() {
     ]
   )
 
-  /** Pacote de demo (lista + atalhos) — visível no Administrador e em Gestão de Demonstrações. */
+  /** Pacote de demo (lista + atalhos) — ecrã dedicado de envio de demonstrações. */
   const renderDemoPackageSelector = useCallback(
     (opts: { compact?: boolean; showOpenGestaoDemos?: boolean; title?: string }) => {
       const compact = opts.compact ?? false
@@ -17419,7 +17421,7 @@ export default function Dashboard() {
             {opts.showOpenGestaoDemos ? (
               <>
                 {' '}
-                Também pode abrir <strong>Gestão de Demonstrações</strong> para o mesmo ecrã em janela própria.
+                Também pode abrir o ecrã <strong>Gestão de envio de demonstrações</strong> pelo menu ou pelo Administrador.
               </>
             ) : null}
           </div>
@@ -17459,7 +17461,7 @@ export default function Dashboard() {
                 fontSize: compact ? '12px' : '13px',
               }}
             >
-              <option value="custom">Personalizada (ajustar na grelha em Gestão de Demonstrações)</option>
+              <option value="custom">Personalizada (ajustar na grelha de módulos abaixo)</option>
               <option value="basic">Comercial mínimo (3 funções na área técnica)</option>
               <option value="commercial">Comercial (clientes, peças, agenda…)</option>
               <option value="technical">Técnica / operação (equip., checklist, protocolos…)</option>
@@ -17569,7 +17571,7 @@ export default function Dashboard() {
                   cursor: 'pointer',
                 }}
               >
-                Abrir «Gestão de Demonstrações» — grelha de todos os módulos
+                Abrir gestão de envio de demonstrações (ecrã completo)
               </button>
             </div>
           ) : null}
@@ -17582,10 +17584,10 @@ export default function Dashboard() {
   const renderGestaoDemosContent = (compact = false) => (
     <div className="admin-section admin-section--cyan" style={compact ? { marginBottom: '24px' } : undefined}>
       <h3 className="admin-section-title admin-section-title--cyan">
-        🎯 Gestão de Demonstrações
+        🎯 Gestão de envio de demonstrações
       </h3>
       <p style={{ fontSize: compact ? '12px' : '13px', opacity: 0.8, marginBottom: '15px', lineHeight: 1.5 }}>
-        Área própria para registar clientes em teste, acompanhar primeiro acesso, renovar prazos e reenviar links individuais.
+        Registe quem recebe o link, defina o que cada demo pode mostrar e copie links individuais. Use os filtros e a lista abaixo para acompanhar estados e prazos.
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: compact ? 'repeat(auto-fit, minmax(120px, 1fr))' : 'repeat(auto-fit, minmax(170px, 1fr))', gap: compact ? '8px' : '10px', marginBottom: '16px' }}>
@@ -17653,7 +17655,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {renderDemoPackageSelector({ compact })}
+      {renderDemoPackageSelector({ compact, showOpenGestaoDemos: false })}
       {renderDemoModuleFineGrid({ compact })}
 
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '14px' }}>
@@ -21478,21 +21480,9 @@ const nextF = familias.filter(x => x !== f)
               <span style={{ opacity: 0.35 }}>·</span>
               <a href="#admin-sync-multi">{(safeT as any)?.syncAdminJump || 'Sincronização entre aparelhos'}</a>
               <span style={{ opacity: 0.35 }}>·</span>
-              <button
-                type="button"
-                onClick={() => openTab('gestao-demos', getTabTitle('gestao-demos'))}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'inherit',
-                  cursor: 'pointer',
-                  padding: 0,
-                  textDecoration: 'underline',
-                  font: 'inherit'
-                }}
-              >
-                Abrir Gestão de Demonstrações
-              </button>
+              <a href="#admin-demo-envio" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                Gestão de envio de demonstrações
+              </a>
             </div>
 
             {/* Sincronização multi-dispositivo — só neste ecrã, sem barra em cima da app */}
@@ -21540,226 +21530,31 @@ const nextF = familias.filter(x => x !== f)
               )}
             </div>
 
-            {/* SEÇÃO: CONTROLE DE ENVIO DO LINK PARA TESTE - Primeira secção para maior visibilidade */}
-            <div className="admin-section admin-section--cyan">
+            {/* Demonstrações — atalho para o ecrã dedicado (evita misturar com o resto do Administrador) */}
+            <div id="admin-demo-envio" className="admin-section admin-section--cyan">
               <h3 className="admin-section-title admin-section-title--cyan">
-                📤 Controle de Envio do Link para Teste
+                📤 Gestão de envio de demonstrações
               </h3>
-              <p style={{ fontSize: '13px', opacity: 0.8, marginBottom: '15px', lineHeight: 1.5 }}>
-                Registe aqui a quem enviou a demonstração. Cada acesso de demo dura `15 dias`, usa dados isolados e depois fica bloqueado automaticamente.
-                {' '}
-                <strong style={{ color: '#9be7ff' }}>O sistema não envia e-mail automaticamente:</strong> depois de «Adicionar», use «Copiar link» na linha dessa pessoa (link com <code style={{ fontSize: '11px' }}>?rid=…</code>) e envie por WhatsApp, e-mail, etc. O botão «Copiar link /demo» só copia a página inicial da demo, sem identificar a pessoa.
+              <p style={{ fontSize: '13px', opacity: 0.85, marginBottom: '14px', lineHeight: 1.55 }}>
+                Registe destinatários, escolha pacotes de módulos, copie links com identificação (<code style={{ fontSize: '11px', opacity: 0.9 }}>?rid=…</code>) e acompanhe prazos. Cada demo segue a regra dos 15 dias após o primeiro acesso; o sistema <strong>não envia e-mail sozinho</strong> — copie o link e envie pelo canal que preferir.
               </p>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '10px', marginBottom: '16px' }}>
-                <div style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,255,255,0.08)', border: '1px solid rgba(0,255,255,0.18)' }}>
-                  <strong style={{ display: 'block', fontSize: '22px', color: '#9be7ff' }}>{demoRecipientsComEstado.length}</strong>
-                  <span style={{ fontSize: '12px', opacity: 0.78 }}>Demos registadas</span>
-                </div>
-                <div style={{ padding: '12px', borderRadius: '8px', background: 'rgba(140,140,255,0.08)', border: '1px solid rgba(140,140,255,0.18)' }}>
-                  <strong style={{ display: 'block', fontSize: '22px', color: '#bdbdff' }}>{demoRecipientsComEstado.filter((item) => item.status === 'pendente').length}</strong>
-                  <span style={{ fontSize: '12px', opacity: 0.78 }}>Aguardando entrada</span>
-                </div>
-                <div style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,255,0,0.08)', border: '1px solid rgba(0,255,0,0.18)' }}>
-                  <strong style={{ display: 'block', fontSize: '22px', color: '#7dffb3' }}>{demoRecipientsComEstado.filter((item) => item.status === 'ativo').length}</strong>
-                  <span style={{ fontSize: '12px', opacity: 0.78 }}>Ativas</span>
-                </div>
-                <div style={{ padding: '12px', borderRadius: '8px', background: 'rgba(255,180,0,0.08)', border: '1px solid rgba(255,180,0,0.18)' }}>
-                  <strong style={{ display: 'block', fontSize: '22px', color: '#ffd36a' }}>{demoRecipientsComEstado.filter((item) => item.status === 'a-expirar').length}</strong>
-                  <span style={{ fontSize: '12px', opacity: 0.78 }}>A expirar</span>
-                </div>
-                <div style={{ padding: '12px', borderRadius: '8px', background: 'rgba(255,80,80,0.08)', border: '1px solid rgba(255,80,80,0.18)' }}>
-                  <strong style={{ display: 'block', fontSize: '22px', color: '#ff9b9b' }}>{demoRecipientsComEstado.filter((item) => item.status === 'expirado').length}</strong>
-                  <span style={{ fontSize: '12px', opacity: 0.78 }}>Expiradas</span>
-                </div>
-              </div>
-
-              {renderDemoPackageSelector({
-                compact: false,
-                showOpenGestaoDemos: true,
-                title: 'O que esta demonstração pode mostrar',
-              })}
-              {renderDemoModuleFineGrid({ compact: false })}
-
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
-                  <input
-                    type="text"
-                    placeholder="Nome"
-                    value={demoLinkForm.nome}
-                    onChange={(e) => setDemoLinkForm(f => ({ ...f, nome: e.target.value }))}
-                    style={{ flex: 1, minWidth: '120px', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Email"
-                    value={demoLinkForm.email}
-                    onChange={(e) => setDemoLinkForm(f => ({ ...f, email: e.target.value }))}
-                    style={{ flex: 1, minWidth: '160px', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Observações (opcional)"
-                    value={demoLinkForm.observacoes}
-                    onChange={(e) => setDemoLinkForm(f => ({ ...f, observacoes: e.target.value }))}
-                    style={{ flex: 1, minWidth: '160px', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '10px' }}>
-                  <button
-                    className="btn-primary"
-                    onClick={handleAddDemoRecipient}
-                    style={{ padding: '8px 16px' }}
-                  >
-                    + Adicionar
-                  </button>
-                  <button
-                    className="btn-primary"
-                    onClick={handleCopyDemoLink}
-                    style={{ padding: '8px 16px', backgroundColor: 'rgba(0, 150, 255, 0.2)', borderColor: '#66b3ff', color: '#66b3ff' }}
-                  >
-                    📋 Copiar link /demo
-                  </button>
-                </div>
-                <div style={{ fontSize: '12px', opacity: 0.72, lineHeight: 1.5 }}>
-                  <div><strong>Link:</strong> {demoLinkBaseUrl}</div>
-                  <div><strong>Regra:</strong> a contagem começa quando a pessoa entra na demo e aceita o acesso.</div>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '14px' }}>
-                {[
-                  { id: 'todos', label: `Todos (${demoRecipientsComEstado.length})` },
-                  { id: 'pendente', label: `Pendentes (${demoRecipientsComEstado.filter((item) => item.status === 'pendente').length})` },
-                  { id: 'ativo', label: `Ativos (${demoRecipientsComEstado.filter((item) => item.status === 'ativo').length})` },
-                  { id: 'a-expirar', label: `A expirar (${demoRecipientsComEstado.filter((item) => item.status === 'a-expirar').length})` },
-                  { id: 'expirado', label: `Expirados (${demoRecipientsComEstado.filter((item) => item.status === 'expirado').length})` },
-                ].map((filter) => (
-                  <button
-                    key={filter.id}
-                    type="button"
-                    onClick={() => setDemoStatusFilter(filter.id as typeof demoStatusFilter)}
-                    style={{
-                      padding: '7px 12px',
-                      borderRadius: '999px',
-                      border: demoStatusFilter === filter.id ? '1px solid rgba(0,255,140,0.45)' : '1px solid rgba(255,255,255,0.12)',
-                      background: demoStatusFilter === filter.id ? 'rgba(0,255,140,0.1)' : 'rgba(255,255,255,0.04)',
-                      color: demoStatusFilter === filter.id ? '#7dffb3' : 'rgba(255,255,255,0.82)',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {filter.label}
-                  </button>
-                ))}
-              </div>
-
-              {demoRecipientsComEstado.length === 0 ? (
-                <p style={{ textAlign: 'center', opacity: 0.6, padding: '20px' }}>Nenhuma pessoa registada</p>
-              ) : demoRecipientsFiltrados.length === 0 ? (
-                <p style={{ textAlign: 'center', opacity: 0.6, padding: '20px' }}>Nenhuma demonstração encontrada neste filtro</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '360px', overflowY: 'auto' }}>
-                  {demoRecipientsFiltrados.map((r) => {
-                    const badgeStyle =
-                      r.status === 'pendente'
-                        ? { color: '#bdbdff', border: '1px solid rgba(160,160,255,0.35)', background: 'rgba(120,120,255,0.08)' }
-                        : r.status === 'expirado'
-                        ? { color: '#ff9b9b', border: '1px solid rgba(255,120,120,0.35)', background: 'rgba(255,80,80,0.08)' }
-                        : r.status === 'a-expirar'
-                          ? { color: '#ffd36a', border: '1px solid rgba(255,180,0,0.35)', background: 'rgba(255,180,0,0.08)' }
-                          : { color: '#7dffb3', border: '1px solid rgba(0,255,140,0.35)', background: 'rgba(0,255,140,0.08)' }
-                    return (
-                      <div
-                        key={r.id}
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          gap: '12px',
-                          flexWrap: 'wrap',
-                          padding: '14px',
-                          backgroundColor: '#222222',
-                          borderRadius: '8px',
-                          border: '1px solid rgba(0, 255, 0, 0.1)'
-                        }}
-                      >
-                        <div style={{ flex: 1, minWidth: '220px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
-                            <strong>{r.nome}</strong>
-                            <span style={{ padding: '3px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', ...badgeStyle }}>
-                              {r.status === 'pendente' ? 'Aguardando entrada' : r.status === 'expirado' ? 'Expirado' : r.status === 'a-expirar' ? 'A expirar' : 'Ativo'}
-                            </span>
-                          </div>
-                          {r.email && <span style={{ fontSize: '12px', opacity: 0.8, display: 'block' }}>{r.email}</span>}
-                          <span style={{ fontSize: '11px', opacity: 0.72, display: 'block', marginTop: '6px', lineHeight: 1.5 }}>
-                            Enviado em: {new Date(r.dataEnvio).toLocaleString('pt-BR')}
-                            {r.firstAccessAt ? (
-                              <>
-                                {' • '}
-                                Primeiro acesso: {new Date(r.firstAccessAt).toLocaleString('pt-BR')}
-                              </>
-                            ) : (
-                              <>
-                                {' • '}
-                                Ainda não entrou
-                              </>
-                            )}
-                            {r.dataExpiracao ? (
-                              <>
-                                {' • '}
-                                Expira em: {new Date(r.dataExpiracao).toLocaleString('pt-BR')}
-                              </>
-                            ) : null}
-                            {' • '}
-                            {r.status === 'pendente'
-                              ? 'A contagem dos 15 dias começa quando o cliente clicar em "Aceitar e entrar"'
-                              : r.status === 'expirado'
-                                ? 'Demo bloqueada'
-                                : `${r.daysLeft} dia${r.daysLeft === 1 ? '' : 's'} restante${r.daysLeft === 1 ? '' : 's'}`}
-                            {typeof r.activationCount === 'number' && r.activationCount > 0 ? ` • acessos: ${r.activationCount}` : ''}
-                            {r.observacoes ? ' • ' + r.observacoes : ''}
-                          </span>
-                          <div style={{ fontSize: '11px', opacity: 0.64, marginTop: '6px', wordBreak: 'break-all' }}>
-                            Link individual: {r.link}
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                          <button
-                            className="btn-primary"
-                            onClick={() => handleCopyDemoLink(r.link)}
-                            style={{ padding: '6px 12px', fontSize: '12px', backgroundColor: 'rgba(0, 150, 255, 0.14)', borderColor: 'rgba(102, 179, 255, 0.45)', color: '#8cc8ff' }}
-                          >
-                            Copiar link
-                          </button>
-                          <button
-                            className="btn-primary"
-                            onClick={() => handleRenewDemoRecipient(r.id)}
-                            style={{ padding: '6px 12px', fontSize: '12px', backgroundColor: 'rgba(0,255,140,0.12)', borderColor: 'rgba(0,255,140,0.34)', color: '#7dffb3' }}
-                          >
-                            Renovar 15 dias
-                          </button>
-                          <button
-                            className="btn-primary"
-                            onClick={() => handleResetDemoRecipient(r.id)}
-                            style={{ padding: '6px 12px', fontSize: '12px', backgroundColor: 'rgba(255,180,0,0.12)', borderColor: 'rgba(255,180,0,0.34)', color: '#ffd36a' }}
-                          >
-                            Resetar demo
-                          </button>
-                          <button
-                            className="btn-danger"
-                            onClick={() => handleDeleteDemoRecipient(r.id)}
-                            style={{ padding: '6px 12px', fontSize: '12px' }}
-                          >
-                            Excluir
-                          </button>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => openTab('gestao-demos', getTabTitle('gestao-demos'))}
+                style={{
+                  padding: '12px 22px',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  backgroundColor: 'rgba(0, 180, 255, 0.16)',
+                  borderColor: 'rgba(0, 200, 255, 0.5)',
+                  color: '#9be7ff',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                }}
+              >
+                Abrir gestão de envio de demonstrações
+              </button>
             </div>
             
             {/* SEÇÃO 1: CONFIGURAÇÕES GERAIS */}
@@ -53280,92 +53075,34 @@ A1;Peça exemplo;10`}
               {safeT?.administrador || 'ADMINISTRADOR'}
             </h2>
 
-            {/* CONTROLE DE ENVIO DO LINK PARA TESTE - Primeiro para maior visibilidade */}
+            {/* Demonstrações — mesmo atalho que no Administrador (ecrã dedicado) */}
             <div className="admin-section admin-section--cyan" style={{ marginBottom: '24px' }}>
               <h3 className="admin-section-title admin-section-title--cyan">
-                📤 Controle de Envio do Link para Teste
+                📤 Gestão de envio de demonstrações
               </h3>
-              <p style={{ fontSize: '12px', opacity: 0.8, marginBottom: '12px', lineHeight: 1.45 }}>
-                Registe as pessoas a quem enviou o link de demonstração e acompanhe se ainda está ativa ou já expirou.
+              <p style={{ fontSize: '12px', opacity: 0.85, marginBottom: '12px', lineHeight: 1.45 }}>
+                Registe destinatários, pacotes e links noutro ecrã para não sobrecarregar este modal.
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px', marginBottom: '12px' }}>
-                <div style={{ padding: '10px', borderRadius: '6px', background: 'rgba(0,255,255,0.08)', border: '1px solid rgba(0,255,255,0.18)' }}>
-                  <strong style={{ display: 'block', fontSize: '18px', color: '#9be7ff' }}>{demoRecipientsComEstado.length}</strong>
-                  <span style={{ fontSize: '11px', opacity: 0.75 }}>Registos</span>
-                </div>
-                <div style={{ padding: '10px', borderRadius: '6px', background: 'rgba(140,140,255,0.08)', border: '1px solid rgba(140,140,255,0.18)' }}>
-                  <strong style={{ display: 'block', fontSize: '18px', color: '#bdbdff' }}>{demoRecipientsComEstado.filter((item) => item.status === 'pendente').length}</strong>
-                  <span style={{ fontSize: '11px', opacity: 0.75 }}>Pendentes</span>
-                </div>
-                <div style={{ padding: '10px', borderRadius: '6px', background: 'rgba(0,255,0,0.08)', border: '1px solid rgba(0,255,0,0.18)' }}>
-                  <strong style={{ display: 'block', fontSize: '18px', color: '#7dffb3' }}>{demoRecipientsComEstado.filter((item) => item.status === 'ativo').length}</strong>
-                  <span style={{ fontSize: '11px', opacity: 0.75 }}>Ativas</span>
-                </div>
-                <div style={{ padding: '10px', borderRadius: '6px', background: 'rgba(255,80,80,0.08)', border: '1px solid rgba(255,80,80,0.18)' }}>
-                  <strong style={{ display: 'block', fontSize: '18px', color: '#ff9b9b' }}>{demoRecipientsComEstado.filter((item) => item.status === 'expirado').length}</strong>
-                  <span style={{ fontSize: '11px', opacity: 0.75 }}>Expiradas</span>
-                </div>
-              </div>
-              {renderDemoPackageSelector({
-                compact: true,
-                showOpenGestaoDemos: true,
-                title: 'Pacote de demonstração',
-              })}
-              {renderDemoModuleFineGrid({ compact: true, maxHeight: 'min(42vh, 360px)' })}
-              <div style={{ marginBottom: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <input
-                  type="text"
-                  placeholder="Nome"
-                  value={demoLinkForm.nome}
-                  onChange={(e) => setDemoLinkForm(f => ({ ...f, nome: e.target.value }))}
-                  style={{ flex: 1, minWidth: '100px', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder="Email"
-                  value={demoLinkForm.email}
-                  onChange={(e) => setDemoLinkForm(f => ({ ...f, email: e.target.value }))}
-                  style={{ flex: 1, minWidth: '120px', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <button
-                  className="btn-primary"
-                  onClick={handleAddDemoRecipient}
-                  style={{ padding: '8px 16px' }}
-                >
-                  + Adicionar
-                </button>
-                <button
-                  className="btn-primary"
-                  onClick={handleCopyDemoLink}
-                  style={{ padding: '8px 16px', backgroundColor: 'rgba(0, 150, 255, 0.2)', borderColor: '#66b3ff', color: '#66b3ff' }}
-                >
-                  📋 Copiar link
-                </button>
-              </div>
-              <div style={{ fontSize: '11px', opacity: 0.72, marginBottom: '10px' }}>
-                Link atual: {demoLinkBaseUrl}
-              </div>
-              {demoRecipientsComEstado.length > 0 && (
-                <div style={{ maxHeight: '180px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {demoRecipientsFiltrados.slice(0, 12).map((r) => (
-                    <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', backgroundColor: '#222222', borderRadius: '4px' }}>
-                      <span style={{ lineHeight: 1.35 }}>
-                        <strong>{r.nome}</strong>
-                        {r.email ? ' • ' + r.email : ''}
-                        <span style={{ fontSize: '10px', opacity: 0.7, display: 'block' }}>
-                          {r.status === 'pendente' ? 'Aguardando acesso' : r.status === 'expirado' ? 'Expirado' : r.status === 'a-expirar' ? 'A expirar' : 'Ativo'}
-                          {r.dataExpiracao ? ` • expira em ${new Date(r.dataExpiracao).toLocaleDateString('pt-BR')}` : ''}
-                        </span>
-                      </span>
-                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                        <button className="btn-primary" style={{ padding: '4px 8px', fontSize: '11px', backgroundColor: 'rgba(0, 150, 255, 0.2)', borderColor: '#66b3ff', color: '#66b3ff' }} onClick={() => handleCopyDemoLink(r.link)}>Copiar</button>
-                        <button className="btn-primary" style={{ padding: '4px 8px', fontSize: '11px', backgroundColor: 'rgba(0,255,140,0.12)', borderColor: 'rgba(0,255,140,0.34)', color: '#7dffb3' }} onClick={() => handleRenewDemoRecipient(r.id)}>Renovar</button>
-                        <button className="btn-danger" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => handleDeleteDemoRecipient(r.id)}>Excluir</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => {
+                  setShowModal(false)
+                  openTab('gestao-demos', getTabTitle('gestao-demos'))
+                }}
+                style={{
+                  padding: '10px 18px',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  backgroundColor: 'rgba(0, 180, 255, 0.16)',
+                  borderColor: 'rgba(0, 200, 255, 0.5)',
+                  color: '#9be7ff',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                }}
+              >
+                Abrir gestão de envio de demonstrações
+              </button>
             </div>
             
             {/* SEÇÃO 1: CONFIGURAÇÕES GERAIS */}
