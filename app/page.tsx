@@ -1198,6 +1198,64 @@ type DemoPackagePreset =
   | 'gestao-nucleo'
   | 'tecnica-clientes'
 
+/** Nome amigável para cada ação na grelha completa da demo (chaves alinhadas com FULL_DEMO_ACTION_KEYS). */
+function getDemoModuleLabelForGrid(action: string): string {
+  const labels: Record<string, string> = {
+    'open-gestores': 'Gestores e Técnicos',
+    'open-equipamentos': 'Equipamentos',
+    'open-clientes': 'Clientes',
+    'open-fornecedores': 'Fornecedores',
+    'open-relatorio-servico': 'Relatório de Serviço',
+    'open-biblioteca-pecas': 'Biblioteca de Peças',
+    'open-importacao-pecas': 'Importação de Peças',
+    'open-solicitacao-servico-tecnico': 'Solicitação de serviço técnico',
+    'open-agenda': 'Agenda',
+    'open-biblioteca-relatorios': 'Biblioteca de relatórios',
+    'open-checklist-hub': 'Hub do Checklist',
+    'open-pre-checklist': 'Pré-checklist',
+    'open-checklist': 'Checklist',
+    'open-familias-grupos': 'Famílias e grupos (checklist)',
+    'open-familias-grupos-equipamentos': 'Famílias e grupos (equipamentos)',
+    'open-desmontados': 'Desmontados',
+    'open-cadastro-servicos': 'Cadastro de serviços',
+    'open-fechamento-relatorios-servicos': 'Fechamento relatórios de serviço',
+    'open-gestao-industrial': 'Gestão Industrial',
+    'open-gestao-tecnica': 'Gestão técnica (hub)',
+    'open-ordem-preparacao': 'Ordem de preparação',
+    'open-formularios-checklist-tecnicos': 'Formulários checklist técnicos',
+    'open-verificacao-final-entrega': 'Verificação final de entrega',
+    'open-protocolos-servico': 'Protocolos de Serviço',
+    'open-gestao-custos': 'Gestão de Custos',
+    'open-gestao-financeira': 'Gestão Financeira',
+    'open-comunicacao-interna': 'Comunicação Interna',
+    'open-biblioteca-hub': 'Hub da biblioteca',
+    'open-gestao-grupos-checklist': 'Gestão de grupos (checklist)',
+    'open-orcamentos-avulso': 'Orçamentos avulso',
+    'open-pedido-orcamentos-avulso': 'Pedido de orçamentos avulso',
+    'open-registro-despesas': 'Registro de despesas',
+    'open-mapa-visual-separacao': 'Mapa visual separação',
+    'open-mapa-visual-separacao-pecas': 'Mapa visual separação (peças)',
+    'open-clientes-financeiro': 'Clientes (financeiro)',
+    'open-comprovantes-despesas': 'Comprovantes de despesas',
+    'open-hub-comunicacao': 'Hub de comunicação',
+    'open-mensagens-internas': 'Mensagens internas',
+    'open-mensagens-internas-tecnicos': 'Mensagens internas (técnicos)',
+    'open-alerta-mensagens': 'Alerta de mensagens',
+    'open-quick-gestao-custos': 'Atalho: Gestão de custos',
+    'open-quick-gestao-financeira': 'Atalho: Gestão financeira',
+    'open-quick-biblioteca-pecas': 'Atalho: Biblioteca de peças',
+    'open-relatorios-excluidos-clientes': 'Relatórios excluídos (clientes)',
+    'open-manuais-informacoes-tecnicas': 'Manuais e informações técnicas',
+    'open-almoxarifado-armazem': 'Almoxarifado / armazém',
+  }
+  if (labels[action]) return labels[action]
+  return action
+    .replace(/^open-/, '')
+    .split('-')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
+}
+
 type ComprovanteDespesa = {
   id: string
   tipo: 'cliente' | 'pessoal'  // cliente = despesa por cliente; pessoal = despesas pessoais
@@ -3430,6 +3488,12 @@ export default function Dashboard() {
     ])
     return Array.from(s)
   }, [DEMO_ALLOWED_ACTIONS, DEMO_MODULE_CATALOG])
+  /** Ações que o administrador pode ajustar na grelha (exclui extras sempre ocultos na demo). */
+  const DEMO_EDITABLE_ACTION_KEYS = useMemo(() => {
+    return FULL_DEMO_ACTION_KEYS.filter((a) => !DEMO_HIDDEN_ACTIONS.has(a)).sort((a, b) =>
+      getDemoModuleLabelForGrid(a).localeCompare(getDemoModuleLabelForGrid(b), 'pt', { sensitivity: 'base' })
+    )
+  }, [DEMO_HIDDEN_ACTIONS, FULL_DEMO_ACTION_KEYS])
   const isActionVisibleInDemo = useCallback((action: string): boolean => {
     if (!isDemoMode) return true
     const configuredMode = demoModuleConfig[action]
@@ -3597,6 +3661,7 @@ export default function Dashboard() {
     return { nome: '', email: '', observacoes: '', demoModules, demoPreset: 'custom' }
   }, [DEMO_ALLOWED_ACTIONS, DEMO_HIDDEN_ACTIONS, FULL_DEMO_ACTION_KEYS])
   const [demoLinkForm, setDemoLinkForm] = useState(createDefaultDemoLinkForm)
+  const [demoModuleGridSearch, setDemoModuleGridSearch] = useState('')
   const demoRecipientsComEstado = useMemo(() => {
     const agora = Date.now()
     return demoLinkRecipients.map((recipient) => {
@@ -17020,6 +17085,113 @@ export default function Dashboard() {
     saveData('nonato-demo-link-recipients', updated)
   }, [demoLinkRecipients])
 
+  /** Junta ao estado actual todos os módulos «ativos» do pacote (não remove ativações já feitas). Perfil passa a «Personalizada». */
+  const mergeDemoPresetActiveKeys = useCallback(
+    (preset: DemoPackagePreset) => {
+      const strict = preset === 'gestao-nucleo' || preset === 'tecnica-clientes'
+      const from = buildDemoModulesFromPreset(preset, strict ? 'strict-hidden' : 'legacy-teaser')
+      setDemoLinkForm((prev) => {
+        const next = { ...prev.demoModules }
+        for (const k of FULL_DEMO_ACTION_KEYS) {
+          if (DEMO_HIDDEN_ACTIONS.has(k)) continue
+          if (from[k] === 'active') next[k] = 'active'
+        }
+        return { ...prev, demoPreset: 'custom', demoModules: next }
+      })
+    },
+    [buildDemoModulesFromPreset, DEMO_HIDDEN_ACTIONS, FULL_DEMO_ACTION_KEYS]
+  )
+
+  /** Grelha de todos os módulos (ativo / teaser / oculto) + filtro de texto. */
+  const renderDemoModuleFineGrid = useCallback(
+    (opts: { compact?: boolean; maxHeight?: string }) => {
+      const compact = opts.compact ?? false
+      const q = demoModuleGridSearch.trim().toLowerCase()
+      const list = DEMO_EDITABLE_ACTION_KEYS.filter((action) => {
+        if (!q) return true
+        const label = getDemoModuleLabelForGrid(action).toLowerCase()
+        return label.includes(q) || action.toLowerCase().includes(q)
+      })
+      return (
+        <div
+          style={{
+            marginBottom: compact ? '16px' : '20px',
+            padding: compact ? '12px' : '15px',
+            backgroundColor: '#222222',
+            borderRadius: '8px',
+            border: '1px solid rgba(0, 180, 255, 0.12)',
+            maxHeight: opts.maxHeight,
+            overflowY: opts.maxHeight ? 'auto' : undefined,
+          }}
+        >
+          <div style={{ fontSize: compact ? '12px' : '13px', fontWeight: 700, color: '#8cd8ff', marginBottom: '8px' }}>
+            Ajuste módulo a módulo (misturar pacotes)
+          </div>
+          <p style={{ fontSize: compact ? '11px' : '12px', opacity: 0.78, marginBottom: '10px', lineHeight: 1.45 }}>
+            Escolha um pacote em cima como base e use <strong>Unir ativos</strong> para acrescentar áreas de outro pacote; depois refine cada linha. «Mostrar bloqueado» = vê o menu mas não entra; «Esconder» = não aparece.
+          </p>
+          <input
+            type="search"
+            value={demoModuleGridSearch}
+            onChange={(e) => setDemoModuleGridSearch(e.target.value)}
+            placeholder="Filtrar por nome do módulo…"
+            style={{
+              width: '100%',
+              maxWidth: '420px',
+              marginBottom: '12px',
+              padding: compact ? '7px 10px' : '8px 12px',
+              backgroundColor: '#141414',
+              color: '#fff',
+              border: '1px solid rgba(0, 180, 255, 0.28)',
+              borderRadius: '8px',
+              fontSize: compact ? '12px' : '13px',
+            }}
+          />
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: compact ? '1fr' : 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: '10px',
+            }}
+          >
+            {list.map((module) => (
+              <div
+                key={module}
+                style={{ padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
+              >
+                <div style={{ fontSize: compact ? '11px' : '12px', fontWeight: 600, marginBottom: '8px', color: '#f2f2f2' }}>
+                  {getDemoModuleLabelForGrid(module)}
+                </div>
+                <select
+                  value={demoLinkForm.demoModules[module] || 'teaser'}
+                  onChange={(e) =>
+                    setDemoLinkForm((prev) => ({
+                      ...prev,
+                      demoPreset: 'custom',
+                      demoModules: {
+                        ...prev.demoModules,
+                        [module]: e.target.value as DemoModuleMode,
+                      },
+                    }))
+                  }
+                  style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 180, 255, 0.26)', borderRadius: '6px' }}
+                >
+                  <option value="active">Ativo</option>
+                  <option value="teaser">Mostrar bloqueado</option>
+                  <option value="hidden">Esconder</option>
+                </select>
+              </div>
+            ))}
+          </div>
+          {list.length === 0 ? (
+            <p style={{ fontSize: '12px', opacity: 0.65, marginTop: '8px' }}>Nenhum módulo corresponde ao filtro.</p>
+          ) : null}
+        </div>
+      )
+    },
+    [DEMO_EDITABLE_ACTION_KEYS, demoLinkForm.demoModules, demoModuleGridSearch]
+  )
+
   /** Pacote de demo (lista + atalhos) — visível no Administrador e em Gestão de Demonstrações. */
   const renderDemoPackageSelector = useCallback(
     (opts: { compact?: boolean; showOpenGestaoDemos?: boolean; title?: string }) => {
@@ -17037,11 +17209,11 @@ export default function Dashboard() {
         >
           <div style={{ fontSize: compact ? '12px' : '13px', fontWeight: 700, color: '#8cd8ff', marginBottom: '10px' }}>{title}</div>
           <div style={{ fontSize: compact ? '11px' : '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
-            Escolha um <strong>pacote</strong> antes de «Adicionar» o destinatário. Define o que essa pessoa pode usar na demo (ativo), ver bloqueado ou não ver.
+            Escolha um <strong>pacote</strong> como base, depois use <strong>Unir ativos de outro pacote</strong> para combinar (ex.: comercial + áreas de gestão). Antes de «Adicionar» o destinatário, confira a <strong>grelha completa</strong> abaixo: cada módulo pode ficar ativo, bloqueado ou oculto.
             {opts.showOpenGestaoDemos ? (
               <>
                 {' '}
-                A grelha com <strong>cada módulo</strong> está no ecrã <strong>Gestão de Demonstrações</strong> (botão abaixo).
+                Também pode abrir <strong>Gestão de Demonstrações</strong> para o mesmo ecrã em janela própria.
               </>
             ) : null}
           </div>
@@ -17141,6 +17313,40 @@ export default function Dashboard() {
               Restaurar padrão
             </button>
           </div>
+          <div style={{ marginTop: '12px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '12px' }}>
+            <div style={{ fontSize: compact ? '10px' : '11px', color: '#a8d4ff', marginBottom: '8px', fontWeight: 600 }}>
+              Unir ativos de outro pacote (acrescenta ao que já está ativo — não apaga o que já escolheu)
+            </div>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {(
+                [
+                  { id: 'basic' as const, label: 'Mínimo' },
+                  { id: 'commercial' as const, label: 'Comercial' },
+                  { id: 'technical' as const, label: 'Técnica' },
+                  { id: 'partial' as const, label: 'Mista' },
+                  { id: 'gestao-nucleo' as const, label: 'Só gestão' },
+                  { id: 'tecnica-clientes' as const, label: 'Téc. + clientes' },
+                ] as const
+              ).map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  className="btn-primary"
+                  title={getDemoPresetLabel(m.id)}
+                  onClick={() => mergeDemoPresetActiveKeys(m.id)}
+                  style={{
+                    padding: compact ? '5px 8px' : '6px 10px',
+                    fontSize: compact ? '10px' : '11px',
+                    backgroundColor: 'rgba(180, 140, 255, 0.12)',
+                    borderColor: 'rgba(180, 140, 255, 0.32)',
+                    color: '#d4c4ff',
+                  }}
+                >
+                  + {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
           {opts.showOpenGestaoDemos ? (
             <div style={{ marginTop: '12px' }}>
               <button
@@ -17164,7 +17370,7 @@ export default function Dashboard() {
         </div>
       )
     },
-    [buildDemoModulesFromPreset, createDefaultDemoLinkForm, demoLinkForm.demoPreset, getDemoPresetLabel, openTab]
+    [buildDemoModulesFromPreset, createDefaultDemoLinkForm, demoLinkForm.demoPreset, getDemoPresetLabel, mergeDemoPresetActiveKeys, openTab]
   )
 
   const renderGestaoDemosContent = (compact = false) => (
@@ -17242,36 +17448,7 @@ export default function Dashboard() {
       </div>
 
       {renderDemoPackageSelector({ compact })}
-      <div style={{ marginBottom: '20px', padding: compact ? '12px' : '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 180, 255, 0.12)' }}>
-        <div style={{ fontSize: compact ? '12px' : '13px', fontWeight: 700, color: '#8cd8ff', marginBottom: '10px' }}>
-          Ajuste módulo a módulo (opcional)
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: compact ? '1fr' : 'repeat(auto-fit, minmax(260px, 1fr))', gap: '10px' }}>
-          {DEMO_MODULE_CATALOG.map((module) => (
-            <div key={module.action} style={{ padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div style={{ fontSize: compact ? '11px' : '12px', fontWeight: 600, marginBottom: '8px', color: '#f2f2f2' }}>
-                {module.label}
-              </div>
-              <select
-                value={demoLinkForm.demoModules[module.action] || 'teaser'}
-                onChange={(e) => setDemoLinkForm((prev) => ({
-                  ...prev,
-                  demoPreset: 'custom',
-                  demoModules: {
-                    ...prev.demoModules,
-                    [module.action]: e.target.value as DemoModuleMode,
-                  }
-                }))}
-                style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 180, 255, 0.26)', borderRadius: '6px' }}
-              >
-                <option value="active">Ativo</option>
-                <option value="teaser">Mostrar bloqueado</option>
-                <option value="hidden">Esconder</option>
-              </select>
-            </div>
-          ))}
-        </div>
-      </div>
+      {renderDemoModuleFineGrid({ compact })}
 
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '14px' }}>
         {[
@@ -21196,6 +21373,7 @@ const nextF = familias.filter(x => x !== f)
                 showOpenGestaoDemos: true,
                 title: 'O que esta demonstração pode mostrar',
               })}
+              {renderDemoModuleFineGrid({ compact: false })}
 
               <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
@@ -52927,6 +53105,7 @@ A1;Peça exemplo;10`}
                 showOpenGestaoDemos: true,
                 title: 'Pacote de demonstração',
               })}
+              {renderDemoModuleFineGrid({ compact: true, maxHeight: 'min(42vh, 360px)' })}
               <div style={{ marginBottom: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <input
                   type="text"
