@@ -1256,6 +1256,76 @@ function getDemoModuleLabelForGrid(action: string): string {
     .join(' ')
 }
 
+const DEMO_MODULE_GROUP_ORDER = ['clientes', 'tecnica', 'gestao', 'outros'] as const
+type DemoModuleGroupId = (typeof DEMO_MODULE_GROUP_ORDER)[number]
+
+const DEMO_MODULE_GROUP_LABELS: Record<DemoModuleGroupId, string> = {
+  clientes: 'Clientes, comercial e peças',
+  tecnica: 'Técnica, operação e checklist',
+  gestao: 'Gestão interna, custos e comunicação',
+  outros: 'Outros',
+}
+
+/** Agrupa módulos da demo para expandir/recolher por secção. */
+function getDemoModuleGroupId(action: string): DemoModuleGroupId {
+  const CLIENTES = new Set<string>([
+    'open-clientes',
+    'open-fornecedores',
+    'open-relatorio-servico',
+    'open-biblioteca-pecas',
+    'open-importacao-pecas',
+    'open-solicitacao-servico-tecnico',
+    'open-agenda',
+    'open-biblioteca-relatorios',
+    'open-biblioteca-hub',
+    'open-orcamentos-avulso',
+    'open-pedido-orcamentos-avulso',
+    'open-relatorios-excluidos-clientes',
+    'open-quick-biblioteca-pecas',
+  ])
+  const TECNICA = new Set<string>([
+    'open-gestores',
+    'open-equipamentos',
+    'open-checklist-hub',
+    'open-pre-checklist',
+    'open-checklist',
+    'open-familias-grupos',
+    'open-familias-grupos-equipamentos',
+    'open-desmontados',
+    'open-cadastro-servicos',
+    'open-fechamento-relatorios-servicos',
+    'open-gestao-tecnica',
+    'open-ordem-preparacao',
+    'open-formularios-checklist-tecnicos',
+    'open-verificacao-final-entrega',
+    'open-protocolos-servico',
+    'open-gestao-grupos-checklist',
+    'open-manuais-informacoes-tecnicas',
+    'open-almoxarifado-armazem',
+  ])
+  const GESTAO = new Set<string>([
+    'open-gestao-custos',
+    'open-gestao-financeira',
+    'open-comunicacao-interna',
+    'open-registro-despesas',
+    'open-comprovantes-despesas',
+    'open-clientes-financeiro',
+    'open-mapa-visual-separacao',
+    'open-mapa-visual-separacao-pecas',
+    'open-hub-comunicacao',
+    'open-mensagens-internas',
+    'open-mensagens-internas-tecnicos',
+    'open-alerta-mensagens',
+    'open-quick-gestao-custos',
+    'open-quick-gestao-financeira',
+    'open-gestao-industrial',
+  ])
+  if (CLIENTES.has(action)) return 'clientes'
+  if (TECNICA.has(action)) return 'tecnica'
+  if (GESTAO.has(action)) return 'gestao'
+  return 'outros'
+}
+
 type ComprovanteDespesa = {
   id: string
   tipo: 'cliente' | 'pessoal'  // cliente = despesa por cliente; pessoal = despesas pessoais
@@ -3662,6 +3732,15 @@ export default function Dashboard() {
   }, [DEMO_ALLOWED_ACTIONS, DEMO_HIDDEN_ACTIONS, FULL_DEMO_ACTION_KEYS])
   const [demoLinkForm, setDemoLinkForm] = useState(createDefaultDemoLinkForm)
   const [demoModuleGridSearch, setDemoModuleGridSearch] = useState('')
+  /** Lista completa da grelha visível ou só o cabeçalho (recolher tudo). */
+  const [demoModuleFineGridExpanded, setDemoModuleFineGridExpanded] = useState(true)
+  /** Por secção: expandir/recolher grupos de módulos. */
+  const [demoModuleGroupsExpanded, setDemoModuleGroupsExpanded] = useState<Record<DemoModuleGroupId, boolean>>({
+    clientes: true,
+    tecnica: true,
+    gestao: true,
+    outros: true,
+  })
   const demoRecipientsComEstado = useMemo(() => {
     const agora = Date.now()
     return demoLinkRecipients.map((recipient) => {
@@ -17102,16 +17181,72 @@ export default function Dashboard() {
     [buildDemoModulesFromPreset, DEMO_HIDDEN_ACTIONS, FULL_DEMO_ACTION_KEYS]
   )
 
-  /** Grelha de todos os módulos (ativo / teaser / oculto) + filtro de texto. */
+  /** Grelha de todos os módulos (ativo / teaser / oculto) + filtro + grupos expandir/recolher. */
   const renderDemoModuleFineGrid = useCallback(
     (opts: { compact?: boolean; maxHeight?: string }) => {
       const compact = opts.compact ?? false
       const q = demoModuleGridSearch.trim().toLowerCase()
-      const list = DEMO_EDITABLE_ACTION_KEYS.filter((action) => {
+      const filtered = DEMO_EDITABLE_ACTION_KEYS.filter((action) => {
         if (!q) return true
         const label = getDemoModuleLabelForGrid(action).toLowerCase()
         return label.includes(q) || action.toLowerCase().includes(q)
       })
+      const grouped: Record<DemoModuleGroupId, string[]> = {
+        clientes: [],
+        tecnica: [],
+        gestao: [],
+        outros: [],
+      }
+      for (const action of filtered) {
+        grouped[getDemoModuleGroupId(action)].push(action)
+      }
+
+      const gridStyle: React.CSSProperties = {
+        display: 'grid',
+        gridTemplateColumns: compact ? '1fr' : 'repeat(auto-fit, minmax(260px, 1fr))',
+        gap: '10px',
+      }
+
+      const btnToolbar: React.CSSProperties = {
+        padding: compact ? '6px 10px' : '7px 12px',
+        fontSize: compact ? '11px' : '12px',
+        borderRadius: '8px',
+        border: '1px solid rgba(0, 180, 255, 0.35)',
+        background: 'rgba(0, 180, 255, 0.1)',
+        color: '#a8d4ff',
+        cursor: 'pointer',
+        fontWeight: 600,
+      }
+
+      const renderModuleRow = (module: string) => (
+        <div
+          key={module}
+          style={{ padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          <div style={{ fontSize: compact ? '11px' : '12px', fontWeight: 600, marginBottom: '8px', color: '#f2f2f2' }}>
+            {getDemoModuleLabelForGrid(module)}
+          </div>
+          <select
+            value={demoLinkForm.demoModules[module] || 'teaser'}
+            onChange={(e) =>
+              setDemoLinkForm((prev) => ({
+                ...prev,
+                demoPreset: 'custom',
+                demoModules: {
+                  ...prev.demoModules,
+                  [module]: e.target.value as DemoModuleMode,
+                },
+              }))
+            }
+            style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 180, 255, 0.26)', borderRadius: '6px' }}
+          >
+            <option value="active">Ativo</option>
+            <option value="teaser">Mostrar bloqueado</option>
+            <option value="hidden">Esconder</option>
+          </select>
+        </div>
+      )
+
       return (
         <div
           style={{
@@ -17120,76 +17255,147 @@ export default function Dashboard() {
             backgroundColor: '#222222',
             borderRadius: '8px',
             border: '1px solid rgba(0, 180, 255, 0.12)',
-            maxHeight: opts.maxHeight,
-            overflowY: opts.maxHeight ? 'auto' : undefined,
           }}
         >
-          <div style={{ fontSize: compact ? '12px' : '13px', fontWeight: 700, color: '#8cd8ff', marginBottom: '8px' }}>
-            Ajuste módulo a módulo (misturar pacotes)
-          </div>
-          <p style={{ fontSize: compact ? '11px' : '12px', opacity: 0.78, marginBottom: '10px', lineHeight: 1.45 }}>
-            Escolha um pacote em cima como base e use <strong>Unir ativos</strong> para acrescentar áreas de outro pacote; depois refine cada linha. «Mostrar bloqueado» = vê o menu mas não entra; «Esconder» = não aparece.
-          </p>
-          <input
-            type="search"
-            value={demoModuleGridSearch}
-            onChange={(e) => setDemoModuleGridSearch(e.target.value)}
-            placeholder="Filtrar por nome do módulo…"
-            style={{
-              width: '100%',
-              maxWidth: '420px',
-              marginBottom: '12px',
-              padding: compact ? '7px 10px' : '8px 12px',
-              backgroundColor: '#141414',
-              color: '#fff',
-              border: '1px solid rgba(0, 180, 255, 0.28)',
-              borderRadius: '8px',
-              fontSize: compact ? '12px' : '13px',
-            }}
-          />
           <div
             style={{
-              display: 'grid',
-              gridTemplateColumns: compact ? '1fr' : 'repeat(auto-fit, minmax(260px, 1fr))',
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'space-between',
               gap: '10px',
+              marginBottom: demoModuleFineGridExpanded ? '8px' : '0',
             }}
           >
-            {list.map((module) => (
-              <div
-                key={module}
-                style={{ padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
-              >
-                <div style={{ fontSize: compact ? '11px' : '12px', fontWeight: 600, marginBottom: '8px', color: '#f2f2f2' }}>
-                  {getDemoModuleLabelForGrid(module)}
-                </div>
-                <select
-                  value={demoLinkForm.demoModules[module] || 'teaser'}
-                  onChange={(e) =>
-                    setDemoLinkForm((prev) => ({
-                      ...prev,
-                      demoPreset: 'custom',
-                      demoModules: {
-                        ...prev.demoModules,
-                        [module]: e.target.value as DemoModuleMode,
-                      },
-                    }))
-                  }
-                  style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 180, 255, 0.26)', borderRadius: '6px' }}
-                >
-                  <option value="active">Ativo</option>
-                  <option value="teaser">Mostrar bloqueado</option>
-                  <option value="hidden">Esconder</option>
-                </select>
-              </div>
-            ))}
+            <div style={{ fontSize: compact ? '12px' : '13px', fontWeight: 700, color: '#8cd8ff' }}>
+              Ajuste módulo a módulo (misturar pacotes)
+            </div>
+            <button
+              type="button"
+              onClick={() => setDemoModuleFineGridExpanded((v) => !v)}
+              style={btnToolbar}
+            >
+              {demoModuleFineGridExpanded ? '▼ Ocultar lista completa' : '▶ Mostrar lista completa'}
+            </button>
           </div>
-          {list.length === 0 ? (
-            <p style={{ fontSize: '12px', opacity: 0.65, marginTop: '8px' }}>Nenhum módulo corresponde ao filtro.</p>
-          ) : null}
+
+          {demoModuleFineGridExpanded ? (
+            <>
+              <p style={{ fontSize: compact ? '11px' : '12px', opacity: 0.78, marginBottom: '10px', lineHeight: 1.45 }}>
+                Escolha um pacote em cima como base e use <strong>Unir ativos</strong> para acrescentar áreas de outro pacote; depois refine cada linha. Use os botões para <strong>expandir ou recolher todos os grupos</strong> de uma vez, ou clique no título de cada grupo.
+              </p>
+              <input
+                type="search"
+                value={demoModuleGridSearch}
+                onChange={(e) => setDemoModuleGridSearch(e.target.value)}
+                placeholder="Filtrar por nome do módulo…"
+                style={{
+                  width: '100%',
+                  maxWidth: '420px',
+                  marginBottom: '10px',
+                  padding: compact ? '7px 10px' : '8px 12px',
+                  backgroundColor: '#141414',
+                  color: '#fff',
+                  border: '1px solid rgba(0, 180, 255, 0.28)',
+                  borderRadius: '8px',
+                  fontSize: compact ? '12px' : '13px',
+                }}
+              />
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDemoModuleGroupsExpanded({
+                      clientes: true,
+                      tecnica: true,
+                      gestao: true,
+                      outros: true,
+                    })
+                  }
+                  style={btnToolbar}
+                >
+                  Expandir todos os grupos
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDemoModuleGroupsExpanded({
+                      clientes: false,
+                      tecnica: false,
+                      gestao: false,
+                      outros: false,
+                    })
+                  }
+                  style={{ ...btnToolbar, borderColor: 'rgba(255, 180, 100, 0.35)', background: 'rgba(255, 180, 100, 0.08)', color: '#ffd4a0' }}
+                >
+                  Recolher todos os grupos
+                </button>
+              </div>
+              <div
+                style={{
+                  maxHeight: opts.maxHeight,
+                  overflowY: opts.maxHeight ? 'auto' : undefined,
+                }}
+              >
+                {DEMO_MODULE_GROUP_ORDER.map((groupId) => {
+                  const items = grouped[groupId]
+                  if (items.length === 0) return null
+                  const open = demoModuleGroupsExpanded[groupId] ?? true
+                  return (
+                    <div key={groupId} style={{ marginBottom: '14px' }}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setDemoModuleGroupsExpanded((p) => ({
+                            ...p,
+                            [groupId]: !(p[groupId] ?? true),
+                          }))
+                        }
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: compact ? '8px 10px' : '10px 12px',
+                          marginBottom: open ? '8px' : '0',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          background: 'rgba(0, 180, 255, 0.06)',
+                          color: '#d7f4ff',
+                          fontSize: compact ? '12px' : '13px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}
+                      >
+                        <span style={{ opacity: 0.9 }}>{open ? '▼' : '▶'}</span>
+                        <span>{DEMO_MODULE_GROUP_LABELS[groupId]}</span>
+                        <span style={{ opacity: 0.55, fontWeight: 500 }}>({items.length})</span>
+                      </button>
+                      {open ? <div style={gridStyle}>{items.map(renderModuleRow)}</div> : null}
+                    </div>
+                  )
+                })}
+              </div>
+              {filtered.length === 0 ? (
+                <p style={{ fontSize: '12px', opacity: 0.65, marginTop: '8px' }}>Nenhum módulo corresponde ao filtro.</p>
+              ) : null}
+            </>
+          ) : (
+            <p style={{ fontSize: compact ? '11px' : '12px', opacity: 0.72, lineHeight: 1.45 }}>
+              A lista de módulos está recolhida. Clique em «Mostrar lista completa» para voltar a editar.
+            </p>
+          )}
         </div>
       )
     },
-    [DEMO_EDITABLE_ACTION_KEYS, demoLinkForm.demoModules, demoModuleGridSearch]
+    [
+      DEMO_EDITABLE_ACTION_KEYS,
+      demoLinkForm.demoModules,
+      demoModuleGridSearch,
+      demoModuleFineGridExpanded,
+      demoModuleGroupsExpanded,
+    ]
   )
 
   /** Pacote de demo (lista + atalhos) — visível no Administrador e em Gestão de Demonstrações. */
