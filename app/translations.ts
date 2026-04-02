@@ -1290,7 +1290,7 @@ export const translations = {
     importacaoErroJsonInvalido: 'O conteúdo da URL não é um JSON válido.',
     importacaoColarUrlNaoSuportado: 'Neste campo, cole o conteúdo JSON/CSV (não a URL). Para links, use "Buscar da URL".',
     importacaoColarCatalogoTitle: 'Colar catálogo do site',
-    importacaoColarCatalogoDesc: 'Copie várias peças da página do fornecedor e cole tudo aqui de uma vez. O sistema tenta separar código, nome, descrição e preço automaticamente.',
+    importacaoColarCatalogoDesc: 'Copie várias peças da página do fornecedor e cole tudo aqui de uma vez. O sistema tenta separar código, nome, descrição, preço e imagem (HTML da tabela ou cartão, com <img> ou endereço .jpg/.png na colagem).',
     importacaoImportarCatalogo: 'Importar catálogo colado',
     importacaoColarCatalogoPasso1: '1. Copie várias linhas do site',
     importacaoColarCatalogoPasso2: '2. Cole tudo na caixa abaixo',

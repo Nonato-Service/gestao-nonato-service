@@ -15978,9 +15978,32 @@ export default function Dashboard() {
         : codigo || `Peça ${index + 1}`
     }
     const preco = item?.preco != null ? String(item.preco) : (item?.price != null ? String(item.price) : (item?.precoUnitario != null ? String(item.precoUnitario) : ''))
-    const imagem = String(
-      item?.imagem ?? item?.image ?? item?.img ?? item?.imagem_url ?? item?.imageUrl ?? item?.photo ?? item?.urlImagem ?? ''
+    let imagem = String(
+      item?.imagem ??
+        item?.image ??
+        item?.img ??
+        item?.imagem_url ??
+        item?.imageUrl ??
+        item?.photo ??
+        item?.urlImagem ??
+        item?.thumbnail ??
+        item?.thumb ??
+        item?.thumbnailUrl ??
+        item?.picture ??
+        item?.mainImage ??
+        item?.main_image ??
+        item?.image_link ??
+        item?.imageLink ??
+        item?.mediaUrl ??
+        item?.url_image ??
+        item?.image_url ??
+        item?.foto ??
+        ''
     ).trim()
+    if (!imagem) {
+      const maybeImgUrl = String(item?.url ?? item?.link ?? item?.href ?? '').trim()
+      if (/\.(jpg|jpeg|png|webp|gif|svg)(\?|#|$)/i.test(maybeImgUrl)) imagem = maybeImgUrl
+    }
     return {
       id: item?.id && typeof item.id === 'string' ? item.id : `import-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 9)}`,
       nome: nome || codigo || `Peça ${index + 1}`,
@@ -16030,26 +16053,77 @@ export default function Dashboard() {
       return out.map(v => v.trim())
     }
 
-    if (trimRaw.startsWith('<')) {
+    /** Extrai URL de <img> (src lazy-load comum em lojas). */
+    const extractImgSrcFromNode = (root: Element | null): string => {
+      if (!root || typeof (root as Element).querySelector !== 'function') return ''
+      const img = root.querySelector('img') as HTMLImageElement | null
+      if (!img) return ''
+      const attrs = ['src', 'data-src', 'data-lazy-src', 'data-original', 'data-url', 'data-image', 'data-lazy']
+      for (const attr of attrs) {
+        const v = img.getAttribute(attr)
+        if (v && v.trim() && !v.startsWith('data:') && !v.startsWith('blob:')) {
+          const decoded = v.trim().replace(/&amp;/g, '&').replace(/&quot;/g, '"')
+          if (decoded.startsWith('//')) return `https:${decoded}`
+          return decoded
+        }
+      }
+      const srcset = img.getAttribute('srcset')
+      if (srcset) {
+        const first = srcset.split(',')[0]?.trim().split(/\s+/)[0]
+        if (first && !first.startsWith('data:') && !first.startsWith('blob:')) {
+          const decoded = first.replace(/&amp;/g, '&')
+          if (decoded.startsWith('//')) return `https:${decoded}`
+          return decoded
+        }
+      }
+      return ''
+    }
+
+    const looksLikeHtml =
+      trimRaw.startsWith('<') ||
+      /<table\b/i.test(trimRaw) ||
+      /<img\b[^>]*\bsrc\s*=/i.test(trimRaw)
+
+    if (looksLikeHtml) {
       // Suporte a importação a partir de páginas HTML (tabelas/listas + JSON embutido em scripts)
       try {
         const parser = new DOMParser()
         const doc = parser.parseFromString(raw, 'text/html')
+        const baseHref = (doc.querySelector('base[href]') as HTMLBaseElement | null)?.href || ''
+
+        const resolveUrl = (u: string): string => {
+          if (!u) return ''
+          try {
+            if (baseHref) return new URL(u, baseHref).href
+            if (u.startsWith('//')) return `https:${u}`
+            if (u.startsWith('/')) return u
+            return u
+          } catch {
+            return u
+          }
+        }
 
         // 1) Tentar tabelas HTML comuns
         const rows = Array.from(doc.querySelectorAll('table tr'))
         rows.forEach((row) => {
-          const cells = Array.from(row.querySelectorAll('th,td')).map((c) => (c.textContent || '').trim())
-          if (cells.length < 2) return
+          const cellEls = Array.from(row.querySelectorAll('th,td'))
+          const cells = cellEls.map((c) => (c.textContent || '').trim())
+          let imagem =
+            cellEls.map((c) => extractImgSrcFromNode(c)).find((src) => src) ||
+            extractImgSrcFromNode(row)
+          if (imagem) imagem = resolveUrl(imagem)
+          const texts = cells.map((t) => t.trim()).filter(Boolean)
+          if (texts.length < 2 && !imagem) return
           const joined = cells.join(' ').toLowerCase()
           if (joined.includes('código') || joined.includes('codigo') || joined.includes('part') || joined.includes('refer') || joined.includes('preço') || joined.includes('preco') || joined.includes('descr')) {
             return // linha provável de cabeçalho
           }
           pushIfValid({
-            codigo: cells[0] || '',
-            nome: cells[1] || cells[0] || '',
-            descricao: cells[2] || cells[1] || '',
-            preco: cells.find(c => /(\d+[.,]\d{2})/.test(c)) || ''
+            codigo: texts[0] || '',
+            nome: texts[1] || texts[0] || '',
+            descricao: texts[2] || texts[1] || '',
+            preco: cells.find((c) => /(\d+[.,]\d{2})/.test(c)) || '',
+            imagem
           })
         })
 
@@ -16074,11 +16148,14 @@ export default function Dashboard() {
             const mCode = text.match(/\b([A-Z0-9][A-Z0-9\-_.\/]{3,})\b/)
             const mPrice = text.match(/(\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{2})\s?(?:€|eur)?)/i)
             const titleEl = card.querySelector('h1,h2,h3,h4,.title,.name,[data-name],[data-title]')
+            let imagem = extractImgSrcFromNode(card)
+            if (imagem) imagem = resolveUrl(imagem)
             pushIfValid({
               codigo: codeAttr || (mCode ? mCode[1] : ''),
               nome: (titleEl?.textContent || '').trim() || text.slice(0, 140),
               descricao: text,
-              preco: mPrice ? mPrice[1] : ''
+              preco: mPrice ? mPrice[1] : '',
+              imagem
             })
           })
         }
@@ -16158,11 +16235,19 @@ export default function Dashboard() {
         const codeRegex = /\b[A-Z0-9][A-Z0-9\-_.\/]{3,}\b/i
         const numericCodeRegex = /^\d{7,}$/
         const priceRegex = /(\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{2})\s?(?:€|eur|usd|us\$|r\$)?)$/i
-        let current: { codigo?: string; nome?: string; descricao?: string; preco?: string } | null = null
+        const imageUrlLine =
+          /^\s*https?:\/\/[^\s<>"']+\.(jpg|jpeg|png|webp|gif|svg)(?:\?[^\s<>"']*)?\s*$/i
+        let current: { codigo?: string; nome?: string; descricao?: string; preco?: string; imagem?: string } | null = null
+        let pendingImagem = ''
 
         const flushCurrent = () => {
           if (!current) return
-          if (current.codigo || current.nome || current.descricao) itens.push(current)
+          if (current.codigo || current.nome || current.descricao) {
+            const row = { ...current }
+            if (pendingImagem && !row.imagem) row.imagem = pendingImagem
+            itens.push(row)
+            pendingImagem = ''
+          }
           current = null
         }
 
@@ -16180,7 +16265,13 @@ export default function Dashboard() {
             const lastLine = block[block.length - 1] || ''
             if (!numericCodeRegex.test(lastLine)) return
 
-            const contentLines = block.slice(0, -1)
+            let contentLines = block.slice(0, -1)
+            const imgIdx = contentLines.findIndex((ln: string) => imageUrlLine.test(ln))
+            let imagemBloco = ''
+            if (imgIdx >= 0) {
+              imagemBloco = contentLines[imgIdx].trim()
+              contentLines = contentLines.filter((_, index) => index !== imgIdx)
+            }
             const precoIndex = contentLines.findIndex((line: string) => priceRegex.test(line))
             const preco = precoIndex >= 0 ? (contentLines[precoIndex].match(priceRegex)?.[1] || '') : ''
             const textLines = precoIndex >= 0
@@ -16194,10 +16285,20 @@ export default function Dashboard() {
               codigo: lastLine,
               nome,
               descricao: descricao || nome,
-              preco
+              preco,
+              ...(imagemBloco ? { imagem: imagemBloco } : {})
             })
           })
         } else for (const line of lines) {
+          if (imageUrlLine.test(line)) {
+            const url = line.trim()
+            if (current && (current.codigo || current.nome || current.descricao)) {
+              current.imagem = url
+            } else {
+              pendingImagem = url
+            }
+            continue
+          }
           const priceMatch = line.match(priceRegex)
           const normalizedLine = line.replace(/\s+/g, ' ').trim()
           const isLikelyCodeLine =
@@ -16209,9 +16310,17 @@ export default function Dashboard() {
           if (isLikelyCodeLine) {
             if (current && !current.codigo && (current.nome || current.descricao)) {
               current.codigo = normalizedLine
+              if (pendingImagem && !current.imagem) {
+                current.imagem = pendingImagem
+                pendingImagem = ''
+              }
             } else {
               flushCurrent()
               current = { codigo: normalizedLine }
+              if (pendingImagem) {
+                current.imagem = pendingImagem
+                pendingImagem = ''
+              }
             }
             continue
           }
@@ -30472,7 +30581,7 @@ A1;Peça exemplo;10'
                 <div className="importacao-pecas-paste-head">
                   <div>
                     <h4>{(safeT as any)?.importacaoColarCatalogoTitle || 'Colar catálogo do site'}</h4>
-                    <p>{(safeT as any)?.importacaoColarCatalogoDesc || 'Copie várias peças da página do fornecedor e cole tudo aqui de uma vez. O sistema tenta separar código, nome, descrição e preço automaticamente.'}</p>
+                    <p>{(safeT as any)?.importacaoColarCatalogoDesc || 'Copie várias peças da página do fornecedor e cole tudo aqui de uma vez. O sistema tenta separar código, nome, descrição, preço e imagem (HTML com <img> ou URL de foto).'}</p>
                   </div>
                   <button
                     type="button"
