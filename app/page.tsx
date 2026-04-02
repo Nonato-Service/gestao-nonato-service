@@ -15998,12 +15998,65 @@ export default function Dashboard() {
         item?.url_image ??
         item?.image_url ??
         item?.foto ??
+        item?.featuredImage ??
+        item?.featured_image ??
+        item?.smallImage ??
+        item?.largeImage ??
+        item?.imagePath ??
+        item?.image_path ??
         ''
     ).trim()
     if (!imagem) {
       const maybeImgUrl = String(item?.url ?? item?.link ?? item?.href ?? '').trim()
       if (/\.(jpg|jpeg|png|webp|gif|svg)(\?|#|$)/i.test(maybeImgUrl)) imagem = maybeImgUrl
     }
+    // Catálogos JSON: images/gallery como array de URLs ou objetos { url, src, ... }
+    if (!imagem) {
+      const arr =
+        item?.images ??
+        item?.photos ??
+        item?.gallery ??
+        item?.medias ??
+        item?.pictures ??
+        item?.media
+      if (Array.isArray(arr) && arr.length > 0) {
+        const x = arr[0]
+        if (typeof x === 'string' && x.trim()) imagem = x.trim()
+        else if (x && typeof x === 'object') {
+          imagem = String(
+            (x as any).url ??
+              (x as any).src ??
+              (x as any).image ??
+              (x as any).href ??
+              (x as any).large ??
+              (x as any).full ??
+              (x as any).original ??
+              (x as any).path ??
+              (x as any).uri ??
+              ''
+          ).trim()
+        }
+      }
+    }
+    if (!imagem && item?.media && typeof item.media === 'object' && !Array.isArray(item.media)) {
+      const m = item.media as Record<string, unknown>
+      const u = m.url ?? m.src ?? m.image ?? m.href
+      if (typeof u === 'string' && u.trim()) imagem = u.trim()
+    }
+    // CSV/campos arbitrários: cabeçalhos como "URL da imagem", "Image URL", "Photo link"
+    if (!imagem && item && typeof item === 'object') {
+      for (const [k, v] of Object.entries(item)) {
+        if (typeof v !== 'string' || !v.trim()) continue
+        const kn = k.toLowerCase()
+        if (!/(imagem|image|photo|foto|miniatura|thumb|picture|capa|poster|banner|galeria|gallery)/i.test(kn)) continue
+        const s = v.trim().replace(/&amp;/g, '&')
+        if (/^https?:\/\//i.test(s) || s.startsWith('//') || /\.(jpg|jpeg|png|webp|gif|svg)(\?|#|$)/i.test(s)) {
+          imagem = s.startsWith('//') ? `https:${s}` : s
+          break
+        }
+      }
+    }
+    if (imagem.startsWith('//')) imagem = `https:${imagem}`
     return {
       id: item?.id && typeof item.id === 'string' ? item.id : `import-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 9)}`,
       nome: nome || codigo || `Peça ${index + 1}`,
@@ -16053,29 +16106,84 @@ export default function Dashboard() {
       return out.map(v => v.trim())
     }
 
-    /** Extrai URL de <img> (src lazy-load comum em lojas). */
+    const decodeHtmlUrl = (u: string) =>
+      u.trim().replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#38;/g, '&')
+
+    const extractBackgroundImageFromStyle = (styleVal: string): string => {
+      if (!styleVal) return ''
+      const m = styleVal.match(/background-image\s*:\s*url\(\s*["']?([^"')]+)["']?\s*\)/i)
+      if (!m?.[1]) return ''
+      const u = decodeHtmlUrl(m[1])
+      if (u.startsWith('data:') || u.startsWith('blob:')) return ''
+      return u
+    }
+
+    /** Extrai URL de imagem: img (lazy-load), picture, background CSS, link para .jpg, etc. */
     const extractImgSrcFromNode = (root: Element | null): string => {
       if (!root || typeof (root as Element).querySelector !== 'function') return ''
-      const img = root.querySelector('img') as HTMLImageElement | null
-      if (!img) return ''
-      const attrs = ['src', 'data-src', 'data-lazy-src', 'data-original', 'data-url', 'data-image', 'data-lazy']
-      for (const attr of attrs) {
-        const v = img.getAttribute(attr)
-        if (v && v.trim() && !v.startsWith('data:') && !v.startsWith('blob:')) {
-          const decoded = v.trim().replace(/&amp;/g, '&').replace(/&quot;/g, '"')
-          if (decoded.startsWith('//')) return `https:${decoded}`
-          return decoded
-        }
-      }
-      const srcset = img.getAttribute('srcset')
-      if (srcset) {
-        const first = srcset.split(',')[0]?.trim().split(/\s+/)[0]
+
+      const styleAttr = (root as HTMLElement).getAttribute('style') || ''
+      const bgRoot = extractBackgroundImageFromStyle(styleAttr)
+      if (bgRoot) return bgRoot.startsWith('//') ? `https:${bgRoot}` : bgRoot
+
+      const pic = root.querySelector('picture source[srcset], picture source[src]') as HTMLSourceElement | null
+      if (pic) {
+        const ss = pic.getAttribute('srcset') || pic.getAttribute('src') || ''
+        const first = ss.split(',')[0]?.trim().split(/\s+/)[0]
         if (first && !first.startsWith('data:') && !first.startsWith('blob:')) {
-          const decoded = first.replace(/&amp;/g, '&')
-          if (decoded.startsWith('//')) return `https:${decoded}`
-          return decoded
+          const d = decodeHtmlUrl(first)
+          return d.startsWith('//') ? `https:${d}` : d
         }
       }
+
+      const link = root.querySelector(
+        'a[href*=".jpg" i],a[href*=".jpeg" i],a[href*=".png" i],a[href*=".webp" i],a[href*=".gif" i],a[href*=".svg" i]'
+      ) as HTMLAnchorElement | null
+      if (link?.href && !link.href.startsWith('data:') && !link.href.startsWith('blob:')) return link.href
+
+      const img = root.querySelector('img') as HTMLImageElement | null
+      if (img) {
+        const attrs = [
+          'src',
+          'data-src',
+          'data-lazy-src',
+          'data-original',
+          'data-url',
+          'data-image',
+          'data-lazy',
+          'data-zoom-image',
+          'data-large_image_url',
+          'data-full-src',
+          'data-img',
+        ]
+        for (const attr of attrs) {
+          const v = img.getAttribute(attr)
+          if (v && v.trim() && !v.startsWith('data:') && !v.startsWith('blob:')) {
+            let decoded = decodeHtmlUrl(v)
+            if (decoded.startsWith('//')) return `https:${decoded}`
+            return decoded
+          }
+        }
+        const lazySrcset = img.getAttribute('data-lazy-srcset') || img.getAttribute('data-srcset')
+        const srcset = img.getAttribute('srcset') || lazySrcset
+        if (srcset) {
+          const candidates = srcset.split(',').map((p) => p.trim().split(/\s+/)[0]).filter(Boolean)
+          for (const first of candidates) {
+            if (first && !first.startsWith('data:') && !first.startsWith('blob:')) {
+              const decoded = decodeHtmlUrl(first)
+              return decoded.startsWith('//') ? `https:${decoded}` : decoded
+            }
+          }
+        }
+      }
+
+      const bgNode = root.querySelector('[style*="background"]')
+      if (bgNode) {
+        const s = (bgNode as HTMLElement).getAttribute('style') || ''
+        const u = extractBackgroundImageFromStyle(s)
+        if (u) return u.startsWith('//') ? `https:${u}` : u
+      }
+
       return ''
     }
 
@@ -16112,6 +16220,21 @@ export default function Dashboard() {
             cellEls.map((c) => extractImgSrcFromNode(c)).find((src) => src) ||
             extractImgSrcFromNode(row)
           if (imagem) imagem = resolveUrl(imagem)
+          if (!imagem) {
+            for (const c of cellEls) {
+              const html = typeof (c as HTMLElement).innerHTML === 'string' ? (c as HTMLElement).innerHTML : ''
+              const abs = html.match(/https?:\/\/[^\s"'<>]+\.(?:jpg|jpeg|png|webp|gif|svg)(?:\?[^\s"'<>]*)?/i)
+              if (abs) {
+                imagem = resolveUrl(abs[0])
+                break
+              }
+              const proto = html.match(/\/\/[^\s"'<>]+\.(?:jpg|jpeg|png|webp|gif|svg)(?:\?[^\s"'<>]*)?/i)
+              if (proto) {
+                imagem = resolveUrl(`https:${proto[0]}`)
+                break
+              }
+            }
+          }
           const texts = cells.map((t) => t.trim()).filter(Boolean)
           if (texts.length < 2 && !imagem) return
           const joined = cells.join(' ').toLowerCase()
@@ -16232,6 +16355,37 @@ export default function Dashboard() {
           itens.push(obj)
         }
       } else {
+        // HOMAG / catálogos: várias linhas de descrição seguidas de uma linha só com código numérico (7–14 dígitos)
+        const homagNumericLine = /^\d{7,14}$/
+        const homagItemsParsed: Array<{ codigo: string; nome: string; descricao: string }> = []
+        let homagBuf: string[] = []
+        for (const line of lines) {
+          const t = line.trim()
+          if (!t) continue
+          if (homagNumericLine.test(t)) {
+            if (homagBuf.length) {
+              homagItemsParsed.push({
+                codigo: t,
+                nome: homagBuf[0],
+                descricao: homagBuf.slice(1).join(' ').trim() || homagBuf[0]
+              })
+              homagBuf = []
+            }
+          } else {
+            homagBuf.push(t)
+          }
+        }
+        if (homagBuf.length && homagItemsParsed.length) {
+          const last = homagItemsParsed[homagItemsParsed.length - 1]
+          last.descricao = [last.descricao, ...homagBuf].join(' ').trim()
+        }
+        const homagCodeLineCount = lines.filter((l) => homagNumericLine.test(l.trim())).length
+        const useHomagLinear =
+          homagItemsParsed.length > 0 && homagItemsParsed.length === homagCodeLineCount
+
+        if (useHomagLinear) {
+          itens = homagItemsParsed
+        } else {
         const codeRegex = /\b[A-Z0-9][A-Z0-9\-_.\/]{3,}\b/i
         const numericCodeRegex = /^\d{7,}$/
         const priceRegex = /(\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{2})\s?(?:€|eur|usd|us\$|r\$)?)$/i
@@ -16344,6 +16498,7 @@ export default function Dashboard() {
         }
 
         flushCurrent()
+        }
       }
     }
     // Normaliza e remove duplicados da própria importação.
@@ -52184,6 +52339,8 @@ A1;Peça exemplo;10`}
                 ? [
                     (safeT as any)?.importacaoGuiaHomag1 || '1) Abra a HOMAG no navegador e faça login.',
                     (safeT as any)?.importacaoGuiaHomag2 || '2) Vá para a lista de peças desejada.',
+                    (safeT as any)?.importacaoGuiaHomagUrlImagens ||
+                      '2b) shop.homag.com: a página carrega em JavaScript — «Buscar da URL» não traz dados nem imagens; colar texto não traz fotos. Para imagens use no PC: config.json em scripts/homag-import (copie de config.example.json), startUrl = categoria, npm run homag:import com HOMAG_MANUAL=1 para login, depois carregue out/export.json.',
                     (safeT as any)?.importacaoGuiaHomag3 || '3) Tente exportar CSV/JSON no próprio site.',
                     (safeT as any)?.importacaoGuiaHomag4 || '4) Se não houver exportação, abra DevTools > Network e recarregue a página.',
                     (safeT as any)?.importacaoGuiaHomag5 || '5) Filtre por XHR/Fetch e abra a resposta que contém lista de peças.',

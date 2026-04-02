@@ -1,5 +1,5 @@
 {
-  "startUrl": "https://shop.homag.com/s/?language=it",
+  "startUrl": "https://shop.homag.com/s/category/spare-parts/0ZG0900000059puGAA?language=en_AU",
   "maxPages": 20,
   "login": {
     "userSelector": "#username",

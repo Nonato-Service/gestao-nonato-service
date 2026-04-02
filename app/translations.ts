@@ -1267,6 +1267,8 @@ export const translations = {
     importacaoGuiaHomagTitle: 'Guia HOMAG — passo a passo',
     importacaoGuiaHomag1: '1) Abra a HOMAG no navegador e faça login.',
     importacaoGuiaHomag2: '2) Vá para a lista de peças desejada.',
+    importacaoGuiaHomagUrlImagens:
+      '2b) shop.homag.com usa JavaScript: «Buscar da URL» na app não traz lista nem imagens. Colar só texto traz códigos/nomes mas não fotos. Com imagens: no PC, na pasta do projeto, copie scripts/homag-import/config.example.json → config.json, defina startUrl com o link da categoria, instale Playwright (npx playwright install chromium), corra HOMAG_MANUAL=1 npm run homag:import — faça login na janela, Enter no terminal — depois importe scripts/homag-import/out/export.json na Biblioteca.',
     importacaoGuiaHomag3: '3) Tente exportar CSV/JSON no próprio site.',
     importacaoGuiaHomag4: '4) Se não houver exportação, abra DevTools > Network e recarregue a página.',
     importacaoGuiaHomag5: '5) Filtre por XHR/Fetch e abra a resposta que contém lista de peças.',
