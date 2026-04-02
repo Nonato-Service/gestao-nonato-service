@@ -1189,6 +1189,15 @@ type Tab = {
 
 type DemoModuleMode = 'active' | 'teaser' | 'hidden'
 
+/** Pacotes pré-definidos para o link de demonstração (Administrador / Gestão de Demonstrações). */
+type DemoPackagePreset =
+  | 'basic'
+  | 'commercial'
+  | 'technical'
+  | 'partial'
+  | 'gestao-nucleo'
+  | 'tecnica-clientes'
+
 type ComprovanteDespesa = {
   id: string
   tipo: 'cliente' | 'pessoal'  // cliente = despesa por cliente; pessoal = despesas pessoais
@@ -3390,6 +3399,37 @@ export default function Dashboard() {
     ]),
     []
   )
+  /** Todas as ações que podem ir no cookie da demo (alinhado com /api/demo/activate). */
+  const FULL_DEMO_ACTION_KEYS = useMemo(() => {
+    const s = new Set<string>([
+      ...DEMO_ALLOWED_ACTIONS,
+      ...DEMO_MODULE_CATALOG.map((m) => m.action),
+      'open-gestao-custos',
+      'open-gestao-financeira',
+      'open-comunicacao-interna',
+      'open-extra',
+      'open-biblioteca-hub',
+      'open-gestao-grupos-checklist',
+      'open-orcamentos-avulso',
+      'open-pedido-orcamentos-avulso',
+      'open-registro-despesas',
+      'open-mapa-visual-separacao',
+      'open-mapa-visual-separacao-pecas',
+      'open-clientes-financeiro',
+      'open-comprovantes-despesas',
+      'open-hub-comunicacao',
+      'open-mensagens-internas',
+      'open-mensagens-internas-tecnicos',
+      'open-alerta-mensagens',
+      'open-quick-gestao-custos',
+      'open-quick-gestao-financeira',
+      'open-quick-biblioteca-pecas',
+      'open-relatorios-excluidos-clientes',
+      'open-manuais-informacoes-tecnicas',
+      'open-almoxarifado-armazem',
+    ])
+    return Array.from(s)
+  }, [DEMO_ALLOWED_ACTIONS, DEMO_MODULE_CATALOG])
   const isActionVisibleInDemo = useCallback((action: string): boolean => {
     if (!isDemoMode) return true
     const configuredMode = demoModuleConfig[action]
@@ -3406,22 +3446,122 @@ export default function Dashboard() {
     if (!isDemoMode) return false
     return isActionVisibleInDemo(action) && !isActionAllowedInDemo(action)
   }, [isActionAllowedInDemo, isActionVisibleInDemo, isDemoMode])
-  const buildDemoModulesFromPreset = useCallback((preset: 'basic' | 'commercial' | 'technical' | 'partial') => {
-    const activeByPreset: Record<'basic' | 'commercial' | 'technical' | 'partial', string[]> = {
-      basic: ['open-clientes', 'open-fornecedores', 'open-relatorio-servico'],
-      commercial: ['open-clientes', 'open-fornecedores', 'open-relatorio-servico', 'open-biblioteca-pecas', 'open-agenda'],
-      technical: ['open-gestores', 'open-equipamentos', 'open-checklist-hub', 'open-checklist', 'open-desmontados', 'open-protocolos-servico'],
-      partial: ['open-clientes', 'open-fornecedores', 'open-relatorio-servico', 'open-biblioteca-pecas', 'open-importacao-pecas', 'open-agenda', 'open-checklist-hub', 'open-protocolos-servico'],
-    }
+  const buildDemoModulesFromPreset = useCallback(
+    (preset: DemoPackagePreset, mode: 'legacy-teaser' | 'strict-hidden' = 'legacy-teaser'): Record<string, DemoModuleMode> => {
+      const activeByPreset: Record<'basic' | 'commercial' | 'technical' | 'partial', string[]> = {
+        basic: ['open-gestao-tecnica', 'open-clientes', 'open-fornecedores', 'open-relatorio-servico'],
+        commercial: [
+          'open-gestao-tecnica',
+          'open-biblioteca-hub',
+          'open-clientes',
+          'open-fornecedores',
+          'open-relatorio-servico',
+          'open-biblioteca-pecas',
+          'open-importacao-pecas',
+          'open-agenda',
+        ],
+        technical: [
+          'open-gestao-tecnica',
+          'open-gestao-industrial',
+          'open-gestores',
+          'open-equipamentos',
+          'open-checklist-hub',
+          'open-checklist',
+          'open-desmontados',
+          'open-protocolos-servico',
+        ],
+        partial: [
+          'open-gestao-tecnica',
+          'open-clientes',
+          'open-fornecedores',
+          'open-relatorio-servico',
+          'open-biblioteca-pecas',
+          'open-importacao-pecas',
+          'open-agenda',
+          'open-checklist-hub',
+          'open-protocolos-servico',
+        ],
+      }
 
-    return Object.fromEntries(
-      DEMO_MODULE_CATALOG.map(({ action }) => {
-        if (DEMO_HIDDEN_ACTIONS.has(action)) return [action, 'hidden' as DemoModuleMode]
-        if (activeByPreset[preset].includes(action)) return [action, 'active' as DemoModuleMode]
-        return [action, 'teaser' as DemoModuleMode]
-      })
-    ) as Record<string, DemoModuleMode>
-  }, [DEMO_HIDDEN_ACTIONS, DEMO_MODULE_CATALOG])
+      const GESTAO_NUCLEO_ACTIVE = new Set([
+        'open-gestao-custos',
+        'open-gestao-financeira',
+        'open-gestao-industrial',
+        'open-comunicacao-interna',
+        'open-cadastro-servicos',
+        'open-orcamentos-avulso',
+        'open-pedido-orcamentos-avulso',
+        'open-registro-despesas',
+        'open-mapa-visual-separacao',
+        'open-mapa-visual-separacao-pecas',
+        'open-fechamento-relatorios-servicos',
+        'open-quick-gestao-custos',
+        'open-quick-gestao-financeira',
+        'open-clientes-financeiro',
+        'open-comprovantes-despesas',
+        'open-familias-grupos-equipamentos',
+        'open-equipamentos',
+        'open-desmontados',
+        'open-manuais-informacoes-tecnicas',
+        'open-almoxarifado-armazem',
+        'open-hub-comunicacao',
+        'open-mensagens-internas',
+        'open-mensagens-internas-tecnicos',
+        'open-alerta-mensagens',
+      ])
+
+      const TECNICA_CLIENTES_ACTIVE = new Set([
+        'open-gestao-tecnica',
+        'open-biblioteca-hub',
+        'open-clientes',
+        'open-fornecedores',
+        'open-relatorio-servico',
+        'open-biblioteca-pecas',
+        'open-importacao-pecas',
+        'open-solicitacao-servico-tecnico',
+        'open-agenda',
+        'open-biblioteca-relatorios',
+        'open-relatorios-excluidos-clientes',
+        'open-gestores',
+        'open-equipamentos',
+        'open-familias-grupos',
+        'open-familias-grupos-equipamentos',
+        'open-checklist-hub',
+        'open-pre-checklist',
+        'open-checklist',
+        'open-gestao-grupos-checklist',
+        'open-formularios-checklist-tecnicos',
+        'open-verificacao-final-entrega',
+        'open-desmontados',
+        'open-cadastro-servicos',
+        'open-fechamento-relatorios-servicos',
+        'open-protocolos-servico',
+        'open-gestao-industrial',
+        'open-manuais-informacoes-tecnicas',
+        'open-almoxarifado-armazem',
+        'open-ordem-preparacao',
+      ])
+
+      let active: Set<string>
+      if (preset === 'gestao-nucleo') active = GESTAO_NUCLEO_ACTIVE
+      else if (preset === 'tecnica-clientes') active = TECNICA_CLIENTES_ACTIVE
+      else active = new Set(activeByPreset[preset])
+
+      const restMode: DemoModuleMode = mode === 'strict-hidden' && (preset === 'gestao-nucleo' || preset === 'tecnica-clientes') ? 'hidden' : 'teaser'
+
+      const out: Record<string, DemoModuleMode> = {}
+      for (const action of FULL_DEMO_ACTION_KEYS) {
+        if (DEMO_HIDDEN_ACTIONS.has(action)) {
+          out[action] = 'hidden'
+          continue
+        }
+        if (active.has(action)) out[action] = 'active'
+        else out[action] = restMode
+      }
+      return out
+    },
+    [DEMO_HIDDEN_ACTIONS, FULL_DEMO_ACTION_KEYS]
+  )
   const getDemoPresetLabel = useCallback((preset?: string) => {
     switch (preset) {
       case 'basic':
@@ -3432,6 +3572,10 @@ export default function Dashboard() {
         return 'Demo técnica'
       case 'partial':
         return 'Demo parcial'
+      case 'gestao-nucleo':
+        return 'Gestão (Custos, Fin., Ind., Com.)'
+      case 'tecnica-clientes':
+        return 'Gestão técnica + clientes'
       case 'custom':
         return 'Personalizada'
       default:
@@ -3440,7 +3584,7 @@ export default function Dashboard() {
   }, [])
   const createDefaultDemoLinkForm = useCallback(() => {
     const demoModules = Object.fromEntries(
-      DEMO_MODULE_CATALOG.map(({ action }) => {
+      FULL_DEMO_ACTION_KEYS.map((action) => {
         const mode: DemoModuleMode =
           DEMO_HIDDEN_ACTIONS.has(action)
             ? 'hidden'
@@ -3451,7 +3595,7 @@ export default function Dashboard() {
       })
     ) as Record<string, DemoModuleMode>
     return { nome: '', email: '', observacoes: '', demoModules, demoPreset: 'custom' }
-  }, [DEMO_ALLOWED_ACTIONS, DEMO_HIDDEN_ACTIONS, DEMO_MODULE_CATALOG])
+  }, [DEMO_ALLOWED_ACTIONS, DEMO_HIDDEN_ACTIONS, FULL_DEMO_ACTION_KEYS])
   const [demoLinkForm, setDemoLinkForm] = useState(createDefaultDemoLinkForm)
   const demoRecipientsComEstado = useMemo(() => {
     const agora = Date.now()
@@ -16955,18 +17099,65 @@ export default function Dashboard() {
           Módulos da demo
         </div>
         <div style={{ fontSize: compact ? '11px' : '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
-          Escolhe agora o comportamento de cada módulo para o link que estás a criar.
+          Escolhe um <strong>pacote</strong> (rápido) ou ajusta cada módulo abaixo. O pacote define o que o destinatário pode usar no link (ativo), ver bloqueado (pré-visualização) ou não ver.
+        </div>
+        <div style={{ marginBottom: '14px' }}>
+          <label style={{ display: 'block', fontSize: compact ? '11px' : '12px', color: '#b8e6ff', marginBottom: '6px', fontWeight: 600 }}>
+            Pacote de demonstração
+          </label>
+          <select
+            value={
+              ['basic', 'commercial', 'technical', 'partial', 'gestao-nucleo', 'tecnica-clientes'].includes(
+                String(demoLinkForm.demoPreset || '')
+              )
+                ? String(demoLinkForm.demoPreset)
+                : 'custom'
+            }
+            onChange={(e) => {
+              const v = e.target.value as DemoPackagePreset | 'custom'
+              if (v === 'custom') {
+                setDemoLinkForm((p) => ({ ...p, demoPreset: 'custom' }))
+                return
+              }
+              const strict = v === 'gestao-nucleo' || v === 'tecnica-clientes'
+              setDemoLinkForm((prev) => ({
+                ...prev,
+                demoPreset: v,
+                demoModules: buildDemoModulesFromPreset(v, strict ? 'strict-hidden' : 'legacy-teaser'),
+              }))
+            }}
+            style={{
+              width: '100%',
+              maxWidth: '520px',
+              padding: compact ? '8px 10px' : '10px 12px',
+              backgroundColor: '#141414',
+              color: '#fff',
+              border: '1px solid rgba(0, 180, 255, 0.35)',
+              borderRadius: '8px',
+              fontSize: compact ? '12px' : '13px',
+            }}
+          >
+            <option value="custom">Personalizada (usar grelha abaixo)</option>
+            <option value="basic">Comercial mínimo (3 funções na área técnica)</option>
+            <option value="commercial">Comercial (clientes, peças, agenda…)</option>
+            <option value="technical">Técnica / operação (equip., checklist, protocolos…)</option>
+            <option value="partial">Mista (parcial)</option>
+            <option value="gestao-nucleo">Só gestão: Custos, Financeiro, Industrial, Comunicação (resto oculto)</option>
+            <option value="tecnica-clientes">Gestão técnica + clientes e operações (resto oculto)</option>
+          </select>
         </div>
         <div style={{ fontSize: compact ? '11px' : '12px', color: '#d7f4ff', marginBottom: '10px' }}>
           <strong>Perfil atual:</strong> {getDemoPresetLabel(demoLinkForm.demoPreset)}
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '14px' }}>
-          {[
-            { id: 'basic', label: 'Demo básica' },
-            { id: 'commercial', label: 'Demo comercial' },
-            { id: 'technical', label: 'Demo técnica' },
-            { id: 'partial', label: 'Demo parcial' },
-          ].map((preset) => (
+          {([
+            { id: 'basic' as const, label: 'Demo básica', mode: 'legacy-teaser' as const },
+            { id: 'commercial' as const, label: 'Demo comercial', mode: 'legacy-teaser' as const },
+            { id: 'technical' as const, label: 'Demo técnica', mode: 'legacy-teaser' as const },
+            { id: 'partial' as const, label: 'Demo parcial', mode: 'legacy-teaser' as const },
+            { id: 'gestao-nucleo' as const, label: 'Só gestão (4 áreas)', mode: 'strict-hidden' as const },
+            { id: 'tecnica-clientes' as const, label: 'Técnica + clientes', mode: 'strict-hidden' as const },
+          ]).map((preset) => (
             <button
               key={preset.id}
               type="button"
@@ -16974,7 +17165,7 @@ export default function Dashboard() {
               onClick={() => setDemoLinkForm((prev) => ({
                 ...prev,
                 demoPreset: preset.id,
-                demoModules: buildDemoModulesFromPreset(preset.id as 'basic' | 'commercial' | 'technical' | 'partial')
+                demoModules: buildDemoModulesFromPreset(preset.id, preset.mode),
               }))}
               style={{
                 padding: compact ? '6px 10px' : '8px 12px',
