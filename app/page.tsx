@@ -678,6 +678,23 @@ type RegraClassificacaoPeca = {
   createdAt: string
 }
 
+/** Categoria/subcategoria válidas para manter no próximo cadastro de peça (ex.: mesma categoria em sequência). */
+function normalizarUltimaSelecaoBiblioteca(
+  form: Pick<PecaBiblioteca, 'categoriaId' | 'subcategoriaId'>,
+  categorias: CategoriaPeca[],
+  subcategorias: SubcategoriaPeca[]
+): { categoriaId: string; subcategoriaId: string } {
+  const catId = form.categoriaId && categorias.some((c) => c.id === form.categoriaId) ? form.categoriaId : ''
+  let subId = ''
+  if (catId && form.subcategoriaId) {
+    const s = subcategorias.find((x) => x.id === form.subcategoriaId && x.categoriaId === catId)
+    if (s) subId = s.id
+  }
+  return { categoriaId: catId, subcategoriaId: subId }
+}
+
+const BIBLIOTECA_PECAS_ULTIMA_SELECAO_KEY = 'nonato-biblioteca-pecas-ultima-selecao'
+
 type PasswordEntry = {
   id: string
   tecnicoName: string
@@ -3485,6 +3502,25 @@ export default function Dashboard() {
   const [showNovaSubcategoriaForm, setShowNovaSubcategoriaForm] = useState(false)
   const [novaSubcategoriaNome, setNovaSubcategoriaNome] = useState('')
   const [subcategoriasPecas, setSubcategoriasPecas] = useState<SubcategoriaPeca[]>([])
+  /** Categorias da biblioteca ordenadas A–Z (reutilizado nos selects e listas). */
+  const categoriasPecasAlfabeto = useMemo(
+    () =>
+      [...categoriasPecas].sort((a, b) =>
+        (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
+      ),
+    [categoriasPecas]
+  )
+  const primeiraExecUltimaSelecaoBiblioteca = useRef(true)
+  useEffect(() => {
+    if (primeiraExecUltimaSelecaoBiblioteca.current) {
+      primeiraExecUltimaSelecaoBiblioteca.current = false
+      if (ultimoGrupoSelecionado === '' && ultimoSubgrupoSelecionado === '') return
+    }
+    void saveData(BIBLIOTECA_PECAS_ULTIMA_SELECAO_KEY, {
+      categoriaId: ultimoGrupoSelecionado,
+      subcategoriaId: ultimoSubgrupoSelecionado,
+    })
+  }, [ultimoGrupoSelecionado, ultimoSubgrupoSelecionado])
   const [selecaoPecasBibliotecaIds, setSelecaoPecasBibliotecaIds] = useState<string[]>([])
   const [classificacaoLoteCategoriaId, setClassificacaoLoteCategoriaId] = useState('')
   const [classificacaoLoteSubcategoriaId, setClassificacaoLoteSubcategoriaId] = useState('')
@@ -5628,6 +5664,25 @@ export default function Dashboard() {
       const savedSubcategoriasPecas = getData('nonato-subcategorias-pecas')
       if (savedSubcategoriasPecas) {
         setSubcategoriasPecas(savedSubcategoriasPecas)
+      }
+
+      // Última categoria/subcategoria usada no cadastro (persiste após recarregar a página)
+      const ultimaSelBib = getData(BIBLIOTECA_PECAS_ULTIMA_SELECAO_KEY)
+      if (ultimaSelBib && typeof ultimaSelBib === 'object' && ultimaSelBib !== null && 'categoriaId' in ultimaSelBib) {
+        const cats = Array.isArray(savedCategoriasPecas) ? savedCategoriasPecas : []
+        const subs = Array.isArray(savedSubcategoriasPecas) ? savedSubcategoriasPecas : []
+        const raw = ultimaSelBib as { categoriaId?: string; subcategoriaId?: string }
+        const catId = typeof raw.categoriaId === 'string' ? raw.categoriaId : ''
+        if (catId && cats.some((c: CategoriaPeca) => c.id === catId)) {
+          let subId = ''
+          if (typeof raw.subcategoriaId === 'string' && raw.subcategoriaId) {
+            if (subs.some((s: SubcategoriaPeca) => s.id === raw.subcategoriaId && s.categoriaId === catId)) {
+              subId = raw.subcategoriaId
+            }
+          }
+          setUltimoGrupoSelecionado(catId)
+          setUltimoSubgrupoSelecionado(subId)
+        }
       }
 
       const savedRegrasClassificacaoPecas = getData('nonato-regras-classificacao-pecas')
@@ -16291,12 +16346,11 @@ export default function Dashboard() {
 
     persistPecasBiblioteca(updatedPecas)
 
-    const grupoParaManter = novaPeca.categoriaId || ultimoGrupoSelecionado || ''
-    const subgrupoParaManter =
-      novaPeca.subcategoriaId &&
-      subcategoriasPecas.some((sub) => sub.id === novaPeca.subcategoriaId && sub.categoriaId === grupoParaManter)
-        ? novaPeca.subcategoriaId
-        : ''
+    const { categoriaId: grupoParaManter, subcategoriaId: subgrupoParaManter } = normalizarUltimaSelecaoBiblioteca(
+      novaPeca,
+      categoriasPecas,
+      subcategoriasPecas
+    )
     const categoriaSelecionada = categoriasPecas.find(c => c.id === grupoParaManter)
     const subcategoriaSelecionada = subcategoriasPecas.find(s => s.id === subgrupoParaManter)
 
@@ -29852,7 +29906,7 @@ onKeyPress={(e) => {
                   style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                 >
                   <option value="">{safeT?.todosGrupos || 'Todos os grupos'}</option>
-                  {categoriasPecas.map(cat => (
+                  {categoriasPecasAlfabeto.map(cat => (
                     <option key={cat.id} value={cat.id}>{cat.nome}</option>
                   ))}
                 </select>
@@ -29870,6 +29924,9 @@ onKeyPress={(e) => {
                     <option value="">{safeT?.todasSubcategorias || 'Todas as subcategorias'}</option>
                     {subcategoriasPecas
                       .filter(sub => sub.categoriaId === filtroGrupoBiblioteca)
+                      .sort((a, b) =>
+                        (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
+                      )
                       .map(sub => (
                         <option key={sub.id} value={sub.id}>{sub.nome}</option>
                       ))}
@@ -30090,7 +30147,7 @@ onKeyPress={(e) => {
                     style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   >
                     <option value="">{safeT?.selecioneCategoria || 'Selecione uma categoria'}</option>
-                    {categoriasPecas.map(cat => (
+                    {categoriasPecasAlfabeto.map(cat => (
                       <option key={cat.id} value={cat.id}>{cat.nome}</option>
                     ))}
                   </select>
@@ -30128,6 +30185,9 @@ onKeyPress={(e) => {
                       <option value="">{safeT?.selecioneSubcategoria || 'Selecione uma subcategoria'}</option>
                       {subcategoriasPecas
                         .filter(sub => sub.categoriaId === pecaBibliotecaForm.categoriaId)
+                        .sort((a, b) =>
+                          (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
+                        )
                         .map(sub => (
                           <option key={sub.id} value={sub.id}>{sub.nome}</option>
                         ))}
@@ -30155,11 +30215,17 @@ onKeyPress={(e) => {
                         const updated = [...pecasBiblioteca, newPeca]
                         persistPecasBiblioteca(updated)
                       }
+                      const { categoriaId: grupoMantido, subcategoriaId: subMantido } = normalizarUltimaSelecaoBiblioteca(
+                        pecaBibliotecaForm,
+                        categoriasPecas,
+                        subcategoriasPecas
+                      )
+                      setUltimoGrupoSelecionado(grupoMantido)
+                      setUltimoSubgrupoSelecionado(subMantido)
                       setShowBibliotecaPecasForm(false)
                       setEditingPecaBiblioteca(null)
-                      // Manter o grupo e subgrupo selecionados ao criar nova peça
-                      const categoriaSelecionada = categoriasPecas.find(c => c.id === ultimoGrupoSelecionado)
-                      const subcategoriaSelecionada = subcategoriasPecas.find(s => s.id === ultimoSubgrupoSelecionado)
+                      const categoriaSelecionada = categoriasPecas.find(c => c.id === grupoMantido)
+                      const subcategoriaSelecionada = subcategoriasPecas.find(s => s.id === subMantido)
                       setPecaBibliotecaForm({ 
                         id: '', 
                         nome: '', 
@@ -30167,9 +30233,9 @@ onKeyPress={(e) => {
                         preco: '', 
                         descricao: '', 
                         categoria: categoriaSelecionada?.nome || '', 
-                        categoriaId: ultimoGrupoSelecionado || '', 
+                        categoriaId: grupoMantido, 
                         subcategoria: subcategoriaSelecionada?.nome || '', 
-                        subcategoriaId: ultimoSubgrupoSelecionado || '', 
+                        subcategoriaId: subMantido, 
                         imagem: '', 
                         dataCriacao: new Date().toISOString() 
                       })
@@ -30589,7 +30655,7 @@ onKeyPress={(e) => {
                           style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
                         >
                           <option value="">Escolher grupo</option>
-                          {categoriasPecas.map((cat) => (
+                          {categoriasPecasAlfabeto.map((cat) => (
                             <option key={cat.id} value={cat.id}>{cat.nome}</option>
                           ))}
                         </select>
@@ -30612,6 +30678,9 @@ onKeyPress={(e) => {
                           <option value="">Escolher subgrupo</option>
                           {subcategoriasPecas
                             .filter((sub) => !classificacaoLoteCategoriaId || sub.categoriaId === classificacaoLoteCategoriaId)
+                            .sort((a, b) =>
+                              (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
+                            )
                             .map((sub) => (
                               <option key={sub.id} value={sub.id}>{sub.nome}</option>
                             ))}
@@ -30907,7 +30976,7 @@ onKeyPress={(e) => {
                       style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                     >
                       <option value="">{safeT?.todosGrupos || 'Todos os grupos'}</option>
-                      {categoriasPecas.map(cat => (
+                      {categoriasPecasAlfabeto.map(cat => (
                         <option key={cat.id} value={cat.id}>{cat.nome}</option>
                       ))}
                     </select>
@@ -31060,7 +31129,7 @@ onKeyPress={(e) => {
                           .sort((a, b) =>
                             (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
                           )
-                        const zebraBg = index % 2 === 0 ? '#1a1a1a' : '#2e2e2e'
+                        const zebraBg = index % 2 === 0 ? '#2a2a2a' : '#3a3a3a'
                         return (
                           <div
                             key={categoria.id}
@@ -31178,7 +31247,7 @@ onKeyPress={(e) => {
                               ) : (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
                                   {subcategoriasDoGrupo.map((subcategoria, subIndex) => {
-                                    const subZebra = subIndex % 2 === 0 ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.14)'
+                                    const subZebra = subIndex % 2 === 0 ? '#2f2f2f' : '#3d3d3d'
                                     return (
                                     <div key={subcategoria.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', backgroundColor: subZebra, borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.18)', minWidth: 0, boxSizing: 'border-box' }}>
                                       {editingSubcategoria?.id === subcategoria.id ? (
