@@ -31049,16 +31049,25 @@ onKeyPress={(e) => {
                       <p style={{ fontSize: '15px', opacity: 0.8, margin: 0 }}>{safeT?.nenhumaCategoria || 'Nenhuma categoria cadastrada. Clique em "Nova Categoria" para começar.'}</p>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                      {categoriasPecas.map(categoria => {
-                        const subcategoriasDoGrupo = subcategoriasPecas.filter(sub => sub.categoriaId === categoria.id)
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {[...categoriasPecas]
+                        .sort((a, b) =>
+                          (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
+                        )
+                        .map((categoria, index) => {
+                        const subcategoriasDoGrupo = subcategoriasPecas
+                          .filter(sub => sub.categoriaId === categoria.id)
+                          .sort((a, b) =>
+                            (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
+                          )
+                        const zebraBg = index % 2 === 0 ? '#262626' : '#343434'
                         return (
                           <div
                             key={categoria.id}
                             style={{
-                              backgroundColor: '#151515',
+                              backgroundColor: zebraBg,
                               borderRadius: '10px',
-                              border: '1px solid rgba(0, 255, 0, 0.25)',
+                              border: '1px solid rgba(0, 255, 0, 0.22)',
                               overflow: 'hidden',
                               transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
                             }}
@@ -31168,8 +31177,8 @@ onKeyPress={(e) => {
                                 <p style={{ fontSize: '13px', opacity: 0.7, fontStyle: 'italic', margin: 0, padding: '12px', backgroundColor: '#222', borderRadius: '6px', border: '1px dashed rgba(0, 255, 0, 0.2)' }}>{safeT?.nenhumaSubcategoria || 'Nenhuma subcategoria cadastrada'}</p>
                               ) : (
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '10px' }}>
-                                  {subcategoriasDoGrupo.map(subcategoria => (
-                                    <div key={subcategoria.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', backgroundColor: '#252525', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.15)', minWidth: 0 }}>
+                                  {subcategoriasDoGrupo.map((subcategoria, subIndex) => (
+                                    <div key={subcategoria.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', backgroundColor: subIndex % 2 === 0 ? '#2a2a2a' : '#383838', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.15)', minWidth: 0 }}>
                                       {editingSubcategoria?.id === subcategoria.id ? (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
                                           <input
