@@ -31118,45 +31118,52 @@ onKeyPress={(e) => {
                       <p style={{ fontSize: '15px', opacity: 0.8, margin: 0 }}>{safeT?.nenhumaCategoria || 'Nenhuma categoria cadastrada. Clique em "Nova Categoria" para começar.'}</p>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      {[...categoriasPecas]
-                        .sort((a, b) =>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 0,
+                        borderRadius: '10px',
+                        border: '1px solid rgba(0, 255, 0, 0.28)',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {(() => {
+                        const categoriasOrdenadas = [...categoriasPecas].sort((a, b) =>
                           (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
                         )
-                        .map((categoria, index) => {
+                        return categoriasOrdenadas.map((categoria, index) => {
                         const subcategoriasDoGrupo = subcategoriasPecas
                           .filter(sub => sub.categoriaId === categoria.id)
                           .sort((a, b) =>
                             (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
                           )
-                        const zebraBg = index % 2 === 0 ? '#2a2a2a' : '#3a3a3a'
+                        /* Contraste forte entre faixas (cinza escuro / cinza médio-claro). */
+                        const zebraBg = index % 2 === 0 ? '#232323' : '#4a4a4a'
+                        const isUltimaCategoria = index === categoriasOrdenadas.length - 1
                         return (
                           <div
                             key={categoria.id}
                             style={{
                               backgroundColor: zebraBg,
-                              borderRadius: '10px',
-                              border: '1px solid rgba(0, 255, 0, 0.22)',
-                              overflow: 'hidden',
-                              transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
+                              borderBottom: isUltimaCategoria ? 'none' : '2px solid rgba(0, 255, 0, 0.28)',
+                              transition: 'filter 0.15s ease',
                             }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.4)'
-                              e.currentTarget.style.boxShadow = '0 2px 12px rgba(0, 255, 0, 0.1)'
+                              e.currentTarget.style.filter = 'brightness(1.07)'
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.25)'
-                              e.currentTarget.style.boxShadow = 'none'
+                              e.currentTarget.style.filter = 'none'
                             }}
                           >
-                            {/* Cabeçalho da categoria (ex: SENSORES) - bem destacado */}
+                            {/* Cabeçalho da categoria — mesma cor base do bloco (zebra legível) */}
                             <div style={{
                               display: 'flex',
                               alignItems: 'center',
                               gap: '12px',
                               padding: '14px 18px',
-                              background: `linear-gradient(90deg, rgba(0, 255, 0, 0.1) 0%, rgba(0, 255, 0, 0.02) 55%, transparent 100%), ${zebraBg}`,
-                              borderBottom: '1px solid rgba(0, 255, 0, 0.2)',
+                              backgroundColor: zebraBg,
+                              borderBottom: '1px solid rgba(0, 255, 0, 0.25)',
                               flexWrap: 'wrap'
                             }}>
                               {editingCategoria?.id === categoria.id ? (
@@ -31225,10 +31232,10 @@ onKeyPress={(e) => {
                               )}
                             </div>
 
-                            {/* Bloco de subcategorias - conteúdo da categoria (ex: itens sob Sensores) */}
-                            <div style={{ padding: '16px 18px', backgroundColor: 'transparent' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-                                <span style={{ fontSize: '12px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{safeT?.subcategorias || 'Subcategorias'}</span>
+                            {/* Bloco de subcategorias — faixas alternadas visíveis face ao fundo da categoria */}
+                            <div style={{ padding: '12px 14px 16px', backgroundColor: zebraBg }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                                <span style={{ fontSize: '12px', color: '#b8b8b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{safeT?.subcategorias || 'Subcategorias'}</span>
                                 <button
                                   className="btn-primary"
                                   onClick={() => {
@@ -31245,11 +31252,14 @@ onKeyPress={(e) => {
                               {subcategoriasDoGrupo.length === 0 ? (
                                 <p style={{ fontSize: '13px', opacity: 0.7, fontStyle: 'italic', margin: 0, padding: '12px', backgroundColor: '#222', borderRadius: '6px', border: '1px dashed rgba(0, 255, 0, 0.2)' }}>{safeT?.nenhumaSubcategoria || 'Nenhuma subcategoria cadastrada'}</p>
                               ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 0, width: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(0, 255, 0, 0.22)' }}>
                                   {subcategoriasDoGrupo.map((subcategoria, subIndex) => {
-                                    const subZebra = subIndex % 2 === 0 ? '#2f2f2f' : '#3d3d3d'
+                                    const subPar = index % 2 === 0 ? '#343434' : '#555555'
+                                    const subImpar = index % 2 === 0 ? '#1a1a1a' : '#3a3a3a'
+                                    const subZebra = subIndex % 2 === 0 ? subPar : subImpar
+                                    const ultimaSub = subIndex === subcategoriasDoGrupo.length - 1
                                     return (
-                                    <div key={subcategoria.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', backgroundColor: subZebra, borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.18)', minWidth: 0, boxSizing: 'border-box' }}>
+                                    <div key={subcategoria.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 14px', backgroundColor: subZebra, borderBottom: ultimaSub ? 'none' : '1px solid rgba(0, 255, 0, 0.2)', minWidth: 0, boxSizing: 'border-box' }}>
                                       {editingSubcategoria?.id === subcategoria.id ? (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
                                           <input
@@ -31300,13 +31310,14 @@ onKeyPress={(e) => {
                                       )}
                                     </div>
                                     )
-                                  })}
+                                  })
                                 </div>
                               )}
                             </div>
                           </div>
                         )
-                      })}
+                      })
+                    })()}
                     </div>
                   )}
                 </div>
