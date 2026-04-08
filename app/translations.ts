@@ -1308,6 +1308,12 @@ export const translations = {
     bibliotecaPecas: 'Biblioteca',
     gerenciarGrupos: 'Gerenciar Grupos',
     gerenciarCategorias: 'Gerenciar Categorias',
+    pecaBibliotecaDicaGerirGruposTitulo: 'Grupos e subgrupos',
+    pecaBibliotecaDicaGerirGruposCorpo:
+      'Para renomear ou apagar categorias e subcategorias já criadas, abra a aba «Gerenciar Categorias» e use os botões Editar / Excluir ao lado de cada nome.',
+    pecaBibliotecaIrGerirGrupos: 'Abrir Gerenciar Categorias',
+    gerenciarCategoriasSubtitulo:
+      'Cada grupo tem Editar e Excluir; dentro dele, cada subcategoria também. Ao renomear, as peças e regras automáticas passam a mostrar o novo nome.',
     gerenciarGruposSubgrupos: 'Gerenciar Grupos e Subgrupos',
     quantidadePecas: 'Peças',
     quantidadeCategorias: 'Categorias',
@@ -3405,6 +3411,13 @@ export const translations = {
     cadastroPecas: 'Registro de Piezas',
     gerenciarGrupos: 'Gestionar Grupos',
     gerenciarGruposSubgrupos: 'Gestionar Grupos y Subgrupos',
+    gerenciarCategorias: 'Gestionar categorías',
+    pecaBibliotecaDicaGerirGruposTitulo: 'Grupos y subgrupos',
+    pecaBibliotecaDicaGerirGruposCorpo:
+      'Para renombrar o eliminar categorías y subcategorías ya creadas, abra la pestaña «Gestionar categorías» y use Editar / Eliminar junto a cada nombre.',
+    pecaBibliotecaIrGerirGrupos: 'Abrir Gestionar categorías',
+    gerenciarCategoriasSubtitulo:
+      'Cada grupo tiene Editar y Eliminar; dentro, cada subgrupo también. Al renombrar, las piezas y reglas automáticas muestran el nombre nuevo.',
     visualizacaoGrid: 'Cuadrícula',
     visualizacaoLista: 'Lista',
     semImagem: 'Sin Imagen',
@@ -5411,6 +5424,13 @@ export const translations = {
     cadastroPecas: 'Enregistrement de Pièces',
     gerenciarGrupos: 'Gérer les Groupes',
     gerenciarGruposSubgrupos: 'Gérer les Groupes et Sous-groupes',
+    gerenciarCategorias: 'Gérer les catégories',
+    pecaBibliotecaDicaGerirGruposTitulo: 'Groupes et sous-groupes',
+    pecaBibliotecaDicaGerirGruposCorpo:
+      'Pour renommer ou supprimer des catégories et sous-catégories existantes, ouvrez l’onglet « Gérer les catégories » et utilisez Modifier / Supprimer à côté de chaque nom.',
+    pecaBibliotecaIrGerirGrupos: 'Ouvrir Gérer les catégories',
+    gerenciarCategoriasSubtitulo:
+      'Chaque groupe a Modifier et Supprimer ; chaque sous-groupe aussi. Au renommage, les pièces et règles automatiques affichent le nouveau nom.',
     visualizacaoGrid: 'Grille',
     visualizacaoLista: 'Liste',
     semImagem: 'Sans Image',
@@ -7424,6 +7444,13 @@ export const translations = {
     cadastroPecas: 'Registro Pezzi',
     gerenciarGrupos: 'Gestisci Gruppi',
     gerenciarGruposSubgrupos: 'Gestisci Gruppi e Sottogruppi',
+    gerenciarCategorias: 'Gestisci categorie',
+    pecaBibliotecaDicaGerirGruposTitulo: 'Gruppi e sottogruppi',
+    pecaBibliotecaDicaGerirGruposCorpo:
+      'Per rinominare o eliminare categorie e sottocategorie già create, apri la scheda « Gestisci categorie » e usa Modifica / Elimina accanto a ogni nome.',
+    pecaBibliotecaIrGerirGrupos: 'Apri Gestisci categorie',
+    gerenciarCategoriasSubtitulo:
+      'Ogni gruppo ha Modifica ed Elimina; anche ogni sottogruppo. Dopo la rinomina, pezzi e regole automatiche mostrano il nuovo nome.',
     visualizacaoGrid: 'Griglia',
     visualizacaoLista: 'Elenco',
     semImagem: 'Senza Immagine',
@@ -9452,6 +9479,13 @@ export const translations = {
     cadastroPecas: 'Teileregistrierung',
     gerenciarGrupos: 'Gruppen Verwalten',
     gerenciarGruposSubgrupos: 'Gruppen und Untergruppen Verwalten',
+    gerenciarCategorias: 'Kategorien verwalten',
+    pecaBibliotecaDicaGerirGruposTitulo: 'Gruppen und Untergruppen',
+    pecaBibliotecaDicaGerirGruposCorpo:
+      'Zum Umbenennen oder Löschen vorhandener Kategorien/Unterkategorien öffnen Sie « Kategorien verwalten » und nutzen Sie Bearbeiten / Löschen neben jedem Namen.',
+    pecaBibliotecaIrGerirGrupos: 'Kategorien verwalten öffnen',
+    gerenciarCategoriasSubtitulo:
+      'Jede Gruppe hat Bearbeiten und Löschen; jede Untergruppe ebenso. Nach Umbenennung zeigen Teile und automatische Regeln den neuen Namen.',
     visualizacaoGrid: 'Raster',
     visualizacaoLista: 'Liste',
     semImagem: 'Kein Bild',
@@ -11458,6 +11492,13 @@ export const translations = {
     cadastroPecas: 'Parts Registration',
     gerenciarGrupos: 'Manage Groups',
     gerenciarGruposSubgrupos: 'Manage Groups and Subgroups',
+    gerenciarCategorias: 'Manage categories',
+    pecaBibliotecaDicaGerirGruposTitulo: 'Groups and subgroups',
+    pecaBibliotecaDicaGerirGruposCorpo:
+      'To rename or delete existing categories and subcategories, open the « Manage categories » tab and use Edit / Delete next to each name.',
+    pecaBibliotecaIrGerirGrupos: 'Open Manage categories',
+    gerenciarCategoriasSubtitulo:
+      'Each group has Edit and Delete; each subgroup too. When you rename, parts and automatic rules show the new name.',
     visualizacaoGrid: 'Grid',
     visualizacaoLista: 'List',
     semImagem: 'No Image',

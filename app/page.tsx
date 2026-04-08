@@ -17252,6 +17252,56 @@ export default function Dashboard() {
     void saveData('nonato-regras-classificacao-pecas', next)
   }, [])
 
+  /** Renomear grupo: atualiza também o texto nas peças e nas regras de classificação automática. */
+  const renomearCategoriaPecaBiblioteca = useCallback(
+    (categoriaId: string, novoNome: string) => {
+      const nome = novoNome.trim()
+      if (!nome) return
+      setCategoriasPecas(prev => {
+        const next = prev.map(c => (c.id === categoriaId ? { ...c, nome } : c))
+        void saveData('nonato-categorias-pecas', next)
+        return next
+      })
+      const nextPecas = pecasBiblioteca.map(p =>
+        p.categoriaId === categoriaId ? { ...p, categoria: nome } : p
+      )
+      persistPecasBiblioteca(nextPecas)
+      setPecaBibliotecaForm(prev =>
+        prev.categoriaId === categoriaId ? { ...prev, categoria: nome } : prev
+      )
+      const nextRegras = regrasClassificacaoPecas.map(r =>
+        r.categoriaId === categoriaId ? { ...r, categoria: nome } : r
+      )
+      persistRegrasClassificacaoPecas(nextRegras)
+    },
+    [pecasBiblioteca, regrasClassificacaoPecas, persistPecasBiblioteca, persistRegrasClassificacaoPecas]
+  )
+
+  /** Renomear subgrupo: atualiza texto nas peças e regras. */
+  const renomearSubcategoriaPecaBiblioteca = useCallback(
+    (subcategoriaId: string, novoNome: string) => {
+      const nome = novoNome.trim()
+      if (!nome) return
+      setSubcategoriasPecas(prev => {
+        const next = prev.map(s => (s.id === subcategoriaId ? { ...s, nome } : s))
+        void saveData('nonato-subcategorias-pecas', next)
+        return next
+      })
+      const nextPecas = pecasBiblioteca.map(p =>
+        p.subcategoriaId === subcategoriaId ? { ...p, subcategoria: nome } : p
+      )
+      persistPecasBiblioteca(nextPecas)
+      setPecaBibliotecaForm(prev =>
+        prev.subcategoriaId === subcategoriaId ? { ...prev, subcategoria: nome } : prev
+      )
+      const nextRegras = regrasClassificacaoPecas.map(r =>
+        r.subcategoriaId === subcategoriaId ? { ...r, subcategoria: nome } : r
+      )
+      persistRegrasClassificacaoPecas(nextRegras)
+    },
+    [pecasBiblioteca, regrasClassificacaoPecas, persistPecasBiblioteca, persistRegrasClassificacaoPecas]
+  )
+
   const pecasImportadasPendentes = useMemo(
     () => pecasBiblioteca.filter((peca) => peca.importacaoPendente),
     [pecasBiblioteca]
@@ -29754,6 +29804,39 @@ onKeyPress={(e) => {
             {/* Conteúdo da aba Cadastro */}
             {abaBibliotecaPecas === 'cadastro' && (
               <>
+                <div
+                  style={{
+                    marginBottom: '16px',
+                    padding: '12px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(0, 200, 120, 0.35)',
+                    backgroundColor: 'rgba(0, 40, 20, 0.35)',
+                    fontSize: '13px',
+                    color: 'rgba(255,255,255,0.92)',
+                    lineHeight: 1.45,
+                  }}
+                >
+                  <strong style={{ color: '#7dff9e' }}>{(safeT as any).pecaBibliotecaDicaGerirGruposTitulo || 'Grupos e subgrupos'}</strong>
+                  {' — '}
+                  {(safeT as any).pecaBibliotecaDicaGerirGruposCorpo ||
+                    'Para renomear ou apagar categorias e subcategorias já criadas, abra a aba «Gerenciar Categorias» e use os botões Editar / Excluir ao lado de cada nome.'}{' '}
+                  <button
+                    type="button"
+                    onClick={() => setAbaBibliotecaPecas('grupos')}
+                    style={{
+                      marginLeft: '6px',
+                      padding: '4px 10px',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      borderRadius: '6px',
+                      border: '1px solid rgba(0, 255, 0, 0.45)',
+                      backgroundColor: 'rgba(18, 52, 24, 0.85)',
+                      color: '#fff',
+                    }}
+                  >
+                    {(safeT as any).pecaBibliotecaIrGerirGrupos || 'Abrir Gerenciar Categorias'}
+                  </button>
+                </div>
                 {/* Filtros por Grupo e Subgrupo */}
             <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
               <div style={{ flex: 1, minWidth: '200px' }}>
@@ -30936,6 +31019,10 @@ onKeyPress={(e) => {
                     <p style={{ margin: 0, fontSize: '12px', color: '#aaa' }}>
                       {categoriasPecas.length} {safeT?.quantidadeCategorias || 'Categorias'} · {subcategoriasPecas.length} {safeT?.quantidadeSubcategorias || 'Subcategorias'}
                     </p>
+                    <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#8a8a8a', maxWidth: '520px' }}>
+                      {(safeT as any).gerenciarCategoriasSubtitulo ||
+                        'Cada grupo tem Editar e Excluir; dentro dele, cada subcategoria também. Ao renomear, as peças e regras automáticas passam a mostrar o novo nome.'}
+                    </p>
                   </div>
                   <button
                     className="btn-primary"
@@ -31004,9 +31091,7 @@ onKeyPress={(e) => {
                                     style={{ flex: '1 1 200px', minWidth: '180px', padding: '9px 14px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.4)', borderRadius: '6px', fontSize: '15px', fontWeight: '600' }}
                                     onKeyPress={(e) => {
                                       if (e.key === 'Enter' && novaCategoriaNome.trim()) {
-                                        const updated = categoriasPecas.map(c => c.id === categoria.id ? { ...c, nome: novaCategoriaNome.trim() } : c)
-                                        setCategoriasPecas(updated)
-                                        saveData('nonato-categorias-pecas', updated)
+                                        renomearCategoriaPecaBiblioteca(categoria.id, novaCategoriaNome)
                                         setEditingCategoria(null)
                                         setNovaCategoriaNome('')
                                       }
@@ -31015,9 +31100,7 @@ onKeyPress={(e) => {
                                   <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                                     <button className="btn-primary" onClick={() => {
                                       if (!novaCategoriaNome.trim()) return
-                                      const updated = categoriasPecas.map(c => c.id === categoria.id ? { ...c, nome: novaCategoriaNome.trim() } : c)
-                                      setCategoriasPecas(updated)
-                                      saveData('nonato-categorias-pecas', updated)
+                                      renomearCategoriaPecaBiblioteca(categoria.id, novaCategoriaNome)
                                       setEditingCategoria(null)
                                       setNovaCategoriaNome('')
                                     }} style={{ padding: '7px 16px', fontSize: '12px' }}>{safeT?.save || 'Salvar'}</button>
@@ -31096,9 +31179,7 @@ onKeyPress={(e) => {
                                             style={{ width: '100%', padding: '7px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }}
                                             onKeyPress={(e) => {
                                               if (e.key === 'Enter' && novaSubcategoriaNome.trim()) {
-                                                const updated = subcategoriasPecas.map(s => s.id === subcategoria.id ? { ...s, nome: novaSubcategoriaNome.trim() } : s)
-                                                setSubcategoriasPecas(updated)
-                                                saveData('nonato-subcategorias-pecas', updated)
+                                                renomearSubcategoriaPecaBiblioteca(subcategoria.id, novaSubcategoriaNome)
                                                 setEditingSubcategoria(null)
                                                 setNovaSubcategoriaNome('')
                                               }
@@ -31107,9 +31188,7 @@ onKeyPress={(e) => {
                                           <div style={{ display: 'flex', gap: '6px' }}>
                                             <button className="btn-primary" onClick={() => {
                                               if (!novaSubcategoriaNome.trim()) return
-                                              const updated = subcategoriasPecas.map(s => s.id === subcategoria.id ? { ...s, nome: novaSubcategoriaNome.trim() } : s)
-                                              setSubcategoriasPecas(updated)
-                                              saveData('nonato-subcategorias-pecas', updated)
+                                              renomearSubcategoriaPecaBiblioteca(subcategoria.id, novaSubcategoriaNome)
                                               setEditingSubcategoria(null)
                                               setNovaSubcategoriaNome('')
                                             }} style={{ flex: 1, padding: '6px', fontSize: '11px', whiteSpace: 'nowrap' }}>{safeT?.save || 'Salvar'}</button>
