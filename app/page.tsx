@@ -61,6 +61,27 @@ async function restoreManuaisFamiliasGruposFromBackupPayload(raw: unknown): Prom
   }
 }
 
+/** Cadastro de serviços: valores vindos do JSON/localStorage podem ser string. */
+function normalizeServicoValorStored(v: unknown): number {
+  if (typeof v === 'number' && Number.isFinite(v)) return v
+  const n = parseFloat(String(v ?? '').replace(/\s/g, '').replace(',', '.'))
+  return Number.isFinite(n) ? n : 0
+}
+
+/** Campo de valor (texto): aceita vírgula ou ponto; vazio trata-se como 0 ao guardar. */
+function parseServicoValorInput(raw: string): number {
+  const t = raw.trim().replace(/\s/g, '').replace(/€/g, '').replace(',', '.')
+  if (t === '' || t === '-' || t === '.') return 0
+  const n = parseFloat(t)
+  return Number.isFinite(n) ? n : NaN
+}
+
+/** Texto inicial do input — sem forçar 0 visível quando o valor é zero. */
+function servicoValorToInputString(v: number): string {
+  if (!Number.isFinite(v) || v === 0) return ''
+  return String(v)
+}
+
 type Language = {
   code: string
   name: string
@@ -4087,6 +4108,7 @@ export default function Dashboard() {
     tipoCobranca: 'unidade' as 'unidade' | 'km' | 'hora' | 'valor-fixo' | 'diarias' | 'extras',
     categoria: 'servico' as 'servico' | 'despesa'
   })
+  const [servicoValorInput, setServicoValorInput] = useState('')
 
   // ===== Biblioteca de Grupos e Peças (Equipamentos Desmontados) =====
   const [showDesmontadosModal, setShowDesmontadosModal] = useState(false)
@@ -5248,7 +5270,12 @@ export default function Dashboard() {
       // Carregar serviços
       const savedServicos = getData('nonato-servicos')
       if (savedServicos && Array.isArray(savedServicos)) {
-        setServicos(savedServicos)
+        setServicos(
+          savedServicos.map((s: (typeof servicos)[number]) => ({
+            ...s,
+            valor: normalizeServicoValorStored(s.valor),
+          }))
+        )
       }
 
       // Carregar biblioteca do tradutor (separada por idiomas)
@@ -9104,6 +9131,7 @@ export default function Dashboard() {
   // Funções para gerenciar Serviços
   const handleAddServico = () => {
     setEditingServico(null)
+    setServicoValorInput('')
     setServicoForm({
       cod: '',
       nome: '',
@@ -9116,12 +9144,14 @@ export default function Dashboard() {
   }
 
   const handleEditServico = (servico: typeof servicos[0]) => {
-    setEditingServico(servico)
+    const valorN = normalizeServicoValorStored(servico.valor)
+    setEditingServico({ ...servico, valor: valorN })
+    setServicoValorInput(servicoValorToInputString(valorN))
     setServicoForm({
       cod: servico.cod || '',
       nome: servico.nome,
       descricao: servico.descricao || '',
-      valor: servico.valor,
+      valor: valorN,
       tipoCobranca: servico.tipoCobranca,
       categoria: servico.categoria
     })
@@ -9129,7 +9159,8 @@ export default function Dashboard() {
   }
 
   const handleSaveServico = async () => {
-    if (!servicoForm.nome.trim() || servicoForm.valor < 0 || isNaN(servicoForm.valor)) {
+    const valor = parseServicoValorInput(servicoValorInput)
+    if (!servicoForm.nome.trim() || valor < 0 || Number.isNaN(valor)) {
       alert((t as any).preenchaNomeValor || 'Preencha o nome e um valor válido (zero ou maior) para o serviço!')
       return
     }
@@ -9144,7 +9175,7 @@ export default function Dashboard() {
         cod: servicoForm.cod || undefined,
         nome: servicoForm.nome,
         descricao: servicoForm.descricao || undefined,
-        valor: servicoForm.valor,
+        valor,
         tipoCobranca: servicoForm.tipoCobranca,
         categoria: servicoForm.categoria
       }
@@ -9159,7 +9190,7 @@ export default function Dashboard() {
         cod: servicoForm.cod || undefined,
         nome: servicoForm.nome,
         descricao: servicoForm.descricao || undefined,
-        valor: servicoForm.valor,
+        valor,
         tipoCobranca: servicoForm.tipoCobranca,
         categoria: servicoForm.categoria
       }
@@ -9184,6 +9215,7 @@ export default function Dashboard() {
       tipoCobranca: savedServico.tipoCobranca,
       categoria: savedServico.categoria
     })
+    setServicoValorInput(servicoValorToInputString(savedServico.valor))
     setEditingServico(savedServico)
     alert((t as any).servicoSalvo || 'Serviço salvo com sucesso!')
   }
@@ -15292,17 +15324,27 @@ export default function Dashboard() {
       const updatedRelatorios = relatoriosServico.filter(r => r.id !== relatorioId)
       setRelatoriosServico(updatedRelatorios)
       saveData('nonato-relatorios-servico', updatedRelatorios)
-      // Remover também dos relatórios do cliente e o fechamento de despesas associado
-      if (relatorio?.clienteId) {
-        const updatedClientes = clientes.map(c => {
-          if (c.id !== relatorio.clienteId || !c.relatorios) return c
-          const newRelatorios = { ...c.relatorios }
-          Object.keys(newRelatorios).forEach(equipKey => {
-            newRelatorios[equipKey] = newRelatorios[equipKey].filter(r => r.id !== relatorioId)
-            if (newRelatorios[equipKey].length === 0) delete newRelatorios[equipKey]
-          })
-          return { ...c, relatorios: newRelatorios }
-        })
+      // Biblioteca lista relatórios a partir de cliente.relatorios — remover o id em TODAS as pastas/chaves.
+      // (Antes só atualizava se o relatório existisse em relatoriosServico com clienteId; dados antigos ou em falta não sumiam.)
+      let clientesRelatoriosAlterados = false
+      const updatedClientes = clientes.map(c => {
+        if (!c.relatorios || Object.keys(c.relatorios).length === 0) return c
+        const newRelatorios: Record<string, RelatorioServico[]> = { ...c.relatorios }
+        let touched = false
+        for (const equipKey of Object.keys(newRelatorios)) {
+          const list = newRelatorios[equipKey]
+          if (!Array.isArray(list) || list.length === 0) continue
+          const filtered = list.filter(r => r.id !== relatorioId)
+          if (filtered.length !== list.length) touched = true
+          if (filtered.length === 0) delete newRelatorios[equipKey]
+          else newRelatorios[equipKey] = filtered
+        }
+        if (!touched) return c
+        clientesRelatoriosAlterados = true
+        const keysLeft = Object.keys(newRelatorios)
+        return { ...c, relatorios: keysLeft.length === 0 ? undefined : newRelatorios }
+      })
+      if (clientesRelatoriosAlterados) {
         setClientes(updatedClientes)
         saveData('nonato-clientes', updatedClientes)
       }
@@ -33649,10 +33691,12 @@ A1;Peça exemplo;10`}
                   style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 ></textarea>
                 <input
-                  type="number"
-                  placeholder={safeT?.valorServico || 'Valor'}
-                  value={servicoForm.valor === 0 ? '' : servicoForm.valor}
-                  onChange={(e) => setServicoForm({ ...servicoForm, valor: parseFloat(e.target.value) || 0 })}
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  placeholder={safeT?.valorServico || 'Valor (ex.: 60 ou 60,00)'}
+                  value={servicoValorInput}
+                  onChange={(e) => setServicoValorInput(e.target.value)}
                   style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <select
@@ -33671,7 +33715,7 @@ A1;Peça exemplo;10`}
                   <button className="btn-primary" onClick={handleSaveServico} style={{ flex: 1, backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff' }}>
                     {safeT?.save || 'Salvar'}
                   </button>
-                  <button className="btn-primary" onClick={() => { setShowServicoForm(false); setEditingServico(null); setServicoForm({ cod: '', nome: '', descricao: '', valor: 0, categoria: 'servico', tipoCobranca: 'valor-fixo' }); }} style={{ flex: 1, backgroundColor: 'rgba(22, 28, 28, 0.88)', border: '1px solid rgba(0, 255, 0, 0.22)', color: '#ffffff' }}>
+                  <button className="btn-primary" onClick={() => { setShowServicoForm(false); setEditingServico(null); setServicoValorInput(''); setServicoForm({ cod: '', nome: '', descricao: '', valor: 0, categoria: 'servico', tipoCobranca: 'valor-fixo' }); }} style={{ flex: 1, backgroundColor: 'rgba(22, 28, 28, 0.88)', border: '1px solid rgba(0, 255, 0, 0.22)', color: '#ffffff' }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>
@@ -57051,10 +57095,12 @@ A1;Peça exemplo;10`}
                   style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 ></textarea>
                 <input
-                  type="number"
-                  placeholder={safeT?.valorServico || 'Valor'}
-                  value={servicoForm.valor === 0 ? '' : servicoForm.valor}
-                  onChange={(e) => setServicoForm({ ...servicoForm, valor: parseFloat(e.target.value) || 0 })}
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  placeholder={safeT?.valorServico || 'Valor (ex.: 60 ou 60,00)'}
+                  value={servicoValorInput}
+                  onChange={(e) => setServicoValorInput(e.target.value)}
                   style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <select
@@ -57073,7 +57119,7 @@ A1;Peça exemplo;10`}
                   <button className="btn-primary" onClick={handleSaveServico} style={{ flex: 1 }}>
                     {safeT?.save || 'Salvar'}
                   </button>
-                  <button className="btn-primary" onClick={() => { setShowServicoForm(false); setEditingServico(null); setServicoForm({ cod: '', nome: '', descricao: '', valor: 0, categoria: 'servico', tipoCobranca: 'valor-fixo' }); }} style={{ flex: 1 }}>
+                  <button className="btn-primary" onClick={() => { setShowServicoForm(false); setEditingServico(null); setServicoValorInput(''); setServicoForm({ cod: '', nome: '', descricao: '', valor: 0, categoria: 'servico', tipoCobranca: 'valor-fixo' }); }} style={{ flex: 1 }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>
