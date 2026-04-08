@@ -31135,34 +31135,42 @@ onKeyPress={(e) => {
                           .sort((a, b) =>
                             (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
                           )
-                        /* Contraste forte entre faixas (cinza escuro / cinza médio-claro). */
-                        const zebraBg = index % 2 === 0 ? '#232323' : '#4a4a4a'
+                        /* Zebra sempre visível: cinza / cinza claro (estilo tabela). */
+                        const zebraBg = index % 2 === 0 ? '#3a3a3a' : '#525252'
                         const isUltimaCategoria = index === categoriasPecasAlfabeto.length - 1
+                        const hoverLinha = {
+                          transition: 'box-shadow 0.12s ease',
+                          boxShadow: 'none',
+                        } as React.CSSProperties
+                        const onEnterLinha = (e: React.MouseEvent<HTMLDivElement>) => {
+                          e.currentTarget.style.boxShadow = '0 0 0 1px rgba(255, 255, 255, 0.55)'
+                        }
+                        const onLeaveLinha = (e: React.MouseEvent<HTMLDivElement>) => {
+                          e.currentTarget.style.boxShadow = 'none'
+                        }
                         return (
                           <div
                             key={categoria.id}
                             style={{
                               backgroundColor: zebraBg,
-                              borderBottom: isUltimaCategoria ? 'none' : '2px solid rgba(0, 255, 0, 0.28)',
-                              transition: 'filter 0.15s ease',
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.filter = 'brightness(1.07)'
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.filter = 'none'
+                              borderBottom: isUltimaCategoria ? 'none' : '1px solid rgba(0, 0, 0, 0.45)',
                             }}
                           >
-                            {/* Cabeçalho da categoria — mesma cor base do bloco (zebra legível) */}
-                            <div style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '12px',
-                              padding: '14px 18px',
-                              backgroundColor: zebraBg,
-                              borderBottom: '1px solid rgba(0, 255, 0, 0.25)',
-                              flexWrap: 'wrap'
-                            }}>
+                            {/* Linha do nome da categoria — zebra + contorno branco fraco ao hover */}
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '12px',
+                                padding: '14px 18px',
+                                backgroundColor: zebraBg,
+                                borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+                                flexWrap: 'wrap',
+                                ...hoverLinha,
+                              }}
+                              onMouseEnter={onEnterLinha}
+                              onMouseLeave={onLeaveLinha}
+                            >
                               {editingCategoria?.id === categoria.id ? (
                                 <>
                                   <input
@@ -31249,14 +31257,28 @@ onKeyPress={(e) => {
                               {subcategoriasDoGrupo.length === 0 ? (
                                 <p style={{ fontSize: '13px', opacity: 0.7, fontStyle: 'italic', margin: 0, padding: '12px', backgroundColor: '#222', borderRadius: '6px', border: '1px dashed rgba(0, 255, 0, 0.2)' }}>{safeT?.nenhumaSubcategoria || 'Nenhuma subcategoria cadastrada'}</p>
                               ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 0, width: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(0, 255, 0, 0.22)' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 0, width: '100%', borderRadius: '6px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.14)' }}>
                                   {subcategoriasDoGrupo.map((subcategoria, subIndex) => {
-                                    const subPar = index % 2 === 0 ? '#343434' : '#555555'
-                                    const subImpar = index % 2 === 0 ? '#1a1a1a' : '#3a3a3a'
-                                    const subZebra = subIndex % 2 === 0 ? subPar : subImpar
+                                    const subZebra = subIndex % 2 === 0 ? '#2e2e2e' : '#454545'
                                     const ultimaSub = subIndex === subcategoriasDoGrupo.length - 1
                                     return (
-                                    <div key={subcategoria.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 14px', backgroundColor: subZebra, borderBottom: ultimaSub ? 'none' : '1px solid rgba(0, 255, 0, 0.2)', minWidth: 0, boxSizing: 'border-box' }}>
+                                    <div
+                                      key={subcategoria.id}
+                                      style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '10px',
+                                        padding: '11px 14px',
+                                        backgroundColor: subZebra,
+                                        borderBottom: ultimaSub ? 'none' : '1px solid rgba(0, 0, 0, 0.35)',
+                                        minWidth: 0,
+                                        boxSizing: 'border-box',
+                                        transition: 'box-shadow 0.12s ease',
+                                        boxShadow: 'none',
+                                      }}
+                                      onMouseEnter={onEnterLinha}
+                                      onMouseLeave={onLeaveLinha}
+                                    >
                                       {editingSubcategoria?.id === subcategoria.id ? (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
                                           <input
