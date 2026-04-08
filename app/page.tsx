@@ -3478,6 +3478,8 @@ export default function Dashboard() {
     imagem: '',
     dataCriacao: new Date().toISOString()
   })
+  /** Rascunho do campo «URL da imagem» no formulário da biblioteca de peças */
+  const [pecaBibliotecaImagemUrlDraft, setPecaBibliotecaImagemUrlDraft] = useState('')
   const [showNovaCategoriaForm, setShowNovaCategoriaForm] = useState(false)
   const [novaCategoriaNome, setNovaCategoriaNome] = useState('')
   const [showNovaSubcategoriaForm, setShowNovaSubcategoriaForm] = useState(false)
@@ -16315,12 +16317,14 @@ export default function Dashboard() {
       imagem: '',
       dataCriacao: new Date().toISOString()
     })
+    setPecaBibliotecaImagemUrlDraft('')
     setEditingPecaBiblioteca(null)
     alert(t.pecaBibliotecaSaved || 'Peça salva com sucesso!')
   }
 
   const handleEditPecaBiblioteca = (peca: PecaBiblioteca) => {
     setEditingPecaBiblioteca(peca)
+    setPecaBibliotecaImagemUrlDraft('')
     setPecaBibliotecaForm({ ...peca })
     setUltimoGrupoSelecionado(peca.categoriaId || '')
     setUltimoSubgrupoSelecionado(peca.subcategoriaId || '')
@@ -16332,6 +16336,75 @@ export default function Dashboard() {
       const updatedPecas = pecasBiblioteca.filter(p => p.id !== pecaId)
       setPecasBiblioteca(updatedPecas)
       localStorage.setItem('nonato-pecas-biblioteca', JSON.stringify(updatedPecas))
+    }
+  }
+
+  /** URL ou data URL → imagem na peça (tenta base64; se CORS bloquear, guarda o URL). */
+  const aplicarImagemPecaBibliotecaDeUrl = async (urlRaw: string) => {
+    const url = urlRaw.trim()
+    if (!url) {
+      alert(t.fillAllFields || 'Indique um endereço ou cole uma imagem.')
+      return
+    }
+    if (url.startsWith('data:image')) {
+      setPecaBibliotecaForm(prev => ({ ...prev, imagem: url }))
+      setPecaBibliotecaImagemUrlDraft('')
+      return
+    }
+    if (/^https?:\/\//i.test(url)) {
+      try {
+        const res = await fetch(url, { mode: 'cors' })
+        if (res.ok) {
+          const blob = await res.blob()
+          if (blob.type.startsWith('image/')) {
+            const dataUrl = await new Promise<string>((resolve, reject) => {
+              const r = new FileReader()
+              r.onload = () => resolve(r.result as string)
+              r.onerror = () => reject(new Error('read'))
+              r.readAsDataURL(blob)
+            })
+            setPecaBibliotecaForm(prev => ({ ...prev, imagem: dataUrl }))
+            setPecaBibliotecaImagemUrlDraft('')
+            return
+          }
+        }
+      } catch {
+        /* CORS, rede ou resposta não-imagem */
+      }
+      setPecaBibliotecaForm(prev => ({ ...prev, imagem: url }))
+      setPecaBibliotecaImagemUrlDraft('')
+      alert(
+        (t as any).pecaBibliotecaImagemUrlExterna ||
+          'A imagem ficou guardada como link (URL). Se não aparecer na pré-visualização, o site de origem pode bloquear o uso externo — nesse caso descarregue a imagem e use «Selecionar foto».'
+      )
+      return
+    }
+    alert((t as any).pecaBibliotecaUrlInvalida || 'Endereço inválido. Use um URL que comece por http:// ou https://')
+  }
+
+  const handlePasteImagemPecaBiblioteca = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items
+    if (items) {
+      for (let i = 0; i < items.length; i++) {
+        const it = items[i]
+        if (it.kind === 'file' && it.type.startsWith('image/')) {
+          e.preventDefault()
+          const file = it.getAsFile()
+          if (file) {
+            const reader = new FileReader()
+            reader.onload = () => {
+              setPecaBibliotecaForm(prev => ({ ...prev, imagem: reader.result as string }))
+            }
+            reader.readAsDataURL(file)
+          }
+          return
+        }
+      }
+    }
+    const text = e.clipboardData?.getData('text/plain')?.trim() ?? ''
+    if (/^https?:\/\//i.test(text) || text.startsWith('data:image')) {
+      e.preventDefault()
+      void aplicarImagemPecaBibliotecaDeUrl(text)
     }
   }
 
@@ -29754,6 +29827,7 @@ onKeyPress={(e) => {
                   imagem: '', 
                   dataCriacao: new Date().toISOString() 
                 }); 
+                setPecaBibliotecaImagemUrlDraft('')
               }} 
               style={{ marginBottom: '20px' }}
             >
@@ -29789,10 +29863,51 @@ onKeyPress={(e) => {
                 <button
                   className="btn-primary"
                   onClick={() => document.getElementById('peca-biblioteca-image-upload-tab')?.click()}
-                  style={{ marginBottom: '15px', padding: '8px 15px', fontSize: '13px' }}
+                  style={{ marginBottom: '10px', padding: '8px 15px', fontSize: '13px' }}
                 >
                   {safeT?.selectPhoto || 'Selecionar Foto'}
                 </button>
+                <div
+                  tabIndex={0}
+                  onPaste={handlePasteImagemPecaBiblioteca}
+                  onClick={(ev) => (ev.currentTarget as HTMLDivElement).focus()}
+                  style={{
+                    marginBottom: '12px',
+                    padding: '10px 12px',
+                    borderRadius: '6px',
+                    border: '1px dashed rgba(0, 255, 0, 0.45)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+                    fontSize: '12px',
+                    color: 'rgba(255,255,255,0.88)',
+                    cursor: 'pointer',
+                    outline: 'none',
+                  }}
+                >
+                  {(safeT as any)?.pecaBibliotecaPasteHint || 'Clique aqui e prima Ctrl+V para colar uma imagem ou o URL da imagem (https://...).'}
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '15px', alignItems: 'center' }}>
+                  <input
+                    type="url"
+                    placeholder={(safeT as any)?.pecaBibliotecaUrlPlaceholder || 'https://... (URL da imagem)'}
+                    value={pecaBibliotecaImagemUrlDraft}
+                    onChange={(e) => setPecaBibliotecaImagemUrlDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        void aplicarImagemPecaBibliotecaDeUrl(pecaBibliotecaImagemUrlDraft)
+                      }
+                    }}
+                    style={{ flex: '1 1 200px', minWidth: '160px', padding: '8px 10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
+                  />
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => void aplicarImagemPecaBibliotecaDeUrl(pecaBibliotecaImagemUrlDraft)}
+                    style={{ padding: '8px 14px', fontSize: '12px' }}
+                  >
+                    {(safeT as any)?.pecaBibliotecaAplicarUrl || 'Aplicar URL'}
+                  </button>
+                </div>
                 
                 {pecaBibliotecaForm.imagem && (
                   <div style={{ marginTop: '10px', marginBottom: '15px', textAlign: 'center' }}>
@@ -29975,6 +30090,7 @@ onKeyPress={(e) => {
                         imagem: '', 
                         dataCriacao: new Date().toISOString() 
                       })
+                      setPecaBibliotecaImagemUrlDraft('')
                       alert(safeT?.saveSuccess || 'Peça salva com sucesso!')
                     }} 
                     style={{ flex: 1, padding: '10px' }}
@@ -29989,6 +30105,7 @@ onKeyPress={(e) => {
                       // Manter o grupo e subgrupo selecionados ao cancelar
                       const categoriaSelecionada = categoriasPecas.find(c => c.id === ultimoGrupoSelecionado)
                       const subcategoriaSelecionada = subcategoriasPecas.find(s => s.id === ultimoSubgrupoSelecionado)
+                      setPecaBibliotecaImagemUrlDraft('')
                       setPecaBibliotecaForm({ 
                         id: '', 
                         nome: '', 
@@ -30627,6 +30744,7 @@ onKeyPress={(e) => {
                                 className="btn-primary"
                                 onClick={() => {
                                   setEditingPecaBiblioteca(peca)
+                                  setPecaBibliotecaImagemUrlDraft('')
                                   setPecaBibliotecaForm(peca)
                                   setShowBibliotecaPecasForm(true)
                                 }}
@@ -31178,6 +31296,7 @@ onKeyPress={(e) => {
                               onClick={() => {
                                 setAbaBibliotecaPecas('cadastro')
                                 setEditingPecaBiblioteca(peca)
+                                setPecaBibliotecaImagemUrlDraft('')
                                 setPecaBibliotecaForm(peca)
                                 setShowBibliotecaPecasForm(true)
                               }}
@@ -31459,6 +31578,7 @@ A1;Peça exemplo;10'
                             className="btn-primary"
                             onClick={() => {
                               setEditingPecaBiblioteca(peca)
+                              setPecaBibliotecaImagemUrlDraft('')
                               setPecaBibliotecaForm(peca)
                               setShowBibliotecaPecasForm(true)
                               openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
@@ -56177,7 +56297,7 @@ A1;Peça exemplo;10`}
         <div className="modal-overlay" onClick={() => setShowBibliotecaPecasModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2>{safeT?.bibliotecaPecasTitle || 'Biblioteca de Peças'}</h2>
-            <button className="btn-primary" onClick={() => { setShowBibliotecaPecasForm(true); setEditingPecaBiblioteca(null); setPecaBibliotecaForm({ id: '', nome: '', codigo: '', preco: '', descricao: '', categoria: '', categoriaId: '', subcategoria: '', subcategoriaId: '', imagem: '', dataCriacao: new Date().toISOString() }); }} style={{ marginBottom: '15px' }}>
+            <button className="btn-primary" onClick={() => { setShowBibliotecaPecasForm(true); setEditingPecaBiblioteca(null); setPecaBibliotecaImagemUrlDraft(''); setPecaBibliotecaForm({ id: '', nome: '', codigo: '', preco: '', descricao: '', categoria: '', categoriaId: '', subcategoria: '', subcategoriaId: '', imagem: '', dataCriacao: new Date().toISOString() }); }} style={{ marginBottom: '15px' }}>
               {safeT?.novaPecaBiblioteca || 'Nova Peça'}
             </button>
             {showBibliotecaPecasForm && (
@@ -56203,6 +56323,55 @@ A1;Peça exemplo;10`}
                   }}
                   style={{ display: 'none' }}
                 />
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => document.getElementById('peca-biblioteca-image-upload')?.click()}
+                  style={{ marginBottom: '10px', padding: '6px 12px', fontSize: '12px' }}
+                >
+                  {safeT?.selectPhoto || 'Selecionar Foto'}
+                </button>
+                <div
+                  tabIndex={0}
+                  onPaste={handlePasteImagemPecaBiblioteca}
+                  onClick={(ev) => (ev.currentTarget as HTMLDivElement).focus()}
+                  style={{
+                    marginBottom: '10px',
+                    padding: '8px 10px',
+                    borderRadius: '6px',
+                    border: '1px dashed rgba(0, 255, 0, 0.45)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+                    fontSize: '11px',
+                    color: 'rgba(255,255,255,0.88)',
+                    cursor: 'pointer',
+                    outline: 'none',
+                  }}
+                >
+                  {(safeT as any)?.pecaBibliotecaPasteHint || 'Clique aqui e prima Ctrl+V para colar uma imagem ou o URL da imagem (https://...).'}
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px', alignItems: 'center' }}>
+                  <input
+                    type="url"
+                    placeholder={(safeT as any)?.pecaBibliotecaUrlPlaceholder || 'https://...'}
+                    value={pecaBibliotecaImagemUrlDraft}
+                    onChange={(e) => setPecaBibliotecaImagemUrlDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        void aplicarImagemPecaBibliotecaDeUrl(pecaBibliotecaImagemUrlDraft)
+                      }
+                    }}
+                    style={{ flex: '1 1 160px', minWidth: '120px', padding: '6px 8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '12px' }}
+                  />
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => void aplicarImagemPecaBibliotecaDeUrl(pecaBibliotecaImagemUrlDraft)}
+                    style={{ padding: '6px 10px', fontSize: '11px' }}
+                  >
+                    {(safeT as any)?.pecaBibliotecaAplicarUrl || 'Aplicar URL'}
+                  </button>
+                </div>
                 {pecaBibliotecaForm.imagem && (
                   <div style={{ marginTop: '10px', textAlign: 'center' }}>
                     <img src={pecaBibliotecaForm.imagem} alt="Imagem da Peça" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'cover', marginBottom: '5px' }} />
@@ -56259,12 +56428,13 @@ A1;Peça exemplo;10`}
                     }
                     setShowBibliotecaPecasForm(false)
                     setEditingPecaBiblioteca(null)
+                    setPecaBibliotecaImagemUrlDraft('')
                     setPecaBibliotecaForm({ id: '', nome: '', codigo: '', preco: '', descricao: '', categoria: '', categoriaId: '', subcategoria: '', subcategoriaId: '', imagem: '', dataCriacao: new Date().toISOString() })
                     alert(safeT?.saveSuccess || 'Peça salva com sucesso!')
                   }} style={{ flex: 1 }}>
                     {safeT?.save || 'Salvar'}
                   </button>
-                  <button className="btn-primary" onClick={() => { setShowBibliotecaPecasForm(false); setEditingPecaBiblioteca(null); setPecaBibliotecaForm({ id: '', nome: '', codigo: '', preco: '', descricao: '', categoria: '', categoriaId: '', subcategoria: '', subcategoriaId: '', imagem: '', dataCriacao: new Date().toISOString() }); }} style={{ flex: 1 }}>
+                  <button className="btn-primary" onClick={() => { setShowBibliotecaPecasForm(false); setEditingPecaBiblioteca(null); setPecaBibliotecaImagemUrlDraft(''); setPecaBibliotecaForm({ id: '', nome: '', codigo: '', preco: '', descricao: '', categoria: '', categoriaId: '', subcategoria: '', subcategoriaId: '', imagem: '', dataCriacao: new Date().toISOString() }); }} style={{ flex: 1 }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>
@@ -56281,7 +56451,7 @@ A1;Peça exemplo;10`}
                     {peca.preco && <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.preco || 'Preço'}: {peca.preco}€</p>}
                     {peca.descricao && <p style={{ fontSize: '12px', opacity: 0.7 }}>{peca.descricao}</p>}
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
-                      <button className="btn-primary" onClick={() => { setEditingPecaBiblioteca(peca); setPecaBibliotecaForm(peca); setShowBibliotecaPecasForm(true); }} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
+                      <button className="btn-primary" onClick={() => { setEditingPecaBiblioteca(peca); setPecaBibliotecaImagemUrlDraft(''); setPecaBibliotecaForm(peca); setShowBibliotecaPecasForm(true); }} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
                         {safeT?.edit || 'Editar'}
                       </button>
                       <button className="btn-danger" onClick={() => {
