@@ -29314,7 +29314,7 @@ onKeyPress={(e) => {
           </div>
         )
       
-      case 'translator':
+      case 'translator': {
         const langs = getLanguages(safeT)
         const libraryFiltered = translatorLibrary.filter(
           e => e.sourceLang === translatorLibraryFrom && e.targetLang === translatorLibraryTo
@@ -29602,6 +29602,7 @@ onKeyPress={(e) => {
             </div>
           </div>
         )
+      }
       
       case 'biblioteca-pecas':
         return (
@@ -31128,11 +31129,7 @@ onKeyPress={(e) => {
                         overflow: 'hidden',
                       }}
                     >
-                      {(() => {
-                        const categoriasOrdenadas = [...categoriasPecas].sort((a, b) =>
-                          (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
-                        )
-                        return categoriasOrdenadas.map((categoria, index) => {
+                      {categoriasPecasAlfabeto.map((categoria, index) => {
                         const subcategoriasDoGrupo = subcategoriasPecas
                           .filter(sub => sub.categoriaId === categoria.id)
                           .sort((a, b) =>
@@ -31140,7 +31137,7 @@ onKeyPress={(e) => {
                           )
                         /* Contraste forte entre faixas (cinza escuro / cinza médio-claro). */
                         const zebraBg = index % 2 === 0 ? '#232323' : '#4a4a4a'
-                        const isUltimaCategoria = index === categoriasOrdenadas.length - 1
+                        const isUltimaCategoria = index === categoriasPecasAlfabeto.length - 1
                         return (
                           <div
                             key={categoria.id}
@@ -31310,14 +31307,13 @@ onKeyPress={(e) => {
                                       )}
                                     </div>
                                     )
-                                  })
+                                  })}
                                 </div>
                               )}
                             </div>
                           </div>
                         )
-                      })
-                    })()}
+                      })}
                     </div>
                   )}
                 </div>
