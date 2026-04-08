@@ -31060,7 +31060,7 @@ onKeyPress={(e) => {
                           .sort((a, b) =>
                             (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
                           )
-                        const zebraBg = index % 2 === 0 ? '#262626' : '#343434'
+                        const zebraBg = index % 2 === 0 ? '#1a1a1a' : '#2e2e2e'
                         return (
                           <div
                             key={categoria.id}
@@ -31086,7 +31086,7 @@ onKeyPress={(e) => {
                               alignItems: 'center',
                               gap: '12px',
                               padding: '14px 18px',
-                              background: 'linear-gradient(90deg, rgba(0, 255, 0, 0.12) 0%, rgba(0, 255, 0, 0.04) 100%)',
+                              background: `linear-gradient(90deg, rgba(0, 255, 0, 0.1) 0%, rgba(0, 255, 0, 0.02) 55%, transparent 100%), ${zebraBg}`,
                               borderBottom: '1px solid rgba(0, 255, 0, 0.2)',
                               flexWrap: 'wrap'
                             }}>
@@ -31157,7 +31157,7 @@ onKeyPress={(e) => {
                             </div>
 
                             {/* Bloco de subcategorias - conteúdo da categoria (ex: itens sob Sensores) */}
-                            <div style={{ padding: '16px 18px', backgroundColor: '#141414' }}>
+                            <div style={{ padding: '16px 18px', backgroundColor: 'transparent' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                                 <span style={{ fontSize: '12px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{safeT?.subcategorias || 'Subcategorias'}</span>
                                 <button
@@ -31176,9 +31176,11 @@ onKeyPress={(e) => {
                               {subcategoriasDoGrupo.length === 0 ? (
                                 <p style={{ fontSize: '13px', opacity: 0.7, fontStyle: 'italic', margin: 0, padding: '12px', backgroundColor: '#222', borderRadius: '6px', border: '1px dashed rgba(0, 255, 0, 0.2)' }}>{safeT?.nenhumaSubcategoria || 'Nenhuma subcategoria cadastrada'}</p>
                               ) : (
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '10px' }}>
-                                  {subcategoriasDoGrupo.map((subcategoria, subIndex) => (
-                                    <div key={subcategoria.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', backgroundColor: subIndex % 2 === 0 ? '#2a2a2a' : '#383838', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.15)', minWidth: 0 }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                                  {subcategoriasDoGrupo.map((subcategoria, subIndex) => {
+                                    const subZebra = subIndex % 2 === 0 ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.14)'
+                                    return (
+                                    <div key={subcategoria.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', backgroundColor: subZebra, borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.18)', minWidth: 0, boxSizing: 'border-box' }}>
                                       {editingSubcategoria?.id === subcategoria.id ? (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
                                           <input
@@ -31228,7 +31230,8 @@ onKeyPress={(e) => {
                                         </>
                                       )}
                                     </div>
-                                  ))}
+                                    )
+                                  })}
                                 </div>
                               )}
                             </div>
