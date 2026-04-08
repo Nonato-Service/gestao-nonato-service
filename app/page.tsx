@@ -720,6 +720,26 @@ type RelatorioServico = {
   dataAssinaturaCliente?: string
 }
 
+/** Conta quantas vezes um id de relatório aparece em cliente.relatorios (todas as chaves de equipamento). */
+function countRelatorioIdInClientesRelatorios(
+  clientes: Array<{ relatorios?: Record<string, RelatorioServico[]> | undefined }>,
+  relatorioId: string
+): number {
+  let n = 0
+  for (const c of clientes) {
+    const rel = c.relatorios
+    if (!rel) continue
+    for (const k of Object.keys(rel)) {
+      const list = rel[k]
+      if (!Array.isArray(list)) continue
+      for (const r of list) {
+        if (r.id === relatorioId) n++
+      }
+    }
+  }
+  return n
+}
+
 /** Item de cobrança no fechamento de um relatório de serviço (vinculado ao Cadastro de Serviços) */
 type FechamentoItem = {
   id: string
@@ -15292,62 +15312,111 @@ export default function Dashboard() {
     } catch (e) { console.error(e); alert('Erro ao gerar PDF.'); }
   };
 
-  const handleDeleteRelatorioServico = (relatorioId: string) => {
-    if (window.confirm(t.confirmDeleteRelatorioServico || 'Tem certeza que deseja excluir este relatório de serviço?')) {
-      const relatorio = relatoriosServico.find(r => r.id === relatorioId)
-      if (relatorio) {
-        const c = clientes.find(cl => cl.id === relatorio.clienteId)
-        const nomePasta = (c?.nomeEmpresa || relatorio.cliente || 'Cliente').trim() || 'Cliente'
-        const chavePasta = relatorio.clienteId || `sem-id-${nomePasta.replace(/\s+/g, '-').slice(0, 40)}`
-        const fechItens = fechamentosRelatorios[relatorioId]
-        const tinhaBib = fechamentosGuardadosBibliotecaIds.includes(relatorioId)
-        const itemArq: ItemRelatorioExcluidoArquivo = {
-          archiveId: `arch-srv-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-          excluidoEm: new Date().toISOString(),
-          tipo: 'servico',
-          relatorio: JSON.parse(JSON.stringify(relatorio)) as RelatorioServico,
-          fechamentoItens: fechItens && fechItens.length > 0 ? JSON.parse(JSON.stringify(fechItens)) : undefined,
-          tinhaFechamentoBiblioteca: tinhaBib
-        }
-        setRelatoriosExcluidosClientes(prev => {
-          const pastas = { ...prev.pastas }
-          const existente = pastas[chavePasta]
-          const pasta: PastaRelatoriosExcluidosCliente = existente
-            ? { ...existente, itens: [...existente.itens, itemArq] }
-            : { clienteId: chavePasta, clienteNome: nomePasta, itens: [itemArq] }
-          pastas[chavePasta] = pasta
-          const next = { pastas }
-          saveData('nonato-relatorios-excluidos-clientes', next)
-          return next
-        })
+  const handleDeleteRelatorioServico = (
+    relatorioId: string,
+    bibliotecaScope?: { clienteId: string; equipamentoKey: string; indexInEquipamento: number }
+  ) => {
+    if (!window.confirm(t.confirmDeleteRelatorioServico || 'Tem certeza que deseja excluir este relatório de serviço?')) {
+      return
+    }
+
+    let relatorioParaArquivo: RelatorioServico | undefined
+    let updatedRelatorios: RelatorioServico[]
+    let updatedClientes: Cliente[]
+
+    if (bibliotecaScope) {
+      const { clienteId, equipamentoKey, indexInEquipamento } = bibliotecaScope
+      const ci = clientes.findIndex(c => c.id === clienteId)
+      if (ci === -1) {
+        alert('Cliente não encontrado.')
+        return
       }
-      const updatedRelatorios = relatoriosServico.filter(r => r.id !== relatorioId)
-      setRelatoriosServico(updatedRelatorios)
-      saveData('nonato-relatorios-servico', updatedRelatorios)
-      // Biblioteca lista relatórios a partir de cliente.relatorios — remover o id em TODAS as pastas/chaves.
-      // (Antes só atualizava se o relatório existisse em relatoriosServico com clienteId; dados antigos ou em falta não sumiam.)
-      let clientesRelatoriosAlterados = false
-      const updatedClientes = clientes.map(c => {
+      const list = clientes[ci].relatorios?.[equipamentoKey]
+      if (!list || indexInEquipamento < 0 || indexInEquipamento >= list.length) {
+        alert('Este relatório já não está nesta lista. Atualize a página.')
+        return
+      }
+      relatorioParaArquivo = JSON.parse(JSON.stringify(list[indexInEquipamento])) as RelatorioServico
+
+      updatedClientes = clientes.map((c, i) => {
+        if (i !== ci) return c
+        const rel = c.relatorios
+        if (!rel?.[equipamentoKey]) return c
+        const nextList = [...rel[equipamentoKey]]
+        nextList.splice(indexInEquipamento, 1)
+        const newRelatorios = { ...rel }
+        if (nextList.length === 0) delete newRelatorios[equipamentoKey]
+        else newRelatorios[equipamentoKey] = nextList
+        const keysLeft = Object.keys(newRelatorios)
+        return { ...c, relatorios: keysLeft.length === 0 ? undefined : newRelatorios }
+      })
+
+      const nestedCount = countRelatorioIdInClientesRelatorios(updatedClientes, relatorioId)
+      updatedRelatorios = [...relatoriosServico]
+      while (updatedRelatorios.filter(r => r.id === relatorioId).length > nestedCount) {
+        const li = updatedRelatorios.map(r => r.id).lastIndexOf(relatorioId)
+        if (li < 0) break
+        updatedRelatorios.splice(li, 1)
+      }
+    } else {
+      relatorioParaArquivo = relatoriosServico.find(r => r.id === relatorioId)
+      updatedRelatorios = relatoriosServico.filter(r => r.id !== relatorioId)
+      updatedClientes = clientes.map(c => {
         if (!c.relatorios || Object.keys(c.relatorios).length === 0) return c
         const newRelatorios: Record<string, RelatorioServico[]> = { ...c.relatorios }
         let touched = false
         for (const equipKey of Object.keys(newRelatorios)) {
-          const list = newRelatorios[equipKey]
-          if (!Array.isArray(list) || list.length === 0) continue
-          const filtered = list.filter(r => r.id !== relatorioId)
-          if (filtered.length !== list.length) touched = true
+          const arr = newRelatorios[equipKey]
+          if (!Array.isArray(arr) || arr.length === 0) continue
+          const filtered = arr.filter(r => r.id !== relatorioId)
+          if (filtered.length !== arr.length) touched = true
           if (filtered.length === 0) delete newRelatorios[equipKey]
           else newRelatorios[equipKey] = filtered
         }
         if (!touched) return c
-        clientesRelatoriosAlterados = true
         const keysLeft = Object.keys(newRelatorios)
         return { ...c, relatorios: keysLeft.length === 0 ? undefined : newRelatorios }
       })
-      if (clientesRelatoriosAlterados) {
-        setClientes(updatedClientes)
-        saveData('nonato-clientes', updatedClientes)
+    }
+
+    if (relatorioParaArquivo) {
+      const relatorio = relatorioParaArquivo
+      const c = clientes.find(cl => cl.id === relatorio.clienteId)
+      const nomePasta = (c?.nomeEmpresa || relatorio.cliente || 'Cliente').trim() || 'Cliente'
+      const chavePasta = relatorio.clienteId || `sem-id-${nomePasta.replace(/\s+/g, '-').slice(0, 40)}`
+      const fechItens = fechamentosRelatorios[relatorioId]
+      const tinhaBib = fechamentosGuardadosBibliotecaIds.includes(relatorioId)
+      const itemArq: ItemRelatorioExcluidoArquivo = {
+        archiveId: `arch-srv-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+        excluidoEm: new Date().toISOString(),
+        tipo: 'servico',
+        relatorio: JSON.parse(JSON.stringify(relatorio)) as RelatorioServico,
+        fechamentoItens: fechItens && fechItens.length > 0 ? JSON.parse(JSON.stringify(fechItens)) : undefined,
+        tinhaFechamentoBiblioteca: tinhaBib
       }
+      setRelatoriosExcluidosClientes(prev => {
+        const pastas = { ...prev.pastas }
+        const existente = pastas[chavePasta]
+        const pasta: PastaRelatoriosExcluidosCliente = existente
+          ? { ...existente, itens: [...existente.itens, itemArq] }
+          : { clienteId: chavePasta, clienteNome: nomePasta, itens: [itemArq] }
+        pastas[chavePasta] = pasta
+        const next = { pastas }
+        saveData('nonato-relatorios-excluidos-clientes', next)
+        return next
+      })
+    }
+
+    setRelatoriosServico(updatedRelatorios)
+    saveData('nonato-relatorios-servico', updatedRelatorios)
+
+    if (updatedClientes.some((c, i) => c !== clientes[i])) {
+      setClientes(updatedClientes)
+      saveData('nonato-clientes', updatedClientes)
+    }
+
+    const aindaHaRelatorioComId = updatedRelatorios.some(r => r.id === relatorioId)
+    if (!aindaHaRelatorioComId) {
       const { [relatorioId]: _, ...restFechamentos } = fechamentosRelatorios
       setFechamentosRelatorios(restFechamentos)
       saveData('nonato-fechamentos-relatorios', restFechamentos)
@@ -45668,6 +45737,7 @@ A1;Peça exemplo;10`}
           cliente: Cliente,
           equipamentos: Array<{
             equipamento: EquipamentoCliente,
+            equipamentoKey: string,
             relatorios: RelatorioServico[]
           }>,
           despesas: Array<{ relatorio: RelatorioServico, itens: FechamentoItem[] }>
@@ -45678,6 +45748,7 @@ A1;Peça exemplo;10`}
         clientes.forEach(cliente => {
           const equipamentosComRelatorios: Array<{
             equipamento: EquipamentoCliente,
+            equipamentoKey: string,
             relatorios: RelatorioServico[]
           }> = []
 
@@ -45693,6 +45764,7 @@ A1;Peça exemplo;10`}
                 if (equipamento) {
                   equipamentosComRelatorios.push({
                     equipamento,
+                    equipamentoKey,
                     relatorios: relatorios.sort((a, b) => {
                       const dataA = new Date(a.data).getTime()
                       const dataB = new Date(b.data).getTime()
@@ -45929,9 +46001,9 @@ A1;Peça exemplo;10`}
                       {/* Equipamentos — só cartões com relatórios (sem blocos vazios nem botões) */}
                       {equipamentos.length > 0 && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {equipamentos.map(({ equipamento, relatorios }) => (
+                        {equipamentos.map(({ equipamento, equipamentoKey, relatorios }) => (
                           <div 
-                            key={equipamento.numeroSerie || equipamento.modelo} 
+                            key={equipamentoKey || equipamento.numeroSerie || equipamento.modelo} 
                             style={glassNestedStyle(ACCENT_GREEN)}
                           >
                             {/* Cabeçalho do Equipamento */}
@@ -45948,7 +46020,7 @@ A1;Peça exemplo;10`}
                             
                             {/* Lista de Relatórios */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                              {relatorios.map(relatorio => {
+                              {relatorios.map((relatorio, relIndex) => {
                                 const totais = calcularTotais(relatorio.diasTrabalho)
                                 const dataFormatada = new Date(relatorio.data).toLocaleDateString('pt-BR', {
                                   day: '2-digit',
@@ -45957,7 +46029,7 @@ A1;Peça exemplo;10`}
                                 })
                                 return (
                                   <div 
-                                    key={relatorio.id} 
+                                    key={`${cliente.id}-${equipamentoKey}-rel-${relIndex}-${relatorio.id}`} 
                                     style={{ ...glassInnerRowStyle(ACCENT_GREEN), transition: 'border-color 0.2s ease, background-color 0.2s ease' }}
                                     onMouseEnter={(e) => glassInnerRowHover(e.currentTarget, ACCENT_GREEN, true)}
                                     onMouseLeave={(e) => glassInnerRowHover(e.currentTarget, ACCENT_GREEN, false)}
@@ -46078,7 +46150,11 @@ A1;Peça exemplo;10`}
                                         </button>
                                         <button 
                                           type="button"
-                                          onClick={() => handleDeleteRelatorioServico(relatorio.id)}
+                                          onClick={() => handleDeleteRelatorioServico(relatorio.id, {
+                                            clienteId: cliente.id,
+                                            equipamentoKey,
+                                            indexInEquipamento: relIndex
+                                          })}
                                           style={{ 
                                             flex: 1,
                                             minWidth: '60px',
