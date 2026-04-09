@@ -31034,33 +31034,124 @@ onKeyPress={(e) => {
                       </div>
                     )
                   } else {
+                    const bibRowLine = '#4a4a4a'
+                    const bibHead = '#1a1a1a'
+                    const bibZebraA = '#363636'
+                    const bibZebraB = '#434343'
+                    const bibText = '#ececec'
+                    const bibMuted = '#b8b8b8'
+                    const bibThRule = { borderBottom: '2px solid #0a0a0a' } as React.CSSProperties
+                    const bibTdRule = { borderBottom: `1px solid ${bibRowLine}` } as React.CSSProperties
+                    const headerFilter = (
+                      <span style={{ opacity: 0.65, fontSize: '10px', lineHeight: 1 }} aria-hidden>
+                        ▼
+                      </span>
+                    )
                     return (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        {pecasFiltradas.map(peca => {
-                          const grupoNome = peca.categoriaId ? categoriasPecas.find(c => c.id === peca.categoriaId)?.nome : null
-                          const isPendingChecklist = criacaoChecklistPendentePeca?.origem === 'biblioteca'
-                          const isSelected = isPendingChecklist && pecaSelecionadaParaChecklist?.id === peca.id
-                          return (
-                            <div key={peca.id} style={{ backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.15)' : '#141414', padding: '15px', borderRadius: '8px', border: isSelected ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', gap: '15px', alignItems: 'center', cursor: isPendingChecklist ? 'pointer' : undefined }}
-                              onClick={() => { if (isPendingChecklist) setPecaSelecionadaParaChecklist(peca) }}
-                            >
-                              {peca.imagem ? (
-                                <img src={peca.imagem} alt={peca.nome} style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '4px' }} />
-                              ) : (
-                                <div style={{ width: '100px', height: '100px', backgroundColor: '#222222', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: '12px' }}>
-                                  {safeT?.semImagem || 'Sem Imagem'}
-                                </div>
-                              )}
-                              <div style={{ flex: 1 }}>
-                                <h4 style={{ marginBottom: '5px', fontSize: '16px', color: '#00ff00' }}>{peca.nome}</h4>
-                                <p style={{ fontSize: '14px', opacity: 0.8, marginBottom: '3px' }}>{safeT?.codigoPecaBiblioteca || 'Código'}: {peca.codigo}</p>
-                                {grupoNome && (
-                                  <p style={{ fontSize: '13px', opacity: 0.7, color: '#00ff00' }}>{safeT?.categoriaPecaBiblioteca || 'Grupo'}: {grupoNome}</p>
-                                )}
-                              </div>
-                            </div>
-                          )
-                        })}
+                      <div
+                        style={{
+                          overflowX: 'auto',
+                          borderRadius: '2px',
+                          border: `1px solid ${bibRowLine}`,
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
+                          backgroundColor: '#2e2e2e',
+                        }}
+                      >
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: bibText, minWidth: '720px' }}>
+                          <thead>
+                            <tr style={{ backgroundColor: bibHead, color: '#ffffff' }}>
+                              <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, width: '88px', ...bibThRule }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                  {(safeT as any)?.fotoColunaBiblioteca || 'Foto'}
+                                  {headerFilter}
+                                </span>
+                              </th>
+                              <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, ...bibThRule }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                  {safeT?.nome || 'Nome'}
+                                  {headerFilter}
+                                </span>
+                              </th>
+                              <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, ...bibThRule }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                  {safeT?.codigoPecaBiblioteca || 'Código'}
+                                  {headerFilter}
+                                </span>
+                              </th>
+                              <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, ...bibThRule }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                  {safeT?.categoriaPecaBiblioteca || 'Grupo'}
+                                  {headerFilter}
+                                </span>
+                              </th>
+                              <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, ...bibThRule }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                  {safeT?.subcategoriaPecaBiblioteca || 'Subcategoria'}
+                                  {headerFilter}
+                                </span>
+                              </th>
+                              <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, ...bibThRule }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', width: '100%' }}>
+                                  {safeT?.preco || 'Preço'}
+                                  {headerFilter}
+                                </span>
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {pecasFiltradas.map((peca, idx) => {
+                              const grupoNome = peca.categoriaId ? categoriasPecas.find((c) => c.id === peca.categoriaId)?.nome : null
+                              const isPendingChecklist = criacaoChecklistPendentePeca?.origem === 'biblioteca'
+                              const isSelected = isPendingChecklist && pecaSelecionadaParaChecklist?.id === peca.id
+                              const rowBg = isSelected ? 'rgba(0, 255, 0, 0.12)' : idx % 2 === 0 ? bibZebraA : bibZebraB
+                              return (
+                                <tr
+                                  key={peca.id}
+                                  style={{
+                                    backgroundColor: rowBg,
+                                    cursor: isPendingChecklist ? 'pointer' : undefined,
+                                    outline: isSelected ? '2px solid #00ff00' : undefined,
+                                    outlineOffset: '-2px',
+                                  }}
+                                  onClick={() => {
+                                    if (isPendingChecklist) setPecaSelecionadaParaChecklist(peca)
+                                  }}
+                                >
+                                  <td style={{ padding: '8px 12px', verticalAlign: 'middle', ...bibTdRule }}>
+                                    {peca.imagem ? (
+                                      <img src={peca.imagem} alt="" style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '4px', display: 'block' }} />
+                                    ) : (
+                                      <div
+                                        style={{
+                                          width: '56px',
+                                          height: '56px',
+                                          backgroundColor: '#2a2a2a',
+                                          borderRadius: '4px',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          color: bibMuted,
+                                          fontSize: '10px',
+                                          textAlign: 'center',
+                                          lineHeight: 1.2,
+                                        }}
+                                      >
+                                        {safeT?.semImagem || '—'}
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td style={{ padding: '10px 14px', verticalAlign: 'middle', ...bibTdRule }}>{peca.nome}</td>
+                                  <td style={{ padding: '10px 14px', verticalAlign: 'middle', color: bibMuted, ...bibTdRule }}>{peca.codigo || '—'}</td>
+                                  <td style={{ padding: '10px 14px', verticalAlign: 'middle', ...bibTdRule }}>{grupoNome || '—'}</td>
+                                  <td style={{ padding: '10px 14px', verticalAlign: 'middle', ...bibTdRule }}>{peca.subcategoria || '—'}</td>
+                                  <td style={{ padding: '10px 14px', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap', ...bibTdRule }}>
+                                    {peca.preco ? `${peca.preco}€` : '—'}
+                                  </td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
                       </div>
                     )
                   }
@@ -31126,29 +31217,31 @@ onKeyPress={(e) => {
                           .sort((a, b) =>
                             (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
                           )
-                        /* Estilo folha de cálculo: cabeçalho escuro + linhas cinza / cinza claro alternadas. */
-                        const excelBorder = '#8c8c8c'
-                        const excelHeaderBg = '#3a3a3a'
-                        const excelSubHeadBg = '#4f4f4f'
-                        const excelZebraA = '#d0d0d0'
-                        const excelZebraB = '#f2f2f2'
-                        const excelText = '#111111'
+                        /* Estilo Excel: cabeçalho muito escuro, zebra em cinza escuro / cinza um pouco mais claro, só divisões horizontais. */
+                        const rowLine = '#4a4a4a'
+                        const excelHeaderBg = '#1a1a1a'
+                        const excelSubHeadBg = '#222222'
+                        const excelZebraA = '#363636'
+                        const excelZebraB = '#434343'
+                        const excelText = '#ececec'
+                        const excelMuted = '#b8b8b8'
                         const onRowEnter = (e: React.MouseEvent<HTMLTableRowElement>) => {
-                          e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(255, 255, 255, 0.95)'
+                          e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(255, 255, 255, 0.35)'
                         }
                         const onRowLeave = (e: React.MouseEvent<HTMLTableRowElement>) => {
                           e.currentTarget.style.boxShadow = 'none'
                         }
-                        const cellBorder = { border: `1px solid ${excelBorder}` } as React.CSSProperties
+                        const thRule = { borderBottom: '2px solid #0a0a0a' } as React.CSSProperties
+                        const tdRule = { borderBottom: `1px solid ${rowLine}` } as React.CSSProperties
                         return (
                           <div
                             key={categoria.id}
                             style={{
-                              backgroundColor: '#ffffff',
-                              border: `1px solid ${excelBorder}`,
-                              borderRadius: '4px',
+                              backgroundColor: '#2e2e2e',
+                              border: `1px solid ${rowLine}`,
+                              borderRadius: '2px',
                               overflow: 'hidden',
-                              boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                              boxShadow: '0 1px 4px rgba(0,0,0,0.45)',
                             }}
                           >
                             {/* Cabeçalho da categoria (como linha de título Excel) */}
@@ -31157,12 +31250,10 @@ onKeyPress={(e) => {
                                 <tr style={{ backgroundColor: excelHeaderBg, color: '#ffffff' }}>
                                   <th
                                     style={{
-                                      padding: '10px 12px',
+                                      padding: '10px 14px',
                                       textAlign: 'left',
                                       fontWeight: 700,
-                                      ...cellBorder,
-                                      borderTop: 'none',
-                                      borderLeft: 'none',
+                                      ...thRule,
                                     }}
                                   >
                                     {editingCategoria?.id === categoria.id ? (
@@ -31176,9 +31267,9 @@ onKeyPress={(e) => {
                                             flex: '1 1 200px',
                                             minWidth: '180px',
                                             padding: '8px 10px',
-                                            backgroundColor: '#fff',
+                                            backgroundColor: '#2a2a2a',
                                             color: excelText,
-                                            border: `1px solid ${excelBorder}`,
+                                            border: '1px solid #5c5c5c',
                                             borderRadius: '2px',
                                             fontSize: '14px',
                                             fontWeight: 600,
@@ -31218,10 +31309,15 @@ onKeyPress={(e) => {
                                       </div>
                                     ) : (
                                       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                                        <span style={{ fontSize: '15px', letterSpacing: '0.02em' }} title={categoria.nome}>
-                                          {categoria.nome}
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                          <span style={{ fontSize: '15px', letterSpacing: '0.02em' }} title={categoria.nome}>
+                                            {categoria.nome}
+                                          </span>
+                                          <span style={{ opacity: 0.65, fontSize: '10px', lineHeight: 1 }} aria-hidden>
+                                            ▼
+                                          </span>
                                         </span>
-                                        <span style={{ fontSize: '12px', opacity: 0.95, fontWeight: 500 }}>
+                                        <span style={{ fontSize: '12px', color: excelMuted, fontWeight: 500 }}>
                                           {subcategoriasDoGrupo.length}{' '}
                                           {subcategoriasDoGrupo.length === 1
                                             ? safeT?.subcategoria || 'Subcategoria'
@@ -31232,13 +31328,11 @@ onKeyPress={(e) => {
                                   </th>
                                   <th
                                     style={{
-                                      padding: '10px 12px',
+                                      padding: '10px 14px',
                                       textAlign: 'right',
                                       whiteSpace: 'nowrap',
                                       fontWeight: 600,
-                                      ...cellBorder,
-                                      borderTop: 'none',
-                                      borderRight: 'none',
+                                      ...thRule,
                                       width: '1%',
                                     }}
                                   >
@@ -31310,26 +31404,34 @@ onKeyPress={(e) => {
                                 <tr style={{ backgroundColor: excelSubHeadBg, color: '#ffffff' }}>
                                   <th
                                     style={{
-                                      padding: '8px 12px',
+                                      padding: '8px 14px',
                                       textAlign: 'left',
                                       fontWeight: 600,
-                                      ...cellBorder,
-                                      borderLeft: 'none',
+                                      ...thRule,
                                     }}
                                   >
-                                    {safeT?.subcategorias || 'Subcategoria'}
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                      {safeT?.subcategorias || 'Subcategoria'}
+                                      <span style={{ opacity: 0.65, fontSize: '10px', lineHeight: 1 }} aria-hidden>
+                                        ▼
+                                      </span>
+                                    </span>
                                   </th>
                                   <th
                                     style={{
-                                      padding: '8px 12px',
+                                      padding: '8px 14px',
                                       textAlign: 'right',
                                       fontWeight: 600,
                                       width: '200px',
-                                      ...cellBorder,
-                                      borderRight: 'none',
+                                      ...thRule,
                                     }}
                                   >
-                                    {safeT?.edit || 'Ações'}
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', width: '100%' }}>
+                                      {safeT?.edit || 'Ações'}
+                                      <span style={{ opacity: 0.65, fontSize: '10px', lineHeight: 1 }} aria-hidden>
+                                        ▼
+                                      </span>
+                                    </span>
                                   </th>
                                 </tr>
                               </thead>
@@ -31342,7 +31444,7 @@ onKeyPress={(e) => {
                                   >
                                     <td
                                       colSpan={2}
-                                      style={{ padding: '12px', fontStyle: 'italic', color: '#555', ...cellBorder, borderBottom: 'none', borderLeft: 'none', borderRight: 'none' }}
+                                      style={{ padding: '12px 14px', fontStyle: 'italic', color: excelMuted, ...tdRule }}
                                     >
                                       {safeT?.nenhumaSubcategoria || 'Nenhuma subcategoria cadastrada'}
                                     </td>
@@ -31360,7 +31462,7 @@ onKeyPress={(e) => {
                                         onMouseEnter={onRowEnter}
                                         onMouseLeave={onRowLeave}
                                       >
-                                        <td style={{ padding: '10px 12px', verticalAlign: 'middle', ...cellBorder, borderLeft: 'none' }}>
+                                        <td style={{ padding: '10px 14px', verticalAlign: 'middle', ...tdRule }}>
                                           {editingSubcategoria?.id === subcategoria.id ? (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                               <input
@@ -31370,9 +31472,9 @@ onKeyPress={(e) => {
                                                 style={{
                                                   width: '100%',
                                                   padding: '8px 10px',
-                                                  backgroundColor: '#fff',
+                                                  backgroundColor: '#2a2a2a',
                                                   color: excelText,
-                                                  border: `1px solid ${excelBorder}`,
+                                                  border: '1px solid #5c5c5c',
                                                   borderRadius: '2px',
                                                   fontSize: '13px',
                                                   boxSizing: 'border-box',
@@ -31418,7 +31520,7 @@ onKeyPress={(e) => {
                                             </span>
                                           )}
                                         </td>
-                                        <td style={{ padding: '10px 12px', textAlign: 'right', whiteSpace: 'nowrap', verticalAlign: 'middle', ...cellBorder, borderRight: 'none' }}>
+                                        <td style={{ padding: '10px 14px', textAlign: 'right', whiteSpace: 'nowrap', verticalAlign: 'middle', ...tdRule }}>
                                           {editingSubcategoria?.id !== subcategoria.id && (
                                             <>
                                               <button
