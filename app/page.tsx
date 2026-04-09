@@ -31135,8 +31135,9 @@ onKeyPress={(e) => {
                           .sort((a, b) =>
                             (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
                           )
-                        /* Zebra sempre visível: cinza / cinza claro (estilo tabela). */
-                        const zebraBg = index % 2 === 0 ? '#3a3a3a' : '#525252'
+                        /* Zebra bem visível: cinza escuro vs cinza claro (contraste forte ~35–40%). */
+                        const zebraBg = index % 2 === 0 ? '#1e1e1e' : '#5f5f5f'
+                        const zebraBarra = index % 2 === 0 ? '#505050' : '#9e9e9e'
                         const isUltimaCategoria = index === categoriasPecasAlfabeto.length - 1
                         const hoverLinha = {
                           transition: 'box-shadow 0.12s ease',
@@ -31153,7 +31154,9 @@ onKeyPress={(e) => {
                             key={categoria.id}
                             style={{
                               backgroundColor: zebraBg,
-                              borderBottom: isUltimaCategoria ? 'none' : '1px solid rgba(0, 0, 0, 0.45)',
+                              borderLeft: `6px solid ${zebraBarra}`,
+                              borderBottom: isUltimaCategoria ? 'none' : '2px solid rgba(255, 255, 255, 0.2)',
+                              boxSizing: 'border-box',
                             }}
                           >
                             {/* Linha do nome da categoria — zebra + contorno branco fraco ao hover */}
@@ -31259,7 +31262,8 @@ onKeyPress={(e) => {
                               ) : (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 0, width: '100%', borderRadius: '6px', overflow: 'hidden', border: '1px solid rgba(255, 255, 255, 0.14)' }}>
                                   {subcategoriasDoGrupo.map((subcategoria, subIndex) => {
-                                    const subZebra = subIndex % 2 === 0 ? '#2e2e2e' : '#454545'
+                                    /* Linhas ímpares mais claras — contraste forte com a linha anterior. */
+                                    const subZebra = subIndex % 2 === 0 ? '#2a2a2a' : '#6a6a6a'
                                     const ultimaSub = subIndex === subcategoriasDoGrupo.length - 1
                                     return (
                                     <div
