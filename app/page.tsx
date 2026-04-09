@@ -31119,465 +31119,353 @@ onKeyPress={(e) => {
                       <p style={{ fontSize: '15px', opacity: 0.8, margin: 0 }}>{safeT?.nenhumaCategoria || 'Nenhuma categoria cadastrada. Clique em "Nova Categoria" para começar.'}</p>
                     </div>
                   ) : (
-                    (() => {
-                      const excelBorder = '#c0c0c0'
-                      const excelHeaderBg = '#1e1e1e'
-                      const excelZebraA = '#d8d8d8'
-                      const excelZebraB = '#ffffff'
-                      const excelText = '#111111'
-                      const onRowEnter = (e: React.MouseEvent<HTMLTableRowElement>) => {
-                        e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(255, 255, 255, 0.95)'
-                      }
-                      const onRowLeave = (e: React.MouseEvent<HTMLTableRowElement>) => {
-                        e.currentTarget.style.boxShadow = 'none'
-                      }
-                      const grupoRows: Array<
-                        | {
-                            kind: 'categoria'
-                            key: string
-                            categoria: (typeof categoriasPecas)[number]
-                            subcategoriasDoGrupo: typeof subcategoriasPecas
-                          }
-                        | {
-                            kind: 'subcategoria'
-                            key: string
-                            categoria: (typeof categoriasPecas)[number]
-                            subcategoria: (typeof subcategoriasPecas)[number]
-                          }
-                        | { kind: 'emptySubs'; key: string; categoria: (typeof categoriasPecas)[number] }
-                      > = []
-                      categoriasPecasAlfabeto.forEach((categoria) => {
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      {categoriasPecasAlfabeto.map((categoria) => {
                         const subcategoriasDoGrupo = subcategoriasPecas
-                          .filter((sub) => sub.categoriaId === categoria.id)
+                          .filter(sub => sub.categoriaId === categoria.id)
                           .sort((a, b) =>
                             (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
                           )
-                        grupoRows.push({
-                          kind: 'categoria',
-                          key: `cat-${categoria.id}`,
-                          categoria,
-                          subcategoriasDoGrupo,
-                        })
-                        if (subcategoriasDoGrupo.length === 0) {
-                          grupoRows.push({ kind: 'emptySubs', key: `empty-${categoria.id}`, categoria })
-                        } else {
-                          subcategoriasDoGrupo.forEach((subcategoria) => {
-                            grupoRows.push({
-                              kind: 'subcategoria',
-                              key: `sub-${subcategoria.id}`,
-                              categoria,
-                              subcategoria,
-                            })
-                          })
+                        /* Estilo folha de cálculo: cabeçalho escuro + linhas cinza / cinza claro alternadas. */
+                        const excelBorder = '#8c8c8c'
+                        const excelHeaderBg = '#3a3a3a'
+                        const excelSubHeadBg = '#4f4f4f'
+                        const excelZebraA = '#d0d0d0'
+                        const excelZebraB = '#f2f2f2'
+                        const excelText = '#111111'
+                        const onRowEnter = (e: React.MouseEvent<HTMLTableRowElement>) => {
+                          e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(255, 255, 255, 0.95)'
                         }
-                      })
-
-                      return (
-                        <div
-                          style={{
-                            backgroundColor: '#ffffff',
-                            border: `1px solid ${excelBorder}`,
-                            borderRadius: '2px',
-                            overflow: 'hidden',
-                            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
-                          }}
-                        >
-                          <table
+                        const onRowLeave = (e: React.MouseEvent<HTMLTableRowElement>) => {
+                          e.currentTarget.style.boxShadow = 'none'
+                        }
+                        const cellBorder = { border: `1px solid ${excelBorder}` } as React.CSSProperties
+                        return (
+                          <div
+                            key={categoria.id}
                             style={{
-                              width: '100%',
-                              borderCollapse: 'collapse',
-                              fontSize: '13px',
-                              color: excelText,
+                              backgroundColor: '#ffffff',
+                              border: `1px solid ${excelBorder}`,
+                              borderRadius: '4px',
+                              overflow: 'hidden',
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
                             }}
                           >
-                            <thead>
-                              <tr style={{ backgroundColor: excelHeaderBg, color: '#ffffff' }}>
-                                <th
-                                  style={{
-                                    padding: '10px 14px',
-                                    textAlign: 'left',
-                                    fontWeight: 700,
-                                    borderBottom: '2px solid #000000',
-                                  }}
-                                >
-                                  Nome
-                                </th>
-                                <th
-                                  style={{
-                                    padding: '10px 14px',
-                                    textAlign: 'left',
-                                    fontWeight: 600,
-                                    width: '130px',
-                                    borderBottom: '2px solid #000000',
-                                    borderLeft: '1px solid #404040',
-                                  }}
-                                >
-                                  Tipo
-                                </th>
-                                <th
-                                  style={{
-                                    padding: '10px 14px',
-                                    textAlign: 'right',
-                                    fontWeight: 600,
-                                    width: '1%',
-                                    borderBottom: '2px solid #000000',
-                                    borderLeft: '1px solid #404040',
-                                  }}
-                                >
-                                  {safeT?.edit || 'Ações'}
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {grupoRows.map((row, globalIdx) => {
-                                const rowBg = globalIdx % 2 === 0 ? excelZebraA : excelZebraB
-                                const tdRow = { borderBottom: `1px solid ${excelBorder}` } as React.CSSProperties
-
-                                if (row.kind === 'categoria') {
-                                  const { categoria, subcategoriasDoGrupo } = row
-                                  return (
-                                    <tr
-                                      key={row.key}
-                                      style={{
-                                        backgroundColor: rowBg,
-                                        transition: 'box-shadow 0.1s ease',
-                                      }}
-                                      onMouseEnter={onRowEnter}
-                                      onMouseLeave={onRowLeave}
-                                    >
-                                      <td style={{ padding: '10px 12px', verticalAlign: 'middle', ...tdRow }}>
-                                        {editingCategoria?.id === categoria.id ? (
-                                          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
-                                            <input
-                                              type="text"
-                                              value={novaCategoriaNome}
-                                              onChange={(e) => setNovaCategoriaNome(e.target.value)}
-                                              placeholder={safeT?.nomeCategoria || 'Nome da categoria'}
-                                              style={{
-                                                flex: '1 1 200px',
-                                                minWidth: '180px',
-                                                padding: '8px 10px',
-                                                backgroundColor: '#fff',
-                                                color: excelText,
-                                                border: `1px solid #8c8c8c`,
-                                                borderRadius: '2px',
-                                                fontSize: '14px',
-                                                fontWeight: 600,
-                                              }}
-                                              onKeyPress={(e) => {
-                                                if (e.key === 'Enter' && novaCategoriaNome.trim()) {
-                                                  renomearCategoriaPecaBiblioteca(categoria.id, novaCategoriaNome)
-                                                  setEditingCategoria(null)
-                                                  setNovaCategoriaNome('')
-                                                }
-                                              }}
-                                            />
-                                            <button
-                                              type="button"
-                                              className="btn-primary"
-                                              onClick={() => {
-                                                if (!novaCategoriaNome.trim()) return
-                                                renomearCategoriaPecaBiblioteca(categoria.id, novaCategoriaNome)
-                                                setEditingCategoria(null)
-                                                setNovaCategoriaNome('')
-                                              }}
-                                              style={{ padding: '6px 14px', fontSize: '12px' }}
-                                            >
-                                              {safeT?.save || 'Salvar'}
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="btn-secondary"
-                                              onClick={() => {
-                                                setEditingCategoria(null)
-                                                setNovaCategoriaNome('')
-                                              }}
-                                              style={{ padding: '6px 14px', fontSize: '12px' }}
-                                            >
-                                              {safeT?.cancel || 'Cancelar'}
-                                            </button>
-                                          </div>
-                                        ) : (
-                                          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                                            <strong style={{ fontSize: '14px', letterSpacing: '0.02em' }} title={categoria.nome}>
-                                              {categoria.nome}
-                                            </strong>
-                                            <span style={{ fontSize: '12px', color: '#333', fontWeight: 500 }}>
-                                              {subcategoriasDoGrupo.length}{' '}
-                                              {subcategoriasDoGrupo.length === 1
-                                                ? safeT?.subcategoria || 'Subcategoria'
-                                                : safeT?.subcategorias || 'Subcategorias'}
-                                            </span>
-                                          </div>
-                                        )}
-                                      </td>
-                                      <td
-                                        style={{
-                                          padding: '10px 12px',
-                                          verticalAlign: 'middle',
-                                          fontWeight: 600,
-                                          borderLeft: '1px solid #e4e4e4',
-                                          ...tdRow,
-                                        }}
-                                      >
-                                        Categoria
-                                      </td>
-                                      <td
-                                        style={{
-                                          padding: '10px 12px',
-                                          textAlign: 'right',
-                                          whiteSpace: 'nowrap',
-                                          verticalAlign: 'middle',
-                                          borderLeft: '1px solid #e4e4e4',
-                                          ...tdRow,
-                                        }}
-                                      >
-                                        {editingCategoria?.id !== categoria.id && (
-                                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'flex-end' }}>
-                                            <button
-                                              type="button"
-                                              className="btn-primary"
-                                              onClick={() => {
-                                                setShowNovaSubcategoriaForm(true)
-                                                setNovaSubcategoriaNome('')
-                                                setEditingSubcategoria(null)
-                                                setPecaBibliotecaForm({ ...pecaBibliotecaForm, categoriaId: categoria.id })
-                                              }}
-                                              style={{ padding: '6px 12px', fontSize: '12px' }}
-                                            >
-                                              + {safeT?.novaSubcategoria || 'Nova Subcategoria'}
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="btn-primary"
-                                              onClick={() => {
-                                                setEditingCategoria(categoria)
-                                                setNovaCategoriaNome(categoria.nome)
-                                              }}
-                                              style={{ padding: '6px 12px', fontSize: '12px' }}
-                                            >
-                                              {safeT?.edit || 'Editar'}
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="btn-danger"
-                                              onClick={() => {
-                                                if (
-                                                  window.confirm(
-                                                    safeT?.confirmDeleteCategoria ||
-                                                      'Tem certeza que deseja excluir esta categoria? Todas as subcategorias e peças associadas serão afetadas.'
-                                                  )
-                                                ) {
-                                                  const updatedSubcategorias = subcategoriasPecas.filter(
-                                                    (sub) => sub.categoriaId !== categoria.id
-                                                  )
-                                                  setSubcategoriasPecas(updatedSubcategorias)
-                                                  saveData('nonato-subcategorias-pecas', updatedSubcategorias)
-                                                  const updated = categoriasPecas.filter((c) => c.id !== categoria.id)
-                                                  setCategoriasPecas(updated)
-                                                  saveData('nonato-categorias-pecas', updated)
-                                                  const updatedPecas = pecasBiblioteca.map((p) =>
-                                                    p.categoriaId === categoria.id
-                                                      ? { ...p, categoriaId: '', categoria: '', subcategoriaId: '', subcategoria: '' }
-                                                      : p
-                                                  )
-                                                  setPecasBiblioteca(updatedPecas)
-                                                  saveData('nonato-pecas-biblioteca', updatedPecas)
-                                                }
-                                              }}
-                                              style={{ padding: '6px 12px', fontSize: '12px' }}
-                                            >
-                                              {safeT?.delete || 'Excluir'}
-                                            </button>
-                                          </div>
-                                        )}
-                                      </td>
-                                    </tr>
-                                  )
-                                }
-
-                                if (row.kind === 'emptySubs') {
-                                  const { categoria } = row
-                                  return (
-                                    <tr
-                                      key={row.key}
-                                      style={{
-                                        backgroundColor: rowBg,
-                                        transition: 'box-shadow 0.1s ease',
-                                      }}
-                                      onMouseEnter={onRowEnter}
-                                      onMouseLeave={onRowLeave}
-                                    >
-                                      <td
-                                        style={{
-                                          padding: '10px 12px 10px 28px',
-                                          fontStyle: 'italic',
-                                          color: '#555',
-                                          verticalAlign: 'middle',
-                                          ...tdRow,
-                                        }}
-                                      >
-                                        {safeT?.nenhumaSubcategoria || 'Nenhuma subcategoria cadastrada'}{' '}
-                                        <span style={{ fontStyle: 'normal', color: '#333' }}>({categoria.nome})</span>
-                                      </td>
-                                      <td
-                                        style={{
-                                          padding: '10px 12px',
-                                          verticalAlign: 'middle',
-                                          borderLeft: '1px solid #e4e4e4',
-                                          color: '#888',
-                                          ...tdRow,
-                                        }}
-                                      >
-                                        —
-                                      </td>
-                                      <td style={{ padding: '10px 12px', borderLeft: '1px solid #e4e4e4', ...tdRow }} />
-                                    </tr>
-                                  )
-                                }
-
-                                const { categoria, subcategoria } = row
-                                return (
-                                  <tr
-                                    key={row.key}
+                            {/* Cabeçalho da categoria (como linha de título Excel) */}
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: excelText }}>
+                              <thead>
+                                <tr style={{ backgroundColor: excelHeaderBg, color: '#ffffff' }}>
+                                  <th
                                     style={{
-                                      backgroundColor: rowBg,
-                                      transition: 'box-shadow 0.1s ease',
+                                      padding: '10px 12px',
+                                      textAlign: 'left',
+                                      fontWeight: 700,
+                                      ...cellBorder,
+                                      borderTop: 'none',
+                                      borderLeft: 'none',
                                     }}
+                                  >
+                                    {editingCategoria?.id === categoria.id ? (
+                                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
+                                        <input
+                                          type="text"
+                                          value={novaCategoriaNome}
+                                          onChange={(e) => setNovaCategoriaNome(e.target.value)}
+                                          placeholder={safeT?.nomeCategoria || 'Nome da categoria'}
+                                          style={{
+                                            flex: '1 1 200px',
+                                            minWidth: '180px',
+                                            padding: '8px 10px',
+                                            backgroundColor: '#fff',
+                                            color: excelText,
+                                            border: `1px solid ${excelBorder}`,
+                                            borderRadius: '2px',
+                                            fontSize: '14px',
+                                            fontWeight: 600,
+                                          }}
+                                          onKeyPress={(e) => {
+                                            if (e.key === 'Enter' && novaCategoriaNome.trim()) {
+                                              renomearCategoriaPecaBiblioteca(categoria.id, novaCategoriaNome)
+                                              setEditingCategoria(null)
+                                              setNovaCategoriaNome('')
+                                            }
+                                          }}
+                                        />
+                                        <button
+                                          type="button"
+                                          className="btn-primary"
+                                          onClick={() => {
+                                            if (!novaCategoriaNome.trim()) return
+                                            renomearCategoriaPecaBiblioteca(categoria.id, novaCategoriaNome)
+                                            setEditingCategoria(null)
+                                            setNovaCategoriaNome('')
+                                          }}
+                                          style={{ padding: '6px 14px', fontSize: '12px' }}
+                                        >
+                                          {safeT?.save || 'Salvar'}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="btn-secondary"
+                                          onClick={() => {
+                                            setEditingCategoria(null)
+                                            setNovaCategoriaNome('')
+                                          }}
+                                          style={{ padding: '6px 14px', fontSize: '12px' }}
+                                        >
+                                          {safeT?.cancel || 'Cancelar'}
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                                        <span style={{ fontSize: '15px', letterSpacing: '0.02em' }} title={categoria.nome}>
+                                          {categoria.nome}
+                                        </span>
+                                        <span style={{ fontSize: '12px', opacity: 0.95, fontWeight: 500 }}>
+                                          {subcategoriasDoGrupo.length}{' '}
+                                          {subcategoriasDoGrupo.length === 1
+                                            ? safeT?.subcategoria || 'Subcategoria'
+                                            : safeT?.subcategorias || 'Subcategorias'}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </th>
+                                  <th
+                                    style={{
+                                      padding: '10px 12px',
+                                      textAlign: 'right',
+                                      whiteSpace: 'nowrap',
+                                      fontWeight: 600,
+                                      ...cellBorder,
+                                      borderTop: 'none',
+                                      borderRight: 'none',
+                                      width: '1%',
+                                    }}
+                                  >
+                                    {editingCategoria?.id !== categoria.id && (
+                                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'flex-end' }}>
+                                        <button
+                                          type="button"
+                                          className="btn-primary"
+                                          onClick={() => {
+                                            setShowNovaSubcategoriaForm(true)
+                                            setNovaSubcategoriaNome('')
+                                            setEditingSubcategoria(null)
+                                            setPecaBibliotecaForm({ ...pecaBibliotecaForm, categoriaId: categoria.id })
+                                          }}
+                                          style={{ padding: '6px 12px', fontSize: '12px' }}
+                                        >
+                                          + {safeT?.novaSubcategoria || 'Nova Subcategoria'}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="btn-primary"
+                                          onClick={() => {
+                                            setEditingCategoria(categoria)
+                                            setNovaCategoriaNome(categoria.nome)
+                                          }}
+                                          style={{ padding: '6px 12px', fontSize: '12px' }}
+                                        >
+                                          {safeT?.edit || 'Editar'}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="btn-danger"
+                                          onClick={() => {
+                                            if (
+                                              window.confirm(
+                                                safeT?.confirmDeleteCategoria ||
+                                                  'Tem certeza que deseja excluir esta categoria? Todas as subcategorias e peças associadas serão afetadas.'
+                                              )
+                                            ) {
+                                              const updatedSubcategorias = subcategoriasPecas.filter((sub) => sub.categoriaId !== categoria.id)
+                                              setSubcategoriasPecas(updatedSubcategorias)
+                                              saveData('nonato-subcategorias-pecas', updatedSubcategorias)
+                                              const updated = categoriasPecas.filter((c) => c.id !== categoria.id)
+                                              setCategoriasPecas(updated)
+                                              saveData('nonato-categorias-pecas', updated)
+                                              const updatedPecas = pecasBiblioteca.map((p) =>
+                                                p.categoriaId === categoria.id
+                                                  ? { ...p, categoriaId: '', categoria: '', subcategoriaId: '', subcategoria: '' }
+                                                  : p
+                                              )
+                                              setPecasBiblioteca(updatedPecas)
+                                              saveData('nonato-pecas-biblioteca', updatedPecas)
+                                            }
+                                          }}
+                                          style={{ padding: '6px 12px', fontSize: '12px' }}
+                                        >
+                                          {safeT?.delete || 'Excluir'}
+                                        </button>
+                                      </div>
+                                    )}
+                                  </th>
+                                </tr>
+                              </thead>
+                            </table>
+
+                            {/* Tabela de subcategorias — cabeçalho + linhas zebra (como na folha Excel) */}
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: excelText }}>
+                              <thead>
+                                <tr style={{ backgroundColor: excelSubHeadBg, color: '#ffffff' }}>
+                                  <th
+                                    style={{
+                                      padding: '8px 12px',
+                                      textAlign: 'left',
+                                      fontWeight: 600,
+                                      ...cellBorder,
+                                      borderLeft: 'none',
+                                    }}
+                                  >
+                                    {safeT?.subcategorias || 'Subcategoria'}
+                                  </th>
+                                  <th
+                                    style={{
+                                      padding: '8px 12px',
+                                      textAlign: 'right',
+                                      fontWeight: 600,
+                                      width: '200px',
+                                      ...cellBorder,
+                                      borderRight: 'none',
+                                    }}
+                                  >
+                                    {safeT?.edit || 'Ações'}
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {subcategoriasDoGrupo.length === 0 ? (
+                                  <tr
+                                    style={{ backgroundColor: excelZebraB }}
                                     onMouseEnter={onRowEnter}
                                     onMouseLeave={onRowLeave}
                                   >
-                                    <td style={{ padding: '10px 12px 10px 28px', verticalAlign: 'middle', ...tdRow }}>
-                                      {editingSubcategoria?.id === subcategoria.id ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                          <input
-                                            type="text"
-                                            value={novaSubcategoriaNome}
-                                            onChange={(e) => setNovaSubcategoriaNome(e.target.value)}
-                                            style={{
-                                              width: '100%',
-                                              padding: '8px 10px',
-                                              backgroundColor: '#fff',
-                                              color: excelText,
-                                              border: `1px solid #8c8c8c`,
-                                              borderRadius: '2px',
-                                              fontSize: '13px',
-                                              boxSizing: 'border-box',
-                                            }}
-                                            onKeyPress={(e) => {
-                                              if (e.key === 'Enter' && novaSubcategoriaNome.trim()) {
-                                                renomearSubcategoriaPecaBiblioteca(subcategoria.id, novaSubcategoriaNome)
-                                                setEditingSubcategoria(null)
-                                                setNovaSubcategoriaNome('')
-                                              }
-                                            }}
-                                          />
-                                          <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button
-                                              type="button"
-                                              className="btn-primary"
-                                              onClick={() => {
-                                                if (!novaSubcategoriaNome.trim()) return
-                                                renomearSubcategoriaPecaBiblioteca(subcategoria.id, novaSubcategoriaNome)
-                                                setEditingSubcategoria(null)
-                                                setNovaSubcategoriaNome('')
-                                              }}
-                                              style={{ padding: '6px 12px', fontSize: '12px' }}
-                                            >
-                                              {safeT?.save || 'Salvar'}
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="btn-secondary"
-                                              onClick={() => {
-                                                setEditingSubcategoria(null)
-                                                setNovaSubcategoriaNome('')
-                                              }}
-                                              style={{ padding: '6px 12px', fontSize: '12px' }}
-                                            >
-                                              {safeT?.cancel || 'Cancelar'}
-                                            </button>
-                                          </div>
-                                        </div>
-                                      ) : (
-                                        <span style={{ fontWeight: 500 }} title={subcategoria.nome}>
-                                          {subcategoria.nome}
-                                        </span>
-                                      )}
-                                    </td>
                                     <td
-                                      style={{
-                                        padding: '10px 12px',
-                                        verticalAlign: 'middle',
-                                        fontWeight: 500,
-                                        borderLeft: '1px solid #e4e4e4',
-                                        ...tdRow,
-                                      }}
+                                      colSpan={2}
+                                      style={{ padding: '12px', fontStyle: 'italic', color: '#555', ...cellBorder, borderBottom: 'none', borderLeft: 'none', borderRight: 'none' }}
                                     >
-                                      Subcategoria
-                                    </td>
-                                    <td
-                                      style={{
-                                        padding: '10px 12px',
-                                        textAlign: 'right',
-                                        whiteSpace: 'nowrap',
-                                        verticalAlign: 'middle',
-                                        borderLeft: '1px solid #e4e4e4',
-                                        ...tdRow,
-                                      }}
-                                    >
-                                      {editingSubcategoria?.id !== subcategoria.id && (
-                                        <>
-                                          <button
-                                            type="button"
-                                            className="btn-primary"
-                                            onClick={() => {
-                                              setEditingSubcategoria(subcategoria)
-                                              setNovaSubcategoriaNome(subcategoria.nome)
-                                            }}
-                                            style={{ padding: '6px 12px', fontSize: '12px', marginRight: '8px' }}
-                                            title={safeT?.edit || 'Editar'}
-                                          >
-                                            {safeT?.edit || 'Editar'}
-                                          </button>
-                                          <button
-                                            type="button"
-                                            className="btn-danger"
-                                            onClick={() => {
-                                              if (
-                                                window.confirm(
-                                                  safeT?.confirmDeleteSubcategoria ||
-                                                    'Tem certeza que deseja excluir esta subcategoria?'
-                                                )
-                                              ) {
-                                                const updated = subcategoriasPecas.filter((s) => s.id !== subcategoria.id)
-                                                setSubcategoriasPecas(updated)
-                                                saveData('nonato-subcategorias-pecas', updated)
-                                                const updatedPecas = pecasBiblioteca.map((p) =>
-                                                  p.subcategoriaId === subcategoria.id
-                                                    ? { ...p, subcategoriaId: '', subcategoria: '' }
-                                                    : p
-                                                )
-                                                setPecasBiblioteca(updatedPecas)
-                                                saveData('nonato-pecas-biblioteca', updatedPecas)
-                                              }
-                                            }}
-                                            style={{ padding: '6px 12px', fontSize: '12px' }}
-                                            title={safeT?.delete || 'Excluir'}
-                                          >
-                                            {safeT?.delete || 'Excluir'}
-                                          </button>
-                                        </>
-                                      )}
+                                      {safeT?.nenhumaSubcategoria || 'Nenhuma subcategoria cadastrada'}
                                     </td>
                                   </tr>
-                                )
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      )
-                    })()
+                                ) : (
+                                  subcategoriasDoGrupo.map((subcategoria, subIndex) => {
+                                    const rowBg = subIndex % 2 === 0 ? excelZebraA : excelZebraB
+                                    return (
+                                      <tr
+                                        key={subcategoria.id}
+                                        style={{
+                                          backgroundColor: rowBg,
+                                          transition: 'box-shadow 0.1s ease',
+                                        }}
+                                        onMouseEnter={onRowEnter}
+                                        onMouseLeave={onRowLeave}
+                                      >
+                                        <td style={{ padding: '10px 12px', verticalAlign: 'middle', ...cellBorder, borderLeft: 'none' }}>
+                                          {editingSubcategoria?.id === subcategoria.id ? (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                              <input
+                                                type="text"
+                                                value={novaSubcategoriaNome}
+                                                onChange={(e) => setNovaSubcategoriaNome(e.target.value)}
+                                                style={{
+                                                  width: '100%',
+                                                  padding: '8px 10px',
+                                                  backgroundColor: '#fff',
+                                                  color: excelText,
+                                                  border: `1px solid ${excelBorder}`,
+                                                  borderRadius: '2px',
+                                                  fontSize: '13px',
+                                                  boxSizing: 'border-box',
+                                                }}
+                                                onKeyPress={(e) => {
+                                                  if (e.key === 'Enter' && novaSubcategoriaNome.trim()) {
+                                                    renomearSubcategoriaPecaBiblioteca(subcategoria.id, novaSubcategoriaNome)
+                                                    setEditingSubcategoria(null)
+                                                    setNovaSubcategoriaNome('')
+                                                  }
+                                                }}
+                                              />
+                                              <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button
+                                                  type="button"
+                                                  className="btn-primary"
+                                                  onClick={() => {
+                                                    if (!novaSubcategoriaNome.trim()) return
+                                                    renomearSubcategoriaPecaBiblioteca(subcategoria.id, novaSubcategoriaNome)
+                                                    setEditingSubcategoria(null)
+                                                    setNovaSubcategoriaNome('')
+                                                  }}
+                                                  style={{ padding: '6px 12px', fontSize: '12px' }}
+                                                >
+                                                  {safeT?.save || 'Salvar'}
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  className="btn-secondary"
+                                                  onClick={() => {
+                                                    setEditingSubcategoria(null)
+                                                    setNovaSubcategoriaNome('')
+                                                  }}
+                                                  style={{ padding: '6px 12px', fontSize: '12px' }}
+                                                >
+                                                  {safeT?.cancel || 'Cancelar'}
+                                                </button>
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <span style={{ fontWeight: 500 }} title={subcategoria.nome}>
+                                              {subcategoria.nome}
+                                            </span>
+                                          )}
+                                        </td>
+                                        <td style={{ padding: '10px 12px', textAlign: 'right', whiteSpace: 'nowrap', verticalAlign: 'middle', ...cellBorder, borderRight: 'none' }}>
+                                          {editingSubcategoria?.id !== subcategoria.id && (
+                                            <>
+                                              <button
+                                                type="button"
+                                                className="btn-primary"
+                                                onClick={() => {
+                                                  setEditingSubcategoria(subcategoria)
+                                                  setNovaSubcategoriaNome(subcategoria.nome)
+                                                }}
+                                                style={{ padding: '6px 12px', fontSize: '12px', marginRight: '8px' }}
+                                                title={safeT?.edit || 'Editar'}
+                                              >
+                                                {safeT?.edit || 'Editar'}
+                                              </button>
+                                              <button
+                                                type="button"
+                                                className="btn-danger"
+                                                onClick={() => {
+                                                  if (window.confirm(safeT?.confirmDeleteSubcategoria || 'Tem certeza que deseja excluir esta subcategoria?')) {
+                                                    const updated = subcategoriasPecas.filter((s) => s.id !== subcategoria.id)
+                                                    setSubcategoriasPecas(updated)
+                                                    saveData('nonato-subcategorias-pecas', updated)
+                                                    const updatedPecas = pecasBiblioteca.map((p) =>
+                                                      p.subcategoriaId === subcategoria.id ? { ...p, subcategoriaId: '', subcategoria: '' } : p
+                                                    )
+                                                    setPecasBiblioteca(updatedPecas)
+                                                    saveData('nonato-pecas-biblioteca', updatedPecas)
+                                                  }
+                                                }}
+                                                style={{ padding: '6px 12px', fontSize: '12px' }}
+                                                title={safeT?.delete || 'Excluir'}
+                                              >
+                                                {safeT?.delete || 'Excluir'}
+                                              </button>
+                                            </>
+                                          )}
+                                        </td>
+                                      </tr>
+                                    )
+                                  })
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        )
+                      })}
+                    </div>
                   )}
                 </div>
               </div>
