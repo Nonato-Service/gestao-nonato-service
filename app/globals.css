@@ -1394,6 +1394,16 @@ body,
   box-shadow: none;
 }
 
+/* Linhas de ação (tabelas, vários botões lado a lado): não esticar à largura da célula */
+.btn-danger.btn-danger--inline,
+button.btn-danger.btn-danger--inline {
+  width: auto !important;
+  min-width: min-content;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .btn-danger:hover {
   background: rgba(255, 68, 68, 0.15);
   border: 1px solid #ff4444;

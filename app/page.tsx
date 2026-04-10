@@ -31610,7 +31610,7 @@ onKeyPress={(e) => {
                             }}
                           >
                             {/* Cabeçalho da categoria (como linha de título Excel) */}
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: '#ffffff' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: '#ffffff', tableLayout: 'auto' }}>
                               <thead>
                                 <tr style={{ backgroundColor: excelHeaderBg, color: '#ffffff' }}>
                                   <th
@@ -31735,7 +31735,7 @@ onKeyPress={(e) => {
                                         </button>
                                         <button
                                           type="button"
-                                          className="btn-danger"
+                                          className="btn-danger btn-danger--inline"
                                           onClick={() => {
                                             if (
                                               window.confirm(
@@ -31793,7 +31793,8 @@ onKeyPress={(e) => {
                                       padding: '8px 14px',
                                       textAlign: 'right',
                                       fontWeight: 600,
-                                      width: '200px',
+                                      width: '1%',
+                                      whiteSpace: 'nowrap',
                                       ...thRule,
                                     }}
                                   >
@@ -31888,9 +31889,27 @@ onKeyPress={(e) => {
                                             </span>
                                           )}
                                         </td>
-                                        <td style={{ padding: '10px 14px', textAlign: 'right', whiteSpace: 'nowrap', verticalAlign: 'middle', ...tdRule }}>
+                                        <td
+                                          style={{
+                                            padding: '10px 14px',
+                                            textAlign: 'right',
+                                            verticalAlign: 'middle',
+                                            whiteSpace: 'nowrap',
+                                            width: '1%',
+                                            ...tdRule,
+                                          }}
+                                        >
                                           {editingSubcategoria?.id !== subcategoria.id && (
-                                            <>
+                                            <div
+                                              style={{
+                                                display: 'inline-flex',
+                                                flexDirection: 'row',
+                                                flexWrap: 'nowrap',
+                                                alignItems: 'center',
+                                                justifyContent: 'flex-end',
+                                                gap: '8px',
+                                              }}
+                                            >
                                               <button
                                                 type="button"
                                                 className="btn-primary"
@@ -31898,14 +31917,14 @@ onKeyPress={(e) => {
                                                   setEditingSubcategoria(subcategoria)
                                                   setNovaSubcategoriaNome(subcategoria.nome)
                                                 }}
-                                                style={{ padding: '6px 12px', fontSize: '12px', marginRight: '8px' }}
+                                                style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
                                                 title={safeT?.edit || 'Editar'}
                                               >
                                                 {safeT?.edit || 'Editar'}
                                               </button>
                                               <button
                                                 type="button"
-                                                className="btn-danger"
+                                                className="btn-danger btn-danger--inline"
                                                 onClick={() => {
                                                   if (window.confirm(safeT?.confirmDeleteSubcategoria || 'Tem certeza que deseja excluir esta subcategoria?')) {
                                                     const updated = subcategoriasPecas.filter((s) => s.id !== subcategoria.id)
@@ -31918,12 +31937,12 @@ onKeyPress={(e) => {
                                                     saveData('nonato-pecas-biblioteca', updatedPecas)
                                                   }
                                                 }}
-                                                style={{ padding: '6px 12px', fontSize: '12px' }}
+                                                style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
                                                 title={safeT?.delete || 'Excluir'}
                                               >
                                                 {safeT?.delete || 'Excluir'}
                                               </button>
-                                            </>
+                                            </div>
                                           )}
                                         </td>
                                       </tr>
