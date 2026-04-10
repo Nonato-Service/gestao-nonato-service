@@ -29746,54 +29746,79 @@ onKeyPress={(e) => {
               </div>
             </div>
 
-            {/* Abas: ordem fixa, grelha alinhada e altura uniforme */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 154px), 1fr))',
-                gap: '10px',
-                marginBottom: '16px',
-                paddingBottom: '12px',
-                borderBottom: '1px solid rgba(0, 255, 0, 0.24)',
-              }}
-            >
-              {(
-                [
-                  { id: 'cadastro' as const, label: safeT?.cadastroPecas || 'Cadastro de Peças' },
-                  { id: 'biblioteca' as const, label: safeT?.bibliotecaPecas || 'Biblioteca' },
-                  { id: 'grupos' as const, label: safeT?.gerenciarCategorias || 'Gerenciar Categorias' },
-                  { id: 'importacao' as const, label: `📥 ${safeT?.importacaoPecas || 'Importação de Peças'}` },
-                ] as const
-              ).map((tab) => {
-                const active = abaBibliotecaPecas === tab.id
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setAbaBibliotecaPecas(tab.id)}
-                    style={{
-                      minHeight: '44px',
-                      padding: '10px 12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      textAlign: 'center',
-                      lineHeight: 1.25,
-                      backgroundColor: active ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
-                      border: active ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 255, 0, 0.22)',
-                      color: '#ffffff',
-                      cursor: 'pointer',
-                      fontSize: '13px',
-                      fontWeight: active ? 'bold' : '500',
-                      borderRadius: '8px',
-                      transition: 'border-color 0.2s ease, background-color 0.2s ease',
-                      boxSizing: 'border-box',
-                    }}
-                  >
-                    {tab.label}
-                  </button>
-                )
-              })}
+            {/* Abas: Cadastro | Biblioteca | Gerenciar Categorias | Importação - com contorno verde padrão */}
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '8px',
+              marginBottom: '16px',
+              paddingBottom: '12px',
+              borderBottom: '1px solid rgba(0, 255, 0, 0.24)'
+            }}>
+              <button
+                onClick={() => setAbaBibliotecaPecas('cadastro')}
+                style={{
+                  padding: '8px 14px',
+                  backgroundColor: abaBibliotecaPecas === 'cadastro' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
+                  border: abaBibliotecaPecas === 'cadastro' ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 255, 0, 0.22)',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: abaBibliotecaPecas === 'cadastro' ? 'bold' : '500',
+                  borderRadius: '8px',
+                  transition: 'border-color 0.2s ease, background-color 0.2s ease'
+                }}
+              >
+                {safeT?.cadastroPecas || 'Cadastro de Peças'}
+              </button>
+              <button
+                onClick={() => setAbaBibliotecaPecas('biblioteca')}
+                style={{
+                  padding: '8px 14px',
+                  backgroundColor: abaBibliotecaPecas === 'biblioteca' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
+                  border: abaBibliotecaPecas === 'biblioteca' ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 255, 0, 0.22)',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: abaBibliotecaPecas === 'biblioteca' ? 'bold' : '500',
+                  borderRadius: '8px',
+                  transition: 'border-color 0.2s ease, background-color 0.2s ease'
+                }}
+              >
+                {safeT?.bibliotecaPecas || 'Biblioteca'}
+              </button>
+              <button
+                onClick={() => setAbaBibliotecaPecas('grupos')}
+                style={{
+                  padding: '8px 14px',
+                  backgroundColor: abaBibliotecaPecas === 'grupos' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
+                  border: abaBibliotecaPecas === 'grupos' ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 255, 0, 0.22)',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: abaBibliotecaPecas === 'grupos' ? 'bold' : '500',
+                  borderRadius: '8px',
+                  transition: 'border-color 0.2s ease, background-color 0.2s ease'
+                }}
+              >
+                {safeT?.gerenciarCategorias || 'Gerenciar Categorias'}
+              </button>
+              <button
+                onClick={() => setAbaBibliotecaPecas('importacao')}
+                style={{
+                  padding: '8px 14px',
+                  backgroundColor: abaBibliotecaPecas === 'importacao' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
+                  border: abaBibliotecaPecas === 'importacao' ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 255, 0, 0.22)',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: abaBibliotecaPecas === 'importacao' ? 'bold' : '500',
+                  borderRadius: '8px',
+                  transition: 'border-color 0.2s ease, background-color 0.2s ease'
+                }}
+              >
+                📥 {safeT?.importacaoPecas || 'Importação de Peças'}
+              </button>
             </div>
 
             {/* Banner: a selecionar peça para o checklist (veio do Criação de Checklist) */}
@@ -29838,223 +29863,117 @@ onKeyPress={(e) => {
                   style={{
                     marginBottom: '16px',
                     padding: '12px 14px',
-                    borderRadius: '2px',
-                    border: '1px solid #4a4a4a',
-                    backgroundColor: '#2e2e2e',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(0, 200, 120, 0.35)',
+                    backgroundColor: 'rgba(0, 40, 20, 0.35)',
                     fontSize: '13px',
-                    color: '#ececec',
+                    color: 'rgba(255,255,255,0.92)',
                     lineHeight: 1.45,
                   }}
                 >
-                  <strong style={{ color: '#ffffff' }}>{(safeT as any).pecaBibliotecaDicaGerirGruposTitulo || 'Grupos e subgrupos'}</strong>
+                  <strong style={{ color: '#7dff9e' }}>{(safeT as any).pecaBibliotecaDicaGerirGruposTitulo || 'Grupos e subgrupos'}</strong>
                   {' — '}
-                  <span style={{ color: '#b8b8b8' }}>
-                    {(safeT as any).pecaBibliotecaDicaGerirGruposCorpo ||
-                      'Para renomear ou apagar categorias e subcategorias já criadas, abra a aba «Gerenciar Categorias» e use os botões Editar / Excluir ao lado de cada nome.'}
-                  </span>{' '}
+                  {(safeT as any).pecaBibliotecaDicaGerirGruposCorpo ||
+                    'Para renomear ou apagar categorias e subcategorias já criadas, abra a aba «Gerenciar Categorias» e use os botões Editar / Excluir ao lado de cada nome.'}{' '}
                   <button
                     type="button"
                     onClick={() => setAbaBibliotecaPecas('grupos')}
                     style={{
-                      marginTop: '8px',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      padding: '6px 12px',
+                      marginLeft: '6px',
+                      padding: '4px 10px',
                       fontSize: '12px',
                       cursor: 'pointer',
-                      borderRadius: '4px',
-                      border: '1px solid #5c5c5c',
-                      backgroundColor: '#363636',
-                      color: '#ececec',
+                      borderRadius: '6px',
+                      border: '1px solid rgba(0, 255, 0, 0.45)',
+                      backgroundColor: 'rgba(18, 52, 24, 0.85)',
+                      color: '#fff',
                     }}
                   >
                     {(safeT as any).pecaBibliotecaIrGerirGrupos || 'Abrir Gerenciar Categorias'}
                   </button>
                 </div>
-                {/* Filtros + Nova peça — mesmo estilo Excel (cinzas) */}
-                <div
-                  style={{
-                    marginBottom: '20px',
-                    border: '1px solid #4a4a4a',
-                    borderRadius: '2px',
-                    overflow: 'hidden',
-                    backgroundColor: '#2e2e2e',
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
+                {/* Filtros por Grupo e Subgrupo */}
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ flex: 1, minWidth: '200px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', opacity: 0.8 }}>
+                  {safeT?.filtrarPorCategoria || 'Filtrar por Categoria'}
+                </label>
+                <select
+                  value={filtroGrupoBiblioteca || ''}
+                  onChange={(e) => {
+                    setFiltroGrupoBiblioteca(e.target.value)
+                    setFiltroSubgrupoBiblioteca('') // Limpar subgrupo quando mudar grupo
                   }}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                 >
-                  <div
-                    style={{
-                      backgroundColor: '#1a1a1a',
-                      color: '#ffffff',
-                      padding: '10px 14px',
-                      fontWeight: 700,
-                      fontSize: '13px',
-                      borderBottom: '2px solid #0a0a0a',
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: '12px',
-                    }}
+                  <option value="">{safeT?.todosGrupos || 'Todos os grupos'}</option>
+                  {categoriasPecasAlfabeto.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.nome}</option>
+                  ))}
+                </select>
+              </div>
+              {filtroGrupoBiblioteca && (
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px', opacity: 0.8 }}>
+                    {safeT?.filtrarPorSubcategoria || 'Filtrar por Subcategoria'}
+                  </label>
+                  <select
+                    value={filtroSubgrupoBiblioteca || ''}
+                    onChange={(e) => setFiltroSubgrupoBiblioteca(e.target.value)}
+                    style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                   >
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                      {(safeT as any).pecaBibliotecaPainelFiltrosTitulo || 'Categoria e subcategoria (filtros da listagem)'}
-                      <span style={{ opacity: 0.65, fontSize: '10px', lineHeight: 1 }} aria-hidden>
-                        ▼
-                      </span>
-                    </span>
-                    <button
-                      type="button"
-                      className="btn-primary"
-                      onClick={() => {
-                        setShowBibliotecaPecasForm(true)
-                        setEditingPecaBiblioteca(null)
-                        const categoriaSelecionada = categoriasPecas.find((c) => c.id === ultimoGrupoSelecionado)
-                        const subcategoriaSelecionada = subcategoriasPecas.find((s) => s.id === ultimoSubgrupoSelecionado)
-                        setPecaBibliotecaForm({
-                          id: '',
-                          nome: '',
-                          codigo: '',
-                          preco: '',
-                          descricao: '',
-                          categoria: categoriaSelecionada?.nome || '',
-                          categoriaId: ultimoGrupoSelecionado || '',
-                          subcategoria: subcategoriaSelecionada?.nome || '',
-                          subcategoriaId: ultimoSubgrupoSelecionado || '',
-                          imagem: '',
-                          dataCriacao: new Date().toISOString(),
-                        })
-                        setPecaBibliotecaImagemUrlDraft('')
-                      }}
-                      style={{
-                        padding: '8px 16px',
-                        fontSize: '13px',
-                        whiteSpace: 'nowrap',
-                        minHeight: '36px',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      {safeT?.novaPecaBiblioteca || 'Nova Peça'}
-                    </button>
-                  </div>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))',
-                      gap: '14px',
-                      padding: '14px',
-                      backgroundColor: '#363636',
-                      borderBottom: '1px solid #4a4a4a',
-                      alignItems: 'end',
-                    }}
-                  >
-                    <div style={{ minWidth: 0 }}>
-                      <label
-                        style={{
-                          display: 'block',
-                          marginBottom: '6px',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          color: '#b8b8b8',
-                        }}
-                      >
-                        {safeT?.filtrarPorCategoria || 'Filtrar por Categoria'}
-                      </label>
-                      <select
-                        value={filtroGrupoBiblioteca || ''}
-                        onChange={(e) => {
-                          setFiltroGrupoBiblioteca(e.target.value)
-                          setFiltroSubgrupoBiblioteca('')
-                        }}
-                        style={{
-                          width: '100%',
-                          padding: '10px 12px',
-                          backgroundColor: '#2a2a2a',
-                          color: '#ececec',
-                          border: '1px solid #5c5c5c',
-                          borderRadius: '2px',
-                          fontSize: '13px',
-                          boxSizing: 'border-box',
-                        }}
-                      >
-                        <option value="">{safeT?.todosGrupos || 'Todos os grupos'}</option>
-                        {categoriasPecasAlfabeto.map((cat) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.nome}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    {filtroGrupoBiblioteca ? (
-                      <div style={{ minWidth: 0 }}>
-                        <label
-                          style={{
-                            display: 'block',
-                            marginBottom: '6px',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            color: '#b8b8b8',
-                          }}
-                        >
-                          {safeT?.filtrarPorSubcategoria || 'Filtrar por Subcategoria'}
-                        </label>
-                        <select
-                          value={filtroSubgrupoBiblioteca || ''}
-                          onChange={(e) => setFiltroSubgrupoBiblioteca(e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '10px 12px',
-                            backgroundColor: '#2a2a2a',
-                            color: '#ececec',
-                            border: '1px solid #5c5c5c',
-                            borderRadius: '2px',
-                            fontSize: '13px',
-                            boxSizing: 'border-box',
-                          }}
-                        >
-                          <option value="">{safeT?.todasSubcategorias || 'Todas as subcategorias'}</option>
-                          {subcategoriasPecas
-                            .filter((sub) => sub.categoriaId === filtroGrupoBiblioteca)
-                            .sort((a, b) =>
-                              (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
-                            )
-                            .map((sub) => (
-                              <option key={sub.id} value={sub.id}>
-                                {sub.nome}
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-                    ) : null}
-                    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-start' }}>
-                      {(filtroGrupoBiblioteca || filtroSubgrupoBiblioteca) && (
-                        <button
-                          type="button"
-                          className="btn-secondary"
-                          onClick={() => {
-                            setFiltroGrupoBiblioteca('')
-                            setFiltroSubgrupoBiblioteca('')
-                          }}
-                          style={{
-                            padding: '10px 16px',
-                            fontSize: '13px',
-                            minHeight: '42px',
-                            width: '100%',
-                            maxWidth: '220px',
-                          }}
-                        >
-                          {safeT?.limparFiltros || 'Limpar Filtros'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <div style={{ padding: '10px 14px', backgroundColor: '#434343', fontSize: '12px', color: '#b8b8b8' }}>
-                    {(safeT as any).pecaBibliotecaFiltrosRodape ||
-                      'Os filtros afetam a lista de peças abaixo. «Nova Peça» abre o formulário com a última categoria/subcategoria guardada.'}
-                  </div>
+                    <option value="">{safeT?.todasSubcategorias || 'Todas as subcategorias'}</option>
+                    {subcategoriasPecas
+                      .filter(sub => sub.categoriaId === filtroGrupoBiblioteca)
+                      .sort((a, b) =>
+                        (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
+                      )
+                      .map(sub => (
+                        <option key={sub.id} value={sub.id}>{sub.nome}</option>
+                      ))}
+                  </select>
                 </div>
+              )}
+              {(filtroGrupoBiblioteca || filtroSubgrupoBiblioteca) && (
+                <button
+                  className="btn-secondary"
+                  onClick={() => {
+                    setFiltroGrupoBiblioteca('')
+                    setFiltroSubgrupoBiblioteca('')
+                  }}
+                  style={{ padding: '8px 15px', fontSize: '13px', alignSelf: 'flex-end' }}
+                >
+                  {safeT?.limparFiltros || 'Limpar Filtros'}
+                </button>
+              )}
+            </div>
+            
+            <button 
+              className="btn-primary" 
+              onClick={() => { 
+                setShowBibliotecaPecasForm(true); 
+                setEditingPecaBiblioteca(null);
+                const categoriaSelecionada = categoriasPecas.find(c => c.id === ultimoGrupoSelecionado)
+                const subcategoriaSelecionada = subcategoriasPecas.find(s => s.id === ultimoSubgrupoSelecionado)
+                setPecaBibliotecaForm({ 
+                  id: '', 
+                  nome: '', 
+                  codigo: '', 
+                  preco: '', 
+                  descricao: '', 
+                  categoria: categoriaSelecionada?.nome || '', 
+                  categoriaId: ultimoGrupoSelecionado || '', 
+                  subcategoria: subcategoriaSelecionada?.nome || '', 
+                  subcategoriaId: ultimoSubgrupoSelecionado || '', 
+                  imagem: '', 
+                  dataCriacao: new Date().toISOString() 
+                }); 
+                setPecaBibliotecaImagemUrlDraft('')
+              }} 
+              style={{ marginBottom: '20px' }}
+            >
+              {safeT?.novaPecaBiblioteca || 'Nova Peça'}
+            </button>
             
             {showBibliotecaPecasForm && (
               <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}>
@@ -30197,150 +30116,85 @@ onKeyPress={(e) => {
                   ></textarea>
                 </div>
 
-                {/* Categoria e subcategoria — painel estilo Excel (cadastro) */}
-                <div
-                  style={{
-                    marginBottom: '15px',
-                    border: '1px solid #4a4a4a',
-                    borderRadius: '2px',
-                    overflow: 'hidden',
-                    backgroundColor: '#2e2e2e',
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
-                  }}
-                >
-                  <div
-                    style={{
-                      backgroundColor: '#1a1a1a',
-                      color: '#ffffff',
-                      padding: '10px 14px',
-                      borderBottom: '2px solid #0a0a0a',
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      gap: '10px',
-                    }}
-                  >
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '13px' }}>
+                {/* Grupo (Categoria) */}
+                <div style={{ marginBottom: '15px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                    <label style={{ display: 'block', fontSize: '14px' }}>
                       {safeT?.categoriaPecaBiblioteca || 'Categoria'}
-                      <span style={{ opacity: 0.65, fontSize: '10px', lineHeight: 1 }} aria-hidden>
-                        ▼
-                      </span>
-                    </span>
+                    </label>
                     <button
-                      type="button"
                       className="btn-primary"
                       onClick={() => setShowNovaCategoriaForm(true)}
-                      style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap' }}
+                      style={{ padding: '5px 10px', fontSize: '11px', whiteSpace: 'nowrap' }}
                     >
                       + {safeT?.novaCategoria || 'Nova Categoria'}
                     </button>
                   </div>
-                  <div style={{ padding: '12px 14px', backgroundColor: '#363636', borderBottom: pecaBibliotecaForm.categoriaId ? '1px solid #4a4a4a' : undefined }}>
+                  <select
+                    value={pecaBibliotecaForm.categoriaId || ''}
+                    onChange={(e) => {
+                      const categoriaId = e.target.value
+                      const categoria = categoriasPecas.find(c => c.id === categoriaId)
+                      setUltimoGrupoSelecionado(categoriaId) // Salvar o grupo selecionado
+                      setPecaBibliotecaForm({ 
+                        ...pecaBibliotecaForm, 
+                        categoriaId: categoriaId,
+                        categoria: categoria?.nome || '',
+                        subcategoriaId: '', // Limpar subcategoria quando mudar grupo
+                        subcategoria: ''
+                      })
+                      setUltimoSubgrupoSelecionado('') // Limpar subgrupo quando mudar grupo
+                    }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  >
+                    <option value="">{safeT?.selecioneCategoria || 'Selecione uma categoria'}</option>
+                    {categoriasPecasAlfabeto.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.nome}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Subgrupo (Subcategoria) */}
+                {pecaBibliotecaForm.categoriaId && (
+                  <div style={{ marginBottom: '15px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                      <label style={{ display: 'block', fontSize: '14px' }}>
+                        {safeT?.subcategoriaPecaBiblioteca || 'Subcategoria'}
+                      </label>
+                      <button
+                        className="btn-primary"
+                        onClick={() => setShowNovaSubcategoriaForm(true)}
+                        style={{ padding: '5px 10px', fontSize: '11px', whiteSpace: 'nowrap' }}
+                      >
+                        + {safeT?.novaSubcategoria || 'Nova Subcategoria'}
+                      </button>
+                    </div>
                     <select
-                      value={pecaBibliotecaForm.categoriaId || ''}
+                      value={pecaBibliotecaForm.subcategoriaId || ''}
                       onChange={(e) => {
-                        const categoriaId = e.target.value
-                        const categoria = categoriasPecas.find((c) => c.id === categoriaId)
-                        setUltimoGrupoSelecionado(categoriaId)
-                        setPecaBibliotecaForm({
-                          ...pecaBibliotecaForm,
-                          categoriaId,
-                          categoria: categoria?.nome || '',
-                          subcategoriaId: '',
-                          subcategoria: '',
+                        const subcategoriaId = e.target.value
+                        const subcategoria = subcategoriasPecas.find(s => s.id === subcategoriaId)
+                        setUltimoSubgrupoSelecionado(subcategoriaId) // Salvar o subgrupo selecionado
+                        setPecaBibliotecaForm({ 
+                          ...pecaBibliotecaForm, 
+                          subcategoriaId: subcategoriaId,
+                          subcategoria: subcategoria?.nome || ''
                         })
-                        setUltimoSubgrupoSelecionado('')
                       }}
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        backgroundColor: '#2a2a2a',
-                        color: '#ececec',
-                        border: '1px solid #5c5c5c',
-                        borderRadius: '2px',
-                        fontSize: '13px',
-                        boxSizing: 'border-box',
-                      }}
+                      style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     >
-                      <option value="">{safeT?.selecioneCategoria || 'Selecione uma categoria'}</option>
-                      {categoriasPecasAlfabeto.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.nome}
-                        </option>
-                      ))}
+                      <option value="">{safeT?.selecioneSubcategoria || 'Selecione uma subcategoria'}</option>
+                      {subcategoriasPecas
+                        .filter(sub => sub.categoriaId === pecaBibliotecaForm.categoriaId)
+                        .sort((a, b) =>
+                          (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
+                        )
+                        .map(sub => (
+                          <option key={sub.id} value={sub.id}>{sub.nome}</option>
+                        ))}
                     </select>
                   </div>
-                  {pecaBibliotecaForm.categoriaId ? (
-                    <>
-                      <div
-                        style={{
-                          backgroundColor: '#222222',
-                          color: '#ffffff',
-                          padding: '10px 14px',
-                          borderBottom: '2px solid #0a0a0a',
-                          display: 'flex',
-                          flexWrap: 'wrap',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          gap: '10px',
-                        }}
-                      >
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '13px' }}>
-                          {safeT?.subcategoriaPecaBiblioteca || 'Subcategoria'}
-                          <span style={{ opacity: 0.65, fontSize: '10px', lineHeight: 1 }} aria-hidden>
-                            ▼
-                          </span>
-                        </span>
-                        <button
-                          type="button"
-                          className="btn-primary"
-                          onClick={() => setShowNovaSubcategoriaForm(true)}
-                          style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap' }}
-                        >
-                          + {safeT?.novaSubcategoria || 'Nova Subcategoria'}
-                        </button>
-                      </div>
-                      <div style={{ padding: '12px 14px', backgroundColor: '#434343' }}>
-                        <select
-                          value={pecaBibliotecaForm.subcategoriaId || ''}
-                          onChange={(e) => {
-                            const subcategoriaId = e.target.value
-                            const subcategoria = subcategoriasPecas.find((s) => s.id === subcategoriaId)
-                            setUltimoSubgrupoSelecionado(subcategoriaId)
-                            setPecaBibliotecaForm({
-                              ...pecaBibliotecaForm,
-                              subcategoriaId,
-                              subcategoria: subcategoria?.nome || '',
-                            })
-                          }}
-                          style={{
-                            width: '100%',
-                            padding: '10px 12px',
-                            backgroundColor: '#2a2a2a',
-                            color: '#ececec',
-                            border: '1px solid #5c5c5c',
-                            borderRadius: '2px',
-                            fontSize: '13px',
-                            boxSizing: 'border-box',
-                          }}
-                        >
-                          <option value="">{safeT?.selecioneSubcategoria || 'Selecione uma subcategoria'}</option>
-                          {subcategoriasPecas
-                            .filter((sub) => sub.categoriaId === pecaBibliotecaForm.categoriaId)
-                            .sort((a, b) =>
-                              (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
-                            )
-                            .map((sub) => (
-                              <option key={sub.id} value={sub.id}>
-                                {sub.nome}
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-                    </>
-                  ) : null}
-                </div>
+                )}
                 
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button 
@@ -31079,95 +30933,52 @@ onKeyPress={(e) => {
             {/* Conteúdo da aba Biblioteca */}
             {abaBibliotecaPecas === 'biblioteca' && (
               <div>
-                {/* Controles: grelha alinhada (mesma ordem em todos os ecrãs) */}
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))',
-                    gap: '10px',
-                    marginBottom: '20px',
-                    alignItems: 'stretch',
-                  }}
-                >
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', minWidth: 0 }}>
+                {/* Controles de visualização */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                     <button
-                      type="button"
                       onClick={() => setVisualizacaoBiblioteca('grid')}
                       style={{
-                        minHeight: '42px',
-                        padding: '10px 12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: visualizacaoBiblioteca === 'grid' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(22, 28, 28, 0.88)',
-                        border: visualizacaoBiblioteca === 'grid' ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 255, 0, 0.22)',
+                        padding: '8px 15px',
+                        backgroundColor: visualizacaoBiblioteca === 'grid' ? 'rgba(0, 255, 0, 0.2)' : 'transparent',
+                        border: '1px solid rgba(0, 255, 0, 0.3)',
                         color: visualizacaoBiblioteca === 'grid' ? '#00ff00' : '#fff',
                         cursor: 'pointer',
-                        borderRadius: '8px',
-                        fontSize: '13px',
-                        fontWeight: visualizacaoBiblioteca === 'grid' ? 'bold' : '500',
-                        boxSizing: 'border-box',
+                        borderRadius: '4px',
+                        fontSize: '13px'
                       }}
                     >
                       {safeT?.visualizacaoGrid || 'Grade'}
                     </button>
                     <button
-                      type="button"
                       onClick={() => setVisualizacaoBiblioteca('lista')}
                       style={{
-                        minHeight: '42px',
-                        padding: '10px 12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: visualizacaoBiblioteca === 'lista' ? 'rgba(0, 255, 0, 0.2)' : 'rgba(22, 28, 28, 0.88)',
-                        border: visualizacaoBiblioteca === 'lista' ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 255, 0, 0.22)',
+                        padding: '8px 15px',
+                        backgroundColor: visualizacaoBiblioteca === 'lista' ? 'rgba(0, 255, 0, 0.2)' : 'transparent',
+                        border: '1px solid rgba(0, 255, 0, 0.3)',
                         color: visualizacaoBiblioteca === 'lista' ? '#00ff00' : '#fff',
                         cursor: 'pointer',
-                        borderRadius: '8px',
-                        fontSize: '13px',
-                        fontWeight: visualizacaoBiblioteca === 'lista' ? 'bold' : '500',
-                        boxSizing: 'border-box',
+                        borderRadius: '4px',
+                        fontSize: '13px'
                       }}
                     >
                       {safeT?.visualizacaoLista || 'Lista'}
                     </button>
                   </div>
-                  <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                    <label
-                      style={{
-                        display: 'block',
-                        marginBottom: '6px',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        color: '#b8b8b8',
-                      }}
-                    >
-                      {safeT?.filtrarPorCategoria || 'Filtrar por Categoria'}
-                    </label>
+
+                  {/* Filtro por grupo */}
+                  <div style={{ minWidth: '200px' }}>
                     <select
                       value={filtroGrupoBiblioteca || ''}
                       onChange={(e) => {
                         setFiltroGrupoBiblioteca(e.target.value)
                         setFiltroSubgrupoBiblioteca('')
                       }}
-                      style={{
-                        width: '100%',
-                        minHeight: '42px',
-                        padding: '10px 12px',
-                        backgroundColor: '#2a2a2a',
-                        color: '#ececec',
-                        border: '1px solid #5c5c5c',
-                        borderRadius: '2px',
-                        fontSize: '13px',
-                        boxSizing: 'border-box',
-                      }}
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                     >
                       <option value="">{safeT?.todosGrupos || 'Todos os grupos'}</option>
-                      {categoriasPecasAlfabeto.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.nome}
-                        </option>
+                      {categoriasPecasAlfabeto.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.nome}</option>
                       ))}
                     </select>
                   </div>
@@ -31400,41 +31211,48 @@ onKeyPress={(e) => {
                     </div>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      {categoriasPecasAlfabeto.map((categoria) => {
+                      {categoriasPecasAlfabeto.map((categoria, catIndex) => {
                         const subcategoriasDoGrupo = subcategoriasPecas
                           .filter(sub => sub.categoriaId === categoria.id)
                           .sort((a, b) =>
                             (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
                           )
-                        /* Estilo Excel: cabeçalho muito escuro, zebra em cinza escuro / cinza um pouco mais claro, só divisões horizontais. */
-                        const rowLine = '#4a4a4a'
-                        const excelHeaderBg = '#1a1a1a'
-                        const excelSubHeadBg = '#222222'
-                        const excelZebraA = '#363636'
-                        const excelZebraB = '#434343'
-                        const excelText = '#ececec'
-                        const excelMuted = '#b8b8b8'
+                        /* Estilo Excel (como na imagem): cabeçalhos escuros com texto branco; linhas de dados em zebra cinza claro / cinza médio e texto preto. */
+                        const rowLine = '#a8a8a8'
+                        const excelHeaderBg = '#2f2f2f'
+                        const excelSubHeadBg = '#454545'
+                        const excelZebraA = '#f2f2f2'
+                        const excelZebraB = '#d9d9d9'
+                        const excelText = '#111111'
+                        const excelMuted = '#4a4a4a'
+                        const excelCardBg = catIndex % 2 === 0 ? '#e8e8e8' : '#dcdcdc'
                         const onRowEnter = (e: React.MouseEvent<HTMLTableRowElement>) => {
-                          e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(255, 255, 255, 0.35)'
+                          e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(0, 0, 0, 0.2)'
                         }
                         const onRowLeave = (e: React.MouseEvent<HTMLTableRowElement>) => {
                           e.currentTarget.style.boxShadow = 'none'
                         }
-                        const thRule = { borderBottom: '2px solid #0a0a0a' } as React.CSSProperties
+                        const thRule = { borderBottom: '2px solid #1a1a1a' } as React.CSSProperties
                         const tdRule = { borderBottom: `1px solid ${rowLine}` } as React.CSSProperties
+                        const inputLight: React.CSSProperties = {
+                          backgroundColor: '#ffffff',
+                          color: '#111111',
+                          border: '1px solid #888888',
+                          borderRadius: '2px',
+                        }
                         return (
                           <div
                             key={categoria.id}
                             style={{
-                              backgroundColor: '#2e2e2e',
+                              backgroundColor: excelCardBg,
                               border: `1px solid ${rowLine}`,
                               borderRadius: '2px',
                               overflow: 'hidden',
-                              boxShadow: '0 1px 4px rgba(0,0,0,0.45)',
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
                             }}
                           >
                             {/* Cabeçalho da categoria (como linha de título Excel) */}
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: excelText }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: '#ffffff' }}>
                               <thead>
                                 <tr style={{ backgroundColor: excelHeaderBg, color: '#ffffff' }}>
                                   <th
@@ -31456,12 +31274,9 @@ onKeyPress={(e) => {
                                             flex: '1 1 200px',
                                             minWidth: '180px',
                                             padding: '8px 10px',
-                                            backgroundColor: '#2a2a2a',
-                                            color: excelText,
-                                            border: '1px solid #5c5c5c',
-                                            borderRadius: '2px',
                                             fontSize: '14px',
                                             fontWeight: 600,
+                                            ...inputLight,
                                           }}
                                           onKeyPress={(e) => {
                                             if (e.key === 'Enter' && novaCategoriaNome.trim()) {
@@ -31506,7 +31321,7 @@ onKeyPress={(e) => {
                                             ▼
                                           </span>
                                         </span>
-                                        <span style={{ fontSize: '12px', color: excelMuted, fontWeight: 500 }}>
+                                        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.75)', fontWeight: 500 }}>
                                           {subcategoriasDoGrupo.length}{' '}
                                           {subcategoriasDoGrupo.length === 1
                                             ? safeT?.subcategoria || 'Subcategoria'
@@ -31661,12 +31476,9 @@ onKeyPress={(e) => {
                                                 style={{
                                                   width: '100%',
                                                   padding: '8px 10px',
-                                                  backgroundColor: '#2a2a2a',
-                                                  color: excelText,
-                                                  border: '1px solid #5c5c5c',
-                                                  borderRadius: '2px',
                                                   fontSize: '13px',
                                                   boxSizing: 'border-box',
+                                                  ...inputLight,
                                                 }}
                                                 onKeyPress={(e) => {
                                                   if (e.key === 'Enter' && novaSubcategoriaNome.trim()) {
