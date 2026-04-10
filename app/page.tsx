@@ -3482,6 +3482,9 @@ export default function Dashboard() {
   const [editingSubcategoria, setEditingSubcategoria] = useState<SubcategoriaPeca | null>(null)
   const [ultimoGrupoSelecionado, setUltimoGrupoSelecionado] = useState<string>('')
   const [ultimoSubgrupoSelecionado, setUltimoSubgrupoSelecionado] = useState<string>('')
+  /** Listas de categoria/subcategoria no cadastro da peça: retraídas até clicar para escolher. */
+  const [pecaBibliotecaPickerCategoriaAberto, setPecaBibliotecaPickerCategoriaAberto] = useState(false)
+  const [pecaBibliotecaPickerSubcategoriaAberto, setPecaBibliotecaPickerSubcategoriaAberto] = useState(false)
   const [pecaBibliotecaForm, setPecaBibliotecaForm] = useState<PecaBiblioteca>({
     id: '',
     nome: '',
@@ -16373,6 +16376,8 @@ export default function Dashboard() {
     })
     setPecaBibliotecaImagemUrlDraft('')
     setEditingPecaBiblioteca(null)
+    setPecaBibliotecaPickerCategoriaAberto(false)
+    setPecaBibliotecaPickerSubcategoriaAberto(false)
     alert(t.pecaBibliotecaSaved || 'Peça salva com sucesso!')
   }
 
@@ -16382,6 +16387,8 @@ export default function Dashboard() {
     setPecaBibliotecaForm({ ...peca })
     setUltimoGrupoSelecionado(peca.categoriaId || '')
     setUltimoSubgrupoSelecionado(peca.subcategoriaId || '')
+    setPecaBibliotecaPickerCategoriaAberto(false)
+    setPecaBibliotecaPickerSubcategoriaAberto(false)
     setShowBibliotecaPecasForm(true)
   }
 
@@ -29969,6 +29976,8 @@ onKeyPress={(e) => {
                   dataCriacao: new Date().toISOString() 
                 }); 
                 setPecaBibliotecaImagemUrlDraft('')
+                setPecaBibliotecaPickerCategoriaAberto(false)
+                setPecaBibliotecaPickerSubcategoriaAberto(false)
               }} 
               style={{ marginBottom: '20px' }}
             >
@@ -30116,7 +30125,7 @@ onKeyPress={(e) => {
                   ></textarea>
                 </div>
 
-                {/* Grupo (Categoria) — lista tipo planilha (zebrada), igual à aba Gerenciar Categorias */}
+                {/* Grupo (Categoria) — resumo retraído; lista zebrada só ao expandir */}
                 <div style={{ marginBottom: '15px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                     <label style={{ display: 'block', fontSize: '14px' }}>
@@ -30131,7 +30140,52 @@ onKeyPress={(e) => {
                       + {safeT?.novaCategoria || 'Nova Categoria'}
                     </button>
                   </div>
-                  {(() => {
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPecaBibliotecaPickerCategoriaAberto((v) => !v)
+                      setPecaBibliotecaPickerSubcategoriaAberto(false)
+                    }}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '10px',
+                      padding: '10px 14px',
+                      marginBottom: pecaBibliotecaPickerCategoriaAberto ? '8px' : 0,
+                      backgroundColor: '#252525',
+                      border: '1px solid rgba(0, 255, 0, 0.28)',
+                      borderRadius: '6px',
+                      color: '#fff',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <span style={{ flex: 1, lineHeight: 1.35 }}>
+                      {pecaBibliotecaForm.categoriaId ? (
+                        <>
+                          <span style={{ opacity: 0.75, fontSize: '11px', display: 'block', marginBottom: '2px' }}>
+                            {safeT?.categoriaPecaBiblioteca || 'Categoria'}
+                          </span>
+                          <span style={{ fontWeight: 600 }}>
+                            {pecaBibliotecaForm.categoria ||
+                              categoriasPecas.find((c) => c.id === pecaBibliotecaForm.categoriaId)?.nome ||
+                              '—'}
+                          </span>
+                        </>
+                      ) : (
+                        <span style={{ opacity: 0.88 }}>
+                          {(safeT as any).pecaBibliotecaEscolherCategoria || 'Nenhuma categoria — clique para escolher'}
+                        </span>
+                      )}
+                    </span>
+                    <span style={{ flexShrink: 0, opacity: 0.85, fontSize: '12px' }} aria-hidden>
+                      {pecaBibliotecaPickerCategoriaAberto ? '▲' : '▼'}
+                    </span>
+                  </button>
+                  {pecaBibliotecaPickerCategoriaAberto && (() => {
                     const rowLine = '#555555'
                     const headerBg = '#2f2f2f'
                     const zebraA = '#2a2a2a'
@@ -30181,6 +30235,8 @@ onKeyPress={(e) => {
                                     subcategoriaId: '',
                                     subcategoria: '',
                                   })
+                                  setPecaBibliotecaPickerCategoriaAberto(false)
+                                  setPecaBibliotecaPickerSubcategoriaAberto(false)
                                 }
                               }}
                               onClick={() => {
@@ -30193,6 +30249,8 @@ onKeyPress={(e) => {
                                   subcategoriaId: '',
                                   subcategoria: '',
                                 })
+                                setPecaBibliotecaPickerCategoriaAberto(false)
+                                setPecaBibliotecaPickerSubcategoriaAberto(false)
                               }}
                               style={{
                                 backgroundColor: zebraA,
@@ -30230,6 +30288,8 @@ onKeyPress={(e) => {
                                         subcategoriaId: '',
                                         subcategoria: '',
                                       })
+                                      setPecaBibliotecaPickerCategoriaAberto(false)
+                                      setPecaBibliotecaPickerSubcategoriaAberto(false)
                                     }
                                   }}
                                   onClick={() => {
@@ -30242,6 +30302,8 @@ onKeyPress={(e) => {
                                       subcategoriaId: '',
                                       subcategoria: '',
                                     })
+                                    setPecaBibliotecaPickerCategoriaAberto(false)
+                                    setPecaBibliotecaPickerSubcategoriaAberto(false)
                                   }}
                                   style={{
                                     backgroundColor: rowBg,
@@ -30264,7 +30326,7 @@ onKeyPress={(e) => {
                   })()}
                 </div>
 
-                {/* Subgrupo (Subcategoria) — mesma lista zebrada */}
+                {/* Subgrupo (Subcategoria) — resumo retraído; lista só ao expandir */}
                 {pecaBibliotecaForm.categoriaId && (
                   <div style={{ marginBottom: '15px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -30280,7 +30342,52 @@ onKeyPress={(e) => {
                         + {safeT?.novaSubcategoria || 'Nova Subcategoria'}
                       </button>
                     </div>
-                    {(() => {
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPecaBibliotecaPickerSubcategoriaAberto((v) => !v)
+                        setPecaBibliotecaPickerCategoriaAberto(false)
+                      }}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '10px',
+                        padding: '10px 14px',
+                        marginBottom: pecaBibliotecaPickerSubcategoriaAberto ? '8px' : 0,
+                        backgroundColor: '#252525',
+                        border: '1px solid rgba(0, 255, 0, 0.28)',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                      }}
+                    >
+                      <span style={{ flex: 1, lineHeight: 1.35 }}>
+                        {pecaBibliotecaForm.subcategoriaId ? (
+                          <>
+                            <span style={{ opacity: 0.75, fontSize: '11px', display: 'block', marginBottom: '2px' }}>
+                              {safeT?.subcategoriaPecaBiblioteca || 'Subcategoria'}
+                            </span>
+                            <span style={{ fontWeight: 600 }}>
+                              {pecaBibliotecaForm.subcategoria ||
+                                subcategoriasPecas.find((s) => s.id === pecaBibliotecaForm.subcategoriaId)?.nome ||
+                                '—'}
+                            </span>
+                          </>
+                        ) : (
+                          <span style={{ opacity: 0.88 }}>
+                            {(safeT as any).pecaBibliotecaEscolherSubcategoria || 'Nenhuma subcategoria — clique para escolher'}
+                          </span>
+                        )}
+                      </span>
+                      <span style={{ flexShrink: 0, opacity: 0.85, fontSize: '12px' }} aria-hidden>
+                        {pecaBibliotecaPickerSubcategoriaAberto ? '▲' : '▼'}
+                      </span>
+                    </button>
+                    {pecaBibliotecaPickerSubcategoriaAberto && (() => {
                       const rowLine = '#555555'
                       const headerBg = '#454545'
                       const zebraA = '#2a2a2a'
@@ -30332,6 +30439,7 @@ onKeyPress={(e) => {
                                       subcategoriaId: '',
                                       subcategoria: '',
                                     })
+                                    setPecaBibliotecaPickerSubcategoriaAberto(false)
                                   }
                                 }}
                                 onClick={() => {
@@ -30341,6 +30449,7 @@ onKeyPress={(e) => {
                                     subcategoriaId: '',
                                     subcategoria: '',
                                   })
+                                  setPecaBibliotecaPickerSubcategoriaAberto(false)
                                 }}
                                 style={{
                                   backgroundColor: zebraA,
@@ -30380,6 +30489,7 @@ onKeyPress={(e) => {
                                             subcategoriaId: sub.id,
                                             subcategoria: sub.nome,
                                           })
+                                          setPecaBibliotecaPickerSubcategoriaAberto(false)
                                         }
                                       }}
                                       onClick={() => {
@@ -30389,6 +30499,7 @@ onKeyPress={(e) => {
                                           subcategoriaId: sub.id,
                                           subcategoria: sub.nome,
                                         })
+                                        setPecaBibliotecaPickerSubcategoriaAberto(false)
                                       }}
                                       style={{
                                         backgroundColor: rowBg,
@@ -30458,6 +30569,8 @@ onKeyPress={(e) => {
                         dataCriacao: new Date().toISOString() 
                       })
                       setPecaBibliotecaImagemUrlDraft('')
+                      setPecaBibliotecaPickerCategoriaAberto(false)
+                      setPecaBibliotecaPickerSubcategoriaAberto(false)
                       alert(safeT?.saveSuccess || 'Peça salva com sucesso!')
                     }} 
                     style={{ flex: 1, padding: '10px' }}
@@ -30469,9 +30582,13 @@ onKeyPress={(e) => {
                     onClick={() => { 
                       setShowBibliotecaPecasForm(false); 
                       setEditingPecaBiblioteca(null);
-                      // Manter o grupo e subgrupo selecionados ao cancelar
-                      const categoriaSelecionada = categoriasPecas.find(c => c.id === ultimoGrupoSelecionado)
-                      const subcategoriaSelecionada = subcategoriasPecas.find(s => s.id === ultimoSubgrupoSelecionado)
+                      // Manter categoria/subcategoria do formulário para a próxima «Nova peça»
+                      const gid = pecaBibliotecaForm.categoriaId || ''
+                      const sid = pecaBibliotecaForm.subcategoriaId || ''
+                      setUltimoGrupoSelecionado(gid)
+                      setUltimoSubgrupoSelecionado(sid)
+                      const categoriaSelecionada = categoriasPecas.find(c => c.id === gid)
+                      const subcategoriaSelecionada = subcategoriasPecas.find(s => s.id === sid)
                       setPecaBibliotecaImagemUrlDraft('')
                       setPecaBibliotecaForm({ 
                         id: '', 
@@ -30480,12 +30597,14 @@ onKeyPress={(e) => {
                         preco: '', 
                         descricao: '', 
                         categoria: categoriaSelecionada?.nome || '', 
-                        categoriaId: ultimoGrupoSelecionado || '', 
+                        categoriaId: gid, 
                         subcategoria: subcategoriaSelecionada?.nome || '', 
-                        subcategoriaId: ultimoSubgrupoSelecionado || '', 
+                        subcategoriaId: sid, 
                         imagem: '', 
                         dataCriacao: new Date().toISOString() 
                       }); 
+                      setPecaBibliotecaPickerCategoriaAberto(false)
+                      setPecaBibliotecaPickerSubcategoriaAberto(false)
                     }} 
                     style={{ flex: 1, padding: '10px' }}
                   >
@@ -31116,6 +31235,8 @@ onKeyPress={(e) => {
                                   setEditingPecaBiblioteca(peca)
                                   setPecaBibliotecaImagemUrlDraft('')
                                   setPecaBibliotecaForm(peca)
+                                  setPecaBibliotecaPickerCategoriaAberto(false)
+                                  setPecaBibliotecaPickerSubcategoriaAberto(false)
                                   setShowBibliotecaPecasForm(true)
                                 }}
                                 style={{ flex: 1, padding: '8px 10px', fontSize: '12px', minWidth: 0 }}
@@ -31936,6 +32057,8 @@ onKeyPress={(e) => {
                                 setEditingPecaBiblioteca(peca)
                                 setPecaBibliotecaImagemUrlDraft('')
                                 setPecaBibliotecaForm(peca)
+                                setPecaBibliotecaPickerCategoriaAberto(false)
+                                setPecaBibliotecaPickerSubcategoriaAberto(false)
                                 setShowBibliotecaPecasForm(true)
                               }}
                               style={{ padding: '6px 10px', fontSize: '12px' }}
@@ -32218,6 +32341,8 @@ A1;Peça exemplo;10'
                               setEditingPecaBiblioteca(peca)
                               setPecaBibliotecaImagemUrlDraft('')
                               setPecaBibliotecaForm(peca)
+                              setPecaBibliotecaPickerCategoriaAberto(false)
+                              setPecaBibliotecaPickerSubcategoriaAberto(false)
                               setShowBibliotecaPecasForm(true)
                               openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
                             }}
@@ -56935,7 +57060,28 @@ A1;Peça exemplo;10`}
         <div className="modal-overlay" onClick={() => setShowBibliotecaPecasModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2>{safeT?.bibliotecaPecasTitle || 'Biblioteca de Peças'}</h2>
-            <button className="btn-primary" onClick={() => { setShowBibliotecaPecasForm(true); setEditingPecaBiblioteca(null); setPecaBibliotecaImagemUrlDraft(''); setPecaBibliotecaForm({ id: '', nome: '', codigo: '', preco: '', descricao: '', categoria: '', categoriaId: '', subcategoria: '', subcategoriaId: '', imagem: '', dataCriacao: new Date().toISOString() }); }} style={{ marginBottom: '15px' }}>
+            <button className="btn-primary" onClick={() => {
+              setShowBibliotecaPecasForm(true)
+              setEditingPecaBiblioteca(null)
+              setPecaBibliotecaImagemUrlDraft('')
+              const catM = categoriasPecas.find(c => c.id === ultimoGrupoSelecionado)
+              const subM = subcategoriasPecas.find(s => s.id === ultimoSubgrupoSelecionado)
+              setPecaBibliotecaForm({
+                id: '',
+                nome: '',
+                codigo: '',
+                preco: '',
+                descricao: '',
+                categoria: catM?.nome || '',
+                categoriaId: ultimoGrupoSelecionado || '',
+                subcategoria: subM?.nome || '',
+                subcategoriaId: ultimoSubgrupoSelecionado || '',
+                imagem: '',
+                dataCriacao: new Date().toISOString(),
+              })
+              setPecaBibliotecaPickerCategoriaAberto(false)
+              setPecaBibliotecaPickerSubcategoriaAberto(false)
+            }} style={{ marginBottom: '15px' }}>
               {safeT?.novaPecaBiblioteca || 'Nova Peça'}
             </button>
             {showBibliotecaPecasForm && (
@@ -57064,15 +57210,63 @@ A1;Peça exemplo;10`}
                       const updated = [...pecasBiblioteca, newPeca]
                       persistPecasBiblioteca(updated)
                     }
+                    const { categoriaId: gM, subcategoriaId: sM } = normalizarUltimaSelecaoBiblioteca(
+                      pecaBibliotecaForm,
+                      categoriasPecas,
+                      subcategoriasPecas
+                    )
+                    setUltimoGrupoSelecionado(gM)
+                    setUltimoSubgrupoSelecionado(sM)
                     setShowBibliotecaPecasForm(false)
                     setEditingPecaBiblioteca(null)
                     setPecaBibliotecaImagemUrlDraft('')
-                    setPecaBibliotecaForm({ id: '', nome: '', codigo: '', preco: '', descricao: '', categoria: '', categoriaId: '', subcategoria: '', subcategoriaId: '', imagem: '', dataCriacao: new Date().toISOString() })
+                    const catApos = categoriasPecas.find(c => c.id === gM)
+                    const subApos = subcategoriasPecas.find(s => s.id === sM)
+                    setPecaBibliotecaForm({
+                      id: '',
+                      nome: '',
+                      codigo: '',
+                      preco: '',
+                      descricao: '',
+                      categoria: catApos?.nome || '',
+                      categoriaId: gM,
+                      subcategoria: subApos?.nome || '',
+                      subcategoriaId: sM,
+                      imagem: '',
+                      dataCriacao: new Date().toISOString(),
+                    })
+                    setPecaBibliotecaPickerCategoriaAberto(false)
+                    setPecaBibliotecaPickerSubcategoriaAberto(false)
                     alert(safeT?.saveSuccess || 'Peça salva com sucesso!')
                   }} style={{ flex: 1 }}>
                     {safeT?.save || 'Salvar'}
                   </button>
-                  <button className="btn-primary" onClick={() => { setShowBibliotecaPecasForm(false); setEditingPecaBiblioteca(null); setPecaBibliotecaImagemUrlDraft(''); setPecaBibliotecaForm({ id: '', nome: '', codigo: '', preco: '', descricao: '', categoria: '', categoriaId: '', subcategoria: '', subcategoriaId: '', imagem: '', dataCriacao: new Date().toISOString() }); }} style={{ flex: 1 }}>
+                  <button className="btn-primary" onClick={() => {
+                    setShowBibliotecaPecasForm(false)
+                    setEditingPecaBiblioteca(null)
+                    setPecaBibliotecaImagemUrlDraft('')
+                    const gid = pecaBibliotecaForm.categoriaId || ''
+                    const sid = pecaBibliotecaForm.subcategoriaId || ''
+                    setUltimoGrupoSelecionado(gid)
+                    setUltimoSubgrupoSelecionado(sid)
+                    const catC = categoriasPecas.find(c => c.id === gid)
+                    const subC = subcategoriasPecas.find(s => s.id === sid)
+                    setPecaBibliotecaForm({
+                      id: '',
+                      nome: '',
+                      codigo: '',
+                      preco: '',
+                      descricao: '',
+                      categoria: catC?.nome || '',
+                      categoriaId: gid,
+                      subcategoria: subC?.nome || '',
+                      subcategoriaId: sid,
+                      imagem: '',
+                      dataCriacao: new Date().toISOString(),
+                    })
+                    setPecaBibliotecaPickerCategoriaAberto(false)
+                    setPecaBibliotecaPickerSubcategoriaAberto(false)
+                  }} style={{ flex: 1 }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>
@@ -57089,7 +57283,7 @@ A1;Peça exemplo;10`}
                     {peca.preco && <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.preco || 'Preço'}: {peca.preco}€</p>}
                     {peca.descricao && <p style={{ fontSize: '12px', opacity: 0.7 }}>{peca.descricao}</p>}
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
-                      <button className="btn-primary" onClick={() => { setEditingPecaBiblioteca(peca); setPecaBibliotecaImagemUrlDraft(''); setPecaBibliotecaForm(peca); setShowBibliotecaPecasForm(true); }} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
+                      <button className="btn-primary" onClick={() => { setEditingPecaBiblioteca(peca); setPecaBibliotecaImagemUrlDraft(''); setPecaBibliotecaForm(peca); setPecaBibliotecaPickerCategoriaAberto(false); setPecaBibliotecaPickerSubcategoriaAberto(false); setShowBibliotecaPecasForm(true); }} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
                         {safeT?.edit || 'Editar'}
                       </button>
                       <button className="btn-danger" onClick={() => {
