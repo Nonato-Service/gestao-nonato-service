@@ -31699,7 +31699,16 @@ onKeyPress={(e) => {
                                     }}
                                   >
                                     {editingCategoria?.id !== categoria.id && (
-                                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'flex-end' }}>
+                                      <div
+                                        style={{
+                                          display: 'flex',
+                                          flexDirection: 'row',
+                                          flexWrap: 'nowrap',
+                                          alignItems: 'center',
+                                          gap: '8px',
+                                          justifyContent: 'flex-end',
+                                        }}
+                                      >
                                         <button
                                           type="button"
                                           className="btn-primary"
@@ -31709,7 +31718,7 @@ onKeyPress={(e) => {
                                             setEditingSubcategoria(null)
                                             setPecaBibliotecaForm({ ...pecaBibliotecaForm, categoriaId: categoria.id })
                                           }}
-                                          style={{ padding: '6px 12px', fontSize: '12px' }}
+                                          style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
                                         >
                                           + {safeT?.novaSubcategoria || 'Nova Subcategoria'}
                                         </button>
@@ -31720,7 +31729,7 @@ onKeyPress={(e) => {
                                             setEditingCategoria(categoria)
                                             setNovaCategoriaNome(categoria.nome)
                                           }}
-                                          style={{ padding: '6px 12px', fontSize: '12px' }}
+                                          style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
                                         >
                                           {safeT?.edit || 'Editar'}
                                         </button>
@@ -31749,7 +31758,7 @@ onKeyPress={(e) => {
                                               saveData('nonato-pecas-biblioteca', updatedPecas)
                                             }
                                           }}
-                                          style={{ padding: '6px 12px', fontSize: '12px' }}
+                                          style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 }}
                                         >
                                           {safeT?.delete || 'Excluir'}
                                         </button>
