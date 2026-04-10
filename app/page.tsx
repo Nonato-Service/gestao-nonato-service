@@ -30132,16 +30132,16 @@ onKeyPress={(e) => {
                     </button>
                   </div>
                   {(() => {
-                    const rowLine = '#a8a8a8'
+                    const rowLine = '#555555'
                     const headerBg = '#2f2f2f'
-                    const zebraA = '#f2f2f2'
-                    const zebraB = '#d9d9d9'
-                    const text = '#111111'
-                    const muted = '#4a4a4a'
+                    const zebraA = '#2a2a2a'
+                    const zebraB = '#3a3a3a'
+                    const text = '#ffffff'
+                    const muted = '#ffffff'
                     const tdRule: React.CSSProperties = { borderBottom: `1px solid ${rowLine}` }
                     const thRule: React.CSSProperties = { borderBottom: '2px solid #1a1a1a' }
                     const rowHover = (e: React.MouseEvent<HTMLTableRowElement>) => {
-                      e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(0, 0, 0, 0.2)'
+                      e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(255, 255, 255, 0.22)'
                     }
                     const rowLeave = (e: React.MouseEvent<HTMLTableRowElement>, selected: boolean) => {
                       e.currentTarget.style.boxShadow = selected ? 'inset 4px 0 0 #00cc44' : 'none'
@@ -30157,7 +30157,7 @@ onKeyPress={(e) => {
                           boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
                         }}
                       >
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: text }}>
                           <thead>
                             <tr style={{ backgroundColor: headerBg, color: '#ffffff' }}>
                               <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, ...thRule }}>
@@ -30196,6 +30196,7 @@ onKeyPress={(e) => {
                               }}
                               style={{
                                 backgroundColor: zebraA,
+                                color: text,
                                 cursor: 'pointer',
                                 transition: 'box-shadow 0.1s ease',
                                 ...(!pecaBibliotecaForm.categoriaId
@@ -30280,12 +30281,12 @@ onKeyPress={(e) => {
                       </button>
                     </div>
                     {(() => {
-                      const rowLine = '#a8a8a8'
+                      const rowLine = '#555555'
                       const headerBg = '#454545'
-                      const zebraA = '#f2f2f2'
-                      const zebraB = '#d9d9d9'
-                      const text = '#111111'
-                      const muted = '#4a4a4a'
+                      const zebraA = '#2a2a2a'
+                      const zebraB = '#3a3a3a'
+                      const text = '#ffffff'
+                      const muted = '#ffffff'
                       const tdRule: React.CSSProperties = { borderBottom: `1px solid ${rowLine}` }
                       const thRule: React.CSSProperties = { borderBottom: '2px solid #1a1a1a' }
                       const subsOrdenadas = subcategoriasPecas
@@ -30294,7 +30295,7 @@ onKeyPress={(e) => {
                           (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
                         )
                       const rowHover = (e: React.MouseEvent<HTMLTableRowElement>) => {
-                        e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(0, 0, 0, 0.2)'
+                        e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(255, 255, 255, 0.22)'
                       }
                       const rowLeave = (e: React.MouseEvent<HTMLTableRowElement>, selected: boolean) => {
                         e.currentTarget.style.boxShadow = selected ? 'inset 4px 0 0 #00cc44' : 'none'
@@ -30310,7 +30311,7 @@ onKeyPress={(e) => {
                             boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
                           }}
                         >
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: text }}>
                             <thead>
                               <tr style={{ backgroundColor: headerBg, color: '#ffffff' }}>
                                 <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, ...thRule }}>
@@ -30343,6 +30344,7 @@ onKeyPress={(e) => {
                                 }}
                                 style={{
                                   backgroundColor: zebraA,
+                                  color: text,
                                   cursor: 'pointer',
                                   transition: 'box-shadow 0.1s ease',
                                   ...(!pecaBibliotecaForm.subcategoriaId ? { boxShadow: 'inset 4px 0 0 #00cc44' } : {}),
@@ -30355,7 +30357,7 @@ onKeyPress={(e) => {
                                 </td>
                               </tr>
                               {subsOrdenadas.length === 0 ? (
-                                <tr style={{ backgroundColor: zebraB }}>
+                                <tr style={{ backgroundColor: zebraB, color: text }}>
                                   <td style={{ padding: '10px 12px', color: muted, fontStyle: 'italic', ...tdRule }}>
                                     {safeT?.nenhumaSubcategoria || 'Nenhuma subcategoria cadastrada'}
                                   </td>
@@ -31432,17 +31434,17 @@ onKeyPress={(e) => {
                           .sort((a, b) =>
                             (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
                           )
-                        /* Estilo Excel (como na imagem): cabeçalhos escuros com texto branco; linhas de dados em zebra cinza claro / cinza médio e texto preto. */
-                        const rowLine = '#a8a8a8'
+                        /* Zebra: cinza mais escuro / cinza um pouco mais claro; texto branco nas linhas. Cabeçalhos permanecem escuros. */
+                        const rowLine = '#555555'
                         const excelHeaderBg = '#2f2f2f'
                         const excelSubHeadBg = '#454545'
-                        const excelZebraA = '#f2f2f2'
-                        const excelZebraB = '#d9d9d9'
-                        const excelText = '#111111'
-                        const excelMuted = '#4a4a4a'
-                        const excelCardBg = catIndex % 2 === 0 ? '#e8e8e8' : '#dcdcdc'
+                        const excelZebraA = '#2a2a2a'
+                        const excelZebraB = '#3a3a3a'
+                        const excelText = '#ffffff'
+                        const excelMuted = '#ffffff'
+                        const excelCardBg = catIndex % 2 === 0 ? '#242424' : '#2c2c2c'
                         const onRowEnter = (e: React.MouseEvent<HTMLTableRowElement>) => {
-                          e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(0, 0, 0, 0.2)'
+                          e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(255, 255, 255, 0.22)'
                         }
                         const onRowLeave = (e: React.MouseEvent<HTMLTableRowElement>) => {
                           e.currentTarget.style.boxShadow = 'none'
@@ -31450,9 +31452,9 @@ onKeyPress={(e) => {
                         const thRule = { borderBottom: '2px solid #1a1a1a' } as React.CSSProperties
                         const tdRule = { borderBottom: `1px solid ${rowLine}` } as React.CSSProperties
                         const inputLight: React.CSSProperties = {
-                          backgroundColor: '#ffffff',
-                          color: '#111111',
-                          border: '1px solid #888888',
+                          backgroundColor: '#1a1a1a',
+                          color: '#ffffff',
+                          border: '1px solid #707070',
                           borderRadius: '2px',
                         }
                         return (
