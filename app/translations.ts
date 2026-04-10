@@ -1343,6 +1343,8 @@ export const translations = {
     nomePecaBibliotecaPlaceholder: 'Ex: Filtro de Óleo',
     codigoPecaBiblioteca: 'Código',
     codigoPecaBibliotecaPlaceholder: 'Ex: FO-123-ABC',
+    codigoPecaBibliotecaDuplicado:
+      'Já existe uma peça com este código. Indique outro código.',
     precoPecaBiblioteca: 'Preço (€)',
     precoPecaBibliotecaPlaceholder: 'Ex: 29.99',
     opcional: '(Opcional)',
@@ -3444,6 +3446,8 @@ export const translations = {
     nomePecaBibliotecaPlaceholder: 'Ej: Filtro de Aceite',
     codigoPecaBiblioteca: 'Código',
     codigoPecaBibliotecaPlaceholder: 'Ej: FO-123-ABC',
+    codigoPecaBibliotecaDuplicado:
+      'Ya existe una pieza con este código. Indique otro código.',
     precoPecaBiblioteca: 'Precio (€)',
     precoPecaBibliotecaPlaceholder: 'Ej: 29.99',
     opcional: '(Opcional)',
@@ -5457,6 +5461,8 @@ export const translations = {
     nomePecaBibliotecaPlaceholder: 'Ex: Filtre à Huile',
     codigoPecaBiblioteca: 'Code',
     codigoPecaBibliotecaPlaceholder: 'Ex: FO-123-ABC',
+    codigoPecaBibliotecaDuplicado:
+      'Une pièce avec ce code existe déjà. Utilisez un autre code.',
     precoPecaBiblioteca: 'Prix (€)',
     precoPecaBibliotecaPlaceholder: 'Ex: 29.99',
     opcional: '(Optionnel)',
@@ -7477,6 +7483,8 @@ export const translations = {
     nomePecaBibliotecaPlaceholder: 'Es: Filtro Olio',
     codigoPecaBiblioteca: 'Codice',
     codigoPecaBibliotecaPlaceholder: 'Es: FO-123-ABC',
+    codigoPecaBibliotecaDuplicado:
+      'Esiste già un pezzo con questo codice. Usa un altro codice.',
     precoPecaBiblioteca: 'Prezzo (€)',
     precoPecaBibliotecaPlaceholder: 'Es: 29.99',
     opcional: '(Opzionale)',
@@ -9511,6 +9519,8 @@ export const translations = {
     nomePecaBibliotecaPlaceholder: 'Z.B: Ölfilter',
     codigoPecaBiblioteca: 'Code',
     codigoPecaBibliotecaPlaceholder: 'Z.B: FO-123-ABC',
+    codigoPecaBibliotecaDuplicado:
+      'Es gibt bereits ein Teil mit diesem Code. Bitte einen anderen Code verwenden.',
     precoPecaBiblioteca: 'Preis (€)',
     precoPecaBibliotecaPlaceholder: 'Z.B: 29.99',
     opcional: '(Optional)',
@@ -11525,6 +11535,8 @@ export const translations = {
     nomePecaBibliotecaPlaceholder: 'Ex: Oil Filter',
     codigoPecaBiblioteca: 'Code',
     codigoPecaBibliotecaPlaceholder: 'Ex: FO-123-ABC',
+    codigoPecaBibliotecaDuplicado:
+      'A part with this code already exists. Please use a different code.',
     precoPecaBiblioteca: 'Price (€)',
     precoPecaBibliotecaPlaceholder: 'Ex: 29.99',
     opcional: '(Optional)',

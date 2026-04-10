@@ -16327,9 +16327,22 @@ export default function Dashboard() {
   }
 
   // Funções para Biblioteca de Peças
+  /** true se outra peça já usa o mesmo código (comparação sem espaços e sem distinção maiúsculas/minúsculas). */
+  const pecaBibliotecaCodigoDuplicado = (codigo: string, excluirPecaId?: string) => {
+    const c = (codigo || '').trim().toLowerCase()
+    if (!c) return false
+    return pecasBiblioteca.some(
+      (p) => p.id !== excluirPecaId && (p.codigo || '').trim().toLowerCase() === c
+    )
+  }
+
   const handleAddPecaBiblioteca = () => {
     if (!pecaBibliotecaForm.nome || !pecaBibliotecaForm.codigo) {
       alert(t.fillAllFields || 'Preencha todos os campos obrigatórios')
+      return
+    }
+    if (pecaBibliotecaCodigoDuplicado(pecaBibliotecaForm.codigo, editingPecaBiblioteca?.id)) {
+      alert(t.codigoPecaBibliotecaDuplicado || 'Já existe uma peça com este código. Indique outro código.')
       return
     }
 
@@ -30530,6 +30543,13 @@ onKeyPress={(e) => {
                     onClick={() => {
                       if (!pecaBibliotecaForm.nome || !pecaBibliotecaForm.codigo) {
                         alert(safeT?.fillAllFields || 'Preencha todos os campos obrigatórios!')
+                        return
+                      }
+                      if (pecaBibliotecaCodigoDuplicado(pecaBibliotecaForm.codigo, editingPecaBiblioteca?.id)) {
+                        alert(
+                          safeT?.codigoPecaBibliotecaDuplicado ||
+                            'Já existe uma peça com este código. Indique outro código.'
+                        )
                         return
                       }
                       if (editingPecaBiblioteca) {
@@ -57196,6 +57216,13 @@ A1;Peça exemplo;10`}
                   <button className="btn-primary" onClick={() => {
                     if (!pecaBibliotecaForm.nome || !pecaBibliotecaForm.codigo) {
                       alert(safeT?.fillAllFields || 'Preencha todos os campos obrigatórios!')
+                      return
+                    }
+                    if (pecaBibliotecaCodigoDuplicado(pecaBibliotecaForm.codigo, editingPecaBiblioteca?.id)) {
+                      alert(
+                        safeT?.codigoPecaBibliotecaDuplicado ||
+                          'Já existe uma peça com este código. Indique outro código.'
+                      )
                       return
                     }
                     if (editingPecaBiblioteca) {
