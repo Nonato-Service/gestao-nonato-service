@@ -30116,13 +30116,14 @@ onKeyPress={(e) => {
                   ></textarea>
                 </div>
 
-                {/* Grupo (Categoria) */}
+                {/* Grupo (Categoria) — lista tipo planilha (zebrada), igual à aba Gerenciar Categorias */}
                 <div style={{ marginBottom: '15px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                     <label style={{ display: 'block', fontSize: '14px' }}>
                       {safeT?.categoriaPecaBiblioteca || 'Categoria'}
                     </label>
                     <button
+                      type="button"
                       className="btn-primary"
                       onClick={() => setShowNovaCategoriaForm(true)}
                       style={{ padding: '5px 10px', fontSize: '11px', whiteSpace: 'nowrap' }}
@@ -30130,38 +30131,147 @@ onKeyPress={(e) => {
                       + {safeT?.novaCategoria || 'Nova Categoria'}
                     </button>
                   </div>
-                  <select
-                    value={pecaBibliotecaForm.categoriaId || ''}
-                    onChange={(e) => {
-                      const categoriaId = e.target.value
-                      const categoria = categoriasPecas.find(c => c.id === categoriaId)
-                      setUltimoGrupoSelecionado(categoriaId) // Salvar o grupo selecionado
-                      setPecaBibliotecaForm({ 
-                        ...pecaBibliotecaForm, 
-                        categoriaId: categoriaId,
-                        categoria: categoria?.nome || '',
-                        subcategoriaId: '', // Limpar subcategoria quando mudar grupo
-                        subcategoria: ''
-                      })
-                      setUltimoSubgrupoSelecionado('') // Limpar subgrupo quando mudar grupo
-                    }}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                  >
-                    <option value="">{safeT?.selecioneCategoria || 'Selecione uma categoria'}</option>
-                    {categoriasPecasAlfabeto.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.nome}</option>
-                    ))}
-                  </select>
+                  {(() => {
+                    const rowLine = '#a8a8a8'
+                    const headerBg = '#2f2f2f'
+                    const zebraA = '#f2f2f2'
+                    const zebraB = '#d9d9d9'
+                    const text = '#111111'
+                    const muted = '#4a4a4a'
+                    const tdRule: React.CSSProperties = { borderBottom: `1px solid ${rowLine}` }
+                    const thRule: React.CSSProperties = { borderBottom: '2px solid #1a1a1a' }
+                    const rowHover = (e: React.MouseEvent<HTMLTableRowElement>) => {
+                      e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(0, 0, 0, 0.2)'
+                    }
+                    const rowLeave = (e: React.MouseEvent<HTMLTableRowElement>, selected: boolean) => {
+                      e.currentTarget.style.boxShadow = selected ? 'inset 4px 0 0 #00cc44' : 'none'
+                    }
+                    return (
+                      <div
+                        style={{
+                          border: `1px solid ${rowLine}`,
+                          borderRadius: '2px',
+                          overflow: 'hidden',
+                          maxHeight: '240px',
+                          overflowY: 'auto',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                        }}
+                      >
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                          <thead>
+                            <tr style={{ backgroundColor: headerBg, color: '#ffffff' }}>
+                              <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, ...thRule }}>
+                                {safeT?.categoriaPecaBiblioteca || 'Categoria'}
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault()
+                                  setUltimoGrupoSelecionado('')
+                                  setUltimoSubgrupoSelecionado('')
+                                  setPecaBibliotecaForm({
+                                    ...pecaBibliotecaForm,
+                                    categoriaId: '',
+                                    categoria: '',
+                                    subcategoriaId: '',
+                                    subcategoria: '',
+                                  })
+                                }
+                              }}
+                              onClick={() => {
+                                setUltimoGrupoSelecionado('')
+                                setUltimoSubgrupoSelecionado('')
+                                setPecaBibliotecaForm({
+                                  ...pecaBibliotecaForm,
+                                  categoriaId: '',
+                                  categoria: '',
+                                  subcategoriaId: '',
+                                  subcategoria: '',
+                                })
+                              }}
+                              style={{
+                                backgroundColor: zebraA,
+                                cursor: 'pointer',
+                                transition: 'box-shadow 0.1s ease',
+                                ...(!pecaBibliotecaForm.categoriaId
+                                  ? { boxShadow: 'inset 4px 0 0 #00cc44' }
+                                  : {}),
+                              }}
+                              onMouseEnter={rowHover}
+                              onMouseLeave={(e) => rowLeave(e, !pecaBibliotecaForm.categoriaId)}
+                            >
+                              <td style={{ padding: '10px 12px', color: muted, fontStyle: 'italic', ...tdRule }}>
+                                {safeT?.selecioneCategoria || 'Selecione uma categoria'}
+                              </td>
+                            </tr>
+                            {categoriasPecasAlfabeto.map((cat, idx) => {
+                              const rowBg = idx % 2 === 0 ? zebraB : zebraA
+                              const selected = pecaBibliotecaForm.categoriaId === cat.id
+                              return (
+                                <tr
+                                  key={cat.id}
+                                  role="button"
+                                  tabIndex={0}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                      e.preventDefault()
+                                      setUltimoGrupoSelecionado(cat.id)
+                                      setUltimoSubgrupoSelecionado('')
+                                      setPecaBibliotecaForm({
+                                        ...pecaBibliotecaForm,
+                                        categoriaId: cat.id,
+                                        categoria: cat.nome,
+                                        subcategoriaId: '',
+                                        subcategoria: '',
+                                      })
+                                    }
+                                  }}
+                                  onClick={() => {
+                                    setUltimoGrupoSelecionado(cat.id)
+                                    setUltimoSubgrupoSelecionado('')
+                                    setPecaBibliotecaForm({
+                                      ...pecaBibliotecaForm,
+                                      categoriaId: cat.id,
+                                      categoria: cat.nome,
+                                      subcategoriaId: '',
+                                      subcategoria: '',
+                                    })
+                                  }}
+                                  style={{
+                                    backgroundColor: rowBg,
+                                    color: text,
+                                    cursor: 'pointer',
+                                    transition: 'box-shadow 0.1s ease',
+                                    ...(selected ? { boxShadow: 'inset 4px 0 0 #00cc44', fontWeight: 700 } : {}),
+                                  }}
+                                  onMouseEnter={rowHover}
+                                  onMouseLeave={(e) => rowLeave(e, selected)}
+                                >
+                                  <td style={{ padding: '10px 12px', ...tdRule }}>{cat.nome}</td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )
+                  })()}
                 </div>
 
-                {/* Subgrupo (Subcategoria) */}
+                {/* Subgrupo (Subcategoria) — mesma lista zebrada */}
                 {pecaBibliotecaForm.categoriaId && (
                   <div style={{ marginBottom: '15px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <label style={{ display: 'block', fontSize: '14px' }}>
                         {safeT?.subcategoriaPecaBiblioteca || 'Subcategoria'}
                       </label>
                       <button
+                        type="button"
                         className="btn-primary"
                         onClick={() => setShowNovaSubcategoriaForm(true)}
                         style={{ padding: '5px 10px', fontSize: '11px', whiteSpace: 'nowrap' }}
@@ -30169,30 +30279,135 @@ onKeyPress={(e) => {
                         + {safeT?.novaSubcategoria || 'Nova Subcategoria'}
                       </button>
                     </div>
-                    <select
-                      value={pecaBibliotecaForm.subcategoriaId || ''}
-                      onChange={(e) => {
-                        const subcategoriaId = e.target.value
-                        const subcategoria = subcategoriasPecas.find(s => s.id === subcategoriaId)
-                        setUltimoSubgrupoSelecionado(subcategoriaId) // Salvar o subgrupo selecionado
-                        setPecaBibliotecaForm({ 
-                          ...pecaBibliotecaForm, 
-                          subcategoriaId: subcategoriaId,
-                          subcategoria: subcategoria?.nome || ''
-                        })
-                      }}
-                      style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    >
-                      <option value="">{safeT?.selecioneSubcategoria || 'Selecione uma subcategoria'}</option>
-                      {subcategoriasPecas
-                        .filter(sub => sub.categoriaId === pecaBibliotecaForm.categoriaId)
+                    {(() => {
+                      const rowLine = '#a8a8a8'
+                      const headerBg = '#454545'
+                      const zebraA = '#f2f2f2'
+                      const zebraB = '#d9d9d9'
+                      const text = '#111111'
+                      const muted = '#4a4a4a'
+                      const tdRule: React.CSSProperties = { borderBottom: `1px solid ${rowLine}` }
+                      const thRule: React.CSSProperties = { borderBottom: '2px solid #1a1a1a' }
+                      const subsOrdenadas = subcategoriasPecas
+                        .filter((sub) => sub.categoriaId === pecaBibliotecaForm.categoriaId)
                         .sort((a, b) =>
                           (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
                         )
-                        .map(sub => (
-                          <option key={sub.id} value={sub.id}>{sub.nome}</option>
-                        ))}
-                    </select>
+                      const rowHover = (e: React.MouseEvent<HTMLTableRowElement>) => {
+                        e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(0, 0, 0, 0.2)'
+                      }
+                      const rowLeave = (e: React.MouseEvent<HTMLTableRowElement>, selected: boolean) => {
+                        e.currentTarget.style.boxShadow = selected ? 'inset 4px 0 0 #00cc44' : 'none'
+                      }
+                      return (
+                        <div
+                          style={{
+                            border: `1px solid ${rowLine}`,
+                            borderRadius: '2px',
+                            overflow: 'hidden',
+                            maxHeight: '240px',
+                            overflowY: 'auto',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                          }}
+                        >
+                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                            <thead>
+                              <tr style={{ backgroundColor: headerBg, color: '#ffffff' }}>
+                                <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, ...thRule }}>
+                                  {safeT?.subcategoriaPecaBiblioteca || 'Subcategoria'}
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault()
+                                    setUltimoSubgrupoSelecionado('')
+                                    setPecaBibliotecaForm({
+                                      ...pecaBibliotecaForm,
+                                      subcategoriaId: '',
+                                      subcategoria: '',
+                                    })
+                                  }
+                                }}
+                                onClick={() => {
+                                  setUltimoSubgrupoSelecionado('')
+                                  setPecaBibliotecaForm({
+                                    ...pecaBibliotecaForm,
+                                    subcategoriaId: '',
+                                    subcategoria: '',
+                                  })
+                                }}
+                                style={{
+                                  backgroundColor: zebraA,
+                                  cursor: 'pointer',
+                                  transition: 'box-shadow 0.1s ease',
+                                  ...(!pecaBibliotecaForm.subcategoriaId ? { boxShadow: 'inset 4px 0 0 #00cc44' } : {}),
+                                }}
+                                onMouseEnter={rowHover}
+                                onMouseLeave={(e) => rowLeave(e, !pecaBibliotecaForm.subcategoriaId)}
+                              >
+                                <td style={{ padding: '10px 12px', color: muted, fontStyle: 'italic', ...tdRule }}>
+                                  {safeT?.selecioneSubcategoria || 'Selecione uma subcategoria'}
+                                </td>
+                              </tr>
+                              {subsOrdenadas.length === 0 ? (
+                                <tr style={{ backgroundColor: zebraB }}>
+                                  <td style={{ padding: '10px 12px', color: muted, fontStyle: 'italic', ...tdRule }}>
+                                    {safeT?.nenhumaSubcategoria || 'Nenhuma subcategoria cadastrada'}
+                                  </td>
+                                </tr>
+                              ) : (
+                                subsOrdenadas.map((sub, idx) => {
+                                  const rowBg = idx % 2 === 0 ? zebraB : zebraA
+                                  const selected = pecaBibliotecaForm.subcategoriaId === sub.id
+                                  return (
+                                    <tr
+                                      key={sub.id}
+                                      role="button"
+                                      tabIndex={0}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                          e.preventDefault()
+                                          setUltimoSubgrupoSelecionado(sub.id)
+                                          setPecaBibliotecaForm({
+                                            ...pecaBibliotecaForm,
+                                            subcategoriaId: sub.id,
+                                            subcategoria: sub.nome,
+                                          })
+                                        }
+                                      }}
+                                      onClick={() => {
+                                        setUltimoSubgrupoSelecionado(sub.id)
+                                        setPecaBibliotecaForm({
+                                          ...pecaBibliotecaForm,
+                                          subcategoriaId: sub.id,
+                                          subcategoria: sub.nome,
+                                        })
+                                      }}
+                                      style={{
+                                        backgroundColor: rowBg,
+                                        color: text,
+                                        cursor: 'pointer',
+                                        transition: 'box-shadow 0.1s ease',
+                                        ...(selected ? { boxShadow: 'inset 4px 0 0 #00cc44', fontWeight: 700 } : {}),
+                                      }}
+                                      onMouseEnter={rowHover}
+                                      onMouseLeave={(e) => rowLeave(e, selected)}
+                                    >
+                                      <td style={{ padding: '10px 12px', ...tdRule }}>{sub.nome}</td>
+                                    </tr>
+                                  )
+                                })
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      )
+                    })()}
                   </div>
                 )}
                 
