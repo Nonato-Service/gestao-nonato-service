@@ -680,16 +680,33 @@ type RegraClassificacaoPeca = {
 
 /** Categoria/subcategoria válidas para manter no próximo cadastro de peça (ex.: mesma categoria em sequência). */
 function normalizarUltimaSelecaoBiblioteca(
-  form: Pick<PecaBiblioteca, 'categoriaId' | 'subcategoriaId'>,
+  form: Pick<PecaBiblioteca, 'categoriaId' | 'subcategoriaId' | 'categoria' | 'subcategoria'>,
   categorias: CategoriaPeca[],
   subcategorias: SubcategoriaPeca[]
 ): { categoriaId: string; subcategoriaId: string } {
-  const catId = form.categoriaId && categorias.some((c) => c.id === form.categoriaId) ? form.categoriaId : ''
+  let catId =
+    form.categoriaId && categorias.some((c) => c.id === form.categoriaId) ? form.categoriaId : ''
+
+  if (!catId && form.categoria?.trim()) {
+    const alvo = form.categoria.trim().toLowerCase()
+    const porNome = categorias.find((c) => (c.nome || '').trim().toLowerCase() === alvo)
+    if (porNome) catId = porNome.id
+  }
+
   let subId = ''
   if (catId && form.subcategoriaId) {
     const s = subcategorias.find((x) => x.id === form.subcategoriaId && x.categoriaId === catId)
     if (s) subId = s.id
   }
+
+  if (!subId && catId && form.subcategoria?.trim()) {
+    const alvo = form.subcategoria.trim().toLowerCase()
+    const porNomeSub = subcategorias.find(
+      (x) => x.categoriaId === catId && (x.nome || '').trim().toLowerCase() === alvo
+    )
+    if (porNomeSub) subId = porNomeSub.id
+  }
+
   return { categoriaId: catId, subcategoriaId: subId }
 }
 
@@ -16419,9 +16436,21 @@ export default function Dashboard() {
     setSalvarPecaBibliotecaVoltaParaImportacao(false)
     setEditingPecaBiblioteca(peca)
     setPecaBibliotecaImagemUrlDraft('')
-    setPecaBibliotecaForm({ ...peca })
-    setUltimoGrupoSelecionado(peca.categoriaId || '')
-    setUltimoSubgrupoSelecionado(peca.subcategoriaId || '')
+    const resolv = normalizarUltimaSelecaoBiblioteca(peca, categoriasPecas, subcategoriasPecas)
+    const catNome = resolv.categoriaId ? categoriasPecas.find((c) => c.id === resolv.categoriaId)?.nome : undefined
+    const subNome =
+      resolv.subcategoriaId
+        ? subcategoriasPecas.find((s) => s.id === resolv.subcategoriaId)?.nome
+        : undefined
+    setPecaBibliotecaForm({
+      ...peca,
+      categoriaId: resolv.categoriaId || peca.categoriaId || '',
+      categoria: catNome || peca.categoria || '',
+      subcategoriaId: resolv.subcategoriaId || peca.subcategoriaId || '',
+      subcategoria: subNome || peca.subcategoria || '',
+    })
+    setUltimoGrupoSelecionado(resolv.categoriaId)
+    setUltimoSubgrupoSelecionado(resolv.subcategoriaId)
     setPecaBibliotecaPickerCategoriaAberto(false)
     setPecaBibliotecaPickerSubcategoriaAberto(false)
     setShowBibliotecaPecasForm(true)
