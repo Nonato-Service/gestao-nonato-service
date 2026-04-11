@@ -771,6 +771,8 @@ function sanitizarPecaBibliotecaImportacaoFlag(peca: PecaBiblioteca): PecaBiblio
 }
 
 const BIBLIOTECA_PECAS_ULTIMA_SELECAO_KEY = 'nonato-biblioteca-pecas-ultima-selecao'
+/** Valor do `<select>` de grupo na biblioteca: só peças sem `categoriaId` (continuam a aparecer na vista normal quando o filtro é «todos»). */
+const BIBLIOTECA_FILTRO_SEM_CATEGORIA = '__sem_categoria__'
 
 type PasswordEntry = {
   id: string
@@ -31260,12 +31262,35 @@ onKeyPress={(e) => {
                       style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                     >
                       <option value="">{safeT?.todosGrupos || 'Todos os grupos'}</option>
+                      <option value={BIBLIOTECA_FILTRO_SEM_CATEGORIA}>
+                        {(safeT as any).bibliotecaFiltroApenasSemCategoria || 'Apenas peças sem categoria'}
+                      </option>
                       {categoriasPecasAlfabeto.map(cat => (
                         <option key={cat.id} value={cat.id}>{cat.nome}</option>
                       ))}
                     </select>
                   </div>
-                  {filtroGrupoBiblioteca ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFiltroGrupoBiblioteca(BIBLIOTECA_FILTRO_SEM_CATEGORIA)
+                      setFiltroSubgrupoBiblioteca('')
+                    }}
+                    style={{
+                      padding: '8px 12px',
+                      fontSize: '12px',
+                      whiteSpace: 'nowrap',
+                      cursor: 'pointer',
+                      borderRadius: '6px',
+                      border: '1px solid rgba(255, 180, 90, 0.55)',
+                      backgroundColor: filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA ? 'rgba(255, 140, 40, 0.25)' : 'rgba(50, 36, 18, 0.75)',
+                      color: '#ffd4a8',
+                      fontWeight: filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA ? 700 : 500,
+                    }}
+                  >
+                    {(safeT as any).bibliotecaBotaoIrSemCategoria || 'Ver só sem categoria'}
+                  </button>
+                  {filtroGrupoBiblioteca && filtroGrupoBiblioteca !== BIBLIOTECA_FILTRO_SEM_CATEGORIA ? (
                     <div style={{ minWidth: '200px' }}>
                       <select
                         value={filtroSubgrupoBiblioteca || ''}
@@ -31318,8 +31343,13 @@ onKeyPress={(e) => {
                 {(() => {
                   const visBiblioteca =
                     somenteLeituraBiblioteca && visualizacaoBiblioteca === 'lista' ? 'grid' : visualizacaoBiblioteca
+                  const isFiltroSoSemCategoria = filtroGrupoBiblioteca === BIBLIOTECA_FILTRO_SEM_CATEGORIA
                   const passaFiltroBiblioteca = (peca: PecaBiblioteca) => {
-                    if (filtroGrupoBiblioteca && peca.categoriaId !== filtroGrupoBiblioteca) return false
+                    if (isFiltroSoSemCategoria) {
+                      if (peca.categoriaId) return false
+                    } else if (filtroGrupoBiblioteca && peca.categoriaId !== filtroGrupoBiblioteca) {
+                      return false
+                    }
                     if (filtroSubgrupoBiblioteca && peca.subcategoriaId !== filtroSubgrupoBiblioteca) return false
                     const q = buscaCodigoBiblioteca.trim().toLowerCase()
                     if (q) {
@@ -31380,15 +31410,65 @@ onKeyPress={(e) => {
                             {safeT?.semImagem || 'Sem Imagem'}
                           </div>
                         )}
-                        <h4 style={{ marginBottom: '5px', fontSize: '16px', color: '#00ff00' }}>{peca.nome}</h4>
-                        <p style={{ fontSize: '13px', opacity: 0.8, marginBottom: '3px' }}>
-                          {safeT?.codigoPecaBiblioteca || 'Código'}: {peca.codigo}
-                        </p>
-                        {grupoNome && (
-                          <p style={{ fontSize: '12px', opacity: 0.7, color: '#00ff00' }}>
-                            {safeT?.categoriaPecaBiblioteca || 'Grupo'}: {grupoNome}
-                          </p>
-                        )}
+                        <h4 style={{ marginBottom: '8px', fontSize: '16px', color: '#00ff00' }}>{peca.nome}</h4>
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '8px',
+                            marginBottom: '4px',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <span
+                            title={`${safeT?.codigoPecaBiblioteca || 'Código'}: ${peca.codigo || ''}`}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '6px 14px',
+                              borderRadius: '999px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              lineHeight: 1.25,
+                              backgroundColor: 'rgba(25, 55, 95, 0.55)',
+                              border: '1px solid rgba(100, 185, 255, 0.5)',
+                              color: '#d0ecff',
+                              maxWidth: '100%',
+                              boxSizing: 'border-box',
+                            }}
+                          >
+                            <span style={{ opacity: 0.82, fontWeight: 500, fontSize: '11px' }}>
+                              {safeT?.codigoPecaBiblioteca || 'Código'}
+                            </span>
+                            <span style={{ wordBreak: 'break-all' }}>{peca.codigo || '—'}</span>
+                          </span>
+                          <span
+                            title={`${safeT?.categoriaPecaBiblioteca || 'Grupo'}: ${grupoNome || (safeT?.bibliotecaGrupoSemCategoria || 'Sem categoria')}`}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '6px 14px',
+                              borderRadius: '999px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              lineHeight: 1.25,
+                              backgroundColor: grupoNome ? 'rgba(0, 70, 32, 0.5)' : 'rgba(70, 48, 18, 0.55)',
+                              border: grupoNome ? '1px solid rgba(0, 230, 110, 0.42)' : '1px solid rgba(255, 175, 90, 0.45)',
+                              color: grupoNome ? '#c8ffd8' : '#ffd9b0',
+                              maxWidth: '100%',
+                              boxSizing: 'border-box',
+                            }}
+                          >
+                            <span style={{ opacity: 0.82, fontWeight: 500, fontSize: '11px' }}>
+                              {safeT?.categoriaPecaBiblioteca || 'Grupo'}
+                            </span>
+                            <span style={{ wordBreak: 'break-word' }}>
+                              {grupoNome || safeT?.bibliotecaGrupoSemCategoria || '—'}
+                            </span>
+                          </span>
+                        </div>
                         {!somenteLeituraBiblioteca ? (
                         <div
                           style={{ display: 'flex', gap: '6px', marginTop: '12px', flexWrap: 'wrap' }}
@@ -31722,6 +31802,32 @@ onKeyPress={(e) => {
                         if (pecasCatalogoFiltradas.some((p) => p.categoriaId === c.id)) ordemIds.push(c.id)
                       }
                       const semCat = pecasCatalogoFiltradas.filter((p) => !p.categoriaId)
+                      if (isFiltroSoSemCategoria) {
+                        return (
+                          <>
+                            {!somenteLeituraBiblioteca && painelClassificacaoLote}
+                            <div
+                              style={{
+                                padding: '16px',
+                                borderRadius: '12px',
+                                border: '1px solid rgba(255, 180, 100, 0.48)',
+                                backgroundColor: 'rgba(48, 34, 14, 0.55)',
+                              }}
+                            >
+                              <h3 style={{ margin: '0 0 8px', fontSize: '16px', color: '#ffc878', fontWeight: 700 }}>
+                                {safeT?.bibliotecaGrupoSemCategoria || 'Sem categoria'}
+                              </h3>
+                              <p style={{ margin: '0 0 14px', fontSize: '12px', color: 'rgba(255, 230, 200, 0.88)', lineHeight: 1.45 }}>
+                                {(safeT as any).bibliotecaSomenteExibindoSemCat ||
+                                  'A mostrar só peças sem grupo — as outras continuam na vista «Todos os grupos».'}
+                              </p>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+                                {semCat.map((peca) => renderPecaBibliotecaGridCell(peca))}
+                              </div>
+                            </div>
+                          </>
+                        )
+                      }
                       return (
                         <>
                           {!somenteLeituraBiblioteca && painelClassificacaoLote}
@@ -31739,8 +31845,19 @@ onKeyPress={(e) => {
                               )
                             })}
                             {semCat.length > 0 ? (
-                              <div key="__sem__">
-                                <h3 style={{ margin: '0 0 10px', fontSize: '15px', color: '#9fd89f', fontWeight: 600 }}>
+                              <div
+                                key="__sem__"
+                                style={{
+                                  marginTop: ordemIds.length > 0 ? 12 : 0,
+                                  paddingTop: ordemIds.length > 0 ? 24 : 0,
+                                  borderTop: ordemIds.length > 0 ? '2px dashed rgba(255, 170, 90, 0.48)' : 'none',
+                                  padding: '16px',
+                                  borderRadius: '12px',
+                                  backgroundColor: 'rgba(42, 30, 12, 0.45)',
+                                  border: '1px solid rgba(255, 160, 80, 0.28)',
+                                }}
+                              >
+                                <h3 style={{ margin: '0 0 10px', fontSize: '15px', color: '#e8b060', fontWeight: 700 }}>
                                   {safeT?.bibliotecaGrupoSemCategoria || 'Sem categoria'}
                                 </h3>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
@@ -31879,8 +31996,50 @@ onKeyPress={(e) => {
                                     )}
                                   </td>
                                   <td style={{ padding: '10px 14px', verticalAlign: 'middle', ...bibTdRule }}>{peca.nome}</td>
-                                  <td style={{ padding: '10px 14px', verticalAlign: 'middle', color: bibMuted, ...bibTdRule }}>{peca.codigo || '—'}</td>
-                                  <td style={{ padding: '10px 14px', verticalAlign: 'middle', ...bibTdRule }}>{grupoNome || '—'}</td>
+                                  <td style={{ padding: '10px 14px', verticalAlign: 'middle', ...bibTdRule }}>
+                                    <span
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        padding: '5px 12px',
+                                        borderRadius: '999px',
+                                        fontSize: '12px',
+                                        fontWeight: 600,
+                                        backgroundColor: 'rgba(25, 55, 95, 0.55)',
+                                        border: '1px solid rgba(100, 185, 255, 0.5)',
+                                        color: '#d0ecff',
+                                        maxWidth: '100%',
+                                      }}
+                                    >
+                                      <span style={{ opacity: 0.8, fontWeight: 500, fontSize: '10px' }}>
+                                        {safeT?.codigoPecaBiblioteca || 'Código'}
+                                      </span>
+                                      <span>{peca.codigo || '—'}</span>
+                                    </span>
+                                  </td>
+                                  <td style={{ padding: '10px 14px', verticalAlign: 'middle', ...bibTdRule }}>
+                                    <span
+                                      style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        padding: '5px 12px',
+                                        borderRadius: '999px',
+                                        fontSize: '12px',
+                                        fontWeight: 600,
+                                        backgroundColor: grupoNome ? 'rgba(0, 70, 32, 0.5)' : 'rgba(70, 48, 18, 0.55)',
+                                        border: grupoNome ? '1px solid rgba(0, 230, 110, 0.42)' : '1px solid rgba(255, 175, 90, 0.45)',
+                                        color: grupoNome ? '#c8ffd8' : '#ffd9b0',
+                                        maxWidth: '100%',
+                                      }}
+                                    >
+                                      <span style={{ opacity: 0.8, fontWeight: 500, fontSize: '10px' }}>
+                                        {safeT?.categoriaPecaBiblioteca || 'Grupo'}
+                                      </span>
+                                      <span>{grupoNome || safeT?.bibliotecaGrupoSemCategoria || '—'}</span>
+                                    </span>
+                                  </td>
                                   <td style={{ padding: '10px 14px', verticalAlign: 'middle', ...bibTdRule }}>{peca.subcategoria || '—'}</td>
                                   <td style={{ padding: '10px 14px', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap', ...bibTdRule }}>
                                     {peca.preco ? `${peca.preco}€` : '—'}
