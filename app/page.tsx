@@ -30004,7 +30004,10 @@ onKeyPress={(e) => {
             </button>
             
             {showBibliotecaPecasForm && (
-              <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}>
+              <div
+                key={editingPecaBiblioteca?.id ? `peca-bib-edit-${editingPecaBiblioteca.id}` : 'peca-bib-nova'}
+                style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}
+              >
                 <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>
                   {editingPecaBiblioteca ? (safeT?.editPecaBiblioteca || 'Editar Peça') : (safeT?.novaPecaBiblioteca || 'Nova Peça')}
                 </h3>
@@ -30580,35 +30583,39 @@ onKeyPress={(e) => {
                         categoriasPecas,
                         subcategoriasPecas
                       )
+                      const voltaImportacaoAposSalvar = salvarPecaBibliotecaVoltaParaImportacao
                       setUltimoGrupoSelecionado(grupoMantido)
                       setUltimoSubgrupoSelecionado(subMantido)
-                      setShowBibliotecaPecasForm(false)
                       setEditingPecaBiblioteca(null)
                       const categoriaSelecionada = categoriasPecas.find(c => c.id === grupoMantido)
                       const subcategoriaSelecionada = subcategoriasPecas.find(s => s.id === subMantido)
-                      setPecaBibliotecaForm({ 
-                        id: '', 
-                        nome: '', 
-                        codigo: '', 
-                        preco: '', 
-                        descricao: '', 
-                        categoria: categoriaSelecionada?.nome || '', 
-                        categoriaId: grupoMantido, 
-                        subcategoria: subcategoriaSelecionada?.nome || '', 
-                        subcategoriaId: subMantido, 
-                        imagem: '', 
-                        dataCriacao: new Date().toISOString() 
+                      setPecaBibliotecaForm({
+                        id: '',
+                        nome: '',
+                        codigo: '',
+                        preco: '',
+                        descricao: '',
+                        categoria: categoriaSelecionada?.nome || '',
+                        categoriaId: grupoMantido,
+                        subcategoria: subcategoriaSelecionada?.nome || '',
+                        subcategoriaId: subMantido,
+                        imagem: '',
+                        dataCriacao: new Date().toISOString(),
+                        importacaoPendente: false,
                       })
                       setPecaBibliotecaImagemUrlDraft('')
                       setPecaBibliotecaPickerCategoriaAberto(false)
                       setPecaBibliotecaPickerSubcategoriaAberto(false)
-                      if (salvarPecaBibliotecaVoltaParaImportacao) {
-                        setSalvarPecaBibliotecaVoltaParaImportacao(false)
+                      setShowBibliotecaPecasForm(false)
+                      setSalvarPecaBibliotecaVoltaParaImportacao(false)
+                      if (voltaImportacaoAposSalvar) {
                         setAbaBibliotecaPecas('importacao')
                       } else {
                         navegarBibliotecaAposSalvarPeca(grupoMantido)
                       }
-                      alert(safeT?.saveSuccess || 'Peça salva com sucesso!')
+                      setTimeout(() => {
+                        alert(safeT?.saveSuccess || 'Peça salva com sucesso!')
+                      }, 0)
                     }} 
                     style={{ flex: 1, padding: '10px' }}
                   >
@@ -57526,9 +57533,9 @@ A1;Peça exemplo;10`}
                       categoriasPecas,
                       subcategoriasPecas
                     )
+                    const voltaImportacaoModal = salvarPecaBibliotecaVoltaParaImportacao
                     setUltimoGrupoSelecionado(gM)
                     setUltimoSubgrupoSelecionado(sM)
-                    setShowBibliotecaPecasForm(false)
                     setEditingPecaBiblioteca(null)
                     setPecaBibliotecaImagemUrlDraft('')
                     const catApos = categoriasPecas.find(c => c.id === gM)
@@ -57545,16 +57552,20 @@ A1;Peça exemplo;10`}
                       subcategoriaId: sM,
                       imagem: '',
                       dataCriacao: new Date().toISOString(),
+                      importacaoPendente: false,
                     })
                     setPecaBibliotecaPickerCategoriaAberto(false)
                     setPecaBibliotecaPickerSubcategoriaAberto(false)
-                    if (salvarPecaBibliotecaVoltaParaImportacao) {
-                      setSalvarPecaBibliotecaVoltaParaImportacao(false)
+                    setShowBibliotecaPecasForm(false)
+                    setSalvarPecaBibliotecaVoltaParaImportacao(false)
+                    if (voltaImportacaoModal) {
                       setAbaBibliotecaPecas('importacao')
                     } else {
                       navegarBibliotecaAposSalvarPeca(gM)
                     }
-                    alert(safeT?.saveSuccess || 'Peça salva com sucesso!')
+                    setTimeout(() => {
+                      alert(safeT?.saveSuccess || 'Peça salva com sucesso!')
+                    }, 0)
                   }} style={{ flex: 1 }}>
                     {safeT?.save || 'Salvar'}
                   </button>
