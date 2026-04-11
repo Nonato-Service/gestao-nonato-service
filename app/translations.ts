@@ -1307,6 +1307,9 @@ export const translations = {
     importacaoPecasEmBreve: 'Aqui você poderá importar peças em lote (planilha Excel, CSV) para a Biblioteca de Peças. Em breve mais opções.',
     cadastroPecas: 'Cadastro de Peças',
     bibliotecaPecas: 'Biblioteca',
+    bibliotecaGestaoEditarTitulo: 'Editar biblioteca',
+    bibliotecaSomenteLeituraHint:
+      'Vista só por categoria (consulta). Para alterar nomes, preços, classificar em lote ou excluir, abra «Editar biblioteca».',
     gerenciarGrupos: 'Gerenciar Grupos',
     gerenciarCategorias: 'Gerenciar Categorias',
     pecaBibliotecaDicaGerirGruposTitulo: 'Grupos e subgrupos',
@@ -3451,6 +3454,9 @@ export const translations = {
     importacaoColarUrlNaoSuportado: 'En este campo, pegue el contenido JSON/CSV (no la URL). Para enlaces, use "Obtener desde URL".',
     importacaoPecasEmBreve: 'Aquí podrá importar piezas en lote (Excel, CSV) a la Biblioteca. Próximamente más opciones.',
     bibliotecaPecas: 'Biblioteca',
+    bibliotecaGestaoEditarTitulo: 'Editar biblioteca',
+    bibliotecaSomenteLeituraHint:
+      'Vista solo por categoría (consulta). Para cambiar nombres, precios, clasificar en lote o eliminar, abra «Editar biblioteca».',
     cadastroPecas: 'Registro de Piezas',
     gerenciarGrupos: 'Gestionar Grupos',
     gerenciarGruposSubgrupos: 'Gestionar Grupos y Subgrupos',
@@ -5507,6 +5513,9 @@ export const translations = {
     importacaoColarUrlNaoSuportado: 'Dans ce champ, collez le contenu JSON/CSV (pas l\'URL). Pour les liens, utilisez "Récupérer depuis l\'URL".',
     importacaoPecasEmBreve: 'Ici vous pourrez importer des pièces en lot (Excel, CSV). Bientôt plus d\'options.',
     bibliotecaPecas: 'Bibliothèque',
+    bibliotecaGestaoEditarTitulo: 'Modifier la bibliothèque',
+    bibliotecaSomenteLeituraHint:
+      'Vue par catégorie uniquement (consultation). Pour modifier noms, prix, classer en lot ou supprimer, ouvrez « Modifier la bibliothèque ».',
     cadastroPecas: 'Enregistrement de Pièces',
     gerenciarGrupos: 'Gérer les Groupes',
     gerenciarGruposSubgrupos: 'Gérer les Groupes et Sous-groupes',
@@ -7569,6 +7578,9 @@ export const translations = {
     importacaoColarUrlNaoSuportado: 'In questo campo incolla il contenuto JSON/CSV (non l\'URL). Per i link usa "Recupera da URL".',
     importacaoPecasEmBreve: 'Qui potrai importare pezzi in blocco (Excel, CSV). Presto altre opzioni.',
     bibliotecaPecas: 'Biblioteca',
+    bibliotecaGestaoEditarTitulo: 'Modifica biblioteca',
+    bibliotecaSomenteLeituraHint:
+      'Solo vista per categoria (sola lettura). Per modificare nomi, prezzi, classificare in blocco o eliminare, apri « Modifica biblioteca ».',
     cadastroPecas: 'Registro Pezzi',
     gerenciarGrupos: 'Gestisci Gruppi',
     gerenciarGruposSubgrupos: 'Gestisci Gruppi e Sottogruppi',
@@ -9646,6 +9658,9 @@ export const translations = {
     importacaoColarUrlNaoSuportado: 'In dieses Feld den JSON/CSV-Inhalt einfügen (nicht die URL). Für Links "Von URL abrufen" verwenden.',
     importacaoPecasEmBreve: 'Hier können Sie Teile stapelweise importieren (Excel, CSV). Weitere Optionen in Kürze.',
     bibliotecaPecas: 'Teilebibliothek',
+    bibliotecaGestaoEditarTitulo: 'Bibliothek bearbeiten',
+    bibliotecaSomenteLeituraHint:
+      'Nur Ansicht nach Kategorie (Lesen). Zum Ändern von Namen, Preisen, Stapelklassifikation oder Löschen « Bibliothek bearbeiten » öffnen.',
     cadastroPecas: 'Teileregistrierung',
     gerenciarGrupos: 'Gruppen Verwalten',
     gerenciarGruposSubgrupos: 'Gruppen und Untergruppen Verwalten',
@@ -11701,6 +11716,9 @@ export const translations = {
     importacaoColarUrlNaoSuportado: 'In this field, paste JSON/CSV content (not a URL). For links, use "Fetch from URL".',
     importacaoPecasEmBreve: 'Here you will be able to import parts in bulk (Excel, CSV). More options coming soon.',
     bibliotecaPecas: 'Library',
+    bibliotecaGestaoEditarTitulo: 'Edit library',
+    bibliotecaSomenteLeituraHint:
+      'Category view only (read-only). To change names, prices, batch classification or delete, open « Edit library ».',
     cadastroPecas: 'Parts Registration',
     gerenciarGrupos: 'Manage Groups',
     gerenciarGruposSubgrupos: 'Manage Groups and Subgroups',

@@ -3528,7 +3528,7 @@ export default function Dashboard() {
   const [filtroSubgrupoBiblioteca, setFiltroSubgrupoBiblioteca] = useState<string>('')
   /** Biblioteca: filtra peças cujo código contém o texto (sem distinção maiúsculas/minúsculas). */
   const [buscaCodigoBiblioteca, setBuscaCodigoBiblioteca] = useState<string>('')
-  const [abaBibliotecaPecas, setAbaBibliotecaPecas] = useState<'cadastro' | 'biblioteca' | 'grupos' | 'importacao'>('cadastro')
+  const [abaBibliotecaPecas, setAbaBibliotecaPecas] = useState<'cadastro' | 'biblioteca' | 'biblioteca-gestao' | 'grupos' | 'importacao'>('cadastro')
   /** Se a peça foi aberta a partir da fila de importação, após Salvar regressa à aba Importação (não à Biblioteca). */
   const [salvarPecaBibliotecaVoltaParaImportacao, setSalvarPecaBibliotecaVoltaParaImportacao] = useState(false)
   const [visualizacaoBiblioteca, setVisualizacaoBiblioteca] = useState<'grid' | 'lista'>('grid')
@@ -18770,6 +18770,9 @@ export default function Dashboard() {
       openTab('manual-programa', getTabTitle('manual-programa'))
     } else if (action === 'open-biblioteca-hub') {
       // Um único botão: abre direto a tela com Cadastro de Peças | Biblioteca | Gerenciar Categorias | Importação
+      setAbaBibliotecaPecas('biblioteca')
+      setBibliotecaAgruparPorCategoria(true)
+      setVisualizacaoBiblioteca('grid')
       openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
     } else if (action === 'open-biblioteca-pecas') {
       openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
@@ -29872,7 +29875,12 @@ onKeyPress={(e) => {
                 {safeT?.cadastroPecas || 'Cadastro de Peças'}
               </button>
               <button
-                onClick={() => setAbaBibliotecaPecas('biblioteca')}
+                type="button"
+                onClick={() => {
+                  setAbaBibliotecaPecas('biblioteca')
+                  setBibliotecaAgruparPorCategoria(true)
+                  setVisualizacaoBiblioteca('grid')
+                }}
                 style={{
                   padding: '8px 14px',
                   backgroundColor: abaBibliotecaPecas === 'biblioteca' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
@@ -29886,6 +29894,23 @@ onKeyPress={(e) => {
                 }}
               >
                 {safeT?.bibliotecaPecas || 'Biblioteca'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAbaBibliotecaPecas('biblioteca-gestao')}
+                style={{
+                  padding: '8px 14px',
+                  backgroundColor: abaBibliotecaPecas === 'biblioteca-gestao' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
+                  border: abaBibliotecaPecas === 'biblioteca-gestao' ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 255, 0, 0.22)',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: abaBibliotecaPecas === 'biblioteca-gestao' ? 'bold' : '500',
+                  borderRadius: '8px',
+                  transition: 'border-color 0.2s ease, background-color 0.2s ease'
+                }}
+              >
+                ✏️ {(safeT as any)?.bibliotecaGestaoEditarTitulo || 'Editar biblioteca'}
               </button>
               <button
                 onClick={() => setAbaBibliotecaPecas('grupos')}
@@ -30993,6 +31018,7 @@ onKeyPress={(e) => {
                   className="btn-primary"
                   onClick={() => {
                     setAbaBibliotecaPecas('biblioteca')
+                    setBibliotecaAgruparPorCategoria(true)
                     setVisualizacaoBiblioteca('grid')
                   }}
                   style={{ padding: '8px 14px', fontSize: '13px' }}
@@ -31036,8 +31062,11 @@ onKeyPress={(e) => {
               </>
             )}
 
-            {/* Conteúdo da aba Biblioteca */}
-            {abaBibliotecaPecas === 'biblioteca' && (
+            {/* Conteúdo da aba Biblioteca (consulta por categoria) ou Editar biblioteca (gestão completa) */}
+            {(abaBibliotecaPecas === 'biblioteca' || abaBibliotecaPecas === 'biblioteca-gestao') && (() => {
+              const somenteLeituraBiblioteca = abaBibliotecaPecas === 'biblioteca'
+              const agruparBibliotecaEfetivo = somenteLeituraBiblioteca || bibliotecaAgruparPorCategoria
+              return (
               <div>
                 {pecasImportadasPendentes.length > 0 && (
                   <div
@@ -31058,10 +31087,18 @@ onKeyPress={(e) => {
                     </p>
                   </div>
                 )}
+                {somenteLeituraBiblioteca && (
+                  <p style={{ margin: '0 0 16px', fontSize: '12px', color: 'rgba(190, 255, 210, 0.95)', lineHeight: 1.55 }}>
+                    {(safeT as any)?.bibliotecaSomenteLeituraHint ||
+                      'Vista só por categoria (consulta). Para alterar nomes, preços, classificar em lote ou excluir, abra «Editar biblioteca».'}
+                  </p>
+                )}
                 {/* Controles de visualização */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
+                  {!somenteLeituraBiblioteca ? (
                   <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                     <button
+                      type="button"
                       onClick={() => setVisualizacaoBiblioteca('grid')}
                       style={{
                         padding: '8px 15px',
@@ -31076,6 +31113,7 @@ onKeyPress={(e) => {
                       {safeT?.visualizacaoGrid || 'Grade'}
                     </button>
                     <button
+                      type="button"
                       onClick={() => setVisualizacaoBiblioteca('lista')}
                       style={{
                         padding: '8px 15px',
@@ -31124,6 +31162,13 @@ onKeyPress={(e) => {
                       {safeT?.bibliotecaTodasPecas || 'Todas as peças'}
                     </button>
                   </div>
+                  ) : (
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '13px', color: 'rgba(0, 255, 100, 0.95)', fontWeight: 600 }}>
+                      {safeT?.bibliotecaPorCategoria || 'Por categoria'}
+                    </span>
+                  </div>
+                  )}
 
                   {/* Filtro por grupo */}
                   <div style={{ minWidth: '200px' }}>
@@ -31192,6 +31237,8 @@ onKeyPress={(e) => {
 
                 {/* Visualização das peças */}
                 {(() => {
+                  const visBiblioteca =
+                    somenteLeituraBiblioteca && visualizacaoBiblioteca === 'lista' ? 'grid' : visualizacaoBiblioteca
                   const passaFiltroBiblioteca = (peca: PecaBiblioteca) => {
                     if (filtroGrupoBiblioteca && peca.categoriaId !== filtroGrupoBiblioteca) return false
                     if (filtroSubgrupoBiblioteca && peca.subcategoriaId !== filtroSubgrupoBiblioteca) return false
@@ -31228,7 +31275,7 @@ onKeyPress={(e) => {
                           if (isPendingChecklist) setPecaSelecionadaParaChecklist(peca)
                         }}
                         onDoubleClick={() => {
-                          if (!isPendingChecklist) handleEditPecaBiblioteca(peca)
+                          if (!isPendingChecklist && !somenteLeituraBiblioteca) handleEditPecaBiblioteca(peca)
                         }}
                       >
                         {peca.imagem ? (
@@ -31263,6 +31310,7 @@ onKeyPress={(e) => {
                             {safeT?.categoriaPecaBiblioteca || 'Grupo'}: {grupoNome}
                           </p>
                         )}
+                        {!somenteLeituraBiblioteca ? (
                         <div
                           style={{ display: 'flex', gap: '6px', marginTop: '12px', flexWrap: 'wrap' }}
                           onClick={(e) => e.stopPropagation()}
@@ -31290,6 +31338,7 @@ onKeyPress={(e) => {
                             {safeT?.delete || 'Excluir'}
                           </button>
                         </div>
+                        ) : null}
                       </div>
                     )
                   }
@@ -31572,7 +31621,7 @@ onKeyPress={(e) => {
                   if (pecasVisiveisParaLote.length === 0) {
                     return (
                       <>
-                        {painelClassificacaoLote}
+                        {!somenteLeituraBiblioteca && painelClassificacaoLote}
                         {vazioMsg}
                       </>
                     )
@@ -31581,14 +31630,14 @@ onKeyPress={(e) => {
                   if (pecasCatalogoFiltradas.length === 0) {
                     return (
                       <>
-                        {painelClassificacaoLote}
+                        {!somenteLeituraBiblioteca && painelClassificacaoLote}
                         {vazioMsgSoPendentes}
                       </>
                     )
                   }
 
-                  if (visualizacaoBiblioteca === 'grid') {
-                    if (bibliotecaAgruparPorCategoria) {
+                  if (visBiblioteca === 'grid') {
+                    if (agruparBibliotecaEfetivo) {
                       const ordemIds: string[] = []
                       for (const c of categoriasPecasAlfabeto) {
                         if (pecasCatalogoFiltradas.some((p) => p.categoriaId === c.id)) ordemIds.push(c.id)
@@ -31596,7 +31645,7 @@ onKeyPress={(e) => {
                       const semCat = pecasCatalogoFiltradas.filter((p) => !p.categoriaId)
                       return (
                         <>
-                          {painelClassificacaoLote}
+                          {!somenteLeituraBiblioteca && painelClassificacaoLote}
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
                             {ordemIds.map((catId) => {
                               const cat = categoriasPecas.find((x) => x.id === catId)
@@ -31626,7 +31675,7 @@ onKeyPress={(e) => {
                     }
                     return (
                       <>
-                        {painelClassificacaoLote}
+                        {!somenteLeituraBiblioteca && painelClassificacaoLote}
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
                           {pecasCatalogoFiltradas.map((peca) => renderPecaBibliotecaGridCell(peca))}
                         </div>
@@ -31649,7 +31698,7 @@ onKeyPress={(e) => {
                   )
                   return (
                     <>
-                      {painelClassificacaoLote}
+                      {!somenteLeituraBiblioteca && painelClassificacaoLote}
                       <div
                         style={{
                           overflowX: 'auto',
@@ -31659,7 +31708,7 @@ onKeyPress={(e) => {
                           backgroundColor: '#2e2e2e',
                         }}
                       >
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: bibText, minWidth: '900px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: bibText, minWidth: somenteLeituraBiblioteca ? '760px' : '900px' }}>
                           <thead>
                             <tr style={{ backgroundColor: bibHead, color: '#ffffff' }}>
                               <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, width: '88px', ...bibThRule }}>
@@ -31698,9 +31747,11 @@ onKeyPress={(e) => {
                                   {headerFilter}
                                 </span>
                               </th>
+                              {!somenteLeituraBiblioteca ? (
                               <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', width: '140px', ...bibThRule }}>
                                 {safeT?.actions || 'Ações'}
                               </th>
+                              ) : null}
                             </tr>
                           </thead>
                           <tbody>
@@ -31722,7 +31773,7 @@ onKeyPress={(e) => {
                                     if (isPendingChecklist) setPecaSelecionadaParaChecklist(peca)
                                   }}
                                   onDoubleClick={() => {
-                                    if (!isPendingChecklist) handleEditPecaBiblioteca(peca)
+                                    if (!isPendingChecklist && !somenteLeituraBiblioteca) handleEditPecaBiblioteca(peca)
                                   }}
                                 >
                                   <td style={{ padding: '8px 12px', verticalAlign: 'middle', ...bibTdRule }}>
@@ -31755,6 +31806,7 @@ onKeyPress={(e) => {
                                   <td style={{ padding: '10px 14px', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap', ...bibTdRule }}>
                                     {peca.preco ? `${peca.preco}€` : '—'}
                                   </td>
+                                  {!somenteLeituraBiblioteca ? (
                                   <td
                                     style={{ padding: '8px 10px', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap', ...bibTdRule }}
                                     onClick={(e) => e.stopPropagation()}
@@ -31778,6 +31830,7 @@ onKeyPress={(e) => {
                                       </button>
                                     </div>
                                   </td>
+                                  ) : null}
                                 </tr>
                               )
                             })}
@@ -31788,7 +31841,7 @@ onKeyPress={(e) => {
                   )
                 })()}
               </div>
-            )}
+            )})()}
 
             {/* Conteúdo da aba Gerenciar Categorias */}
             {abaBibliotecaPecas === 'grupos' && (
