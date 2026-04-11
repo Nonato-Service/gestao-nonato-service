@@ -31384,7 +31384,7 @@ onKeyPress={(e) => {
                           if (isPendingChecklist) setPecaSelecionadaParaChecklist(peca)
                         }}
                         onDoubleClick={() => {
-                          if (!isPendingChecklist && !somenteLeituraBiblioteca) handleEditPecaBiblioteca(peca)
+                          if (!isPendingChecklist && (!somenteLeituraBiblioteca || isFiltroSoSemCategoria)) handleEditPecaBiblioteca(peca)
                         }}
                       >
                         {peca.imagem ? (
@@ -31495,6 +31495,24 @@ onKeyPress={(e) => {
                             style={{ flex: 1, minWidth: '72px', padding: '6px 8px', fontSize: '12px' }}
                           >
                             {safeT?.delete || 'Excluir'}
+                          </button>
+                        </div>
+                        ) : isFiltroSoSemCategoria ? (
+                        <div
+                          style={{ display: 'flex', gap: '6px', marginTop: '12px', flexWrap: 'wrap' }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEditPecaBiblioteca(peca)
+                            }}
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '12px', fontWeight: 600 }}
+                            title={(safeT as any)?.bibliotecaBtnClassificarPecaTitle}
+                          >
+                            {(safeT as any)?.bibliotecaBtnClassificarPeca || 'Classificar / editar'}
                           </button>
                         </div>
                         ) : null}
@@ -31904,7 +31922,15 @@ onKeyPress={(e) => {
                           backgroundColor: '#2e2e2e',
                         }}
                       >
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: bibText, minWidth: somenteLeituraBiblioteca ? '760px' : '900px' }}>
+                        <table
+                          style={{
+                            width: '100%',
+                            borderCollapse: 'collapse',
+                            fontSize: '13px',
+                            color: bibText,
+                            minWidth: somenteLeituraBiblioteca && !isFiltroSoSemCategoria ? '760px' : '900px',
+                          }}
+                        >
                           <thead>
                             <tr style={{ backgroundColor: bibHead, color: '#ffffff' }}>
                               <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, width: '88px', ...bibThRule }}>
@@ -31943,7 +31969,7 @@ onKeyPress={(e) => {
                                   {headerFilter}
                                 </span>
                               </th>
-                              {!somenteLeituraBiblioteca ? (
+                              {(!somenteLeituraBiblioteca || isFiltroSoSemCategoria) ? (
                               <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', width: '140px', ...bibThRule }}>
                                 {safeT?.actions || 'Ações'}
                               </th>
@@ -31969,7 +31995,7 @@ onKeyPress={(e) => {
                                     if (isPendingChecklist) setPecaSelecionadaParaChecklist(peca)
                                   }}
                                   onDoubleClick={() => {
-                                    if (!isPendingChecklist && !somenteLeituraBiblioteca) handleEditPecaBiblioteca(peca)
+                                    if (!isPendingChecklist && (!somenteLeituraBiblioteca || isFiltroSoSemCategoria)) handleEditPecaBiblioteca(peca)
                                   }}
                                 >
                                   <td style={{ padding: '8px 12px', verticalAlign: 'middle', ...bibTdRule }}>
@@ -32067,6 +32093,21 @@ onKeyPress={(e) => {
                                         {safeT?.delete || 'Excluir'}
                                       </button>
                                     </div>
+                                  </td>
+                                  ) : isFiltroSoSemCategoria ? (
+                                  <td
+                                    style={{ padding: '8px 10px', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap', ...bibTdRule }}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <button
+                                      type="button"
+                                      className="btn-primary"
+                                      onClick={() => handleEditPecaBiblioteca(peca)}
+                                      style={{ padding: '6px 10px', fontSize: '11px', fontWeight: 600 }}
+                                      title={(safeT as any)?.bibliotecaBtnClassificarPecaTitle}
+                                    >
+                                      {(safeT as any)?.bibliotecaBtnClassificarPeca || 'Classificar / editar'}
+                                    </button>
                                   </td>
                                   ) : null}
                                 </tr>
