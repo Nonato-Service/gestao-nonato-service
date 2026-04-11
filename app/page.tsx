@@ -3477,6 +3477,8 @@ export default function Dashboard() {
   const [filtroGrupoBiblioteca, setFiltroGrupoBiblioteca] = useState<string>('')
   const [filtroSubgrupoBiblioteca, setFiltroSubgrupoBiblioteca] = useState<string>('')
   const [abaBibliotecaPecas, setAbaBibliotecaPecas] = useState<'cadastro' | 'biblioteca' | 'grupos' | 'importacao'>('cadastro')
+  /** Se a peça foi aberta a partir da fila de importação, após Salvar regressa à aba Importação (não à Biblioteca). */
+  const [salvarPecaBibliotecaVoltaParaImportacao, setSalvarPecaBibliotecaVoltaParaImportacao] = useState(false)
   const [visualizacaoBiblioteca, setVisualizacaoBiblioteca] = useState<'grid' | 'lista'>('grid')
   /** Biblioteca: grade em secções por categoria vs lista única (com filtro). */
   const [bibliotecaAgruparPorCategoria, setBibliotecaAgruparPorCategoria] = useState(false)
@@ -16414,6 +16416,7 @@ export default function Dashboard() {
   }
 
   const handleEditPecaBiblioteca = (peca: PecaBiblioteca) => {
+    setSalvarPecaBibliotecaVoltaParaImportacao(false)
     setEditingPecaBiblioteca(peca)
     setPecaBibliotecaImagemUrlDraft('')
     setPecaBibliotecaForm({ ...peca })
@@ -29932,6 +29935,7 @@ onKeyPress={(e) => {
             <button 
               className="btn-primary" 
               onClick={() => { 
+                setSalvarPecaBibliotecaVoltaParaImportacao(false)
                 setShowBibliotecaPecasForm(true); 
                 setEditingPecaBiblioteca(null);
                 const categoriaSelecionada = categoriasPecas.find(c => c.id === ultimoGrupoSelecionado)
@@ -30556,7 +30560,12 @@ onKeyPress={(e) => {
                       setPecaBibliotecaImagemUrlDraft('')
                       setPecaBibliotecaPickerCategoriaAberto(false)
                       setPecaBibliotecaPickerSubcategoriaAberto(false)
-                      navegarBibliotecaAposSalvarPeca(grupoMantido)
+                      if (salvarPecaBibliotecaVoltaParaImportacao) {
+                        setSalvarPecaBibliotecaVoltaParaImportacao(false)
+                        setAbaBibliotecaPecas('importacao')
+                      } else {
+                        navegarBibliotecaAposSalvarPeca(grupoMantido)
+                      }
                       alert(safeT?.saveSuccess || 'Peça salva com sucesso!')
                     }} 
                     style={{ flex: 1, padding: '10px' }}
@@ -30566,6 +30575,9 @@ onKeyPress={(e) => {
                   <button 
                     className="btn-secondary" 
                     onClick={() => { 
+                      const voltarImportacao = salvarPecaBibliotecaVoltaParaImportacao
+                      setSalvarPecaBibliotecaVoltaParaImportacao(false)
+                      if (voltarImportacao) setAbaBibliotecaPecas('importacao')
                       setShowBibliotecaPecasForm(false); 
                       setEditingPecaBiblioteca(null);
                       // Manter categoria/subcategoria do formulário para a próxima «Nova peça»
@@ -32293,6 +32305,7 @@ onKeyPress={(e) => {
                               type="button"
                               className="btn-primary"
                               onClick={() => {
+                                setSalvarPecaBibliotecaVoltaParaImportacao(true)
                                 setAbaBibliotecaPecas('cadastro')
                                 setEditingPecaBiblioteca(peca)
                                 setPecaBibliotecaImagemUrlDraft('')
@@ -32579,6 +32592,8 @@ A1;Peça exemplo;10'
                             type="button"
                             className="btn-primary"
                             onClick={() => {
+                              setSalvarPecaBibliotecaVoltaParaImportacao(true)
+                              setAbaBibliotecaPecas('importacao')
                               setEditingPecaBiblioteca(peca)
                               setPecaBibliotecaImagemUrlDraft('')
                               setPecaBibliotecaForm(peca)
@@ -57302,6 +57317,7 @@ A1;Peça exemplo;10`}
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2>{safeT?.bibliotecaPecasTitle || 'Biblioteca de Peças'}</h2>
             <button className="btn-primary" onClick={() => {
+              setSalvarPecaBibliotecaVoltaParaImportacao(false)
               setShowBibliotecaPecasForm(true)
               setEditingPecaBiblioteca(null)
               setPecaBibliotecaImagemUrlDraft('')
@@ -57489,12 +57505,20 @@ A1;Peça exemplo;10`}
                     })
                     setPecaBibliotecaPickerCategoriaAberto(false)
                     setPecaBibliotecaPickerSubcategoriaAberto(false)
-                    navegarBibliotecaAposSalvarPeca(gM)
+                    if (salvarPecaBibliotecaVoltaParaImportacao) {
+                      setSalvarPecaBibliotecaVoltaParaImportacao(false)
+                      setAbaBibliotecaPecas('importacao')
+                    } else {
+                      navegarBibliotecaAposSalvarPeca(gM)
+                    }
                     alert(safeT?.saveSuccess || 'Peça salva com sucesso!')
                   }} style={{ flex: 1 }}>
                     {safeT?.save || 'Salvar'}
                   </button>
                   <button className="btn-primary" onClick={() => {
+                    const voltarImportacao = salvarPecaBibliotecaVoltaParaImportacao
+                    setSalvarPecaBibliotecaVoltaParaImportacao(false)
+                    if (voltarImportacao) setAbaBibliotecaPecas('importacao')
                     setShowBibliotecaPecasForm(false)
                     setEditingPecaBiblioteca(null)
                     setPecaBibliotecaImagemUrlDraft('')
@@ -57536,7 +57560,7 @@ A1;Peça exemplo;10`}
                     {peca.preco && <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.preco || 'Preço'}: {peca.preco}€</p>}
                     {peca.descricao && <p style={{ fontSize: '12px', opacity: 0.7 }}>{peca.descricao}</p>}
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
-                      <button className="btn-primary" onClick={() => { setEditingPecaBiblioteca(peca); setPecaBibliotecaImagemUrlDraft(''); setPecaBibliotecaForm(peca); setPecaBibliotecaPickerCategoriaAberto(false); setPecaBibliotecaPickerSubcategoriaAberto(false); setShowBibliotecaPecasForm(true); }} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
+                      <button className="btn-primary" onClick={() => { setSalvarPecaBibliotecaVoltaParaImportacao(false); setEditingPecaBiblioteca(peca); setPecaBibliotecaImagemUrlDraft(''); setPecaBibliotecaForm(peca); setPecaBibliotecaPickerCategoriaAberto(false); setPecaBibliotecaPickerSubcategoriaAberto(false); setShowBibliotecaPecasForm(true); }} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
                         {safeT?.edit || 'Editar'}
                       </button>
                       <button className="btn-danger" onClick={() => {
