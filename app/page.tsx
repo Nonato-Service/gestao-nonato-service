@@ -710,6 +710,18 @@ function normalizarUltimaSelecaoBiblioteca(
   return { categoriaId: catId, subcategoriaId: subId }
 }
 
+/** Garante atualização da peça certa ao gravar (evita duplicar se `editingPecaBiblioteca` se perdeu mas o formulário ainda tem `id`). */
+function resolverIdEdicaoPecaBiblioteca(
+  form: PecaBiblioteca,
+  editing: PecaBiblioteca | null,
+  todas: PecaBiblioteca[]
+): string | null {
+  if (editing?.id) return editing.id
+  const fid = (form.id || '').trim()
+  if (fid && todas.some((p) => p.id === fid)) return fid
+  return null
+}
+
 const BIBLIOTECA_PECAS_ULTIMA_SELECAO_KEY = 'nonato-biblioteca-pecas-ultima-selecao'
 
 type PasswordEntry = {
@@ -30539,17 +30551,18 @@ onKeyPress={(e) => {
                         alert(safeT?.fillAllFields || 'Preencha todos os campos obrigatórios!')
                         return
                       }
-                      if (pecaBibliotecaCodigoDuplicado(pecaBibliotecaForm.codigo, editingPecaBiblioteca?.id)) {
+                      const idEdicao = resolverIdEdicaoPecaBiblioteca(pecaBibliotecaForm, editingPecaBiblioteca, pecasBiblioteca)
+                      if (pecaBibliotecaCodigoDuplicado(pecaBibliotecaForm.codigo, idEdicao || undefined)) {
                         alert(
                           safeT?.codigoPecaBibliotecaDuplicado ||
                             'Já existe uma peça com este código. Indique outro código.'
                         )
                         return
                       }
-                      if (editingPecaBiblioteca) {
-                        const updated = pecasBiblioteca.map(p =>
-                          p.id === editingPecaBiblioteca.id
-                            ? { ...pecaBibliotecaForm, id: editingPecaBiblioteca.id, importacaoPendente: false }
+                      if (idEdicao) {
+                        const updated = pecasBiblioteca.map((p) =>
+                          p.id === idEdicao
+                            ? { ...pecaBibliotecaForm, id: idEdicao, importacaoPendente: false }
                             : p
                         )
                         persistPecasBiblioteca(updated)
@@ -32622,7 +32635,7 @@ A1;Peça exemplo;10'
                             className="btn-primary"
                             onClick={() => {
                               setSalvarPecaBibliotecaVoltaParaImportacao(true)
-                              setAbaBibliotecaPecas('importacao')
+                              setAbaBibliotecaPecas('cadastro')
                               setEditingPecaBiblioteca(peca)
                               setPecaBibliotecaImagemUrlDraft('')
                               setPecaBibliotecaForm(peca)
@@ -57484,17 +57497,18 @@ A1;Peça exemplo;10`}
                       alert(safeT?.fillAllFields || 'Preencha todos os campos obrigatórios!')
                       return
                     }
-                    if (pecaBibliotecaCodigoDuplicado(pecaBibliotecaForm.codigo, editingPecaBiblioteca?.id)) {
+                    const idEdicaoModal = resolverIdEdicaoPecaBiblioteca(pecaBibliotecaForm, editingPecaBiblioteca, pecasBiblioteca)
+                    if (pecaBibliotecaCodigoDuplicado(pecaBibliotecaForm.codigo, idEdicaoModal || undefined)) {
                       alert(
                         safeT?.codigoPecaBibliotecaDuplicado ||
                           'Já existe uma peça com este código. Indique outro código.'
                       )
                       return
                     }
-                    if (editingPecaBiblioteca) {
-                      const updated = pecasBiblioteca.map(p =>
-                          p.id === editingPecaBiblioteca.id
-                            ? { ...pecaBibliotecaForm, id: editingPecaBiblioteca.id, importacaoPendente: false }
+                    if (idEdicaoModal) {
+                      const updated = pecasBiblioteca.map((p) =>
+                          p.id === idEdicaoModal
+                            ? { ...pecaBibliotecaForm, id: idEdicaoModal, importacaoPendente: false }
                             : p
                         )
                         persistPecasBiblioteca(updated)
