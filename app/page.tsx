@@ -719,7 +719,28 @@ function resolverIdEdicaoPecaBiblioteca(
   if (editing?.id) return editing.id
   const fid = (form.id || '').trim()
   if (fid && todas.some((p) => p.id === fid)) return fid
+  const cod = (form.codigo || '').trim().toLowerCase()
+  const nome = (form.nome || '').trim().toLowerCase()
+  if (cod) {
+    const pendentes = todas.filter((p) => ehImportacaoPendenteStrict(p))
+    const porCodigo = pendentes.filter((p) => (p.codigo || '').trim().toLowerCase() === cod)
+    if (porCodigo.length === 1) return porCodigo[0].id
+    if (porCodigo.length > 1 && nome) {
+      const porNome = porCodigo.filter((p) => (p.nome || '').trim().toLowerCase() === nome)
+      if (porNome.length === 1) return porNome[0].id
+    }
+  }
   return null
+}
+
+/** Só conta como pendente valores explicitamente verdadeiros (evita strings/JSON estranhos). */
+function ehImportacaoPendenteStrict(peca: PecaBiblioteca): boolean {
+  const v = peca.importacaoPendente as unknown
+  return v === true || v === 'true' || v === 1 || v === '1'
+}
+
+function sanitizarPecaBibliotecaImportacaoFlag(peca: PecaBiblioteca): PecaBiblioteca {
+  return { ...peca, importacaoPendente: ehImportacaoPendenteStrict(peca) }
 }
 
 const BIBLIOTECA_PECAS_ULTIMA_SELECAO_KEY = 'nonato-biblioteca-pecas-ultima-selecao'
@@ -5688,8 +5709,10 @@ export default function Dashboard() {
 
       // Carregar peças biblioteca
       const savedPecasBiblioteca = getData('nonato-pecas-biblioteca')
-      if (savedPecasBiblioteca) {
-        setPecasBiblioteca(savedPecasBiblioteca)
+      if (savedPecasBiblioteca && Array.isArray(savedPecasBiblioteca)) {
+        setPecasBiblioteca(
+          (savedPecasBiblioteca as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
+        )
       }
 
       // Carregar categorias de peças
@@ -16562,11 +16585,6 @@ export default function Dashboard() {
     return descricaoLimpa
   }
 
-  /** Só deixa de ser «importação pendente» ao gravar a peça no formulário (Salvar), não ao só escolher grupo. */
-  function normalizePecaBibliotecaImportacaoStatus(peca: PecaBiblioteca): PecaBiblioteca {
-    return { ...peca, importacaoPendente: !!peca.importacaoPendente }
-  }
-
   // Mapeia objeto genérico (JSON do site) para PecaBiblioteca
   function mapItemToPecaBiblioteca(item: any, index: number): PecaBiblioteca {
     const codigo = String(item?.codigo ?? item?.code ?? item?.partNumber ?? item?.sku ?? item?.numero ?? item?.id ?? item?.ref ?? '').trim()
@@ -17340,7 +17358,7 @@ export default function Dashboard() {
     })
     const classificadosAutomaticamente = aplicarRegrasClassificacaoEmLista(novos, true)
     const atualizado = [...existentes, ...classificadosAutomaticamente.lista]
-    const atualizadoNormalizado = atualizado.map((peca) => normalizePecaBibliotecaImportacaoStatus(peca))
+    const atualizadoNormalizado = atualizado.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
     setPecasBiblioteca(atualizadoNormalizado)
     localStorage.setItem('nonato-pecas-biblioteca', JSON.stringify(atualizadoNormalizado))
     void saveData('nonato-pecas-biblioteca', atualizadoNormalizado)
@@ -17366,7 +17384,7 @@ export default function Dashboard() {
   }, [aplicarRegrasClassificacaoEmLista, importacaoPreview, pecasBiblioteca, t])
 
   const persistPecasBiblioteca = useCallback((next: PecaBiblioteca[]) => {
-    const normalizado = next.map((peca) => normalizePecaBibliotecaImportacaoStatus(peca))
+    const normalizado = next.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
     setPecasBiblioteca(normalizado)
     localStorage.setItem('nonato-pecas-biblioteca', JSON.stringify(normalizado))
     void saveData('nonato-pecas-biblioteca', normalizado)
@@ -17437,7 +17455,7 @@ export default function Dashboard() {
   )
 
   const pecasImportadasPendentes = useMemo(
-    () => pecasBiblioteca.filter((peca) => peca.importacaoPendente),
+    () => pecasBiblioteca.filter((peca) => ehImportacaoPendenteStrict(peca)),
     [pecasBiblioteca]
   )
 
@@ -31152,7 +31170,7 @@ onKeyPress={(e) => {
                     return true
                   }
                   const pecasVisiveisParaLote = pecasBiblioteca.filter(passaFiltroBiblioteca)
-                  const pecasCatalogoFiltradas = pecasVisiveisParaLote.filter((p) => !p.importacaoPendente)
+                  const pecasCatalogoFiltradas = pecasVisiveisParaLote.filter((p) => !ehImportacaoPendenteStrict(p))
 
                   const renderPecaBibliotecaGridCell = (peca: PecaBiblioteca) => {
                     const grupoNome = peca.categoriaId ? categoriasPecas.find((c) => c.id === peca.categoriaId)?.nome : null
