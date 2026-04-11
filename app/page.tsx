@@ -710,6 +710,33 @@ function normalizarUltimaSelecaoBiblioteca(
   return { categoriaId: catId, subcategoriaId: subId }
 }
 
+/** Se a peça ainda não tem categoria válida (ex.: importação), aplica a última categoria/subcategoria usada para cadastro rápido em sequência. */
+function preencherPecaBibliotecaComUltimaCategoriaSeVazio(
+  peca: PecaBiblioteca,
+  ultimoCatId: string,
+  ultimoSubId: string,
+  categorias: CategoriaPeca[],
+  subcategorias: SubcategoriaPeca[]
+): PecaBiblioteca {
+  const idValido = peca.categoriaId && categorias.some((c) => c.id === peca.categoriaId)
+  if (idValido) return peca
+  if (!ultimoCatId || !categorias.some((c) => c.id === ultimoCatId)) return peca
+  const cat = categorias.find((c) => c.id === ultimoCatId)!
+  let subId = ''
+  let subNome = ''
+  if (ultimoSubId && subcategorias.some((s) => s.id === ultimoSubId && s.categoriaId === ultimoCatId)) {
+    subId = ultimoSubId
+    subNome = subcategorias.find((s) => s.id === ultimoSubId)?.nome || ''
+  }
+  return {
+    ...peca,
+    categoriaId: ultimoCatId,
+    categoria: cat.nome || peca.categoria || '',
+    subcategoriaId: subId,
+    subcategoria: subNome,
+  }
+}
+
 /** Garante atualização da peça certa ao gravar (evita duplicar se `editingPecaBiblioteca` se perdeu mas o formulário ainda tem `id`). */
 function resolverIdEdicaoPecaBiblioteca(
   form: PecaBiblioteca,
@@ -16490,6 +16517,8 @@ export default function Dashboard() {
     setUltimoSubgrupoSelecionado(resolv.subcategoriaId)
     setPecaBibliotecaPickerCategoriaAberto(false)
     setPecaBibliotecaPickerSubcategoriaAberto(false)
+    // O formulário completo só existe na aba «Cadastro»; «Editar biblioteca» só mostra a grelha.
+    setAbaBibliotecaPecas('cadastro')
     setShowBibliotecaPecasForm(true)
   }
 
@@ -30026,6 +30055,12 @@ onKeyPress={(e) => {
                 setEditingPecaBiblioteca(null);
                 const categoriaSelecionada = categoriasPecas.find(c => c.id === ultimoGrupoSelecionado)
                 const subcategoriaSelecionada = subcategoriasPecas.find(s => s.id === ultimoSubgrupoSelecionado)
+                const gid = ultimoGrupoSelecionado || ''
+                const sid =
+                  gid && subcategoriaSelecionada && subcategoriaSelecionada.categoriaId === gid
+                    ? ultimoSubgrupoSelecionado
+                    : ''
+                const subNome = sid ? subcategoriaSelecionada?.nome || '' : ''
                 setPecaBibliotecaForm({ 
                   id: '', 
                   nome: '', 
@@ -30033,13 +30068,15 @@ onKeyPress={(e) => {
                   preco: '', 
                   descricao: '', 
                   categoria: categoriaSelecionada?.nome || '', 
-                  categoriaId: ultimoGrupoSelecionado || '', 
-                  subcategoria: subcategoriaSelecionada?.nome || '', 
-                  subcategoriaId: ultimoSubgrupoSelecionado || '', 
+                  categoriaId: gid, 
+                  subcategoria: subNome, 
+                  subcategoriaId: sid, 
                   imagem: '', 
                   dataCriacao: new Date().toISOString() 
                 }); 
                 setPecaBibliotecaImagemUrlDraft('')
+                setUltimoGrupoSelecionado(gid)
+                setUltimoSubgrupoSelecionado(sid)
                 setPecaBibliotecaPickerCategoriaAberto(false)
                 setPecaBibliotecaPickerSubcategoriaAberto(false)
               }} 
@@ -30191,6 +30228,48 @@ onKeyPress={(e) => {
                     style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', resize: 'vertical' }}
                   ></textarea>
                 </div>
+
+                {(() => {
+                  const catIdShow = pecaBibliotecaForm.categoriaId || ultimoGrupoSelecionado
+                  if (!catIdShow) return null
+                  const nomeCat =
+                    (pecaBibliotecaForm.categoria || '').trim() ||
+                    categoriasPecas.find((c) => c.id === catIdShow)?.nome ||
+                    '—'
+                  const subIdEff =
+                    pecaBibliotecaForm.subcategoriaId ||
+                    (pecaBibliotecaForm.categoriaId === ultimoGrupoSelecionado || catIdShow === ultimoGrupoSelecionado
+                      ? ultimoSubgrupoSelecionado
+                      : '')
+                  const nomeSub = subIdEff
+                    ? (pecaBibliotecaForm.subcategoria || '').trim() ||
+                      subcategoriasPecas.find((s) => s.id === subIdEff)?.nome ||
+                      ''
+                    : ''
+                  return (
+                    <div
+                      style={{
+                        marginBottom: '14px',
+                        padding: '12px 14px',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(0, 255, 120, 0.42)',
+                        backgroundColor: 'rgba(0, 48, 24, 0.42)',
+                      }}
+                    >
+                      <div style={{ fontSize: '12px', color: 'rgba(200, 255, 215, 0.92)', marginBottom: '6px', fontWeight: 600 }}>
+                        {(safeT as any).pecaBibliotecaFaixaUltimaTitulo || 'Grupo atual (cadastro rápido)'}
+                      </div>
+                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#b4ffc8', lineHeight: 1.35 }}>
+                        {nomeCat}
+                        {nomeSub ? <span style={{ opacity: 0.95 }}>{' · '}{nomeSub}</span> : null}
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'rgba(200, 230, 210, 0.78)', marginTop: '8px', lineHeight: 1.4 }}>
+                        {(safeT as any).pecaBibliotecaFaixaUltimaHint ||
+                          'Este grupo repete na próxima peça. Abra «Categoria» abaixo só se precisar de outro.'}
+                      </div>
+                    </div>
+                  )
+                })()}
 
                 {/* Grupo (Categoria) — resumo retraído; lista zebrada só ao expandir */}
                 <div style={{ marginBottom: '15px' }}>
@@ -32464,7 +32543,18 @@ onKeyPress={(e) => {
                                 setAbaBibliotecaPecas('cadastro')
                                 setEditingPecaBiblioteca(peca)
                                 setPecaBibliotecaImagemUrlDraft('')
-                                setPecaBibliotecaForm(peca)
+                                const merged = preencherPecaBibliotecaComUltimaCategoriaSeVazio(
+                                  peca,
+                                  ultimoGrupoSelecionado,
+                                  ultimoSubgrupoSelecionado,
+                                  categoriasPecas,
+                                  subcategoriasPecas
+                                )
+                                setPecaBibliotecaForm(merged)
+                                if (merged.categoriaId) {
+                                  setUltimoGrupoSelecionado(merged.categoriaId)
+                                  setUltimoSubgrupoSelecionado(merged.subcategoriaId || '')
+                                }
                                 setPecaBibliotecaPickerCategoriaAberto(false)
                                 setPecaBibliotecaPickerSubcategoriaAberto(false)
                                 setShowBibliotecaPecasForm(true)
@@ -32751,7 +32841,18 @@ A1;Peça exemplo;10'
                               setAbaBibliotecaPecas('cadastro')
                               setEditingPecaBiblioteca(peca)
                               setPecaBibliotecaImagemUrlDraft('')
-                              setPecaBibliotecaForm(peca)
+                              const merged = preencherPecaBibliotecaComUltimaCategoriaSeVazio(
+                                peca,
+                                ultimoGrupoSelecionado,
+                                ultimoSubgrupoSelecionado,
+                                categoriasPecas,
+                                subcategoriasPecas
+                              )
+                              setPecaBibliotecaForm(merged)
+                              if (merged.categoriaId) {
+                                setUltimoGrupoSelecionado(merged.categoriaId)
+                                setUltimoSubgrupoSelecionado(merged.subcategoriaId || '')
+                              }
                               setPecaBibliotecaPickerCategoriaAberto(false)
                               setPecaBibliotecaPickerSubcategoriaAberto(false)
                               setShowBibliotecaPecasForm(true)
@@ -57478,6 +57579,10 @@ A1;Peça exemplo;10`}
               setPecaBibliotecaImagemUrlDraft('')
               const catM = categoriasPecas.find(c => c.id === ultimoGrupoSelecionado)
               const subM = subcategoriasPecas.find(s => s.id === ultimoSubgrupoSelecionado)
+              const gidM = ultimoGrupoSelecionado || ''
+              const sidM =
+                gidM && subM && subM.categoriaId === gidM ? ultimoSubgrupoSelecionado : ''
+              const subNomeM = sidM ? subM?.nome || '' : ''
               setPecaBibliotecaForm({
                 id: '',
                 nome: '',
@@ -57485,12 +57590,14 @@ A1;Peça exemplo;10`}
                 preco: '',
                 descricao: '',
                 categoria: catM?.nome || '',
-                categoriaId: ultimoGrupoSelecionado || '',
-                subcategoria: subM?.nome || '',
-                subcategoriaId: ultimoSubgrupoSelecionado || '',
+                categoriaId: gidM,
+                subcategoria: subNomeM,
+                subcategoriaId: sidM,
                 imagem: '',
                 dataCriacao: new Date().toISOString(),
               })
+              setUltimoGrupoSelecionado(gidM)
+              setUltimoSubgrupoSelecionado(sidM)
               setPecaBibliotecaPickerCategoriaAberto(false)
               setPecaBibliotecaPickerSubcategoriaAberto(false)
             }} style={{ marginBottom: '15px' }}>

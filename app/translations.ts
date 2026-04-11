@@ -1316,6 +1316,9 @@ export const translations = {
     pecaBibliotecaDicaGerirGruposCorpo:
       'Para renomear ou apagar categorias e subcategorias já criadas, abra a aba «Gerenciar Categorias» e use os botões Editar / Excluir ao lado de cada nome.',
     pecaBibliotecaIrGerirGrupos: 'Abrir Gerenciar Categorias',
+    pecaBibliotecaFaixaUltimaTitulo: 'Grupo atual (cadastro rápido)',
+    pecaBibliotecaFaixaUltimaHint:
+      'Este grupo repete na próxima peça e nas importações sem categoria. Abra «Categoria» abaixo só se precisar de outro.',
     gerenciarCategoriasSubtitulo:
       'Cada grupo tem Editar e Excluir; dentro dele, cada subcategoria também. Ao renomear, as peças e regras automáticas passam a mostrar o novo nome.',
     gerenciarGruposSubgrupos: 'Gerenciar Grupos e Subgrupos',
@@ -3465,6 +3468,9 @@ export const translations = {
     pecaBibliotecaDicaGerirGruposCorpo:
       'Para renombrar o eliminar categorías y subcategorías ya creadas, abra la pestaña «Gestionar categorías» y use Editar / Eliminar junto a cada nombre.',
     pecaBibliotecaIrGerirGrupos: 'Abrir Gestionar categorías',
+    pecaBibliotecaFaixaUltimaTitulo: 'Grupo actual (registro rápido)',
+    pecaBibliotecaFaixaUltimaHint:
+      'Se repite en la siguiente pieza y en importaciones sin categoría. Abra «Categoría» abajo solo si necesita otro.',
     gerenciarCategoriasSubtitulo:
       'Cada grupo tiene Editar y Eliminar; dentro, cada subgrupo también. Al renombrar, las piezas y reglas automáticas muestran el nombre nuevo.',
     visualizacaoGrid: 'Cuadrícula',
@@ -5524,6 +5530,9 @@ export const translations = {
     pecaBibliotecaDicaGerirGruposCorpo:
       'Pour renommer ou supprimer des catégories et sous-catégories existantes, ouvrez l’onglet « Gérer les catégories » et utilisez Modifier / Supprimer à côté de chaque nom.',
     pecaBibliotecaIrGerirGrupos: 'Ouvrir Gérer les catégories',
+    pecaBibliotecaFaixaUltimaTitulo: 'Groupe actuel (saisie rapide)',
+    pecaBibliotecaFaixaUltimaHint:
+      'Réutilisé pour la pièce suivante et les imports sans catégorie. Ouvrez « Catégorie » ci-dessous seulement pour changer.',
     gerenciarCategoriasSubtitulo:
       'Chaque groupe a Modifier et Supprimer ; chaque sous-groupe aussi. Au renommage, les pièces et règles automatiques affichent le nouveau nom.',
     visualizacaoGrid: 'Grille',
@@ -7589,6 +7598,9 @@ export const translations = {
     pecaBibliotecaDicaGerirGruposCorpo:
       'Per rinominare o eliminare categorie e sottocategorie già create, apri la scheda « Gestisci categorie » e usa Modifica / Elimina accanto a ogni nome.',
     pecaBibliotecaIrGerirGrupos: 'Apri Gestisci categorie',
+    pecaBibliotecaFaixaUltimaTitulo: 'Gruppo attuale (inserimento rapido)',
+    pecaBibliotecaFaixaUltimaHint:
+      'Si ripete per il pezzo successivo e per import senza categoria. Apri «Categoria» sotto solo se serve un altro gruppo.',
     gerenciarCategoriasSubtitulo:
       'Ogni gruppo ha Modifica ed Elimina; anche ogni sottogruppo. Dopo la rinomina, pezzi e regole automatiche mostrano il nuovo nome.',
     visualizacaoGrid: 'Griglia',
@@ -9669,6 +9681,9 @@ export const translations = {
     pecaBibliotecaDicaGerirGruposCorpo:
       'Zum Umbenennen oder Löschen vorhandener Kategorien/Unterkategorien öffnen Sie « Kategorien verwalten » und nutzen Sie Bearbeiten / Löschen neben jedem Namen.',
     pecaBibliotecaIrGerirGrupos: 'Kategorien verwalten öffnen',
+    pecaBibliotecaFaixaUltimaTitulo: 'Aktuelle Gruppe (schnelle Erfassung)',
+    pecaBibliotecaFaixaUltimaHint:
+      'Wird für das nächste Teil und Importe ohne Kategorie übernommen. «Kategorie» unten nur öffnen, wenn Sie wechseln möchten.',
     gerenciarCategoriasSubtitulo:
       'Jede Gruppe hat Bearbeiten und Löschen; jede Untergruppe ebenso. Nach Umbenennung zeigen Teile und automatische Regeln den neuen Namen.',
     visualizacaoGrid: 'Raster',
@@ -11727,6 +11742,9 @@ export const translations = {
     pecaBibliotecaDicaGerirGruposCorpo:
       'To rename or delete existing categories and subcategories, open the « Manage categories » tab and use Edit / Delete next to each name.',
     pecaBibliotecaIrGerirGrupos: 'Open Manage categories',
+    pecaBibliotecaFaixaUltimaTitulo: 'Current group (quick entry)',
+    pecaBibliotecaFaixaUltimaHint:
+      'Carries over to the next part and imports without a category. Open «Category» below only if you need a different group.',
     gerenciarCategoriasSubtitulo:
       'Each group has Edit and Delete; each subgroup too. When you rename, parts and automatic rules show the new name.',
     visualizacaoGrid: 'Grid',
