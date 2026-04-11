@@ -3487,6 +3487,8 @@ export default function Dashboard() {
   /** Listas de categoria/subcategoria no cadastro da peça: retraídas até clicar para escolher. */
   const [pecaBibliotecaPickerCategoriaAberto, setPecaBibliotecaPickerCategoriaAberto] = useState(false)
   const [pecaBibliotecaPickerSubcategoriaAberto, setPecaBibliotecaPickerSubcategoriaAberto] = useState(false)
+  /** Gerenciar Categorias: subcategorias retraídas por grupo até expandir. */
+  const [gerenciarCategoriasGrupoAberto, setGerenciarCategoriasGrupoAberto] = useState<Record<string, boolean>>({})
   const [pecaBibliotecaForm, setPecaBibliotecaForm] = useState<PecaBiblioteca>({
     id: '',
     nome: '',
@@ -16422,14 +16424,6 @@ export default function Dashboard() {
     setShowBibliotecaPecasForm(true)
   }
 
-  const handleDeletePecaBiblioteca = (pecaId: string) => {
-    if (window.confirm(t.confirmDeletePecaBiblioteca || 'Tem certeza que deseja excluir esta peça?')) {
-      const updatedPecas = pecasBiblioteca.filter(p => p.id !== pecaId)
-      setPecasBiblioteca(updatedPecas)
-      localStorage.setItem('nonato-pecas-biblioteca', JSON.stringify(updatedPecas))
-    }
-  }
-
   /** URL ou data URL → imagem na peça (tenta base64; se CORS bloquear, guarda o URL). */
   const aplicarImagemPecaBibliotecaDeUrl = async (urlRaw: string) => {
     const url = urlRaw.trim()
@@ -16524,12 +16518,9 @@ export default function Dashboard() {
     return descricaoLimpa
   }
 
+  /** Só deixa de ser «importação pendente» ao gravar a peça no formulário (Salvar), não ao só escolher grupo. */
   function normalizePecaBibliotecaImportacaoStatus(peca: PecaBiblioteca): PecaBiblioteca {
-    if (!peca.importacaoPendente) return { ...peca, importacaoPendente: false }
-    if (peca.categoriaId || peca.subcategoriaId) {
-      return { ...peca, importacaoPendente: false }
-    }
-    return { ...peca, importacaoPendente: true }
+    return { ...peca, importacaoPendente: !!peca.importacaoPendente }
   }
 
   // Mapeia objeto genérico (JSON do site) para PecaBiblioteca
@@ -17336,6 +17327,14 @@ export default function Dashboard() {
     localStorage.setItem('nonato-pecas-biblioteca', JSON.stringify(normalizado))
     void saveData('nonato-pecas-biblioteca', normalizado)
   }, [])
+
+  const handleDeletePecaBiblioteca = useCallback(
+    (pecaId: string) => {
+      if (!window.confirm(t.confirmDeletePecaBiblioteca || 'Tem certeza que deseja excluir esta peça?')) return
+      persistPecasBiblioteca(pecasBiblioteca.filter((p) => p.id !== pecaId))
+    },
+    [t, persistPecasBiblioteca, pecasBiblioteca]
+  )
 
   const persistRegrasClassificacaoPecas = useCallback((next: RegraClassificacaoPeca[]) => {
     setRegrasClassificacaoPecas(next)
@@ -30515,7 +30514,11 @@ onKeyPress={(e) => {
                         return
                       }
                       if (editingPecaBiblioteca) {
-                        const updated = pecasBiblioteca.map(p => p.id === editingPecaBiblioteca.id ? { ...pecaBibliotecaForm, id: editingPecaBiblioteca.id, importacaoPendente: p.importacaoPendente || false } : p)
+                        const updated = pecasBiblioteca.map(p =>
+                          p.id === editingPecaBiblioteca.id
+                            ? { ...pecaBibliotecaForm, id: editingPecaBiblioteca.id, importacaoPendente: false }
+                            : p
+                        )
                         persistPecasBiblioteca(updated)
                       } else {
                         const newPeca: PecaBiblioteca = {
@@ -30955,6 +30958,25 @@ onKeyPress={(e) => {
             {/* Conteúdo da aba Biblioteca */}
             {abaBibliotecaPecas === 'biblioteca' && (
               <div>
+                {pecasImportadasPendentes.length > 0 && (
+                  <div
+                    style={{
+                      marginBottom: '16px',
+                      padding: '12px 14px',
+                      borderRadius: '10px',
+                      border: '1px solid rgba(255, 193, 7, 0.35)',
+                      backgroundColor: 'rgba(40, 32, 0, 0.55)',
+                    }}
+                  >
+                    <div style={{ fontSize: '13px', color: '#ffe082', fontWeight: 600, marginBottom: '6px' }}>
+                      {safeT?.pecaBibliotecaImportacoesPendentes || 'Importações pendentes'} ({pecasImportadasPendentes.length})
+                    </div>
+                    <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.9)', lineHeight: 1.5 }}>
+                      {safeT?.bibliotecaImportacoesNaoSalvasBanner ||
+                        'Estas peças ainda não entram na grelha do catálogo. Abra cada uma (duplo clique ou editar), confira e use Salvar para integrá-las.'}
+                    </p>
+                  </div>
+                )}
                 {/* Controles de visualização */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
                   <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -31063,11 +31085,13 @@ onKeyPress={(e) => {
 
                 {/* Visualização das peças */}
                 {(() => {
-                  const pecasFiltradas = pecasBiblioteca.filter((peca) => {
+                  const passaFiltroBiblioteca = (peca: PecaBiblioteca) => {
                     if (filtroGrupoBiblioteca && peca.categoriaId !== filtroGrupoBiblioteca) return false
                     if (filtroSubgrupoBiblioteca && peca.subcategoriaId !== filtroSubgrupoBiblioteca) return false
                     return true
-                  })
+                  }
+                  const pecasVisiveisParaLote = pecasBiblioteca.filter(passaFiltroBiblioteca)
+                  const pecasCatalogoFiltradas = pecasVisiveisParaLote.filter((p) => !p.importacaoPendente)
 
                   const renderPecaBibliotecaGridCell = (peca: PecaBiblioteca) => {
                     const grupoNome = peca.categoriaId ? categoriasPecas.find((c) => c.id === peca.categoriaId)?.nome : null
@@ -31081,13 +31105,16 @@ onKeyPress={(e) => {
                           padding: '15px',
                           borderRadius: '8px',
                           border: isSelected ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
-                          cursor: 'pointer',
+                          cursor: isPendingChecklist ? 'pointer' : 'default',
                           transition: 'transform 0.2s',
                         }}
                         onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
                         onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
                         onClick={() => {
                           if (isPendingChecklist) setPecaSelecionadaParaChecklist(peca)
+                        }}
+                        onDoubleClick={() => {
+                          if (!isPendingChecklist) handleEditPecaBiblioteca(peca)
                         }}
                       >
                         {peca.imagem ? (
@@ -31122,6 +31149,33 @@ onKeyPress={(e) => {
                             {safeT?.categoriaPecaBiblioteca || 'Grupo'}: {grupoNome}
                           </p>
                         )}
+                        <div
+                          style={{ display: 'flex', gap: '6px', marginTop: '12px', flexWrap: 'wrap' }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEditPecaBiblioteca(peca)
+                            }}
+                            style={{ flex: 1, minWidth: '72px', padding: '6px 8px', fontSize: '12px' }}
+                          >
+                            {safeT?.edit || 'Editar'}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-danger"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeletePecaBiblioteca(peca.id)
+                            }}
+                            style={{ flex: 1, minWidth: '72px', padding: '6px 8px', fontSize: '12px' }}
+                          >
+                            {safeT?.delete || 'Excluir'}
+                          </button>
+                        </div>
                       </div>
                     )
                   }
@@ -31183,10 +31237,10 @@ onKeyPress={(e) => {
                           <button
                             type="button"
                             className="btn-secondary"
-                            onClick={() => setSelecaoPecasBibliotecaIds(pecasFiltradas.map((peca) => peca.id))}
+                            onClick={() => setSelecaoPecasBibliotecaIds(pecasVisiveisParaLote.map((peca) => peca.id))}
                             style={{ padding: '8px 12px', fontSize: '12px' }}
                           >
-                            {safeT?.classificacaoLoteSelecionarVisiveis || 'Selecionar visíveis'} ({pecasFiltradas.length})
+                            {safeT?.classificacaoLoteSelecionarVisiveis || 'Selecionar visíveis'} ({pecasVisiveisParaLote.length})
                           </button>
                           <button
                             type="button"
@@ -31303,7 +31357,7 @@ onKeyPress={(e) => {
                               className="btn-primary"
                               onClick={() =>
                                 handleAplicarClassificacaoLote(
-                                  selecaoPecasBibliotecaIds.length > 0 ? selecaoPecasBibliotecaIds : pecasFiltradas.map((peca) => peca.id)
+                                  selecaoPecasBibliotecaIds.length > 0 ? selecaoPecasBibliotecaIds : pecasVisiveisParaLote.map((peca) => peca.id)
                                 )
                               }
                               style={{ padding: '10px 14px', fontSize: '12px' }}
@@ -31315,7 +31369,7 @@ onKeyPress={(e) => {
                               className="btn-secondary"
                               onClick={() =>
                                 handleAplicarPalavrasClassificacaoLote(
-                                  selecaoPecasBibliotecaIds.length > 0 ? selecaoPecasBibliotecaIds : pecasFiltradas.map((peca) => peca.id)
+                                  selecaoPecasBibliotecaIds.length > 0 ? selecaoPecasBibliotecaIds : pecasVisiveisParaLote.map((peca) => peca.id)
                                 )
                               }
                               style={{ padding: '10px 14px', fontSize: '12px' }}
@@ -31333,7 +31387,7 @@ onKeyPress={(e) => {
                               className="btn-secondary"
                               onClick={() =>
                                 handleAplicarRegrasSalvas(
-                                  selecaoPecasBibliotecaIds.length > 0 ? selecaoPecasBibliotecaIds : pecasFiltradas.map((peca) => peca.id)
+                                  selecaoPecasBibliotecaIds.length > 0 ? selecaoPecasBibliotecaIds : pecasVisiveisParaLote.map((peca) => peca.id)
                                 )
                               }
                               style={{ padding: '9px 12px', fontSize: '12px' }}
@@ -31392,7 +31446,16 @@ onKeyPress={(e) => {
                     </div>
                   )
 
-                  if (pecasFiltradas.length === 0) {
+                  const vazioMsgSoPendentes = (
+                    <div style={{ padding: '28px', textAlign: 'center', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(255, 193, 7, 0.25)' }}>
+                      <p style={{ fontSize: '15px', opacity: 0.88, color: '#e8e0c8', lineHeight: 1.5, margin: 0 }}>
+                        {safeT?.bibliotecaCatalogoVazioSoPendentes ||
+                          'Nenhuma peça integrada ao catálogo para estes filtros. As importações ainda não confirmadas aparecem na aba Importação e na lista acima até gravar a peça (Salvar).'}
+                      </p>
+                    </div>
+                  )
+
+                  if (pecasVisiveisParaLote.length === 0) {
                     return (
                       <>
                         {painelClassificacaoLote}
@@ -31401,20 +31464,29 @@ onKeyPress={(e) => {
                     )
                   }
 
+                  if (pecasCatalogoFiltradas.length === 0) {
+                    return (
+                      <>
+                        {painelClassificacaoLote}
+                        {vazioMsgSoPendentes}
+                      </>
+                    )
+                  }
+
                   if (visualizacaoBiblioteca === 'grid') {
                     if (bibliotecaAgruparPorCategoria) {
                       const ordemIds: string[] = []
                       for (const c of categoriasPecasAlfabeto) {
-                        if (pecasFiltradas.some((p) => p.categoriaId === c.id)) ordemIds.push(c.id)
+                        if (pecasCatalogoFiltradas.some((p) => p.categoriaId === c.id)) ordemIds.push(c.id)
                       }
-                      const semCat = pecasFiltradas.filter((p) => !p.categoriaId)
+                      const semCat = pecasCatalogoFiltradas.filter((p) => !p.categoriaId)
                       return (
                         <>
                           {painelClassificacaoLote}
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
                             {ordemIds.map((catId) => {
                               const cat = categoriasPecas.find((x) => x.id === catId)
-                              const lista = pecasFiltradas.filter((p) => p.categoriaId === catId)
+                              const lista = pecasCatalogoFiltradas.filter((p) => p.categoriaId === catId)
                               return (
                                 <div key={catId}>
                                   <h3 style={{ margin: '0 0 10px', fontSize: '15px', color: '#00ff00', fontWeight: 600 }}>{cat?.nome || catId}</h3>
@@ -31442,7 +31514,7 @@ onKeyPress={(e) => {
                       <>
                         {painelClassificacaoLote}
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
-                          {pecasFiltradas.map((peca) => renderPecaBibliotecaGridCell(peca))}
+                          {pecasCatalogoFiltradas.map((peca) => renderPecaBibliotecaGridCell(peca))}
                         </div>
                       </>
                     )
@@ -31473,7 +31545,7 @@ onKeyPress={(e) => {
                           backgroundColor: '#2e2e2e',
                         }}
                       >
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: bibText, minWidth: '720px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: bibText, minWidth: '900px' }}>
                           <thead>
                             <tr style={{ backgroundColor: bibHead, color: '#ffffff' }}>
                               <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, width: '88px', ...bibThRule }}>
@@ -31512,10 +31584,13 @@ onKeyPress={(e) => {
                                   {headerFilter}
                                 </span>
                               </th>
+                              <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', width: '140px', ...bibThRule }}>
+                                {safeT?.actions || 'Ações'}
+                              </th>
                             </tr>
                           </thead>
                           <tbody>
-                            {pecasFiltradas.map((peca, idx) => {
+                            {pecasCatalogoFiltradas.map((peca, idx) => {
                               const grupoNome = peca.categoriaId ? categoriasPecas.find((c) => c.id === peca.categoriaId)?.nome : null
                               const isPendingChecklist = criacaoChecklistPendentePeca?.origem === 'biblioteca'
                               const isSelected = isPendingChecklist && pecaSelecionadaParaChecklist?.id === peca.id
@@ -31531,6 +31606,9 @@ onKeyPress={(e) => {
                                   }}
                                   onClick={() => {
                                     if (isPendingChecklist) setPecaSelecionadaParaChecklist(peca)
+                                  }}
+                                  onDoubleClick={() => {
+                                    if (!isPendingChecklist) handleEditPecaBiblioteca(peca)
                                   }}
                                 >
                                   <td style={{ padding: '8px 12px', verticalAlign: 'middle', ...bibTdRule }}>
@@ -31562,6 +31640,29 @@ onKeyPress={(e) => {
                                   <td style={{ padding: '10px 14px', verticalAlign: 'middle', ...bibTdRule }}>{peca.subcategoria || '—'}</td>
                                   <td style={{ padding: '10px 14px', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap', ...bibTdRule }}>
                                     {peca.preco ? `${peca.preco}€` : '—'}
+                                  </td>
+                                  <td
+                                    style={{ padding: '8px 10px', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap', ...bibTdRule }}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <div style={{ display: 'inline-flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                      <button
+                                        type="button"
+                                        className="btn-primary"
+                                        onClick={() => handleEditPecaBiblioteca(peca)}
+                                        style={{ padding: '5px 8px', fontSize: '11px' }}
+                                      >
+                                        {safeT?.edit || 'Editar'}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn-danger"
+                                        onClick={() => handleDeletePecaBiblioteca(peca.id)}
+                                        style={{ padding: '5px 8px', fontSize: '11px' }}
+                                      >
+                                        {safeT?.delete || 'Excluir'}
+                                      </button>
+                                    </div>
                                   </td>
                                 </tr>
                               )
@@ -31633,6 +31734,10 @@ onKeyPress={(e) => {
                           .sort((a, b) =>
                             (a.nome || '').localeCompare(b.nome || '', undefined, { sensitivity: 'base', numeric: true })
                           )
+                        const editandoSubNestaCategoria =
+                          editingSubcategoria != null && subcategoriasDoGrupo.some((s) => s.id === editingSubcategoria.id)
+                        const subcategoriasVisiveis =
+                          editandoSubNestaCategoria || gerenciarCategoriasGrupoAberto[categoria.id] === true
                         /* Zebra: cinza mais escuro / cinza um pouco mais claro; texto branco nas linhas. Cabeçalhos permanecem escuros. */
                         const rowLine = '#555555'
                         const excelHeaderBg = '#2f2f2f'
@@ -31730,11 +31835,36 @@ onKeyPress={(e) => {
                                     ) : (
                                       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                          <button
+                                            type="button"
+                                            aria-expanded={subcategoriasVisiveis}
+                                            title={
+                                              subcategoriasVisiveis
+                                                ? safeT?.gerenciarCategoriasOcultarSubcategorias || 'Ocultar subcategorias'
+                                                : safeT?.gerenciarCategoriasMostrarSubcategorias || 'Mostrar subcategorias'
+                                            }
+                                            onClick={() =>
+                                              setGerenciarCategoriasGrupoAberto((prev) => ({
+                                                ...prev,
+                                                [categoria.id]: !prev[categoria.id],
+                                              }))
+                                            }
+                                            style={{
+                                              background: 'rgba(255,255,255,0.08)',
+                                              border: '1px solid rgba(255,255,255,0.2)',
+                                              borderRadius: '4px',
+                                              color: '#fff',
+                                              cursor: 'pointer',
+                                              padding: '4px 8px',
+                                              fontSize: '11px',
+                                              lineHeight: 1,
+                                              flexShrink: 0,
+                                            }}
+                                          >
+                                            {subcategoriasVisiveis ? '▼' : '▶'}
+                                          </button>
                                           <span style={{ fontSize: '15px', letterSpacing: '0.02em' }} title={categoria.nome}>
                                             {categoria.nome}
-                                          </span>
-                                          <span style={{ opacity: 0.65, fontSize: '10px', lineHeight: 1 }} aria-hidden>
-                                            ▼
                                           </span>
                                         </span>
                                         <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.75)', fontWeight: 500 }}>
@@ -31771,6 +31901,7 @@ onKeyPress={(e) => {
                                           type="button"
                                           className="btn-primary"
                                           onClick={() => {
+                                            setGerenciarCategoriasGrupoAberto((prev) => ({ ...prev, [categoria.id]: true }))
                                             setShowNovaSubcategoriaForm(true)
                                             setNovaSubcategoriaNome('')
                                             setEditingSubcategoria(null)
@@ -31827,7 +31958,8 @@ onKeyPress={(e) => {
                               </thead>
                             </table>
 
-                            {/* Tabela de subcategorias — cabeçalho + linhas zebra (como na folha Excel) */}
+                            {/* Tabela de subcategorias — retraída até expandir o grupo */}
+                            {subcategoriasVisiveis ? (
                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: excelText }}>
                               <thead>
                                 <tr style={{ backgroundColor: excelSubHeadBg, color: '#ffffff' }}>
@@ -32009,6 +32141,7 @@ onKeyPress={(e) => {
                                 )}
                               </tbody>
                             </table>
+                            ) : null}
                           </div>
                         )
                       })}
@@ -32120,14 +32253,15 @@ onKeyPress={(e) => {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
                     <div>
                       <div style={{ color: '#ffdc73', fontSize: '14px', fontWeight: 700 }}>
-                        {(safeT as any)?.importacaoPendentesTitle || 'Fila de importações pendentes'}
+                        {safeT?.importacaoPendentesTitle || 'Fila de importações pendentes'}
                       </div>
                       <div style={{ color: '#f5e7b5', fontSize: '12px', marginTop: '4px' }}>
-                        {(safeT as any)?.importacaoPendentesDesc || 'As peças importadas aparecem aqui até receberem grupo ou subgrupo. Depois somem desta lista automaticamente.'}
+                        {safeT?.importacaoPendentesDesc ||
+                          'Ficam aqui até gravar a peça no formulário (Salvar). Só depois entram na grelha da Biblioteca.'}
                       </div>
                     </div>
                     <div style={{ padding: '6px 10px', borderRadius: '999px', backgroundColor: 'rgba(255, 193, 7, 0.18)', color: '#fff2bf', fontSize: '12px', fontWeight: 700 }}>
-                      {pecasImportadasPendentes.length} {(safeT as any)?.importacaoPendentesCount || 'pendente(s)'}
+                      {pecasImportadasPendentes.length} {safeT?.importacaoPendentesCount || 'pendente(s)'}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
@@ -32143,7 +32277,7 @@ onKeyPress={(e) => {
                   </div>
                   {pecasImportadasPendentesFiltradas.length === 0 ? (
                     <div style={{ fontSize: '12px', color: '#d9d9d9', opacity: 0.85 }}>
-                      {(safeT as any)?.importacaoPendentesEmpty || 'Nenhuma peça importada pendente neste momento.'}
+                      {safeT?.importacaoPendentesEmpty || 'Nenhuma peça importada pendente neste momento.'}
                     </div>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px', maxHeight: '240px', overflowY: 'auto', paddingRight: '4px' }}>
@@ -32152,7 +32286,7 @@ onKeyPress={(e) => {
                           <div style={{ color: '#ffffff', fontSize: '13px', fontWeight: 700, marginBottom: '4px' }}>{peca.nome}</div>
                           <div style={{ color: '#ffdc73', fontSize: '12px', marginBottom: '6px' }}>{peca.codigo}</div>
                           <div style={{ color: '#bfbfbf', fontSize: '12px' }}>
-                            {(safeT as any)?.importacaoPendentesStatus || 'À espera de grupo/subgrupo'}
+                            {safeT?.importacaoPendentesStatus || 'À espera de confirmação (Salvar)'}
                           </div>
                           <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
                             <button
@@ -32301,7 +32435,7 @@ A1;Peça exemplo;10'
                         fontSize: '14px'
                       }}
                     >
-                      {safeT?.importacaoAdicionarBiblioteca || 'Adicionar à Biblioteca'} ({importacaoPreview.length})
+                      {safeT?.importacaoEnviarParaFila || safeT?.importacaoAdicionarBiblioteca || 'Enviar para fila'} ({importacaoPreview.length})
                     </button>
                   </div>
                 )}
@@ -32405,14 +32539,15 @@ A1;Peça exemplo;10'
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
                   <div>
                     <div style={{ color: '#ffdc73', fontSize: '14px', fontWeight: 700 }}>
-                      {(safeT as any)?.importacaoPendentesTitle || 'Fila de importações pendentes'}
+                      {safeT?.importacaoPendentesTitle || 'Fila de importações pendentes'}
                     </div>
                     <div style={{ color: '#f5e7b5', fontSize: '12px', marginTop: '4px' }}>
-                      {(safeT as any)?.importacaoPendentesDesc || 'As peças importadas aparecem aqui até receberem grupo ou subgrupo. Depois somem desta lista automaticamente.'}
+                      {safeT?.importacaoPendentesDesc ||
+                          'Ficam aqui até gravar a peça no formulário (Salvar). Só depois entram na grelha da Biblioteca.'}
                     </div>
                   </div>
                   <div style={{ padding: '6px 10px', borderRadius: '999px', backgroundColor: 'rgba(255, 193, 7, 0.18)', color: '#fff2bf', fontSize: '12px', fontWeight: 700 }}>
-                    {pecasImportadasPendentes.length} {(safeT as any)?.importacaoPendentesCount || 'pendente(s)'}
+                    {pecasImportadasPendentes.length} {safeT?.importacaoPendentesCount || 'pendente(s)'}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
@@ -32428,7 +32563,7 @@ A1;Peça exemplo;10'
                 </div>
                 {pecasImportadasPendentesFiltradas.length === 0 ? (
                   <div style={{ fontSize: '12px', color: '#d9d9d9', opacity: 0.85 }}>
-                    {(safeT as any)?.importacaoPendentesEmpty || 'Nenhuma peça importada pendente neste momento.'}
+                    {safeT?.importacaoPendentesEmpty || 'Nenhuma peça importada pendente neste momento.'}
                   </div>
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px', maxHeight: '240px', overflowY: 'auto', paddingRight: '4px' }}>
@@ -32437,7 +32572,7 @@ A1;Peça exemplo;10'
                         <div style={{ color: '#ffffff', fontSize: '13px', fontWeight: 700, marginBottom: '4px' }}>{peca.nome}</div>
                         <div style={{ color: '#ffdc73', fontSize: '12px', marginBottom: '6px' }}>{peca.codigo}</div>
                         <div style={{ color: '#bfbfbf', fontSize: '12px' }}>
-                          {(safeT as any)?.importacaoPendentesStatus || 'À espera de grupo/subgrupo'}
+                          {safeT?.importacaoPendentesStatus || 'À espera de confirmação (Salvar)'}
                         </div>
                         <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
                           <button
@@ -32673,7 +32808,7 @@ A1;Peça exemplo;10`}
                       fontSize: '14px'
                     }}
                   >
-                    {safeT?.importacaoAdicionarBiblioteca || 'Adicionar à Biblioteca'} ({importacaoPreview.length})
+                    {safeT?.importacaoEnviarParaFila || safeT?.importacaoAdicionarBiblioteca || 'Enviar para fila'} ({importacaoPreview.length})
                   </button>
                 </div>
               )}
@@ -57312,8 +57447,12 @@ A1;Peça exemplo;10`}
                       return
                     }
                     if (editingPecaBiblioteca) {
-                      const updated = pecasBiblioteca.map(p => p.id === editingPecaBiblioteca.id ? { ...pecaBibliotecaForm, id: editingPecaBiblioteca.id, importacaoPendente: p.importacaoPendente || false } : p)
-                      persistPecasBiblioteca(updated)
+                      const updated = pecasBiblioteca.map(p =>
+                          p.id === editingPecaBiblioteca.id
+                            ? { ...pecaBibliotecaForm, id: editingPecaBiblioteca.id, importacaoPendente: false }
+                            : p
+                        )
+                        persistPecasBiblioteca(updated)
                     } else {
                       const newPeca: PecaBiblioteca = {
                         ...pecaBibliotecaForm,
