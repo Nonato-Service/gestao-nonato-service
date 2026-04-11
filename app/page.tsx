@@ -3526,6 +3526,8 @@ export default function Dashboard() {
   const [editingPecaBiblioteca, setEditingPecaBiblioteca] = useState<PecaBiblioteca | null>(null)
   const [filtroGrupoBiblioteca, setFiltroGrupoBiblioteca] = useState<string>('')
   const [filtroSubgrupoBiblioteca, setFiltroSubgrupoBiblioteca] = useState<string>('')
+  /** Biblioteca: filtra peças cujo código contém o texto (sem distinção maiúsculas/minúsculas). */
+  const [buscaCodigoBiblioteca, setBuscaCodigoBiblioteca] = useState<string>('')
   const [abaBibliotecaPecas, setAbaBibliotecaPecas] = useState<'cadastro' | 'biblioteca' | 'grupos' | 'importacao'>('cadastro')
   /** Se a peça foi aberta a partir da fila de importação, após Salvar regressa à aba Importação (não à Biblioteca). */
   const [salvarPecaBibliotecaVoltaParaImportacao, setSalvarPecaBibliotecaVoltaParaImportacao] = useState(false)
@@ -31160,6 +31162,32 @@ onKeyPress={(e) => {
                       </select>
                     </div>
                   ) : null}
+                  <div style={{ minWidth: '200px', flex: '1 1 220px', maxWidth: '360px' }}>
+                    <label
+                      htmlFor="biblioteca-busca-codigo"
+                      style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.75)', marginBottom: '4px' }}
+                    >
+                      {safeT?.bibliotecaBuscarPorCodigo || 'Buscar por código'}
+                    </label>
+                    <input
+                      id="biblioteca-busca-codigo"
+                      type="search"
+                      value={buscaCodigoBiblioteca}
+                      onChange={(e) => setBuscaCodigoBiblioteca(e.target.value)}
+                      placeholder={safeT?.codigoPecaBibliotecaPlaceholder || 'Ex: FO-123-ABC'}
+                      autoComplete="off"
+                      style={{
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        padding: '8px 10px',
+                        backgroundColor: '#222222',
+                        color: '#fff',
+                        border: '1px solid rgba(0, 255, 0, 0.3)',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                      }}
+                    />
+                  </div>
                 </div>
 
                 {/* Visualização das peças */}
@@ -31167,6 +31195,13 @@ onKeyPress={(e) => {
                   const passaFiltroBiblioteca = (peca: PecaBiblioteca) => {
                     if (filtroGrupoBiblioteca && peca.categoriaId !== filtroGrupoBiblioteca) return false
                     if (filtroSubgrupoBiblioteca && peca.subcategoriaId !== filtroSubgrupoBiblioteca) return false
+                    const q = buscaCodigoBiblioteca.trim().toLowerCase()
+                    if (q) {
+                      const cod = String(peca.codigo ?? '')
+                        .trim()
+                        .toLowerCase()
+                      if (!cod.includes(q)) return false
+                    }
                     return true
                   }
                   const pecasVisiveisParaLote = pecasBiblioteca.filter(passaFiltroBiblioteca)

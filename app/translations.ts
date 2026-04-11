@@ -1325,6 +1325,7 @@ export const translations = {
       'O catálogo completo está na aba «Biblioteca» (por categoria ou todas as peças). Aqui no «Cadastro» vê apenas o que ainda está a importar ou a completar antes de gravar.',
     bibliotecaPorCategoria: 'Por categoria',
     bibliotecaTodasPecas: 'Todas as peças',
+    bibliotecaBuscarPorCodigo: 'Buscar por código',
     pecaBibliotecaImportacoesPendentes: 'Importações pendentes',
     bibliotecaCatalogoVazioSoPendentes:
       'Nenhuma peça integrada ao catálogo para estes filtros. As importações ainda não confirmadas aparecem na aba Importação e no aviso acima até gravar a peça (Salvar).',
@@ -3467,6 +3468,7 @@ export const translations = {
       'El catálogo completo está en la pestaña «Biblioteca» (por categoría o todas las piezas). En «Registro de piezas» solo verá lo pendiente de importar o de completar antes de guardar.',
     bibliotecaPorCategoria: 'Por categoría',
     bibliotecaTodasPecas: 'Todas las piezas',
+    bibliotecaBuscarPorCodigo: 'Buscar por código',
     pecaBibliotecaImportacoesPendentes: 'Importaciones pendientes',
     bibliotecaCatalogoVazioSoPendentes:
       'Ninguna pieza integrada al catálogo con estos filtros. Las importaciones sin confirmar están en la pestaña Importación y en el aviso superior hasta guardar la pieza (Guardar).',
@@ -5521,6 +5523,7 @@ export const translations = {
       'Le catalogue complet se trouve dans l’onglet « Bibliothèque » (par catégorie ou toutes les pièces). Dans « Saisie », vous ne voyez que ce qui reste à importer ou à compléter avant enregistrement.',
     bibliotecaPorCategoria: 'Par catégorie',
     bibliotecaTodasPecas: 'Toutes les pièces',
+    bibliotecaBuscarPorCodigo: 'Rechercher par code',
     pecaBibliotecaImportacoesPendentes: 'Importations en attente',
     bibliotecaCatalogoVazioSoPendentes:
       'Aucune pièce intégrée au catalogue avec ces filtres. Les importations non confirmées sont dans l’onglet Importation et dans l’encadré ci-dessus jusqu’à enregistrer la pièce (Enregistrer).',
@@ -7582,6 +7585,7 @@ export const translations = {
       'Il catalogo completo è nella scheda « Biblioteca » (per categoria o tutti i componenti). In « Registro » vedi solo ciò che è ancora da importare o da completare prima di salvare.',
     bibliotecaPorCategoria: 'Per categoria',
     bibliotecaTodasPecas: 'Tutti i componenti',
+    bibliotecaBuscarPorCodigo: 'Cerca per codice',
     pecaBibliotecaImportacoesPendentes: 'Importazioni in sospeso',
     bibliotecaCatalogoVazioSoPendentes:
       'Nessun componente integrato al catalogo con questi filtri. Le importazioni non confermate sono nella scheda Importazione e nel riquadro sopra finché non salvi il componente (Salva).',
@@ -9658,6 +9662,7 @@ export const translations = {
       'Der vollständige Katalog befindet sich unter « Bibliothek » (nach Kategorie oder alle Teile). Unter « Erfassung » sehen Sie nur noch zu importierende oder vor dem Speichern zu vervollständigende Einträge.',
     bibliotecaPorCategoria: 'Nach Kategorie',
     bibliotecaTodasPecas: 'Alle Teile',
+    bibliotecaBuscarPorCodigo: 'Nach Code suchen',
     pecaBibliotecaImportacoesPendentes: 'Ausstehende Importe',
     bibliotecaCatalogoVazioSoPendentes:
       'Keine Teile im Katalog mit diesen Filtern. Nicht bestätigte Importe finden Sie im Tab Import und im Hinweis oben, bis Sie das Teil speichern (Speichern).',
@@ -11712,6 +11717,7 @@ export const translations = {
       'The full catalog is on the « Library » tab (by category or all parts). On « Registration » you only see items still being imported or completed before saving.',
     bibliotecaPorCategoria: 'By category',
     bibliotecaTodasPecas: 'All parts',
+    bibliotecaBuscarPorCodigo: 'Search by code',
     pecaBibliotecaImportacoesPendentes: 'Pending imports',
     bibliotecaCatalogoVazioSoPendentes:
       'No parts integrated into the catalog with these filters. Unconfirmed imports stay on the Import tab and in the banner above until you save the part (Save).',
