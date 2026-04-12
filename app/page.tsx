@@ -29738,21 +29738,169 @@ onKeyPress={(e) => {
         )
       }
       
-      case 'biblioteca-pecas':
+      case 'biblioteca-pecas': {
+        const hubT: Record<string, string> = (safeT || {}) as Record<string, string>
+        const bibFmtCount = (n: number) =>
+          String(hubT.bibliotecaContagemPecas || '{count}').replace('{count}', String(n))
+        const bpTab = (active: boolean): React.CSSProperties => ({
+          padding: '10px 16px',
+          backgroundColor: active ? 'rgba(8, 42, 22, 0.98)' : 'rgba(255,255,255,0.03)',
+          border: active ? '1px solid rgba(0, 230, 120, 0.5)' : '1px solid transparent',
+          color: '#ffffff',
+          cursor: 'pointer',
+          fontSize: 13,
+          fontWeight: active ? 800 : 600,
+          borderRadius: 11,
+          transition: 'all 0.2s ease',
+          boxShadow: active
+            ? '0 0 24px rgba(0, 200, 90, 0.14), inset 0 1px 0 rgba(255,255,255,0.07)'
+            : 'none',
+        })
+        const BibliotecaSecaoCategoria = (props: {
+          titulo: string
+          count: number
+          variant: 'grupo' | 'sem'
+          children: React.ReactNode
+          descricaoExtra?: React.ReactNode
+        }) => {
+          const isSem = props.variant === 'sem'
+          const badge = isSem
+            ? hubT.bibliotecaSecaoBadgeAClassificar || 'A classificar'
+            : hubT.bibliotecaSecaoBadgeGrupo || 'Grupo'
+          return (
+            <div
+              style={{
+                borderRadius: 16,
+                overflow: 'hidden',
+                border: isSem
+                  ? '1px solid rgba(255, 170, 90, 0.42)'
+                  : '1px solid rgba(0, 220, 120, 0.3)',
+                boxShadow: isSem
+                  ? '0 12px 40px rgba(255, 100, 40, 0.1), inset 0 1px 0 rgba(255,255,255,0.05)'
+                  : '0 16px 48px rgba(0, 40, 24, 0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
+                background: isSem ? 'rgba(32, 20, 8, 0.82)' : 'rgba(6, 16, 10, 0.88)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 14,
+                  flexWrap: 'wrap',
+                  padding: '14px 18px',
+                  background: isSem
+                    ? 'linear-gradient(108deg, rgba(140, 70, 12, 0.5) 0%, rgba(36, 22, 8, 0.96) 52%)'
+                    : 'linear-gradient(108deg, rgba(0, 100, 52, 0.5) 0%, rgba(6, 28, 16, 0.97) 55%)',
+                  borderBottom: '1px solid rgba(255,255,255,0.07)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, minWidth: 0, flex: 1 }}>
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      marginTop: 2,
+                      fontSize: 10,
+                      letterSpacing: '0.14em',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      padding: '5px 10px',
+                      borderRadius: 8,
+                      background: isSem ? 'rgba(255, 150, 60, 0.22)' : 'rgba(0, 230, 120, 0.14)',
+                      border: isSem ? '1px solid rgba(255, 190, 110, 0.38)' : '1px solid rgba(0, 255, 150, 0.28)',
+                      color: isSem ? '#ffd8b0' : '#c6ffd8',
+                    }}
+                  >
+                    {badge}
+                  </span>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <h3
+                      style={{
+                        margin: 0,
+                        fontSize: 'clamp(1.02rem, 2.8vw, 1.22rem)',
+                        fontWeight: 800,
+                        letterSpacing: '0.03em',
+                        color: isSem ? '#ffeacc' : '#f0fff6',
+                        lineHeight: 1.3,
+                        wordBreak: 'break-word',
+                      }}
+                    >
+                      {props.titulo}
+                    </h3>
+                  </div>
+                </div>
+                <span
+                  style={{
+                    flexShrink: 0,
+                    fontSize: 12,
+                    fontWeight: 800,
+                    padding: '7px 15px',
+                    borderRadius: 999,
+                    background: isSem ? 'rgba(255, 130, 40, 0.25)' : 'rgba(0, 210, 96, 0.2)',
+                    border: isSem ? '1px solid rgba(255, 170, 90, 0.45)' : '1px solid rgba(0, 255, 140, 0.35)',
+                    color: '#fff',
+                    letterSpacing: '0.02em',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.28)',
+                  }}
+                >
+                  {bibFmtCount(props.count)}
+                </span>
+              </div>
+              {props.descricaoExtra ? (
+                <div
+                  style={{
+                    padding: '12px 18px',
+                    fontSize: 12,
+                    lineHeight: 1.55,
+                    color: 'rgba(255, 235, 210, 0.92)',
+                    background: 'rgba(0,0,0,0.22)',
+                    borderBottom: '1px solid rgba(255,255,255,0.05)',
+                  }}
+                >
+                  {props.descricaoExtra}
+                </div>
+              ) : null}
+              <div style={{ padding: 18, background: 'rgba(0,0,0,0.2)' }}>{props.children}</div>
+            </div>
+          )
+        }
         return (
           <div className="tab-content-wrapper tab-glass-root" style={{ overflow: 'visible' }}>
-            {/* Cabeçalho Profissional */}
-            <div className="tab-glass-hero tab-glass-hero--compact">
+            {/* Cabeçalho — moldura em gradiente */}
+            <div
+              style={{
+                position: 'relative',
+                marginBottom: 20,
+                padding: 2,
+                borderRadius: 18,
+                background: 'linear-gradient(145deg, rgba(0,255,150,0.45), rgba(0,70,42,0.35) 40%, rgba(0,120,80,0.5))',
+                boxShadow:
+                  '0 0 0 1px rgba(0,255,120,0.12), 0 22px 56px rgba(0, 30, 16, 0.55), inset 0 1px 0 rgba(255,255,255,0.06)',
+              }}
+            >
+            <div
+              className="tab-glass-hero tab-glass-hero--compact"
+              style={{
+                borderRadius: 16,
+                margin: 0,
+                background: 'linear-gradient(168deg, rgba(12,32,20,0.98), rgba(4,14,9,0.94))',
+                border: '1px solid rgba(0, 255, 120, 0.14)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
+              }}
+            >
               <div className="tab-glass-hero-top" style={{ marginBottom: 0 }}>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
                 </div>
                 <div className="tab-glass-hero-heading">
-                  <h1 className="tab-glass-hero-title" style={{ fontSize: 'clamp(1rem, 3.5vw, 1.15rem)' }}>
+                  <h1 className="tab-glass-hero-title" style={{ fontSize: 'clamp(1.05rem, 3.6vw, 1.28rem)', letterSpacing: '0.06em' }}>
                     {safeT?.cadastroPecasBibliotecaTitle || 'BIBLIOTECA DE PEÇAS'}
                   </h1>
-                  <p className="tab-glass-hero-meta" style={{ fontSize: '12px', opacity: 0.92 }}>
+                  <p className="tab-glass-hero-meta" style={{ fontSize: '12px', opacity: 0.92, fontWeight: 600 }}>
                     {pecasBiblioteca.length} {safeT?.pecasCadastradas || 'peça(s) cadastrada(s)'}
+                  </p>
+                  <p style={{ fontSize: '11px', opacity: 0.82, maxWidth: 560, lineHeight: 1.5, margin: '8px 0 0' }}>
+                    {hubT.bibliotecaHubTagline || 'Catálogo unificado e grupos claros.'}
                   </p>
                 </div>
                 <div className="tab-glass-hero-actions">
@@ -29819,13 +29967,27 @@ onKeyPress={(e) => {
                 </div>
               </div>
             </div>
+            </div>
 
-            {/* Painel de Estatísticas - compacto */}
+            {/* Painel de Estatísticas — visão geral */}
+            <div style={{ marginBottom: 18 }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  letterSpacing: '0.16em',
+                  textTransform: 'uppercase',
+                  fontWeight: 800,
+                  color: 'rgba(160, 235, 190, 0.88)',
+                  marginBottom: 10,
+                }}
+              >
+                {hubT.bibliotecaVisaoGeral || 'Visão geral'}
+              </div>
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: 'repeat(3, 1fr)', 
-              gap: '10px', 
-              marginBottom: '16px'
+              gap: '12px', 
+              marginBottom: 0
             }}>
               <div style={{
                 ...glassCardStyle(ACCENT_GREEN, { padding: '10px 12px', radius: '10px', borderAlpha: 0.2 }),
@@ -29879,99 +30041,70 @@ onKeyPress={(e) => {
                 </div>
               </div>
             </div>
+            </div>
 
-            {/* Abas: Cadastro | Biblioteca | Gerenciar Categorias | Importação - com contorno verde padrão */}
-            <div style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '8px',
-              marginBottom: '16px',
-              paddingBottom: '12px',
-              borderBottom: '1px solid rgba(0, 255, 0, 0.24)'
-            }}>
+            {/* Abas — controlos segmentados */}
+            <div
+              role="tablist"
+              aria-label={hubT.bibliotecaNavAria || 'Biblioteca de peças'}
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 6,
+                marginBottom: 20,
+                padding: 8,
+                borderRadius: 14,
+                background: 'rgba(0, 0, 0, 0.38)',
+                border: '1px solid rgba(0, 255, 120, 0.16)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
+              }}
+            >
               <button
+                type="button"
+                role="tab"
+                aria-selected={abaBibliotecaPecas === 'cadastro'}
                 onClick={() => setAbaBibliotecaPecas('cadastro')}
-                style={{
-                  padding: '8px 14px',
-                  backgroundColor: abaBibliotecaPecas === 'cadastro' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
-                  border: abaBibliotecaPecas === 'cadastro' ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 255, 0, 0.22)',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: abaBibliotecaPecas === 'cadastro' ? 'bold' : '500',
-                  borderRadius: '8px',
-                  transition: 'border-color 0.2s ease, background-color 0.2s ease'
-                }}
+                style={bpTab(abaBibliotecaPecas === 'cadastro')}
               >
                 {safeT?.cadastroPecas || 'Cadastro de Peças'}
               </button>
               <button
                 type="button"
+                role="tab"
+                aria-selected={abaBibliotecaPecas === 'biblioteca'}
                 onClick={() => {
                   setAbaBibliotecaPecas('biblioteca')
                   setBibliotecaAgruparPorCategoria(true)
                   setVisualizacaoBiblioteca('grid')
                 }}
-                style={{
-                  padding: '8px 14px',
-                  backgroundColor: abaBibliotecaPecas === 'biblioteca' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
-                  border: abaBibliotecaPecas === 'biblioteca' ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 255, 0, 0.22)',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: abaBibliotecaPecas === 'biblioteca' ? 'bold' : '500',
-                  borderRadius: '8px',
-                  transition: 'border-color 0.2s ease, background-color 0.2s ease'
-                }}
+                style={bpTab(abaBibliotecaPecas === 'biblioteca')}
               >
                 {safeT?.bibliotecaPecas || 'Biblioteca'}
               </button>
               <button
                 type="button"
+                role="tab"
+                aria-selected={abaBibliotecaPecas === 'biblioteca-gestao'}
                 onClick={() => setAbaBibliotecaPecas('biblioteca-gestao')}
-                style={{
-                  padding: '8px 14px',
-                  backgroundColor: abaBibliotecaPecas === 'biblioteca-gestao' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
-                  border: abaBibliotecaPecas === 'biblioteca-gestao' ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 255, 0, 0.22)',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: abaBibliotecaPecas === 'biblioteca-gestao' ? 'bold' : '500',
-                  borderRadius: '8px',
-                  transition: 'border-color 0.2s ease, background-color 0.2s ease'
-                }}
+                style={bpTab(abaBibliotecaPecas === 'biblioteca-gestao')}
               >
                 ✏️ {(safeT as any)?.bibliotecaGestaoEditarTitulo || 'Editar biblioteca'}
               </button>
               <button
+                type="button"
+                role="tab"
+                aria-selected={abaBibliotecaPecas === 'grupos'}
                 onClick={() => setAbaBibliotecaPecas('grupos')}
-                style={{
-                  padding: '8px 14px',
-                  backgroundColor: abaBibliotecaPecas === 'grupos' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
-                  border: abaBibliotecaPecas === 'grupos' ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 255, 0, 0.22)',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: abaBibliotecaPecas === 'grupos' ? 'bold' : '500',
-                  borderRadius: '8px',
-                  transition: 'border-color 0.2s ease, background-color 0.2s ease'
-                }}
+                style={bpTab(abaBibliotecaPecas === 'grupos')}
               >
                 {safeT?.gerenciarCategorias || 'Gerenciar Categorias'}
               </button>
               <button
+                type="button"
+                role="tab"
+                aria-selected={abaBibliotecaPecas === 'importacao'}
                 onClick={() => setAbaBibliotecaPecas('importacao')}
-                style={{
-                  padding: '8px 14px',
-                  backgroundColor: abaBibliotecaPecas === 'importacao' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
-                  border: abaBibliotecaPecas === 'importacao' ? '1px solid rgba(0, 200, 80, 0.55)' : '1px solid rgba(0, 255, 0, 0.22)',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: abaBibliotecaPecas === 'importacao' ? 'bold' : '500',
-                  borderRadius: '8px',
-                  transition: 'border-color 0.2s ease, background-color 0.2s ease'
-                }}
+                style={bpTab(abaBibliotecaPecas === 'importacao')}
               >
                 📥 {safeT?.importacaoPecas || 'Importação de Peças'}
               </button>
@@ -30017,36 +30150,71 @@ onKeyPress={(e) => {
               <>
                 <div
                   style={{
-                    marginBottom: '16px',
-                    padding: '12px 14px',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(0, 200, 120, 0.35)',
-                    backgroundColor: 'rgba(0, 40, 20, 0.35)',
-                    fontSize: '13px',
-                    color: 'rgba(255,255,255,0.92)',
-                    lineHeight: 1.45,
+                    marginBottom: '20px',
+                    borderRadius: 14,
+                    border: '1px solid rgba(0, 210, 120, 0.28)',
+                    background: 'linear-gradient(95deg, rgba(0, 72, 40, 0.42), rgba(5, 16, 10, 0.94))',
+                    boxShadow: '0 16px 44px rgba(0, 32, 16, 0.42)',
+                    position: 'relative',
+                    overflow: 'hidden',
                   }}
                 >
-                  <strong style={{ color: '#7dff9e' }}>{(safeT as any).pecaBibliotecaDicaGerirGruposTitulo || 'Grupos e subgrupos'}</strong>
-                  {' — '}
-                  {(safeT as any).pecaBibliotecaDicaGerirGruposCorpo ||
-                    'Para renomear ou apagar categorias e subcategorias já criadas, abra a aba «Gerenciar Categorias» e use os botões Editar / Excluir ao lado de cada nome.'}{' '}
-                  <button
-                    type="button"
-                    onClick={() => setAbaBibliotecaPecas('grupos')}
+                  <div
                     style={{
-                      marginLeft: '6px',
-                      padding: '4px 10px',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      borderRadius: '6px',
-                      border: '1px solid rgba(0, 255, 0, 0.45)',
-                      backgroundColor: 'rgba(18, 52, 24, 0.85)',
-                      color: '#fff',
+                      position: 'absolute',
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: 5,
+                      background: 'linear-gradient(180deg, #3dff9a, #00a85c)',
+                      boxShadow: '0 0 18px rgba(0, 255, 140, 0.35)',
+                    }}
+                  />
+                  <div
+                    style={{
+                      padding: '12px 16px 10px 22px',
+                      fontSize: 10,
+                      letterSpacing: '0.14em',
+                      textTransform: 'uppercase',
+                      fontWeight: 800,
+                      color: 'rgba(170, 255, 205, 0.88)',
+                      borderBottom: '1px solid rgba(0, 255, 120, 0.1)',
                     }}
                   >
-                    {(safeT as any).pecaBibliotecaIrGerirGrupos || 'Abrir Gerenciar Categorias'}
-                  </button>
+                    {safeT?.cadastroPecas || 'Cadastro de Peças'}
+                  </div>
+                  <div
+                    style={{
+                      padding: '12px 16px 14px 22px',
+                      fontSize: '13px',
+                      color: 'rgba(255,255,255,0.93)',
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    <strong style={{ color: '#8effb8' }}>{(safeT as any).pecaBibliotecaDicaGerirGruposTitulo || 'Grupos e subgrupos'}</strong>
+                    {' — '}
+                    {(safeT as any).pecaBibliotecaDicaGerirGruposCorpo ||
+                      'Para renomear ou apagar categorias e subcategorias já criadas, abra a aba «Gerenciar Categorias» e use os botões Editar / Excluir ao lado de cada nome.'}{' '}
+                    <button
+                      type="button"
+                      onClick={() => setAbaBibliotecaPecas('grupos')}
+                      style={{
+                        marginLeft: '6px',
+                        marginTop: '4px',
+                        padding: '6px 12px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        borderRadius: 8,
+                        border: '1px solid rgba(0, 255, 120, 0.5)',
+                        backgroundColor: 'rgba(12, 48, 26, 0.9)',
+                        color: '#e8fff0',
+                        boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
+                      }}
+                    >
+                      {(safeT as any).pecaBibliotecaIrGerirGrupos || 'Abrir Gerenciar Categorias'}
+                    </button>
+                  </div>
                 </div>
             
             <button 
@@ -31824,64 +31992,53 @@ onKeyPress={(e) => {
                         return (
                           <>
                             {!somenteLeituraBiblioteca && painelClassificacaoLote}
-                            <div
-                              style={{
-                                padding: '16px',
-                                borderRadius: '12px',
-                                border: '1px solid rgba(255, 180, 100, 0.48)',
-                                backgroundColor: 'rgba(48, 34, 14, 0.55)',
-                              }}
+                            <BibliotecaSecaoCategoria
+                              titulo={safeT?.bibliotecaGrupoSemCategoria || 'Sem categoria'}
+                              count={semCat.length}
+                              variant="sem"
+                              descricaoExtra={
+                                (safeT as any).bibliotecaSomenteExibindoSemCat ||
+                                'A mostrar só peças sem grupo — as outras continuam na vista «Todos os grupos».'
+                              }
                             >
-                              <h3 style={{ margin: '0 0 8px', fontSize: '16px', color: '#ffc878', fontWeight: 700 }}>
-                                {safeT?.bibliotecaGrupoSemCategoria || 'Sem categoria'}
-                              </h3>
-                              <p style={{ margin: '0 0 14px', fontSize: '12px', color: 'rgba(255, 230, 200, 0.88)', lineHeight: 1.45 }}>
-                                {(safeT as any).bibliotecaSomenteExibindoSemCat ||
-                                  'A mostrar só peças sem grupo — as outras continuam na vista «Todos os grupos».'}
-                              </p>
                               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
                                 {semCat.map((peca) => renderPecaBibliotecaGridCell(peca))}
                               </div>
-                            </div>
+                            </BibliotecaSecaoCategoria>
                           </>
                         )
                       }
                       return (
                         <>
                           {!somenteLeituraBiblioteca && painelClassificacaoLote}
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
                             {ordemIds.map((catId) => {
                               const cat = categoriasPecas.find((x) => x.id === catId)
                               const lista = pecasCatalogoFiltradas.filter((p) => p.categoriaId === catId)
                               return (
-                                <div key={catId}>
-                                  <h3 style={{ margin: '0 0 10px', fontSize: '15px', color: '#00ff00', fontWeight: 600 }}>{cat?.nome || catId}</h3>
+                                <BibliotecaSecaoCategoria
+                                  key={catId}
+                                  titulo={cat?.nome || catId}
+                                  count={lista.length}
+                                  variant="grupo"
+                                >
                                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
                                     {lista.map((peca) => renderPecaBibliotecaGridCell(peca))}
                                   </div>
-                                </div>
+                                </BibliotecaSecaoCategoria>
                               )
                             })}
                             {semCat.length > 0 ? (
-                              <div
+                              <BibliotecaSecaoCategoria
                                 key="__sem__"
-                                style={{
-                                  marginTop: ordemIds.length > 0 ? 12 : 0,
-                                  paddingTop: ordemIds.length > 0 ? 24 : 0,
-                                  borderTop: ordemIds.length > 0 ? '2px dashed rgba(255, 170, 90, 0.48)' : 'none',
-                                  padding: '16px',
-                                  borderRadius: '12px',
-                                  backgroundColor: 'rgba(42, 30, 12, 0.45)',
-                                  border: '1px solid rgba(255, 160, 80, 0.28)',
-                                }}
+                                titulo={safeT?.bibliotecaGrupoSemCategoria || 'Sem categoria'}
+                                count={semCat.length}
+                                variant="sem"
                               >
-                                <h3 style={{ margin: '0 0 10px', fontSize: '15px', color: '#e8b060', fontWeight: 700 }}>
-                                  {safeT?.bibliotecaGrupoSemCategoria || 'Sem categoria'}
-                                </h3>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
                                   {semCat.map((peca) => renderPecaBibliotecaGridCell(peca))}
                                 </div>
-                              </div>
+                              </BibliotecaSecaoCategoria>
                             ) : null}
                           </div>
                         </>
@@ -32901,6 +33058,7 @@ A1;Peça exemplo;10'
             )}
           </div>
         )
+      }
       
       case 'importacao-pecas':
         return (
