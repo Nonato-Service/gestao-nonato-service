@@ -16568,27 +16568,47 @@ export default function Dashboard() {
   }
 
   const handlePasteImagemPecaBiblioteca = (e: React.ClipboardEvent) => {
-    const items = e.clipboardData?.items
+    const cd = e.clipboardData
+    if (!cd) return
+
+    const aplicarFileImagem = (file: File) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        setPecaBibliotecaForm(prev => ({ ...prev, imagem: reader.result as string }))
+      }
+      reader.readAsDataURL(file)
+    }
+
+    const items = cd.items
     if (items) {
       for (let i = 0; i < items.length; i++) {
         const it = items[i]
         if (it.kind === 'file' && it.type.startsWith('image/')) {
           e.preventDefault()
+          e.stopPropagation()
           const file = it.getAsFile()
-          if (file) {
-            const reader = new FileReader()
-            reader.onload = () => {
-              setPecaBibliotecaForm(prev => ({ ...prev, imagem: reader.result as string }))
-            }
-            reader.readAsDataURL(file)
-          }
+          if (file) aplicarFileImagem(file)
           return
         }
       }
     }
-    const text = e.clipboardData?.getData('text/plain')?.trim() ?? ''
+
+    if (cd.files && cd.files.length > 0) {
+      for (let i = 0; i < cd.files.length; i++) {
+        const f = cd.files[i]
+        if (f.type.startsWith('image/')) {
+          e.preventDefault()
+          e.stopPropagation()
+          aplicarFileImagem(f)
+          return
+        }
+      }
+    }
+
+    const text = cd.getData('text/plain')?.trim() ?? ''
     if (/^https?:\/\//i.test(text) || text.startsWith('data:image')) {
       e.preventDefault()
+      e.stopPropagation()
       void aplicarImagemPecaBibliotecaDeUrl(text)
     }
   }
@@ -30274,6 +30294,7 @@ onKeyPress={(e) => {
             {showBibliotecaPecasForm && (
               <div
                 key={editingPecaBiblioteca?.id ? `peca-bib-edit-${editingPecaBiblioteca.id}` : 'peca-bib-nova'}
+                onPasteCapture={handlePasteImagemPecaBiblioteca}
                 style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}
               >
                 <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>
@@ -57978,7 +57999,10 @@ A1;Peça exemplo;10`}
               {safeT?.novaPecaBiblioteca || 'Nova Peça'}
             </button>
             {showBibliotecaPecasForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
+              <div
+                onPasteCapture={handlePasteImagemPecaBiblioteca}
+                style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}
+              >
                 <h4>{editingPecaBiblioteca ? (safeT?.editPecaBiblioteca || 'Editar Peça') : (safeT?.novaPecaBiblioteca || 'Nova Peça')}</h4>
                 <label className="file-upload-label" htmlFor="peca-biblioteca-image-upload" style={{ marginBottom: '10px' }}>
                   {safeT?.imagemPecaBiblioteca || 'Imagem da Peça'}

@@ -1392,7 +1392,8 @@ export const translations = {
     novaPecaBiblioteca: 'Nova Peça',
     adicioneNovaPecaBiblioteca: 'Adicione uma nova peça à biblioteca',
     imagemPecaBiblioteca: 'Imagem da Peça',
-    pecaBibliotecaPasteHint: 'Clique aqui e prima Ctrl+V para colar uma imagem ou o URL da imagem (https://...).',
+    pecaBibliotecaPasteHint:
+      'Use Ctrl+V (Windows/Linux) ou Cmd+V (Mac) para colar uma imagem em qualquer campo desta peça. Também pode clicar na área tracejada e colar, ou colar um URL https://...',
     pecaBibliotecaUrlPlaceholder: 'https://... (URL da imagem)',
     pecaBibliotecaAplicarUrl: 'Aplicar URL',
     pecaBibliotecaImagemUrlExterna:
@@ -3557,7 +3558,8 @@ export const translations = {
     novaPecaBiblioteca: 'Nueva Pieza',
     adicioneNovaPecaBiblioteca: 'Agregue una nueva pieza a la biblioteca',
     imagemPecaBiblioteca: 'Imagen de la Pieza',
-    pecaBibliotecaPasteHint: 'Haga clic aquí y pulse Ctrl+V para pegar una imagen o la URL de la imagen (https://...).',
+    pecaBibliotecaPasteHint:
+      'Use Ctrl+V o Cmd+V (Mac) para pegar una imagen en cualquier campo de esta pieza, o haga clic en el recuadro y pegue, o pegue una URL https://...',
     pecaBibliotecaUrlPlaceholder: 'https://... (URL de la imagen)',
     pecaBibliotecaAplicarUrl: 'Aplicar URL',
     pecaBibliotecaImagemUrlExterna:
@@ -5633,7 +5635,8 @@ export const translations = {
     novaPecaBiblioteca: 'Nouvelle Pièce',
     adicioneNovaPecaBiblioteca: 'Ajoutez une nouvelle pièce à la bibliothèque',
     imagemPecaBiblioteca: 'Image de la Pièce',
-    pecaBibliotecaPasteHint: 'Cliquez ici puis Ctrl+V pour coller une image ou l’URL (https://...).',
+    pecaBibliotecaPasteHint:
+      'Ctrl+V ou Cmd+V (Mac) : collez une image dans n’importe quel champ de cette pièce, ou cliquez dans la zone et collez, ou une URL https://...',
     pecaBibliotecaUrlPlaceholder: 'https://... (URL de l’image)',
     pecaBibliotecaAplicarUrl: 'Appliquer l’URL',
     pecaBibliotecaImagemUrlExterna:
@@ -7716,7 +7719,8 @@ export const translations = {
     novaPecaBiblioteca: 'Nuovo Pezzo',
     adicioneNovaPecaBiblioteca: 'Aggiungi un nuovo pezzo alla biblioteca',
     imagemPecaBiblioteca: 'Immagine del Pezzo',
-    pecaBibliotecaPasteHint: 'Clicca qui e premi Ctrl+V per incollare un’immagine o l’URL (https://...).',
+    pecaBibliotecaPasteHint:
+      'Ctrl+V o Cmd+V (Mac): incolla un’immagine in qualsiasi campo di questo pezzo, oppure clicca nell’area tratteggiata o incolla un URL https://...',
     pecaBibliotecaUrlPlaceholder: 'https://... (URL immagine)',
     pecaBibliotecaAplicarUrl: 'Applica URL',
     pecaBibliotecaImagemUrlExterna:
@@ -9813,7 +9817,8 @@ export const translations = {
     novaPecaBiblioteca: 'Neues Teil',
     adicioneNovaPecaBiblioteca: 'Fügen Sie ein neues Teil zur Bibliothek hinzu',
     imagemPecaBiblioteca: 'Teilbild',
-    pecaBibliotecaPasteHint: 'Hier klicken und Strg+V zum Einfügen eines Bildes oder der Bild-URL (https://...).',
+    pecaBibliotecaPasteHint:
+      'Strg+V oder Cmd+V (Mac): Bild in ein beliebiges Feld dieses Teils einfügen, oder in den Rahmen klicken und einfügen, oder eine https://...-URL einfügen.',
     pecaBibliotecaUrlPlaceholder: 'https://... (Bild-URL)',
     pecaBibliotecaAplicarUrl: 'URL anwenden',
     pecaBibliotecaImagemUrlExterna:
@@ -11890,7 +11895,8 @@ export const translations = {
     novaPecaBiblioteca: 'New Part',
     adicioneNovaPecaBiblioteca: 'Add a new part to the library',
     imagemPecaBiblioteca: 'Part Image',
-    pecaBibliotecaPasteHint: 'Click here and press Ctrl+V to paste an image or image URL (https://...).',
+    pecaBibliotecaPasteHint:
+      'Press Ctrl+V (or Cmd+V on Mac) to paste an image in any field of this part, or click the dashed box and paste, or paste a https://... image URL.',
     pecaBibliotecaUrlPlaceholder: 'https://... (image URL)',
     pecaBibliotecaAplicarUrl: 'Apply URL',
     pecaBibliotecaImagemUrlExterna:
