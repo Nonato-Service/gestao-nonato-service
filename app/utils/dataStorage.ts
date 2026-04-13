@@ -2,7 +2,12 @@
 
 import { mergeManuaisFamiliasGrupos } from './manuaisMerge'
 import { applyRevisionFromSaveResponse, fetchSyncStatus } from './syncRevision'
-import { saveManuaisFamiliasGruposToIdb, loadManuaisFamiliasGruposFromIdb, saveKv } from './manuaisIndexedDb'
+import {
+  saveManuaisFamiliasGruposToIdb,
+  loadManuaisFamiliasGruposFromIdb,
+  saveKv,
+  getKv,
+} from './manuaisIndexedDb'
 
 const API_BASE = '/api/data'
 const SYNC_QUEUE_KEY = 'nonato-sync-queue'
@@ -730,6 +735,16 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
     } catch {
       /* ignorar */
     }
+  }
+
+  // Dados gravados só em IndexedDB quando o localStorage encheu (saveData → saveKv)
+  try {
+    const fromKv = await getKv(key)
+    if (fromKv !== null && fromKv !== undefined) {
+      return fromKv
+    }
+  } catch {
+    /* ignorar */
   }
 
   return null

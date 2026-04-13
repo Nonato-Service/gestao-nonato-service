@@ -17393,39 +17393,51 @@ export default function Dashboard() {
     const atualizado = [...existentes, ...classificadosAutomaticamente.lista]
     const atualizadoNormalizado = atualizado.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
     setPecasBiblioteca(atualizadoNormalizado)
-    localStorage.setItem('nonato-pecas-biblioteca', JSON.stringify(atualizadoNormalizado))
     void saveData('nonato-pecas-biblioteca', atualizadoNormalizado)
+      .then(() => {
+        let mensagemFinal: string
+        if (novos.length === 0) {
+          mensagemFinal =
+            t?.importacaoSemNovidades ?? 'Nenhuma peça nova para adicionar (itens já existentes na biblioteca).'
+        } else {
+          const mensagemBase =
+            t?.importacaoSucesso ?? `${novos.length} peça(s) enviada(s) para a fila. Abra cada uma e use Salvar para integrar ao catálogo da Biblioteca.`
+          mensagemFinal =
+            classificadosAutomaticamente.alteradas > 0
+              ? `${mensagemBase} ${classificadosAutomaticamente.alteradas} já foram classificadas automaticamente.`
+              : mensagemBase
+        }
 
-    let mensagemFinal: string
-    if (novos.length === 0) {
-      mensagemFinal =
-        t?.importacaoSemNovidades ?? 'Nenhuma peça nova para adicionar (itens já existentes na biblioteca).'
-    } else {
-      const mensagemBase =
-        t?.importacaoSucesso ?? `${novos.length} peça(s) enviada(s) para a fila. Abra cada uma e use Salvar para integrar ao catálogo da Biblioteca.`
-      mensagemFinal =
-        classificadosAutomaticamente.alteradas > 0
-          ? `${mensagemBase} ${classificadosAutomaticamente.alteradas} já foram classificadas automaticamente.`
-          : mensagemBase
-    }
+        const desejaLimparLista = window.confirm(
+          `${mensagemFinal}\n\n${t?.importacaoConfirmarLimparLista ?? 'Deseja limpar a lista importada agora? Clique em OK para limpar ou em Cancelar para manter e conferir.'}`
+        )
 
-    const desejaLimparLista = window.confirm(
-      `${mensagemFinal}\n\n${t?.importacaoConfirmarLimparLista ?? 'Deseja limpar a lista importada agora? Clique em OK para limpar ou em Cancelar para manter e conferir.'}`
-    )
-
-    if (desejaLimparLista) {
-      setImportacaoPreview(null)
-      setImportacaoTextoColado('')
-      setUrlImportacaoPecas('')
-    }
+        if (desejaLimparLista) {
+          setImportacaoPreview(null)
+          setImportacaoTextoColado('')
+          setUrlImportacaoPecas('')
+        }
+      })
+      .catch((err) => {
+        console.error('[importação fila]', err)
+        alert(
+          (t as any)?.importacaoErroGravarFila ??
+            'Não foi possível gravar na biblioteca. O armazenamento do navegador pode estar cheio — liberte espaço ou reduza imagens nas peças.'
+        )
+      })
   }, [aplicarRegrasClassificacaoEmLista, importacaoPreview, pecasBiblioteca, t])
 
   const persistPecasBiblioteca = useCallback((next: PecaBiblioteca[]) => {
     const normalizado = next.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
     setPecasBiblioteca(normalizado)
-    localStorage.setItem('nonato-pecas-biblioteca', JSON.stringify(normalizado))
-    void saveData('nonato-pecas-biblioteca', normalizado)
-  }, [])
+    void saveData('nonato-pecas-biblioteca', normalizado).catch((err) => {
+      console.error('[pecas biblioteca]', err)
+      alert(
+        (t as any)?.importacaoErroGravarFila ??
+          'Não foi possível gravar na biblioteca. Verifique espaço no navegador ou tente de novo.'
+      )
+    })
+  }, [t])
 
   const handleDeletePecaBiblioteca = useCallback(
     (pecaId: string) => {
