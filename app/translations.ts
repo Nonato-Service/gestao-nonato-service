@@ -1287,6 +1287,8 @@ export const translations = {
     importacaoEnviarParaFila: 'Enviar para fila (confirmar com Salvar)',
     importacaoSucesso: 'peça(s) enviada(s) para a fila. Abra cada uma e use Salvar para integrar ao catálogo da Biblioteca.',
     importacaoSemNovidades: 'Nenhuma peça nova para adicionar (itens já existentes na biblioteca).',
+    importacaoConfirmarLimparLista:
+      'Deseja limpar a lista importada agora? OK = limpar a pré-visualização e o texto; Cancelar = manter para conferir.',
     importacaoErroFetchFailed: 'Não foi possível aceder à URL. Verifique o endereço e a ligação, ou se o site permite acesso.',
     importacaoErroRespostaVazia: 'O servidor respondeu sem dados.',
     importacaoErroRespostaInvalida: 'Resposta inválida do servidor. Verifique se a aplicação está a correr.',
@@ -3461,6 +3463,8 @@ export const translations = {
     importacaoEnviarParaFila: 'Enviar a la cola (confirmar con Guardar)',
     importacaoSucesso: 'pieza(s) enviada(s) a la cola. Abra cada una y use Guardar para integrarla al catálogo de la Biblioteca.',
     importacaoSemNovidades: 'No hay piezas nuevas para añadir (ya existen en la biblioteca).',
+    importacaoConfirmarLimparLista:
+      '¿Desea vaciar la lista importada ahora? Aceptar = limpiar la vista previa y el texto; Cancelar = mantener para revisar.',
     importacaoErroFetchFailed: 'No se pudo acceder a la URL. Compruebe la dirección y la conexión, o si el sitio permite el acceso.',
     importacaoErroRespostaVazia: 'El servidor respondió sin datos.',
     importacaoErroRespostaInvalida: 'Respuesta inválida del servidor. Compruebe que la aplicación está en ejecución.',
@@ -5534,6 +5538,8 @@ export const translations = {
     importacaoEnviarParaFila: 'Envoyer vers la file (confirmer avec Enregistrer)',
     importacaoSucesso: 'pièce(s) envoyée(s) vers la file. Ouvrez chaque fiche et utilisez Enregistrer pour intégrer au catalogue de la Bibliothèque.',
     importacaoSemNovidades: 'Aucune nouvelle pièce à ajouter (éléments déjà présents dans la bibliothèque).',
+    importacaoConfirmarLimparLista:
+      'Vider la liste importée maintenant ? OK = effacer l’aperçu et le texte ; Annuler = garder pour vérifier.',
     importacaoErroFetchFailed: 'Impossible d\'accéder à l\'URL. Vérifiez l\'adresse et la connexion, ou si le site autorise l\'accès.',
     importacaoErroRespostaVazia: 'Le serveur a répondu sans données.',
     importacaoErroRespostaInvalida: 'Réponse invalide du serveur. Vérifiez que l\'application tourne.',
@@ -7613,6 +7619,8 @@ export const translations = {
     importacaoEnviarParaFila: 'Invia in coda (conferma con Salva)',
     importacaoSucesso: 'pezzo/i inviato/i in coda. Apri ciascuno e usa Salva per integrarlo al catalogo della Biblioteca.',
     importacaoSemNovidades: 'Nessun nuovo pezzo da aggiungere (elementi già presenti in biblioteca).',
+    importacaoConfirmarLimparLista:
+      'Vuoi svuotare l’elenco importato ora? OK = cancella anteprima e testo; Annulla = mantieni per controllare.',
     importacaoErroFetchFailed: 'Impossibile accedere all\'URL. Verificare indirizzo e connessione, o se il sito consente l\'accesso.',
     importacaoErroRespostaVazia: 'Il server ha risposto senza dati.',
     importacaoErroRespostaInvalida: 'Risposta non valida del server. Verificare che l\'applicazione sia in esecuzione.',
@@ -9707,6 +9715,8 @@ export const translations = {
     importacaoEnviarParaFila: 'In Warteschlange (mit Speichern bestätigen)',
     importacaoSucesso: 'Teil(e) in die Warteschlange. Öffnen Sie jedes Teil und klicken Sie auf Speichern, um es in den Katalog der Bibliothek zu übernehmen.',
     importacaoSemNovidades: 'Keine neuen Teile zum Hinzufügen (bereits in der Bibliothek vorhanden).',
+    importacaoConfirmarLimparLista:
+      'Importliste jetzt leeren? OK = Vorschau und Text löschen; Abbrechen = behalten zur Kontrolle.',
     importacaoErroFetchFailed: 'Die URL konnte nicht zugegriffen werden. Adresse und Verbindung prüfen oder ob die Website den Zugriff erlaubt.',
     importacaoErroRespostaVazia: 'Der Server hat ohne Daten geantwortet.',
     importacaoErroRespostaInvalida: 'Ungültige Serverantwort. Prüfen Sie, ob die Anwendung läuft.',
@@ -11779,6 +11789,8 @@ export const translations = {
     importacaoEnviarParaFila: 'Send to queue (confirm with Save)',
     importacaoSucesso: 'part(s) sent to the queue. Open each one and click Save to add it to the Library catalog.',
     importacaoSemNovidades: 'No new parts to add (items already exist in the library).',
+    importacaoConfirmarLimparLista:
+      'Clear the imported list now? OK = clear preview and text; Cancel = keep to review.',
     importacaoErroFetchFailed: 'Could not access the URL. Check the address and connection, or whether the site allows access.',
     importacaoErroRespostaVazia: 'The server responded with no data.',
     importacaoErroRespostaInvalida: 'Invalid server response. Check that the application is running.',

@@ -17395,15 +17395,19 @@ export default function Dashboard() {
     setPecasBiblioteca(atualizadoNormalizado)
     localStorage.setItem('nonato-pecas-biblioteca', JSON.stringify(atualizadoNormalizado))
     void saveData('nonato-pecas-biblioteca', atualizadoNormalizado)
+
+    let mensagemFinal: string
     if (novos.length === 0) {
-      alert(t?.importacaoSemNovidades ?? 'Nenhuma peça nova para adicionar (itens já existentes na biblioteca).')
-      return
+      mensagemFinal =
+        t?.importacaoSemNovidades ?? 'Nenhuma peça nova para adicionar (itens já existentes na biblioteca).'
+    } else {
+      const mensagemBase =
+        t?.importacaoSucesso ?? `${novos.length} peça(s) enviada(s) para a fila. Abra cada uma e use Salvar para integrar ao catálogo da Biblioteca.`
+      mensagemFinal =
+        classificadosAutomaticamente.alteradas > 0
+          ? `${mensagemBase} ${classificadosAutomaticamente.alteradas} já foram classificadas automaticamente.`
+          : mensagemBase
     }
-    const mensagemBase = t?.importacaoSucesso ?? `${novos.length} peça(s) adicionada(s) à biblioteca.`
-    const mensagemFinal =
-      classificadosAutomaticamente.alteradas > 0
-        ? `${mensagemBase} ${classificadosAutomaticamente.alteradas} já foram classificadas automaticamente.`
-        : mensagemBase
 
     const desejaLimparLista = window.confirm(
       `${mensagemFinal}\n\n${t?.importacaoConfirmarLimparLista ?? 'Deseja limpar a lista importada agora? Clique em OK para limpar ou em Cancelar para manter e conferir.'}`
