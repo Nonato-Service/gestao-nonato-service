@@ -3587,6 +3587,8 @@ export default function Dashboard() {
   })
   /** Rascunho do campo «URL da imagem» no formulário da biblioteca de peças */
   const [pecaBibliotecaImagemUrlDraft, setPecaBibliotecaImagemUrlDraft] = useState('')
+  /** Contentor do formulário da peça — listener nativo `paste` em captura (mais fiável que só React) */
+  const pecaBibliotecaFormPasteRootRef = useRef<HTMLDivElement | null>(null)
   const [showNovaCategoriaForm, setShowNovaCategoriaForm] = useState(false)
   const [novaCategoriaNome, setNovaCategoriaNome] = useState('')
   const [showNovaSubcategoriaForm, setShowNovaSubcategoriaForm] = useState(false)
@@ -16525,7 +16527,7 @@ export default function Dashboard() {
   }
 
   /** URL ou data URL → imagem na peça (tenta base64; se CORS bloquear, guarda o URL). */
-  const aplicarImagemPecaBibliotecaDeUrl = async (urlRaw: string) => {
+  const aplicarImagemPecaBibliotecaDeUrl = useCallback(async (urlRaw: string) => {
     const url = urlRaw.trim()
     if (!url) {
       alert(t.fillAllFields || 'Indique um endereço ou cole uma imagem.')
@@ -16565,53 +16567,103 @@ export default function Dashboard() {
       return
     }
     alert((t as any).pecaBibliotecaUrlInvalida || 'Endereço inválido. Use um URL que comece por http:// ou https://')
-  }
+  }, [t])
 
-  const handlePasteImagemPecaBiblioteca = (e: React.ClipboardEvent) => {
-    const cd = e.clipboardData
-    if (!cd) return
+  const handlePasteImagemPecaBiblioteca = useCallback(
+    (e: React.ClipboardEvent | ClipboardEvent) => {
+      const cd = e.clipboardData
+      if (!cd) return
 
-    const aplicarFileImagem = (file: File) => {
-      const reader = new FileReader()
-      reader.onload = () => {
-        setPecaBibliotecaForm(prev => ({ ...prev, imagem: reader.result as string }))
+      const aplicarFileImagem = (file: File) => {
+        const reader = new FileReader()
+        reader.onload = () => {
+          setPecaBibliotecaForm(prev => ({ ...prev, imagem: reader.result as string }))
+        }
+        reader.readAsDataURL(file)
       }
-      reader.readAsDataURL(file)
-    }
 
-    const items = cd.items
-    if (items) {
-      for (let i = 0; i < items.length; i++) {
-        const it = items[i]
-        if (it.kind === 'file' && it.type.startsWith('image/')) {
+      const pareceImagem = (file: File) => {
+        if (file.type && file.type.startsWith('image/')) return true
+        if (!file.type && file.size > 0) {
+          const n = (file.name || '').toLowerCase()
+          return /\.(png|jpe?g|gif|webp|bmp|svg|ico)$/.test(n)
+        }
+        return false
+      }
+
+      const items = cd.items
+      if (items && items.length > 0) {
+        for (let i = 0; i < items.length; i++) {
+          const it = items[i]
+          if (it.kind === 'file') {
+            const file = it.getAsFile()
+            if (file && file.size > 0 && (it.type.startsWith('image/') || pareceImagem(file))) {
+              e.preventDefault()
+              e.stopPropagation()
+              aplicarFileImagem(file)
+              return
+            }
+          }
+        }
+      }
+
+      if (cd.files && cd.files.length > 0) {
+        for (let i = 0; i < cd.files.length; i++) {
+          const f = cd.files[i]
+          if (f.size > 0 && (f.type.startsWith('image/') || pareceImagem(f))) {
+            e.preventDefault()
+            e.stopPropagation()
+            aplicarFileImagem(f)
+            return
+          }
+        }
+      }
+
+      const html = cd.getData('text/html')
+      if (html && /<img/i.test(html)) {
+        try {
+          const doc = new DOMParser().parseFromString(html, 'text/html')
+          const src = doc.querySelector('img')?.getAttribute('src')?.trim()
+          if (src && (src.startsWith('data:image') || /^https?:\/\//i.test(src))) {
+            e.preventDefault()
+            e.stopPropagation()
+            void aplicarImagemPecaBibliotecaDeUrl(src)
+            return
+          }
+        } catch {
+          /* ignorar */
+        }
+      }
+
+      const uriList = cd.getData('text/uri-list')?.trim()
+      if (uriList) {
+        const primeira = uriList.split(/\r?\n/).find((u) => u.trim().length > 0)?.trim() ?? ''
+        if (/^https?:\/\//i.test(primeira)) {
           e.preventDefault()
           e.stopPropagation()
-          const file = it.getAsFile()
-          if (file) aplicarFileImagem(file)
+          void aplicarImagemPecaBibliotecaDeUrl(primeira)
           return
         }
       }
-    }
 
-    if (cd.files && cd.files.length > 0) {
-      for (let i = 0; i < cd.files.length; i++) {
-        const f = cd.files[i]
-        if (f.type.startsWith('image/')) {
-          e.preventDefault()
-          e.stopPropagation()
-          aplicarFileImagem(f)
-          return
-        }
+      const text = cd.getData('text/plain')?.trim() ?? ''
+      if (/^https?:\/\//i.test(text) || text.startsWith('data:image')) {
+        e.preventDefault()
+        e.stopPropagation()
+        void aplicarImagemPecaBibliotecaDeUrl(text)
       }
-    }
+    },
+    [aplicarImagemPecaBibliotecaDeUrl]
+  )
 
-    const text = cd.getData('text/plain')?.trim() ?? ''
-    if (/^https?:\/\//i.test(text) || text.startsWith('data:image')) {
-      e.preventDefault()
-      e.stopPropagation()
-      void aplicarImagemPecaBibliotecaDeUrl(text)
-    }
-  }
+  useLayoutEffect(() => {
+    if (!showBibliotecaPecasForm) return
+    const root = pecaBibliotecaFormPasteRootRef.current
+    if (!root) return
+    const listener = (ev: Event) => handlePasteImagemPecaBiblioteca(ev as ClipboardEvent)
+    root.addEventListener('paste', listener, true)
+    return () => root.removeEventListener('paste', listener, true)
+  }, [showBibliotecaPecasForm, editingPecaBiblioteca?.id, handlePasteImagemPecaBiblioteca])
 
   function normalizeImportKey(v: any): string {
     return String(v ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
@@ -30294,7 +30346,7 @@ onKeyPress={(e) => {
             {showBibliotecaPecasForm && (
               <div
                 key={editingPecaBiblioteca?.id ? `peca-bib-edit-${editingPecaBiblioteca.id}` : 'peca-bib-nova'}
-                onPasteCapture={handlePasteImagemPecaBiblioteca}
+                ref={pecaBibliotecaFormPasteRootRef}
                 style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}
               >
                 <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>
@@ -30330,7 +30382,6 @@ onKeyPress={(e) => {
                 </button>
                 <div
                   tabIndex={0}
-                  onPaste={handlePasteImagemPecaBiblioteca}
                   onClick={(ev) => (ev.currentTarget as HTMLDivElement).focus()}
                   style={{
                     marginBottom: '12px',
@@ -58000,7 +58051,7 @@ A1;Peça exemplo;10`}
             </button>
             {showBibliotecaPecasForm && (
               <div
-                onPasteCapture={handlePasteImagemPecaBiblioteca}
+                ref={pecaBibliotecaFormPasteRootRef}
                 style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}
               >
                 <h4>{editingPecaBiblioteca ? (safeT?.editPecaBiblioteca || 'Editar Peça') : (safeT?.novaPecaBiblioteca || 'Nova Peça')}</h4>
@@ -58034,7 +58085,6 @@ A1;Peça exemplo;10`}
                 </button>
                 <div
                   tabIndex={0}
-                  onPaste={handlePasteImagemPecaBiblioteca}
                   onClick={(ev) => (ev.currentTarget as HTMLDivElement).focus()}
                   style={{
                     marginBottom: '10px',
