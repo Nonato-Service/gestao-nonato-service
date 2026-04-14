@@ -25881,90 +25881,234 @@ onKeyPress={(e) => {
           : protocolosOrdenados
         const inputBase = {
           width: '100%',
-          padding: '11px 14px',
-          backgroundColor: '#0d0d0d',
+          padding: '12px 16px',
+          backgroundColor: 'rgba(6, 10, 14, 0.92)',
           color: '#fff',
-          border: '1px solid rgba(0, 255, 136, 0.28)',
-          borderRadius: '10px',
+          border: '1px solid rgba(0, 220, 200, 0.35)',
+          borderRadius: '12px',
           fontSize: '14px',
           outline: 'none' as const,
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
         }
         const secCard = {
-          marginBottom: '22px',
-          padding: '22px 22px 20px',
-          borderRadius: '14px',
-          border: '1px solid rgba(0, 255, 136, 0.22)',
-          background: 'linear-gradient(165deg, rgba(18, 22, 20, 0.95) 0%, rgba(10, 12, 11, 0.98) 100%)',
-          boxShadow: '0 4px 28px rgba(0, 0, 0, 0.35)',
+          marginBottom: '24px',
+          padding: '24px 24px 22px',
+          borderRadius: '16px',
+          border: '1px solid rgba(0, 220, 255, 0.18)',
+          background: 'linear-gradient(165deg, rgba(12, 20, 28, 0.96) 0%, rgba(6, 10, 16, 0.99) 100%)',
+          boxShadow: '0 8px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(0, 255, 220, 0.06)',
         }
         const secTitle = {
-          margin: '0 0 16px',
-          fontSize: '13px',
-          color: '#00ff88',
-          fontWeight: 700 as const,
-          letterSpacing: '0.08em',
+          margin: '0 0 18px',
+          fontSize: '12px',
+          color: '#7dffe8',
+          fontWeight: 800 as const,
+          letterSpacing: '0.14em',
           textTransform: 'uppercase' as const,
-          borderBottom: '1px solid rgba(0, 255, 136, 0.15)',
-          paddingBottom: '10px',
-        }
+          borderBottom: '1px solid rgba(0, 200, 255, 0.22)',
+          paddingBottom: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+        } as React.CSSProperties
+        const totalProto = protocolosServico.length
+        const visivelProto = protocolosFiltrados.length
+        const stepNumStyle = () => ({
+          display: 'inline-flex' as const,
+          alignItems: 'center' as const,
+          justifyContent: 'center' as const,
+          width: 28,
+          height: 28,
+          borderRadius: 9,
+          flexShrink: 0 as const,
+          background: 'linear-gradient(145deg, rgba(0,255,220,0.42), rgba(0,90,140,0.4))',
+          border: '1px solid rgba(0,220,255,0.5)',
+          fontSize: 12,
+          fontWeight: 900,
+          color: '#ecfffb',
+        })
+        const protoSteps = [
+          protoT?.protocolosServicoStep1 || 'ID',
+          protoT?.protocolosServicoStep2 || 'DOC',
+          protoT?.protocolosServicoStep3 || 'PEÇAS',
+          protoT?.protocolosServicoStep4 || 'GUARDAR',
+        ]
         return (
-          <div style={{ padding: '30px', maxWidth: '1200px', margin: '0 auto' }} className="tab-content-wrapper">
+          <div style={{ padding: '22px 18px 40px', maxWidth: '1240px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }} className="tab-content-wrapper">
             <div className="mobile-sticky-toolbar">
               <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>↶ {safeT?.voltar || 'Voltar'}</button>
               <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
             </div>
-            <div style={{ marginBottom: '22px', padding: '22px 26px', background: 'linear-gradient(135deg, rgba(0, 255, 136, 0.07) 0%, rgba(0, 0, 0, 0.88) 100%)', borderRadius: '18px', border: '1px solid rgba(0, 255, 136, 0.28)', boxShadow: '0 10px 40px rgba(0, 0, 0, 0.45)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
-                <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flex: '1 1 280px' }}>
-                  <LogoComponent size="small" />
-                  <div>
-                    <h1 style={{ margin: 0, fontSize: 'clamp(20px, 2.5vw, 26px)', fontWeight: 800, color: '#00ff88', letterSpacing: '0.06em' }}>{tituloProto}</h1>
-                    <p style={{ margin: '8px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.55, maxWidth: '520px' }}>{descProto}</p>
+            <div
+              style={{
+                position: 'relative',
+                marginBottom: 26,
+                padding: 3,
+                borderRadius: 22,
+                background: 'linear-gradient(118deg, rgba(0,255,200,0.5), rgba(0,100,180,0.45), rgba(140,80,255,0.35))',
+                boxShadow: '0 0 0 1px rgba(0,255,220,0.15), 0 28px 70px rgba(0, 10, 30, 0.65)',
+              }}
+            >
+              <div
+                style={{
+                  borderRadius: 19,
+                  padding: '22px 24px',
+                  background: 'linear-gradient(172deg, rgba(8,18,22,0.99), rgba(4,8,16,0.98))',
+                  border: '1px solid rgba(0, 220, 255, 0.1)',
+                }}
+              >
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 18 }}>
+                  <div style={{ display: 'flex', gap: 18, alignItems: 'center', flex: '1 1 300px', minWidth: 0 }}>
+                    <LogoComponent size="small" />
+                    <div style={{ minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontSize: 10,
+                          letterSpacing: '0.22em',
+                          fontWeight: 900,
+                          color: 'rgba(120, 230, 255, 0.88)',
+                          marginBottom: 8,
+                        }}
+                      >
+                        {protoT?.protocolosServicoHeroBadge || 'DOCUMENTAÇÃO TÉCNICA'}
+                      </div>
+                      <h1
+                        style={{
+                          margin: 0,
+                          fontSize: 'clamp(1.35rem, 4.2vw, 2rem)',
+                          fontWeight: 900,
+                          letterSpacing: '0.05em',
+                          lineHeight: 1.15,
+                          background: 'linear-gradient(92deg, #9fffe8, #00ffc8, #5ec4ff)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          backgroundClip: 'text',
+                        }}
+                      >
+                        {tituloProto}
+                      </h1>
+                      <p style={{ margin: '10px 0 0', fontSize: 13, color: 'rgba(230, 245, 255, 0.86)', lineHeight: 1.65, maxWidth: 580 }}>
+                        {descProto}
+                      </p>
+                      <p style={{ margin: '10px 0 0', fontSize: 12, fontWeight: 600, color: 'rgba(160, 210, 255, 0.78)', maxWidth: 600, lineHeight: 1.5 }}>
+                        {protoT?.protocolosServicoHeroTagline ||
+                          'Um fluxo só: cliente + equipamento → blocos texto/imagem → peças → PDF / email / WhatsApp.'}
+                      </p>
+                    </div>
                   </div>
+                  {!mostrarFormulario && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingProtocoloServicoId('new')
+                        setProtocoloServicoForm({
+                          clienteId: '',
+                          equipamentoNumeroSerie: '',
+                          textoInicial: '',
+                          blocos: [],
+                          pecasTrocadasCodigos: [],
+                          pdfModelo: 1,
+                        })
+                      }}
+                      style={{
+                        padding: '14px 26px',
+                        fontWeight: 900,
+                        borderRadius: 14,
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#021208',
+                        letterSpacing: '0.08em',
+                        fontSize: 11,
+                        textTransform: 'uppercase',
+                        whiteSpace: 'nowrap',
+                        background: 'linear-gradient(168deg, #3dffe0, #00c9a0)',
+                        boxShadow: '0 0 36px rgba(0, 255, 210, 0.35), 0 10px 28px rgba(0,0,0,0.45)',
+                      }}
+                    >
+                      + {protoT?.protocolosServicoNovo || 'Novo protocolo'}
+                    </button>
+                  )}
                 </div>
-                {!mostrarFormulario && (
-                  <button
-                    type="button"
-                    className="btn-primary"
-                    onClick={() => {
-                      setEditingProtocoloServicoId('new')
-                      setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
-                    }}
-                    style={{ padding: '12px 22px', fontWeight: 700, borderRadius: '10px', whiteSpace: 'nowrap' }}
-                  >
-                    {protoT?.protocolosServicoNovo || 'Novo protocolo'}
-                  </button>
-                )}
               </div>
             </div>
 
             {mostrarFormulario ? (
               <div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '18px' }}>
-                  <div>
-                    <h2 style={{ margin: 0, fontSize: '18px', color: '#fff', fontWeight: 700 }}>
-                      {editingProtocoloServicoId === 'new'
-                        ? protoT?.protocolosServicoFormTituloNovo || protoT?.protocolosServicoNovo || 'Novo protocolo de serviço'
-                        : protoT?.protocolosServicoFormTituloEditar || protoT?.protocolosServicoEditar || 'Editar protocolo'}
-                    </h2>
-                    <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#888' }}>{protoT?.protocolosServicoFormSub || 'Preencha por secções. Guarde ao final para ficar na lista.'}</p>
+                <div
+                  style={{
+                    position: 'relative',
+                    marginBottom: 22,
+                    padding: '18px 20px',
+                    borderRadius: 16,
+                    border: '1px solid rgba(0, 200, 255, 0.22)',
+                    background: 'linear-gradient(118deg, rgba(0, 55, 72, 0.5), rgba(6, 10, 18, 0.96))',
+                    boxShadow: '0 16px 48px rgba(0, 20, 40, 0.55), inset 0 1px 0 rgba(0, 255, 220, 0.06)',
+                  }}
+                >
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 14, marginBottom: 14 }}>
+                    <div style={{ minWidth: 0, flex: '1 1 220px' }}>
+                      <h2 style={{ margin: 0, fontSize: 'clamp(1.05rem, 2.8vw, 1.35rem)', color: '#fff', fontWeight: 800, letterSpacing: '0.02em' }}>
+                        {editingProtocoloServicoId === 'new'
+                          ? protoT?.protocolosServicoFormTituloNovo || protoT?.protocolosServicoNovo || 'Novo protocolo de serviço'
+                          : protoT?.protocolosServicoFormTituloEditar || protoT?.protocolosServicoEditar || 'Editar protocolo'}
+                      </h2>
+                      <p style={{ margin: '8px 0 0', fontSize: 12, color: 'rgba(180, 220, 255, 0.78)' }}>{protoT?.protocolosServicoFormSub || 'Preencha por secções. Guarde ao final para ficar na lista.'}</p>
+                    </div>
+                    <button
+                      type="button"
+                      style={{
+                        padding: '10px 18px',
+                        borderRadius: 11,
+                        border: '1px solid rgba(255,255,255,0.22)',
+                        background: 'rgba(0,0,0,0.4)',
+                        color: '#d8f4ff',
+                        fontWeight: 700,
+                        fontSize: 12,
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => {
+                        if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY)
+                        setEditingProtocoloServicoId(null)
+                        setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
+                      }}
+                    >
+                      ← {protoT?.protocolosServicoVoltarLista || 'Voltar à lista'}
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    className="btn-primary"
-                    style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.35)', color: '#ccc', padding: '10px 18px' }}
-                    onClick={() => {
-                      if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY)
-                      setEditingProtocoloServicoId(null)
-                      setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
-                    }}
-                  >
-                    ← {protoT?.protocolosServicoVoltarLista || 'Voltar à lista'}
-                  </button>
+                  <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.18em', color: 'rgba(120, 200, 255, 0.75)', marginBottom: 10 }}>
+                    {(protoT?.protocolosServicoFormPassosLabel || 'MODO EDIÇÃO').toUpperCase()}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8 }}>
+                    {protoSteps.map((lab, si) => (
+                      <div
+                        key={lab + si}
+                        style={{
+                          padding: '10px 6px',
+                          textAlign: 'center',
+                          borderRadius: 11,
+                          fontSize: 10,
+                          fontWeight: 900,
+                          letterSpacing: '0.06em',
+                          color: '#021208',
+                          background: 'linear-gradient(165deg, #5dffe8, #00a88a)',
+                          border: '1px solid rgba(0, 255, 220, 0.35)',
+                          boxShadow: si === 3 ? '0 0 22px rgba(0,255,210,0.28)' : '0 4px 14px rgba(0,0,0,0.35)',
+                        }}
+                      >
+                        {si + 1} · {lab}
+                      </div>
+                    ))}
+                  </div>
+                  <p style={{ margin: '12px 0 0', fontSize: 11, color: 'rgba(160, 200, 230, 0.7)', lineHeight: 1.5 }}>
+                    {protoT?.protocolosServicoFormPassos || 'Identificação → conteúdo → peças → guardar na lista.'}
+                  </p>
                 </div>
 
                 <div style={secCard}>
-                  <h3 style={secTitle}>{protoT?.protocolosServicoSecIdentificacao || 'Identificação'}</h3>
+                  <h3 style={secTitle}>
+                    <span style={stepNumStyle()}>1</span>
+                    {protoT?.protocolosServicoSecIdentificacao || 'Identificação'}
+                  </h3>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '18px' }}>
                     <div>
                       <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>{protoT?.protocolosServicoCliente || 'Cliente'}</label>
@@ -25992,7 +26136,10 @@ onKeyPress={(e) => {
                 </div>
 
                 <div style={secCard}>
-                  <h3 style={secTitle}>{protoT?.protocolosServicoSecConteudo || 'Relatório visual (texto e imagens)'}</h3>
+                  <h3 style={secTitle}>
+                    <span style={stepNumStyle()}>2</span>
+                    {protoT?.protocolosServicoSecConteudo || 'Relatório visual (texto e imagens)'}
+                  </h3>
                   <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>{protoT?.protocolosServicoTextoInicial || 'Texto inicial'}</label>
                   <textarea value={protocoloServicoForm.textoInicial} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, textoInicial: e.target.value }))} placeholder={protoT?.protocolosServicoTextoInicialPlaceholder || 'Texto introdutório do protocolo...'} rows={4} style={{ ...inputBase, resize: 'vertical' as const, marginBottom: '20px', maxWidth: '100%' }} />
                   {protocoloServicoForm.blocos.map((bloco, idx) => (
@@ -26040,7 +26187,10 @@ onKeyPress={(e) => {
                 </div>
 
                 <div style={secCard}>
-                  <h3 style={secTitle}>{protoT?.protocolosServicoSecPecas || 'Peças substituídas'}</h3>
+                  <h3 style={secTitle}>
+                    <span style={stepNumStyle()}>3</span>
+                    {protoT?.protocolosServicoSecPecas || 'Peças substituídas'}
+                  </h3>
                   <p style={{ margin: '0 0 14px', fontSize: '12px', color: '#777' }}>{protoT?.protocolosServicoSecPecasHint || 'Códigos alinhados à biblioteca de peças (opcional).'}</p>
                   {protocoloServicoForm.pecasTrocadasCodigos.map((cod, i) => (
                     <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap' }}>
@@ -26053,8 +26203,8 @@ onKeyPress={(e) => {
                   </button>
                 </div>
 
-                <div style={{ position: 'sticky', bottom: 0, zIndex: 5, marginTop: '8px', padding: '16px 0 8px', background: 'linear-gradient(180deg, transparent 0%, #0a0a0a 35%)' }}>
-                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', padding: '16px 20px', borderRadius: '14px', border: '1px solid rgba(0, 255, 136, 0.25)', background: 'rgba(12, 14, 13, 0.96)' }}>
+                <div style={{ position: 'sticky', bottom: 0, zIndex: 5, marginTop: '8px', padding: '16px 0 8px', background: 'linear-gradient(180deg, transparent 0%, rgba(6,10,16,0.97) 40%)' }}>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', padding: '16px 20px', borderRadius: '14px', border: '1px solid rgba(0, 220, 255, 0.28)', background: 'linear-gradient(165deg, rgba(10, 22, 28, 0.98), rgba(4, 8, 14, 0.99))', boxShadow: '0 -8px 32px rgba(0, 40, 60, 0.45)' }}>
                     <button
                       type="button"
                       className="btn-primary"
@@ -26085,89 +26235,142 @@ onKeyPress={(e) => {
                 </div>
               </div>
             ) : (
-              <div style={{ padding: '22px 24px', backgroundColor: '#121212', borderRadius: '16px', border: '1px solid rgba(0, 255, 136, 0.2)' }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '14px', marginBottom: '20px' }}>
-                  <div>
-                    <h2 style={{ margin: 0, fontSize: '16px', color: '#fff', fontWeight: 700 }}>{protoT?.protocolosServicoListaTitulo || 'Protocolos registados'}</h2>
-                    <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#777' }}>
-                      {(protoT?.protocolosServicoListaContagem || '{n} na lista').replace('{n}', String(protocolosFiltrados.length))}
-                      {filtroLista ? ` · ${protocolosOrdenados.length} ${protoT?.protocolosServicoListaTotal || 'no total'}` : ''}
-                    </p>
+              <div
+                style={{
+                  padding: '4px',
+                  borderRadius: 20,
+                  background: 'linear-gradient(135deg, rgba(0, 200, 255, 0.2), rgba(0, 120, 90, 0.15), rgba(100, 80, 200, 0.12))',
+                  boxShadow: '0 24px 60px rgba(0, 0, 0, 0.5)',
+                }}
+              >
+                <div
+                  style={{
+                    padding: '22px 22px 26px',
+                    borderRadius: 17,
+                    background: 'linear-gradient(180deg, rgba(10, 16, 22, 0.98), rgba(4, 8, 12, 0.99))',
+                    border: '1px solid rgba(0, 200, 255, 0.12)',
+                  }}
+                >
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 20 }}>
+                    <div style={{ padding: '14px 16px', borderRadius: 14, background: 'linear-gradient(145deg, rgba(0, 60, 55, 0.55), rgba(6, 14, 18, 0.95))', border: '1px solid rgba(0, 255, 200, 0.2)' }}>
+                      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: 'rgba(160, 240, 220, 0.75)' }}>{(protoT?.protocolosServicoHubKpiArquivo || 'ARQUIVO').toUpperCase()}</div>
+                      <div style={{ fontSize: 28, fontWeight: 900, color: '#b8fff0', marginTop: 6, lineHeight: 1 }}>{totalProto}</div>
+                      <div style={{ fontSize: 11, color: 'rgba(200, 230, 255, 0.55)', marginTop: 4 }}>{protoT?.protocolosServicoHubKpiArquivoSub || 'protocolos guardados'}</div>
+                    </div>
+                    <div style={{ padding: '14px 16px', borderRadius: 14, background: 'linear-gradient(145deg, rgba(0, 50, 80, 0.5), rgba(6, 12, 22, 0.95))', border: '1px solid rgba(80, 180, 255, 0.22)' }}>
+                      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: 'rgba(160, 210, 255, 0.8)' }}>{(protoT?.protocolosServicoHubKpiVisiveis || 'VISÍVEIS').toUpperCase()}</div>
+                      <div style={{ fontSize: 28, fontWeight: 900, color: '#a8d8ff', marginTop: 6, lineHeight: 1 }}>{visivelProto}</div>
+                      <div style={{ fontSize: 11, color: 'rgba(200, 220, 255, 0.55)', marginTop: 4 }}>
+                        {filtroLista
+                          ? (protoT?.protocolosServicoHubKpiFiltroOn || 'filtro inteligente ativo')
+                          : (protoT?.protocolosServicoHubKpiFiltroOff || 'sem filtro de texto')}
+                      </div>
+                    </div>
+                    <div style={{ padding: '14px 16px', borderRadius: 14, background: 'linear-gradient(145deg, rgba(60, 40, 90, 0.35), rgba(8, 10, 18, 0.95))', border: '1px solid rgba(180, 120, 255, 0.2)' }}>
+                      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: 'rgba(220, 190, 255, 0.75)' }}>{(protoT?.protocolosServicoHubKpiCobertura || 'COBERTURA').toUpperCase()}</div>
+                      <div style={{ fontSize: 28, fontWeight: 900, color: '#e4d4ff', marginTop: 6, lineHeight: 1 }}>
+                        {totalProto > 0 ? `${Math.round((visivelProto / totalProto) * 100)}%` : '—'}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'rgba(220, 210, 255, 0.55)', marginTop: 4 }}>{protoT?.protocolosServicoHubKpiCoberturaSub || 'da lista face ao arquivo'}</div>
+                    </div>
                   </div>
-                  <input
-                    type="search"
-                    value={protocoloServicoFiltroLista}
-                    onChange={(e) => setProtocoloServicoFiltroLista(e.target.value)}
-                    placeholder={protoT?.protocolosServicoBuscaPlaceholder || 'Pesquisar por cliente, equipamento, série…'}
-                    style={{ ...inputBase, maxWidth: '340px', minWidth: '200px' }}
-                  />
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 14, marginBottom: 18 }}>
+                    <div>
+                      <h2 style={{ margin: 0, fontSize: 'clamp(1rem, 2.5vw, 1.2rem)', color: '#fff', fontWeight: 800, letterSpacing: '0.04em' }}>{protoT?.protocolosServicoListaTitulo || 'Protocolos registados'}</h2>
+                      <p style={{ margin: '8px 0 0', fontSize: 12, color: 'rgba(180, 200, 220, 0.65)' }}>
+                        {(protoT?.protocolosServicoListaContagem || '{n} na lista').replace('{n}', String(protocolosFiltrados.length))}
+                        {filtroLista ? ` · ${protocolosOrdenados.length} ${protoT?.protocolosServicoListaTotal || 'no total'}` : ''}
+                      </p>
+                    </div>
+                    <input
+                      type="search"
+                      value={protocoloServicoFiltroLista}
+                      onChange={(e) => setProtocoloServicoFiltroLista(e.target.value)}
+                      placeholder={protoT?.protocolosServicoBuscaPlaceholder || 'Pesquisar por cliente, equipamento, série…'}
+                      style={{ ...inputBase, maxWidth: '380px', minWidth: '200px', flex: '1 1 220px' }}
+                    />
+                  </div>
+
+                  {protocolosServico.length === 0 ? (
+                    <div style={{ padding: '36px 22px', textAlign: 'center', borderRadius: 16, border: '1px dashed rgba(0, 220, 255, 0.25)', background: 'rgba(0, 30, 40, 0.35)' }}>
+                      <p style={{ color: 'rgba(230, 245, 255, 0.82)', lineHeight: 1.65, margin: 0, maxWidth: 520, marginLeft: 'auto', marginRight: 'auto', fontSize: 14 }}>{protoT?.protocolosServicoSemProtocolos || 'Ainda não há protocolos.'}</p>
+                    </div>
+                  ) : protocolosFiltrados.length === 0 ? (
+                    <p style={{ color: 'rgba(200, 210, 230, 0.75)', padding: '24px 8px', fontSize: 14 }}>{protoT?.protocolosServicoListaVaziaFiltro || 'Nenhum protocolo corresponde à pesquisa.'}</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      {protocolosFiltrados.map(p => {
+                        const cl = clientes.find(c => c.id === p.clienteId)
+                        const eq = cl?.equipamentos?.find(e => e.numeroSerie === p.equipamentoNumeroSerie)
+                        const dataStr = new Date(p.dataCriacao).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'en' ? 'en-GB' : selectedLanguage)
+                        const modeloLabel = (protoT as Record<string, string>)?.[`protocolosServicoPdfModelo${clampProtocoloPdfModelo(p.pdfModelo)}`] || `M${p.pdfModelo || 1}`
+                        const nBlocos = p.blocos?.length ?? 0
+                        const nPecas = p.pecasTrocadasCodigos?.filter(c => c.trim()).length ?? 0
+                        return (
+                          <div
+                            key={p.id}
+                            style={{
+                              position: 'relative',
+                              overflow: 'hidden',
+                              display: 'grid',
+                              gridTemplateColumns: 'minmax(0, 1fr) auto',
+                              gap: 18,
+                              alignItems: 'start',
+                              padding: '20px 22px',
+                              borderRadius: 16,
+                              border: '1px solid rgba(0, 200, 255, 0.18)',
+                              background: 'linear-gradient(118deg, rgba(16, 28, 36, 0.98), rgba(6, 10, 16, 0.99))',
+                              boxShadow: '0 12px 40px rgba(0, 20, 35, 0.45), inset 0 1px 0 rgba(0, 255, 220, 0.04)',
+                            }}
+                          >
+                            <div
+                              style={{
+                                position: 'absolute',
+                                left: 0,
+                                top: 0,
+                                bottom: 0,
+                                width: 5,
+                                background: 'linear-gradient(180deg, #5dffe8, #00a0c8, #8860ff)',
+                                opacity: 0.95,
+                              }}
+                            />
+                            <div style={{ minWidth: 0, paddingLeft: 12 }}>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px 12px', marginBottom: 10 }}>
+                                <strong style={{ color: '#fff', fontSize: 'clamp(15px, 2.5vw, 18px)', fontWeight: 800 }}>{cl?.nomeEmpresa || '—'}</strong>
+                                <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.08em', color: '#031018', background: 'linear-gradient(90deg, #7dffe8, #5ec4ff)', padding: '5px 12px', borderRadius: 999 }}>{modeloLabel}</span>
+                                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', color: 'rgba(160, 200, 255, 0.7)' }}>{dataStr}</span>
+                              </div>
+                              {eq ? (
+                                <p style={{ margin: 0, color: 'rgba(255,255,255,0.88)', fontSize: 14, lineHeight: 1.55 }}>
+                                  <span style={{ color: '#8dffe0', fontWeight: 700 }}>{eq.tipoEquipamento}</span>
+                                  {eq.marca ? <span style={{ color: 'rgba(180,200,220,0.65)' }}> · {eq.marca}</span> : null}
+                                  {eq.modelo ? <span style={{ color: 'rgba(180,200,220,0.65)' }}> · {eq.modelo}</span> : null}
+                                </p>
+                              ) : null}
+                              <p style={{ margin: '8px 0 0', fontSize: 12, color: 'rgba(140, 180, 210, 0.85)', fontFamily: 'ui-monospace, monospace' }}>{eq?.numeroSerie || p.equipamentoNumeroSerie || '—'}</p>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+                                <span style={{ fontSize: 11, fontWeight: 700, padding: '6px 11px', borderRadius: 999, background: 'rgba(0, 80, 70, 0.45)', border: '1px solid rgba(0, 255, 200, 0.2)', color: '#b8fff0' }}>{(protoT?.protocolosServicoResumoBlocos || '{n} blocos').replace('{n}', String(nBlocos))}</span>
+                                <span style={{ fontSize: 11, fontWeight: 700, padding: '6px 11px', borderRadius: 999, background: 'rgba(40, 60, 100, 0.45)', border: '1px solid rgba(100, 180, 255, 0.22)', color: '#c8e4ff' }}>{(protoT?.protocolosServicoResumoPecas || '{n} peças').replace('{n}', String(nPecas))}</span>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'stretch', minWidth: 0 }}>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' }}>
+                                <button type="button" className="btn-primary" style={{ padding: '9px 14px', fontSize: 11, borderRadius: 10, fontWeight: 800, letterSpacing: '0.04em', background: 'linear-gradient(165deg, #3dffe0, #00a080)', border: 'none', color: '#031210' }} onClick={() => gerarPDFProtocolo(p)}>{protoT?.protocolosServicoGerarPDF || 'PDF'}</button>
+                                <button type="button" className="btn-primary" style={{ padding: '9px 14px', fontSize: 11, borderRadius: 10, fontWeight: 800, backgroundColor: 'rgba(0, 140, 255, 0.35)', borderColor: 'rgba(0, 180, 255, 0.55)' }} onClick={() => enviarEmailProtocolo(p)}>{protoT?.protocolosServicoEnviarEmail || 'Email'}</button>
+                                <button type="button" className="btn-primary" style={{ padding: '9px 14px', fontSize: 11, borderRadius: 10, fontWeight: 800, backgroundColor: 'rgba(37, 211, 102, 0.28)', borderColor: 'rgba(37, 211, 102, 0.55)' }} onClick={() => enviarWhatsAppProtocolo(p)}>{protoT?.protocolosServicoEnviarWhatsApp || 'WhatsApp'}</button>
+                              </div>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' }}>
+                                <button type="button" className="btn-primary" style={{ padding: '9px 14px', fontSize: 11, borderRadius: 10, fontWeight: 700, background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.22)', color: '#ddeeff' }} onClick={() => { const pr = protocolosServico.find(x => x.id === p.id); if (pr) { setProtocoloServicoForm({ clienteId: pr.clienteId, equipamentoNumeroSerie: pr.equipamentoNumeroSerie, textoInicial: pr.textoInicial, blocos: pr.blocos, pecasTrocadasCodigos: pr.pecasTrocadasCodigos, pdfModelo: clampProtocoloPdfModelo(pr.pdfModelo) }); setEditingProtocoloServicoId(pr.id) } }}>{protoT?.protocolosServicoEditar || 'Editar'}</button>
+                                <button type="button" className="btn-danger" style={{ padding: '9px 14px', fontSize: 11, borderRadius: 10, fontWeight: 700 }} onClick={() => { if (window.confirm(protoT?.protocolosServicoConfirmarExcluir || 'Excluir este protocolo?')) { const next = protocolosServico.filter(x => x.id !== p.id); setProtocolosServico(next); saveData('nonato-protocolos-servico', next) } }}>{protoT?.protocolosServicoExcluir || 'Excluir'}</button>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
-                {protocolosServico.length === 0 ? (
-                  <div style={{ padding: '32px 20px', textAlign: 'center', borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.12)', background: 'rgba(0,0,0,0.25)' }}>
-                    <p style={{ color: 'rgba(255,255,255,0.75)', lineHeight: 1.65, margin: 0, maxWidth: '480px', marginLeft: 'auto', marginRight: 'auto', fontSize: '14px' }}>{protoT?.protocolosServicoSemProtocolos || 'Ainda não há protocolos.'}</p>
-                  </div>
-                ) : protocolosFiltrados.length === 0 ? (
-                  <p style={{ color: '#999', padding: '20px 0' }}>{protoT?.protocolosServicoListaVaziaFiltro || 'Nenhum protocolo corresponde à pesquisa.'}</p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    {protocolosFiltrados.map(p => {
-                      const cl = clientes.find(c => c.id === p.clienteId)
-                      const eq = cl?.equipamentos?.find(e => e.numeroSerie === p.equipamentoNumeroSerie)
-                      const dataStr = new Date(p.dataCriacao).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'en' ? 'en-GB' : selectedLanguage)
-                      const modeloLabel = (protoT as any)?.[`protocolosServicoPdfModelo${clampProtocoloPdfModelo(p.pdfModelo)}`] || `M${p.pdfModelo || 1}`
-                      const nBlocos = p.blocos?.length ?? 0
-                      const nPecas = p.pecasTrocadasCodigos?.filter(c => c.trim()).length ?? 0
-                      return (
-                        <div
-                          key={p.id}
-                          style={{
-                            display: 'grid',
-                            gridTemplateColumns: '1fr auto',
-                            gap: '16px',
-                            alignItems: 'start',
-                            padding: '18px 20px',
-                            background: 'linear-gradient(135deg, rgba(22, 26, 24, 0.98) 0%, rgba(14, 16, 15, 0.99) 100%)',
-                            borderRadius: '14px',
-                            border: '1px solid rgba(0, 255, 136, 0.2)',
-                            borderLeft: '4px solid rgba(0, 255, 136, 0.55)',
-                            boxShadow: '0 4px 24px rgba(0, 0, 0, 0.35)',
-                          }}
-                        >
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '8px 12px', marginBottom: '8px' }}>
-                              <strong style={{ color: '#fff', fontSize: '16px', fontWeight: 700 }}>{cl?.nomeEmpresa || '—'}</strong>
-                              <span style={{ fontSize: '11px', fontWeight: 700, color: '#0a3d2e', background: 'rgba(0, 255, 136, 0.35)', padding: '4px 10px', borderRadius: '999px' }}>{modeloLabel}</span>
-                            </div>
-                            {eq ? (
-                              <p style={{ margin: 0, color: 'rgba(255,255,255,0.82)', fontSize: '14px', lineHeight: 1.5 }}>
-                                <span style={{ color: '#7dffb3' }}>{eq.tipoEquipamento}</span>
-                                {eq.marca ? <span style={{ color: '#888' }}> · {eq.marca}</span> : null}
-                                {eq.modelo ? <span style={{ color: '#888' }}> · {eq.modelo}</span> : null}
-                              </p>
-                            ) : null}
-                            <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#666', fontFamily: 'ui-monospace, monospace' }}>{eq?.numeroSerie || p.equipamentoNumeroSerie || '—'}</p>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '10px', fontSize: '11px', color: '#888' }}>
-                              <span>{dataStr}</span>
-                              <span>{(protoT?.protocolosServicoResumoBlocos || '{n} blocos').replace('{n}', String(nBlocos))}</span>
-                              <span>{(protoT?.protocolosServicoResumoPecas || '{n} peças').replace('{n}', String(nPecas))}</span>
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'stretch' }}>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'flex-end' }}>
-                              <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', fontWeight: 600 }} onClick={() => gerarPDFProtocolo(p)}>{protoT?.protocolosServicoGerarPDF || 'PDF'}</button>
-                              <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', backgroundColor: 'rgba(0, 150, 255, 0.22)', borderColor: 'rgba(0, 150, 255, 0.5)', fontWeight: 600 }} onClick={() => enviarEmailProtocolo(p)}>{protoT?.protocolosServicoEnviarEmail || 'Email'}</button>
-                              <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', backgroundColor: 'rgba(37, 211, 102, 0.2)', borderColor: 'rgba(37, 211, 102, 0.55)', fontWeight: 600 }} onClick={() => enviarWhatsAppProtocolo(p)}>{protoT?.protocolosServicoEnviarWhatsApp || 'WhatsApp'}</button>
-                            </div>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'flex-end' }}>
-                              <button type="button" className="btn-primary" style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px', background: 'transparent', borderColor: 'rgba(255,255,255,0.3)', color: '#ccc' }} onClick={() => { const pr = protocolosServico.find(x => x.id === p.id); if (pr) { setProtocoloServicoForm({ clienteId: pr.clienteId, equipamentoNumeroSerie: pr.equipamentoNumeroSerie, textoInicial: pr.textoInicial, blocos: pr.blocos, pecasTrocadasCodigos: pr.pecasTrocadasCodigos, pdfModelo: clampProtocoloPdfModelo(pr.pdfModelo) }); setEditingProtocoloServicoId(pr.id) } }}>{protoT?.protocolosServicoEditar || 'Editar'}</button>
-                              <button type="button" className="btn-danger" style={{ padding: '8px 14px', fontSize: '12px', borderRadius: '8px' }} onClick={() => { if (window.confirm(protoT?.protocolosServicoConfirmarExcluir || 'Excluir este protocolo?')) { const next = protocolosServico.filter(x => x.id !== p.id); setProtocolosServico(next); saveData('nonato-protocolos-servico', next) } }}>{protoT?.protocolosServicoExcluir || 'Excluir'}</button>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
               </div>
             )}
           </div>
