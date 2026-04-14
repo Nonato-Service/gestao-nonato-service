@@ -3472,6 +3472,11 @@ a:focus-visible {
   border-bottom: 1px solid rgba(0, 255, 0, 0.24);
 }
 
+.tab-glass-nav--clientes {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
 .tab-glass-cards-grid {
   display: grid;
   gap: 15px;

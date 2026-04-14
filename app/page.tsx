@@ -28553,7 +28553,7 @@ onKeyPress={(e) => {
         
         return (
           <div className="tab-content-wrapper tab-glass-root tab-glass-root--wide">
-            {/* Barra fixa no topo para mobile - Voltar + Cadastrar + Listar sempre visíveis */}
+            {/* Barra fixa no topo para mobile - Voltar + Cadastrar + Listar + Adicionar (aba cadastrar) + Início */}
             <div className="mobile-sticky-toolbar">
               <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>
                 ↶ {safeT?.voltar || 'Voltar'}
@@ -28570,6 +28570,11 @@ onKeyPress={(e) => {
               >
                 📋 {safeT?.clientesCadastrados || 'Listar'}
               </button>
+              {clientesActiveTab === 'cadastrar' && (
+                <button type="button" className="mobile-toolbar-btn" onClick={handleAddCliente} title={safeT?.addCliente || 'Adicionar Cliente'}>
+                  ➕ {safeT?.addCliente || 'Adicionar'}
+                </button>
+              )}
               <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>
                 🏠
               </button>
@@ -28653,8 +28658,8 @@ onKeyPress={(e) => {
               </div>
             </div>
 
-            {/* Abas de Navegação - ocultas em mobile (toolbar tem Cadastrar/Listar) */}
-            <div className="tab-nav-desktop tab-glass-nav">
+            {/* Abas de Navegação - ocultas em mobile (toolbar tem Cadastrar/Listar + Adicionar na aba cadastrar) */}
+            <div className="tab-nav-desktop tab-glass-nav tab-glass-nav--clientes">
               <button 
                 className="btn-primary"
                 onClick={() => setClientesActiveTab('cadastrar')}
@@ -28691,14 +28696,30 @@ onKeyPress={(e) => {
               >
                 📋 {safeT?.clientesCadastrados || 'Clientes Cadastrados'} ({clientes.length})
               </button>
+              {clientesActiveTab === 'cadastrar' && (
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={handleAddCliente}
+                  style={{
+                    padding: '12px 24px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    border: '1px solid rgba(0, 255, 160, 0.45)',
+                    backgroundColor: 'rgba(0, 90, 55, 0.55)',
+                    color: '#ffffff',
+                    transition: 'border-color 0.2s ease, background-color 0.2s ease',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ➕ {safeT?.addCliente || 'Adicionar Cliente'}
+                </button>
+              )}
             </div>
             
             {clientesActiveTab === 'cadastrar' ? (
               <div>
-                <button className="btn-primary" onClick={handleAddCliente} style={{ marginBottom: '20px' }}>
-                  {safeT?.addCliente || 'Adicionar Cliente'}
-                </button>
-                
                 {showClienteForm && (
               <div
                 className={editingCliente && clienteCadastroAlertaDevedorId === editingCliente.id ? 'cliente-form-alerta-devedor' : undefined}
