@@ -26151,11 +26151,13 @@ onKeyPress={(e) => {
                           ))}
                           {(bloco.imagens || []).length < 2 && (
                             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-                              <label style={{ padding: '10px 16px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)' }}>
+                              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 16px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)' }}>
+                                <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden>🔍</span>
                                 {protoT?.protocolosServicoBuscarImagem || 'Buscar imagem'}
                                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const bid = bloco.id; if (!bid) return; const input = ev.currentTarget; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b) => (b.id === bid && b.tipo === 'imagens' ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b)) })); input.value = '' }; r.readAsDataURL(f) }} />
                               </label>
-                              <label style={{ padding: '10px 16px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)' }}>
+                              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 16px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)' }}>
+                                <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden>📷</span>
                                 {protoT?.protocolosServicoTirarFoto || 'Tirar foto'}
                                 <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const bid = bloco.id; if (!bid) return; const input = ev.currentTarget; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b) => (b.id === bid && b.tipo === 'imagens' ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b)) })); input.value = '' }; r.readAsDataURL(f) }} />
                               </label>
@@ -26184,7 +26186,30 @@ onKeyPress={(e) => {
                   {protocoloServicoForm.pecasTrocadasCodigos.map((cod, i) => (
                     <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap' }}>
                       <input type="text" value={cod} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, pecasTrocadasCodigos: prev.pecasTrocadasCodigos.map((c, j) => j === i ? e.target.value : c) }))} placeholder={protoT?.protocolosServicoCodigoPeca || 'Código da peça'} style={{ ...inputBase, maxWidth: '280px' }} />
-                      <button type="button" className="btn-danger" style={{ padding: '8px 12px', fontSize: '12px', borderRadius: '8px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, pecasTrocadasCodigos: prev.pecasTrocadasCodigos.filter((_, j) => j !== i) }))}>{safeT?.delete || 'Excluir'}</button>
+                      <button
+                        type="button"
+                        title={safeT?.delete || 'Excluir'}
+                        aria-label={safeT?.delete || 'Excluir'}
+                        className="btn-danger"
+                        style={{
+                          padding: 0,
+                          width: 28,
+                          height: 28,
+                          flexShrink: 0,
+                          fontSize: 13,
+                          borderRadius: 6,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: 'rgba(127, 29, 29, 0.35)',
+                          border: '1px solid rgba(248, 113, 113, 0.28)',
+                          color: '#fca5a5',
+                          boxShadow: 'none',
+                        }}
+                        onClick={() => setProtocoloServicoForm(prev => ({ ...prev, pecasTrocadasCodigos: prev.pecasTrocadasCodigos.filter((_, j) => j !== i) }))}
+                      >
+                        ×
+                      </button>
                     </div>
                   ))}
                   <button type="button" className="btn-primary" style={{ padding: '10px 16px', fontSize: '13px', borderRadius: '10px', marginTop: '4px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, pecasTrocadasCodigos: [...prev.pecasTrocadasCodigos, ''] }))}>
@@ -26355,7 +26380,38 @@ onKeyPress={(e) => {
                               </div>
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' }}>
                                 <button type="button" className="btn-primary" style={{ padding: '9px 14px', fontSize: 11, borderRadius: 10, fontWeight: 700, background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.22)', color: '#ddeeff' }} onClick={() => { const pr = protocolosServico.find(x => x.id === p.id); if (pr) { setProtocoloServicoForm({ clienteId: pr.clienteId, equipamentoNumeroSerie: pr.equipamentoNumeroSerie, textoInicial: pr.textoInicial, blocos: ensureProtocoloBlocosIds(pr.blocos || []), pecasTrocadasCodigos: pr.pecasTrocadasCodigos, pdfModelo: clampProtocoloPdfModelo(pr.pdfModelo) }); setEditingProtocoloServicoId(pr.id) } }}>{protoT?.protocolosServicoEditar || 'Editar'}</button>
-                                <button type="button" className="btn-danger" style={{ padding: '9px 14px', fontSize: 11, borderRadius: 10, fontWeight: 700 }} onClick={() => { if (window.confirm(protoT?.protocolosServicoConfirmarExcluir || 'Excluir este protocolo?')) { const next = protocolosServico.filter(x => x.id !== p.id); setProtocolosServico(next); saveData('nonato-protocolos-servico', next) } }}>{protoT?.protocolosServicoExcluir || 'Excluir'}</button>
+                                <button
+                                  type="button"
+                                  title={protoT?.protocolosServicoExcluir || 'Excluir'}
+                                  aria-label={protoT?.protocolosServicoExcluir || 'Excluir'}
+                                  className="btn-danger"
+                                  style={{
+                                    padding: 0,
+                                    width: 30,
+                                    height: 30,
+                                    flexShrink: 0,
+                                    fontSize: 14,
+                                    lineHeight: 1,
+                                    borderRadius: 8,
+                                    fontWeight: 600,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    background: 'rgba(127, 29, 29, 0.35)',
+                                    border: '1px solid rgba(248, 113, 113, 0.28)',
+                                    color: '#fca5a5',
+                                    boxShadow: 'none',
+                                  }}
+                                  onClick={() => {
+                                    if (window.confirm(protoT?.protocolosServicoConfirmarExcluir || 'Excluir este protocolo?')) {
+                                      const next = protocolosServico.filter(x => x.id !== p.id)
+                                      setProtocolosServico(next)
+                                      saveData('nonato-protocolos-servico', next)
+                                    }
+                                  }}
+                                >
+                                  🗑
+                                </button>
                               </div>
                             </div>
                           </div>
