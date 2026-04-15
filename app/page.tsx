@@ -996,6 +996,8 @@ function getDatasPeriodoAgendamento(ag: Agendamento): string[] {
 }
 
 type EquipamentoCliente = {
+  /** Código ou ID interno opcional (distinto do n.º de série, quando existir no cadastro) */
+  id?: string
   tipoEquipamento: string
   modelo: string
   marca: string
@@ -25833,6 +25835,12 @@ onKeyPress={(e) => {
         const descProto = protoT?.protocolosServicoDesc || 'Consulte e gere os protocolos de serviço (antes/depois, imagens e peças trocadas).'
         const clienteProto = clientes.find(c => c.id === protocoloServicoForm.clienteId)
         const equipamentoProto = clienteProto?.equipamentos?.find(e => e.numeroSerie === protocoloServicoForm.equipamentoNumeroSerie)
+        const serieProtocoloResumo = (equipamentoProto?.numeroSerie || protocoloServicoForm.equipamentoNumeroSerie || '').trim()
+        const idEquipamentoCliente = (equipamentoProto?.id || '').trim()
+        const idEquipamentoArmazem = serieProtocoloResumo
+          ? (equipamentos.find((e) => (e.numeroSerie || '').trim().toLowerCase() === serieProtocoloResumo.toLowerCase())?.id || '').trim()
+          : ''
+        const idEquipamentoVisivel = idEquipamentoCliente || idEquipamentoArmazem
         const gerarPDFProtocolo = (p: ProtocoloServico) => {
           const cl = clientes.find(c => c.id === p.clienteId)
           const eq = cl?.equipamentos?.find(e => e.numeroSerie === p.equipamentoNumeroSerie)
@@ -26134,7 +26142,32 @@ onKeyPress={(e) => {
                         <span style={{ color: '#7dffb3', fontSize: '12px', fontWeight: 700 }}>
                           #{idx + 1} · {bloco.tipo === 'texto' ? (protoT?.protocolosServicoBlocoTexto || 'Bloco de texto') : (protoT?.protocolosServicoBlocoImagens || 'Bloco de imagens (máx. 2)')}
                         </span>
-                        <button type="button" className="btn-danger" style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: bloco.id ? prev.blocos.filter((b) => b.id !== bloco.id) : prev.blocos.filter((_, i) => i !== idx) }))}>{protoT?.protocolosServicoRemoverBloco || 'Remover'}</button>
+                        {bloco.tipo === 'texto' ? (
+                          <button
+                            type="button"
+                            title={protoT?.protocolosServicoRemoverBloco || 'Remover'}
+                            aria-label={protoT?.protocolosServicoRemoverBloco || 'Remover'}
+                            className="btn-danger"
+                            style={{
+                              padding: 0,
+                              width: 28,
+                              height: 28,
+                              flexShrink: 0,
+                              fontSize: 14,
+                              borderRadius: 6,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              background: 'rgba(127, 29, 29, 0.35)',
+                              border: '1px solid rgba(248, 113, 113, 0.28)',
+                              color: '#fca5a5',
+                              boxShadow: 'none',
+                            }}
+                            onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: bloco.id ? prev.blocos.filter((b) => b.id !== bloco.id) : prev.blocos.filter((_, i) => i !== idx) }))}
+                          >
+                            ×
+                          </button>
+                        ) : null}
                       </div>
                       {bloco.tipo === 'imagens' && protoT?.protocolosServicoBlocoImagensHint ? (
                         <p style={{ margin: '0 0 10px', fontSize: 11, color: '#64748b', lineHeight: 1.45 }}>{protoT.protocolosServicoBlocoImagensHint}</p>
@@ -26149,20 +26182,44 @@ onKeyPress={(e) => {
                               <button type="button" aria-label="Remover imagem" style={{ position: 'absolute', top: '6px', right: '6px', background: 'rgba(180,30,30,0.95)', color: '#fff', border: 'none', borderRadius: '6px', width: '28px', height: '28px', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }} onClick={() => { const bid = bloco.id; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, bi) => (bid ? b.id === bid : bi === idx) ? { ...b, imagens: (b.imagens || []).filter((_, j) => j !== i) } : b) })) }}>×</button>
                             </div>
                           ))}
-                          {(bloco.imagens || []).length < 2 && (
-                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-                              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 16px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)' }}>
-                                <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden>🔍</span>
-                                {protoT?.protocolosServicoBuscarImagem || 'Buscar imagem'}
-                                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const bid = bloco.id; if (!bid) return; const input = ev.currentTarget; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b) => (b.id === bid && b.tipo === 'imagens' ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b)) })); input.value = '' }; r.readAsDataURL(f) }} />
-                              </label>
-                              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 16px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)' }}>
-                                <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden>📷</span>
-                                {protoT?.protocolosServicoTirarFoto || 'Tirar foto'}
-                                <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const bid = bloco.id; if (!bid) return; const input = ev.currentTarget; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b) => (b.id === bid && b.tipo === 'imagens' ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b)) })); input.value = '' }; r.readAsDataURL(f) }} />
-                              </label>
-                            </div>
-                          )}
+                          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                            {(bloco.imagens || []).length < 2 ? (
+                              <>
+                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 16px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)' }}>
+                                  <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden>🔍</span>
+                                  {protoT?.protocolosServicoBuscarImagem || 'Buscar imagem'}
+                                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const bid = bloco.id; if (!bid) return; const input = ev.currentTarget; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b) => (b.id === bid && b.tipo === 'imagens' ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b)) })); input.value = '' }; r.readAsDataURL(f) }} />
+                                </label>
+                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 16px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)' }}>
+                                  <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden>📷</span>
+                                  {protoT?.protocolosServicoTirarFoto || 'Tirar foto'}
+                                  <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const bid = bloco.id; if (!bid) return; const input = ev.currentTarget; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b) => (b.id === bid && b.tipo === 'imagens' ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b)) })); input.value = '' }; r.readAsDataURL(f) }} />
+                                </label>
+                              </>
+                            ) : null}
+                            <button
+                              type="button"
+                              title={protoT?.protocolosServicoRemoverBloco || 'Remover'}
+                              aria-label={protoT?.protocolosServicoRemoverBloco || 'Remover'}
+                              className="btn-danger"
+                              style={{
+                                padding: '10px 14px',
+                                fontSize: 12,
+                                fontWeight: 600,
+                                borderRadius: 10,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                background: 'rgba(127, 29, 29, 0.35)',
+                                border: '1px solid rgba(248, 113, 113, 0.28)',
+                                color: '#fca5a5',
+                                boxShadow: 'none',
+                              }}
+                              onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: bloco.id ? prev.blocos.filter((b) => b.id !== bloco.id) : prev.blocos.filter((_, i) => i !== idx) }))}
+                            >
+                              {protoT?.protocolosServicoRemoverBloco || 'Remover'}
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
