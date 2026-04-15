@@ -26197,12 +26197,11 @@ onKeyPress={(e) => {
                             aria-label={protoT?.protocolosServicoRemoverBloco || 'Remover'}
                             className="btn-danger"
                             style={{
-                              padding: 0,
-                              width: 28,
-                              height: 28,
+                              padding: '6px 12px',
                               flexShrink: 0,
-                              fontSize: 14,
-                              borderRadius: 6,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              borderRadius: 8,
                               display: 'inline-flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -26210,10 +26209,11 @@ onKeyPress={(e) => {
                               border: '1px solid rgba(248, 113, 113, 0.28)',
                               color: '#fca5a5',
                               boxShadow: 'none',
+                              whiteSpace: 'nowrap',
                             }}
                             onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: bloco.id ? prev.blocos.filter((b) => b.id !== bloco.id) : prev.blocos.filter((_, i) => i !== idx) }))}
                           >
-                            ×
+                            {protoT?.protocolosServicoRemoverBloco || 'Remover'}
                           </button>
                         ) : null}
                       </div>
@@ -26228,7 +26228,36 @@ onKeyPress={(e) => {
                             {(bloco.imagens || []).slice(0, 2).map((src, i) => (
                               <div key={i} style={{ position: 'relative' }}>
                                 <img src={src} alt="" style={{ maxWidth: '220px', maxHeight: '165px', objectFit: 'contain', borderRadius: '10px', border: '1px solid rgba(0,255,136,0.25)', background: '#111' }} />
-                                <button type="button" aria-label="Remover imagem" style={{ position: 'absolute', top: '6px', right: '6px', background: 'rgba(180,30,30,0.95)', color: '#fff', border: 'none', borderRadius: '6px', width: '28px', height: '28px', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }} onClick={() => { const bid = bloco.id; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, bi) => (bid ? b.id === bid : bi === idx) ? { ...b, imagens: (b.imagens || []).filter((_, j) => j !== i) } : b) })) }}>×</button>
+                                <button
+                                  type="button"
+                                  title={protoT?.protocolosServicoRemoverImagem || protoT?.protocolosServicoExcluir || 'Remover'}
+                                  aria-label={protoT?.protocolosServicoRemoverImagem || protoT?.protocolosServicoExcluir || 'Remover'}
+                                  style={{
+                                    position: 'absolute',
+                                    top: '6px',
+                                    right: '6px',
+                                    background: 'rgba(180,30,30,0.95)',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    padding: '4px 8px',
+                                    cursor: 'pointer',
+                                    fontSize: '10px',
+                                    fontWeight: 700,
+                                    lineHeight: 1.2,
+                                    whiteSpace: 'nowrap',
+                                    boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
+                                  }}
+                                  onClick={() => {
+                                    const bid = bloco.id
+                                    setProtocoloServicoForm(prev => ({
+                                      ...prev,
+                                      blocos: prev.blocos.map((b, bi) => (bid ? b.id === bid : bi === idx) ? { ...b, imagens: (b.imagens || []).filter((_, j) => j !== i) } : b),
+                                    }))
+                                  }}
+                                >
+                                  {protoT?.protocolosServicoRemoverImagem || protoT?.protocolosServicoExcluir || 'Remover'}
+                                </button>
                               </div>
                             ))}
                           </div>
@@ -26269,10 +26298,9 @@ onKeyPress={(e) => {
                               className="btn-danger"
                               style={{
                                 padding: '0 12px',
-                                minWidth: 40,
-                                height: 40,
+                                minHeight: 40,
                                 flexShrink: 0,
-                                fontSize: 16,
+                                fontSize: 12,
                                 fontWeight: 600,
                                 borderRadius: 10,
                                 display: 'inline-flex',
@@ -26286,7 +26314,7 @@ onKeyPress={(e) => {
                               }}
                               onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: bloco.id ? prev.blocos.filter((b) => b.id !== bloco.id) : prev.blocos.filter((_, i) => i !== idx) }))}
                             >
-                              🗑
+                              {protoT?.protocolosServicoRemoverBloco || 'Remover'}
                             </button>
                           </div>
                         </div>
@@ -26314,16 +26342,15 @@ onKeyPress={(e) => {
                       <input type="text" value={cod} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, pecasTrocadasCodigos: prev.pecasTrocadasCodigos.map((c, j) => j === i ? e.target.value : c) }))} placeholder={protoT?.protocolosServicoCodigoPeca || 'Código da peça'} style={{ ...inputBase, maxWidth: '280px' }} />
                       <button
                         type="button"
-                        title={safeT?.delete || 'Excluir'}
-                        aria-label={safeT?.delete || 'Excluir'}
+                        title={protoT?.protocolosServicoExcluirLinhaPeca || safeT?.delete || 'Excluir'}
+                        aria-label={protoT?.protocolosServicoExcluirLinhaPeca || safeT?.delete || 'Excluir'}
                         className="btn-danger"
                         style={{
-                          padding: 0,
-                          width: 28,
-                          height: 28,
+                          padding: '6px 12px',
                           flexShrink: 0,
-                          fontSize: 13,
-                          borderRadius: 6,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          borderRadius: 8,
                           display: 'inline-flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -26331,10 +26358,11 @@ onKeyPress={(e) => {
                           border: '1px solid rgba(248, 113, 113, 0.28)',
                           color: '#fca5a5',
                           boxShadow: 'none',
+                          whiteSpace: 'nowrap',
                         }}
                         onClick={() => setProtocoloServicoForm(prev => ({ ...prev, pecasTrocadasCodigos: prev.pecasTrocadasCodigos.filter((_, j) => j !== i) }))}
                       >
-                        ×
+                        {protoT?.protocolosServicoExcluirLinhaPeca || safeT?.delete || 'Excluir'}
                       </button>
                     </div>
                   ))}
@@ -26512,14 +26540,11 @@ onKeyPress={(e) => {
                                   aria-label={protoT?.protocolosServicoExcluir || 'Excluir'}
                                   className="btn-danger"
                                   style={{
-                                    padding: 0,
-                                    width: 30,
-                                    height: 30,
+                                    padding: '8px 12px',
                                     flexShrink: 0,
-                                    fontSize: 14,
-                                    lineHeight: 1,
+                                    fontSize: 11,
                                     borderRadius: 8,
-                                    fontWeight: 600,
+                                    fontWeight: 700,
                                     display: 'inline-flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
@@ -26527,6 +26552,7 @@ onKeyPress={(e) => {
                                     border: '1px solid rgba(248, 113, 113, 0.28)',
                                     color: '#fca5a5',
                                     boxShadow: 'none',
+                                    whiteSpace: 'nowrap',
                                   }}
                                   onClick={() => {
                                     if (window.confirm(protoT?.protocolosServicoConfirmarExcluir || 'Excluir este protocolo?')) {
@@ -26536,7 +26562,7 @@ onKeyPress={(e) => {
                                     }
                                   }}
                                 >
-                                  🗑
+                                  {protoT?.protocolosServicoExcluir || 'Excluir'}
                                 </button>
                               </div>
                             </div>
