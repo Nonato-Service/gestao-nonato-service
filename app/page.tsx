@@ -1032,9 +1032,20 @@ type Cliente = {
 
 // Protocolo de Serviço: antes/depois com texto, imagens e peças trocadas
 type ProtocoloBloco = {
+  /** Identificador estável por bloco (evita FileReader async gravar no índice errado). */
+  id?: string
   tipo: 'texto' | 'imagens'
   texto?: string
   imagens?: string[] // máx. 2, uma ao lado da outra
+}
+
+function newProtocoloBlocoId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+  return `bloco-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+}
+
+function ensureProtocoloBlocosIds(blocos: ProtocoloBloco[]): ProtocoloBloco[] {
+  return blocos.map((b) => (b.id ? b : { ...b, id: newProtocoloBlocoId() }))
 }
 
 type ProtocoloServico = {
@@ -4744,7 +4755,7 @@ export default function Dashboard() {
         clienteId: typeof parsed.clienteId === 'string' ? parsed.clienteId : '',
         equipamentoNumeroSerie: typeof parsed.equipamentoNumeroSerie === 'string' ? parsed.equipamentoNumeroSerie : '',
         textoInicial: typeof parsed.textoInicial === 'string' ? parsed.textoInicial : '',
-        blocos: Array.isArray(parsed.blocos) ? parsed.blocos : [],
+        blocos: ensureProtocoloBlocosIds(Array.isArray(parsed.blocos) ? parsed.blocos : []),
         pecasTrocadasCodigos: Array.isArray(parsed.pecasTrocadasCodigos) ? parsed.pecasTrocadasCodigos : [],
         pdfModelo: clampProtocoloPdfModelo(Number(parsed.pdfModelo))
       })
@@ -4754,6 +4765,15 @@ export default function Dashboard() {
       // Ignora rascunho inválido no localStorage
     }
   }, [PROTOCOLO_SERVICO_DRAFT_KEY])
+
+  // Protocolo: garantir id em cada bloco (FileReader assíncrono + índice obsoleto corrompia o 2.º bloco de imagens).
+  useEffect(() => {
+    if (editingProtocoloServicoId === null) return
+    setProtocoloServicoForm((prev) => {
+      if (!prev.blocos.length || !prev.blocos.some((b) => !b.id)) return prev
+      return { ...prev, blocos: ensureProtocoloBlocosIds(prev.blocos) }
+    })
+  }, [editingProtocoloServicoId])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -26143,32 +26163,32 @@ onKeyPress={(e) => {
                   <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>{protoT?.protocolosServicoTextoInicial || 'Texto inicial'}</label>
                   <textarea value={protocoloServicoForm.textoInicial} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, textoInicial: e.target.value }))} placeholder={protoT?.protocolosServicoTextoInicialPlaceholder || 'Texto introdutório do protocolo...'} rows={4} style={{ ...inputBase, resize: 'vertical' as const, marginBottom: '20px', maxWidth: '100%' }} />
                   {protocoloServicoForm.blocos.map((bloco, idx) => (
-                    <div key={idx} style={{ marginBottom: '16px', padding: '16px 18px', backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: '12px', border: '1px solid rgba(0, 255, 136, 0.14)' }}>
+                    <div key={bloco.id || `bloco-fallback-${idx}`} style={{ marginBottom: '16px', padding: '16px 18px', backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: '12px', border: '1px solid rgba(0, 255, 136, 0.14)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                         <span style={{ color: '#7dffb3', fontSize: '12px', fontWeight: 700 }}>
                           #{idx + 1} · {bloco.tipo === 'texto' ? (protoT?.protocolosServicoBlocoTexto || 'Bloco de texto') : (protoT?.protocolosServicoBlocoImagens || 'Bloco de imagens (máx. 2)')}
                         </span>
-                        <button type="button" className="btn-danger" style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.filter((_, i) => i !== idx) }))}>{protoT?.protocolosServicoRemoverBloco || 'Remover'}</button>
+                        <button type="button" className="btn-danger" style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: bloco.id ? prev.blocos.filter((b) => b.id !== bloco.id) : prev.blocos.filter((_, i) => i !== idx) }))}>{protoT?.protocolosServicoRemoverBloco || 'Remover'}</button>
                       </div>
                       {bloco.tipo === 'texto' ? (
-                        <textarea value={bloco.texto || ''} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, i) => i === idx ? { ...b, texto: e.target.value } : b) }))} rows={3} style={{ ...inputBase, resize: 'vertical' as const }} />
+                        <textarea value={bloco.texto || ''} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, i) => (bloco.id ? b.id === bloco.id : i === idx) ? { ...b, texto: e.target.value } : b) }))} rows={3} style={{ ...inputBase, resize: 'vertical' as const }} />
                       ) : (
                         <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
                           {(bloco.imagens || []).slice(0, 2).map((src, i) => (
                             <div key={i} style={{ position: 'relative' }}>
                               <img src={src} alt="" style={{ maxWidth: '220px', maxHeight: '165px', objectFit: 'contain', borderRadius: '10px', border: '1px solid rgba(0,255,136,0.25)', background: '#111' }} />
-                              <button type="button" aria-label="Remover imagem" style={{ position: 'absolute', top: '6px', right: '6px', background: 'rgba(180,30,30,0.95)', color: '#fff', border: 'none', borderRadius: '6px', width: '28px', height: '28px', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, bi) => bi === idx ? { ...b, imagens: (b.imagens || []).filter((_, j) => j !== i) } : b) }))}>×</button>
+                              <button type="button" aria-label="Remover imagem" style={{ position: 'absolute', top: '6px', right: '6px', background: 'rgba(180,30,30,0.95)', color: '#fff', border: 'none', borderRadius: '6px', width: '28px', height: '28px', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }} onClick={() => { const bid = bloco.id; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, bi) => (bid ? b.id === bid : bi === idx) ? { ...b, imagens: (b.imagens || []).filter((_, j) => j !== i) } : b) })) }}>×</button>
                             </div>
                           ))}
                           {(bloco.imagens || []).length < 2 && (
                             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
                               <label style={{ padding: '10px 16px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)' }}>
                                 {protoT?.protocolosServicoBuscarImagem || 'Buscar imagem'}
-                                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, bi) => bi === idx ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b) })); ev.target.value = '' }; r.readAsDataURL(f) }} />
+                                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const bid = bloco.id; if (!bid) return; const input = ev.currentTarget; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b) => (b.id === bid && b.tipo === 'imagens' ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b)) })); input.value = '' }; r.readAsDataURL(f) }} />
                               </label>
                               <label style={{ padding: '10px 16px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)' }}>
                                 {protoT?.protocolosServicoTirarFoto || 'Tirar foto'}
-                                <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, bi) => bi === idx ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b) })); ev.target.value = '' }; r.readAsDataURL(f) }} />
+                                <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const bid = bloco.id; if (!bid) return; const input = ev.currentTarget; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b) => (b.id === bid && b.tipo === 'imagens' ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b)) })); input.value = '' }; r.readAsDataURL(f) }} />
                               </label>
                             </div>
                           )}
@@ -26177,10 +26197,10 @@ onKeyPress={(e) => {
                     </div>
                   ))}
                   <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '8px' }}>
-                    <button type="button" className="btn-primary" style={{ padding: '10px 16px', fontSize: '13px', borderRadius: '10px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: [...prev.blocos, { tipo: 'texto', texto: '' }] }))}>
+                    <button type="button" className="btn-primary" style={{ padding: '10px 16px', fontSize: '13px', borderRadius: '10px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: [...prev.blocos, { id: newProtocoloBlocoId(), tipo: 'texto', texto: '' }] }))}>
                       + {protoT?.protocolosServicoAdicionarTexto || 'Bloco de texto'}
                     </button>
-                    <button type="button" className="btn-primary" style={{ padding: '10px 16px', fontSize: '13px', borderRadius: '10px', backgroundColor: 'rgba(0, 180, 120, 0.15)', borderColor: 'rgba(0, 200, 140, 0.45)' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: [...prev.blocos, { tipo: 'imagens', imagens: [] }] }))}>
+                    <button type="button" className="btn-primary" style={{ padding: '10px 16px', fontSize: '13px', borderRadius: '10px', backgroundColor: 'rgba(0, 180, 120, 0.15)', borderColor: 'rgba(0, 200, 140, 0.45)' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: [...prev.blocos, { id: newProtocoloBlocoId(), tipo: 'imagens', imagens: [] }] }))}>
                       + {protoT?.protocolosServicoAdicionarImagens || 'Bloco de imagens'}
                     </button>
                   </div>
@@ -26361,7 +26381,7 @@ onKeyPress={(e) => {
                                 <button type="button" className="btn-primary" style={{ padding: '9px 14px', fontSize: 11, borderRadius: 10, fontWeight: 800, backgroundColor: 'rgba(37, 211, 102, 0.28)', borderColor: 'rgba(37, 211, 102, 0.55)' }} onClick={() => enviarWhatsAppProtocolo(p)}>{protoT?.protocolosServicoEnviarWhatsApp || 'WhatsApp'}</button>
                               </div>
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' }}>
-                                <button type="button" className="btn-primary" style={{ padding: '9px 14px', fontSize: 11, borderRadius: 10, fontWeight: 700, background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.22)', color: '#ddeeff' }} onClick={() => { const pr = protocolosServico.find(x => x.id === p.id); if (pr) { setProtocoloServicoForm({ clienteId: pr.clienteId, equipamentoNumeroSerie: pr.equipamentoNumeroSerie, textoInicial: pr.textoInicial, blocos: pr.blocos, pecasTrocadasCodigos: pr.pecasTrocadasCodigos, pdfModelo: clampProtocoloPdfModelo(pr.pdfModelo) }); setEditingProtocoloServicoId(pr.id) } }}>{protoT?.protocolosServicoEditar || 'Editar'}</button>
+                                <button type="button" className="btn-primary" style={{ padding: '9px 14px', fontSize: 11, borderRadius: 10, fontWeight: 700, background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.22)', color: '#ddeeff' }} onClick={() => { const pr = protocolosServico.find(x => x.id === p.id); if (pr) { setProtocoloServicoForm({ clienteId: pr.clienteId, equipamentoNumeroSerie: pr.equipamentoNumeroSerie, textoInicial: pr.textoInicial, blocos: ensureProtocoloBlocosIds(pr.blocos || []), pecasTrocadasCodigos: pr.pecasTrocadasCodigos, pdfModelo: clampProtocoloPdfModelo(pr.pdfModelo) }); setEditingProtocoloServicoId(pr.id) } }}>{protoT?.protocolosServicoEditar || 'Editar'}</button>
                                 <button type="button" className="btn-danger" style={{ padding: '9px 14px', fontSize: 11, borderRadius: 10, fontWeight: 700 }} onClick={() => { if (window.confirm(protoT?.protocolosServicoConfirmarExcluir || 'Excluir este protocolo?')) { const next = protocolosServico.filter(x => x.id !== p.id); setProtocolosServico(next); saveData('nonato-protocolos-servico', next) } }}>{protoT?.protocolosServicoExcluir || 'Excluir'}</button>
                               </div>
                             </div>
