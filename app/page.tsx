@@ -25901,32 +25901,31 @@ onKeyPress={(e) => {
           : protocolosOrdenados
         const inputBase = {
           width: '100%',
-          padding: '12px 16px',
-          backgroundColor: 'rgba(6, 10, 14, 0.92)',
-          color: '#fff',
-          border: '1px solid rgba(0, 220, 200, 0.35)',
-          borderRadius: '12px',
+          padding: '11px 14px',
+          backgroundColor: '#0f1419',
+          color: '#f1f5f9',
+          border: '1px solid rgba(148, 163, 184, 0.22)',
+          borderRadius: '8px',
           fontSize: '14px',
           outline: 'none' as const,
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
         }
         const secCard = {
-          marginBottom: '24px',
-          padding: '24px 24px 22px',
-          borderRadius: '16px',
-          border: '1px solid rgba(0, 220, 255, 0.18)',
-          background: 'linear-gradient(165deg, rgba(12, 20, 28, 0.96) 0%, rgba(6, 10, 16, 0.99) 100%)',
-          boxShadow: '0 8px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(0, 255, 220, 0.06)',
+          marginBottom: '20px',
+          padding: '22px 22px 20px',
+          borderRadius: '10px',
+          border: '1px solid rgba(148, 163, 184, 0.16)',
+          background: '#121922',
+          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.28)',
         }
         const secTitle = {
-          margin: '0 0 18px',
-          fontSize: '12px',
-          color: '#7dffe8',
-          fontWeight: 800 as const,
-          letterSpacing: '0.14em',
+          margin: '0 0 16px',
+          fontSize: '11px',
+          color: '#94a3b8',
+          fontWeight: 700 as const,
+          letterSpacing: '0.08em',
           textTransform: 'uppercase' as const,
-          borderBottom: '1px solid rgba(0, 200, 255, 0.22)',
-          paddingBottom: '12px',
+          borderBottom: '1px solid rgba(148, 163, 184, 0.14)',
+          paddingBottom: '10px',
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
@@ -25937,15 +25936,15 @@ onKeyPress={(e) => {
           display: 'inline-flex' as const,
           alignItems: 'center' as const,
           justifyContent: 'center' as const,
-          width: 28,
-          height: 28,
-          borderRadius: 9,
+          width: 26,
+          height: 26,
+          borderRadius: 6,
           flexShrink: 0 as const,
-          background: 'linear-gradient(145deg, rgba(0,255,220,0.42), rgba(0,90,140,0.4))',
-          border: '1px solid rgba(0,220,255,0.5)',
+          background: '#1e293b',
+          border: '1px solid rgba(148, 163, 184, 0.28)',
           fontSize: 12,
-          fontWeight: 900,
-          color: '#ecfffb',
+          fontWeight: 700,
+          color: '#cbd5e1',
         })
         const protoSteps = [
           protoT?.protocolosServicoStep1 || 'ID',
@@ -25954,101 +25953,71 @@ onKeyPress={(e) => {
           protoT?.protocolosServicoStep4 || 'GUARDAR',
         ]
         return (
-          <div style={{ padding: '22px 18px 40px', maxWidth: '1240px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }} className="tab-content-wrapper">
+          <div style={{ padding: '24px 20px 40px', maxWidth: '1100px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }} className="tab-content-wrapper protocolos-servico-pro">
             <div className="mobile-sticky-toolbar">
               <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>↶ {safeT?.voltar || 'Voltar'}</button>
               <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
             </div>
             <div
               style={{
-                position: 'relative',
-                marginBottom: 26,
-                padding: 3,
-                borderRadius: 22,
-                background: 'linear-gradient(118deg, rgba(0,255,200,0.5), rgba(0,100,180,0.45), rgba(140,80,255,0.35))',
-                boxShadow: '0 0 0 1px rgba(0,255,220,0.15), 0 28px 70px rgba(0, 10, 30, 0.65)',
+                marginBottom: 24,
+                padding: '20px 24px',
+                borderRadius: 10,
+                background: '#121922',
+                border: '1px solid rgba(148, 163, 184, 0.16)',
+                borderLeft: '4px solid #0d9488',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.35)',
               }}
             >
-              <div
-                style={{
-                  borderRadius: 19,
-                  padding: '22px 24px',
-                  background: 'linear-gradient(172deg, rgba(8,18,22,0.99), rgba(4,8,16,0.98))',
-                  border: '1px solid rgba(0, 220, 255, 0.1)',
-                }}
-              >
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 18 }}>
-                  <div style={{ display: 'flex', gap: 18, alignItems: 'center', flex: '1 1 300px', minWidth: 0 }}>
-                    <LogoComponent size="small" />
-                    <div style={{ minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: 10,
-                          letterSpacing: '0.22em',
-                          fontWeight: 900,
-                          color: 'rgba(120, 230, 255, 0.88)',
-                          marginBottom: 8,
-                        }}
-                      >
-                        {protoT?.protocolosServicoHeroBadge || 'DOCUMENTAÇÃO TÉCNICA'}
-                      </div>
-                      <h1
-                        style={{
-                          margin: 0,
-                          fontSize: 'clamp(1.35rem, 4.2vw, 2rem)',
-                          fontWeight: 900,
-                          letterSpacing: '0.05em',
-                          lineHeight: 1.15,
-                          background: 'linear-gradient(92deg, #9fffe8, #00ffc8, #5ec4ff)',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                          backgroundClip: 'text',
-                        }}
-                      >
-                        {tituloProto}
-                      </h1>
-                      <p style={{ margin: '10px 0 0', fontSize: 13, color: 'rgba(230, 245, 255, 0.86)', lineHeight: 1.65, maxWidth: 580 }}>
-                        {descProto}
-                      </p>
-                      <p style={{ margin: '10px 0 0', fontSize: 12, fontWeight: 600, color: 'rgba(160, 210, 255, 0.78)', maxWidth: 600, lineHeight: 1.5 }}>
-                        {protoT?.protocolosServicoHeroTagline ||
-                          'Um fluxo só: cliente + equipamento → blocos texto/imagem → peças → PDF / email / WhatsApp.'}
-                      </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20 }}>
+                <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flex: '1 1 280px', minWidth: 0 }}>
+                  <LogoComponent size="small" />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 6, letterSpacing: '0.04em' }}>
+                      {protoT?.protocolosServicoHeroBadge || 'Documentação técnica'}
                     </div>
+                    <h1 style={{ margin: 0, fontSize: 'clamp(1.25rem, 3vw, 1.65rem)', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2, color: '#f8fafc' }}>
+                      {tituloProto}
+                    </h1>
+                    <p style={{ margin: '10px 0 0', fontSize: 14, color: '#94a3b8', lineHeight: 1.6, maxWidth: 560 }}>
+                      {descProto}
+                    </p>
+                    <p style={{ margin: '8px 0 0', fontSize: 13, color: '#64748b', maxWidth: 560, lineHeight: 1.55 }}>
+                      {protoT?.protocolosServicoHeroTagline ||
+                        'Um fluxo só: cliente + equipamento → blocos texto/imagem → peças → PDF / email / WhatsApp.'}
+                    </p>
                   </div>
-                  {!mostrarFormulario && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditingProtocoloServicoId('new')
-                        setProtocoloServicoForm({
-                          clienteId: '',
-                          equipamentoNumeroSerie: '',
-                          textoInicial: '',
-                          blocos: [],
-                          pecasTrocadasCodigos: [],
-                          pdfModelo: 1,
-                        })
-                      }}
-                      style={{
-                        padding: '14px 26px',
-                        fontWeight: 900,
-                        borderRadius: 14,
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: '#021208',
-                        letterSpacing: '0.08em',
-                        fontSize: 11,
-                        textTransform: 'uppercase',
-                        whiteSpace: 'nowrap',
-                        background: 'linear-gradient(168deg, #3dffe0, #00c9a0)',
-                        boxShadow: '0 0 36px rgba(0, 255, 210, 0.35), 0 10px 28px rgba(0,0,0,0.45)',
-                      }}
-                    >
-                      + {protoT?.protocolosServicoNovo || 'Novo protocolo'}
-                    </button>
-                  )}
                 </div>
+                {!mostrarFormulario && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingProtocoloServicoId('new')
+                      setProtocoloServicoForm({
+                        clienteId: '',
+                        equipamentoNumeroSerie: '',
+                        textoInicial: '',
+                        blocos: [],
+                        pecasTrocadasCodigos: [],
+                        pdfModelo: 1,
+                      })
+                    }}
+                    style={{
+                      padding: '11px 20px',
+                      fontWeight: 600,
+                      borderRadius: 8,
+                      border: '1px solid rgba(13, 148, 136, 0.45)',
+                      cursor: 'pointer',
+                      color: '#ecfdf5',
+                      fontSize: 14,
+                      whiteSpace: 'nowrap',
+                      background: '#0f766e',
+                      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
+                    }}
+                  >
+                    + {protoT?.protocolosServicoNovo || 'Novo protocolo'}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -26056,34 +26025,33 @@ onKeyPress={(e) => {
               <div>
                 <div
                   style={{
-                    position: 'relative',
-                    marginBottom: 22,
+                    marginBottom: 20,
                     padding: '18px 20px',
-                    borderRadius: 16,
-                    border: '1px solid rgba(0, 200, 255, 0.22)',
-                    background: 'linear-gradient(118deg, rgba(0, 55, 72, 0.5), rgba(6, 10, 18, 0.96))',
-                    boxShadow: '0 16px 48px rgba(0, 20, 40, 0.55), inset 0 1px 0 rgba(0, 255, 220, 0.06)',
+                    borderRadius: 10,
+                    border: '1px solid rgba(148, 163, 184, 0.16)',
+                    background: '#121922',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.28)',
                   }}
                 >
-                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 14, marginBottom: 14 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 14, marginBottom: 12 }}>
                     <div style={{ minWidth: 0, flex: '1 1 220px' }}>
-                      <h2 style={{ margin: 0, fontSize: 'clamp(1.05rem, 2.8vw, 1.35rem)', color: '#fff', fontWeight: 800, letterSpacing: '0.02em' }}>
+                      <h2 style={{ margin: 0, fontSize: 'clamp(1.05rem, 2.5vw, 1.25rem)', color: '#f1f5f9', fontWeight: 700, letterSpacing: '-0.02em' }}>
                         {editingProtocoloServicoId === 'new'
                           ? protoT?.protocolosServicoFormTituloNovo || protoT?.protocolosServicoNovo || 'Novo protocolo de serviço'
                           : protoT?.protocolosServicoFormTituloEditar || protoT?.protocolosServicoEditar || 'Editar protocolo'}
                       </h2>
-                      <p style={{ margin: '8px 0 0', fontSize: 12, color: 'rgba(180, 220, 255, 0.78)' }}>{protoT?.protocolosServicoFormSub || 'Preencha por secções. Guarde ao final para ficar na lista.'}</p>
+                      <p style={{ margin: '6px 0 0', fontSize: 13, color: '#94a3b8' }}>{protoT?.protocolosServicoFormSub || 'Preencha por secções. Guarde ao final para ficar na lista.'}</p>
                     </div>
                     <button
                       type="button"
                       style={{
-                        padding: '10px 18px',
-                        borderRadius: 11,
-                        border: '1px solid rgba(255,255,255,0.22)',
-                        background: 'rgba(0,0,0,0.4)',
-                        color: '#d8f4ff',
-                        fontWeight: 700,
-                        fontSize: 12,
+                        padding: '9px 16px',
+                        borderRadius: 8,
+                        border: '1px solid rgba(148, 163, 184, 0.28)',
+                        background: '#0f1419',
+                        color: '#e2e8f0',
+                        fontWeight: 600,
+                        fontSize: 13,
                         cursor: 'pointer',
                       }}
                       onClick={() => {
@@ -26095,31 +26063,20 @@ onKeyPress={(e) => {
                       ← {protoT?.protocolosServicoVoltarLista || 'Voltar à lista'}
                     </button>
                   </div>
-                  <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.18em', color: 'rgba(120, 200, 255, 0.75)', marginBottom: 10 }}>
-                    {(protoT?.protocolosServicoFormPassosLabel || 'MODO EDIÇÃO').toUpperCase()}
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 8 }}>
+                    {protoT?.protocolosServicoFormPassosLabel || 'Fluxo do formulário'}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px 10px', fontSize: 12, color: '#94a3b8' }}>
                     {protoSteps.map((lab, si) => (
-                      <div
-                        key={lab + si}
-                        style={{
-                          padding: '10px 6px',
-                          textAlign: 'center',
-                          borderRadius: 11,
-                          fontSize: 10,
-                          fontWeight: 900,
-                          letterSpacing: '0.06em',
-                          color: '#021208',
-                          background: 'linear-gradient(165deg, #5dffe8, #00a88a)',
-                          border: '1px solid rgba(0, 255, 220, 0.35)',
-                          boxShadow: si === 3 ? '0 0 22px rgba(0,255,210,0.28)' : '0 4px 14px rgba(0,0,0,0.35)',
-                        }}
-                      >
-                        {si + 1} · {lab}
-                      </div>
+                      <React.Fragment key={lab + si}>
+                        {si > 0 && <span style={{ color: '#475569', userSelect: 'none' }} aria-hidden>→</span>}
+                        <span style={{ fontWeight: 600, color: '#cbd5e1' }}>
+                          {si + 1}. {lab}
+                        </span>
+                      </React.Fragment>
                     ))}
                   </div>
-                  <p style={{ margin: '12px 0 0', fontSize: 11, color: 'rgba(160, 200, 230, 0.7)', lineHeight: 1.5 }}>
+                  <p style={{ margin: '10px 0 0', fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
                     {protoT?.protocolosServicoFormPassos || 'Identificação → conteúdo → peças → guardar na lista.'}
                   </p>
                 </div>
@@ -26129,6 +26086,9 @@ onKeyPress={(e) => {
                     <span style={stepNumStyle()}>1</span>
                     {protoT?.protocolosServicoSecIdentificacao || 'Identificação'}
                   </h3>
+                  {protoT?.protocolosServicoSecIdentificacaoHint ? (
+                    <p style={{ margin: '0 0 14px', fontSize: 12, color: '#64748b', lineHeight: 1.55 }}>{protoT.protocolosServicoSecIdentificacaoHint}</p>
+                  ) : null}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '18px' }}>
                     <div>
                       <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>{protoT?.protocolosServicoCliente || 'Cliente'}</label>
@@ -26153,6 +26113,9 @@ onKeyPress={(e) => {
                       </select>
                     </div>
                   </div>
+                  {protoT?.protocolosServicoSecPdfHint ? (
+                    <p style={{ margin: '14px 0 0', fontSize: 12, color: '#64748b', lineHeight: 1.55, maxWidth: 640 }}>{protoT.protocolosServicoSecPdfHint}</p>
+                  ) : null}
                 </div>
 
                 <div style={secCard}>
@@ -26160,6 +26123,9 @@ onKeyPress={(e) => {
                     <span style={stepNumStyle()}>2</span>
                     {protoT?.protocolosServicoSecConteudo || 'Relatório visual (texto e imagens)'}
                   </h3>
+                  {protoT?.protocolosServicoSecConteudoHint ? (
+                    <p style={{ margin: '0 0 14px', fontSize: 12, color: '#64748b', lineHeight: 1.55 }}>{protoT.protocolosServicoSecConteudoHint}</p>
+                  ) : null}
                   <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>{protoT?.protocolosServicoTextoInicial || 'Texto inicial'}</label>
                   <textarea value={protocoloServicoForm.textoInicial} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, textoInicial: e.target.value }))} placeholder={protoT?.protocolosServicoTextoInicialPlaceholder || 'Texto introdutório do protocolo...'} rows={4} style={{ ...inputBase, resize: 'vertical' as const, marginBottom: '20px', maxWidth: '100%' }} />
                   {protocoloServicoForm.blocos.map((bloco, idx) => (
@@ -26170,6 +26136,9 @@ onKeyPress={(e) => {
                         </span>
                         <button type="button" className="btn-danger" style={{ padding: '6px 12px', fontSize: '12px', borderRadius: '8px' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: bloco.id ? prev.blocos.filter((b) => b.id !== bloco.id) : prev.blocos.filter((_, i) => i !== idx) }))}>{protoT?.protocolosServicoRemoverBloco || 'Remover'}</button>
                       </div>
+                      {bloco.tipo === 'imagens' && protoT?.protocolosServicoBlocoImagensHint ? (
+                        <p style={{ margin: '0 0 10px', fontSize: 11, color: '#64748b', lineHeight: 1.45 }}>{protoT.protocolosServicoBlocoImagensHint}</p>
+                      ) : null}
                       {bloco.tipo === 'texto' ? (
                         <textarea value={bloco.texto || ''} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, i) => (bloco.id ? b.id === bloco.id : i === idx) ? { ...b, texto: e.target.value } : b) }))} rows={3} style={{ ...inputBase, resize: 'vertical' as const }} />
                       ) : (
@@ -26223,8 +26192,12 @@ onKeyPress={(e) => {
                   </button>
                 </div>
 
-                <div style={{ position: 'sticky', bottom: 0, zIndex: 5, marginTop: '8px', padding: '16px 0 8px', background: 'linear-gradient(180deg, transparent 0%, rgba(6,10,16,0.97) 40%)' }}>
-                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', padding: '16px 20px', borderRadius: '14px', border: '1px solid rgba(0, 220, 255, 0.28)', background: 'linear-gradient(165deg, rgba(10, 22, 28, 0.98), rgba(4, 8, 14, 0.99))', boxShadow: '0 -8px 32px rgba(0, 40, 60, 0.45)' }}>
+                <div style={{ position: 'sticky', bottom: 0, zIndex: 5, marginTop: '8px', padding: '16px 0 8px', background: 'linear-gradient(180deg, transparent 0%, #0c1016 45%)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '14px 18px', borderRadius: 10, border: '1px solid rgba(148, 163, 184, 0.18)', background: '#121922', boxShadow: '0 -4px 24px rgba(0, 0, 0, 0.35)' }}>
+                    {protoT?.protocolosServicoGuardarHint ? (
+                      <p style={{ margin: 0, fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>{protoT.protocolosServicoGuardarHint}</p>
+                    ) : null}
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                     <button
                       type="button"
                       className="btn-primary"
@@ -26251,54 +26224,51 @@ onKeyPress={(e) => {
                     >
                       {protoT?.protocolosServicoCancelar || 'Cancelar'}
                     </button>
+                    </div>
                   </div>
                 </div>
               </div>
             ) : (
               <div
                 style={{
-                  padding: '4px',
-                  borderRadius: 20,
-                  background: 'linear-gradient(135deg, rgba(0, 200, 255, 0.2), rgba(0, 120, 90, 0.15), rgba(100, 80, 200, 0.12))',
-                  boxShadow: '0 24px 60px rgba(0, 0, 0, 0.5)',
+                  padding: '22px 22px 26px',
+                  borderRadius: 10,
+                  background: '#121922',
+                  border: '1px solid rgba(148, 163, 184, 0.14)',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
                 }}
               >
-                <div
-                  style={{
-                    padding: '22px 22px 26px',
-                    borderRadius: 17,
-                    background: 'linear-gradient(180deg, rgba(10, 16, 22, 0.98), rgba(4, 8, 12, 0.99))',
-                    border: '1px solid rgba(0, 200, 255, 0.12)',
-                  }}
-                >
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 20 }}>
-                    <div style={{ padding: '14px 16px', borderRadius: 14, background: 'linear-gradient(145deg, rgba(0, 60, 55, 0.55), rgba(6, 14, 18, 0.95))', border: '1px solid rgba(0, 255, 200, 0.2)' }}>
-                      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: 'rgba(160, 240, 220, 0.75)' }}>{(protoT?.protocolosServicoHubKpiArquivo || 'ARQUIVO').toUpperCase()}</div>
-                      <div style={{ fontSize: 28, fontWeight: 900, color: '#b8fff0', marginTop: 6, lineHeight: 1 }}>{totalProto}</div>
-                      <div style={{ fontSize: 11, color: 'rgba(200, 230, 255, 0.55)', marginTop: 4 }}>{protoT?.protocolosServicoHubKpiArquivoSub || 'protocolos guardados'}</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 22 }}>
+                    <div style={{ padding: '14px 16px', borderRadius: 8, background: '#0f1419', border: '1px solid rgba(148, 163, 184, 0.14)' }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>{protoT?.protocolosServicoHubKpiArquivo || 'Arquivo'}</div>
+                      <div style={{ fontSize: 26, fontWeight: 700, color: '#f1f5f9', marginTop: 6, lineHeight: 1 }}>{totalProto}</div>
+                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{protoT?.protocolosServicoHubKpiArquivoSub || 'protocolos guardados'}</div>
                     </div>
-                    <div style={{ padding: '14px 16px', borderRadius: 14, background: 'linear-gradient(145deg, rgba(0, 50, 80, 0.5), rgba(6, 12, 22, 0.95))', border: '1px solid rgba(80, 180, 255, 0.22)' }}>
-                      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: 'rgba(160, 210, 255, 0.8)' }}>{(protoT?.protocolosServicoHubKpiVisiveis || 'VISÍVEIS').toUpperCase()}</div>
-                      <div style={{ fontSize: 28, fontWeight: 900, color: '#a8d8ff', marginTop: 6, lineHeight: 1 }}>{visivelProto}</div>
-                      <div style={{ fontSize: 11, color: 'rgba(200, 220, 255, 0.55)', marginTop: 4 }}>
+                    <div style={{ padding: '14px 16px', borderRadius: 8, background: '#0f1419', border: '1px solid rgba(148, 163, 184, 0.14)' }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>{protoT?.protocolosServicoHubKpiVisiveis || 'Visíveis'}</div>
+                      <div style={{ fontSize: 26, fontWeight: 700, color: '#f1f5f9', marginTop: 6, lineHeight: 1 }}>{visivelProto}</div>
+                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
                         {filtroLista
                           ? (protoT?.protocolosServicoHubKpiFiltroOn || 'filtro inteligente ativo')
                           : (protoT?.protocolosServicoHubKpiFiltroOff || 'sem filtro de texto')}
                       </div>
                     </div>
-                    <div style={{ padding: '14px 16px', borderRadius: 14, background: 'linear-gradient(145deg, rgba(60, 40, 90, 0.35), rgba(8, 10, 18, 0.95))', border: '1px solid rgba(180, 120, 255, 0.2)' }}>
-                      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: 'rgba(220, 190, 255, 0.75)' }}>{(protoT?.protocolosServicoHubKpiCobertura || 'COBERTURA').toUpperCase()}</div>
-                      <div style={{ fontSize: 28, fontWeight: 900, color: '#e4d4ff', marginTop: 6, lineHeight: 1 }}>
+                    <div style={{ padding: '14px 16px', borderRadius: 8, background: '#0f1419', border: '1px solid rgba(148, 163, 184, 0.14)' }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>{protoT?.protocolosServicoHubKpiCobertura || 'Cobertura'}</div>
+                      <div style={{ fontSize: 26, fontWeight: 700, color: '#f1f5f9', marginTop: 6, lineHeight: 1 }}>
                         {totalProto > 0 ? `${Math.round((visivelProto / totalProto) * 100)}%` : '—'}
                       </div>
-                      <div style={{ fontSize: 11, color: 'rgba(220, 210, 255, 0.55)', marginTop: 4 }}>{protoT?.protocolosServicoHubKpiCoberturaSub || 'da lista face ao arquivo'}</div>
+                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{protoT?.protocolosServicoHubKpiCoberturaSub || 'da lista face ao arquivo'}</div>
                     </div>
                   </div>
+                  {protoT?.protocolosServicoPainelIntro ? (
+                    <p style={{ margin: '0 0 20px', fontSize: 12, color: '#64748b', lineHeight: 1.55, maxWidth: 720 }}>{protoT.protocolosServicoPainelIntro}</p>
+                  ) : null}
 
                   <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 14, marginBottom: 18 }}>
                     <div>
-                      <h2 style={{ margin: 0, fontSize: 'clamp(1rem, 2.5vw, 1.2rem)', color: '#fff', fontWeight: 800, letterSpacing: '0.04em' }}>{protoT?.protocolosServicoListaTitulo || 'Protocolos registados'}</h2>
-                      <p style={{ margin: '8px 0 0', fontSize: 12, color: 'rgba(180, 200, 220, 0.65)' }}>
+                      <h2 style={{ margin: 0, fontSize: 'clamp(1rem, 2.4vw, 1.15rem)', color: '#f1f5f9', fontWeight: 700, letterSpacing: '-0.02em' }}>{protoT?.protocolosServicoListaTitulo || 'Protocolos registados'}</h2>
+                      <p style={{ margin: '8px 0 0', fontSize: 13, color: '#94a3b8' }}>
                         {(protoT?.protocolosServicoListaContagem || '{n} na lista').replace('{n}', String(protocolosFiltrados.length))}
                         {filtroLista ? ` · ${protocolosOrdenados.length} ${protoT?.protocolosServicoListaTotal || 'no total'}` : ''}
                       </p>
@@ -26311,6 +26281,9 @@ onKeyPress={(e) => {
                       style={{ ...inputBase, maxWidth: '380px', minWidth: '200px', flex: '1 1 220px' }}
                     />
                   </div>
+                  {protoT?.protocolosServicoListaHint ? (
+                    <p style={{ margin: '0 0 18px', fontSize: 12, color: '#64748b', lineHeight: 1.55, maxWidth: 720 }}>{protoT.protocolosServicoListaHint}</p>
+                  ) : null}
 
                   {protocolosServico.length === 0 ? (
                     <div style={{ padding: '36px 22px', textAlign: 'center', borderRadius: 16, border: '1px dashed rgba(0, 220, 255, 0.25)', background: 'rgba(0, 30, 40, 0.35)' }}>
@@ -26391,7 +26364,6 @@ onKeyPress={(e) => {
                     </div>
                   )}
                 </div>
-              </div>
             )}
           </div>
         )

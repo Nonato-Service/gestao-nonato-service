@@ -219,7 +219,8 @@ export const translations = {
     helpOrdemPreparacao: 'Serve para ordem de preparação de peças antes de envio ao técnico ou cliente.\n\n---COMO---\n\n• Gere ou abra a ordem a partir de solicitações aprovadas.\n• Separe fisicamente conforme a lista e assinale itens concluídos.\n• Registre exceções (falta de stock, substituição).\n• Feche a ordem quando a remessa estiver pronta.',
     helpFormulariosChecklistTecnicos: 'Serve para formulários específicos de checklist que os técnicos preenchem em campo.\n\n---COMO---\n\n• Escolha o formulário adequado ao tipo de serviço.\n• Preencha todos os campos obrigatórios antes de assinar.\n• Guarde rascunhos se o sistema permitir e finalize antes de sair do cliente.\n• Sincronize ou envie conforme o botão de conclusão.',
     helpVerificacaoFinalEntrega: 'Serve para verificação final antes da entrega do equipamento ao cliente (qualidade e segurança).\n\n---COMO---\n\n• Percorra todos os grupos do checklist final.\n• Corrija não conformidades antes de marcar como concluído.\n• Registe observações de entrega e responsável.\n• Só finalize quando o cliente ou o processo interno validar.',
-    helpProtocolosServico: 'Serve para protocolos de serviço (antes/depois, imagens, peças trocadas, PDFs).\n\n---COMO---\n\n• Crie um protocolo associado a cliente e equipamento.\n• Adicione blocos de texto e imagens conforme o modelo.\n• Liste peças trocadas com códigos da biblioteca.\n• Gere PDF e envie por e-mail ou WhatsApp conforme os botões.',
+    helpProtocolosServico:
+      'Serve para documentar intervenções técnicas com rastreio: cliente, equipamento (série), texto introdutório, blocos de texto e de imagens (até duas fotos por bloco de imagens), peças substituídas alinhadas à biblioteca, modelo de PDF e partilha.\n\n---COMO---\n\n• Crie ou edite um protocolo sempre com cliente e equipamento selecionados — estes dados vão para o PDF sem reescrever à mão.\n• Use o texto inicial para contexto (motivo da visita, estado antes da intervenção); nos blocos seguintes narre passos, medições ou conclusões.\n• Em cada bloco de imagens carregue até duas fotos; para mais imagens, adicione outro bloco de imagens (mantém a ordem cronológica ou lógica que quiser).\n• Registe códigos de peças trocadas tal como na biblioteca de peças para consistência com stocks e relatórios.\n• Escolha o modelo de PDF antes de guardar; depois use Gerar PDF, Email ou WhatsApp na lista.\n• O rascunho é guardado automaticamente enquanto edita; «Guardar protocolo» grava na lista global e limpa o rascunho.',
     helpManualPrograma: 'Serve como documentação geral do sistema: início rápido, cadastros, operação técnica, peças, financeiro e segurança.\n\n---COMO---\n\n• Navegue pelos tópicos à esquerda ou use a pesquisa interna.\n• Leia cada secção na ordem sugerida se for novo utilizador.\n• Em qualquer ecrã, F1 abre a ajuda contextual.\n• Volte ao manual quando precisar de rever políticas ou boas práticas.',
     manualProgramaTitle: 'Manual do Programa',
     manualProgramaSubtitle: 'Guia detalhado para uso profissional do sistema.',
@@ -241,11 +242,25 @@ export const translations = {
     manualSecaoSegurancaDesc:
       'A sincronização entre aparelhos é feita pelo aviso automático (resumo e escolha). Para recarregar a página use o menu do navegador se necessário. Mantenha backups periódicos no Administrador.',
     protocolosServicoTitle: 'Protocolos de Serviço',
-    protocolosServicoDesc: 'Consulte e gere os protocolos de serviço (antes/depois, imagens e peças trocadas).',
-    protocolosServicoHeroBadge: 'DOCUMENTAÇÃO TÉCNICA',
-    protocolosServicoHeroTagline: 'Um fluxo só: cliente e equipamento → blocos de texto e imagem → peças → PDF, email ou WhatsApp.',
-    protocolosServicoFormPassosLabel: 'Modo edição',
-    protocolosServicoFormPassos: 'Siga a ordem: identificação, relatório visual, peças e guardar na lista.',
+    protocolosServicoDesc:
+      'Centralize relatórios visuais de intervenção: cliente e equipamento (série), texto introdutório, blocos de texto e de imagens (até duas fotos por bloco de imagens), peças substituídas com códigos da biblioteca, modelo de PDF e partilha por PDF, e-mail ou WhatsApp.',
+    protocolosServicoHeroBadge: 'Documentação técnica',
+    protocolosServicoHeroTagline:
+      'Cada protocolo fica ligado ao cadastro de clientes e ao número de série do equipamento. Use blocos para narrar a intervenção (observações e fotos antes/depois). Guarde na lista para consultar, filtrar e reabrir; o rascunho é guardado automaticamente enquanto edita.',
+    protocolosServicoFormPassosLabel: 'Fluxo recomendado',
+    protocolosServicoFormPassos: 'Identificação e modelo de PDF → relatório (texto inicial e blocos) → peças substituídas → Guardar na lista.',
+    protocolosServicoPainelIntro:
+      'Os indicadores mostram o total no arquivo, quantos protocolos correspondem à pesquisa e a percentagem visível. A pesquisa analisa nome do cliente, tipo de equipamento, modelo, número de série e marca.',
+    protocolosServicoSecIdentificacaoHint:
+      'Selecione o cliente e, em seguida, o equipamento pela série registada no cadastro. Estes dados preenchem o cabeçalho do PDF e reduzem erros de transcrição.',
+    protocolosServicoSecPdfHint:
+      'O modelo define cores, tipografia e disposição do documento impresso ou guardado como PDF. Pode alterá-lo antes de concluir; a escolha fica gravada com o protocolo.',
+    protocolosServicoSecConteudoHint:
+      'O texto inicial aparece no PDF antes dos blocos. Adicione blocos de texto (passos, conclusões) e blocos de imagem (até duas fotos por bloco). Pode repetir a combinação na ordem que fizer sentido para o caso.',
+    protocolosServicoBlocoImagensHint: 'Cada bloco de imagens aceita até duas fotos. Para mais imagens, crie outro bloco de imagens.',
+    protocolosServicoListaHint:
+      'Na lista pode gerar o PDF, abrir o cliente de e-mail com texto sugerido, iniciar WhatsApp com resumo, editar ou eliminar. A pesquisa filtra em tempo real.',
+    protocolosServicoGuardarHint: 'Guardar grava o protocolo nos dados da empresa e remove o rascunho local. Cliente e equipamento são obrigatórios.',
     protocolosServicoStep1: 'ID',
     protocolosServicoStep2: 'DOC',
     protocolosServicoStep3: 'PEÇAS',
@@ -359,7 +374,8 @@ export const translations = {
     protocolosServicoPdfModelo12: '12 — Relatório técnico (monospace)',
     protocolosServicoFormTituloNovo: 'Novo protocolo de serviço',
     protocolosServicoFormTituloEditar: 'Editar protocolo',
-    protocolosServicoFormSub: 'Preencha por secções. Guarde ao final para ficar na lista.',
+    protocolosServicoFormSub:
+      'Avance pelas secções na ordem sugerida. O PDF usa os dados de cliente e equipamento já registados e o modelo que escolher. Use Guardar protocolo ao final para gravar na lista global.',
     protocolosServicoVoltarLista: 'Voltar à lista',
     protocolosServicoSecIdentificacao: 'Identificação',
     protocolosServicoSecPdf: 'Modelo do documento PDF',
@@ -2567,14 +2583,29 @@ export const translations = {
     helpOrdemPreparacao: 'Sirve para orden de preparación de piezas antes del envío al técnico o cliente.\n\n---COMO---\n\n• Genere o abra la orden desde solicitudes aprobadas.\n• Separe físicamente según la lista y marque ítems completados.\n• Registre excepciones (falta de stock, sustitución).\n• Cierre la orden cuando el envío esté listo.',
     helpFormulariosChecklistTecnicos: 'Sirve para formularios específicos de checklist que los técnicos rellenan en campo.\n\n---COMO---\n\n• Elija el formulario adecuado al tipo de servicio.\n• Complete todos los campos obligatorios antes de firmar.\n• Guarde borradores si el sistema lo permite y finalice antes de salir del cliente.\n• Sincronice o envíe según el botón de conclusión.',
     helpVerificacaoFinalEntrega: 'Sirve para verificación final antes de la entrega del equipo al cliente (calidad y seguridad).\n\n---COMO---\n\n• Recorra todos los grupos del checklist final.\n• Corrija no conformidades antes de marcar como concluido.\n• Registre observaciones de entrega y responsable.\n• Solo finalice cuando el cliente o el proceso interno valide.',
-    helpProtocolosServico: 'Sirve para protocolos de servicio (antes/después, imágenes, piezas sustituidas, PDF).\n\n---COMO---\n\n• Cree un protocolo asociado a cliente y equipo.\n• Añada bloques de texto e imágenes según el modelo.\n• Liste piezas sustituidas con códigos de la biblioteca.\n• Genere PDF y envíe por correo o WhatsApp según los botones.',
+    helpProtocolosServico:
+      'Sirve para documentar intervenciones técnicas con trazabilidad: cliente, equipo (serie), texto introductorio, bloques de texto y de imágenes (hasta dos fotos por bloque de imágenes), piezas sustituidas alineadas con la biblioteca, modelo de PDF y envío.\n\n---COMO---\n\n• Cree o edite un protocolo siempre con cliente y equipo seleccionados: esos datos pasan al PDF sin reescribirlos.\n• Use el texto inicial para el contexto (motivo de la visita, estado previo); en los bloques siguientes narre pasos, mediciones o conclusiones.\n• En cada bloque de imágenes cargue hasta dos fotos; para más imágenes añada otro bloque de imágenes (mantenga el orden cronológico o lógico que necesite).\n• Registre códigos de piezas tal como en la biblioteca para coherencia con stock e informes.\n• Elija el modelo de PDF antes de guardar; luego use Generar PDF, Email o WhatsApp en la lista.\n• El borrador se guarda automáticamente mientras edita; «Guardar protocolo» graba en la lista global y limpia el borrador.',
     helpManualPrograma: 'Sirve como documentación general del sistema: inicio rápido, registros, operación técnica, piezas, financiero y seguridad.\n\n---COMO---\n\n• Navegue por los temas a la izquierda o use la búsqueda interna.\n• Lea cada sección en el orden sugerido si es usuario nuevo.\n• En cualquier pantalla, F1 abre la ayuda contextual.\n• Vuelva al manual cuando necesite revisar políticas o buenas prácticas.',
     protocolosServicoTitle: 'Protocolos de Servicio',
-    protocolosServicoDesc: 'Consulte y genere los protocolos de servicio (antes/después, imágenes y piezas sustituidas).',
-    protocolosServicoHeroBadge: 'DOCUMENTACIÓN TÉCNICA',
-    protocolosServicoHeroTagline: 'Un solo flujo: cliente y equipo → bloques de texto e imagen → piezas → PDF, correo o WhatsApp.',
-    protocolosServicoFormPassosLabel: 'Modo edición',
-    protocolosServicoFormPassos: 'Siga el orden: identificación, informe visual, piezas y guardar en la lista.',
+    protocolosServicoDesc:
+      'Centralice informes visuales de intervención: cliente y equipo (serie), texto introductorio, bloques de texto y de imágenes (hasta dos fotos por bloque de imágenes), piezas sustituidas con códigos de la biblioteca, modelo de PDF y envío por PDF, correo o WhatsApp.',
+    protocolosServicoHeroBadge: 'Documentación técnica',
+    protocolosServicoHeroTagline:
+      'Cada protocolo queda vinculado al registro de clientes y al número de serie del equipo. Use bloques para narrar la intervención (observaciones y fotos antes/después). Guarde en la lista para consultar, filtrar y reabrir; el borrador se guarda automáticamente mientras edita.',
+    protocolosServicoFormPassosLabel: 'Flujo recomendado',
+    protocolosServicoFormPassos: 'Identificación y modelo de PDF → informe (texto inicial y bloques) → piezas sustituidas → Guardar en la lista.',
+    protocolosServicoPainelIntro:
+      'Los indicadores muestran el total en el archivo, cuántos protocolos coinciden con la búsqueda y el porcentaje visible. La búsqueda usa nombre del cliente, tipo de equipo, modelo, número de serie y marca.',
+    protocolosServicoSecIdentificacaoHint:
+      'Seleccione el cliente y, a continuación, el equipo por la serie registrada en el registro. Esos datos rellenan la cabecera del PDF y reducen errores de transcripción.',
+    protocolosServicoSecPdfHint:
+      'El modelo define colores, tipografía y disposición del documento impreso o guardado como PDF. Puede cambiarlo antes de finalizar; la elección queda guardada con el protocolo.',
+    protocolosServicoSecConteudoHint:
+      'El texto inicial aparece en el PDF antes de los bloques. Añada bloques de texto (pasos, conclusiones) y bloques de imagen (hasta dos fotos por bloque). Puede repetir la combinación en el orden que tenga sentido para el caso.',
+    protocolosServicoBlocoImagensHint: 'Cada bloque de imágenes admite hasta dos fotos. Para más imágenes, cree otro bloque de imágenes.',
+    protocolosServicoListaHint:
+      'En la lista puede generar el PDF, abrir el cliente de correo con texto sugerido, iniciar WhatsApp con resumen, editar o eliminar. La búsqueda filtra en tiempo real.',
+    protocolosServicoGuardarHint: 'Guardar graba el protocolo en los datos de la empresa y elimina el borrador local. Cliente y equipo son obligatorios.',
     protocolosServicoStep1: 'ID',
     protocolosServicoStep2: 'DOC',
     protocolosServicoStep3: 'PIEZAS',
@@ -2637,7 +2668,8 @@ export const translations = {
     protocolosServicoPdfModelo12: '12 — Informe técnico (monoespacio)',
     protocolosServicoFormTituloNovo: 'Nuevo protocolo de servicio',
     protocolosServicoFormTituloEditar: 'Editar protocolo',
-    protocolosServicoFormSub: 'Complete por secciones. Guarde al final para que aparezca en la lista.',
+    protocolosServicoFormSub:
+      'Avance por las secciones en el orden sugerido. El PDF usa los datos de cliente y equipo ya registrados y el modelo que elija. Use Guardar protocolo al final para grabar en la lista global.',
     protocolosServicoVoltarLista: 'Volver a la lista',
     protocolosServicoSecIdentificacao: 'Identificación',
     protocolosServicoSecPdf: 'Modelo del documento PDF',
@@ -4670,14 +4702,29 @@ export const translations = {
     helpOrdemPreparacao: 'Sert à l\'ordre de préparation de pièces avant envoi au technicien ou client.\n\n---COMO---\n\n• Générez ou ouvrez l\'ordre depuis demandes approuvées.\n• Séparez physiquement selon la liste et cochez les lignes.\n• Enregistrez exceptions (rupture, substitution).\n• Clôturez quand l\'envoi est prêt.',
     helpFormulariosChecklistTecnicos: 'Sert pour formulaires checklist que les techniciens remplissent sur le terrain.\n\n---COMO---\n\n• Choisissez le formulaire adapté au type de service.\n• Remplissez tous les champs obligatoires avant signature.\n• Enregistrez brouillons si possible et finalisez avant de quitter le client.\n• Synchronisez ou envoyez selon le bouton de fin.',
     helpVerificacaoFinalEntrega: 'Sert à la vérification finale avant remise de l\'équipement au client (qualité et sécurité).\n\n---COMO---\n\n• Parcourez tous les groupes du checklist final.\n• Corrigez les non-conformités avant validation.\n• Enregistrez remarques de remise et responsable.\n• Ne finalisez que lorsque le client ou le process interne valide.',
-    helpProtocolosServico: 'Sert aux protocoles de service (avant/après, images, pièces remplacées, PDF).\n\n---COMO---\n\n• Créez un protocole lié au client et à l\'équipement.\n• Ajoutez blocs texte et images selon le modèle.\n• Listez les pièces remplacées avec codes bibliothèque.\n• Générez le PDF et envoyez par e-mail ou WhatsApp selon les boutons.',
+    helpProtocolosServico:
+      'Sert à documenter les interventions techniques avec traçabilité : client, équipement (n° de série), texte d\'introduction, blocs texte et image (jusqu\'à deux photos par bloc images), pièces remplacées alignées sur la bibliothèque, modèle PDF et envoi.\n\n---COMO---\n\n• Créez ou modifiez un protocole avec client et équipement sélectionnés : ces données vont dans le PDF sans ressaisie.\n• Utilisez le texte initial pour le contexte (motif de visite, état avant) ; dans les blocs suivants décrivez étapes, mesures ou conclusions.\n• Dans chaque bloc images importez jusqu\'à deux photos ; pour plus d\'images ajoutez un autre bloc images (gardez l\'ordre chronologique ou logique voulu).\n• Saisissez les codes pièces comme dans la bibliothèque pour cohérence stocks et rapports.\n• Choisissez le modèle PDF avant d\'enregistrer ; puis utilisez Générer PDF, E-mail ou WhatsApp dans la liste.\n• Le brouillon est sauvegardé automatiquement pendant l\'édition ; « Enregistrer le protocole » enregistre dans la liste globale et efface le brouillon.',
     helpManualPrograma: 'Sert de documentation générale du système : démarrage rapide, registres, exploitation technique, pièces, finances et sécurité.\n\n---COMO---\n\n• Naviguez par les sujets à gauche ou la recherche interne.\n• Lisez chaque section dans l\'ordre conseillé si vous débutez.\n• Sur tout écran, F1 ouvre l\'aide contextuelle.\n• Revenez au manuel pour revoir politiques et bonnes pratiques.',
     protocolosServicoTitle: 'Protocoles de Service',
-    protocolosServicoDesc: 'Consultez et générez les protocoles de service (avant/après, images et pièces remplacées).',
-    protocolosServicoHeroBadge: 'DOCUMENTATION TECHNIQUE',
-    protocolosServicoHeroTagline: 'Un seul flux : client et équipement → blocs texte et image → pièces → PDF, e-mail ou WhatsApp.',
-    protocolosServicoFormPassosLabel: 'Mode édition',
-    protocolosServicoFormPassos: 'Suivez l’ordre : identification, rapport visuel, pièces puis enregistrement dans la liste.',
+    protocolosServicoDesc:
+      'Centralisez les comptes rendus visuels d\'intervention : client et équipement (série), texte d\'introduction, blocs texte et image (jusqu\'à deux photos par bloc images), pièces remplacées avec codes bibliothèque, modèle PDF et envoi par PDF, e-mail ou WhatsApp.',
+    protocolosServicoHeroBadge: 'Documentation technique',
+    protocolosServicoHeroTagline:
+      'Chaque protocole est lié au dossier clients et au numéro de série de l\'équipement. Utilisez les blocs pour raconter l\'intervention (observations et photos avant/après). Enregistrez dans la liste pour consulter, filtrer et rouvrir ; le brouillon est sauvegardé automatiquement pendant l\'édition.',
+    protocolosServicoFormPassosLabel: 'Flux recommandé',
+    protocolosServicoFormPassos: 'Identification et modèle PDF → rapport (texte initial et blocs) → pièces remplacées → Enregistrer dans la liste.',
+    protocolosServicoPainelIntro:
+      'Les indicateurs montrent le total dans l\'archive, combien de protocoles correspondent à la recherche et le pourcentage visible. La recherche porte sur le nom du client, le type d\'équipement, le modèle, le n° de série et la marque.',
+    protocolosServicoSecIdentificacaoHint:
+      'Sélectionnez le client puis l\'équipement par la série enregistrée dans le dossier. Ces données alimentent l\'en-tête du PDF et limitent les erreurs de transcription.',
+    protocolosServicoSecPdfHint:
+      'Le modèle définit couleurs, typographie et mise en page du document imprimé ou enregistré en PDF. Vous pouvez le modifier avant de finaliser ; le choix est enregistré avec le protocole.',
+    protocolosServicoSecConteudoHint:
+      'Le texte initial apparaît dans le PDF avant les blocs. Ajoutez des blocs texte (étapes, conclusions) et des blocs image (jusqu\'à deux photos par bloc). Vous pouvez répéter la combinaison dans l\'ordre pertinent pour le cas.',
+    protocolosServicoBlocoImagensHint: 'Chaque bloc images accepte jusqu\'à deux photos. Pour plus d\'images, créez un autre bloc images.',
+    protocolosServicoListaHint:
+      'Dans la liste vous pouvez générer le PDF, ouvrir le client e-mail avec texte suggéré, lancer WhatsApp avec résumé, modifier ou supprimer. La recherche filtre en temps réel.',
+    protocolosServicoGuardarHint: 'Enregistrer stocke le protocole dans les données de l\'entreprise et supprime le brouillon local. Client et équipement sont obligatoires.',
     protocolosServicoStep1: 'ID',
     protocolosServicoStep2: 'DOC',
     protocolosServicoStep3: 'PIÈCES',
@@ -4740,7 +4787,8 @@ export const translations = {
     protocolosServicoPdfModelo12: '12 — Rapport technique (monospace)',
     protocolosServicoFormTituloNovo: 'Nouveau protocole de service',
     protocolosServicoFormTituloEditar: 'Modifier le protocole',
-    protocolosServicoFormSub: 'Remplissez par sections. Enregistrez à la fin pour l\'ajouter à la liste.',
+    protocolosServicoFormSub:
+      'Avancez section par section dans l\'ordre proposé. Le PDF reprend les données client et équipement déjà enregistrées et le modèle choisi. Utilisez Enregistrer le protocole à la fin pour la liste globale.',
     protocolosServicoVoltarLista: 'Retour à la liste',
     protocolosServicoSecIdentificacao: 'Identification',
     protocolosServicoSecPdf: 'Modèle du document PDF',
@@ -6766,14 +6814,29 @@ export const translations = {
     helpOrdemPreparacao: 'Serve per ordine di preparazione ricambi prima dell\'invio al tecnico o cliente.\n\n---COMO---\n\n• Genera o apri l\'ordine da richieste approvate.\n• Separa fisicamente secondo l\'elenco e segna le righe.\n• Registra eccezioni (mancanza stock, sostituzione).\n• Chiudi quando la spedizione è pronta.',
     helpFormulariosChecklistTecnicos: 'Serve per moduli checklist che i tecnici compilano sul campo.\n\n---COMO---\n\n• Scegli il modulo adatto al tipo di servizio.\n• Compila tutti i campi obbligatori prima della firma.\n• Salva bozze se possibile e finalizza prima di lasciare il cliente.\n• Sincronizza o invia secondo il pulsante di completamento.',
     helpVerificacaoFinalEntrega: 'Serve per verifica finale prima della consegna dell\'attrezzatura al cliente (qualità e sicurezza).\n\n---COMO---\n\n• Scorri tutti i gruppi del checklist finale.\n• Correggi non conformità prima di validare.\n• Registra note di consegna e responsabile.\n• Finalizza solo quando cliente o processo interno validano.',
-    helpProtocolosServico: 'Serve per protocolli di servizio (prima/dopo, immagini, ricambi sostituiti, PDF).\n\n---COMO---\n\n• Crea un protocollo collegato a cliente e attrezzatura.\n• Aggiungi blocchi testo e immagini secondo modello.\n• Elenca ricambi sostituiti con codici dalla biblioteca.\n• Genera PDF e invia via email o WhatsApp secondo i pulsanti.',
+    helpProtocolosServico:
+      'Serve per documentare interventi tecnici con tracciabilità: cliente, apparecchio (matricola), testo introduttivo, blocchi di testo e di immagini (fino a due foto per blocco immagini), ricambi sostituiti allineati alla biblioteca, modello PDF e invio.\n\n---COMO---\n\n• Crea o modifica un protocollo sempre con cliente e apparecchio selezionati: quei dati vanno nel PDF senza riscriverli.\n• Usa il testo iniziale per il contesto (motivo dell\'intervento, stato prima); nei blocchi successivi descrivi passi, misure o conclusioni.\n• In ogni blocco immagini carica fino a due foto; per altre immagini aggiungi un altro blocco immagini (mantieni l\'ordine cronologico o logico che serve).\n• Registra i codici ricambi come in biblioteca per coerenza con magazzino e rapporti.\n• Scegli il modello PDF prima di salvare; poi usa Genera PDF, Email o WhatsApp nell\'elenco.\n• La bozza si salva automaticamente durante la modifica; «Salva protocollo» registra nell\'elenco globale e azzera la bozza.',
     helpManualPrograma: 'Serve come documentazione generale del sistema: avvio rapido, registri, operazione tecnica, ricambi, finanza e sicurezza.\n\n---COMO---\n\n• Naviga gli argomenti a sinistra o usa la ricerca interna.\n• Leggi ogni sezione nell\'ordine suggerito se sei nuovo utente.\n• In ogni schermata, F1 apre l\'aiuto contestuale.\n• Torna al manuale per rivedere policy e buone pratiche.',
     protocolosServicoTitle: 'Protocolli di Servizio',
-    protocolosServicoDesc: 'Consulta e genera i protocolli di servizio (prima/dopo, immagini e pezzi sostituiti).',
-    protocolosServicoHeroBadge: 'DOCUMENTAZIONE TECNICA',
-    protocolosServicoHeroTagline: 'Un solo flusso: cliente e apparecchio → blocchi testo e immagine → ricambi → PDF, email o WhatsApp.',
-    protocolosServicoFormPassosLabel: 'Modalità modifica',
-    protocolosServicoFormPassos: 'Segui l’ordine: identificazione, resoconto visivo, ricambi e salva in elenco.',
+    protocolosServicoDesc:
+      'Centralizza resoconti visivi d\'intervento: cliente e apparecchio (matricola), testo introduttivo, blocchi di testo e di immagini (fino a due foto per blocco immagini), ricambi sostituiti con codici della biblioteca, modello PDF e invio tramite PDF, email o WhatsApp.',
+    protocolosServicoHeroBadge: 'Documentazione tecnica',
+    protocolosServicoHeroTagline:
+      'Ogni protocollo è collegato all\'anagrafica clienti e al numero di serie dell\'apparecchio. Usa i blocchi per narrare l\'intervento (osservazioni e foto prima/dopo). Salva in elenco per consultare, filtrare e riaprire; la bozza si salva automaticamente durante la modifica.',
+    protocolosServicoFormPassosLabel: 'Flusso consigliato',
+    protocolosServicoFormPassos: 'Identificazione e modello PDF → resoconto (testo iniziale e blocchi) → ricambi sostituiti → Salva in elenco.',
+    protocolosServicoPainelIntro:
+      'Gli indicatori mostrano il totale in archivio, quanti protocolli corrispondono alla ricerca e la percentuale visibile. La ricerca usa nome cliente, tipo di apparecchio, modello, numero di serie e marca.',
+    protocolosServicoSecIdentificacaoHint:
+      'Seleziona il cliente e poi l\'apparecchio per la matricola registrata in anagrafica. Questi dati alimentano l\'intestazione del PDF e riducono errori di trascrizione.',
+    protocolosServicoSecPdfHint:
+      'Il modello definisce colori, tipografia e impaginazione del documento stampato o salvato come PDF. Puoi cambiarlo prima di concludere; la scelta resta salvata con il protocollo.',
+    protocolosServicoSecConteudoHint:
+      'Il testo iniziale compare nel PDF prima dei blocchi. Aggiungi blocchi di testo (passi, conclusioni) e blocchi immagine (fino a due foto per blocco). Puoi ripetere la combinazione nell\'ordine più adatto al caso.',
+    protocolosServicoBlocoImagensHint: 'Ogni blocco immagini accetta fino a due foto. Per altre immagini crea un altro blocco immagini.',
+    protocolosServicoListaHint:
+      'Nell\'elenco puoi generare il PDF, aprire il client email con testo suggerito, avviare WhatsApp con riepilogo, modificare o eliminare. La ricerca filtra in tempo reale.',
+    protocolosServicoGuardarHint: 'Salva registra il protocollo nei dati aziendali e rimuove la bozza locale. Cliente e apparecchio sono obbligatori.',
     protocolosServicoStep1: 'ID',
     protocolosServicoStep2: 'DOC',
     protocolosServicoStep3: 'RICAMBI',
@@ -6836,7 +6899,8 @@ export const translations = {
     protocolosServicoPdfModelo12: '12 — Rapporto tecnico (monospazio)',
     protocolosServicoFormTituloNovo: 'Nuovo protocollo di servizio',
     protocolosServicoFormTituloEditar: 'Modifica protocollo',
-    protocolosServicoFormSub: 'Compilare per sezioni. Salvare alla fine per comparire in elenco.',
+    protocolosServicoFormSub:
+      'Procedi per sezioni nell\'ordine suggerito. Il PDF usa i dati cliente e apparecchio già registrati e il modello scelto. Usa Salva protocollo alla fine per l\'elenco globale.',
     protocolosServicoVoltarLista: 'Torna all\'elenco',
     protocolosServicoSecIdentificacao: 'Identificazione',
     protocolosServicoSecPdf: 'Modello documento PDF',
@@ -8855,14 +8919,29 @@ export const translations = {
     helpOrdemPreparacao: 'Dient zur Vorbereitungsaufstellung für Teile vor Versand an Techniker oder Kunden.\n\n---COMO---\n\n• Auftrag aus freigegebenen Anfragen erzeugen oder öffnen.\n\n• Physisch nach Liste kommissionieren und abhaken.\n\n• Ausnahmen (kein Bestand, Ersatz) erfassen.\n\n• Schließen, wenn Versand bereit ist.',
     helpFormulariosChecklistTecnicos: 'Dient für Checklistenformulare, die Techniker vor Ort ausfüllen.\n\n---COMO---\n\n• Formular passend zum Servicetyp wählen.\n\n• Pflichtfelder vor Unterschrift ausfüllen.\n\n• Entwürfe speichern, falls möglich, und vor Verlassen des Kunden abschließen.\n\n• Synchronisieren oder senden per Abschlussbutton.',
     helpVerificacaoFinalEntrega: 'Dient zur Endkontrolle vor Übergabe des Geräts an den Kunden (Qualität und Sicherheit).\n\n---COMO---\n\n• Alle Gruppen der Abschluss-Checkliste durchgehen.\n\n• Mängel vor Freigabe beheben.\n\n• Übergabe und Verantwortliche notieren.\n\n• Nur abschließen, wenn Kunde oder interner Prozess freigibt.',
-    helpProtocolosServico: 'Dient zu Serviceprotokollen (vorher/nachher, Bilder, getauschte Teile, PDF).\n\n---COMO---\n\n• Protokoll mit Kunde und Gerät anlegen.\n\n• Text- und Bildblöcke nach Vorlage hinzufügen.\n\n• Getauschte Teile mit Bibliothekscodes listen.\n\n• PDF erzeugen und per E-Mail oder WhatsApp senden.',
+    helpProtocolosServico:
+      'Dient zur nachvollziehbaren Dokumentation technischer Einsätze: Kunde, Gerät (Seriennummer), Einleitungstext, Text- und Bildblöcke (bis zu zwei Fotos pro Bildblock), ausgetauschte Teile passend zur Teilebibliothek, PDF-Vorlage und Versand.\n\n---COMO---\n\n• Legen Sie Protokolle immer mit gewähltem Kunden und Gerät an – diese Daten erscheinen im PDF ohne erneutes Abtippen.\n\n• Nutzen Sie den Einleitungstext für Kontext (Anlass, Zustand vorher); in den folgenden Blöcken beschreiben Sie Schritte, Messwerte oder Schlussfolgerungen.\n\n• Pro Bildblock bis zu zwei Fotos laden; für weitere Bilder einen weiteren Bildblock anlegen (Reihenfolge nach Zeit oder Logik).\n\n• Teilecodes wie in der Bibliothek erfassen – konsistent zu Bestand und Berichten.\n\n• PDF-Vorlage vor dem Speichern wählen; danach in der Liste PDF erzeugen, E-Mail oder WhatsApp nutzen.\n\n• Der Entwurf wird beim Bearbeiten automatisch gesichert; «Protokoll speichern» schreibt in die globale Liste und löscht den Entwurf.',
     helpManualPrograma: 'Dient als allgemeine Systemdokumentation: Schnellstart, Stammdaten, technischer Betrieb, Teile, Finanzen und Sicherheit.\n\n---COMO---\n\n• Themen links navigieren oder interne Suche nutzen.\n\n• Als Neuling die empfohlene Reihenfolge einhalten.\n\n• Auf jedem Bildschirm öffnet F1 die Kontexthilfe.\n\n• Zum Handbuch zurückkehren für Richtlinien und Best Practices.',
     protocolosServicoTitle: 'Serviceprotokolle',
-    protocolosServicoDesc: 'Serviceprotokolle einsehen und erstellen (Vorher/Nachher, Bilder und ausgetauschte Teile).',
-    protocolosServicoHeroBadge: 'TECHNISCHE DOKUMENTATION',
-    protocolosServicoHeroTagline: 'Ein Ablauf: Kunde und Gerät → Text- und Bildblöcke → Teile → PDF, E-Mail oder WhatsApp.',
-    protocolosServicoFormPassosLabel: 'Bearbeitungsmodus',
-    protocolosServicoFormPassos: 'Reihenfolge: Identifikation, visueller Bericht, Teile und in der Liste speichern.',
+    protocolosServicoDesc:
+      'Bündeln Sie visuelle Einsatzberichte: Kunde und Gerät (Seriennummer), Einleitungstext, Text- und Bildblöcke (bis zu zwei Fotos pro Bildblock), ausgetauschte Teile mit Bibliothekscodes, PDF-Vorlage und Versand per PDF, E-Mail oder WhatsApp.',
+    protocolosServicoHeroBadge: 'Technische Dokumentation',
+    protocolosServicoHeroTagline:
+      'Jedes Protokoll ist mit dem Kundenstamm und der Geräteseriennummer verknüpft. Nutzen Sie Blöcke, um den Einsatz zu schildern (Beobachtungen und Fotos vor/nachher). In der Liste speichern zum Suchen, Filtern und Wiederöffnen; der Entwurf wird beim Bearbeiten automatisch gesichert.',
+    protocolosServicoFormPassosLabel: 'Empfohlener Ablauf',
+    protocolosServicoFormPassos: 'Identifikation und PDF-Vorlage → Bericht (Einleitung und Blöcke) → ausgetauschte Teile → In der Liste speichern.',
+    protocolosServicoPainelIntro:
+      'Die Kennzahlen zeigen die Archiv-Gesamtzahl, wie viele Protokolle zur Suche passen und den sichtbaren Anteil. Die Suche berücksichtigt Kundenname, Gerätetyp, Modell, Seriennummer und Marke.',
+    protocolosServicoSecIdentificacaoHint:
+      'Wählen Sie zuerst den Kunden, dann das Gerät anhand der im Stamm erfassten Seriennummer. Diese Daten füllen die PDF-Kopfzeile und verringern Übertragungsfehler.',
+    protocolosServicoSecPdfHint:
+      'Die Vorlage legt Farben, Schrift und Layout des Druck- oder PDF-Dokuments fest. Sie können sie vor dem Abschluss ändern; die Wahl wird mit dem Protokoll gespeichert.',
+    protocolosServicoSecConteudoHint:
+      'Der Einleitungstext steht im PDF vor den Blöcken. Fügen Sie Textblöcke (Schritte, Fazit) und Bildblöcke (bis zwei Fotos pro Block) hinzu. Die Kombination kann in der für den Fall sinnvollen Reihenfolge wiederholt werden.',
+    protocolosServicoBlocoImagensHint: 'Jeder Bildblock nimmt bis zu zwei Fotos auf. Für weitere Bilder legen Sie einen weiteren Bildblock an.',
+    protocolosServicoListaHint:
+      'In der Liste können Sie PDF erzeugen, das E-Mail-Programm mit Vorschlagtext öffnen, WhatsApp mit Kurzinfo starten, bearbeiten oder löschen. Die Suche filtert in Echtzeit.',
+    protocolosServicoGuardarHint: 'Speichern schreibt das Protokoll in die Unternehmensdaten und entfernt den lokalen Entwurf. Kunde und Gerät sind Pflichtfelder.',
     protocolosServicoStep1: 'ID',
     protocolosServicoStep2: 'DOC',
     protocolosServicoStep3: 'TEILE',
@@ -8925,7 +9004,8 @@ export const translations = {
     protocolosServicoPdfModelo12: '12 — Technischer Bericht (Monospace)',
     protocolosServicoFormTituloNovo: 'Neues Serviceprotokoll',
     protocolosServicoFormTituloEditar: 'Protokoll bearbeiten',
-    protocolosServicoFormSub: 'Abschnitt für Abschnitt ausfüllen. Am Ende speichern, um es in der Liste zu haben.',
+    protocolosServicoFormSub:
+      'Gehen Sie die Abschnitte in der vorgeschlagenen Reihenfolge durch. Das PDF nutzt die bereits erfassten Kunden- und Gerätedaten sowie die gewählte Vorlage. Speichern Sie am Ende, damit das Protokoll in der Unternehmensliste erscheint und der lokale Entwurf entfernt wird.',
     protocolosServicoVoltarLista: 'Zurück zur Liste',
     protocolosServicoSecIdentificacao: 'Identifikation',
     protocolosServicoSecPdf: 'PDF-Dokumentvorlage',
@@ -10931,14 +11011,29 @@ export const translations = {
     helpOrdemPreparacao: 'Used for parts preparation orders before sending to technician or client.\n\n---COMO---\n\n• Generate or open the order from approved requests.\n• Pick physically per list and tick lines.\n• Log exceptions (stock out, substitution).\n• Close when shipment is ready.',
     helpFormulariosChecklistTecnicos: 'Used for checklist forms that technicians fill in on site.\n\n---COMO---\n\n• Pick the form that matches the service type.\n• Fill all required fields before signing.\n• Save drafts if allowed and finish before leaving the client.\n• Sync or send using the completion button.',
     helpVerificacaoFinalEntrega: 'Used for final verification before handing equipment to the client (quality and safety).\n\n---COMO---\n\n• Go through all groups of the final checklist.\n• Fix non-conformities before sign-off.\n• Record handover notes and responsible person.\n• Only finish when the client or internal process validates.',
-    helpProtocolosServico: 'Used for service protocols (before/after, images, replaced parts, PDF).\n\n---COMO---\n\n• Create a protocol linked to client and equipment.\n• Add text and image blocks per template.\n• List replaced parts with library codes.\n• Generate PDF and send by email or WhatsApp per buttons.',
+    helpProtocolosServico:
+      'Used to document technical visits with traceability: client, equipment (serial number), introductory text, text and image blocks (up to two photos per image block), replaced parts aligned with the parts library, PDF template and sending.\n\n---COMO---\n\n• Always create or edit a protocol with the client and equipment selected—their data appear on the PDF without retyping.\n\n• Use the opening text for context (reason for visit, condition before); in later blocks describe steps, readings or conclusions.\n\n• Load up to two photos per image block; add another image block for more pictures (keep chronological or logical order).\n\n• Enter part codes as in the library for consistency with stock and reports.\n\n• Choose the PDF template before saving; then use Generate PDF, Email or WhatsApp from the list.\n\n• The draft saves automatically while you edit; Save writes to the company archive and clears the local draft.',
     helpManualPrograma: 'Used as general system documentation: quick start, registers, technical operation, parts, finance and security.\n\n---COMO---\n\n• Browse topics on the left or use internal search.\n• Read each section in suggested order if you are new.\n• On any screen, F1 opens contextual help.\n• Return to the manual to review policies and good practices.',
     protocolosServicoTitle: 'Service Protocols',
-    protocolosServicoDesc: 'View and generate service protocols (before/after, images and replaced parts).',
-    protocolosServicoHeroBadge: 'TECHNICAL DOCUMENTATION',
-    protocolosServicoHeroTagline: 'One flow: customer and equipment → text and image blocks → parts → PDF, email or WhatsApp.',
-    protocolosServicoFormPassosLabel: 'Edit mode',
-    protocolosServicoFormPassos: 'Follow the order: identification, visual report, parts, then save to the list.',
+    protocolosServicoDesc:
+      'Bring together visual service reports: client and equipment (serial number), introductory text, text and image blocks (up to two photos per image block), replaced parts with library codes, a PDF template, and output via PDF, email or WhatsApp.',
+    protocolosServicoHeroBadge: 'Technical documentation',
+    protocolosServicoHeroTagline:
+      'Each protocol is linked to the client register and the equipment serial number. Use blocks to tell the story of the job (notes and before/after photos). Save to the list to search, filter and reopen; your draft is saved automatically while you edit.',
+    protocolosServicoFormPassosLabel: 'Recommended flow',
+    protocolosServicoFormPassos: 'Identification and PDF template → report (opening text and blocks) → replaced parts → Save to the list.',
+    protocolosServicoPainelIntro:
+      'The figures show the full archive count, how many protocols match your search, and the visible share. Search covers client name, equipment type, model, serial number and brand.',
+    protocolosServicoSecIdentificacaoHint:
+      'Pick the client first, then the equipment by the serial number on file. Those fields feed the PDF header and reduce transcription errors.',
+    protocolosServicoSecPdfHint:
+      'The template sets colours, typography and layout for print or PDF. You can change it before finishing; the choice is stored with the protocol.',
+    protocolosServicoSecConteudoHint:
+      'The opening text appears on the PDF before the blocks. Add text blocks (steps, conclusions) and image blocks (up to two photos each). Repeat the mix in whatever order fits the case.',
+    protocolosServicoBlocoImagensHint: 'Each image block holds up to two photos. For more images, add another image block.',
+    protocolosServicoListaHint:
+      'From the list you can generate the PDF, open email with suggested wording, start WhatsApp with a short summary, edit or delete. Search filters in real time.',
+    protocolosServicoGuardarHint: 'Save stores the protocol in the company data and removes the local draft. Client and equipment are required.',
     protocolosServicoStep1: 'ID',
     protocolosServicoStep2: 'DOC',
     protocolosServicoStep3: 'PARTS',
@@ -11001,7 +11096,8 @@ export const translations = {
     protocolosServicoPdfModelo12: '12 — Technical report (monospace)',
     protocolosServicoFormTituloNovo: 'New service protocol',
     protocolosServicoFormTituloEditar: 'Edit protocol',
-    protocolosServicoFormSub: 'Fill in by section. Save at the end to appear in the list.',
+    protocolosServicoFormSub:
+      'Work through the sections in the suggested order. The PDF uses the client and equipment already on file and the template you pick. Use Save at the end to record in the global list.',
     protocolosServicoVoltarLista: 'Back to list',
     protocolosServicoSecIdentificacao: 'Identification',
     protocolosServicoSecPdf: 'PDF document template',
