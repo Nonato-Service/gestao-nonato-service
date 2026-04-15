@@ -261,6 +261,12 @@ export const translations = {
     protocolosServicoListaHint:
       'Na lista pode gerar o PDF, abrir o cliente de e-mail com texto sugerido, iniciar WhatsApp com resumo, editar ou eliminar. A pesquisa filtra em tempo real.',
     protocolosServicoGuardarHint: 'Guardar grava o protocolo nos dados da empresa e remove o rascunho local. Cliente e equipamento são obrigatórios.',
+    protocolosServicoEquipamentoResumoTitulo: 'Equipamento selecionado',
+    protocolosServicoEquipamentoResumoSerie: 'N.º série',
+    protocolosServicoEquipamentoResumoId: 'ID',
+    protocolosServicoEquipamentoSemId: '—',
+    protocolosServicoEquipamentoSemIdHint:
+      'O ID preenche-se quando existir no cadastro do cliente ou quando o n.º de série for igual ao de um equipamento no armazém.',
     protocolosServicoStep1: 'ID',
     protocolosServicoStep2: 'DOC',
     protocolosServicoStep3: 'PEÇAS',
@@ -2606,6 +2612,12 @@ export const translations = {
     protocolosServicoListaHint:
       'En la lista puede generar el PDF, abrir el cliente de correo con texto sugerido, iniciar WhatsApp con resumen, editar o eliminar. La búsqueda filtra en tiempo real.',
     protocolosServicoGuardarHint: 'Guardar graba el protocolo en los datos de la empresa y elimina el borrador local. Cliente y equipo son obligatorios.',
+    protocolosServicoEquipamentoResumoTitulo: 'Equipo seleccionado',
+    protocolosServicoEquipamentoResumoSerie: 'N.º de serie',
+    protocolosServicoEquipamentoResumoId: 'ID',
+    protocolosServicoEquipamentoSemId: '—',
+    protocolosServicoEquipamentoSemIdHint:
+      'El ID se rellena si existe en el registro del cliente o si el n.º de serie coincide con un equipo en el almacén.',
     protocolosServicoStep1: 'ID',
     protocolosServicoStep2: 'DOC',
     protocolosServicoStep3: 'PIEZAS',
@@ -4725,6 +4737,12 @@ export const translations = {
     protocolosServicoListaHint:
       'Dans la liste vous pouvez générer le PDF, ouvrir le client e-mail avec texte suggéré, lancer WhatsApp avec résumé, modifier ou supprimer. La recherche filtre en temps réel.',
     protocolosServicoGuardarHint: 'Enregistrer stocke le protocole dans les données de l\'entreprise et supprime le brouillon local. Client et équipement sont obligatoires.',
+    protocolosServicoEquipamentoResumoTitulo: 'Équipement sélectionné',
+    protocolosServicoEquipamentoResumoSerie: 'N.º de série',
+    protocolosServicoEquipamentoResumoId: 'ID',
+    protocolosServicoEquipamentoSemId: '—',
+    protocolosServicoEquipamentoSemIdHint:
+      'L\'ID s\'affiche s\'il existe sur la fiche client ou si le n.º de série correspond à un équipement en entrepôt.',
     protocolosServicoStep1: 'ID',
     protocolosServicoStep2: 'DOC',
     protocolosServicoStep3: 'PIÈCES',
@@ -6837,6 +6855,12 @@ export const translations = {
     protocolosServicoListaHint:
       'Nell\'elenco puoi generare il PDF, aprire il client email con testo suggerito, avviare WhatsApp con riepilogo, modificare o eliminare. La ricerca filtra in tempo reale.',
     protocolosServicoGuardarHint: 'Salva registra il protocollo nei dati aziendali e rimuove la bozza locale. Cliente e apparecchio sono obbligatori.',
+    protocolosServicoEquipamentoResumoTitulo: 'Apparecchio selezionato',
+    protocolosServicoEquipamentoResumoSerie: 'N.º di serie',
+    protocolosServicoEquipamentoResumoId: 'ID',
+    protocolosServicoEquipamentoSemId: '—',
+    protocolosServicoEquipamentoSemIdHint:
+      'L\'ID compare se presente in anagrafica cliente o se il n.º di serie coincide con un apparecchio in magazzino.',
     protocolosServicoStep1: 'ID',
     protocolosServicoStep2: 'DOC',
     protocolosServicoStep3: 'RICAMBI',
@@ -8942,6 +8966,12 @@ export const translations = {
     protocolosServicoListaHint:
       'In der Liste können Sie PDF erzeugen, das E-Mail-Programm mit Vorschlagtext öffnen, WhatsApp mit Kurzinfo starten, bearbeiten oder löschen. Die Suche filtert in Echtzeit.',
     protocolosServicoGuardarHint: 'Speichern schreibt das Protokoll in die Unternehmensdaten und entfernt den lokalen Entwurf. Kunde und Gerät sind Pflichtfelder.',
+    protocolosServicoEquipamentoResumoTitulo: 'Ausgewähltes Gerät',
+    protocolosServicoEquipamentoResumoSerie: 'Seriennummer',
+    protocolosServicoEquipamentoResumoId: 'ID',
+    protocolosServicoEquipamentoSemId: '—',
+    protocolosServicoEquipamentoSemIdHint:
+      'Die ID erscheint, wenn sie beim Kunden hinterlegt ist oder die Seriennummer mit einem Gerät im Lager übereinstimmt.',
     protocolosServicoStep1: 'ID',
     protocolosServicoStep2: 'DOC',
     protocolosServicoStep3: 'TEILE',
@@ -11034,6 +11064,12 @@ export const translations = {
     protocolosServicoListaHint:
       'From the list you can generate the PDF, open email with suggested wording, start WhatsApp with a short summary, edit or delete. Search filters in real time.',
     protocolosServicoGuardarHint: 'Save stores the protocol in the company data and removes the local draft. Client and equipment are required.',
+    protocolosServicoEquipamentoResumoTitulo: 'Selected equipment',
+    protocolosServicoEquipamentoResumoSerie: 'Serial no.',
+    protocolosServicoEquipamentoResumoId: 'ID',
+    protocolosServicoEquipamentoSemId: '—',
+    protocolosServicoEquipamentoSemIdHint:
+      'The ID appears when it exists on the client record or when the serial matches equipment in the warehouse.',
     protocolosServicoStep1: 'ID',
     protocolosServicoStep2: 'DOC',
     protocolosServicoStep3: 'PARTS',

@@ -25876,8 +25876,20 @@ onKeyPress={(e) => {
           const clienteSection = cl && clientRows.length > 0
             ? `<div class="sec"><h3 class="sec-title">${protoT?.protocolosServicoInformacaoCliente || 'Informação do cliente'}</h3><table class="cl-table">${clientRows.join('')}</table></div>`
             : ''
+          const idEqPdf = (() => {
+            if (!eq) return ''
+            const idC = (eq.id || '').trim()
+            const s = (eq.numeroSerie || '').trim()
+            const idA = s
+              ? (equipamentos.find((e) => (e.numeroSerie || '').trim().toLowerCase() === s.toLowerCase())?.id || '').trim()
+              : ''
+            return idC || idA
+          })()
+          const rowIdPdf = idEqPdf
+            ? `<tr><td class="cl-label">${esc(protoT?.protocolosServicoEquipamentoResumoId || 'ID')}</td><td class="cl-value">${esc(idEqPdf)}</td></tr>`
+            : ''
           const equipSection = eq
-            ? `<div class="sec"><h3 class="sec-title">${protoT?.protocolosServicoInformacaoEquipamento || 'Informação do equipamento'}</h3><table class="cl-table"><tr><td class="cl-label">${lab('tipoEquipamento', 'Tipo')}</td><td class="cl-value">${esc(eq.tipoEquipamento)}</td></tr><tr><td class="cl-label">${lab('modelo', 'Modelo')}</td><td class="cl-value">${esc(eq.modelo)}</td></tr><tr><td class="cl-label">${lab('marca', 'Marca')}</td><td class="cl-value">${esc(eq.marca)}</td></tr><tr><td class="cl-label">${protoT?.numeroSerie || 'Nº Série'}</td><td class="cl-value">${esc(eq.numeroSerie)}</td></tr></table></div>`
+            ? `<div class="sec"><h3 class="sec-title">${protoT?.protocolosServicoInformacaoEquipamento || 'Informação do equipamento'}</h3><table class="cl-table"><tr><td class="cl-label">${lab('tipoEquipamento', 'Tipo')}</td><td class="cl-value">${esc(eq.tipoEquipamento)}</td></tr><tr><td class="cl-label">${lab('modelo', 'Modelo')}</td><td class="cl-value">${esc(eq.modelo)}</td></tr><tr><td class="cl-label">${lab('marca', 'Marca')}</td><td class="cl-value">${esc(eq.marca)}</td></tr><tr><td class="cl-label">${protoT?.numeroSerie || 'Nº Série'}</td><td class="cl-value">${esc(eq.numeroSerie)}</td></tr>${rowIdPdf}</table></div>`
             : ''
           const textoSection = p.textoInicial ? `<div class="sec"><h3 class="sec-title">${protoT?.protocolosServicoTextoInicial || 'Texto inicial'}</h3><p style="margin:0;white-space:pre-wrap;" class="texto-inicial">${esc(p.textoInicial)}</p></div>` : ''
           const bodyInner = `${clienteSection}${equipSection}${textoSection}${blocosHtml}${pecasStrong}<div class="footer-bar"><span class="footer-date">${dataDoc}</span><span class="doc-ref">${refDoc}</span></div>`
@@ -25903,7 +25915,11 @@ onKeyPress={(e) => {
           ? protocolosOrdenados.filter(p => {
               const cl = clientes.find(c => c.id === p.clienteId)
               const eq = cl?.equipamentos?.find(e => e.numeroSerie === p.equipamentoNumeroSerie)
-              const hay = [cl?.nomeEmpresa, eq?.tipoEquipamento, eq?.modelo, eq?.numeroSerie, eq?.marca].filter(Boolean).join(' ').toLowerCase()
+              const idEqFilt = eq
+                ? ((eq.id || '').trim() ||
+                    (equipamentos.find((e) => (e.numeroSerie || '').trim().toLowerCase() === (eq.numeroSerie || '').trim().toLowerCase())?.id || '').trim())
+                : ''
+              const hay = [cl?.nomeEmpresa, eq?.tipoEquipamento, eq?.modelo, eq?.numeroSerie, eq?.marca, idEqFilt].filter(Boolean).join(' ').toLowerCase()
               return hay.includes(filtroLista)
             })
           : protocolosOrdenados
@@ -26121,6 +26137,38 @@ onKeyPress={(e) => {
                       </select>
                     </div>
                   </div>
+                  {protocoloServicoForm.equipamentoNumeroSerie && equipamentoProto ? (
+                    <div
+                      style={{
+                        marginTop: 14,
+                        padding: '12px 14px',
+                        borderRadius: 10,
+                        background: 'rgba(15, 23, 42, 0.55)',
+                        border: '1px solid rgba(148, 163, 184, 0.22)',
+                        maxWidth: 640,
+                      }}
+                    >
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', letterSpacing: '0.06em', marginBottom: 8 }}>
+                        {protoT?.protocolosServicoEquipamentoResumoTitulo || 'Equipamento selecionado'}
+                      </div>
+                      <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.5 }}>
+                        <span style={{ color: '#94a3b8' }}>{protoT?.protocolosServicoEquipamentoResumoSerie || 'N.º série'}: </span>
+                        <span style={{ fontFamily: 'ui-monospace, monospace', color: '#f1f5f9' }}>{serieProtocoloResumo || '—'}</span>
+                      </div>
+                      <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.5, marginTop: 6 }}>
+                        <span style={{ color: '#94a3b8' }}>{protoT?.protocolosServicoEquipamentoResumoId || 'ID'}: </span>
+                        <span style={{ fontFamily: 'ui-monospace, monospace', color: '#f1f5f9' }}>
+                          {idEquipamentoVisivel || (protoT?.protocolosServicoEquipamentoSemId || '—')}
+                        </span>
+                      </div>
+                      {!idEquipamentoVisivel ? (
+                        <p style={{ margin: '8px 0 0', fontSize: 11, color: '#64748b', lineHeight: 1.45 }}>
+                          {protoT?.protocolosServicoEquipamentoSemIdHint ||
+                            'O ID aparece quando existir no equipamento do cliente ou quando o n.º de série coincidir com um equipamento no armazém.'}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
                   {protoT?.protocolosServicoSecPdfHint ? (
                     <p style={{ margin: '14px 0 0', fontSize: 12, color: '#64748b', lineHeight: 1.55, maxWidth: 640 }}>{protoT.protocolosServicoSecPdfHint}</p>
                   ) : null}
@@ -26175,22 +26223,39 @@ onKeyPress={(e) => {
                       {bloco.tipo === 'texto' ? (
                         <textarea value={bloco.texto || ''} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, i) => (bloco.id ? b.id === bloco.id : i === idx) ? { ...b, texto: e.target.value } : b) }))} rows={3} style={{ ...inputBase, resize: 'vertical' as const }} />
                       ) : (
-                        <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                          {(bloco.imagens || []).slice(0, 2).map((src, i) => (
-                            <div key={i} style={{ position: 'relative' }}>
-                              <img src={src} alt="" style={{ maxWidth: '220px', maxHeight: '165px', objectFit: 'contain', borderRadius: '10px', border: '1px solid rgba(0,255,136,0.25)', background: '#111' }} />
-                              <button type="button" aria-label="Remover imagem" style={{ position: 'absolute', top: '6px', right: '6px', background: 'rgba(180,30,30,0.95)', color: '#fff', border: 'none', borderRadius: '6px', width: '28px', height: '28px', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }} onClick={() => { const bid = bloco.id; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, bi) => (bid ? b.id === bid : bi === idx) ? { ...b, imagens: (b.imagens || []).filter((_, j) => j !== i) } : b) })) }}>×</button>
-                            </div>
-                          ))}
-                          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <div style={{ width: '100%' }}>
+                          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                            {(bloco.imagens || []).slice(0, 2).map((src, i) => (
+                              <div key={i} style={{ position: 'relative' }}>
+                                <img src={src} alt="" style={{ maxWidth: '220px', maxHeight: '165px', objectFit: 'contain', borderRadius: '10px', border: '1px solid rgba(0,255,136,0.25)', background: '#111' }} />
+                                <button type="button" aria-label="Remover imagem" style={{ position: 'absolute', top: '6px', right: '6px', background: 'rgba(180,30,30,0.95)', color: '#fff', border: 'none', borderRadius: '6px', width: '28px', height: '28px', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }} onClick={() => { const bid = bloco.id; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, bi) => (bid ? b.id === bid : bi === idx) ? { ...b, imagens: (b.imagens || []).filter((_, j) => j !== i) } : b) })) }}>×</button>
+                              </div>
+                            ))}
+                          </div>
+                          <div
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'row',
+                              flexWrap: 'nowrap',
+                              gap: '8px',
+                              alignItems: 'center',
+                              marginTop: 12,
+                              width: '100%',
+                              minHeight: 40,
+                              overflowX: 'auto',
+                              overflowY: 'hidden',
+                              paddingBottom: 2,
+                              boxSizing: 'border-box',
+                            }}
+                          >
                             {(bloco.imagens || []).length < 2 ? (
                               <>
-                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 16px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)' }}>
+                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 14px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)', flexShrink: 0, whiteSpace: 'nowrap' }}>
                                   <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden>🔍</span>
                                   {protoT?.protocolosServicoBuscarImagem || 'Buscar imagem'}
                                   <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const bid = bloco.id; if (!bid) return; const input = ev.currentTarget; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b) => (b.id === bid && b.tipo === 'imagens' ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b)) })); input.value = '' }; r.readAsDataURL(f) }} />
                                 </label>
-                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 16px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)' }}>
+                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 14px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)', flexShrink: 0, whiteSpace: 'nowrap' }}>
                                   <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden>📷</span>
                                   {protoT?.protocolosServicoTirarFoto || 'Tirar foto'}
                                   <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const bid = bloco.id; if (!bid) return; const input = ev.currentTarget; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b) => (b.id === bid && b.tipo === 'imagens' ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b)) })); input.value = '' }; r.readAsDataURL(f) }} />
@@ -26203,8 +26268,11 @@ onKeyPress={(e) => {
                               aria-label={protoT?.protocolosServicoRemoverBloco || 'Remover'}
                               className="btn-danger"
                               style={{
-                                padding: '10px 14px',
-                                fontSize: 12,
+                                padding: '0 12px',
+                                minWidth: 40,
+                                height: 40,
+                                flexShrink: 0,
+                                fontSize: 16,
                                 fontWeight: 600,
                                 borderRadius: 10,
                                 display: 'inline-flex',
@@ -26214,10 +26282,11 @@ onKeyPress={(e) => {
                                 border: '1px solid rgba(248, 113, 113, 0.28)',
                                 color: '#fca5a5',
                                 boxShadow: 'none',
+                                whiteSpace: 'nowrap',
                               }}
                               onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: bloco.id ? prev.blocos.filter((b) => b.id !== bloco.id) : prev.blocos.filter((_, i) => i !== idx) }))}
                             >
-                              {protoT?.protocolosServicoRemoverBloco || 'Remover'}
+                              🗑
                             </button>
                           </div>
                         </div>
