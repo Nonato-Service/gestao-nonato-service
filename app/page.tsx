@@ -2035,6 +2035,11 @@ export default function Dashboard() {
   // Sistema de múltiplas páginas/abas
   const [openTabs, setOpenTabs] = useState<Tab[]>([])
   const [activeTabId, setActiveTabId] = useState<string | null>(null)
+  /** Sem abas e painel ainda não expandido: esconder sidebar na vista de entrada. */
+  const hideSidebarForEntryDashboard = !activeTabId && !dashboardWorkspaceExpanded
+  useEffect(() => {
+    if (hideSidebarForEntryDashboard) setMobileMenuOpen(false)
+  }, [hideSidebarForEntryDashboard])
   const mainContentAreaRef = useRef<HTMLDivElement>(null)
   const [showHelpModal, setShowHelpModal] = useState(false)
 
@@ -53130,7 +53135,7 @@ A1;Peça exemplo;10`}
 
   return (
     <div
-      className={`app-layout${!isDemoMode ? ' app-layout-no-top-bar' : ''}${isCompactLayout ? ' app-compact-layout' : ''}${isCompactLayout && isDemoMode ? ' app-compact-with-demo' : ''}${openTabs.length > 0 ? ' app-has-bottom-tabs' : ''}`}
+      className={`app-layout${!isDemoMode ? ' app-layout-no-top-bar' : ''}${isCompactLayout ? ' app-compact-layout' : ''}${isCompactLayout && isDemoMode ? ' app-compact-with-demo' : ''}${openTabs.length > 0 ? ' app-has-bottom-tabs' : ''}${hideSidebarForEntryDashboard ? ' app-layout-entry-focus' : ''}`}
       style={{
         display: 'flex',
         minHeight: '100dvh',
@@ -53220,8 +53225,11 @@ A1;Peça exemplo;10`}
           ) : null}
         </div>
       )}
-      {/* Sidebar - em ecrã estreito: gaveta lateral (globals.css) */}
-      <div className={`sidebar${isCompactLayout && mobileMenuOpen ? ' sidebar-mobile-open' : ''}`}>
+      {/* Sidebar - em ecrã estreito: gaveta lateral (globals.css). Classe extra na vista de entrada: esconde de forma fiável face a media queries. */}
+      <div
+        className={`sidebar${isCompactLayout && mobileMenuOpen ? ' sidebar-mobile-open' : ''}${hideSidebarForEntryDashboard ? ' sidebar--hidden-entry' : ''}`}
+        aria-hidden={hideSidebarForEntryDashboard ? true : undefined}
+      >
         {/* Logo NONATO SERVICE — logo ocupa 100% do contorno verde, borda mantida */}
         <div className="sidebar-brand" style={{ marginBottom: '25px', textAlign: 'center', padding: '8px', overflow: 'hidden', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.12)', minHeight: '120px', maxHeight: 'min(28vh, 200px)', height: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
           {logoUrl ? (

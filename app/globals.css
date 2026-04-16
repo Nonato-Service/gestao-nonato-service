@@ -4185,3 +4185,43 @@ button.dia-trabalho-acao-btn--del:hover {
   border-radius: 18px;
 }
 
+/* Vista de entrada resumida: ocultar barra lateral (classe no .sidebar — ganha a .app-compact-layout .sidebar { display:flex!important }) */
+.app-layout.app-layout-entry-focus > .sidebar.sidebar--hidden-entry,
+.sidebar.sidebar--hidden-entry {
+  display: none !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  flex: 0 0 0 !important;
+}
+
+@media (max-width: 1024px) {
+  .app-compact-layout .sidebar.sidebar--hidden-entry {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: none !important;
+  }
+}
+
+.app-layout.app-layout-entry-focus > .main-app-column {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Telemóvel: sem botão ☰ na entrada (evita gaveta vazia); o menu volta após «Entrar no sistema» */
+.app-layout.app-layout-entry-focus.app-compact-layout .mobile-menu-toggle {
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
