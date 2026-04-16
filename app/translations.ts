@@ -380,6 +380,8 @@ export const translations = {
     protocolosServicoPdfModelo10: '10 — Premium escuro & dourado',
     protocolosServicoPdfModelo11: '11 — Faixa lateral índigo',
     protocolosServicoPdfModelo12: '12 — Relatório técnico (monospace)',
+    protocolosServicoPdfModelo13: '13 — Executive (azul-marinho & ouro)',
+    protocolosServicoPdfModelo14: '14 — Clínico clean (branco & teal)',
     protocolosServicoFormTituloNovo: 'Novo protocolo de serviço',
     protocolosServicoFormTituloEditar: 'Editar protocolo',
     protocolosServicoFormSub:
@@ -2682,6 +2684,8 @@ export const translations = {
     protocolosServicoPdfModelo10: '10 — Premium oscuro y dorado',
     protocolosServicoPdfModelo11: '11 — Franja lateral índigo',
     protocolosServicoPdfModelo12: '12 — Informe técnico (monoespacio)',
+    protocolosServicoPdfModelo13: '13 — Executive (azul marino y oro)',
+    protocolosServicoPdfModelo14: '14 — Clínico limpio (blanco y teal)',
     protocolosServicoFormTituloNovo: 'Nuevo protocolo de servicio',
     protocolosServicoFormTituloEditar: 'Editar protocolo',
     protocolosServicoFormSub:
@@ -4809,6 +4813,8 @@ export const translations = {
     protocolosServicoPdfModelo10: '10 — Premium sombre & or',
     protocolosServicoPdfModelo11: '11 — Bande latérale indigo',
     protocolosServicoPdfModelo12: '12 — Rapport technique (monospace)',
+    protocolosServicoPdfModelo13: '13 — Executive (marine & or)',
+    protocolosServicoPdfModelo14: '14 — Clinique épuré (blanc & teal)',
     protocolosServicoFormTituloNovo: 'Nouveau protocole de service',
     protocolosServicoFormTituloEditar: 'Modifier le protocole',
     protocolosServicoFormSub:
@@ -6929,6 +6935,8 @@ export const translations = {
     protocolosServicoPdfModelo10: '10 — Premium scuro e oro',
     protocolosServicoPdfModelo11: '11 — Banda laterale indaco',
     protocolosServicoPdfModelo12: '12 — Rapporto tecnico (monospazio)',
+    protocolosServicoPdfModelo13: '13 — Executive (blu navy e oro)',
+    protocolosServicoPdfModelo14: '14 — Clinico pulito (bianco e teal)',
     protocolosServicoFormTituloNovo: 'Nuovo protocollo di servizio',
     protocolosServicoFormTituloEditar: 'Modifica protocollo',
     protocolosServicoFormSub:
@@ -9042,6 +9050,8 @@ export const translations = {
     protocolosServicoPdfModelo10: '10 — Premium dunkel & Gold',
     protocolosServicoPdfModelo11: '11 — Indigo-Seitenstreifen',
     protocolosServicoPdfModelo12: '12 — Technischer Bericht (Monospace)',
+    protocolosServicoPdfModelo13: '13 — Executive (Marineblau & Gold)',
+    protocolosServicoPdfModelo14: '14 — Klinisch clean (Weiß & Teal)',
     protocolosServicoFormTituloNovo: 'Neues Serviceprotokoll',
     protocolosServicoFormTituloEditar: 'Protokoll bearbeiten',
     protocolosServicoFormSub:
@@ -11142,6 +11152,8 @@ export const translations = {
     protocolosServicoPdfModelo10: '10 — Premium dark & gold',
     protocolosServicoPdfModelo11: '11 — Indigo side stripe',
     protocolosServicoPdfModelo12: '12 — Technical report (monospace)',
+    protocolosServicoPdfModelo13: '13 — Executive (navy & gold)',
+    protocolosServicoPdfModelo14: '14 — Clinical clean (white & teal)',
     protocolosServicoFormTituloNovo: 'New service protocol',
     protocolosServicoFormTituloEditar: 'Edit protocol',
     protocolosServicoFormSub:
