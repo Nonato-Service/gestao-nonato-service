@@ -3940,3 +3940,115 @@ button.dia-trabalho-acao-btn--del:hover {
   animation: ns-fatura-sphere-pulse 0.85s ease-in-out infinite;
 }
 
+/* Protocolos de serviço — lista: ações em grelha (larguras iguais, hierarquia clara) */
+.tab-content-wrapper .protocolo-servico-lista-card {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  gap: 18px;
+  align-items: start;
+  padding: 20px 22px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 200, 255, 0.18);
+  background: linear-gradient(118deg, rgba(16, 28, 36, 0.98), rgba(6, 10, 16, 0.99));
+  box-shadow: 0 12px 40px rgba(0, 20, 35, 0.45), inset 0 1px 0 rgba(0, 255, 220, 0.04);
+}
+
+@media (max-width: 768px) {
+  .tab-content-wrapper .protocolo-servico-lista-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tab-content-wrapper .protocolo-servico-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tab-content-wrapper .protocolo-servico-card__actions-row {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.tab-content-wrapper .protocolo-servico-card__actions-row--share {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tab-content-wrapper .protocolo-servico-card__actions-row--manage {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 420px) {
+  .tab-content-wrapper .protocolo-servico-card__actions-row--share {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tab-content-wrapper .protocolo-servico-card__actions .btn-primary,
+.tab-content-wrapper .protocolo-servico-card__actions .btn-danger.btn-danger--inline {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 38px !important;
+  max-width: none !important;
+  padding: 8px 10px !important;
+  font-size: 11px !important;
+  line-height: 1.25 !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
+  box-sizing: border-box;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+.tab-content-wrapper .protocolo-servico-card__btn--pdf {
+  background: linear-gradient(165deg, #3dffe0, #00a080) !important;
+  border: none !important;
+  color: #031210 !important;
+  box-shadow: none !important;
+  letter-spacing: 0.03em;
+}
+
+.tab-content-wrapper .protocolo-servico-card__btn--pdf:hover {
+  filter: brightness(1.08);
+  color: #031210 !important;
+}
+
+.tab-content-wrapper .protocolo-servico-card__btn--email {
+  background-color: rgba(0, 140, 255, 0.38) !important;
+  border: 1px solid rgba(0, 180, 255, 0.55) !important;
+  color: #e8f6ff !important;
+}
+
+.tab-content-wrapper .protocolo-servico-card__btn--wa {
+  background-color: rgba(37, 211, 102, 0.32) !important;
+  border: 1px solid rgba(37, 211, 102, 0.55) !important;
+  color: #ecfdf5 !important;
+}
+
+.tab-content-wrapper .protocolo-servico-card__btn--edit {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  color: #ddeeff !important;
+}
+
+.tab-content-wrapper .protocolo-servico-card__actions .btn-danger.btn-danger--inline.protocolo-servico-card__btn--del {
+  background: rgba(127, 29, 29, 0.45) !important;
+  border: 1px solid rgba(248, 113, 113, 0.35) !important;
+  color: #fecaca !important;
+  box-shadow: none !important;
+}
+
+.tab-content-wrapper .protocolo-servico-card__actions .btn-danger.btn-danger--inline.protocolo-servico-card__btn--del:hover {
+  background: rgba(153, 27, 27, 0.55) !important;
+  color: #fff !important;
+}
+

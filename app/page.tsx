@@ -26498,19 +26498,7 @@ onKeyPress={(e) => {
                         return (
                           <div
                             key={p.id}
-                            style={{
-                              position: 'relative',
-                              overflow: 'hidden',
-                              display: 'grid',
-                              gridTemplateColumns: 'minmax(0, 1fr) auto',
-                              gap: 18,
-                              alignItems: 'start',
-                              padding: '20px 22px',
-                              borderRadius: 16,
-                              border: '1px solid rgba(0, 200, 255, 0.18)',
-                              background: 'linear-gradient(118deg, rgba(16, 28, 36, 0.98), rgba(6, 10, 16, 0.99))',
-                              boxShadow: '0 12px 40px rgba(0, 20, 35, 0.45), inset 0 1px 0 rgba(0, 255, 220, 0.04)',
-                            }}
+                            className="protocolo-servico-lista-card"
                           >
                             <div
                               style={{
@@ -26542,36 +26530,38 @@ onKeyPress={(e) => {
                                 <span style={{ fontSize: 11, fontWeight: 700, padding: '6px 11px', borderRadius: 999, background: 'rgba(40, 60, 100, 0.45)', border: '1px solid rgba(100, 180, 255, 0.22)', color: '#c8e4ff' }}>{(protoT?.protocolosServicoResumoPecas || '{n} peças').replace('{n}', String(nPecas))}</span>
                               </div>
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'stretch', minWidth: 0 }}>
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' }}>
-                                <button type="button" className="btn-primary" style={{ padding: '9px 14px', fontSize: 11, borderRadius: 10, fontWeight: 800, letterSpacing: '0.04em', background: 'linear-gradient(165deg, #3dffe0, #00a080)', border: 'none', color: '#031210' }} onClick={() => gerarPDFProtocolo(p)}>{protoT?.protocolosServicoGerarPDF || 'PDF'}</button>
-                                <button type="button" className="btn-primary" style={{ padding: '9px 14px', fontSize: 11, borderRadius: 10, fontWeight: 800, backgroundColor: 'rgba(0, 140, 255, 0.35)', borderColor: 'rgba(0, 180, 255, 0.55)' }} onClick={() => enviarEmailProtocolo(p)}>{protoT?.protocolosServicoEnviarEmail || 'Email'}</button>
-                                <button type="button" className="btn-primary" style={{ padding: '9px 14px', fontSize: 11, borderRadius: 10, fontWeight: 800, backgroundColor: 'rgba(37, 211, 102, 0.28)', borderColor: 'rgba(37, 211, 102, 0.55)' }} onClick={() => enviarWhatsAppProtocolo(p)}>{protoT?.protocolosServicoEnviarWhatsApp || 'WhatsApp'}</button>
+                            <div className="protocolo-servico-card__actions">
+                              <div className="protocolo-servico-card__actions-row protocolo-servico-card__actions-row--share">
+                                <button type="button" className="btn-primary protocolo-servico-card__btn--pdf" onClick={() => gerarPDFProtocolo(p)}>{protoT?.protocolosServicoGerarPDF || 'PDF'}</button>
+                                <button type="button" className="btn-primary protocolo-servico-card__btn--email" onClick={() => enviarEmailProtocolo(p)}>{protoT?.protocolosServicoEnviarEmail || 'Email'}</button>
+                                <button type="button" className="btn-primary protocolo-servico-card__btn--wa" onClick={() => enviarWhatsAppProtocolo(p)}>{protoT?.protocolosServicoEnviarWhatsApp || 'WhatsApp'}</button>
                               </div>
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' }}>
-                                <button type="button" className="btn-primary" style={{ padding: '9px 14px', fontSize: 11, borderRadius: 10, fontWeight: 700, background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.22)', color: '#ddeeff' }} onClick={() => { const pr = protocolosServico.find(x => x.id === p.id); if (pr) { setProtocoloServicoForm({ clienteId: pr.clienteId, equipamentoNumeroSerie: pr.equipamentoNumeroSerie, textoInicial: pr.textoInicial, blocos: ensureProtocoloBlocosIds(pr.blocos || []), pecasTrocadasCodigos: pr.pecasTrocadasCodigos, pdfModelo: clampProtocoloPdfModelo(pr.pdfModelo) }); setEditingProtocoloServicoId(pr.id) } }}>{protoT?.protocolosServicoEditar || 'Editar'}</button>
+                              <div className="protocolo-servico-card__actions-row protocolo-servico-card__actions-row--manage">
+                                <button
+                                  type="button"
+                                  className="btn-primary protocolo-servico-card__btn--edit"
+                                  onClick={() => {
+                                    const pr = protocolosServico.find(x => x.id === p.id)
+                                    if (pr) {
+                                      setProtocoloServicoForm({
+                                        clienteId: pr.clienteId,
+                                        equipamentoNumeroSerie: pr.equipamentoNumeroSerie,
+                                        textoInicial: pr.textoInicial,
+                                        blocos: ensureProtocoloBlocosIds(pr.blocos || []),
+                                        pecasTrocadasCodigos: pr.pecasTrocadasCodigos,
+                                        pdfModelo: clampProtocoloPdfModelo(pr.pdfModelo),
+                                      })
+                                      setEditingProtocoloServicoId(pr.id)
+                                    }
+                                  }}
+                                >
+                                  {protoT?.protocolosServicoEditar || 'Editar'}
+                                </button>
                                 <button
                                   type="button"
                                   title={protoT?.protocolosServicoExcluir || 'Excluir'}
                                   aria-label={protoT?.protocolosServicoExcluir || 'Excluir'}
-                                  className="btn-danger btn-danger--inline"
-                                  style={{
-                                    padding: '8px 12px',
-                                    flex: '0 0 auto',
-                                    fontSize: 11,
-                                    borderRadius: 8,
-                                    fontWeight: 700,
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    background: 'rgba(127, 29, 29, 0.35)',
-                                    border: '1px solid rgba(248, 113, 113, 0.28)',
-                                    color: '#fca5a5',
-                                    boxShadow: 'none',
-                                    whiteSpace: 'nowrap',
-                                    width: 'auto',
-                                    maxWidth: 'max-content',
-                                  }}
+                                  className="btn-danger btn-danger--inline protocolo-servico-card__btn--del"
                                   onClick={() => {
                                     if (window.confirm(protoT?.protocolosServicoConfirmarExcluir || 'Excluir este protocolo?')) {
                                       const next = protocolosServico.filter(x => x.id !== p.id)
