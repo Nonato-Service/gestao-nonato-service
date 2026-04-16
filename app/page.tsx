@@ -1830,6 +1830,8 @@ export default function Dashboard() {
   /** Primeira carga: pedidos ao servidor + fusão de dados (evita parecer que «não termina»). */
   const [appInitialLoading, setAppInitialLoading] = useState(true)
   const [showDashboardView, setShowDashboardView] = useState(true) // Dashboard central por padrão
+  /** Vista resumida no painel inicial; «Entrar no sistema» mostra métricas, atalhos e inventário. */
+  const [dashboardWorkspaceExpanded, setDashboardWorkspaceExpanded] = useState(false)
   const [showTranslatorModal, setShowTranslatorModal] = useState(false)
   
   // Estados para Checklist
@@ -3245,6 +3247,7 @@ export default function Dashboard() {
   const voltarPaginaInicial = () => {
     setOpenTabs([])
     setActiveTabId(null)
+    setDashboardWorkspaceExpanded(false)
     // Fechar todos os modais
     setShowModal(false)
     setShowGestoresModal(false)
@@ -54815,7 +54818,7 @@ A1;Peça exemplo;10`}
               </div>
             </>
           ) : (
-            // Dashboard Profissional
+            // Dashboard: vista de entrada resumida ou painel completo
             <div
               className={isCompactLayout ? 'ns-dashboard-root ns-dashboard-root--compact' : 'ns-dashboard-root'}
               style={{
@@ -54824,6 +54827,48 @@ A1;Peça exemplo;10`}
               padding: isCompactLayout ? '12px 8px' : '40px 20px',
               minHeight: 'calc(100vh - 60px)'
             }}>
+              {!dashboardWorkspaceExpanded ? (
+                <div className="ns-dashboard-entry">
+                  <div className="ns-dashboard-entry-hero">
+                    <div className="ns-dashboard-entry-pill">{(safeT as any)?.dashboardEntradaBadge || 'Nonato Service'}</div>
+                    <div style={{ marginBottom: isCompactLayout ? 14 : 22 }}>
+                      <LogoComponent size={isCompactLayout ? 'small' : 'large'} />
+                    </div>
+                    <h1 className="ns-dashboard-entry-title">
+                      {(safeT as any)?.dashboardEntradaTitulo || safeT?.welcomeDashboard || safeT?.welcome || 'Bem-vindo'}
+                    </h1>
+                    <p className="ns-dashboard-entry-lead">
+                      {(safeT as any)?.dashboardEntradaSub || safeT?.welcomeText2 || ''}
+                    </p>
+                    <div className="ns-dashboard-entry-grid">
+                      {(
+                        [
+                          { icon: '📋', t: (safeT as any)?.dashboardEntradaCard1Titulo, d: (safeT as any)?.dashboardEntradaCard1Desc },
+                          { icon: '👥', t: (safeT as any)?.dashboardEntradaCard2Titulo, d: (safeT as any)?.dashboardEntradaCard2Desc },
+                          { icon: '🏭', t: (safeT as any)?.dashboardEntradaCard3Titulo, d: (safeT as any)?.dashboardEntradaCard3Desc },
+                          { icon: '💬', t: (safeT as any)?.dashboardEntradaCard4Titulo, d: (safeT as any)?.dashboardEntradaCard4Desc },
+                        ] as const
+                      ).map((row, i) => (
+                        <div key={i} className="ns-dashboard-entry-card">
+                          <div className="ns-dashboard-entry-card-icon" aria-hidden>{row.icon}</div>
+                          <h3 className="ns-dashboard-entry-card-title">{row.t}</h3>
+                          <p className="ns-dashboard-entry-card-desc">{row.d}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      className="btn-primary ns-dashboard-entry-cta"
+                      onClick={() => setDashboardWorkspaceExpanded(true)}
+                    >
+                      <span aria-hidden style={{ fontSize: 18 }}>→</span>
+                      {(safeT as any)?.dashboardEntrarPainelCompleto || safeT?.acessarSistema || 'Entrar no sistema'}
+                    </button>
+                    <p className="ns-dashboard-entry-note">{(safeT as any)?.dashboardEntradaNota}</p>
+                  </div>
+                </div>
+              ) : (
+                <>
               {/* Hero Section com Logo */}
               <div style={{
                 textAlign: 'center',
@@ -55160,6 +55205,8 @@ A1;Peça exemplo;10`}
                   </div>
                 </div>
               </div>
+                </>
+              )}
             </div>
           )}
         </div>
