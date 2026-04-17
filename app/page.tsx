@@ -4172,6 +4172,8 @@ export default function Dashboard() {
   const [showFaturasGeralModal, setShowFaturasGeralModal] = useState(false)
   const [showEquipamentoClienteForm, setShowEquipamentoClienteForm] = useState(false)
   const [editingEquipamentoCliente, setEditingEquipamentoCliente] = useState<EquipamentoCliente | null>(null)
+  const [isSavingEquipamentoCliente, setIsSavingEquipamentoCliente] = useState(false)
+  const [equipamentoClienteGuardadoMsg, setEquipamentoClienteGuardadoMsg] = useState('')
   const [equipamentoClienteForm, setEquipamentoClienteForm] = useState<EquipamentoCliente>({
     tipoEquipamento: '',
     modelo: '',
@@ -10981,12 +10983,16 @@ export default function Dashboard() {
 
   // Funções para gerenciar Equipamentos do Cliente
   const handleViewClienteEquipamentos = (cliente: Cliente) => {
-    setSelectedClienteForEquipamento(cliente)
+    const latest = clientes.find((c) => c.id === cliente.id) || cliente
+    setSelectedClienteForEquipamento(latest)
+    setEquipamentoClienteGuardadoMsg('')
   }
 
   const handleAddEquipamentoCliente = (cliente: Cliente) => {
-    setSelectedClienteForEquipamento(cliente)
+    const latest = clientes.find((c) => c.id === cliente.id) || cliente
+    setSelectedClienteForEquipamento(latest)
     setEditingEquipamentoCliente(null)
+    setEquipamentoClienteGuardadoMsg('')
     setEquipamentoClienteForm({
       tipoEquipamento: '',
       modelo: '',
@@ -11005,8 +11011,10 @@ export default function Dashboard() {
   }
 
   const handleEditEquipamentoCliente = (cliente: Cliente, equipamento: EquipamentoCliente, index: number) => {
-    setSelectedClienteForEquipamento(cliente)
+    const latest = clientes.find((c) => c.id === cliente.id) || cliente
+    setSelectedClienteForEquipamento(latest)
     setEditingEquipamentoCliente(equipamento)
+    setEquipamentoClienteGuardadoMsg('')
     // Garantir que itemsIncluded e relatorios sejam arrays
     setEquipamentoClienteForm({ 
       ...equipamento,
@@ -11018,60 +11026,114 @@ export default function Dashboard() {
   }
 
   const handleDeleteEquipamentoCliente = (clienteId: string, index: number) => {
-    if (window.confirm(t.confirmDeleteEquipamento || 'Tem certeza que deseja excluir este equipamento?')) {
+    const confirmMsg =
+      safeT?.confirmDeleteEquipamentoCliente ||
+      safeT?.confirmDeleteEquipamento ||
+      t.confirmDeleteEquipamento ||
+      'Tem certeza que deseja excluir este equipamento?'
+    if (window.confirm(confirmMsg)) {
       const cliente = clientes.find(c => c.id === clienteId)
       if (cliente) {
         const updatedEquipamentos = [...cliente.equipamentos]
         updatedEquipamentos.splice(index, 1)
-        const updatedClientes = clientes.map(c => 
-          c.id === clienteId 
-            ? { ...c, equipamentos: updatedEquipamentos }
-            : c
+        const updatedClientes = clientes.map(c =>
+          c.id === clienteId ? { ...c, equipamentos: updatedEquipamentos } : c
         )
         setClientes(updatedClientes)
-        saveData('nonato-clientes', updatedClientes)
+        void saveData('nonato-clientes', updatedClientes)
+        try {
+          localStorage.setItem('nonato-clientes', JSON.stringify(updatedClientes))
+        } catch {
+          /* ignore */
+        }
+        const refreshed = updatedClientes.find(c => c.id === clienteId)
+        if (refreshed) setSelectedClienteForEquipamento(refreshed)
+        setEquipamentoClienteGuardadoMsg('')
       }
     }
   }
 
   const handleSaveEquipamentoCliente = () => {
     if (!selectedClienteForEquipamento) return
+    if (isSavingEquipamentoCliente) return
 
     if (!equipamentoClienteForm.tipoEquipamento || !equipamentoClienteForm.modelo || !equipamentoClienteForm.marca || !equipamentoClienteForm.numeroSerie) {
-      alert(t.fillAllFields)
+      alert(safeT?.fillAllFields || t.fillAllFields)
       return
     }
 
-    let savedEquipamentoCliente: EquipamentoCliente = editingEquipamentoCliente
-      ? { ...editingEquipamentoCliente, ...equipamentoClienteForm }
-      : equipamentoClienteForm
-
-    const updatedClientes = clientes.map(c => {
-      if (c.id === selectedClienteForEquipamento.id) {
-        if (editingEquipamentoCliente) {
-          const index = c.equipamentos.findIndex(eq => 
-            eq.numeroSerie === editingEquipamentoCliente.numeroSerie &&
-            eq.tipoEquipamento === editingEquipamentoCliente.tipoEquipamento
-          )
-          const updatedEquipamentos = [...c.equipamentos]
-          if (index >= 0) {
-            updatedEquipamentos[index] = savedEquipamentoCliente
-          }
-          return { ...c, equipamentos: updatedEquipamentos }
-        } else {
-          return { ...c, equipamentos: [...c.equipamentos, savedEquipamentoCliente] }
-        }
+    const serialNorm = String(equipamentoClienteForm.numeroSerie).trim()
+    const clienteAtual = clientes.find((c) => c.id === selectedClienteForEquipamento.id)
+    if (clienteAtual && !editingEquipamentoCliente) {
+      const dup = clienteAtual.equipamentos.some((eq) => String(eq.numeroSerie).trim() === serialNorm)
+      if (dup) {
+        alert(
+          (safeT as any)?.equipamentoClienteDuplicadoSerie ||
+            'Já existe um equipamento com este número de série neste cliente. Use «Editar» no equipamento existente ou indique outro n.º de série.'
+        )
+        return
       }
-      return c
+    }
+
+    const wasEditing = Boolean(editingEquipamentoCliente)
+    setIsSavingEquipamentoCliente(true)
+
+    let savedEquipamentoCliente: EquipamentoCliente = editingEquipamentoCliente
+      ? { ...editingEquipamentoCliente, ...equipamentoClienteForm, numeroSerie: serialNorm }
+      : {
+          ...equipamentoClienteForm,
+          numeroSerie: serialNorm,
+          id:
+            equipamentoClienteForm.id ||
+            (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+              ? crypto.randomUUID()
+              : `eqc-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`)
+        }
+
+    const updatedClientes = clientes.map((c) => {
+      if (c.id !== selectedClienteForEquipamento.id) return c
+      if (editingEquipamentoCliente) {
+        let index = -1
+        if (editingEquipamentoCliente.id) {
+          index = c.equipamentos.findIndex((eq) => eq.id === editingEquipamentoCliente.id)
+        }
+        if (index < 0) {
+          index = c.equipamentos.findIndex(
+            (eq) =>
+              eq.numeroSerie === editingEquipamentoCliente.numeroSerie &&
+              eq.tipoEquipamento === editingEquipamentoCliente.tipoEquipamento
+          )
+        }
+        const updatedEquipamentos = [...c.equipamentos]
+        if (index >= 0) {
+          updatedEquipamentos[index] = savedEquipamentoCliente
+        } else {
+          updatedEquipamentos.push(savedEquipamentoCliente)
+        }
+        return { ...c, equipamentos: updatedEquipamentos }
+      }
+      return { ...c, equipamentos: [...c.equipamentos, savedEquipamentoCliente] }
     })
 
     setClientes(updatedClientes)
-    localStorage.setItem('nonato-clientes', JSON.stringify(updatedClientes))
-    saveData('nonato-clientes', updatedClientes)
+    try {
+      localStorage.setItem('nonato-clientes', JSON.stringify(updatedClientes))
+    } catch {
+      /* ignore */
+    }
+    void saveData('nonato-clientes', updatedClientes)
+
+    const refreshed = updatedClientes.find((c) => c.id === selectedClienteForEquipamento.id)
+    if (refreshed) setSelectedClienteForEquipamento(refreshed)
+
     setEquipamentoClienteForm(savedEquipamentoCliente)
     setEditingEquipamentoCliente(savedEquipamentoCliente)
     setNewItemCliente('')
-    alert((t as any).equipamentoClienteSaved || 'Equipamento adicionado ao cliente com sucesso!')
+    const msg = wasEditing
+      ? (safeT as any)?.equipamentoClienteUpdated || 'Equipamento atualizado com sucesso!'
+      : (safeT as any)?.equipamentoClienteSaved || 'Equipamento cadastrado com sucesso!'
+    setEquipamentoClienteGuardadoMsg(msg)
+    window.setTimeout(() => setIsSavingEquipamentoCliente(false), 700)
   }
 
   const handleAddItemCliente = () => {
@@ -59543,6 +59605,22 @@ A1;Peça exemplo;10`}
                       {editingEquipamentoCliente ? (safeT?.editarEquipamento || 'Editar Equipamento') : (safeT?.adicionarEquipamento || 'Adicionar Equipamento')}
                     </h4>
                   </div>
+                  {equipamentoClienteGuardadoMsg ? (
+                    <div
+                      role="status"
+                      style={{
+                        margin: '0',
+                        padding: '12px 24px',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        color: '#ecfdf5',
+                        background: 'rgba(6, 95, 70, 0.55)',
+                        borderBottom: '1px solid rgba(45, 212, 191, 0.35)'
+                      }}
+                    >
+                      ✓ {equipamentoClienteGuardadoMsg}
+                    </div>
+                  ) : null}
                   <div style={{ padding: '24px 28px' }}>
                     <div className="equipamento-cliente-form-grid">
                       {/* Coluna esquerda: Imagem */}
@@ -59618,10 +59696,35 @@ A1;Peça exemplo;10`}
                     </div>
                     {/* Botões de acção */}
                     <div style={{ display: 'flex', gap: '14px', marginTop: '28px', paddingTop: '24px', borderTop: '1px solid rgba(0, 255, 0, 0.1)' }}>
-                      <button className="btn-primary" onClick={handleSaveEquipamentoCliente} style={{ flex: 1, padding: '14px 20px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', border: '1px solid #00ff00', background: 'rgba(0, 255, 0, 0.15)', color: '#00ff00', cursor: 'pointer' }}>
-                        ✓ {safeT?.save || 'Salvar'}
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        disabled={isSavingEquipamentoCliente}
+                        onClick={handleSaveEquipamentoCliente}
+                        style={{
+                          flex: 1,
+                          padding: '14px 20px',
+                          borderRadius: '12px',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          border: '1px solid #00ff00',
+                          background: isSavingEquipamentoCliente ? 'rgba(0, 80, 0, 0.25)' : 'rgba(0, 255, 0, 0.15)',
+                          color: isSavingEquipamentoCliente ? 'rgba(0, 255, 0, 0.45)' : '#00ff00',
+                          cursor: isSavingEquipamentoCliente ? 'not-allowed' : 'pointer',
+                          opacity: isSavingEquipamentoCliente ? 0.75 : 1
+                        }}
+                      >
+                        ✓ {isSavingEquipamentoCliente ? ((safeT as any)?.equipamentoClienteSaving || 'A guardar…') : safeT?.save || 'Salvar'}
                       </button>
-                      <button type="button" onClick={() => { setShowEquipamentoClienteForm(false); setEditingEquipamentoCliente(null); }} style={{ flex: 1, padding: '14px 20px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.9)', cursor: 'pointer' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowEquipamentoClienteForm(false)
+                          setEditingEquipamentoCliente(null)
+                          setEquipamentoClienteGuardadoMsg('')
+                        }}
+                        style={{ flex: 1, padding: '14px 20px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.9)', cursor: 'pointer' }}
+                      >
                         {safeT?.cancel || 'Cancelar'}
                       </button>
                     </div>
@@ -59639,7 +59742,7 @@ A1;Peça exemplo;10`}
                     return (
                       <div
                         className="equipamento-cliente-card"
-                        key={index}
+                        key={equipamento.id || `${equipamento.numeroSerie}-${equipamento.tipoEquipamento}-${index}`}
                         style={{
                           borderRadius: '18px',
                           overflow: 'hidden',
