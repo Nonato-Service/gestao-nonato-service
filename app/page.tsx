@@ -52764,20 +52764,22 @@ A1;Peça exemplo;10`}
           }}
         />
         <div className="ns-splash-inner">
-          {/* Logo do dashboard (ou barra lateral como fallback) */}
-          {dashboardLogo && (
-            <div className="ns-splash-logo-box" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.25)', boxShadow: '0 4px 24px rgba(0, 255, 0, 0.08)' }}>
-              {dashboardLogoType === 'video' ? (
-                <video src={dashboardLogo} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-              ) : (
-                <img src={dashboardLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-              )}
-            </div>
-          )}
+          <header className="ns-splash-brand-row">
+            {/* Logo do dashboard (ou barra lateral como fallback) */}
+            {dashboardLogo && (
+              <div className="ns-splash-logo-box">
+                {dashboardLogoType === 'video' ? (
+                  <video src={dashboardLogo} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                ) : (
+                  <img src={dashboardLogo} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                )}
+              </div>
+            )}
 
-          <div className="ns-splash-badge">
-            {safeT?.sistemaCompletoGestao || 'Sistema Completo de Gestão'}
-          </div>
+            <div className="ns-splash-badge">
+              {safeT?.sistemaCompletoGestao || 'Sistema Completo de Gestão'}
+            </div>
+          </header>
 
           <section className="ns-splash-hero-card" aria-labelledby="ns-splash-brand">
             <h1 id="ns-splash-brand" className="ns-splash-hero-title">
@@ -52795,6 +52797,7 @@ A1;Peça exemplo;10`}
             <button
               type="button"
               className="ns-splash-cta"
+              aria-label={safeT?.acessarSistema || 'Acessar sistema'}
               onClick={() => {
                 setShowSplashInicial(false)
                 setShowPasswordScreen(false)
@@ -52819,10 +52822,10 @@ A1;Peça exemplo;10`}
                 })
               }}
             >
-            <span style={{ fontSize: 'clamp(16px, 4vw, 20px)' }} aria-hidden>⚡</span>
-            {safeT?.acessarSistema || 'Acessar Sistema'}
-            <span style={{ fontSize: 'clamp(14px, 3.5vw, 18px)' }} aria-hidden>→</span>
-          </button>
+              <span style={{ fontSize: 'clamp(16px, 4vw, 20px)' }} aria-hidden>⚡</span>
+              {safeT?.acessarSistema || 'Acessar Sistema'}
+              <span style={{ fontSize: 'clamp(14px, 3.5vw, 18px)' }} aria-hidden>→</span>
+            </button>
           </section>
 
           <details className="ns-splash-legal">
@@ -52853,51 +52856,46 @@ A1;Peça exemplo;10`}
           ))}
         </section>
 
-        {/* Seção: Recursos que Fazem a Diferença (6 cards) */}
-        <section
-          className="ns-splash-features"
-          style={{ marginTop: 'clamp(28px, 6vh, 56px)', padding: '0 16px' }}
-          aria-label={safeT?.splashFeaturesAria || safeT?.recursosQueFazemDiferenca || 'Recursos'}
-        >
-          <div className="ns-splash-features__head">
-            <h2 className="ns-splash-features__title">
-              {safeT?.recursosQueFazemDiferenca || 'Recursos que Fazem a Diferença'}
-            </h2>
-            <p className="ns-splash-features__sub">
-              {safeT?.recursosQueFazemDiferencaDesc || 'Tudo o que precisa para comandar equipas, ativos e relatórios — num só lugar.'}
-            </p>
-          </div>
-          <div
-            className="ns-splash-cards-grid"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
-              gap: '14px',
-              justifyContent: 'center'
-            }}
+          {/* Seção: Recursos que Fazem a Diferença (6 cards) */}
+          <section
+            className="ns-splash-features"
+            aria-label={safeT?.splashFeaturesAria || safeT?.recursosQueFazemDiferenca || 'Recursos'}
           >
-            {[
-              { icon: '👥', title: safeT?.card1Title || 'Gestão de Clientes', desc: safeT?.card1Desc || 'Sistema completo para gerenciar clientes, histórico de serviços e manter todos os dados organizados de forma inteligente.' },
-              { icon: '🔧', title: safeT?.card2Title || 'Controle de Serviços', desc: safeT?.card2Desc || 'Acompanhe todos os serviços e manutenções em tempo real, com relatórios detalhados e controle de status.' },
-              { icon: '✅', title: safeT?.card3Title || 'Inspeções e Checklists', desc: safeT?.card3Desc || 'Realize inspeções detalhadas com checklists personalizados e mantenha o controle de qualidade automatizado.' },
-              { icon: '📈', title: safeT?.card4Title || 'Relatórios Avançados', desc: safeT?.card4Desc || 'Análises completas de performance e insights do negócio para tomada de decisões estratégicas.' },
-              { icon: '🛡️', title: safeT?.card5Title || 'Segurança Total', desc: safeT?.card5Desc || 'Proteção avançada de dados com criptografia, backup automático e controle de acesso granular.' },
-              { icon: '🌐', title: safeT?.card6Title || 'Acesso Multiplataforma', desc: safeT?.card6Desc || 'Acesse o sistema de qualquer lugar, em qualquer dispositivo, com sincronização em tempo real.' }
-            ].map((card) => (
-              <div
-                key={card.title}
-                className="ns-splash-card"
-                style={glassCardStyle(ACCENT_GREEN)}
-                onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)}
-                onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}
-              >
-                <div style={{ fontSize: 'clamp(22px, 5vw, 26px)', marginBottom: '8px', color: '#00ff00' }}>{card.icon}</div>
-                <h3 style={{ margin: '0 0 8px 0', fontSize: 'clamp(14px, 3.2vw, 17px)', fontWeight: '700', color: '#fff' }}>{card.title}</h3>
-                <p style={{ margin: 0, fontSize: 'clamp(12px, 2.8vw, 14px)', lineHeight: 1.45, color: 'rgba(255,255,255,0.8)' }}>{card.desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+            <div className="ns-splash-features__head">
+              <h2 className="ns-splash-features__title">
+                {safeT?.recursosQueFazemDiferenca || 'Recursos que Fazem a Diferença'}
+              </h2>
+              <p className="ns-splash-features__sub">
+                {safeT?.recursosQueFazemDiferencaDesc || 'Tudo o que precisa para comandar equipas, ativos e relatórios — num só lugar.'}
+              </p>
+            </div>
+            <div className="ns-splash-cards-grid">
+              {[
+                { icon: '👥', title: safeT?.card1Title || 'Gestão de Clientes', desc: safeT?.card1Desc || 'Sistema completo para gerenciar clientes, histórico de serviços e manter todos os dados organizados de forma inteligente.' },
+                { icon: '🔧', title: safeT?.card2Title || 'Controle de Serviços', desc: safeT?.card2Desc || 'Acompanhe todos os serviços e manutenções em tempo real, com relatórios detalhados e controle de status.' },
+                { icon: '✅', title: safeT?.card3Title || 'Inspeções e Checklists', desc: safeT?.card3Desc || 'Realize inspeções detalhadas com checklists personalizados e mantenha o controle de qualidade automatizado.' },
+                { icon: '📈', title: safeT?.card4Title || 'Relatórios Avançados', desc: safeT?.card4Desc || 'Análises completas de performance e insights do negócio para tomada de decisões estratégicas.' },
+                { icon: '🛡️', title: safeT?.card5Title || 'Segurança Total', desc: safeT?.card5Desc || 'Proteção avançada de dados com criptografia, backup automático e controle de acesso granular.' },
+                { icon: '🌐', title: safeT?.card6Title || 'Acesso Multiplataforma', desc: safeT?.card6Desc || 'Acesse o sistema de qualquer lugar, em qualquer dispositivo, com sincronização em tempo real.' }
+              ].map((card) => (
+                <div
+                  key={card.title}
+                  className="ns-splash-card"
+                  style={glassCardStyle(ACCENT_GREEN)}
+                  onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)}
+                  onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}
+                >
+                  <div style={{ fontSize: 'clamp(22px, 5vw, 26px)', marginBottom: '8px', color: '#00ff00' }}>{card.icon}</div>
+                  <h3 style={{ margin: '0 0 8px 0', fontSize: 'clamp(14px, 3.2vw, 17px)', fontWeight: '700', color: '#fff' }}>{card.title}</h3>
+                  <p style={{ margin: 0, fontSize: 'clamp(12px, 2.8vw, 14px)', lineHeight: 1.45, color: 'rgba(255,255,255,0.8)' }}>{card.desc}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <footer className="ns-splash-footer" role="contentinfo">
+            {safeT?.splashFooterTagline || '© Nonato Service · Todos os direitos reservados'}
+          </footer>
         </div>
         {bootLoadingOverlay}
       </div>
