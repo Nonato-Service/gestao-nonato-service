@@ -138,3 +138,26 @@ body{margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;font-size:10
 
   return `<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${titleSafe}</title><style>${css}</style></head><body>${body}</body></html>`
 }
+
+/** Nome de ficheiro seguro (Windows / anexos). */
+export function safeSolicitacaoFilenameSegment(name: string): string {
+  const t = String(name || 'cliente')
+    .trim()
+    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '')
+    .replace(/\s+/g, '_')
+  return (t.slice(0, 48) || 'cliente').replace(/_+$/g, '') || 'cliente'
+}
+
+/** Descarrega o HTML oficial (mesmo conteúdo que «Imprimir / Guardar como PDF» no browser). */
+export function downloadSolicitacaoServicoTecnicoHtmlFile(html: string, filename: string): void {
+  if (typeof document === 'undefined') return
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename.replace(/[<>:"/\\|?*\u0000-\u001f]/g, '_')
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  setTimeout(() => URL.revokeObjectURL(url), 2500)
+}
