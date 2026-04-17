@@ -34779,6 +34779,21 @@ A1;Peça exemplo;10`}
               <p style={{ margin: '0 0 18px 0', fontSize: '13px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.45 }}>
                 {safeT?.solicitacaoServicoTecnicoArquivoDesc}
               </p>
+              <p
+                style={{
+                  margin: '0 0 14px 0',
+                  padding: '10px 12px',
+                  fontSize: '12px',
+                  lineHeight: 1.45,
+                  color: 'rgba(224, 242, 254, 0.95)',
+                  background: 'rgba(15, 80, 70, 0.55)',
+                  border: '1px solid rgba(45, 212, 191, 0.45)',
+                  borderRadius: '8px'
+                }}
+              >
+                {(safeT as any)?.solicitacaoServicoTecnicoTabelaAvisoDocCol ||
+                  'A coluna «Img / PDF cliente» fica logo a seguir à coluna Equipamento. Se não a vir, deslize a tabela horizontalmente (barra por baixo da grelha).'}
+              </p>
               {solicitacoesServicoTecnico.length === 0 ? (
                 <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '14px' }}>{safeT?.solicitacaoServicoTecnicoNenhuma}</p>
               ) : (
@@ -34788,12 +34803,12 @@ A1;Peça exemplo;10`}
                       <tr style={{ borderBottom: '1px solid rgba(0, 255, 0, 0.28)' }}>
                         <th style={{ textAlign: 'left', padding: '10px 8px', color: '#9fdf9f', fontWeight: 700, whiteSpace: 'nowrap' }}>{safeT?.solicitacaoServicoTecnicoColCliente}</th>
                         <th style={{ textAlign: 'left', padding: '10px 8px', color: '#9fdf9f', fontWeight: 700 }}>{safeT?.solicitacaoServicoTecnicoColEquipamento}</th>
+                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#9fdf9f', fontWeight: 700, whiteSpace: 'nowrap', minWidth: 168 }}>{(safeT as any)?.solicitacaoServicoTecnicoColDocDevolvido || 'Img / PDF cliente'}</th>
                         <th style={{ textAlign: 'left', padding: '10px 8px', color: '#9fdf9f', fontWeight: 700, whiteSpace: 'nowrap' }}>{safeT?.solicitacaoServicoTecnicoColDataRegisto}</th>
                         <th style={{ textAlign: 'left', padding: '10px 8px', color: '#9fdf9f', fontWeight: 700, whiteSpace: 'nowrap' }}>{safeT?.solicitacaoServicoTecnicoColDataAssinatura}</th>
                         <th style={{ textAlign: 'left', padding: '10px 8px', color: '#9fdf9f', fontWeight: 700, whiteSpace: 'nowrap' }}>{safeT?.solicitacaoServicoTecnicoColRecebimento}</th>
                         <th style={{ textAlign: 'left', padding: '10px 8px', color: '#9fdf9f', fontWeight: 700, whiteSpace: 'nowrap' }}>{safeT?.solicitacaoServicoTecnicoColUrgencia}</th>
                         <th style={{ textAlign: 'left', padding: '10px 8px', color: '#9fdf9f', fontWeight: 700, whiteSpace: 'nowrap' }}>{safeT?.solicitacaoServicoTecnicoColAssinatura}</th>
-                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#9fdf9f', fontWeight: 700, whiteSpace: 'nowrap' }}>{(safeT as any)?.solicitacaoServicoTecnicoColDocDevolvido || 'Doc. devolvido'}</th>
                         <th style={{ textAlign: 'left', padding: '10px 8px', color: '#9fdf9f', fontWeight: 700, whiteSpace: 'nowrap' }}>{safeT?.solicitacaoServicoTecnicoColAcoes}</th>
                       </tr>
                     </thead>
@@ -34817,24 +34832,7 @@ A1;Peça exemplo;10`}
                                 {(safeT?.solicitacaoServicoTecnicoNumeroSerie || 'N.º série')}: {s.numeroSerie || '—'}
                               </div>
                             </td>
-                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>{fmtDataSst(s.dataCriacao)}</td>
-                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>{fmtDataSst(s.dataAssinaturaCliente)}</td>
-                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>
-                              <input type="date" value={s.dataRecebimento ? s.dataRecebimento.slice(0, 10) : ''} onChange={e => handleUpdateDataRecebimento(s.id, e.target.value)} style={{ padding: '6px 8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '12px' }} title={safeT?.solicitacaoServicoTecnicoDataRecebimento} />
-                            </td>
-                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>
-                              <select value={s.nivelUrgencia || ''} onChange={e => handleUpdateUrgencia(s.id, e.target.value ? (e.target.value as 'baixa' | 'media' | 'alta' | 'critica') : undefined)} style={{ padding: '6px 8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '12px', maxWidth: 140 }}>
-                                <option value="">{safeT?.solicitacaoServicoTecnicoNivelUrgencia}</option>
-                                <option value="baixa">{safeT?.solicitacaoServicoTecnicoUrgenciaBaixa}</option>
-                                <option value="media">{safeT?.solicitacaoServicoTecnicoUrgenciaMedia}</option>
-                                <option value="alta">{safeT?.solicitacaoServicoTecnicoUrgenciaAlta}</option>
-                                <option value="critica">{safeT?.solicitacaoServicoTecnicoUrgenciaCritica}</option>
-                              </select>
-                            </td>
-                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>
-                              {s.assinaturaCliente ? (safeT?.solicitacaoServicoTecnicoAssinaturaSim ?? 'Sim') : (safeT?.solicitacaoServicoTecnicoAssinaturaNao ?? 'Não')}
-                            </td>
-                            <td style={{ padding: '12px 8px', maxWidth: 220 }}>
+                            <td style={{ padding: '12px 8px', maxWidth: 220, verticalAlign: 'top' }}>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
                                 {s.documentoDevolvido?.dados ? (
                                   <>
@@ -34884,6 +34882,23 @@ A1;Peça exemplo;10`}
                                   {(safeT as any)?.solicitacaoServicoTecnicoDocDevolvidoSubstituir || 'Guardar imagem ou PDF no sistema (anexar)'}
                                 </label>
                               </div>
+                            </td>
+                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>{fmtDataSst(s.dataCriacao)}</td>
+                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>{fmtDataSst(s.dataAssinaturaCliente)}</td>
+                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>
+                              <input type="date" value={s.dataRecebimento ? s.dataRecebimento.slice(0, 10) : ''} onChange={e => handleUpdateDataRecebimento(s.id, e.target.value)} style={{ padding: '6px 8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '12px' }} title={safeT?.solicitacaoServicoTecnicoDataRecebimento} />
+                            </td>
+                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>
+                              <select value={s.nivelUrgencia || ''} onChange={e => handleUpdateUrgencia(s.id, e.target.value ? (e.target.value as 'baixa' | 'media' | 'alta' | 'critica') : undefined)} style={{ padding: '6px 8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '12px', maxWidth: 140 }}>
+                                <option value="">{safeT?.solicitacaoServicoTecnicoNivelUrgencia}</option>
+                                <option value="baixa">{safeT?.solicitacaoServicoTecnicoUrgenciaBaixa}</option>
+                                <option value="media">{safeT?.solicitacaoServicoTecnicoUrgenciaMedia}</option>
+                                <option value="alta">{safeT?.solicitacaoServicoTecnicoUrgenciaAlta}</option>
+                                <option value="critica">{safeT?.solicitacaoServicoTecnicoUrgenciaCritica}</option>
+                              </select>
+                            </td>
+                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>
+                              {s.assinaturaCliente ? (safeT?.solicitacaoServicoTecnicoAssinaturaSim ?? 'Sim') : (safeT?.solicitacaoServicoTecnicoAssinaturaNao ?? 'Não')}
                             </td>
                             <td style={{ padding: '12px 8px' }}>
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>

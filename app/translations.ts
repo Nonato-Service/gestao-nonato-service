@@ -1537,7 +1537,7 @@ export const translations = {
     solicitacaoServicoTecnicoSubtitle: 'Formulário para enviar ao cliente. O cliente preenche, assina e reenvia por e-mail ou WhatsApp.',
     solicitacaoServicoTecnicoNotice: 'Após receber esta solicitação preenchida e assinada pelo cliente, será feito o pré-agendamento e na mesma solicitação será aplicado o nível de urgência.',
     solicitacaoServicoTecnicoComoGuardarAprovacao:
-      'Recebeu do cliente imagens (foto, captura de ecrã, etc.) ou ficheiros PDF de aprovação (WhatsApp / e-mail)? Guarde o ficheiro no PC, use «Editar» na linha ou a coluna «Doc. devolvido» e clique em «Guardar imagem ou PDF no sistema (anexar)» / «Escolher imagem ou PDF — guarda no sistema». Ao escolher o ficheiro, fica gravado na solicitação — não precisa de outro botão «Guardar» só para esse anexo.',
+      'Recebeu do cliente imagens (foto, captura de ecrã, etc.) ou ficheiros PDF de aprovação (WhatsApp / e-mail)? Guarde o ficheiro no PC, use «Editar» na linha ou a coluna «Img / PDF cliente» (logo após Equipamento na tabela) e clique em «Guardar imagem ou PDF no sistema (anexar)» / «Escolher imagem ou PDF — guarda no sistema». Ao escolher o ficheiro, fica gravado na solicitação — não precisa de outro botão «Guardar» só para esse anexo.',
     solicitacaoServicoTecnicoNomeCliente: 'Nome do cliente',
     solicitacaoServicoTecnicoTipoEquipamento: 'Tipo de equipamento',
     solicitacaoServicoTecnicoMarca: 'Marca',
@@ -1604,7 +1604,9 @@ export const translations = {
       'O nome no registo já corresponde ao padrão (cliente + referência SST + data).',
     solicitacaoServicoTecnicoDocDevolvidoNomeAtualizadoOk:
       'Nome do ficheiro atualizado no registo e na ficha do cliente (se aplicável).',
-    solicitacaoServicoTecnicoColDocDevolvido: 'Doc. devolvido',
+    solicitacaoServicoTecnicoColDocDevolvido: 'Img / PDF cliente',
+    solicitacaoServicoTecnicoTabelaAvisoDocCol:
+      'A coluna «Img / PDF cliente» (imagem ou PDF devolvido) fica logo a seguir a «Equipamento». Num ecrã estreito, deslize a tabela horizontalmente (barra por baixo da grelha) até ver essa coluna.',
     solicitacaoServicoTecnicoArquivoMuitoGrande: 'O ficheiro excede o limite de 12 MB.',
     solicitacaoServicoTecnicoEmailInstrucaoAnexo: 'Foi descarregado o ficheiro HTML do formulário oficial (o mesmo que vê ao gerar PDF / imprimir). Anexe esse ficheiro a este e-mail, ou abra-o no browser, use Imprimir → Guardar como PDF e anexe o PDF. Abaixo segue apenas um resumo dos campos que estiverem preenchidos (não aparecem linhas vazias).',
     solicitacaoServicoTecnicoWhatsAppInstrucaoAnexo: 'O formulário oficial (.html) foi descarregado para a pasta de descargas — anexe-o aqui ou envie o PDF depois de imprimir a partir desse ficheiro.',
@@ -3854,7 +3856,7 @@ export const translations = {
     solicitacaoServicoTecnicoSubtitle: 'Formulario para enviar al cliente. El cliente rellena, firma y reenvía por correo o WhatsApp.',
     solicitacaoServicoTecnicoNotice: 'Tras recibir esta solicitud cumplimentada y firmada por el cliente, se realizará la pre-reserva y en la misma solicitud se aplicará el nivel de urgencia.',
     solicitacaoServicoTecnicoComoGuardarAprovacao:
-      '¿Recibió del cliente imágenes (foto, captura de pantalla, etc.) o archivos PDF de aprobación (WhatsApp / correo)? Guarde el archivo en el PC, use «Editar» en la fila o la columna «Doc. devuelto» y pulse «Guardar imagen o PDF en el sistema (adjuntar)» / «Elegir imagen o PDF — guarda en el sistema». Al elegir el archivo, queda guardado en la solicitud; no necesita otro botón «Guardar» solo para ese adjunto.',
+      '¿Recibió del cliente imágenes (foto, captura de pantalla, etc.) o archivos PDF de aprobación (WhatsApp / correo)? Guarde el archivo en el PC, use «Editar» en la fila o la columna «Img / PDF cliente» (justo después de «Equipo») y pulse «Guardar imagen o PDF en el sistema (adjuntar)» / «Elegir imagen o PDF — guarda en el sistema». Al elegir el archivo, queda guardado en la solicitud; no necesita otro botón «Guardar» solo para ese adjunto.',
     solicitacaoServicoTecnicoNomeCliente: 'Nombre del cliente',
     solicitacaoServicoTecnicoTipoEquipamento: 'Tipo de equipo',
     solicitacaoServicoTecnicoMarca: 'Marca',
@@ -3921,7 +3923,9 @@ export const translations = {
       'El nombre en el registro ya sigue el patrón (cliente + referencia SST + fecha).',
     solicitacaoServicoTecnicoDocDevolvidoNomeAtualizadoOk:
       'Nombre del archivo actualizado en el registro y en la ficha del cliente (si aplica).',
-    solicitacaoServicoTecnicoColDocDevolvido: 'Doc. devuelto',
+    solicitacaoServicoTecnicoColDocDevolvido: 'Img / PDF cliente',
+    solicitacaoServicoTecnicoTabelaAvisoDocCol:
+      'La columna «Img / PDF cliente» (imagen o PDF devuelto) está justo después de «Equipo». En pantallas estrechas, desplace la tabla horizontalmente (barra inferior) hasta verla.',
     solicitacaoServicoTecnicoArquivoMuitoGrande: 'El archivo supera el límite de 12 MB.',
     solicitacaoServicoTecnicoEmailInstrucaoAnexo: 'Se descargó el archivo HTML del formulario oficial (el mismo que al generar PDF). Adjúntelo a este correo o ábralo en el navegador, Imprimir → Guardar como PDF y adjunte el PDF. El texto siguiente es solo un resumen.',
     solicitacaoServicoTecnicoWhatsAppInstrucaoAnexo: 'El formulario oficial (.html) se descargó en Descargas — adjúntelo aquí o envíe el PDF tras imprimir desde ese archivo.',
@@ -6082,7 +6086,7 @@ export const translations = {
     solicitacaoServicoTecnicoSubtitle: 'Formulaire à envoyer au client. Le client remplit, signe et renvoie par e-mail ou WhatsApp.',
     solicitacaoServicoTecnicoNotice: 'Après réception de cette demande remplie et signée par le client, le pré-planning sera effectué et le niveau d\'urgence sera appliqué à la même demande.',
     solicitacaoServicoTecnicoComoGuardarAprovacao:
-      'Le client vous a envoyé des images (photo, capture d’écran, etc.) ou des fichiers PDF d’approbation (WhatsApp / e-mail) ? Enregistrez le fichier sur le PC, utilisez « Modifier » sur la ligne ou la colonne « Doc. retourné », puis « Enregistrer image ou PDF dans le système (joindre) » / « Choisir image ou PDF — enregistre dans le système ». Dès que vous choisissez le fichier, il est enregistré sur la demande — pas besoin d’un autre bouton « Enregistrer » uniquement pour cette pièce jointe.',
+      'Le client vous a envoyé des images (photo, capture d’écran, etc.) ou des fichiers PDF d’approbation (WhatsApp / e-mail) ? Enregistrez le fichier sur le PC, utilisez « Modifier » sur la ligne ou la colonne « Img / PDF client » (juste après « Équipement »), puis « Enregistrer image ou PDF dans le système (joindre) » / « Choisir image ou PDF — enregistre dans le système ». Dès que vous choisissez le fichier, il est enregistré sur la demande — pas besoin d’un autre bouton « Enregistrer » uniquement pour cette pièce jointe.',
     solicitacaoServicoTecnicoNomeCliente: 'Nom du client',
     solicitacaoServicoTecnicoTipoEquipamento: 'Type d\'équipement',
     solicitacaoServicoTecnicoMarca: 'Marque',
@@ -6149,7 +6153,9 @@ export const translations = {
       'Le nom enregistré suit déjà le modèle (client + réf. SST + date).',
     solicitacaoServicoTecnicoDocDevolvidoNomeAtualizadoOk:
       'Nom du fichier mis à jour dans l’enregistrement et sur la fiche client (le cas échéant).',
-    solicitacaoServicoTecnicoColDocDevolvido: 'Doc. retourné',
+    solicitacaoServicoTecnicoColDocDevolvido: 'Img / PDF client',
+    solicitacaoServicoTecnicoTabelaAvisoDocCol:
+      'La colonne « Img / PDF client » (image ou PDF retourné) se trouve juste après « Équipement ». Sur un écran étroit, faites défiler le tableau horizontalement (barre en bas) jusqu’à la voir.',
     solicitacaoServicoTecnicoArquivoMuitoGrande: 'Le fichier dépasse la limite de 12 Mo.',
     solicitacaoServicoTecnicoEmailInstrucaoAnexo: 'Le fichier HTML du formulaire officiel a été téléchargé (identique à l’aperçu PDF). Joignez-le à cet e-mail ou ouvrez-le dans le navigateur, Imprimer → Enregistrer au format PDF. Le texte ci-dessous est un résumé.',
     solicitacaoServicoTecnicoWhatsAppInstrucaoAnexo: 'Le formulaire officiel (.html) a été téléchargé — joignez-le ici ou envoyez le PDF après impression.',
@@ -8317,7 +8323,7 @@ export const translations = {
     solicitacaoServicoTecnicoSubtitle: 'Modulo da inviare al cliente. Il cliente compila, firma e reinvia via e-mail o WhatsApp.',
     solicitacaoServicoTecnicoNotice: 'Dopo aver ricevuto questa richiesta compilata e firmata dal cliente, verrà effettuato il pre-appuntamento e sulla stessa richiesta verrà applicato il livello di urgenza.',
     solicitacaoServicoTecnicoComoGuardarAprovacao:
-      'Il cliente ha inviato immagini (foto, screenshot, ecc.) o file PDF di approvazione (WhatsApp / e-mail)? Salvi il file sul PC, usi «Modifica» sulla riga o la colonna «Doc. restituito», poi «Salva immagine o PDF nel sistema (allega)» / «Scegli immagine o PDF — salva nel sistema». Appena sceglie il file, viene salvato nella richiesta — non serve un altro pulsante «Salva» solo per l’allegato.',
+      'Il cliente ha inviato immagini (foto, screenshot, ecc.) o file PDF di approvazione (WhatsApp / e-mail)? Salvi il file sul PC, usi «Modifica» sulla riga o la colonna «Img / PDF cliente» (subito dopo «Attrezzatura»), poi «Salva immagine o PDF nel sistema (allega)» / «Scegli immagine o PDF — salva nel sistema». Appena sceglie il file, viene salvato nella richiesta — non serve un altro pulsante «Salva» solo per l’allegato.',
     solicitacaoServicoTecnicoNomeCliente: 'Nome del cliente',
     solicitacaoServicoTecnicoTipoEquipamento: 'Tipo di attrezzatura',
     solicitacaoServicoTecnicoMarca: 'Marca',
@@ -8384,7 +8390,9 @@ export const translations = {
       'Il nome nel registro è già conforme al modello (cliente + rif. SST + data).',
     solicitacaoServicoTecnicoDocDevolvidoNomeAtualizadoOk:
       'Nome file aggiornato nel registro e nella scheda cliente (se applicabile).',
-    solicitacaoServicoTecnicoColDocDevolvido: 'Doc. restituito',
+    solicitacaoServicoTecnicoColDocDevolvido: 'Img / PDF cliente',
+    solicitacaoServicoTecnicoTabelaAvisoDocCol:
+      'La colonna «Img / PDF cliente» (immagine o PDF restituito) è subito dopo «Attrezzatura». Su schermo stretto, scorrere la tabella in orizzontale (barra in basso) fino a vederla.',
     solicitacaoServicoTecnicoArquivoMuitoGrande: 'Il file supera il limite di 12 MB.',
     solicitacaoServicoTecnicoEmailInstrucaoAnexo: 'È stato scaricato il file HTML del modulo ufficiale (come in stampa/PDF). Allegarlo a questa e-mail o aprirlo nel browser, Stampa → Salva come PDF. Il testo seguente è solo un riepilogo.',
     solicitacaoServicoTecnicoWhatsAppInstrucaoAnexo: 'Il modulo ufficiale (.html) è stato scaricato — allegarlo qui o inviare il PDF dopo la stampa.',
@@ -10566,7 +10574,7 @@ export const translations = {
     solicitacaoServicoTecnicoSubtitle: 'Formular zur Sendung an den Kunden. Der Kunde füllt aus, unterschreibt und sendet per E-Mail oder WhatsApp zurück.',
     solicitacaoServicoTecnicoNotice: 'Nach Erhalt dieser vom Kunden ausgefüllten und unterschriebenen Anfrage wird die Terminvormerkung durchgeführt und derselben Anfrage der Dringlichkeitsgrad zugewiesen.',
     solicitacaoServicoTecnicoComoGuardarAprovacao:
-      'Hat der Kunde Bilder (Foto, Screenshot usw.) oder PDF-Dateien zur Zustimmung gesendet (WhatsApp / E-Mail)? Datei auf dem PC speichern, «Bearbeiten» in der Zeile oder die Spalte «Dok. zurück» nutzen, dann «Bild oder PDF im System speichern (anhängen)» / «Bild oder PDF wählen — speichert im System». Sobald Sie die Datei wählen, wird sie in der Anfrage gespeichert — kein extra «Speichern»-Klick nur für den Anhang nötig.',
+      'Hat der Kunde Bilder (Foto, Screenshot usw.) oder PDF-Dateien zur Zustimmung gesendet (WhatsApp / E-Mail)? Datei auf dem PC speichern, «Bearbeiten» in der Zeile oder die Spalte «Bild / PDF Kunde» (direkt nach «Gerät») nutzen, dann «Bild oder PDF im System speichern (anhängen)» / «Bild oder PDF wählen — speichert im System». Sobald Sie die Datei wählen, wird sie in der Anfrage gespeichert — kein extra «Speichern»-Klick nur für den Anhang nötig.',
     solicitacaoServicoTecnicoNomeCliente: 'Kundenname',
     solicitacaoServicoTecnicoTipoEquipamento: 'Gerätetyp',
     solicitacaoServicoTecnicoMarca: 'Marke',
@@ -10633,7 +10641,9 @@ export const translations = {
       'Der gespeicherte Name entspricht bereits dem Muster (Kunde + SST-Referenz + Datum).',
     solicitacaoServicoTecnicoDocDevolvidoNomeAtualizadoOk:
       'Dateiname im Datensatz und in der Kundenakte aktualisiert (falls zutreffend).',
-    solicitacaoServicoTecnicoColDocDevolvido: 'Dok. zurück',
+    solicitacaoServicoTecnicoColDocDevolvido: 'Bild / PDF Kunde',
+    solicitacaoServicoTecnicoTabelaAvisoDocCol:
+      'Die Spalte «Bild / PDF Kunde» (Bild oder zurückgesandtes PDF) steht direkt nach «Gerät». Auf schmalen Bildschirmen die Tabelle horizontal scrollen (Leiste unten), bis die Spalte sichtbar ist.',
     solicitacaoServicoTecnicoArquivoMuitoGrande: 'Die Datei überschreitet das Limit von 12 MB.',
     solicitacaoServicoTecnicoEmailInstrucaoAnexo: 'Die HTML-Datei des offiziellen Formulars wurde heruntergeladen (wie Druck/PDF). Bitte an diese E-Mail anhängen oder im Browser öffnen, Drucken → Als PDF speichern. Der folgende Text ist nur eine Zusammenfassung.',
     solicitacaoServicoTecnicoWhatsAppInstrucaoAnexo: 'Das offizielle Formular (.html) wurde heruntergeladen — hier anhängen oder nach dem Drucken das PDF senden.',
@@ -12795,7 +12805,7 @@ export const translations = {
     solicitacaoServicoTecnicoSubtitle: 'Form to send to the client. The client fills in, signs and returns by email or WhatsApp.',
     solicitacaoServicoTecnicoNotice: 'After receiving this request completed and signed by the client, pre-scheduling will be carried out and the urgency level will be applied to the same request.',
     solicitacaoServicoTecnicoComoGuardarAprovacao:
-      'Did the client send images (photo, screenshot, etc.) or PDF files for approval (WhatsApp / email)? Save the file on your PC, use «Edit» on the row or the «Returned doc.» column, then «Save image or PDF to system (attach)» / «Choose image or PDF — saves to the system». As soon as you pick the file, it is stored on the request — you do not need an extra «Save» click only for that attachment.',
+      'Did the client send images (photo, screenshot, etc.) or PDF files for approval (WhatsApp / email)? Save the file on your PC, use «Edit» on the row or the «Img / PDF client» column (right after «Equipment»), then «Save image or PDF to system (attach)» / «Choose image or PDF — saves to the system». As soon as you pick the file, it is stored on the request — you do not need an extra «Save» click only for that attachment.',
     solicitacaoServicoTecnicoNomeCliente: 'Client name',
     solicitacaoServicoTecnicoTipoEquipamento: 'Equipment type',
     solicitacaoServicoTecnicoMarca: 'Brand',
@@ -12862,7 +12872,9 @@ export const translations = {
       'The stored filename already matches the pattern (client + SST reference + date).',
     solicitacaoServicoTecnicoDocDevolvidoNomeAtualizadoOk:
       'Filename updated in the record and on the client profile (if applicable).',
-    solicitacaoServicoTecnicoColDocDevolvido: 'Returned doc.',
+    solicitacaoServicoTecnicoColDocDevolvido: 'Img / PDF client',
+    solicitacaoServicoTecnicoTabelaAvisoDocCol:
+      'The «Img / PDF client» column (returned image or PDF) is immediately after «Equipment». On a narrow screen, scroll the table horizontally (bar below) until you see it.',
     solicitacaoServicoTecnicoArquivoMuitoGrande: 'The file exceeds the 12 MB limit.',
     solicitacaoServicoTecnicoEmailInstrucaoAnexo: 'The official form was downloaded as an HTML file (same as print/PDF preview). Attach it to this email, or open it in the browser and use Print → Save as PDF. The text below is only a summary.',
     solicitacaoServicoTecnicoWhatsAppInstrucaoAnexo: 'The official form (.html) was downloaded to your Downloads folder — attach it here or send the PDF after printing from that file.',
