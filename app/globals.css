@@ -1029,15 +1029,15 @@ body,
   }
 }
 
-/* Barra lateral — tema escuro, acento esmeralda (menos neon agressivo) */
+/* Barra lateral — tema escuro, acento esmeralda (meio-termo: mais “pop”, sem glow agressivo) */
 .sidebar {
-  --sidebar-rail: #34d399;
-  --sidebar-dim: rgba(52, 211, 153, 0.28);
-  --sidebar-accent: #34d399;
-  --sidebar-accent-soft: #6ee7b7;
-  --sidebar-accent-muted: rgba(52, 211, 153, 0.12);
-  --sidebar-text: rgba(243, 244, 246, 0.92);
-  --sidebar-text-dim: rgba(209, 213, 219, 0.88);
+  --sidebar-rail: #4ade80;
+  --sidebar-dim: rgba(74, 222, 128, 0.42);
+  --sidebar-accent: #4ade80;
+  --sidebar-accent-soft: #86efac;
+  --sidebar-accent-muted: rgba(74, 222, 128, 0.18);
+  --sidebar-text: rgba(243, 244, 246, 0.95);
+  --sidebar-text-dim: rgba(214, 250, 226, 0.87);
   width: 280px;
   min-width: 280px;
   min-height: 0;
@@ -1052,11 +1052,12 @@ body,
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
-  background: linear-gradient(165deg, #1a1d1c 0%, #121413 48%, #0e1010 100%);
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(165deg, #1a221e 0%, #121815 48%, #0d1210 100%);
+  border-right: 1px solid rgba(74, 222, 128, 0.13);
   box-shadow:
-    inset 1px 0 0 rgba(255, 255, 255, 0.03),
-    8px 0 24px rgba(0, 0, 0, 0.45);
+    inset 1px 0 0 rgba(255, 255, 255, 0.045),
+    8px 0 28px rgba(0, 0, 0, 0.48),
+    -2px 0 26px rgba(52, 211, 153, 0.055);
   position: relative;
 }
 .sidebar::before {
@@ -1066,10 +1067,11 @@ body,
   top: 0;
   bottom: 0;
   width: 3px;
-  background: linear-gradient(180deg, rgba(52, 211, 153, 0.35) 0%, rgba(45, 55, 52, 0.9) 45%, rgba(30, 32, 31, 0.95) 100%);
-  opacity: 0.85;
+  background: linear-gradient(180deg, rgba(134, 239, 172, 0.6) 0%, rgba(52, 211, 153, 0.32) 38%, rgba(36, 44, 40, 0.92) 100%);
+  opacity: 0.98;
   pointer-events: none;
   border-radius: 0 2px 2px 0;
+  box-shadow: 2px 0 20px rgba(52, 211, 153, 0.14);
 }
 .sidebar > * {
   position: relative;
@@ -1083,9 +1085,9 @@ body,
   border-radius: 8px;
 }
 .sidebar::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #353a38 0%, #252928 100%);
+  background: linear-gradient(180deg, #3d4540 0%, #2a322e 100%);
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.17);
 }
 
 .sidebar-nav-cluster {
@@ -1100,7 +1102,7 @@ body,
   overflow: hidden;
   background: linear-gradient(180deg, rgba(28, 32, 30, 0.98) 0%, rgba(18, 20, 19, 0.99) 100%);
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.17);
   min-height: 112px;
   max-height: min(28vh, 200px);
   height: auto;
@@ -1111,7 +1113,8 @@ body,
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 6px 20px rgba(0, 0, 0, 0.35);
+    0 6px 22px rgba(0, 0, 0, 0.35),
+    0 0 34px rgba(52, 211, 153, 0.075);
 }
 
 .sidebar-nav-subcluster {
@@ -1146,24 +1149,26 @@ body,
 }
 
 .sidebar button.btn-primary.sidebar-group-header:not(.sidebar-group-btn-selected) {
-  background: linear-gradient(165deg, rgba(34, 40, 37, 0.96) 0%, rgba(22, 26, 24, 0.99) 100%) !important;
+  background: linear-gradient(165deg, rgba(28, 44, 36, 0.55) 0%, rgba(22, 28, 25, 0.98) 45%, rgba(18, 22, 20, 0.99) 100%) !important;
   color: var(--sidebar-text-dim) !important;
-  border: 1px solid rgba(255, 255, 255, 0.07) !important;
-  border-left: 3px solid rgba(52, 211, 153, 0.55) !important;
+  border: 1px solid rgba(74, 222, 128, 0.14) !important;
+  border-left: 3px solid rgba(74, 222, 128, 0.78) !important;
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.04) inset,
-    0 4px 14px rgba(0, 0, 0, 0.28) !important;
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    0 0 24px rgba(52, 211, 153, 0.07) !important;
 }
 
 .sidebar button.btn-primary.sidebar-group-header:not(.sidebar-group-btn-selected):hover {
-  background: linear-gradient(165deg, rgba(40, 48, 44, 0.98) 0%, rgba(26, 32, 29, 0.99) 100%) !important;
-  border-color: rgba(52, 211, 153, 0.22) !important;
-  border-left-color: rgba(52, 211, 153, 0.85) !important;
+  background: linear-gradient(165deg, rgba(32, 52, 42, 0.65) 0%, rgba(26, 34, 29, 0.99) 100%) !important;
+  border-color: rgba(74, 222, 128, 0.32) !important;
+  border-left-color: rgba(167, 243, 208, 0.98) !important;
   color: var(--sidebar-text) !important;
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.05) inset,
-    0 6px 18px rgba(0, 0, 0, 0.32),
-    0 0 0 1px rgba(52, 211, 153, 0.08) !important;
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 6px 20px rgba(0, 0, 0, 0.34),
+    0 0 0 1px rgba(52, 211, 153, 0.14),
+    0 0 30px rgba(52, 211, 153, 0.12) !important;
 }
 
 .sidebar button.btn-administrador.sidebar-group-header:not(.sidebar-group-btn-selected) {
@@ -1177,7 +1182,7 @@ body,
 }
 
 .sidebar button.sidebar-group-header:focus-visible {
-  outline: 2px solid rgba(52, 211, 153, 0.65);
+  outline: 2px solid rgba(110, 231, 183, 0.75);
   outline-offset: 2px;
 }
 
@@ -1192,11 +1197,16 @@ body,
   pointer-events: none;
 }
 
+.sidebar button.sidebar-group-header.sidebar-group-btn-selected .sidebar-nav-check {
+  color: rgba(220, 252, 231, 0.98);
+  text-shadow: 0 0 12px rgba(52, 211, 153, 0.4);
+}
+
 .sidebar .sidebar-group-header .sidebar-nav-chevron {
   flex-shrink: 0;
   font-size: 11px;
-  opacity: 0.75;
-  color: rgba(255, 255, 255, 0.55);
+  opacity: 0.9;
+  color: rgba(167, 243, 208, 0.62);
   margin-left: 6px;
 }
 
@@ -1235,8 +1245,9 @@ body,
 }
 
 .sidebar .sidebar-group-btn-selected .sidebar-nav-chevron {
-  color: rgba(110, 231, 183, 0.85);
+  color: rgba(190, 250, 210, 0.95);
   opacity: 1;
+  text-shadow: 0 0 14px rgba(52, 211, 153, 0.3);
 }
 
 /* Itens dentro do grupo — “gaveta” visual */
@@ -1245,9 +1256,11 @@ body,
   margin-bottom: 4px !important;
   padding: 10px 8px 10px 12px;
   border-radius: 0 12px 12px 0;
-  border-left: 2px solid rgba(52, 211, 153, 0.22);
-  background: linear-gradient(90deg, rgba(24, 26, 25, 0.96) 0%, rgba(18, 20, 19, 0.98) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  border-left: 2px solid rgba(74, 222, 128, 0.36);
+  background: linear-gradient(90deg, rgba(22, 32, 28, 0.58) 0%, rgba(18, 22, 20, 0.98) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    inset 3px 0 12px rgba(52, 211, 153, 0.048);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1268,7 +1281,7 @@ body,
   text-align: center !important;
   padding: 11px 12px !important;
   margin-bottom: 0 !important;
-  border-left: 2px solid rgba(52, 211, 153, 0.15) !important;
+  border-left: 2px solid rgba(52, 211, 153, 0.18) !important;
   font-size: 12px !important;
   font-weight: 600 !important;
   border-radius: 10px !important;
@@ -1282,31 +1295,34 @@ body,
 
 /* Subitens inativos */
 .sidebar .sidebar-action-buttons > button.sidebar-action-btn:not(.sidebar-action-btn-active) {
-  background: rgba(52, 211, 153, 0.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.06) !important;
-  border-left: 2px solid rgba(52, 211, 153, 0.18) !important;
-  color: rgba(226, 232, 240, 0.9) !important;
+  background: rgba(52, 211, 153, 0.072) !important;
+  border: 1px solid rgba(74, 222, 128, 0.12) !important;
+  border-left: 2px solid rgba(74, 222, 128, 0.32) !important;
+  color: rgba(236, 253, 243, 0.94) !important;
   box-shadow: none !important;
 }
 
 .sidebar .sidebar-action-buttons > button.sidebar-action-btn:not(.sidebar-action-btn-active):hover {
-  background: rgba(52, 211, 153, 0.08) !important;
-  border-color: rgba(52, 211, 153, 0.2) !important;
-  border-left-color: rgba(52, 211, 153, 0.42) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.22) !important;
+  background: rgba(52, 211, 153, 0.12) !important;
+  border-color: rgba(74, 222, 128, 0.3) !important;
+  border-left-color: rgba(110, 231, 183, 0.6) !important;
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.24),
+    0 0 22px rgba(52, 211, 153, 0.07) !important;
 }
 
 /* Submenu ativo */
 .sidebar .sidebar-action-btn.sidebar-action-btn-active {
-  border: 1px solid rgba(52, 211, 153, 0.35) !important;
-  border-left: 3px solid rgba(52, 211, 153, 0.75) !important;
-  background: linear-gradient(180deg, rgba(52, 211, 153, 0.12) 0%, rgba(6, 78, 59, 0.12) 100%) !important;
-  color: #a7f3d0 !important;
+  border: 1px solid rgba(74, 222, 128, 0.48) !important;
+  border-left: 3px solid rgba(167, 243, 208, 0.92) !important;
+  background: linear-gradient(180deg, rgba(52, 211, 153, 0.18) 0%, rgba(6, 95, 70, 0.15) 100%) !important;
+  color: #ccfcdc !important;
   font-weight: 700 !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 4px 14px rgba(0, 0, 0, 0.25) !important;
-  text-shadow: none !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.065),
+    0 4px 16px rgba(0, 0, 0, 0.28),
+    0 0 28px rgba(52, 211, 153, 0.12) !important;
+  text-shadow: 0 0 16px rgba(52, 211, 153, 0.18) !important;
 }
 
 .sidebar .sidebar-action-btn .sidebar-nav-check {
@@ -1320,7 +1336,7 @@ body,
 }
 
 .sidebar .sidebar-action-btn.sidebar-action-btn-active .sidebar-nav-check {
-  color: rgba(167, 243, 208, 0.95);
+  color: rgba(220, 252, 231, 0.98);
 }
 
 /* Cabeçalhos / botões na sidebar (incl. principais): base .btn-primary; cabeçalhos de grupo sobrescrevem acima */
@@ -1359,19 +1375,20 @@ body,
   filter: none;
 }
 
-/* Grupo selecionado — acento claro, sombra suave */
+/* Grupo selecionado — acento mais vivo, halo discreto */
 .sidebar .sidebar-group-btn-selected,
 .sidebar-group-btn-selected {
-  border: 1px solid rgba(52, 211, 153, 0.38) !important;
+  border: 1px solid rgba(74, 222, 128, 0.5) !important;
   border-left: 4px solid var(--sidebar-accent-soft) !important;
-  background: linear-gradient(165deg, rgba(22, 52, 40, 0.98) 0%, rgba(12, 28, 22, 0.99) 100%) !important;
-  color: #a7f3d0 !important;
+  background: linear-gradient(165deg, rgba(18, 58, 42, 0.94) 0%, rgba(10, 32, 24, 0.99) 100%) !important;
+  color: #ccfcdc !important;
   font-weight: 700 !important;
   box-shadow:
-    0 0 0 1px rgba(52, 211, 153, 0.12),
-    0 8px 22px rgba(0, 0, 0, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
-  text-shadow: none !important;
+    0 0 0 1px rgba(52, 211, 153, 0.2),
+    0 8px 26px rgba(0, 0, 0, 0.4),
+    0 0 36px rgba(52, 211, 153, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.065) !important;
+  text-shadow: 0 0 20px rgba(52, 211, 153, 0.14) !important;
   transform: none !important;
 }
 
