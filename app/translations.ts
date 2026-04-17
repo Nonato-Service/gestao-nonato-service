@@ -1607,6 +1607,8 @@ export const translations = {
     solicitacaoServicoTecnicoColDocDevolvido: 'Img / PDF cliente',
     solicitacaoServicoTecnicoTabelaAvisoDocCol:
       'A coluna «Img / PDF cliente» (imagem ou PDF devolvido) fica logo a seguir a «Equipamento». Num ecrã estreito, deslize a tabela horizontalmente (barra por baixo da grelha) até ver essa coluna.',
+    solicitacaoServicoTecnicoArquivoVazioAnexoImgPdf:
+      'Ainda não há solicitações guardadas — por isso não aparece tabela nem coluna para anexar. Para guardar a imagem ou o PDF que o cliente enviou: 1) «Nova solicitação», 2) preencha cliente e equipamento, 3) «Guardar solicitação». Depois use a coluna «Img / PDF cliente» (ao lado de Equipamento) ou «Editar» nessa linha.',
     solicitacaoServicoTecnicoArquivoMuitoGrande: 'O ficheiro excede o limite de 12 MB.',
     solicitacaoServicoTecnicoEmailInstrucaoAnexo: 'Foi descarregado o ficheiro HTML do formulário oficial (o mesmo que vê ao gerar PDF / imprimir). Anexe esse ficheiro a este e-mail, ou abra-o no browser, use Imprimir → Guardar como PDF e anexe o PDF. Abaixo segue apenas um resumo dos campos que estiverem preenchidos (não aparecem linhas vazias).',
     solicitacaoServicoTecnicoWhatsAppInstrucaoAnexo: 'O formulário oficial (.html) foi descarregado para a pasta de descargas — anexe-o aqui ou envie o PDF depois de imprimir a partir desse ficheiro.',
@@ -3926,6 +3928,8 @@ export const translations = {
     solicitacaoServicoTecnicoColDocDevolvido: 'Img / PDF cliente',
     solicitacaoServicoTecnicoTabelaAvisoDocCol:
       'La columna «Img / PDF cliente» (imagen o PDF devuelto) está justo después de «Equipo». En pantallas estrechas, desplace la tabla horizontalmente (barra inferior) hasta verla.',
+    solicitacaoServicoTecnicoArquivoVazioAnexoImgPdf:
+      'Aún no hay solicitudes guardadas: no hay tabla ni columna para adjuntar. Para guardar la imagen o el PDF del cliente: 1) «Nueva solicitud», 2) rellene cliente y equipo, 3) «Guardar solicitud». Luego use la columna «Img / PDF cliente» (junto a Equipo) o «Editar» en esa fila.',
     solicitacaoServicoTecnicoArquivoMuitoGrande: 'El archivo supera el límite de 12 MB.',
     solicitacaoServicoTecnicoEmailInstrucaoAnexo: 'Se descargó el archivo HTML del formulario oficial (el mismo que al generar PDF). Adjúntelo a este correo o ábralo en el navegador, Imprimir → Guardar como PDF y adjunte el PDF. El texto siguiente es solo un resumen.',
     solicitacaoServicoTecnicoWhatsAppInstrucaoAnexo: 'El formulario oficial (.html) se descargó en Descargas — adjúntelo aquí o envíe el PDF tras imprimir desde ese archivo.',
@@ -6156,6 +6160,8 @@ export const translations = {
     solicitacaoServicoTecnicoColDocDevolvido: 'Img / PDF client',
     solicitacaoServicoTecnicoTabelaAvisoDocCol:
       'La colonne « Img / PDF client » (image ou PDF retourné) se trouve juste après « Équipement ». Sur un écran étroit, faites défiler le tableau horizontalement (barre en bas) jusqu’à la voir.',
+    solicitacaoServicoTecnicoArquivoVazioAnexoImgPdf:
+      'Aucune demande enregistrée : pas de tableau ni de colonne pour joindre un fichier. Pour enregistrer l’image ou le PDF du client : 1) « Nouvelle demande », 2) renseignez client et équipement, 3) « Enregistrer la demande ». Ensuite utilisez la colonne « Img / PDF client » (à côté d’Équipement) ou « Modifier » sur la ligne.',
     solicitacaoServicoTecnicoArquivoMuitoGrande: 'Le fichier dépasse la limite de 12 Mo.',
     solicitacaoServicoTecnicoEmailInstrucaoAnexo: 'Le fichier HTML du formulaire officiel a été téléchargé (identique à l’aperçu PDF). Joignez-le à cet e-mail ou ouvrez-le dans le navigateur, Imprimer → Enregistrer au format PDF. Le texte ci-dessous est un résumé.',
     solicitacaoServicoTecnicoWhatsAppInstrucaoAnexo: 'Le formulaire officiel (.html) a été téléchargé — joignez-le ici ou envoyez le PDF après impression.',
@@ -8393,6 +8399,8 @@ export const translations = {
     solicitacaoServicoTecnicoColDocDevolvido: 'Img / PDF cliente',
     solicitacaoServicoTecnicoTabelaAvisoDocCol:
       'La colonna «Img / PDF cliente» (immagine o PDF restituito) è subito dopo «Attrezzatura». Su schermo stretto, scorrere la tabella in orizzontale (barra in basso) fino a vederla.',
+    solicitacaoServicoTecnicoArquivoVazioAnexoImgPdf:
+      'Non ci sono ancora richieste salvate: niente tabella né colonna per allegare. Per salvare immagine o PDF del cliente: 1) «Nuova richiesta», 2) compilare cliente e attrezzatura, 3) «Salva richiesta». Poi usi la colonna «Img / PDF cliente» (accanto ad Attrezzatura) o «Modifica» sulla riga.',
     solicitacaoServicoTecnicoArquivoMuitoGrande: 'Il file supera il limite di 12 MB.',
     solicitacaoServicoTecnicoEmailInstrucaoAnexo: 'È stato scaricato il file HTML del modulo ufficiale (come in stampa/PDF). Allegarlo a questa e-mail o aprirlo nel browser, Stampa → Salva come PDF. Il testo seguente è solo un riepilogo.',
     solicitacaoServicoTecnicoWhatsAppInstrucaoAnexo: 'Il modulo ufficiale (.html) è stato scaricato — allegarlo qui o inviare il PDF dopo la stampa.',
@@ -10644,6 +10652,8 @@ export const translations = {
     solicitacaoServicoTecnicoColDocDevolvido: 'Bild / PDF Kunde',
     solicitacaoServicoTecnicoTabelaAvisoDocCol:
       'Die Spalte «Bild / PDF Kunde» (Bild oder zurückgesandtes PDF) steht direkt nach «Gerät». Auf schmalen Bildschirmen die Tabelle horizontal scrollen (Leiste unten), bis die Spalte sichtbar ist.',
+    solicitacaoServicoTecnicoArquivoVazioAnexoImgPdf:
+      'Noch keine gespeicherten Anfragen — daher keine Tabelle und keine Spalte zum Anhängen. Um Bild oder PDF des Kunden zu speichern: 1) «Neue Anfrage», 2) Kunde und Gerät ausfüllen, 3) «Anfrage speichern». Danach Spalte «Bild / PDF Kunde» (neben Gerät) oder «Bearbeiten» in der Zeile nutzen.',
     solicitacaoServicoTecnicoArquivoMuitoGrande: 'Die Datei überschreitet das Limit von 12 MB.',
     solicitacaoServicoTecnicoEmailInstrucaoAnexo: 'Die HTML-Datei des offiziellen Formulars wurde heruntergeladen (wie Druck/PDF). Bitte an diese E-Mail anhängen oder im Browser öffnen, Drucken → Als PDF speichern. Der folgende Text ist nur eine Zusammenfassung.',
     solicitacaoServicoTecnicoWhatsAppInstrucaoAnexo: 'Das offizielle Formular (.html) wurde heruntergeladen — hier anhängen oder nach dem Drucken das PDF senden.',
@@ -12875,6 +12885,8 @@ export const translations = {
     solicitacaoServicoTecnicoColDocDevolvido: 'Img / PDF client',
     solicitacaoServicoTecnicoTabelaAvisoDocCol:
       'The «Img / PDF client» column (returned image or PDF) is immediately after «Equipment». On a narrow screen, scroll the table horizontally (bar below) until you see it.',
+    solicitacaoServicoTecnicoArquivoVazioAnexoImgPdf:
+      'No saved requests yet — so there is no table or column to attach to. To store the client’s image or PDF: 1) «New request», 2) fill in client and equipment, 3) «Save request». Then use the «Img / PDF client» column (next to Equipment) or «Edit» on that row.',
     solicitacaoServicoTecnicoArquivoMuitoGrande: 'The file exceeds the 12 MB limit.',
     solicitacaoServicoTecnicoEmailInstrucaoAnexo: 'The official form was downloaded as an HTML file (same as print/PDF preview). Attach it to this email, or open it in the browser and use Print → Save as PDF. The text below is only a summary.',
     solicitacaoServicoTecnicoWhatsAppInstrucaoAnexo: 'The official form (.html) was downloaded to your Downloads folder — attach it here or send the PDF after printing from that file.',

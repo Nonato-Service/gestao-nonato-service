@@ -34779,23 +34779,62 @@ A1;Peça exemplo;10`}
               <p style={{ margin: '0 0 18px 0', fontSize: '13px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.45 }}>
                 {safeT?.solicitacaoServicoTecnicoArquivoDesc}
               </p>
-              <p
-                style={{
-                  margin: '0 0 14px 0',
-                  padding: '10px 12px',
-                  fontSize: '12px',
-                  lineHeight: 1.45,
-                  color: 'rgba(224, 242, 254, 0.95)',
-                  background: 'rgba(15, 80, 70, 0.55)',
-                  border: '1px solid rgba(45, 212, 191, 0.45)',
-                  borderRadius: '8px'
-                }}
-              >
-                {(safeT as any)?.solicitacaoServicoTecnicoTabelaAvisoDocCol ||
-                  'A coluna «Img / PDF cliente» fica logo a seguir à coluna Equipamento. Se não a vir, deslize a tabela horizontalmente (barra por baixo da grelha).'}
-              </p>
+              {solicitacoesServicoTecnico.length > 0 ? (
+                <p
+                  style={{
+                    margin: '0 0 14px 0',
+                    padding: '10px 12px',
+                    fontSize: '12px',
+                    lineHeight: 1.45,
+                    color: 'rgba(224, 242, 254, 0.95)',
+                    background: 'rgba(15, 80, 70, 0.55)',
+                    border: '1px solid rgba(45, 212, 191, 0.45)',
+                    borderRadius: '8px'
+                  }}
+                >
+                  {(safeT as any)?.solicitacaoServicoTecnicoTabelaAvisoDocCol ||
+                    'A coluna «Img / PDF cliente» fica logo a seguir à coluna Equipamento. Se não a vir, deslize a tabela horizontalmente (barra por baixo da grelha).'}
+                </p>
+              ) : (
+                <p
+                  style={{
+                    margin: '0 0 16px 0',
+                    padding: '12px 14px',
+                    fontSize: '13px',
+                    lineHeight: 1.55,
+                    color: 'rgba(255, 248, 220, 0.96)',
+                    background: 'rgba(120, 53, 15, 0.45)',
+                    border: '1px solid rgba(251, 191, 36, 0.5)',
+                    borderRadius: '8px'
+                  }}
+                >
+                  {(safeT as any)?.solicitacaoServicoTecnicoArquivoVazioAnexoImgPdf ||
+                    'Ainda não há solicitações guardadas — por isso não vê coluna para anexar. Para guardar a imagem ou o PDF do cliente: use «Nova solicitação» (botão em cima ou abaixo), preencha cliente e equipamento, clique em «Guardar solicitação». Depois aparece a tabela com a coluna «Img / PDF cliente» ao lado de Equipamento (ou use «Editar» nessa linha).'}
+                </p>
+              )}
               {solicitacoesServicoTecnico.length === 0 ? (
-                <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '14px' }}>{safeT?.solicitacaoServicoTecnicoNenhuma}</p>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '14px' }}>
+                  <p style={{ margin: 0, color: 'rgba(255,255,255,0.7)', fontSize: '14px', fontWeight: 600 }}>{safeT?.solicitacaoServicoTecnicoNenhuma}</p>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => {
+                      setShowSolicitacaoServicoTecnicoForm(true)
+                      setEditingSolicitacaoServicoTecnico(null)
+                      setSolicitacaoServicoTecnicoForm({
+                        ...sstModeloBase,
+                        clienteId: undefined,
+                        assinaturaCliente: undefined,
+                        dataAssinaturaCliente: undefined,
+                        dataRecebimento: undefined,
+                        documentoDevolvido: undefined
+                      })
+                    }}
+                    style={{ padding: '10px 20px', backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff', fontWeight: 'bold', borderRadius: '8px', cursor: 'pointer' }}
+                  >
+                    ➕ {safeT?.solicitacaoServicoTecnicoNovaSolicitacao || 'Nova solicitação'}
+                  </button>
+                </div>
               ) : (
                 <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                   <table style={{ width: '100%', minWidth: 1080, borderCollapse: 'collapse', fontSize: '13px', color: '#e8e8e8' }}>
