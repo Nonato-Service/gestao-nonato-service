@@ -22019,68 +22019,199 @@ const nextF = familias.filter(x => x !== f)
               </div>
             </div>
 
-            {/* Atalhos rápidos */}
-            <div className="admin-quick-nav">
-              <a href="#admin-backup-seguranca">{safeT?.backupRestore || '▼ Ir para BACKUP E SEGURANÇA (backup do código e restauração)'}</a>
-              <span style={{ opacity: 0.35 }}>·</span>
-              <a href="#admin-sync-multi">{(safeT as any)?.syncAdminJump || 'Sincronização entre aparelhos'}</a>
-              <span style={{ opacity: 0.35 }}>·</span>
-              <a href="#admin-demo-envio" style={{ color: 'inherit', textDecoration: 'underline' }}>
-                Gestão de envio de demonstrações
-              </a>
-            </div>
-
-            {/* Sincronização multi-dispositivo — só neste ecrã, sem barra em cima da app */}
-            <div
-              id="admin-sync-multi"
-              className="admin-sync-card"
-            >
-              <h3>
-                {(safeT as any)?.syncAdminSectionTitle || 'Sincronização entre aparelhos'}
-              </h3>
-              <p style={{ fontSize: '12px', color: '#999', margin: '0 0 12px', lineHeight: 1.45 }}>
-                {(safeT as any)?.syncAdminSectionHintNew ||
-                  (safeT as any)?.syncAdminSectionHint ||
-                  'O sistema mostra automaticamente um aviso com resumo quando o servidor foi atualizado noutro aparelho. Use sempre esse aviso para escolher atualizar ou enviar dados.'}
+            <div className="admin-panels-overview">
+              <p className="admin-panels-overview__title">{safeT?.adminPanelIndexTitle || 'Áreas do administrador'}</p>
+              <p className="admin-panels-overview__lead">
+                {safeT?.adminPanelIndexLead ||
+                  'Todas as secções estão fechadas por defeito. Use os atalhos abaixo ou o título de cada bloco para expandir só o que precisa.'}
               </p>
-              {syncPendingRemote ? (
-                <>
-                  <p style={{ fontSize: '12px', color: '#ddaa66', margin: '0 0 8px', padding: '8px 10px', background: 'rgba(255,170,0,0.08)', borderRadius: '6px', border: '1px solid rgba(255,170,0,0.25)' }}>
-                    {(safeT as any)?.syncAdminPendingNote || 'Há dados no servidor mais recentes do que os que este aparelho aceitou.'}{' '}
-                    <span style={{ opacity: 0.9 }}>
-                      ({(safeT as any)?.syncRevisionLabel || 'revisão'} {syncPendingRemote.revision})
-                    </span>
-                  </p>
-                  <ul style={{ fontSize: '11px', color: '#bbb', margin: '0 0 12px', paddingLeft: '18px', lineHeight: 1.45, maxHeight: '160px', overflowY: 'auto' }}>
-                    {syncPendingRemote.summaryLines.map((line, i) => (
-                      <li key={i} style={{ marginBottom: '4px' }}>{line.startsWith('•') ? line.slice(1).trim() : line}</li>
-                    ))}
-                  </ul>
-                  <button
-                    type="button"
-                    className="btn-primary"
-                    onClick={() => {
-                      syncModalDismissedRevisionRef.current = null
-                      setSyncDecisionModalOpen(true)
-                    }}
-                    style={{ padding: '8px 14px', fontSize: '12px', fontWeight: 600 }}
-                  >
-                    {(safeT as any)?.syncReopenModal || 'Abrir aviso de sincronização'}
-                  </button>
-                </>
-              ) : (
-                <p style={{ fontSize: '12px', color: '#666', margin: 0 }}>
-                  {(safeT as any)?.syncAdminNoPending || 'Neste momento não há diferença de revisão pendente de decisão.'}
-                </p>
-              )}
+              <div className="admin-panels-grid">
+                <button
+                  type="button"
+                  className="admin-panel-jump"
+                  onClick={() => {
+                    const el = document.getElementById('admin-detail-sync') as HTMLDetailsElement | null
+                    if (el) {
+                      el.open = true
+                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }
+                  }}
+                >
+                  <span className="admin-panel-jump__k">01</span>
+                  <span className="admin-panel-jump__t">{(safeT as any)?.syncAdminSectionTitle || 'Sincronização'}</span>
+                  <span className="admin-panel-jump__d">{safeT?.syncAdminJumpHint || 'Servidor e outros aparelhos'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="admin-panel-jump"
+                  onClick={() => {
+                    const el = document.getElementById('admin-detail-demos') as HTMLDetailsElement | null
+                    if (el) {
+                      el.open = true
+                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }
+                  }}
+                >
+                  <span className="admin-panel-jump__k">02</span>
+                  <span className="admin-panel-jump__t">{safeT?.adminJumpDemosTitle || 'Demonstrações'}</span>
+                  <span className="admin-panel-jump__d">{safeT?.adminJumpDemosDesc || 'Links, destinatários e prazos'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="admin-panel-jump"
+                  onClick={() => {
+                    const el = document.getElementById('admin-detail-geral') as HTMLDetailsElement | null
+                    if (el) {
+                      el.open = true
+                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }
+                  }}
+                >
+                  <span className="admin-panel-jump__k">03</span>
+                  <span className="admin-panel-jump__t">{safeT?.configuracoesGerais || 'Configurações gerais'}</span>
+                  <span className="admin-panel-jump__d">{safeT?.adminJumpGeralDesc || 'Relatórios, logos e PDFs'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="admin-panel-jump"
+                  onClick={() => {
+                    const el = document.getElementById('admin-detail-users') as HTMLDetailsElement | null
+                    if (el) {
+                      el.open = true
+                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }
+                  }}
+                >
+                  <span className="admin-panel-jump__k">04</span>
+                  <span className="admin-panel-jump__t">{safeT?.userManagement || 'Utilizadores'}</span>
+                  <span className="admin-panel-jump__d">{safeT?.adminJumpUsersDesc || 'Contas e permissões'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="admin-panel-jump"
+                  onClick={() => {
+                    const el = document.getElementById('admin-detail-prioritario') as HTMLDetailsElement | null
+                    if (el) {
+                      el.open = true
+                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }
+                  }}
+                >
+                  <span className="admin-panel-jump__k">05</span>
+                  <span className="admin-panel-jump__t">{safeT?.clientePrioritarioTitle || 'Cliente prioritário'}</span>
+                  <span className="admin-panel-jump__d">{safeT?.adminJumpClienteDesc || 'Dados em destaque no sistema'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="admin-panel-jump"
+                  onClick={() => {
+                    const el = document.getElementById('admin-detail-sidebar') as HTMLDetailsElement | null
+                    if (el) {
+                      el.open = true
+                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }
+                  }}
+                >
+                  <span className="admin-panel-jump__k">06</span>
+                  <span className="admin-panel-jump__t">{safeT?.adminJumpSidebarTitle || 'Menu lateral'}</span>
+                  <span className="admin-panel-jump__d">{safeT?.adminJumpSidebarDesc || 'Ordem e botões da barra'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="admin-panel-jump"
+                  onClick={() => {
+                    const el = document.getElementById('admin-detail-passwords') as HTMLDetailsElement | null
+                    if (el) {
+                      el.open = true
+                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }
+                  }}
+                >
+                  <span className="admin-panel-jump__k">07</span>
+                  <span className="admin-panel-jump__t">{safeT?.passwordManagerTitle || 'Gestor de senhas'}</span>
+                  <span className="admin-panel-jump__d">{safeT?.adminJumpPasswordsDesc || 'Senhas de técnicos / checklist'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="admin-panel-jump"
+                  onClick={() => {
+                    const el = document.getElementById('admin-backup-seguranca') as HTMLDetailsElement | null
+                    if (el) {
+                      el.open = true
+                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }
+                  }}
+                >
+                  <span className="admin-panel-jump__k">08</span>
+                  <span className="admin-panel-jump__t">{safeT?.backupRestore || 'Backup e segurança'}</span>
+                  <span className="admin-panel-jump__d">{safeT?.adminJumpBackupDesc || 'Código, ZIP e restauração'}</span>
+                </button>
+              </div>
             </div>
 
-            {/* Gestão de envio de demonstrações — painel completo também aqui (a aba dedicada tem o mesmo conteúdo) */}
+            <details id="admin-detail-sync" className="admin-disclosure admin-disclosure--sync">
+              <summary>
+                <span className="admin-disclosure__icon" aria-hidden>⟳</span>
+                <span className="admin-disclosure__meta">
+                  <span className="admin-disclosure__title">{(safeT as any)?.syncAdminSectionTitle || 'Sincronização entre aparelhos'}</span>
+                  <span className="admin-disclosure__sub">
+                    {(safeT as any)?.syncAdminSectionHintNew ||
+                      (safeT as any)?.syncAdminSectionHint ||
+                      'Aviso automático com resumo quando o servidor foi atualizado noutro aparelho.'}
+                  </span>
+                </span>
+                <span className="admin-disclosure__chev" aria-hidden>▼</span>
+              </summary>
+              <div className="admin-disclosure__body">
+                <div id="admin-sync-multi" className="admin-sync-card" style={{ marginBottom: 0 }}>
+                  {syncPendingRemote ? (
+                    <>
+                      <p style={{ fontSize: '12px', color: '#ddaa66', margin: '0 0 8px', padding: '8px 10px', background: 'rgba(255,170,0,0.08)', borderRadius: '6px', border: '1px solid rgba(255,170,0,0.25)' }}>
+                        {(safeT as any)?.syncAdminPendingNote || 'Há dados no servidor mais recentes do que os que este aparelho aceitou.'}{' '}
+                        <span style={{ opacity: 0.9 }}>
+                          ({(safeT as any)?.syncRevisionLabel || 'revisão'} {syncPendingRemote.revision})
+                        </span>
+                      </p>
+                      <ul style={{ fontSize: '11px', color: '#bbb', margin: '0 0 12px', paddingLeft: '18px', lineHeight: 1.45, maxHeight: '160px', overflowY: 'auto' }}>
+                        {syncPendingRemote.summaryLines.map((line, i) => (
+                          <li key={i} style={{ marginBottom: '4px' }}>{line.startsWith('•') ? line.slice(1).trim() : line}</li>
+                        ))}
+                      </ul>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() => {
+                          syncModalDismissedRevisionRef.current = null
+                          setSyncDecisionModalOpen(true)
+                        }}
+                        style={{ padding: '8px 14px', fontSize: '12px', fontWeight: 600 }}
+                      >
+                        {(safeT as any)?.syncReopenModal || 'Abrir aviso de sincronização'}
+                      </button>
+                    </>
+                  ) : (
+                    <p style={{ fontSize: '12px', color: '#666', margin: 0 }}>
+                      {(safeT as any)?.syncAdminNoPending || 'Neste momento não há diferença de revisão pendente de decisão.'}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </details>
+
+            <details id="admin-detail-demos" className="admin-disclosure admin-disclosure--cyan">
+              <summary>
+                <span className="admin-disclosure__icon" aria-hidden>📤</span>
+                <span className="admin-disclosure__meta">
+                  <span className="admin-disclosure__title">{safeT?.adminDemosSummaryTitle || 'Gestão de envio de demonstrações'}</span>
+                  <span className="admin-disclosure__sub">
+                    {safeT?.adminDemosSummarySub || 'Destinatários, pacotes de módulos e cópia de links com identificação.'}
+                  </span>
+                </span>
+                <span className="admin-disclosure__chev" aria-hidden>▼</span>
+              </summary>
+              <div className="admin-disclosure__body">
             <div id="admin-demo-envio" className="admin-section admin-section--cyan">
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '12px' }}>
-                <h3 className="admin-section-title admin-section-title--cyan" style={{ marginBottom: 0 }}>
-                  📤 Gestão de envio de demonstrações
-                </h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: '12px', marginBottom: '12px' }}>
                 <button
                   type="button"
                   className="btn-primary"
@@ -22314,12 +22445,22 @@ const nextF = familias.filter(x => x !== f)
                 </div>
               )}
             </div>
-            
-            {/* SEÇÃO 1: CONFIGURAÇÕES GERAIS */}
+              </div>
+            </details>
+
+            <details id="admin-detail-geral" className="admin-disclosure admin-disclosure--violet">
+              <summary>
+                <span className="admin-disclosure__icon" aria-hidden>⚙</span>
+                <span className="admin-disclosure__meta">
+                  <span className="admin-disclosure__title">{safeT?.configuracoesGerais || 'Configurações gerais'}</span>
+                  <span className="admin-disclosure__sub">
+                    {safeT?.adminGeralSummarySub || 'Contador de relatórios, logos na interface, identidade da marca e logos nos PDFs.'}
+                  </span>
+                </span>
+                <span className="admin-disclosure__chev" aria-hidden>▼</span>
+              </summary>
+              <div className="admin-disclosure__body">
             <div className="admin-section admin-section--violet">
-              <h3 className="admin-section-title admin-section-title--violet">
-                {safeT?.configuracoesGerais || 'CONFIGURAÇÕES GERAIS'}
-              </h3>
               
               {/* Configuração de Contador de Relatórios */}
               <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
@@ -22769,159 +22910,24 @@ const nextF = familias.filter(x => x !== f)
                   )}
                 </div>
             </div>
-
-            {/* SEÇÃO 1.1: LOGOS PDF POR FASE (modo compacto) */}
-            <div className="admin-section admin-section--emerald">
-              <h3 className="admin-section-title">
-                {(safeT as any)?.adminLogosPdfTitle || 'LOGOS NOS DOCUMENTOS PDF'}
-              </h3>
-              <p style={{ margin: '0 0 14px', fontSize: '12px', opacity: 0.75, lineHeight: 1.45 }}>
-                {(safeT as any)?.adminLogosPdfDesc || 'Escolha o logo para cada fase e veja a pré-visualização antes de gerar o PDF.'}
-              </p>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>PDF · 01</span>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'rgba(255,255,255,0.9)' }}>
-                      <input
-                        type="checkbox"
-                        checked={incluirLogoNosRelatorios}
-                        onChange={(e) => {
-                          const v = e.target.checked
-                          setIncluirLogoNosRelatorios(v)
-                          saveData('nonato-relatorios-incluir-logo', v)
-                        }}
-                        style={{ width: '16px', height: '16px', accentColor: '#00ff00' }}
-                      />
-                      {safeT?.incluirLogoNosRelatorios || 'Incluir nos PDF'}
-                    </label>
-                  </div>
-                  <strong style={{ fontSize: '14px', color: '#fff' }}>{safeT?.escolherLogoRelatorios || 'Relatórios de serviço'}</strong>
-                  <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
-                    {administradorPreviewPdfLogo(logoRelatorioSelecionadoId) ? (
-                      <img src={administradorPreviewPdfLogo(logoRelatorioSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
-                    ) : (
-                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
-                    )}
-                  </div>
-                  <select
-                    value={logoRelatorioSelecionadoId}
-                    onChange={(e) => {
-                      const v = e.target.value
-                      setLogoRelatorioSelecionadoId(v)
-                      saveData('nonato-relatorios-logo-id', v)
-                    }}
-                    style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
-                  >
-                    <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
-                    {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
-                      <option key={l.id} value={l.id}>{l.name || l.id}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>PDF · 02</span>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'rgba(255,255,255,0.9)' }}>
-                      <input
-                        type="checkbox"
-                        checked={incluirLogoFechamentosDespesas}
-                        onChange={(e) => {
-                          const v = e.target.checked
-                          setIncluirLogoFechamentosDespesas(v)
-                          saveData('nonato-fechamentos-incluir-logo', v)
-                        }}
-                        style={{ width: '16px', height: '16px', accentColor: '#00ff00' }}
-                      />
-                      {(safeT as any)?.incluirLogoFechamentosDespesasShort || 'Incluir nos PDF'}
-                    </label>
-                  </div>
-                  <strong style={{ fontSize: '14px', color: '#fff' }}>{(safeT as any)?.escolherLogoFechamentos || 'Fechamentos de despesas'}</strong>
-                  <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
-                    {administradorPreviewPdfLogo(logoFechamentoSelecionadoId) ? (
-                      <img src={administradorPreviewPdfLogo(logoFechamentoSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
-                    ) : (
-                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
-                    )}
-                  </div>
-                  <select
-                    value={logoFechamentoSelecionadoId}
-                    onChange={(e) => {
-                      const v = e.target.value
-                      setLogoFechamentoSelecionadoId(v)
-                      saveData('nonato-fechamentos-logo-id', v)
-                    }}
-                    style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
-                  >
-                    <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
-                    {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
-                      <option key={l.id} value={l.id}>{l.name || l.id}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>PDF · 03</span>
-                  <strong style={{ fontSize: '14px', color: '#fff' }}>{(safeT as any)?.escolherLogoOrcamento || 'Orçamentos'}</strong>
-                  <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
-                    {administradorPreviewPdfLogo(logoOrcamentoSelecionadoId) ? (
-                      <img src={administradorPreviewPdfLogo(logoOrcamentoSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
-                    ) : (
-                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
-                    )}
-                  </div>
-                  <select
-                    value={logoOrcamentoSelecionadoId}
-                    onChange={(e) => {
-                      const v = e.target.value
-                      setLogoOrcamentoSelecionadoId(v)
-                      saveData('nonato-orcamento-logo-id', v)
-                    }}
-                    style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
-                  >
-                    <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
-                    {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
-                      <option key={l.id} value={l.id}>{l.name || l.id}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>PDF · 04</span>
-                  <strong style={{ fontSize: '14px', color: '#fff' }}>{(safeT as any)?.escolherLogoProtocoloServico || 'Protocolos de serviço'}</strong>
-                  <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
-                    {administradorPreviewPdfLogo(logoProtocoloServicoSelecionadoId) ? (
-                      <img src={administradorPreviewPdfLogo(logoProtocoloServicoSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
-                    ) : (
-                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
-                    )}
-                  </div>
-                  <select
-                    value={logoProtocoloServicoSelecionadoId}
-                    onChange={(e) => {
-                      const v = e.target.value
-                      setLogoProtocoloServicoSelecionadoId(v)
-                      saveData('nonato-protocolo-servico-logo-id', v)
-                    }}
-                    style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
-                  >
-                    <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
-                    {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
-                      <option key={l.id} value={l.id}>{l.name || l.id}</option>
-                    ))}
-                  </select>
-                </div>
               </div>
-            </div>
+            </details>
 
+            <details id="admin-detail-users" className="admin-disclosure admin-disclosure--violet">
+              <summary>
+                <span className="admin-disclosure__icon" aria-hidden>👤</span>
+                <span className="admin-disclosure__meta">
+                  <span className="admin-disclosure__title">{safeT?.userManagement || 'Gestão de utilizadores'}</span>
+                  <span className="admin-disclosure__sub">
+                    {safeT?.adminUsersSummarySub || 'Contas, permissões e vínculo com gestores ou técnicos.'}
+                  </span>
+                </span>
+                <span className="admin-disclosure__chev" aria-hidden>▼</span>
+              </summary>
+              <div className="admin-disclosure__body">
             {/* SEÇÃO 2: GESTÃO DE USUÁRIOS */}
             <div className="admin-section">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(0, 255, 136, 0.2)', paddingBottom: '10px' }}>
-                <h3 className="admin-section-title" style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>
-                  {safeT?.userManagement || 'GESTÃO DE USUÁRIOS'}
-                </h3>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '16px' }}>
                 <button className="btn-primary" onClick={handleAddUser} style={{ padding: '8px 15px' }}>
                   {safeT?.addUser || 'Adicionar Usuário'}
                 </button>
@@ -23087,13 +23093,23 @@ const nextF = familias.filter(x => x !== f)
                 </div>
               )}
             </div>
+              </div>
+            </details>
 
-            {/* SEÇÃO 3: CADASTRO DE CLIENTE PRIORITÁRIO */}
+            <details id="admin-detail-prioritario" className="admin-disclosure admin-disclosure--amber">
+              <summary>
+                <span className="admin-disclosure__icon" aria-hidden>★</span>
+                <span className="admin-disclosure__meta">
+                  <span className="admin-disclosure__title">{safeT?.clientePrioritarioTitle || 'Cliente prioritário'}</span>
+                  <span className="admin-disclosure__sub">
+                    {safeT?.adminClientePriorSummarySub || 'Empresa em destaque e dados para formulários e fluxos internos.'}
+                  </span>
+                </span>
+                <span className="admin-disclosure__chev" aria-hidden>▼</span>
+              </summary>
+              <div className="admin-disclosure__body">
             <div className="admin-section admin-section--amber">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(255, 215, 0, 0.25)', paddingBottom: '10px' }}>
-                <h3 className="admin-section-title admin-section-title--gold" style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>
-                  {safeT?.clientePrioritarioTitle || 'CADASTRO DE CLIENTE PRIORITÁRIO'}
-                </h3>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   {clientePrioritario ? (
                     <>
@@ -23342,19 +23358,42 @@ const nextF = familias.filter(x => x !== f)
                 <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>{safeT?.noClientePrioritario || 'Nenhum cliente prioritário cadastrado'}</p>
               )}
             </div>
+              </div>
+            </details>
 
+            <details id="admin-detail-sidebar" className="admin-disclosure admin-disclosure--emerald">
+              <summary>
+                <span className="admin-disclosure__icon" aria-hidden>☰</span>
+                <span className="admin-disclosure__meta">
+                  <span className="admin-disclosure__title">{safeT?.adminJumpSidebarTitle || 'Menu lateral'}</span>
+                  <span className="admin-disclosure__sub">
+                    {safeT?.adminJumpSidebarDesc || 'Ordem dos botões, grupos e nomes apresentados na barra.'}
+                  </span>
+                </span>
+                <span className="admin-disclosure__chev" aria-hidden>▼</span>
+              </summary>
+              <div className="admin-disclosure__body">
             {renderSidebarButtonOrganizer()}
+              </div>
+            </details>
 
-            {/* SEÇÃO 4: GESTOR DE SENHAS */}
+            <details id="admin-detail-passwords" className="admin-disclosure admin-disclosure--violet">
+              <summary>
+                <span className="admin-disclosure__icon" aria-hidden>🔒</span>
+                <span className="admin-disclosure__meta">
+                  <span className="admin-disclosure__title">{safeT?.passwordManagerTitle || 'Gestor de senhas'}</span>
+                  <span className="admin-disclosure__sub">
+                    {safeT?.adminPasswordsSummarySub || 'Senhas para checklist e acesso de técnicos.'}
+                  </span>
+                </span>
+                <span className="admin-disclosure__chev" aria-hidden>▼</span>
+              </summary>
+              <div className="admin-disclosure__body">
             <div className="admin-section admin-section--violet">
-              <h3 className="admin-section-title admin-section-title--violet" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="password-manager-lock">🔒</span>
-                {safeT?.passwordManagerTitle || 'GESTOR DE SENHAS'}
-              </h3>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <p style={{ fontSize: '13px', opacity: 0.7, margin: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '12px' }}>
+                  <p style={{ fontSize: '13px', opacity: 0.7, margin: 0, flex: '1 1 200px' }}>
                     {safeT?.passwordManagerDescription || 'As senhas dos técnicos são automaticamente salvas aqui quando um novo usuário é criado.'}
                   </p>
                   <button
@@ -23546,12 +23585,22 @@ const nextF = familias.filter(x => x !== f)
                 )}
               </div>
             </div>
+              </div>
+            </details>
 
-            {/* SEÇÃO 5: BACKUP E SEGURANÇA - Sempre visível; em modo DEMO mostra aviso */}
-            <div id="admin-backup-seguranca" className="admin-section admin-section--emerald">
-              <h3 className="admin-section-title">
-                {safeT?.backupRestore || 'BACKUP E SEGURANÇA'}
-              </h3>
+            <details id="admin-backup-seguranca" className="admin-disclosure admin-disclosure--emerald">
+              <summary>
+                <span className="admin-disclosure__icon" aria-hidden>🛡</span>
+                <span className="admin-disclosure__meta">
+                  <span className="admin-disclosure__title">{safeT?.backupRestore || 'Backup e segurança'}</span>
+                  <span className="admin-disclosure__sub">
+                    {safeT?.adminBackupSummarySub || 'Cópias de dados, exportação do código em ZIP e restauração controlada.'}
+                  </span>
+                </span>
+                <span className="admin-disclosure__chev" aria-hidden>▼</span>
+              </summary>
+              <div className="admin-disclosure__body">
+            <div className="admin-section admin-section--emerald">
               {!isDemoMode && (
                 <p style={{ padding: '10px 12px', marginBottom: '15px', backgroundColor: 'rgba(0, 150, 0, 0.12)', border: '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '6px', color: '#90ee90', fontSize: '12px' }}>
                   <strong>Para não perder o código:</strong> use «Descarregar backup (ZIP)» e guarde o ficheiro no seu PC. Assim o código fica seguro mesmo que o servidor seja reinstalado.
@@ -23672,6 +23721,8 @@ const nextF = familias.filter(x => x !== f)
                 </div>
               </div>
             </div>
+              </div>
+            </details>
           </div>
         )
       
