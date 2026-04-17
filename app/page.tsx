@@ -34527,6 +34527,10 @@ A1;Peça exemplo;10`}
 
             <div style={{ ...glassCardStyle(ACCENT_AMBER, { padding: '16px 20px', radius: '12px', borderAlpha: 0.35 }), marginBottom: '24px', color: '#ffffff', fontSize: '14px' }}>
               <strong style={{ opacity: 0.95 }}>{safeT?.solicitacaoServicoTecnicoNotice || 'Após receber esta solicitação preenchida e assinada pelo cliente, será feito o pré-agendamento e na mesma solicitação será aplicado o nível de urgência.'}</strong>
+              <p style={{ margin: '12px 0 0', fontSize: '13px', fontWeight: 500, lineHeight: 1.5, color: 'rgba(255,255,255,0.92)' }}>
+                {(safeT as any)?.solicitacaoServicoTecnicoComoGuardarAprovacao ||
+                  'Recebeu do cliente imagens (foto, captura de ecrã, etc.) ou ficheiros PDF de aprovação (WhatsApp / e-mail)? Guarde o ficheiro no PC, abra «Editar» na linha ou use a coluna «Doc. devolvido» e clique em «Guardar imagem ou PDF no sistema (anexar)» / «Escolher imagem ou PDF — guarda no sistema». Ao escolher o ficheiro, fica gravado na solicitação — não precisa de outro botão «Guardar» só para esse anexo.'}
+              </p>
             </div>
 
             <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px 22px', radius: '12px', borderAlpha: 0.28 }), marginBottom: '24px', border: '1px solid rgba(45, 212, 191, 0.35)' }}>
@@ -34644,22 +34648,45 @@ A1;Peça exemplo;10`}
                 </div>
                 {editingSolicitacaoServicoTecnico ? (
                   <div style={{ marginBottom: '18px' }}>
-                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.solicitacaoServicoTecnicoDocDevolvido || 'Documento devolvido pelo cliente (PDF ou imagem)'}</label>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.solicitacaoServicoTecnicoDocDevolvido || 'Aprovação / resposta do cliente — imagens (foto, captura) ou ficheiro PDF'}</label>
+                    <p style={{ margin: '0 0 8px', fontSize: '12px', color: 'rgba(110, 231, 183, 0.95)', lineHeight: 1.45 }}>
+                      {(safeT as any)?.solicitacaoServicoTecnicoDocDevolvidoGuardarAutomatico ||
+                        'Ao escolher a imagem ou o PDF abaixo, o sistema grava-o logo nesta solicitação (não precisa de um botão «Guardar» extra só para o anexo).'}
+                    </p>
                     <p style={{ margin: '0 0 10px', fontSize: '11px', color: 'rgba(255,255,255,0.52)', lineHeight: 1.45 }}>
                       {(safeT as any)?.solicitacaoServicoTecnicoDocDevolvidoHintNome ||
-                        'Ao anexar, o ficheiro fica com nome automático (cliente + referência SST + data). Use «Descarregar com nome do cliente» ou «Atualizar nome no registo» se o nome antigo não seguir esse padrão.'}
+                        'O nome da imagem ou do PDF fica automático (cliente + referência SST + data). Use «Descarregar com nome do cliente» ou «Atualizar nome no registo» se o nome antigo não seguir esse padrão.'}
                     </p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
-                      <input
-                        type="file"
-                        accept="application/pdf,image/*"
-                        onChange={(e) => {
-                          const f = e.target.files?.[0]
-                          if (f) handleAnexarDocumentoDevolvidoCliente(editingSolicitacaoServicoTecnico.id, f)
-                          e.target.value = ''
+                      <label
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          cursor: 'pointer',
+                          padding: '10px 16px',
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          color: '#ecfdf5',
+                          background: 'rgba(15, 80, 70, 0.96)',
+                          border: '1px solid rgba(45, 212, 191, 0.65)',
+                          borderRadius: '8px',
+                          flexShrink: 0
                         }}
-                        style={{ fontSize: '12px', color: '#ccc', maxWidth: '100%' }}
-                      />
+                      >
+                        <input
+                          type="file"
+                          accept="application/pdf,image/*"
+                          style={{ display: 'none' }}
+                          onChange={(e) => {
+                            const f = e.target.files?.[0]
+                            if (f) handleAnexarDocumentoDevolvidoCliente(editingSolicitacaoServicoTecnico.id, f)
+                            e.target.value = ''
+                          }}
+                        />
+                        {(safeT as any)?.solicitacaoServicoTecnicoDocDevolvidoEscolherFicheiro || 'Escolher imagem ou PDF — guarda no sistema'}
+                      </label>
                       {solicitacaoServicoTecnicoForm.documentoDevolvido?.dados ? (
                         <>
                           <a href={solicitacaoServicoTecnicoForm.documentoDevolvido.dados} download={solicitacaoServicoTecnicoForm.documentoDevolvido.nome} style={{ color: '#5eead4', fontSize: '12px', fontWeight: 600 }}>
@@ -34839,9 +34866,22 @@ A1;Peça exemplo;10`}
                                 ) : (
                                   <span style={{ fontSize: '11px', color: '#6b7280' }}>—</span>
                                 )}
-                                <label style={{ fontSize: '11px', color: '#9ca3af', cursor: 'pointer' }}>
-                                  <span style={{ textDecoration: 'underline' }}>{(safeT as any)?.solicitacaoServicoTecnicoDocDevolvidoSubstituir || 'Anexar'}</span>
+                                <label
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    cursor: 'pointer',
+                                    padding: '6px 10px',
+                                    fontSize: '11px',
+                                    fontWeight: 700,
+                                    color: '#ecfdf5',
+                                    background: 'rgba(15, 80, 70, 0.85)',
+                                    border: '1px solid rgba(45, 212, 191, 0.55)',
+                                    borderRadius: '6px'
+                                  }}
+                                >
                                   <input type="file" accept="application/pdf,image/*" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleAnexarDocumentoDevolvidoCliente(s.id, f); e.target.value = '' }} />
+                                  {(safeT as any)?.solicitacaoServicoTecnicoDocDevolvidoSubstituir || 'Guardar imagem ou PDF no sistema (anexar)'}
                                 </label>
                               </div>
                             </td>
