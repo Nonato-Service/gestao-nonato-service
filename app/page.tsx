@@ -52734,7 +52734,7 @@ A1;Peça exemplo;10`}
     const dashboardLogoType = logoUrlDashboard ? logoTypeDashboard : logoType
     return (
       <div
-        className="ns-splash-root"
+        className="ns-splash-root ns-splash-root--entry"
         style={{
           position: 'fixed',
           inset: 0,
@@ -52763,7 +52763,7 @@ A1;Peça exemplo;10`}
             zIndex: 0
           }}
         />
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '1100px' }}>
+        <div className="ns-splash-inner">
           {/* Logo do dashboard (ou barra lateral como fallback) */}
           {dashboardLogo && (
             <div className="ns-splash-logo-box" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.25)', boxShadow: '0 4px 24px rgba(0, 255, 0, 0.08)' }}>
@@ -52775,240 +52775,98 @@ A1;Peça exemplo;10`}
             </div>
           )}
 
-          <div
-            style={{
-              display: 'inline-block',
-              padding: '8px 20px',
-              marginBottom: '16px',
-              backgroundColor: 'rgba(0, 255, 0, 0.08)',
-              border: '1px solid rgba(0, 255, 0, 0.35)',
-              borderRadius: '8px',
-              color: '#00ff00',
-              fontSize: 'clamp(11px, 1.5vw, 13px)',
-              fontWeight: '700',
-              letterSpacing: '1.5px',
-              textTransform: 'uppercase'
-            }}
-          >
+          <div className="ns-splash-badge">
             {safeT?.sistemaCompletoGestao || 'Sistema Completo de Gestão'}
           </div>
 
-          <div
-            style={{
-              width: 'min(100%, 920px)',
-              marginBottom: '18px',
-              padding: '16px 18px',
-              borderRadius: '16px',
-              background: 'linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(255,255,255,0.04) 100%)',
-              border: '1px solid rgba(255,215,0,0.26)',
-              boxShadow: '0 12px 34px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.06)',
-              color: 'rgba(255,255,255,0.9)',
-              textAlign: 'center',
-              lineHeight: 1.55,
-              fontSize: 'clamp(11px, 1.5vw, 14px)',
-            }}
-          >
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginBottom: '10px',
-                padding: '6px 10px',
-                borderRadius: '999px',
-                background: 'rgba(255,215,0,0.12)',
-                border: '1px solid rgba(255,215,0,0.25)',
-                color: '#ffd76a',
-                fontSize: 'clamp(10px, 1.2vw, 12px)',
-                fontWeight: 800,
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
+          <section className="ns-splash-hero-card" aria-labelledby="ns-splash-brand">
+            <h1 id="ns-splash-brand" className="ns-splash-hero-title">
+              {safeT?.boaTrade || safeT?.nonatoService || 'NONATO SERVICE'}
+            </h1>
+            <p className="ns-splash-hero-lead">
+              {(safeT as any)?.telaInicialHeadline || 'Gestão Técnica Profissional — Operação, Clientes e Relatórios num Só Lugar.'}
+            </p>
+            <p className="ns-splash-hero-body">
+              {safeT?.telaInicialSubtitle || 'Gestão integrada de serviços, equipamentos, equipe e relatórios. Uma única plataforma para comando total da operação.'}
+            </p>
+            <p className="ns-splash-hero-tag">
+              {(safeT as any)?.telaInicialClaim || 'Plataforma integrada para gestão técnica, clientes e relatórios de serviço.'}
+            </p>
+            <button
+              type="button"
+              className="ns-splash-cta"
+              onClick={() => {
+                setShowSplashInicial(false)
+                setShowPasswordScreen(false)
+                setLoginUser((current) => current || {
+                  id: 'default-admin',
+                  name: 'Administrador',
+                  email: '',
+                  role: 'Administrador',
+                  isAdmin: true,
+                  permissions: {
+                    gestores: true,
+                    equipamentos: true,
+                    clientes: true,
+                    fornecedores: true,
+                    relatorioServico: true,
+                    bibliotecaPecas: true,
+                    agenda: true,
+                    desmontados: true,
+                    cadastroServicos: true,
+                    extras: true
+                  }
+                })
               }}
             >
-              <span>■</span>
-              <span>Propriedade Intelectual Protegida</span>
-            </div>
-            <div>
-            Este programa pertence a <strong style={{ color: '#00ff00' }}>NONATO SERVICE</strong> e ao seu criador
-            {' '}<strong style={{ color: '#00ff00' }}>Nonato</strong>. Todos os direitos reservados. A reprodução,
-            cópia, distribuição, modificação, cedência ou utilização sem autorização expressa é proibida e poderá
-            originar medidas legais.
-            </div>
-          </div>
-
-          <h1
-            style={{
-              margin: '0 0 12px 0',
-              padding: 0,
-              fontSize: 'clamp(20px, 5vw, 40px)',
-              fontWeight: '800',
-              color: '#00ff00',
-              letterSpacing: '1px',
-              textAlign: 'center',
-              lineHeight: 1.15,
-              textShadow: '0 0 30px rgba(0, 255, 0, 0.2)'
-            }}
-          >
-            {safeT?.boaTrade || safeT?.nonatoService || 'NONATO SERVICE'}
-          </h1>
-
-          <p
-            style={{
-              margin: '0 0 8px 0',
-              padding: '0 12px',
-              maxWidth: '640px',
-              fontSize: 'clamp(13px, 3.2vw, 16px)',
-              fontWeight: '700',
-              lineHeight: 1.35,
-              color: '#fff',
-              textAlign: 'center'
-            }}
-          >
-            {(safeT as any)?.telaInicialHeadline || 'Gestão Técnica Profissional — Operação, Clientes e Relatórios num Só Lugar.'}
-          </p>
-          <p
-            style={{
-              margin: '0 0 24px 0',
-              padding: '0 16px',
-              maxWidth: '600px',
-              fontSize: 'clamp(12px, 2.8vw, 14px)',
-              lineHeight: 1.5,
-              color: 'rgba(255, 255, 255, 0.75)',
-              textAlign: 'center'
-            }}
-          >
-            {safeT?.telaInicialSubtitle || 'Gestão integrada de serviços, equipamentos, equipe e relatórios. Uma única plataforma para comando total da operação.'}
-          </p>
-          <p
-            style={{
-              margin: '0 0 20px 0',
-              fontSize: 'clamp(11px, 2.6vw, 13px)',
-              color: 'rgba(0, 255, 0, 0.85)',
-              fontWeight: '600',
-              letterSpacing: '0.5px',
-              textAlign: 'center'
-            }}
-          >
-            {(safeT as any)?.telaInicialClaim || 'Plataforma integrada para gestão técnica, clientes e relatórios de serviço.'}
-          </p>
-
-          <button
-            type="button"
-            onClick={() => {
-              setShowSplashInicial(false)
-              setShowPasswordScreen(false)
-              setLoginUser((current) => current || {
-                id: 'default-admin',
-                name: 'Administrador',
-                email: '',
-                role: 'Administrador',
-                isAdmin: true,
-                permissions: {
-                  gestores: true,
-                  equipamentos: true,
-                  clientes: true,
-                  fornecedores: true,
-                  relatorioServico: true,
-                  bibliotecaPecas: true,
-                  agenda: true,
-                  desmontados: true,
-                  cadastroServicos: true,
-                  extras: true
-                }
-              })
-            }}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: 'clamp(10px, 2.5vw, 16px) clamp(18px, 5vw, 32px)',
-              fontSize: 'clamp(13px, 3.2vw, 16px)',
-              fontWeight: '700',
-              color: '#000',
-              backgroundColor: 'rgba(0, 255, 0, 0.18)',
-              border: '2px solid rgba(0, 255, 0, 0.65)',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 4px 24px rgba(0, 255, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.32)'
-              e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.9)'
-              e.currentTarget.style.transform = 'scale(1.03)'
-              e.currentTarget.style.boxShadow = '0 6px 32px rgba(0, 255, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.18)'
-              e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.65)'
-              e.currentTarget.style.transform = 'scale(1)'
-              e.currentTarget.style.boxShadow = '0 4px 24px rgba(0, 255, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12)'
-            }}
-          >
-            <span style={{ fontSize: 'clamp(16px, 4vw, 20px)' }}>⚡</span>
+            <span style={{ fontSize: 'clamp(16px, 4vw, 20px)' }} aria-hidden>⚡</span>
             {safeT?.acessarSistema || 'Acessar Sistema'}
-            <span style={{ fontSize: 'clamp(14px, 3.5vw, 18px)' }}>→</span>
+            <span style={{ fontSize: 'clamp(14px, 3.5vw, 18px)' }} aria-hidden>→</span>
           </button>
+          </section>
+
+          <details className="ns-splash-legal">
+            <summary>
+              <span>{safeT?.splashIpTitle || 'Propriedade intelectual'}</span>
+              <span className="ns-splash-legal-summary-hint">{safeT?.splashLegalExpand}</span>
+            </summary>
+            <div className="ns-splash-legal__body">{safeT?.splashIpBody}</div>
+          </details>
 
           {/* Métricas — mais informações */}
-          <div
-            style={{
-              marginTop: 'clamp(22px, 4vh, 44px)',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(88px, 1fr))',
-              gap: 'clamp(10px, 2.5vw, 20px)',
-              width: '100%',
-              maxWidth: '720px',
-              padding: '0 16px'
-            }}
+          <section
+            className="ns-splash-stats"
+            aria-label={safeT?.splashStatsAria || 'Destaques'}
           >
             {[
               { icon: '🕐', value: '99.9%', label: safeT?.statUptime || 'Uptime' },
               { icon: '🎧', value: '24/7', label: safeT?.statSuporte || 'Suporte' },
               { icon: '👥', value: '500+', label: safeT?.statClientes || 'Clientes' },
-              { icon: '⚡', value: 'Fast', label: safeT?.statPerformance || 'Performance' },
-              { icon: '🔒', value: '100%', label: (safeT as any)?.statSeguranca || 'Seguro' }
+              { icon: '⚡', value: safeT?.statPerformanceValue || 'Fast', label: safeT?.statPerformance || 'Performance' },
+              { icon: '🔒', value: '100%', label: safeT?.statSeguranca || 'Seguro' }
             ].map((item) => (
-            <div
-              key={item.label}
-              style={{
-                textAlign: 'center',
-                minWidth: '100px'
-              }}
-            >
-              <div style={{ fontSize: 'clamp(18px, 4.5vw, 22px)', marginBottom: '4px', color: '#00ff00' }}>{item.icon}</div>
-              <div style={{ fontSize: 'clamp(14px, 3.2vw, 17px)', fontWeight: '700', color: '#fff' }}>{item.value}</div>
-              <div style={{ fontSize: 'clamp(10px, 2.5vw, 12px)', color: 'rgba(255,255,255,0.7)' }}>{item.label}</div>
+            <div key={item.label} className="ns-splash-stat">
+              <div className="ns-splash-stat__icon" aria-hidden>{item.icon}</div>
+              <div className="ns-splash-stat__value">{item.value}</div>
+              <div className="ns-splash-stat__label">{item.label}</div>
             </div>
           ))}
-        </div>
+        </section>
 
         {/* Seção: Recursos que Fazem a Diferença (6 cards) */}
-        <div style={{ marginTop: 'clamp(28px, 6vh, 56px)', width: '100%', maxWidth: '1000px', padding: '0 16px' }}>
-          <h2
-            style={{
-              margin: '0 0 12px 0',
-              fontSize: 'clamp(17px, 3.5vw, 24px)',
-              fontWeight: '800',
-              color: '#fff',
-              textAlign: 'center'
-            }}
-          >
-            {safeT?.recursosQueFazemDiferenca || 'Recursos que Fazem a Diferença'}
-          </h2>
-          <p
-            style={{
-              margin: '0 0 20px 0',
-              fontSize: 'clamp(12px, 2.8vw, 15px)',
-              color: 'rgba(255,255,255,0.75)',
-              textAlign: 'center',
-              lineHeight: 1.5
-            }}
-          >
-            {(safeT as any)?.recursosQueFazemDiferencaDesc || 'Tudo o que precisa para comandar equipas, ativos e relatórios — num só lugar.'}
-          </p>
+        <section
+          className="ns-splash-features"
+          style={{ marginTop: 'clamp(28px, 6vh, 56px)', padding: '0 16px' }}
+          aria-label={safeT?.splashFeaturesAria || safeT?.recursosQueFazemDiferenca || 'Recursos'}
+        >
+          <div className="ns-splash-features__head">
+            <h2 className="ns-splash-features__title">
+              {safeT?.recursosQueFazemDiferenca || 'Recursos que Fazem a Diferença'}
+            </h2>
+            <p className="ns-splash-features__sub">
+              {safeT?.recursosQueFazemDiferencaDesc || 'Tudo o que precisa para comandar equipas, ativos e relatórios — num só lugar.'}
+            </p>
+          </div>
           <div
             className="ns-splash-cards-grid"
             style={{
@@ -53039,7 +52897,7 @@ A1;Peça exemplo;10`}
               </div>
             ))}
           </div>
-        </div>
+        </section>
         </div>
         {bootLoadingOverlay}
       </div>

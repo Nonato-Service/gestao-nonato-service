@@ -3702,6 +3702,197 @@ button.dia-trabalho-acao-btn--del:hover {
   padding-bottom: max(clamp(20px, 5vh, 56px), env(safe-area-inset-bottom, 0px)) !important;
   padding-left: max(4px, env(safe-area-inset-left, 0px)) !important;
 }
+.ns-splash-root--entry {
+  background: radial-gradient(ellipse 100% 70% at 50% -15%, rgba(0, 255, 136, 0.11), transparent 52%),
+    linear-gradient(180deg, #0b0d0c 0%, #040504 100%) !important;
+}
+.ns-splash-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(16px, 2.8vh, 26px);
+}
+.ns-splash-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4em 1.1em;
+  border-radius: 999px;
+  font-size: clamp(10px, 1.45vw, 12px);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(0, 255, 136, 0.95);
+  background: rgba(0, 255, 136, 0.06);
+  border: 1px solid rgba(0, 255, 136, 0.26);
+}
+.ns-splash-hero-card {
+  width: 100%;
+  max-width: 720px;
+  border-radius: 22px;
+  padding: clamp(22px, 4.2vw, 38px) clamp(18px, 3.2vw, 32px);
+  background: linear-gradient(158deg, rgba(255, 255, 255, 0.055) 0%, rgba(14, 16, 15, 0.94) 42%, rgba(7, 9, 8, 0.98) 100%);
+  border: 1px solid rgba(0, 255, 136, 0.16);
+  box-shadow: 0 18px 56px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  text-align: center;
+}
+.ns-splash-hero-title {
+  margin: 0 0 0.45em;
+  font-size: clamp(1.4rem, 4.5vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: 0.035em;
+  line-height: 1.1;
+  background: linear-gradient(94deg, #c8ffd8 0%, #3dff9a 36%, #00c853 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 24px rgba(0, 255, 136, 0.12));
+}
+.ns-splash-hero-lead {
+  margin: 0 auto 0.55em;
+  max-width: 38rem;
+  font-size: clamp(0.88rem, 2.35vw, 1.06rem);
+  font-weight: 600;
+  line-height: 1.42;
+  color: rgba(255, 255, 255, 0.93);
+}
+.ns-splash-hero-body {
+  margin: 0 auto 0.6em;
+  max-width: 36rem;
+  font-size: clamp(0.8rem, 2.05vw, 0.94rem);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.7);
+}
+.ns-splash-hero-tag {
+  margin: 0 auto 1.15em;
+  max-width: 34rem;
+  font-size: clamp(0.74rem, 1.95vw, 0.86rem);
+  font-weight: 600;
+  line-height: 1.45;
+  color: rgba(0, 255, 136, 0.78);
+  letter-spacing: 0.02em;
+}
+.ns-splash-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45em;
+  min-height: 48px;
+  padding: 0.62em 1.65em;
+  font-size: clamp(0.84rem, 2.15vw, 1rem);
+  font-weight: 700;
+  color: #021308;
+  background: linear-gradient(180deg, #62ffb8 0%, #00e676 46%, #00a344 100%);
+  border: 1px solid rgba(0, 255, 136, 0.45);
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 10px 32px rgba(0, 255, 136, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.38);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+.ns-splash-cta:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.04);
+  box-shadow: 0 14px 40px rgba(0, 255, 136, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.42);
+}
+.ns-splash-legal {
+  width: 100%;
+  max-width: 720px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  background: rgba(255, 215, 0, 0.035);
+}
+.ns-splash-legal > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+  padding: 12px 16px;
+  font-size: clamp(11px, 1.75vw, 13px);
+  color: rgba(255, 224, 150, 0.96);
+}
+.ns-splash-legal > summary::-webkit-details-marker {
+  display: none;
+}
+.ns-splash-legal > summary::after {
+  content: '▾';
+  font-size: 11px;
+  opacity: 0.65;
+  flex-shrink: 0;
+}
+.ns-splash-legal[open] > summary::after {
+  opacity: 0.9;
+}
+.ns-splash-legal-summary-hint {
+  font-weight: 500;
+  opacity: 0.72;
+  font-size: 0.92em;
+}
+.ns-splash-legal__body {
+  padding: 2px 16px 14px;
+  font-size: clamp(11px, 1.65vw, 13px);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.76);
+  border-top: 1px solid rgba(255, 215, 0, 0.12);
+}
+.ns-splash-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 132px), 1fr));
+  gap: 10px;
+  width: 100%;
+  max-width: 760px;
+}
+.ns-splash-stat {
+  text-align: center;
+  padding: 12px 8px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.055);
+}
+.ns-splash-stat__icon {
+  font-size: clamp(1.05rem, 2.9vw, 1.3rem);
+  margin-bottom: 4px;
+  line-height: 1;
+}
+.ns-splash-stat__value {
+  font-size: clamp(0.9rem, 2.4vw, 1.05rem);
+  font-weight: 700;
+  color: #fff;
+}
+.ns-splash-stat__label {
+  font-size: clamp(0.62rem, 1.75vw, 0.74rem);
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.25;
+}
+.ns-splash-features {
+  width: 100%;
+  max-width: 1000px;
+}
+.ns-splash-features__head {
+  text-align: center;
+  margin-bottom: clamp(14px, 2.4vh, 22px);
+}
+.ns-splash-features__title {
+  margin: 0 0 0.4em;
+  font-size: clamp(1.02rem, 2.65vw, 1.38rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #fff;
+}
+.ns-splash-features__sub {
+  margin: 0 auto;
+  max-width: 40rem;
+  font-size: clamp(0.78rem, 2vw, 0.9rem);
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.68);
+}
 .ns-splash-logo-box {
   margin-bottom: clamp(14px, 3vh, 24px) !important;
   width: clamp(88px, 36vw, 160px) !important;
