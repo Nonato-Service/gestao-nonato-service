@@ -36,6 +36,7 @@ import {
   buildSolicitacaoServicoTecnicoPrintHtml,
   downloadSolicitacaoServicoTecnicoHtmlFile,
   safeSolicitacaoFilenameSegment,
+  buildSolicitacaoDocDevolvidoCanonicalFilename,
   type SolicitacaoServicoTecnicoPdfData,
   type SolicitacaoServicoTecnicoPdfLabels,
 } from './utils/solicitacaoServicoTecnicoPdf'
@@ -34110,6 +34111,26 @@ A1;Peça exemplo;10`}
             endereco: String(rec.endereco || '').trim() || morada || rec.endereco
           }
         }
+        const resolveRecParaNomeDocDevolvido = (sstId: string): SolicitacaoServicoTecnico | null => {
+          const fromList = solicitacoesServicoTecnico.find((x) => x.id === sstId)
+          if (editingSolicitacaoServicoTecnico?.id === sstId) {
+            const base =
+              fromList ||
+              ({
+                ...editingSolicitacaoServicoTecnico,
+                id: sstId,
+                dataCriacao: editingSolicitacaoServicoTecnico.dataCriacao
+              } as SolicitacaoServicoTecnico)
+            return enriquecerSolicitacaoComClienteCadastrado({
+              ...base,
+              ...solicitacaoServicoTecnicoForm,
+              id: sstId,
+              dataCriacao: base.dataCriacao
+            })
+          }
+          if (fromList) return enriquecerSolicitacaoComClienteCadastrado(fromList)
+          return null
+        }
         const buildSolicitacaoBody = (s: typeof solicitacaoServicoTecnicoForm | SolicitacaoServicoTecnico) => {
           const t = translations[selectedLanguage as keyof typeof translations] as typeof translations['pt-BR']
           const labels = {
@@ -34156,9 +34177,30 @@ A1;Peça exemplo;10`}
         }
         const handleGuardarSolicitacao = () => {
           const id = editingSolicitacaoServicoTecnico?.id || `sst-${Date.now()}`
+          let formPayload = { ...solicitacaoServicoTecnicoForm }
+          if (formPayload.documentoDevolvido?.dados) {
+            const pseudo: SolicitacaoServicoTecnico = {
+              id,
+              ...formPayload,
+              dataCriacao: editingSolicitacaoServicoTecnico?.dataCriacao || new Date().toISOString()
+            }
+            const enr = enriquecerSolicitacaoComClienteCadastrado(pseudo)
+            formPayload = {
+              ...formPayload,
+              documentoDevolvido: {
+                ...formPayload.documentoDevolvido,
+                nome: buildSolicitacaoDocDevolvidoCanonicalFilename({
+                  solicitacaoId: id,
+                  nomeCliente: String(enr.nomeCliente || '').trim() || 'cliente',
+                  nomeOriginal: formPayload.documentoDevolvido.nome,
+                  dataUploadIso: formPayload.documentoDevolvido.dataUpload
+                })
+              }
+            }
+          }
           const nova: SolicitacaoServicoTecnico = {
             id,
-            ...solicitacaoServicoTecnicoForm,
+            ...formPayload,
             dataCriacao: editingSolicitacaoServicoTecnico?.dataCriacao || new Date().toISOString()
           }
           const list = editingSolicitacaoServicoTecnico
@@ -34256,12 +34298,20 @@ A1;Peça exemplo;10`}
           const reader = new FileReader()
           reader.onload = () => {
             const dados = String(reader.result || '')
+            const dataUpload = new Date().toISOString()
+            const recNome = resolveRecParaNomeDocDevolvido(sstId)
+            const nomeCanon = buildSolicitacaoDocDevolvidoCanonicalFilename({
+              solicitacaoId: sstId,
+              nomeCliente: String(recNome?.nomeCliente || solicitacaoServicoTecnicoForm.nomeCliente || '').trim() || 'cliente',
+              nomeOriginal: file.name,
+              dataUploadIso: dataUpload
+            })
             const doc: SolicitacaoDocDevolvido = {
               id: typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : `sst-doc-${Date.now()}`,
-              nome: file.name,
+              nome: nomeCanon,
               tipo: file.type || 'application/octet-stream',
               dados,
-              dataUpload: new Date().toISOString()
+              dataUpload
             }
             if (editingIdAoAnexar && editingIdAoAnexar === sstId) {
               setSolicitacaoServicoTecnicoForm((f) => ({ ...f, documentoDevolvido: doc }))
@@ -34291,6 +34341,72 @@ A1;Peça exemplo;10`}
             alert('Erro ao ler o ficheiro. Tente outro formato ou um ficheiro mais pequeno.')
           }
           reader.readAsDataURL(file)
+        }
+        const handleDescarregarDocumentoDevolvidoComNomeCliente = (s: SolicitacaoServicoTecnico) => {
+          const doc = s.documentoDevolvido
+          if (!doc?.dados || typeof document === 'undefined') return
+          const enr = enriquecerSolicitacaoComClienteCadastrado(s)
+          const nome = buildSolicitacaoDocDevolvidoCanonicalFilename({
+            solicitacaoId: s.id,
+            nomeCliente: String(enr.nomeCliente || '').trim() || 'cliente',
+            nomeOriginal: doc.nome,
+            dataUploadIso: doc.dataUpload
+          })
+          const a = document.createElement('a')
+          a.href = doc.dados
+          a.download = nome
+          a.rel = 'noopener'
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+        }
+        const handleAtualizarNomeDocumentoDevolvidoNoRegisto = (sstId: string) => {
+          const row = solicitacoesServicoTecnico.find((x) => x.id === sstId)
+          if (!row?.documentoDevolvido?.dados) return
+          const enr = enriquecerSolicitacaoComClienteCadastrado(row)
+          const newNome = buildSolicitacaoDocDevolvidoCanonicalFilename({
+            solicitacaoId: sstId,
+            nomeCliente: String(enr.nomeCliente || '').trim() || 'cliente',
+            nomeOriginal: row.documentoDevolvido.nome,
+            dataUploadIso: row.documentoDevolvido.dataUpload
+          })
+          if (newNome === row.documentoDevolvido.nome) {
+            window.alert(
+              (safeT as any)?.solicitacaoServicoTecnicoDocDevolvidoNomeJaCanonico ||
+                'O nome no registo já corresponde ao padrão (cliente + referência + data).'
+            )
+            return
+          }
+          const docUp: SolicitacaoDocDevolvido = { ...row.documentoDevolvido, nome: newNome }
+          const next = solicitacoesServicoTecnico.map((x) => (x.id === sstId ? { ...x, documentoDevolvido: docUp } : x))
+          setSolicitacoesServicoTecnico(next)
+          void saveData('nonato-solicitacoes-servico-tecnico', next)
+          if (editingSolicitacaoServicoTecnico?.id === sstId) {
+            setSolicitacaoServicoTecnicoForm((f) =>
+              f.documentoDevolvido ? { ...f, documentoDevolvido: { ...f.documentoDevolvido, nome: newNome } } : f
+            )
+          }
+          const cid = row.clienteId
+          if (cid) {
+            setClientes((prevC) => {
+              const upd = prevC.map((c) => {
+                if (c.id !== cid) return c
+                const prevAnexos = c.anexosSolicitacaoServico || []
+                const outros = prevAnexos.filter((a) => a.solicitacaoServicoId !== sstId)
+                const antigo = prevAnexos.find((a) => a.solicitacaoServicoId === sstId)
+                const anexoCliente: SolicitacaoDocDevolvidoCliente = antigo
+                  ? { ...antigo, ...docUp, solicitacaoServicoId: sstId }
+                  : { ...docUp, solicitacaoServicoId: sstId }
+                return { ...c, anexosSolicitacaoServico: [...outros, anexoCliente] }
+              })
+              void saveData('nonato-clientes', upd)
+              return upd
+            })
+          }
+          window.alert(
+            (safeT as any)?.solicitacaoServicoTecnicoDocDevolvidoNomeAtualizadoOk ||
+              'Nome do ficheiro atualizado no registo e na ficha do cliente (se aplicável).'
+          )
         }
         const handleEnviarEmail = (s?: SolicitacaoServicoTecnico) => {
           const rec = solicitacaoSstComoRegisto(s)
@@ -34529,6 +34645,10 @@ A1;Peça exemplo;10`}
                 {editingSolicitacaoServicoTecnico ? (
                   <div style={{ marginBottom: '18px' }}>
                     <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.solicitacaoServicoTecnicoDocDevolvido || 'Documento devolvido pelo cliente (PDF ou imagem)'}</label>
+                    <p style={{ margin: '0 0 10px', fontSize: '11px', color: 'rgba(255,255,255,0.52)', lineHeight: 1.45 }}>
+                      {(safeT as any)?.solicitacaoServicoTecnicoDocDevolvidoHintNome ||
+                        'Ao anexar, o ficheiro fica com nome automático (cliente + referência SST + data). Use «Descarregar com nome do cliente» ou «Atualizar nome no registo» se o nome antigo não seguir esse padrão.'}
+                    </p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
                       <input
                         type="file"
@@ -34541,9 +34661,37 @@ A1;Peça exemplo;10`}
                         style={{ fontSize: '12px', color: '#ccc', maxWidth: '100%' }}
                       />
                       {solicitacaoServicoTecnicoForm.documentoDevolvido?.dados ? (
-                        <a href={solicitacaoServicoTecnicoForm.documentoDevolvido.dados} download={solicitacaoServicoTecnicoForm.documentoDevolvido.nome} style={{ color: '#5eead4', fontSize: '12px', fontWeight: 600 }}>
-                          {(safeT as any)?.solicitacaoServicoTecnicoDocDevolvidoVer || 'Abrir / descarregar anexo'}
-                        </a>
+                        <>
+                          <a href={solicitacaoServicoTecnicoForm.documentoDevolvido.dados} download={solicitacaoServicoTecnicoForm.documentoDevolvido.nome} style={{ color: '#5eead4', fontSize: '12px', fontWeight: 600 }}>
+                            {(safeT as any)?.solicitacaoServicoTecnicoDocDevolvidoVer || 'Abrir / descarregar anexo'}
+                          </a>
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={() =>
+                              handleDescarregarDocumentoDevolvidoComNomeCliente({
+                                ...editingSolicitacaoServicoTecnico,
+                                ...solicitacaoServicoTecnicoForm,
+                                id: editingSolicitacaoServicoTecnico.id,
+                                dataCriacao: editingSolicitacaoServicoTecnico.dataCriacao,
+                                documentoDevolvido: solicitacaoServicoTecnicoForm.documentoDevolvido
+                              })
+                            }
+                            style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '6px', cursor: 'pointer' }}
+                          >
+                            {(safeT as any)?.solicitacaoServicoTecnicoDocDevolvidoDescarregarNomeCliente || 'Descarregar com nome do cliente'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleAtualizarNomeDocumentoDevolvidoNoRegisto(editingSolicitacaoServicoTecnico.id)}
+                            style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '6px', cursor: 'pointer', border: '1px solid rgba(110, 231, 183, 0.45)', color: '#a7f3d0', background: 'rgba(6, 40, 35, 0.45)' }}
+                          >
+                            {(safeT as any)?.solicitacaoServicoTecnicoDocDevolvidoFixarNomeRegisto || 'Atualizar nome no registo'}
+                          </button>
+                          <span style={{ fontSize: '10px', color: '#94a3b8', maxWidth: 280 }} title={solicitacaoServicoTecnicoForm.documentoDevolvido.nome}>
+                            {solicitacaoServicoTecnicoForm.documentoDevolvido.nome}
+                          </span>
+                        </>
                       ) : null}
                     </div>
                   </div>
@@ -34659,12 +34807,35 @@ A1;Peça exemplo;10`}
                             <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>
                               {s.assinaturaCliente ? (safeT?.solicitacaoServicoTecnicoAssinaturaSim ?? 'Sim') : (safeT?.solicitacaoServicoTecnicoAssinaturaNao ?? 'Não')}
                             </td>
-                            <td style={{ padding: '12px 8px', maxWidth: 200 }}>
+                            <td style={{ padding: '12px 8px', maxWidth: 220 }}>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
                                 {s.documentoDevolvido?.dados ? (
-                                  <a href={s.documentoDevolvido.dados} download={s.documentoDevolvido.nome} style={{ color: '#5eead4', fontSize: '11px', fontWeight: 600, wordBreak: 'break-all' }}>
-                                    {(safeT as any)?.solicitacaoServicoTecnicoDocDevolvidoVer || 'Abrir anexo'}
-                                  </a>
+                                  <>
+                                    <a href={s.documentoDevolvido.dados} download={s.documentoDevolvido.nome} style={{ color: '#5eead4', fontSize: '11px', fontWeight: 600, wordBreak: 'break-all' }}>
+                                      {(safeT as any)?.solicitacaoServicoTecnicoDocDevolvidoVer || 'Abrir anexo'}
+                                    </a>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                      <button
+                                        type="button"
+                                        title={(safeT as any)?.solicitacaoServicoTecnicoDocDevolvidoDescarregarNomeCliente || 'Descarregar com nome do cliente'}
+                                        onClick={() => handleDescarregarDocumentoDevolvidoComNomeCliente(s)}
+                                        style={{ padding: '4px 8px', fontSize: '10px', borderRadius: '6px', cursor: 'pointer', border: '1px solid rgba(45, 212, 191, 0.45)', color: '#5eead4', background: 'rgba(6, 40, 35, 0.45)' }}
+                                      >
+                                        ⬇
+                                      </button>
+                                      <button
+                                        type="button"
+                                        title={(safeT as any)?.solicitacaoServicoTecnicoDocDevolvidoFixarNomeRegisto || 'Atualizar nome no registo'}
+                                        onClick={() => handleAtualizarNomeDocumentoDevolvidoNoRegisto(s.id)}
+                                        style={{ padding: '4px 8px', fontSize: '10px', borderRadius: '6px', cursor: 'pointer', border: '1px solid rgba(148, 163, 184, 0.45)', color: '#cbd5e1', background: 'rgba(30, 41, 59, 0.45)' }}
+                                      >
+                                        ✎
+                                      </button>
+                                    </div>
+                                    <span style={{ fontSize: '9px', color: '#64748b', wordBreak: 'break-all', maxWidth: '100%' }} title={s.documentoDevolvido.nome}>
+                                      {s.documentoDevolvido.nome}
+                                    </span>
+                                  </>
                                 ) : (
                                   <span style={{ fontSize: '11px', color: '#6b7280' }}>—</span>
                                 )}

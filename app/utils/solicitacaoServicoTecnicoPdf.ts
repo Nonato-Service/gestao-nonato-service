@@ -148,6 +148,29 @@ export function safeSolicitacaoFilenameSegment(name: string): string {
   return (t.slice(0, 48) || 'cliente').replace(/_+$/g, '') || 'cliente'
 }
 
+/**
+ * Nome canónico para guardar/descarregar o documento devolvido pelo cliente
+ * (referência SST + nome do cliente + data + extensão do ficheiro original).
+ */
+export function buildSolicitacaoDocDevolvidoCanonicalFilename(params: {
+  solicitacaoId: string
+  nomeCliente: string
+  nomeOriginal?: string
+  dataUploadIso?: string
+}): string {
+  const id = String(params.solicitacaoId || '')
+  const ref = `SST-${id.replace(/[^a-zA-Z0-9]/g, '').slice(-10).toUpperCase() || 'DOC'}`
+  const seg = safeSolicitacaoFilenameSegment(params.nomeCliente || 'cliente')
+  const d = params.dataUploadIso ? new Date(params.dataUploadIso) : new Date()
+  const ymd = Number.isNaN(d.getTime()) ? new Date().toISOString().slice(0, 10) : d.toISOString().slice(0, 10)
+  const orig = String(params.nomeOriginal || 'documento').trim()
+  const m = orig.match(/\.([a-zA-Z0-9]{1,8})$/i)
+  let ext = (m ? m[1] : '').toLowerCase()
+  if (!ext) ext = 'pdf'
+  if (ext === 'jpeg') ext = 'jpg'
+  return `Solicitacao_assinada_${ref}_${seg}_${ymd}.${ext}`
+}
+
 /** Descarrega o HTML oficial (mesmo conteúdo que «Imprimir / Guardar como PDF» no browser). */
 export function downloadSolicitacaoServicoTecnicoHtmlFile(html: string, filename: string): void {
   if (typeof document === 'undefined') return

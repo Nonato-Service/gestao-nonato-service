@@ -1591,6 +1591,14 @@ export const translations = {
     solicitacaoServicoTecnicoDocDevolvidoVer: 'Abrir / descarregar anexo',
     solicitacaoServicoTecnicoDocDevolvidoSubstituir: 'Anexar / substituir',
     solicitacaoServicoTecnicoDocDevolvidoAposGuardar: 'Guarde a solicitação primeiro para anexar aqui o ficheiro devolvido (ou use a coluna na grelha abaixo).',
+    solicitacaoServicoTecnicoDocDevolvidoHintNome:
+      'Ao anexar, o ficheiro fica com nome automático: cliente (cadastrado ou escrito) + referência SST + data. Use «Descarregar com nome do cliente» para gravar na pasta com esse nome, ou «Atualizar nome no registo» se já tinha anexado com outro nome.',
+    solicitacaoServicoTecnicoDocDevolvidoDescarregarNomeCliente: 'Descarregar com nome do cliente',
+    solicitacaoServicoTecnicoDocDevolvidoFixarNomeRegisto: 'Atualizar nome no registo',
+    solicitacaoServicoTecnicoDocDevolvidoNomeJaCanonico:
+      'O nome no registo já corresponde ao padrão (cliente + referência SST + data).',
+    solicitacaoServicoTecnicoDocDevolvidoNomeAtualizadoOk:
+      'Nome do ficheiro atualizado no registo e na ficha do cliente (se aplicável).',
     solicitacaoServicoTecnicoColDocDevolvido: 'Doc. devolvido',
     solicitacaoServicoTecnicoArquivoMuitoGrande: 'O ficheiro excede o limite de 12 MB.',
     solicitacaoServicoTecnicoEmailInstrucaoAnexo: 'Foi descarregado o ficheiro HTML do formulário oficial (o mesmo que vê ao gerar PDF / imprimir). Anexe esse ficheiro a este e-mail, ou abra-o no browser, use Imprimir → Guardar como PDF e anexe o PDF. Abaixo segue apenas um resumo dos campos que estiverem preenchidos (não aparecem linhas vazias).',
@@ -3895,6 +3903,14 @@ export const translations = {
     solicitacaoServicoTecnicoDocDevolvidoVer: 'Abrir / descargar adjunto',
     solicitacaoServicoTecnicoDocDevolvidoSubstituir: 'Adjuntar / sustituir',
     solicitacaoServicoTecnicoDocDevolvidoAposGuardar: 'Guarde la solicitud primero para adjuntar aquí el archivo devuelto (o use la columna en la tabla).',
+    solicitacaoServicoTecnicoDocDevolvidoHintNome:
+      'Al adjuntar, el archivo usa un nombre automático: cliente (registrado o escrito) + referencia SST + fecha. Use «Descargar con nombre del cliente» para guardarlo así, o «Actualizar nombre en el registro» si ya estaba con otro nombre.',
+    solicitacaoServicoTecnicoDocDevolvidoDescarregarNomeCliente: 'Descargar con nombre del cliente',
+    solicitacaoServicoTecnicoDocDevolvidoFixarNomeRegisto: 'Actualizar nombre en el registro',
+    solicitacaoServicoTecnicoDocDevolvidoNomeJaCanonico:
+      'El nombre en el registro ya sigue el patrón (cliente + referencia SST + fecha).',
+    solicitacaoServicoTecnicoDocDevolvidoNomeAtualizadoOk:
+      'Nombre del archivo actualizado en el registro y en la ficha del cliente (si aplica).',
     solicitacaoServicoTecnicoColDocDevolvido: 'Doc. devuelto',
     solicitacaoServicoTecnicoArquivoMuitoGrande: 'El archivo supera el límite de 12 MB.',
     solicitacaoServicoTecnicoEmailInstrucaoAnexo: 'Se descargó el archivo HTML del formulario oficial (el mismo que al generar PDF). Adjúntelo a este correo o ábralo en el navegador, Imprimir → Guardar como PDF y adjunte el PDF. El texto siguiente es solo un resumen.',
@@ -6110,6 +6126,14 @@ export const translations = {
     solicitacaoServicoTecnicoDocDevolvidoVer: 'Ouvrir / télécharger la pièce jointe',
     solicitacaoServicoTecnicoDocDevolvidoSubstituir: 'Joindre / remplacer',
     solicitacaoServicoTecnicoDocDevolvidoAposGuardar: 'Enregistrez d’abord la demande pour joindre ici le fichier retourné (ou utilisez la colonne du tableau).',
+    solicitacaoServicoTecnicoDocDevolvidoHintNome:
+      'Lors de l’ajout, le fichier reçoit un nom automatique : client (enregistré ou saisi) + réf. SST + date. Utilisez « Télécharger avec le nom du client » pour l’enregistrer ainsi, ou « Mettre à jour le nom dans l’enregistrement » si l’ancien nom était différent.',
+    solicitacaoServicoTecnicoDocDevolvidoDescarregarNomeCliente: 'Télécharger avec le nom du client',
+    solicitacaoServicoTecnicoDocDevolvidoFixarNomeRegisto: 'Mettre à jour le nom dans l’enregistrement',
+    solicitacaoServicoTecnicoDocDevolvidoNomeJaCanonico:
+      'Le nom enregistré suit déjà le modèle (client + réf. SST + date).',
+    solicitacaoServicoTecnicoDocDevolvidoNomeAtualizadoOk:
+      'Nom du fichier mis à jour dans l’enregistrement et sur la fiche client (le cas échéant).',
     solicitacaoServicoTecnicoColDocDevolvido: 'Doc. retourné',
     solicitacaoServicoTecnicoArquivoMuitoGrande: 'Le fichier dépasse la limite de 12 Mo.',
     solicitacaoServicoTecnicoEmailInstrucaoAnexo: 'Le fichier HTML du formulaire officiel a été téléchargé (identique à l’aperçu PDF). Joignez-le à cet e-mail ou ouvrez-le dans le navigateur, Imprimer → Enregistrer au format PDF. Le texte ci-dessous est un résumé.',
@@ -8332,6 +8356,14 @@ export const translations = {
     solicitacaoServicoTecnicoDocDevolvidoVer: 'Apri / scarica allegato',
     solicitacaoServicoTecnicoDocDevolvidoSubstituir: 'Allega / sostituisci',
     solicitacaoServicoTecnicoDocDevolvidoAposGuardar: 'Salvare prima la richiesta per allegare qui il file restituito (o usare la colonna nella tabella).',
+    solicitacaoServicoTecnicoDocDevolvidoHintNome:
+      'In allegato, il file riceve un nome automatico: cliente (registrato o scritto) + riferimento SST + data. Usare «Scarica con nome cliente» per salvarlo così, o «Aggiorna nome nel registro» se aveva già un altro nome.',
+    solicitacaoServicoTecnicoDocDevolvidoDescarregarNomeCliente: 'Scarica con nome cliente',
+    solicitacaoServicoTecnicoDocDevolvidoFixarNomeRegisto: 'Aggiorna nome nel registro',
+    solicitacaoServicoTecnicoDocDevolvidoNomeJaCanonico:
+      'Il nome nel registro è già conforme al modello (cliente + rif. SST + data).',
+    solicitacaoServicoTecnicoDocDevolvidoNomeAtualizadoOk:
+      'Nome file aggiornato nel registro e nella scheda cliente (se applicabile).',
     solicitacaoServicoTecnicoColDocDevolvido: 'Doc. restituito',
     solicitacaoServicoTecnicoArquivoMuitoGrande: 'Il file supera il limite di 12 MB.',
     solicitacaoServicoTecnicoEmailInstrucaoAnexo: 'È stato scaricato il file HTML del modulo ufficiale (come in stampa/PDF). Allegarlo a questa e-mail o aprirlo nel browser, Stampa → Salva come PDF. Il testo seguente è solo un riepilogo.',
@@ -10568,6 +10600,14 @@ export const translations = {
     solicitacaoServicoTecnicoDocDevolvidoVer: 'Anhang öffnen / herunterladen',
     solicitacaoServicoTecnicoDocDevolvidoSubstituir: 'Anhängen / ersetzen',
     solicitacaoServicoTecnicoDocDevolvidoAposGuardar: 'Bitte zuerst speichern, um die zurückgesendete Datei hier anzuhängen (oder die Tabellenspalte nutzen).',
+    solicitacaoServicoTecnicoDocDevolvidoHintNome:
+      'Beim Anhängen erhält die Datei einen automatischen Namen: Kunde (registriert oder eingegeben) + SST-Referenz + Datum. «Mit Kundennamen herunterladen» speichert so, oder «Namen im Datensatz aktualisieren», falls zuvor ein anderer Name verwendet wurde.',
+    solicitacaoServicoTecnicoDocDevolvidoDescarregarNomeCliente: 'Mit Kundennamen herunterladen',
+    solicitacaoServicoTecnicoDocDevolvidoFixarNomeRegisto: 'Namen im Datensatz aktualisieren',
+    solicitacaoServicoTecnicoDocDevolvidoNomeJaCanonico:
+      'Der gespeicherte Name entspricht bereits dem Muster (Kunde + SST-Referenz + Datum).',
+    solicitacaoServicoTecnicoDocDevolvidoNomeAtualizadoOk:
+      'Dateiname im Datensatz und in der Kundenakte aktualisiert (falls zutreffend).',
     solicitacaoServicoTecnicoColDocDevolvido: 'Dok. zurück',
     solicitacaoServicoTecnicoArquivoMuitoGrande: 'Die Datei überschreitet das Limit von 12 MB.',
     solicitacaoServicoTecnicoEmailInstrucaoAnexo: 'Die HTML-Datei des offiziellen Formulars wurde heruntergeladen (wie Druck/PDF). Bitte an diese E-Mail anhängen oder im Browser öffnen, Drucken → Als PDF speichern. Der folgende Text ist nur eine Zusammenfassung.',
@@ -12784,6 +12824,14 @@ export const translations = {
     solicitacaoServicoTecnicoDocDevolvidoVer: 'Open / download attachment',
     solicitacaoServicoTecnicoDocDevolvidoSubstituir: 'Attach / replace',
     solicitacaoServicoTecnicoDocDevolvidoAposGuardar: 'Save the request first to attach the returned file here (or use the column in the table).',
+    solicitacaoServicoTecnicoDocDevolvidoHintNome:
+      'When you attach a file, its name is built automatically: client (registered or typed) + SST reference + date. Use «Download with client name» to save it that way, or «Update name in record» if it was saved under a different name before.',
+    solicitacaoServicoTecnicoDocDevolvidoDescarregarNomeCliente: 'Download with client name',
+    solicitacaoServicoTecnicoDocDevolvidoFixarNomeRegisto: 'Update name in record',
+    solicitacaoServicoTecnicoDocDevolvidoNomeJaCanonico:
+      'The stored filename already matches the pattern (client + SST reference + date).',
+    solicitacaoServicoTecnicoDocDevolvidoNomeAtualizadoOk:
+      'Filename updated in the record and on the client profile (if applicable).',
     solicitacaoServicoTecnicoColDocDevolvido: 'Returned doc.',
     solicitacaoServicoTecnicoArquivoMuitoGrande: 'The file exceeds the 12 MB limit.',
     solicitacaoServicoTecnicoEmailInstrucaoAnexo: 'The official form was downloaded as an HTML file (same as print/PDF preview). Attach it to this email, or open it in the browser and use Print → Save as PDF. The text below is only a summary.',
