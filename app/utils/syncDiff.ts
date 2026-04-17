@@ -38,6 +38,7 @@ export const SYNC_KEY_LABELS: Record<string, string> = {
   'nonato-familias-grupos-equipamentos': 'Famílias e grupos (equipamentos)',
   'nonato-desmontados': 'Equipamentos desmontados',
   'nonato-solicitacoes-servico-tecnico': 'Solicitações de serviço',
+  'nonato-solicitacao-sst-modelo-base': 'SST — modelo base (envio)',
   'nonato-pecas-solicitadas-armazem': 'Peças solicitadas (armazém)',
   'nonato-inventario-armazem': 'Inventário armazém',
   'nonato-checklists': 'Checklists',

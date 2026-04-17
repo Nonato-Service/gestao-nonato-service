@@ -3504,16 +3504,29 @@ export default function Dashboard() {
   const [pecasSelecionadasAgenda, setPecasSelecionadasAgenda] = useState<PecaBiblioteca[]>([])
   const [showAgendaLembreteModal, setShowAgendaLembreteModal] = useState(false)
   
+  const emptySolicitacaoServicoTecnicoFormState = (): Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'> => ({
+    clienteId: undefined,
+    nomeCliente: '',
+    tipoEquipamento: '',
+    marca: '',
+    modelo: '',
+    numeroSerie: '',
+    problemasApresentados: '',
+    endereco: '',
+    telefone: '',
+    responsavel: '',
+    assinaturaCliente: undefined,
+    dataAssinaturaCliente: undefined,
+    dataRecebimento: undefined,
+    documentoDevolvido: undefined
+  })
   // Estados para Solicitação de Serviço Técnico (formulário para enviar ao cliente; assinatura; envio por e-mail/WhatsApp)
   const [solicitacoesServicoTecnico, setSolicitacoesServicoTecnico] = useState<SolicitacaoServicoTecnico[]>([])
   const [showSolicitacaoServicoTecnicoForm, setShowSolicitacaoServicoTecnicoForm] = useState(false)
   const [editingSolicitacaoServicoTecnico, setEditingSolicitacaoServicoTecnico] = useState<SolicitacaoServicoTecnico | null>(null)
-  const [solicitacaoServicoTecnicoForm, setSolicitacaoServicoTecnicoForm] = useState<Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'>>({
-    clienteId: undefined,
-    nomeCliente: '', tipoEquipamento: '', marca: '', modelo: '', numeroSerie: '', problemasApresentados: '',
-    endereco: '', telefone: '', responsavel: '', assinaturaCliente: undefined, dataAssinaturaCliente: undefined, dataRecebimento: undefined,
-    documentoDevolvido: undefined
-  })
+  const [solicitacaoServicoTecnicoForm, setSolicitacaoServicoTecnicoForm] = useState<Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'>>(() => emptySolicitacaoServicoTecnicoFormState())
+  /** Modelo base (em branco ou texto fixo) guardado para reutilizar em novos envios ao cliente */
+  const [sstModeloBase, setSstModeloBase] = useState<Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'>>(() => emptySolicitacaoServicoTecnicoFormState())
   const canvasAssinaturaSolicitacaoRef = useRef<HTMLCanvasElement>(null)
   const [mostrarCanvasAssinaturaSolicitacao, setMostrarCanvasAssinaturaSolicitacao] = useState(false)
   const isDrawingSolicitacaoRef = useRef(false)
@@ -5856,6 +5869,24 @@ export default function Dashboard() {
       const savedSolicitacoes = getData('nonato-solicitacoes-servico-tecnico')
       if (savedSolicitacoes && Array.isArray(savedSolicitacoes)) {
         setSolicitacoesServicoTecnico(savedSolicitacoes)
+      }
+
+      const savedSstModeloBase = getData('nonato-solicitacao-sst-modelo-base')
+      if (savedSstModeloBase && typeof savedSstModeloBase === 'object' && !Array.isArray(savedSstModeloBase)) {
+        const m = savedSstModeloBase as Record<string, unknown>
+        setSstModeloBase({
+          ...emptySolicitacaoServicoTecnicoFormState(),
+          clienteId: typeof m.clienteId === 'string' ? m.clienteId : undefined,
+          nomeCliente: typeof m.nomeCliente === 'string' ? m.nomeCliente : '',
+          tipoEquipamento: typeof m.tipoEquipamento === 'string' ? m.tipoEquipamento : '',
+          marca: typeof m.marca === 'string' ? m.marca : '',
+          modelo: typeof m.modelo === 'string' ? m.modelo : '',
+          numeroSerie: typeof m.numeroSerie === 'string' ? m.numeroSerie : '',
+          problemasApresentados: typeof m.problemasApresentados === 'string' ? m.problemasApresentados : '',
+          endereco: typeof m.endereco === 'string' ? m.endereco : '',
+          telefone: typeof m.telefone === 'string' ? m.telefone : '',
+          responsavel: typeof m.responsavel === 'string' ? m.responsavel : ''
+        })
       }
 
       // Carregar ficha cadastral
@@ -34153,7 +34184,7 @@ A1;Peça exemplo;10`}
           }
           setShowSolicitacaoServicoTecnicoForm(false)
           setEditingSolicitacaoServicoTecnico(null)
-          setSolicitacaoServicoTecnicoForm({ clienteId: undefined, nomeCliente: '', tipoEquipamento: '', marca: '', modelo: '', numeroSerie: '', problemasApresentados: '', endereco: '', telefone: '', responsavel: '', assinaturaCliente: undefined, dataAssinaturaCliente: undefined, dataRecebimento: undefined, documentoDevolvido: undefined })
+          setSolicitacaoServicoTecnicoForm(emptySolicitacaoServicoTecnicoFormState())
         }
         const localePdfSst = selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'en' ? 'en-GB' : selectedLanguage
         const solicitacaoSstComoRegisto = (s?: SolicitacaoServicoTecnico): SolicitacaoServicoTecnico => {
@@ -34284,6 +34315,41 @@ A1;Peça exemplo;10`}
             window.open(`${url}text=${encodeURIComponent(body)}`, '_blank')
           })
         }
+        const registoModeloBaseParaEnvio = (): SolicitacaoServicoTecnico => ({
+          id: 'sst-modelo-base',
+          ...sstModeloBase,
+          dataCriacao: new Date().toISOString()
+        })
+        const handleGuardarSstModeloBase = async () => {
+          try {
+            await saveData('nonato-solicitacao-sst-modelo-base', sstModeloBase)
+            alert((safeT as any)?.solicitacaoServicoTecnicoModeloBaseGuardadoOk || 'Modelo base guardado. Será usado em «Nova solicitação» e nos envios abaixo.')
+          } catch {
+            alert('Erro ao guardar o modelo base.')
+          }
+        }
+        const handleEnviarEmailModeloBase = () => {
+          const rec = enriquecerSolicitacaoComClienteCadastrado(registoModeloBaseParaEnvio())
+          baixarFormularioOficialClienteHtml(rec)
+          const intro = (safeT as any)?.solicitacaoServicoTecnicoEmailInstrucaoAnexo || ''
+          const body = `${intro}\n\n---\n${buildSolicitacaoBody(rec)}`
+          const tagModelo = (safeT as any)?.solicitacaoServicoTecnicoModeloBaseAssunto || 'Modelo base'
+          const subject = (safeT?.solicitacaoServicoTecnicoTitle || 'Solicitação de Serviço Técnico') + ' — ' + tagModelo
+          queueMicrotask(() => {
+            window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank')
+          })
+        }
+        const handleEnviarWhatsAppModeloBase = () => {
+          const rec = enriquecerSolicitacaoComClienteCadastrado(registoModeloBaseParaEnvio())
+          baixarFormularioOficialClienteHtml(rec)
+          const introWa = (safeT as any)?.solicitacaoServicoTecnicoWhatsAppInstrucaoAnexo || ''
+          const body = `${introWa}\n\n---\n${buildSolicitacaoBody(rec)}`
+          const tel = (rec.telefone || '').replace(/\D/g, '')
+          const url = tel ? `https://wa.me/${tel.startsWith('0') ? '351' + tel.slice(1) : tel}?` : 'https://wa.me/?'
+          queueMicrotask(() => {
+            window.open(`${url}text=${encodeURIComponent(body)}`, '_blank')
+          })
+        }
         const handleUpdateUrgencia = (id: string, nivel: 'baixa' | 'media' | 'alta' | 'critica' | undefined) => {
           const list = solicitacoesServicoTecnico.map(s => s.id === id ? { ...s, nivelUrgencia: nivel || undefined } : s)
           setSolicitacoesServicoTecnico(list)
@@ -34331,7 +34397,7 @@ A1;Peça exemplo;10`}
                 </div>
                 <div className="tab-glass-hero-actions">
                   {!showSolicitacaoServicoTecnicoForm && (
-                    <button className="btn-primary" onClick={() => { setShowSolicitacaoServicoTecnicoForm(true); setEditingSolicitacaoServicoTecnico(null); setSolicitacaoServicoTecnicoForm({ clienteId: undefined, nomeCliente: '', tipoEquipamento: '', marca: '', modelo: '', numeroSerie: '', problemasApresentados: '', endereco: '', telefone: '', responsavel: '', assinaturaCliente: undefined, dataAssinaturaCliente: undefined, dataRecebimento: undefined, documentoDevolvido: undefined }); }} style={{ padding: '10px 20px', backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff', fontWeight: 'bold' }}>
+                    <button className="btn-primary" onClick={() => { setShowSolicitacaoServicoTecnicoForm(true); setEditingSolicitacaoServicoTecnico(null); setSolicitacaoServicoTecnicoForm({ ...sstModeloBase, clienteId: undefined, assinaturaCliente: undefined, dataAssinaturaCliente: undefined, dataRecebimento: undefined, documentoDevolvido: undefined }); }} style={{ padding: '10px 20px', backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff', fontWeight: 'bold' }}>
                       ➕ {safeT?.solicitacaoServicoTecnicoNovaSolicitacao || 'Nova solicitação'}
                     </button>
                   )}
@@ -34345,6 +34411,82 @@ A1;Peça exemplo;10`}
 
             <div style={{ ...glassCardStyle(ACCENT_AMBER, { padding: '16px 20px', radius: '12px', borderAlpha: 0.35 }), marginBottom: '24px', color: '#ffffff', fontSize: '14px' }}>
               <strong style={{ opacity: 0.95 }}>{safeT?.solicitacaoServicoTecnicoNotice || 'Após receber esta solicitação preenchida e assinada pelo cliente, será feito o pré-agendamento e na mesma solicitação será aplicado o nível de urgência.'}</strong>
+            </div>
+
+            <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px 22px', radius: '12px', borderAlpha: 0.28 }), marginBottom: '24px', border: '1px solid rgba(45, 212, 191, 0.35)' }}>
+              <h2 style={{ margin: '0 0 8px 0', fontSize: '17px', color: '#ecfdf5', fontWeight: 800 }}>
+                {(safeT as any)?.solicitacaoServicoTecnicoModeloBaseTitulo || 'Modelo base para envio ao cliente'}
+              </h2>
+              <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.5 }}>
+                {(safeT as any)?.solicitacaoServicoTecnicoModeloBaseMeta || 'Guarde aqui o formulário em branco (ou com texto fixo) que quer reutilizar. «Nova solicitação» começa a partir deste modelo. Use os botões para gerar PDF/HTML ou enviar este modelo diretamente.'}
+              </p>
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.solicitacaoServicoTecnicoClienteCadastrado || 'Cliente cadastrado (opcional)'}</label>
+                <select
+                  value={sstModeloBase.clienteId || ''}
+                  onChange={(e) => setSstModeloBase({ ...sstModeloBase, clienteId: e.target.value || undefined })}
+                  style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }}
+                >
+                  <option value="">{(safeT as any)?.solicitacaoServicoTecnicoClienteCadastradoOpt || '— Nenhum —'}</option>
+                  {clientes.map((cli) => (
+                    <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px', marginBottom: '14px' }}>
+                {[
+                  { key: 'nomeCliente', label: safeT?.solicitacaoServicoTecnicoNomeCliente },
+                  { key: 'tipoEquipamento', label: safeT?.solicitacaoServicoTecnicoTipoEquipamento },
+                  { key: 'marca', label: safeT?.solicitacaoServicoTecnicoMarca },
+                  { key: 'modelo', label: safeT?.solicitacaoServicoTecnicoModelo },
+                  { key: 'numeroSerie', label: safeT?.solicitacaoServicoTecnicoNumeroSerie },
+                  { key: 'endereco', label: safeT?.solicitacaoServicoTecnicoEndereco },
+                  { key: 'telefone', label: safeT?.solicitacaoServicoTecnicoTelefone },
+                  { key: 'responsavel', label: safeT?.solicitacaoServicoTecnicoResponsavel }
+                ].map(({ key, label }) => (
+                  <div key={`mb-${key}`}>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{label}</label>
+                    <input
+                      type="text"
+                      value={(sstModeloBase as any)[key] || ''}
+                      onChange={(e) => setSstModeloBase({ ...sstModeloBase, [key]: e.target.value })}
+                      style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.28)', borderRadius: '6px' }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.solicitacaoServicoTecnicoProblemasApresentados}</label>
+                <textarea
+                  value={sstModeloBase.problemasApresentados}
+                  onChange={(e) => setSstModeloBase({ ...sstModeloBase, problemasApresentados: e.target.value })}
+                  rows={3}
+                  style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.28)', borderRadius: '6px' }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+                <button type="button" className="btn-primary" onClick={() => void handleGuardarSstModeloBase()} style={{ padding: '10px 18px', backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#fff', fontWeight: 700 }}>
+                  💾 {(safeT as any)?.solicitacaoServicoTecnicoModeloBaseGuardar || 'Guardar modelo base'}
+                </button>
+                <button type="button" className="btn-primary" onClick={() => gerarPdfSolicitacaoServico(registoModeloBaseParaEnvio())} style={{ padding: '10px 18px', backgroundColor: 'rgba(15, 80, 70, 0.96)', border: '1px solid rgba(45, 212, 191, 0.65)', color: '#ecfdf5', fontWeight: 700 }}>
+                  📄 {(safeT as any)?.solicitacaoServicoTecnicoModeloBaseGerarPdf || 'PDF / impressão (modelo)'}
+                </button>
+                <button type="button" className="btn-primary" onClick={() => baixarFormularioOficialClienteHtml(enriquecerSolicitacaoComClienteCadastrado(registoModeloBaseParaEnvio()))} style={{ padding: '10px 18px', backgroundColor: 'rgba(30, 58, 90, 0.95)', border: '1px solid rgba(100, 180, 255, 0.45)', color: '#e0f2fe', fontWeight: 700 }}>
+                  ⬇ {(safeT as any)?.solicitacaoServicoTecnicoModeloBaseHtml || 'Descarregar .html (modelo)'}
+                </button>
+                <button type="button" onClick={() => handleEnviarEmailModeloBase()} style={{ padding: '10px 18px', border: '1px solid rgba(80, 160, 255, 0.55)', color: '#ffffff', background: 'rgba(18, 38, 62, 0.96)', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}>
+                  📧 {(safeT as any)?.solicitacaoServicoTecnicoModeloBaseEnviarEmail || 'E-mail (modelo)'}
+                </button>
+                <button type="button" onClick={() => handleEnviarWhatsAppModeloBase()} style={{ padding: '10px 18px', border: '1px solid rgba(37, 211, 102, 0.55)', color: '#ffffff', background: 'rgba(18, 52, 32, 0.92)', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}>
+                  💬 {(safeT as any)?.solicitacaoServicoTecnicoModeloBaseEnviarWhatsApp || 'WhatsApp (modelo)'}
+                </button>
+                <button type="button" onClick={() => setSstModeloBase(emptySolicitacaoServicoTecnicoFormState())} style={{ padding: '10px 14px', border: '1px solid rgba(255,255,255,0.25)', color: '#ccc', background: 'rgba(40,40,40,0.9)', borderRadius: '6px', cursor: 'pointer' }}>
+                  {(safeT as any)?.solicitacaoServicoTecnicoModeloBaseLimpar || 'Limpar campos do modelo'}
+                </button>
+              </div>
+              <p style={{ margin: '14px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
+                {(safeT as any)?.solicitacaoServicoTecnicoNovaUsaModelo || 'Dica: «Nova solicitação» copia os campos deste modelo (limpa cliente, assinatura e anexo da devolução).'}
+              </p>
             </div>
 
             {showSolicitacaoServicoTecnicoForm && (
