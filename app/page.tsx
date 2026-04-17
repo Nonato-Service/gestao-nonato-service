@@ -53607,7 +53607,7 @@ A1;Peça exemplo;10`}
         aria-hidden={hideSidebarForEntryDashboard ? true : undefined}
       >
         {/* Logo NONATO SERVICE — logo ocupa 100% do contorno verde, borda mantida */}
-        <div className="sidebar-brand" style={{ marginBottom: '25px', textAlign: 'center', padding: '8px', overflow: 'hidden', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.12)', minHeight: '120px', maxHeight: 'min(28vh, 200px)', height: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
+        <div className="sidebar-brand">
           {logoUrl ? (
             logoType === 'video' ? (
               <video src={logoUrl} autoPlay loop muted style={{ width: '100%', maxHeight: 'min(26vh, 184px)', objectFit: 'contain', display: 'block' }} />
@@ -53661,52 +53661,13 @@ A1;Peça exemplo;10`}
         
         {/* Grupo: GESTÃO TÉCNICA — só mostra se o usuário tiver permissão em algum botão */}
         {getButtonsByGroup('gestao-tecnica').some((b) => canAccessAction(b.action)) && (
-        <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+        <div className="sidebar-nav-cluster">
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-gestao-tecnica' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-tecnica')}
-            style={{ 
-              width: '100%', 
-              textAlign: 'left', 
-              padding: '12px', 
-              marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-gestao-tecnica' ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
-              border: selectedSidebarButton === 'open-gestao-tecnica' ? '2px solid transparent' : '1px solid rgba(105, 255, 145, 0.72)',
-              borderRadius: '8px',
-              color: selectedSidebarButton === 'open-gestao-tecnica' ? '#7dd68a' : '#ccc',
-              fontWeight: 'bold',
-              fontSize: '12px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              transition: 'all 0.3s ease',
-              position: 'relative'
-            }}
-            onMouseEnter={(e) => {
-              if (selectedSidebarButton !== 'open-gestao-tecnica') {
-                e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
-                e.currentTarget.style.border = '1px solid rgba(140, 255, 175, 0.9)'
-                e.currentTarget.style.boxShadow = 'none'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (selectedSidebarButton !== 'open-gestao-tecnica') {
-                e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
-                e.currentTarget.style.border = '1px solid rgba(105, 255, 145, 0.72)'
-                e.currentTarget.style.boxShadow = 'none'
-              }
-            }}
           >
             {selectedSidebarButton === 'open-gestao-tecnica' && (
-              <span style={{
-                position: 'absolute',
-                top: '8px',
-                right: '30px',
-                fontSize: '16px',
-                color: '#ffffff',
-                fontWeight: 'bold',
-                zIndex: 2
-              }}>✓</span>
+              <span className="sidebar-nav-check" aria-hidden>✓</span>
             )}
             <span>
               <span style={{ 
@@ -53717,11 +53678,11 @@ A1;Peça exemplo;10`}
               </span>
               {safeT?.gestaoTecnicaTitle || 'GESTÃO TÉCNICA'}
             </span>
-            <span style={{ fontSize: '12px' }}>{expandedGroups.has('gestao-tecnica') ? '▼' : '▶'}</span>
+            <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('gestao-tecnica') ? '▼' : '▶'}</span>
           </button>
           
           {expandedGroups.has('gestao-tecnica') && getButtonsByGroup('gestao-tecnica').some((b) => canAccessAction(b.action === 'open-biblioteca-hub' ? 'open-biblioteca-pecas' : b.action)) && (
-            <div className="sidebar-action-buttons" style={{ marginTop: '5px', marginBottom: '10px' }}>
+            <div className="sidebar-action-buttons">
               {getButtonsByGroup('gestao-tecnica')
                 .filter((button) => button.id === 'biblioteca-pecas-default' ? canAccessAction('open-biblioteca-pecas') : canAccessAction(button.action))
                 .sort((a, b) => a.order - b.order)
@@ -53733,32 +53694,6 @@ A1;Peça exemplo;10`}
                         key={button.id}
                         className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
                         onClick={() => handleButtonClick('open-biblioteca-hub')}
-                        style={{ 
-                          textAlign: 'center', 
-                          padding: '12px', 
-                          marginBottom: '6px',
-                          fontSize: '13px',
-                          backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.42)' : 'rgba(0, 255, 0, 0.18)',
-                          border: isSelected ? '1px solid rgba(0, 255, 0, 0.52)' : '1px solid rgba(0, 255, 0, 0.28)',
-                          borderRadius: '12px',
-                          boxShadow: 'none',
-                          color: isSelected ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
-                          fontWeight: '500',
-                          transition: 'all 0.3s ease',
-                          position: 'relative'
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isSelected) {
-                            e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
-                            e.currentTarget.style.boxShadow = 'none'
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isSelected) {
-                            e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
-                            e.currentTarget.style.boxShadow = 'none'
-                          }
-                        }}
                       >
                         📚 {getButtonName(button)}
                       </button>
@@ -53772,42 +53707,9 @@ A1;Peça exemplo;10`}
                       data-sidebar-nav-action={button.action}
                       className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
                       onClick={() => handleButtonClick(button.action)}
-                      style={{ 
-                        textAlign: 'center', 
-                        padding: '12px', 
-                        marginBottom: '6px',
-                        fontSize: '13px',
-                        backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.42)' : 'rgba(0, 255, 0, 0.18)',
-                        border: isSelected ? '1px solid rgba(0, 255, 0, 0.52)' : '1px solid rgba(0, 255, 0, 0.28)',
-                        borderRadius: '12px',
-                        boxShadow: 'none',
-                        color: isSelected ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
-                        fontWeight: isSelected ? 'bold' : '500',
-                        transition: 'all 0.3s ease',
-                        position: 'relative'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isSelected) {
-                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
-                          e.currentTarget.style.boxShadow = 'none'
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isSelected) {
-                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
-                          e.currentTarget.style.boxShadow = 'none'
-                        }
-                      }}
                     >
                       {isSelected && (
-                        <span style={{
-                          position: 'absolute',
-                          top: '5px',
-                          right: '8px',
-                          fontSize: '14px',
-                          color: '#ffffff',
-                          fontWeight: 'bold'
-                        }}>✓</span>
+                        <span className="sidebar-nav-check" aria-hidden>✓</span>
                       )}
                       {getButtonName(button)}
                     </button>
@@ -53819,137 +53721,50 @@ A1;Peça exemplo;10`}
         )}
 
         {/* Botão principal: Protocolos de Serviço (abaixo de Gestão Técnica) */}
-        <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+        <div className="sidebar-nav-cluster">
           <button
             type="button"
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-protocolos-servico' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-protocolos-servico')}
-            style={{
-              width: '100%',
-              textAlign: 'left',
-              padding: '12px',
-              marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-protocolos-servico' ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
-              border: selectedSidebarButton === 'open-protocolos-servico' ? '2px solid transparent' : '1px solid rgba(105, 255, 145, 0.72)',
-              borderRadius: '8px',
-              color: selectedSidebarButton === 'open-protocolos-servico' ? '#7dd68a' : '#ccc',
-              fontWeight: 'bold',
-              fontSize: '12px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              transition: 'all 0.3s ease',
-              position: 'relative'
-            }}
-            onMouseEnter={(e) => {
-              if (selectedSidebarButton !== 'open-protocolos-servico') {
-                e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
-                e.currentTarget.style.border = '1px solid rgba(140, 255, 175, 0.9)'
-                e.currentTarget.style.boxShadow = 'none'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (selectedSidebarButton !== 'open-protocolos-servico') {
-                e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
-                e.currentTarget.style.border = '1px solid rgba(105, 255, 145, 0.72)'
-                e.currentTarget.style.boxShadow = 'none'
-              }
-            }}
           >
             {selectedSidebarButton === 'open-protocolos-servico' && (
-              <span style={{ position: 'absolute', top: '8px', right: '30px', fontSize: '16px', color: '#ffffff', fontWeight: 'bold', zIndex: 2 }}>✓</span>
+              <span className="sidebar-nav-check" aria-hidden>✓</span>
             )}
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-              <span style={{ flexShrink: 0 }}>📋</span>
-              <span style={{ textTransform: 'uppercase', letterSpacing: '0.4px', lineHeight: 1.25 }}>
+            <span className="sidebar-nav-label">
+              <span className="sidebar-nav-label-icon" aria-hidden>📋</span>
+              <span className="sidebar-nav-label-text">
                 {(safeT as any)?.protocolosServicoTitle || 'Protocolos de Serviço'}
               </span>
             </span>
-            <span style={{ fontSize: '12px' }}>▶</span>
+            <span className="sidebar-nav-chevron" aria-hidden>▶</span>
           </button>
         </div>
 
         {/* Botão principal: Manual detalhado do programa */}
-        <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+        <div className="sidebar-nav-cluster">
           <button
             type="button"
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-manual-programa' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-manual-programa')}
-            style={{
-              width: '100%',
-              textAlign: 'left',
-              padding: '12px',
-              marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-manual-programa' ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
-              border: selectedSidebarButton === 'open-manual-programa' ? '2px solid transparent' : '1px solid rgba(105, 255, 145, 0.72)',
-              borderRadius: '8px',
-              color: selectedSidebarButton === 'open-manual-programa' ? '#7dd68a' : '#ccc',
-              fontWeight: 'bold',
-              fontSize: '12px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              transition: 'all 0.3s ease',
-              position: 'relative'
-            }}
           >
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-              <span style={{ flexShrink: 0 }}>📘</span>
-              <span style={{ textTransform: 'uppercase', letterSpacing: '0.4px', lineHeight: 1.25 }}>
+            <span className="sidebar-nav-label">
+              <span className="sidebar-nav-label-icon" aria-hidden>📘</span>
+              <span className="sidebar-nav-label-text">
                 {(safeT as any)?.manualProgramaTitle || 'Manual do Programa'}
               </span>
             </span>
-            <span style={{ fontSize: '12px' }}>▶</span>
+            <span className="sidebar-nav-chevron" aria-hidden>▶</span>
           </button>
         </div>
 
         {/* Grupo: GESTÃO DE CUSTOS — mesmo padrão de cores e contorno do botão GESTÃO TÉCNICA */}
-        <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+        <div className="sidebar-nav-cluster">
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-gestao-custos' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-custos')}
-            style={{ 
-              width: '100%', 
-              textAlign: 'left', 
-              padding: '12px', 
-              marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-gestao-custos' ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
-              border: selectedSidebarButton === 'open-gestao-custos' ? '2px solid transparent' : '1px solid rgba(105, 255, 145, 0.72)',
-              borderRadius: '8px',
-              color: selectedSidebarButton === 'open-gestao-custos' ? '#7dd68a' : '#ccc',
-              fontWeight: 'bold',
-              fontSize: '12px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              transition: 'all 0.3s ease',
-              position: 'relative'
-            }}
-            onMouseEnter={(e) => {
-              if (selectedSidebarButton !== 'open-gestao-custos') {
-                e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
-                e.currentTarget.style.border = '1px solid rgba(140, 255, 175, 0.9)'
-                e.currentTarget.style.boxShadow = 'none'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (selectedSidebarButton !== 'open-gestao-custos') {
-                e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
-                e.currentTarget.style.border = '1px solid rgba(105, 255, 145, 0.72)'
-                e.currentTarget.style.boxShadow = 'none'
-              }
-            }}
           >
             {selectedSidebarButton === 'open-gestao-custos' && (
-              <span style={{
-                position: 'absolute',
-                top: '8px',
-                right: '30px',
-                fontSize: '16px',
-                color: '#ffffff',
-                fontWeight: 'bold',
-                zIndex: 2
-              }}>✓</span>
+              <span className="sidebar-nav-check" aria-hidden>✓</span>
             )}
             <span>
               <span style={{ 
@@ -53960,11 +53775,11 @@ A1;Peça exemplo;10`}
               </span>
               {safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS'}
             </span>
-            <span style={{ fontSize: '12px' }}>{expandedGroups.has('gestao-custos') ? '▼' : '▶'}</span>
+            <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('gestao-custos') ? '▼' : '▶'}</span>
           </button>
           
           {expandedGroups.has('gestao-custos') && (
-            <div className="sidebar-action-buttons" style={{ marginTop: '5px', marginBottom: '10px' }}>
+            <div className="sidebar-action-buttons">
               {getButtonsByGroup('gestao-custos')
                 .sort((a, b) => a.order - b.order)
                 .map((button) => {
@@ -53976,42 +53791,9 @@ A1;Peça exemplo;10`}
                       data-sidebar-nav-action={button.action}
                       className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
                       onClick={() => handleButtonClick(button.action)}
-                      style={{ 
-                        textAlign: 'center', 
-                        padding: '12px', 
-                        marginBottom: '6px',
-                        fontSize: '13px',
-                        backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.42)' : 'rgba(0, 255, 0, 0.18)',
-                        border: isSelected ? '1px solid rgba(0, 255, 0, 0.52)' : '1px solid rgba(0, 255, 0, 0.28)',
-                        borderRadius: '12px',
-                        boxShadow: 'none',
-                        color: isSelected ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
-                        fontWeight: isSelected ? 'bold' : '500',
-                        transition: 'all 0.3s ease',
-                        position: 'relative'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isSelected) {
-                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
-                          e.currentTarget.style.boxShadow = 'none'
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isSelected) {
-                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
-                          e.currentTarget.style.boxShadow = 'none'
-                        }
-                      }}
                     >
                       {isSelected && (
-                        <span style={{
-                          position: 'absolute',
-                          top: '5px',
-                          right: '8px',
-                          fontSize: '14px',
-                          color: '#ffffff',
-                          fontWeight: 'bold'
-                        }}>✓</span>
+                        <span className="sidebar-nav-check" aria-hidden>✓</span>
                       )}
                       {getButtonName(button)}
                     </button>
@@ -54027,52 +53809,13 @@ A1;Peça exemplo;10`}
         </div>
 
         {/* Botão: COMUNICAÇÃO INTERNA C/ GESTORES E TECNICOS */}
-        <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+        <div className="sidebar-nav-cluster">
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-comunicacao-interna' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-comunicacao-interna')}
-            style={{ 
-              width: '100%', 
-              textAlign: 'left', 
-              padding: '12px', 
-              marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-comunicacao-interna' ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
-              border: selectedSidebarButton === 'open-comunicacao-interna' ? '2px solid transparent' : '1px solid rgba(105, 255, 145, 0.72)',
-              borderRadius: '8px',
-              color: selectedSidebarButton === 'open-comunicacao-interna' ? '#7dd68a' : '#ccc',
-              fontWeight: 'bold',
-              fontSize: '12px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              transition: 'all 0.3s ease',
-              position: 'relative'
-            }}
-            onMouseEnter={(e) => {
-              if (selectedSidebarButton !== 'open-comunicacao-interna') {
-                e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
-                e.currentTarget.style.border = '1px solid rgba(140, 255, 175, 0.9)'
-                e.currentTarget.style.boxShadow = 'none'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (selectedSidebarButton !== 'open-comunicacao-interna') {
-                e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
-                e.currentTarget.style.border = '1px solid rgba(105, 255, 145, 0.72)'
-                e.currentTarget.style.boxShadow = 'none'
-              }
-            }}
           >
             {selectedSidebarButton === 'open-comunicacao-interna' && (
-              <span style={{
-                position: 'absolute',
-                top: '8px',
-                right: '30px',
-                fontSize: '16px',
-                color: '#ffffff',
-                fontWeight: 'bold',
-                zIndex: 2
-              }}>✓</span>
+              <span className="sidebar-nav-check" aria-hidden>✓</span>
             )}
             <span>
               <span style={{ 
@@ -54088,11 +53831,11 @@ A1;Peça exemplo;10`}
                 {comunicacaoUnreadCount}
               </span>
             )}
-            <span style={{ fontSize: '12px' }}>{expandedGroups.has('comunicacao-interna') ? '▼' : '▶'}</span>
+            <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('comunicacao-interna') ? '▼' : '▶'}</span>
           </button>
           
           {expandedGroups.has('comunicacao-interna') && (
-            <div className="sidebar-action-buttons" style={{ marginTop: '5px', marginBottom: '10px' }}>
+            <div className="sidebar-action-buttons">
               {(() => {
                 // Sempre mostrar os 3 botões: usar dados guardados se existirem, senão usar defaults
                 const ids: Array<{ id: string; action: string; translationKey: string }> = [
@@ -54113,42 +53856,9 @@ A1;Peça exemplo;10`}
                       key={id}
                       className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
                       onClick={() => handleButtonClick(action)}
-                      style={{ 
-                        textAlign: 'center', 
-                        padding: '12px', 
-                        marginBottom: '6px',
-                        fontSize: '13px',
-                        backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.42)' : 'rgba(0, 255, 0, 0.18)',
-                        border: isSelected ? '1px solid rgba(0, 255, 0, 0.52)' : '1px solid rgba(0, 255, 0, 0.28)',
-                        borderRadius: '12px',
-                        boxShadow: 'none',
-                        color: isSelected ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
-                        fontWeight: isSelected ? 'bold' : '500',
-                        transition: 'all 0.3s ease',
-                        position: 'relative'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isSelected) {
-                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
-                          e.currentTarget.style.boxShadow = 'none'
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isSelected) {
-                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
-                          e.currentTarget.style.boxShadow = 'none'
-                        }
-                      }}
                     >
                       {isSelected && (
-                        <span style={{
-                          position: 'absolute',
-                          top: '5px',
-                          right: '8px',
-                          fontSize: '14px',
-                          color: '#ffffff',
-                          fontWeight: 'bold'
-                        }}>✓</span>
+                        <span className="sidebar-nav-check" aria-hidden>✓</span>
                       )}
                       {shouldShowUnreadBadge && (
                         <span className="hub-comunicacao-menu-badge" style={{
@@ -54180,43 +53890,9 @@ A1;Peça exemplo;10`}
                 <button
                   className={`btn-primary sidebar-action-btn${selectedSidebarButton === 'open-mensagens-internas' ? ' sidebar-action-btn-active' : ''}`}
                   onClick={() => handleButtonClick('open-mensagens-internas')}
-                  style={{ 
-                    width: '100%', 
-                    textAlign: 'center', 
-                    padding: '12px', 
-                    marginBottom: '6px',
-                    fontSize: '13px',
-                    backgroundColor: selectedSidebarButton === 'open-mensagens-internas' ? 'rgba(0, 255, 0, 0.42)' : 'rgba(0, 255, 0, 0.18)',
-                    border: selectedSidebarButton === 'open-mensagens-internas' ? '1px solid rgba(0, 255, 0, 0.52)' : '1px solid rgba(0, 255, 0, 0.28)',
-                    borderRadius: '12px',
-                    boxShadow: 'none',
-                    color: selectedSidebarButton === 'open-mensagens-internas' ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
-                    fontWeight: selectedSidebarButton === 'open-mensagens-internas' ? 'bold' : '500',
-                    transition: 'all 0.3s ease',
-                    position: 'relative'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedSidebarButton !== 'open-mensagens-internas') {
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
-                      e.currentTarget.style.boxShadow = 'none'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedSidebarButton !== 'open-mensagens-internas') {
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
-                      e.currentTarget.style.boxShadow = 'none'
-                    }
-                  }}
                 >
                   {selectedSidebarButton === 'open-mensagens-internas' && (
-                    <span style={{
-                      position: 'absolute',
-                      top: '5px',
-                      right: '8px',
-                      fontSize: '14px',
-                      color: '#ffffff',
-                      fontWeight: 'bold'
-                    }}>✓</span>
+                    <span className="sidebar-nav-check" aria-hidden>✓</span>
                   )}
                   {safeT?.mensagensInternas || 'MENSAGENS INTERNAS'}
                 </button>
@@ -54226,58 +53902,19 @@ A1;Peça exemplo;10`}
         </div>
 
         {/* Grupo: GESTÃO DOS CHECKLIST (Movido para fora da Gestão Industrial) */}
-        <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+        <div className="sidebar-nav-cluster">
           {sidebarButtons
             .filter(btn => btn.id === 'checklist-group-default')
             .map((button) => {
               const isSelected = selectedSidebarButton === button.action
               return (
-                <div key={button.id} style={{ marginBottom: '5px' }}>
+                <div key={button.id} className="sidebar-nav-subcluster">
                   <button
                     className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
                     onClick={() => handleButtonClick(button.action)}
-                    style={{ 
-                      width: '100%', 
-                      textAlign: 'left', 
-                      padding: '12px', 
-                      marginBottom: '5px',
-                      fontSize: '12px',
-                      backgroundColor: isSelected ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
-                      border: isSelected ? '2px solid transparent' : '1px solid rgba(105, 255, 145, 0.72)',
-                      borderRadius: '8px',
-                      color: isSelected ? '#7dd68a' : '#ccc',
-                      fontWeight: 'bold',
-                      transition: 'all 0.3s ease',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      position: 'relative'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isSelected) {
-                        e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
-                        e.currentTarget.style.border = '1px solid rgba(140, 255, 175, 0.9)'
-                        e.currentTarget.style.boxShadow = 'none'
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isSelected) {
-                        e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
-                        e.currentTarget.style.border = '1px solid rgba(105, 255, 145, 0.72)'
-                        e.currentTarget.style.boxShadow = 'none'
-                      }
-                    }}
                   >
                     {isSelected && (
-                      <span style={{
-                        position: 'absolute',
-                        top: '8px',
-                        right: '30px',
-                        fontSize: '16px',
-                        color: '#ffffff',
-                        fontWeight: 'bold',
-                        zIndex: 2
-                      }}>✓</span>
+                      <span className="sidebar-nav-check" aria-hidden>✓</span>
                     )}
                     <span>
                       <span style={{ 
@@ -54288,10 +53925,10 @@ A1;Peça exemplo;10`}
                       </span>
                       {getButtonName(button)}
                     </span>
-                    <span style={{ fontSize: '12px' }}>{expandedGroups.has('checklist-group') ? '▼' : '▶'}</span>
+                    <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('checklist-group') ? '▼' : '▶'}</span>
                   </button>
                   {expandedGroups.has('checklist-group') && (
-                    <div className="sidebar-action-buttons" style={{ marginTop: '5px', marginBottom: '5px' }}>
+                    <div className="sidebar-action-buttons">
                       {getButtonsByGroup('checklist-group')
                         .sort((a, b) => a.order - b.order)
                         .map((subButton) => {
@@ -54302,43 +53939,9 @@ A1;Peça exemplo;10`}
                               className={`btn-primary sidebar-action-btn${isSubSelected ? ' sidebar-action-btn-active' : ''}`}
                               data-button-action={subButton.action}
                               onClick={() => handleButtonClick(subButton.action)}
-                              style={{ 
-                                width: '100%', 
-                                textAlign: 'center', 
-                                padding: '12px', 
-                                marginBottom: '6px',
-                                fontSize: '13px',
-                                backgroundColor: isSubSelected ? 'rgba(0, 255, 0, 0.42)' : 'rgba(0, 255, 0, 0.18)',
-                                border: isSubSelected ? '1px solid rgba(0, 255, 0, 0.52)' : '1px solid rgba(0, 255, 0, 0.28)',
-                                borderRadius: '12px',
-                                boxShadow: 'none',
-                                color: isSubSelected ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
-                                fontWeight: isSubSelected ? 'bold' : '500',
-                                transition: 'all 0.3s ease',
-                                position: 'relative'
-                              }}
-                              onMouseEnter={(e) => {
-                                if (!isSubSelected) {
-                                  e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
-                                  e.currentTarget.style.boxShadow = 'none'
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                if (!isSubSelected) {
-                                  e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
-                                  e.currentTarget.style.boxShadow = 'none'
-                                }
-                              }}
                             >
                               {isSubSelected && (
-                                <span style={{
-                                  position: 'absolute',
-                                  top: '5px',
-                                  right: '8px',
-                                  fontSize: '14px',
-                                  color: '#ffffff',
-                                  fontWeight: 'bold'
-                                }}>✓</span>
+                                <span className="sidebar-nav-check" aria-hidden>✓</span>
                               )}
                               {getButtonName(subButton)}
                             </button>
@@ -54352,55 +53955,16 @@ A1;Peça exemplo;10`}
         </div>
 
         {/* Grupo: GESTÃO INDUSTRIAL */}
-        <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+        <div className="sidebar-nav-cluster">
           {(() => {
             const gestaoIndustrialActive = selectedSidebarButton === 'open-gestao-industrial' || getButtonsByGroup('gestao-industrial').some((b: SidebarButton) => b.id === selectedSidebarButton)
             return (
           <button
             className={`btn-primary sidebar-group-header${gestaoIndustrialActive ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-industrial')}
-            style={{ 
-              width: '100%', 
-              textAlign: 'left', 
-              padding: '12px', 
-              marginBottom: '5px',
-              backgroundColor: gestaoIndustrialActive ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
-              border: gestaoIndustrialActive ? '2px solid transparent' : '1px solid rgba(105, 255, 145, 0.72)',
-              borderRadius: '8px',
-              color: gestaoIndustrialActive ? '#7dd68a' : '#ccc',
-              fontWeight: 'bold',
-              fontSize: '12px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              transition: 'all 0.3s ease',
-              position: 'relative'
-            }}
-            onMouseEnter={(e) => {
-              if (!gestaoIndustrialActive) {
-                e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
-                e.currentTarget.style.border = '1px solid rgba(140, 255, 175, 0.9)'
-                e.currentTarget.style.boxShadow = 'none'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!gestaoIndustrialActive) {
-                e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
-                e.currentTarget.style.border = '1px solid rgba(105, 255, 145, 0.72)'
-                e.currentTarget.style.boxShadow = 'none'
-              }
-            }}
           >
             {gestaoIndustrialActive && (
-              <span style={{
-                position: 'absolute',
-                top: '8px',
-                right: '30px',
-                fontSize: '16px',
-                color: '#ffffff',
-                fontWeight: 'bold',
-                zIndex: 2
-              }}>✓</span>
+              <span className="sidebar-nav-check" aria-hidden>✓</span>
             )}
             <span>
               <span style={{ 
@@ -54411,12 +53975,12 @@ A1;Peça exemplo;10`}
               </span>
               {safeT?.gestaoIndustrialTitle || 'GESTÃO INDUSTRIAL'}
             </span>
-            <span style={{ fontSize: '12px' }}>{expandedGroups.has('gestao-industrial') ? '▼' : '▶'}</span>
+            <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('gestao-industrial') ? '▼' : '▶'}</span>
           </button>
             )
           })()}
           {expandedGroups.has('gestao-industrial') && (
-            <div className="sidebar-action-buttons" style={{ marginTop: '5px', marginBottom: '10px' }}>
+            <div className="sidebar-action-buttons">
               {getButtonsByGroup('gestao-industrial')
                 .sort((a, b) => a.order - b.order)
                 .map((button) => {
@@ -54424,43 +53988,19 @@ A1;Peça exemplo;10`}
                   if (button.id === 'checklist-group-default') {
                     const isSelected = selectedSidebarButton === button.action
                     return (
-                      <div key={button.id} style={{ marginBottom: '5px' }}>
+                      <div key={button.id} className="sidebar-nav-subcluster">
                         <button
-                          className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
+                          className={`btn-primary sidebar-action-btn sidebar-action-btn--row${isSelected ? ' sidebar-action-btn-active' : ''}`}
                           onClick={() => handleButtonClick(button.action)}
-                          style={{ 
-                            textAlign: 'left', 
-                            padding: '12px', 
-                            marginBottom: '6px',
-                            fontSize: '13px',
-                            backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.42)' : 'rgba(0, 255, 0, 0.18)',
-                            border: isSelected ? '1px solid rgba(0, 255, 0, 0.52)' : '1px solid rgba(0, 255, 0, 0.28)',
-                            borderRadius: '12px',
-                            boxShadow: 'none',
-                            color: isSelected ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
-                            fontWeight: isSelected ? 'bold' : '500',
-                            transition: 'all 0.3s ease',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            position: 'relative'
-                          }}
                         >
                           {isSelected && (
-                            <span style={{
-                              position: 'absolute',
-                              top: '5px',
-                              right: '30px',
-                              fontSize: '14px',
-                              color: '#00ff00',
-                              fontWeight: 'bold'
-                            }}>✓</span>
+                            <span className="sidebar-nav-check" aria-hidden>✓</span>
                           )}
                           <span>{getButtonName(button)}</span>
-                          <span style={{ fontSize: '12px' }}>{expandedGroups.has('checklist-group') ? '▼' : '▶'}</span>
+                          <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('checklist-group') ? '▼' : '▶'}</span>
                         </button>
                         {expandedGroups.has('checklist-group') && (
-                          <div className="sidebar-action-buttons" style={{ marginLeft: '15px', marginTop: '5px', marginBottom: '5px' }}>
+                          <div className="sidebar-action-buttons">
                             {getButtonsByGroup('checklist-group')
                               .sort((a, b) => a.order - b.order)
                               .map((subButton) => {
@@ -54471,30 +54011,9 @@ A1;Peça exemplo;10`}
                                     className={`btn-primary sidebar-action-btn${isSubSelected ? ' sidebar-action-btn-active' : ''}`}
                                     data-button-action={subButton.action}
                                     onClick={() => handleButtonClick(subButton.action)}
-                                    style={{ 
-                                      textAlign: 'center', 
-                                      padding: '10px', 
-                                      marginBottom: '5px',
-                                      fontSize: '12px',
-                                      backgroundColor: isSubSelected ? 'rgba(0, 255, 0, 0.42)' : 'rgba(0, 255, 0, 0.18)',
-                                      border: isSubSelected ? '1px solid rgba(0, 255, 0, 0.52)' : '1px solid rgba(0, 255, 0, 0.28)',
-                                      borderRadius: '12px',
-                                      boxShadow: 'none',
-                                      color: isSubSelected ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
-                                      fontWeight: isSubSelected ? 'bold' : '500',
-                                      transition: 'all 0.3s ease',
-                                      position: 'relative'
-                                    }}
                                   >
                                     {isSubSelected && (
-                                      <span style={{
-                                        position: 'absolute',
-                                        top: '3px',
-                                        right: '8px',
-                                        fontSize: '12px',
-                                        color: '#00ff00',
-                                        fontWeight: 'bold'
-                                      }}>✓</span>
+                                      <span className="sidebar-nav-check" aria-hidden>✓</span>
                                     )}
                                     {getButtonName(subButton)}
                                   </button>
@@ -54512,30 +54031,9 @@ A1;Peça exemplo;10`}
                       key={button.id}
                       className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
                       onClick={() => handleButtonClick(button.action, button.id)}
-                      style={{ 
-                        textAlign: 'center', 
-                        padding: '12px', 
-                        marginBottom: '6px',
-                        fontSize: '13px',
-                        backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.42)' : 'rgba(0, 255, 0, 0.18)',
-                        border: isSelected ? '1px solid rgba(0, 255, 0, 0.52)' : '1px solid rgba(0, 255, 0, 0.28)',
-                        borderRadius: '12px',
-                        boxShadow: 'none',
-                        color: isSelected ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
-                        fontWeight: isSelected ? 'bold' : '500',
-                        transition: 'all 0.3s ease',
-                        position: 'relative'
-                      }}
                     >
                       {isSelected && (
-                        <span style={{
-                          position: 'absolute',
-                          top: '5px',
-                          right: '8px',
-                          fontSize: '14px',
-                          color: '#ffffff',
-                          fontWeight: 'bold'
-                        }}>✓</span>
+                        <span className="sidebar-nav-check" aria-hidden>✓</span>
                       )}
                       {getButtonName(button)}
                     </button>
@@ -54551,6 +54049,7 @@ A1;Peça exemplo;10`}
         </div>
 
         {/* Botão Principal: MANUAIS E INFORMAÇÕES TÉCNICA DOS EQUIPAMENTOS — abaixo de Gestão Industrial, mesmo padrão */}
+        <div className="sidebar-nav-cluster">
         {sidebarButtons
           .filter(b => b.id === 'manuais-informacoes-tecnicas-default')
           .map((button) => {
@@ -54560,60 +54059,22 @@ A1;Peça exemplo;10`}
                 key={button.id}
                 className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
                 onClick={() => handleButtonClick(button.action)}
-                style={{
-                  width: '100%',
-                  textAlign: 'left',
-                  padding: '12px',
-                  marginTop: '10px',
-                  marginBottom: '10px',
-                  backgroundColor: isSelected ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
-                  border: isSelected ? '2px solid transparent' : '1px solid rgba(105, 255, 145, 0.72)',
-                  borderRadius: '8px',
-                  color: isSelected ? '#7dd68a' : '#ccc',
-                  fontWeight: 'bold',
-                  fontSize: '12px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  transition: 'all 0.3s ease',
-                  position: 'relative'
-                }}
-                onMouseEnter={(e) => {
-                  if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
-                    e.currentTarget.style.border = '1px solid rgba(140, 255, 175, 0.9)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
-                    e.currentTarget.style.border = '1px solid rgba(105, 255, 145, 0.72)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }
-                }}
               >
                 {isSelected && (
-                  <span style={{
-                    position: 'absolute',
-                    top: '8px',
-                    right: '30px',
-                    fontSize: '16px',
-                    color: '#ffffff',
-                    fontWeight: 'bold',
-                    zIndex: 2
-                  }}>✓</span>
+                  <span className="sidebar-nav-check" aria-hidden>✓</span>
                 )}
                 <span>
                   <span style={{ display: 'inline-block', marginRight: '8px' }}>📋</span>
                   {getButtonName(button)}
                 </span>
-                <span style={{ fontSize: '12px' }}>▶</span>
+                <span className="sidebar-nav-chevron" aria-hidden>▶</span>
               </button>
             )
           })}
+        </div>
 
         {/* Botão Principal: ALMOXARIFADO / ARMAZEM — mesmo padrão de cores e contorno do botão GESTÃO TÉCNICA */}
+        <div className="sidebar-nav-cluster">
         {sidebarButtons
           .filter(b => b.id === 'almoxarifado-armazem-default')
           .map((button) => {
@@ -54623,49 +54084,9 @@ A1;Peça exemplo;10`}
                 key={button.id}
                 className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
                 onClick={() => handleButtonClick(button.action)}
-                style={{ 
-                  width: '100%', 
-                  textAlign: 'left', 
-                  padding: '12px', 
-                  marginTop: '10px',
-                  marginBottom: '10px',
-                  backgroundColor: isSelected ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
-                  border: isSelected ? '2px solid transparent' : '1px solid rgba(105, 255, 145, 0.72)',
-                  borderRadius: '8px',
-                  color: isSelected ? '#7dd68a' : '#ccc',
-                  fontWeight: 'bold',
-                  fontSize: '12px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  transition: 'all 0.3s ease',
-                  position: 'relative'
-                }}
-                onMouseEnter={(e) => {
-                  if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
-                    e.currentTarget.style.border = '1px solid rgba(140, 255, 175, 0.9)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
-                    e.currentTarget.style.border = '1px solid rgba(105, 255, 145, 0.72)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }
-                }}
               >
                 {isSelected && (
-                  <span style={{
-                    position: 'absolute',
-                    top: '8px',
-                    right: '30px',
-                    fontSize: '16px',
-                    color: '#ffffff',
-                    fontWeight: 'bold',
-                    zIndex: 2
-                  }}>✓</span>
+                  <span className="sidebar-nav-check" aria-hidden>✓</span>
                 )}
                 <span>
                   <span style={{ 
@@ -54676,58 +54097,20 @@ A1;Peça exemplo;10`}
                   </span>
                   {getButtonName(button)}
                 </span>
-                <span style={{ fontSize: '12px' }}>▶</span>
+                <span className="sidebar-nav-chevron" aria-hidden>▶</span>
               </button>
             )
           })}
+        </div>
 
         {/* Grupo: GESTÃO FINANCEIRA */}
-        <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+        <div className="sidebar-nav-cluster">
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-gestao-financeira' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-financeira')}
-            style={{ 
-              width: '100%', 
-              textAlign: 'left', 
-              padding: '12px', 
-              marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-gestao-financeira' ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
-              border: selectedSidebarButton === 'open-gestao-financeira' ? '2px solid transparent' : '1px solid rgba(105, 255, 145, 0.72)',
-              borderRadius: '8px',
-              color: selectedSidebarButton === 'open-gestao-financeira' ? '#7dd68a' : '#ccc',
-              fontWeight: 'bold',
-              fontSize: '12px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              transition: 'all 0.3s ease',
-              position: 'relative'
-            }}
-            onMouseEnter={(e) => {
-              if (selectedSidebarButton !== 'open-gestao-financeira') {
-                e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
-                e.currentTarget.style.border = '1px solid rgba(140, 255, 175, 0.9)'
-                e.currentTarget.style.boxShadow = 'none'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (selectedSidebarButton !== 'open-gestao-financeira') {
-                e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
-                e.currentTarget.style.border = '1px solid rgba(105, 255, 145, 0.72)'
-                e.currentTarget.style.boxShadow = 'none'
-              }
-            }}
           >
             {selectedSidebarButton === 'open-gestao-financeira' && (
-              <span style={{
-                position: 'absolute',
-                top: '8px',
-                right: '30px',
-                fontSize: '16px',
-                color: '#ffffff',
-                fontWeight: 'bold',
-                zIndex: 2
-              }}>✓</span>
+              <span className="sidebar-nav-check" aria-hidden>✓</span>
             )}
             <span>
               <span style={{ 
@@ -54738,11 +54121,11 @@ A1;Peça exemplo;10`}
               </span>
               {safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}
             </span>
-            <span style={{ fontSize: '12px' }}>{expandedGroups.has('gestao-financeira') ? '▼' : '▶'}</span>
+            <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('gestao-financeira') ? '▼' : '▶'}</span>
           </button>
           
           {expandedGroups.has('gestao-financeira') && (
-            <div className="sidebar-action-buttons" style={{ marginTop: '5px', marginBottom: '10px' }}>
+            <div className="sidebar-action-buttons">
               {getButtonsByGroup('gestao-financeira')
                 .sort((a, b) => a.order - b.order)
                 .map((button) => {
@@ -54752,42 +54135,9 @@ A1;Peça exemplo;10`}
                       key={button.id}
                       className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
                       onClick={() => handleButtonClick(button.action)}
-                      style={{ 
-                        textAlign: 'center', 
-                        padding: '12px', 
-                        marginBottom: '6px',
-                        fontSize: '13px',
-                        backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.42)' : 'rgba(0, 255, 0, 0.18)',
-                        border: isSelected ? '1px solid rgba(0, 255, 0, 0.52)' : '1px solid rgba(0, 255, 0, 0.28)',
-                        borderRadius: '12px',
-                        boxShadow: 'none',
-                        color: isSelected ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
-                        fontWeight: isSelected ? 'bold' : '500',
-                        transition: 'all 0.3s ease',
-                        position: 'relative'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isSelected) {
-                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
-                          e.currentTarget.style.boxShadow = 'none'
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isSelected) {
-                          e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
-                          e.currentTarget.style.boxShadow = 'none'
-                        }
-                      }}
                     >
                       {isSelected && (
-                        <span style={{
-                          position: 'absolute',
-                          top: '5px',
-                          right: '8px',
-                          fontSize: '14px',
-                          color: '#ffffff',
-                          fontWeight: 'bold'
-                        }}>✓</span>
+                        <span className="sidebar-nav-check" aria-hidden>✓</span>
                       )}
                       {getButtonName(button)}
                     </button>
@@ -54804,52 +54154,13 @@ A1;Peça exemplo;10`}
 
         {/* Botão CADASTRO DA NONATO SERVICE - Sempre visível acima do EXTRAS */}
         {!isDemoMode && (
-        <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+        <div className="sidebar-nav-cluster">
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-cadastro-nonato-service' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-cadastro-nonato-service')}
-            style={{
-              width: '100%',
-              textAlign: 'left',
-              padding: '12px',
-              marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-cadastro-nonato-service' ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
-              border: selectedSidebarButton === 'open-cadastro-nonato-service' ? '2px solid transparent' : '1px solid rgba(105, 255, 145, 0.72)',
-              borderRadius: '8px',
-              color: selectedSidebarButton === 'open-cadastro-nonato-service' ? '#7dd68a' : '#ccc',
-              fontWeight: 'bold',
-              fontSize: '12px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              transition: 'all 0.3s ease',
-              position: 'relative'
-            }}
-            onMouseEnter={(e) => {
-              if (selectedSidebarButton !== 'open-cadastro-nonato-service') {
-                e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
-                e.currentTarget.style.border = '1px solid rgba(140, 255, 175, 0.9)'
-                e.currentTarget.style.boxShadow = 'none'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (selectedSidebarButton !== 'open-cadastro-nonato-service') {
-                e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
-                e.currentTarget.style.border = '1px solid rgba(105, 255, 145, 0.72)'
-                e.currentTarget.style.boxShadow = 'none'
-              }
-            }}
           >
             {selectedSidebarButton === 'open-cadastro-nonato-service' && (
-              <span style={{
-                position: 'absolute',
-                top: '8px',
-                right: '30px',
-                fontSize: '16px',
-                color: '#ffffff',
-                fontWeight: 'bold',
-                zIndex: 2
-              }}>✓</span>
+              <span className="sidebar-nav-check" aria-hidden>✓</span>
             )}
             <span>
               <span style={{ display: 'inline-block', marginRight: '8px' }}>📋</span>
@@ -54861,52 +54172,13 @@ A1;Peça exemplo;10`}
 
         {/* Grupo: EXTRA */}
         {!isDemoMode && (
-        <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+        <div className="sidebar-nav-cluster">
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-extra' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-extra')}
-            style={{ 
-              width: '100%', 
-              textAlign: 'left', 
-              padding: '12px', 
-              marginBottom: '5px',
-              backgroundColor: selectedSidebarButton === 'open-extra' ? 'rgba(34, 82, 44, 0.98)' : 'rgba(26, 62, 34, 0.94)',
-              border: selectedSidebarButton === 'open-extra' ? '2px solid transparent' : '1px solid rgba(105, 255, 145, 0.72)',
-              borderRadius: '8px',
-              color: selectedSidebarButton === 'open-extra' ? '#7dd68a' : '#ccc',
-              fontWeight: 'bold',
-              fontSize: '12px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              transition: 'all 0.3s ease',
-              position: 'relative'
-            }}
-            onMouseEnter={(e) => {
-              if (selectedSidebarButton !== 'open-extra') {
-                e.currentTarget.style.backgroundColor = 'rgba(30, 72, 40, 0.96)'
-                e.currentTarget.style.border = '1px solid rgba(140, 255, 175, 0.9)'
-                e.currentTarget.style.boxShadow = 'none'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (selectedSidebarButton !== 'open-extra') {
-                e.currentTarget.style.backgroundColor = 'rgba(26, 62, 34, 0.94)'
-                e.currentTarget.style.border = '1px solid rgba(105, 255, 145, 0.72)'
-                e.currentTarget.style.boxShadow = 'none'
-              }
-            }}
           >
             {selectedSidebarButton === 'open-extra' && (
-              <span style={{
-                position: 'absolute',
-                top: '8px',
-                right: '30px',
-                fontSize: '16px',
-                color: '#ffffff',
-                fontWeight: 'bold',
-                zIndex: 2
-              }}>✓</span>
+              <span className="sidebar-nav-check" aria-hidden>✓</span>
             )}
             <span>
               <span style={{ 
@@ -54917,11 +54189,11 @@ A1;Peça exemplo;10`}
               </span>
               {safeT?.extras || 'EXTRAS'}
             </span>
-            <span style={{ fontSize: '12px' }}>{expandedGroups.has('extra') ? '▼' : '▶'}</span>
+            <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('extra') ? '▼' : '▶'}</span>
           </button>
           
           {expandedGroups.has('extra') && (
-            <div className="sidebar-action-buttons" style={{ marginTop: '5px', marginBottom: '10px' }}>
+            <div className="sidebar-action-buttons">
               {/* Seletor de Idioma */}
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px', color: '#ffffff' }}>{safeT?.selectLanguage || 'Idioma'}</label>
@@ -54943,42 +54215,9 @@ A1;Peça exemplo;10`}
               <button
                 className={`btn-primary sidebar-action-btn${selectedSidebarButton === 'open-translator' ? ' sidebar-action-btn-active' : ''}`}
                 onClick={() => handleButtonClick('open-translator')}
-                style={{ 
-                  textAlign: 'center', 
-                  padding: '12px', 
-                  marginBottom: '6px',
-                  fontSize: '13px',
-                  backgroundColor: selectedSidebarButton === 'open-translator' ? 'rgba(0, 255, 0, 0.42)' : 'rgba(0, 255, 0, 0.18)',
-                  border: selectedSidebarButton === 'open-translator' ? '1px solid rgba(0, 255, 0, 0.52)' : '1px solid rgba(0, 255, 0, 0.28)',
-                  borderRadius: '12px',
-                  boxShadow: 'none',
-                  color: selectedSidebarButton === 'open-translator' ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
-                  fontWeight: selectedSidebarButton === 'open-translator' ? 'bold' : '500',
-                  transition: 'all 0.3s ease',
-                  position: 'relative'
-                }}
-                onMouseEnter={(e) => {
-                  if (selectedSidebarButton !== 'open-translator') {
-                    e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (selectedSidebarButton !== 'open-translator') {
-                    e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }
-                }}
               >
                 {selectedSidebarButton === 'open-translator' && (
-                  <span style={{
-                    position: 'absolute',
-                    top: '5px',
-                    right: '8px',
-                    fontSize: '14px',
-                    color: '#ffffff',
-                    fontWeight: 'bold'
-                  }}>✓</span>
+                  <span className="sidebar-nav-check" aria-hidden>✓</span>
                 )}
                 {safeT?.translator || 'Tradutor de Idiomas'}
               </button>
@@ -54987,43 +54226,9 @@ A1;Peça exemplo;10`}
               <button
                 className={`btn-primary sidebar-action-btn${selectedSidebarButton === 'open-manual-gestor' ? ' sidebar-action-btn-active' : ''}`}
                 onClick={() => handleButtonClick('open-manual-gestor')}
-                style={{ 
-                  width: '100%', 
-                  textAlign: 'center', 
-                  padding: '12px', 
-                  marginBottom: '6px',
-                  fontSize: '13px',
-                  backgroundColor: selectedSidebarButton === 'open-manual-gestor' ? 'rgba(0, 255, 0, 0.42)' : 'rgba(0, 255, 0, 0.18)',
-                  border: selectedSidebarButton === 'open-manual-gestor' ? '1px solid rgba(0, 255, 0, 0.52)' : '1px solid rgba(0, 255, 0, 0.28)',
-                  borderRadius: '12px',
-                  boxShadow: 'none',
-                  color: selectedSidebarButton === 'open-manual-gestor' ? '#00ff00' : 'rgba(255, 255, 255, 0.95)',
-                  fontWeight: selectedSidebarButton === 'open-manual-gestor' ? 'bold' : '500',
-                  transition: 'all 0.3s ease',
-                  position: 'relative'
-                }}
-                onMouseEnter={(e) => {
-                  if (selectedSidebarButton !== 'open-manual-gestor') {
-                    e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (selectedSidebarButton !== 'open-manual-gestor') {
-                    e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.45)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }
-                }}
               >
                 {selectedSidebarButton === 'open-manual-gestor' && (
-                  <span style={{
-                    position: 'absolute',
-                    top: '8px',
-                    right: '30px',
-                    fontSize: '16px',
-                    color: '#00ff00',
-                    fontWeight: 'bold'
-                  }}>✓</span>
+                  <span className="sidebar-nav-check" aria-hidden>✓</span>
                 )}
                 <span style={{ display: 'inline-block', marginRight: '8px' }}>📖</span>
                 {(safeT as any)?.manualUsoGestorNonatoService || 'MANUAL DE USO DO GESTOR NONATO SERVICE'}
@@ -55046,32 +54251,11 @@ A1;Peça exemplo;10`}
           return (
             <button
               key={adminBtn.id}
-              className={`btn-administrador sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
+              className={`btn-administrador sidebar-group-header sidebar-admin-footer${isSelected ? ' sidebar-group-btn-selected' : ''}`}
               onClick={() => handleButtonClick(adminBtn.action)}
-              style={{ 
-                width: '100%', 
-                textAlign: 'left', 
-                padding: '12px', 
-                marginTop: 'auto',
-                marginBottom: '20px',
-                backgroundColor: isSelected ? 'rgba(34, 82, 44, 0.98)' : undefined,
-                border: isSelected ? '2px solid transparent' : undefined,
-                color: isSelected ? '#7dd68a' : undefined,
-                fontWeight: isSelected ? 'bold' : undefined,
-                transition: 'all 0.3s ease',
-                position: 'relative'
-              }}
             >
               {isSelected && (
-                <span style={{
-                  position: 'absolute',
-                  top: '8px',
-                  right: '30px',
-                  fontSize: '16px',
-                  color: '#ffffff',
-                  fontWeight: 'bold',
-                  zIndex: 2
-                }}>✓</span>
+                <span className="sidebar-nav-check" aria-hidden>✓</span>
               )}
               <span style={{ 
                 display: 'inline-block', 
@@ -55089,39 +54273,7 @@ A1;Peça exemplo;10`}
         <button
           type="button"
           onClick={handleSairDoSistema}
-          className="btn-primary"
-          style={{
-            width: '100%',
-            marginTop: '8px',
-            marginBottom: '0',
-            padding: '14px 16px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '10px',
-            fontSize: '13px',
-            fontWeight: '600',
-            letterSpacing: '0.5px',
-            color: 'rgba(255, 255, 255, 0.9)',
-            backgroundColor: 'rgba(255, 255, 255, 0.04)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            borderRadius: '10px',
-            cursor: 'pointer',
-            transition: 'all 0.25s ease',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'rgba(255, 80, 80, 0.12)'
-            e.currentTarget.style.borderColor = 'rgba(255, 100, 100, 0.45)'
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 80, 80, 0.15)'
-            e.currentTarget.style.color = 'rgba(255, 200, 200, 0.95)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.04)'
-            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)'
-            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)'
-            e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)'
-          }}
+          className="btn-primary sidebar-logout-btn"
         >
           <span style={{ fontSize: '16px', lineHeight: 1 }} aria-hidden title={safeT?.sairDoSistema || 'Sair do Sistema'}>🚪</span>
           <span>{safeT?.sairDoSistema || 'Sair do Sistema'}</span>
