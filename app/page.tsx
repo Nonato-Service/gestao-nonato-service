@@ -33,6 +33,11 @@ import {
   buildProtocoloServicoPrintHtml,
 } from './utils/protocoloServicoPdfThemes'
 import {
+  buildSolicitacaoServicoTecnicoPrintHtml,
+  type SolicitacaoServicoTecnicoPdfData,
+  type SolicitacaoServicoTecnicoPdfLabels,
+} from './utils/solicitacaoServicoTecnicoPdf'
+import {
   ACCENT_GREEN,
   ACCENT_AMBER,
   glassCardStyle,
@@ -34041,6 +34046,67 @@ A1;Peça exemplo;10`}
           setSolicitacoesServicoTecnico(list)
           saveData('nonato-solicitacoes-servico-tecnico', list)
         }
+        const localePdfSst = selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'en' ? 'en-GB' : selectedLanguage
+        const gerarPdfSolicitacaoServico = (s: SolicitacaoServicoTecnico) => {
+          const tr = translations[selectedLanguage as keyof typeof translations] as (typeof translations)['pt-BR']
+          const dataCriStr = new Date(s.dataCriacao).toLocaleDateString(localePdfSst)
+          const refVal = `SST-${String(s.id).replace(/[^a-zA-Z0-9]/g, '').slice(-10).toUpperCase() || 'DOC'}`
+          const L: SolicitacaoServicoTecnicoPdfLabels = {
+            docTitle: tr.solicitacaoServicoTecnicoTitle || 'SOLICITAÇÃO DE SERVIÇO TÉCNICO',
+            docSubtitle: tr.solicitacaoServicoTecnicoPdfDocSubtitle || '',
+            emitidoEmLabel: tr.solicitacaoServicoTecnicoPdfEmitidoEm || 'Emitido em',
+            emitidoEmValue: dataCriStr,
+            refLabel: tr.solicitacaoServicoTecnicoPdfRef || 'Referência',
+            refValue: refVal,
+            secDados: tr.solicitacaoServicoTecnicoPdfSecDados || 'Dados da solicitação',
+            nomeCliente: tr.solicitacaoServicoTecnicoNomeCliente || 'Nome do cliente',
+            tipoEquipamento: tr.solicitacaoServicoTecnicoTipoEquipamento || 'Tipo',
+            marca: tr.solicitacaoServicoTecnicoMarca || 'Marca',
+            modelo: tr.solicitacaoServicoTecnicoModelo || 'Modelo',
+            numeroSerie: tr.solicitacaoServicoTecnicoNumeroSerie || 'N.º série',
+            problemas: tr.solicitacaoServicoTecnicoProblemasApresentados || 'Problemas',
+            endereco: tr.solicitacaoServicoTecnicoEndereco || 'Endereço',
+            telefone: tr.solicitacaoServicoTecnicoTelefone || 'Telefone',
+            responsavel: tr.solicitacaoServicoTecnicoResponsavel || 'Responsável',
+            secAssinatura: tr.solicitacaoServicoTecnicoPdfSecAssinatura || 'Assinatura do cliente',
+            textoLegal: tr.solicitacaoServicoTecnicoPdfTextoLegal || '',
+            zonaAssinar: tr.solicitacaoServicoTecnicoPdfZonaAssinar || '',
+            nomeLegivel: tr.solicitacaoServicoTecnicoPdfNomeLegivel || '',
+            localData: tr.solicitacaoServicoTecnicoPdfLocalData || '',
+            rodape: tr.solicitacaoServicoTecnicoPdfRodape || 'Nonato Service',
+          }
+          const dataPdf: SolicitacaoServicoTecnicoPdfData = {
+            id: s.id,
+            nomeCliente: s.nomeCliente,
+            tipoEquipamento: s.tipoEquipamento,
+            marca: s.marca,
+            modelo: s.modelo,
+            numeroSerie: s.numeroSerie,
+            problemasApresentados: s.problemasApresentados,
+            endereco: s.endereco,
+            telefone: s.telefone,
+            responsavel: s.responsavel,
+            dataCriacao: s.dataCriacao,
+          }
+          const html = buildSolicitacaoServicoTecnicoPrintHtml(dataPdf, L, getLogoHtmlForProtocoloServico())
+          const w = typeof window !== 'undefined' ? window.open('', '_blank') : null
+          if (w) {
+            w.document.write(html)
+            w.document.close()
+            w.focus()
+            setTimeout(() => { try { w.print() } catch (_) { /* ignore */ } }, 450)
+          }
+        }
+        const sstOrdenadas = [...solicitacoesServicoTecnico].sort(
+          (a, b) =>
+            new Date(b.dataCriacao || 0).getTime() - new Date(a.dataCriacao || 0).getTime()
+        )
+        const fmtDataSst = (iso?: string) => {
+          if (!iso) return '—'
+          const t = Date.parse(iso)
+          if (Number.isNaN(t)) return iso.length >= 10 ? iso.slice(0, 10) : '—'
+          return new Date(t).toLocaleDateString(localePdfSst)
+        }
         return (
           <div className="tab-content-wrapper tab-glass-root">
             <div className="tab-glass-hero">
@@ -34129,6 +34195,14 @@ A1;Peça exemplo;10`}
 
                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                   <button className="btn-primary" onClick={handleGuardarSolicitacao} style={{ padding: '10px 20px', backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff' }}>{safeT?.solicitacaoServicoTecnicoGuardar}</button>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => gerarPdfSolicitacaoServico({ id: editingSolicitacaoServicoTecnico?.id || 'preview', ...solicitacaoServicoTecnicoForm, dataCriacao: editingSolicitacaoServicoTecnico?.dataCriacao || new Date().toISOString() })}
+                    style={{ padding: '10px 20px', backgroundColor: 'rgba(15, 80, 70, 0.96)', border: '1px solid rgba(45, 212, 191, 0.65)', color: '#ecfdf5', fontWeight: 'bold' }}
+                  >
+                    📄 {(safeT as any)?.solicitacaoServicoTecnicoGerarPdf || 'Gerar PDF (cliente)'}
+                  </button>
                   <button onClick={() => handleEnviarEmail()} style={{ padding: '10px 20px', border: '1px solid rgba(80, 160, 255, 0.55)', color: '#ffffff', background: 'rgba(18, 38, 62, 0.96)', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>📧 {safeT?.solicitacaoServicoTecnicoEnviarPorEmail}</button>
                   <button onClick={() => handleEnviarWhatsApp()} style={{ padding: '10px 20px', border: '1px solid rgba(37, 211, 102, 0.55)', color: '#ffffff', background: 'rgba(18, 52, 32, 0.92)', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>💬 {safeT?.solicitacaoServicoTecnicoEnviarPorWhatsApp}</button>
                   <button onClick={() => { setShowSolicitacaoServicoTecnicoForm(false); setEditingSolicitacaoServicoTecnico(null); }} style={{ padding: '10px 20px', border: '1px solid rgba(255,255,255,0.25)', color: '#ffffff', background: 'rgba(30,30,30,0.9)', borderRadius: '6px', cursor: 'pointer' }}>{safeT?.close || 'Fechar'}</button>
@@ -34137,36 +34211,77 @@ A1;Peça exemplo;10`}
             )}
 
             <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }) }}>
-              <h3 style={{ marginBottom: '16px', color: '#ffffff' }}>{safeT?.solicitacaoServicoTecnicoLista}</h3>
+              <h3 style={{ margin: '0 0 8px 0', color: '#ffffff' }}>{safeT?.solicitacaoServicoTecnicoArquivoTitulo}</h3>
+              <p style={{ margin: '0 0 18px 0', fontSize: '13px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.45 }}>
+                {safeT?.solicitacaoServicoTecnicoArquivoDesc}
+              </p>
               {solicitacoesServicoTecnico.length === 0 ? (
                 <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '14px' }}>{safeT?.solicitacaoServicoTecnicoNenhuma}</p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {solicitacoesServicoTecnico.map(s => (
-                    <div key={s.id} style={{ ...glassInnerRowStyle(ACCENT_GREEN), padding: '14px' }} onMouseEnter={(e) => glassInnerRowHover(e.currentTarget, ACCENT_GREEN, true)} onMouseLeave={(e) => glassInnerRowHover(e.currentTarget, ACCENT_GREEN, false)}>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-                        <div>
-                          <strong style={{ color: '#fff' }}>{s.nomeCliente || '-'}</strong>
-                          <span style={{ color: '#888', marginLeft: '8px' }}>{s.tipoEquipamento} {s.marca} {s.modelo}</span>
-                          {s.dataCriacao && <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px' }}>{new Date(s.dataCriacao).toLocaleDateString()}</span>}
-                        </div>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: '12px', color: '#aaa' }}>{safeT?.solicitacaoServicoTecnicoDataRecebimento}:</span>
-                          <input type="date" value={s.dataRecebimento ? s.dataRecebimento.slice(0, 10) : ''} onChange={e => handleUpdateDataRecebimento(s.id, e.target.value)} style={{ padding: '6px 10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '12px' }} title={safeT?.solicitacaoServicoTecnicoDataRecebimento} />
-                          <select value={s.nivelUrgencia || ''} onChange={e => handleUpdateUrgencia(s.id, e.target.value ? (e.target.value as 'baixa' | 'media' | 'alta' | 'critica') : undefined)} style={{ padding: '6px 10px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '12px' }}>
-                            <option value="">{safeT?.solicitacaoServicoTecnicoNivelUrgencia}</option>
-                            <option value="baixa">{safeT?.solicitacaoServicoTecnicoUrgenciaBaixa}</option>
-                            <option value="media">{safeT?.solicitacaoServicoTecnicoUrgenciaMedia}</option>
-                            <option value="alta">{safeT?.solicitacaoServicoTecnicoUrgenciaAlta}</option>
-                            <option value="critica">{safeT?.solicitacaoServicoTecnicoUrgenciaCritica}</option>
-                          </select>
-                          <button onClick={() => handleEnviarEmail(s)} style={{ padding: '6px 12px', fontSize: '12px', border: '1px solid rgba(0, 150, 255, 0.5)', color: '#66b3ff', background: 'transparent', borderRadius: '6px', cursor: 'pointer' }}>📧</button>
-                          <button onClick={() => handleEnviarWhatsApp(s)} style={{ padding: '6px 12px', fontSize: '12px', border: '1px solid rgba(37, 211, 102, 0.5)', color: '#25d366', background: 'transparent', borderRadius: '6px', cursor: 'pointer' }}>💬</button>
-                          <button onClick={() => { setSolicitacaoServicoTecnicoForm({ nomeCliente: s.nomeCliente, tipoEquipamento: s.tipoEquipamento, marca: s.marca, modelo: s.modelo, numeroSerie: s.numeroSerie, problemasApresentados: s.problemasApresentados, endereco: s.endereco, telefone: s.telefone, responsavel: s.responsavel, assinaturaCliente: s.assinaturaCliente, dataAssinaturaCliente: s.dataAssinaturaCliente, dataRecebimento: s.dataRecebimento }); setEditingSolicitacaoServicoTecnico(s); setShowSolicitacaoServicoTecnicoForm(true); }} style={{ padding: '6px 12px', fontSize: '12px', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', background: 'transparent', borderRadius: '6px', cursor: 'pointer' }}>{safeT?.editar || 'Editar'}</button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                  <table style={{ width: '100%', minWidth: 920, borderCollapse: 'collapse', fontSize: '13px', color: '#e8e8e8' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid rgba(0, 255, 0, 0.28)' }}>
+                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#9fdf9f', fontWeight: 700, whiteSpace: 'nowrap' }}>{safeT?.solicitacaoServicoTecnicoColCliente}</th>
+                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#9fdf9f', fontWeight: 700 }}>{safeT?.solicitacaoServicoTecnicoColEquipamento}</th>
+                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#9fdf9f', fontWeight: 700, whiteSpace: 'nowrap' }}>{safeT?.solicitacaoServicoTecnicoColDataRegisto}</th>
+                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#9fdf9f', fontWeight: 700, whiteSpace: 'nowrap' }}>{safeT?.solicitacaoServicoTecnicoColDataAssinatura}</th>
+                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#9fdf9f', fontWeight: 700, whiteSpace: 'nowrap' }}>{safeT?.solicitacaoServicoTecnicoColRecebimento}</th>
+                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#9fdf9f', fontWeight: 700, whiteSpace: 'nowrap' }}>{safeT?.solicitacaoServicoTecnicoColUrgencia}</th>
+                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#9fdf9f', fontWeight: 700, whiteSpace: 'nowrap' }}>{safeT?.solicitacaoServicoTecnicoColAssinatura}</th>
+                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#9fdf9f', fontWeight: 700, whiteSpace: 'nowrap' }}>{safeT?.solicitacaoServicoTecnicoColAcoes}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sstOrdenadas.map(s => {
+                        const endResumo = (s.endereco || '').length > 48 ? `${(s.endereco || '').slice(0, 48)}…` : (s.endereco || '')
+                        return (
+                          <tr key={s.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', verticalAlign: 'top' }}>
+                            <td style={{ padding: '12px 8px', maxWidth: 200 }}>
+                              <div style={{ fontWeight: 700, color: '#fff' }}>{s.nomeCliente || '—'}</div>
+                              <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>{s.telefone || '—'}</div>
+                              {s.endereco ? (
+                                <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.endereco}>
+                                  {endResumo}
+                                </div>
+                              ) : null}
+                            </td>
+                            <td style={{ padding: '12px 8px', maxWidth: 220 }}>
+                              <div>{[s.tipoEquipamento, s.marca, s.modelo].filter(Boolean).join(' · ') || '—'}</div>
+                              <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+                                {(safeT?.solicitacaoServicoTecnicoNumeroSerie || 'N.º série')}: {s.numeroSerie || '—'}
+                              </div>
+                            </td>
+                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>{fmtDataSst(s.dataCriacao)}</td>
+                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>{fmtDataSst(s.dataAssinaturaCliente)}</td>
+                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>
+                              <input type="date" value={s.dataRecebimento ? s.dataRecebimento.slice(0, 10) : ''} onChange={e => handleUpdateDataRecebimento(s.id, e.target.value)} style={{ padding: '6px 8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '12px' }} title={safeT?.solicitacaoServicoTecnicoDataRecebimento} />
+                            </td>
+                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>
+                              <select value={s.nivelUrgencia || ''} onChange={e => handleUpdateUrgencia(s.id, e.target.value ? (e.target.value as 'baixa' | 'media' | 'alta' | 'critica') : undefined)} style={{ padding: '6px 8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '12px', maxWidth: 140 }}>
+                                <option value="">{safeT?.solicitacaoServicoTecnicoNivelUrgencia}</option>
+                                <option value="baixa">{safeT?.solicitacaoServicoTecnicoUrgenciaBaixa}</option>
+                                <option value="media">{safeT?.solicitacaoServicoTecnicoUrgenciaMedia}</option>
+                                <option value="alta">{safeT?.solicitacaoServicoTecnicoUrgenciaAlta}</option>
+                                <option value="critica">{safeT?.solicitacaoServicoTecnicoUrgenciaCritica}</option>
+                              </select>
+                            </td>
+                            <td style={{ padding: '12px 8px', whiteSpace: 'nowrap' }}>
+                              {s.assinaturaCliente ? (safeT?.solicitacaoServicoTecnicoAssinaturaSim ?? 'Sim') : (safeT?.solicitacaoServicoTecnicoAssinaturaNao ?? 'Não')}
+                            </td>
+                            <td style={{ padding: '12px 8px' }}>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+                                <button type="button" title={(safeT as any)?.solicitacaoServicoTecnicoGerarPdf || 'PDF'} onClick={() => gerarPdfSolicitacaoServico(s)} style={{ padding: '6px 10px', fontSize: '12px', border: '1px solid rgba(45, 212, 191, 0.55)', color: '#5eead4', background: 'rgba(6, 40, 35, 0.5)', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}>📄</button>
+                                <button type="button" onClick={() => handleEnviarEmail(s)} style={{ padding: '6px 10px', fontSize: '12px', border: '1px solid rgba(0, 150, 255, 0.5)', color: '#66b3ff', background: 'transparent', borderRadius: '6px', cursor: 'pointer' }}>📧</button>
+                                <button type="button" onClick={() => handleEnviarWhatsApp(s)} style={{ padding: '6px 10px', fontSize: '12px', border: '1px solid rgba(37, 211, 102, 0.5)', color: '#25d366', background: 'transparent', borderRadius: '6px', cursor: 'pointer' }}>💬</button>
+                                <button type="button" onClick={() => { setSolicitacaoServicoTecnicoForm({ nomeCliente: s.nomeCliente, tipoEquipamento: s.tipoEquipamento, marca: s.marca, modelo: s.modelo, numeroSerie: s.numeroSerie, problemasApresentados: s.problemasApresentados, endereco: s.endereco, telefone: s.telefone, responsavel: s.responsavel, assinaturaCliente: s.assinaturaCliente, dataAssinaturaCliente: s.dataAssinaturaCliente, dataRecebimento: s.dataRecebimento }); setEditingSolicitacaoServicoTecnico(s); setShowSolicitacaoServicoTecnicoForm(true); }} style={{ padding: '6px 10px', fontSize: '12px', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', background: 'transparent', borderRadius: '6px', cursor: 'pointer' }}>{safeT?.editar || 'Editar'}</button>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
