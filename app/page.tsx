@@ -34067,6 +34067,18 @@ A1;Peça exemplo;10`}
         )
       
       case 'solicitacao-servico-tecnico': {
+        const enriquecerSolicitacaoComClienteCadastrado = (rec: SolicitacaoServicoTecnico): SolicitacaoServicoTecnico => {
+          if (!rec.clienteId) return rec
+          const c = clientes.find((x) => x.id === rec.clienteId)
+          if (!c) return rec
+          const morada = [c.morada, c.codigoPostal, c.localidade].filter(Boolean).join(', ')
+          return {
+            ...rec,
+            nomeCliente: String(rec.nomeCliente || '').trim() || c.nomeEmpresa || rec.nomeCliente,
+            telefone: String(rec.telefone || '').trim() || String(c.telefones || '').split(/[;,]/)[0]?.trim() || rec.telefone,
+            endereco: String(rec.endereco || '').trim() || morada || rec.endereco
+          }
+        }
         const buildSolicitacaoBody = (s: typeof solicitacaoServicoTecnicoForm | SolicitacaoServicoTecnico) => {
           const t = translations[selectedLanguage as keyof typeof translations] as typeof translations['pt-BR']
           const labels = {
@@ -34081,21 +34093,35 @@ A1;Peça exemplo;10`}
             responsavel: t?.solicitacaoServicoTecnicoResponsavel ?? 'Responsável',
             assinaturaDesc: t?.solicitacaoServicoTecnicoAssinaturaDesc ?? 'O cliente deve assinar e enviar por e-mail ou WhatsApp.'
           }
-          return [
-            (safeT?.solicitacaoServicoTecnicoTitle || 'SOLICITAÇÃO DE SERVIÇO TÉCNICO'),
-            '',
-            `${labels.nomeCliente}: ${s.nomeCliente || '-'}`,
-            `${labels.tipoEquipamento}: ${s.tipoEquipamento || '-'}`,
-            `${labels.marca}: ${s.marca || '-'}`,
-            `${labels.modelo}: ${s.modelo || '-'}`,
-            `${labels.numeroSerie}: ${s.numeroSerie || '-'}`,
-            `${labels.problemas}: ${s.problemasApresentados || '-'}`,
-            `${labels.endereco}: ${s.endereco || '-'}`,
-            `${labels.telefone}: ${s.telefone || '-'}`,
-            `${labels.responsavel}: ${s.responsavel || '-'}`,
-            '',
-            labels.assinaturaDesc
-          ].join('\n')
+          const pushVal = (label: string, val?: string) => {
+            const v = String(val ?? '').trim()
+            return v ? `${label}: ${v}` : ''
+          }
+          const linhas = [
+            pushVal(labels.nomeCliente, s.nomeCliente),
+            pushVal(labels.tipoEquipamento, s.tipoEquipamento),
+            pushVal(labels.marca, s.marca),
+            pushVal(labels.modelo, s.modelo),
+            pushVal(labels.numeroSerie, s.numeroSerie),
+            pushVal(labels.problemas, s.problemasApresentados),
+            pushVal(labels.endereco, s.endereco),
+            pushVal(labels.telefone, s.telefone),
+            pushVal(labels.responsavel, s.responsavel)
+          ].filter(Boolean)
+          const titulo = safeT?.solicitacaoServicoTecnicoTitle || 'SOLICITAÇÃO DE SERVIÇO TÉCNICO'
+          const blocoResumo =
+            linhas.length > 0
+              ? [
+                  (t as any)?.solicitacaoServicoTecnicoResumoTitulo || (safeT as any)?.solicitacaoServicoTecnicoResumoTitulo || 'Resumo (só campos preenchidos):',
+                  '',
+                  ...linhas,
+                  '',
+                  labels.assinaturaDesc
+                ].join('\n')
+              : (t as any)?.solicitacaoServicoTecnicoBodySomenteAnexo ||
+                (safeT as any)?.solicitacaoServicoTecnicoBodySomenteAnexo ||
+                'Não há campos preenchidos no resumo. Todos os dados estão no documento oficial descarregado (.html): abra esse ficheiro no browser — é o mesmo layout do PDF — ou use Imprimir → Guardar como PDF e anexe o PDF.'
+          return [titulo, '', blocoResumo].join('\n')
         }
         const handleGuardarSolicitacao = () => {
           const id = editingSolicitacaoServicoTecnico?.id || `sst-${Date.now()}`
@@ -34131,12 +34157,14 @@ A1;Peça exemplo;10`}
         }
         const localePdfSst = selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'en' ? 'en-GB' : selectedLanguage
         const solicitacaoSstComoRegisto = (s?: SolicitacaoServicoTecnico): SolicitacaoServicoTecnico => {
-          if (s) return s
-          return {
-            id: editingSolicitacaoServicoTecnico?.id || `sst-${Date.now()}`,
-            ...solicitacaoServicoTecnicoForm,
-            dataCriacao: editingSolicitacaoServicoTecnico?.dataCriacao || new Date().toISOString()
-          }
+          const base =
+            s ||
+            ({
+              id: editingSolicitacaoServicoTecnico?.id || `sst-${Date.now()}`,
+              ...solicitacaoServicoTecnicoForm,
+              dataCriacao: editingSolicitacaoServicoTecnico?.dataCriacao || new Date().toISOString()
+            } as SolicitacaoServicoTecnico)
+          return enriquecerSolicitacaoComClienteCadastrado(base)
         }
         const montarHtmlSolicitacao = (rec: SolicitacaoServicoTecnico) => {
           const tr = translations[selectedLanguage as keyof typeof translations] as (typeof translations)['pt-BR']
@@ -34236,23 +34264,25 @@ A1;Peça exemplo;10`}
         const handleEnviarEmail = (s?: SolicitacaoServicoTecnico) => {
           const rec = solicitacaoSstComoRegisto(s)
           baixarFormularioOficialClienteHtml(rec)
-          const intro = (safeT as any)?.solicitacaoServicoTecnicoEmailInstrucaoAnexo || 'Foi descarregado o ficheiro HTML do formulário oficial (igual ao PDF/impressão). Anexe esse ficheiro a este e-mail, ou abra-o no browser e use «Imprimir → Guardar como PDF» e anexe o PDF. O texto abaixo é apenas um resumo.'
+          const intro = (safeT as any)?.solicitacaoServicoTecnicoEmailInstrucaoAnexo || 'Foi descarregado o ficheiro HTML do formulário oficial (igual ao PDF/impressão). Anexe esse ficheiro a este e-mail, ou abra-o no browser e use «Imprimir → Guardar como PDF» e anexe o PDF.'
           const body = `${intro}\n\n---\n${buildSolicitacaoBody(rec)}`
-          const subject = (safeT?.solicitacaoServicoTecnicoTitle || 'Solicitação de Serviço Técnico') + ' - ' + (rec.nomeCliente || '')
-          setTimeout(() => {
+          const refVal = `SST-${String(rec.id).replace(/[^a-zA-Z0-9]/g, '').slice(-10).toUpperCase() || 'DOC'}`
+          const nomeAssunto = String(rec.nomeCliente || '').trim() || refVal
+          const subject = (safeT?.solicitacaoServicoTecnicoTitle || 'Solicitação de Serviço Técnico') + ' — ' + nomeAssunto
+          queueMicrotask(() => {
             window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank')
-          }, 400)
+          })
         }
         const handleEnviarWhatsApp = (s?: SolicitacaoServicoTecnico) => {
           const rec = solicitacaoSstComoRegisto(s)
           baixarFormularioOficialClienteHtml(rec)
-          const introWa = (safeT as any)?.solicitacaoServicoTecnicoWhatsAppInstrucaoAnexo || 'Formulário oficial: o ficheiro .html foi descarregado (pasta de descargas). Anexe-o aqui ou envie o PDF depois de imprimir a partir desse ficheiro.'
-          const body = `${buildSolicitacaoBody(rec)}\n\n---\n${introWa}`
+          const introWa = (safeT as any)?.solicitacaoServicoTecnicoWhatsAppInstrucaoAnexo || 'Formulário oficial: o ficheiro .html foi descarregado (pasta de descargas). Anexe-o a seguir nesta conversa ou envie o PDF depois de imprimir a partir desse ficheiro.'
+          const body = `${introWa}\n\n---\n${buildSolicitacaoBody(rec)}`
           const tel = (rec.telefone || '').replace(/\D/g, '')
           const url = tel ? `https://wa.me/${tel.startsWith('0') ? '351' + tel.slice(1) : tel}?` : 'https://wa.me/?'
-          setTimeout(() => {
+          queueMicrotask(() => {
             window.open(`${url}text=${encodeURIComponent(body)}`, '_blank')
-          }, 400)
+          })
         }
         const handleUpdateUrgencia = (id: string, nivel: 'baixa' | 'media' | 'alta' | 'critica' | undefined) => {
           const list = solicitacoesServicoTecnico.map(s => s.id === id ? { ...s, nivelUrgencia: nivel || undefined } : s)
@@ -34265,7 +34295,7 @@ A1;Peça exemplo;10`}
           saveData('nonato-solicitacoes-servico-tecnico', list)
         }
         const gerarPdfSolicitacaoServico = (s: SolicitacaoServicoTecnico) => {
-          const { html } = montarHtmlSolicitacao(s)
+          const { html } = montarHtmlSolicitacao(enriquecerSolicitacaoComClienteCadastrado(s))
           const w = typeof window !== 'undefined' ? window.open('', '_blank') : null
           if (w) {
             w.document.write(html)
