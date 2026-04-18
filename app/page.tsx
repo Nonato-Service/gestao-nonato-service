@@ -2075,6 +2075,9 @@ export default function Dashboard() {
   // Sistema de múltiplas páginas/abas
   const [openTabs, setOpenTabs] = useState<Tab[]>([])
   const [activeTabId, setActiveTabId] = useState<string | null>(null)
+  const [bottomTabsDraggingId, setBottomTabsDraggingId] = useState<string | null>(null)
+  const [bottomTabsDragOverId, setBottomTabsDragOverId] = useState<string | null>(null)
+  const [bottomTabsSavedOrder, setBottomTabsSavedOrder] = useState<string[] | null>(null)
   /** Sem abas e painel ainda não expandido: esconder sidebar na vista de entrada. */
   const hideSidebarForEntryDashboard = !activeTabId && !dashboardWorkspaceExpanded
   useEffect(() => {
@@ -2084,6 +2087,56 @@ export default function Dashboard() {
   const [showHelpModal, setShowHelpModal] = useState(false)
   /** Resumo do módulo no topo da área principal (expandir/ocultar). */
   const [mainModuleIntroExpanded, setMainModuleIntroExpanded] = useState(true)
+
+  // Barra inferior: carregar/guardar ordem das abas (por tipo)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const raw = window.localStorage.getItem('nonato-bottom-tabs-order')
+      if (!raw) return
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        setBottomTabsSavedOrder(parsed.map((v) => String(v)).filter(Boolean))
+      }
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (openTabs.length === 0) return
+    const current = openTabs.map((t) => t.type)
+    if (!bottomTabsSavedOrder || bottomTabsSavedOrder.length === 0) {
+      try {
+        window.localStorage.setItem('nonato-bottom-tabs-order', JSON.stringify(current))
+      } catch {
+        // ignore
+      }
+      return
+    }
+
+    const indexMap = new Map(bottomTabsSavedOrder.map((ty, i) => [ty, i]))
+    const desired = [...openTabs].sort((a, b) => {
+      const ia = indexMap.has(a.type) ? (indexMap.get(a.type) as number) : 1e9
+      const ib = indexMap.has(b.type) ? (indexMap.get(b.type) as number) : 1e9
+      if (ia !== ib) return ia - ib
+      return 0
+    })
+    const desiredTypes = desired.map((t) => t.type).join('|')
+    const currentTypes = current.join('|')
+    if (desiredTypes !== currentTypes) setOpenTabs(desired)
+
+    const nextPersist = desired.map((t) => t.type)
+    const persistStr = JSON.stringify(nextPersist)
+    try {
+      if (window.localStorage.getItem('nonato-bottom-tabs-order') !== persistStr) {
+        window.localStorage.setItem('nonato-bottom-tabs-order', persistStr)
+      }
+    } catch {
+      // ignore
+    }
+  }, [openTabs, bottomTabsSavedOrder])
 
   // F1 — Abrir Help da seção ativa (aba aberta)
   useEffect(() => {
@@ -18996,6 +19049,18 @@ export default function Dashboard() {
     }
   }, [])
 
+  const openDashboardHubFromSidebar = useCallback(
+    (hubId: string) => {
+      // Se o utilizador estiver dentro de uma função (aba aberta), ao clicar num botão principal
+      // devemos mostrar o hub no centro (como pediu) — sem obrigar a fechar tabs.
+      setDashboardWorkspaceExpanded(true)
+      setActiveTabId(null)
+      setDashboardMainHubId(hubId)
+      requestAnimationFrame(() => scrollMainContentToTop())
+    },
+    [scrollMainContentToTop]
+  )
+
   // Função para lidar com cliques nos botões da sidebar (buttonId opcional: quando dois botões abrem a mesma aba, usar id para só um ficar ativo)
   const handleButtonClick = useCallback((action: string, buttonId?: string) => {
     const groupToggles = ['open-gestao-tecnica', 'open-gestao-custos', 'open-comunicacao-interna', 'open-gestao-industrial', 'open-gestao-financeira', 'open-extra', 'open-biblioteca-hub']
@@ -19128,21 +19193,15 @@ export default function Dashboard() {
       }
     } else if (action === 'open-comunicacao-interna') {
       // Toggle do grupo COMUNICAÇÃO INTERNA
+      const willOpen = !expandedGroups.has('comunicacao-interna')
       setExpandedGroups((prev) => {
         const newSet = new Set(prev)
-        if (newSet.has('comunicacao-interna')) {
-          newSet.delete('comunicacao-interna')
-          if (!activeTabId && dashboardWorkspaceExpanded) {
-            setDashboardMainHubId((h) => (h === 'comunicacao-interna' ? null : h))
-          }
-        } else {
-          newSet.add('comunicacao-interna')
-          if (!activeTabId && dashboardWorkspaceExpanded) {
-            setDashboardMainHubId('comunicacao-interna')
-          }
-        }
+        if (newSet.has('comunicacao-interna')) newSet.delete('comunicacao-interna')
+        else newSet.add('comunicacao-interna')
         return newSet
       })
+      if (willOpen) openDashboardHubFromSidebar('comunicacao-interna')
+      else if (dashboardMainHubId === 'comunicacao-interna') setDashboardMainHubId(null)
     } else if (action === 'open-hub-comunicacao') {
       if (!expandedGroups.has('comunicacao-interna')) setExpandedGroups(prev => new Set(prev).add('comunicacao-interna'))
       openTab('hub-comunicacao', getTabTitle('hub-comunicacao'))
@@ -19213,93 +19272,63 @@ export default function Dashboard() {
       openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
     } else if (action === 'open-gestao-tecnica') {
       // Toggle do grupo GESTÃO TÉCNICA
+      const willOpen = !expandedGroups.has('gestao-tecnica')
       setExpandedGroups(prev => {
         const newSet = new Set(prev)
-        if (newSet.has('gestao-tecnica')) {
-          newSet.delete('gestao-tecnica')
-          if (!activeTabId && dashboardWorkspaceExpanded) {
-            setDashboardMainHubId((h) => (h === 'gestao-tecnica' ? null : h))
-          }
-        } else {
-          newSet.add('gestao-tecnica')
-          if (!activeTabId && dashboardWorkspaceExpanded) {
-            setDashboardMainHubId('gestao-tecnica')
-          }
-        }
+        if (newSet.has('gestao-tecnica')) newSet.delete('gestao-tecnica')
+        else newSet.add('gestao-tecnica')
         return newSet
       })
+      if (willOpen) openDashboardHubFromSidebar('gestao-tecnica')
+      else if (dashboardMainHubId === 'gestao-tecnica') setDashboardMainHubId(null)
     } else if (action === 'open-gestao-custos') {
       // Toggle do grupo GESTÃO DE CUSTOS
+      const willOpen = !expandedGroups.has('gestao-custos')
       setExpandedGroups(prev => {
         const newSet = new Set(prev)
-        if (newSet.has('gestao-custos')) {
-          newSet.delete('gestao-custos')
-          if (!activeTabId && dashboardWorkspaceExpanded) {
-            setDashboardMainHubId((h) => (h === 'gestao-custos' ? null : h))
-          }
-        } else {
-          newSet.add('gestao-custos')
-          if (!activeTabId && dashboardWorkspaceExpanded) {
-            setDashboardMainHubId('gestao-custos')
-          }
-        }
+        if (newSet.has('gestao-custos')) newSet.delete('gestao-custos')
+        else newSet.add('gestao-custos')
         return newSet
       })
+      if (willOpen) openDashboardHubFromSidebar('gestao-custos')
+      else if (dashboardMainHubId === 'gestao-custos') setDashboardMainHubId(null)
     } else if (action === 'open-gestao-financeira') {
       // Toggle do grupo GESTÃO FINANCEIRA
+      const willOpen = !expandedGroups.has('gestao-financeira')
       setExpandedGroups(prev => {
         const newSet = new Set(prev)
-        if (newSet.has('gestao-financeira')) {
-          newSet.delete('gestao-financeira')
-          if (!activeTabId && dashboardWorkspaceExpanded) {
-            setDashboardMainHubId((h) => (h === 'gestao-financeira' ? null : h))
-          }
-        } else {
-          newSet.add('gestao-financeira')
-          if (!activeTabId && dashboardWorkspaceExpanded) {
-            setDashboardMainHubId('gestao-financeira')
-          }
-        }
+        if (newSet.has('gestao-financeira')) newSet.delete('gestao-financeira')
+        else newSet.add('gestao-financeira')
         return newSet
       })
+      if (willOpen) openDashboardHubFromSidebar('gestao-financeira')
+      else if (dashboardMainHubId === 'gestao-financeira') setDashboardMainHubId(null)
     } else if (action === 'open-clientes-financeiro') {
       openTab('clientes-financeiro', getTabTitle('clientes-financeiro'))
     } else if (action === 'open-comprovantes-despesas') {
       openTab('comprovantes-despesas', getTabTitle('comprovantes-despesas'))
     } else if (action === 'open-gestao-industrial') {
       // Toggle do grupo GESTÃO INDUSTRIAL
+      const willOpen = !expandedGroups.has('gestao-industrial')
       setExpandedGroups(prev => {
         const newSet = new Set(prev)
-        if (newSet.has('gestao-industrial')) {
-          newSet.delete('gestao-industrial')
-          if (!activeTabId && dashboardWorkspaceExpanded) {
-            setDashboardMainHubId((h) => (h === 'gestao-industrial' ? null : h))
-          }
-        } else {
-          newSet.add('gestao-industrial')
-          if (!activeTabId && dashboardWorkspaceExpanded) {
-            setDashboardMainHubId('gestao-industrial')
-          }
-        }
+        if (newSet.has('gestao-industrial')) newSet.delete('gestao-industrial')
+        else newSet.add('gestao-industrial')
         return newSet
       })
+      if (willOpen) openDashboardHubFromSidebar('gestao-industrial')
+      else if (dashboardMainHubId === 'gestao-industrial') setDashboardMainHubId(null)
     } else if (action === 'open-checklist-group') {
       // Toggle do grupo CHECKLIST
+      const willOpen = !expandedGroups.has('checklist-group')
       setExpandedGroups(prev => {
         const newSet = new Set(prev)
-        if (newSet.has('checklist-group')) {
-          newSet.delete('checklist-group')
-          if (!activeTabId && dashboardWorkspaceExpanded) {
-            setDashboardMainHubId((h) => (h === 'checklist-group' ? null : h))
-          }
-        } else {
-          newSet.add('checklist-group')
-          if (!activeTabId && dashboardWorkspaceExpanded) {
-            setDashboardMainHubId('checklist-group')
-          }
-        }
+        if (newSet.has('checklist-group')) newSet.delete('checklist-group')
+        else newSet.add('checklist-group')
         return newSet
       })
+      if (willOpen) openDashboardHubFromSidebar('checklist-group')
+      else if (dashboardMainHubId === 'checklist-group') setDashboardMainHubId(null)
     } else if (action === 'open-checklist-hub') {
       // Toggle do grupo CHECKLIST quando clicar no botão principal
       setExpandedGroups(prev => {
@@ -19315,21 +19344,15 @@ export default function Dashboard() {
       }, 50)
     } else if (action === 'open-extra') {
       // Toggle do grupo EXTRA
+      const willOpen = !expandedGroups.has('extra')
       setExpandedGroups(prev => {
         const newSet = new Set(prev)
-        if (newSet.has('extra')) {
-          newSet.delete('extra')
-          if (!activeTabId && dashboardWorkspaceExpanded) {
-            setDashboardMainHubId((h) => (h === 'extra' ? null : h))
-          }
-        } else {
-          newSet.add('extra')
-          if (!activeTabId && dashboardWorkspaceExpanded) {
-            setDashboardMainHubId('extra')
-          }
-        }
+        if (newSet.has('extra')) newSet.delete('extra')
+        else newSet.add('extra')
         return newSet
       })
+      if (willOpen) openDashboardHubFromSidebar('extra')
+      else if (dashboardMainHubId === 'extra') setDashboardMainHubId(null)
     } else if (action === 'open-translator') {
       openTab('translator', getTabTitle('translator'))
     } else if (action === 'open-manual-gestor') {
@@ -19347,7 +19370,7 @@ export default function Dashboard() {
       ])
       if (!keepDrawerOpen.has(action)) setMobileMenuOpen(false)
     }
-  }, [expandedGroups, openTab, getTabTitle, canAccessAction, isDemoTeaserAction, safeT, scrollMainContentToTop, isCompactLayout, activeTabId, dashboardWorkspaceExpanded])
+  }, [expandedGroups, openTab, getTabTitle, canAccessAction, isDemoTeaserAction, safeT, scrollMainContentToTop, isCompactLayout, activeTabId, dashboardWorkspaceExpanded, openDashboardHubFromSidebar, dashboardMainHubId])
 
   // ===== Funções PRE CHECKLIST =====
   const handleBuscarEquipamentoPreCheck = () => {
@@ -56300,7 +56323,50 @@ A1;Peça exemplo;10`}
               {openTabs.map((tab) => (
                 <div
                   key={tab.id}
-                  className={`bottom-tab-item ${activeTabId === tab.id ? 'active' : ''} ${getBottomTabAccentClass(tab.type)}`}
+                  draggable
+                  onDragStart={(e) => {
+                    setBottomTabsDraggingId(tab.id)
+                    setBottomTabsDragOverId(null)
+                    try {
+                      e.dataTransfer.effectAllowed = 'move'
+                      e.dataTransfer.setData('text/plain', tab.id)
+                    } catch {
+                      // ignore
+                    }
+                  }}
+                  onDragEnd={() => {
+                    setBottomTabsDraggingId(null)
+                    setBottomTabsDragOverId(null)
+                  }}
+                  onDragOver={(e) => {
+                    if (!bottomTabsDraggingId || bottomTabsDraggingId === tab.id) return
+                    e.preventDefault()
+                    setBottomTabsDragOverId(tab.id)
+                    try {
+                      e.dataTransfer.dropEffect = 'move'
+                    } catch {
+                      // ignore
+                    }
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    const draggedId = bottomTabsDraggingId || (() => {
+                      try { return e.dataTransfer.getData('text/plain') } catch { return '' }
+                    })()
+                    if (!draggedId || draggedId === tab.id) return
+                    setOpenTabs((prev) => {
+                      const from = prev.findIndex((t) => t.id === draggedId)
+                      const to = prev.findIndex((t) => t.id === tab.id)
+                      if (from < 0 || to < 0) return prev
+                      const next = [...prev]
+                      const [moved] = next.splice(from, 1)
+                      next.splice(to, 0, moved)
+                      return next
+                    })
+                    setBottomTabsDraggingId(null)
+                    setBottomTabsDragOverId(null)
+                  }}
+                  className={`bottom-tab-item ${activeTabId === tab.id ? 'active' : ''} ${getBottomTabAccentClass(tab.type)}${bottomTabsDraggingId === tab.id ? ' is-dragging' : ''}${bottomTabsDragOverId === tab.id ? ' is-drop-target' : ''}`}
                   onClick={() => setActiveTabId(tab.id)}
                   title={tab.title}
                 >
