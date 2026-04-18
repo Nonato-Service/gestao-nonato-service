@@ -31,6 +31,9 @@ export const translations = {
     mainModuleContextLabel: 'Módulo selecionado',
     mainModuleIntroFallback:
       'Utilize a área abaixo para trabalhar neste módulo. Clique na seta para mostrar ou ocultar este resumo.',
+    mainHubBackToDashboard: 'Voltar ao painel completo',
+    mainHubIntro: 'Selecione um módulo abaixo — os mesmos atalhos do menu lateral.',
+    mainHubCardHint: 'Abrir esta área no sistema.',
     statUptime: 'Uptime',
     statSuporte: 'Suporte',
     statClientes: 'Clientes',
@@ -2560,6 +2563,9 @@ export const translations = {
     mainModuleContextLabel: 'Módulo seleccionado',
     mainModuleIntroFallback:
       'Use el área inferior para trabajar en este módulo. Pulse la flecha para mostrar u ocultar este resumen.',
+    mainHubBackToDashboard: 'Volver al panel completo',
+    mainHubIntro: 'Seleccione un módulo abajo — los mismos accesos del menú lateral.',
+    mainHubCardHint: 'Abrir esta función en el sistema.',
     statUptime: 'Uptime',
     statSuporte: 'Soporte',
     statClientes: 'Clientes',
@@ -4819,6 +4825,9 @@ export const translations = {
     mainModuleContextLabel: 'Module sélectionné',
     mainModuleIntroFallback:
       'Utilisez la zone ci-dessous pour travailler dans ce module. Cliquez sur la flèche pour afficher ou masquer ce résumé.',
+    mainHubBackToDashboard: 'Retour au tableau de bord complet',
+    mainHubIntro: 'Choisissez un module ci-dessous — les mêmes raccourcis que dans le menu latéral.',
+    mainHubCardHint: 'Ouvrir cette fonction dans le système.',
     statUptime: 'Disponibilité',
     statSuporte: 'Support',
     statClientes: 'Clients',
@@ -7071,6 +7080,9 @@ export const translations = {
     mainModuleContextLabel: 'Modulo selezionato',
     mainModuleIntroFallback:
       'Usa l’area sotto per lavorare in questo modulo. Clicca sulla freccia per mostrare o nascondere questo riepilogo.',
+    mainHubBackToDashboard: 'Torna al pannello completo',
+    mainHubIntro: 'Seleziona un modulo sotto — le stesse scorciatoie del menu laterale.',
+    mainHubCardHint: 'Apri questa funzione nel sistema.',
     statUptime: 'Uptime',
     statSuporte: 'Supporto',
     statClientes: 'Clienti',
@@ -9324,6 +9336,9 @@ export const translations = {
     mainModuleContextLabel: 'Ausgewähltes Modul',
     mainModuleIntroFallback:
       'Nutzen Sie den Bereich unten, um in diesem Modul zu arbeiten. Klicken Sie auf den Pfeil, um diese Zusammenfassung ein- oder auszublenden.',
+    mainHubBackToDashboard: 'Zurück zur vollständigen Übersicht',
+    mainHubIntro: 'Wählen Sie unten ein Modul — dieselben Einträge wie in der Seitenleiste.',
+    mainHubCardHint: 'Diese Funktion im System öffnen.',
     statUptime: 'Betriebszeit',
     statSuporte: 'Support',
     statClientes: 'Kunden',
@@ -11548,6 +11563,9 @@ export const translations = {
     mainModuleContextLabel: 'Selected module',
     mainModuleIntroFallback:
       'Use the area below to work in this module. Click the arrow to show or hide this summary.',
+    mainHubBackToDashboard: 'Back to full dashboard',
+    mainHubIntro: 'Pick a module below — the same shortcuts as in the side menu.',
+    mainHubCardHint: 'Open this area in the system.',
     statUptime: 'Uptime',
     statSuporte: 'Support',
     statClientes: 'Clients',

@@ -1870,6 +1870,8 @@ export default function Dashboard() {
   const [showDashboardView, setShowDashboardView] = useState(true) // Dashboard central por padrão
   /** Vista resumida no painel inicial; «Entrar no sistema» mostra métricas, atalhos e inventário. */
   const [dashboardWorkspaceExpanded, setDashboardWorkspaceExpanded] = useState(false)
+  /** No painel completo (sem aba): mostrar grelha só com os botões do grupo expandido na barra lateral. */
+  const [dashboardMainHubId, setDashboardMainHubId] = useState<string | null>(null)
   const [showTranslatorModal, setShowTranslatorModal] = useState(false)
   
   // Estados para Checklist
@@ -2115,6 +2117,14 @@ export default function Dashboard() {
   useEffect(() => {
     if (activeTabId) setMainModuleIntroExpanded(true)
   }, [activeTabId])
+
+  useEffect(() => {
+    if (activeTabId) setDashboardMainHubId(null)
+  }, [activeTabId])
+
+  useEffect(() => {
+    if (!dashboardWorkspaceExpanded) setDashboardMainHubId(null)
+  }, [dashboardWorkspaceExpanded])
 
   // Funções para gerenciar abas
   const openTab = (type: TabType, title: string, icon?: string) => {
@@ -3303,6 +3313,7 @@ export default function Dashboard() {
     setOpenTabs([])
     setActiveTabId(null)
     setDashboardWorkspaceExpanded(false)
+    setDashboardMainHubId(null)
     // Fechar todos os modais
     setShowModal(false)
     setShowGestoresModal(false)
@@ -19093,13 +19104,21 @@ export default function Dashboard() {
       }
     } else if (action === 'open-comunicacao-interna') {
       // Toggle do grupo COMUNICAÇÃO INTERNA
-      const newSet = new Set(expandedGroups)
-      if (newSet.has('comunicacao-interna')) {
-        newSet.delete('comunicacao-interna')
-      } else {
-        newSet.add('comunicacao-interna')
-      }
-      setExpandedGroups(newSet)
+      setExpandedGroups((prev) => {
+        const newSet = new Set(prev)
+        if (newSet.has('comunicacao-interna')) {
+          newSet.delete('comunicacao-interna')
+          if (!activeTabId && dashboardWorkspaceExpanded) {
+            setDashboardMainHubId((h) => (h === 'comunicacao-interna' ? null : h))
+          }
+        } else {
+          newSet.add('comunicacao-interna')
+          if (!activeTabId && dashboardWorkspaceExpanded) {
+            setDashboardMainHubId('comunicacao-interna')
+          }
+        }
+        return newSet
+      })
     } else if (action === 'open-hub-comunicacao') {
       if (!expandedGroups.has('comunicacao-interna')) setExpandedGroups(prev => new Set(prev).add('comunicacao-interna'))
       openTab('hub-comunicacao', getTabTitle('hub-comunicacao'))
@@ -19174,8 +19193,14 @@ export default function Dashboard() {
         const newSet = new Set(prev)
         if (newSet.has('gestao-tecnica')) {
           newSet.delete('gestao-tecnica')
+          if (!activeTabId && dashboardWorkspaceExpanded) {
+            setDashboardMainHubId((h) => (h === 'gestao-tecnica' ? null : h))
+          }
         } else {
           newSet.add('gestao-tecnica')
+          if (!activeTabId && dashboardWorkspaceExpanded) {
+            setDashboardMainHubId('gestao-tecnica')
+          }
         }
         return newSet
       })
@@ -19185,8 +19210,14 @@ export default function Dashboard() {
         const newSet = new Set(prev)
         if (newSet.has('gestao-custos')) {
           newSet.delete('gestao-custos')
+          if (!activeTabId && dashboardWorkspaceExpanded) {
+            setDashboardMainHubId((h) => (h === 'gestao-custos' ? null : h))
+          }
         } else {
           newSet.add('gestao-custos')
+          if (!activeTabId && dashboardWorkspaceExpanded) {
+            setDashboardMainHubId('gestao-custos')
+          }
         }
         return newSet
       })
@@ -19196,8 +19227,14 @@ export default function Dashboard() {
         const newSet = new Set(prev)
         if (newSet.has('gestao-financeira')) {
           newSet.delete('gestao-financeira')
+          if (!activeTabId && dashboardWorkspaceExpanded) {
+            setDashboardMainHubId((h) => (h === 'gestao-financeira' ? null : h))
+          }
         } else {
           newSet.add('gestao-financeira')
+          if (!activeTabId && dashboardWorkspaceExpanded) {
+            setDashboardMainHubId('gestao-financeira')
+          }
         }
         return newSet
       })
@@ -19211,8 +19248,14 @@ export default function Dashboard() {
         const newSet = new Set(prev)
         if (newSet.has('gestao-industrial')) {
           newSet.delete('gestao-industrial')
+          if (!activeTabId && dashboardWorkspaceExpanded) {
+            setDashboardMainHubId((h) => (h === 'gestao-industrial' ? null : h))
+          }
         } else {
           newSet.add('gestao-industrial')
+          if (!activeTabId && dashboardWorkspaceExpanded) {
+            setDashboardMainHubId('gestao-industrial')
+          }
         }
         return newSet
       })
@@ -19222,8 +19265,14 @@ export default function Dashboard() {
         const newSet = new Set(prev)
         if (newSet.has('checklist-group')) {
           newSet.delete('checklist-group')
+          if (!activeTabId && dashboardWorkspaceExpanded) {
+            setDashboardMainHubId((h) => (h === 'checklist-group' ? null : h))
+          }
         } else {
           newSet.add('checklist-group')
+          if (!activeTabId && dashboardWorkspaceExpanded) {
+            setDashboardMainHubId('checklist-group')
+          }
         }
         return newSet
       })
@@ -19246,8 +19295,14 @@ export default function Dashboard() {
         const newSet = new Set(prev)
         if (newSet.has('extra')) {
           newSet.delete('extra')
+          if (!activeTabId && dashboardWorkspaceExpanded) {
+            setDashboardMainHubId((h) => (h === 'extra' ? null : h))
+          }
         } else {
           newSet.add('extra')
+          if (!activeTabId && dashboardWorkspaceExpanded) {
+            setDashboardMainHubId('extra')
+          }
         }
         return newSet
       })
@@ -19268,7 +19323,7 @@ export default function Dashboard() {
       ])
       if (!keepDrawerOpen.has(action)) setMobileMenuOpen(false)
     }
-  }, [expandedGroups, openTab, getTabTitle, canAccessAction, isDemoTeaserAction, safeT, scrollMainContentToTop, isCompactLayout])
+  }, [expandedGroups, openTab, getTabTitle, canAccessAction, isDemoTeaserAction, safeT, scrollMainContentToTop, isCompactLayout, activeTabId, dashboardWorkspaceExpanded])
 
   // ===== Funções PRE CHECKLIST =====
   const handleBuscarEquipamentoPreCheck = () => {
@@ -50110,6 +50165,326 @@ A1;Peça exemplo;10`}
     }
   }
 
+  const getDashboardMainHubTitle = (hubId: string) => {
+    const t = safeT as Record<string, string | undefined>
+    switch (hubId) {
+      case 'protocolos-main':
+        return (t as any).protocolosServicoTitle || 'Protocolos de serviço'
+      case 'manual-programa-main':
+        return (t as any).manualProgramaTitle || 'Manual do programa'
+      case 'manuais-informacoes-main':
+        return (t as any).manuaisInformacoesTecnicasTitle || 'Manuais e informações técnicas'
+      case 'almoxarifado-main':
+        return (t as any).almoxarifadoArmazemTitle || 'Almoxarifado / Armazém'
+      case 'cadastro-nonato-main':
+        return t.cadastroNonatoServiceTitle || 'CADASTRO DA NONATO SERVICE'
+      case 'admin-main':
+        return t.administrador || 'ADMINISTRADOR'
+      case 'extra':
+        return t.extras || 'EXTRAS'
+      default:
+        if (SIDEBAR_GROUPS.includes(hubId as SidebarGroup)) return getSidebarGroupLabel(hubId as SidebarGroup)
+        return t.title || ''
+    }
+  }
+
+  const renderDashboardMainHubContent = (hubId: string) => {
+    const tr = safeT as Record<string, string | undefined>
+    const qaColors = [
+      { border: 'rgba(0, 255, 100, 0.38)', borderH: 'rgba(0, 255, 120, 0.75)', shadow: 'rgba(0, 255, 100, 0.28)', glow: 'rgba(0, 255, 100, 0.14)', title: '#66ff99' },
+      { border: 'rgba(56, 189, 248, 0.42)', borderH: 'rgba(56, 189, 248, 0.78)', shadow: 'rgba(56, 189, 248, 0.3)', glow: 'rgba(56, 189, 248, 0.15)', title: '#7dd3fc' },
+      { border: 'rgba(167, 139, 250, 0.45)', borderH: 'rgba(167, 139, 250, 0.82)', shadow: 'rgba(167, 139, 250, 0.32)', glow: 'rgba(167, 139, 250, 0.16)', title: '#c4b5fd' },
+      { border: 'rgba(251, 146, 60, 0.45)', borderH: 'rgba(251, 146, 60, 0.82)', shadow: 'rgba(251, 146, 60, 0.3)', glow: 'rgba(251, 146, 60, 0.15)', title: '#fdba74' },
+      { border: 'rgba(45, 212, 191, 0.42)', borderH: 'rgba(45, 212, 191, 0.8)', shadow: 'rgba(45, 212, 191, 0.28)', glow: 'rgba(45, 212, 191, 0.14)', title: '#5eead4' },
+      { border: 'rgba(244, 114, 182, 0.42)', borderH: 'rgba(244, 114, 182, 0.78)', shadow: 'rgba(244, 114, 182, 0.28)', glow: 'rgba(244, 114, 182, 0.14)', title: '#f9a8d4' },
+      { border: 'rgba(250, 204, 21, 0.45)', borderH: 'rgba(250, 204, 21, 0.85)', shadow: 'rgba(250, 204, 21, 0.28)', glow: 'rgba(250, 204, 21, 0.14)', title: '#fde047' },
+      { border: 'rgba(232, 121, 249, 0.42)', borderH: 'rgba(232, 121, 249, 0.8)', shadow: 'rgba(232, 121, 249, 0.3)', glow: 'rgba(232, 121, 249, 0.15)', title: '#f0abfc' },
+      { border: 'rgba(34, 211, 238, 0.42)', borderH: 'rgba(34, 211, 238, 0.8)', shadow: 'rgba(34, 211, 238, 0.28)', glow: 'rgba(34, 211, 238, 0.14)', title: '#67e8f9' },
+      { border: 'rgba(163, 230, 53, 0.4)', borderH: 'rgba(163, 230, 53, 0.78)', shadow: 'rgba(163, 230, 53, 0.28)', glow: 'rgba(163, 230, 53, 0.14)', title: '#bef264' },
+      { border: 'rgba(99, 102, 241, 0.45)', borderH: 'rgba(99, 102, 241, 0.82)', shadow: 'rgba(99, 102, 241, 0.3)', glow: 'rgba(99, 102, 241, 0.15)', title: '#a5b4fc' },
+      { border: 'rgba(52, 211, 153, 0.42)', borderH: 'rgba(52, 211, 153, 0.8)', shadow: 'rgba(52, 211, 153, 0.28)', glow: 'rgba(52, 211, 153, 0.14)', title: '#6ee7b7' }
+    ]
+    const cardHint = (tr as any).mainHubCardHint || 'Abrir no sistema.'
+    const hubIntro = (tr as any).mainHubIntro || tr.welcomeText2 || ''
+    type HubRow = { key: string; title: string; desc: string; icon: string; action: string; buttonId?: string }
+    const rows: HubRow[] = []
+
+    if (hubId === 'gestao-tecnica') {
+      const sorted = [...getButtonsByGroup('gestao-tecnica')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      for (const button of sorted) {
+        const perm =
+          button.id === 'biblioteca-pecas-default' ? canAccessAction('open-biblioteca-pecas') : canAccessAction(button.action)
+        if (!perm) continue
+        const action = button.id === 'biblioteca-pecas-default' ? 'open-biblioteca-hub' : button.action
+        rows.push({
+          key: button.id,
+          title: getButtonName(button),
+          desc: cardHint,
+          icon: button.id === 'biblioteca-pecas-default' ? '📚' : '🔧',
+          action,
+          buttonId: button.id
+        })
+      }
+    } else if (hubId === 'gestao-custos' || hubId === 'gestao-financeira') {
+      const sorted = [...getButtonsByGroup(hubId as SidebarGroup)].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      for (const button of sorted) {
+        if (!canAccessAction(button.action)) continue
+        rows.push({ key: button.id, title: getButtonName(button), desc: cardHint, icon: '▸', action: button.action, buttonId: button.id })
+      }
+    } else if (hubId === 'gestao-industrial') {
+      const sorted = [...getButtonsByGroup('gestao-industrial')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      for (const button of sorted) {
+        if (button.id === 'checklist-group-default') {
+          if (canAccessAction(button.action)) {
+            rows.push({ key: button.id, title: getButtonName(button), desc: cardHint, icon: '📋', action: button.action, buttonId: button.id })
+          }
+          continue
+        }
+        if (!canAccessAction(button.action)) continue
+        rows.push({ key: button.id, title: getButtonName(button), desc: cardHint, icon: '🏭', action: button.action, buttonId: button.id })
+      }
+    } else if (hubId === 'checklist-group') {
+      const sorted = [...getButtonsByGroup('checklist-group')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      for (const button of sorted) {
+        if (!canAccessAction(button.action)) continue
+        rows.push({ key: button.id, title: getButtonName(button), desc: cardHint, icon: '✅', action: button.action, buttonId: button.id })
+      }
+    } else if (hubId === 'comunicacao-interna') {
+      const defs: Array<{ id: string; action: string; translationKey: string }> = [
+        { id: 'hub-comunicacao-default', action: 'open-hub-comunicacao', translationKey: 'hubComunicacao' },
+        { id: 'mensagens-internas-default', action: 'open-mensagens-internas', translationKey: 'mensagensInternas' },
+        { id: 'mensagens-internas-tecnicos-default', action: 'open-mensagens-internas-tecnicos', translationKey: 'mensagensInternasTecnicos' },
+        { id: 'alerta-mensagens-default', action: 'open-alerta-mensagens', translationKey: 'alertaMensagens' }
+      ]
+      for (const d of defs) {
+        if (!canAccessAction(d.action)) continue
+        const saved = sidebarButtons.find((btn) => btn.id === d.id)
+        const button: SidebarButton = saved || {
+          id: d.id,
+          name: ((safeT as any)[d.translationKey] as string) || d.action,
+          action: d.action,
+          order: 0,
+          translationKey: d.translationKey,
+          group: 'comunicacao-interna'
+        }
+        rows.push({ key: d.id, title: getButtonName(button), desc: cardHint, icon: '💬', action: d.action, buttonId: d.id })
+      }
+    } else if (hubId === 'protocolos-main') {
+      if (canAccessAction('open-protocolos-servico')) {
+        rows.push({
+          key: 'protocolos-servico',
+          title: (tr as any).protocolosServicoTitle || 'Protocolos de serviço',
+          desc: cardHint,
+          icon: '📑',
+          action: 'open-protocolos-servico'
+        })
+      }
+    } else if (hubId === 'manual-programa-main') {
+      if (canAccessAction('open-manual-programa')) {
+        rows.push({
+          key: 'manual-programa',
+          title: (tr as any).manualProgramaTitle || 'Manual do programa',
+          desc: cardHint,
+          icon: '📘',
+          action: 'open-manual-programa'
+        })
+      }
+    } else if (hubId === 'manuais-informacoes-main') {
+      const bb = sidebarButtons.find((b) => b.id === 'manuais-informacoes-tecnicas-default')
+      if (bb && canAccessAction(bb.action)) {
+        rows.push({ key: bb.id, title: getButtonName(bb), desc: cardHint, icon: '📖', action: bb.action, buttonId: bb.id })
+      }
+    } else if (hubId === 'almoxarifado-main') {
+      const bb = sidebarButtons.find((b) => b.id === 'almoxarifado-armazem-default')
+      if (bb && canAccessAction(bb.action)) {
+        rows.push({ key: bb.id, title: getButtonName(bb), desc: cardHint, icon: '📦', action: bb.action, buttonId: bb.id })
+      }
+    } else if (hubId === 'cadastro-nonato-main' && !isDemoMode) {
+      if (canAccessAction('open-cadastro-nonato-service')) {
+        rows.push({
+          key: 'cadastro-nonato',
+          title: tr.cadastroNonatoServiceTitle || 'CADASTRO DA NONATO SERVICE',
+          desc: cardHint,
+          icon: '📋',
+          action: 'open-cadastro-nonato-service'
+        })
+      }
+      if (canAccessAction('open-ficha-cadastral')) {
+        rows.push({
+          key: 'ficha-cadastral',
+          title: tr.fichaCadastralTitle || 'FICHA CADASTRAL',
+          desc: cardHint,
+          icon: '📄',
+          action: 'open-ficha-cadastral'
+        })
+      }
+    } else if (hubId === 'admin-main' && !isDemoMode) {
+      const adminBtn =
+        getButtonsByGroup('outros').find((b) => b.id === 'administrador-default') ||
+        ({
+          id: 'administrador-default',
+          name: 'ADMINISTRADOR',
+          action: 'open-administrador',
+          order: 9999,
+          translationKey: 'administrador',
+          group: 'outros' as SidebarGroup
+        } as SidebarButton)
+      if (canAccessAction(adminBtn.action)) {
+        rows.push({ key: adminBtn.id, title: getButtonName(adminBtn), desc: cardHint, icon: '🔒', action: adminBtn.action, buttonId: adminBtn.id })
+      }
+    } else if (hubId === 'extra' && !isDemoMode) {
+      if (canAccessAction('open-translator')) {
+        rows.push({ key: 'open-translator', title: tr.translator || 'Tradutor', desc: cardHint, icon: '🌐', action: 'open-translator' })
+      }
+      if (canAccessAction('open-manual-gestor')) {
+        rows.push({
+          key: 'open-manual-gestor',
+          title: (tr as any).manualUsoGestorNonatoService || 'MANUAL DE USO DO GESTOR',
+          desc: cardHint,
+          icon: '📖',
+          action: 'open-manual-gestor'
+        })
+      }
+      const seen = new Set<string>(['open-translator', 'open-manual-gestor'])
+      for (const button of getButtonsByGroup('outros')) {
+        if (seen.has(button.action)) continue
+        if (!canAccessAction(button.action)) continue
+        seen.add(button.action)
+        rows.push({ key: button.id, title: getButtonName(button), desc: cardHint, icon: '⚙️', action: button.action, buttonId: button.id })
+      }
+    }
+
+    return (
+      <div style={{ width: '100%' }}>
+        <div style={{ marginBottom: isCompactLayout ? 16 : 24, display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => setDashboardMainHubId(null)}
+            style={{
+              padding: '10px 18px',
+              fontSize: 13,
+              backgroundColor: '#1a1a1a',
+              border: '1px solid rgba(0, 255, 0, 0.45)',
+              color: '#bfffbf'
+            }}
+          >
+            {(tr as any).mainHubBackToDashboard || 'Voltar ao painel completo'}
+          </button>
+        </div>
+        <div
+          style={{
+            textAlign: 'center',
+            marginBottom: isCompactLayout ? 20 : 40,
+            padding: isCompactLayout ? '16px 12px' : '40px 28px',
+            background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.06) 0%, rgba(0, 0, 0, 0.85) 100%)',
+            borderRadius: isCompactLayout ? 12 : 18,
+            border: '2px solid rgba(0, 255, 0, 0.22)',
+            boxShadow: '0 8px 32px rgba(0, 255, 0, 0.08)'
+          }}
+        >
+          <h1
+            style={{
+              fontSize: isCompactLayout ? 20 : 36,
+              fontWeight: 800,
+              color: '#ffffff',
+              marginBottom: 12,
+              letterSpacing: isCompactLayout ? '0.06em' : '0.12em',
+              textTransform: 'uppercase',
+              textShadow: '0 0 18px rgba(0, 255, 0, 0.25)'
+            }}
+          >
+            {getDashboardMainHubTitle(hubId)}
+          </h1>
+          {hubIntro ? (
+            <p style={{ fontSize: isCompactLayout ? 13 : 15, color: 'rgba(200, 255, 210, 0.88)', maxWidth: 720, margin: '0 auto', lineHeight: 1.55 }}>
+              {hubIntro}
+            </p>
+          ) : null}
+        </div>
+        {rows.length === 0 ? (
+          <p style={{ textAlign: 'center', color: '#aaa', padding: 32 }}>{safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}</p>
+        ) : (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: 18
+            }}
+          >
+            {rows.map((row, idx) => {
+              const c = qaColors[idx % qaColors.length]
+              return (
+                <div
+                  key={row.key}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handleButtonClick(row.action, row.buttonId)
+                    }
+                  }}
+                  style={{
+                    padding: '26px 22px',
+                    backgroundColor: '#141414',
+                    borderRadius: 14,
+                    border: `2px solid ${c.border}`,
+                    transition: 'all 0.25s ease',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-6px) scale(1.01)'
+                    e.currentTarget.style.borderColor = c.borderH
+                    e.currentTarget.style.boxShadow = `0 12px 36px ${c.shadow}`
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0) scale(1)'
+                    e.currentTarget.style.borderColor = c.border
+                    e.currentTarget.style.boxShadow = 'none'
+                  }}
+                  onClick={() => handleButtonClick(row.action, row.buttonId)}
+                >
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: -18,
+                      right: -18,
+                      width: 96,
+                      height: 96,
+                      background: `radial-gradient(circle, ${c.glow} 0%, transparent 72%)`,
+                      borderRadius: '50%'
+                    }}
+                  />
+                  <div style={{ fontSize: 44, marginBottom: 12, position: 'relative', zIndex: 1 }} aria-hidden>
+                    {row.icon}
+                  </div>
+                  <h3
+                    style={{
+                      color: c.title,
+                      fontSize: 16,
+                      fontWeight: 800,
+                      marginBottom: 8,
+                      position: 'relative',
+                      zIndex: 1,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em'
+                    }}
+                  >
+                    {row.title}
+                  </h3>
+                  <p style={{ color: '#bdbdbd', fontSize: 13, lineHeight: 1.55, position: 'relative', zIndex: 1, margin: 0 }}>{row.desc}</p>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   const renderSidebarButtonOrganizer = () => {
     const normalizedButtons = normalizeSidebarButtons(sidebarButtons)
     const coreButtons = normalizedButtons.filter((button) => isSidebarButtonLocked(button))
@@ -54506,8 +54881,17 @@ A1;Peça exemplo;10`}
             onClick={() => {
               setExpandedGroups((prev) => {
                 const s = new Set(prev)
-                if (s.has('protocolos-main')) s.delete('protocolos-main')
-                else s.add('protocolos-main')
+                if (s.has('protocolos-main')) {
+                  s.delete('protocolos-main')
+                  if (!activeTabId && dashboardWorkspaceExpanded) {
+                    setDashboardMainHubId((h) => (h === 'protocolos-main' ? null : h))
+                  }
+                } else {
+                  s.add('protocolos-main')
+                  if (!activeTabId && dashboardWorkspaceExpanded) {
+                    setDashboardMainHubId('protocolos-main')
+                  }
+                }
                 return s
               })
             }}
@@ -54548,8 +54932,17 @@ A1;Peça exemplo;10`}
             onClick={() => {
               setExpandedGroups((prev) => {
                 const s = new Set(prev)
-                if (s.has('manual-programa-main')) s.delete('manual-programa-main')
-                else s.add('manual-programa-main')
+                if (s.has('manual-programa-main')) {
+                  s.delete('manual-programa-main')
+                  if (!activeTabId && dashboardWorkspaceExpanded) {
+                    setDashboardMainHubId((h) => (h === 'manual-programa-main' ? null : h))
+                  }
+                } else {
+                  s.add('manual-programa-main')
+                  if (!activeTabId && dashboardWorkspaceExpanded) {
+                    setDashboardMainHubId('manual-programa-main')
+                  }
+                }
                 return s
               })
             }}
@@ -54887,8 +55280,17 @@ A1;Peça exemplo;10`}
                   onClick={() => {
                     setExpandedGroups((prev) => {
                       const s = new Set(prev)
-                      if (s.has('manuais-informacoes-main')) s.delete('manuais-informacoes-main')
-                      else s.add('manuais-informacoes-main')
+                      if (s.has('manuais-informacoes-main')) {
+                        s.delete('manuais-informacoes-main')
+                        if (!activeTabId && dashboardWorkspaceExpanded) {
+                          setDashboardMainHubId((h) => (h === 'manuais-informacoes-main' ? null : h))
+                        }
+                      } else {
+                        s.add('manuais-informacoes-main')
+                        if (!activeTabId && dashboardWorkspaceExpanded) {
+                          setDashboardMainHubId('manuais-informacoes-main')
+                        }
+                      }
                       return s
                     })
                   }}
@@ -54936,8 +55338,17 @@ A1;Peça exemplo;10`}
                   onClick={() => {
                     setExpandedGroups((prev) => {
                       const s = new Set(prev)
-                      if (s.has('almoxarifado-main')) s.delete('almoxarifado-main')
-                      else s.add('almoxarifado-main')
+                      if (s.has('almoxarifado-main')) {
+                        s.delete('almoxarifado-main')
+                        if (!activeTabId && dashboardWorkspaceExpanded) {
+                          setDashboardMainHubId((h) => (h === 'almoxarifado-main' ? null : h))
+                        }
+                      } else {
+                        s.add('almoxarifado-main')
+                        if (!activeTabId && dashboardWorkspaceExpanded) {
+                          setDashboardMainHubId('almoxarifado-main')
+                        }
+                      }
                       return s
                     })
                   }}
@@ -55038,8 +55449,17 @@ A1;Peça exemplo;10`}
             onClick={() => {
               setExpandedGroups((prev) => {
                 const s = new Set(prev)
-                if (s.has('cadastro-nonato-main')) s.delete('cadastro-nonato-main')
-                else s.add('cadastro-nonato-main')
+                if (s.has('cadastro-nonato-main')) {
+                  s.delete('cadastro-nonato-main')
+                  if (!activeTabId && dashboardWorkspaceExpanded) {
+                    setDashboardMainHubId((h) => (h === 'cadastro-nonato-main' ? null : h))
+                  }
+                } else {
+                  s.add('cadastro-nonato-main')
+                  if (!activeTabId && dashboardWorkspaceExpanded) {
+                    setDashboardMainHubId('cadastro-nonato-main')
+                  }
+                }
                 return s
               })
             }}
@@ -55172,8 +55592,17 @@ A1;Peça exemplo;10`}
                 onClick={() => {
                   setExpandedGroups((prev) => {
                     const s = new Set(prev)
-                    if (s.has('admin-main')) s.delete('admin-main')
-                    else s.add('admin-main')
+                    if (s.has('admin-main')) {
+                      s.delete('admin-main')
+                      if (!activeTabId && dashboardWorkspaceExpanded) {
+                        setDashboardMainHubId((h) => (h === 'admin-main' ? null : h))
+                      }
+                    } else {
+                      s.add('admin-main')
+                      if (!activeTabId && dashboardWorkspaceExpanded) {
+                        setDashboardMainHubId('admin-main')
+                      }
+                    }
                     return s
                   })
                 }}
@@ -55416,7 +55845,10 @@ A1;Peça exemplo;10`}
                     <button
                       type="button"
                       className="btn-primary ns-dashboard-entry-cta"
-                      onClick={() => setDashboardWorkspaceExpanded(true)}
+                      onClick={() => {
+                        setDashboardMainHubId(null)
+                        setDashboardWorkspaceExpanded(true)
+                      }}
                     >
                       <span aria-hidden style={{ fontSize: 18 }}>→</span>
                       {(safeT as any)?.dashboardEntrarPainelCompleto || safeT?.acessarSistema || 'Entrar no sistema'}
@@ -55424,6 +55856,10 @@ A1;Peça exemplo;10`}
                     <p className="ns-dashboard-entry-note">{(safeT as any)?.dashboardEntradaNota}</p>
                   </div>
                 </div>
+              ) : (
+                <>
+              {dashboardMainHubId ? (
+                renderDashboardMainHubContent(dashboardMainHubId)
               ) : (
                 <>
               {/* Hero Section com Logo */}
@@ -55762,6 +56198,8 @@ A1;Peça exemplo;10`}
                   </div>
                 </div>
               </div>
+                </>
+              )}
                 </>
               )}
             </div>
