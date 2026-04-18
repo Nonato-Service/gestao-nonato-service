@@ -2085,6 +2085,8 @@ export default function Dashboard() {
   }, [hideSidebarForEntryDashboard])
   const mainContentAreaRef = useRef<HTMLDivElement>(null)
   const [showHelpModal, setShowHelpModal] = useState(false)
+  /** Origem do modal de ajuda: painel inicial ou tipo da aba (texto contextual). */
+  const [helpModalSource, setHelpModalSource] = useState<'dashboard' | TabType | null>(null)
   /** Resumo do módulo no topo da área principal (expandir/ocultar). */
   const [mainModuleIntroExpanded, setMainModuleIntroExpanded] = useState(true)
 
@@ -2137,18 +2139,6 @@ export default function Dashboard() {
       // ignore
     }
   }, [openTabs, bottomTabsSavedOrder])
-
-  // F1 — Abrir Help da seção ativa (aba aberta)
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'F1') {
-        e.preventDefault()
-        if (activeTabId && openTabs.some(t => t.id === activeTabId)) setShowHelpModal(true)
-      }
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [activeTabId, openTabs])
 
   // Ao mudar de aba ou abrir uma nova: scroll apenas da área CENTRAL (não mexer na barra lateral nem na janela)
   useEffect(() => {
@@ -3406,6 +3396,8 @@ export default function Dashboard() {
     setShowRelatorioForm(false)
     setShowFaturaForm(false)
     setShowFaturaFornecedorForm(false)
+    setShowHelpModal(false)
+    setHelpModalSource(null)
   }
   
   const getTabTitle = (type: TabType): string => {
@@ -3581,6 +3573,35 @@ export default function Dashboard() {
     const text = t?.[key]
     return text || (t?.helpDefault || 'Consulte o manual do sistema para mais informações sobre esta secção.')
   }
+
+  const openHelpModal = useCallback(() => {
+    if (activeTabId) {
+      const tab = openTabs.find((t) => t.id === activeTabId)
+      if (tab?.type) setHelpModalSource(tab.type)
+      else setHelpModalSource('dashboard')
+    } else {
+      setHelpModalSource('dashboard')
+    }
+    setShowHelpModal(true)
+  }, [activeTabId, openTabs])
+
+  const closeHelpModal = useCallback(() => {
+    setShowHelpModal(false)
+    setHelpModalSource(null)
+  }, [])
+
+  // F1 — ajuda contextual (painel ou módulo aberto)
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F1') {
+        e.preventDefault()
+        openHelpModal()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [openHelpModal])
+
   // Evita abrir modais automaticamente na carga inicial (ex: HMR/estado preservado)
   const [tabsOpenedByUser, setTabsOpenedByUser] = useState(false)
   
@@ -26927,7 +26948,7 @@ onKeyPress={(e) => {
           { title: mT?.manualSecaoOperacao || '3) Operação técnica', body: mT?.manualSecaoOperacaoDesc || 'Use Relatório de Serviço, Protocolos de Serviço, Agenda e Checklist para controlar todo o ciclo do atendimento técnico.' },
           { title: mT?.manualSecaoPecas || '4) Peças e biblioteca', body: mT?.manualSecaoPecasDesc || 'Registe peças na Biblioteca e use Importação (URL, ficheiro CSV/JSON ou texto colado) para ganho de produtividade.' },
           { title: mT?.manualSecaoFinanceiro || '5) Financeiro', body: mT?.manualSecaoFinanceiroDesc || 'Acompanhe custos, despesas, comprovantes e clientes financeiros para fechar os serviços com rastreabilidade.' },
-          { title: mT?.manualSecaoAjuda || '6) Ajuda e suporte interno', body: mT?.manualSecaoAjudaDesc || 'Pressione F1 em qualquer tela para abrir a ajuda contextual. O botão HELP também abre o mesmo conteúdo.' },
+          { title: mT?.manualSecaoAjuda || '6) Ajuda e suporte interno', body: mT?.manualSecaoAjudaDesc || 'No painel ou em cada módulo, use o botão Ajuda (ou F1) no topo da área central para a ajuda contextual desse ecrã.' },
           { title: mT?.manualSecaoBoasPraticas || '7) Boas práticas profissionais', body: mT?.manualSecaoBoasPraticasDesc || 'Guarde dados com frequência, mantenha códigos de peças padronizados e use nomes consistentes para clientes/equipamentos.' },
           { title: mT?.manualSecaoSeguranca || '8) Segurança e backup', body: mT?.manualSecaoSegurancaDesc || 'A sincronização entre aparelhos é feita pelo aviso automático. Mantenha backups no Administrador.' }
         ]
@@ -54901,50 +54922,7 @@ A1;Peça exemplo;10`}
             {mobileMenuOpen ? '✕' : '☰'}
           </button>
           <span className="mobile-app-header-title">NONATO SERVICE</span>
-          <div className="mobile-header-right-actions">
-            {activeTabId ? (
-              <button
-                type="button"
-                className="mobile-help-f1"
-                onClick={() => setShowHelpModal(true)}
-                aria-label={safeT?.help || 'HELP'}
-                title={safeT?.helpTooltip || 'Pressione F1 para abrir a ajuda'}
-              >
-                <span aria-hidden>F1</span>
-                <span aria-hidden style={{ opacity: 0.85 }}>·</span>
-                <span style={{ fontSize: '10px', fontWeight: 800 }}>{safeT?.help || 'HELP'}</span>
-              </button>
-            ) : null}
-          </div>
         </header>
-      )}
-      {!isCompactLayout && (
-        <div className="desktop-top-bar-actions">
-          <button
-            type="button"
-            className="desktop-pagina-inicial-btn"
-            onClick={() => {
-              setLoginUser(null)
-              setShowSplashInicial(true)
-            }}
-            title={safeT?.voltarTelaInicial || 'Voltar à tela inicial'}
-          >
-            {safeT?.paginaInicial || 'Página Inicial'}
-          </button>
-          {activeTabId ? (
-            <button
-              type="button"
-              className="desktop-help-f1"
-              onClick={() => setShowHelpModal(true)}
-              aria-label={safeT?.helpTooltip || 'Pressione F1 para abrir a ajuda'}
-              title={safeT?.helpTooltip || 'Pressione F1 para abrir a ajuda'}
-            >
-              <span style={{ opacity: 0.9 }}>F1</span>
-              <span aria-hidden>—</span>
-              <span>{safeT?.help || 'HELP'}</span>
-            </button>
-          ) : null}
-        </div>
       )}
       {/* Sidebar - em ecrã estreito: gaveta lateral (globals.css). Classe extra na vista de entrada: esconde de forma fiável face a media queries. */}
       <div
@@ -55784,35 +55762,6 @@ A1;Peça exemplo;10`}
 
       {/* Área Principal */}
       <div className="main-app-column" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, minHeight: 0 }}>
-        {/* Página Inicial: no desktop está na barra fixa (.desktop-top-bar-actions); em layout compacto mantém-se aqui */}
-        {isCompactLayout ? (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 20px 0 0', flexShrink: 0 }}>
-            <button
-              type="button"
-              onClick={() => voltarPaginaInicial()}
-              title={safeT?.paginaInicial || 'Página Inicial'}
-              style={{
-                padding: '6px 12px',
-                fontSize: '12px',
-                fontWeight: '500',
-                color: '#00ff00',
-                backgroundColor: 'transparent',
-                border: '1px solid #00ff00',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent'
-              }}
-            >
-              {safeT?.paginaInicial || 'Página Inicial'}
-            </button>
-          </div>
-        ) : null}
         {/* Conteúdo da Aba Ativa ou Dashboard */}
         <div
           ref={mainContentAreaRef}
@@ -55849,54 +55798,90 @@ A1;Peça exemplo;10`}
                       padding: isCompactLayout ? '10px 12px' : '14px 20px',
                     }}
                   >
-                    <button
-                      type="button"
-                      onClick={() => setMainModuleIntroExpanded((v) => !v)}
+                    <div
                       style={{
-                        width: '100%',
                         display: 'flex',
-                        alignItems: 'center',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
                         gap: 12,
                         flexWrap: 'wrap',
-                        background: 'transparent',
-                        border: 'none',
-                        color: '#e8ffe8',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        padding: 0,
+                        width: '100%',
                       }}
                     >
-                      <span style={{ fontSize: 26, lineHeight: 1 }} aria-hidden>
-                        {emoji}
-                      </span>
-                      <span style={{ flex: 1, minWidth: 0 }}>
-                        <span
-                          style={{
-                            display: 'block',
-                            fontSize: 11,
-                            letterSpacing: '0.14em',
-                            textTransform: 'uppercase',
-                            color: 'rgba(180, 255, 190, 0.75)',
-                            marginBottom: 4,
-                          }}
-                        >
-                          {(safeT as any)?.mainModuleContextLabel || 'Módulo selecionado'}
+                      <button
+                        type="button"
+                        onClick={() => setMainModuleIntroExpanded((v) => !v)}
+                        style={{
+                          flex: '1 1 220px',
+                          minWidth: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          flexWrap: 'wrap',
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#e8ffe8',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          padding: 0,
+                        }}
+                      >
+                        <span style={{ fontSize: 26, lineHeight: 1 }} aria-hidden>
+                          {emoji}
                         </span>
-                        <span
-                          style={{
-                            display: 'block',
-                            fontWeight: 800,
-                            fontSize: isCompactLayout ? 16 : 18,
-                            color: '#bfffbf',
-                          }}
-                        >
-                          {activeTab.title}
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                          <span
+                            style={{
+                              display: 'block',
+                              fontSize: 11,
+                              letterSpacing: '0.14em',
+                              textTransform: 'uppercase',
+                              color: 'rgba(180, 255, 190, 0.75)',
+                              marginBottom: 4,
+                            }}
+                          >
+                            {(safeT as any)?.mainModuleContextLabel || 'Módulo selecionado'}
+                          </span>
+                          <span
+                            style={{
+                              display: 'block',
+                              fontWeight: 800,
+                              fontSize: isCompactLayout ? 16 : 18,
+                              color: '#bfffbf',
+                            }}
+                          >
+                            {activeTab.title}
+                          </span>
                         </span>
-                      </span>
-                      <span style={{ fontSize: 14, color: '#7dff9a', flexShrink: 0 }} aria-hidden>
-                        {mainModuleIntroExpanded ? '▼' : '▶'}
-                      </span>
-                    </button>
+                        <span style={{ fontSize: 14, color: '#7dff9a', flexShrink: 0 }} aria-hidden>
+                          {mainModuleIntroExpanded ? '▼' : '▶'}
+                        </span>
+                      </button>
+                      <div className="main-module-context-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          className="main-content-action-btn main-content-action-btn--home"
+                          onClick={voltarPaginaInicial}
+                          title={safeT?.paginaInicial || 'Página Inicial'}
+                        >
+                          <span aria-hidden>🏠</span>
+                          <span className="main-content-action-label">{safeT?.paginaInicial || 'Página Inicial'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="main-content-action-btn main-content-action-btn--help"
+                          onClick={openHelpModal}
+                          aria-label={safeT?.helpTooltip || 'Pressione F1 para abrir a ajuda'}
+                          title={safeT?.helpTooltip || 'Pressione F1 para abrir a ajuda'}
+                        >
+                          <span aria-hidden>❓</span>
+                          <span className="main-content-action-label">{safeT?.help || 'HELP'}</span>
+                          <span className="main-content-action-f1" aria-hidden>
+                            F1
+                          </span>
+                        </button>
+                      </div>
+                    </div>
                     {mainModuleIntroExpanded && intro ? (
                       <p
                         style={{
@@ -55914,7 +55899,7 @@ A1;Peça exemplo;10`}
                   </div>
                 )
               })()}
-              {/* Renderizar conteúdo da aba ativa (F1 HELP na barra fixa no desktop) */}
+              {/* Conteúdo da aba; ajuda e página inicial no painel acima */}
               <div
                 className="tab-inner-scroll"
                 style={{
@@ -55945,6 +55930,32 @@ A1;Peça exemplo;10`}
               padding: isCompactLayout ? '12px 8px' : '40px 20px',
               minHeight: 'calc(100vh - 60px)'
             }}>
+              <div className="main-dashboard-actions-bar">
+                {dashboardWorkspaceExpanded ? (
+                  <button
+                    type="button"
+                    className="main-content-action-btn main-content-action-btn--home"
+                    onClick={voltarPaginaInicial}
+                    title={safeT?.paginaInicial || 'Página Inicial'}
+                  >
+                    <span aria-hidden>🏠</span>
+                    <span className="main-content-action-label">{safeT?.paginaInicial || 'Página Inicial'}</span>
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className="main-content-action-btn main-content-action-btn--help"
+                  onClick={openHelpModal}
+                  aria-label={safeT?.helpTooltip || 'Pressione F1 para abrir a ajuda'}
+                  title={safeT?.helpTooltip || 'Pressione F1 para abrir a ajuda'}
+                >
+                  <span aria-hidden>❓</span>
+                  <span className="main-content-action-label">{safeT?.help || 'HELP'}</span>
+                  <span className="main-content-action-f1" aria-hidden>
+                    F1
+                  </span>
+                </button>
+              </div>
               {!dashboardWorkspaceExpanded ? (
                 <div className="ns-dashboard-entry">
                   <div className="ns-dashboard-entry-hero">
@@ -56585,16 +56596,25 @@ A1;Peça exemplo;10`}
         </div>
       )}
 
-      {/* Modal F1 - HELP (ajuda da seção ativa) */}
-      {showHelpModal && activeTabId && (() => {
-        const activeTab = openTabs.find(t => t.id === activeTabId)
-        if (!activeTab) return null
-        const helpTitle = getTabTitle(activeTab.type)
-        const helpBody = getHelpContent(activeTab.type)
+      {/* Modal F1 - HELP (painel ou módulo aberto) */}
+      {showHelpModal && helpModalSource && (() => {
+        const tr = safeT as Record<string, string | undefined>
+        const helpTitle =
+          helpModalSource === 'dashboard'
+            ? (tr?.helpDashboardTitle || tr?.welcomeDashboard || safeT?.welcome || 'Painel')
+            : getTabTitle(helpModalSource)
+        const helpBody =
+          helpModalSource === 'dashboard'
+            ? (tr?.helpDashboardPainel || tr?.helpDefault || 'Consulte o manual do sistema para mais informações.')
+            : getHelpContent(helpModalSource)
+        const helpFooter =
+          helpModalSource === 'dashboard'
+            ? (tr?.helpFooterPainel || tr?.helpShortcut || '')
+            : (tr?.helpFooterModulo || tr?.helpShortcut || '')
         return (
           <div
             className="modal-overlay"
-            onClick={() => setShowHelpModal(false)}
+            onClick={closeHelpModal}
             style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10050, padding: '20px' }}
           >
             <div
@@ -56620,7 +56640,7 @@ A1;Peça exemplo;10`}
                 </div>
                 <button
                   type="button"
-                  onClick={() => setShowHelpModal(false)}
+                  onClick={closeHelpModal}
                   style={{ padding: '8px 12px', fontSize: '14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.25)', borderRadius: '8px', color: '#ccc', cursor: 'pointer' }}
                 >
                   {safeT?.close || 'Fechar'}
@@ -56635,7 +56655,9 @@ A1;Peça exemplo;10`}
                 />
               </div>
               <div style={{ flexShrink: 0, padding: '16px 24px', borderTop: '1px solid rgba(0, 255, 0, 0.1)', background: 'rgba(0,0,0,0.2)' }}>
-                <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>{safeT?.helpShortcut || 'Pressione F1 em qualquer secção para abrir esta ajuda.'}</p>
+                <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>
+                  {helpFooter || safeT?.helpShortcut || 'Pressione F1 para abrir esta ajuda.'}
+                </p>
               </div>
             </div>
           </div>

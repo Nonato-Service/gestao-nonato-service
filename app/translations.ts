@@ -27,7 +27,7 @@ export const translations = {
     dashboardEntradaCard4Titulo: 'Finanças e comunicação',
     dashboardEntradaCard4Desc: 'Custos, orçamentos e canais internos para fechar o ciclo com transparência.',
     dashboardEntrarPainelCompleto: 'Entrar no sistema',
-    dashboardEntradaNota: 'O menu lateral está sempre disponível. F1 abre a ajuda contextual em qualquer ecrã.',
+    dashboardEntradaNota: 'O menu lateral está sempre disponível. Use o botão Ajuda (ou F1) no topo desta área; dentro de cada módulo aberto, o mesmo botão explica o ecrã em que está.',
     mainModuleContextLabel: 'Módulo selecionado',
     mainModuleIntroFallback:
       'Utilize a área abaixo para trabalhar neste módulo. Clique na seta para mostrar ou ocultar este resumo.',
@@ -221,6 +221,11 @@ export const translations = {
     helpTooltip: 'Pressione F1 para abrir a ajuda',
     helpDefault: 'Texto de ajuda específico para este ecrã ainda não foi definido; use o manual geral ou contacte o administrador.\n\n---COMO---\n\n• Pressione F1 noutra secção para ver exemplos de ajuda contextual.\n• Abra o «Manual do Programa» no menu quando disponível.\n• Em caso de dúvida operacional, registe o ecrã e peça suporte interno.',
     helpShortcut: 'Pressione F1 em qualquer secção para abrir esta ajuda.',
+    helpDashboardTitle: 'Painel inicial',
+    helpDashboardPainel:
+      'Este é o painel de entrada e resumo do sistema.\n\n---COMO---\n\n• Use «Entrar no sistema» para ver estatísticas e atalhos completos.\n• Abra funções pelo menu lateral; cada módulo tem no topo os botões Página inicial (volta ao painel e fecha separadores) e Ajuda (ou tecla F1).\n• Para sair da conta, use «Sair do sistema» no fim do menu lateral.',
+    helpFooterPainel: 'Dica: o botão Ajuda nesta página explica o painel; nos módulos, explica o ecrã aberto. Tecla F1 faz o mesmo.',
+    helpFooterModulo: 'Dúvidas sobre este módulo: use o botão Ajuda aqui ao lado ou a tecla F1.',
     helpSectionParaQueServe: 'Para que serve',
     helpSectionComoFazer: 'Como fazer',
     helpSectionResumo: 'Informação',
@@ -289,7 +294,8 @@ export const translations = {
     manualSecaoFinanceiro: '5) Financeiro',
     manualSecaoFinanceiroDesc: 'Acompanhe custos, despesas, comprovantes e clientes financeiros para fechar os serviços com rastreabilidade.',
     manualSecaoAjuda: '6) Ajuda e suporte interno',
-    manualSecaoAjudaDesc: 'Pressione F1 em qualquer tela para abrir a ajuda contextual. O botão HELP também abre o mesmo conteúdo.',
+    manualSecaoAjudaDesc:
+      'No painel ou dentro de cada módulo, use o botão Ajuda (ou a tecla F1) no topo da área central para ver a ajuda contextual desse ecrã.',
     manualSecaoBoasPraticas: '7) Boas práticas profissionais',
     manualSecaoBoasPraticasDesc: 'Guarde dados com frequência, mantenha códigos de peças padronizados e use nomes consistentes para clientes/equipamentos.',
     manualSecaoSeguranca: '8) Segurança e backup',
@@ -2572,7 +2578,7 @@ export const translations = {
     dashboardEntradaCard4Titulo: 'Finanzas y comunicación',
     dashboardEntradaCard4Desc: 'Costes, presupuestos y canales internos para cerrar el ciclo con transparencia.',
     dashboardEntrarPainelCompleto: 'Entrar en el sistema',
-    dashboardEntradaNota: 'El menú lateral está siempre disponible. F1 abre la ayuda contextual en cualquier pantalla.',
+    dashboardEntradaNota: 'El menú lateral está siempre disponible. Use el botón Ayuda (o F1) en la parte superior de esta zona; dentro de cada módulo abierto, el mismo botón explica la pantalla actual.',
     mainModuleContextLabel: 'Módulo seleccionado',
     mainModuleIntroFallback:
       'Use el área inferior para trabajar en este módulo. Pulse la flecha para mostrar u ocultar este resumen.',
@@ -2749,6 +2755,11 @@ export const translations = {
     helpTooltip: 'Pulse F1 para abrir la ayuda',
     helpDefault: 'Aún no hay texto de ayuda específico para esta pantalla; use el manual general o contacte al administrador.\n\n---COMO---\n\n• Pulse F1 en otra sección para ver ejemplos de ayuda contextual.\n• Abra el «Manual del programa» en el menú si está disponible.\n• Si tiene dudas, anote la pantalla y pida soporte interno.',
     helpShortcut: 'Pulse F1 en cualquier sección para abrir esta ayuda.',
+    helpDashboardTitle: 'Panel inicial',
+    helpDashboardPainel:
+      'Este es el panel de entrada y resumen del sistema.\n\n---COMO---\n\n• Use «Entrar en el sistema» para ver estadísticas y accesos directos completos.\n• Abra funciones desde el menú lateral; cada módulo muestra arriba Inicio (vuelve al panel y cierra pestañas) y Ayuda (o tecla F1).\n• Para cerrar sesión, use «Salir del sistema» al final del menú lateral.',
+    helpFooterPainel: 'Consejo: el botón Ayuda en esta página explica el panel; en los módulos, explica la pantalla abierta. La tecla F1 hace lo mismo.',
+    helpFooterModulo: 'Dudas sobre este módulo: use el botón Ayuda aquí o la tecla F1.',
     helpSectionParaQueServe: 'Para qué sirve',
     helpSectionComoFazer: 'Cómo hacerlo',
     helpSectionResumo: 'Información',
@@ -4841,7 +4852,8 @@ export const translations = {
     dashboardEntradaCard4Titulo: 'Finances et communication',
     dashboardEntradaCard4Desc: 'Coûts, budgets et canaux internes pour boucler le cycle en transparence.',
     dashboardEntrarPainelCompleto: 'Entrer dans le système',
-    dashboardEntradaNota: "Le menu latéral est toujours disponible. F1 ouvre l'aide contextuelle sur tout écran.",
+    dashboardEntradaNota:
+      "Le menu latéral est toujours disponible. Utilisez le bouton Aide (ou F1) en haut de cette zone ; dans chaque module ouvert, le même bouton décrit l'écran actuel.",
     mainModuleContextLabel: 'Module sélectionné',
     mainModuleIntroFallback:
       'Utilisez la zone ci-dessous pour travailler dans ce module. Cliquez sur la flèche pour afficher ou masquer ce résumé.',
@@ -5018,6 +5030,11 @@ export const translations = {
     helpTooltip: 'Appuyez sur F1 pour ouvrir l\'aide',
     helpDefault: 'Aucun texte d\'aide spécifique n\'est encore défini pour cet écran ; utilisez le manuel général ou contactez l\'administrateur.\n\n---COMO---\n\n• Appuyez sur F1 dans une autre section pour voir des exemples d\'aide contextuelle.\n• Ouvrez le « Manuel du programme » dans le menu s\'il est disponible.\n• En cas de doute, notez l\'écran et demandez un support interne.',
     helpShortcut: 'Appuyez sur F1 dans toute section pour ouvrir cette aide.',
+    helpDashboardTitle: "Panneau d'accueil",
+    helpDashboardPainel:
+      "Ceci est le panneau d'entrée et de synthèse du système.\n\n---COMO---\n\n• Utilisez « Entrer dans le système » pour les statistiques et raccourcis complets.\n• Ouvrez les fonctions depuis le menu latéral ; chaque module affiche en haut Accueil (retour au panneau et fermeture des onglets) et Aide (ou touche F1).\n• Pour vous déconnecter, utilisez « Quitter le système » en bas du menu latéral.",
+    helpFooterPainel: "Astuce : le bouton Aide sur cette page décrit le panneau ; dans les modules, il décrit l'écran ouvert. La touche F1 fait la même chose.",
+    helpFooterModulo: "Questions sur ce module : utilisez le bouton Aide ici ou la touche F1.",
     helpSectionParaQueServe: 'À quoi ça sert',
     helpSectionComoFazer: 'Comment faire',
     helpSectionResumo: 'Information',
@@ -7103,7 +7120,8 @@ export const translations = {
     dashboardEntradaCard4Titulo: 'Finanza e comunicazione',
     dashboardEntradaCard4Desc: 'Costi, preventivi e canali interni per chiudere il ciclo con trasparenza.',
     dashboardEntrarPainelCompleto: 'Entra nel sistema',
-    dashboardEntradaNota: 'Il menu laterale è sempre disponibile. F1 apre la guida contestuale su qualsiasi schermata.',
+    dashboardEntradaNota:
+      'Il menu laterale è sempre disponibile. Usa il pulsante Aiuto (o F1) in alto in questa area; in ogni modulo aperto lo stesso pulsante spiega la schermata corrente.',
     mainModuleContextLabel: 'Modulo selezionato',
     mainModuleIntroFallback:
       'Usa l’area sotto per lavorare in questo modulo. Clicca sulla freccia per mostrare o nascondere questo riepilogo.',
@@ -7280,6 +7298,11 @@ export const translations = {
     helpTooltip: 'Premi F1 per aprire l\'aiuto',
     helpDefault: 'Non è ancora definito un testo di aiuto per questa schermata; usa il manuale generale o contatta l\'amministratore.\n\n---COMO---\n\n• Premi F1 in un\'altra sezione per vedere esempi di aiuto contestuale.\n• Apri il «Manuale del programma» dal menu se disponibile.\n• In caso di dubbi, annota la schermata e chiedi supporto interno.',
     helpShortcut: 'Premi F1 in qualsiasi sezione per aprire questo aiuto.',
+    helpDashboardTitle: 'Pannello iniziale',
+    helpDashboardPainel:
+      "Questo è il pannello di ingresso e riepilogo del sistema.\n\n---COMO---\n\n• Usa «Entra nel sistema» per statistiche e scorciatoie complete.\n• Apri le funzioni dal menu laterale; ogni modulo mostra in alto Home (torna al pannello e chiude le schede) e Aiuto (o tasto F1).\n• Per uscire dall'account usa «Esci dal sistema» in fondo al menu laterale.",
+    helpFooterPainel: 'Suggerimento: il pulsante Aiuto in questa pagina spiega il pannello; nei moduli spiega la schermata aperta. Il tasto F1 fa lo stesso.',
+    helpFooterModulo: 'Dubbi su questo modulo: usa il pulsante Aiuto qui accanto o il tasto F1.',
     helpSectionParaQueServe: 'A cosa serve',
     helpSectionComoFazer: 'Come fare',
     helpSectionResumo: 'Informazioni',
@@ -9366,7 +9389,8 @@ export const translations = {
     dashboardEntradaCard4Titulo: 'Finanzen und Kommunikation',
     dashboardEntradaCard4Desc: 'Kosten, Angebote und interne Kanäle für einen transparenten Kreislauf.',
     dashboardEntrarPainelCompleto: 'Ins System gehen',
-    dashboardEntradaNota: 'Das Seitenmenü ist immer verfügbar. F1 öffnet die kontextuelle Hilfe auf jedem Bildschirm.',
+    dashboardEntradaNota:
+      'Das Seitenmenü ist immer verfügbar. Nutzen Sie oben in diesem Bereich die Schaltfläche Hilfe (oder F1); in jedem geöffneten Modul erklärt dieselbe Schaltfläche den aktuellen Bildschirm.',
     mainModuleContextLabel: 'Ausgewähltes Modul',
     mainModuleIntroFallback:
       'Nutzen Sie den Bereich unten, um in diesem Modul zu arbeiten. Klicken Sie auf den Pfeil, um diese Zusammenfassung ein- oder auszublenden.',
@@ -9535,6 +9559,11 @@ export const translations = {
     helpTooltip: 'Drücken Sie F1, um die Hilfe zu öffnen',
     helpDefault: 'Für diesen Bildschirm ist noch kein spezifischer Hilfetext definiert; nutzen Sie das allgemeine Handbuch oder wenden Sie sich an den Administrator.\n\n---COMO---\n\n• Drücken Sie F1 in einem anderen Bereich, um Beispiele für kontextbezogene Hilfe zu sehen.\n• Öffnen Sie das «Programmhandbuch» im Menü, falls verfügbar.\n• Notieren Sie bei Unklarheiten den Bildschirm und holen Sie internen Support ein.',
     helpShortcut: 'Drücken Sie F1 in jedem Bereich, um diese Hilfe zu öffnen.',
+    helpDashboardTitle: 'Startbereich',
+    helpDashboardPainel:
+      'Dies ist der Einstiegs- und Übersichtsbereich des Systems.\n\n---COMO---\n\n• Nutzen Sie «Ins System gehen» für Kennzahlen und alle Schnellzugriffe.\n• Öffnen Sie Funktionen über das Seitenmenü; jedes Modul zeigt oben Startseite (zurück zum Panel, schließt Tabs) und Hilfe (oder Taste F1).\n• Zum Abmelden «System verlassen» am Ende des Seitenmenüs verwenden.',
+    helpFooterPainel: 'Tipp: Hilfe auf dieser Seite erklärt das Panel; in Modulen erklärt sie den geöffneten Bildschirm. F1 bewirkt dasselbe.',
+    helpFooterModulo: 'Fragen zu diesem Modul: Hilfe-Schaltfläche hier oder Taste F1.',
     helpSectionParaQueServe: 'Wofür es dient',
     helpSectionComoFazer: 'So geht\'s',
     helpSectionResumo: 'Information',
@@ -11600,7 +11629,8 @@ export const translations = {
     dashboardEntradaCard4Titulo: 'Finance and communication',
     dashboardEntradaCard4Desc: 'Costs, budgets and internal channels to close the loop with transparency.',
     dashboardEntrarPainelCompleto: 'Enter the system',
-    dashboardEntradaNota: 'The side menu is always available. F1 opens contextual help on any screen.',
+    dashboardEntradaNota:
+      'The side menu is always available. Use the Help button (or F1) at the top of this area; inside each open module, the same button explains the current screen.',
     mainModuleContextLabel: 'Selected module',
     mainModuleIntroFallback:
       'Use the area below to work in this module. Click the arrow to show or hide this summary.',
@@ -11777,6 +11807,11 @@ export const translations = {
     helpTooltip: 'Press F1 to open help',
     helpDefault: 'There is no specific help text for this screen yet; use the general manual or contact the administrator.\n\n---COMO---\n\n• Press F1 in another section to see examples of contextual help.\n• Open the «Program manual» from the menu when available.\n• If unsure, note the screen and ask for internal support.',
     helpShortcut: 'Press F1 in any section to open this help.',
+    helpDashboardTitle: 'Home panel',
+    helpDashboardPainel:
+      'This is the system entry and summary panel.\n\n---COMO---\n\n• Use «Enter the system» for full statistics and shortcuts.\n• Open features from the side menu; each module shows Home at the top (returns to the panel and closes tabs) and Help (or the F1 key).\n• To sign out, use «Exit system» at the bottom of the side menu.',
+    helpFooterPainel: 'Tip: Help on this page describes the panel; in modules it describes the open screen. The F1 key does the same.',
+    helpFooterModulo: 'Questions about this module: use the Help button here or the F1 key.',
     helpSectionParaQueServe: 'What it is for',
     helpSectionComoFazer: 'How to do it',
     helpSectionResumo: 'Information',

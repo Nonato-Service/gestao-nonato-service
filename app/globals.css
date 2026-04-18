@@ -3095,70 +3095,66 @@ body {
   background: rgba(0, 255, 0, 0.18);
 }
 
-/* Cantos superiores direitos: F1 HELP + Atualizar com segurança (desktop) */
-.desktop-top-bar-actions {
-  position: fixed;
-  top: max(10px, env(safe-area-inset-top, 0px));
-  right: max(10px, env(safe-area-inset-right, 0px));
-  z-index: 2600;
+/* Página inicial + Ajuda (F1): dentro da área principal / painel do módulo */
+.main-dashboard-actions-bar {
   display: flex;
-  flex-direction: row;
+  justify-content: flex-end;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  max-width: min(100vw - 20px, calc(100vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px) - 20px));
+  margin-bottom: 14px;
 }
-.desktop-pagina-inicial-btn {
-  border: 1px solid rgba(0, 255, 0, 0.55);
-  background: transparent;
-  color: #00ff00;
+.main-module-context-actions {
+  align-items: stretch !important;
+}
+.main-content-action-btn {
+  border: 1px solid rgba(0, 255, 122, 0.45);
+  background: rgba(0, 0, 0, 0.35);
+  color: #dfffe4;
   border-radius: 10px;
-  padding: 10px 14px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.2px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  white-space: nowrap;
-}
-.desktop-pagina-inicial-btn:hover {
-  background: rgba(0, 255, 0, 0.1);
-  box-shadow: 0 0 10px rgba(0, 255, 0, 0.25);
-}
-.desktop-pagina-inicial-btn:active {
-  background: rgba(0, 255, 0, 0.16);
-}
-.app-layout:has(.app-top-bar) .desktop-top-bar-actions {
-  top: calc(48px + max(8px, env(safe-area-inset-top, 0px)));
-}
-.desktop-top-bar-actions .desktop-refresh-safe {
-  position: static;
-  top: auto;
-  right: auto;
-}
-.desktop-help-f1 {
-  border: 1px solid rgba(0, 255, 0, 0.5);
-  background: rgba(0, 0, 0, 0.7);
-  color: #00ff00;
-  border-radius: 10px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  -webkit-tap-highlight-color: transparent;
   white-space: nowrap;
+  max-width: 100%;
 }
-.desktop-help-f1:hover {
-  background: rgba(0, 255, 0, 0.14);
-  box-shadow: 0 0 12px rgba(0, 255, 0, 0.35);
+.main-content-action-btn:hover {
+  background: rgba(0, 255, 122, 0.12);
+  box-shadow: 0 0 12px rgba(0, 255, 122, 0.2);
 }
-.desktop-help-f1:active {
-  background: rgba(0, 255, 0, 0.22);
+.main-content-action-btn:active {
+  background: rgba(0, 255, 122, 0.2);
+}
+.main-content-action-btn--home {
+  border-color: rgba(120, 185, 255, 0.55);
+  color: #d6ecff;
+}
+.main-content-action-btn--home:hover {
+  background: rgba(80, 140, 255, 0.12);
+  box-shadow: 0 0 12px rgba(80, 140, 255, 0.22);
+}
+.main-content-action-btn--help {
+  border-color: rgba(0, 255, 122, 0.55);
+}
+.main-content-action-f1 {
+  font-size: 10px;
+  font-weight: 800;
+  opacity: 0.9;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 255, 122, 0.35);
+  background: rgba(0, 0, 0, 0.35);
+}
+.app-compact-layout .main-content-action-label {
+  max-width: 42vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .desktop-refresh-safe {
