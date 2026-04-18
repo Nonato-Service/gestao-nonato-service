@@ -36694,98 +36694,41 @@ A1;Peça exemplo;10`}
               const agendamentosUnicosDoDia = (lista: Agendamento[]) =>
                 Array.from(new Map(lista.map((a) => [a.id, a])).values())
 
-              /** Data de hoje (YYYY-MM-DD) para pré: futuro → laranja; dia atual ou passado → azul até concluir */
-              const hojeKeyCalendario = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`
-
-              /**
-               * Cores só no chip (hora + cliente).
-               * Pré-agendamento pendente → laranja (qualquer dia).
-               * Confirmado (pré ou técnico): azul no dia atual e futuros; verde em cada dia do período já passado (dia trabalhado).
-               * Concluído → verde forte. Cancelado → cinza.
-               */
-              const estiloVerdeDiaTrabalhado: React.CSSProperties = {
-                backgroundColor: 'rgba(0, 200, 88, 0.88)',
-                border: '2px solid rgba(0, 255, 150, 0.95)',
-                color: '#04210c',
-                fontWeight: 700,
-                boxShadow: '0 0 10px rgba(0, 255, 120, 0.28)',
-              }
-              const estiloAzulConfirmado: React.CSSProperties = {
-                backgroundColor: 'rgba(45, 115, 235, 0.55)',
-                border: '1px solid rgba(160, 200, 255, 1)',
-                color: '#fff',
-                fontWeight: 600,
-              }
-              const estiloLaranjaPrePendente: React.CSSProperties = {
-                backgroundColor: 'rgba(255, 130, 0, 0.65)',
-                border: '1px solid rgba(255, 210, 100, 1)',
-                color: '#1a0f00',
-                fontWeight: 700,
+              /** Chip neutro; status aparece só na cor do nome do cliente (pedido do usuário). */
+              const estiloChipBaseCalendario: React.CSSProperties = {
+                backgroundColor: 'rgba(22, 24, 28, 0.98)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: 'rgba(228, 232, 238, 0.88)',
+                fontWeight: 500,
               }
 
-              const estiloChipAgendaCalendario = (
-                ag: Agendamento,
-                dataKeyCelula: string
-              ): React.CSSProperties => {
+              const estiloNomeClienteCalendario = (
+                ag: Agendamento
+              ): { color: string; fontWeight: number; textDecoration?: 'line-through' } => {
                 const st = normalizeStatusAgendamento(ag)
                 if (st === 'cancelado') {
                   return {
-                    backgroundColor: 'rgba(90, 90, 98, 0.5)',
-                    border: '1px solid rgba(140, 140, 150, 0.55)',
-                    color: 'rgba(255, 255, 255, 0.55)',
-                    fontWeight: 500,
+                    color: 'rgba(170, 172, 180, 0.5)',
+                    fontWeight: 600,
                     textDecoration: 'line-through',
                   }
                 }
                 if (st === 'concluido') {
-                  return {
-                    backgroundColor: 'rgba(0, 220, 95, 0.92)',
-                    border: '2px solid rgba(0, 255, 160, 1)',
-                    color: '#04210c',
-                    fontWeight: 700,
-                    boxShadow: '0 0 12px rgba(0, 255, 130, 0.35)',
-                  }
+                  return { color: 'rgba(0, 235, 115, 0.98)', fontWeight: 800 }
                 }
                 const tipo = normalizeTipoAgendamento(ag)
-                const dataKeyNorm = normalizeDataKeyAgenda(dataKeyCelula)
-                const datasPeriodo = getDatasPeriodoAgendamento(ag)
-                const celulaNoPeriodo = datasPeriodo.includes(dataKeyNorm)
-                /** Data da célula é hoje ou já passou: tratar como dia concluído (verde), inclusive pendente técnico / pré sem marcar concluído */
-                const dataCelulaJaPassouOuEhHoje = dataKeyNorm <= hojeKeyCalendario
-                /** Hoje e dias passados no período contam como trabalhados (verde); só futuros ficam azuis. */
-                const diaJaTrabalhado =
-                  celulaNoPeriodo && dataKeyNorm <= hojeKeyCalendario
-                const ativoConfirmado =
-                  st === 'confirmado' || st === 'em-andamento'
-
-                if (dataCelulaJaPassouOuEhHoje) {
-                  return estiloVerdeDiaTrabalhado
-                }
-
                 if (tipo === 'pre-agendamento') {
-                  if (st === 'pendente') {
-                    return estiloLaranjaPrePendente
-                  }
-                  if (ativoConfirmado && diaJaTrabalhado) {
-                    return estiloVerdeDiaTrabalhado
-                  }
-                  if (ativoConfirmado) {
-                    return estiloAzulConfirmado
-                  }
-                  return estiloLaranjaPrePendente
+                  /** Pré-agendamento: sempre amarelo no nome (pendente ou confirmado), até marcar concluído. */
+                  return { color: 'rgba(255, 210, 60, 0.98)', fontWeight: 800 }
                 }
-
-                // agendamento-tecnico
+                /** Agendamento técnico */
                 if (st === 'pendente') {
-                  return estiloAzulConfirmado
+                  return { color: 'rgba(255, 118, 72, 0.96)', fontWeight: 800 }
                 }
-                if (ativoConfirmado && diaJaTrabalhado) {
-                  return estiloVerdeDiaTrabalhado
+                if (st === 'confirmado' || st === 'em-andamento') {
+                  return { color: 'rgba(120, 175, 255, 0.98)', fontWeight: 800 }
                 }
-                if (ativoConfirmado) {
-                  return estiloAzulConfirmado
-                }
-                return estiloAzulConfirmado
+                return { color: 'rgba(235, 238, 245, 0.92)', fontWeight: 700 }
               }
 
               return (
@@ -36863,13 +36806,6 @@ A1;Peça exemplo;10`}
                         const agendamentosDoDia = agendamentosPorData[dataKey] || []
                         const agDiaUnicos = agendamentosUnicosDoDia(agendamentosDoDia)
                         const hojeDia = isHoje(dia)
-                        const ativosDia = agDiaUnicos.filter((a) => normalizeStatusAgendamento(a) !== 'cancelado')
-                        const diaTodoServicosConcluidos =
-                          ativosDia.length > 0 && ativosDia.every((a) => normalizeStatusAgendamento(a) === 'concluido')
-                        /** Fundo do quadrado do dia: só verde quando todos os serviços estão concluídos; “dia passado” aparece só no chip (hora + cliente). */
-                        const fundoCelulaDia = diaTodoServicosConcluidos
-                          ? 'rgba(0, 210, 88, 0.38)'
-                          : '#141414'
 
                         return (
                           <div
@@ -36879,12 +36815,8 @@ A1;Peça exemplo;10`}
                               padding: '8px',
                               borderRight: (diaSemanaAjustado + dia) % 7 !== 0 ? '1px solid rgba(0, 255, 0, 0.1)' : 'none',
                               borderBottom: '1px solid rgba(0, 255, 0, 0.1)',
-                              backgroundColor: fundoCelulaDia,
-                              boxShadow: hojeDia
-                                ? `inset 0 0 0 2px rgba(0, 255, 160, ${diaTodoServicosConcluidos ? 0.75 : 0.45})`
-                                : diaTodoServicosConcluidos
-                                  ? 'inset 0 0 0 1px rgba(0, 255, 140, 0.35)'
-                                  : undefined,
+                              backgroundColor: '#141414',
+                              boxShadow: hojeDia ? 'inset 0 0 0 2px rgba(0, 255, 160, 0.45)' : undefined,
                               position: 'relative',
                               cursor: agendamentosDoDia.length > 0 ? 'pointer' : 'default'
                             }}
@@ -36919,7 +36851,10 @@ A1;Peça exemplo;10`}
 
                             {/* Agendamentos do dia */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                              {agDiaUnicos.slice(0, 3).map((ag) => (
+                              {agDiaUnicos.slice(0, 3).map((ag) => {
+                                const nomeSt = estiloNomeClienteCalendario(ag)
+                                const clienteTxt = `${ag.cliente.substring(0, 15)}${ag.cliente.length > 15 ? '...' : ''}`
+                                return (
                                 <div
                                   key={`${ag.id}-${dataKey}`}
                                   id={`agendamento-${ag.id}`}
@@ -36928,7 +36863,7 @@ A1;Peça exemplo;10`}
                                     fontSize: '10px',
                                     padding: '4px 6px',
                                     borderRadius: '3px',
-                                    ...estiloChipAgendaCalendario(ag, dataKey),
+                                    ...estiloChipBaseCalendario,
                                     overflow: 'hidden',
                                     textOverflow: 'ellipsis',
                                     whiteSpace: 'nowrap',
@@ -36939,9 +36874,18 @@ A1;Peça exemplo;10`}
                                     handleEditAgendamento(ag)
                                   }}
                                 >
-                                  <strong>{ag.hora}</strong> {ag.cliente.substring(0, 15)}{ag.cliente.length > 15 ? '...' : ''}
+                                  <strong style={{ color: 'rgba(210, 215, 222, 0.82)', fontWeight: 700 }}>{ag.hora}</strong>{' '}
+                                  <span
+                                    style={{
+                                      color: nomeSt.color,
+                                      fontWeight: nomeSt.fontWeight,
+                                      textDecoration: nomeSt.textDecoration,
+                                    }}
+                                  >
+                                    {clienteTxt}
+                                  </span>
                                 </div>
-                              ))}
+                              )})}
                               {agDiaUnicos.length > 3 && (
                                 <div
                                   style={{
@@ -36978,35 +36922,83 @@ A1;Peça exemplo;10`}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.45 }}>
                         {(safeT as any)?.legendaFundoNeutro ||
-                          'Fundo neutro nos dias em curso; fundo verde suave quando todos os serviços do dia estão concluídos (cancelados não contam). Marcadores: hora + cliente.'}
+                          'Fundo do dia sempre neutro. No marcador, a hora fica em cinza-claro e o status aparece só na cor do nome do cliente.'}
                       </div>
                       <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                         {(safeT as any)?.legendaMarcadores || 'Marcadores (hora + cliente)'}
                       </div>
                       <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(0, 200, 85, 0.45)', border: '1px solid rgba(0, 255, 140, 0.85)', borderRadius: '4px' }} />
-                          <span style={{ fontSize: '12px' }}>{safeT?.concluido || 'Concluído'} (verde)</span>
+                          <div
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              backgroundColor: 'rgba(22, 24, 28, 0.98)',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                              fontSize: '11px',
+                              color: 'rgba(0, 235, 115, 0.98)',
+                              fontWeight: 800,
+                            }}
+                          >
+                            Cliente
+                          </div>
+                          <span style={{ fontSize: '12px' }}>{safeT?.concluido || 'Concluído'} — {(safeT as any)?.legendaNomeVerde || 'verde no nome'}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(255, 145, 0, 0.5)', border: '1px solid rgba(255, 200, 80, 0.95)', borderRadius: '4px' }} />
+                          <div
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              backgroundColor: 'rgba(22, 24, 28, 0.98)',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                              fontSize: '11px',
+                              color: 'rgba(255, 210, 60, 0.98)',
+                              fontWeight: 800,
+                            }}
+                          >
+                            Cliente
+                          </div>
                           <span style={{ fontSize: '12px' }}>
-                            {(safeT as any)?.legendaPreFuturo ||
-                              'Pré-agendamento pendente (ainda não confirmado) — laranja'}
+                            {(safeT as any)?.legendaPreAmarelo ||
+                              'Pré-agendamento (pendente ou confirmado) — amarelo no nome'}
                           </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(45, 115, 235, 0.42)', border: '1px solid rgba(140, 185, 255, 0.95)', borderRadius: '4px' }} />
+                          <div
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              backgroundColor: 'rgba(22, 24, 28, 0.98)',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                              fontSize: '11px',
+                              color: 'rgba(120, 175, 255, 0.98)',
+                              fontWeight: 800,
+                            }}
+                          >
+                            Cliente
+                          </div>
                           <span style={{ fontSize: '12px' }}>
-                            {(safeT as any)?.legendaAzulEmCurso ||
-                              'Confirmado: pré ou agendamento técnico — azul no dia atual e nos dias futuros do período'}
+                            {(safeT as any)?.legendaAzulTecnicoConfirmado ||
+                              'Agendamento técnico confirmado/em andamento — azul no nome'}
                           </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(0, 200, 88, 0.55)', border: '1px solid rgba(0, 255, 150, 0.85)', borderRadius: '4px' }} />
+                          <div
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              backgroundColor: 'rgba(22, 24, 28, 0.98)',
+                              border: '1px solid rgba(255,255,255,0.1)',
+                              fontSize: '11px',
+                              color: 'rgba(255, 118, 72, 0.96)',
+                              fontWeight: 800,
+                            }}
+                          >
+                            Cliente
+                          </div>
                           <span style={{ fontSize: '12px' }}>
-                            {(safeT as any)?.legendaVerdeDiaTrabalhado ||
-                              'Cada dia do período já trabalhado (data passada) — verde'}
+                            {(safeT as any)?.legendaPendenteTecnico ||
+                              'Agendamento técnico pendente — laranja no nome'}
                           </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
