@@ -306,6 +306,8 @@ body{margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;font-size:10
 
     ${row(L.nomeCliente, d.nomeCliente)}
 
+    ${row(L.identificacaoFiscal, d.identificacaoFiscal)}
+
     ${row(L.dataSolicitacaoLabel, d.dataSolicitacaoStr)}
 
   </table>
@@ -328,6 +330,8 @@ body{margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;font-size:10
 
     ${row(L.telefone, d.telefone)}
 
+    ${row(L.endereco, d.endereco)}
+
   </table>
 
 </section>
@@ -347,6 +351,26 @@ body{margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;font-size:10
     ${row(L.problemas, d.problemasApresentados)}
 
     ${row(L.nivelUrgencia, d.nivelUrgenciaLabel)}
+
+  </table>
+
+</section>
+
+
+
+<section class="sl-sec">
+
+  <h2>${esc(L.secEquipamento)}</h2>
+
+  <table class="sl-table" role="presentation">
+
+    ${row(L.tipoEquipamento, d.tipoEquipamento)}
+
+    ${row(L.marca, d.marca)}
+
+    ${row(L.modelo, d.modelo)}
+
+    ${row(L.numeroSerie, d.numeroSerie)}
 
   </table>
 

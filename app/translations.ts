@@ -28,6 +28,9 @@ export const translations = {
     dashboardEntradaCard4Desc: 'Custos, orçamentos e canais internos para fechar o ciclo com transparência.',
     dashboardEntrarPainelCompleto: 'Entrar no sistema',
     dashboardEntradaNota: 'O menu lateral está sempre disponível. F1 abre a ajuda contextual em qualquer ecrã.',
+    mainModuleContextLabel: 'Módulo selecionado',
+    mainModuleIntroFallback:
+      'Utilize a área abaixo para trabalhar neste módulo. Clique na seta para mostrar ou ocultar este resumo.',
     statUptime: 'Uptime',
     statSuporte: 'Suporte',
     statClientes: 'Clientes',
@@ -1580,6 +1583,7 @@ export const translations = {
     solicitacaoServicoTecnicoPdfDataSolicitacao: 'Data da solicitação',
     solicitacaoServicoTecnicoPdfSecContato: 'INFORMAÇÕES DE CONTATO',
     solicitacaoServicoTecnicoPdfSecRequisito: 'REQUISITO DO SERVIÇO',
+    solicitacaoServicoTecnicoPdfSecEquipamento: 'EQUIPAMENTO',
     solicitacaoServicoTecnicoPdfSecDisponibilidade: 'DISPONIBILIDADE',
     solicitacaoServicoTecnicoPdfHorarioPreferidoParaServico: 'Horário preferido para serviço:',
     solicitacaoServicoTecnicoPdfNivelUrgenciaCampo: 'Nível de urgência',
@@ -2553,6 +2557,9 @@ export const translations = {
     dashboardEntradaCard4Desc: 'Costes, presupuestos y canales internos para cerrar el ciclo con transparencia.',
     dashboardEntrarPainelCompleto: 'Entrar en el sistema',
     dashboardEntradaNota: 'El menú lateral está siempre disponible. F1 abre la ayuda contextual en cualquier pantalla.',
+    mainModuleContextLabel: 'Módulo seleccionado',
+    mainModuleIntroFallback:
+      'Use el área inferior para trabajar en este módulo. Pulse la flecha para mostrar u ocultar este resumen.',
     statUptime: 'Uptime',
     statSuporte: 'Soporte',
     statClientes: 'Clientes',
@@ -4809,6 +4816,9 @@ export const translations = {
     dashboardEntradaCard4Desc: 'Coûts, budgets et canaux internes pour boucler le cycle en transparence.',
     dashboardEntrarPainelCompleto: 'Entrer dans le système',
     dashboardEntradaNota: "Le menu latéral est toujours disponible. F1 ouvre l'aide contextuelle sur tout écran.",
+    mainModuleContextLabel: 'Module sélectionné',
+    mainModuleIntroFallback:
+      'Utilisez la zone ci-dessous pour travailler dans ce module. Cliquez sur la flèche pour afficher ou masquer ce résumé.',
     statUptime: 'Disponibilité',
     statSuporte: 'Support',
     statClientes: 'Clients',
@@ -7058,6 +7068,9 @@ export const translations = {
     dashboardEntradaCard4Desc: 'Costi, preventivi e canali interni per chiudere il ciclo con trasparenza.',
     dashboardEntrarPainelCompleto: 'Entra nel sistema',
     dashboardEntradaNota: 'Il menu laterale è sempre disponibile. F1 apre la guida contestuale su qualsiasi schermata.',
+    mainModuleContextLabel: 'Modulo selezionato',
+    mainModuleIntroFallback:
+      'Usa l’area sotto per lavorare in questo modulo. Clicca sulla freccia per mostrare o nascondere questo riepilogo.',
     statUptime: 'Uptime',
     statSuporte: 'Supporto',
     statClientes: 'Clienti',
@@ -9308,6 +9321,9 @@ export const translations = {
     dashboardEntradaCard4Desc: 'Kosten, Angebote und interne Kanäle für einen transparenten Kreislauf.',
     dashboardEntrarPainelCompleto: 'Ins System gehen',
     dashboardEntradaNota: 'Das Seitenmenü ist immer verfügbar. F1 öffnet die kontextuelle Hilfe auf jedem Bildschirm.',
+    mainModuleContextLabel: 'Ausgewähltes Modul',
+    mainModuleIntroFallback:
+      'Nutzen Sie den Bereich unten, um in diesem Modul zu arbeiten. Klicken Sie auf den Pfeil, um diese Zusammenfassung ein- oder auszublenden.',
     statUptime: 'Betriebszeit',
     statSuporte: 'Support',
     statClientes: 'Kunden',
@@ -11529,6 +11545,9 @@ export const translations = {
     dashboardEntradaCard4Desc: 'Costs, budgets and internal channels to close the loop with transparency.',
     dashboardEntrarPainelCompleto: 'Enter the system',
     dashboardEntradaNota: 'The side menu is always available. F1 opens contextual help on any screen.',
+    mainModuleContextLabel: 'Selected module',
+    mainModuleIntroFallback:
+      'Use the area below to work in this module. Click the arrow to show or hide this summary.',
     statUptime: 'Uptime',
     statSuporte: 'Support',
     statClientes: 'Clients',
