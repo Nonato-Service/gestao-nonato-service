@@ -31,6 +31,12 @@ export const translations = {
     mainModuleContextLabel: 'Módulo selecionado',
     mainModuleIntroFallback:
       'Utilize a área abaixo para trabalhar neste módulo. Clique na seta para mostrar ou ocultar este resumo.',
+    importacaoLimparFila: 'Limpar fila',
+    importacaoLimparFilaFiltrada: 'Limpar filtradas',
+    importacaoExcluirItem: 'Excluir',
+    importacaoConfirmarLimparFila:
+      'Tem certeza que deseja limpar a fila de importação? Esta ação apaga as peças pendentes (ainda não salvas) e não pode ser desfeita.',
+    importacaoNenhumaPendenteParaLimpar: 'Nenhuma peça pendente para limpar.',
     mainHubBackToDashboard: 'Voltar ao painel completo',
     mainHubIntro: 'Selecione um módulo abaixo — os mesmos atalhos do menu lateral.',
     mainHubCardHint: 'Abrir esta área no sistema.',

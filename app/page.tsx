@@ -17766,6 +17766,30 @@ export default function Dashboard() {
     [t, persistPecasBiblioteca, pecasBiblioteca]
   )
 
+  const handleLimparFilaImportacaoPendente = useCallback(
+    (ids?: string[]) => {
+      const onlyIds = Array.isArray(ids) && ids.length > 0 ? new Set(ids) : null
+      const pendentes = pecasBiblioteca.filter((p) => ehImportacaoPendenteStrict(p))
+      const alvo = onlyIds ? pendentes.filter((p) => onlyIds.has(p.id)) : pendentes
+      if (alvo.length === 0) {
+        alert((t as any)?.importacaoNenhumaPendenteParaLimpar || 'Nenhuma peça pendente para limpar.')
+        return
+      }
+      const confirmMsg =
+        (t as any)?.importacaoConfirmarLimparFila ||
+        'Tem certeza que deseja limpar a fila de importação? Esta ação apaga as peças pendentes (ainda não salvas) e não pode ser desfeita.'
+      if (!window.confirm(`${confirmMsg}\n\n${alvo.length} item(ns).`)) return
+      const toRemove = new Set(alvo.map((p) => p.id))
+      persistPecasBiblioteca(pecasBiblioteca.filter((p) => !toRemove.has(p.id)))
+      if (editingPecaBiblioteca && toRemove.has(editingPecaBiblioteca.id)) {
+        setEditingPecaBiblioteca(null)
+        setShowBibliotecaPecasForm(false)
+        setSalvarPecaBibliotecaVoltaParaImportacao(false)
+      }
+    },
+    [editingPecaBiblioteca, pecasBiblioteca, persistPecasBiblioteca, t]
+  )
+
   const persistRegrasClassificacaoPecas = useCallback((next: RegraClassificacaoPeca[]) => {
     setRegrasClassificacaoPecas(next)
     localStorage.setItem('nonato-regras-classificacao-pecas', JSON.stringify(next))
@@ -33734,6 +33758,28 @@ onKeyPress={(e) => {
                       Sem subgrupo ({pecasImportadasSemSubgrupoCount})
                     </button>
                   </div>
+                  {pecasImportadasPendentes.length > 0 && (
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '10px' }}>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() => handleLimparFilaImportacaoPendente()}
+                        style={{ padding: '7px 12px', fontSize: '12px', backgroundColor: 'rgba(255, 80, 80, 0.14)', borderColor: 'rgba(255, 120, 120, 0.55)', color: '#ffd0d0' }}
+                      >
+                        🗑️ {(safeT as any)?.importacaoLimparFila || 'Limpar fila'}
+                      </button>
+                      {pecasImportadasPendentesFiltradas.length > 0 && pecasImportadasPendentesFiltradas.length !== pecasImportadasPendentes.length && (
+                        <button
+                          type="button"
+                          className="btn-primary"
+                          onClick={() => handleLimparFilaImportacaoPendente(pecasImportadasPendentesFiltradas.map((p) => p.id))}
+                          style={{ padding: '7px 12px', fontSize: '12px', backgroundColor: 'rgba(255, 160, 60, 0.12)', borderColor: 'rgba(255, 190, 90, 0.55)', color: '#ffe0b0' }}
+                        >
+                          {(safeT as any)?.importacaoLimparFilaFiltrada || 'Limpar filtradas'} ({pecasImportadasPendentesFiltradas.length})
+                        </button>
+                      )}
+                    </div>
+                  )}
                   {pecasImportadasPendentesFiltradas.length === 0 ? (
                     <div style={{ fontSize: '12px', color: '#d9d9d9', opacity: 0.85 }}>
                       {safeT?.importacaoPendentesEmpty || 'Nenhuma peça importada pendente neste momento.'}
@@ -33775,6 +33821,14 @@ onKeyPress={(e) => {
                               style={{ padding: '6px 10px', fontSize: '12px' }}
                             >
                               Editar peça
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              onClick={() => handleDeletePecaBiblioteca(peca.id)}
+                              style={{ padding: '6px 10px', fontSize: '12px', backgroundColor: 'rgba(255, 80, 80, 0.14)', borderColor: 'rgba(255, 120, 120, 0.55)', color: '#ffd0d0' }}
+                            >
+                              {(safeT as any)?.importacaoExcluirItem || 'Excluir'}
                             </button>
                           </div>
                         </div>
@@ -34033,6 +34087,28 @@ A1;Peça exemplo;10'
                     Sem subgrupo ({pecasImportadasSemSubgrupoCount})
                   </button>
                 </div>
+                {pecasImportadasPendentes.length > 0 && (
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '10px' }}>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={() => handleLimparFilaImportacaoPendente()}
+                      style={{ padding: '7px 12px', fontSize: '12px', backgroundColor: 'rgba(255, 80, 80, 0.14)', borderColor: 'rgba(255, 120, 120, 0.55)', color: '#ffd0d0' }}
+                    >
+                      🗑️ {(safeT as any)?.importacaoLimparFila || 'Limpar fila'}
+                    </button>
+                    {pecasImportadasPendentesFiltradas.length > 0 && pecasImportadasPendentesFiltradas.length !== pecasImportadasPendentes.length && (
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() => handleLimparFilaImportacaoPendente(pecasImportadasPendentesFiltradas.map((p) => p.id))}
+                        style={{ padding: '7px 12px', fontSize: '12px', backgroundColor: 'rgba(255, 160, 60, 0.12)', borderColor: 'rgba(255, 190, 90, 0.55)', color: '#ffe0b0' }}
+                      >
+                        {(safeT as any)?.importacaoLimparFilaFiltrada || 'Limpar filtradas'} ({pecasImportadasPendentesFiltradas.length})
+                      </button>
+                    )}
+                  </div>
+                )}
                 {pecasImportadasPendentesFiltradas.length === 0 ? (
                   <div style={{ fontSize: '12px', color: '#d9d9d9', opacity: 0.85 }}>
                     {safeT?.importacaoPendentesEmpty || 'Nenhuma peça importada pendente neste momento.'}
@@ -34075,6 +34151,14 @@ A1;Peça exemplo;10'
                             style={{ padding: '6px 10px', fontSize: '12px' }}
                           >
                             Editar peça
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={() => handleDeletePecaBiblioteca(peca.id)}
+                            style={{ padding: '6px 10px', fontSize: '12px', backgroundColor: 'rgba(255, 80, 80, 0.14)', borderColor: 'rgba(255, 120, 120, 0.55)', color: '#ffd0d0' }}
+                          >
+                            {(safeT as any)?.importacaoExcluirItem || 'Excluir'}
                           </button>
                         </div>
                       </div>
