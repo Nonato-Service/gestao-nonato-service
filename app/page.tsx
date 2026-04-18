@@ -36364,9 +36364,10 @@ A1;Peça exemplo;10`}
                     .filter((ag) => normalizeStatusAgendamento(ag) === 'cancelado')
                     .sort(ordenarAgenda)
 
-                  const renderAgendaCard = (agendamento: Agendamento, accent: string) => (
+                  const renderAgendaCard = (agendamento: Agendamento, accent: string, pulseClass?: string) => (
                     <div
                       key={agendamento.id}
+                      className={pulseClass || undefined}
                       style={{
                         backgroundColor: '#141414',
                         padding: '20px',
@@ -36515,11 +36516,33 @@ A1;Peça exemplo;10`}
                     </div>
                   )
 
-                  const renderAgendaSection = (titulo: string, cor: string, itens: Agendamento[], hint?: string) => {
+                  const renderAgendaSection = (
+                    titulo: string,
+                    cor: string,
+                    itens: Agendamento[],
+                    hint?: string,
+                    pulse?: 'pendencias' | 'pre'
+                  ) => {
                     if (itens.length === 0) return null
+                    const headerPulseClass =
+                      pulse === 'pendencias'
+                        ? 'agenda-section-header agenda-section-header--pulse-pendencias'
+                        : pulse === 'pre'
+                          ? 'agenda-section-header agenda-section-header--pulse-pre'
+                          : undefined
+                    const dotPulseClass =
+                      pulse === 'pendencias'
+                        ? 'agenda-section-dot agenda-section-dot--pulse-pendencias'
+                        : pulse === 'pre'
+                          ? 'agenda-section-dot agenda-section-dot--pulse-pre'
+                          : undefined
+                    const cardPulseClass =
+                      pulse === 'pendencias' ? 'agenda-card--pulse-pendencias' : pulse === 'pre' ? 'agenda-card--pulse-pre' : undefined
                     return (
                       <div style={{ marginBottom: '18px' }}>
-                        <div style={{
+                        <div
+                          className={headerPulseClass}
+                          style={{
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
@@ -36531,7 +36554,17 @@ A1;Peça exemplo;10`}
                           marginBottom: '12px'
                         }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                            <span style={{ width: 10, height: 10, borderRadius: 999, backgroundColor: cor, boxShadow: `0 0 16px ${cor}55` }} aria-hidden />
+                            <span
+                              className={dotPulseClass}
+                              style={{
+                                width: 10,
+                                height: 10,
+                                borderRadius: 999,
+                                backgroundColor: cor,
+                                ...(dotPulseClass ? {} : { boxShadow: `0 0 16px ${cor}55` }),
+                              }}
+                              aria-hidden
+                            />
                             <span style={{ fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#fff', fontSize: '12px' }}>
                               {titulo}
                             </span>
@@ -36544,7 +36577,7 @@ A1;Peça exemplo;10`}
                           </span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                          {itens.map((ag) => renderAgendaCard(ag, cor))}
+                          {itens.map((ag) => renderAgendaCard(ag, cor, cardPulseClass))}
                         </div>
                       </div>
                     )
@@ -36552,8 +36585,8 @@ A1;Peça exemplo;10`}
 
                   return (
                     <div>
-                      {renderAgendaSection((safeT as any)?.agendaSecaoPendencias || 'Pendências', 'rgba(255, 90, 60, 0.92)', agPendencias, (safeT as any)?.agendaSecaoPendenciasHint || 'Pendente (a confirmar/fechar)')}
-                      {renderAgendaSection((safeT as any)?.agendaSecaoPreAgendamento || (safeT?.preAgendamento || 'Pré-Agendamento'), 'rgba(255, 190, 50, 0.95)', agPreAgendamento, (safeT as any)?.agendaSecaoPreHint || 'Amarelo = pré')}
+                      {renderAgendaSection((safeT as any)?.agendaSecaoPendencias || 'Pendências', 'rgba(255, 90, 60, 0.92)', agPendencias, (safeT as any)?.agendaSecaoPendenciasHint || 'Pendente (a confirmar/fechar)', 'pendencias')}
+                      {renderAgendaSection((safeT as any)?.agendaSecaoPreAgendamento || (safeT?.preAgendamento || 'Pré-Agendamento'), 'rgba(255, 190, 50, 0.95)', agPreAgendamento, (safeT as any)?.agendaSecaoPreHint || 'Amarelo = pré', 'pre')}
                       {renderAgendaSection((safeT as any)?.agendaSecaoAgendado || (safeT?.confirmado || 'Agendado/Confirmado'), 'rgba(55, 130, 235, 0.92)', agAgendadosConfirmados, (safeT as any)?.agendaSecaoAgendadoHint || 'Azul = agendado/confirmado')}
                       {renderAgendaSection((safeT as any)?.agendaSecaoConcluidos || (safeT?.concluido || 'Concluídos'), 'rgba(0, 210, 90, 0.9)', agConcluidos, (safeT as any)?.agendaSecaoConcluidosHint || 'Verde = concluído')}
                       {agCancelados.length > 0 ? (
