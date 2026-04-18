@@ -36694,41 +36694,71 @@ A1;Peça exemplo;10`}
               const agendamentosUnicosDoDia = (lista: Agendamento[]) =>
                 Array.from(new Map(lista.map((a) => [a.id, a])).values())
 
-              /** Chip neutro; status aparece só na cor do nome do cliente (pedido do usuário). */
-              const estiloChipBaseCalendario: React.CSSProperties = {
-                backgroundColor: 'rgba(22, 24, 28, 0.98)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: 'rgba(228, 232, 238, 0.88)',
-                fontWeight: 500,
-              }
-
-              const estiloNomeClienteCalendario = (
-                ag: Agendamento
-              ): { color: string; fontWeight: number; textDecoration?: 'line-through' } => {
+              /**
+               * Marcador do calendário: fundo na cor do status; hora e nome em branco (pedido do usuário).
+               * Pré-agendamento (qualquer status exc. concl./canc.) → fundo amarelo/dourado.
+               * Agendamento técnico confirmado/em andamento → fundo azul; pendente → laranja.
+               */
+              const estiloMarcadorCalendario = (ag: Agendamento): React.CSSProperties => {
                 const st = normalizeStatusAgendamento(ag)
+                const texto: React.CSSProperties = {
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                }
                 if (st === 'cancelado') {
                   return {
-                    color: 'rgba(170, 172, 180, 0.5)',
+                    ...texto,
+                    backgroundColor: 'rgba(68, 70, 78, 0.9)',
+                    border: '1px solid rgba(130, 132, 142, 0.55)',
+                    color: 'rgba(255, 255, 255, 0.58)',
                     fontWeight: 600,
                     textDecoration: 'line-through',
+                    textShadow: 'none',
                   }
                 }
                 if (st === 'concluido') {
-                  return { color: 'rgba(0, 235, 115, 0.98)', fontWeight: 800 }
+                  return {
+                    ...texto,
+                    backgroundColor: 'rgba(0, 128, 58, 0.94)',
+                    border: '1px solid rgba(0, 255, 150, 0.5)',
+                    boxShadow: '0 0 12px rgba(0, 200, 95, 0.28)',
+                    fontWeight: 800,
+                  }
                 }
                 const tipo = normalizeTipoAgendamento(ag)
                 if (tipo === 'pre-agendamento') {
-                  /** Pré-agendamento: sempre amarelo no nome (pendente ou confirmado), até marcar concluído. */
-                  return { color: 'rgba(255, 210, 60, 0.98)', fontWeight: 800 }
+                  return {
+                    ...texto,
+                    backgroundColor: 'rgba(158, 108, 8, 0.95)',
+                    border: '1px solid rgba(255, 220, 110, 0.55)',
+                    boxShadow: '0 0 12px rgba(255, 185, 40, 0.22)',
+                    fontWeight: 800,
+                  }
                 }
-                /** Agendamento técnico */
                 if (st === 'pendente') {
-                  return { color: 'rgba(255, 118, 72, 0.96)', fontWeight: 800 }
+                  return {
+                    ...texto,
+                    backgroundColor: 'rgba(178, 62, 22, 0.94)',
+                    border: '1px solid rgba(255, 160, 105, 0.55)',
+                    fontWeight: 800,
+                  }
                 }
                 if (st === 'confirmado' || st === 'em-andamento') {
-                  return { color: 'rgba(120, 175, 255, 0.98)', fontWeight: 800 }
+                  return {
+                    ...texto,
+                    backgroundColor: 'rgba(28, 78, 188, 0.94)',
+                    border: '1px solid rgba(150, 195, 255, 0.55)',
+                    boxShadow: '0 0 12px rgba(70, 130, 255, 0.22)',
+                    fontWeight: 800,
+                  }
                 }
-                return { color: 'rgba(235, 238, 245, 0.92)', fontWeight: 700 }
+                return {
+                  ...texto,
+                  backgroundColor: 'rgba(40, 44, 52, 0.96)',
+                  border: '1px solid rgba(255, 255, 255, 0.14)',
+                  fontWeight: 650,
+                }
               }
 
               return (
@@ -36852,7 +36882,6 @@ A1;Peça exemplo;10`}
                             {/* Agendamentos do dia */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                               {agDiaUnicos.slice(0, 3).map((ag) => {
-                                const nomeSt = estiloNomeClienteCalendario(ag)
                                 const clienteTxt = `${ag.cliente.substring(0, 15)}${ag.cliente.length > 15 ? '...' : ''}`
                                 return (
                                 <div
@@ -36862,8 +36891,8 @@ A1;Peça exemplo;10`}
                                   style={{
                                     fontSize: '10px',
                                     padding: '4px 6px',
-                                    borderRadius: '3px',
-                                    ...estiloChipBaseCalendario,
+                                    borderRadius: '6px',
+                                    ...estiloMarcadorCalendario(ag),
                                     overflow: 'hidden',
                                     textOverflow: 'ellipsis',
                                     whiteSpace: 'nowrap',
@@ -36874,16 +36903,7 @@ A1;Peça exemplo;10`}
                                     handleEditAgendamento(ag)
                                   }}
                                 >
-                                  <strong style={{ color: 'rgba(210, 215, 222, 0.82)', fontWeight: 700 }}>{ag.hora}</strong>{' '}
-                                  <span
-                                    style={{
-                                      color: nomeSt.color,
-                                      fontWeight: nomeSt.fontWeight,
-                                      textDecoration: nomeSt.textDecoration,
-                                    }}
-                                  >
-                                    {clienteTxt}
-                                  </span>
+                                  <strong>{ag.hora}</strong> {clienteTxt}
                                 </div>
                               )})}
                               {agDiaUnicos.length > 3 && (
@@ -36922,7 +36942,7 @@ A1;Peça exemplo;10`}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.45 }}>
                         {(safeT as any)?.legendaFundoNeutro ||
-                          'Fundo do dia sempre neutro. No marcador, a hora fica em cinza-claro e o status aparece só na cor do nome do cliente.'}
+                          'Fundo do dia da grade neutro. Em cada marcador, o fundo colorido indica o status; hora e nome do cliente ficam em branco.'}
                       </div>
                       <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                         {(safeT as any)?.legendaMarcadores || 'Marcadores (hora + cliente)'}
@@ -36932,77 +36952,94 @@ A1;Peça exemplo;10`}
                           <div
                             style={{
                               padding: '2px 8px',
-                              borderRadius: '4px',
-                              backgroundColor: 'rgba(22, 24, 28, 0.98)',
-                              border: '1px solid rgba(255,255,255,0.1)',
+                              borderRadius: '6px',
+                              backgroundColor: 'rgba(0, 128, 58, 0.94)',
+                              border: '1px solid rgba(0, 255, 150, 0.5)',
                               fontSize: '11px',
-                              color: 'rgba(0, 235, 115, 0.98)',
+                              color: '#fff',
                               fontWeight: 800,
+                              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
                             }}
                           >
-                            Cliente
+                            09:00 Cliente
                           </div>
-                          <span style={{ fontSize: '12px' }}>{safeT?.concluido || 'Concluído'} — {(safeT as any)?.legendaNomeVerde || 'verde no nome'}</span>
+                          <span style={{ fontSize: '12px' }}>{safeT?.concluido || 'Concluído'} — {(safeT as any)?.legendaNomeVerde || 'fundo verde'}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <div
                             style={{
                               padding: '2px 8px',
-                              borderRadius: '4px',
-                              backgroundColor: 'rgba(22, 24, 28, 0.98)',
-                              border: '1px solid rgba(255,255,255,0.1)',
+                              borderRadius: '6px',
+                              backgroundColor: 'rgba(158, 108, 8, 0.95)',
+                              border: '1px solid rgba(255, 220, 110, 0.55)',
                               fontSize: '11px',
-                              color: 'rgba(255, 210, 60, 0.98)',
+                              color: '#fff',
                               fontWeight: 800,
+                              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
                             }}
                           >
-                            Cliente
+                            09:00 Cliente
                           </div>
                           <span style={{ fontSize: '12px' }}>
                             {(safeT as any)?.legendaPreAmarelo ||
-                              'Pré-agendamento (pendente ou confirmado) — amarelo no nome'}
+                              'Pré-agendamento (pendente ou confirmado) — fundo amarelo/dourado'}
                           </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <div
                             style={{
                               padding: '2px 8px',
-                              borderRadius: '4px',
-                              backgroundColor: 'rgba(22, 24, 28, 0.98)',
-                              border: '1px solid rgba(255,255,255,0.1)',
+                              borderRadius: '6px',
+                              backgroundColor: 'rgba(28, 78, 188, 0.94)',
+                              border: '1px solid rgba(150, 195, 255, 0.55)',
                               fontSize: '11px',
-                              color: 'rgba(120, 175, 255, 0.98)',
+                              color: '#fff',
                               fontWeight: 800,
+                              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
                             }}
                           >
-                            Cliente
+                            09:00 Cliente
                           </div>
                           <span style={{ fontSize: '12px' }}>
                             {(safeT as any)?.legendaAzulTecnicoConfirmado ||
-                              'Agendamento técnico confirmado/em andamento — azul no nome'}
+                              'Agendamento técnico confirmado/em andamento — fundo azul'}
                           </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <div
                             style={{
                               padding: '2px 8px',
-                              borderRadius: '4px',
-                              backgroundColor: 'rgba(22, 24, 28, 0.98)',
-                              border: '1px solid rgba(255,255,255,0.1)',
+                              borderRadius: '6px',
+                              backgroundColor: 'rgba(178, 62, 22, 0.94)',
+                              border: '1px solid rgba(255, 160, 105, 0.55)',
                               fontSize: '11px',
-                              color: 'rgba(255, 118, 72, 0.96)',
+                              color: '#fff',
                               fontWeight: 800,
+                              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
                             }}
                           >
-                            Cliente
+                            09:00 Cliente
                           </div>
                           <span style={{ fontSize: '12px' }}>
                             {(safeT as any)?.legendaPendenteTecnico ||
-                              'Agendamento técnico pendente — laranja no nome'}
+                              'Agendamento técnico pendente — fundo laranja'}
                           </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ width: '22px', height: '22px', backgroundColor: 'rgba(90, 90, 98, 0.5)', border: '1px solid rgba(140, 140, 150, 0.55)', borderRadius: '4px' }} />
+                          <div
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                              backgroundColor: 'rgba(68, 70, 78, 0.9)',
+                              border: '1px solid rgba(130, 132, 142, 0.55)',
+                              fontSize: '11px',
+                              color: 'rgba(255, 255, 255, 0.58)',
+                              fontWeight: 600,
+                              textDecoration: 'line-through',
+                            }}
+                          >
+                            09:00 Cliente
+                          </div>
                           <span style={{ fontSize: '12px' }}>{safeT?.cancelado || 'Cancelado'}</span>
                         </div>
                       </div>
