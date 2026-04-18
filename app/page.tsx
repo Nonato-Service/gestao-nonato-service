@@ -413,6 +413,19 @@ type SolicitacaoServicoTecnico = {
   /** Cliente cadastrado (opcional) — anexos devolvidos são também guardados na ficha deste cliente */
   clienteId?: string
   nomeCliente: string
+  /** NIF / VAT / identificação fiscal (preenchido a partir do cadastro do cliente quando existir) */
+  identificacaoFiscal?: string
+  /** E-mail de contacto na solicitação */
+  emailContato?: string
+  departamento?: string
+  /** Tipo de serviço requisitado (ex.: reparação, manutenção) — distinto do tipo de equipamento */
+  tipoServico?: string
+  /** Local onde o serviço é necessário */
+  localServico?: string
+  /** Preferência de horário (modelo NSA) */
+  horarioPreferido?: '' | 'manha' | 'tarde' | 'dia' | 'noite' | 'livre'
+  /** Referência ao equipamento escolhido na lista do cliente: `id:…` ou `idx:n` */
+  equipamentoClienteChave?: string
   tipoEquipamento: string
   marca: string
   modelo: string
@@ -3508,6 +3521,13 @@ export default function Dashboard() {
   const emptySolicitacaoServicoTecnicoFormState = (): Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'> => ({
     clienteId: undefined,
     nomeCliente: '',
+    identificacaoFiscal: '',
+    emailContato: '',
+    departamento: '',
+    tipoServico: '',
+    localServico: '',
+    horarioPreferido: '',
+    equipamentoClienteChave: '',
     tipoEquipamento: '',
     marca: '',
     modelo: '',
@@ -5877,10 +5897,25 @@ export default function Dashboard() {
       const savedSstModeloBase = getData('nonato-solicitacao-sst-modelo-base')
       if (savedSstModeloBase && typeof savedSstModeloBase === 'object' && !Array.isArray(savedSstModeloBase)) {
         const m = savedSstModeloBase as Record<string, unknown>
+        const hp = m.horarioPreferido
+        const horarioOk: SolicitacaoServicoTecnico['horarioPreferido'] =
+          hp === 'manha' || hp === 'tarde' || hp === 'dia' || hp === 'noite' || hp === 'livre' || hp === ''
+            ? hp
+            : ''
+        const nu = m.nivelUrgencia
+        const nivelOk =
+          nu === 'baixa' || nu === 'media' || nu === 'alta' || nu === 'critica' ? (nu as SolicitacaoServicoTecnico['nivelUrgencia']) : undefined
         setSstModeloBase({
           ...emptySolicitacaoServicoTecnicoFormState(),
           clienteId: typeof m.clienteId === 'string' ? m.clienteId : undefined,
           nomeCliente: typeof m.nomeCliente === 'string' ? m.nomeCliente : '',
+          identificacaoFiscal: typeof m.identificacaoFiscal === 'string' ? m.identificacaoFiscal : '',
+          emailContato: typeof m.emailContato === 'string' ? m.emailContato : '',
+          departamento: typeof m.departamento === 'string' ? m.departamento : '',
+          tipoServico: typeof m.tipoServico === 'string' ? m.tipoServico : '',
+          localServico: typeof m.localServico === 'string' ? m.localServico : '',
+          horarioPreferido: horarioOk,
+          equipamentoClienteChave: typeof m.equipamentoClienteChave === 'string' ? m.equipamentoClienteChave : '',
           tipoEquipamento: typeof m.tipoEquipamento === 'string' ? m.tipoEquipamento : '',
           marca: typeof m.marca === 'string' ? m.marca : '',
           modelo: typeof m.modelo === 'string' ? m.modelo : '',
@@ -5888,7 +5923,8 @@ export default function Dashboard() {
           problemasApresentados: typeof m.problemasApresentados === 'string' ? m.problemasApresentados : '',
           endereco: typeof m.endereco === 'string' ? m.endereco : '',
           telefone: typeof m.telefone === 'string' ? m.telefone : '',
-          responsavel: typeof m.responsavel === 'string' ? m.responsavel : ''
+          responsavel: typeof m.responsavel === 'string' ? m.responsavel : '',
+          nivelUrgencia: nivelOk
         })
       }
 
@@ -34166,11 +34202,74 @@ A1;Peça exemplo;10`}
           const c = clientes.find((x) => x.id === rec.clienteId)
           if (!c) return rec
           const morada = [c.morada, c.codigoPostal, c.localidade].filter(Boolean).join(', ')
+          const tel = String(c.telefones || '').split(/[;,]/)[0]?.trim() || ''
+          const email = String(c.email || '').trim()
+          const nif = String(c.numeroContribuicaoFiscal || '').trim()
+          const contato = String(c.contato || '').trim()
           return {
             ...rec,
             nomeCliente: String(rec.nomeCliente || '').trim() || c.nomeEmpresa || rec.nomeCliente,
-            telefone: String(rec.telefone || '').trim() || String(c.telefones || '').split(/[;,]/)[0]?.trim() || rec.telefone,
-            endereco: String(rec.endereco || '').trim() || morada || rec.endereco
+            telefone: String(rec.telefone || '').trim() || tel || rec.telefone,
+            endereco: String(rec.endereco || '').trim() || morada || rec.endereco,
+            identificacaoFiscal: String(rec.identificacaoFiscal || '').trim() || nif || rec.identificacaoFiscal,
+            emailContato: String(rec.emailContato || '').trim() || email || rec.emailContato,
+            responsavel: String(rec.responsavel || '').trim() || contato || rec.responsavel
+          }
+        }
+        const mergeClienteSelecionadoSst = (
+          prev: Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'>,
+          clienteId: string | undefined
+        ): Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'> => {
+          if (!clienteId) {
+            return { ...prev, clienteId: undefined, equipamentoClienteChave: '' }
+          }
+          const c = clientes.find((x) => x.id === clienteId)
+          if (!c) return { ...prev, clienteId }
+          const morada = [c.morada, c.codigoPostal, c.localidade].filter(Boolean).join(', ')
+          const tel = String(c.telefones || '').split(/[;,]/)[0]?.trim() || ''
+          return {
+            ...prev,
+            clienteId,
+            nomeCliente: (c.nomeEmpresa || prev.nomeCliente || '').trim(),
+            endereco: morada || prev.endereco || '',
+            telefone: tel || prev.telefone || '',
+            emailContato: String(c.email || '').trim() || prev.emailContato || '',
+            identificacaoFiscal: String(c.numeroContribuicaoFiscal || '').trim() || prev.identificacaoFiscal || '',
+            responsavel: String(c.contato || '').trim() || prev.responsavel || '',
+            equipamentoClienteChave: '',
+            tipoEquipamento: '',
+            marca: '',
+            modelo: '',
+            numeroSerie: ''
+          }
+        }
+        const patchEquipamentoClienteChave = (
+          base: Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'>,
+          chave: string,
+          clienteId: string | undefined
+        ): Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'> => {
+          if (!chave) {
+            return { ...base, equipamentoClienteChave: '', tipoEquipamento: '', marca: '', modelo: '', numeroSerie: '' }
+          }
+          if (!clienteId) return { ...base, equipamentoClienteChave: chave }
+          const c = clientes.find((x) => x.id === clienteId)
+          const list = c?.equipamentos
+          if (!list?.length) return { ...base, equipamentoClienteChave: chave }
+          let eq: EquipamentoCliente | undefined
+          if (chave.startsWith('idx:')) {
+            const i = parseInt(chave.slice(4), 10)
+            eq = Number.isFinite(i) ? list[i] : undefined
+          } else {
+            eq = list.find((e) => e.id === chave)
+          }
+          if (!eq) return { ...base, equipamentoClienteChave: chave }
+          return {
+            ...base,
+            equipamentoClienteChave: chave,
+            tipoEquipamento: eq.tipoEquipamento || '',
+            marca: eq.marca || '',
+            modelo: eq.modelo || '',
+            numeroSerie: eq.numeroSerie || ''
           }
         }
         const resolveRecParaNomeDocDevolvido = (sstId: string): SolicitacaoServicoTecnico | null => {
@@ -34197,6 +34296,13 @@ A1;Peça exemplo;10`}
           const t = translations[selectedLanguage as keyof typeof translations] as typeof translations['pt-BR']
           const labels = {
             nomeCliente: t?.solicitacaoServicoTecnicoNomeCliente ?? 'Nome do cliente',
+            identificacaoFiscal: (t as any)?.solicitacaoServicoTecnicoIdentificacaoFiscal ?? 'Identificação fiscal',
+            emailContato: (t as any)?.solicitacaoServicoTecnicoEmailContato ?? 'E-mail',
+            departamento: (t as any)?.solicitacaoServicoTecnicoDepartamento ?? 'Departamento',
+            tipoServico: (t as any)?.solicitacaoServicoTecnicoTipoServico ?? 'Tipo de serviço',
+            localServico: (t as any)?.solicitacaoServicoTecnicoLocalServico ?? 'Local do serviço',
+            horarioPreferido: (t as any)?.solicitacaoServicoTecnicoHorarioPreferido ?? 'Horário preferencial',
+            nivelUrgencia: (t as any)?.solicitacaoServicoTecnicoPdfNivelUrgenciaCampo ?? t?.solicitacaoServicoTecnicoNivelUrgencia ?? 'Nível de urgência',
             tipoEquipamento: t?.solicitacaoServicoTecnicoTipoEquipamento ?? 'Tipo de equipamento',
             marca: t?.solicitacaoServicoTecnicoMarca ?? 'Marca',
             modelo: t?.solicitacaoServicoTecnicoModelo ?? 'Modelo',
@@ -34211,8 +34317,35 @@ A1;Peça exemplo;10`}
             const v = String(val ?? '').trim()
             return v ? `${label}: ${v}` : ''
           }
+          const hk = String((s as SolicitacaoServicoTecnico).horarioPreferido || '')
+          const horarioMap: Record<string, string> = {
+            manha: (t as any)?.solicitacaoServicoTecnicoHorarioOpcManha ?? '',
+            tarde: (t as any)?.solicitacaoServicoTecnicoHorarioOpcTarde ?? '',
+            dia: (t as any)?.solicitacaoServicoTecnicoHorarioOpcDia ?? '',
+            noite: (t as any)?.solicitacaoServicoTecnicoHorarioOpcNoite ?? '',
+            livre: (t as any)?.solicitacaoServicoTecnicoHorarioOpcLivre ?? ''
+          }
+          const horarioTxt = hk ? horarioMap[hk] || hk : ''
+          const nu = (s as SolicitacaoServicoTecnico).nivelUrgencia
+          const nivelTxt =
+            nu === 'baixa'
+              ? t?.solicitacaoServicoTecnicoUrgenciaBaixa ?? 'Baixa'
+              : nu === 'media'
+                ? t?.solicitacaoServicoTecnicoUrgenciaMedia ?? 'Média'
+                : nu === 'alta'
+                  ? t?.solicitacaoServicoTecnicoUrgenciaAlta ?? 'Alta'
+                  : nu === 'critica'
+                    ? t?.solicitacaoServicoTecnicoUrgenciaCritica ?? 'Crítica'
+                    : ''
           const linhas = [
             pushVal(labels.nomeCliente, s.nomeCliente),
+            pushVal(labels.identificacaoFiscal, (s as SolicitacaoServicoTecnico).identificacaoFiscal),
+            pushVal(labels.emailContato, (s as SolicitacaoServicoTecnico).emailContato),
+            pushVal(labels.departamento, (s as SolicitacaoServicoTecnico).departamento),
+            pushVal(labels.tipoServico, (s as SolicitacaoServicoTecnico).tipoServico),
+            pushVal(labels.localServico, (s as SolicitacaoServicoTecnico).localServico),
+            pushVal(labels.horarioPreferido, horarioTxt),
+            pushVal(labels.nivelUrgencia, nivelTxt),
             pushVal(labels.tipoEquipamento, s.tipoEquipamento),
             pushVal(labels.marca, s.marca),
             pushVal(labels.modelo, s.modelo),
@@ -34305,23 +34438,59 @@ A1;Peça exemplo;10`}
           const tr = translations[selectedLanguage as keyof typeof translations] as (typeof translations)['pt-BR']
           const dataCriStr = new Date(rec.dataCriacao).toLocaleDateString(localePdfSst)
           const refVal = `SST-${String(rec.id).replace(/[^a-zA-Z0-9]/g, '').slice(-10).toUpperCase() || 'DOC'}`
+          const nu = rec.nivelUrgencia
+          const nivelUrgenciaLabel =
+            nu === 'baixa'
+              ? tr.solicitacaoServicoTecnicoUrgenciaBaixa ?? 'Baixa'
+              : nu === 'media'
+                ? tr.solicitacaoServicoTecnicoUrgenciaMedia ?? 'Média'
+                : nu === 'alta'
+                  ? tr.solicitacaoServicoTecnicoUrgenciaAlta ?? 'Alta'
+                  : nu === 'critica'
+                    ? tr.solicitacaoServicoTecnicoUrgenciaCritica ?? 'Crítica'
+                    : ''
+          const trAny = tr as Record<string, string | undefined>
           const L: SolicitacaoServicoTecnicoPdfLabels = {
-            docTitle: tr.solicitacaoServicoTecnicoTitle || 'SOLICITAÇÃO DE SERVIÇO TÉCNICO',
-            docSubtitle: tr.solicitacaoServicoTecnicoPdfDocSubtitle || '',
-            emitidoEmLabel: tr.solicitacaoServicoTecnicoPdfEmitidoEm || 'Emitido em',
+            docTitleLine1: trAny.solicitacaoServicoTecnicoPdfTitleLine1 || 'SOLICITAÇÃO DE',
+            docTitleLine2: trAny.solicitacaoServicoTecnicoPdfTitleLine2 || 'SERVIÇO TÉCNICO',
+            docSubtitle: tr.solicitacaoServicoTecnicoPdfDocSubtitle ?? '',
+            emitidoEmLabel: tr.solicitacaoServicoTecnicoPdfEmitidoEm ?? 'Emitido em',
             emitidoEmValue: dataCriStr,
-            refLabel: tr.solicitacaoServicoTecnicoPdfRef || 'Referência',
+            refLabel: tr.solicitacaoServicoTecnicoPdfRef ?? 'Referência',
             refValue: refVal,
-            secDados: tr.solicitacaoServicoTecnicoPdfSecDados || 'Dados da solicitação',
+            secEmpresa:
+              trAny.solicitacaoServicoTecnicoPdfSecEmpresa != null
+                ? trAny.solicitacaoServicoTecnicoPdfSecEmpresa
+                : 'EMPRESA SOLICITANTE',
+            secContato: trAny.solicitacaoServicoTecnicoPdfSecContato || 'INFORMAÇÕES DE CONTATO',
+            secRequisito: trAny.solicitacaoServicoTecnicoPdfSecRequisito || 'REQUISITO DO SERVIÇO',
+            secEquipamento: trAny.solicitacaoServicoTecnicoPdfSecEquipamento || 'EQUIPAMENTO',
+            secDisponibilidade: trAny.solicitacaoServicoTecnicoPdfSecDisponibilidade || 'DISPONIBILIDADE',
+            horarioPreferidoParaServico:
+              trAny.solicitacaoServicoTecnicoPdfHorarioPreferidoParaServico ||
+              trAny.solicitacaoServicoTecnicoHorarioPreferido ||
+              'Horário preferido para serviço:',
+            dataSolicitacaoLabel: trAny.solicitacaoServicoTecnicoPdfDataSolicitacao || 'Data da solicitação',
             nomeCliente: tr.solicitacaoServicoTecnicoNomeCliente || 'Nome do cliente',
+            identificacaoFiscal: trAny.solicitacaoServicoTecnicoIdentificacaoFiscal || 'Identificação fiscal',
+            emailContato: trAny.solicitacaoServicoTecnicoEmailContato || 'E-mail',
+            departamento: trAny.solicitacaoServicoTecnicoDepartamento || 'Departamento',
+            tipoServico: trAny.solicitacaoServicoTecnicoTipoServico || 'Tipo de serviço',
+            localServico: trAny.solicitacaoServicoTecnicoLocalServico || 'Local do serviço',
             tipoEquipamento: tr.solicitacaoServicoTecnicoTipoEquipamento || 'Tipo',
             marca: tr.solicitacaoServicoTecnicoMarca || 'Marca',
             modelo: tr.solicitacaoServicoTecnicoModelo || 'Modelo',
             numeroSerie: tr.solicitacaoServicoTecnicoNumeroSerie || 'N.º série',
             problemas: tr.solicitacaoServicoTecnicoProblemasApresentados || 'Problemas',
+            nivelUrgencia: trAny.solicitacaoServicoTecnicoPdfNivelUrgenciaCampo || tr.solicitacaoServicoTecnicoNivelUrgencia || 'Nível de urgência',
             endereco: tr.solicitacaoServicoTecnicoEndereco || 'Endereço',
             telefone: tr.solicitacaoServicoTecnicoTelefone || 'Telefone',
             responsavel: tr.solicitacaoServicoTecnicoResponsavel || 'Responsável',
+            horarioManha: trAny.solicitacaoServicoTecnicoHorarioOpcManha || '',
+            horarioTarde: trAny.solicitacaoServicoTecnicoHorarioOpcTarde || '',
+            horarioDia: trAny.solicitacaoServicoTecnicoHorarioOpcDia || '',
+            horarioNoite: trAny.solicitacaoServicoTecnicoHorarioOpcNoite || '',
+            horarioLivre: trAny.solicitacaoServicoTecnicoHorarioOpcLivre || '',
             secAssinatura: tr.solicitacaoServicoTecnicoPdfSecAssinatura || 'Assinatura do cliente',
             textoLegal: tr.solicitacaoServicoTecnicoPdfTextoLegal || '',
             zonaAssinar: tr.solicitacaoServicoTecnicoPdfZonaAssinar || '',
@@ -34332,17 +34501,37 @@ A1;Peça exemplo;10`}
           const dataPdf: SolicitacaoServicoTecnicoPdfData = {
             id: rec.id,
             nomeCliente: rec.nomeCliente,
+            identificacaoFiscal: String(rec.identificacaoFiscal || '').trim(),
+            emailContato: String(rec.emailContato || '').trim(),
+            departamento: String(rec.departamento || '').trim(),
+            tipoServico: String(rec.tipoServico || '').trim(),
+            localServico: String(rec.localServico || '').trim(),
+            problemasApresentados: rec.problemasApresentados,
+            nivelUrgenciaLabel,
+            horarioPreferidoKey: String(rec.horarioPreferido || ''),
             tipoEquipamento: rec.tipoEquipamento,
             marca: rec.marca,
             modelo: rec.modelo,
             numeroSerie: rec.numeroSerie,
-            problemasApresentados: rec.problemasApresentados,
             endereco: rec.endereco,
             telefone: rec.telefone,
             responsavel: rec.responsavel,
             dataCriacao: rec.dataCriacao,
+            dataSolicitacaoStr: dataCriStr,
           }
-          const html = buildSolicitacaoServicoTecnicoPrintHtml(dataPdf, L, getLogoHtmlForProtocoloServico())
+          const htmlLang =
+            selectedLanguage === 'en'
+              ? 'en'
+              : selectedLanguage === 'de'
+                ? 'de'
+                : selectedLanguage === 'fr'
+                  ? 'fr'
+                  : selectedLanguage === 'it'
+                    ? 'it'
+                    : selectedLanguage === 'es'
+                      ? 'es'
+                      : 'pt'
+          const html = buildSolicitacaoServicoTecnicoPrintHtml(dataPdf, L, getLogoHtmlForProtocoloServico(), htmlLang)
           return { html, refVal }
         }
         const baixarFormularioOficialClienteHtml = (rec: SolicitacaoServicoTecnico) => {
@@ -34606,7 +34795,7 @@ A1;Peça exemplo;10`}
                 <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.solicitacaoServicoTecnicoClienteCadastrado || 'Cliente cadastrado (opcional)'}</label>
                 <select
                   value={sstModeloBase.clienteId || ''}
-                  onChange={(e) => setSstModeloBase({ ...sstModeloBase, clienteId: e.target.value || undefined })}
+                  onChange={(e) => setSstModeloBase(mergeClienteSelecionadoSst(sstModeloBase, e.target.value || undefined))}
                   style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }}
                 >
                   <option value="">{(safeT as any)?.solicitacaoServicoTecnicoClienteCadastradoOpt || '— Nenhum —'}</option>
@@ -34615,16 +34804,52 @@ A1;Peça exemplo;10`}
                   ))}
                 </select>
               </div>
+              {(() => {
+                const cidMb = sstModeloBase.clienteId
+                const cliMb = cidMb ? clientes.find((cl) => cl.id === cidMb) : null
+                const eqsMb = cliMb?.equipamentos?.filter(Boolean) ?? []
+                if (!cidMb || eqsMb.length === 0) return null
+                return (
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa' }}>
+                      {(safeT as any)?.solicitacaoServicoTecnicoEquipamentoDoCadastro || 'Equipamento do cadastro'}
+                    </label>
+                    <select
+                      value={sstModeloBase.equipamentoClienteChave || ''}
+                      onChange={(e) => setSstModeloBase(patchEquipamentoClienteChave(sstModeloBase, e.target.value, cidMb))}
+                      style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }}
+                    >
+                      <option value="">{(safeT as any)?.solicitacaoServicoTecnicoEquipamentoManual || '— Introduzir equipamento manualmente —'}</option>
+                      {eqsMb.map((eq, idxMb) => {
+                        const valEq = eq.id || `idx:${idxMb}`
+                        const labEq =
+                          [eq.tipoEquipamento, eq.marca, eq.modelo].filter(Boolean).join(' · ') ||
+                          `${(safeT as any)?.solicitacaoServicoTecnicoEquipamentoOpcao || 'Equipamento'} ${idxMb + 1}`
+                        return (
+                          <option key={`${cidMb}-${valEq}`} value={valEq}>
+                            {labEq}
+                          </option>
+                        )
+                      })}
+                    </select>
+                  </div>
+                )
+              })()}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '12px', marginBottom: '14px' }}>
                 {[
                   { key: 'nomeCliente', label: safeT?.solicitacaoServicoTecnicoNomeCliente },
+                  { key: 'identificacaoFiscal', label: (safeT as any)?.solicitacaoServicoTecnicoIdentificacaoFiscal },
+                  { key: 'emailContato', label: (safeT as any)?.solicitacaoServicoTecnicoEmailContato },
+                  { key: 'departamento', label: (safeT as any)?.solicitacaoServicoTecnicoDepartamento },
+                  { key: 'responsavel', label: safeT?.solicitacaoServicoTecnicoResponsavel },
+                  { key: 'telefone', label: safeT?.solicitacaoServicoTecnicoTelefone },
+                  { key: 'tipoServico', label: (safeT as any)?.solicitacaoServicoTecnicoTipoServico },
+                  { key: 'localServico', label: (safeT as any)?.solicitacaoServicoTecnicoLocalServico },
                   { key: 'tipoEquipamento', label: safeT?.solicitacaoServicoTecnicoTipoEquipamento },
                   { key: 'marca', label: safeT?.solicitacaoServicoTecnicoMarca },
                   { key: 'modelo', label: safeT?.solicitacaoServicoTecnicoModelo },
                   { key: 'numeroSerie', label: safeT?.solicitacaoServicoTecnicoNumeroSerie },
-                  { key: 'endereco', label: safeT?.solicitacaoServicoTecnicoEndereco },
-                  { key: 'telefone', label: safeT?.solicitacaoServicoTecnicoTelefone },
-                  { key: 'responsavel', label: safeT?.solicitacaoServicoTecnicoResponsavel }
+                  { key: 'endereco', label: safeT?.solicitacaoServicoTecnicoEndereco }
                 ].map(({ key, label }) => (
                   <div key={`mb-${key}`}>
                     <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{label}</label>
@@ -34645,6 +34870,51 @@ A1;Peça exemplo;10`}
                   rows={3}
                   style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.28)', borderRadius: '6px' }}
                 />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px', marginBottom: '14px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>
+                    {(safeT as any)?.solicitacaoServicoTecnicoSecDisponibilidade || (safeT as any)?.solicitacaoServicoTecnicoPdfSecDisponibilidade || 'DISPONIBILIDADE'}
+                    {' — '}
+                    {(safeT as any)?.solicitacaoServicoTecnicoHorarioPreferido || (safeT as any)?.solicitacaoServicoTecnicoPdfHorarioPreferidoParaServico}
+                  </label>
+                  <select
+                    value={sstModeloBase.horarioPreferido || ''}
+                    onChange={(e) =>
+                      setSstModeloBase({
+                        ...sstModeloBase,
+                        horarioPreferido: (e.target.value || '') as SolicitacaoServicoTecnico['horarioPreferido']
+                      })
+                    }
+                    style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.28)', borderRadius: '6px' }}
+                  >
+                    <option value="">{(safeT as any)?.solicitacaoServicoTecnicoHorarioOpcPlaceholder || '—'}</option>
+                    <option value="manha">{(safeT as any)?.solicitacaoServicoTecnicoHorarioOpcManha || '—'}</option>
+                    <option value="tarde">{(safeT as any)?.solicitacaoServicoTecnicoHorarioOpcTarde || '—'}</option>
+                    <option value="dia">{(safeT as any)?.solicitacaoServicoTecnicoHorarioOpcDia || '—'}</option>
+                    <option value="noite">{(safeT as any)?.solicitacaoServicoTecnicoHorarioOpcNoite || '—'}</option>
+                    <option value="livre">{(safeT as any)?.solicitacaoServicoTecnicoHorarioOpcLivre || '—'}</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.solicitacaoServicoTecnicoNivelUrgencia}</label>
+                  <select
+                    value={sstModeloBase.nivelUrgencia || ''}
+                    onChange={(e) =>
+                      setSstModeloBase({
+                        ...sstModeloBase,
+                        nivelUrgencia: e.target.value ? (e.target.value as SolicitacaoServicoTecnico['nivelUrgencia']) : undefined
+                      })
+                    }
+                    style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.28)', borderRadius: '6px' }}
+                  >
+                    <option value="">{safeT?.solicitacaoServicoTecnicoNivelUrgencia}</option>
+                    <option value="baixa">{safeT?.solicitacaoServicoTecnicoUrgenciaBaixa}</option>
+                    <option value="media">{safeT?.solicitacaoServicoTecnicoUrgenciaMedia}</option>
+                    <option value="alta">{safeT?.solicitacaoServicoTecnicoUrgenciaAlta}</option>
+                    <option value="critica">{safeT?.solicitacaoServicoTecnicoUrgenciaCritica}</option>
+                  </select>
+                </div>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
                 <button type="button" className="btn-primary" onClick={() => void handleGuardarSstModeloBase()} style={{ padding: '10px 18px', backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#fff', fontWeight: 700 }}>
@@ -34678,7 +34948,11 @@ A1;Peça exemplo;10`}
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.solicitacaoServicoTecnicoClienteCadastrado || 'Cliente cadastrado (opcional)'}</label>
                   <select
                     value={solicitacaoServicoTecnicoForm.clienteId || ''}
-                    onChange={(e) => setSolicitacaoServicoTecnicoForm({ ...solicitacaoServicoTecnicoForm, clienteId: e.target.value || undefined })}
+                    onChange={(e) =>
+                      setSolicitacaoServicoTecnicoForm(
+                        mergeClienteSelecionadoSst(solicitacaoServicoTecnicoForm, e.target.value || undefined)
+                      )
+                    }
                     style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }}
                   >
                     <option value="">{(safeT as any)?.solicitacaoServicoTecnicoClienteCadastradoOpt || '— Nenhum / preencher só o nome acima —'}</option>
@@ -34690,16 +34964,56 @@ A1;Peça exemplo;10`}
                     {(safeT as any)?.solicitacaoServicoTecnicoClienteFolderHint || 'Se selecionar um cliente cadastrado, o documento que anexar como «devolvido» fica também na ficha desse cliente.'}
                   </p>
                 </div>
+                {(() => {
+                  const cidFv = solicitacaoServicoTecnicoForm.clienteId
+                  const cliFv = cidFv ? clientes.find((cl) => cl.id === cidFv) : null
+                  const eqsFv = cliFv?.equipamentos?.filter(Boolean) ?? []
+                  if (!cidFv || eqsFv.length === 0) return null
+                  return (
+                    <div style={{ marginBottom: '18px' }}>
+                      <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#aaa' }}>
+                        {(safeT as any)?.solicitacaoServicoTecnicoEquipamentoDoCadastro || 'Equipamento do cadastro'}
+                      </label>
+                      <select
+                        value={solicitacaoServicoTecnicoForm.equipamentoClienteChave || ''}
+                        onChange={(e) =>
+                          setSolicitacaoServicoTecnicoForm(
+                            patchEquipamentoClienteChave(solicitacaoServicoTecnicoForm, e.target.value, cidFv)
+                          )
+                        }
+                        style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }}
+                      >
+                        <option value="">{(safeT as any)?.solicitacaoServicoTecnicoEquipamentoManual || '— Introduzir equipamento manualmente —'}</option>
+                        {eqsFv.map((eq, idxFv) => {
+                          const valEq = eq.id || `idx:${idxFv}`
+                          const labEq =
+                            [eq.tipoEquipamento, eq.marca, eq.modelo].filter(Boolean).join(' · ') ||
+                            `${(safeT as any)?.solicitacaoServicoTecnicoEquipamentoOpcao || 'Equipamento'} ${idxFv + 1}`
+                          return (
+                            <option key={`${cidFv}-${valEq}`} value={valEq}>
+                              {labEq}
+                            </option>
+                          )
+                        })}
+                      </select>
+                    </div>
+                  )
+                })()}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px', marginBottom: '16px' }}>
                   {[
                     { key: 'nomeCliente', label: safeT?.solicitacaoServicoTecnicoNomeCliente },
+                    { key: 'identificacaoFiscal', label: (safeT as any)?.solicitacaoServicoTecnicoIdentificacaoFiscal },
+                    { key: 'emailContato', label: (safeT as any)?.solicitacaoServicoTecnicoEmailContato },
+                    { key: 'departamento', label: (safeT as any)?.solicitacaoServicoTecnicoDepartamento },
+                    { key: 'responsavel', label: safeT?.solicitacaoServicoTecnicoResponsavel },
+                    { key: 'telefone', label: safeT?.solicitacaoServicoTecnicoTelefone },
+                    { key: 'tipoServico', label: (safeT as any)?.solicitacaoServicoTecnicoTipoServico },
+                    { key: 'localServico', label: (safeT as any)?.solicitacaoServicoTecnicoLocalServico },
                     { key: 'tipoEquipamento', label: safeT?.solicitacaoServicoTecnicoTipoEquipamento },
                     { key: 'marca', label: safeT?.solicitacaoServicoTecnicoMarca },
                     { key: 'modelo', label: safeT?.solicitacaoServicoTecnicoModelo },
                     { key: 'numeroSerie', label: safeT?.solicitacaoServicoTecnicoNumeroSerie },
                     { key: 'endereco', label: safeT?.solicitacaoServicoTecnicoEndereco },
-                    { key: 'telefone', label: safeT?.solicitacaoServicoTecnicoTelefone },
-                    { key: 'responsavel', label: safeT?.solicitacaoServicoTecnicoResponsavel },
                     { key: 'dataRecebimento', label: safeT?.solicitacaoServicoTecnicoDataRecebimento, type: 'date' as const }
                   ].map(({ key, label, type }) => (
                     <div key={key}>
@@ -34707,6 +35021,60 @@ A1;Peça exemplo;10`}
                       <input type={type || 'text'} value={type === 'date' ? ((solicitacaoServicoTecnicoForm as any)[key] ? String((solicitacaoServicoTecnicoForm as any)[key]).slice(0, 10) : '') : ((solicitacaoServicoTecnicoForm as any)[key] || '')} onChange={e => setSolicitacaoServicoTecnicoForm({ ...solicitacaoServicoTecnicoForm, [key]: type === 'date' ? (e.target.value || undefined) : e.target.value })} style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} />
                     </div>
                   ))}
+                </div>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.solicitacaoServicoTecnicoProblemasApresentados}</label>
+                  <textarea
+                    value={solicitacaoServicoTecnicoForm.problemasApresentados}
+                    onChange={(e) => setSolicitacaoServicoTecnicoForm({ ...solicitacaoServicoTecnicoForm, problemasApresentados: e.target.value })}
+                    rows={4}
+                    style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }}
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>
+                      {(safeT as any)?.solicitacaoServicoTecnicoSecDisponibilidade || (safeT as any)?.solicitacaoServicoTecnicoPdfSecDisponibilidade || 'DISPONIBILIDADE'}
+                      {' — '}
+                      {(safeT as any)?.solicitacaoServicoTecnicoHorarioPreferido || (safeT as any)?.solicitacaoServicoTecnicoPdfHorarioPreferidoParaServico}
+                    </label>
+                    <select
+                      value={solicitacaoServicoTecnicoForm.horarioPreferido || ''}
+                      onChange={(e) =>
+                        setSolicitacaoServicoTecnicoForm({
+                          ...solicitacaoServicoTecnicoForm,
+                          horarioPreferido: (e.target.value || '') as SolicitacaoServicoTecnico['horarioPreferido']
+                        })
+                      }
+                      style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.28)', borderRadius: '6px' }}
+                    >
+                      <option value="">{(safeT as any)?.solicitacaoServicoTecnicoHorarioOpcPlaceholder || '—'}</option>
+                      <option value="manha">{(safeT as any)?.solicitacaoServicoTecnicoHorarioOpcManha || '—'}</option>
+                      <option value="tarde">{(safeT as any)?.solicitacaoServicoTecnicoHorarioOpcTarde || '—'}</option>
+                      <option value="dia">{(safeT as any)?.solicitacaoServicoTecnicoHorarioOpcDia || '—'}</option>
+                      <option value="noite">{(safeT as any)?.solicitacaoServicoTecnicoHorarioOpcNoite || '—'}</option>
+                      <option value="livre">{(safeT as any)?.solicitacaoServicoTecnicoHorarioOpcLivre || '—'}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.solicitacaoServicoTecnicoNivelUrgencia}</label>
+                    <select
+                      value={solicitacaoServicoTecnicoForm.nivelUrgencia || ''}
+                      onChange={(e) =>
+                        setSolicitacaoServicoTecnicoForm({
+                          ...solicitacaoServicoTecnicoForm,
+                          nivelUrgencia: e.target.value ? (e.target.value as SolicitacaoServicoTecnico['nivelUrgencia']) : undefined
+                        })
+                      }
+                      style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.28)', borderRadius: '6px' }}
+                    >
+                      <option value="">{safeT?.solicitacaoServicoTecnicoNivelUrgencia}</option>
+                      <option value="baixa">{safeT?.solicitacaoServicoTecnicoUrgenciaBaixa}</option>
+                      <option value="media">{safeT?.solicitacaoServicoTecnicoUrgenciaMedia}</option>
+                      <option value="alta">{safeT?.solicitacaoServicoTecnicoUrgenciaAlta}</option>
+                      <option value="critica">{safeT?.solicitacaoServicoTecnicoUrgenciaCritica}</option>
+                    </select>
+                  </div>
                 </div>
                 {editingSolicitacaoServicoTecnico ? (
                   <div style={{ marginBottom: '18px' }}>
@@ -35006,7 +35374,40 @@ A1;Peça exemplo;10`}
                                 <button type="button" title={(safeT as any)?.solicitacaoServicoTecnicoGerarPdf || 'PDF'} onClick={() => gerarPdfSolicitacaoServico(s)} style={{ padding: '6px 10px', fontSize: '12px', border: '1px solid rgba(45, 212, 191, 0.55)', color: '#5eead4', background: 'rgba(6, 40, 35, 0.5)', borderRadius: '6px', cursor: 'pointer', fontWeight: 700 }}>📄</button>
                                 <button type="button" onClick={() => handleEnviarEmail(s)} style={{ padding: '6px 10px', fontSize: '12px', border: '1px solid rgba(0, 150, 255, 0.5)', color: '#66b3ff', background: 'transparent', borderRadius: '6px', cursor: 'pointer' }}>📧</button>
                                 <button type="button" onClick={() => handleEnviarWhatsApp(s)} style={{ padding: '6px 10px', fontSize: '12px', border: '1px solid rgba(37, 211, 102, 0.5)', color: '#25d366', background: 'transparent', borderRadius: '6px', cursor: 'pointer' }}>💬</button>
-                                <button type="button" onClick={() => { setSolicitacaoServicoTecnicoForm({ clienteId: s.clienteId, nomeCliente: s.nomeCliente, tipoEquipamento: s.tipoEquipamento, marca: s.marca, modelo: s.modelo, numeroSerie: s.numeroSerie, problemasApresentados: s.problemasApresentados, endereco: s.endereco, telefone: s.telefone, responsavel: s.responsavel, assinaturaCliente: s.assinaturaCliente, dataAssinaturaCliente: s.dataAssinaturaCliente, dataRecebimento: s.dataRecebimento, documentoDevolvido: s.documentoDevolvido }); setEditingSolicitacaoServicoTecnico(s); setShowSolicitacaoServicoTecnicoForm(true); }} style={{ padding: '6px 10px', fontSize: '12px', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', background: 'transparent', borderRadius: '6px', cursor: 'pointer' }}>{safeT?.editar || 'Editar'}</button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSolicitacaoServicoTecnicoForm({
+                                      clienteId: s.clienteId,
+                                      nomeCliente: s.nomeCliente,
+                                      identificacaoFiscal: s.identificacaoFiscal,
+                                      emailContato: s.emailContato,
+                                      departamento: s.departamento,
+                                      tipoServico: s.tipoServico,
+                                      localServico: s.localServico,
+                                      horarioPreferido: s.horarioPreferido,
+                                      equipamentoClienteChave: s.equipamentoClienteChave,
+                                      tipoEquipamento: s.tipoEquipamento,
+                                      marca: s.marca,
+                                      modelo: s.modelo,
+                                      numeroSerie: s.numeroSerie,
+                                      problemasApresentados: s.problemasApresentados,
+                                      endereco: s.endereco,
+                                      telefone: s.telefone,
+                                      responsavel: s.responsavel,
+                                      nivelUrgencia: s.nivelUrgencia,
+                                      assinaturaCliente: s.assinaturaCliente,
+                                      dataAssinaturaCliente: s.dataAssinaturaCliente,
+                                      dataRecebimento: s.dataRecebimento,
+                                      documentoDevolvido: s.documentoDevolvido
+                                    })
+                                    setEditingSolicitacaoServicoTecnico(s)
+                                    setShowSolicitacaoServicoTecnicoForm(true)
+                                  }}
+                                  style={{ padding: '6px 10px', fontSize: '12px', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', background: 'transparent', borderRadius: '6px', cursor: 'pointer' }}
+                                >
+                                  {safeT?.editar || 'Editar'}
+                                </button>
                               </div>
                             </td>
                           </tr>
