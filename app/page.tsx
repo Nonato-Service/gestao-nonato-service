@@ -36341,169 +36341,226 @@ A1;Peça exemplo;10`}
                     )
                   }
 
-                  return (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                      {agendamentosFiltrados.map(agendamento => (
-                        <div
-                          key={agendamento.id}
-                          style={{
-                            backgroundColor: '#141414',
-                            padding: '20px',
-                            borderRadius: '8px',
-                            border: '1px solid rgba(0, 255, 0, 0.2)',
-                            borderLeft:
-                              agendamento.status === 'concluido'
-                                ? '5px solid rgba(0, 210, 90, 0.9)'
-                                : normalizeTipoAgendamento(agendamento) === 'pre-agendamento' &&
-                                    normalizeStatusAgendamento(agendamento) === 'pendente'
-                                  ? '5px solid rgba(255, 160, 0, 0.95)'
-                                  : '5px solid rgba(55, 130, 235, 0.92)',
-                          }}
-                        >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
-                            <div style={{ flex: 1 }}>
-                              <h3 style={{ marginBottom: '8px', fontSize: '18px', color: '#00ff00' }}>
-                                {agendamento.cliente}
-                              </h3>
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', fontSize: '14px', marginBottom: '10px' }}>
-                                <p style={{ margin: 0, opacity: 0.8 }}>
-                                  <strong>{safeT?.tecnico || 'Técnico'}:</strong> {agendamento.tecnico}
-                                </p>
-                                <p style={{ margin: 0, opacity: 0.8 }}>
-                                  <strong>{safeT?.data || 'Data'}:</strong> {new Date(agendamento.data).toLocaleDateString('pt-BR')}
-                                </p>
-                                <p style={{ margin: 0, opacity: 0.8 }}>
-                                  <strong>{safeT?.hora || 'Hora'}:</strong> {agendamento.hora}
-                                </p>
-                                {agendamento.duracaoEstimada && (
-                                  <p style={{ margin: 0, opacity: 0.8 }}>
-                                    <strong>{safeT?.duracaoEstimada || 'Duração'}:</strong> {agendamento.duracaoEstimada} {agendamento.duracaoEstimada === '1' ? (safeT?.dia || 'dia') : (safeT?.dias || 'dias')}
+                  const ordenarAgenda = (a: Agendamento, b: Agendamento) => {
+                    const da = String(a.data || '')
+                    const db = String(b.data || '')
+                    if (da !== db) return da.localeCompare(db)
+                    return String(a.hora || '').localeCompare(String(b.hora || ''))
+                  }
+
+                  const agConcluidos = agendamentosFiltrados
+                    .filter((ag) => normalizeStatusAgendamento(ag) === 'concluido')
+                    .sort(ordenarAgenda)
+                  const agPreAgendamento = agendamentosFiltrados
+                    .filter((ag) => normalizeTipoAgendamento(ag) === 'pre-agendamento' && normalizeStatusAgendamento(ag) !== 'concluido' && normalizeStatusAgendamento(ag) !== 'cancelado')
+                    .sort(ordenarAgenda)
+                  const agPendencias = agendamentosFiltrados
+                    .filter((ag) => normalizeTipoAgendamento(ag) === 'agendamento-tecnico' && normalizeStatusAgendamento(ag) === 'pendente')
+                    .sort(ordenarAgenda)
+                  const agAgendadosConfirmados = agendamentosFiltrados
+                    .filter((ag) => normalizeTipoAgendamento(ag) === 'agendamento-tecnico' && ['confirmado', 'em-andamento'].includes(normalizeStatusAgendamento(ag)))
+                    .sort(ordenarAgenda)
+                  const agCancelados = agendamentosFiltrados
+                    .filter((ag) => normalizeStatusAgendamento(ag) === 'cancelado')
+                    .sort(ordenarAgenda)
+
+                  const renderAgendaCard = (agendamento: Agendamento, accent: string) => (
+                    <div
+                      key={agendamento.id}
+                      style={{
+                        backgroundColor: '#141414',
+                        padding: '20px',
+                        borderRadius: '10px',
+                        border: `1px solid ${accent}`,
+                        borderLeft: `6px solid ${accent}`,
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
+                        <div style={{ flex: 1 }}>
+                          <h3 style={{ marginBottom: '8px', fontSize: '18px', color: '#ffffff' }}>
+                            {agendamento.cliente}
+                          </h3>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', fontSize: '14px', marginBottom: '10px' }}>
+                            <p style={{ margin: 0, opacity: 0.86 }}>
+                              <strong>{safeT?.tecnico || 'Técnico'}:</strong> {agendamento.tecnico}
+                            </p>
+                            <p style={{ margin: 0, opacity: 0.86 }}>
+                              <strong>{safeT?.data || 'Data'}:</strong> {new Date(agendamento.data + 'T12:00:00').toLocaleDateString('pt-BR')}
+                            </p>
+                            <p style={{ margin: 0, opacity: 0.86 }}>
+                              <strong>{safeT?.hora || 'Hora'}:</strong> {agendamento.hora}
+                            </p>
+                            {agendamento.duracaoEstimada && (
+                              <p style={{ margin: 0, opacity: 0.86 }}>
+                                <strong>{safeT?.duracaoEstimada || 'Duração'}:</strong> {agendamento.duracaoEstimada} {agendamento.duracaoEstimada === '1' ? (safeT?.dia || 'dia') : (safeT?.dias || 'dias')}
+                              </p>
+                            )}
+                            <p style={{ margin: 0, opacity: 0.86 }}>
+                              <strong>{safeT?.tipoAgendamento || 'Tipo'}:</strong> {normalizeTipoAgendamento(agendamento) === 'pre-agendamento' ? (safeT?.preAgendamento || 'Pré-Agendamento') : (safeT?.agendamentoTecnico || 'Agendamento Técnico')}
+                            </p>
+                            {agendamento.tipoServico && (
+                              <p style={{ margin: 0, opacity: 0.86 }}>
+                                <strong>{safeT?.tipoServico || 'Tipo de Serviço'}:</strong> {agendamento.tipoServico}
+                              </p>
+                            )}
+                            {agendamento.equipamento && (
+                              <p style={{ margin: 0, opacity: 0.86 }}>
+                                <strong>{safeT?.equipamento || 'Equipamento'}:</strong> {agendamento.equipamento}
+                              </p>
+                            )}
+                            <p style={{ margin: 0, opacity: 0.9 }}>
+                              <strong>{safeT?.status || 'Status'}:</strong>
+                              <span style={{ marginLeft: '6px', fontWeight: 800, color: accent }}>
+                                {(() => {
+                                  const st = normalizeStatusAgendamento(agendamento)
+                                  if (st === 'concluido') return safeT?.concluido || 'Concluído'
+                                  if (st === 'cancelado') return safeT?.cancelado || 'Cancelado'
+                                  if (st === 'em-andamento') return safeT?.emAndamento || 'Em Andamento'
+                                  if (st === 'confirmado') return safeT?.confirmado || 'Confirmado'
+                                  return safeT?.pendente || 'Pendente'
+                                })()}
+                              </span>
+                            </p>
+                          </div>
+
+                          {(agendamento.telefone || agendamento.endereco || agendamento.cidade) && (
+                            <div style={{ padding: '10px', backgroundColor: '#222222', borderRadius: '8px', marginBottom: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                              <h4 style={{ fontSize: '13px', marginBottom: '8px', color: '#e8ffe8' }}>{safeT?.informacoesContato || 'Informações de Contato'}</h4>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px', fontSize: '13px' }}>
+                                {agendamento.telefone && (
+                                  <p style={{ margin: 0, opacity: 0.86 }}>
+                                    <strong>{safeT?.telefone || 'Telefone'}:</strong> {agendamento.telefone}
                                   </p>
                                 )}
-                                <p style={{ margin: 0, opacity: 0.8 }}>
-                                  <strong>{safeT?.tipoAgendamento || 'Tipo'}:</strong> {agendamento.tipo === 'pre-agendamento' ? (safeT?.preAgendamento || 'Pré-Agendamento') : (safeT?.agendamentoTecnico || 'Agendamento Técnico')}
-                                </p>
-                                {agendamento.tipoServico && (
-                                  <p style={{ margin: 0, opacity: 0.8 }}>
-                                    <strong>{safeT?.tipoServico || 'Tipo de Serviço'}:</strong> {agendamento.tipoServico}
+                                {agendamento.endereco && (
+                                  <p style={{ margin: 0, opacity: 0.86 }}>
+                                    <strong>{safeT?.endereco || 'Endereço'}:</strong> {agendamento.endereco}
                                   </p>
                                 )}
-                                {agendamento.equipamento && (
-                                  <p style={{ margin: 0, opacity: 0.8 }}>
-                                    <strong>{safeT?.equipamento || 'Equipamento'}:</strong> {agendamento.equipamento}
+                                {agendamento.cidade && (
+                                  <p style={{ margin: 0, opacity: 0.86 }}>
+                                    <strong>{safeT?.cidade || 'Cidade'}:</strong> {agendamento.cidade}
                                   </p>
                                 )}
-                                <p style={{ margin: 0, opacity: 0.8 }}>
-                                  <strong>{safeT?.status || 'Status'}:</strong> 
-                                  <span style={{ 
-                                    color: agendamento.status === 'concluido' ? '#00ff00' : 
-                                           agendamento.status === 'cancelado' ? '#ff0000' : 
-                                           agendamento.status === 'em-andamento' ? '#ffd700' : 
-                                           agendamento.status === 'confirmado' ? '#00ffff' : '#fff',
-                                    marginLeft: '5px'
-                                  }}>
-                                    {agendamento.status === 'concluido' ? (safeT?.concluido || 'Concluído') :
-                                     agendamento.status === 'cancelado' ? (safeT?.cancelado || 'Cancelado') :
-                                     agendamento.status === 'em-andamento' ? (safeT?.emAndamento || 'Em Andamento') :
-                                     agendamento.status === 'confirmado' ? (safeT?.confirmado || 'Confirmado') :
-                                     (safeT?.pendente || 'Pendente')}
-                                  </span>
-                                </p>
                               </div>
-                              
-                              {/* Informações de contato e localização */}
-                              {(agendamento.telefone || agendamento.endereco || agendamento.cidade) && (
-                                <div style={{ padding: '10px', backgroundColor: '#222222', borderRadius: '4px', marginBottom: '10px' }}>
-                                  <h4 style={{ fontSize: '14px', marginBottom: '8px', color: '#00ff00' }}>{safeT?.informacoesContato || 'Informações de Contato'}</h4>
-                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px', fontSize: '13px' }}>
-                                    {agendamento.telefone && (
-                                      <p style={{ margin: 0, opacity: 0.8 }}>
-                                        <strong>{safeT?.telefone || 'Telefone'}:</strong> {agendamento.telefone}
-                                      </p>
-                                    )}
-                                    {agendamento.endereco && (
-                                      <p style={{ margin: 0, opacity: 0.8 }}>
-                                        <strong>{safeT?.endereco || 'Endereço'}:</strong> {agendamento.endereco}
-                                      </p>
-                                    )}
-                                    {agendamento.cidade && (
-                                      <p style={{ margin: 0, opacity: 0.8 }}>
-                                        <strong>{safeT?.cidade || 'Cidade'}:</strong> {agendamento.cidade}
-                                      </p>
-                                    )}
+                            </div>
+                          )}
+
+                          {agendamento.observacoesTecnicas && (
+                            <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                              <p style={{ margin: 0, fontSize: '13px', opacity: 0.9 }}>
+                                <strong style={{ color: '#e8ffe8' }}>{safeT?.observacaoTecnica || 'Observação Técnica'}:</strong>
+                                <span style={{ marginLeft: '8px', fontStyle: 'italic', color: 'rgba(255,255,255,0.85)' }}>{agendamento.observacoesTecnicas}</span>
+                              </p>
+                            </div>
+                          )}
+
+                          {agendamento.necessidadePecas && (
+                            <div style={{ marginTop: '10px', padding: '10px', backgroundColor: 'rgba(255, 165, 0, 0.08)', borderRadius: '8px', border: '1px solid rgba(255, 165, 0, 0.28)' }}>
+                              <p style={{ margin: 0, fontSize: '13px', marginBottom: '8px', color: '#ffa500' }}>
+                                <strong>{safeT?.necessidadePecas || 'Há necessidade de levar alguma peça'}:</strong> {safeT?.sim || 'Sim'}
+                              </p>
+                              {agendamento.codigoNotaFiscal && (
+                                <p style={{ margin: 0, fontSize: '13px', opacity: 0.9, marginBottom: '5px' }}>
+                                  <strong>{safeT?.codigoNotaFiscal || 'Código da Nota Fiscal'}:</strong> {agendamento.codigoNotaFiscal}
+                                </p>
+                              )}
+                              {agendamento.pecasAnexadas && agendamento.pecasAnexadas.length > 0 && (
+                                <div style={{ marginTop: '8px' }}>
+                                  <p style={{ margin: 0, fontSize: '12px', marginBottom: '5px', opacity: 0.9 }}>
+                                    <strong>{safeT?.pecasAnexadas || 'Peças selecionadas'}:</strong>
+                                  </p>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    {agendamento.pecasAnexadas.map((pecaId, index) => {
+                                      const peca = pecasBiblioteca.find(p => p.id === pecaId)
+                                      if (!peca) return null
+                                      return (
+                                        <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '10px' }}>
+                                          {peca.imagem && (
+                                            <img
+                                              src={peca.imagem}
+                                              alt={peca.nome}
+                                              style={{ width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px' }}
+                                            />
+                                          )}
+                                          <span style={{ fontSize: '12px', opacity: 0.85 }}>
+                                            • {peca.nome} ({peca.codigo})
+                                          </span>
+                                        </div>
+                                      )
+                                    })}
                                   </div>
                                 </div>
                               )}
-                              
-                              {agendamento.observacoesTecnicas && (
-                                <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#222222', borderRadius: '4px' }}>
-                                  <p style={{ margin: 0, fontSize: '13px', opacity: 0.8 }}>
-                                    <strong style={{ color: '#00ff00' }}>{safeT?.observacaoTecnica || 'Observação Técnica'}:</strong> 
-                                    <span style={{ marginLeft: '8px', fontStyle: 'italic' }}>{agendamento.observacoesTecnicas}</span>
-                                  </p>
-                                </div>
-                              )}
-
-                              {/* Informações sobre Peças */}
-                              {agendamento.necessidadePecas && (
-                                <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#222222', borderRadius: '4px', border: '1px solid rgba(255, 165, 0, 0.3)' }}>
-                                  <p style={{ margin: 0, fontSize: '13px', marginBottom: '8px', color: '#ffa500' }}>
-                                    <strong>{safeT?.necessidadePecas || 'Há necessidade de levar alguma peça'}:</strong> {safeT?.sim || 'Sim'}
-                                  </p>
-                                  {agendamento.codigoNotaFiscal && (
-                                    <p style={{ margin: 0, fontSize: '13px', opacity: 0.8, marginBottom: '5px' }}>
-                                      <strong>{safeT?.codigoNotaFiscal || 'Código da Nota Fiscal'}:</strong> {agendamento.codigoNotaFiscal}
-                                    </p>
-                                  )}
-                                  {agendamento.pecasAnexadas && agendamento.pecasAnexadas.length > 0 && (
-                                    <div style={{ marginTop: '8px' }}>
-                                      <p style={{ margin: 0, fontSize: '12px', marginBottom: '5px', opacity: 0.8 }}>
-                                        <strong>{safeT?.pecasAnexadas || 'Peças selecionadas'}:</strong>
-                                      </p>
-                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                        {agendamento.pecasAnexadas.map((pecaId, index) => {
-                                          const peca = pecasBiblioteca.find(p => p.id === pecaId)
-                                          if (!peca) return null
-                                          return (
-                                            <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '10px' }}>
-                                              {peca.imagem && (
-                                                <img 
-                                                  src={peca.imagem} 
-                                                  alt={peca.nome}
-                                                  style={{ width: '30px', height: '30px', objectFit: 'cover', borderRadius: '3px' }}
-                                                />
-                                              )}
-                                              <span style={{ fontSize: '12px', opacity: 0.7 }}>
-                                                • {peca.nome} ({peca.codigo})
-                                              </span>
-                                            </div>
-                                          )
-                                        })}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
                             </div>
-                            <div style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
-                              <button 
-                                className="btn-primary" 
-                                onClick={() => handleEditAgendamento(agendamento)} 
-                                style={{ padding: '8px 15px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '80px' }}
-                              >
-                                {safeT?.edit || 'Editar'}
-                              </button>
-                              <button 
-                                className="btn-danger" 
-                                onClick={() => handleDeleteAgendamento(agendamento.id)} 
-                                style={{ padding: '8px 15px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '80px' }}
-                              >
-                                {safeT?.delete || 'Excluir'}
-                              </button>
-                            </div>
-                          </div>
+                          )}
                         </div>
-                      ))}
+                        <div style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
+                          <button
+                            className="btn-primary"
+                            onClick={() => handleEditAgendamento(agendamento)}
+                            style={{ padding: '8px 15px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '80px' }}
+                          >
+                            {safeT?.edit || 'Editar'}
+                          </button>
+                          <button
+                            className="btn-danger"
+                            onClick={() => handleDeleteAgendamento(agendamento.id)}
+                            style={{ padding: '8px 15px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '80px' }}
+                          >
+                            {safeT?.delete || 'Excluir'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+
+                  const renderAgendaSection = (titulo: string, cor: string, itens: Agendamento[], hint?: string) => {
+                    if (itens.length === 0) return null
+                    return (
+                      <div style={{ marginBottom: '18px' }}>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '12px',
+                          padding: '12px 14px',
+                          borderRadius: '12px',
+                          backgroundColor: 'rgba(20,20,20,0.92)',
+                          border: `1px solid ${cor}55`,
+                          marginBottom: '12px'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                            <span style={{ width: 10, height: 10, borderRadius: 999, backgroundColor: cor, boxShadow: `0 0 16px ${cor}55` }} aria-hidden />
+                            <span style={{ fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#fff', fontSize: '12px' }}>
+                              {titulo}
+                            </span>
+                            {hint ? (
+                              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>{hint}</span>
+                            ) : null}
+                          </div>
+                          <span style={{ padding: '6px 10px', borderRadius: 999, backgroundColor: `${cor}22`, border: `1px solid ${cor}55`, color: '#fff', fontSize: '12px', fontWeight: 800 }}>
+                            {itens.length}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          {itens.map((ag) => renderAgendaCard(ag, cor))}
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  return (
+                    <div>
+                      {renderAgendaSection((safeT as any)?.agendaSecaoPendencias || 'Pendências', 'rgba(255, 90, 60, 0.92)', agPendencias, (safeT as any)?.agendaSecaoPendenciasHint || 'Pendente (a confirmar/fechar)')}
+                      {renderAgendaSection((safeT as any)?.agendaSecaoPreAgendamento || (safeT?.preAgendamento || 'Pré-Agendamento'), 'rgba(255, 190, 50, 0.95)', agPreAgendamento, (safeT as any)?.agendaSecaoPreHint || 'Amarelo = pré')}
+                      {renderAgendaSection((safeT as any)?.agendaSecaoAgendado || (safeT?.confirmado || 'Agendado/Confirmado'), 'rgba(55, 130, 235, 0.92)', agAgendadosConfirmados, (safeT as any)?.agendaSecaoAgendadoHint || 'Azul = agendado/confirmado')}
+                      {renderAgendaSection((safeT as any)?.agendaSecaoConcluidos || (safeT?.concluido || 'Concluídos'), 'rgba(0, 210, 90, 0.9)', agConcluidos, (safeT as any)?.agendaSecaoConcluidosHint || 'Verde = concluído')}
+                      {agCancelados.length > 0 ? (
+                        <div style={{ opacity: 0.9 }}>
+                          {renderAgendaSection((safeT as any)?.agendaSecaoCancelados || (safeT?.cancelado || 'Cancelados'), 'rgba(180, 180, 180, 0.55)', agCancelados)}
+                        </div>
+                      ) : null}
                     </div>
                   )
                 })()}
