@@ -19193,15 +19193,11 @@ export default function Dashboard() {
       }
     } else if (action === 'open-comunicacao-interna') {
       // Toggle do grupo COMUNICAÇÃO INTERNA
-      const willOpen = !expandedGroups.has('comunicacao-interna')
-      setExpandedGroups((prev) => {
-        const newSet = new Set(prev)
-        if (newSet.has('comunicacao-interna')) newSet.delete('comunicacao-interna')
-        else newSet.add('comunicacao-interna')
-        return newSet
-      })
-      if (willOpen) openDashboardHubFromSidebar('comunicacao-interna')
-      else if (dashboardMainHubId === 'comunicacao-interna') setDashboardMainHubId(null)
+      // Sempre abrir o hub no centro (mesmo se o grupo já estiver expandido)
+      if (!expandedGroups.has('comunicacao-interna')) {
+        setExpandedGroups((prev) => new Set(prev).add('comunicacao-interna'))
+      }
+      openDashboardHubFromSidebar('comunicacao-interna')
     } else if (action === 'open-hub-comunicacao') {
       if (!expandedGroups.has('comunicacao-interna')) setExpandedGroups(prev => new Set(prev).add('comunicacao-interna'))
       openTab('hub-comunicacao', getTabTitle('hub-comunicacao'))
@@ -19271,64 +19267,39 @@ export default function Dashboard() {
       setExpandedGroups(prev => new Set(prev).add('gestao-tecnica'))
       openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
     } else if (action === 'open-gestao-tecnica') {
-      // Toggle do grupo GESTÃO TÉCNICA
-      const willOpen = !expandedGroups.has('gestao-tecnica')
-      setExpandedGroups(prev => {
-        const newSet = new Set(prev)
-        if (newSet.has('gestao-tecnica')) newSet.delete('gestao-tecnica')
-        else newSet.add('gestao-tecnica')
-        return newSet
-      })
-      if (willOpen) openDashboardHubFromSidebar('gestao-tecnica')
-      else if (dashboardMainHubId === 'gestao-tecnica') setDashboardMainHubId(null)
+      // Sempre abrir o hub no centro (mesmo se o grupo já estiver expandido)
+      if (!expandedGroups.has('gestao-tecnica')) {
+        setExpandedGroups(prev => new Set(prev).add('gestao-tecnica'))
+      }
+      openDashboardHubFromSidebar('gestao-tecnica')
     } else if (action === 'open-gestao-custos') {
-      // Toggle do grupo GESTÃO DE CUSTOS
-      const willOpen = !expandedGroups.has('gestao-custos')
-      setExpandedGroups(prev => {
-        const newSet = new Set(prev)
-        if (newSet.has('gestao-custos')) newSet.delete('gestao-custos')
-        else newSet.add('gestao-custos')
-        return newSet
-      })
-      if (willOpen) openDashboardHubFromSidebar('gestao-custos')
-      else if (dashboardMainHubId === 'gestao-custos') setDashboardMainHubId(null)
+      // Sempre abrir o hub no centro (mesmo se o grupo já estiver expandido)
+      if (!expandedGroups.has('gestao-custos')) {
+        setExpandedGroups(prev => new Set(prev).add('gestao-custos'))
+      }
+      openDashboardHubFromSidebar('gestao-custos')
     } else if (action === 'open-gestao-financeira') {
-      // Toggle do grupo GESTÃO FINANCEIRA
-      const willOpen = !expandedGroups.has('gestao-financeira')
-      setExpandedGroups(prev => {
-        const newSet = new Set(prev)
-        if (newSet.has('gestao-financeira')) newSet.delete('gestao-financeira')
-        else newSet.add('gestao-financeira')
-        return newSet
-      })
-      if (willOpen) openDashboardHubFromSidebar('gestao-financeira')
-      else if (dashboardMainHubId === 'gestao-financeira') setDashboardMainHubId(null)
+      // Sempre abrir o hub no centro (mesmo se o grupo já estiver expandido)
+      if (!expandedGroups.has('gestao-financeira')) {
+        setExpandedGroups(prev => new Set(prev).add('gestao-financeira'))
+      }
+      openDashboardHubFromSidebar('gestao-financeira')
     } else if (action === 'open-clientes-financeiro') {
       openTab('clientes-financeiro', getTabTitle('clientes-financeiro'))
     } else if (action === 'open-comprovantes-despesas') {
       openTab('comprovantes-despesas', getTabTitle('comprovantes-despesas'))
     } else if (action === 'open-gestao-industrial') {
-      // Toggle do grupo GESTÃO INDUSTRIAL
-      const willOpen = !expandedGroups.has('gestao-industrial')
-      setExpandedGroups(prev => {
-        const newSet = new Set(prev)
-        if (newSet.has('gestao-industrial')) newSet.delete('gestao-industrial')
-        else newSet.add('gestao-industrial')
-        return newSet
-      })
-      if (willOpen) openDashboardHubFromSidebar('gestao-industrial')
-      else if (dashboardMainHubId === 'gestao-industrial') setDashboardMainHubId(null)
+      // Sempre abrir o hub no centro (mesmo se o grupo já estiver expandido)
+      if (!expandedGroups.has('gestao-industrial')) {
+        setExpandedGroups(prev => new Set(prev).add('gestao-industrial'))
+      }
+      openDashboardHubFromSidebar('gestao-industrial')
     } else if (action === 'open-checklist-group') {
-      // Toggle do grupo CHECKLIST
-      const willOpen = !expandedGroups.has('checklist-group')
-      setExpandedGroups(prev => {
-        const newSet = new Set(prev)
-        if (newSet.has('checklist-group')) newSet.delete('checklist-group')
-        else newSet.add('checklist-group')
-        return newSet
-      })
-      if (willOpen) openDashboardHubFromSidebar('checklist-group')
-      else if (dashboardMainHubId === 'checklist-group') setDashboardMainHubId(null)
+      // Sempre abrir o hub no centro (mesmo se o grupo já estiver expandido)
+      if (!expandedGroups.has('checklist-group')) {
+        setExpandedGroups(prev => new Set(prev).add('checklist-group'))
+      }
+      openDashboardHubFromSidebar('checklist-group')
     } else if (action === 'open-checklist-hub') {
       // Toggle do grupo CHECKLIST quando clicar no botão principal
       setExpandedGroups(prev => {
@@ -19343,16 +19314,11 @@ export default function Dashboard() {
         openTab('checklist-hub', getTabTitle('checklist-hub'))
       }, 50)
     } else if (action === 'open-extra') {
-      // Toggle do grupo EXTRA
-      const willOpen = !expandedGroups.has('extra')
-      setExpandedGroups(prev => {
-        const newSet = new Set(prev)
-        if (newSet.has('extra')) newSet.delete('extra')
-        else newSet.add('extra')
-        return newSet
-      })
-      if (willOpen) openDashboardHubFromSidebar('extra')
-      else if (dashboardMainHubId === 'extra') setDashboardMainHubId(null)
+      // Sempre abrir o hub no centro (mesmo se o grupo já estiver expandido)
+      if (!expandedGroups.has('extra')) {
+        setExpandedGroups(prev => new Set(prev).add('extra'))
+      }
+      openDashboardHubFromSidebar('extra')
     } else if (action === 'open-translator') {
       openTab('translator', getTabTitle('translator'))
     } else if (action === 'open-manual-gestor') {
@@ -54986,21 +54952,11 @@ A1;Peça exemplo;10`}
             type="button"
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-protocolos-servico' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => {
-              setExpandedGroups((prev) => {
-                const s = new Set(prev)
-                if (s.has('protocolos-main')) {
-                  s.delete('protocolos-main')
-                  if (!activeTabId && dashboardWorkspaceExpanded) {
-                    setDashboardMainHubId((h) => (h === 'protocolos-main' ? null : h))
-                  }
-                } else {
-                  s.add('protocolos-main')
-                  if (!activeTabId && dashboardWorkspaceExpanded) {
-                    setDashboardMainHubId('protocolos-main')
-                  }
-                }
-                return s
-              })
+              // Sempre abrir o hub no centro (mesmo se já estiver expandido)
+              if (!expandedGroups.has('protocolos-main')) {
+                setExpandedGroups((prev) => new Set(prev).add('protocolos-main'))
+              }
+              openDashboardHubFromSidebar('protocolos-main')
             }}
           >
             {selectedSidebarButton === 'open-protocolos-servico' && (
@@ -55037,21 +54993,11 @@ A1;Peça exemplo;10`}
             type="button"
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-manual-programa' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => {
-              setExpandedGroups((prev) => {
-                const s = new Set(prev)
-                if (s.has('manual-programa-main')) {
-                  s.delete('manual-programa-main')
-                  if (!activeTabId && dashboardWorkspaceExpanded) {
-                    setDashboardMainHubId((h) => (h === 'manual-programa-main' ? null : h))
-                  }
-                } else {
-                  s.add('manual-programa-main')
-                  if (!activeTabId && dashboardWorkspaceExpanded) {
-                    setDashboardMainHubId('manual-programa-main')
-                  }
-                }
-                return s
-              })
+              // Sempre abrir o hub no centro (mesmo se já estiver expandido)
+              if (!expandedGroups.has('manual-programa-main')) {
+                setExpandedGroups((prev) => new Set(prev).add('manual-programa-main'))
+              }
+              openDashboardHubFromSidebar('manual-programa-main')
             }}
           >
             {selectedSidebarButton === 'open-manual-programa' && (
@@ -55385,21 +55331,11 @@ A1;Peça exemplo;10`}
                   type="button"
                   className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
                   onClick={() => {
-                    setExpandedGroups((prev) => {
-                      const s = new Set(prev)
-                      if (s.has('manuais-informacoes-main')) {
-                        s.delete('manuais-informacoes-main')
-                        if (!activeTabId && dashboardWorkspaceExpanded) {
-                          setDashboardMainHubId((h) => (h === 'manuais-informacoes-main' ? null : h))
-                        }
-                      } else {
-                        s.add('manuais-informacoes-main')
-                        if (!activeTabId && dashboardWorkspaceExpanded) {
-                          setDashboardMainHubId('manuais-informacoes-main')
-                        }
-                      }
-                      return s
-                    })
+                    // Sempre abrir o hub no centro (mesmo se já estiver expandido)
+                    if (!expandedGroups.has('manuais-informacoes-main')) {
+                      setExpandedGroups((prev) => new Set(prev).add('manuais-informacoes-main'))
+                    }
+                    openDashboardHubFromSidebar('manuais-informacoes-main')
                   }}
                 >
                   {isSelected && (
@@ -55443,21 +55379,11 @@ A1;Peça exemplo;10`}
                   type="button"
                   className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
                   onClick={() => {
-                    setExpandedGroups((prev) => {
-                      const s = new Set(prev)
-                      if (s.has('almoxarifado-main')) {
-                        s.delete('almoxarifado-main')
-                        if (!activeTabId && dashboardWorkspaceExpanded) {
-                          setDashboardMainHubId((h) => (h === 'almoxarifado-main' ? null : h))
-                        }
-                      } else {
-                        s.add('almoxarifado-main')
-                        if (!activeTabId && dashboardWorkspaceExpanded) {
-                          setDashboardMainHubId('almoxarifado-main')
-                        }
-                      }
-                      return s
-                    })
+                    // Sempre abrir o hub no centro (mesmo se já estiver expandido)
+                    if (!expandedGroups.has('almoxarifado-main')) {
+                      setExpandedGroups((prev) => new Set(prev).add('almoxarifado-main'))
+                    }
+                    openDashboardHubFromSidebar('almoxarifado-main')
                   }}
                 >
                   {isSelected && (
@@ -55554,21 +55480,11 @@ A1;Peça exemplo;10`}
                 : ''
             }`}
             onClick={() => {
-              setExpandedGroups((prev) => {
-                const s = new Set(prev)
-                if (s.has('cadastro-nonato-main')) {
-                  s.delete('cadastro-nonato-main')
-                  if (!activeTabId && dashboardWorkspaceExpanded) {
-                    setDashboardMainHubId((h) => (h === 'cadastro-nonato-main' ? null : h))
-                  }
-                } else {
-                  s.add('cadastro-nonato-main')
-                  if (!activeTabId && dashboardWorkspaceExpanded) {
-                    setDashboardMainHubId('cadastro-nonato-main')
-                  }
-                }
-                return s
-              })
+              // Sempre abrir o hub no centro (mesmo se já estiver expandido)
+              if (!expandedGroups.has('cadastro-nonato-main')) {
+                setExpandedGroups((prev) => new Set(prev).add('cadastro-nonato-main'))
+              }
+              openDashboardHubFromSidebar('cadastro-nonato-main')
             }}
           >
             {(selectedSidebarButton === 'open-cadastro-nonato-service' || selectedSidebarButton === 'open-ficha-cadastral') && (
@@ -55697,21 +55613,11 @@ A1;Peça exemplo;10`}
                 type="button"
                 className={`btn-administrador sidebar-group-header sidebar-admin-footer${isSelected ? ' sidebar-group-btn-selected' : ''}`}
                 onClick={() => {
-                  setExpandedGroups((prev) => {
-                    const s = new Set(prev)
-                    if (s.has('admin-main')) {
-                      s.delete('admin-main')
-                      if (!activeTabId && dashboardWorkspaceExpanded) {
-                        setDashboardMainHubId((h) => (h === 'admin-main' ? null : h))
-                      }
-                    } else {
-                      s.add('admin-main')
-                      if (!activeTabId && dashboardWorkspaceExpanded) {
-                        setDashboardMainHubId('admin-main')
-                      }
-                    }
-                    return s
-                  })
+                  // Sempre abrir o hub no centro (mesmo se já estiver expandido)
+                  if (!expandedGroups.has('admin-main')) {
+                    setExpandedGroups((prev) => new Set(prev).add('admin-main'))
+                  }
+                  openDashboardHubFromSidebar('admin-main')
                 }}
               >
                 {isSelected && (
