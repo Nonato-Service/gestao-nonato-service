@@ -3700,8 +3700,9 @@ export default function Dashboard() {
   const [bibliotecaImageHoverPreview, setBibliotecaImageHoverPreview] = useState<{
     src: string
     alt: string
-    x: number
-    y: number
+    /** Canto superior esquerdo fixo (px), calculado a partir da miniatura — não segue o cursor. */
+    left: number
+    top: number
   } | null>(null)
   const [editingCategoria, setEditingCategoria] = useState<CategoriaPeca | null>(null)
   const [editingSubcategoria, setEditingSubcategoria] = useState<SubcategoriaPeca | null>(null)
@@ -16913,10 +16914,21 @@ export default function Dashboard() {
   )
 
   const showBibliotecaImgPreview = useCallback((e: React.MouseEvent, src: string, alt: string) => {
-    setBibliotecaImageHoverPreview({ src, alt, x: e.clientX, y: e.clientY })
-  }, [])
-  const moveBibliotecaImgPreview = useCallback((e: React.MouseEvent) => {
-    setBibliotecaImageHoverPreview((prev) => (prev ? { ...prev, x: e.clientX, y: e.clientY } : prev))
+    if (typeof window === 'undefined') return
+    const el = e.currentTarget as HTMLElement
+    const r = el.getBoundingClientRect()
+    const pad = 12
+    const panelW = 328
+    const panelH = 380
+    let left = r.right + pad
+    if (left + panelW > window.innerWidth - pad) {
+      left = r.left - panelW - pad
+    }
+    if (left < pad) left = pad
+    let top = r.top + (r.height - panelH) / 2
+    if (top + panelH > window.innerHeight - pad) top = window.innerHeight - panelH - pad
+    if (top < pad) top = pad
+    setBibliotecaImageHoverPreview({ src, alt, left, top })
   }, [])
   const hideBibliotecaImgPreview = useCallback(() => {
     setBibliotecaImageHoverPreview(null)
@@ -30795,17 +30807,10 @@ onKeyPress={(e) => {
             {bibliotecaImageHoverPreview && typeof window !== 'undefined' ? (() => {
               const maxW = 300
               const maxH = 300
-              const pad = 16
-              const left = Math.min(
-                Math.max(pad, bibliotecaImageHoverPreview.x + 12),
-                window.innerWidth - maxW - pad
-              )
-              const top = Math.min(
-                Math.max(pad, bibliotecaImageHoverPreview.y + 12),
-                window.innerHeight - maxH - 72
-              )
+              const { left, top } = bibliotecaImageHoverPreview
               return (
                 <div
+                  key={bibliotecaImageHoverPreview.src}
                   className="biblioteca-peca-img-preview-flyout"
                   style={{
                     position: 'fixed',
@@ -30823,6 +30828,7 @@ onKeyPress={(e) => {
                   aria-hidden
                 >
                   <img
+                    key={bibliotecaImageHoverPreview.src}
                     src={bibliotecaImageHoverPreview.src}
                     alt=""
                     style={{
@@ -31366,7 +31372,6 @@ onKeyPress={(e) => {
                           showBibliotecaImgPreview(ev, pecaBibliotecaForm.imagem, pecaBibliotecaForm.nome || safeT?.imagemPecaBiblioteca || '')
                           ev.currentTarget.style.transform = 'scale(1.06)'
                         }}
-                        onMouseMove={moveBibliotecaImgPreview}
                         onMouseLeave={(ev) => {
                           hideBibliotecaImgPreview()
                           ev.currentTarget.style.transform = 'scale(1)'
@@ -32652,7 +32657,6 @@ onKeyPress={(e) => {
                                 showBibliotecaImgPreview(ev, peca.imagem!, peca.nome)
                                 ev.currentTarget.style.transform = 'scale(1.08)'
                               }}
-                              onMouseMove={moveBibliotecaImgPreview}
                               onMouseLeave={(ev) => {
                                 hideBibliotecaImgPreview()
                                 ev.currentTarget.style.transform = 'scale(1)'
@@ -33275,7 +33279,6 @@ onKeyPress={(e) => {
                                           ev.currentTarget.style.transform = 'scale(1.12)'
                                           ev.currentTarget.style.boxShadow = '0 8px 22px rgba(0,0,0,0.45)'
                                         }}
-                                        onMouseMove={moveBibliotecaImgPreview}
                                         onMouseLeave={(ev) => {
                                           hideBibliotecaImgPreview()
                                           ev.currentTarget.style.transform = 'scale(1)'
