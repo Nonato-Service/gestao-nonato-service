@@ -17080,7 +17080,7 @@ export default function Dashboard() {
     }
   }
 
-  const parseRawToPecas = useCallback((raw: string, lojaBaseUrl = ''): PecaBiblioteca[] => {
+  const parseRawToPecas = useCallback((raw: string, lojaBaseUrl = '', pageUrl = ''): PecaBiblioteca[] => {
     const trimRaw = raw.trim()
     const lojaOrigin = (() => {
       const s = String(lojaBaseUrl || '').trim()
@@ -17089,6 +17089,18 @@ export default function Dashboard() {
         const u = new URL(s.includes('://') ? s : `https://${s}`)
         if (u.protocol !== 'http:' && u.protocol !== 'https:') return ''
         return u.origin
+      } catch {
+        return ''
+      }
+    })()
+    /** URL da página de onde veio o HTML (lista no «Buscar da URL» ou URL base ao colar) — resolve src relativos. */
+    const pageBaseHref = (() => {
+      const s = String(pageUrl || '').trim()
+      if (!s) return ''
+      try {
+        const u = new URL(s.includes('://') ? s : `https://${s}`)
+        if (u.protocol !== 'http:' && u.protocol !== 'https:') return ''
+        return u.href
       } catch {
         return ''
       }
@@ -17168,11 +17180,16 @@ export default function Dashboard() {
           'data-original',
           'data-url',
           'data-image',
+          'data-image-url',
           'data-lazy',
           'data-zoom-image',
           'data-large_image_url',
           'data-full-src',
           'data-img',
+          'data-full-url',
+          'data-href',
+          'data-photosrc',
+          'data-aura-rendered-src',
         ]
         for (const attr of attrs) {
           const v = img.getAttribute(attr)
@@ -17216,18 +17233,34 @@ export default function Dashboard() {
         const parser = new DOMParser()
         const doc = parser.parseFromString(raw, 'text/html')
         const baseHref = (doc.querySelector('base[href]') as HTMLBaseElement | null)?.href || ''
+        const documentBase = baseHref || pageBaseHref || (lojaOrigin ? `${lojaOrigin}/` : '')
 
         const resolveUrl = (u: string): string => {
           if (!u) return ''
+          const t = u.trim().replace(/&amp;/g, '&')
+          if (!t || t.startsWith('data:') || t.startsWith('blob:')) return t
           try {
-            if (baseHref) return new URL(u, baseHref).href
-            if (u.startsWith('//')) return `https:${u}`
-            if (u.startsWith('/') && lojaOrigin) return new URL(u, `${lojaOrigin}/`).href
-            if (u.startsWith('/')) return u
-            return u
+            if (t.startsWith('//')) return `https:${t}`
+            if (documentBase) return new URL(t, documentBase).href
+            if (t.startsWith('/') && lojaOrigin) return new URL(t, `${lojaOrigin}/`).href
+            return t
           } catch {
-            return u
+            return t
           }
+        }
+
+        const isJunkImgUrl = (src: string): boolean => {
+          const s = src.toLowerCase()
+          if (!s || s.length < 10) return true
+          if (/spacer|blank\.|clear\.gif|pixel\.|1x1|transparent|placeholder|loading\.svg|s\.gif|w\.gif/i.test(s)) return true
+          return false
+        }
+        const firstValidImgInRow = (row: Element): string => {
+          for (const node of row.querySelectorAll('img')) {
+            const s = extractImgSrcFromNode(node)
+            if (s && !isJunkImgUrl(s)) return s
+          }
+          return ''
         }
 
         // 1) Tentar tabelas HTML comuns
@@ -17236,8 +17269,12 @@ export default function Dashboard() {
           const cellEls = Array.from(row.querySelectorAll('th,td'))
           const cells = cellEls.map((c) => (c.textContent || '').trim())
           let imagem =
-            cellEls.map((c) => extractImgSrcFromNode(c)).find((src) => src) ||
-            extractImgSrcFromNode(row)
+            firstValidImgInRow(row) ||
+            cellEls.map((c) => extractImgSrcFromNode(c)).find((src) => src && !isJunkImgUrl(src)) ||
+            (() => {
+              const s = extractImgSrcFromNode(row)
+              return s && !isJunkImgUrl(s) ? s : ''
+            })()
           if (imagem) imagem = resolveUrl(imagem)
           if (!imagem) {
             for (const c of cellEls) {
@@ -17255,9 +17292,9 @@ export default function Dashboard() {
               const srcRel = html.match(/\bsrc\s*=\s*["']([^"']+)["']/i)
               if (srcRel?.[1]) {
                 const cand = srcRel[1].replace(/&amp;/g, '&').trim()
-                if (cand.startsWith('/') && !cand.startsWith('//')) imagem = resolveUrl(cand)
-                else if (/^https?:\/\//i.test(cand) || cand.startsWith('//')) imagem = resolveUrl(cand.startsWith('//') ? `https:${cand}` : cand)
-                if (imagem) break
+                if (cand) imagem = resolveUrl(cand.startsWith('//') ? `https:${cand}` : cand)
+                if (imagem && !isJunkImgUrl(imagem)) break
+                imagem = ''
               }
             }
           }
@@ -17579,7 +17616,7 @@ export default function Dashboard() {
 
     const tryParseAndPreview = (raw: string): boolean => {
       try {
-        const pecas = parseRawToPecas(raw, importacaoLojaBaseUrl)
+        const pecas = parseRawToPecas(raw, importacaoLojaBaseUrl, url)
         if (pecas.length === 0) return false
         setImportacaoPreview(pecas)
         setImportacaoUrlError(null)
@@ -17675,6 +17712,52 @@ export default function Dashboard() {
     }
   }, [urlImportacaoPecas, t, parseRawToPecas, importacaoLojaBaseUrl])
 
+  const abrirSiteImportacaoNoNavegador = useCallback(() => {
+    const resolveOpenableUrl = (raw: string): string | null => {
+      const u = raw.trim()
+      if (!u) return null
+      if (u.startsWith('http://') || u.startsWith('https://')) {
+        try {
+          return new URL(u).href
+        } catch {
+          return null
+        }
+      }
+      try {
+        const withProto = u.startsWith('//') ? `https:${u}` : `https://${u.replace(/^\/+/, '')}`
+        const parsed = new URL(withProto)
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null
+        return parsed.href
+      } catch {
+        return null
+      }
+    }
+    const target =
+      resolveOpenableUrl(urlImportacaoPecas) || resolveOpenableUrl(importacaoLojaBaseUrl)
+    if (!target) {
+      alert(t?.importacaoAbrirSiteInformeUrl ?? 'Indique uma URL válida no campo da lista ou em «URL base da loja».')
+      return
+    }
+    window.open(target, '_blank', 'noopener,noreferrer')
+  }, [urlImportacaoPecas, importacaoLojaBaseUrl, t])
+
+  /** Colagem a partir do site: preferir `text/html` (tabelas + &lt;img&gt;) em vez de só texto plano. */
+  const handleImportacaoPecasPaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const html = e.clipboardData?.getData('text/html') || ''
+    if (!html || html.length < 80) return
+    const looksCatalogHtml =
+      /<table\b/i.test(html) ||
+      /<tr\b/i.test(html) ||
+      (/<img[^>]+src=/i.test(html) && /<(?:div|td|th|li|article|section)/i.test(html))
+    if (!looksCatalogHtml) return
+    e.preventDefault()
+    setImportacaoTextoColado((cur) => {
+      const t = (cur || '').trim()
+      return t.length ? `${t}\n\n${html}` : html
+    })
+    setImportacaoUrlError(null)
+  }, [])
+
   const handleImportacaoFicheiro = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -17714,7 +17797,10 @@ export default function Dashboard() {
     setImportacaoUrlError(null)
     setImportacaoPreview(null)
     try {
-      const pecas = parseRawToPecas(raw, importacaoLojaBaseUrl)
+      const paginaColagem =
+        (/^https?:\/\//i.test(urlImportacaoPecas.trim()) && urlImportacaoPecas.trim()) ||
+        (/^https?:\/\//i.test(importacaoLojaBaseUrl.trim()) ? importacaoLojaBaseUrl.trim() : '')
+      const pecas = parseRawToPecas(raw, importacaoLojaBaseUrl, paginaColagem)
       if (pecas.length === 0) {
         setImportacaoUrlError(t?.importacaoNenhumaLinha ?? 'Nenhuma lista encontrada. Use JSON (array ou objeto com .pecas/.parts/.items/.data/.itens) ou CSV (1ª linha = cabeçalhos).')
         return
@@ -17723,7 +17809,7 @@ export default function Dashboard() {
     } catch (err: any) {
       setImportacaoUrlError(err?.message || (t?.importacaoErroJsonInvalido ?? 'Conteúdo inválido. Use JSON ou CSV com cabeçalhos na primeira linha.'))
     }
-  }, [importacaoTextoColado, parseRawToPecas, t, importacaoLojaBaseUrl])
+  }, [importacaoTextoColado, parseRawToPecas, t, importacaoLojaBaseUrl, urlImportacaoPecas])
 
   const handleAdicionarImportacaoPreview = useCallback(() => {
     if (!importacaoPreview || importacaoPreview.length === 0) return
@@ -33933,6 +34019,22 @@ onKeyPress={(e) => {
                   >
                     {importacaoUrlLoading ? (safeT?.importacaoBuscando || 'A buscar...') : (safeT?.importacaoBuscarUrl || 'Buscar da URL')}
                   </button>
+                  <button
+                    type="button"
+                    onClick={abrirSiteImportacaoNoNavegador}
+                    style={{
+                      padding: '12px 24px',
+                      backgroundColor: 'rgba(180, 120, 255, 0.12)',
+                      border: '1px solid rgba(200, 160, 255, 0.55)',
+                      borderRadius: '8px',
+                      color: '#d4b8ff',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      fontSize: '14px'
+                    }}
+                  >
+                    🔗 {safeT?.importacaoAbrirSiteNovaAba || 'Abrir no navegador'}
+                  </button>
                   <input
                     type="file"
                     ref={importacaoFileInputRef}
@@ -34108,6 +34210,7 @@ onKeyPress={(e) => {
                 <AssistTextarea
                   value={importacaoTextoColado}
                   onValueChange={(v) => { setImportacaoTextoColado(v); setImportacaoUrlError(null) }}
+                  onPaste={handleImportacaoPecasPaste}
                   placeholder='[{"codigo":"A1","nome":"Peça exemplo","preco":"10"}]
 ou
 codigo;nome;preco
@@ -34426,6 +34529,22 @@ A1;Peça exemplo;10'
                 >
                   {importacaoUrlLoading ? (safeT?.importacaoBuscando || 'A buscar...') : (safeT?.importacaoBuscarUrl || 'Buscar da URL')}
                 </button>
+                <button
+                  type="button"
+                  onClick={abrirSiteImportacaoNoNavegador}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: 'rgba(180, 120, 255, 0.12)',
+                    border: '1px solid rgba(200, 160, 255, 0.55)',
+                    borderRadius: '8px',
+                    color: '#d4b8ff',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    fontSize: '14px'
+                  }}
+                >
+                  🔗 {safeT?.importacaoAbrirSiteNovaAba || 'Abrir no navegador'}
+                </button>
                 <input
                   type="file"
                   ref={importacaoFileInputRef}
@@ -34520,6 +34639,7 @@ A1;Peça exemplo;10'
                 <AssistTextarea
                   value={importacaoTextoColado}
                   onValueChange={(v) => { setImportacaoTextoColado(v); setImportacaoUrlError(null) }}
+                  onPaste={handleImportacaoPecasPaste}
                   placeholder={(safeT as any)?.importacaoColarCatalogoPlaceholder || `Exemplo de colagem rápida:
 
 COD-001

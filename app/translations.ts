@@ -1401,6 +1401,9 @@ export const translations = {
     importacaoGuiaHomag7: '7) No sistema, use "Carregar ficheiro CSV/JSON" ou cole o conteúdo no campo de texto.',
     importacaoGuiaHomag8: '8) Clique em "Importar do texto colado", valide o preview e depois "Adicionar à Biblioteca".',
     importacaoBuscarUrl: 'Buscar da URL',
+    importacaoAbrirSiteNovaAba: 'Abrir no navegador',
+    importacaoAbrirSiteInformeUrl:
+      'Indique uma URL válida no campo da lista ou em «URL base da loja» (abaixo, ao colar catálogo), depois clique de novo.',
     importacaoBuscando: 'A buscar...',
     importacaoUrlObrigatoria: 'Informe a URL da lista de peças.',
     importacaoErroBusca: 'Erro ao buscar a URL.',
@@ -1424,7 +1427,8 @@ export const translations = {
     importacaoErroJsonInvalido: 'O conteúdo da URL não é um JSON válido.',
     importacaoColarUrlNaoSuportado: 'Neste campo, cole o conteúdo JSON/CSV (não a URL). Para links, use "Buscar da URL".',
     importacaoColarCatalogoTitle: 'Colar catálogo do site',
-    importacaoColarCatalogoDesc: 'Copie várias peças da página do fornecedor e cole tudo aqui de uma vez. O sistema tenta separar código, nome, descrição, preço e imagem (HTML da tabela ou cartão, com <img> ou endereço .jpg/.png na colagem).',
+    importacaoColarCatalogoDesc:
+      'Copie várias peças na página do fornecedor e use Ctrl+V aqui: o sistema usa o HTML completo (tabelas e <img>) sempre que o navegador o enviar — assim as fotos deixam de depender só do texto. Preencha também «URL base da loja» (ou use antes «Buscar da URL») para caminhos relativos como /s/... virarem endereço absoluto. Separa código, nome, descrição, preço e imagem.',
     importacaoImportarCatalogo: 'Importar catálogo colado',
     importacaoColarCatalogoPasso1: '1. Copie várias linhas do site',
     importacaoColarCatalogoPasso2: '2. Cole tudo na caixa abaixo',
@@ -3849,6 +3853,9 @@ export const translations = {
     importacaoNotaHomag:
       'JSON: arrays o .pecas / .parts / .items / .data / .itens. Campos: codigo, nombre o descripcion, imagen (URL o data:image). En el PC: npm run homag:import genera export.json con fotos para cargar aquí.',
     importacaoBuscarUrl: 'Obtener desde URL',
+    importacaoAbrirSiteNovaAba: 'Abrir en el navegador',
+    importacaoAbrirSiteInformeUrl:
+      'Indique una URL válida en el campo de la lista o en «URL base de la tienda»; luego pulse de nuevo.',
     importacaoBuscando: 'Obteniendo...',
     importacaoUrlObrigatoria: 'Indique la URL de la lista de piezas.',
     importacaoErroBusca: 'Error al obtener la URL.',
@@ -6139,6 +6146,9 @@ export const translations = {
     importacaoNotaHomag:
       'JSON : tableaux ou .pecas / .parts / .items / .data / .itens. Champs : code, nom ou description, image (URL ou data:image). Sur le PC : npm run homag:import produit export.json avec photos à importer ici.',
     importacaoBuscarUrl: 'Récupérer depuis l\'URL',
+    importacaoAbrirSiteNovaAba: 'Ouvrir dans le navigateur',
+    importacaoAbrirSiteInformeUrl:
+      'Indiquez une URL valide dans le champ liste ou dans « URL de base du magasin », puis recliquez.',
     importacaoBuscando: 'Récupération...',
     importacaoUrlObrigatoria: 'Indiquez l\'URL de la liste des pièces.',
     importacaoErroBusca: 'Erreur lors de la récupération de l\'URL.',
@@ -8435,6 +8445,9 @@ export const translations = {
     importacaoNotaHomag:
       'JSON: array o .pecas / .parts / .items / .data / .itens. Campi: codice, nome o descrizione, immagine (URL o data:image). Sul PC: npm run homag:import crea export.json con foto da caricare qui.',
     importacaoBuscarUrl: 'Recupera da URL',
+    importacaoAbrirSiteNovaAba: 'Apri nel browser',
+    importacaoAbrirSiteInformeUrl:
+      'Inserisci un URL valido nel campo lista o in «URL base negozio», poi clicca di nuovo.',
     importacaoBuscando: 'Recupero...',
     importacaoUrlObrigatoria: 'Inserisci l\'URL dell\'elenco pezzi.',
     importacaoErroBusca: 'Errore nel recuperare l\'URL.',
@@ -10746,6 +10759,9 @@ export const translations = {
     importacaoNotaHomag:
       'JSON: Arrays oder .pecas / .parts / .items / .data / .itens. Felder: codigo, Name/Beschreibung, Bild (URL oder data:image). Lokal: npm run homag:import erzeugt export.json mit Fotos zum Import hier.',
     importacaoBuscarUrl: 'Von URL abrufen',
+    importacaoAbrirSiteNovaAba: 'Im Browser öffnen',
+    importacaoAbrirSiteInformeUrl:
+      'Geben Sie eine gültige URL im Listenfeld oder unter «Shop-Basis-URL» ein und klicken Sie erneut.',
     importacaoBuscando: 'Wird abgerufen...',
     importacaoUrlObrigatoria: 'Geben Sie die URL der Teileliste an.',
     importacaoErroBusca: 'Fehler beim Abrufen der URL.',
@@ -13035,6 +13051,9 @@ export const translations = {
     importacaoNotaHomag:
       'JSON: root array or .pecas / .parts / .items / .data / .itens. Fields: code, name/description, image (URL or data:image). On your PC run npm run homag:import to build export.json with photos, then load it here.',
     importacaoBuscarUrl: 'Fetch from URL',
+    importacaoAbrirSiteNovaAba: 'Open in browser',
+    importacaoAbrirSiteInformeUrl:
+      'Enter a valid URL in the list field or in «Store base URL», then click again.',
     importacaoBuscando: 'Fetching...',
     importacaoUrlObrigatoria: 'Enter the URL of the parts list.',
     importacaoErroBusca: 'Error fetching the URL.',
