@@ -29658,39 +29658,81 @@ onKeyPress={(e) => {
                               )}
                             </div>
                             
-                            {/* Botões de Ação — sem encolher o texto (minWidth:0 cortava «Equipamentos do Cliente») */}
-                            <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-start', width: '100%', boxSizing: 'border-box' }}>
+                            {/* Botões: Editar | Excluir na mesma linha (metade cada); Equipamentos em largura total por baixo */}
+                            <div
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '6px',
+                                marginTop: '6px',
+                                width: '100%',
+                                boxSizing: 'border-box',
+                              }}
+                            >
                               {alertaDevedor && (
                                 <button
                                   type="button"
                                   className="btn-danger"
                                   onClick={() => setClienteCadastroAlertaDevedorId(null)}
-                                  style={{ padding: '6px 10px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.25', flex: '0 0 auto' }}
+                                  style={{
+                                    width: '100%',
+                                    padding: '6px 10px',
+                                    fontSize: '10px',
+                                    whiteSpace: 'nowrap',
+                                    lineHeight: 1.25,
+                                    boxSizing: 'border-box',
+                                  }}
                                 >
                                   {safeT?.encerrarAlertaDevedorCadastro || 'Encerrar alerta de devedor'}
                                 </button>
                               )}
-                              <button 
-                                className="btn-primary" 
-                                onClick={() => {
-                                  handleEditCliente(cliente)
-                                  setClientesActiveTab('cadastrar')
-                                }} 
-                                style={{ padding: '6px 12px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.25', flex: '0 0 auto' }}
-                              >
-                                {safeT?.edit || 'Editar'}
-                              </button>
-                              <button 
-                                className="btn-danger" 
-                                onClick={() => handleDeleteCliente(cliente.id)} 
-                                style={{ padding: '6px 12px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.25', flex: '0 0 auto' }}
-                              >
-                                {safeT?.delete || 'Excluir'}
-                              </button>
-                              <button 
-                                className="btn-primary" 
-                                onClick={() => handleViewClienteEquipamentos(cliente)} 
-                                style={{ padding: '6px 14px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.25', flex: '1 1 auto', minWidth: 'min-content', flexShrink: 0, boxSizing: 'border-box' }}
+                              <div style={{ display: 'flex', gap: '6px', width: '100%', alignItems: 'stretch' }}>
+                                <button
+                                  type="button"
+                                  className="btn-primary"
+                                  onClick={() => {
+                                    handleEditCliente(cliente)
+                                    setClientesActiveTab('cadastrar')
+                                  }}
+                                  style={{
+                                    flex: 1,
+                                    minWidth: 0,
+                                    padding: '8px 10px',
+                                    fontSize: '11px',
+                                    lineHeight: 1.25,
+                                    boxSizing: 'border-box',
+                                  }}
+                                >
+                                  {safeT?.edit || 'Editar'}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn-danger"
+                                  onClick={() => handleDeleteCliente(cliente.id)}
+                                  style={{
+                                    flex: 1,
+                                    minWidth: 0,
+                                    padding: '8px 10px',
+                                    fontSize: '11px',
+                                    lineHeight: 1.25,
+                                    boxSizing: 'border-box',
+                                  }}
+                                >
+                                  {safeT?.delete || 'Excluir'}
+                                </button>
+                              </div>
+                              <button
+                                type="button"
+                                className="btn-primary"
+                                onClick={() => handleViewClienteEquipamentos(cliente)}
+                                style={{
+                                  width: '100%',
+                                  padding: '8px 14px',
+                                  fontSize: '10px',
+                                  whiteSpace: 'nowrap',
+                                  lineHeight: 1.25,
+                                  boxSizing: 'border-box',
+                                }}
                               >
                                 {safeT?.equipamentosDoCliente || 'Equipamentos'}
                               </button>
