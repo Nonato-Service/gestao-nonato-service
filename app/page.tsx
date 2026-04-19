@@ -18989,6 +18989,27 @@ export default function Dashboard() {
     [scrollMainContentToTop]
   )
 
+  /** Botão principal do mesmo grupo: segundo clique retrai o hub e fecha o grupo na sidebar. */
+  const toggleOrOpenDashboardHub = useCallback(
+    (groupId: string, hubId: string) => {
+      if (dashboardMainHubId === hubId && !activeTabId) {
+        setExpandedGroups((prev) => {
+          const next = new Set(prev)
+          next.delete(groupId)
+          return next
+        })
+        setDashboardMainHubId(null)
+        requestAnimationFrame(() => scrollMainContentToTop())
+        return
+      }
+      if (!expandedGroups.has(groupId)) {
+        setExpandedGroups((prev) => new Set(prev).add(groupId))
+      }
+      openDashboardHubFromSidebar(hubId)
+    },
+    [activeTabId, dashboardMainHubId, expandedGroups, openDashboardHubFromSidebar, scrollMainContentToTop]
+  )
+
   // Função para lidar com cliques nos botões da sidebar (buttonId opcional: quando dois botões abrem a mesma aba, usar id para só um ficar ativo)
   const handleButtonClick = useCallback((action: string, buttonId?: string) => {
     const groupToggles = ['open-gestao-tecnica', 'open-gestao-custos', 'open-comunicacao-interna', 'open-gestao-industrial', 'open-gestao-financeira', 'open-extra', 'open-biblioteca-hub']
@@ -19120,12 +19141,7 @@ export default function Dashboard() {
         openTab('verificacao-final-entrega', getTabTitle('verificacao-final-entrega'))
       }
     } else if (action === 'open-comunicacao-interna') {
-      // Toggle do grupo COMUNICAÇÃO INTERNA
-      // Sempre abrir o hub no centro (mesmo se o grupo já estiver expandido)
-      if (!expandedGroups.has('comunicacao-interna')) {
-        setExpandedGroups((prev) => new Set(prev).add('comunicacao-interna'))
-      }
-      openDashboardHubFromSidebar('comunicacao-interna')
+      toggleOrOpenDashboardHub('comunicacao-interna', 'comunicacao-interna')
     } else if (action === 'open-hub-comunicacao') {
       if (!expandedGroups.has('comunicacao-interna')) setExpandedGroups(prev => new Set(prev).add('comunicacao-interna'))
       openTab('hub-comunicacao', getTabTitle('hub-comunicacao'))
@@ -19195,39 +19211,19 @@ export default function Dashboard() {
       setExpandedGroups(prev => new Set(prev).add('gestao-tecnica'))
       openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
     } else if (action === 'open-gestao-tecnica') {
-      // Sempre abrir o hub no centro (mesmo se o grupo já estiver expandido)
-      if (!expandedGroups.has('gestao-tecnica')) {
-        setExpandedGroups(prev => new Set(prev).add('gestao-tecnica'))
-      }
-      openDashboardHubFromSidebar('gestao-tecnica')
+      toggleOrOpenDashboardHub('gestao-tecnica', 'gestao-tecnica')
     } else if (action === 'open-gestao-custos') {
-      // Sempre abrir o hub no centro (mesmo se o grupo já estiver expandido)
-      if (!expandedGroups.has('gestao-custos')) {
-        setExpandedGroups(prev => new Set(prev).add('gestao-custos'))
-      }
-      openDashboardHubFromSidebar('gestao-custos')
+      toggleOrOpenDashboardHub('gestao-custos', 'gestao-custos')
     } else if (action === 'open-gestao-financeira') {
-      // Sempre abrir o hub no centro (mesmo se o grupo já estiver expandido)
-      if (!expandedGroups.has('gestao-financeira')) {
-        setExpandedGroups(prev => new Set(prev).add('gestao-financeira'))
-      }
-      openDashboardHubFromSidebar('gestao-financeira')
+      toggleOrOpenDashboardHub('gestao-financeira', 'gestao-financeira')
     } else if (action === 'open-clientes-financeiro') {
       openTab('clientes-financeiro', getTabTitle('clientes-financeiro'))
     } else if (action === 'open-comprovantes-despesas') {
       openTab('comprovantes-despesas', getTabTitle('comprovantes-despesas'))
     } else if (action === 'open-gestao-industrial') {
-      // Sempre abrir o hub no centro (mesmo se o grupo já estiver expandido)
-      if (!expandedGroups.has('gestao-industrial')) {
-        setExpandedGroups(prev => new Set(prev).add('gestao-industrial'))
-      }
-      openDashboardHubFromSidebar('gestao-industrial')
+      toggleOrOpenDashboardHub('gestao-industrial', 'gestao-industrial')
     } else if (action === 'open-checklist-group') {
-      // Sempre abrir o hub no centro (mesmo se o grupo já estiver expandido)
-      if (!expandedGroups.has('checklist-group')) {
-        setExpandedGroups(prev => new Set(prev).add('checklist-group'))
-      }
-      openDashboardHubFromSidebar('checklist-group')
+      toggleOrOpenDashboardHub('checklist-group', 'checklist-group')
     } else if (action === 'open-checklist-hub') {
       // Toggle do grupo CHECKLIST quando clicar no botão principal
       setExpandedGroups(prev => {
@@ -19242,11 +19238,7 @@ export default function Dashboard() {
         openTab('checklist-hub', getTabTitle('checklist-hub'))
       }, 50)
     } else if (action === 'open-extra') {
-      // Sempre abrir o hub no centro (mesmo se o grupo já estiver expandido)
-      if (!expandedGroups.has('extra')) {
-        setExpandedGroups(prev => new Set(prev).add('extra'))
-      }
-      openDashboardHubFromSidebar('extra')
+      toggleOrOpenDashboardHub('extra', 'extra')
     } else if (action === 'open-translator') {
       openTab('translator', getTabTitle('translator'))
     } else if (action === 'open-manual-gestor') {
@@ -19264,7 +19256,7 @@ export default function Dashboard() {
       ])
       if (!keepDrawerOpen.has(action)) setMobileMenuOpen(false)
     }
-  }, [expandedGroups, openTab, getTabTitle, canAccessAction, isDemoTeaserAction, safeT, scrollMainContentToTop, isCompactLayout, activeTabId, dashboardWorkspaceExpanded, openDashboardHubFromSidebar, dashboardMainHubId])
+  }, [expandedGroups, openTab, getTabTitle, canAccessAction, isDemoTeaserAction, safeT, scrollMainContentToTop, isCompactLayout, activeTabId, dashboardWorkspaceExpanded, openDashboardHubFromSidebar, dashboardMainHubId, toggleOrOpenDashboardHub])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
