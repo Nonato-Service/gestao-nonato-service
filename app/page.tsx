@@ -28650,27 +28650,27 @@ onKeyPress={(e) => {
                     <h3 className="relatorio-resumo-cobranca-titulo">{safeT?.resumoHorasDeslocamentos?.toUpperCase() || 'RESUMO DE HORAS, DESLOCAMENTOS E DIÁRIAS'}</h3>
                     <div className="relatorio-servico-resumo-totais-grid">
                       <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
-                        <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasTrabalho || 'Horas de Trabalho'}</p>
+                        <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasTrabalho || 'Horas de Trabalho'}</p>
                         <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasTrabalho}h</p>
                       </div>
                       <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
-                        <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.kmsPercorridos || 'Km\'s Percorridos'}</p>
+                        <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.kmsPercorridos || 'Km\'s Percorridos'}</p>
                         <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).kmsPercorridos} km</p>
                       </div>
                       <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
-                        <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasViagem || 'Horas de Viagem'}</p>
+                        <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasViagem || 'Horas de Viagem'}</p>
                         <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasViagem}h</p>
                       </div>
                       <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
-                        <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.diarias || 'DIÁRIAS'}</p>
+                        <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.diarias || 'DIÁRIAS'}</p>
                         <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{relatorioServicoForm.diasTrabalho.length}</p>
                       </div>
                       <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
-                        <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemIda || 'Horas de Viagem de Ida'}</p>
+                        <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemIda || 'Horas de Viagem de Ida'}</p>
                         <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '16px' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasViagemIda}</p>
                       </div>
                       <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
-                        <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemRetorno || 'Horas de Viagem de Retorno'}</p>
+                        <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemRetorno || 'Horas de Viagem de Retorno'}</p>
                         <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '16px' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasViagemRetorno}</p>
                       </div>
                     </div>
@@ -39024,10 +39024,20 @@ A1;Peça exemplo;10`}
                   : servicoCadastro
                     ? servicoCodParaExibicao(servicoCadastro)
                     : ''
+                /** `??` não substitui string vazia — evita célula “—” quando o cadastro tem só `nome` */
+                const pickDesc = (...vals: (string | undefined | null)[]) => {
+                  for (const v of vals) {
+                    const s = v != null ? String(v).trim() : ''
+                    if (s) return s
+                  }
+                  return ''
+                }
                 const descricao =
-                  (temCodOuServico
-                    ? (saved.descricao ?? svSaved?.descricao ?? svSaved?.nome)
-                    : (servicoCadastro?.descricao || servicoCadastro?.nome || item.descricao)) ?? item.descricao
+                  pickDesc(
+                    ...(temCodOuServico
+                      ? [saved.descricao, svSaved?.descricao, svSaved?.nome, servicoCadastro?.descricao, servicoCadastro?.nome, item.descricao]
+                      : [servicoCadastro?.descricao, servicoCadastro?.nome, saved.descricao, svSaved?.descricao, svSaved?.nome, item.descricao])
+                  ) || item.descricao
                 const servicoId = saved.servicoId || servicoCadastro?.id
                 const total = (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias' || item.id === 'hida' || item.id === 'hret') ? Math.round(qty * valorUnit * 100) / 100 : valorUnit
                 const cobrarDiaria = item.id === 'diarias' && typeof saved.cobrarDiaria === 'boolean' ? saved.cobrarDiaria : (item as FechamentoItem).cobrarDiaria !== false
@@ -39359,6 +39369,7 @@ A1;Peça exemplo;10`}
                     <h3 style={{ margin: 0, color: '#00ff00', fontSize: '16px' }}>{(safeT as any)?.itensCobrancaFechamento || 'Itens a cobrar (ajuste com o Cadastro de Serviços)'}</h3>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.8)' }}>✏️ {(safeT as any)?.editarItensFechamento || 'Editar itens'}</span>
                   </div>
+                  <div className="fechamento-relatorios-servicos-table-host" style={{ width: '100%', overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', color: '#ccc' }}>
                     <thead>
                       <tr style={{ borderBottom: '1px solid rgba(0,255,0,0.3)' }}>
@@ -39382,8 +39393,13 @@ A1;Peça exemplo;10`}
                           (servicoVinculado ? servicoCodParaExibicao(servicoVinculado) : '')
                         const codFallbackRelatorio = item.origem === 'relatorio' && (item.id === 'ht' ? 'HT' : item.id === 'km' ? 'KM' : item.id === 'hviagem' ? 'H.Viag' : item.id === 'diarias' ? 'DIAR' : item.id === 'hida' ? 'H.Ida' : item.id === 'hret' ? 'H.Ret' : '')
                         const codExibir = codDoServico || codFallbackRelatorio || '—'
-                        const nomeExibir =
-                          (item.descricao ?? servicoVinculado?.descricao ?? servicoVinculado?.nome ?? '').trim() || '—'
+                        const nomeExibir = (() => {
+                          for (const v of [item.descricao, servicoVinculado?.descricao, servicoVinculado?.nome]) {
+                            const s = v != null ? String(v).trim() : ''
+                            if (s) return s
+                          }
+                          return '—'
+                        })()
                         const itemFixoDoRelatorio = item.origem === 'relatorio'
                         const eManual = item.origem === 'manual'
                         const eDiarias = item.id === 'diarias'
@@ -39392,7 +39408,7 @@ A1;Peça exemplo;10`}
                         return (
                         <tr key={item.id} style={{ borderBottom: '1px solid #333' }}>
                           <td style={{ padding: '10px 8px', color: '#00ff00', fontWeight: 600 }}>{codExibir}</td>
-                          <td style={{ padding: '10px 8px' }}>{nomeExibir}</td>
+                          <td style={{ padding: '10px 8px', minWidth: '160px', maxWidth: 'min(480px, 55vw)', whiteSpace: 'normal', wordBreak: 'break-word', color: '#e8e8e8' }}>{nomeExibir}</td>
                           <td style={{ padding: '10px 8px', textAlign: 'right' }}>{item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : item.quantidade}</td>
                           <td style={{ padding: '10px 8px', textAlign: 'right' }}>
                             {itemFixoDoRelatorio ? (
@@ -39449,6 +39465,7 @@ A1;Peça exemplo;10`}
                       </tr>
                     </tfoot>
                   </table>
+                  </div>
                   <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                     <button type="button" className="btn-primary" onClick={adicionarItemManual} style={{ padding: '8px 16px' }}>+ {(safeT as any)?.adicionarItemCobranca || 'Adicionar item a cobrar'}</button>
                     <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{(safeT as any)?.total || 'Total'}: {totalCobranca.toFixed(2)} €</div>
@@ -63156,27 +63173,27 @@ A1;Peça exemplo;10`}
                       <h3 className="relatorio-resumo-cobranca-titulo">{safeT?.resumoHorasDeslocamentos?.toUpperCase() || 'RESUMO DE HORAS, DESLOCAMENTOS E DIÁRIAS'}</h3>
                       <div className="relatorio-servico-resumo-view-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
                         <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
-                          <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasTrabalho || 'Horas de Trabalho'}</p>
+                          <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasTrabalho || 'Horas de Trabalho'}</p>
                           <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{totais.horasTrabalho}h</p>
                         </div>
                         <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
-                          <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.kmsPercorridos || 'Km\'s Percorridos'}</p>
+                          <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.kmsPercorridos || 'Km\'s Percorridos'}</p>
                           <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{totais.kmsPercorridos} km</p>
                         </div>
                         <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
-                          <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasViagem || 'Horas de Viagem'}</p>
+                          <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasViagem || 'Horas de Viagem'}</p>
                           <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{totais.horasViagem}h</p>
                         </div>
                         <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
-                          <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.diarias || 'DIÁRIAS'}</p>
+                          <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.diarias || 'DIÁRIAS'}</p>
                           <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{viewingRelatorioServico.diasTrabalho.length}</p>
                         </div>
                         <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
-                          <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemIda || 'Horas de Viagem de Ida'}</p>
+                          <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemIda || 'Horas de Viagem de Ida'}</p>
                           <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '16px' }}>{totais.horasViagemIda}</p>
                         </div>
                         <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
-                          <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemRetorno || 'Horas de Viagem de Retorno'}</p>
+                          <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemRetorno || 'Horas de Viagem de Retorno'}</p>
                           <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '16px' }}>{totais.horasViagemRetorno}</p>
                         </div>
                       </div>
