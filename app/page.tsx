@@ -29078,48 +29078,82 @@ onKeyPress={(e) => {
                           )}
                         </div>
 
-                        {/* Resumo de Trabalho */}
-                        {relatorio.diasTrabalho.length > 0 && (
-                          <div style={{
-                            ...glassNestedStyle(ACCENT_GREEN),
-                            marginBottom: '15px'
-                          }}>
-                            <p style={{
-                              fontSize: '11px',
-                              color: '#ffffff',
-                              marginBottom: '10px',
-                              fontWeight: 'bold',
-                              textTransform: 'uppercase',
-                              letterSpacing: '1px',
-                              opacity: 0.95
-                            }}>
+                        {/* Resumo de Trabalho — mesmos estados laranja/azul/verde que no formulário (cobrar / fechamento) */}
+                        {relatorio.diasTrabalho.length > 0 && (() => {
+                          const ridCard = relatorio.id
+                          const faseCard = getResumoCobrancaVisualClass(ridCard)
+                          const wrapCard =
+                            faseCard === 'verde'
+                              ? 'relatorio-resumo-cobranca-wrap--verde'
+                              : faseCard === 'azul'
+                                ? 'relatorio-resumo-cobranca-wrap--azul'
+                                : 'relatorio-resumo-cobranca-wrap--laranja'
+                          const diasLbl = (() => {
+                            const d = String(safeT?.dias || 'dias').trim()
+                            return d ? d.charAt(0).toUpperCase() + d.slice(1) : 'Dias'
+                          })()
+                          const viagemLbl = (() => {
+                            const hv = String((safeT as any)?.horasViagem || '').trim()
+                            if (!hv) return 'Viagem'
+                            const low = hv.toLowerCase()
+                            if (low.includes('viagem') || low.includes('viaje') || low.includes('travel')) {
+                              const m = hv.match(/viagem|viaje|travel/i)
+                              return m ? hv.slice(m.index) : 'Viagem'
+                            }
+                            return hv.length > 14 ? hv.slice(0, 12) + '…' : hv
+                          })()
+                          return (
+                          <div
+                            role="button"
+                            tabIndex={0}
+                            className={`relatorio-resumo-cobranca-wrap ${wrapCard}`}
+                            style={{
+                              marginBottom: '15px',
+                              background: 'rgba(10, 12, 10, 0.55)',
+                              borderRadius: '10px'
+                            }}
+                            onClick={e => {
+                              e.stopPropagation()
+                              handleClickResumoCobranca(ridCard)
+                            }}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                handleClickResumoCobranca(ridCard)
+                              }
+                            }}
+                            title={(safeT as any)?.resumoCobrancaDicaClique || 'Toque para indicar se deve cobrar ao cliente.'}
+                          >
+                            <p className="relatorio-resumo-cobranca-titulo" style={{ marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.95 }}>
                               {safeT?.resumoTrabalho || 'Resumo de Trabalho'}
                             </p>
-                            <div style={{
+                            <div className="relatorio-servico-resumo-view-grid" style={{
                               display: 'grid',
                               gridTemplateColumns: 'repeat(4, 1fr)',
                               gap: '8px',
                               textAlign: 'center'
                             }}>
                               <div>
-                                <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.55)', marginBottom: '3px' }}>Dias</p>
-                                <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#ffffff' }}>{relatorio.diasTrabalho.length}</p>
+                                <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '9px', marginBottom: '3px', opacity: 0.85 }}>{diasLbl}</p>
+                                <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '16px' }}>{relatorio.diasTrabalho.length}</p>
                               </div>
                               <div>
-                                <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.55)', marginBottom: '3px' }}>Horas</p>
-                                <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#ffffff' }}>{totais.horasTrabalho}h</p>
+                                <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '9px', marginBottom: '3px', opacity: 0.85 }}>{safeT?.horas || 'Horas'}</p>
+                                <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '16px' }}>{totais.horasTrabalho}h</p>
                               </div>
                               <div>
-                                <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.55)', marginBottom: '3px' }}>Viagem</p>
-                                <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#ffffff' }}>{totais.horasViagem}h</p>
+                                <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '9px', marginBottom: '3px', opacity: 0.85 }}>{viagemLbl}</p>
+                                <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '16px' }}>{totais.horasViagem}h</p>
                               </div>
                               <div>
-                                <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.55)', marginBottom: '3px' }}>KM</p>
-                                <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#ffffff' }}>{totais.kmsPercorridos}</p>
+                                <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '9px', marginBottom: '3px', opacity: 0.85 }}>{safeT?.km || 'KM'}</p>
+                                <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '16px' }}>{totais.kmsPercorridos}</p>
                               </div>
                             </div>
                           </div>
-                        )}
+                          )
+                        })()}
 
                         {/* Peças Substituídas */}
                         {relatorio.pecasSubstituicao.length > 0 && (
@@ -38981,11 +39015,28 @@ A1;Peça exemplo;10`}
             const codResolvido =
               (typeof primeiroServico.cod === 'string' && primeiroServico.cod.trim()) ||
               servicoCodParaExibicao(primeiroServico)
+            const codCmp = (codResolvido || '').trim().toUpperCase()
+            const candD = (primeiroServico.descricao || '').trim()
+            const candN = (primeiroServico.nome || '').trim()
+            const sameAsCod = (s: string) => s.trim().toUpperCase() === codCmp
+            /** Evita substituir «Horas de trabalho» pelo código curto do cadastro (ex.: HTT, VKR) quando nome = COD */
+            const looksLikeCodToken = (s: string) => {
+              const t = s.trim()
+              if (!t) return true
+              if (sameAsCod(t)) return true
+              if (t.length <= 8 && /^[A-Z0-9._\-]+$/i.test(t) && !/\s/.test(t)) return true
+              return false
+            }
+            const descricaoCadastro =
+              candD && !looksLikeCodToken(candD) ? candD
+              : candN && !looksLikeCodToken(candN) ? candN
+              : ''
+            const descricao = descricaoCadastro || item.descricao
             return {
               ...item,
               servicoId: primeiroServico.id,
               cod: codResolvido || undefined,
-              descricao: primeiroServico.descricao || primeiroServico.nome || item.descricao,
+              descricao,
               valorUnitario: valorUnit,
               valorTotal: total
             }
@@ -39032,12 +39083,23 @@ A1;Peça exemplo;10`}
                   }
                   return ''
                 }
-                const descricao =
-                  pickDesc(
-                    ...(temCodOuServico
-                      ? [saved.descricao, svSaved?.descricao, svSaved?.nome, servicoCadastro?.descricao, servicoCadastro?.nome, item.descricao]
-                      : [servicoCadastro?.descricao, servicoCadastro?.nome, saved.descricao, svSaved?.descricao, svSaved?.nome, item.descricao])
-                  ) || item.descricao
+                const codNorm = (cod || '').trim().toUpperCase()
+                const looksLikeCodOnly = (s: string) => {
+                  const t = (s || '').trim()
+                  if (!t) return true
+                  if (t.toUpperCase() === codNorm) return true
+                  if (t.length <= 8 && /^[A-Z0-9._\-]+$/i.test(t) && !/\s/.test(t)) return true
+                  return false
+                }
+                let descricao = pickDesc(
+                  ...(temCodOuServico
+                    ? [saved.descricao, svSaved?.descricao, svSaved?.nome, servicoCadastro?.descricao, servicoCadastro?.nome]
+                    : [servicoCadastro?.descricao, servicoCadastro?.nome, saved.descricao, svSaved?.descricao, svSaved?.nome])
+                )
+                if (looksLikeCodOnly(descricao)) {
+                  descricao = pickDesc(item.descricao, svSaved?.descricao, servicoCadastro?.descricao, svSaved?.nome, servicoCadastro?.nome, saved.descricao)
+                }
+                if (!descricao || looksLikeCodOnly(descricao)) descricao = item.descricao
                 const servicoId = saved.servicoId || servicoCadastro?.id
                 const total = (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias' || item.id === 'hida' || item.id === 'hret') ? Math.round(qty * valorUnit * 100) / 100 : valorUnit
                 const cobrarDiaria = item.id === 'diarias' && typeof saved.cobrarDiaria === 'boolean' ? saved.cobrarDiaria : (item as FechamentoItem).cobrarDiaria !== false
@@ -39394,11 +39456,20 @@ A1;Peça exemplo;10`}
                         const codFallbackRelatorio = item.origem === 'relatorio' && (item.id === 'ht' ? 'HT' : item.id === 'km' ? 'KM' : item.id === 'hviagem' ? 'H.Viag' : item.id === 'diarias' ? 'DIAR' : item.id === 'hida' ? 'H.Ida' : item.id === 'hret' ? 'H.Ret' : '')
                         const codExibir = codDoServico || codFallbackRelatorio || '—'
                         const nomeExibir = (() => {
+                          const codN = (codExibir || '').trim().toUpperCase()
+                          const bad = (s: string) => {
+                            const t = (s || '').trim()
+                            if (!t) return true
+                            if (t.toUpperCase() === codN) return true
+                            if (t.length <= 8 && /^[A-Z0-9._\-]+$/i.test(t) && !/\s/.test(t)) return true
+                            return false
+                          }
                           for (const v of [item.descricao, servicoVinculado?.descricao, servicoVinculado?.nome]) {
                             const s = v != null ? String(v).trim() : ''
-                            if (s) return s
+                            if (s && !bad(s)) return s
                           }
-                          return '—'
+                          const fallback = (item.descricao || '').trim()
+                          return fallback || '—'
                         })()
                         const itemFixoDoRelatorio = item.origem === 'relatorio'
                         const eManual = item.origem === 'manual'

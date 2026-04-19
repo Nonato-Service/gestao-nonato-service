@@ -4414,6 +4414,10 @@ button.dia-trabalho-acao-btn--del:hover {
 .relatorio-resumo-cobranca-wrap--azul .relatorio-servico-resumo-view-grid > div {
   border-color: rgba(100, 170, 255, 0.45) !important;
 }
+.relatorio-resumo-cobranca-wrap--verde .relatorio-servico-resumo-totais-grid > div,
+.relatorio-resumo-cobranca-wrap--verde .relatorio-servico-resumo-view-grid > div {
+  border-color: rgba(0, 255, 0, 0.4) !important;
+}
 
 /* Conteúdo das tabs: reforço de especificidade (alguns estilos globais usam !important em cor) */
 .tab-content-wrapper .relatorio-resumo-cobranca-wrap--laranja .relatorio-resumo-cobranca-titulo,
