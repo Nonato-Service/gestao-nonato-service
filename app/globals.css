@@ -5437,3 +5437,84 @@ button.dia-trabalho-acao-btn--del:hover {
   opacity: 0 !important;
 }
 
+/* —— Hub «Biblioteca de peças»: abas (Cadastro, Biblioteca, Editar, Categorias, Importação) —— */
+.biblioteca-hub-tablist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: linear-gradient(152deg, rgba(12, 38, 26, 0.78) 0%, rgba(5, 10, 8, 0.94) 100%);
+  border: 1px solid rgba(0, 210, 125, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 10px 36px rgba(0, 0, 0, 0.38);
+}
+
+.biblioteca-hub-tab {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  color: rgba(245, 255, 248, 0.96);
+  cursor: pointer;
+  outline: none;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 195, 118, 0.35);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0.22) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 2px 12px rgba(0, 0, 0, 0.32);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.18s ease;
+}
+
+.biblioteca-hub-tab:hover {
+  border-color: rgba(0, 255, 165, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 4px 20px rgba(0, 95, 55, 0.32);
+  transform: translateY(-1px);
+}
+
+.biblioteca-hub-tab:focus-visible {
+  border-color: rgba(0, 255, 180, 0.65);
+  box-shadow:
+    0 0 0 2px rgba(0, 230, 140, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 4px 18px rgba(0, 0, 0, 0.35);
+}
+
+.biblioteca-hub-tab--active {
+  font-weight: 800;
+  color: #ffffff;
+  border: 1px solid rgba(0, 255, 175, 0.72);
+  background: linear-gradient(168deg, rgba(28, 105, 68, 0.96) 0%, rgba(6, 44, 28, 0.99) 100%);
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 140, 0.22),
+    0 8px 30px rgba(0, 130, 72, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.biblioteca-hub-tab--active:hover {
+  border-color: rgba(120, 255, 200, 0.85);
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 160, 0.3),
+    0 10px 34px rgba(0, 150, 85, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.biblioteca-hub-tab:active {
+  transform: translateY(0);
+}
+

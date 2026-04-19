@@ -30680,20 +30680,8 @@ onKeyPress={(e) => {
         const hubT: Record<string, string> = (safeT || {}) as Record<string, string>
         const bibFmtCount = (n: number) =>
           String(hubT.bibliotecaContagemPecas || '{count}').replace('{count}', String(n))
-        const bpTab = (active: boolean): React.CSSProperties => ({
-          padding: '10px 16px',
-          backgroundColor: active ? 'rgba(8, 42, 22, 0.98)' : 'rgba(255,255,255,0.03)',
-          border: active ? '1px solid rgba(0, 230, 120, 0.5)' : '1px solid transparent',
-          color: '#ffffff',
-          cursor: 'pointer',
-          fontSize: 13,
-          fontWeight: active ? 800 : 600,
-          borderRadius: 11,
-          transition: 'all 0.2s ease',
-          boxShadow: active
-            ? '0 0 24px rgba(0, 200, 90, 0.14), inset 0 1px 0 rgba(255,255,255,0.07)'
-            : 'none',
-        })
+        const bibliotecaHubTabClass = (active: boolean) =>
+          `biblioteca-hub-tab${active ? ' biblioteca-hub-tab--active' : ''}`
         const BibliotecaSecaoCategoria = (props: {
           titulo: string
           count: number
@@ -31053,68 +31041,58 @@ onKeyPress={(e) => {
             </div>
             </div>
 
-            {/* Abas — controlos segmentados */}
+            {/* Abas — controlos segmentados (estilos: globals.css .biblioteca-hub-tablist / .biblioteca-hub-tab) */}
             <div
               role="tablist"
+              className="biblioteca-hub-tablist"
               aria-label={hubT.bibliotecaNavAria || 'Biblioteca de peças'}
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 6,
-                marginBottom: 20,
-                padding: 8,
-                borderRadius: 14,
-                background: 'rgba(0, 0, 0, 0.38)',
-                border: '1px solid rgba(0, 255, 120, 0.16)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
-              }}
             >
               <button
                 type="button"
                 role="tab"
+                className={bibliotecaHubTabClass(abaBibliotecaPecas === 'cadastro')}
                 aria-selected={abaBibliotecaPecas === 'cadastro'}
                 onClick={() => setAbaBibliotecaPecas('cadastro')}
-                style={bpTab(abaBibliotecaPecas === 'cadastro')}
               >
                 {safeT?.cadastroPecas || 'Cadastro de Peças'}
               </button>
               <button
                 type="button"
                 role="tab"
+                className={bibliotecaHubTabClass(abaBibliotecaPecas === 'biblioteca')}
                 aria-selected={abaBibliotecaPecas === 'biblioteca'}
                 onClick={() => {
                   setAbaBibliotecaPecas('biblioteca')
                   setBibliotecaAgruparPorCategoria(true)
                   setVisualizacaoBiblioteca('grid')
                 }}
-                style={bpTab(abaBibliotecaPecas === 'biblioteca')}
               >
                 {safeT?.bibliotecaPecas || 'Biblioteca'}
               </button>
               <button
                 type="button"
                 role="tab"
+                className={bibliotecaHubTabClass(abaBibliotecaPecas === 'biblioteca-gestao')}
                 aria-selected={abaBibliotecaPecas === 'biblioteca-gestao'}
                 onClick={() => setAbaBibliotecaPecas('biblioteca-gestao')}
-                style={bpTab(abaBibliotecaPecas === 'biblioteca-gestao')}
               >
                 ✏️ {(safeT as any)?.bibliotecaGestaoEditarTitulo || 'Editar biblioteca'}
               </button>
               <button
                 type="button"
                 role="tab"
+                className={bibliotecaHubTabClass(abaBibliotecaPecas === 'grupos')}
                 aria-selected={abaBibliotecaPecas === 'grupos'}
                 onClick={() => setAbaBibliotecaPecas('grupos')}
-                style={bpTab(abaBibliotecaPecas === 'grupos')}
               >
                 {safeT?.gerenciarCategorias || 'Gerenciar Categorias'}
               </button>
               <button
                 type="button"
                 role="tab"
+                className={bibliotecaHubTabClass(abaBibliotecaPecas === 'importacao')}
                 aria-selected={abaBibliotecaPecas === 'importacao'}
                 onClick={() => setAbaBibliotecaPecas('importacao')}
-                style={bpTab(abaBibliotecaPecas === 'importacao')}
               >
                 📥 {safeT?.importacaoPecas || 'Importação de Peças'}
               </button>
