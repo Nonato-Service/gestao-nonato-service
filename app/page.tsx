@@ -30878,7 +30878,7 @@ onKeyPress={(e) => {
           )
         }
         return (
-          <div className="tab-content-wrapper tab-glass-root" style={{ overflow: 'visible' }}>
+          <div className="tab-content-wrapper tab-glass-root biblioteca-pecas-hub" style={{ overflow: 'visible' }}>
             {bibliotecaImageHoverPreview && typeof window !== 'undefined' ? (() => {
               const maxW = 300
               const maxH = 300
@@ -30936,27 +30936,8 @@ onKeyPress={(e) => {
               )
             })() : null}
             {/* Cabeçalho — moldura em gradiente */}
-            <div
-              style={{
-                position: 'relative',
-                marginBottom: 20,
-                padding: 2,
-                borderRadius: 18,
-                background: 'linear-gradient(145deg, rgba(0,255,150,0.45), rgba(0,70,42,0.35) 40%, rgba(0,120,80,0.5))',
-                boxShadow:
-                  '0 0 0 1px rgba(0,255,120,0.12), 0 22px 56px rgba(0, 30, 16, 0.55), inset 0 1px 0 rgba(255,255,255,0.06)',
-              }}
-            >
-            <div
-              className="tab-glass-hero tab-glass-hero--compact"
-              style={{
-                borderRadius: 16,
-                margin: 0,
-                background: 'linear-gradient(168deg, rgba(12,32,20,0.98), rgba(4,14,9,0.94))',
-                border: '1px solid rgba(0, 255, 120, 0.14)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
-              }}
-            >
+            <div className="biblioteca-pecas-hub__hero-ring">
+            <div className="tab-glass-hero tab-glass-hero--compact">
               <div className="tab-glass-hero-top" style={{ marginBottom: 0 }}>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
@@ -30978,61 +30959,19 @@ onKeyPress={(e) => {
                 </div>
                 <div className="tab-glass-hero-actions">
                   <div className="tab-glass-hero-actions-row">
-                  <button 
+                  <button
+                    type="button"
+                    className="biblioteca-pecas-hub__icon-btn biblioteca-pecas-hub__icon-btn--back"
                     onClick={() => closeTab(activeTabId || '')}
-                    style={{ 
-                      padding: '6px 8px', 
-                      fontSize: '16px',
-                      backgroundColor: 'rgba(0, 255, 0, 0.06)',
-                      border: '1px solid rgba(0, 255, 0, 0.55)',
-                      borderRadius: '4px',
-                      color: '#ffffff',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '32px',
-                      height: '32px'
-                    }}
                     title={safeT?.voltar || 'Voltar'}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.12)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.72)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.06)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.55)'
-                    }}
                   >
                     ↶
                   </button>
-                  <button 
+                  <button
+                    type="button"
+                    className="biblioteca-pecas-hub__icon-btn biblioteca-pecas-hub__icon-btn--home"
                     onClick={voltarPaginaInicial}
-                    style={{ 
-                      padding: '6px 8px', 
-                      fontSize: '16px',
-                      backgroundColor: 'rgba(0, 150, 255, 0.06)',
-                      border: '1px solid rgba(0, 150, 255, 0.55)',
-                      borderRadius: '4px',
-                      color: '#ffffff',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '32px',
-                      height: '32px'
-                    }}
                     title={safeT?.paginaInicial || 'Página Inicial'}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.12)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.72)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.06)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.55)'
-                    }}
                   >
                     🏠
                   </button>
@@ -31043,39 +30982,19 @@ onKeyPress={(e) => {
             </div>
 
             {/* Painel de Estatísticas — visão geral */}
-            <div style={{ marginBottom: 18 }}>
-              <div
-                style={{
-                  fontSize: 11,
-                  letterSpacing: '0.16em',
-                  textTransform: 'uppercase',
-                  fontWeight: 800,
-                  color: 'rgba(160, 235, 190, 0.88)',
-                  marginBottom: 10,
-                }}
-              >
+            <div className="biblioteca-pecas-hub__stats-panel">
+              <p className="biblioteca-pecas-hub__eyebrow">
                 {hubT.bibliotecaVisaoGeral || 'Visão geral'}
-              </div>
-              <p
-                style={{
-                  fontSize: 12,
-                  lineHeight: 1.55,
-                  color: 'rgba(210, 240, 222, 0.9)',
-                  margin: '0 0 12px',
-                  maxWidth: 780,
-                }}
-              >
+              </p>
+              <p className="biblioteca-pecas-hub__lead">
                 {hubT.bibliotecaVisaoGeralSub ||
                   'Resumo do volume de peças e da árvore de grupos (categorias e subcategorias).'}
               </p>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', 
-              gap: '12px', 
-              marginBottom: 0
-            }}>
-              <div style={{
-                ...glassCardStyle(ACCENT_GREEN, { padding: '10px 12px', radius: '10px', borderAlpha: 0.2 }),
+            <div className="biblioteca-pecas-hub__kpi-grid">
+              <div
+                className="biblioteca-pecas-hub__kpi"
+                style={{
+                ...glassCardStyle(ACCENT_GREEN, { padding: '12px 14px', radius: '10px', borderAlpha: 0.2 }),
                 textAlign: 'center',
                 display: 'flex',
                 alignItems: 'center',
@@ -31087,12 +31006,14 @@ onKeyPress={(e) => {
               >
                 <span style={{ fontSize: '18px', opacity: 0.9 }}>⚙️</span>
                 <div style={{ textAlign: 'left' }}>
-                  <div style={{ color: '#ffffff', fontSize: '11px', fontWeight: '600', lineHeight: 1.2, opacity: 0.9 }}>{safeT?.quantidadePecas || 'Peças'}</div>
-                  <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>{pecasBiblioteca.length}</div>
+                  <div className="biblioteca-pecas-hub__kpi-label">{safeT?.quantidadePecas || 'Peças'}</div>
+                  <div className="biblioteca-pecas-hub__kpi-value">{pecasBiblioteca.length}</div>
                 </div>
               </div>
-              <div style={{
-                ...glassCardStyle(ACCENT_GREEN, { padding: '10px 12px', radius: '10px', borderAlpha: 0.2 }),
+              <div
+                className="biblioteca-pecas-hub__kpi"
+                style={{
+                ...glassCardStyle(ACCENT_GREEN, { padding: '12px 14px', radius: '10px', borderAlpha: 0.2 }),
                 textAlign: 'center',
                 display: 'flex',
                 alignItems: 'center',
@@ -31104,12 +31025,14 @@ onKeyPress={(e) => {
               >
                 <span style={{ fontSize: '18px', opacity: 0.9 }}>📁</span>
                 <div style={{ textAlign: 'left' }}>
-                  <div style={{ color: '#ffffff', fontSize: '11px', fontWeight: '600', lineHeight: 1.2, opacity: 0.9 }}>{safeT?.quantidadeCategorias || 'Categorias'}</div>
-                  <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>{categoriasPecas.length}</div>
+                  <div className="biblioteca-pecas-hub__kpi-label">{safeT?.quantidadeCategorias || 'Categorias'}</div>
+                  <div className="biblioteca-pecas-hub__kpi-value">{categoriasPecas.length}</div>
                 </div>
               </div>
-              <div style={{
-                ...glassCardStyle(ACCENT_GREEN, { padding: '10px 12px', radius: '10px', borderAlpha: 0.2 }),
+              <div
+                className="biblioteca-pecas-hub__kpi"
+                style={{
+                ...glassCardStyle(ACCENT_GREEN, { padding: '12px 14px', radius: '10px', borderAlpha: 0.2 }),
                 textAlign: 'center',
                 display: 'flex',
                 alignItems: 'center',
@@ -31121,14 +31044,15 @@ onKeyPress={(e) => {
               >
                 <span style={{ fontSize: '18px', opacity: 0.9 }}>📂</span>
                 <div style={{ textAlign: 'left' }}>
-                  <div style={{ color: '#ffffff', fontSize: '11px', fontWeight: '600', lineHeight: 1.2, opacity: 0.9 }}>{safeT?.quantidadeSubcategorias || 'Subcategorias'}</div>
-                  <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>{subcategoriasPecas.length}</div>
+                  <div className="biblioteca-pecas-hub__kpi-label">{safeT?.quantidadeSubcategorias || 'Subcategorias'}</div>
+                  <div className="biblioteca-pecas-hub__kpi-value">{subcategoriasPecas.length}</div>
                 </div>
               </div>
             </div>
             </div>
 
-            {/* Abas — controlos segmentados (estilos: globals.css .biblioteca-hub-tablist / .biblioteca-hub-tab) */}
+            {/* Abas + atalho loja (navegação) */}
+            <div className="biblioteca-hub-nav">
             <div
               role="tablist"
               className="biblioteca-hub-tablist"
@@ -31183,20 +31107,22 @@ onKeyPress={(e) => {
               >
                 📥 {safeT?.importacaoPecas || 'Importação de Peças'}
               </button>
+            </div>
+            <div className="biblioteca-hub-nav__aux">
               <a
                 href={HOMAG_SHOP_PECAS_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={bibliotecaHubTabClass(false)}
-                style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', boxSizing: 'border-box' }}
+                className="biblioteca-hub-tab biblioteca-hub-tab--external"
               >
                 🛒 Loja Nonato Service / Homag
               </a>
             </div>
+            </div>
 
             {/* Banner: a selecionar peça para o checklist (veio do Criação de Checklist) */}
             {criacaoChecklistPendentePeca?.origem === 'biblioteca' && (
-              <div style={{ marginBottom: '16px', padding: '12px 16px', backgroundColor: 'rgba(0, 255, 0, 0.12)', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+              <div className="biblioteca-pecas-hub__banner">
                 <span style={{ color: '#00ff00', fontWeight: 600, fontSize: '13px' }}>{(safeT as any)?.selecionarPecaParaChecklist || 'Selecione uma peça abaixo e clique em OK para associar ao item do checklist.'}</span>
                 {pecaSelecionadaParaChecklist && (
                   <>
@@ -31232,28 +31158,8 @@ onKeyPress={(e) => {
             {/* Conteúdo da aba Cadastro */}
             {abaBibliotecaPecas === 'cadastro' && (
               <>
-                <div
-                  style={{
-                    marginBottom: '20px',
-                    borderRadius: 14,
-                    border: '1px solid rgba(0, 210, 120, 0.28)',
-                    background: 'linear-gradient(95deg, rgba(0, 72, 40, 0.42), rgba(5, 16, 10, 0.94))',
-                    boxShadow: '0 16px 44px rgba(0, 32, 16, 0.42)',
-                    position: 'relative',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      width: 5,
-                      background: 'linear-gradient(180deg, #3dff9a, #00a85c)',
-                      boxShadow: '0 0 18px rgba(0, 255, 140, 0.35)',
-                    }}
-                  />
+                <div className="biblioteca-pecas-hub__callout" style={{ marginBottom: '20px' }}>
+                  <div className="biblioteca-pecas-hub__callout-accent" aria-hidden />
                   <div
                     style={{
                       padding: '12px 16px 10px 22px',
@@ -32459,73 +32365,31 @@ onKeyPress={(e) => {
                   </p>
                 )}
                 {/* Controles de visualização — painel único */}
-                <div
-                  style={{
-                    marginBottom: 20,
-                    padding: '14px 16px',
-                    borderRadius: 14,
-                    border: '1px solid rgba(0, 210, 120, 0.18)',
-                    background: 'linear-gradient(108deg, rgba(0, 36, 20, 0.55), rgba(6, 12, 10, 0.92))',
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 10,
-                      letterSpacing: '0.14em',
-                      textTransform: 'uppercase',
-                      fontWeight: 800,
-                      color: 'rgba(170, 235, 200, 0.9)',
-                      marginBottom: 12,
-                    }}
-                  >
+                <div className="biblioteca-hub-toolbar">
+                  <div className="biblioteca-hub-toolbar__title">
                     {hubT.bibliotecaCatalogoToolbarTitulo || 'Catálogo — filtros, visualização e grupos'}
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
                   {!somenteLeituraBiblioteca ? (
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                     <button
                       type="button"
                       onClick={() => setVisualizacaoBiblioteca('grid')}
-                      style={{
-                        padding: '8px 15px',
-                        backgroundColor: visualizacaoBiblioteca === 'grid' ? 'rgba(0, 255, 0, 0.2)' : 'transparent',
-                        border: '1px solid rgba(0, 255, 0, 0.3)',
-                        color: visualizacaoBiblioteca === 'grid' ? '#00ff00' : '#fff',
-                        cursor: 'pointer',
-                        borderRadius: '4px',
-                        fontSize: '13px'
-                      }}
+                      className={`biblioteca-pecas-hub__seg${visualizacaoBiblioteca === 'grid' ? ' biblioteca-pecas-hub__seg--active' : ''}`}
                     >
                       {safeT?.visualizacaoGrid || 'Grade'}
                     </button>
                     <button
                       type="button"
                       onClick={() => setVisualizacaoBiblioteca('lista')}
-                      style={{
-                        padding: '8px 15px',
-                        backgroundColor: visualizacaoBiblioteca === 'lista' ? 'rgba(0, 255, 0, 0.2)' : 'transparent',
-                        border: '1px solid rgba(0, 255, 0, 0.3)',
-                        color: visualizacaoBiblioteca === 'lista' ? '#00ff00' : '#fff',
-                        cursor: 'pointer',
-                        borderRadius: '4px',
-                        fontSize: '13px'
-                      }}
+                      className={`biblioteca-pecas-hub__seg${visualizacaoBiblioteca === 'lista' ? ' biblioteca-pecas-hub__seg--active' : ''}`}
                     >
                       {safeT?.visualizacaoLista || 'Lista'}
                     </button>
                     <button
                       type="button"
                       onClick={() => setBibliotecaAgruparPorCategoria(true)}
-                      style={{
-                        padding: '8px 15px',
-                        backgroundColor: bibliotecaAgruparPorCategoria ? 'rgba(0, 255, 0, 0.2)' : 'transparent',
-                        border: '1px solid rgba(0, 255, 0, 0.3)',
-                        color: bibliotecaAgruparPorCategoria ? '#00ff00' : '#fff',
-                        cursor: 'pointer',
-                        borderRadius: '4px',
-                        fontSize: '13px',
-                      }}
+                      className={`biblioteca-pecas-hub__seg${bibliotecaAgruparPorCategoria ? ' biblioteca-pecas-hub__seg--active' : ''}`}
                     >
                       {safeT?.bibliotecaPorCategoria || 'Por categoria'}
                     </button>
@@ -32536,15 +32400,7 @@ onKeyPress={(e) => {
                         setFiltroGrupoBiblioteca('')
                         setFiltroSubgrupoBiblioteca('')
                       }}
-                      style={{
-                        padding: '8px 15px',
-                        backgroundColor: !bibliotecaAgruparPorCategoria ? 'rgba(0, 255, 0, 0.2)' : 'transparent',
-                        border: '1px solid rgba(0, 255, 0, 0.3)',
-                        color: !bibliotecaAgruparPorCategoria ? '#00ff00' : '#fff',
-                        cursor: 'pointer',
-                        borderRadius: '4px',
-                        fontSize: '13px',
-                      }}
+                      className={`biblioteca-pecas-hub__seg${!bibliotecaAgruparPorCategoria ? ' biblioteca-pecas-hub__seg--active' : ''}`}
                     >
                       {safeT?.bibliotecaTodasPecas || 'Todas as peças'}
                     </button>
@@ -32560,12 +32416,12 @@ onKeyPress={(e) => {
                   {/* Filtro por grupo */}
                   <div style={{ minWidth: '200px' }}>
                     <select
+                      className="biblioteca-pecas-hub__select"
                       value={filtroGrupoBiblioteca || ''}
                       onChange={(e) => {
                         setFiltroGrupoBiblioteca(e.target.value)
                         setFiltroSubgrupoBiblioteca('')
                       }}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                     >
                       <option value="">{safeT?.todosGrupos || 'Todos os grupos'}</option>
                       <option value={BIBLIOTECA_FILTRO_SEM_CATEGORIA}>
@@ -32599,9 +32455,9 @@ onKeyPress={(e) => {
                   {filtroGrupoBiblioteca && filtroGrupoBiblioteca !== BIBLIOTECA_FILTRO_SEM_CATEGORIA ? (
                     <div style={{ minWidth: '200px' }}>
                       <select
+                        className="biblioteca-pecas-hub__select"
                         value={filtroSubgrupoBiblioteca || ''}
                         onChange={(e) => setFiltroSubgrupoBiblioteca(e.target.value)}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                       >
                         <option value="">{safeT?.todasSubcategorias || 'Todas as subcategorias'}</option>
                         {subcategoriasPecas
@@ -33957,25 +33813,18 @@ onKeyPress={(e) => {
 
             {/* Conteúdo da aba Importação de Peças - importar lista de um site (URL) */}
             {abaBibliotecaPecas === 'importacao' && (
-              <div style={{
-                padding: '24px',
-                minHeight: '280px',
-                backgroundColor: 'rgba(20, 25, 20, 0.9)',
-                borderRadius: '12px',
-                border: '2px solid rgba(0, 255, 0, 0.35)',
-                color: '#ccc'
-              }}>
-                <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', color: '#00ff00', fontWeight: '600' }}>
+              <div className="biblioteca-pecas-hub__import-card">
+                <h3>
                   📥 {safeT?.importacaoPecas || 'Importação de Peças'}
                 </h3>
-                <p style={{ fontSize: '14px', marginBottom: '20px', opacity: 0.9 }}>
+                <p style={{ fontSize: '14px', marginBottom: '18px', lineHeight: 1.55, color: 'rgba(230, 238, 232, 0.95)' }}>
                   {safeT?.importacaoUrlDesc || 'Cole a URL de um ficheiro JSON/CSV ou carregue um ficheiro da sua lista de peças (ex.: exportação Homag ou outro).'}
                 </p>
-                <p style={{ fontSize: '12px', marginBottom: '16px', color: '#888' }}>
+                <p className="biblioteca-pecas-hub__import-hint">
                   {safeT?.importacaoNotaHomag || 'Nota: A loja Homag (shop.homag.com) carrega os dados por JavaScript; use antes exportação/ficheiro CSV ou JSON se tiver.'}
                 </p>
-                <div style={{ marginBottom: '16px', padding: '12px', borderRadius: '8px', border: '1px solid rgba(0,180,255,0.35)', backgroundColor: 'rgba(0,120,200,0.08)' }}>
-                  <div style={{ color: '#7cc8ff', fontSize: '13px', fontWeight: 700, marginBottom: '6px' }}>
+                <div className="biblioteca-pecas-hub__import-assist">
+                  <div>
                     🧭 {(safeT as any)?.importacaoAssistenteHomagTitle || 'Assistente HOMAG (rápido e seguro)'}
                   </div>
                   <ol style={{ margin: 0, paddingLeft: '18px', color: '#bddfff', fontSize: '12px', lineHeight: 1.55 }}>

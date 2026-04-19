@@ -5518,3 +5518,330 @@ button.dia-trabalho-acao-btn--del:hover {
   transform: translateY(0);
 }
 
+/* —— Hub «Biblioteca de peças»: layout geral, hero, KPIs, navegação, ferramentas —— */
+.biblioteca-pecas-hub {
+  --bib-hub-accent: rgba(0, 230, 150, 0.92);
+  --bib-hub-accent-soft: rgba(0, 210, 125, 0.35);
+  --bib-hub-surface: rgba(8, 18, 14, 0.72);
+  --bib-hub-border: rgba(0, 210, 120, 0.22);
+  --bib-hub-text: rgba(245, 255, 248, 0.96);
+  --bib-hub-muted: rgba(200, 230, 212, 0.88);
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(8px, 1.2vw, 16px);
+  padding-right: clamp(8px, 1.2vw, 16px);
+  padding-bottom: 28px;
+}
+
+.biblioteca-pecas-hub__hero-ring {
+  position: relative;
+  margin-bottom: 22px;
+  padding: 2px;
+  border-radius: 20px;
+  background: linear-gradient(
+    145deg,
+    rgba(0, 255, 160, 0.38) 0%,
+    rgba(0, 72, 48, 0.42) 42%,
+    rgba(0, 140, 95, 0.48) 100%
+  );
+  box-shadow:
+    0 0 0 1px rgba(0, 255, 120, 0.1),
+    0 24px 60px rgba(0, 22, 12, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.biblioteca-pecas-hub .tab-glass-hero.tab-glass-hero--compact {
+  margin-bottom: 0;
+  border-radius: 18px;
+  border-width: 1px;
+  border-color: rgba(0, 255, 120, 0.16);
+  background: linear-gradient(168deg, rgba(10, 34, 22, 0.99), rgba(4, 12, 9, 0.96));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.biblioteca-pecas-hub__icon-btn {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 10px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+  border: 1px solid transparent;
+  color: #fff;
+}
+
+.biblioteca-pecas-hub__icon-btn--back {
+  background: rgba(0, 255, 0, 0.07);
+  border-color: rgba(0, 255, 0, 0.45);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+.biblioteca-pecas-hub__icon-btn--back:hover {
+  background: rgba(0, 255, 0, 0.14);
+  border-color: rgba(0, 255, 180, 0.65);
+  box-shadow: 0 4px 16px rgba(0, 60, 30, 0.35);
+}
+.biblioteca-pecas-hub__icon-btn--home {
+  background: rgba(0, 140, 255, 0.08);
+  border-color: rgba(0, 160, 255, 0.45);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+.biblioteca-pecas-hub__icon-btn--home:hover {
+  background: rgba(0, 140, 255, 0.16);
+  border-color: rgba(100, 200, 255, 0.7);
+  box-shadow: 0 4px 16px rgba(0, 40, 80, 0.35);
+}
+.biblioteca-pecas-hub__icon-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 230, 150, 0.45);
+}
+
+.biblioteca-pecas-hub__stats-panel {
+  margin-bottom: 22px;
+  padding: 18px 18px 16px;
+  border-radius: 18px;
+  background: linear-gradient(155deg, rgba(14, 38, 26, 0.55) 0%, rgba(5, 10, 8, 0.88) 100%);
+  border: 1px solid var(--bib-hub-border);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 14px 40px rgba(0, 0, 0, 0.32);
+}
+
+.biblioteca-pecas-hub__eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: rgba(160, 235, 195, 0.92);
+  margin: 0 0 8px;
+}
+
+.biblioteca-pecas-hub__lead {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--bib-hub-muted);
+  margin: 0 0 16px;
+  max-width: 52rem;
+}
+
+.biblioteca-pecas-hub__kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 12px;
+}
+
+.biblioteca-pecas-hub__kpi {
+  min-height: 64px;
+  border-radius: 14px !important;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.18s ease;
+}
+.biblioteca-pecas-hub__kpi:hover {
+  transform: translateY(-1px);
+}
+
+.biblioteca-pecas-hub__kpi-label {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  opacity: 0.92;
+}
+
+.biblioteca-pecas-hub__kpi-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.biblioteca-hub-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.biblioteca-hub-nav .biblioteca-hub-tablist {
+  flex: 1 1 280px;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.biblioteca-hub-nav__aux {
+  flex: 0 1 auto;
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.biblioteca-hub-tab--external {
+  text-decoration: none;
+  display: inline-flex !important;
+  align-items: center;
+  box-sizing: border-box;
+  white-space: nowrap;
+  border-color: rgba(0, 170, 255, 0.38) !important;
+  background: linear-gradient(180deg, rgba(0, 120, 200, 0.12) 0%, rgba(0, 0, 0, 0.2) 100%) !important;
+}
+.biblioteca-hub-tab--external:hover {
+  border-color: rgba(120, 210, 255, 0.55) !important;
+  color: #fff !important;
+}
+
+.biblioteca-pecas-hub__banner {
+  margin-bottom: 18px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: linear-gradient(95deg, rgba(0, 72, 36, 0.45), rgba(8, 22, 14, 0.92));
+  border: 1px solid rgba(0, 255, 120, 0.35);
+  box-shadow: 0 8px 28px rgba(0, 24, 14, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.biblioteca-pecas-hub__callout {
+  margin-bottom: 22px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 210, 120, 0.3);
+  background: linear-gradient(100deg, rgba(0, 56, 32, 0.5), rgba(6, 14, 10, 0.95));
+  box-shadow: 0 18px 48px rgba(0, 28, 16, 0.38);
+  position: relative;
+  overflow: hidden;
+}
+
+.biblioteca-pecas-hub__callout-accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: linear-gradient(180deg, #3dff9a, #00a85c);
+  box-shadow: 0 0 18px rgba(0, 255, 140, 0.35);
+}
+
+.biblioteca-hub-toolbar {
+  margin-bottom: 22px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 210, 120, 0.22);
+  background: linear-gradient(108deg, rgba(0, 40, 24, 0.58), rgba(6, 12, 10, 0.94));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 12px 36px rgba(0, 0, 0, 0.28);
+}
+
+.biblioteca-hub-toolbar__title {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: rgba(170, 235, 200, 0.92);
+  margin: 0 0 12px;
+}
+
+.biblioteca-pecas-hub__seg {
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1px solid rgba(0, 200, 120, 0.32);
+  background: rgba(0, 0, 0, 0.2);
+  color: rgba(255, 255, 255, 0.92);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.biblioteca-pecas-hub__seg:hover {
+  border-color: rgba(0, 255, 160, 0.45);
+  box-shadow: 0 2px 12px rgba(0, 50, 28, 0.25);
+}
+.biblioteca-pecas-hub__seg--active {
+  background: linear-gradient(168deg, rgba(28, 105, 68, 0.85) 0%, rgba(6, 44, 28, 0.95) 100%);
+  border-color: rgba(0, 255, 175, 0.55);
+  color: #c8ffd8;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 4px 18px rgba(0, 90, 50, 0.3);
+}
+
+.biblioteca-pecas-hub__select {
+  width: 100%;
+  padding: 10px 12px;
+  background: linear-gradient(180deg, #1e1e1e 0%, #161616 100%);
+  color: #fff;
+  border: 1px solid rgba(0, 200, 120, 0.32);
+  border-radius: 10px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.biblioteca-pecas-hub__select:focus {
+  border-color: rgba(0, 255, 160, 0.55);
+  box-shadow: 0 0 0 2px rgba(0, 230, 140, 0.25);
+}
+
+.biblioteca-pecas-hub__import-card {
+  padding: 22px 22px 26px;
+  min-height: 280px;
+  background: linear-gradient(165deg, rgba(16, 28, 22, 0.96), rgba(8, 12, 10, 0.98));
+  border-radius: 16px;
+  border: 1px solid rgba(0, 210, 120, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 16px 44px rgba(0, 0, 0, 0.35);
+  color: rgba(220, 230, 224, 0.95);
+}
+
+.biblioteca-pecas-hub__import-card h3 {
+  margin: 0 0 14px;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--bib-hub-accent);
+  letter-spacing: 0.02em;
+}
+
+.biblioteca-pecas-hub__import-hint {
+  font-size: 12px;
+  margin-bottom: 14px;
+  color: rgba(180, 190, 184, 0.9);
+  line-height: 1.55;
+}
+
+.biblioteca-pecas-hub__import-assist {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 170, 255, 0.32);
+  background: rgba(0, 90, 150, 0.1);
+}
+
+.biblioteca-pecas-hub__import-assist > div:first-of-type {
+  color: #9fd8ff;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
