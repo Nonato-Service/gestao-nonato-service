@@ -1262,6 +1262,10 @@ body,
   --sidebar-accent: #4ade80;
   --sidebar-accent-soft: #86efac;
   --sidebar-accent-muted: rgba(74, 222, 128, 0.18);
+  --sidebar-drawer-bg0: rgba(6, 10, 8, 0.96);
+  --sidebar-drawer-bg1: rgba(11, 15, 13, 0.99);
+  --sidebar-drawer-rail: rgba(74, 222, 128, 0.26);
+  --sidebar-subtle-line: rgba(255, 255, 255, 0.06);
   --sidebar-text: rgba(243, 244, 246, 0.95);
   --sidebar-text-dim: rgba(214, 250, 226, 0.87);
   width: 280px;
@@ -1273,7 +1277,7 @@ body,
   padding: 20px 14px 24px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -1316,8 +1320,47 @@ body,
   border: 1px solid rgba(74, 222, 128, 0.17);
 }
 
+@keyframes sidebar-nav-drawer-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Cada módulo da navegação: “cartão” leve para não misturar com o vizinho ao expandir */
 .sidebar-nav-cluster {
-  margin: 0;
+  margin: 0 0 12px;
+  padding: 6px 7px 8px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 1px 0 rgba(0, 0, 0, 0.35);
+  transition:
+    background 0.24s ease,
+    border-color 0.24s ease,
+    box-shadow 0.28s ease;
+}
+
+/* Último bloco de navegação: sem margem extra; o botão Sair traz o espaçamento */
+.sidebar > .sidebar-nav-cluster:last-of-type {
+  margin-bottom: 0;
+}
+
+/* Grupo com subitens abertos: cartão um pouco mais definido */
+.sidebar-nav-cluster:has(.sidebar-action-buttons) {
+  padding: 8px 8px 10px;
+  background: rgba(3, 8, 5, 0.55);
+  border-color: rgba(74, 222, 128, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 4px 18px rgba(0, 0, 0, 0.32),
+    0 0 0 1px rgba(52, 211, 153, 0.06);
 }
 
 .sidebar-brand {
@@ -1344,7 +1387,21 @@ body,
 }
 
 .sidebar-nav-subcluster {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  padding: 4px 2px 2px;
+  border-radius: 12px;
+  transition: background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.sidebar-nav-subcluster:last-child {
+  margin-bottom: 0;
+}
+
+.sidebar-nav-subcluster:has(.sidebar-action-buttons) {
+  padding: 6px 4px 6px;
+  background: rgba(0, 0, 0, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.045);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 /* Cabeçalhos de grupo — cartão escuro, traço de acento à esquerda */
@@ -1367,11 +1424,13 @@ body,
   font-weight: 600 !important;
   line-height: 1.25 !important;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
     box-shadow 0.2s ease,
-    color 0.2s ease;
+    color 0.2s ease,
+    transform 0.18s ease;
 }
 
 .sidebar button.btn-primary.sidebar-group-header:not(.sidebar-group-btn-selected) {
@@ -1395,6 +1454,11 @@ body,
     0 6px 20px rgba(0, 0, 0, 0.34),
     0 0 0 1px rgba(52, 211, 153, 0.14),
     0 0 30px rgba(52, 211, 153, 0.12) !important;
+}
+
+.sidebar button.btn-primary.sidebar-group-header:not(.sidebar-group-btn-selected):active,
+.sidebar button.btn-administrador.sidebar-group-header:not(.sidebar-group-btn-selected):active {
+  transform: scale(0.992);
 }
 
 .sidebar button.btn-administrador.sidebar-group-header:not(.sidebar-group-btn-selected) {
@@ -1430,10 +1494,20 @@ body,
 
 .sidebar .sidebar-group-header .sidebar-nav-chevron {
   flex-shrink: 0;
-  font-size: 11px;
-  opacity: 0.9;
-  color: rgba(167, 243, 208, 0.62);
+  min-width: 26px;
+  height: 26px;
   margin-left: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  line-height: 1;
+  opacity: 0.95;
+  color: rgba(186, 250, 210, 0.78);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(74, 222, 128, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .sidebar .sidebar-group-header .sidebar-nav-label {
@@ -1471,67 +1545,105 @@ body,
 }
 
 .sidebar .sidebar-group-btn-selected .sidebar-nav-chevron {
-  color: rgba(190, 250, 210, 0.95);
+  color: rgba(210, 255, 225, 0.98);
   opacity: 1;
-  text-shadow: 0 0 14px rgba(52, 211, 153, 0.3);
+  background: rgba(52, 211, 153, 0.12);
+  border-color: rgba(110, 231, 183, 0.35);
+  text-shadow: 0 0 10px rgba(52, 211, 153, 0.22);
 }
 
-/* Itens dentro do grupo — “gaveta” visual */
+.sidebar .sidebar-action-btn.sidebar-action-btn--row .sidebar-nav-chevron {
+  flex-shrink: 0;
+  min-width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  line-height: 1;
+  border-radius: 7px;
+  color: rgba(186, 250, 210, 0.72);
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(74, 222, 128, 0.12);
+}
+
+/* Itens dentro do grupo — gaveta mais escrita e separada do cabeçalho principal */
 .sidebar .sidebar-action-buttons {
-  margin-top: 8px !important;
-  margin-bottom: 4px !important;
-  padding: 10px 8px 10px 12px;
-  border-radius: 0 12px 12px 0;
-  border-left: 2px solid rgba(74, 222, 128, 0.36);
-  background: linear-gradient(90deg, rgba(22, 32, 28, 0.58) 0%, rgba(18, 22, 20, 0.98) 100%);
+  margin-top: 6px !important;
+  margin-bottom: 2px !important;
+  padding: 12px 10px 12px 14px;
+  border-radius: 0 12px 12px 12px;
+  border: 1px solid var(--sidebar-subtle-line);
+  border-left: 3px solid var(--sidebar-drawer-rail);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  background: linear-gradient(180deg, var(--sidebar-drawer-bg0) 0%, var(--sidebar-drawer-bg1) 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.045),
-    inset 3px 0 12px rgba(52, 211, 153, 0.048);
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    inset 4px 0 0 rgba(52, 211, 153, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  animation: sidebar-nav-drawer-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: top center;
 }
 
 .sidebar .sidebar-action-buttons .sidebar-action-buttons {
-  margin-top: 4px !important;
+  margin-top: 6px !important;
   margin-bottom: 0 !important;
-  margin-left: 12px !important;
-  padding: 8px 6px 8px 10px;
+  margin-left: 14px !important;
+  padding: 10px 8px 10px 12px;
   border-left-width: 2px;
-  border-radius: 0 10px 10px 0;
+  border-left-color: rgba(74, 222, 128, 0.16);
+  border-top-color: rgba(255, 255, 255, 0.035);
+  border-radius: 0 10px 10px 10px;
+  background: linear-gradient(180deg, rgba(4, 7, 6, 0.97) 0%, rgba(8, 11, 10, 0.995) 100%);
+  gap: 6px;
+  animation: sidebar-nav-drawer-in 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .sidebar .sidebar-action-buttons > button.sidebar-action-btn {
   width: 100%;
   position: relative;
   text-align: center !important;
-  padding: 11px 12px !important;
+  padding: 10px 12px !important;
   margin-bottom: 0 !important;
-  border-left: 2px solid rgba(52, 211, 153, 0.18) !important;
-  font-size: 12px !important;
+  border-left: 2px solid rgba(52, 211, 153, 0.14) !important;
+  font-size: 11.5px !important;
   font-weight: 600 !important;
   border-radius: 10px !important;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
     color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    transform 0.16s ease;
 }
 
-/* Subitens inativos */
+.sidebar .sidebar-action-buttons > button.sidebar-action-btn:focus-visible {
+  outline: 2px solid rgba(110, 231, 183, 0.65);
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+.sidebar .sidebar-action-buttons > button.sidebar-action-btn:active {
+  transform: scale(0.99);
+}
+
+/* Subitens inativos — menos brilho que o cabeçalho do grupo */
 .sidebar .sidebar-action-buttons > button.sidebar-action-btn:not(.sidebar-action-btn-active) {
-  background: rgba(52, 211, 153, 0.072) !important;
-  border: 1px solid rgba(74, 222, 128, 0.12) !important;
-  border-left: 2px solid rgba(74, 222, 128, 0.32) !important;
-  color: rgba(236, 253, 243, 0.94) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-left: 2px solid rgba(74, 222, 128, 0.22) !important;
+  color: rgba(230, 245, 236, 0.9) !important;
   box-shadow: none !important;
 }
 
 .sidebar .sidebar-action-buttons > button.sidebar-action-btn:not(.sidebar-action-btn-active):hover {
-  background: rgba(52, 211, 153, 0.12) !important;
-  border-color: rgba(74, 222, 128, 0.3) !important;
-  border-left-color: rgba(110, 231, 183, 0.6) !important;
+  background: rgba(52, 211, 153, 0.1) !important;
+  border-color: rgba(74, 222, 128, 0.22) !important;
+  border-left-color: rgba(110, 231, 183, 0.45) !important;
   box-shadow:
     0 4px 14px rgba(0, 0, 0, 0.24),
     0 0 22px rgba(52, 211, 153, 0.07) !important;
@@ -1539,16 +1651,16 @@ body,
 
 /* Submenu ativo */
 .sidebar .sidebar-action-btn.sidebar-action-btn-active {
-  border: 1px solid rgba(74, 222, 128, 0.48) !important;
-  border-left: 3px solid rgba(167, 243, 208, 0.92) !important;
-  background: linear-gradient(180deg, rgba(52, 211, 153, 0.18) 0%, rgba(6, 95, 70, 0.15) 100%) !important;
-  color: #ccfcdc !important;
+  border: 1px solid rgba(74, 222, 128, 0.42) !important;
+  border-left: 3px solid rgba(167, 243, 208, 0.88) !important;
+  background: linear-gradient(180deg, rgba(52, 211, 153, 0.16) 0%, rgba(8, 72, 52, 0.22) 100%) !important;
+  color: #d8ffe8 !important;
   font-weight: 700 !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.065),
-    0 4px 16px rgba(0, 0, 0, 0.28),
-    0 0 28px rgba(52, 211, 153, 0.12) !important;
-  text-shadow: 0 0 16px rgba(52, 211, 153, 0.18) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 4px 14px rgba(0, 0, 0, 0.26),
+    0 0 20px rgba(52, 211, 153, 0.09) !important;
+  text-shadow: 0 0 12px rgba(52, 211, 153, 0.12) !important;
 }
 
 .sidebar .sidebar-action-btn .sidebar-nav-check {
@@ -1634,7 +1746,7 @@ body,
 
 .sidebar-logout-btn {
   width: 100%;
-  margin-top: 4px;
+  margin-top: 14px;
   margin-bottom: 0;
   padding: 14px 16px;
   display: flex;
@@ -1649,8 +1761,13 @@ body,
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.16s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.sidebar-logout-btn:active {
+  transform: scale(0.99);
 }
 
 .sidebar-logout-btn:hover {
@@ -1666,10 +1783,26 @@ body,
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .sidebar-nav-cluster,
+  .sidebar-nav-subcluster {
+    transition: none;
+  }
+
   .sidebar button.sidebar-group-header,
   .sidebar .sidebar-action-buttons > button.sidebar-action-btn,
   .sidebar-logout-btn {
     transition: none;
+  }
+
+  .sidebar button.sidebar-group-header:active,
+  .sidebar .sidebar-action-buttons > button.sidebar-action-btn:active,
+  .sidebar-logout-btn:active {
+    transform: none;
+  }
+
+  .sidebar .sidebar-action-buttons,
+  .sidebar .sidebar-action-buttons .sidebar-action-buttons {
+    animation: none !important;
   }
 }
 
