@@ -6,7 +6,9 @@ export type ClientePedido = {
   id: string
   nomeEmpresa: string
   morada?: string
-  localidade?: string
+  conselho?: string
+  codigoPostal?: string
+  pais?: string
   email?: string
   telefones?: string
   equipamentos: EquipamentoClientePedido[]
@@ -101,7 +103,11 @@ export function PedidoOrcamentosAvulsoContent({
       (c) =>
         c.nomeEmpresa?.toLowerCase().includes(b) ||
         c.email?.toLowerCase().includes(b) ||
-        c.localidade?.toLowerCase().includes(b)
+        c.telefones?.toLowerCase().includes(b) ||
+        c.morada?.toLowerCase().includes(b) ||
+        c.codigoPostal?.toLowerCase().includes(b) ||
+        c.conselho?.toLowerCase().includes(b) ||
+        c.pais?.toLowerCase().includes(b)
     )
   }, [clientes, buscaCliente])
 
@@ -392,9 +398,9 @@ export function PedidoOrcamentosAvulsoContent({
                 }}
               >
                 <div style={{ fontWeight: 'bold', color: '#66b3ff' }}>{cliente.nomeEmpresa}</div>
-                {(cliente.morada || cliente.localidade || cliente.email) && (
+                {(cliente.morada || cliente.codigoPostal || cliente.conselho || cliente.email) && (
                   <div style={{ fontSize: '12px', color: '#ccc' }}>
-                    {[cliente.morada, cliente.localidade, cliente.email].filter(Boolean).join(' · ')}
+                    {[cliente.morada, cliente.codigoPostal, cliente.conselho, cliente.email].filter(Boolean).join(' · ')}
                   </div>
                 )}
               </div>

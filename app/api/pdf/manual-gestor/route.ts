@@ -125,7 +125,7 @@ export async function GET() {
     <div class="passo"><strong>Informações de conhecimento:</strong> Use o módulo «Informações de Conhecimento dos Técnicos» para associar cada técnico aos tipos de equipamento e definir níveis de conhecimento (0=nenhum, 1=básico, 2=médio, 3=avançado, 4=especialista).</div>
 
     <h3 id="clientes">5.2. Cadastro de Clientes</h3>
-    <p>Cadastro completo de clientes com: nome da empresa, morada, localidade, conselho, país, código postal, freguesia, número de contribuinte fiscal, telefones, e-mail, contacto, foto. Opção de Cliente Prioritário (ex.: NONATO SERVICE) e status devedor.</p>
+    <p>Cadastro completo de clientes com: nome da empresa, morada, conselho, país, código postal, freguesia, número de contribuinte fiscal, telefones, e-mail, contacto, foto. Opção de Cliente Prioritário (ex.: NONATO SERVICE) e status devedor.</p>
     <div class="passo"><strong>Adicionar cliente:</strong> Cadastro de Clientes → Adicionar Cliente → preencher todos os campos → Salvar. Pode associar equipamentos e consultar relatórios de serviço a partir do perfil do cliente. O botão de mapa abre a localização no Google Maps.</div>
 
     <h3 id="fornecedores">5.3. Fornecedores</h3>

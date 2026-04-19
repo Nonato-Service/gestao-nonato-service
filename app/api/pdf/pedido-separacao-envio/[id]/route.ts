@@ -154,7 +154,7 @@ export async function GET(
     const t = translations[lang] || translations['pt-BR']
     const dataFormatada = new Date().toLocaleString('pt-BR')
     const dadosCliente = orcamento.dadosCliente || {}
-    const enderecoCompleto = `${dadosCliente.morada || ''}, ${dadosCliente.localidade || ''} - ${dadosCliente.codigoPostal || ''}`
+    const enderecoCompleto = [dadosCliente.morada, dadosCliente.conselho || dadosCliente.localidade, dadosCliente.codigoPostal].filter(Boolean).join(', ')
 
     // Gerar HTML
     const html = `

@@ -956,6 +956,10 @@ type Agendamento = {
   cidade: string
   dataCriacao: string
   dataConfirmacao?: string
+  /** Texto livre: serviço efetivamente executado (preencher ao concluir). Gravado com o agendamento. */
+  relatorioTrabalhoExecutado?: string
+  /** Preenchido automaticamente ao passar o estado para «Concluído». */
+  dataRegistoConclusao?: string
 }
 
 /** Normaliza tipo para o calendário: dados antigos podem vir sem `tipo` ou com texto diferente — antes ficava tudo azul. */
@@ -3538,7 +3542,9 @@ export default function Dashboard() {
     telefone: '',
     endereco: '',
     cidade: '',
-    dataCriacao: new Date().toISOString()
+    dataCriacao: new Date().toISOString(),
+    relatorioTrabalhoExecutado: '',
+    dataRegistoConclusao: undefined
   })
   const [filtroAgenda, setFiltroAgenda] = useState<'todos' | 'pre-agendamento' | 'agendamento-tecnico' | 'nenhum' | 'folga' | 'doente' | 'ferias'>('todos')
   const [filtroTecnicoAgenda, setFiltroTecnicoAgenda] = useState('')
@@ -3554,8 +3560,6 @@ export default function Dashboard() {
   const [datasSelecionadasCalendario, setDatasSelecionadasCalendario] = useState<string[]>([])
   const [statusDiaSelecionado, setStatusDiaSelecionado] = useState<'nenhum' | 'folga' | 'doente' | 'ferias'>('nenhum')
   const [statusTecnicoPorDia, setStatusTecnicoPorDia] = useState<Record<string, Record<string, 'nenhum' | 'pre' | 'agendamento' | 'folga' | 'doente' | 'ferias'>>>({})
-  const [execucaoTecnicoPorDia, setExecucaoTecnicoPorDia] = useState<Record<string, Record<string, 'pendente' | 'concluido'>>>({})
-  const [modoExecucaoResumo, setModoExecucaoResumo] = useState<'pendente' | 'concluido'>('pendente')
   const [showSelecionarPecasModal, setShowSelecionarPecasModal] = useState(false)
   const [pecasSelecionadasAgenda, setPecasSelecionadasAgenda] = useState<PecaBiblioteca[]>([])
   const [showAgendaLembreteModal, setShowAgendaLembreteModal] = useState(false)
@@ -9583,7 +9587,9 @@ export default function Dashboard() {
       telefone: '',
       endereco: '',
       cidade: '',
-      dataCriacao: new Date().toISOString()
+      dataCriacao: new Date().toISOString(),
+      relatorioTrabalhoExecutado: '',
+      dataRegistoConclusao: undefined
     })
     const hoje = new Date()
     setAgendaPickerMes(hoje.getMonth())
@@ -9627,11 +9633,19 @@ export default function Dashboard() {
       status: normalizeStatusAgendamento(agendaForm),
     }
 
+    const statusAntes = editingAgendamento ? normalizeStatusAgendamento(editingAgendamento) : null
+    const statusDepois = normalizeStatusAgendamento(formSanitizado)
+    const marcarConclusao =
+      statusDepois === 'concluido' && statusAntes !== 'concluido'
+        ? { dataRegistoConclusao: new Date().toISOString() }
+        : {}
+
     const savedAgendamento: Agendamento = editingAgendamento
-      ? { ...formSanitizado, id: editingAgendamento.id }
+      ? { ...formSanitizado, id: editingAgendamento.id, ...marcarConclusao }
       : {
           ...formSanitizado,
           id: Date.now().toString(),
+          ...marcarConclusao,
         }
 
     if (editingAgendamento) {
@@ -23340,10 +23354,6 @@ const nextF = familias.filter(x => x !== f)
                       <span>{clientePrioritario.morada}</span>
                     </div>
                     <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.localidade || 'Localidade'}</strong>
-                      <span>{clientePrioritario.localidade}</span>
-                    </div>
-                    <div>
                       <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.conselho || 'Conselho'}</strong>
                       <span>{clientePrioritario.conselho}</span>
                     </div>
@@ -23406,17 +23416,6 @@ const nextF = familias.filter(x => x !== f)
                         placeholder={safeT?.morada || 'Morada'}
                         value={clientePrioritarioForm.morada}
                         onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, morada: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.localidade || 'Localidade'}</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.localidade || 'Localidade'}
-                        value={clientePrioritarioForm.localidade}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, localidade: e.target.value })}
                         style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
@@ -27080,7 +27079,7 @@ onKeyPress={(e) => {
                             ...prev,
                             cliente: selectedClient?.nomeEmpresa || '',
                             clienteId: selectedClient?.id || '',
-                            cidade: selectedClient?.localidade || '',
+                            cidade: selectedClient?.conselho || selectedClient?.localidade || '',
                             telefone: selectedClient?.telefones || '',
                             ...(prev.equipamentoOrigem !== 'armazem'
                               ? { equipamentoId: '', numeroMaquina: '', maquinaModelo: '' }
@@ -29027,13 +29026,16 @@ onKeyPress={(e) => {
         )
       
       case 'clientes':
+        const qCli = buscaCliente.toLowerCase()
         const clientesFiltrados = clientes
-          .filter(cliente => 
-            cliente.nomeEmpresa.toLowerCase().includes(buscaCliente.toLowerCase()) ||
-            cliente.localidade?.toLowerCase().includes(buscaCliente.toLowerCase()) ||
-            cliente.telefones?.toLowerCase().includes(buscaCliente.toLowerCase()) ||
-            cliente.email?.toLowerCase().includes(buscaCliente.toLowerCase()) ||
-            cliente.contato?.toLowerCase().includes(buscaCliente.toLowerCase())
+          .filter(cliente =>
+            cliente.nomeEmpresa.toLowerCase().includes(qCli) ||
+            (cliente.morada || '').toLowerCase().includes(qCli) ||
+            (cliente.codigoPostal || '').toLowerCase().includes(qCli) ||
+            (cliente.pais || '').toLowerCase().includes(qCli) ||
+            cliente.telefones?.toLowerCase().includes(qCli) ||
+            cliente.email?.toLowerCase().includes(qCli) ||
+            cliente.contato?.toLowerCase().includes(qCli)
           )
           .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
         
@@ -29249,17 +29251,6 @@ onKeyPress={(e) => {
                   </div>
                   
                   <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.localidade || 'Localidade'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.localidade || 'Localidade'}
-                      value={clienteForm.localidade}
-                      onChange={(e) => setClienteForm({ ...clienteForm, localidade: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div>
                     <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.conselho || 'Conselho'}</label>
                     <input
                       type="text"
@@ -29292,10 +29283,10 @@ onKeyPress={(e) => {
                     />
                   </div>
                   
-                  {(clienteForm.morada || clienteForm.localidade || clienteForm.codigoPostal)?.trim() && (
+                  {(clienteForm.morada || clienteForm.codigoPostal)?.trim() && (
                     <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([clienteForm.morada, clienteForm.localidade, clienteForm.codigoPostal, clienteForm.pais].filter(Boolean).join(', '))}`}
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([clienteForm.morada, clienteForm.codigoPostal, clienteForm.pais].filter(Boolean).join(', '))}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{
@@ -29462,7 +29453,7 @@ onKeyPress={(e) => {
                   <div style={{ marginBottom: '20px' }}>
                     <input
                       type="text"
-                      placeholder={`🔍 ${safeT?.buscarCliente || 'Buscar cliente por nome, localidade, telefone, e-mail ou contato...'}`}
+                      placeholder={`🔍 ${safeT?.buscarCliente || 'Buscar cliente por nome, morada, código postal, país, telefone, e-mail ou contato...'}`}
                       value={buscaCliente}
                       onChange={(e) => setBuscaCliente(e.target.value)}
                       style={{ 
@@ -29624,17 +29615,17 @@ onKeyPress={(e) => {
                             
                             {/* Endereço e NIF em linha */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                              {(cliente.morada || cliente.localidade) && (
+                              {(cliente.morada || cliente.codigoPostal) && (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: alertaDevedor ? '#ff9999' : '#aaa', fontSize: '10px', flexWrap: 'wrap' }}>
                                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={alertaDevedor ? '#ff7777' : '#888'} strokeWidth="2">
                                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
                                   </svg>
                                   <span style={{ wordBreak: 'break-word', lineHeight: 1.35 }}>
-                                    {[cliente.morada, cliente.localidade, cliente.codigoPostal].filter(Boolean).join(' ')}
+                                    {[cliente.morada, cliente.codigoPostal].filter(Boolean).join(' ')}
                                   </span>
                                   <a
-                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([cliente.morada, cliente.localidade, cliente.codigoPostal, cliente.pais].filter(Boolean).join(', '))}`}
+                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([cliente.morada, cliente.codigoPostal, cliente.pais].filter(Boolean).join(', '))}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     title={(safeT as any)?.abrirGoogleMaps || 'Abrir no Google Maps'}
@@ -34368,7 +34359,7 @@ A1;Peça exemplo;10`}
           if (!rec.clienteId) return rec
           const c = clientes.find((x) => x.id === rec.clienteId)
           if (!c) return rec
-          const morada = [c.morada, c.codigoPostal, c.localidade].filter(Boolean).join(', ')
+          const morada = [c.morada, c.codigoPostal].filter(Boolean).join(', ')
           const tel = String(c.telefones || '').split(/[;,]/)[0]?.trim() || ''
           const email = String(c.email || '').trim()
           const nif = String(c.numeroContribuicaoFiscal || '').trim()
@@ -34392,7 +34383,7 @@ A1;Peça exemplo;10`}
           }
           const c = clientes.find((x) => x.id === clienteId)
           if (!c) return { ...prev, clienteId }
-          const morada = [c.morada, c.codigoPostal, c.localidade].filter(Boolean).join(', ')
+          const morada = [c.morada, c.codigoPostal].filter(Boolean).join(', ')
           const tel = String(c.telefones || '').split(/[;,]/)[0]?.trim() || ''
           return {
             ...prev,
@@ -35821,6 +35812,177 @@ A1;Peça exemplo;10`}
               )}
             </div>
 
+            {/* Painel operacional: execução, agendados, pré-agendados e registos de trabalho concluído */}
+            <div
+              style={{
+                marginBottom: '22px',
+                padding: '18px',
+                backgroundColor: '#101010',
+                borderRadius: '12px',
+                border: '1px solid rgba(0, 255, 0, 0.22)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '14px' }}>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '17px', color: '#00ff00', letterSpacing: '0.5px' }}>
+                    {(safeT as any)?.agendaPainelOperacionalTitulo || 'Situação operacional'}
+                  </h2>
+                  <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#999', maxWidth: '720px' }}>
+                    {(safeT as any)?.agendaPainelOperacionalHint ||
+                      'Resumo em tempo real. O filtro de técnico acima aplica-se aqui; tipo e data da lista não ocultam este painel.'}
+                  </p>
+                </div>
+              </div>
+              {(() => {
+                const agBasePainel = agendamentos.filter((a) => !filtroTecnicoAgenda || a.tecnico === filtroTecnicoAgenda)
+                const ordenarDataHoraAsc = (x: Agendamento, y: Agendamento) => {
+                  const c = String(x.data || '').localeCompare(String(y.data || ''))
+                  return c !== 0 ? c : String(x.hora || '').localeCompare(String(y.hora || ''))
+                }
+                const ordenarDataHoraDesc = (x: Agendamento, y: Agendamento) => {
+                  const c = String(y.data || '').localeCompare(String(x.data || ''))
+                  return c !== 0 ? c : String(y.hora || '').localeCompare(String(x.hora || ''))
+                }
+                const emExecucao = agBasePainel
+                  .filter((a) => normalizeTipoAgendamento(a) === 'agendamento-tecnico' && normalizeStatusAgendamento(a) === 'em-andamento')
+                  .sort(ordenarDataHoraAsc)
+                const agendados = agBasePainel
+                  .filter((a) => normalizeTipoAgendamento(a) === 'agendamento-tecnico' && normalizeStatusAgendamento(a) === 'confirmado')
+                  .sort(ordenarDataHoraAsc)
+                const preAgendados = agBasePainel
+                  .filter(
+                    (a) =>
+                      normalizeTipoAgendamento(a) === 'pre-agendamento' &&
+                      !['concluido', 'cancelado'].includes(normalizeStatusAgendamento(a))
+                  )
+                  .sort(ordenarDataHoraAsc)
+                const trabalhosRecentes = agBasePainel
+                  .filter((a) => normalizeStatusAgendamento(a) === 'concluido')
+                  .sort(ordenarDataHoraDesc)
+                  .slice(0, 18)
+
+                const colTitulo = (t: string, cor: string, n: number) => (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 800, color: cor }}>{t}</span>
+                    <span style={{ fontSize: '12px', color: '#888' }}>{n}</span>
+                  </div>
+                )
+
+                const miniAgendaBtn = (a: Agendamento, borda: string) => (
+                  <button
+                    key={`painel-${a.id}`}
+                    type="button"
+                    onClick={() => handleEditAgendamento(a)}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '10px 11px',
+                      marginBottom: '8px',
+                      borderRadius: '8px',
+                      border: `1px solid ${borda}`,
+                      backgroundColor: '#181818',
+                      color: '#eee',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      lineHeight: 1.35,
+                    }}
+                  >
+                    <div style={{ fontWeight: 800, color: '#fff', marginBottom: '4px' }}>{a.cliente}</div>
+                    <div style={{ opacity: 0.88 }}>
+                      {new Date(a.data + 'T12:00:00').toLocaleDateString('pt-PT')} · {a.hora} · {a.tecnico}
+                    </div>
+                    {a.tipoServico ? <div style={{ marginTop: '4px', opacity: 0.75 }}>{a.tipoServico}</div> : null}
+                  </button>
+                )
+
+                const vazio = (msg: string) => (
+                  <div style={{ padding: '12px', fontSize: '12px', color: '#666', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.12)' }}>{msg}</div>
+                )
+
+                return (
+                  <>
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                        gap: '14px',
+                        marginBottom: '18px',
+                      }}
+                    >
+                      <div style={{ padding: '12px', borderRadius: '10px', backgroundColor: '#151515', border: '1px solid rgba(255, 120, 40, 0.45)' }}>
+                        {colTitulo((safeT as any)?.agendaPainelEmExecucao || 'Em execução', '#ff9a3c', emExecucao.length)}
+                        {emExecucao.length === 0
+                          ? vazio((safeT as any)?.agendaPainelVazioExecucao || 'Nenhum trabalho em execução.')
+                          : emExecucao.map((a) => miniAgendaBtn(a, 'rgba(255, 150, 60, 0.55)'))}
+                      </div>
+                      <div style={{ padding: '12px', borderRadius: '10px', backgroundColor: '#151515', border: '1px solid rgba(70, 140, 255, 0.5)' }}>
+                        {colTitulo((safeT as any)?.agendaPainelAgendados || 'Agendados (confirmados)', '#6ab0ff', agendados.length)}
+                        {agendados.length === 0
+                          ? vazio((safeT as any)?.agendaPainelVazioAgendados || 'Nenhum agendamento técnico confirmado.')
+                          : agendados.map((a) => miniAgendaBtn(a, 'rgba(90, 150, 255, 0.45)'))}
+                      </div>
+                      <div style={{ padding: '12px', borderRadius: '10px', backgroundColor: '#151515', border: '1px solid rgba(230, 200, 60, 0.45)' }}>
+                        {colTitulo((safeT as any)?.agendaPainelPreAgendados || 'Pré-agendados', '#e6c84a', preAgendados.length)}
+                        {preAgendados.length === 0
+                          ? vazio((safeT as any)?.agendaPainelVazioPre || 'Nenhum pré-agendamento ativo.')
+                          : preAgendados.map((a) => miniAgendaBtn(a, 'rgba(230, 200, 80, 0.4)'))}
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '12px', borderRadius: '10px', backgroundColor: '#141814', border: '1px solid rgba(0, 210, 90, 0.35)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 800, color: '#5fe08a' }}>
+                          {(safeT as any)?.agendaTrabalhosExecutadosTitulo || 'Trabalhos executados (registos recentes)'}
+                        </span>
+                        <span style={{ fontSize: '11px', color: '#777' }}>
+                          {(safeT as any)?.agendaTrabalhosExecutadosSub || 'Últimos concluídos — clique para ver ou editar o registo'}
+                        </span>
+                      </div>
+                      {trabalhosRecentes.length === 0 ? (
+                        vazio((safeT as any)?.agendaPainelVazioTrabalhos || 'Ainda não há trabalhos concluídos nesta vista.')
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '280px', overflowY: 'auto' }}>
+                          {trabalhosRecentes.map((a) => (
+                            <button
+                              key={`trab-${a.id}`}
+                              type="button"
+                              onClick={() => handleEditAgendamento(a)}
+                              style={{
+                                textAlign: 'left',
+                                padding: '10px 11px',
+                                borderRadius: '8px',
+                                border: '1px solid rgba(0, 200, 90, 0.35)',
+                                backgroundColor: '#121a14',
+                                color: '#ddd',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                              }}
+                            >
+                              <div style={{ fontWeight: 800, color: '#fff', marginBottom: '4px' }}>{a.cliente}</div>
+                              <div style={{ opacity: 0.85, marginBottom: '6px' }}>
+                                {new Date(a.data + 'T12:00:00').toLocaleDateString('pt-PT')} · {a.hora} · {a.tecnico}
+                              </div>
+                              {a.dataRegistoConclusao ? (
+                                <div style={{ fontSize: '11px', color: '#6abf7a', marginBottom: '6px' }}>
+                                  {(safeT as any)?.agendaDataRegistoConclusao || 'Concluído registado em'}:{' '}
+                                  {new Date(a.dataRegistoConclusao).toLocaleString('pt-PT')}
+                                </div>
+                              ) : null}
+                              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.82)', lineHeight: 1.4 }}>
+                                {(a.relatorioTrabalhoExecutado && String(a.relatorioTrabalhoExecutado).trim()) ||
+                                  (safeT as any)?.agendaSemRegistoTrabalho ||
+                                  'Sem texto de trabalho executado — abra o registo para preencher.'}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )
+              })()}
+            </div>
+
             {/* Formulário de Agendamento */}
             {showAgendaForm && (
               <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}>
@@ -35871,7 +36033,7 @@ A1;Peça exemplo;10`}
                         clienteId: selectedClient?.id || '',
                         cliente: selectedClient?.nomeEmpresa || '',
                         endereco: selectedClient?.morada || '',
-                        cidade: selectedClient?.localidade || '',
+                        cidade: selectedClient?.conselho || selectedClient?.localidade || '',
                         telefone: selectedClient?.telefones || '',
                         equipamentoId: '',
                         equipamento: '',
@@ -36136,6 +36298,23 @@ A1;Peça exemplo;10`}
                   ></AssistTextarea>
                 </div>
 
+                <div style={{ marginBottom: '15px', padding: '12px', backgroundColor: '#1a221c', borderRadius: '8px', border: '1px solid rgba(0, 200, 90, 0.25)' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px', color: '#7dffa8' }}>
+                    {(safeT as any)?.agendaRelatorioTrabalhoExecutado || 'Trabalho executado / relatório do serviço'}
+                  </label>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#9aa89e' }}>
+                    {(safeT as any)?.agendaRelatorioTrabalhoExecutadoHint ||
+                      'Guarde aqui o que foi feito no terreno. Fica gravado com o agendamento e aparece na lista de trabalhos concluídos.'}
+                  </p>
+                  <AssistTextarea
+                    value={agendaForm.relatorioTrabalhoExecutado || ''}
+                    onValueChange={(v) => setAgendaForm({ ...agendaForm, relatorioTrabalhoExecutado: v })}
+                    rows={4}
+                    placeholder={(safeT as any)?.agendaRelatorioTrabalhoExecutadoPlaceholder || 'Ex.: substituição de corrente, calibração, testes de ciclos...'}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '6px', resize: 'vertical' }}
+                  />
+                </div>
+
                 {/* Necessidade de Peças */}
                 <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#222222', borderRadius: '4px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', marginBottom: agendaForm.necessidadePecas ? '15px' : '0' }}>
@@ -36296,7 +36475,9 @@ A1;Peça exemplo;10`}
                         telefone: '', 
                         endereco: '', 
                         cidade: '', 
-                        dataCriacao: new Date().toISOString() 
+                        dataCriacao: new Date().toISOString(),
+                        relatorioTrabalhoExecutado: '',
+                        dataRegistoConclusao: undefined,
                       }); 
                     }} 
                     style={{ flex: 1, padding: '10px' }}
@@ -36444,6 +36625,28 @@ A1;Peça exemplo;10`}
                               </p>
                             </div>
                           )}
+
+                          {(normalizeStatusAgendamento(agendamento) === 'concluido' ||
+                            (agendamento.relatorioTrabalhoExecutado && String(agendamento.relatorioTrabalhoExecutado).trim())) ? (
+                            <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#152018', borderRadius: '8px', border: '1px solid rgba(0, 200, 90, 0.22)' }}>
+                              <p style={{ margin: 0, fontSize: '13px', opacity: 0.95 }}>
+                                <strong style={{ color: '#8ef5b2' }}>
+                                  {(safeT as any)?.agendaRelatorioTrabalhoExecutado || 'Trabalho executado / relatório do serviço'}:
+                                </strong>
+                                <span style={{ marginLeft: '8px', color: 'rgba(255,255,255,0.9)' }}>
+                                  {(agendamento.relatorioTrabalhoExecutado && String(agendamento.relatorioTrabalhoExecutado).trim()) ||
+                                    (safeT as any)?.agendaSemRegistoTrabalho ||
+                                    '—'}
+                                </span>
+                              </p>
+                              {agendamento.dataRegistoConclusao && (
+                                <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#6abf7a' }}>
+                                  {(safeT as any)?.agendaDataRegistoConclusao || 'Concluído registado em'}:{' '}
+                                  {new Date(agendamento.dataRegistoConclusao).toLocaleString('pt-PT')}
+                                </p>
+                              )}
+                            </div>
+                          ) : null}
 
                           {agendamento.necessidadePecas && (
                             <div style={{ marginTop: '10px', padding: '10px', backgroundColor: 'rgba(255, 165, 0, 0.08)', borderRadius: '8px', border: '1px solid rgba(255, 165, 0, 0.28)' }}>
@@ -49794,11 +49997,6 @@ A1;Peça exemplo;10`}
                             </button>
                           </div>
                         </div>
-                        {cliente.localidade && (
-                          <p style={{ margin: 0, fontSize: '11px', opacity: 0.9, color: '#ffffff' }}>
-                            📍 {cliente.localidade}
-                          </p>
-                        )}
                       </div>
 
                       {/* Secção: Relatórios de Serviço */}
@@ -51161,7 +51359,6 @@ A1;Peça exemplo;10`}
     const dadosNonatoService = clientePrioritario ? {
       nomeEmpresa: clientePrioritario.nomeEmpresa || 'NONATO SERVICE',
       morada: clientePrioritario.morada || '',
-      localidade: clientePrioritario.localidade || '',
       conselho: clientePrioritario.conselho || '',
       pais: clientePrioritario.pais || 'Portugal',
       codigoPostal: clientePrioritario.codigoPostal || '',
@@ -51172,7 +51369,6 @@ A1;Peça exemplo;10`}
     } : {
       nomeEmpresa: 'NONATO SERVICE',
       morada: '',
-      localidade: '',
       conselho: '',
       pais: 'Portugal',
       codigoPostal: '',
@@ -51187,7 +51383,6 @@ A1;Peça exemplo;10`}
         ? {
             nomeEmpresa: clienteCadastroPrioritarioFixo.nomeEmpresa || 'NONATO SERVICE',
             morada: clienteCadastroPrioritarioFixo.morada || '',
-            localidade: clienteCadastroPrioritarioFixo.localidade || '',
             conselho: clienteCadastroPrioritarioFixo.conselho || '',
             pais: clienteCadastroPrioritarioFixo.pais || 'Portugal',
             codigoPostal: clienteCadastroPrioritarioFixo.codigoPostal || '',
@@ -51326,7 +51521,10 @@ A1;Peça exemplo;10`}
         const email = (cliente.email || '').toLowerCase()
         const tel = (cliente.telefones || '').toLowerCase()
         const cont = (cliente.contato || '').toLowerCase()
-        return nome.includes(q) || email.includes(q) || tel.includes(q) || cont.includes(q)
+        const morada = (cliente.morada || '').toLowerCase()
+        const cp = (cliente.codigoPostal || '').toLowerCase()
+        const pais = (cliente.pais || '').toLowerCase()
+        return nome.includes(q) || email.includes(q) || tel.includes(q) || cont.includes(q) || morada.includes(q) || cp.includes(q) || pais.includes(q)
       })
       .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
 
@@ -51338,7 +51536,10 @@ A1;Peça exemplo;10`}
         const email = (cliente.email || '').toLowerCase()
         const tel = (cliente.telefones || '').toLowerCase()
         const cont = (cliente.contato || '').toLowerCase()
-        return nome.includes(qPf) || email.includes(qPf) || tel.includes(qPf) || cont.includes(qPf)
+        const morada = (cliente.morada || '').toLowerCase()
+        const cp = (cliente.codigoPostal || '').toLowerCase()
+        const pais = (cliente.pais || '').toLowerCase()
+        return nome.includes(qPf) || email.includes(qPf) || tel.includes(qPf) || cont.includes(qPf) || morada.includes(qPf) || cp.includes(qPf) || pais.includes(qPf)
       })
       .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
 
@@ -51350,7 +51551,10 @@ A1;Peça exemplo;10`}
         const email = (cliente.email || '').toLowerCase()
         const tel = (cliente.telefones || '').toLowerCase()
         const cont = (cliente.contato || '').toLowerCase()
-        return nome.includes(qEnvOrc) || email.includes(qEnvOrc) || tel.includes(qEnvOrc) || cont.includes(qEnvOrc)
+        const morada = (cliente.morada || '').toLowerCase()
+        const cp = (cliente.codigoPostal || '').toLowerCase()
+        const pais = (cliente.pais || '').toLowerCase()
+        return nome.includes(qEnvOrc) || email.includes(qEnvOrc) || tel.includes(qEnvOrc) || cont.includes(qEnvOrc) || morada.includes(qEnvOrc) || cp.includes(qEnvOrc) || pais.includes(qEnvOrc)
       })
       .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
 
@@ -51571,7 +51775,7 @@ A1;Peça exemplo;10`}
             ${clienteEmail ? `<div class="info-row"><span class="info-label">Email:</span> ${clienteEmail}</div>` : ''}
             ${clienteTelefone ? `<div class="info-row"><span class="info-label">Telefone:</span> ${clienteTelefone}</div>` : ''}
             ${dadosCliente.morada ? `<div class="info-row"><span class="info-label">Morada:</span> ${dadosCliente.morada}</div>` : ''}
-            ${dadosCliente.localidade ? `<div class="info-row"><span class="info-label">Localidade:</span> ${dadosCliente.localidade}</div>` : ''}
+            ${dadosCliente.conselho ? `<div class="info-row"><span class="info-label">Conselho:</span> ${dadosCliente.conselho}</div>` : ''}
             ${dadosCliente.codigoPostal ? `<div class="info-row"><span class="info-label">Código Postal:</span> ${dadosCliente.codigoPostal}</div>` : ''}
           </div>
           
@@ -51724,7 +51928,7 @@ A1;Peça exemplo;10`}
         dadosClienteFinal = clienteDoRelatorio || {
           nomeEmpresa: relatorioSelecionado.cliente,
           morada: '',
-          localidade: relatorioSelecionado.cidade,
+          conselho: relatorioSelecionado.cidade,
           telefones: relatorioSelecionado.telefone,
           email: '',
           numeroRelatorio: relatorioSelecionado.numero
@@ -52068,9 +52272,9 @@ A1;Peça exemplo;10`}
                       <div><span style={{ color: '#888' }}>{safeT?.contato || 'Contato'}:</span> {(cliente.contato || '').trim() || '—'}</div>
                       <div><span style={{ color: '#888' }}>{safeT?.email || 'E-mail'}:</span> {(cliente.email || '').trim() || '—'}</div>
                       <div style={{ gridColumn: '1 / -1' }}><span style={{ color: '#888' }}>{safeT?.telefone || 'Telefone'}:</span> {(cliente.telefones || '').trim() || '—'}</div>
-                      {(cliente.morada || cliente.localidade) && (
+                      {(cliente.morada || cliente.codigoPostal) && (
                         <div style={{ gridColumn: '1 / -1', marginTop: '4px', paddingTop: '8px', borderTop: '1px solid rgba(100,100,100,0.35)', fontSize: '11px', color: '#999' }}>
-                          {[cliente.morada, cliente.localidade].filter(Boolean).join(' · ')}
+                          {[cliente.morada, cliente.codigoPostal].filter(Boolean).join(' · ')}
                         </div>
                       )}
                     </div>
@@ -52198,7 +52402,7 @@ A1;Peça exemplo;10`}
                     </div>
                   </div>
                   {dadosNonatoParaExibicao.morada && <div><strong>{safeT?.morada || 'Morada'}:</strong> {dadosNonatoParaExibicao.morada}</div>}
-                  {dadosNonatoParaExibicao.localidade && <div><strong>{safeT?.localidade || 'Localidade'}:</strong> {dadosNonatoParaExibicao.localidade}{dadosNonatoParaExibicao.conselho ? `, ${dadosNonatoParaExibicao.conselho}` : ''}</div>}
+                  {dadosNonatoParaExibicao.conselho && <div><strong>{safeT?.conselho || 'Conselho'}:</strong> {dadosNonatoParaExibicao.conselho}</div>}
                   {dadosNonatoParaExibicao.codigoPostal && <div><strong>{safeT?.codigoPostal || 'Código Postal'}:</strong> {dadosNonatoParaExibicao.codigoPostal}</div>}
                   {dadosNonatoParaExibicao.pais && <div><strong>{safeT?.pais || 'País'}:</strong> {dadosNonatoParaExibicao.pais}</div>}
                   {dadosNonatoParaExibicao.numeroContribuicaoFiscal && <div><strong>{safeT?.contribuicaoFiscal || 'Nº Contribuição Fiscal'}:</strong> {dadosNonatoParaExibicao.numeroContribuicaoFiscal}</div>}
@@ -52232,7 +52436,7 @@ A1;Peça exemplo;10`}
                       </div>
                     </div>
                     <div><strong>{safeT?.morada || 'Morada'}:</strong> {clienteSelecionado.morada || '—'}</div>
-                    <div><strong>{safeT?.localidade || 'Localidade'}:</strong> {[clienteSelecionado.localidade, clienteSelecionado.conselho].filter(Boolean).join(', ') || '—'}</div>
+                    <div><strong>{safeT?.conselho || 'Conselho'}:</strong> {clienteSelecionado.conselho || '—'}</div>
                     <div><strong>{safeT?.codigoPostal || 'Código Postal'}:</strong> {clienteSelecionado.codigoPostal || '—'}</div>
                     <div><strong>{safeT?.pais || 'País'}:</strong> {clienteSelecionado.pais || '—'}</div>
                     <div><strong>{safeT?.contribuicaoFiscal || 'Nº Contribuição Fiscal'}:</strong> {clienteSelecionado.numeroContribuicaoFiscal || '—'}</div>
@@ -53037,7 +53241,7 @@ A1;Peça exemplo;10`}
                     dadosClienteFinal = clienteDoRelatorio || {
                       nomeEmpresa: relatorioSelecionado.cliente,
                       morada: '',
-                      localidade: relatorioSelecionado.cidade,
+                      conselho: relatorioSelecionado.cidade,
                       telefones: relatorioSelecionado.telefone,
                       email: '',
                       numeroRelatorio: relatorioSelecionado.numero
@@ -53306,7 +53510,7 @@ A1;Peça exemplo;10`}
                     const dadosClienteFinal = clienteSelecionado || (relatorioSelecionado ? {
                       nomeEmpresa: relatorioSelecionado.cliente,
                       morada: '',
-                      localidade: relatorioSelecionado.cidade,
+                      conselho: relatorioSelecionado.cidade,
                       telefones: relatorioSelecionado.telefone
                     } : dadosNonatoService)
                     
@@ -55064,13 +55268,7 @@ A1;Peça exemplo;10`}
           <button
             type="button"
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-protocolos-servico' ? ' sidebar-group-btn-selected' : ''}`}
-            onClick={() => {
-              // Sempre abrir o hub no centro (mesmo se já estiver expandido)
-              if (!expandedGroups.has('protocolos-main')) {
-                setExpandedGroups((prev) => new Set(prev).add('protocolos-main'))
-              }
-              openDashboardHubFromSidebar('protocolos-main')
-            }}
+            onClick={() => toggleOrOpenDashboardHub('protocolos-main', 'protocolos-main')}
           >
             {selectedSidebarButton === 'open-protocolos-servico' && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -55105,13 +55303,7 @@ A1;Peça exemplo;10`}
           <button
             type="button"
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-manual-programa' ? ' sidebar-group-btn-selected' : ''}`}
-            onClick={() => {
-              // Sempre abrir o hub no centro (mesmo se já estiver expandido)
-              if (!expandedGroups.has('manual-programa-main')) {
-                setExpandedGroups((prev) => new Set(prev).add('manual-programa-main'))
-              }
-              openDashboardHubFromSidebar('manual-programa-main')
-            }}
+            onClick={() => toggleOrOpenDashboardHub('manual-programa-main', 'manual-programa-main')}
           >
             {selectedSidebarButton === 'open-manual-programa' && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -55443,13 +55635,7 @@ A1;Peça exemplo;10`}
                 <button
                   type="button"
                   className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
-                  onClick={() => {
-                    // Sempre abrir o hub no centro (mesmo se já estiver expandido)
-                    if (!expandedGroups.has('manuais-informacoes-main')) {
-                      setExpandedGroups((prev) => new Set(prev).add('manuais-informacoes-main'))
-                    }
-                    openDashboardHubFromSidebar('manuais-informacoes-main')
-                  }}
+                  onClick={() => toggleOrOpenDashboardHub('manuais-informacoes-main', 'manuais-informacoes-main')}
                 >
                   {isSelected && (
                     <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -55491,13 +55677,7 @@ A1;Peça exemplo;10`}
                 <button
                   type="button"
                   className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
-                  onClick={() => {
-                    // Sempre abrir o hub no centro (mesmo se já estiver expandido)
-                    if (!expandedGroups.has('almoxarifado-main')) {
-                      setExpandedGroups((prev) => new Set(prev).add('almoxarifado-main'))
-                    }
-                    openDashboardHubFromSidebar('almoxarifado-main')
-                  }}
+                  onClick={() => toggleOrOpenDashboardHub('almoxarifado-main', 'almoxarifado-main')}
                 >
                   {isSelected && (
                     <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -55592,13 +55772,7 @@ A1;Peça exemplo;10`}
                 ? ' sidebar-group-btn-selected'
                 : ''
             }`}
-            onClick={() => {
-              // Sempre abrir o hub no centro (mesmo se já estiver expandido)
-              if (!expandedGroups.has('cadastro-nonato-main')) {
-                setExpandedGroups((prev) => new Set(prev).add('cadastro-nonato-main'))
-              }
-              openDashboardHubFromSidebar('cadastro-nonato-main')
-            }}
+            onClick={() => toggleOrOpenDashboardHub('cadastro-nonato-main', 'cadastro-nonato-main')}
           >
             {(selectedSidebarButton === 'open-cadastro-nonato-service' || selectedSidebarButton === 'open-ficha-cadastral') && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -55725,13 +55899,7 @@ A1;Peça exemplo;10`}
               <button
                 type="button"
                 className={`btn-administrador sidebar-group-header sidebar-admin-footer${isSelected ? ' sidebar-group-btn-selected' : ''}`}
-                onClick={() => {
-                  // Sempre abrir o hub no centro (mesmo se já estiver expandido)
-                  if (!expandedGroups.has('admin-main')) {
-                    setExpandedGroups((prev) => new Set(prev).add('admin-main'))
-                  }
-                  openDashboardHubFromSidebar('admin-main')
-                }}
+                onClick={() => toggleOrOpenDashboardHub('admin-main', 'admin-main')}
               >
                 {isSelected && (
                   <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -59040,13 +59208,6 @@ A1;Peça exemplo;10`}
                 />
                 <input
                   type="text"
-                  placeholder={safeT?.localidade || 'Localidade'}
-                  value={clienteForm.localidade}
-                  onChange={(e) => setClienteForm({ ...clienteForm, localidade: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
                   placeholder={safeT?.conselho || 'Conselho'}
                   value={clienteForm.conselho}
                   onChange={(e) => setClienteForm({ ...clienteForm, conselho: e.target.value })}
@@ -59284,14 +59445,14 @@ A1;Peça exemplo;10`}
                         
                         {/* Endereço e NIF em linha */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                          {(cliente.morada || cliente.localidade) && (
+                          {(cliente.morada || cliente.codigoPostal) && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: alertaDevedor ? '#ff9999' : '#aaa', fontSize: '10px' }}>
                               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={alertaDevedor ? '#ff7777' : '#888'} strokeWidth="2">
                                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                                 <circle cx="12" cy="10" r="3"></circle>
                               </svg>
                               <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                {[cliente.morada, cliente.localidade, cliente.codigoPostal].filter(Boolean).join(' ')}
+                                {[cliente.morada, cliente.codigoPostal].filter(Boolean).join(' ')}
                               </span>
                             </div>
                           )}
@@ -59613,7 +59774,7 @@ A1;Peça exemplo;10`}
                       ...relatorioServicoForm,
                       cliente: selectedClient?.nomeEmpresa || '',
                       clienteId: selectedClient?.id || '',
-                      cidade: selectedClient?.localidade || '',
+                      cidade: selectedClient?.conselho || selectedClient?.localidade || '',
                       telefone: selectedClient?.telefones || '',
                     });
                   }}
@@ -60248,7 +60409,7 @@ A1;Peça exemplo;10`}
                       clienteId: selectedClient?.id || '',
                       cliente: selectedClient?.nomeEmpresa || '',
                       endereco: selectedClient?.morada || '',
-                      cidade: selectedClient?.localidade || '',
+                      cidade: selectedClient?.conselho || selectedClient?.localidade || '',
                       telefone: selectedClient?.telefones || '',
                       equipamentoId: '',
                       equipamento: '',
@@ -60400,11 +60561,18 @@ A1;Peça exemplo;10`}
                   rows={3}
                   style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 ></AssistTextarea>
+                <AssistTextarea
+                  placeholder={(safeT as any)?.agendaRelatorioTrabalhoExecutadoPlaceholder || 'Trabalho executado / relatório...'}
+                  value={agendaForm.relatorioTrabalhoExecutado || ''}
+                  onValueChange={(v) => setAgendaForm({ ...agendaForm, relatorioTrabalhoExecutado: v })}
+                  rows={3}
+                  style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#121a14', color: '#fff', border: '1px solid rgba(0, 200, 90, 0.28)', borderRadius: '4px' }}
+                ></AssistTextarea>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button className="btn-primary" onClick={handleSaveAgendamento} style={{ flex: 1 }}>
                     {safeT?.save || 'Salvar'}
                   </button>
-                  <button className="btn-primary" onClick={() => { setShowAgendaForm(false); setEditingAgendamento(null); setAgendaDiasRascunho([]); setAgendaForm({ id: '', tipo: 'pre-agendamento', tecnico: '', cliente: '', clienteId: '', equipamento: '', equipamentoId: '', data: new Date().toISOString().split('T')[0], hora: '09:00', duracaoEstimada: '2', diasSelecionados: undefined, tipoServico: '', observacoesTecnicas: '', necessidadePecas: false, codigoNotaFiscal: '', pecasAnexadas: [], status: 'pendente', telefone: '', endereco: '', cidade: '', dataCriacao: new Date().toISOString() }); }} style={{ flex: 1 }}>
+                  <button className="btn-primary" onClick={() => { setShowAgendaForm(false); setEditingAgendamento(null); setAgendaDiasRascunho([]); setAgendaForm({ id: '', tipo: 'pre-agendamento', tecnico: '', cliente: '', clienteId: '', equipamento: '', equipamentoId: '', data: new Date().toISOString().split('T')[0], hora: '09:00', duracaoEstimada: '2', diasSelecionados: undefined, tipoServico: '', observacoesTecnicas: '', necessidadePecas: false, codigoNotaFiscal: '', pecasAnexadas: [], status: 'pendente', telefone: '', endereco: '', cidade: '', dataCriacao: new Date().toISOString(), relatorioTrabalhoExecutado: '', dataRegistoConclusao: undefined }); }} style={{ flex: 1 }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>
