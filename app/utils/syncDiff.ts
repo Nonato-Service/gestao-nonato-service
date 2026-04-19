@@ -24,6 +24,8 @@ export const SYNC_KEY_LABELS: Record<string, string> = {
   'nonato-usuarios': 'Utilizadores',
   'nonato-sidebar-buttons': 'Menu lateral',
   'nonato-faturas-pecas': 'Faturas / peças',
+  'nonato-pecas-biblioteca': 'Biblioteca de peças',
+  /** Chave antiga (alguns ambientes / cópias locais) — mesmo rótulo para o resumo de sync. */
   'nonato-biblioteca-pecas': 'Biblioteca de peças',
   'nonato-mensagens-comunicacao': 'Mensagens internas',
   'nonato-agenda': 'Agenda',

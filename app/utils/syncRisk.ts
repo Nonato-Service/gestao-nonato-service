@@ -15,6 +15,7 @@ const ARRAY_RISK_KEYS: string[] = [
   'nonato-usuarios',
   'nonato-fornecedores',
   'nonato-servicos',
+  'nonato-pecas-biblioteca',
   'nonato-biblioteca-pecas',
   'nonato-faturas-pecas',
   'nonato-mensagens-comunicacao',

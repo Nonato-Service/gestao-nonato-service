@@ -1486,6 +1486,12 @@ export const translations = {
     bibliotecaSecaoBadgeGrupo: 'Grupo',
     bibliotecaSecaoBadgeAClassificar: 'A classificar',
     bibliotecaContagemPecas: '{count} peças',
+    bibliotecaHubIntroBody:
+      'Fluxo sugerido: Cadastro (inclusão) → Biblioteca (consulta por grupo/categoria) → Gerenciar Categorias (estrutura) → Importação. Na grade ou lista, passe o rato sobre a foto para pré-visualização ampliada.',
+    bibliotecaVisaoGeralSub:
+      'Indicadores do catálogo e da árvore de grupos (categorias e subcategorias). Combine com os filtros abaixo para trabalhar de forma organizada.',
+    bibliotecaCatalogoToolbarTitulo: 'Catálogo — filtros, visualização e grupos',
+    bibliotecaImagemHoverTitle: 'Passe o rato para ver a imagem ampliada',
     categoriaPecasSemCategoria: 'Peças sem categoria',
     classificacaoLoteTitulo: 'Classificação rápida em lote',
     classificacaoLoteDesc: 'Selecione peças ou use os filtros acima. Depois aplique grupo/subgrupo de uma vez.',
@@ -3912,6 +3918,12 @@ export const translations = {
     bibliotecaSecaoBadgeGrupo: 'Grupo',
     bibliotecaSecaoBadgeAClassificar: 'Por clasificar',
     bibliotecaContagemPecas: '{count} piezas',
+    bibliotecaHubIntroBody:
+      'Flujo sugerido: Registro → Biblioteca (consulta por grupo/categoría) → Gestionar categorías (estructura) → Importación. En cuadrícula o lista, pase el ratón sobre la foto para una vista ampliada.',
+    bibliotecaVisaoGeralSub:
+      'Indicadores del catálogo y del árbol de grupos (categorías y subcategorías). Combínelos con los filtros inferiores para un trabajo ordenado.',
+    bibliotecaCatalogoToolbarTitulo: 'Catálogo — filtros, vista y grupos',
+    bibliotecaImagemHoverTitle: 'Pase el ratón para ampliar la imagen',
     categoriaPecasSemCategoria: 'Piezas sin categoría',
     classificacaoLoteTitulo: 'Clasificación rápida en lote',
     classificacaoLoteDesc: 'Seleccione piezas o use los filtros de arriba. Luego aplique grupo/subgrupo de una vez.',
@@ -6195,6 +6207,12 @@ export const translations = {
     bibliotecaSecaoBadgeGrupo: 'Groupe',
     bibliotecaSecaoBadgeAClassificar: 'À classer',
     bibliotecaContagemPecas: '{count} pièces',
+    bibliotecaHubIntroBody:
+      'Flux recommandé : Saisie → Bibliothèque (consultation par groupe) → Gérer les catégories (structure) → Importation. En grille ou liste, survolez la photo pour un aperçu agrandi.',
+    bibliotecaVisaoGeralSub:
+      'Indicateurs du catalogue et de l’arborescence de groupes (catégories et sous-catégories). À combiner avec les filtres ci-dessous pour un travail structuré.',
+    bibliotecaCatalogoToolbarTitulo: 'Catalogue — filtres, affichage et groupes',
+    bibliotecaImagemHoverTitle: 'Survol pour agrandir l’image',
     categoriaPecasSemCategoria: 'Pièces sans catégorie',
     classificacaoLoteTitulo: 'Classification rapide par lot',
     classificacaoLoteDesc: 'Sélectionnez des pièces ou utilisez les filtres ci-dessus, puis appliquez groupe/sous-groupe en une fois.',
@@ -8485,6 +8503,12 @@ export const translations = {
     bibliotecaSecaoBadgeGrupo: 'Gruppo',
     bibliotecaSecaoBadgeAClassificar: 'Da classificare',
     bibliotecaContagemPecas: '{count} componenti',
+    bibliotecaHubIntroBody:
+      'Flusso consigliato: Registro → Biblioteca (consultazione per gruppo) → Gestisci categorie (struttura) → Importazione. In griglia o elenco, passa il mouse sulla foto per un’anteprima ingrandita.',
+    bibliotecaVisaoGeralSub:
+      'Indicatori del catalogo e dell’albero di gruppi (categorie e sottocategorie). Da usare insieme ai filtri sotto per lavorare in modo ordinato.',
+    bibliotecaCatalogoToolbarTitulo: 'Catalogo — filtri, vista e gruppi',
+    bibliotecaImagemHoverTitle: 'Passa il mouse per ingrandire l’immagine',
     categoriaPecasSemCategoria: 'Componenti senza categoria',
     classificacaoLoteTitulo: 'Classificazione rapida in blocco',
     classificacaoLoteDesc: 'Seleziona i componenti o usa i filtri sopra. Poi applica gruppo/sottogruppo in un solo passaggio.',
@@ -10790,6 +10814,12 @@ export const translations = {
     bibliotecaSecaoBadgeGrupo: 'Gruppe',
     bibliotecaSecaoBadgeAClassificar: 'Zu klassifizieren',
     bibliotecaContagemPecas: '{count} Teile',
+    bibliotecaHubIntroBody:
+      'Empfohlener Ablauf: Erfassung → Bibliothek (Ansicht nach Gruppe) → Kategorien verwalten (Struktur) → Import. In Raster oder Liste mit der Maus über das Foto fahren für eine größere Vorschau.',
+    bibliotecaVisaoGeralSub:
+      'Kennzahlen zum Katalog und zur Gruppenstruktur (Kategorien und Unterkategorien). Zusammen mit den Filtern darunter für klares Arbeiten.',
+    bibliotecaCatalogoToolbarTitulo: 'Katalog — Filter, Ansicht und Gruppen',
+    bibliotecaImagemHoverTitle: 'Zum Vergrößern mit der Maus darüber fahren',
     categoriaPecasSemCategoria: 'Teile ohne Kategorie',
     classificacaoLoteTitulo: 'Schnellklassifikation im Stapel',
     classificacaoLoteDesc: 'Teile auswählen oder Filter oben nutzen. Gruppe/Untergruppe dann auf einmal zuweisen.',
@@ -13073,6 +13103,12 @@ export const translations = {
     bibliotecaSecaoBadgeGrupo: 'Group',
     bibliotecaSecaoBadgeAClassificar: 'To classify',
     bibliotecaContagemPecas: '{count} parts',
+    bibliotecaHubIntroBody:
+      'Suggested flow: Registration → Library (browse by group) → Manage categories (structure) → Import. In grid or list, hover the photo for a larger preview.',
+    bibliotecaVisaoGeralSub:
+      'Quick view of catalog size and your group tree (categories and subcategories). Use together with the filters below for tidy work.',
+    bibliotecaCatalogoToolbarTitulo: 'Catalog — filters, view and groups',
+    bibliotecaImagemHoverTitle: 'Hover to enlarge the image',
     categoriaPecasSemCategoria: 'Parts without category',
     classificacaoLoteTitulo: 'Quick batch classification',
     classificacaoLoteDesc: 'Select parts or use the filters above, then apply group/subgroup in one step.',

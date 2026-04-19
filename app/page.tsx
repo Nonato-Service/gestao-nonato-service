@@ -1403,6 +1403,7 @@ function getDemoModuleLabelForGrid(action: string): string {
     'open-relatorio-servico': 'Relatório de Serviço',
     'open-biblioteca-pecas': 'Biblioteca de Peças',
     'open-importacao-pecas': 'Importação de Peças',
+    'open-pecas-substituicao': 'Peças de substituição',
     'open-solicitacao-servico-tecnico': 'Solicitação de serviço técnico',
     'open-agenda': 'Agenda',
     'open-biblioteca-relatorios': 'Biblioteca de relatórios',
@@ -1469,6 +1470,7 @@ function getDemoModuleGroupId(action: string): DemoModuleGroupId {
     'open-relatorio-servico',
     'open-biblioteca-pecas',
     'open-importacao-pecas',
+    'open-pecas-substituicao',
     'open-solicitacao-servico-tecnico',
     'open-agenda',
     'open-biblioteca-relatorios',
@@ -3694,6 +3696,13 @@ export default function Dashboard() {
   const [visualizacaoBiblioteca, setVisualizacaoBiblioteca] = useState<'grid' | 'lista'>('grid')
   /** Biblioteca: grade em secções por categoria vs lista única (com filtro). */
   const [bibliotecaAgruparPorCategoria, setBibliotecaAgruparPorCategoria] = useState(false)
+  /** Pré-visualização ampliada ao passar o rato sobre fotos no catálogo (grade/lista). */
+  const [bibliotecaImageHoverPreview, setBibliotecaImageHoverPreview] = useState<{
+    src: string
+    alt: string
+    x: number
+    y: number
+  } | null>(null)
   const [editingCategoria, setEditingCategoria] = useState<CategoriaPeca | null>(null)
   const [editingSubcategoria, setEditingSubcategoria] = useState<SubcategoriaPeca | null>(null)
   const [ultimoGrupoSelecionado, setUltimoGrupoSelecionado] = useState<string>('')
@@ -3807,6 +3816,7 @@ export default function Dashboard() {
       'open-relatorio-servico',
       'open-biblioteca-pecas',
       'open-importacao-pecas',
+      'open-pecas-substituicao',
       'open-solicitacao-servico-tecnico',
       'open-agenda',
       'open-biblioteca-relatorios',
@@ -16902,6 +16912,20 @@ export default function Dashboard() {
     [aplicarImagemPecaBibliotecaDeUrl]
   )
 
+  const showBibliotecaImgPreview = useCallback((e: React.MouseEvent, src: string, alt: string) => {
+    setBibliotecaImageHoverPreview({ src, alt, x: e.clientX, y: e.clientY })
+  }, [])
+  const moveBibliotecaImgPreview = useCallback((e: React.MouseEvent) => {
+    setBibliotecaImageHoverPreview((prev) => (prev ? { ...prev, x: e.clientX, y: e.clientY } : prev))
+  }, [])
+  const hideBibliotecaImgPreview = useCallback(() => {
+    setBibliotecaImageHoverPreview(null)
+  }, [])
+
+  useEffect(() => {
+    setBibliotecaImageHoverPreview(null)
+  }, [abaBibliotecaPecas, activeTabId])
+
   useLayoutEffect(() => {
     if (!showBibliotecaPecasForm) return
     const root = pecaBibliotecaFormPasteRootRef.current
@@ -18818,6 +18842,7 @@ export default function Dashboard() {
     'open-biblioteca-relatorios': 'relatorioServico',
     'open-biblioteca-pecas': 'bibliotecaPecas',
     'open-importacao-pecas': 'bibliotecaPecas',
+    'open-pecas-substituicao': 'bibliotecaPecas',
     'open-solicitacao-servico-tecnico': 'agenda',
     'open-agenda': 'agenda',
     'open-desmontados': 'desmontados',
@@ -19193,6 +19218,9 @@ export default function Dashboard() {
       openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
     } else if (action === 'open-importacao-pecas') {
       openTab('importacao-pecas', getTabTitle('importacao-pecas'))
+    } else if (action === 'open-pecas-substituicao') {
+      setExpandedGroups((prev) => new Set(prev).add('gestao-tecnica'))
+      openTab('pecas-substituicao', getTabTitle('pecas-substituicao'))
     } else if (action === 'open-solicitacao-servico-tecnico') {
       openTab('solicitacao-servico-tecnico', getTabTitle('solicitacao-servico-tecnico'))
     } else if (action === 'open-agenda') {
@@ -25747,7 +25775,7 @@ onKeyPress={(e) => {
                             style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                           />
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '15px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '15px' }}>
                           {(!viewingEquipamento.photoLibrary || viewingEquipamento.photoLibrary.length === 0) ? (
                             <div style={{ gridColumn: '1 / -1', textAlign: 'center', opacity: 0.6, padding: '20px' }}>{t.nenhumaFotoAlbum || 'Nenhuma foto no álbum.'}</div>
                           ) : (
@@ -30632,6 +30660,9 @@ onKeyPress={(e) => {
           </div>
         )
       }
+
+      case 'pecas-substituicao':
+        return renderTabContent({ ...tab, type: 'biblioteca-pecas' })
       
       case 'biblioteca-pecas': {
         const hubT: Record<string, string> = (safeT || {}) as Record<string, string>
@@ -30666,7 +30697,7 @@ onKeyPress={(e) => {
             <div
               style={{
                 borderRadius: 16,
-                overflow: 'hidden',
+                overflow: 'visible',
                 border: isSem
                   ? '1px solid rgba(255, 170, 90, 0.42)'
                   : '1px solid rgba(0, 220, 120, 0.3)',
@@ -30761,6 +30792,68 @@ onKeyPress={(e) => {
         }
         return (
           <div className="tab-content-wrapper tab-glass-root" style={{ overflow: 'visible' }}>
+            {bibliotecaImageHoverPreview && typeof window !== 'undefined' ? (() => {
+              const maxW = 300
+              const maxH = 300
+              const pad = 16
+              const left = Math.min(
+                Math.max(pad, bibliotecaImageHoverPreview.x + 12),
+                window.innerWidth - maxW - pad
+              )
+              const top = Math.min(
+                Math.max(pad, bibliotecaImageHoverPreview.y + 12),
+                window.innerHeight - maxH - 72
+              )
+              return (
+                <div
+                  className="biblioteca-peca-img-preview-flyout"
+                  style={{
+                    position: 'fixed',
+                    left,
+                    top,
+                    zIndex: 10050,
+                    pointerEvents: 'none',
+                    padding: 12,
+                    borderRadius: 14,
+                    background: 'linear-gradient(155deg, rgba(10, 42, 26, 0.98), rgba(6, 10, 8, 0.99))',
+                    border: '1px solid rgba(0, 230, 130, 0.48)',
+                    boxShadow: '0 28px 56px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255,255,255,0.06)',
+                    maxWidth: maxW + 28,
+                  }}
+                  aria-hidden
+                >
+                  <img
+                    src={bibliotecaImageHoverPreview.src}
+                    alt=""
+                    style={{
+                      display: 'block',
+                      width: 'auto',
+                      height: 'auto',
+                      maxWidth: maxW,
+                      maxHeight: maxH,
+                      objectFit: 'contain',
+                      borderRadius: 10,
+                      background: 'rgba(0,0,0,0.35)',
+                    }}
+                  />
+                  {bibliotecaImageHoverPreview.alt ? (
+                    <div
+                      style={{
+                        marginTop: 10,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: 'rgba(220, 255, 232, 0.95)',
+                        lineHeight: 1.4,
+                        maxWidth: maxW,
+                        wordBreak: 'break-word',
+                      }}
+                    >
+                      {bibliotecaImageHoverPreview.alt}
+                    </div>
+                  ) : null}
+                </div>
+              )
+            })() : null}
             {/* Cabeçalho — moldura em gradiente */}
             <div
               style={{
@@ -30794,8 +30887,12 @@ onKeyPress={(e) => {
                   <p className="tab-glass-hero-meta" style={{ fontSize: '12px', opacity: 0.92, fontWeight: 600 }}>
                     {pecasBiblioteca.length} {safeT?.pecasCadastradas || 'peça(s) cadastrada(s)'}
                   </p>
-                  <p style={{ fontSize: '11px', opacity: 0.82, maxWidth: 560, lineHeight: 1.5, margin: '8px 0 0' }}>
+                  <p style={{ fontSize: '11px', opacity: 0.88, maxWidth: 640, lineHeight: 1.45, margin: '8px 0 0', fontWeight: 600 }}>
                     {hubT.bibliotecaHubTagline || 'Catálogo unificado e grupos claros.'}
+                  </p>
+                  <p style={{ fontSize: '11px', opacity: 0.78, maxWidth: 680, lineHeight: 1.55, margin: '6px 0 0' }}>
+                    {hubT.bibliotecaHubIntroBody ||
+                      'Organize por categorias e subcategorias; use as abas para cadastrar, consultar, editar, gerir grupos ou importar. Passe o rato sobre as miniaturas na biblioteca para ver a imagem ampliada.'}
                   </p>
                 </div>
                 <div className="tab-glass-hero-actions">
@@ -30878,9 +30975,21 @@ onKeyPress={(e) => {
               >
                 {hubT.bibliotecaVisaoGeral || 'Visão geral'}
               </div>
+              <p
+                style={{
+                  fontSize: 12,
+                  lineHeight: 1.55,
+                  color: 'rgba(210, 240, 222, 0.9)',
+                  margin: '0 0 12px',
+                  maxWidth: 780,
+                }}
+              >
+                {hubT.bibliotecaVisaoGeralSub ||
+                  'Resumo do volume de peças e da árvore de grupos (categorias e subcategorias).'}
+              </p>
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(3, 1fr)', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', 
               gap: '12px', 
               marginBottom: 0
             }}>
@@ -31230,7 +31339,40 @@ onKeyPress={(e) => {
                 
                 {pecaBibliotecaForm.imagem && (
                   <div style={{ marginTop: '10px', marginBottom: '15px', textAlign: 'center' }}>
-                    <img src={pecaBibliotecaForm.imagem} alt="Imagem da Peça" style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'cover', marginBottom: '10px', borderRadius: '4px' }} />
+                    <div
+                      style={{
+                        display: 'inline-block',
+                        maxWidth: 240,
+                        borderRadius: 10,
+                        overflow: 'hidden',
+                        border: '1px solid rgba(0, 255, 120, 0.28)',
+                        marginBottom: 10,
+                        background: '#151515',
+                      }}
+                    >
+                      <img
+                        src={pecaBibliotecaForm.imagem}
+                        alt={safeT?.imagemPecaBiblioteca || 'Imagem da Peça'}
+                        title={hubT.bibliotecaImagemHoverTitle || ''}
+                        style={{
+                          width: '100%',
+                          maxHeight: 200,
+                          objectFit: 'cover',
+                          display: 'block',
+                          transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+                          cursor: 'zoom-in',
+                        }}
+                        onMouseEnter={(ev) => {
+                          showBibliotecaImgPreview(ev, pecaBibliotecaForm.imagem, pecaBibliotecaForm.nome || safeT?.imagemPecaBiblioteca || '')
+                          ev.currentTarget.style.transform = 'scale(1.06)'
+                        }}
+                        onMouseMove={moveBibliotecaImgPreview}
+                        onMouseLeave={(ev) => {
+                          hideBibliotecaImgPreview()
+                          ev.currentTarget.style.transform = 'scale(1)'
+                        }}
+                      />
+                    </div>
                     <button 
                       className="btn-danger" 
                       onClick={() => setPecaBibliotecaForm({ ...pecaBibliotecaForm, imagem: '' })} 
@@ -32178,7 +32320,7 @@ onKeyPress={(e) => {
                   <div
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
                       gap: '10px',
                       maxHeight: '220px',
                       overflowY: 'auto',
@@ -32237,8 +32379,30 @@ onKeyPress={(e) => {
                       'Vista só por categoria (consulta). Para alterar nomes, preços, classificar em lote ou excluir, abra «Editar biblioteca».'}
                   </p>
                 )}
-                {/* Controles de visualização */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
+                {/* Controles de visualização — painel único */}
+                <div
+                  style={{
+                    marginBottom: 20,
+                    padding: '14px 16px',
+                    borderRadius: 14,
+                    border: '1px solid rgba(0, 210, 120, 0.18)',
+                    background: 'linear-gradient(108deg, rgba(0, 36, 20, 0.55), rgba(6, 12, 10, 0.92))',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 10,
+                      letterSpacing: '0.14em',
+                      textTransform: 'uppercase',
+                      fontWeight: 800,
+                      color: 'rgba(170, 235, 200, 0.9)',
+                      marginBottom: 12,
+                    }}
+                  >
+                    {hubT.bibliotecaCatalogoToolbarTitulo || 'Catálogo — filtros, visualização e grupos'}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
                   {!somenteLeituraBiblioteca ? (
                   <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                     <button
@@ -32401,6 +32565,7 @@ onKeyPress={(e) => {
                     />
                   </div>
                 </div>
+                </div>
 
                 {/* Visualização das peças */}
                 {(() => {
@@ -32436,13 +32601,22 @@ onKeyPress={(e) => {
                         style={{
                           backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.15)' : '#141414',
                           padding: '15px',
-                          borderRadius: '8px',
+                          borderRadius: '12px',
                           border: isSelected ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
                           cursor: isPendingChecklist ? 'pointer' : 'default',
-                          transition: 'transform 0.2s',
+                          transition: 'box-shadow 0.22s ease, border-color 0.22s ease',
+                          boxShadow: '0 4px 18px rgba(0,0,0,0.28)',
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
-                        onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                        onMouseEnter={(e) => {
+                          const el = e.currentTarget
+                          el.style.boxShadow = '0 14px 36px rgba(0, 80, 44, 0.38)'
+                          el.style.borderColor = 'rgba(0, 255, 120, 0.45)'
+                        }}
+                        onMouseLeave={(e) => {
+                          const el = e.currentTarget
+                          el.style.boxShadow = '0 4px 18px rgba(0,0,0,0.28)'
+                          el.style.borderColor = isSelected ? '#00ff00' : 'rgba(0, 255, 0, 0.2)'
+                        }}
                         onClick={() => {
                           if (isPendingChecklist) setPecaSelecionadaParaChecklist(peca)
                         }}
@@ -32451,23 +32625,53 @@ onKeyPress={(e) => {
                         }}
                       >
                         {peca.imagem ? (
-                          <img
-                            src={peca.imagem}
-                            alt={peca.nome}
-                            style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '4px', marginBottom: '10px' }}
-                          />
+                          <div
+                            style={{
+                              position: 'relative',
+                              width: '100%',
+                              height: 150,
+                              marginBottom: 10,
+                              borderRadius: 10,
+                              overflow: 'hidden',
+                              background: '#1a1a1a',
+                              border: '1px solid rgba(0, 230, 120, 0.14)',
+                            }}
+                          >
+                            <img
+                              src={peca.imagem}
+                              alt={peca.nome}
+                              title={hubT.bibliotecaImagemHoverTitle || ''}
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                display: 'block',
+                                transition: 'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
+                              }}
+                              onMouseEnter={(ev) => {
+                                showBibliotecaImgPreview(ev, peca.imagem!, peca.nome)
+                                ev.currentTarget.style.transform = 'scale(1.08)'
+                              }}
+                              onMouseMove={moveBibliotecaImgPreview}
+                              onMouseLeave={(ev) => {
+                                hideBibliotecaImgPreview()
+                                ev.currentTarget.style.transform = 'scale(1)'
+                              }}
+                            />
+                          </div>
                         ) : (
                           <div
                             style={{
                               width: '100%',
                               height: '150px',
                               backgroundColor: '#222222',
-                              borderRadius: '4px',
+                              borderRadius: '10px',
                               marginBottom: '10px',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               color: '#666',
+                              border: '1px dashed rgba(0, 255, 120, 0.2)',
                             }}
                           >
                             {safeT?.semImagem || 'Sem Imagem'}
@@ -32896,7 +33100,7 @@ onKeyPress={(e) => {
                                 'A mostrar só peças sem grupo — as outras continuam na vista «Todos os grupos».'
                               }
                             >
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
                                 {semCat.map((peca) => renderPecaBibliotecaGridCell(peca))}
                               </div>
                             </BibliotecaSecaoCategoria>
@@ -32917,7 +33121,7 @@ onKeyPress={(e) => {
                                   count={lista.length}
                                   variant="grupo"
                                 >
-                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
                                     {lista.map((peca) => renderPecaBibliotecaGridCell(peca))}
                                   </div>
                                 </BibliotecaSecaoCategoria>
@@ -32930,7 +33134,7 @@ onKeyPress={(e) => {
                                 count={semCat.length}
                                 variant="sem"
                               >
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
                                   {semCat.map((peca) => renderPecaBibliotecaGridCell(peca))}
                                 </div>
                               </BibliotecaSecaoCategoria>
@@ -32942,7 +33146,7 @@ onKeyPress={(e) => {
                     return (
                       <>
                         {!somenteLeituraBiblioteca && painelClassificacaoLote}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
                           {pecasCatalogoFiltradas.map((peca) => renderPecaBibliotecaGridCell(peca))}
                         </div>
                       </>
@@ -33052,7 +33256,32 @@ onKeyPress={(e) => {
                                 >
                                   <td style={{ padding: '8px 12px', verticalAlign: 'middle', ...bibTdRule }}>
                                     {peca.imagem ? (
-                                      <img src={peca.imagem} alt="" style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '4px', display: 'block' }} />
+                                      <img
+                                        src={peca.imagem}
+                                        alt={peca.nome}
+                                        title={hubT.bibliotecaImagemHoverTitle || ''}
+                                        style={{
+                                          width: '56px',
+                                          height: '56px',
+                                          objectFit: 'cover',
+                                          borderRadius: '8px',
+                                          display: 'block',
+                                          border: '1px solid rgba(0, 230, 120, 0.25)',
+                                          cursor: 'zoom-in',
+                                          transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                                        }}
+                                        onMouseEnter={(ev) => {
+                                          showBibliotecaImgPreview(ev, peca.imagem!, peca.nome)
+                                          ev.currentTarget.style.transform = 'scale(1.12)'
+                                          ev.currentTarget.style.boxShadow = '0 8px 22px rgba(0,0,0,0.45)'
+                                        }}
+                                        onMouseMove={moveBibliotecaImgPreview}
+                                        onMouseLeave={(ev) => {
+                                          hideBibliotecaImgPreview()
+                                          ev.currentTarget.style.transform = 'scale(1)'
+                                          ev.currentTarget.style.boxShadow = 'none'
+                                        }}
+                                      />
                                     ) : (
                                       <div
                                         style={{
@@ -39097,7 +39326,7 @@ A1;Peça exemplo;10`}
               <>
                 <div style={{ padding: '22px 24px', backgroundColor: '#1e1e1e', borderRadius: '14px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '20px' }}>
                   <h3 style={{ margin: '0 0 16px', color: 'rgba(0, 255, 0, 0.95)', fontSize: '13px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{(safeT as any)?.cabecalhoRelatorio || 'Cabeçalho do relatório'}</h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
                     <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.cliente || 'Cliente'}</span><br/><strong style={{ color: '#fff', fontSize: '14px' }}>{relatorioSelecionado.cliente}</strong></div>
                     <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.numeroRelatorio || 'Nº Relatório'}</span><br/><strong style={{ color: '#00ff00', fontSize: '14px' }}>{relatorioSelecionado.numero}</strong></div>
                     <div><span style={{ color: '#888', fontSize: '12px' }}>{(safeT as any)?.equipamento || 'Equipamento'}</span><br/><strong style={{ color: '#fff', fontSize: '14px' }}>{relatorioSelecionado.maquinaModelo} {relatorioSelecionado.numeroMaquina ? `– ${relatorioSelecionado.numeroMaquina}` : ''}</strong></div>
@@ -39521,7 +39750,7 @@ A1;Peça exemplo;10`}
                   <h2 style={{ margin: '0 0 8px', color: '#00ff00', fontSize: '22px' }}>{(safeT as any)?.comprovantesEnvioTitulo || 'Enviar por WhatsApp e Email'}</h2>
                   <p style={{ color: '#aaa', fontSize: '13px', marginBottom: '24px' }}>{(safeT as any)?.comprovantesEnvioDesc || 'Escolha um dos 5 modelos, selecione o canal e gere a mensagem para copiar ou abrir diretamente.'}</p>
                   {/* 5 modelos */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px', marginBottom: '24px' }}>
                     {([1, 2, 3, 4, 5] as const).map(id => (
                       <button type="button" key={id} onClick={() => setEnvioForm(f => ({ ...f, templateId: id }))} style={{ textAlign: 'left', padding: '14px', borderRadius: '10px', border: envioForm.templateId === id ? '2px solid #00ff00' : '1px solid #444', background: envioForm.templateId === id ? 'rgba(0,255,0,0.12)' : '#252525', color: '#fff', cursor: 'pointer' }}>
                         <div style={{ fontWeight: 700, color: '#00ff00', marginBottom: '4px' }}>{(safeT as any)?.[`comprovantesModelo${id}`] || `Modelo ${id}`}</div>
@@ -46536,7 +46765,7 @@ A1;Peça exemplo;10`}
                       {(equipamentoForm.partes || []).map((parte, idx) => (
                         <div key={idx} style={{ marginTop: '12px', padding: '12px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                           <div style={{ marginBottom: '8px', fontWeight: 600, color: '#00ff00' }}>{(safeT as any)?.equipamentoParte || 'Parte'} {parte.ordem}/{equipamentoForm.quantidadePartes || 1}</div>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
                             <div><label style={{ fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.equipamentoTipoId || 'ID geral ou específico?'}</label><select value={parte.tipoId} onChange={(e) => { const tipoId = e.target.value as 'geral' | 'especifico'; const novasPartes = [...(equipamentoForm.partes || [])]; novasPartes[idx] = { ...parte, tipoId, id: tipoId === 'especifico' ? (parte.id || '') : undefined }; setEquipamentoForm({ ...equipamentoForm, partes: novasPartes }); }} style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }}><option value="geral">{(safeT as any)?.equipamentoIdGeral || 'ID geral'}</option><option value="especifico">{(safeT as any)?.equipamentoIdEspecifico || 'ID específico'}</option></select></div>
                             {parte.tipoId === 'especifico' && <div><label style={{ fontSize: '12px', color: '#aaa' }}>ID</label><input type="text" value={parte.id || ''} onChange={(e) => { const novasPartes = [...(equipamentoForm.partes || [])]; novasPartes[idx] = { ...parte, id: e.target.value }; setEquipamentoForm({ ...equipamentoForm, partes: novasPartes }); }} style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} /></div>}
                             <div><label style={{ fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.equipamentoNumeroSerieFabricante || 'Nº série fabricante'}</label><input type="text" value={parte.numeroSerieFabricante || ''} onChange={(e) => { const novasPartes = [...(equipamentoForm.partes || [])]; novasPartes[idx] = { ...parte, numeroSerieFabricante: e.target.value }; setEquipamentoForm({ ...equipamentoForm, partes: novasPartes }); }} style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} /></div>
@@ -47028,7 +47257,7 @@ A1;Peça exemplo;10`}
                     ? (safeT?.selecioneParaVerConversas || 'Selecione um gestor ou um técnico. O técnico só verá gestores para conversar. O gestor verá todos os técnicos e poderá escolher um ou vários.')
                     : 'Entre com um usuário ligado a um gestor ou técnico para abrir a comunicação privada.'}
                 </p>
-                {podeEscolherManualHub && <div className="hub-comunicacao-selector-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
+                {podeEscolherManualHub && <div className="hub-comunicacao-selector-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
                   <div style={{ marginBottom: '16px' }}>
                     <div style={{ color: '#66b3ff', fontSize: '12px', fontWeight: 'bold', marginBottom: '10px' }}>{safeT?.gestorAssistenciaTecnica || 'Gestor Assistência Técnica'}</div>
                     {gestoresAssistencia.length === 0 ? <div style={{ color: '#888', fontSize: '13px' }}>{safeT?.nenhumGestorArea || 'Nenhum gestor cadastrado'}</div> : gestoresAssistencia.map(g => (
@@ -55598,7 +55827,11 @@ A1;Peça exemplo;10`}
                 .sort((a, b) => a.order - b.order)
                 .map((button) => {
                   if (button.id === 'biblioteca-pecas-default') {
-                    const isSelected = selectedSidebarButton === 'open-biblioteca-hub' || selectedSidebarButton === 'open-biblioteca-pecas' || selectedSidebarButton === 'open-importacao-pecas'
+                    const isSelected =
+                      selectedSidebarButton === 'open-biblioteca-hub' ||
+                      selectedSidebarButton === 'open-biblioteca-pecas' ||
+                      selectedSidebarButton === 'open-importacao-pecas' ||
+                      selectedSidebarButton === 'open-pecas-substituicao'
                     return (
                       <button
                         key={button.id}
@@ -60345,7 +60578,37 @@ A1;Peça exemplo;10`}
                 </div>
                 {pecaBibliotecaForm.imagem && (
                   <div style={{ marginTop: '10px', textAlign: 'center' }}>
-                    <img src={pecaBibliotecaForm.imagem} alt="Imagem da Peça" style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'cover', marginBottom: '5px' }} />
+                    <div
+                      style={{
+                        display: 'inline-block',
+                        maxWidth: 170,
+                        borderRadius: 10,
+                        overflow: 'hidden',
+                        border: '1px solid rgba(0, 255, 120, 0.25)',
+                        marginBottom: 6,
+                        background: '#141414',
+                      }}
+                    >
+                      <img
+                        src={pecaBibliotecaForm.imagem}
+                        alt={safeT?.imagemPecaBiblioteca || 'Imagem da Peça'}
+                        title={(safeT as { bibliotecaImagemHoverTitle?: string }).bibliotecaImagemHoverTitle || ''}
+                        style={{
+                          width: '100%',
+                          maxHeight: 150,
+                          objectFit: 'cover',
+                          display: 'block',
+                          transition: 'transform 0.28s ease',
+                          cursor: 'zoom-in',
+                        }}
+                        onMouseEnter={(ev) => {
+                          ev.currentTarget.style.transform = 'scale(1.12)'
+                        }}
+                        onMouseLeave={(ev) => {
+                          ev.currentTarget.style.transform = 'scale(1)'
+                        }}
+                      />
+                    </div>
                     <button className="btn-danger" onClick={() => setPecaBibliotecaForm({ ...pecaBibliotecaForm, imagem: '' })} style={{ display: 'block', margin: 'auto' }}>
                       {safeT?.removeEquipamentoPhoto || 'Remover Imagem'}
                     </button>
@@ -62834,7 +63097,7 @@ A1;Peça exemplo;10`}
                 <h3 style={{ color: '#00ff00', marginBottom: '15px', fontSize: '16px' }}>
                   {safeT?.pecasSubstituicao || 'Peças de Substituição'}
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
                   {viewingRelatorioServico.pecasSubstituicao.map((peca, index) => (
                     <div key={peca.id || index} style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                       {peca.imagem && (
