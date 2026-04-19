@@ -4335,6 +4335,82 @@ button.dia-trabalho-acao-btn--del:hover {
   }
 }
 
+/* Resumo de trabalho: estados de cobrança (laranja/amarelo → azul → verde) */
+@keyframes relatorio-resumo-pulse-laranja {
+  0%,
+  100% {
+    color: #ff8c00;
+    border-color: rgba(255, 180, 60, 0.55);
+    box-shadow: 0 0 0 0 rgba(255, 200, 80, 0.35);
+  }
+  50% {
+    color: #ffcc33;
+    border-color: rgba(255, 220, 100, 0.85);
+    box-shadow: 0 0 14px 2px rgba(255, 200, 60, 0.45);
+  }
+}
+@keyframes relatorio-resumo-pulse-azul {
+  0%,
+  100% {
+    color: #66b3ff;
+    border-color: rgba(80, 160, 255, 0.45);
+    box-shadow: 0 0 0 0 rgba(80, 160, 255, 0.2);
+  }
+  50% {
+    color: #a8d8ff;
+    border-color: rgba(120, 190, 255, 0.75);
+    box-shadow: 0 0 16px 3px rgba(80, 160, 255, 0.4);
+  }
+}
+.relatorio-resumo-cobranca-wrap {
+  border-radius: 10px;
+  padding: 10px 8px 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.relatorio-resumo-cobranca-wrap--laranja {
+  border: 2px solid rgba(255, 180, 60, 0.55);
+  animation: relatorio-resumo-pulse-laranja 1.6s ease-in-out infinite;
+  cursor: pointer;
+}
+.relatorio-resumo-cobranca-wrap--laranja .relatorio-resumo-cobranca-titulo,
+.relatorio-resumo-cobranca-wrap--laranja .relatorio-resumo-cobranca-valor {
+  animation: relatorio-resumo-pulse-laranja 1.6s ease-in-out infinite;
+}
+.relatorio-resumo-cobranca-wrap--azul {
+  border: 2px solid rgba(80, 160, 255, 0.5);
+  animation: relatorio-resumo-pulse-azul 1.5s ease-in-out infinite;
+  cursor: default;
+}
+.relatorio-resumo-cobranca-wrap--azul .relatorio-resumo-cobranca-titulo,
+.relatorio-resumo-cobranca-wrap--azul .relatorio-resumo-cobranca-valor {
+  animation: relatorio-resumo-pulse-azul 1.5s ease-in-out infinite;
+}
+.relatorio-resumo-cobranca-wrap--verde {
+  border: 1px solid rgba(0, 255, 0, 0.45);
+  cursor: default;
+}
+.relatorio-resumo-cobranca-wrap--verde .relatorio-resumo-cobranca-titulo,
+.relatorio-resumo-cobranca-wrap--verde .relatorio-resumo-cobranca-valor {
+  color: #00ff00;
+}
+.relatorio-resumo-cobranca-wrap .relatorio-resumo-cobranca-titulo {
+  margin-bottom: 10px;
+  font-size: 14px;
+  text-align: center;
+  font-weight: bold;
+}
+.relatorio-resumo-cobranca-wrap .relatorio-resumo-cobranca-valor {
+  font-weight: bold;
+}
+.relatorio-resumo-cobranca-wrap--laranja .relatorio-servico-resumo-totais-grid > div,
+.relatorio-resumo-cobranca-wrap--laranja .relatorio-servico-resumo-view-grid > div {
+  border-color: rgba(255, 180, 80, 0.45) !important;
+}
+.relatorio-resumo-cobranca-wrap--azul .relatorio-servico-resumo-totais-grid > div,
+.relatorio-resumo-cobranca-wrap--azul .relatorio-servico-resumo-view-grid > div {
+  border-color: rgba(100, 170, 255, 0.45) !important;
+}
+
 /* Linha modelo PDF + Editar: flex pode encolher sem cortar o botão */
 .relatorio-servico-card-acoes-linha {
   display: flex;

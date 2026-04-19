@@ -870,6 +870,8 @@ function sanitizarPecaBibliotecaImportacaoFlag(peca: PecaBiblioteca): PecaBiblio
 const BIBLIOTECA_PECAS_ULTIMA_SELECAO_KEY = 'nonato-biblioteca-pecas-ultima-selecao'
 /** Valor do `<select>` de grupo na biblioteca: só peças sem `categoriaId` (continuam a aparecer na vista normal quando o filtro é «todos»). */
 const BIBLIOTECA_FILTRO_SEM_CATEGORIA = '__sem_categoria__'
+/** Decisão «cobrar / não cobrar» no resumo do relatório (por id do relatório) */
+const RESUMO_COBRANCA_DECISAO_KEY = 'nonato-resumo-cobranca-decisao'
 
 type PasswordEntry = {
   id: string
@@ -4343,10 +4345,13 @@ export default function Dashboard() {
   const [fechamentosRelatorios, setFechamentosRelatorios] = useState<Record<string, FechamentoItem[]>>({})
   /** IDs de relatórios cujo fechamento de despesas foi guardado na Biblioteca (só aparecem lá até editar de novo) */
   const [fechamentosGuardadosBibliotecaIds, setFechamentosGuardadosBibliotecaIds] = useState<string[]>([])
+  /** Por relatório: 'sim' = aguarda fechamento na Biblioteca; 'nao' = sem cobrança (verde fixo no resumo) */
+  const [resumoCobrancaDecisaoPorRelatorio, setResumoCobrancaDecisaoPorRelatorio] = useState<Record<string, 'sim' | 'nao'>>({})
   const [relatoriosExcluidosClientes, setRelatoriosExcluidosClientes] = useState<RelatoriosExcluidosClientesStorage>({ pastas: {} })
   const [pastasExcluidasExpandidas, setPastasExcluidasExpandidas] = useState<Set<string>>(new Set())
   const [modalNotaExcluida, setModalNotaExcluida] = useState<ItemRelatorioExcluidoArquivo | null>(null)
   const [fechamentoRelatorioSelecionadoId, setFechamentoRelatorioSelecionadoId] = useState<string | null>(null)
+  const [fechamentoOsConsultaInput, setFechamentoOsConsultaInput] = useState('')
   const [fechamentoPdfModelo, setFechamentoPdfModelo] = useState<number>(1) // 1-8 modelos de PDF
   const [modalVisualizarDespesasBiblioteca, setModalVisualizarDespesasBiblioteca] = useState<{ relatorio: RelatorioServico; itens: FechamentoItem[] } | null>(null)
   const [showRelatorioServicoModal, setShowRelatorioServicoModal] = useState(false)
@@ -5877,17 +5882,30 @@ export default function Dashboard() {
             guardArr = guardArr.filter((id: string) => !removedRelatorioIds.has(id))
             saveData('nonato-fechamentos-guardados-biblioteca', guardArr).catch(() => {})
           }
-          setFechamentosGuardadosBibliotecaIds(guardArr)
-        }
-      } else {
-        const guardSaved = getData('nonato-fechamentos-guardados-biblioteca')
-        let guardArr = Array.isArray(guardSaved) ? [...guardSaved] : []
-        if (removedRelatorioIds.size > 0) {
-          guardArr = guardArr.filter((id: string) => !removedRelatorioIds.has(id))
-          saveData('nonato-fechamentos-guardados-biblioteca', guardArr).catch(() => {})
-        }
         setFechamentosGuardadosBibliotecaIds(guardArr)
       }
+    } else {
+      const guardSaved = getData('nonato-fechamentos-guardados-biblioteca')
+      let guardArr = Array.isArray(guardSaved) ? [...guardSaved] : []
+      if (removedRelatorioIds.size > 0) {
+        guardArr = guardArr.filter((id: string) => !removedRelatorioIds.has(id))
+        saveData('nonato-fechamentos-guardados-biblioteca', guardArr).catch(() => {})
+      }
+      setFechamentosGuardadosBibliotecaIds(guardArr)
+    }
+
+      const savedResumoDecisao = getData(RESUMO_COBRANCA_DECISAO_KEY)
+      let resumoDecMap: Record<string, 'sim' | 'nao'> = {}
+      if (savedResumoDecisao && typeof savedResumoDecisao === 'object' && !Array.isArray(savedResumoDecisao)) {
+        resumoDecMap = { ...(savedResumoDecisao as Record<string, 'sim' | 'nao'>) }
+        if (removedRelatorioIds.size > 0) {
+          for (const id of removedRelatorioIds) {
+            delete resumoDecMap[id]
+          }
+          saveData(RESUMO_COBRANCA_DECISAO_KEY, resumoDecMap).catch(() => {})
+        }
+      }
+      setResumoCobrancaDecisaoPorRelatorio(resumoDecMap)
 
       const savedRelExcl = getData('nonato-relatorios-excluidos-clientes') as RelatoriosExcluidosClientesStorage | null
       if (savedRelExcl && savedRelExcl.pastas && typeof savedRelExcl.pastas === 'object') {
@@ -10294,6 +10312,14 @@ export default function Dashboard() {
         setFechamentosGuardadosBibliotecaIds(prev => {
           const next = prev.filter(id => !reportIdsDoCliente.includes(id))
           saveData('nonato-fechamentos-guardados-biblioteca', next)
+          return next
+        })
+        setResumoCobrancaDecisaoPorRelatorio(prev => {
+          const next = { ...prev }
+          reportIdsDoCliente.forEach(id => {
+            delete next[id]
+          })
+          void saveData(RESUMO_COBRANCA_DECISAO_KEY, next)
           return next
         })
       }
@@ -15901,6 +15927,41 @@ export default function Dashboard() {
         saveData('nonato-fechamentos-guardados-biblioteca', next)
         return next
       })
+      setResumoCobrancaDecisaoPorRelatorio(prev => {
+        const { [relatorioId]: __, ...rest } = prev
+        void saveData(RESUMO_COBRANCA_DECISAO_KEY, rest)
+        return rest
+      })
+    }
+  }
+
+  const persistResumoCobrancaDecisaoMap = (next: Record<string, 'sim' | 'nao'>) => {
+    setResumoCobrancaDecisaoPorRelatorio(next)
+    void saveData(RESUMO_COBRANCA_DECISAO_KEY, next)
+  }
+
+  const getResumoCobrancaVisualClass = (relatorioId: string | undefined): 'laranja' | 'azul' | 'verde' => {
+    if (relatorioId && fechamentosGuardadosBibliotecaIds.includes(relatorioId)) return 'verde'
+    if (relatorioId && resumoCobrancaDecisaoPorRelatorio[relatorioId] === 'nao') return 'verde'
+    if (relatorioId && resumoCobrancaDecisaoPorRelatorio[relatorioId] === 'sim') return 'azul'
+    return 'laranja'
+  }
+
+  const handleClickResumoCobranca = (relatorioId: string | undefined) => {
+    if (!relatorioId) {
+      alert((safeT as any)?.resumoCobrancaSalvarPrimeiro || 'Guarde o relatório primeiro para registar a decisão de cobrança no resumo.')
+      return
+    }
+    if (fechamentosGuardadosBibliotecaIds.includes(relatorioId)) return
+    const d = resumoCobrancaDecisaoPorRelatorio[relatorioId]
+    if (d === 'nao' || d === 'sim') return
+    const msg =
+      (safeT as any)?.resumoCobrancaConfirm ||
+      'Deve cobrar ao cliente com base neste resumo de trabalho?\n\nOK = Sim (fica em destaque até concluir o relatório de valores e guardar na Biblioteca)\nCancelar = Não cobrar'
+    if (window.confirm(msg)) {
+      persistResumoCobrancaDecisaoMap({ ...resumoCobrancaDecisaoPorRelatorio, [relatorioId]: 'sim' })
+    } else {
+      persistResumoCobrancaDecisaoMap({ ...resumoCobrancaDecisaoPorRelatorio, [relatorioId]: 'nao' })
     }
   }
 
@@ -28562,35 +28623,60 @@ onKeyPress={(e) => {
 
                 {/* Resumo Final - Cálculos Finais - Organizado e Compacto */}
                 {relatorioServicoForm.diasTrabalho && relatorioServicoForm.diasTrabalho.length > 0 ? (
-                  <div style={{ marginBottom: '15px', marginTop: '15px' }}>
-                    <h3 style={{ marginBottom: '10px', color: '#00ff00', fontSize: '14px', textAlign: 'center', fontWeight: 'bold' }}>{safeT?.resumoHorasDeslocamentos?.toUpperCase() || 'RESUMO DE HORAS, DESLOCAMENTOS E DIÁRIAS'}</h3>
+                  (() => {
+                    const ridResumo = relatorioServicoForm.id || editingRelatorioServico?.id || ''
+                    const faseResumo = getResumoCobrancaVisualClass(ridResumo || undefined)
+                    const wrapMod =
+                      faseResumo === 'verde'
+                        ? 'relatorio-resumo-cobranca-wrap--verde'
+                        : faseResumo === 'azul'
+                          ? 'relatorio-resumo-cobranca-wrap--azul'
+                          : 'relatorio-resumo-cobranca-wrap--laranja'
+                    return (
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        handleClickResumoCobranca(ridResumo || undefined)
+                      }
+                    }}
+                    className={`relatorio-resumo-cobranca-wrap ${wrapMod}`}
+                    style={{ marginBottom: '15px', marginTop: '15px' }}
+                    onClick={() => handleClickResumoCobranca(ridResumo || undefined)}
+                    title={(safeT as any)?.resumoCobrancaDicaClique || 'Toque para indicar se deve cobrar ao cliente (após gravar o relatório).'}
+                  >
+                    <h3 className="relatorio-resumo-cobranca-titulo">{safeT?.resumoHorasDeslocamentos?.toUpperCase() || 'RESUMO DE HORAS, DESLOCAMENTOS E DIÁRIAS'}</h3>
                     <div className="relatorio-servico-resumo-totais-grid">
                       <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                         <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasTrabalho || 'Horas de Trabalho'}</p>
-                        <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasTrabalho}h</p>
+                        <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasTrabalho}h</p>
                       </div>
                       <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                         <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.kmsPercorridos || 'Km\'s Percorridos'}</p>
-                        <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).kmsPercorridos} km</p>
+                        <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).kmsPercorridos} km</p>
                       </div>
                       <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                         <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasViagem || 'Horas de Viagem'}</p>
-                        <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasViagem}h</p>
+                        <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasViagem}h</p>
                       </div>
                       <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                         <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.diarias || 'DIÁRIAS'}</p>
-                        <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{relatorioServicoForm.diasTrabalho.length}</p>
+                        <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{relatorioServicoForm.diasTrabalho.length}</p>
                       </div>
                       <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
                         <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemIda || 'Horas de Viagem de Ida'}</p>
-                        <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#00ff00' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasViagemIda}</p>
+                        <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '16px' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasViagemIda}</p>
                       </div>
                       <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
                         <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemRetorno || 'Horas de Viagem de Retorno'}</p>
-                        <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#00ff00' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasViagemRetorno}</p>
+                        <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '16px' }}>{calcularTotais(relatorioServicoForm.diasTrabalho).horasViagemRetorno}</p>
                       </div>
                     </div>
                   </div>
+                    )
+                  })()
                 ) : (
                   <div style={{ marginBottom: '15px', padding: '12px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(255, 255, 0, 0.3)', textAlign: 'center' }}>
                     <p style={{ color: '#ffaa00', fontSize: '12px' }}>⚠️ {safeT?.adicioneDiasTrabalho || 'Adicione dias de trabalho para ver os cálculos finais'}</p>
@@ -39126,6 +39212,33 @@ A1;Peça exemplo;10`}
           const corpo = `Fechamento de despesas do relatório de serviço.\n\nRelatório: ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento: ${relatorioSelecionado.maquinaModelo} ${relatorioSelecionado.numeroMaquina || ''}\nData: ${relatorioSelecionado.data}\n\nItens a cobrar:\n${linhas}\n\nTotal: ${totalCobranca.toFixed(2)} €\n\n--\nEnviado pela Gestão Técnica Nonato Service`
           window.location.href = `mailto:?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`
         }
+        const relatoriosPendentesFechamentoLista = relatoriosServico.filter(r => !fechamentosGuardadosBibliotecaIds.includes(r.id))
+        const confirmarOsFechamento = () => {
+          const raw = fechamentoOsConsultaInput.trim()
+          if (!raw) {
+            alert((safeT as any)?.fechamentoOsInformeNumero || 'Indique o número da OS (relatório de serviço).')
+            return
+          }
+          const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '')
+          const candidatos = relatoriosPendentesFechamentoLista
+          let found = candidatos.find(r => (r.numero || '').trim() === raw)
+          if (!found) found = candidatos.find(r => norm(r.numero || '') === norm(raw))
+          if (!found) {
+            const apenasDig = raw.replace(/\D/g, '')
+            if (apenasDig.length > 0) {
+              found = candidatos.find(r => {
+                const d = (r.numero || '').replace(/\D/g, '')
+                return d === apenasDig || (apenasDig.length >= 3 && d.includes(apenasDig))
+              })
+            }
+          }
+          if (!found) {
+            alert((safeT as any)?.fechamentoOsNaoEncontrado || 'Nenhum relatório pendente encontrado com esse número de OS.')
+            return
+          }
+          setFechamentoRelatorioSelecionadoId(found.id)
+          setFechamentoOsConsultaInput('')
+        }
         const fechamentoJsx = (
           <div style={{ padding: '24px 32px', maxWidth: '1600px', margin: '0 auto', minHeight: '100vh' }}>
             <header style={{ background: 'linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%)', border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '16px', padding: '24px 28px', marginBottom: '28px', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
@@ -39148,8 +39261,16 @@ A1;Peça exemplo;10`}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                   {fechamentoRelatorioSelecionadoId && (
-                    <button type="button" className="btn-primary" onClick={() => setFechamentoRelatorioSelecionadoId(null)} style={{ padding: '10px 18px', fontSize: '13px', borderRadius: '10px' }}>
-                      {(safeT as any)?.voltarLista || 'Voltar à lista'}
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={() => {
+                        setFechamentoRelatorioSelecionadoId(null)
+                        setFechamentoOsConsultaInput('')
+                      }}
+                      style={{ padding: '10px 18px', fontSize: '13px', borderRadius: '10px' }}
+                    >
+                      {(safeT as any)?.fechamentoVoltarConsultaOs || 'Consultar outra OS'}
                     </button>
                   )}
                   <button type="button" onClick={() => closeTab(activeTabId || '')} style={{ padding: '10px 14px', border: '1px solid rgba(255,255,255,0.25)', borderRadius: '10px', color: 'rgba(255,255,255,0.9)', background: 'transparent', cursor: 'pointer' }} title={safeT?.voltar || 'Voltar'}>↶</button>
@@ -39158,11 +39279,10 @@ A1;Peça exemplo;10`}
             </header>
 
             {!relatorioSelecionado ? (
-              <div style={{ display: 'grid', gap: '12px' }}>
-                <p style={{ color: '#ccc', marginBottom: '12px' }}>{(safeT as any)?.selecioneRelatorioFechamento || 'Selecione um relatório para ver o fechamento e anexar o que será cobrado.'}</p>
+              <div style={{ display: 'grid', gap: '16px' }}>
                 {relatoriosServico.length === 0 ? (
                   <p style={{ color: '#888' }}>{(safeT as any)?.nenhumRelatorioServico || 'Nenhum relatório de serviço. Crie e gere relatórios em Relatório de Serviço.'}</p>
-                ) : relatoriosServico.filter(r => !fechamentosGuardadosBibliotecaIds.includes(r.id)).length === 0 ? (
+                ) : relatoriosPendentesFechamentoLista.length === 0 ? (
                   <div style={{ padding: '20px', backgroundColor: '#252525', borderRadius: '12px', border: '1px solid rgba(0,255,0,0.25)' }}>
                     <p style={{ color: '#ccc', margin: '0 0 12px' }}>{(safeT as any)?.todosFechamentosNaBiblioteca || 'Todos os relatórios com fechamento estão na Biblioteca de Relatórios. Para alterar despesas, abra a Biblioteca e use «Editar despesas».'}</p>
                     <button type="button" className="btn-primary" onClick={() => openTab('biblioteca-relatorios', getTabTitle('biblioteca-relatorios'))} style={{ padding: '10px 18px', borderRadius: '10px' }}>
@@ -39170,28 +39290,56 @@ A1;Peça exemplo;10`}
                     </button>
                   </div>
                 ) : (
-                  relatoriosServico.filter(r => !fechamentosGuardadosBibliotecaIds.includes(r.id)).map(r => (
-                    <div
-                      key={r.id}
-                      onClick={() => setFechamentoRelatorioSelecionadoId(r.id)}
-                      style={{
-                        padding: '16px 20px',
-                        backgroundColor: '#2a2a2a',
-                        borderRadius: '12px',
-                        border: '2px solid rgba(0, 255, 0, 0.3)',
-                        cursor: 'pointer',
-                        display: 'grid',
-                        gridTemplateColumns: '1fr 1fr 1fr auto',
-                        gap: '12px',
-                        alignItems: 'center'
+                  <div
+                    style={{
+                      padding: '24px 22px',
+                      backgroundColor: '#252525',
+                      borderRadius: '14px',
+                      border: '1px solid rgba(0, 255, 0, 0.28)',
+                      maxWidth: '480px'
+                    }}
+                  >
+                    <p style={{ color: '#e8e8e8', margin: '0 0 14px', fontSize: '15px', fontWeight: 600 }}>
+                      {(safeT as any)?.fechamentoInformeNumeroOsTitulo || 'Número da OS (relatório de serviço)'}
+                    </p>
+                    <p style={{ color: '#aaa', margin: '0 0 18px', fontSize: '13px', lineHeight: 1.45 }}>
+                      {(safeT as any)?.fechamentoInformeNumeroOsTexto ||
+                        'Indique o número da OS. Depois de confirmar, aparece o resumo de trabalho com COD, descrição e valores, com opção de adicionar itens.'}
+                    </p>
+                    <label style={{ display: 'block', color: '#888', fontSize: '12px', marginBottom: '6px' }}>
+                      {(safeT as any)?.fechamentoCampoNumeroOs || 'N.º OS'}
+                    </label>
+                    <input
+                      type="text"
+                      value={fechamentoOsConsultaInput}
+                      onChange={e => setFechamentoOsConsultaInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          confirmarOsFechamento()
+                        }
                       }}
-                    >
-                      <span style={{ color: '#00ff00', fontWeight: 600 }}>{(safeT as any)?.numeroRelatorio || 'Nº'}: {r.numero}</span>
-                      <span style={{ color: '#fff' }}>{(safeT as any)?.cliente || 'Cliente'}: {r.cliente}</span>
-                      <span style={{ color: '#ccc' }}>{(safeT as any)?.equipamento || 'Equipamento'}: {r.maquinaModelo} {r.numeroMaquina ? `– ${r.numeroMaquina}` : ''}</span>
-                      <span style={{ color: '#888', fontSize: '13px' }}>{r.data}</span>
-                    </div>
-                  ))
+                      placeholder={(safeT as any)?.fechamentoPlaceholderOs || 'Ex.: 12-202504'}
+                      style={{
+                        width: '100%',
+                        padding: '12px 14px',
+                        borderRadius: '10px',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        background: '#1a1a1a',
+                        color: '#fff',
+                        fontSize: '15px',
+                        marginBottom: '14px',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                    <button type="button" className="btn-primary" onClick={confirmarOsFechamento} style={{ padding: '12px 22px', borderRadius: '10px', fontSize: '14px', width: '100%' }}>
+                      {(safeT as any)?.fechamentoConfirmarOs || 'Confirmar'}
+                    </button>
+                    <p style={{ color: '#666', fontSize: '12px', margin: '14px 0 0' }}>
+                      {relatoriosPendentesFechamentoLista.length}{' '}
+                      {(safeT as any)?.relatoriosPendentesFechamento || 'pendentes de guardar na Biblioteca'}
+                    </p>
+                  </div>
                 )}
               </div>
             ) : (
@@ -62982,33 +63130,54 @@ A1;Peça exemplo;10`}
                 {/* Resumo de Totais */}
                 {(() => {
                   const totais = calcularTotais(viewingRelatorioServico.diasTrabalho)
+                  const ridView = viewingRelatorioServico.id
+                  const faseView = getResumoCobrancaVisualClass(ridView)
+                  const wrapModView =
+                    faseView === 'verde'
+                      ? 'relatorio-resumo-cobranca-wrap--verde'
+                      : faseView === 'azul'
+                        ? 'relatorio-resumo-cobranca-wrap--azul'
+                        : 'relatorio-resumo-cobranca-wrap--laranja'
                   return (
-                    <div style={{ marginTop: '15px', marginBottom: '15px' }}>
-                      <h3 style={{ marginBottom: '10px', color: '#00ff00', fontSize: '14px', textAlign: 'center', fontWeight: 'bold' }}>{safeT?.resumoHorasDeslocamentos?.toUpperCase() || 'RESUMO DE HORAS, DESLOCAMENTOS E DIÁRIAS'}</h3>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          handleClickResumoCobranca(ridView)
+                        }
+                      }}
+                      className={`relatorio-resumo-cobranca-wrap ${wrapModView}`}
+                      style={{ marginTop: '15px', marginBottom: '15px' }}
+                      onClick={() => handleClickResumoCobranca(ridView)}
+                      title={(safeT as any)?.resumoCobrancaDicaClique || 'Toque para indicar se deve cobrar ao cliente.'}
+                    >
+                      <h3 className="relatorio-resumo-cobranca-titulo">{safeT?.resumoHorasDeslocamentos?.toUpperCase() || 'RESUMO DE HORAS, DESLOCAMENTOS E DIÁRIAS'}</h3>
+                      <div className="relatorio-servico-resumo-view-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
                         <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                           <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasTrabalho || 'Horas de Trabalho'}</p>
-                          <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{totais.horasTrabalho}h</p>
+                          <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{totais.horasTrabalho}h</p>
                         </div>
                         <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                           <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.kmsPercorridos || 'Km\'s Percorridos'}</p>
-                          <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{totais.kmsPercorridos} km</p>
+                          <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{totais.kmsPercorridos} km</p>
                         </div>
                         <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                           <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasViagem || 'Horas de Viagem'}</p>
-                          <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{totais.horasViagem}h</p>
+                          <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{totais.horasViagem}h</p>
                         </div>
                         <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                           <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.diarias || 'DIÁRIAS'}</p>
-                          <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{viewingRelatorioServico.diasTrabalho.length}</p>
+                          <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{viewingRelatorioServico.diasTrabalho.length}</p>
                         </div>
                         <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
                           <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemIda || 'Horas de Viagem de Ida'}</p>
-                          <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#00ff00' }}>{totais.horasViagemIda}</p>
+                          <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '16px' }}>{totais.horasViagemIda}</p>
                         </div>
                         <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
                           <p style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemRetorno || 'Horas de Viagem de Retorno'}</p>
-                          <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#00ff00' }}>{totais.horasViagemRetorno}</p>
+                          <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '16px' }}>{totais.horasViagemRetorno}</p>
                         </div>
                       </div>
                     </div>
