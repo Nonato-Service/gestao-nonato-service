@@ -104,6 +104,40 @@ function servicoValorToInputString(v: number): string {
   return String(v)
 }
 
+/**
+ * Legado: `nome` = "COD-DESCRIÇÃO" (ex.: HTT-HORA TECNICA TRABALHADA) sem `cod` →
+ * `cod`, `nome` em formato título a partir do texto após o hífen e `descricao` em maiúsculas (se ainda vazia).
+ */
+function migrarServicoLegacyCodNomeDesc<
+  T extends {
+    id: string
+    cod?: string
+    nome: string
+    descricao?: string
+    valor: number
+    tipoCobranca: 'unidade' | 'km' | 'hora' | 'valor-fixo' | 'diarias' | 'extras'
+    categoria: 'servico' | 'despesa'
+  }
+>(s: T): { row: T; touched: boolean } {
+  const codExistente = (typeof s.cod === 'string' ? s.cod : '').trim()
+  if (codExistente) return { row: s, touched: false }
+  const nome = (s.nome || '').trim()
+  const m = nome.match(/^([A-Za-z0-9]{2,8})[-–]\s*(.+)$/)
+  if (!m) return { row: s, touched: false }
+  const cod = m[1].toUpperCase()
+  const tail = m[2].trim()
+  if (!tail) return { row: s, touched: false }
+  const descTrim = typeof s.descricao === 'string' ? s.descricao.trim() : ''
+  const descricao = descTrim || tail.toUpperCase()
+  const nomeNovo = tail
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
+  return { row: { ...s, cod, nome: nomeNovo, descricao } as T, touched: true }
+}
+
 type Language = {
   code: string
   name: string
@@ -1429,7 +1463,7 @@ function getDemoModuleLabelForGrid(action: string): string {
     'open-familias-grupos': 'Famílias e grupos (checklist)',
     'open-familias-grupos-equipamentos': 'Famílias e grupos (equipamentos)',
     'open-desmontados': 'Desmontados',
-    'open-cadastro-servicos': 'Cadastro de serviços',
+    'open-cadastro-servicos': 'Cadastro de serviços / valores',
     'open-fechamento-relatorios-servicos': 'Fechamento relatórios de serviço',
     'open-gestao-industrial': 'Gestão Industrial',
     'open-gestao-tecnica': 'Gestão técnica (hub)',
@@ -3350,7 +3384,7 @@ export default function Dashboard() {
       'solicitacao-servico-tecnico': t?.solicitacaoServicoTecnicoTitle || 'SOLICITAÇÃO DE SERVIÇO TÉCNICO',
       'agenda': t?.agenda || 'Agenda',
       'desmontados': t?.desmontados || 'Desmontados',
-      'cadastro-servicos': t?.cadastroServicos || 'Cadastro de Serviços',
+      'cadastro-servicos': t?.cadastroServicos || 'Cadastro de Serviços / Valores',
       'fechamento-relatorios-servicos': t?.fechamentoRelatoriosServicosTitle || 'Fechamento dos Relatórios de Serviços',
       'translator': t?.translator || 'Tradutor de Idiomas',
       'administrador': t?.administrador || 'Administrador',
@@ -5586,15 +5620,23 @@ export default function Dashboard() {
         setTiposGestores(savedTiposGestores)
       }
 
-      // Carregar serviços
+      // Carregar serviços (migrar legado "COD-TEXTO" no `nome` → cod + nome + descricao; gravar se mudou)
       const savedServicos = getData('nonato-servicos')
       if (savedServicos && Array.isArray(savedServicos)) {
-        setServicos(
-          savedServicos.map((s: (typeof servicos)[number]) => ({
-            ...s,
-            valor: normalizeServicoValorStored(s.valor),
-          }))
-        )
+        let persistServicosMigrados = false
+        const aposMigracao = savedServicos.map((s: (typeof servicos)[number]) => {
+          const { row, touched } = migrarServicoLegacyCodNomeDesc(s)
+          if (touched) persistServicosMigrados = true
+          return row
+        })
+        const servicosNormalizados = aposMigracao.map((s) => ({
+          ...s,
+          valor: normalizeServicoValorStored(s.valor),
+        }))
+        setServicos(servicosNormalizados)
+        if (persistServicosMigrados) {
+          void saveData('nonato-servicos', servicosNormalizados, false).catch(() => {})
+        }
       }
 
       // Carregar biblioteca do tradutor (separada por idiomas)
@@ -6906,7 +6948,7 @@ export default function Dashboard() {
       if (!hasCadastroServicos) {
         const cadastroServicosButton: SidebarButton = {
           id: 'cadastro-servicos-default',
-          name: 'CADASTRO DE SERVIÇOS',
+          name: 'CADASTRO DE SERVIÇOS / VALORES',
           action: 'open-cadastro-servicos',
           order: buttons.length,
           translationKey: 'cadastroServicosTitle',
@@ -7100,7 +7142,7 @@ export default function Dashboard() {
         // Se não existe, adicionar
         const cadastroServicosButton: SidebarButton = {
           id: 'cadastro-servicos-default',
-          name: 'CADASTRO DE SERVIÇOS',
+          name: 'CADASTRO DE SERVIÇOS / VALORES',
           action: 'open-cadastro-servicos',
           order: buttons.length,
           translationKey: 'cadastroServicosTitle',
@@ -7335,7 +7377,7 @@ export default function Dashboard() {
       if (!hasCadastroServicosAfter) {
         filteredButtons.push({
           id: 'cadastro-servicos-default',
-          name: 'CADASTRO DE SERVIÇOS',
+          name: 'CADASTRO DE SERVIÇOS / VALORES',
           action: 'open-cadastro-servicos',
           order: filteredButtons.length,
           translationKey: 'cadastroServicosTitle',
@@ -7504,7 +7546,7 @@ export default function Dashboard() {
         },
         {
           id: 'cadastro-servicos-default',
-          name: 'CADASTRO DE SERVIÇOS',
+          name: 'CADASTRO DE SERVIÇOS / VALORES',
           action: 'open-cadastro-servicos',
           order: 11,
           translationKey: 'cadastroServicosTitle',
@@ -37988,7 +38030,7 @@ A1;Peça exemplo;10`}
                 </div>
                 <div className="tab-glass-hero-heading">
                   <h1 className="tab-glass-hero-title">
-                    {safeT?.cadastroServicosTitle || 'CADASTRO DE SERVIÇOS'}
+                    {safeT?.cadastroServicosTitle || 'CADASTRO DE SERVIÇOS / VALORES'}
                   </h1>
                   <p className="tab-glass-hero-meta">
                     {servicos.length} {safeT?.servicosCadastrados || 'serviço(s) cadastrado(s)'}
@@ -38177,13 +38219,21 @@ A1;Peça exemplo;10`}
               <div className="tab-glass-cards-grid" style={{ marginTop: '20px' }}>
                 {servicos.map(servico => (
                   <div key={servico.id} style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }), height: 'fit-content' }} onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)} onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}>
-                    <h3 style={{ marginBottom: '10px', color: '#ffffff' }}>{servico.cod ? `${servico.cod} – ` : ''}{servico.nome}</h3>
+                    <h3 style={{ marginBottom: '10px', color: '#ffffff' }}>
+                      {servico.cod?.trim() ? (
+                        <span style={{ color: '#7dff9e' }}>COD: {servico.cod.trim()}</span>
+                      ) : null}
+                      {servico.cod?.trim() ? <span style={{ color: 'rgba(255,255,255,0.45)' }}> · </span> : null}
+                      {servico.nome}
+                    </h3>
                     <p style={{ fontSize: '14px', marginBottom: '5px' }}><strong>{safeT?.valorServico || 'Valor'}:</strong> {servico.valor}€</p>
                     <p style={{ fontSize: '14px', marginBottom: '5px' }}><strong>{safeT?.tipoCobranca || 'Tipo de Cobrança'}:</strong> {servico.tipoCobranca}</p>
                     <p style={{ fontSize: '14px', marginBottom: '5px', opacity: 0.8 }}><strong>{safeT?.tipo || 'Tipo'}:</strong> {servico.categoria}</p>
-                    {servico.descricao && (
-                      <p style={{ fontSize: '13px', opacity: 0.7, marginBottom: '10px', fontStyle: 'italic' }}>{servico.descricao}</p>
-                    )}
+                    {servico.descricao?.trim() ? (
+                      <p style={{ fontSize: '13px', marginBottom: '10px', opacity: 0.92 }}>
+                        <strong>{safeT?.descricao || 'Descrição'}:</strong> {servico.descricao.trim()}
+                      </p>
+                    ) : null}
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
                       <button
                         className="btn-primary"
@@ -38645,7 +38695,7 @@ A1;Peça exemplo;10`}
               marginTop: '20px'
             }}>
               <h3 style={{ marginBottom: '20px', color: '#00ff00', fontSize: '18px', borderBottom: '1px solid rgba(0, 100, 255, 0.2)', paddingBottom: '10px' }}>
-                {safeT?.cadastroServicosTitle || 'CADASTRO DE SERVIÇOS'}
+                {safeT?.cadastroServicosTitle || 'CADASTRO DE SERVIÇOS / VALORES'}
               </h3>
               <p style={{ opacity: 0.7, textAlign: 'center', padding: '20px', marginBottom: '20px' }}>
                 {safeT?.cadastroServicosDesc || 'Gerencie o cadastro de serviços aqui. Esta funcionalidade está disponível através do botão na barra lateral.'}
@@ -38656,7 +38706,7 @@ A1;Peça exemplo;10`}
                   onClick={() => {
                     // Abrir o cadastro de serviços
                     const tabType: TabType = 'cadastro-servicos'
-                    const title = safeT?.cadastroServicosTitle || 'CADASTRO DE SERVIÇOS'
+                    const title = safeT?.cadastroServicosTitle || 'CADASTRO DE SERVIÇOS / VALORES'
                     openTab(tabType, title)
                   }}
                   style={{ 
@@ -38804,7 +38854,7 @@ A1;Peça exemplo;10`}
               ...item,
               servicoId: primeiroServico.id,
               cod: primeiroServico.cod,
-              descricao: primeiroServico.nome || primeiroServico.descricao || item.descricao,
+              descricao: primeiroServico.descricao || primeiroServico.nome || item.descricao,
               valorUnitario: valorUnit,
               valorTotal: total
             }
@@ -38838,7 +38888,12 @@ A1;Peça exemplo;10`}
                 const servicoCadastro = getServicoParaItemResumo(item.id)
                 const valorUnit = (temValorUnit ? saved.valorUnitario : servicoCadastro?.valor ?? item.valorUnitario) ?? 0
                 const cod = temCodOuServico ? (saved.cod ?? servicos.find(s => s.id === saved.servicoId)?.cod) : (servicoCadastro?.cod ?? '')
-                const descricao = (temCodOuServico ? (saved.descricao ?? servicos.find(s => s.id === saved.servicoId)?.nome) : (servicoCadastro?.nome || servicoCadastro?.descricao || item.descricao)) ?? item.descricao
+                const descricao =
+                  (temCodOuServico
+                    ? (saved.descricao ??
+                        servicos.find(s => s.id === saved.servicoId)?.descricao ??
+                        servicos.find(s => s.id === saved.servicoId)?.nome)
+                    : (servicoCadastro?.descricao || servicoCadastro?.nome || item.descricao)) ?? item.descricao
                 const servicoId = saved.servicoId || servicoCadastro?.id
                 const total = (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias' || item.id === 'hida' || item.id === 'hret') ? Math.round(qty * valorUnit * 100) / 100 : valorUnit
                 const cobrarDiaria = item.id === 'diarias' && typeof saved.cobrarDiaria === 'boolean' ? saved.cobrarDiaria : (item as FechamentoItem).cobrarDiaria !== false
@@ -38881,7 +38936,7 @@ A1;Peça exemplo;10`}
           atualizarItem(itemId, {
             servicoId: servico.id,
             cod: servico.cod,
-            descricao: servico.nome || servico.descricao || item.descricao,
+            descricao: servico.descricao || servico.nome || item.descricao,
             valorUnitario: valorUnit,
             valorTotal: total,
             tipoCobranca: tipo as FechamentoItem['tipoCobranca']
@@ -39124,7 +39179,8 @@ A1;Peça exemplo;10`}
                         const codDoServico = (item.cod ?? servicoVinculado?.cod ?? '').trim() || (servicoVinculado?.nome ?? '').trim()
                         const codFallbackRelatorio = item.origem === 'relatorio' && (item.id === 'ht' ? 'HT' : item.id === 'km' ? 'KM' : item.id === 'hviagem' ? 'H.Viag' : item.id === 'diarias' ? 'DIAR' : item.id === 'hida' ? 'H.Ida' : item.id === 'hret' ? 'H.Ret' : '')
                         const codExibir = codDoServico || codFallbackRelatorio || '—'
-                        const nomeExibir = (item.descricao ?? servicoVinculado?.nome ?? servicoVinculado?.descricao ?? '').trim() || '—'
+                        const nomeExibir =
+                          (item.descricao ?? servicoVinculado?.descricao ?? servicoVinculado?.nome ?? '').trim() || '—'
                         const itemFixoDoRelatorio = item.origem === 'relatorio'
                         const eManual = item.origem === 'manual'
                         const eDiarias = item.id === 'diarias'
@@ -39159,7 +39215,10 @@ A1;Peça exemplo;10`}
                                 <select value={item.servicoId || ''} onChange={e => { const sid = e.target.value; const s = servicos.find(sv => sv.id === sid); if (s) aplicarServico(item.id, s) }} style={{ width: '100%', padding: '6px 8px', background: '#2a2a2a', border: '1px solid #444', borderRadius: '4px', color: '#fff', fontSize: '12px' }}>
                                   <option value="">{(safeT as any)?.selecioneServicoAnexar || '— Selecionar serviço (COD, nome, valor) —'}</option>
                                   {servicosParaItem(item).map(s => (
-                                    <option key={s.id} value={s.id}>{s.cod ? `${s.cod} – ` : ''}{s.nome} – {s.valor}€</option>
+                                    <option key={s.id} value={s.id}>
+                                      {s.cod?.trim() ? `COD: ${s.cod.trim()} · ` : ''}
+                                      {s.nome} – {s.valor}€
+                                    </option>
                                   ))}
                                 </select>
                               ) : (
@@ -61402,7 +61461,7 @@ A1;Peça exemplo;10`}
       {showCadastroServicosModal && (
         <div className="modal-overlay" onClick={() => setShowCadastroServicosModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>{safeT?.cadastroServicosTitle || 'CADASTRO DE SERVIÇOS'}</h2>
+            <h2>{safeT?.cadastroServicosTitle || 'CADASTRO DE SERVIÇOS / VALORES'}</h2>
             <button className="btn-primary" onClick={handleAddServico} style={{ marginBottom: '15px' }}>
               {safeT?.adicionarServico || 'Adicionar Serviço ou Despesa'}
             </button>
@@ -61475,7 +61534,18 @@ A1;Peça exemplo;10`}
               <ul style={{ listStyle: 'none', padding: 0, marginTop: '20px' }}>
                 {servicos.map(servico => (
                   <li key={servico.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
-                    <p><strong>{servico.cod ? `${servico.cod} – ` : ''}{servico.nome}</strong> - {servico.valor}€ ({servico.tipoCobranca})</p>
+                    <p>
+                      <strong>
+                        {servico.cod?.trim() ? <>COD: {servico.cod.trim()} · </> : null}
+                        {servico.nome}
+                      </strong>{' '}
+                      - {servico.valor}€ ({servico.tipoCobranca})
+                    </p>
+                    {servico.descricao?.trim() ? (
+                      <p style={{ fontSize: '13px', opacity: 0.85, marginBottom: '6px' }}>
+                        <strong>{safeT?.descricao || 'Descrição'}:</strong> {servico.descricao.trim()}
+                      </p>
+                    ) : null}
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.tipo || 'Tipo'}: {servico.categoria}</p>
                     <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
                       <button
