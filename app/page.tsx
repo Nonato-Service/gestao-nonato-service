@@ -35857,12 +35857,127 @@ A1;Peça exemplo;10`}
                   )
                   .sort(ordenarDataHoraAsc)
 
-                const colTitulo = (t: string, cor: string, n: number) => (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '14px', fontWeight: 800, color: cor }}>{t}</span>
-                    <span style={{ fontSize: '12px', color: '#888' }}>{n}</span>
-                  </div>
-                )
+                const cabecalhoPainelColuna = (
+                  variant: 'exec' | 'agend' | 'pre',
+                  titulo: string,
+                  n: number
+                ) => {
+                  const cfg =
+                    variant === 'exec'
+                      ? {
+                          icon: '▶',
+                          tag: (safeT as any)?.agendaPainelHeadTagExecucao || 'AO VIVO',
+                          bar: '#ff6b2d',
+                          grad: 'linear-gradient(105deg, rgba(255,95,40,0.42) 0%, rgba(18,10,8,0.97) 48%, rgba(12,12,12,0.98) 100%)',
+                          iconBox: 'rgba(255, 110, 50, 0.22)',
+                          iconBorder: '1px solid rgba(255, 160, 100, 0.55)',
+                          titleTint: '#ffd4bc',
+                        }
+                      : variant === 'agend'
+                        ? {
+                            icon: '✓',
+                            tag: (safeT as any)?.agendaPainelHeadTagAgendados || 'CONFIRMADO',
+                            bar: '#3b82f6',
+                            grad: 'linear-gradient(105deg, rgba(45,120,255,0.38) 0%, rgba(8,14,28,0.97) 48%, rgba(12,12,14,0.98) 100%)',
+                            iconBox: 'rgba(55, 130, 235, 0.22)',
+                            iconBorder: '1px solid rgba(130, 185, 255, 0.5)',
+                            titleTint: '#cfe6ff',
+                          }
+                        : {
+                            icon: '⏱',
+                            tag: (safeT as any)?.agendaPainelHeadTagPre || 'RASCUNHO',
+                            bar: '#e6b422',
+                            grad: 'linear-gradient(105deg, rgba(230,190,50,0.34) 0%, rgba(26,22,8,0.97) 48%, rgba(14,14,12,0.98) 100%)',
+                            iconBox: 'rgba(220, 180, 40, 0.2)',
+                            iconBorder: '1px solid rgba(240, 210, 100, 0.45)',
+                            titleTint: '#f5ecc8',
+                          }
+                  return (
+                    <div
+                      style={{
+                        margin: '0 0 12px 0',
+                        borderRadius: '0',
+                        borderTop: `4px solid ${cfg.bar}`,
+                        background: cfg.grad,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '12px',
+                          padding: '12px 14px',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
+                          <span
+                            aria-hidden
+                            style={{
+                              flexShrink: 0,
+                              width: 40,
+                              height: 40,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderRadius: '11px',
+                              backgroundColor: cfg.iconBox,
+                              border: cfg.iconBorder,
+                              fontSize: '17px',
+                              fontWeight: 900,
+                              color: cfg.titleTint,
+                              lineHeight: 1,
+                            }}
+                          >
+                            {cfg.icon}
+                          </span>
+                          <div style={{ minWidth: 0 }}>
+                            <div
+                              style={{
+                                fontSize: '10px',
+                                fontWeight: 900,
+                                letterSpacing: '0.16em',
+                                color: 'rgba(255,255,255,0.42)',
+                                textTransform: 'uppercase',
+                                marginBottom: '3px',
+                              }}
+                            >
+                              {cfg.tag}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: '14px',
+                                fontWeight: 900,
+                                color: '#fff',
+                                letterSpacing: '0.02em',
+                                lineHeight: 1.25,
+                              }}
+                            >
+                              {titulo}
+                            </div>
+                          </div>
+                        </div>
+                        <span
+                          style={{
+                            flexShrink: 0,
+                            minWidth: 36,
+                            padding: '7px 12px',
+                            borderRadius: '999px',
+                            backgroundColor: 'rgba(0,0,0,0.35)',
+                            border: cfg.iconBorder,
+                            fontSize: '14px',
+                            fontWeight: 900,
+                            color: '#fff',
+                            textAlign: 'center',
+                            boxShadow: '0 0 0 1px rgba(0,0,0,0.2)',
+                          }}
+                        >
+                          {n}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                }
 
                 const miniAgendaBtn = (a: Agendamento, borda: string) => (
                   <button
@@ -35905,23 +36020,65 @@ A1;Peça exemplo;10`}
                         marginBottom: '18px',
                       }}
                     >
-                      <div style={{ padding: '12px', borderRadius: '10px', backgroundColor: '#151515', border: '1px solid rgba(255, 120, 40, 0.45)' }}>
-                        {colTitulo((safeT as any)?.agendaPainelEmExecucao || 'Em execução', '#ff9a3c', emExecucao.length)}
-                        {emExecucao.length === 0
-                          ? vazio((safeT as any)?.agendaPainelVazioExecucao || 'Nenhum trabalho em execução.')
-                          : emExecucao.map((a) => miniAgendaBtn(a, 'rgba(255, 150, 60, 0.55)'))}
+                      <div
+                        style={{
+                          borderRadius: '12px',
+                          overflow: 'hidden',
+                          backgroundColor: 'rgba(28, 14, 8, 0.55)',
+                          border: '1px solid rgba(255, 110, 55, 0.5)',
+                          boxShadow: '0 4px 18px rgba(255, 80, 30, 0.08)',
+                        }}
+                      >
+                        {cabecalhoPainelColuna(
+                          'exec',
+                          (safeT as any)?.agendaPainelEmExecucao || 'Em execução',
+                          emExecucao.length
+                        )}
+                        <div style={{ padding: '0 12px 12px' }}>
+                          {emExecucao.length === 0
+                            ? vazio((safeT as any)?.agendaPainelVazioExecucao || 'Nenhum trabalho em execução.')
+                            : emExecucao.map((a) => miniAgendaBtn(a, 'rgba(255, 150, 60, 0.55)'))}
+                        </div>
                       </div>
-                      <div style={{ padding: '12px', borderRadius: '10px', backgroundColor: '#151515', border: '1px solid rgba(70, 140, 255, 0.5)' }}>
-                        {colTitulo((safeT as any)?.agendaPainelAgendados || 'Agendados (confirmados)', '#6ab0ff', agendados.length)}
-                        {agendados.length === 0
-                          ? vazio((safeT as any)?.agendaPainelVazioAgendados || 'Nenhum agendamento técnico confirmado.')
-                          : agendados.map((a) => miniAgendaBtn(a, 'rgba(90, 150, 255, 0.45)'))}
+                      <div
+                        style={{
+                          borderRadius: '12px',
+                          overflow: 'hidden',
+                          backgroundColor: 'rgba(8, 16, 32, 0.6)',
+                          border: '1px solid rgba(80, 150, 255, 0.52)',
+                          boxShadow: '0 4px 18px rgba(40, 100, 255, 0.1)',
+                        }}
+                      >
+                        {cabecalhoPainelColuna(
+                          'agend',
+                          (safeT as any)?.agendaPainelAgendados || 'Agendados (confirmados)',
+                          agendados.length
+                        )}
+                        <div style={{ padding: '0 12px 12px' }}>
+                          {agendados.length === 0
+                            ? vazio((safeT as any)?.agendaPainelVazioAgendados || 'Nenhum agendamento técnico confirmado.')
+                            : agendados.map((a) => miniAgendaBtn(a, 'rgba(90, 150, 255, 0.45)'))}
+                        </div>
                       </div>
-                      <div style={{ padding: '12px', borderRadius: '10px', backgroundColor: '#151515', border: '1px solid rgba(230, 200, 60, 0.45)' }}>
-                        {colTitulo((safeT as any)?.agendaPainelPreAgendados || 'Pré-agendados', '#e6c84a', preAgendados.length)}
-                        {preAgendados.length === 0
-                          ? vazio((safeT as any)?.agendaPainelVazioPre || 'Nenhum pré-agendamento ativo.')
-                          : preAgendados.map((a) => miniAgendaBtn(a, 'rgba(230, 200, 80, 0.4)'))}
+                      <div
+                        style={{
+                          borderRadius: '12px',
+                          overflow: 'hidden',
+                          backgroundColor: 'rgba(32, 28, 10, 0.58)',
+                          border: '1px solid rgba(215, 175, 45, 0.48)',
+                          boxShadow: '0 4px 18px rgba(200, 160, 30, 0.08)',
+                        }}
+                      >
+                        {cabecalhoPainelColuna(
+                          'pre',
+                          (safeT as any)?.agendaPainelPreAgendados || 'Pré-agendados',
+                          preAgendados.length
+                        )}
+                        <div style={{ padding: '0 12px 12px' }}>
+                          {preAgendados.length === 0
+                            ? vazio((safeT as any)?.agendaPainelVazioPre || 'Nenhum pré-agendamento ativo.')
+                            : preAgendados.map((a) => miniAgendaBtn(a, 'rgba(230, 200, 80, 0.4)'))}
+                        </div>
                       </div>
                     </div>
                   </>

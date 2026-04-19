@@ -1740,6 +1740,9 @@ export const translations = {
     agendamentoConfirmado: 'Agendamento confirmado com sucesso!',
     gerencieAgendamentos: 'Gerencie pré-agendamentos e agendamentos técnicos',
     agendaPainelOperacionalTitulo: 'Situação operacional',
+    agendaPainelHeadTagExecucao: 'AO VIVO',
+    agendaPainelHeadTagAgendados: 'CONFIRMADO',
+    agendaPainelHeadTagPre: 'RASCUNHO',
     agendaPainelOperacionalHint:
       'Resumo em tempo real. O filtro de técnico acima aplica-se aqui; os filtros de tipo e data da lista em baixo não ocultam este painel.',
     agendaPainelEmExecucao: 'Em execução',
@@ -13302,6 +13305,9 @@ export const translations = {
     agendamentoConfirmado: 'Appointment confirmed successfully!',
     gerencieAgendamentos: 'Manage pre-appointments and technical appointments',
     agendaPainelOperacionalTitulo: 'Operational overview',
+    agendaPainelHeadTagExecucao: 'LIVE',
+    agendaPainelHeadTagAgendados: 'CONFIRMED',
+    agendaPainelHeadTagPre: 'DRAFT',
     agendaPainelOperacionalHint:
       'Live summary. The technician filter above applies here; type and date filters for the list below do not hide this panel.',
     agendaPainelEmExecucao: 'In progress',
