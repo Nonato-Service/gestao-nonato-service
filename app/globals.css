@@ -16,6 +16,19 @@
   --ns-radius-sm: 8px;
   --ns-radius-md: 12px;
   --ns-radius-lg: 16px;
+  /* README + formulários escuros */
+  --ns-bg-body: #1e1e1e;
+  --ns-container: #2a2a2a;
+  --ns-input-bg: #222222;
+  --ns-border-accent-soft: rgba(0, 255, 0, 0.3);
+  --ns-accent-neon: #00ff00;
+  /* Comunicação interna (destaque azul) */
+  --ns-info: #66b3ff;
+  --ns-info-muted: #a8d8ff;
+  --ns-info-border: rgba(0, 100, 255, 0.2);
+  --ns-info-bg-soft: rgba(0, 100, 255, 0.1);
+  --ns-info-bg-medium: rgba(0, 100, 255, 0.28);
+  --ns-info-glow: rgba(102, 179, 255, 0.35);
 }
 
 html {
@@ -204,6 +217,219 @@ body,
 
 .btn-primary:active {
   box-shadow: 0 0 10px rgba(0, 255, 0, 0.25);
+}
+
+/* Compacto: voltar / página inicial (barra de ferramentas) */
+.btn-primary.btn--compact {
+  padding: 8px 14px !important;
+  font-size: 14px !important;
+  min-height: 36px !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+}
+
+.btn-primary.btn--compact.btn--border-soft {
+  border-color: rgba(0, 255, 122, 0.5) !important;
+}
+
+/* Ação informativa (comunicação interna — azul, hover só em CSS) */
+.btn-info {
+  padding: 12px 24px;
+  background-color: var(--ns-info-bg-medium);
+  border: 2px solid rgba(102, 179, 255, 0.9);
+  border-radius: var(--ns-radius-sm);
+  color: var(--ns-info-muted);
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    filter 0.2s ease,
+    transform 0.15s ease;
+}
+
+.btn-info:hover {
+  background-color: rgba(0, 100, 255, 0.42);
+  border-color: #9fd4ff;
+  box-shadow: 0 0 16px var(--ns-info-glow);
+  filter: brightness(1.04);
+  transform: translateY(-1px);
+}
+
+.btn-info:active {
+  box-shadow: 0 0 10px rgba(102, 179, 255, 0.25);
+  transform: translateY(0);
+}
+
+.btn-info.btn--sm {
+  min-height: 0 !important;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-width: 1px;
+  border-radius: 4px;
+}
+
+.btn-info.btn--sm:hover {
+  transform: none !important;
+}
+
+/* Chip perigo (excluir mensagem) */
+.btn-chip-danger {
+  padding: 6px 12px;
+  background-color: rgba(255, 68, 68, 0.18);
+  border: 1px solid rgba(255, 68, 68, 0.85);
+  border-radius: 4px;
+  color: #ff8a8a;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-chip-danger:hover {
+  background-color: rgba(255, 68, 68, 0.28);
+  box-shadow: 0 0 12px rgba(255, 68, 68, 0.3);
+}
+
+/* Campos escuros alinhados ao tema */
+.input-ns {
+  box-sizing: border-box;
+  padding: 10px;
+  background-color: var(--ns-input-bg);
+  border: 1px solid var(--ns-border-accent-soft);
+  border-radius: 4px;
+  color: #fff;
+  width: 100%;
+  font: inherit;
+}
+
+.input-ns--select-sm {
+  padding: 8px;
+}
+
+.input-ns--emphasis {
+  border-width: 2px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.input-ns--flex {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+.input-ns--textarea {
+  resize: vertical;
+}
+
+.input-ns--inline {
+  width: auto;
+}
+
+.ns-well {
+  padding: 8px 10px;
+  background-color: var(--ns-input-bg);
+  border-radius: 4px;
+  color: #ccc;
+}
+
+.comunicacao-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.comunicacao-banner {
+  padding: 15px;
+  background-color: var(--ns-info-bg-soft);
+  border-radius: var(--ns-radius-sm);
+  border: 1px solid var(--ns-border-accent-soft);
+}
+
+.text-ns-info {
+  color: var(--ns-info);
+}
+
+.text-ns-muted {
+  color: #999;
+}
+
+.label-ns {
+  color: #ccc;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.comunicacao-msg-card {
+  padding: 20px;
+  border-radius: var(--ns-radius-sm);
+  position: relative;
+}
+
+.comunicacao-msg-card--read {
+  background-color: #141414;
+  border: 2px solid var(--ns-info-border);
+}
+
+.comunicacao-msg-card--unread {
+  background-color: var(--ns-info-bg-soft);
+  border: 2px solid var(--ns-info);
+}
+
+.badge-ns-unread {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #ff4444;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.link-ns-download {
+  padding: 4px 8px;
+  background-color: rgba(0, 100, 255, 0.2);
+  border: 1px solid rgba(0, 100, 255, 0.4);
+  border-radius: 4px;
+  color: var(--ns-info);
+  text-decoration: none;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.link-ns-download:hover {
+  background-color: rgba(0, 100, 255, 0.32);
+  border-color: rgba(102, 179, 255, 0.75);
+}
+
+.comunicacao-img-thumb {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 2px solid var(--ns-border-accent-soft);
+  cursor: pointer;
+}
+
+.comunicacao-arquivo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background-color: #141414;
+  border-radius: 4px;
+  border: 1px solid var(--ns-info-border);
 }
 
 .sidebar-organizer-shell {
@@ -3105,14 +3331,15 @@ body {
   margin-bottom: 14px;
 }
 .main-module-context-actions {
-  align-items: stretch !important;
+  /* center: evita botões «Página inicial / HELP» esticarem à altura do bloco do ícone + título (ficavam desproporcionais). */
+  align-items: center !important;
 }
 .main-content-action-btn {
   border: 1px solid rgba(0, 255, 122, 0.45);
   background: rgba(0, 0, 0, 0.35);
   color: #dfffe4;
-  border-radius: 10px;
-  padding: 8px 12px;
+  border-radius: 8px;
+  padding: 6px 10px;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -3374,7 +3601,8 @@ body {
 
 .btn-primary,
 .btn-danger,
-.btn-administrador {
+.btn-administrador,
+.btn-info {
   min-height: 40px;
   font-size: 14px !important;
   font-weight: 700 !important;
@@ -3384,8 +3612,14 @@ body {
 
 .btn-primary:hover,
 .btn-danger:hover,
-.btn-administrador:hover {
+.btn-administrador:hover,
+.btn-info:hover {
   transform: translateY(-1px);
+}
+
+.btn-info:not(.btn--sm) {
+  font-size: 16px !important;
+  padding: 12px 24px !important;
 }
 
 .tab-content-wrapper h1,
@@ -4017,10 +4251,22 @@ button.dia-trabalho-acao-btn--del:hover {
 @media (max-width: 768px) {
   .btn-primary,
   .btn-danger,
-  .btn-administrador {
+  .btn-administrador,
+  .btn-info {
     min-height: 36px !important;
     font-size: 13px !important;
     padding: 8px 12px !important;
+  }
+
+  .btn-info.btn--sm {
+    min-height: 0 !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+  }
+
+  .btn-info:not(.btn--sm) {
+    font-size: 15px !important;
+    padding: 10px 18px !important;
   }
 }
 

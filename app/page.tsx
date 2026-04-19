@@ -2831,21 +2831,15 @@ export default function Dashboard() {
     }, [mensagens, filtro])
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="comunicacao-stack">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ color: '#66b3ff', margin: 0 }}>
+          <h3 className="text-ns-info" style={{ margin: 0 }}>
             {safeT?.mensagensRecebidas || 'Mensagens Recebidas'}
           </h3>
           <select
+            className="input-ns input-ns--select-sm input-ns--inline"
             value={filtro}
             onChange={(e) => onFiltroChange(e.target.value as any)}
-            style={{
-              padding: '8px',
-              backgroundColor: '#222222',
-              border: '1px solid rgba(0, 255, 0, 0.3)',
-              borderRadius: '4px',
-              color: '#fff'
-            }}
           >
             <option value="todas">{safeT?.todas || 'Todas'}</option>
             <option value="nao-lidas">{safeT?.apenasNaoLidas || 'Apenas Não Lidas'}</option>
@@ -2854,7 +2848,7 @@ export default function Dashboard() {
         </div>
 
         {mensagensFiltradas.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+          <div className="text-ns-muted" style={{ textAlign: 'center', padding: '40px' }}>
             <p>{safeT?.nenhumaMensagem || 'Nenhuma mensagem'}</p>
           </div>
         ) : (
@@ -2862,37 +2856,21 @@ export default function Dashboard() {
             {mensagensFiltradas.map(mensagem => (
               <div
                 key={mensagem.id}
-                style={{
-                  padding: '20px',
-                  backgroundColor: mensagem.lida ? '#141414' : 'rgba(0, 100, 255, 0.1)',
-                  border: `2px solid ${mensagem.lida ? 'rgba(0, 100, 255, 0.2)' : '#66b3ff'}`,
-                  borderRadius: '8px',
-                  position: 'relative'
-                }}
+                className={`comunicacao-msg-card ${mensagem.lida ? 'comunicacao-msg-card--read' : 'comunicacao-msg-card--unread'}`}
               >
                 {!mensagem.lida && (
-                  <span style={{
-                    position: 'absolute',
-                    top: '10px',
-                    right: '10px',
-                    backgroundColor: '#ff4444',
-                    color: '#fff',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    fontSize: '11px',
-                    fontWeight: 'bold'
-                  }}>
+                  <span className="badge-ns-unread">
                     {safeT?.naoLida || 'Não Lida'}
                   </span>
                 )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                   <div>
-                    <strong style={{ color: '#66b3ff' }}>{mensagem.assunto}</strong>
+                    <strong className="text-ns-info">{mensagem.assunto}</strong>
                     <p style={{ color: '#ccc', fontSize: '12px', margin: '5px 0 0 0' }}>
                       {safeT?.remetente || 'De'}: {mensagem.remetenteNome} ({mensagem.remetenteTipo})
                     </p>
                   </div>
-                  <div style={{ textAlign: 'right', color: '#999', fontSize: '12px' }}>
+                  <div className="text-ns-muted" style={{ textAlign: 'right', fontSize: '12px' }}>
                     {new Date(mensagem.dataEnvio).toLocaleString('pt-BR')}
                   </div>
                 </div>
@@ -2903,34 +2881,17 @@ export default function Dashboard() {
                 {/* Exibir Arquivos Anexados */}
                 {mensagem.arquivos && mensagem.arquivos.length > 0 && (
                   <div style={{ marginBottom: '15px' }}>
-                    <strong style={{ color: '#66b3ff', fontSize: '13px', display: 'block', marginBottom: '8px' }}>
+                    <strong className="text-ns-info" style={{ fontSize: '13px', display: 'block', marginBottom: '8px' }}>
                       {safeT?.arquivosAnexados || 'Arquivos Anexados'}:
                     </strong>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                       {mensagem.arquivos.map((arquivo, index) => (
-                        <div key={index} style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '10px',
-                          padding: '8px',
-                          backgroundColor: '#141414',
-                          borderRadius: '4px',
-                          border: '1px solid rgba(0, 100, 255, 0.2)'
-                        }}>
+                        <div key={index} className="comunicacao-arquivo-row">
                           <span style={{ color: '#ccc', fontSize: '13px' }}>📎 {arquivo.nome}</span>
                           <a
                             href={arquivo.dados}
                             download={arquivo.nome}
-                            style={{
-                              padding: '4px 8px',
-                              backgroundColor: 'rgba(0, 100, 255, 0.2)',
-                              border: '1px solid rgba(0, 100, 255, 0.4)',
-                              borderRadius: '4px',
-                              color: '#66b3ff',
-                              textDecoration: 'none',
-                              fontSize: '12px',
-                              cursor: 'pointer'
-                            }}
+                            className="link-ns-download"
                           >
                             {safeT?.baixar || 'Baixar'}
                           </a>
@@ -2943,7 +2904,7 @@ export default function Dashboard() {
                 {/* Exibir Imagens Anexadas */}
                 {mensagem.imagens && mensagem.imagens.length > 0 && (
                   <div style={{ marginBottom: '15px' }}>
-                    <strong style={{ color: '#66b3ff', fontSize: '13px', display: 'block', marginBottom: '8px' }}>
+                    <strong className="text-ns-info" style={{ fontSize: '13px', display: 'block', marginBottom: '8px' }}>
                       {safeT?.imagensAnexadas || 'Imagens Anexadas'}:
                     </strong>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' }}>
@@ -2952,14 +2913,7 @@ export default function Dashboard() {
                           <img
                             src={imagem.dados}
                             alt={imagem.nome}
-                            style={{
-                              width: '100%',
-                              height: '150px',
-                              objectFit: 'cover',
-                              borderRadius: '6px',
-                              border: '2px solid rgba(0, 255, 0, 0.3)',
-                              cursor: 'pointer'
-                            }}
+                            className="comunicacao-img-thumb"
                             onClick={() => window.open(imagem.dados, '_blank')}
                             title={imagem.nome}
                           />
@@ -2971,31 +2925,17 @@ export default function Dashboard() {
                 <div style={{ display: 'flex', gap: '10px' }}>
                   {!mensagem.lida && (
                     <button
+                      type="button"
+                      className="btn-info btn--sm"
                       onClick={() => onMarcarComoLida(mensagem.id)}
-                      style={{
-                        padding: '6px 12px',
-                        backgroundColor: 'rgba(0, 100, 255, 0.2)',
-                        border: '1px solid #66b3ff',
-                        borderRadius: '4px',
-                        color: '#66b3ff',
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                      }}
                     >
                       {safeT?.marcarComoLida || 'Marcar como Lida'}
                     </button>
                   )}
                   <button
+                    type="button"
+                    className="btn-chip-danger"
                     onClick={() => onExcluir(mensagem.id)}
-                    style={{
-                      padding: '6px 12px',
-                      backgroundColor: 'rgba(255, 68, 68, 0.2)',
-                      border: '1px solid #ff4444',
-                      borderRadius: '4px',
-                      color: '#ff4444',
-                      cursor: 'pointer',
-                      fontSize: '12px'
-                    }}
                   >
                     {safeT?.excluirMensagem || 'Excluir'}
                   </button>
@@ -3098,41 +3038,29 @@ export default function Dashboard() {
     }
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <div style={{ 
-          padding: '15px', 
-          backgroundColor: 'rgba(0, 100, 255, 0.1)', 
-          borderRadius: '8px',
-          border: '1px solid rgba(0, 255, 0, 0.3)'
-        }}>
-          <p style={{ color: '#66b3ff', margin: 0, fontSize: '14px', fontWeight: 'bold' }}>
+      <div className="comunicacao-stack">
+        <div className="comunicacao-banner">
+          <p className="text-ns-info" style={{ margin: 0, fontSize: '14px', fontWeight: 'bold' }}>
             {safeT?.remetente || 'Remetente'}: {tecnicoNome} ({tecnicoTipo === 'tecnico-interno' ? safeT?.tecnicosInternos : safeT?.tecnicosExternos})
           </p>
         </div>
 
-        <h3 style={{ color: '#66b3ff', marginBottom: '10px' }}>
+        <h3 className="text-ns-info" style={{ marginBottom: '10px' }}>
           {safeT?.novaMensagem || 'Nova Mensagem'}
         </h3>
 
         {/* Destinatário - Apenas Gestores ou Armazém */}
         <div>
-          <label style={{ color: '#ccc', display: 'block', marginBottom: '8px' }}>
+          <label className="label-ns">
             {safeT?.destinatario || 'Destinatário'}:
           </label>
           <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
             <select
+              className="input-ns input-ns--select-sm input-ns--flex"
               value={tipoDestinatario}
               onChange={(e) => {
                 setTipoDestinatario(e.target.value as 'gestor' | 'armazem')
                 setDestinatarioId('')
-              }}
-              style={{
-                padding: '8px',
-                backgroundColor: '#222222',
-                border: '1px solid rgba(0, 255, 0, 0.3)',
-                borderRadius: '4px',
-                color: '#fff',
-                flex: 1
               }}
             >
               <option value="gestor">{safeT?.gestores || 'Gestores'}</option>
@@ -3140,18 +3068,11 @@ export default function Dashboard() {
             </select>
             {tipoDestinatario === 'gestor' && (
               <select
+                className="input-ns input-ns--select-sm input-ns--flex"
                 value={classeDestinatario}
                 onChange={(e) => {
                   setClasseDestinatario(e.target.value as any)
                   setDestinatarioId('')
-                }}
-                style={{
-                  padding: '8px',
-                  backgroundColor: '#222222',
-                  border: '1px solid rgba(0, 255, 0, 0.3)',
-                  borderRadius: '4px',
-                  color: '#fff',
-                  flex: 1
                 }}
               >
                 <option value="todos-gestores">{safeT?.todosGestores || 'Todos os Gestores'} ({gestores.filter(g => g.area === 'assistencia-tecnica').length})</option>
@@ -3161,16 +3082,9 @@ export default function Dashboard() {
           </div>
           {!classeDestinatario.startsWith('todos-') && tipoDestinatario !== 'armazem' && (
             <select
+              className="input-ns input-ns--select-sm"
               value={destinatarioId}
               onChange={(e) => setDestinatarioId(e.target.value)}
-              style={{
-                padding: '8px',
-                backgroundColor: '#222222',
-                border: '1px solid rgba(0, 255, 0, 0.3)',
-                borderRadius: '4px',
-                color: '#fff',
-                width: '100%'
-              }}
             >
               <option value="">{safeT?.selecionarDestinatario || 'Selecionar Destinatário'}</option>
               {destinatariosDisponiveis.map(d => (
@@ -3181,7 +3095,7 @@ export default function Dashboard() {
             </select>
           )}
           {tipoDestinatario === 'armazem' && (
-            <div style={{ padding: '8px', backgroundColor: '#222222', borderRadius: '4px', color: '#ccc' }}>
+            <div className="ns-well">
               {safeT?.armazem || 'Armazém'}
             </div>
           )}
@@ -3189,70 +3103,34 @@ export default function Dashboard() {
 
         {/* Assunto */}
         <div>
-          <label style={{ color: '#ccc', display: 'block', marginBottom: '8px' }}>
+          <label className="label-ns">
             {safeT?.assunto || 'Assunto'}:
           </label>
           <input
             type="text"
+            className="input-ns"
             value={assunto}
             onChange={(e) => setAssunto(e.target.value)}
             placeholder={safeT?.assunto || 'Assunto'}
-            style={{
-              padding: '10px',
-              backgroundColor: '#222222',
-              border: '1px solid rgba(0, 255, 0, 0.3)',
-              borderRadius: '4px',
-              color: '#fff',
-              width: '100%'
-            }}
           />
         </div>
 
         {/* Mensagem */}
         <div>
-          <label style={{ color: '#ccc', display: 'block', marginBottom: '8px' }}>
+          <label className="label-ns">
             {safeT?.mensagem || 'Mensagem'}:
           </label>
           <textarea
+            className="input-ns input-ns--textarea"
             value={mensagem}
             onChange={(e) => setMensagem(e.target.value)}
             placeholder={safeT?.mensagem || 'Mensagem'}
             rows={8}
-            style={{
-              padding: '10px',
-              backgroundColor: '#222222',
-              border: '1px solid rgba(0, 255, 0, 0.3)',
-              borderRadius: '4px',
-              color: '#fff',
-              width: '100%',
-              resize: 'vertical'
-            }}
           />
         </div>
 
         {/* Botão Enviar */}
-        <button
-          onClick={handleEnviar}
-          style={{
-            padding: '12px 24px',
-            backgroundColor: 'rgba(0, 100, 255, 0.3)',
-            border: '2px solid #66b3ff',
-            borderRadius: '8px',
-            color: '#66b3ff',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            fontSize: '16px',
-            transition: 'all 0.3s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'rgba(0, 100, 255, 0.5)'
-            e.currentTarget.style.boxShadow = '0 0 15px rgba(0, 100, 255, 0.5)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'rgba(0, 100, 255, 0.3)'
-            e.currentTarget.style.boxShadow = 'none'
-          }}
-        >
+        <button type="button" className="btn-info" onClick={handleEnviar}>
           {safeT?.enviar || 'Enviar'}
         </button>
       </div>
@@ -3267,35 +3145,27 @@ export default function Dashboard() {
     safeT: any
   }) => {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <h3 style={{ color: '#66b3ff', margin: 0 }}>
+      <div className="comunicacao-stack">
+        <h3 className="text-ns-info" style={{ margin: 0 }}>
           {safeT?.mensagensEnviadas || 'Mensagens Enviadas'}
         </h3>
 
         {mensagens.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+          <div className="text-ns-muted" style={{ textAlign: 'center', padding: '40px' }}>
             <p>{safeT?.nenhumaMensagem || 'Nenhuma mensagem'}</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
             {mensagens.map(mensagem => (
-              <div
-                key={mensagem.id}
-                style={{
-                  padding: '20px',
-                  backgroundColor: '#141414',
-                  border: '2px solid rgba(0, 100, 255, 0.2)',
-                  borderRadius: '8px'
-                }}
-              >
+              <div key={mensagem.id} className="comunicacao-msg-card comunicacao-msg-card--read">
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                   <div>
-                    <strong style={{ color: '#66b3ff' }}>{mensagem.assunto}</strong>
+                    <strong className="text-ns-info">{mensagem.assunto}</strong>
                     <p style={{ color: '#ccc', fontSize: '12px', margin: '5px 0 0 0' }}>
                       {safeT?.destinatario || 'Para'}: {mensagem.destinatarioNome} ({mensagem.destinatarioTipo})
                     </p>
                   </div>
-                  <div style={{ textAlign: 'right', color: '#999', fontSize: '12px' }}>
+                  <div className="text-ns-muted" style={{ textAlign: 'right', fontSize: '12px' }}>
                     {new Date(mensagem.dataEnvio).toLocaleString('pt-BR')}
                   </div>
                 </div>
@@ -3313,36 +3183,20 @@ export default function Dashboard() {
   const BotaoNavegacao = ({ onVoltar, mostrarPaginaInicial = true }: { onVoltar?: () => void, mostrarPaginaInicial?: boolean }) => (
     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
       {onVoltar && (
-        <button 
-          className="btn-primary" 
+        <button
+          type="button"
+          className="btn-primary btn--compact"
           onClick={onVoltar}
-          style={{ 
-            padding: '8px 12px', 
-            fontSize: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            backgroundColor: '#222222',
-            borderColor: '#00ff00'
-          }}
           title={safeT?.voltar || 'Voltar'}
         >
           ↶ {safeT?.voltar || 'Voltar'}
         </button>
       )}
       {mostrarPaginaInicial && (
-        <button 
-          className="btn-primary" 
+        <button
+          type="button"
+          className="btn-primary btn--compact btn--border-soft"
           onClick={voltarPaginaInicial}
-          style={{ 
-            padding: '8px 12px', 
-            fontSize: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            backgroundColor: '#222222',
-            borderColor: 'rgba(0, 255, 0, 0.5)'
-          }}
           title={safeT?.paginaInicial || 'Página Inicial'}
         >
           🏠 {safeT?.paginaInicial || 'Página Inicial'}
@@ -55795,15 +55649,15 @@ A1;Peça exemplo;10`}
                       flexShrink: 0,
                       borderBottom: '1px solid rgba(0, 255, 0, 0.22)',
                       background: 'linear-gradient(180deg, rgba(18, 52, 28, 0.95) 0%, rgba(10, 22, 14, 0.98) 100%)',
-                      padding: isCompactLayout ? '10px 12px' : '14px 20px',
+                      padding: isCompactLayout ? '6px 10px' : '8px 16px',
                     }}
                   >
                     <div
                       style={{
                         display: 'flex',
-                        alignItems: 'flex-start',
+                        alignItems: 'center',
                         justifyContent: 'space-between',
-                        gap: 12,
+                        gap: 8,
                         flexWrap: 'wrap',
                         width: '100%',
                       }}
@@ -55816,7 +55670,7 @@ A1;Peça exemplo;10`}
                           minWidth: 0,
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 12,
+                          gap: 8,
                           flexWrap: 'wrap',
                           background: 'transparent',
                           border: 'none',
@@ -55826,18 +55680,19 @@ A1;Peça exemplo;10`}
                           padding: 0,
                         }}
                       >
-                        <span style={{ fontSize: 26, lineHeight: 1 }} aria-hidden>
+                        <span style={{ fontSize: 20, lineHeight: 1 }} aria-hidden>
                           {emoji}
                         </span>
                         <span style={{ flex: 1, minWidth: 0 }}>
                           <span
                             style={{
                               display: 'block',
-                              fontSize: 11,
-                              letterSpacing: '0.14em',
+                              fontSize: 10,
+                              letterSpacing: '0.12em',
                               textTransform: 'uppercase',
                               color: 'rgba(180, 255, 190, 0.75)',
-                              marginBottom: 4,
+                              marginBottom: 2,
+                              lineHeight: 1.2,
                             }}
                           >
                             {(safeT as any)?.mainModuleContextLabel || 'Módulo selecionado'}
@@ -55846,18 +55701,19 @@ A1;Peça exemplo;10`}
                             style={{
                               display: 'block',
                               fontWeight: 800,
-                              fontSize: isCompactLayout ? 16 : 18,
+                              fontSize: isCompactLayout ? 14 : 15,
+                              lineHeight: 1.2,
                               color: '#bfffbf',
                             }}
                           >
                             {activeTab.title}
                           </span>
                         </span>
-                        <span style={{ fontSize: 14, color: '#7dff9a', flexShrink: 0 }} aria-hidden>
+                        <span style={{ fontSize: 12, color: '#7dff9a', flexShrink: 0 }} aria-hidden>
                           {mainModuleIntroExpanded ? '▼' : '▶'}
                         </span>
                       </button>
-                      <div className="main-module-context-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', flexShrink: 0 }}>
+                      <div className="main-module-context-actions" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', flexShrink: 0 }}>
                         <button
                           type="button"
                           className="main-content-action-btn main-content-action-btn--home"
@@ -55885,10 +55741,10 @@ A1;Peça exemplo;10`}
                     {mainModuleIntroExpanded && intro ? (
                       <p
                         style={{
-                          margin: '12px 0 0',
-                          paddingLeft: isCompactLayout ? 2 : 38,
-                          fontSize: 13,
-                          lineHeight: 1.55,
+                          margin: '8px 0 0',
+                          paddingLeft: isCompactLayout ? 2 : 30,
+                          fontSize: 12,
+                          lineHeight: 1.5,
                           color: 'rgba(230, 255, 230, 0.88)',
                           maxWidth: 960,
                         }}
