@@ -872,6 +872,9 @@ const BIBLIOTECA_PECAS_ULTIMA_SELECAO_KEY = 'nonato-biblioteca-pecas-ultima-sele
 const BIBLIOTECA_FILTRO_SEM_CATEGORIA = '__sem_categoria__'
 /** Decisão «cobrar / não cobrar» no resumo do relatório (por id do relatório) */
 const RESUMO_COBRANCA_DECISAO_KEY = 'nonato-resumo-cobranca-decisao'
+/** Linhas fixas do fechamento (resumo) que podem ser retiradas da cobrança e restauradas depois */
+const FECHAMENTO_ITENS_OMITIDOS_KEY = 'nonato-fechamentos-itens-omitidos-por-relatorio'
+const FECHAMENTO_IDS_FIXOS_TEMPLATE = ['ht', 'km', 'diarias', 'hida', 'hret'] as const
 
 type PasswordEntry = {
   id: string
@@ -948,6 +951,17 @@ type FechamentoItem = {
   origem?: 'relatorio' | 'manual'
   /** Apenas para item Diárias: false = não cobrar diária ao cliente (Sim/Não) */
   cobrarDiaria?: boolean
+}
+
+function filtrarFechamentoItensPorOmitidos(
+  omitidosPorRelatorio: Record<string, string[]>,
+  relatorioId: string,
+  itens: FechamentoItem[]
+): FechamentoItem[] {
+  const omit = omitidosPorRelatorio[relatorioId]
+  if (!omit || omit.length === 0) return itens
+  const setO = new Set(omit)
+  return itens.filter(i => !setO.has(i.id))
 }
 
 /** Item arquivado ao excluir relatório (cópia de segurança por pasta de cliente) */
@@ -4343,6 +4357,8 @@ export default function Dashboard() {
   const [relatoriosServico, setRelatoriosServico] = useState<RelatorioServico[]>([])
   /** Fechamentos por relatório: relatorioId -> itens de cobrança (vinculados ao Cadastro de Serviços) */
   const [fechamentosRelatorios, setFechamentosRelatorios] = useState<Record<string, FechamentoItem[]>>({})
+  /** Por relatório: ids das linhas fixas (ht, km, …) retiradas da cobrança no fechamento (persistido) */
+  const [fechamentoItensOmitidosPorRelatorio, setFechamentoItensOmitidosPorRelatorio] = useState<Record<string, string[]>>({})
   /** IDs de relatórios cujo fechamento de despesas foi guardado na Biblioteca (só aparecem lá até editar de novo) */
   const [fechamentosGuardadosBibliotecaIds, setFechamentosGuardadosBibliotecaIds] = useState<string[]>([])
   /** Por relatório: 'sim' = aguarda fechamento na Biblioteca; 'nao' = sem cobrança (verde fixo no resumo) */
@@ -5906,6 +5922,26 @@ export default function Dashboard() {
         }
       }
       setResumoCobrancaDecisaoPorRelatorio(resumoDecMap)
+
+      const savedFechamentoOmitidos = getData(FECHAMENTO_ITENS_OMITIDOS_KEY)
+      let fechamentoOmitidosMap: Record<string, string[]> = {}
+      if (savedFechamentoOmitidos && typeof savedFechamentoOmitidos === 'object' && !Array.isArray(savedFechamentoOmitidos)) {
+        const fixos = new Set<string>([...FECHAMENTO_IDS_FIXOS_TEMPLATE])
+        const raw = savedFechamentoOmitidos as Record<string, unknown>
+        for (const k of Object.keys(raw)) {
+          const v = raw[k]
+          if (!Array.isArray(v)) continue
+          const arr = v.filter((x): x is string => typeof x === 'string' && fixos.has(x))
+          if (arr.length > 0) fechamentoOmitidosMap[k] = arr
+        }
+        if (removedRelatorioIds.size > 0) {
+          for (const id of removedRelatorioIds) {
+            delete fechamentoOmitidosMap[id]
+          }
+          saveData(FECHAMENTO_ITENS_OMITIDOS_KEY, fechamentoOmitidosMap).catch(() => {})
+        }
+      }
+      setFechamentoItensOmitidosPorRelatorio(fechamentoOmitidosMap)
 
       const savedRelExcl = getData('nonato-relatorios-excluidos-clientes') as RelatoriosExcluidosClientesStorage | null
       if (savedRelExcl && savedRelExcl.pastas && typeof savedRelExcl.pastas === 'object') {
@@ -10322,6 +10358,14 @@ export default function Dashboard() {
           void saveData(RESUMO_COBRANCA_DECISAO_KEY, next)
           return next
         })
+        setFechamentoItensOmitidosPorRelatorio(prev => {
+          const next = { ...prev }
+          reportIdsDoCliente.forEach(id => {
+            delete next[id]
+          })
+          void saveData(FECHAMENTO_ITENS_OMITIDOS_KEY, next)
+          return next
+        })
       }
     }
   }
@@ -10334,6 +10378,11 @@ export default function Dashboard() {
       const nextGuard = fechamentosGuardadosBibliotecaIds.filter(id => id !== relatorioId)
       setFechamentosGuardadosBibliotecaIds(nextGuard)
       saveData('nonato-fechamentos-guardados-biblioteca', nextGuard)
+      setFechamentoItensOmitidosPorRelatorio(prev => {
+        const { [relatorioId]: _, ...rest } = prev
+        void saveData(FECHAMENTO_ITENS_OMITIDOS_KEY, rest)
+        return rest
+      })
     }
   }
 
@@ -15932,6 +15981,11 @@ export default function Dashboard() {
         void saveData(RESUMO_COBRANCA_DECISAO_KEY, rest)
         return rest
       })
+      setFechamentoItensOmitidosPorRelatorio(prev => {
+        const { [relatorioId]: ___, ...restO } = prev
+        void saveData(FECHAMENTO_ITENS_OMITIDOS_KEY, restO)
+        return restO
+      })
     }
   }
 
@@ -16112,10 +16166,15 @@ export default function Dashboard() {
 
     return {
       horasTrabalho,
+      /** Minutos após descontar pausa — uso no fechamento para evitar erros de arredondamento HH:MM */
+      horasTrabalhoMinutos: totalHorasTrabalho,
       kmsPercorridos: totalKms.toFixed(2),
       horasViagem,
+      horasViagemMinutos: totalHorasViagem,
       horasViagemIda,
-      horasViagemRetorno
+      horasViagemIdaMinutos: totalHorasViagemIda,
+      horasViagemRetorno,
+      horasViagemRetornoMinutos: totalHorasViagemRetorno
     }
   }
 
@@ -38945,26 +39004,54 @@ A1;Peça exemplo;10`}
 
       case 'fechamento-relatorios-servicos': {
         const hhmmToDecimal = (s: string): number => {
-          if (!s || !String(s).trim()) return 0
-          const parts = String(s).trim().split(':')
+          const raw = String(s ?? '').trim()
+          if (!raw) return 0
+          // Horas decimais sem ":" (ex.: "2,5" ou "2.5")
+          if (!raw.includes(':')) {
+            const n = parseFloat(raw.replace(',', '.'))
+            return Number.isFinite(n) ? n : 0
+          }
+          const parts = raw.split(':').map(p => p.trim())
           const h = parseInt(parts[0], 10) || 0
-          const m = parseInt(parts[1], 10) || 0
+          const m = parseInt(parts[1] ?? '0', 10) || 0
           return h + m / 60
+        }
+        const minutosParaHorasDecimal = (min: number | undefined): number => {
+          if (min == null || !Number.isFinite(min)) return 0
+          return Math.round(min) / 60
         }
         const totaisFromRelatorio = (r: RelatorioServico) => {
           const totais = calcularTotais(r.diasTrabalho || [])
           const dias = r.diasTrabalho || []
           const kmIdaTotal = dias.reduce((s, d) => s + (parseFloat(d.kmIda) || 0), 0)
           const kmRetornoTotal = dias.reduce((s, d) => s + (parseFloat(d.kmRetorno) || 0), 0)
+          const tAny = totais as typeof totais & {
+            horasTrabalhoMinutos?: number
+            horasViagemMinutos?: number
+            horasViagemIdaMinutos?: number
+            horasViagemRetornoMinutos?: number
+          }
           return {
             horasTrabalho: totais.horasTrabalho,
-            horasTrabalhoDecimal: hhmmToDecimal(totais.horasTrabalho),
+            horasTrabalhoDecimal:
+              typeof tAny.horasTrabalhoMinutos === 'number'
+                ? minutosParaHorasDecimal(tAny.horasTrabalhoMinutos)
+                : hhmmToDecimal(totais.horasTrabalho),
             horasViagem: totais.horasViagem,
-            horasViagemDecimal: hhmmToDecimal(totais.horasViagem),
+            horasViagemDecimal:
+              typeof tAny.horasViagemMinutos === 'number'
+                ? minutosParaHorasDecimal(tAny.horasViagemMinutos)
+                : hhmmToDecimal(totais.horasViagem),
             horasViagemIda: totais.horasViagemIda,
-            horasViagemIdaDecimal: hhmmToDecimal(totais.horasViagemIda),
+            horasViagemIdaDecimal:
+              typeof tAny.horasViagemIdaMinutos === 'number'
+                ? minutosParaHorasDecimal(tAny.horasViagemIdaMinutos)
+                : hhmmToDecimal(totais.horasViagemIda),
             horasViagemRetorno: totais.horasViagemRetorno,
-            horasViagemRetornoDecimal: hhmmToDecimal(totais.horasViagemRetorno),
+            horasViagemRetornoDecimal:
+              typeof tAny.horasViagemRetornoMinutos === 'number'
+                ? minutosParaHorasDecimal(tAny.horasViagemRetornoMinutos)
+                : hhmmToDecimal(totais.horasViagemRetorno),
             kmsPercorridos: parseFloat(totais.kmsPercorridos) || 0,
             numDiarias: dias.length,
             kmIdaTotal,
@@ -38982,11 +39069,11 @@ A1;Peça exemplo;10`}
         const getItensIniciaisDoRelatorio = (r: RelatorioServico): FechamentoItem[] => {
           const t = totaisFromRelatorio(r)
           const lab = (key: string) => (safeT as any)[key] || key
-          // 6 itens alinhados ao resumo: Horas Trabalho, Km's Percorridos, Horas de Viagem, Diárias, Hora Ida, Hora Retorno
+          // 5 itens alinhados ao resumo: Horas Trabalho, Km's, Diárias, Viagem Ida, Viagem Retorno (sem «Horas de Viagem» total — evita duplicar ida+retorno)
+          /** Sem linha «Horas de Viagem» total: evita cobrar ida+retorno duas vezes (total já = ida + retorno). */
           const base: FechamentoItem[] = [
             { id: 'ht', descricao: lab('horasTrabalho') || 'Horas de Trabalho', tipoCobranca: 'hora', quantidade: t.horasTrabalhoDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
             { id: 'km', descricao: lab('kmsPercorridos') || 'Km\'s Percorridos', tipoCobranca: 'km', quantidade: t.kmsPercorridos, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
-            { id: 'hviagem', descricao: lab('horasViagem') || 'Horas de Viagem', tipoCobranca: 'hora', quantidade: t.horasViagemDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
             { id: 'diarias', descricao: lab('diarias') || 'Diárias', tipoCobranca: 'diarias', quantidade: t.numDiarias, valorUnitario: 0, valorTotal: 0, origem: 'relatorio', cobrarDiaria: true },
             { id: 'hida', descricao: lab('horasViagemIda') || 'Horas de Viagem de Ida', tipoCobranca: 'hora', quantidade: t.horasViagemIdaDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' },
             { id: 'hret', descricao: lab('horasViagemRetorno') || 'Horas de Viagem de Retorno', tipoCobranca: 'hora', quantidade: t.horasViagemRetornoDecimal, valorUnitario: 0, valorTotal: 0, origem: 'relatorio' }
@@ -39047,12 +39134,12 @@ A1;Peça exemplo;10`}
         const getServicoParaItemResumo = (itemId: string) => {
           if (itemId === 'hida') return servicos.find(s => /viagem/.test(textoServico(s)) && /ida/.test(textoServico(s))) || servicos.find(s => s.tipoCobranca === 'hora')
           if (itemId === 'hret') return servicos.find(s => /viagem/.test(textoServico(s)) && /retorno/.test(textoServico(s))) || servicos.find(s => s.tipoCobranca === 'hora')
-          if (itemId === 'ht' || itemId === 'hviagem') return servicos.find(s => s.tipoCobranca === 'hora')
+          if (itemId === 'ht') return servicos.find(s => s.tipoCobranca === 'hora')
           if (itemId === 'km') return servicos.find(s => s.tipoCobranca === 'km')
           if (itemId === 'diarias') return servicos.find(s => s.tipoCobranca === 'diarias')
           return undefined
         }
-        // Sempre preencher a tabela a partir do resumo do relatório (Foto 1): 6 itens com quantidades do resumo + código/descrição/valor do Cadastro de Serviços
+        // Sempre preencher a tabela a partir do resumo do relatório: itens com quantidades do resumo + código/descrição/valor do Cadastro de Serviços
         const itensIniciaisSempre = relatorioSelecionado ? getItensIniciaisDoRelatorio(relatorioSelecionado) : []
         const salvosParaEsteRelatorio = (relatorioSelecionado && fechamentosRelatorios[relatorioSelecionado.id]) || []
         const itensManuaisSalvos = salvosParaEsteRelatorio.filter(i => i.origem === 'manual')
@@ -39105,11 +39192,47 @@ A1;Peça exemplo;10`}
                 const cobrarDiaria = item.id === 'diarias' && typeof saved.cobrarDiaria === 'boolean' ? saved.cobrarDiaria : (item as FechamentoItem).cobrarDiaria !== false
                 return { ...saved, servicoId, cod, descricao, quantidade: item.quantidade, valorUnitario: valorUnit, valorTotal: total, cobrarDiaria: item.id === 'diarias' ? cobrarDiaria : undefined }
               })
-              const seisIds = ['ht', 'km', 'hviagem', 'diarias', 'hida', 'hret']
+              const seisIds = ['ht', 'km', 'diarias', 'hida', 'hret']
               const comTodosSeis = seisIds.map(id => seisComQuantidadeDoResumo.find(i => i.id === id) || itensIniciaisSempre.find(i => i.id === id)).filter(Boolean) as FechamentoItem[]
-              return [...comTodosSeis, ...itensManuaisSalvos]
+              return [...comTodosSeis, ...itensManuaisSalvos].filter(i => !(i.id === 'hviagem' && i.origem === 'relatorio'))
             })()
           : []
+        const omitidosRelatorio = relatorioSelecionado ? (fechamentoItensOmitidosPorRelatorio[relatorioSelecionado.id] ?? []) : []
+        const omitSetFechamento = new Set(omitidosRelatorio)
+        const itensVisiveisFechamento = itensParaExibir.filter(i => !omitSetFechamento.has(i.id))
+        const labelLinhaFechamentoFixa = (id: string) => {
+          const tx = safeT as Record<string, string | undefined>
+          if (id === 'ht') return tx.horasTrabalho || 'HT'
+          if (id === 'km') return tx.kmsPercorridos || 'KM'
+          if (id === 'diarias') return tx.diarias || 'Diárias'
+          if (id === 'hida') return tx.horasViagemIda || 'Ida'
+          if (id === 'hret') return tx.horasViagemRetorno || 'Retorno'
+          return id
+        }
+        const retirarLinhaTemplateFechamento = (itemId: string) => {
+          if (!relatorioSelecionado) return
+          if (!(FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(itemId)) return
+          setFechamentoItensOmitidosPorRelatorio(prev => {
+            const rid = relatorioSelecionado.id
+            const cur = [...(prev[rid] || [])]
+            if (!cur.includes(itemId)) cur.push(itemId)
+            const next = { ...prev, [rid]: cur }
+            void saveData(FECHAMENTO_ITENS_OMITIDOS_KEY, next)
+            return next
+          })
+        }
+        const restaurarLinhaTemplateFechamento = (itemId: string) => {
+          if (!relatorioSelecionado) return
+          setFechamentoItensOmitidosPorRelatorio(prev => {
+            const rid = relatorioSelecionado.id
+            const cur = (prev[rid] || []).filter(x => x !== itemId)
+            const next = { ...prev }
+            if (cur.length > 0) next[rid] = cur
+            else delete next[rid]
+            void saveData(FECHAMENTO_ITENS_OMITIDOS_KEY, next)
+            return next
+          })
+        }
         const servicosParaItem = (item: FechamentoItem) => {
           const txt = (s: typeof servicos[0]) => ((s.nome || '') + ' ' + (s.descricao || '')).toLowerCase()
           if (item.id === 'hida') return servicos.filter(s => s.tipoCobranca === 'hora' || (/viagem/.test(txt(s)) && /ida/.test(txt(s))))
@@ -39119,7 +39242,7 @@ A1;Peça exemplo;10`}
           if (item.tipoCobranca === 'diarias') return servicos.filter(s => s.tipoCobranca === 'diarias')
           return servicos
         }
-        const totalCobranca = itensParaExibir.reduce((s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal), 0)
+        const totalCobranca = itensVisiveisFechamento.reduce((s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal), 0)
         const atualizarItem = (id: string, upd: Partial<FechamentoItem>) => {
           const list = itensParaExibir
           const idx = list.findIndex(i => i.id === id)
@@ -39190,7 +39313,7 @@ A1;Peça exemplo;10`}
           const logoHtml = getLogoHtmlForFechamento()
           const logoSrc = logoHtml && logoHtml.includes('src="') ? logoHtml.replace(/.*src="([^"]+)".*/, '$1') : ''
           const docGeradoEm = (safeT as any)?.pdfDocumentoGeradoEm || 'Documento gerado em'
-          const rows = itensParaExibir.map((item, idx) => {
+          const rows = itensVisiveisFechamento.map((item, idx) => {
             const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
             const cod =
               ((item.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—')
@@ -39273,13 +39396,13 @@ A1;Peça exemplo;10`}
         }
         const handleEnviarWhatsAppFechamento = () => {
           if (!relatorioSelecionado) return
-          const linhas = itensParaExibir.map(i => `• ${(i.cod || i.descricao || '').toString().slice(0, 30)}: ${(i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal).toFixed(2)} €`).join('\n')
+          const linhas = itensVisiveisFechamento.map(i => `• ${(i.cod || i.descricao || '').toString().slice(0, 30)}: ${(i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal).toFixed(2)} €`).join('\n')
           const texto = `Fechamento Relatório ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento: ${relatorioSelecionado.maquinaModelo} ${relatorioSelecionado.numeroMaquina || ''}\nData: ${relatorioSelecionado.data}\n\nItens:\n${linhas}\n\n*Total: ${totalCobranca.toFixed(2)} €*`
           window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener')
         }
         const handleEnviarEmailFechamento = () => {
           if (!relatorioSelecionado) return
-          const linhas = itensParaExibir.map(i => `  • ${(i.cod || i.descricao || '').toString().slice(0, 40)}: ${(i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal).toFixed(2)} €`).join('\n')
+          const linhas = itensVisiveisFechamento.map(i => `  • ${(i.cod || i.descricao || '').toString().slice(0, 40)}: ${(i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal).toFixed(2)} €`).join('\n')
           const assunto = `Fechamento Relatório ${relatorioSelecionado.numero} - ${relatorioSelecionado.cliente}`
           const corpo = `Fechamento de despesas do relatório de serviço.\n\nRelatório: ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento: ${relatorioSelecionado.maquinaModelo} ${relatorioSelecionado.numeroMaquina || ''}\nData: ${relatorioSelecionado.data}\n\nItens a cobrar:\n${linhas}\n\nTotal: ${totalCobranca.toFixed(2)} €\n\n--\nEnviado pela Gestão Técnica Nonato Service`
           window.location.href = `mailto:?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`
@@ -39431,6 +39554,44 @@ A1;Peça exemplo;10`}
                     <h3 style={{ margin: 0, color: '#00ff00', fontSize: '16px' }}>{(safeT as any)?.itensCobrancaFechamento || 'Itens a cobrar (ajuste com o Cadastro de Serviços)'}</h3>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.8)' }}>✏️ {(safeT as any)?.editarItensFechamento || 'Editar itens'}</span>
                   </div>
+                  {omitidosRelatorio.length > 0 && (
+                    <div
+                      style={{
+                        marginBottom: '14px',
+                        padding: '12px 14px',
+                        borderRadius: '10px',
+                        border: '1px solid rgba(255, 170, 0, 0.45)',
+                        background: 'rgba(255, 170, 0, 0.08)',
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                        gap: '10px'
+                      }}
+                    >
+                      <span style={{ fontSize: '12px', color: '#ffcc80', fontWeight: 600 }}>
+                        {(safeT as any)?.fechamentoLinhasRetiradas || 'Linhas retiradas da cobrança:'}
+                      </span>
+                      {omitidosRelatorio.map(oid => (
+                        <button
+                          key={oid}
+                          type="button"
+                          onClick={() => restaurarLinhaTemplateFechamento(oid)}
+                          style={{
+                            padding: '6px 12px',
+                            fontSize: '12px',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(0, 255, 0, 0.45)',
+                            background: 'rgba(0, 255, 0, 0.12)',
+                            color: '#9f9',
+                            cursor: 'pointer',
+                            fontWeight: 500
+                          }}
+                        >
+                          {labelLinhaFechamentoFixa(oid)} — {(safeT as any)?.fechamentoRestaurarLinha || 'Restaurar'}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <div className="fechamento-relatorios-servicos-table-host" style={{ width: '100%', overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', color: '#ccc' }}>
                     <thead>
@@ -39444,11 +39605,11 @@ A1;Peça exemplo;10`}
                         {itensParaExibir.some(i => i.origem === 'manual') && (
                           <th style={{ width: '200px', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.selecionarServicoAnexar || 'Anexar: selecionar do Cadastro'}</th>
                         )}
-                        <th style={{ width: '40px' }}></th>
+                        <th style={{ width: '96px', padding: '10px 6px', color: '#00ff00', textAlign: 'center', fontSize: '11px' }}>{(safeT as any)?.fechamentoColunaAcoes || 'Ações'}</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {itensParaExibir.map(item => {
+                      {itensVisiveisFechamento.map(item => {
                         const servicoVinculado = item.servicoId ? servicos.find(sv => sv.id === item.servicoId) : null
                         const codDoServico =
                           (item.cod ?? '').trim() ||
@@ -39519,8 +39680,29 @@ A1;Peça exemplo;10`}
                               )}
                             </td>
                           )}
-                          <td style={{ padding: '8px' }}>
-                            {eManual && <button type="button" onClick={() => removerItem(item.id)} style={{ background: 'transparent', border: 'none', color: '#f66', cursor: 'pointer', padding: '4px' }} title={(safeT as any)?.remover || 'Remover'}>✕</button>}
+                          <td style={{ padding: '8px', textAlign: 'center' }}>
+                            {itemFixoDoRelatorio && (FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(item.id) ? (
+                              <button
+                                type="button"
+                                onClick={() => retirarLinhaTemplateFechamento(item.id)}
+                                style={{
+                                  padding: '6px 10px',
+                                  fontSize: '11px',
+                                  borderRadius: '6px',
+                                  border: '1px solid rgba(255, 136, 0, 0.55)',
+                                  background: 'rgba(255, 136, 0, 0.12)',
+                                  color: '#ffaa66',
+                                  cursor: 'pointer',
+                                  fontWeight: 500,
+                                  whiteSpace: 'nowrap'
+                                }}
+                                title={(safeT as any)?.fechamentoRetirarLinhaHint || ''}
+                              >
+                                {(safeT as any)?.fechamentoRetirarLinha || 'Retirar'}
+                              </button>
+                            ) : eManual ? (
+                              <button type="button" onClick={() => removerItem(item.id)} style={{ background: 'transparent', border: 'none', color: '#f66', cursor: 'pointer', padding: '4px' }} title={(safeT as any)?.remover || 'Remover'}>✕</button>
+                            ) : null}
                           </td>
                         </tr>
                         )
@@ -50919,7 +51101,8 @@ A1;Peça exemplo;10`}
                           ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                               {despesasCliente.map(({ relatorio, itens }) => {
-                                const totalCobranca = itens.reduce((s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)), 0)
+                                const itensDespesasVisiveis = filtrarFechamentoItensPorOmitidos(fechamentoItensOmitidosPorRelatorio, relatorio.id, itens)
+                                const totalCobranca = itensDespesasVisiveis.reduce((s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)), 0)
                                 const btnBase = { padding: '10px 14px', fontSize: '13px', borderRadius: '8px', cursor: 'pointer' as const, fontWeight: 600 as const, border: 'none' }
                                 return (
                                   <div 
@@ -50945,13 +51128,13 @@ A1;Peça exemplo;10`}
                                       </div>
                                     </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                                      <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens })} style={{ ...btnBase, backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff' }}>
+                                      <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens: itensDespesasVisiveis })} style={{ ...btnBase, backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff' }}>
                                         👁️ {(safeT as any)?.visualizarDespesasBiblioteca ?? safeT?.view ?? 'View'}
                                       </button>
                                       <button type="button" onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(26, 28, 26, 0.92)', border: '2px solid rgba(255, 170, 0, 0.75)', color: '#ffaa00' }}>
                                         ✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}
                                       </button>
-                                      <button type="button" onClick={() => imprimirPDFDespesasDaBiblioteca(relatorio, itens)} style={{ ...btnBase, backgroundColor: 'rgba(40, 26, 52, 0.96)', border: '1px solid rgba(180, 130, 255, 0.5)', color: '#ffffff' }}>
+                                      <button type="button" onClick={() => imprimirPDFDespesasDaBiblioteca(relatorio, itensDespesasVisiveis)} style={{ ...btnBase, backgroundColor: 'rgba(40, 26, 52, 0.96)', border: '1px solid rgba(180, 130, 255, 0.5)', color: '#ffffff' }}>
                                         📄 {(safeT as any)?.gerarPDF || 'PDF'}
                                       </button>
                                       <button type="button" onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(52, 22, 22, 0.96)', border: '1px solid rgba(255, 100, 100, 0.5)', color: '#ffffff' }}>
