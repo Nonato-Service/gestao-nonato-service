@@ -30768,6 +30768,7 @@ onKeyPress={(e) => {
           String(hubT.bibliotecaContagemPecas || '{count}').replace('{count}', String(n))
         const bibliotecaHubTabClass = (active: boolean) =>
           `biblioteca-hub-tab${active ? ' biblioteca-hub-tab--active' : ''}`
+        const HOMAG_SHOP_PECAS_URL = 'https://shop.homag.com/s/?language=en_US'
         const BibliotecaSecaoCategoria = (props: {
           titulo: string
           count: number
@@ -31182,6 +31183,15 @@ onKeyPress={(e) => {
               >
                 📥 {safeT?.importacaoPecas || 'Importação de Peças'}
               </button>
+              <a
+                href={HOMAG_SHOP_PECAS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={bibliotecaHubTabClass(false)}
+                style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', boxSizing: 'border-box' }}
+              >
+                🛒 Loja Nonato Service / Homag
+              </a>
             </div>
 
             {/* Banner: a selecionar peça para o checklist (veio do Criação de Checklist) */}
