@@ -30261,35 +30261,77 @@ onKeyPress={(e) => {
                         </div>
                       )}
 
-                      <div style={{ display: 'flex', gap: '5px', marginTop: '10px', flexWrap: 'wrap' }}>
-                        <button 
-                          className="btn-primary" 
-                          onClick={() => handleEditFornecedor(fornecedor)} 
-                          style={{ padding: '8px 16px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '80px' }}
-                        >
-                          {safeT?.edit || 'Editar'}
-                        </button>
-                        <button 
-                          className="btn-danger" 
-                          onClick={() => handleDeleteFornecedor(fornecedor.id)} 
-                          style={{ padding: '8px 16px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '80px' }}
-                        >
-                          {safeT?.delete || 'Excluir'}
-                        </button>
-                        <button 
-                          className="btn-primary" 
-                          onClick={() => handleViewFaturasFornecedor(fornecedor)} 
-                          style={{ padding: '8px 16px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '100px' }}
-                        >
-                          {safeT?.faturasDoFornecedor || 'Faturas'}
-                        </button>
-                        <button 
-                          className="btn-primary" 
-                          onClick={() => setShowFaturasGeralModal(true)} 
-                          style={{ padding: '8px 16px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '120px' }}
-                        >
-                          {safeT?.verTodasFaturas || 'Ver Todas Faturas'}
-                        </button>
+                      <div
+                        className="fornecedor-card-acoes"
+                        style={{
+                          marginTop: '14px',
+                          paddingTop: '12px',
+                          borderTop: '1px solid rgba(0, 255, 0, 0.12)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '10px',
+                        }}
+                      >
+                        <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={() => handleEditFornecedor(fornecedor)}
+                            style={{
+                              flex: 1,
+                              minWidth: 0,
+                              padding: '10px 12px',
+                              fontSize: '13px',
+                              fontWeight: 700,
+                            }}
+                          >
+                            {safeT?.edit || 'Editar'}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-danger btn-danger--inline"
+                            onClick={() => handleDeleteFornecedor(fornecedor.id)}
+                            style={{
+                              flex: 1,
+                              minWidth: 0,
+                              padding: '10px 12px',
+                              fontSize: '13px',
+                              fontWeight: 700,
+                            }}
+                          >
+                            {safeT?.delete || 'Excluir'}
+                          </button>
+                        </div>
+                        <div style={{ display: 'flex', gap: '10px', width: '100%', flexWrap: 'wrap' }}>
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={() => handleViewFaturasFornecedor(fornecedor)}
+                            style={{
+                              flex: '1 1 140px',
+                              minWidth: 0,
+                              padding: '10px 12px',
+                              fontSize: '13px',
+                              fontWeight: 700,
+                            }}
+                          >
+                            {safeT?.faturasDoFornecedor || 'Faturas do Fornecedor'}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={() => setShowFaturasGeralModal(true)}
+                            style={{
+                              flex: '1 1 140px',
+                              minWidth: 0,
+                              padding: '10px 12px',
+                              fontSize: '13px',
+                              fontWeight: 700,
+                            }}
+                          >
+                            {safeT?.verTodasFaturas || 'Ver Todas Faturas'}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )
@@ -60041,14 +60083,16 @@ A1;Peça exemplo;10`}
                     <p><strong>{fornecedor.nomeEmpresa}</strong></p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{fornecedor.localidade}, {fornecedor.pais}</p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>{fornecedor.telefones}</p>
-                    <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
-                      <button className="btn-primary" onClick={() => handleEditFornecedor(fornecedor)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
-                        {safeT?.edit || 'Editar'}
-                      </button>
-                      <button className="btn-danger" onClick={() => handleDeleteFornecedor(fornecedor.id)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
-                        {safeT?.delete || 'Excluir'}
-                      </button>
-                      <button className="btn-primary" onClick={() => handleViewFaturasFornecedor(fornecedor)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>
+                    <div className="fornecedor-card-acoes" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+                      <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                        <button type="button" className="btn-primary" onClick={() => handleEditFornecedor(fornecedor)} style={{ flex: 1, padding: '8px 10px', fontSize: '12px', fontWeight: 700, minWidth: 0 }}>
+                          {safeT?.edit || 'Editar'}
+                        </button>
+                        <button type="button" className="btn-danger btn-danger--inline" onClick={() => handleDeleteFornecedor(fornecedor.id)} style={{ flex: 1, padding: '8px 10px', fontSize: '12px', fontWeight: 700, minWidth: 0 }}>
+                          {safeT?.delete || 'Excluir'}
+                        </button>
+                      </div>
+                      <button type="button" className="btn-primary" onClick={() => handleViewFaturasFornecedor(fornecedor)} style={{ width: '100%', padding: '8px 10px', fontSize: '12px', fontWeight: 700 }}>
                         {safeT?.faturasDoFornecedor || 'Faturas'}
                       </button>
                     </div>
