@@ -3563,6 +3563,10 @@ export default function Dashboard() {
   const [showSelecionarPecasModal, setShowSelecionarPecasModal] = useState(false)
   const [pecasSelecionadasAgenda, setPecasSelecionadasAgenda] = useState<PecaBiblioteca[]>([])
   const [showAgendaLembreteModal, setShowAgendaLembreteModal] = useState(false)
+  const [agendaHistoricoConcluidosAberto, setAgendaHistoricoConcluidosAberto] = useState(false)
+  const [buscaAgendaHistoricoConcluidos, setBuscaAgendaHistoricoConcluidos] = useState('')
+  const [historicoConcluidoDataDesde, setHistoricoConcluidoDataDesde] = useState('')
+  const [historicoConcluidoDataAte, setHistoricoConcluidoDataAte] = useState('')
   
   const emptySolicitacaoServicoTecnicoFormState = (): Omit<SolicitacaoServicoTecnico, 'id' | 'dataCriacao'> => ({
     clienteId: undefined,
@@ -35839,10 +35843,6 @@ A1;Peça exemplo;10`}
                   const c = String(x.data || '').localeCompare(String(y.data || ''))
                   return c !== 0 ? c : String(x.hora || '').localeCompare(String(y.hora || ''))
                 }
-                const ordenarDataHoraDesc = (x: Agendamento, y: Agendamento) => {
-                  const c = String(y.data || '').localeCompare(String(x.data || ''))
-                  return c !== 0 ? c : String(y.hora || '').localeCompare(String(x.hora || ''))
-                }
                 const emExecucao = agBasePainel
                   .filter((a) => normalizeTipoAgendamento(a) === 'agendamento-tecnico' && normalizeStatusAgendamento(a) === 'em-andamento')
                   .sort(ordenarDataHoraAsc)
@@ -35856,10 +35856,6 @@ A1;Peça exemplo;10`}
                       !['concluido', 'cancelado'].includes(normalizeStatusAgendamento(a))
                   )
                   .sort(ordenarDataHoraAsc)
-                const trabalhosRecentes = agBasePainel
-                  .filter((a) => normalizeStatusAgendamento(a) === 'concluido')
-                  .sort(ordenarDataHoraDesc)
-                  .slice(0, 18)
 
                 const colTitulo = (t: string, cor: string, n: number) => (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '10px' }}>
@@ -35928,59 +35924,223 @@ A1;Peça exemplo;10`}
                           : preAgendados.map((a) => miniAgendaBtn(a, 'rgba(230, 200, 80, 0.4)'))}
                       </div>
                     </div>
-
-                    <div style={{ padding: '12px', borderRadius: '10px', backgroundColor: '#141814', border: '1px solid rgba(0, 210, 90, 0.35)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '14px', fontWeight: 800, color: '#5fe08a' }}>
-                          {(safeT as any)?.agendaTrabalhosExecutadosTitulo || 'Trabalhos executados (registos recentes)'}
-                        </span>
-                        <span style={{ fontSize: '11px', color: '#777' }}>
-                          {(safeT as any)?.agendaTrabalhosExecutadosSub || 'Últimos concluídos — clique para ver ou editar o registo'}
-                        </span>
-                      </div>
-                      {trabalhosRecentes.length === 0 ? (
-                        vazio((safeT as any)?.agendaPainelVazioTrabalhos || 'Ainda não há trabalhos concluídos nesta vista.')
-                      ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '280px', overflowY: 'auto' }}>
-                          {trabalhosRecentes.map((a) => (
-                            <button
-                              key={`trab-${a.id}`}
-                              type="button"
-                              onClick={() => handleEditAgendamento(a)}
-                              style={{
-                                textAlign: 'left',
-                                padding: '10px 11px',
-                                borderRadius: '8px',
-                                border: '1px solid rgba(0, 200, 90, 0.35)',
-                                backgroundColor: '#121a14',
-                                color: '#ddd',
-                                cursor: 'pointer',
-                                fontSize: '12px',
-                              }}
-                            >
-                              <div style={{ fontWeight: 800, color: '#fff', marginBottom: '4px' }}>{a.cliente}</div>
-                              <div style={{ opacity: 0.85, marginBottom: '6px' }}>
-                                {new Date(a.data + 'T12:00:00').toLocaleDateString('pt-PT')} · {a.hora} · {a.tecnico}
-                              </div>
-                              {a.dataRegistoConclusao ? (
-                                <div style={{ fontSize: '11px', color: '#6abf7a', marginBottom: '6px' }}>
-                                  {(safeT as any)?.agendaDataRegistoConclusao || 'Concluído registado em'}:{' '}
-                                  {new Date(a.dataRegistoConclusao).toLocaleString('pt-PT')}
-                                </div>
-                              ) : null}
-                              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.82)', lineHeight: 1.4 }}>
-                                {(a.relatorioTrabalhoExecutado && String(a.relatorioTrabalhoExecutado).trim()) ||
-                                  (safeT as any)?.agendaSemRegistoTrabalho ||
-                                  'Sem texto de trabalho executado — abra o registo para preencher.'}
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
                   </>
                 )
               })()}
+            </div>
+
+            {/* Histórico: concluídos só aqui, com pesquisa por cliente */}
+            <div
+              style={{
+                marginBottom: '22px',
+                padding: '16px',
+                backgroundColor: '#0c0f0c',
+                borderRadius: '12px',
+                border: '1px solid rgba(0, 200, 90, 0.22)',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setAgendaHistoricoConcluidosAberto((o) => !o)}
+                style={{
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '12px 14px',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(0, 200, 90, 0.35)',
+                  backgroundColor: agendaHistoricoConcluidosAberto ? 'rgba(0, 60, 30, 0.45)' : '#121814',
+                  color: '#8ef5b2',
+                  fontWeight: 800,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '10px',
+                }}
+              >
+                <span>{(safeT as any)?.agendaHistoricoConcluidosTitulo || 'Histórico — trabalhos concluídos (pesquisa)'}</span>
+                <span aria-hidden>{agendaHistoricoConcluidosAberto ? '▲' : '▼'}</span>
+              </button>
+              {agendaHistoricoConcluidosAberto && (
+                <div style={{ marginTop: '14px' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: '#ccc' }}>
+                    {(safeT as any)?.agendaHistoricoPesquisaLabel || 'Pesquisa (cliente, técnico, equipamento, tipo de serviço ou relatório)'}
+                  </label>
+                  <input
+                    type="search"
+                    value={buscaAgendaHistoricoConcluidos}
+                    onChange={(e) => setBuscaAgendaHistoricoConcluidos(e.target.value)}
+                    placeholder={(safeT as any)?.agendaHistoricoPesquisaPlaceholder || 'Ex.: Silva, secção, calibração…'}
+                    style={{
+                      width: '100%',
+                      maxWidth: '480px',
+                      padding: '10px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(0, 255, 0, 0.25)',
+                      backgroundColor: '#141414',
+                      color: '#fff',
+                      fontSize: '14px',
+                    }}
+                  />
+                  <div style={{ marginTop: '14px', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-end' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>
+                        {(safeT as any)?.agendaHistoricoDataDesde || 'Data do serviço (desde)'}
+                      </label>
+                      <input
+                        type="date"
+                        value={historicoConcluidoDataDesde}
+                        onChange={(e) => setHistoricoConcluidoDataDesde(e.target.value)}
+                        style={{
+                          padding: '8px 10px',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(0, 255, 0, 0.25)',
+                          backgroundColor: '#141414',
+                          color: '#fff',
+                          fontSize: '13px',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>
+                        {(safeT as any)?.agendaHistoricoDataAte || 'Data do serviço (até)'}
+                      </label>
+                      <input
+                        type="date"
+                        value={historicoConcluidoDataAte}
+                        onChange={(e) => setHistoricoConcluidoDataAte(e.target.value)}
+                        style={{
+                          padding: '8px 10px',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(0, 255, 0, 0.25)',
+                          backgroundColor: '#141414',
+                          color: '#fff',
+                          fontSize: '13px',
+                        }}
+                      />
+                    </div>
+                    {(historicoConcluidoDataDesde || historicoConcluidoDataAte) && (
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() => {
+                          setHistoricoConcluidoDataDesde('')
+                          setHistoricoConcluidoDataAte('')
+                        }}
+                        style={{ padding: '8px 12px', fontSize: '12px' }}
+                      >
+                        {(safeT as any)?.agendaHistoricoLimparDatas || 'Limpar datas'}
+                      </button>
+                    )}
+                  </div>
+                  <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: '#888', maxWidth: '720px' }}>
+                    {(safeT as any)?.agendaHistoricoConcluidosHint ||
+                      'Os concluídos não aparecem na lista nem no calendário. Use pelo menos 2 caracteres na pesquisa ou defina um intervalo de datas (ou ambos). O filtro de técnico (acima) também se aplica.'}
+                  </p>
+                  {(() => {
+                    const q = buscaAgendaHistoricoConcluidos.trim().toLowerCase()
+                    let dDesde = historicoConcluidoDataDesde.trim()
+                    let dAte = historicoConcluidoDataAte.trim()
+                    if (dDesde && dAte && dDesde > dAte) {
+                      const t = dDesde
+                      dDesde = dAte
+                      dAte = t
+                    }
+                    const temIntervaloDatas = !!(dDesde || dAte)
+                    if (q.length < 2 && !temIntervaloDatas) {
+                      return (
+                        <p style={{ marginTop: '12px', fontSize: '13px', color: '#666' }}>
+                          {(safeT as any)?.agendaHistoricoConcluidosMinCharsOuDatas ||
+                            'Escreva pelo menos 2 caracteres na pesquisa ou escolha datas «desde» / «até».'}
+                        </p>
+                      )
+                    }
+                    const ordenarDataHoraDesc = (x: Agendamento, y: Agendamento) => {
+                      const c = String(y.data || '').localeCompare(String(x.data || ''))
+                      return c !== 0 ? c : String(y.hora || '').localeCompare(String(x.hora || ''))
+                    }
+                    const passesDataServico = (a: Agendamento) => {
+                      const dk = normalizeDataKeyAgenda(String(a.data || ''))
+                      if (dDesde && dk < normalizeDataKeyAgenda(dDesde)) return false
+                      if (dAte && dk > normalizeDataKeyAgenda(dAte)) return false
+                      return true
+                    }
+                    const passesTexto = (a: Agendamento) => {
+                      if (q.length < 2) return true
+                      const campos = [a.cliente, a.tecnico, a.equipamento, a.tipoServico, a.relatorioTrabalhoExecutado]
+                      return campos.some((f) => (f || '').toLowerCase().includes(q))
+                    }
+                    const limite = temIntervaloDatas ? 120 : 80
+                    const matches = agendamentos
+                      .filter((a) => normalizeStatusAgendamento(a) === 'concluido')
+                      .filter((a) => !filtroTecnicoAgenda || a.tecnico === filtroTecnicoAgenda)
+                      .filter(passesDataServico)
+                      .filter(passesTexto)
+                      .sort(ordenarDataHoraDesc)
+                      .slice(0, limite)
+                    if (matches.length === 0) {
+                      return (
+                        <p style={{ marginTop: '12px', fontSize: '13px', color: '#777' }}>
+                          {(safeT as any)?.agendaHistoricoConcluidosNenhum || 'Nenhum trabalho concluído encontrado para essa pesquisa.'}
+                        </p>
+                      )
+                    }
+                    return (
+                      <div style={{ marginTop: '14px' }}>
+                        {matches.length >= limite ? (
+                          <p style={{ margin: '0 0 8px 0', fontSize: '11px', color: '#888' }}>
+                            {String((safeT as any)?.agendaHistoricoLimiteResultados || 'A mostrar no máximo {n} resultados — afinar datas ou pesquisa se precisar de mais.').replace(
+                              /\{n\}/g,
+                              String(limite)
+                            )}
+                          </p>
+                        ) : null}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '360px', overflowY: 'auto' }}>
+                        {matches.map((a) => (
+                          <button
+                            key={`hist-${a.id}`}
+                            type="button"
+                            onClick={() => handleEditAgendamento(a)}
+                            style={{
+                              textAlign: 'left',
+                              padding: '11px 12px',
+                              borderRadius: '8px',
+                              border: '1px solid rgba(0, 200, 90, 0.3)',
+                              backgroundColor: '#121a14',
+                              color: '#e8e8e8',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                            }}
+                          >
+                            <div style={{ fontWeight: 800, color: '#fff', marginBottom: '4px' }}>{a.cliente}</div>
+                            <div style={{ opacity: 0.88, marginBottom: '4px' }}>
+                              {new Date(a.data + 'T12:00:00').toLocaleDateString('pt-BR')} · {a.hora} · {a.tecnico}
+                            </div>
+                            {a.equipamento ? (
+                              <div style={{ fontSize: '11px', opacity: 0.8, marginBottom: '4px' }}>
+                                <strong>{safeT?.equipamento || 'Equipamento'}:</strong> {a.equipamento}
+                              </div>
+                            ) : null}
+                            {a.dataRegistoConclusao ? (
+                              <div style={{ fontSize: '11px', color: '#6abf7a', marginBottom: '4px' }}>
+                                {(safeT as any)?.agendaDataRegistoConclusao || 'Concluído registado em'}:{' '}
+                                {new Date(a.dataRegistoConclusao).toLocaleString('pt-BR')}
+                              </div>
+                            ) : null}
+                            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.82)', lineHeight: 1.4 }}>
+                              {(a.relatorioTrabalhoExecutado && String(a.relatorioTrabalhoExecutado).trim()) ||
+                                (safeT as any)?.agendaSemRegistoTrabalho ||
+                                '—'}
+                            </div>
+                          </button>
+                        ))}
+                        </div>
+                      </div>
+                    )
+                  })()}
+                </div>
+              )}
             </div>
 
             {/* Formulário de Agendamento */}
@@ -36511,6 +36671,28 @@ A1;Peça exemplo;10`}
                     )
                   }
 
+                  const agendamentosListaAtivos = agendamentosFiltrados.filter(
+                    (ag) => normalizeStatusAgendamento(ag) !== 'concluido'
+                  )
+                  const soConcluidosNosFiltros =
+                    agendamentosListaAtivos.length === 0 &&
+                    agendamentosFiltrados.some((ag) => normalizeStatusAgendamento(ag) === 'concluido')
+
+                  if (soConcluidosNosFiltros) {
+                    return (
+                      <div style={{ padding: '28px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                        <p style={{ fontSize: '15px', color: '#ccc', marginBottom: '10px' }}>
+                          {(safeT as any)?.agendaListaSoConcluidosMsg ||
+                            'Com estes filtros só existem trabalhos já concluídos. Eles não são mostrados nesta lista.'}
+                        </p>
+                        <p style={{ fontSize: '13px', color: '#888', margin: 0 }}>
+                          {(safeT as any)?.agendaListaSoConcluidosDica ||
+                            'Abra «Histórico — trabalhos concluídos» acima e pesquise pelo nome do cliente.'}
+                        </p>
+                      </div>
+                    )
+                  }
+
                   const ordenarAgenda = (a: Agendamento, b: Agendamento) => {
                     const da = String(a.data || '')
                     const db = String(b.data || '')
@@ -36518,19 +36700,16 @@ A1;Peça exemplo;10`}
                     return String(a.hora || '').localeCompare(String(b.hora || ''))
                   }
 
-                  const agConcluidos = agendamentosFiltrados
-                    .filter((ag) => normalizeStatusAgendamento(ag) === 'concluido')
-                    .sort(ordenarAgenda)
-                  const agPreAgendamento = agendamentosFiltrados
+                  const agPreAgendamento = agendamentosListaAtivos
                     .filter((ag) => normalizeTipoAgendamento(ag) === 'pre-agendamento' && normalizeStatusAgendamento(ag) !== 'concluido' && normalizeStatusAgendamento(ag) !== 'cancelado')
                     .sort(ordenarAgenda)
-                  const agPendencias = agendamentosFiltrados
+                  const agPendencias = agendamentosListaAtivos
                     .filter((ag) => normalizeTipoAgendamento(ag) === 'agendamento-tecnico' && normalizeStatusAgendamento(ag) === 'pendente')
                     .sort(ordenarAgenda)
-                  const agAgendadosConfirmados = agendamentosFiltrados
+                  const agAgendadosConfirmados = agendamentosListaAtivos
                     .filter((ag) => normalizeTipoAgendamento(ag) === 'agendamento-tecnico' && ['confirmado', 'em-andamento'].includes(normalizeStatusAgendamento(ag)))
                     .sort(ordenarAgenda)
-                  const agCancelados = agendamentosFiltrados
+                  const agCancelados = agendamentosListaAtivos
                     .filter((ag) => normalizeStatusAgendamento(ag) === 'cancelado')
                     .sort(ordenarAgenda)
 
@@ -36780,7 +36959,6 @@ A1;Peça exemplo;10`}
                       {renderAgendaSection((safeT as any)?.agendaSecaoPendencias || 'Pendências', 'rgba(255, 90, 60, 0.92)', agPendencias, (safeT as any)?.agendaSecaoPendenciasHint || 'Pendente (a confirmar/fechar)', 'pendencias')}
                       {renderAgendaSection((safeT as any)?.agendaSecaoPreAgendamento || (safeT?.preAgendamento || 'Pré-Agendamento'), 'rgba(255, 190, 50, 0.95)', agPreAgendamento, (safeT as any)?.agendaSecaoPreHint || 'Amarelo = pré', 'pre')}
                       {renderAgendaSection((safeT as any)?.agendaSecaoAgendado || (safeT?.confirmado || 'Agendado/Confirmado'), 'rgba(55, 130, 235, 0.92)', agAgendadosConfirmados, (safeT as any)?.agendaSecaoAgendadoHint || 'Azul = agendado/confirmado')}
-                      {renderAgendaSection((safeT as any)?.agendaSecaoConcluidos || (safeT?.concluido || 'Concluídos'), 'rgba(0, 210, 90, 0.9)', agConcluidos, (safeT as any)?.agendaSecaoConcluidosHint || 'Verde = concluído')}
                       {agCancelados.length > 0 ? (
                         <div style={{ opacity: 0.9 }}>
                           {renderAgendaSection((safeT as any)?.agendaSecaoCancelados || (safeT?.cancelado || 'Cancelados'), 'rgba(180, 180, 180, 0.55)', agCancelados)}
@@ -36801,6 +36979,9 @@ A1;Peça exemplo;10`}
                 if (filtroDataAgenda && ag.data !== filtroDataAgenda) return false
                 return true
               })
+              const agendamentosCalendarioVisiveis = agendamentosFiltrados.filter(
+                (ag) => normalizeStatusAgendamento(ag) !== 'concluido'
+              )
 
               // Obter primeiro dia do mês e número de dias
               const primeiroDia = new Date(calendarioAno, calendarioMes, 1)
@@ -36839,7 +37020,7 @@ A1;Peça exemplo;10`}
 
               // Agrupar agendamentos por data (incluindo todos os dias do período)
               const agendamentosPorData: Record<string, Agendamento[]> = {}
-              agendamentosFiltrados.forEach((ag) => {
+              agendamentosCalendarioVisiveis.forEach((ag) => {
                 const datasPeriodo = getDatasPeriodoAgendamento(ag)
                 datasPeriodo.forEach((dataKey) => {
                   if (!agendamentosPorData[dataKey]) {
@@ -37132,6 +37313,10 @@ A1;Peça exemplo;10`}
                       {safeT?.legenda || 'Legenda'}
                     </h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ fontSize: '12px', color: 'rgba(120, 200, 255, 0.85)', lineHeight: 1.45 }}>
+                        {(safeT as any)?.agendaLegendaOcultaConcluidos ||
+                          'Trabalhos concluídos não aparecem no calendário nem na lista — use «Histórico — trabalhos concluídos» e pesquise pelo cliente.'}
+                      </div>
                       <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.45 }}>
                         {(safeT as any)?.legendaFundoNeutro ||
                           'Fundo do dia da grade neutro. Em cada marcador, o fundo colorido indica o status; hora e nome do cliente ficam em branco.'}
@@ -37140,23 +37325,6 @@ A1;Peça exemplo;10`}
                         {(safeT as any)?.legendaMarcadores || 'Marcadores (hora + cliente)'}
                       </div>
                       <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div
-                            style={{
-                              padding: '2px 8px',
-                              borderRadius: '6px',
-                              backgroundColor: 'rgba(0, 128, 58, 0.94)',
-                              border: '1px solid rgba(0, 255, 150, 0.5)',
-                              fontSize: '11px',
-                              color: '#fff',
-                              fontWeight: 800,
-                              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-                            }}
-                          >
-                            09:00 Cliente
-                          </div>
-                          <span style={{ fontSize: '12px' }}>{safeT?.concluido || 'Concluído'} — {(safeT as any)?.legendaNomeVerde || 'fundo verde'}</span>
-                        </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <div
                             style={{

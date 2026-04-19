@@ -1757,6 +1757,27 @@ export const translations = {
     agendaRelatorioTrabalhoExecutadoPlaceholder: 'Ex.: substituição de corrente, calibração, testes de ciclos...',
     agendaSemRegistoTrabalho: 'Sem texto de trabalho executado — abra o registo para preencher.',
     agendaDataRegistoConclusao: 'Concluído registado em',
+    agendaHistoricoConcluidosTitulo: 'Histórico — trabalhos concluídos (pesquisa)',
+    agendaHistoricoConcluidosBuscaLabel: 'Pesquisa (cliente, técnico, equipamento, serviço ou relatório)',
+    agendaHistoricoPesquisaLabel: 'Pesquisa (cliente, técnico, equipamento, tipo de serviço ou relatório)',
+    agendaHistoricoPesquisaPlaceholder: 'Ex.: Silva, HPP, calibração…',
+    agendaHistoricoConcluidosPlaceholder: 'Ex.: Silva, HPP, calibração…',
+    agendaHistoricoDataDesde: 'Data do serviço (desde)',
+    agendaHistoricoDataAte: 'Data do serviço (até)',
+    agendaHistoricoLimparDatas: 'Limpar datas',
+    agendaHistoricoConcluidosHint:
+      'Os concluídos não aparecem na lista nem no calendário. Use pelo menos 2 caracteres na pesquisa ou um intervalo de datas (ou ambos). A pesquisa abrange cliente, técnico, equipamento, tipo de serviço e texto do relatório. O filtro de técnico (acima) também se aplica.',
+    agendaHistoricoConcluidosMinChars: 'Escreva pelo menos 2 caracteres para pesquisar.',
+    agendaHistoricoConcluidosMinCharsOuDatas:
+      'Escreva pelo menos 2 caracteres na pesquisa ou escolha datas «desde» / «até» (ou combine os dois).',
+    agendaHistoricoConcluidosNenhum: 'Nenhum trabalho concluído encontrado para esses critérios.',
+    agendaHistoricoLimiteResultados:
+      'A mostrar no máximo {n} resultados — afinar datas ou pesquisa se precisar de mais.',
+    agendaListaSoConcluidosMsg:
+      'Com estes filtros só existem trabalhos já concluídos. Eles não são mostrados nesta lista.',
+    agendaListaSoConcluidosDica: 'Abra «Histórico — trabalhos concluídos» acima e pesquise ou filtre por datas.',
+    agendaLegendaOcultaConcluidos:
+      'Trabalhos concluídos não aparecem no calendário nem na lista — use «Histórico — trabalhos concluídos» (pesquisa ou datas).',
     todos: 'Todos',
     todosTecnicos: 'Todos os técnicos',
     limparFiltros: 'Limpar Filtros',
@@ -13298,6 +13319,27 @@ export const translations = {
     agendaRelatorioTrabalhoExecutadoPlaceholder: 'E.g. chain replacement, calibration, cycle tests...',
     agendaSemRegistoTrabalho: 'No work-performed text yet — open the record to add it.',
     agendaDataRegistoConclusao: 'Marked completed at',
+    agendaHistoricoConcluidosTitulo: 'History — completed work (search)',
+    agendaHistoricoConcluidosBuscaLabel: 'Search (client, technician, equipment, service or report)',
+    agendaHistoricoPesquisaLabel: 'Search (client, technician, equipment, service type or report)',
+    agendaHistoricoPesquisaPlaceholder: 'E.g. Silva, HPP, calibration…',
+    agendaHistoricoConcluidosPlaceholder: 'E.g. Silva, HPP, calibration…',
+    agendaHistoricoDataDesde: 'Service date (from)',
+    agendaHistoricoDataAte: 'Service date (to)',
+    agendaHistoricoLimparDatas: 'Clear dates',
+    agendaHistoricoConcluidosHint:
+      'Completed jobs are not shown in the list or calendar. Use at least 2 characters in the search or a date range (or both). Search covers client, technician, equipment, service type and report text. The technician filter above also applies.',
+    agendaHistoricoConcluidosMinChars: 'Type at least 2 characters to search.',
+    agendaHistoricoConcluidosMinCharsOuDatas:
+      'Type at least 2 characters in the search or pick From / To dates (or combine both).',
+    agendaHistoricoConcluidosNenhum: 'No completed jobs found for those criteria.',
+    agendaHistoricoLimiteResultados:
+      'Showing at most {n} results — narrow dates or search if you need more.',
+    agendaListaSoConcluidosMsg:
+      'With these filters there are only completed jobs. They are not shown in this list.',
+    agendaListaSoConcluidosDica: 'Open «History — completed work» above and search or filter by date.',
+    agendaLegendaOcultaConcluidos:
+      'Completed jobs do not appear on the calendar or list — use «History — completed work» (search or dates).',
     todos: 'All',
     todosTecnicos: 'All technicians',
     limparFiltros: 'Clear Filters',
