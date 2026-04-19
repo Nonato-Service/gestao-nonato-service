@@ -138,6 +138,14 @@ function migrarServicoLegacyCodNomeDesc<
   return { row: { ...s, cod, nome: nomeNovo, descricao } as T, touched: true }
 }
 
+/** Código para ecrã e PDF: `cod` preenchido ou prefixo legado `COD-…` no `nome` (ex. HTT-HORA… → HTT). */
+function servicoCodParaExibicao(s: { cod?: string; nome: string }): string {
+  const c = (typeof s.cod === 'string' ? s.cod : '').trim()
+  if (c) return c
+  const m = (s.nome || '').trim().match(/^([A-Za-z0-9]{2,8})[-–]/)
+  return m ? m[1].toUpperCase() : ''
+}
+
 type Language = {
   code: string
   name: string
@@ -11796,7 +11804,9 @@ export default function Dashboard() {
     const esc = (s: string) => (s || '').replace(/</g, '&lt;').replace(/"/g, '&quot;')
     const rows = itens.map(item => {
       const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
-      const cod = (item.cod ?? sv?.cod ?? sv?.nome ?? '—').toString().replace(/</g, '&lt;')
+      const cod = ((item.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—')
+        .toString()
+        .replace(/</g, '&lt;')
       const desc = (item.descricao || '').replace(/</g, '&lt;')
       const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
       const totalLinha = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
@@ -38158,13 +38168,42 @@ A1;Peça exemplo;10`}
                   <option value="servico">{safeT?.servico || 'SERVIÇO'}</option>
                   <option value="despesa">{safeT?.despesa || 'DESPESA'}</option>
                 </select>
-                <input
-                  type="text"
-                  placeholder={(safeT as any)?.codigoServico || 'Código (COD)'}
-                  value={servicoForm.cod}
-                  onChange={(e) => setServicoForm({ ...servicoForm, cod: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    marginBottom: '10px',
+                    width: '100%',
+                  }}
+                >
+                  <span
+                    style={{
+                      color: '#7dff9e',
+                      fontWeight: 700,
+                      fontSize: '13px',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                    }}
+                  >
+                    COD:
+                  </span>
+                  <input
+                    type="text"
+                    placeholder={(safeT as any)?.codigoServico || 'HTT'}
+                    value={servicoForm.cod}
+                    onChange={(e) => setServicoForm({ ...servicoForm, cod: e.target.value })}
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      padding: '8px',
+                      backgroundColor: '#222222',
+                      color: '#fff',
+                      border: '1px solid rgba(0, 255, 0, 0.3)',
+                      borderRadius: '4px',
+                    }}
+                  />
+                </div>
                 <input
                   type="text"
                   placeholder={safeT?.nomeServico || 'Nome do Serviço/Despesa'}
@@ -38217,13 +38256,15 @@ A1;Peça exemplo;10`}
               <p style={{ color: 'rgba(255,255,255,0.55)' }}>{safeT?.noServicos || 'Nenhum serviço ou despesa cadastrado.'}</p>
             ) : (
               <div className="tab-glass-cards-grid" style={{ marginTop: '20px' }}>
-                {servicos.map(servico => (
+                {servicos.map((servico) => {
+                  const codExibirServico = servicoCodParaExibicao(servico)
+                  return (
                   <div key={servico.id} style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }), height: 'fit-content' }} onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)} onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}>
                     <h3 style={{ marginBottom: '10px', color: '#ffffff' }}>
-                      {servico.cod?.trim() ? (
-                        <span style={{ color: '#7dff9e' }}>COD: {servico.cod.trim()}</span>
+                      {codExibirServico ? (
+                        <span style={{ color: '#7dff9e' }}>COD: {codExibirServico}</span>
                       ) : null}
-                      {servico.cod?.trim() ? <span style={{ color: 'rgba(255,255,255,0.45)' }}> · </span> : null}
+                      {codExibirServico ? <span style={{ color: 'rgba(255,255,255,0.45)' }}> · </span> : null}
                       {servico.nome}
                     </h3>
                     <p style={{ fontSize: '14px', marginBottom: '5px' }}><strong>{safeT?.valorServico || 'Valor'}:</strong> {servico.valor}€</p>
@@ -38248,7 +38289,8 @@ A1;Peça exemplo;10`}
                       </button>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             )}
               </div>
@@ -38850,10 +38892,13 @@ A1;Peça exemplo;10`}
             const qty = item.quantidade || 0
             const usaQtyXValor = item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias' || item.id === 'hida' || item.id === 'hret'
             const total = usaQtyXValor ? Math.round(qty * valorUnit * 100) / 100 : valorUnit
+            const codResolvido =
+              (typeof primeiroServico.cod === 'string' && primeiroServico.cod.trim()) ||
+              servicoCodParaExibicao(primeiroServico)
             return {
               ...item,
               servicoId: primeiroServico.id,
-              cod: primeiroServico.cod,
+              cod: codResolvido || undefined,
               descricao: primeiroServico.descricao || primeiroServico.nome || item.descricao,
               valorUnitario: valorUnit,
               valorTotal: total
@@ -38887,12 +38932,15 @@ A1;Peça exemplo;10`}
                 const temValorUnit = saved.valorUnitario != null && saved.valorUnitario > 0
                 const servicoCadastro = getServicoParaItemResumo(item.id)
                 const valorUnit = (temValorUnit ? saved.valorUnitario : servicoCadastro?.valor ?? item.valorUnitario) ?? 0
-                const cod = temCodOuServico ? (saved.cod ?? servicos.find(s => s.id === saved.servicoId)?.cod) : (servicoCadastro?.cod ?? '')
+                const svSaved = saved.servicoId ? servicos.find((s) => s.id === saved.servicoId) : undefined
+                const cod = temCodOuServico
+                  ? (String(saved.cod ?? '').trim() || (svSaved ? servicoCodParaExibicao(svSaved) : ''))
+                  : servicoCadastro
+                    ? servicoCodParaExibicao(servicoCadastro)
+                    : ''
                 const descricao =
                   (temCodOuServico
-                    ? (saved.descricao ??
-                        servicos.find(s => s.id === saved.servicoId)?.descricao ??
-                        servicos.find(s => s.id === saved.servicoId)?.nome)
+                    ? (saved.descricao ?? svSaved?.descricao ?? svSaved?.nome)
                     : (servicoCadastro?.descricao || servicoCadastro?.nome || item.descricao)) ?? item.descricao
                 const servicoId = saved.servicoId || servicoCadastro?.id
                 const total = (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias' || item.id === 'hida' || item.id === 'hret') ? Math.round(qty * valorUnit * 100) / 100 : valorUnit
@@ -38933,9 +38981,11 @@ A1;Peça exemplo;10`}
           const valorUnit = servico.valor
           let total = (tipo === 'hora' || tipo === 'km' || tipo === 'diarias' || isHidaOuHret) ? Math.round((item.quantidade || 0) * valorUnit * 100) / 100 : valorUnit
           if (tipo === 'valor-fixo' || (servico.tipoCobranca === 'unidade' && !isHidaOuHret)) total = valorUnit
+          const codFechamento =
+            (typeof servico.cod === 'string' && servico.cod.trim()) || servicoCodParaExibicao(servico) || undefined
           atualizarItem(itemId, {
             servicoId: servico.id,
-            cod: servico.cod,
+            cod: codFechamento,
             descricao: servico.descricao || servico.nome || item.descricao,
             valorUnitario: valorUnit,
             valorTotal: total,
@@ -38984,7 +39034,10 @@ A1;Peça exemplo;10`}
           const docGeradoEm = (safeT as any)?.pdfDocumentoGeradoEm || 'Documento gerado em'
           const rows = itensParaExibir.map((item, idx) => {
             const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
-            const cod = (item.cod ?? sv?.cod ?? sv?.nome ?? '—').toString().replace(/</g, '&lt;')
+            const cod =
+              ((item.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—')
+                .toString()
+                .replace(/</g, '&lt;')
             const desc = (item.descricao || '').replace(/</g, '&lt;')
             const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
             const totalLinha = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
@@ -39176,7 +39229,9 @@ A1;Peça exemplo;10`}
                     <tbody>
                       {itensParaExibir.map(item => {
                         const servicoVinculado = item.servicoId ? servicos.find(sv => sv.id === item.servicoId) : null
-                        const codDoServico = (item.cod ?? servicoVinculado?.cod ?? '').trim() || (servicoVinculado?.nome ?? '').trim()
+                        const codDoServico =
+                          (item.cod ?? '').trim() ||
+                          (servicoVinculado ? servicoCodParaExibicao(servicoVinculado) : '')
                         const codFallbackRelatorio = item.origem === 'relatorio' && (item.id === 'ht' ? 'HT' : item.id === 'km' ? 'KM' : item.id === 'hviagem' ? 'H.Viag' : item.id === 'diarias' ? 'DIAR' : item.id === 'hida' ? 'H.Ida' : item.id === 'hret' ? 'H.Ret' : '')
                         const codExibir = codDoServico || codFallbackRelatorio || '—'
                         const nomeExibir =
@@ -39214,12 +39269,15 @@ A1;Peça exemplo;10`}
                               {eManual ? (
                                 <select value={item.servicoId || ''} onChange={e => { const sid = e.target.value; const s = servicos.find(sv => sv.id === sid); if (s) aplicarServico(item.id, s) }} style={{ width: '100%', padding: '6px 8px', background: '#2a2a2a', border: '1px solid #444', borderRadius: '4px', color: '#fff', fontSize: '12px' }}>
                                   <option value="">{(safeT as any)?.selecioneServicoAnexar || '— Selecionar serviço (COD, nome, valor) —'}</option>
-                                  {servicosParaItem(item).map(s => (
+                                  {servicosParaItem(item).map((s) => {
+                                    const copt = servicoCodParaExibicao(s)
+                                    return (
                                     <option key={s.id} value={s.id}>
-                                      {s.cod?.trim() ? `COD: ${s.cod.trim()} · ` : ''}
+                                      {copt ? `COD: ${copt} · ` : ''}
                                       {s.nome} – {s.valor}€
                                     </option>
-                                  ))}
+                                    )
+                                  })}
                                 </select>
                               ) : (
                                 <span style={{ fontSize: '11px', color: '#666' }}>—</span>
@@ -50698,7 +50756,7 @@ A1;Peça exemplo;10`}
                     <tbody>
                       {itensV.map(item => {
                         const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
-                        const cod = (item.cod ?? sv?.cod ?? sv?.nome ?? '—').toString()
+                        const cod = ((item.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—').toString()
                         const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
                         const linTot = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
                         return (
@@ -61476,13 +61534,24 @@ A1;Peça exemplo;10`}
                   <option value="servico">{safeT?.servico || 'SERVIÇO'}</option>
                   <option value="despesa">{safeT?.despesa || 'DESPESA'}</option>
                 </select>
-                <input
-                  type="text"
-                  placeholder={(safeT as any)?.codigoServico || 'Código (COD)'}
-                  value={servicoForm.cod}
-                  onChange={(e) => setServicoForm({ ...servicoForm, cod: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', width: '100%' }}>
+                  <span style={{ color: '#7dff9e', fontWeight: 700, fontSize: '13px', whiteSpace: 'nowrap', flexShrink: 0 }}>COD:</span>
+                  <input
+                    type="text"
+                    placeholder={(safeT as any)?.codigoServico || 'HTT'}
+                    value={servicoForm.cod}
+                    onChange={(e) => setServicoForm({ ...servicoForm, cod: e.target.value })}
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      padding: '8px',
+                      backgroundColor: '#141414',
+                      color: '#fff',
+                      border: '1px solid rgba(0, 255, 0, 0.3)',
+                      borderRadius: '4px',
+                    }}
+                  />
+                </div>
                 <input
                   type="text"
                   placeholder={safeT?.nomeServico || 'Nome do Serviço/Despesa'}
@@ -61532,11 +61601,13 @@ A1;Peça exemplo;10`}
               <p>{safeT?.noServicos || 'Nenhum serviço ou despesa cadastrado.'}</p>
             ) : (
               <ul style={{ listStyle: 'none', padding: 0, marginTop: '20px' }}>
-                {servicos.map(servico => (
+                {servicos.map((servico) => {
+                  const codExModal = servicoCodParaExibicao(servico)
+                  return (
                   <li key={servico.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
                     <p>
                       <strong>
-                        {servico.cod?.trim() ? <>COD: {servico.cod.trim()} · </> : null}
+                        {codExModal ? <>COD: {codExModal} · </> : null}
                         {servico.nome}
                       </strong>{' '}
                       - {servico.valor}€ ({servico.tipoCobranca})
@@ -61561,7 +61632,8 @@ A1;Peça exemplo;10`}
                       </button>
                     </div>
                   </li>
-                ))}
+                  )
+                })}
               </ul>
             )}
             <button className="btn-primary" onClick={() => setShowCadastroServicosModal(false)} style={{ width: '100%', marginTop: '20px' }}>
