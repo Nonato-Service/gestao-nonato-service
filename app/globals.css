@@ -3338,8 +3338,9 @@ body {
   border: 1px solid rgba(0, 255, 122, 0.45);
   background: rgba(0, 0, 0, 0.35);
   color: #dfffe4;
-  border-radius: 8px;
-  padding: 6px 10px;
+  border-radius: 10px;
+  padding: 6px 12px;
+  line-height: 1.2;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;

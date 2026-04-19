@@ -55649,7 +55649,8 @@ A1;Peça exemplo;10`}
                       flexShrink: 0,
                       borderBottom: '1px solid rgba(0, 255, 0, 0.22)',
                       background: 'linear-gradient(180deg, rgba(18, 52, 28, 0.95) 0%, rgba(10, 22, 14, 0.98) 100%)',
-                      padding: isCompactLayout ? '6px 10px' : '8px 16px',
+                      /* Espaço: pouco padding vertical; tipografia mantém-se abaixo */
+                      padding: isCompactLayout ? '4px 10px' : '5px 18px',
                     }}
                   >
                     <div
@@ -55670,7 +55671,7 @@ A1;Peça exemplo;10`}
                           minWidth: 0,
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 8,
+                          gap: 10,
                           flexWrap: 'wrap',
                           background: 'transparent',
                           border: 'none',
@@ -55680,19 +55681,19 @@ A1;Peça exemplo;10`}
                           padding: 0,
                         }}
                       >
-                        <span style={{ fontSize: 20, lineHeight: 1 }} aria-hidden>
+                        <span style={{ fontSize: 26, lineHeight: 1, display: 'inline-flex' }} aria-hidden>
                           {emoji}
                         </span>
                         <span style={{ flex: 1, minWidth: 0 }}>
                           <span
                             style={{
                               display: 'block',
-                              fontSize: 10,
-                              letterSpacing: '0.12em',
+                              fontSize: 11,
+                              letterSpacing: '0.14em',
                               textTransform: 'uppercase',
                               color: 'rgba(180, 255, 190, 0.75)',
-                              marginBottom: 2,
-                              lineHeight: 1.2,
+                              marginBottom: 1,
+                              lineHeight: 1.15,
                             }}
                           >
                             {(safeT as any)?.mainModuleContextLabel || 'Módulo selecionado'}
@@ -55701,19 +55702,19 @@ A1;Peça exemplo;10`}
                             style={{
                               display: 'block',
                               fontWeight: 800,
-                              fontSize: isCompactLayout ? 14 : 15,
-                              lineHeight: 1.2,
+                              fontSize: isCompactLayout ? 16 : 18,
+                              lineHeight: 1.15,
                               color: '#bfffbf',
                             }}
                           >
                             {activeTab.title}
                           </span>
                         </span>
-                        <span style={{ fontSize: 12, color: '#7dff9a', flexShrink: 0 }} aria-hidden>
+                        <span style={{ fontSize: 14, lineHeight: 1, color: '#7dff9a', flexShrink: 0 }} aria-hidden>
                           {mainModuleIntroExpanded ? '▼' : '▶'}
                         </span>
                       </button>
-                      <div className="main-module-context-actions" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', flexShrink: 0 }}>
+                      <div className="main-module-context-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', flexShrink: 0 }}>
                         <button
                           type="button"
                           className="main-content-action-btn main-content-action-btn--home"
@@ -55742,8 +55743,8 @@ A1;Peça exemplo;10`}
                       <p
                         style={{
                           margin: '8px 0 0',
-                          paddingLeft: isCompactLayout ? 2 : 30,
-                          fontSize: 12,
+                          paddingLeft: isCompactLayout ? 2 : 38,
+                          fontSize: 13,
                           lineHeight: 1.5,
                           color: 'rgba(230, 255, 230, 0.88)',
                           maxWidth: 960,
