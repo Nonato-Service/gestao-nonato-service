@@ -1826,6 +1826,19 @@ body,
   color: #ffffff !important;
 }
 
+/* Assistente de escrita bilingue — resultados em duas colunas; uma no telemóvel */
+.writing-assist-results-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .writing-assist-results-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;

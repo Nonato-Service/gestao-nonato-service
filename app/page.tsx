@@ -21,6 +21,9 @@ import {
   getKv,
   deleteAllNonatoKvFromIdb,
 } from './utils/manuaisIndexedDb'
+import { WritingAssistFab, WritingLanguageAssistModal } from './components/WritingLanguageAssistModal'
+import { WritingAssistFieldContext } from './context/WritingAssistFieldContext'
+import { AssistTextarea, AssistInput } from './components/AssistTextFields'
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 import { NonatoBrandLogo } from './components/NonatoBrandLogo'
@@ -1628,6 +1631,8 @@ export default function Dashboard() {
       return { title: 'Gestão Técnica da Nonato Service', welcome: 'Bem-vindo ao Painel de Controlo' } as any
     }
   }, [selectedLanguage])
+
+  const writingAssistLangOptions = useMemo(() => getLanguages(safeT), [safeT])
   
   const [users, setUsers] = useState<User[]>([])
   const [showUserForm, setShowUserForm] = useState(false)
@@ -1852,6 +1857,27 @@ export default function Dashboard() {
   const [translatorLibraryTo, setTranslatorLibraryTo] = useState<string>('en')
   const [libraryEntrySource, setLibraryEntrySource] = useState('')
   const [libraryEntryTarget, setLibraryEntryTarget] = useState('')
+  const [writingAssistOpen, setWritingAssistOpen] = useState(false)
+  const [writingAssistField, setWritingAssistField] = useState<{
+    initial: string
+    onApply: (s: string) => void
+  } | null>(null)
+
+  const openWritingAssistStandalone = useCallback(() => {
+    setWritingAssistField(null)
+    setWritingAssistOpen(true)
+  }, [])
+
+  const openWritingAssistForField = useCallback((initial: string, onApply: (s: string) => void) => {
+    setWritingAssistField({ initial, onApply })
+    setWritingAssistOpen(true)
+  }, [])
+
+  const writingAssistFieldApi = useMemo(
+    () => ({ openForField: openWritingAssistForField }),
+    [openWritingAssistForField]
+  )
+
   const [expandedEquipamentos, setExpandedEquipamentos] = useState<Set<string>>(new Set())
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   /** Servidor tem revisão mais recente — modal único com resumo e escolha carregar / enviar. */
@@ -2790,10 +2816,11 @@ export default function Dashboard() {
           <label style={{ color: '#ccc', display: 'block', marginBottom: '8px' }}>
             {safeT?.assunto || 'Assunto'}:
           </label>
-          <input
+          <AssistInput
             type="text"
             value={assunto}
-            onChange={(e) => setAssunto(e.target.value)}
+            onValueChange={setAssunto}
+            assistButtonTitle={(safeT as any)?.writingAssistFieldBtnTitle}
             placeholder={safeT?.assunto || 'Assunto'}
             style={{
               padding: '10px',
@@ -2801,7 +2828,29 @@ export default function Dashboard() {
               border: '1px solid rgba(0, 255, 0, 0.3)',
               borderRadius: '4px',
               color: '#fff',
-              width: '100%'
+            }}
+          />
+        </div>
+
+        {/* Mensagem */}
+        <div>
+          <label style={{ color: '#ccc', display: 'block', marginBottom: '8px' }}>
+            {safeT?.mensagem || 'Mensagem'}:
+          </label>
+          <AssistTextarea
+            value={mensagem}
+            onValueChange={setMensagem}
+            assistButtonTitle={(safeT as any)?.writingAssistFieldBtnTitle}
+            placeholder={safeT?.mensagem || 'Mensagem'}
+            rows={8}
+            style={{
+              width: '100%',
+              padding: '10px',
+              backgroundColor: '#222222',
+              border: '1px solid rgba(0, 255, 0, 0.3)',
+              borderRadius: '4px',
+              color: '#fff',
+              resize: 'vertical' as const,
             }}
           />
         </div>
@@ -3106,11 +3155,13 @@ export default function Dashboard() {
           <label className="label-ns">
             {safeT?.assunto || 'Assunto'}:
           </label>
-          <input
+          <AssistInput
             type="text"
             className="input-ns"
+            style={{ width: '100%' }}
             value={assunto}
-            onChange={(e) => setAssunto(e.target.value)}
+            onValueChange={setAssunto}
+            assistButtonTitle={(safeT as any)?.writingAssistFieldBtnTitle}
             placeholder={safeT?.assunto || 'Assunto'}
           />
         </div>
@@ -3120,10 +3171,12 @@ export default function Dashboard() {
           <label className="label-ns">
             {safeT?.mensagem || 'Mensagem'}:
           </label>
-          <textarea
+          <AssistTextarea
             className="input-ns input-ns--textarea"
+            style={{ width: '100%' }}
             value={mensagem}
-            onChange={(e) => setMensagem(e.target.value)}
+            onValueChange={setMensagem}
+            assistButtonTitle={(safeT as any)?.writingAssistFieldBtnTitle}
             placeholder={safeT?.mensagem || 'Mensagem'}
             rows={8}
           />
@@ -19213,6 +19266,17 @@ export default function Dashboard() {
     }
   }, [expandedGroups, openTab, getTabTitle, canAccessAction, isDemoTeaserAction, safeT, scrollMainContentToTop, isCompactLayout, activeTabId, dashboardWorkspaceExpanded, openDashboardHubFromSidebar, dashboardMainHubId])
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.ctrlKey || !e.shiftKey) return
+      if (e.key !== 'l' && e.key !== 'L') return
+      e.preventDefault()
+      setWritingAssistOpen((o) => !o)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   // ===== Funções PRE CHECKLIST =====
   const handleBuscarEquipamentoPreCheck = () => {
     if (preCheckBuscaTipo === 'id') {
@@ -21146,9 +21210,9 @@ const nextF = familias.filter(x => x !== f)
 
                     <div style={cardStyle}>
                       <div style={sectionTitle}>⚙ {(safeT as any)?.manuaisInfoTecnicas || 'Informações técnicas'}</div>
-                      <textarea
+                      <AssistTextarea
                         value={modelo.infoTecnicas ?? ''}
-                        onChange={(e) => updateModelo({ infoTecnicas: e.target.value })}
+                        onValueChange={(v) => updateModelo({ infoTecnicas: v })}
                         placeholder={(safeT as any)?.manuaisInfoTecnicasPlaceholder || 'Texto livre...'}
                         rows={2}
                         style={{ width: '100%', padding: '10px', background: '#0d0d0d', border: '1px solid rgba(0,255,0,0.25)', borderRadius: '8px', color: '#fff', fontSize: '13px', resize: 'vertical', minHeight: '56px', boxSizing: 'border-box' }}
@@ -21157,9 +21221,9 @@ const nextF = familias.filter(x => x !== f)
 
                     <div style={cardStyle}>
                       <div style={sectionTitle}>🔧 {(safeT as any)?.manuaisInfoMecanicas || 'Informações mecânicas'}</div>
-                      <textarea
+                      <AssistTextarea
                         value={modelo.infoMecanicas ?? ''}
-                        onChange={(e) => updateModelo({ infoMecanicas: e.target.value })}
+                        onValueChange={(v) => updateModelo({ infoMecanicas: v })}
                         placeholder={(safeT as any)?.manuaisInfoMecanicasPlaceholder || 'Texto livre...'}
                         rows={2}
                         style={{ width: '100%', padding: '10px', background: '#0d0d0d', border: '1px solid rgba(0,255,0,0.25)', borderRadius: '8px', color: '#fff', fontSize: '13px', resize: 'vertical', minHeight: '56px', boxSizing: 'border-box' }}
@@ -21168,9 +21232,9 @@ const nextF = familias.filter(x => x !== f)
 
                     <div style={cardStyle}>
                       <div style={sectionTitle}>⚡ {(safeT as any)?.manuaisInfoEletricas || 'Informações elétricas'}</div>
-                      <textarea
+                      <AssistTextarea
                         value={modelo.infoEletricas ?? ''}
-                        onChange={(e) => updateModelo({ infoEletricas: e.target.value })}
+                        onValueChange={(v) => updateModelo({ infoEletricas: v })}
                         placeholder={(safeT as any)?.manuaisInfoEletricasPlaceholder || 'Texto livre...'}
                         rows={2}
                         style={{ width: '100%', padding: '10px', background: '#0d0d0d', border: '1px solid rgba(0,255,0,0.25)', borderRadius: '8px', color: '#fff', fontSize: '13px', resize: 'vertical', minHeight: '56px', boxSizing: 'border-box' }}
@@ -25473,9 +25537,9 @@ onKeyPress={(e) => {
                             </div>
                             <div>
                               <label style={{ display: 'block', marginBottom: '5px' }}>{t?.descricao || 'Descrição'} *</label>
-                              <textarea
+                              <AssistTextarea
                                 value={historicoForm.descricao}
-                                onChange={(e) => setHistoricoForm({ ...historicoForm, descricao: e.target.value })}
+                                onValueChange={(v) => setHistoricoForm({ ...historicoForm, descricao: v })}
                                 rows={3}
                                 style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                                 placeholder={t?.descricaoEventoPlaceholder || 'Descreva o evento...'}
@@ -25493,9 +25557,9 @@ onKeyPress={(e) => {
                             </div>
                             <div>
                               <label style={{ display: 'block', marginBottom: '5px' }}>{t?.observacoes || 'Observações'}</label>
-                              <textarea
+                              <AssistTextarea
                                 value={historicoForm.observacoes}
-                                onChange={(e) => setHistoricoForm({ ...historicoForm, observacoes: e.target.value })}
+                                onValueChange={(v) => setHistoricoForm({ ...historicoForm, observacoes: v })}
                                 rows={2}
                                 style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                                 placeholder={t?.observacoesAdicionais || 'Observações adicionais...'}
@@ -26391,7 +26455,7 @@ onKeyPress={(e) => {
                     <p style={{ margin: '0 0 14px', fontSize: 12, color: '#64748b', lineHeight: 1.55 }}>{protoT.protocolosServicoSecConteudoHint}</p>
                   ) : null}
                   <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>{protoT?.protocolosServicoTextoInicial || 'Texto inicial'}</label>
-                  <textarea value={protocoloServicoForm.textoInicial} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, textoInicial: e.target.value }))} placeholder={protoT?.protocolosServicoTextoInicialPlaceholder || 'Texto introdutório do protocolo...'} rows={4} style={{ ...inputBase, resize: 'vertical' as const, marginBottom: '20px', maxWidth: '100%' }} />
+                  <AssistTextarea value={protocoloServicoForm.textoInicial} onValueChange={(v) => setProtocoloServicoForm(prev => ({ ...prev, textoInicial: v }))} placeholder={protoT?.protocolosServicoTextoInicialPlaceholder || 'Texto introdutório do protocolo...'} rows={4} style={{ ...inputBase, resize: 'vertical' as const, marginBottom: '20px', maxWidth: '100%' }} />
                   {protocoloServicoForm.blocos.map((bloco, idx) => (
                     <div key={bloco.id || `bloco-fallback-${idx}`} style={{ marginBottom: '16px', padding: '16px 18px', backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: '12px', border: '1px solid rgba(0, 255, 136, 0.14)' }}>
                       <div
@@ -26441,7 +26505,7 @@ onKeyPress={(e) => {
                         <p style={{ margin: '0 0 10px', fontSize: 11, color: '#64748b', lineHeight: 1.45 }}>{protoT.protocolosServicoBlocoImagensHint}</p>
                       ) : null}
                       {bloco.tipo === 'texto' ? (
-                        <textarea value={bloco.texto || ''} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, i) => (bloco.id ? b.id === bloco.id : i === idx) ? { ...b, texto: e.target.value } : b) }))} rows={3} style={{ ...inputBase, resize: 'vertical' as const }} />
+                        <AssistTextarea value={bloco.texto || ''} onValueChange={(v) => setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, i) => (bloco.id ? b.id === bloco.id : i === idx) ? { ...b, texto: v } : b) }))} rows={3} style={{ ...inputBase, resize: 'vertical' as const }} />
                       ) : (
                         <div style={{ width: '100%' }}>
                           <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
@@ -27733,10 +27797,7 @@ onKeyPress={(e) => {
                             <input
                               type="time"
                               value={novoDiaTrabalho.tempoPausa || ''}
-                              onChange={(e) => setNovoDiaTrabalho({ 
-                                ...novoDiaTrabalho, 
-                                tempoPausa: e.target.value 
-                              })}
+                              onChange={(e) => setNovoDiaTrabalho({ ...novoDiaTrabalho, tempoPausa: e.target.value })}
                               placeholder="00:30"
                               style={{ 
                                 width: '100%', 
@@ -27783,20 +27844,21 @@ onKeyPress={(e) => {
                         <span style={{ fontSize: '16px' }}>📝</span>
                         {safeT?.descricaoTrabalho || 'Descrição do Trabalho'} <span style={{ fontSize: '11px', color: '#999', fontWeight: 'normal' }}>{safeT?.opcional || '(Opcional)'}</span>
                       </label>
-                      <textarea
+                      <AssistTextarea
                         value={novoDiaTrabalho.descricaoTrabalho || ''}
-                        onChange={(e) => setNovoDiaTrabalho({ ...novoDiaTrabalho, descricaoTrabalho: e.target.value })}
+                        onValueChange={(v) => setNovoDiaTrabalho({ ...novoDiaTrabalho, descricaoTrabalho: v })}
+                        assistButtonTitle={(safeT as any)?.writingAssistFieldBtnTitle}
                         placeholder={safeT?.descricaoTrabalhoPlaceholder || 'Descreva o trabalho realizado neste dia (opcional)...'}
                         rows={3}
-                        style={{ 
-                          width: '100%', 
-                          padding: '12px', 
-                          backgroundColor: '#222222', 
-                          color: '#fff', 
-                          border: '1px solid rgba(255, 255, 255, 0.1)', 
-                          borderRadius: '6px', 
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          backgroundColor: '#222222',
+                          color: '#fff',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '6px',
                           fontSize: '14px',
-                          resize: 'vertical'
+                          resize: 'vertical',
                         }}
                       />
                     </div>
@@ -27980,12 +28042,20 @@ onKeyPress={(e) => {
                   <h4 style={{ marginBottom: '15px', color: '#00ff00' }}>{t?.observacoes || 'Observações'}</h4>
                   <div>
                     <label style={{ display: 'block', marginBottom: '5px' }}>{t?.observacoes || 'Observações'}</label>
-                    <textarea
+                    <AssistTextarea
                       value={relatorioServicoForm.observacoes}
-                      onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, observacoes: e.target.value })}
+                      onValueChange={(v) => setRelatorioServicoForm({ ...relatorioServicoForm, observacoes: v })}
+                      assistButtonTitle={(safeT as any)?.writingAssistFieldBtnTitle}
                       rows={4}
                       placeholder={t?.observacoesPlaceholder || 'Digite as observações do serviço...'}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        backgroundColor: '#141414',
+                        color: '#fff',
+                        border: '1px solid rgba(0, 255, 0, 0.3)',
+                        borderRadius: '4px',
+                      }}
                     />
                   </div>
                 </div>
@@ -27995,12 +28065,20 @@ onKeyPress={(e) => {
                   <h4 style={{ marginBottom: '15px', color: '#00ff00' }}>{t?.pontosAberto || 'Pontos em Aberto'}</h4>
                   <div>
                     <label style={{ display: 'block', marginBottom: '5px' }}>{t?.pontosAberto || 'Pontos em Aberto'}</label>
-                    <textarea
+                    <AssistTextarea
                       value={relatorioServicoForm.pontosAberto}
-                      onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, pontosAberto: e.target.value })}
+                      onValueChange={(v) => setRelatorioServicoForm({ ...relatorioServicoForm, pontosAberto: v })}
+                      assistButtonTitle={(safeT as any)?.writingAssistFieldBtnTitle}
                       rows={4}
                       placeholder={t?.pontosAbertoPlaceholder || 'Digite os pontos que ficaram abertos...'}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        backgroundColor: '#141414',
+                        color: '#fff',
+                        border: '1px solid rgba(0, 255, 0, 0.3)',
+                        borderRadius: '4px',
+                      }}
                     />
                   </div>
                 </div>
@@ -30242,9 +30320,9 @@ onKeyPress={(e) => {
                     <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
                   ))}
                 </select>
-                <textarea
+                <AssistTextarea
                   value={translatorText}
-                  onChange={(e) => setTranslatorText(e.target.value)}
+                  onValueChange={setTranslatorText}
                   placeholder={safeT?.enterTextToTranslate || 'Digite o texto...'}
                   rows={5}
                   style={{ width: '100%', padding: '14px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', resize: 'vertical', fontSize: '14px' }}
@@ -30290,9 +30368,11 @@ onKeyPress={(e) => {
                     <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
                   ))}
                 </select>
-                <textarea
+                <AssistTextarea
                   readOnly
+                  showAssist={false}
                   value={translatedText || quickTranslateResult || ''}
+                  onValueChange={() => {}}
                   rows={5}
                   style={{ width: '100%', padding: '14px', backgroundColor: '#222222', color: '#00ff00', border: '1px solid rgba(0, 255, 0, 0.4)', borderRadius: '8px', resize: 'vertical', fontSize: '14px' }}
                 />
@@ -31134,13 +31214,13 @@ onKeyPress={(e) => {
                   <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
                     {safeT?.descricaoPecaBiblioteca || 'Descrição'}
                   </label>
-                  <textarea
+                  <AssistTextarea
                     placeholder={safeT?.descricaoPecaBiblioteca || 'Descrição'}
                     value={pecaBibliotecaForm.descricao}
-                    onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, descricao: e.target.value })}
+                    onValueChange={(v) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, descricao: v })}
                     rows={4}
                     style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', resize: 'vertical' }}
-                  ></textarea>
+                  ></AssistTextarea>
                 </div>
 
                 {(() => {
@@ -33744,9 +33824,9 @@ onKeyPress={(e) => {
                 <p style={{ fontSize: '13px', margin: '16px 0 8px 0', color: '#aaa' }}>
                   {safeT?.importacaoColarDesc || 'Ou cole aqui o conteúdo JSON ou CSV (ex.: copiado do site ou de um ficheiro):'}
                 </p>
-                <textarea
+                <AssistTextarea
                   value={importacaoTextoColado}
-                  onChange={(e) => { setImportacaoTextoColado(e.target.value); setImportacaoUrlError(null) }}
+                  onValueChange={(v) => { setImportacaoTextoColado(v); setImportacaoUrlError(null) }}
                   placeholder='[{"codigo":"A1","nome":"Peça exemplo","preco":"10"}]
 ou
 codigo;nome;preco
@@ -34156,9 +34236,9 @@ A1;Peça exemplo;10'
                 <p style={{ fontSize: '13px', margin: '0 0 8px 0', color: '#aaa' }}>
                   {safeT?.importacaoColarDesc || 'Ou cole aqui o conteúdo JSON ou CSV (ex.: copiado do site ou de um ficheiro):'}
                 </p>
-                <textarea
+                <AssistTextarea
                   value={importacaoTextoColado}
-                  onChange={(e) => { setImportacaoTextoColado(e.target.value); setImportacaoUrlError(null) }}
+                  onValueChange={(v) => { setImportacaoTextoColado(v); setImportacaoUrlError(null) }}
                   placeholder={(safeT as any)?.importacaoColarCatalogoPlaceholder || `Exemplo de colagem rápida:
 
 COD-001
@@ -34917,9 +34997,9 @@ A1;Peça exemplo;10`}
               </div>
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.solicitacaoServicoTecnicoProblemasApresentados}</label>
-                <textarea
+                <AssistTextarea
                   value={sstModeloBase.problemasApresentados}
-                  onChange={(e) => setSstModeloBase({ ...sstModeloBase, problemasApresentados: e.target.value })}
+                  onValueChange={(v) => setSstModeloBase({ ...sstModeloBase, problemasApresentados: v })}
                   rows={3}
                   style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.28)', borderRadius: '6px' }}
                 />
@@ -35077,9 +35157,9 @@ A1;Peça exemplo;10`}
                 </div>
                 <div style={{ marginBottom: '16px' }}>
                   <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.solicitacaoServicoTecnicoProblemasApresentados}</label>
-                  <textarea
+                  <AssistTextarea
                     value={solicitacaoServicoTecnicoForm.problemasApresentados}
-                    onChange={(e) => setSolicitacaoServicoTecnicoForm({ ...solicitacaoServicoTecnicoForm, problemasApresentados: e.target.value })}
+                    onValueChange={(v) => setSolicitacaoServicoTecnicoForm({ ...solicitacaoServicoTecnicoForm, problemasApresentados: v })}
                     rows={4}
                     style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }}
                   />
@@ -35210,7 +35290,7 @@ A1;Peça exemplo;10`}
                 )}
                 <div style={{ marginBottom: '16px' }}>
                   <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.solicitacaoServicoTecnicoProblemasApresentados}</label>
-                  <textarea value={solicitacaoServicoTecnicoForm.problemasApresentados} onChange={e => setSolicitacaoServicoTecnicoForm({ ...solicitacaoServicoTecnicoForm, problemasApresentados: e.target.value })} rows={3} style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} />
+                  <AssistTextarea value={solicitacaoServicoTecnicoForm.problemasApresentados} onValueChange={(v) => setSolicitacaoServicoTecnicoForm({ ...solicitacaoServicoTecnicoForm, problemasApresentados: v })} rows={3} style={{ width: '100%', padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} />
                 </div>
 
                 <div style={{ ...glassNestedStyle(ACCENT_GREEN), marginBottom: '20px' }}>
@@ -36013,13 +36093,13 @@ A1;Peça exemplo;10`}
                   <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
                     {safeT?.observacaoTecnica || 'Observação Técnica'}
                   </label>
-                  <textarea
+                  <AssistTextarea
                     value={agendaForm.observacoesTecnicas}
-                    onChange={(e) => setAgendaForm({ ...agendaForm, observacoesTecnicas: e.target.value })}
+                    onValueChange={(v) => setAgendaForm({ ...agendaForm, observacoesTecnicas: v })}
                     rows={4}
                     placeholder={safeT?.observacaoTecnicaPlaceholder || 'Observações técnicas sobre o agendamento...'}
                     style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', resize: 'vertical' }}
-                  ></textarea>
+                  ></AssistTextarea>
                 </div>
 
                 {/* Necessidade de Peças */}
@@ -37453,13 +37533,13 @@ A1;Peça exemplo;10`}
                   onChange={(e) => setServicoForm({ ...servicoForm, nome: e.target.value })}
                   style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
-                <textarea
+                <AssistTextarea
                   placeholder={safeT?.descricaoServico || 'Descrição (opcional)'}
                   value={servicoForm.descricao}
-                  onChange={(e) => setServicoForm({ ...servicoForm, descricao: e.target.value })}
+                  onValueChange={(v) => setServicoForm({ ...servicoForm, descricao: v })}
                   rows={3}
                   style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                ></textarea>
+                ></AssistTextarea>
                 <input
                   type="text"
                   inputMode="decimal"
@@ -38719,7 +38799,7 @@ A1;Peça exemplo;10`}
               {filtroPeriodoView === 'mensal' && (
                 <>
                   <label style={{ color: '#00ff00', fontSize: '13px', marginLeft: '12px' }}>{(safeT as any)?.comprovantesFiltroMes || 'Filtrar por mês'}</label>
-                  <select value={filtroMes} onChange={e => setFiltroMes(e.target.value)} style={{ padding: '8px 12px', background: '#222', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', minWidth: '160px' }}>
+                  <select value={filtroMes} onChange={(e) => setFiltroMes(e.target.value)} style={{ padding: '8px 12px', background: '#222', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', minWidth: '160px' }}>
                     <option value="">{(safeT as any)?.comprovantesTodosMeses || 'Todos os meses'}</option>
                     {mesesAnos.map(m => (<option key={m} value={m}>{m}</option>))}
                   </select>
@@ -38728,14 +38808,14 @@ A1;Peça exemplo;10`}
               {filtroPeriodoView === 'semanal' && (
                 <>
                   <label style={{ color: '#00ff00', fontSize: '13px', marginLeft: '12px' }}>{(safeT as any)?.comprovantesSemana || 'Semana'}</label>
-                  <select value={filtroSemana} onChange={e => setFiltroSemana(e.target.value)} style={{ padding: '8px 12px', background: '#222', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', minWidth: '160px' }}>
+                  <select value={filtroSemana} onChange={(e) => setFiltroSemana(e.target.value)} style={{ padding: '8px 12px', background: '#222', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', minWidth: '160px' }}>
                     <option value="">{(safeT as any)?.comprovantesTodasSemanas || 'Todas as semanas'}</option>
                     {semanasDisponiveis.map(s => (<option key={s} value={s}>{s}</option>))}
                   </select>
                 </>
               )}
               <label style={{ color: '#00ff00', fontSize: '13px', marginLeft: '8px' }}>{(safeT as any)?.comprovantesFiltroCliente || 'Filtrar por cliente'}</label>
-              <select value={filtroCliente} onChange={e => setFiltroCliente(e.target.value)} style={{ padding: '8px 12px', background: '#222', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', minWidth: '180px' }}>
+              <select value={filtroCliente} onChange={(e) => setFiltroCliente(e.target.value)} style={{ padding: '8px 12px', background: '#222', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff', minWidth: '180px' }}>
                 <option value="">{(safeT as any)?.comprovantesTodosClientes || 'Todos os clientes'}</option>
                 {clientesOuPessoalUnicos.map(cl => (<option key={cl} value={cl}>{cl}</option>))}
               </select>
@@ -38874,7 +38954,7 @@ A1;Peça exemplo;10`}
                   {/* Preview */}
                   <div style={{ marginBottom: '20px' }}>
                     <div style={{ color: '#00ff00', fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>{(safeT as any)?.comprovantesPreview || 'Pré-visualização da mensagem'}</div>
-                    <textarea readOnly value={mensagemEnvio} rows={8} style={{ width: '100%', padding: '12px', background: '#141414', border: '1px solid #333', borderRadius: '8px', color: '#ccc', fontSize: '13px', resize: 'vertical', fontFamily: 'inherit' }} />
+                    <AssistTextarea readOnly value={mensagemEnvio} onValueChange={() => {}} rows={8} style={{ width: '100%', padding: '12px', background: '#141414', border: '1px solid #333', borderRadius: '8px', color: '#ccc', fontSize: '13px', resize: 'vertical', fontFamily: 'inherit' }} showAssist={false} />
                   </div>
                   {/* Ações */}
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -39296,7 +39376,7 @@ A1;Peça exemplo;10`}
                     type="text"
                     placeholder={safeT?.opOther || 'Outro'}
                     value={ordemPreparacaoForm.materialeLavoratoAltro}
-                    onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, materialeLavoratoAltro: e.target.value})}
+                    onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, materialeLavoratoAltro: e.target.value })}
                     style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                   />
                 </div>
@@ -39322,7 +39402,7 @@ A1;Peça exemplo;10`}
                     type="text"
                     placeholder={safeT?.opOther || 'Outro'}
                     value={ordemPreparacaoForm.tipologiaImpiallaggiaturaAltro}
-                    onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, tipologiaImpiallaggiaturaAltro: e.target.value})}
+                    onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, tipologiaImpiallaggiaturaAltro: e.target.value })}
                     style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                   />
                 </div>
@@ -39348,7 +39428,7 @@ A1;Peça exemplo;10`}
                     type="text"
                     placeholder={safeT?.opOther || 'Outro'}
                     value={ordemPreparacaoForm.coloreAltro}
-                    onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, coloreAltro: e.target.value})}
+                    onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, coloreAltro: e.target.value })}
                     style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                   />
                 </div>
@@ -39361,21 +39441,21 @@ A1;Peça exemplo;10`}
                       type="text"
                       placeholder={safeT?.opMaxDim || 'Max (X/Y/Z)'}
                       value={ordemPreparacaoForm.dimensioniMax}
-                      onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, dimensioniMax: e.target.value})}
+                      onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, dimensioniMax: e.target.value })}
                       style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.opMinDim || 'Min (X/Y/Z)'}
                       value={ordemPreparacaoForm.dimensioniMin}
-                      onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, dimensioniMin: e.target.value})}
+                      onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, dimensioniMin: e.target.value })}
                       style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                     <input
                       type="text"
                       placeholder={safeT?.opOther || 'Outro'}
                       value={ordemPreparacaoForm.dimensioniAltro}
-                      onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, dimensioniAltro: e.target.value})}
+                      onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, dimensioniAltro: e.target.value })}
                       style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                   </div>
@@ -39406,7 +39486,7 @@ A1;Peça exemplo;10`}
                     type="text"
                     placeholder={safeT?.opOther || 'Outro'}
                     value={ordemPreparacaoForm.tipologiaBordoAltro}
-                    onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, tipologiaBordoAltro: e.target.value})}
+                    onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, tipologiaBordoAltro: e.target.value })}
                     style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                   />
                 </div>
@@ -39436,7 +39516,7 @@ A1;Peça exemplo;10`}
                     type="text"
                     placeholder={safeT?.opOther || 'Outro'}
                     value={ordemPreparacaoForm.spessoreBordoAltro}
-                    onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, spessoreBordoAltro: e.target.value})}
+                    onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, spessoreBordoAltro: e.target.value })}
                     style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                   />
                 </div>
@@ -39466,7 +39546,7 @@ A1;Peça exemplo;10`}
                     type="text"
                     placeholder={safeT?.opOther || 'Outro'}
                     value={ordemPreparacaoForm.tipoCollaAltro}
-                    onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, tipoCollaAltro: e.target.value})}
+                    onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, tipoCollaAltro: e.target.value })}
                     style={{ width: '100%', marginTop: '10px', padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                   />
                 </div>
@@ -39511,7 +39591,7 @@ A1;Peça exemplo;10`}
                       type="text"
                       placeholder={safeT?.opWhich || 'Quais?'}
                       value={ordemPreparacaoForm.utensiliQuali}
-                      onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, utensiliQuali: e.target.value})}
+                      onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, utensiliQuali: e.target.value })}
                       style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                     <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
@@ -39545,7 +39625,7 @@ A1;Peça exemplo;10`}
                       type="text"
                       placeholder={safeT?.opSuctionCups || 'Ventosas (qtd)'}
                       value={ordemPreparacaoForm.ventose}
-                      onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, ventose: e.target.value})}
+                      onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, ventose: e.target.value })}
                       style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                   </div>
@@ -39568,7 +39648,7 @@ A1;Peça exemplo;10`}
                       type="text"
                       placeholder={safeT?.opWhichAndQty || 'Quais e Qtd?'}
                       value={ordemPreparacaoForm.materialeTestRunQualiQta}
-                      onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, materialeTestRunQualiQta: e.target.value})}
+                      onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, materialeTestRunQualiQta: e.target.value })}
                       style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                     <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
@@ -39591,21 +39671,21 @@ A1;Peça exemplo;10`}
                     <input
                       type="text"
                       value={ordemPreparacaoForm.linguaDestinazione}
-                      onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, linguaDestinazione: e.target.value})}
+                      onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, linguaDestinazione: e.target.value })}
                       style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                     <label style={{ color: '#ccc', fontSize: '12px' }}>{safeT?.opManuals || 'Manuais'}</label>
                     <input
                       type="text"
                       value={ordemPreparacaoForm.manualistica}
-                      onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, manualistica: e.target.value})}
+                      onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, manualistica: e.target.value })}
                       style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                     <label style={{ color: '#ccc', fontSize: '12px' }}>{safeT?.opStickers || 'Adesivos'}</label>
                     <input
                       type="text"
                       value={ordemPreparacaoForm.adesivi}
-                      onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, adesivi: e.target.value})}
+                      onChange={(e) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, adesivi: e.target.value })}
                       style={{ padding: '6px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px' }}
                     />
                   </div>
@@ -39614,10 +39694,10 @@ A1;Peça exemplo;10`}
                 {/* Notas de Produção */}
                 <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px', gridColumn: '1 / -1' }}>
                   <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opProductionNotes || 'Notas de Produção'}</h3>
-                  <textarea
+                  <AssistTextarea
                     rows={5}
                     value={ordemPreparacaoForm.noteProduzione}
-                    onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, noteProduzione: e.target.value})}
+                    onValueChange={(v) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, noteProduzione: v })}
                     style={{ width: '100%', padding: '10px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px', resize: 'vertical' }}
                   />
                 </div>
@@ -39625,10 +39705,10 @@ A1;Peça exemplo;10`}
                 {/* Campo de Impressões */}
                 <div style={{ padding: '15px', border: '1px solid #333', borderRadius: '8px', gridColumn: '1 / -1' }}>
                   <h3 style={{ color: '#66b3ff', marginBottom: '15px', fontSize: '16px' }}>{safeT?.opImpressoes || 'Impressões'}</h3>
-                  <textarea
+                  <AssistTextarea
                     rows={4}
                     value={ordemPreparacaoForm.impressoes}
-                    onChange={(e) => setOrdemPreparacaoForm({...ordemPreparacaoForm, impressoes: e.target.value})}
+                    onValueChange={(v) => setOrdemPreparacaoForm({ ...ordemPreparacaoForm, impressoes: v })}
                     placeholder={safeT?.opImpressoesPlaceholder || 'Informações sobre impressões, etiquetas, marcações, etc...'}
                     style={{ width: '100%', padding: '10px', backgroundColor: '#222222', border: '1px solid #444', color: '#fff', borderRadius: '4px', resize: 'vertical' }}
                   />
@@ -40474,9 +40554,9 @@ A1;Peça exemplo;10`}
                       <label style={{ display: 'block', color: '#ffc107', fontSize: '14px', marginBottom: '6px' }}>
                         {safeT?.motivoOuRazaoSolicitacaoPecas || 'Motivo/razão da solicitação'}
                       </label>
-                      <textarea
+                      <AssistTextarea
                         value={motivoSolicitacaoPecasExecucao}
-                        onChange={(e) => setMotivoSolicitacaoPecasExecucao(e.target.value)}
+                        onValueChange={setMotivoSolicitacaoPecasExecucao}
                         placeholder={safeT?.descrevaMotivoSolicitacaoPecas || 'Descreva o porquê da solicitação das peças (opcional)'}
                         rows={3}
                         style={{
@@ -43065,9 +43145,9 @@ A1;Peça exemplo;10`}
                       <label style={{ display: 'block', color: '#fff', marginBottom: '8px', fontWeight: 'bold' }}>
                         {safeT?.trabalhosASeremExecutados || 'Trabalhos a serem executados'}
                       </label>
-                      <textarea
+                      <AssistTextarea
                         value={grupoChecklistForm.trabalhosASeremExecutados || ''}
-                        onChange={(e) => setGrupoChecklistForm({ ...grupoChecklistForm, trabalhosASeremExecutados: e.target.value })}
+                        onValueChange={(v) => setGrupoChecklistForm({ ...grupoChecklistForm, trabalhosASeremExecutados: v })}
                         placeholder={safeT?.trabalhosASeremExecutadosPlaceholder || 'Descreva os trabalhos a serem executados neste grupo...'}
                         rows={5}
                         style={{
@@ -45607,9 +45687,9 @@ A1;Peça exemplo;10`}
                       <label style={{ display: 'block', color: '#fff', marginBottom: '5px', fontSize: '14px' }}>
                         {safeT?.observacoesPreCheck || 'Observações'}
                       </label>
-                      <textarea
+                      <AssistTextarea
                         value={preCheckForm.observacoes}
-                        onChange={(e) => setPreCheckForm({ ...preCheckForm, observacoes: e.target.value })}
+                        onValueChange={(v) => setPreCheckForm({ ...preCheckForm, observacoes: v })}
                         placeholder={safeT?.observacoesPreCheck || 'Digite as observações...'}
                         rows={4}
                         style={{
@@ -46529,8 +46609,8 @@ A1;Peça exemplo;10`}
                         })}
                       </div>
                       <div className="hub-comunicacao-composer" style={{ borderTop: '1px solid rgba(0, 255, 0, 0.2)', paddingTop: '16px' }}>
-                        <input className="hub-comunicacao-input" type="text" placeholder={safeT?.assunto || 'Assunto'} value={hubAssunto} onChange={e => setHubAssunto(e.target.value)} style={{ width: '100%', padding: '10px 14px', marginBottom: '10px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
-                        <textarea className="hub-comunicacao-textarea" placeholder={safeT?.mensagem || 'Mensagem'} value={hubMensagemTexto} onChange={e => setHubMensagemTexto(e.target.value)} rows={3} style={{ width: '100%', padding: '10px 14px', marginBottom: '12px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px', resize: 'vertical' }} />
+                        <AssistInput className="hub-comunicacao-input" type="text" placeholder={safeT?.assunto || 'Assunto'} value={hubAssunto} onValueChange={setHubAssunto} assistButtonTitle={(safeT as any)?.writingAssistFieldBtnTitle} style={{ width: '100%', padding: '10px 14px', marginBottom: '10px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
+                        <AssistTextarea className="hub-comunicacao-textarea" placeholder={safeT?.mensagem || 'Mensagem'} value={hubMensagemTexto} onValueChange={setHubMensagemTexto} rows={3} style={{ width: '100%', padding: '10px 14px', marginBottom: '12px', backgroundColor: '#222222', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px', resize: 'vertical' }} />
                         <button className="hub-comunicacao-send-btn" type="button" onClick={enviarMensagemPrivada} disabled={!hubAssunto.trim() || !hubMensagemTexto.trim()} style={{ padding: '12px 24px', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '2px solid rgba(0, 255, 0, 0.5)', borderRadius: '10px', color: '#00ff00', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', width: isCompactLayout ? '100%' : 'auto' }}>
                           {safeT?.enviar || 'Enviar'}
                         </button>
@@ -47647,9 +47727,9 @@ A1;Peça exemplo;10`}
                                         <label style={{ display: 'block', color: '#00ff00', fontSize: '12px', marginBottom: '6px' }}>
                                           {(safeT as any)?.conhecimentoDescricaoDetalhada ?? 'Descrição detalhada'} — {label}
                                         </label>
-                                        <textarea
+                                        <AssistTextarea
                                           value={value}
-                                          onChange={(e) => updateConhecimentoDescricaoCampo(ent.id, key, e.target.value)}
+                                          onValueChange={(v) => updateConhecimentoDescricaoCampo(ent.id, key, v)}
                                           placeholder={(safeT as any)?.conhecimentoDescricaoPlaceholder ?? 'Descreva em detalhe os conhecimentos nesta área...'}
                                           rows={2}
                                           style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#eee', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px', resize: 'vertical', minHeight: '56px' }}
@@ -52193,9 +52273,9 @@ A1;Peça exemplo;10`}
               <label style={{ display: 'block', marginBottom: '5px', color: '#ccc', fontSize: '14px' }}>
                 {safeT?.descricao || 'Descrição'}
               </label>
-              <textarea
+              <AssistTextarea
                 value={dadosOrcamento.descricao}
-                onChange={(e) => setDadosOrcamento(prev => ({ ...prev, descricao: e.target.value }))}
+                onValueChange={(v) => setDadosOrcamento(prev => ({ ...prev, descricao: v }))}
                 rows={3}
                 style={{
                   width: '100%',
@@ -52753,9 +52833,9 @@ A1;Peça exemplo;10`}
               <label style={{ display: 'block', marginBottom: '5px', color: '#ccc', fontSize: '14px' }}>
                 {safeT?.observacoes || 'Observações'}
               </label>
-              <textarea
+              <AssistTextarea
                 value={dadosOrcamento.observacoes}
-                onChange={(e) => setDadosOrcamento(prev => ({ ...prev, observacoes: e.target.value }))}
+                onValueChange={(v) => setDadosOrcamento(prev => ({ ...prev, observacoes: v }))}
                 rows={4}
                 style={{
                   width: '100%',
@@ -54741,7 +54821,55 @@ A1;Peça exemplo;10`}
         paddingTop: isDemoMode && !isCompactLayout ? '48px' : undefined
       }}
     >
+      <WritingAssistFieldContext.Provider value={writingAssistFieldApi}>
       {bootLoadingOverlay}
+      <WritingLanguageAssistModal
+        open={writingAssistOpen}
+        onClose={() => {
+          setWritingAssistOpen(false)
+          setWritingAssistField(null)
+        }}
+        selectedLanguage={selectedLanguage}
+        languageOptions={writingAssistLangOptions}
+        translationError={(safeT as any)?.translationError || 'Erro ao traduzir.'}
+        fieldInitialText={writingAssistField?.initial ?? ''}
+        onApplyToField={writingAssistField?.onApply}
+        labels={{
+          title: (safeT as any)?.writingAssistTitle || 'Escrevo num idioma, preciso noutro',
+          subtitle:
+            (safeT as any)?.writingAssistSubtitle ||
+            'Cole o texto, indique em que idioma escreveu e obtenha a versão no idioma do trabalho.',
+          yourText: (safeT as any)?.writingAssistYourText || 'O seu texto',
+          placeholder: (safeT as any)?.writingAssistPlaceholder || 'Cole ou escreva aqui…',
+          wroteIn: (safeT as any)?.writingAssistWroteIn || 'Escrevi em',
+          alsoNeed: (safeT as any)?.writingAssistAlsoNeed || 'Preciso também em',
+          uiHint: (safeT as any)?.writingAssistUiHint || 'Por omissão = idioma da interface',
+          sameLang: (safeT as any)?.writingAssistSameLang || 'Escolha dois idiomas diferentes.',
+          generate: (safeT as any)?.writingAssistGenerate || 'Gerar tradução',
+          translating: (safeT as any)?.translating || 'A traduzir…',
+          resultBase: (safeT as any)?.writingAssistResultBase || 'Texto no idioma em que escreveu',
+          resultTranslated: (safeT as any)?.writingAssistResultTranslated || 'Texto no outro idioma',
+          rememberNative: (safeT as any)?.writingAssistRememberNative || 'Memorizar o meu idioma de escrita',
+          close: (safeT as any)?.writingAssistClose || (safeT as any)?.close || 'Fechar',
+          copyToClipboard: (safeT as any)?.copyToClipboard || 'Copiar',
+          copiedToClipboard: (safeT as any)?.copiedToClipboard || 'Copiado.',
+          fabTitle: (safeT as any)?.writingAssistFabTitle || 'Assistente de escrita (dois idiomas)',
+          shortcutHint: (safeT as any)?.writingAssistShortcutHint || 'Ctrl+Shift+L abre ou fecha este assistente.',
+          applyOriginalInField:
+            (safeT as any)?.writingAssistApplyOriginalInField || 'Usar no campo: o que escrevi',
+          applyTranslatedInField:
+            (safeT as any)?.writingAssistApplyTranslatedInField || 'Usar no campo: tradução',
+          fieldModeHint:
+            (safeT as any)?.writingAssistFieldModeHint ||
+            'Gere a tradução e escolha qual texto aplicar ao campo.',
+        }}
+      />
+      <WritingAssistFab
+        onClick={openWritingAssistStandalone}
+        title={(safeT as any)?.writingAssistFabTitle || 'Assistente de escrita'}
+        hasBottomTabs={openTabs.length > 0}
+        isCompact={isCompactLayout}
+      />
       {/* Barra superior: apenas em modo demo mostra aviso (botão Administrador / Backup está na barra lateral) */}
       {isDemoMode && (
         <div className="app-top-bar" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '8px 16px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '1px solid rgba(0, 255, 0, 0.4)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
@@ -59680,13 +59808,13 @@ A1;Peça exemplo;10`}
                   onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, preco: e.target.value })}
                   style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
-                <textarea
+                <AssistTextarea
                   placeholder={safeT?.descricaoPecaBiblioteca || 'Descrição'}
                   value={pecaBibliotecaForm.descricao}
-                  onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, descricao: e.target.value })}
+                  onValueChange={(v) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, descricao: v })}
                   rows={3}
                   style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                ></textarea>
+                ></AssistTextarea>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button className="btn-primary" onClick={() => {
                     if (!pecaBibliotecaForm.nome || !pecaBibliotecaForm.codigo) {
@@ -60231,13 +60359,13 @@ A1;Peça exemplo;10`}
                     ));
                   })()}
                 </select>
-                <textarea
+                <AssistTextarea
                   placeholder={safeT?.observacaoTecnica || 'Observação Técnica'}
                   value={agendaForm.observacoesTecnicas}
-                  onChange={(e) => setAgendaForm({ ...agendaForm, observacoesTecnicas: e.target.value })}
+                  onValueChange={(v) => setAgendaForm({ ...agendaForm, observacoesTecnicas: v })}
                   rows={3}
                   style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                ></textarea>
+                ></AssistTextarea>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button className="btn-primary" onClick={handleSaveAgendamento} style={{ flex: 1 }}>
                     {safeT?.save || 'Salvar'}
@@ -60563,13 +60691,13 @@ A1;Peça exemplo;10`}
                       onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, tipoEquipamento: e.target.value })}
                       style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
-                    <textarea
+                    <AssistTextarea
                       placeholder={safeT?.observacoes || 'Observações'}
                       value={pecaDesmontadaForm.observacoes}
-                      onChange={(e) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, observacoes: e.target.value })}
+                      onValueChange={(v) => setPecaDesmontadaForm({ ...pecaDesmontadaForm, observacoes: v })}
                       rows={3}
                       style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    ></textarea>
+                    ></AssistTextarea>
                     <input
                       type="number"
                       placeholder={safeT?.quantidade || 'Quantidade'}
@@ -60685,13 +60813,13 @@ A1;Peça exemplo;10`}
                   onChange={(e) => setServicoForm({ ...servicoForm, nome: e.target.value })}
                   style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
-                <textarea
+                <AssistTextarea
                   placeholder={safeT?.descricaoServico || 'Descrição (opcional)'}
                   value={servicoForm.descricao}
-                  onChange={(e) => setServicoForm({ ...servicoForm, descricao: e.target.value })}
+                  onValueChange={(v) => setServicoForm({ ...servicoForm, descricao: v })}
                   rows={3}
                   style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                ></textarea>
+                ></AssistTextarea>
                 <input
                   type="text"
                   inputMode="decimal"
@@ -61042,7 +61170,7 @@ A1;Peça exemplo;10`}
               <div className="modal-relatorios-equipamento-form" style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
                 <h4>{editingRelatorio ? (safeT?.editarRelatorio || 'Editar Relatório') : (safeT?.novoRelatorio || 'Novo Relatório')}</h4>
                 <input type="text" placeholder={safeT?.tituloRelatorio || 'Título'} value={relatorioForm.titulo} onChange={(e) => setRelatorioForm({ ...relatorioForm, titulo: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
-                <textarea placeholder={safeT?.conteudoRelatorio || 'Conteúdo'} value={relatorioForm.conteudo} onChange={(e) => setRelatorioForm({ ...relatorioForm, conteudo: e.target.value })} rows={5} style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}></textarea>
+                <AssistTextarea placeholder={safeT?.conteudoRelatorio || 'Conteúdo'} value={relatorioForm.conteudo} onValueChange={(v) => setRelatorioForm({ ...relatorioForm, conteudo: v })} rows={5} style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}></AssistTextarea>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button className="btn-primary" onClick={handleSaveRelatorio} style={{ flex: 1 }}>{safeT?.save || 'Salvar'}</button>
                   <button className="btn-primary" onClick={() => { setShowRelatorioForm(false); setEditingRelatorio(null); }} style={{ flex: 1 }}>{safeT?.cancel || 'Cancelar'}</button>
@@ -61164,7 +61292,7 @@ A1;Peça exemplo;10`}
                     </div>
                   )
                 })()}
-                <textarea placeholder={safeT?.observacoes || 'Observações'} value={faturaFornecedorForm.observacoes} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, observacoes: e.target.value })} rows={3} style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}></textarea>
+                <AssistTextarea placeholder={safeT?.observacoes || 'Observações'} value={faturaFornecedorForm.observacoes} onValueChange={(v) => setFaturaFornecedorForm({ ...faturaFornecedorForm, observacoes: v })} rows={3} style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}></AssistTextarea>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button className="btn-primary" onClick={() => handleSaveFaturaFornecedor()} style={{ flex: 1 }}>{safeT?.save || 'Salvar'}</button>
                   <button className="btn-primary" onClick={() => { setShowFaturaFornecedorForm(false); setEditingFaturaFornecedor(null); }} style={{ flex: 1 }}>{safeT?.cancel || 'Cancelar'}</button>
@@ -61463,7 +61591,7 @@ A1;Peça exemplo;10`}
             </div>
 
             <label style={{ color: '#aaa', fontSize: '12px', display: 'block', marginTop: '12px' }}>{safeT?.observacoes || 'Observações'}</label>
-            <textarea value={faturaForm.observacoes} onChange={e => setFaturaForm({ ...faturaForm, observacoes: e.target.value })} rows={3} style={{ width: '100%', padding: '10px', marginBottom: '16px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+            <AssistTextarea value={faturaForm.observacoes} onValueChange={(v) => setFaturaForm({ ...faturaForm, observacoes: v })} rows={3} style={{ width: '100%', padding: '10px', marginBottom: '16px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
               <button type="button" className="btn-primary" onClick={handleSaveFatura} style={{ flex: 1, padding: '12px', fontWeight: '600' }}>{safeT?.save || 'Guardar'}</button>
@@ -61704,9 +61832,9 @@ A1;Peça exemplo;10`}
               <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px' }}>
                 {safeT?.textToTranslate || 'Texto para traduzir:'}
               </label>
-              <textarea 
+              <AssistTextarea 
                 value={translatorText} 
-                onChange={(e) => setTranslatorText(e.target.value)}
+                onValueChange={setTranslatorText}
                 placeholder={safeT?.enterTextToTranslate || 'Digite o texto que deseja traduzir...'}
                 rows={6}
                 style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', resize: 'vertical' }}
@@ -61734,9 +61862,11 @@ A1;Peça exemplo;10`}
                 <label style={{ display: 'block', marginBottom: '10px', fontSize: '14px' }}>
                   {safeT?.translatedText || 'Texto traduzido:'}
                 </label>
-                <textarea 
-                  value={translatedText || quickTranslateResult} 
+                <AssistTextarea
                   readOnly
+                  showAssist={false}
+                  value={translatedText || quickTranslateResult}
+                  onValueChange={() => {}}
                   rows={6}
                   style={{ width: '100%', padding: '10px', backgroundColor: '#141414', color: '#00ff00', border: '1px solid rgba(0, 255, 0, 0.5)', borderRadius: '4px', resize: 'vertical' }}
                 />
@@ -62515,6 +62645,7 @@ A1;Peça exemplo;10`}
           </div>
         </div>
       )}
+    </WritingAssistFieldContext.Provider>
     </div>
   )
 }
