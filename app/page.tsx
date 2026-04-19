@@ -31249,13 +31249,13 @@ onKeyPress={(e) => {
               <div
                 key={editingPecaBiblioteca?.id ? `peca-bib-edit-${editingPecaBiblioteca.id}` : 'peca-bib-nova'}
                 ref={pecaBibliotecaFormPasteRootRef}
-                style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}
+                className="biblioteca-pecas-form"
               >
-                <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>
+                <h3 className="biblioteca-pecas-form__title">
                   {editingPecaBiblioteca ? (safeT?.editPecaBiblioteca || 'Editar Peça') : (safeT?.novaPecaBiblioteca || 'Nova Peça')}
                 </h3>
                 
-                <label className="file-upload-label" htmlFor="peca-biblioteca-image-upload-tab" style={{ marginBottom: '10px', display: 'block' }}>
+                <label className="file-upload-label biblioteca-pecas-form__label" htmlFor="peca-biblioteca-image-upload-tab" style={{ marginBottom: '10px' }}>
                   {safeT?.imagemPecaBiblioteca || 'Imagem da Peça'}
                 </label>
                 <input
@@ -31284,24 +31284,15 @@ onKeyPress={(e) => {
                 </button>
                 <div
                   tabIndex={0}
+                  className="biblioteca-pecas-form__paste-zone"
                   onClick={(ev) => (ev.currentTarget as HTMLDivElement).focus()}
-                  style={{
-                    marginBottom: '12px',
-                    padding: '10px 12px',
-                    borderRadius: '6px',
-                    border: '1px dashed rgba(0, 255, 0, 0.45)',
-                    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-                    fontSize: '12px',
-                    color: 'rgba(255,255,255,0.88)',
-                    cursor: 'pointer',
-                    outline: 'none',
-                  }}
                 >
                   {(safeT as any)?.pecaBibliotecaPasteHint || 'Clique aqui e prima Ctrl+V para colar uma imagem ou o URL da imagem (https://...).'}
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '15px', alignItems: 'center' }}>
+                <div className="biblioteca-pecas-form__url-row">
                   <input
                     type="url"
+                    className="biblioteca-pecas-form__input biblioteca-pecas-form__url-input"
                     placeholder={(safeT as any)?.pecaBibliotecaUrlPlaceholder || 'https://... (URL da imagem)'}
                     value={pecaBibliotecaImagemUrlDraft}
                     onChange={(e) => setPecaBibliotecaImagemUrlDraft(e.target.value)}
@@ -31311,7 +31302,6 @@ onKeyPress={(e) => {
                         void aplicarImagemPecaBibliotecaDeUrl(pecaBibliotecaImagemUrlDraft)
                       }
                     }}
-                    style={{ flex: '1 1 200px', minWidth: '160px', padding: '8px 10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                   />
                   <button
                     type="button"
@@ -31324,18 +31314,8 @@ onKeyPress={(e) => {
                 </div>
                 
                 {pecaBibliotecaForm.imagem && (
-                  <div style={{ marginTop: '10px', marginBottom: '15px', textAlign: 'center' }}>
-                    <div
-                      style={{
-                        display: 'inline-block',
-                        maxWidth: 240,
-                        borderRadius: 10,
-                        overflow: 'hidden',
-                        border: '1px solid rgba(0, 255, 120, 0.28)',
-                        marginBottom: 10,
-                        background: '#151515',
-                      }}
-                    >
+                  <div className="biblioteca-pecas-form__preview-wrap">
+                    <div className="biblioteca-pecas-form__preview-frame">
                       <img
                         src={pecaBibliotecaForm.imagem}
                         alt={safeT?.imagemPecaBiblioteca || 'Imagem da Peça'}
@@ -31368,56 +31348,57 @@ onKeyPress={(e) => {
                   </div>
                 )}
                 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
-                    {safeT?.nomePecaBiblioteca || 'Nome'} <span style={{ color: '#ff0000' }}>*</span>
+                <div className="biblioteca-pecas-form__field">
+                  <label className="biblioteca-pecas-form__label">
+                    {safeT?.nomePecaBiblioteca || 'Nome'} <span className="biblioteca-pecas-form__required">*</span>
                   </label>
                   <input
                     type="text"
+                    className="biblioteca-pecas-form__input"
                     placeholder={safeT?.nomePecaBiblioteca || 'Nome'}
                     value={pecaBibliotecaForm.nome}
                     onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, nome: e.target.value })}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
                 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
-                    {safeT?.codigoPecaBiblioteca || 'Código'} <span style={{ color: '#ff0000' }}>*</span>
+                <div className="biblioteca-pecas-form__field">
+                  <label className="biblioteca-pecas-form__label">
+                    {safeT?.codigoPecaBiblioteca || 'Código'} <span className="biblioteca-pecas-form__required">*</span>
                   </label>
                   <input
                     type="text"
+                    className="biblioteca-pecas-form__input"
                     placeholder={safeT?.codigoPecaBiblioteca || 'Código'}
                     value={pecaBibliotecaForm.codigo}
                     onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, codigo: e.target.value })}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
                 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+                <div className="biblioteca-pecas-form__field">
+                  <label className="biblioteca-pecas-form__label">
                     {safeT?.precoPecaBiblioteca || 'Preço (€)'}
                   </label>
                   <input
                     type="number"
                     step="0.01"
+                    className="biblioteca-pecas-form__input"
                     placeholder={safeT?.precoPecaBiblioteca || 'Preço (€)'}
                     value={pecaBibliotecaForm.preco}
                     onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, preco: e.target.value })}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   />
                 </div>
                 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+                <div className="biblioteca-pecas-form__field">
+                  <label className="biblioteca-pecas-form__label">
                     {safeT?.descricaoPecaBiblioteca || 'Descrição'}
                   </label>
                   <AssistTextarea
+                    className="biblioteca-pecas-form__textarea"
                     placeholder={safeT?.descricaoPecaBiblioteca || 'Descrição'}
                     value={pecaBibliotecaForm.descricao}
                     onValueChange={(v) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, descricao: v })}
                     rows={4}
-                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', resize: 'vertical' }}
+                    style={{ resize: 'vertical' as const }}
                   ></AssistTextarea>
                 </div>
 
@@ -31439,23 +31420,15 @@ onKeyPress={(e) => {
                       ''
                     : ''
                   return (
-                    <div
-                      style={{
-                        marginBottom: '14px',
-                        padding: '12px 14px',
-                        borderRadius: '8px',
-                        border: '1px solid rgba(0, 255, 120, 0.42)',
-                        backgroundColor: 'rgba(0, 48, 24, 0.42)',
-                      }}
-                    >
-                      <div style={{ fontSize: '12px', color: 'rgba(200, 255, 215, 0.92)', marginBottom: '6px', fontWeight: 600 }}>
+                    <div className="biblioteca-pecas-form__summary">
+                      <div className="biblioteca-pecas-form__summary-kicker">
                         {(safeT as any).pecaBibliotecaFaixaUltimaTitulo || 'Grupo atual (cadastro rápido)'}
                       </div>
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#b4ffc8', lineHeight: 1.35 }}>
+                      <div className="biblioteca-pecas-form__summary-name">
                         {nomeCat}
                         {nomeSub ? <span style={{ opacity: 0.95 }}>{' · '}{nomeSub}</span> : null}
                       </div>
-                      <div style={{ fontSize: '11px', color: 'rgba(200, 230, 210, 0.78)', marginTop: '8px', lineHeight: 1.4 }}>
+                      <div className="biblioteca-pecas-form__summary-hint">
                         {(safeT as any).pecaBibliotecaFaixaUltimaHint ||
                           'Este grupo repete na próxima peça. Abra «Categoria» abaixo só se precisar de outro.'}
                       </div>
@@ -31464,9 +31437,9 @@ onKeyPress={(e) => {
                 })()}
 
                 {/* Grupo (Categoria) — resumo retraído; lista zebrada só ao expandir */}
-                <div style={{ marginBottom: '15px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <label style={{ display: 'block', fontSize: '14px' }}>
+                <div className="biblioteca-pecas-form__field">
+                  <div className="biblioteca-pecas-form__row-head">
+                    <label className="biblioteca-pecas-form__label" style={{ marginBottom: 0 }}>
                       {safeT?.categoriaPecaBiblioteca || 'Categoria'}
                     </label>
                     <button
@@ -31480,25 +31453,13 @@ onKeyPress={(e) => {
                   </div>
                   <button
                     type="button"
+                    className="biblioteca-pecas-form__picker-trigger"
                     onClick={() => {
                       setPecaBibliotecaPickerCategoriaAberto((v) => !v)
                       setPecaBibliotecaPickerSubcategoriaAberto(false)
                     }}
                     style={{
-                      width: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: '10px',
-                      padding: '10px 14px',
                       marginBottom: pecaBibliotecaPickerCategoriaAberto ? '8px' : 0,
-                      backgroundColor: '#252525',
-                      border: '1px solid rgba(0, 255, 0, 0.28)',
-                      borderRadius: '6px',
-                      color: '#fff',
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      textAlign: 'left',
                     }}
                   >
                     <span style={{ flex: 1, lineHeight: 1.35 }}>
@@ -31539,17 +31500,8 @@ onKeyPress={(e) => {
                       e.currentTarget.style.boxShadow = selected ? 'inset 4px 0 0 #00cc44' : 'none'
                     }
                     return (
-                      <div
-                        style={{
-                          border: `1px solid ${rowLine}`,
-                          borderRadius: '2px',
-                          overflow: 'hidden',
-                          maxHeight: '240px',
-                          overflowY: 'auto',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                        }}
-                      >
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: text }}>
+                      <div className="biblioteca-pecas-form__picker-panel">
+                        <table className="biblioteca-pecas-hub__grupo-table" style={{ color: text }}>
                           <thead>
                             <tr style={{ backgroundColor: headerBg, color: '#ffffff' }}>
                               <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, ...thRule }}>
@@ -31666,9 +31618,9 @@ onKeyPress={(e) => {
 
                 {/* Subgrupo (Subcategoria) — resumo retraído; lista só ao expandir */}
                 {pecaBibliotecaForm.categoriaId && (
-                  <div style={{ marginBottom: '15px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <label style={{ display: 'block', fontSize: '14px' }}>
+                  <div className="biblioteca-pecas-form__field">
+                    <div className="biblioteca-pecas-form__row-head">
+                      <label className="biblioteca-pecas-form__label" style={{ marginBottom: 0 }}>
                         {safeT?.subcategoriaPecaBiblioteca || 'Subcategoria'}
                       </label>
                       <button
@@ -31682,25 +31634,13 @@ onKeyPress={(e) => {
                     </div>
                     <button
                       type="button"
+                      className="biblioteca-pecas-form__picker-trigger"
                       onClick={() => {
                         setPecaBibliotecaPickerSubcategoriaAberto((v) => !v)
                         setPecaBibliotecaPickerCategoriaAberto(false)
                       }}
                       style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: '10px',
-                        padding: '10px 14px',
                         marginBottom: pecaBibliotecaPickerSubcategoriaAberto ? '8px' : 0,
-                        backgroundColor: '#252525',
-                        border: '1px solid rgba(0, 255, 0, 0.28)',
-                        borderRadius: '6px',
-                        color: '#fff',
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                        textAlign: 'left',
                       }}
                     >
                       <span style={{ flex: 1, lineHeight: 1.35 }}>
@@ -31746,17 +31686,8 @@ onKeyPress={(e) => {
                         e.currentTarget.style.boxShadow = selected ? 'inset 4px 0 0 #00cc44' : 'none'
                       }
                       return (
-                        <div
-                          style={{
-                            border: `1px solid ${rowLine}`,
-                            borderRadius: '2px',
-                            overflow: 'hidden',
-                            maxHeight: '240px',
-                            overflowY: 'auto',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                          }}
-                        >
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: text }}>
+                        <div className="biblioteca-pecas-form__picker-panel">
+                          <table className="biblioteca-pecas-hub__grupo-table" style={{ color: text }}>
                             <thead>
                               <tr style={{ backgroundColor: headerBg, color: '#ffffff' }}>
                                 <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, ...thRule }}>
@@ -31862,7 +31793,7 @@ onKeyPress={(e) => {
                   </div>
                 )}
                 
-                <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                <div className="biblioteca-pecas-form__actions">
                   <button 
                     className="btn-primary" 
                     onClick={() => {
@@ -31932,8 +31863,7 @@ onKeyPress={(e) => {
                       setTimeout(() => {
                         alert(safeT?.saveSuccess || 'Peça salva com sucesso!')
                       }, 0)
-                    }} 
-                    style={{ flex: 1, padding: '10px' }}
+                    }}
                   >
                     {safeT?.save || 'Salvar'}
                   </button>
@@ -31968,8 +31898,7 @@ onKeyPress={(e) => {
                       }); 
                       setPecaBibliotecaPickerCategoriaAberto(false)
                       setPecaBibliotecaPickerSubcategoriaAberto(false)
-                    }} 
-                    style={{ flex: 1, padding: '10px' }}
+                    }}
                   >
                     {safeT?.cancel || 'Cancelar'}
                   </button>
@@ -32340,19 +32269,11 @@ onKeyPress={(e) => {
               return (
               <div>
                 {pecasImportadasPendentes.length > 0 && (
-                  <div
-                    style={{
-                      marginBottom: '16px',
-                      padding: '12px 14px',
-                      borderRadius: '10px',
-                      border: '1px solid rgba(255, 193, 7, 0.35)',
-                      backgroundColor: 'rgba(40, 32, 0, 0.55)',
-                    }}
-                  >
-                    <div style={{ fontSize: '13px', color: '#ffe082', fontWeight: 600, marginBottom: '6px' }}>
+                  <div className="biblioteca-pecas-hub__warn-banner">
+                    <div className="biblioteca-pecas-hub__warn-banner-title">
                       {safeT?.pecaBibliotecaImportacoesPendentes || 'Importações pendentes'} ({pecasImportadasPendentes.length})
                     </div>
-                    <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.9)', lineHeight: 1.5 }}>
+                    <p className="biblioteca-pecas-hub__warn-banner-body">
                       {safeT?.bibliotecaImportacoesNaoSalvasBanner ||
                         'Estas peças ainda não entram na grelha do catálogo. Abra cada uma (duplo clique ou editar), confira e use Salvar para integrá-las.'}
                     </p>
@@ -32533,25 +32454,7 @@ onKeyPress={(e) => {
                     return (
                       <div
                         key={peca.id}
-                        style={{
-                          backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.15)' : '#141414',
-                          padding: '15px',
-                          borderRadius: '12px',
-                          border: isSelected ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
-                          cursor: isPendingChecklist ? 'pointer' : 'default',
-                          transition: 'box-shadow 0.22s ease, border-color 0.22s ease',
-                          boxShadow: '0 4px 18px rgba(0,0,0,0.28)',
-                        }}
-                        onMouseEnter={(e) => {
-                          const el = e.currentTarget
-                          el.style.boxShadow = '0 14px 36px rgba(0, 80, 44, 0.38)'
-                          el.style.borderColor = 'rgba(0, 255, 120, 0.45)'
-                        }}
-                        onMouseLeave={(e) => {
-                          const el = e.currentTarget
-                          el.style.boxShadow = '0 4px 18px rgba(0,0,0,0.28)'
-                          el.style.borderColor = isSelected ? '#00ff00' : 'rgba(0, 255, 0, 0.2)'
-                        }}
+                        className={`biblioteca-pecas-hub__piece-card${isSelected ? ' biblioteca-pecas-hub__piece-card--selected' : ''}${isPendingChecklist ? ' biblioteca-pecas-hub__piece-card--pickable' : ''}`}
                         onClick={() => {
                           if (isPendingChecklist) setPecaSelecionadaParaChecklist(peca)
                         }}
@@ -32560,18 +32463,7 @@ onKeyPress={(e) => {
                         }}
                       >
                         {peca.imagem ? (
-                          <div
-                            style={{
-                              position: 'relative',
-                              width: '100%',
-                              height: 150,
-                              marginBottom: 10,
-                              borderRadius: 10,
-                              overflow: 'hidden',
-                              background: '#1a1a1a',
-                              border: '1px solid rgba(0, 230, 120, 0.14)',
-                            }}
-                          >
+                          <div className="biblioteca-pecas-hub__piece-thumb">
                             <img
                               src={peca.imagem}
                               alt={peca.nome}
@@ -32594,24 +32486,11 @@ onKeyPress={(e) => {
                             />
                           </div>
                         ) : (
-                          <div
-                            style={{
-                              width: '100%',
-                              height: '150px',
-                              backgroundColor: '#222222',
-                              borderRadius: '10px',
-                              marginBottom: '10px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: '#666',
-                              border: '1px dashed rgba(0, 255, 120, 0.2)',
-                            }}
-                          >
+                          <div className="biblioteca-pecas-hub__piece-thumb biblioteca-pecas-hub__piece-thumb--empty">
                             {safeT?.semImagem || 'Sem Imagem'}
                           </div>
                         )}
-                        <h4 style={{ marginBottom: '8px', fontSize: '16px', color: '#00ff00' }}>{peca.nome}</h4>
+                        <h4 className="biblioteca-pecas-hub__piece-name">{peca.nome}</h4>
                         <div
                           style={{
                             display: 'flex',
@@ -32978,8 +32857,8 @@ onKeyPress={(e) => {
                   )
 
                   const vazioMsg = (
-                    <div style={{ padding: '40px', textAlign: 'center', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                      <p style={{ fontSize: '16px', opacity: 0.7 }}>
+                    <div className="biblioteca-pecas-hub__catalog-empty">
+                      <p>
                         {filtroGrupoBiblioteca || filtroSubgrupoBiblioteca
                           ? safeT?.nenhumaPecaFiltro || 'Nenhuma peça encontrada com os filtros selecionados.'
                           : safeT?.noPecasBiblioteca || 'Nenhuma peça cadastrada.'}
@@ -32988,8 +32867,8 @@ onKeyPress={(e) => {
                   )
 
                   const vazioMsgSoPendentes = (
-                    <div style={{ padding: '28px', textAlign: 'center', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(255, 193, 7, 0.25)' }}>
-                      <p style={{ fontSize: '15px', opacity: 0.88, color: '#e8e0c8', lineHeight: 1.5, margin: 0 }}>
+                    <div className="biblioteca-pecas-hub__catalog-empty biblioteca-pecas-hub__catalog-empty--warn">
+                      <p>
                         {safeT?.bibliotecaCatalogoVazioSoPendentes ||
                           'Nenhuma peça integrada ao catálogo para estes filtros. As importações ainda não confirmadas aparecem na aba Importação e na lista acima até gravar a peça (Salvar).'}
                       </p>
@@ -33034,7 +32913,7 @@ onKeyPress={(e) => {
                                 'A mostrar só peças sem grupo — as outras continuam na vista «Todos os grupos».'
                               }
                             >
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
+                              <div className="biblioteca-pecas-hub__piece-grid">
                                 {semCat.map((peca) => renderPecaBibliotecaGridCell(peca))}
                               </div>
                             </BibliotecaSecaoCategoria>
@@ -33055,7 +32934,7 @@ onKeyPress={(e) => {
                                   count={lista.length}
                                   variant="grupo"
                                 >
-                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
+                                  <div className="biblioteca-pecas-hub__piece-grid">
                                     {lista.map((peca) => renderPecaBibliotecaGridCell(peca))}
                                   </div>
                                 </BibliotecaSecaoCategoria>
@@ -33068,7 +32947,7 @@ onKeyPress={(e) => {
                                 count={semCat.length}
                                 variant="sem"
                               >
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
+                                <div className="biblioteca-pecas-hub__piece-grid">
                                   {semCat.map((peca) => renderPecaBibliotecaGridCell(peca))}
                                 </div>
                               </BibliotecaSecaoCategoria>
@@ -33080,87 +32959,68 @@ onKeyPress={(e) => {
                     return (
                       <>
                         {!somenteLeituraBiblioteca && painelClassificacaoLote}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
+                        <div className="biblioteca-pecas-hub__piece-grid">
                           {pecasCatalogoFiltradas.map((peca) => renderPecaBibliotecaGridCell(peca))}
                         </div>
                       </>
                     )
                   }
 
-                  const bibRowLine = '#4a4a4a'
-                  const bibHead = '#1a1a1a'
-                  const bibZebraA = '#363636'
-                  const bibZebraB = '#434343'
-                  const bibText = '#ececec'
-                  const bibMuted = '#b8b8b8'
-                  const bibThRule = { borderBottom: '2px solid #0a0a0a' } as React.CSSProperties
-                  const bibTdRule = { borderBottom: `1px solid ${bibRowLine}` } as React.CSSProperties
                   const headerFilter = (
-                    <span style={{ opacity: 0.65, fontSize: '10px', lineHeight: 1 }} aria-hidden>
+                    <span className="biblioteca-pecas-hub__catalog-th-chevron" aria-hidden>
                       ▼
                     </span>
                   )
                   return (
                     <>
                       {!somenteLeituraBiblioteca && painelClassificacaoLote}
-                      <div
-                        style={{
-                          overflowX: 'auto',
-                          borderRadius: '2px',
-                          border: `1px solid ${bibRowLine}`,
-                          boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
-                          backgroundColor: '#2e2e2e',
-                        }}
-                      >
+                      <div className="biblioteca-pecas-hub__catalog-table-wrap">
                         <table
+                          className="biblioteca-pecas-hub__catalog-table"
                           style={{
-                            width: '100%',
-                            borderCollapse: 'collapse',
-                            fontSize: '13px',
-                            color: bibText,
                             minWidth: somenteLeituraBiblioteca && !isFiltroSoSemCategoria ? '760px' : '900px',
                           }}
                         >
                           <thead>
-                            <tr style={{ backgroundColor: bibHead, color: '#ffffff' }}>
-                              <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, width: '88px', ...bibThRule }}>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                            <tr>
+                              <th className="biblioteca-pecas-hub__catalog-th biblioteca-pecas-hub__catalog-th--thumb">
+                                <span className="biblioteca-pecas-hub__catalog-th-label">
                                   {(safeT as any)?.fotoColunaBiblioteca || 'Foto'}
                                   {headerFilter}
                                 </span>
                               </th>
-                              <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, ...bibThRule }}>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                              <th className="biblioteca-pecas-hub__catalog-th">
+                                <span className="biblioteca-pecas-hub__catalog-th-label">
                                   {safeT?.nome || 'Nome'}
                                   {headerFilter}
                                 </span>
                               </th>
-                              <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, ...bibThRule }}>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                              <th className="biblioteca-pecas-hub__catalog-th">
+                                <span className="biblioteca-pecas-hub__catalog-th-label">
                                   {safeT?.codigoPecaBiblioteca || 'Código'}
                                   {headerFilter}
                                 </span>
                               </th>
-                              <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, ...bibThRule }}>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                              <th className="biblioteca-pecas-hub__catalog-th">
+                                <span className="biblioteca-pecas-hub__catalog-th-label">
                                   {safeT?.categoriaPecaBiblioteca || 'Grupo'}
                                   {headerFilter}
                                 </span>
                               </th>
-                              <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, ...bibThRule }}>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                              <th className="biblioteca-pecas-hub__catalog-th">
+                                <span className="biblioteca-pecas-hub__catalog-th-label">
                                   {safeT?.subcategoriaPecaBiblioteca || 'Subcategoria'}
                                   {headerFilter}
                                 </span>
                               </th>
-                              <th style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 700, ...bibThRule }}>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', width: '100%' }}>
+                              <th className="biblioteca-pecas-hub__catalog-th biblioteca-pecas-hub__catalog-th--right">
+                                <span className="biblioteca-pecas-hub__catalog-th-label biblioteca-pecas-hub__catalog-th-label--end">
                                   {safeT?.preco || 'Preço'}
                                   {headerFilter}
                                 </span>
                               </th>
                               {(!somenteLeituraBiblioteca || isFiltroSoSemCategoria) ? (
-                              <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap', width: '140px', ...bibThRule }}>
+                              <th className="biblioteca-pecas-hub__catalog-th biblioteca-pecas-hub__catalog-th--right biblioteca-pecas-hub__catalog-th--actions">
                                 {safeT?.actions || 'Ações'}
                               </th>
                               ) : null}
@@ -33171,16 +33031,10 @@ onKeyPress={(e) => {
                               const grupoNome = peca.categoriaId ? categoriasPecas.find((c) => c.id === peca.categoriaId)?.nome : null
                               const isPendingChecklist = criacaoChecklistPendentePeca?.origem === 'biblioteca'
                               const isSelected = isPendingChecklist && pecaSelecionadaParaChecklist?.id === peca.id
-                              const rowBg = isSelected ? 'rgba(0, 255, 0, 0.12)' : idx % 2 === 0 ? bibZebraA : bibZebraB
                               return (
                                 <tr
                                   key={peca.id}
-                                  style={{
-                                    backgroundColor: rowBg,
-                                    cursor: isPendingChecklist ? 'pointer' : undefined,
-                                    outline: isSelected ? '2px solid #00ff00' : undefined,
-                                    outlineOffset: '-2px',
-                                  }}
+                                  className={`biblioteca-pecas-hub__catalog-row${idx % 2 === 0 ? ' biblioteca-pecas-hub__catalog-row--a' : ' biblioteca-pecas-hub__catalog-row--b'}${isSelected ? ' biblioteca-pecas-hub__catalog-row--selected' : ''}${isPendingChecklist ? ' biblioteca-pecas-hub__catalog-row--pickable' : ''}`}
                                   onClick={() => {
                                     if (isPendingChecklist) setPecaSelecionadaParaChecklist(peca)
                                   }}
@@ -33188,20 +33042,14 @@ onKeyPress={(e) => {
                                     if (!isPendingChecklist && (!somenteLeituraBiblioteca || isFiltroSoSemCategoria)) handleEditPecaBiblioteca(peca)
                                   }}
                                 >
-                                  <td style={{ padding: '8px 12px', verticalAlign: 'middle', ...bibTdRule }}>
+                                  <td className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--thumb">
                                     {peca.imagem ? (
                                       <img
                                         src={peca.imagem}
                                         alt={peca.nome}
+                                        className="biblioteca-pecas-hub__catalog-img"
                                         title={hubT.bibliotecaImagemHoverTitle || ''}
                                         style={{
-                                          width: '56px',
-                                          height: '56px',
-                                          objectFit: 'cover',
-                                          borderRadius: '8px',
-                                          display: 'block',
-                                          border: '1px solid rgba(0, 230, 120, 0.25)',
-                                          cursor: 'zoom-in',
                                           transition: 'transform 0.25s ease, box-shadow 0.25s ease',
                                         }}
                                         onMouseEnter={(ev) => {
@@ -33216,85 +33064,46 @@ onKeyPress={(e) => {
                                         }}
                                       />
                                     ) : (
-                                      <div
-                                        style={{
-                                          width: '56px',
-                                          height: '56px',
-                                          backgroundColor: '#2a2a2a',
-                                          borderRadius: '4px',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          color: bibMuted,
-                                          fontSize: '10px',
-                                          textAlign: 'center',
-                                          lineHeight: 1.2,
-                                        }}
-                                      >
+                                      <div className="biblioteca-pecas-hub__catalog-img-ph">
                                         {safeT?.semImagem || '—'}
                                       </div>
                                     )}
                                   </td>
-                                  <td style={{ padding: '10px 14px', verticalAlign: 'middle', ...bibTdRule }}>{peca.nome}</td>
-                                  <td style={{ padding: '10px 14px', verticalAlign: 'middle', ...bibTdRule }}>
-                                    <span
-                                      style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        padding: '5px 12px',
-                                        borderRadius: '999px',
-                                        fontSize: '12px',
-                                        fontWeight: 600,
-                                        backgroundColor: 'rgba(25, 55, 95, 0.55)',
-                                        border: '1px solid rgba(100, 185, 255, 0.5)',
-                                        color: '#d0ecff',
-                                        maxWidth: '100%',
-                                      }}
-                                    >
-                                      <span style={{ opacity: 0.8, fontWeight: 500, fontSize: '10px' }}>
+                                  <td className="biblioteca-pecas-hub__catalog-td">
+                                    <span className="biblioteca-pecas-hub__catalog-name">{peca.nome}</span>
+                                  </td>
+                                  <td className="biblioteca-pecas-hub__catalog-td">
+                                    <span className="biblioteca-pecas-hub__catalog-chip biblioteca-pecas-hub__catalog-chip--code">
+                                      <span className="biblioteca-pecas-hub__catalog-chip-k">
                                         {safeT?.codigoPecaBiblioteca || 'Código'}
                                       </span>
                                       <span>{peca.codigo || '—'}</span>
                                     </span>
                                   </td>
-                                  <td style={{ padding: '10px 14px', verticalAlign: 'middle', ...bibTdRule }}>
+                                  <td className="biblioteca-pecas-hub__catalog-td">
                                     <span
-                                      style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        padding: '5px 12px',
-                                        borderRadius: '999px',
-                                        fontSize: '12px',
-                                        fontWeight: 600,
-                                        backgroundColor: grupoNome ? 'rgba(0, 70, 32, 0.5)' : 'rgba(70, 48, 18, 0.55)',
-                                        border: grupoNome ? '1px solid rgba(0, 230, 110, 0.42)' : '1px solid rgba(255, 175, 90, 0.45)',
-                                        color: grupoNome ? '#c8ffd8' : '#ffd9b0',
-                                        maxWidth: '100%',
-                                      }}
+                                      className={`biblioteca-pecas-hub__catalog-chip${grupoNome ? ' biblioteca-pecas-hub__catalog-chip--group' : ' biblioteca-pecas-hub__catalog-chip--group-muted'}`}
                                     >
-                                      <span style={{ opacity: 0.8, fontWeight: 500, fontSize: '10px' }}>
+                                      <span className="biblioteca-pecas-hub__catalog-chip-k">
                                         {safeT?.categoriaPecaBiblioteca || 'Grupo'}
                                       </span>
                                       <span>{grupoNome || safeT?.bibliotecaGrupoSemCategoria || '—'}</span>
                                     </span>
                                   </td>
-                                  <td style={{ padding: '10px 14px', verticalAlign: 'middle', ...bibTdRule }}>{peca.subcategoria || '—'}</td>
-                                  <td style={{ padding: '10px 14px', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap', ...bibTdRule }}>
+                                  <td className="biblioteca-pecas-hub__catalog-td">{peca.subcategoria || '—'}</td>
+                                  <td className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--price">
                                     {peca.preco ? `${peca.preco}€` : '—'}
                                   </td>
                                   {!somenteLeituraBiblioteca ? (
                                   <td
-                                    style={{ padding: '8px 10px', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap', ...bibTdRule }}
+                                    className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--actions"
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    <div style={{ display: 'inline-flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                    <div className="biblioteca-pecas-hub__catalog-actions">
                                       <button
                                         type="button"
                                         className="btn-primary"
                                         onClick={() => handleEditPecaBiblioteca(peca)}
-                                        style={{ padding: '5px 8px', fontSize: '11px' }}
                                       >
                                         {safeT?.edit || 'Editar'}
                                       </button>
@@ -33302,7 +33111,6 @@ onKeyPress={(e) => {
                                         type="button"
                                         className="btn-danger"
                                         onClick={() => handleDeletePecaBiblioteca(peca.id)}
-                                        style={{ padding: '5px 8px', fontSize: '11px' }}
                                       >
                                         {safeT?.delete || 'Excluir'}
                                       </button>
@@ -33310,14 +33118,14 @@ onKeyPress={(e) => {
                                   </td>
                                   ) : isFiltroSoSemCategoria ? (
                                   <td
-                                    style={{ padding: '8px 10px', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap', ...bibTdRule }}
+                                    className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--actions"
                                     onClick={(e) => e.stopPropagation()}
                                   >
                                     <button
                                       type="button"
                                       className="btn-primary"
                                       onClick={() => handleEditPecaBiblioteca(peca)}
-                                      style={{ padding: '6px 10px', fontSize: '11px', fontWeight: 600 }}
+                                      style={{ fontWeight: 600 }}
                                       title={(safeT as any)?.bibliotecaBtnClassificarPecaTitle}
                                     >
                                       {(safeT as any)?.bibliotecaBtnClassificarPeca || 'Classificar / editar'}
@@ -33338,26 +33146,17 @@ onKeyPress={(e) => {
 
             {/* Conteúdo da aba Gerenciar Categorias */}
             {abaBibliotecaPecas === 'grupos' && (
-              <div style={{ width: '100%', boxSizing: 'border-box', marginTop: '4px' }}>
+              <div className="biblioteca-pecas-hub__grupos-panel">
                 {/* Cabeçalho: título + resumo + botão Nova Categoria */}
-                <div style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: '12px',
-                  marginBottom: '16px',
-                  paddingBottom: '12px',
-                  borderBottom: '1px solid rgba(0, 255, 0, 0.2)'
-                }}>
+                <div className="biblioteca-pecas-hub__grupos-header">
                   <div>
-                    <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', color: '#00ff00', fontWeight: '600' }}>
+                    <h3 className="biblioteca-pecas-hub__grupos-title">
                       {safeT?.gerenciarCategorias || 'Gerenciar Categorias e Subcategorias'}
                     </h3>
-                    <p style={{ margin: 0, fontSize: '12px', color: '#aaa' }}>
+                    <p className="biblioteca-pecas-hub__grupos-meta">
                       {categoriasPecas.length} {safeT?.quantidadeCategorias || 'Categorias'} · {subcategoriasPecas.length} {safeT?.quantidadeSubcategorias || 'Subcategorias'}
                     </p>
-                    <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#8a8a8a', maxWidth: '520px' }}>
+                    <p className="biblioteca-pecas-hub__grupos-desc">
                       {(safeT as any).gerenciarCategoriasSubtitulo ||
                         'Cada grupo tem Editar e Excluir; dentro dele, cada subcategoria também. Ao renomear, as peças e regras automáticas passam a mostrar o novo nome.'}
                     </p>
@@ -33376,18 +33175,13 @@ onKeyPress={(e) => {
                 </div>
 
                 {/* Área rolável da lista de categorias */}
-                <div style={{
-                  minHeight: '200px',
-                  maxHeight: 'calc(100vh - 400px)',
-                  overflowY: 'auto',
-                  paddingRight: '6px'
-                }}>
+                <div className="biblioteca-pecas-hub__grupos-scroll">
                   {categoriasPecas.length === 0 ? (
-                    <div style={{ padding: '40px 24px', textAlign: 'center', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                      <p style={{ fontSize: '15px', opacity: 0.8, margin: 0 }}>{safeT?.nenhumaCategoria || 'Nenhuma categoria cadastrada. Clique em "Nova Categoria" para começar.'}</p>
+                    <div className="biblioteca-pecas-hub__grupos-empty">
+                      {safeT?.nenhumaCategoria || 'Nenhuma categoria cadastrada. Clique em "Nova Categoria" para começar.'}
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div className="biblioteca-pecas-hub__grupo-list">
                       {categoriasPecasAlfabeto.map((categoria, catIndex) => {
                         const subcategoriasDoGrupo = subcategoriasPecas
                           .filter(sub => sub.categoriaId === categoria.id)
@@ -33398,7 +33192,7 @@ onKeyPress={(e) => {
                           editingSubcategoria != null && subcategoriasDoGrupo.some((s) => s.id === editingSubcategoria.id)
                         const subcategoriasVisiveis =
                           editandoSubNestaCategoria || gerenciarCategoriasGrupoAberto[categoria.id] === true
-                        /* Zebra: cinza mais escuro / cinza um pouco mais claro; texto branco nas linhas. Cabeçalhos permanecem escuros. */
+                        /* Zebra nas linhas da tabela; cartão exterior usa classes do hub. */
                         const rowLine = '#555555'
                         const excelHeaderBg = '#2f2f2f'
                         const excelSubHeadBg = '#454545'
@@ -33406,34 +33200,15 @@ onKeyPress={(e) => {
                         const excelZebraB = '#3a3a3a'
                         const excelText = '#ffffff'
                         const excelMuted = '#ffffff'
-                        const excelCardBg = catIndex % 2 === 0 ? '#242424' : '#2c2c2c'
-                        const onRowEnter = (e: React.MouseEvent<HTMLTableRowElement>) => {
-                          e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(255, 255, 255, 0.22)'
-                        }
-                        const onRowLeave = (e: React.MouseEvent<HTMLTableRowElement>) => {
-                          e.currentTarget.style.boxShadow = 'none'
-                        }
                         const thRule = { borderBottom: '2px solid #1a1a1a' } as React.CSSProperties
                         const tdRule = { borderBottom: `1px solid ${rowLine}` } as React.CSSProperties
-                        const inputLight: React.CSSProperties = {
-                          backgroundColor: '#1a1a1a',
-                          color: '#ffffff',
-                          border: '1px solid #707070',
-                          borderRadius: '2px',
-                        }
                         return (
                           <div
                             key={categoria.id}
-                            style={{
-                              backgroundColor: excelCardBg,
-                              border: `1px solid ${rowLine}`,
-                              borderRadius: '2px',
-                              overflow: 'hidden',
-                              boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
-                            }}
+                            className={`biblioteca-pecas-hub__grupo-card${catIndex % 2 === 0 ? ' biblioteca-pecas-hub__grupo-card--a' : ' biblioteca-pecas-hub__grupo-card--b'}`}
                           >
                             {/* Cabeçalho da categoria (como linha de título Excel) */}
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: '#ffffff', tableLayout: 'auto' }}>
+                            <table className="biblioteca-pecas-hub__grupo-table" style={{ tableLayout: 'auto' }}>
                               <thead>
                                 <tr style={{ backgroundColor: excelHeaderBg, color: '#ffffff' }}>
                                   <th
@@ -33448,16 +33223,13 @@ onKeyPress={(e) => {
                                       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
                                         <input
                                           type="text"
+                                          className="biblioteca-pecas-hub__grupo-input"
                                           value={novaCategoriaNome}
                                           onChange={(e) => setNovaCategoriaNome(e.target.value)}
                                           placeholder={safeT?.nomeCategoria || 'Nome da categoria'}
                                           style={{
                                             flex: '1 1 200px',
                                             minWidth: '180px',
-                                            padding: '8px 10px',
-                                            fontSize: '14px',
-                                            fontWeight: 600,
-                                            ...inputLight,
                                           }}
                                           onKeyPress={(e) => {
                                             if (e.key === 'Enter' && novaCategoriaNome.trim()) {
@@ -33620,7 +33392,7 @@ onKeyPress={(e) => {
 
                             {/* Tabela de subcategorias — retraída até expandir o grupo */}
                             {subcategoriasVisiveis ? (
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: excelText }}>
+                            <table className="biblioteca-pecas-hub__grupo-table" style={{ color: excelText }}>
                               <thead>
                                 <tr style={{ backgroundColor: excelSubHeadBg, color: '#ffffff' }}>
                                   <th
@@ -33659,11 +33431,7 @@ onKeyPress={(e) => {
                               </thead>
                               <tbody>
                                 {subcategoriasDoGrupo.length === 0 ? (
-                                  <tr
-                                    style={{ backgroundColor: excelZebraB }}
-                                    onMouseEnter={onRowEnter}
-                                    onMouseLeave={onRowLeave}
-                                  >
+                                  <tr style={{ backgroundColor: excelZebraB }}>
                                     <td
                                       colSpan={2}
                                       style={{ padding: '12px 14px', fontStyle: 'italic', color: excelMuted, ...tdRule }}
@@ -33679,24 +33447,19 @@ onKeyPress={(e) => {
                                         key={subcategoria.id}
                                         style={{
                                           backgroundColor: rowBg,
-                                          transition: 'box-shadow 0.1s ease',
                                         }}
-                                        onMouseEnter={onRowEnter}
-                                        onMouseLeave={onRowLeave}
                                       >
                                         <td style={{ padding: '10px 14px', verticalAlign: 'middle', ...tdRule }}>
                                           {editingSubcategoria?.id === subcategoria.id ? (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                               <input
                                                 type="text"
+                                                className="biblioteca-pecas-hub__grupo-input"
                                                 value={novaSubcategoriaNome}
                                                 onChange={(e) => setNovaSubcategoriaNome(e.target.value)}
                                                 style={{
-                                                  width: '100%',
-                                                  padding: '8px 10px',
                                                   fontSize: '13px',
-                                                  boxSizing: 'border-box',
-                                                  ...inputLight,
+                                                  fontWeight: 500,
                                                 }}
                                                 onKeyPress={(e) => {
                                                   if (e.key === 'Enter' && novaSubcategoriaNome.trim()) {
@@ -60463,12 +60226,11 @@ A1;Peça exemplo;10`}
               {safeT?.novaPecaBiblioteca || 'Nova Peça'}
             </button>
             {showBibliotecaPecasForm && (
-              <div
-                ref={pecaBibliotecaFormPasteRootRef}
-                style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}
-              >
-                <h4>{editingPecaBiblioteca ? (safeT?.editPecaBiblioteca || 'Editar Peça') : (safeT?.novaPecaBiblioteca || 'Nova Peça')}</h4>
-                <label className="file-upload-label" htmlFor="peca-biblioteca-image-upload" style={{ marginBottom: '10px' }}>
+              <div ref={pecaBibliotecaFormPasteRootRef} className="biblioteca-pecas-form" style={{ marginBottom: '15px' }}>
+                <h4 className="biblioteca-pecas-form__title">
+                  {editingPecaBiblioteca ? (safeT?.editPecaBiblioteca || 'Editar Peça') : (safeT?.novaPecaBiblioteca || 'Nova Peça')}
+                </h4>
+                <label className="file-upload-label biblioteca-pecas-form__label" htmlFor="peca-biblioteca-image-upload" style={{ marginBottom: '10px' }}>
                   {safeT?.imagemPecaBiblioteca || 'Imagem da Peça'}
                 </label>
                 <input
@@ -60498,24 +60260,16 @@ A1;Peça exemplo;10`}
                 </button>
                 <div
                   tabIndex={0}
+                  className="biblioteca-pecas-form__paste-zone"
                   onClick={(ev) => (ev.currentTarget as HTMLDivElement).focus()}
-                  style={{
-                    marginBottom: '10px',
-                    padding: '8px 10px',
-                    borderRadius: '6px',
-                    border: '1px dashed rgba(0, 255, 0, 0.45)',
-                    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-                    fontSize: '11px',
-                    color: 'rgba(255,255,255,0.88)',
-                    cursor: 'pointer',
-                    outline: 'none',
-                  }}
+                  style={{ fontSize: '11px' }}
                 >
                   {(safeT as any)?.pecaBibliotecaPasteHint || 'Clique aqui e prima Ctrl+V para colar uma imagem ou o URL da imagem (https://...).'}
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px', alignItems: 'center' }}>
+                <div className="biblioteca-pecas-form__url-row" style={{ marginBottom: '10px' }}>
                   <input
                     type="url"
+                    className="biblioteca-pecas-form__input biblioteca-pecas-form__url-input"
                     placeholder={(safeT as any)?.pecaBibliotecaUrlPlaceholder || 'https://...'}
                     value={pecaBibliotecaImagemUrlDraft}
                     onChange={(e) => setPecaBibliotecaImagemUrlDraft(e.target.value)}
@@ -60525,7 +60279,7 @@ A1;Peça exemplo;10`}
                         void aplicarImagemPecaBibliotecaDeUrl(pecaBibliotecaImagemUrlDraft)
                       }
                     }}
-                    style={{ flex: '1 1 160px', minWidth: '120px', padding: '6px 8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '12px' }}
+                    style={{ fontSize: '12px' }}
                   />
                   <button
                     type="button"
@@ -60537,18 +60291,8 @@ A1;Peça exemplo;10`}
                   </button>
                 </div>
                 {pecaBibliotecaForm.imagem && (
-                  <div style={{ marginTop: '10px', textAlign: 'center' }}>
-                    <div
-                      style={{
-                        display: 'inline-block',
-                        maxWidth: 170,
-                        borderRadius: 10,
-                        overflow: 'hidden',
-                        border: '1px solid rgba(0, 255, 120, 0.25)',
-                        marginBottom: 6,
-                        background: '#141414',
-                      }}
-                    >
+                  <div className="biblioteca-pecas-form__preview-wrap">
+                    <div className="biblioteca-pecas-form__preview-frame" style={{ maxWidth: 170 }}>
                       <img
                         src={pecaBibliotecaForm.imagem}
                         alt={safeT?.imagemPecaBiblioteca || 'Imagem da Peça'}
@@ -60574,35 +60318,44 @@ A1;Peça exemplo;10`}
                     </button>
                   </div>
                 )}
-                <input
-                  type="text"
-                  placeholder={safeT?.nomePecaBiblioteca || 'Nome'}
-                  value={pecaBibliotecaForm.nome}
-                  onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, nome: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder={safeT?.codigoPecaBiblioteca || 'Código'}
-                  value={pecaBibliotecaForm.codigo}
-                  onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, codigo: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="number"
-                  placeholder={safeT?.precoPecaBiblioteca || 'Preço (€)'}
-                  value={pecaBibliotecaForm.preco}
-                  onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, preco: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <AssistTextarea
-                  placeholder={safeT?.descricaoPecaBiblioteca || 'Descrição'}
-                  value={pecaBibliotecaForm.descricao}
-                  onValueChange={(v) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, descricao: v })}
-                  rows={3}
-                  style={{ width: '100%', padding: '10px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                ></AssistTextarea>
-                <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                <div className="biblioteca-pecas-form__field">
+                  <input
+                    type="text"
+                    className="biblioteca-pecas-form__input"
+                    placeholder={safeT?.nomePecaBiblioteca || 'Nome'}
+                    value={pecaBibliotecaForm.nome}
+                    onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, nome: e.target.value })}
+                  />
+                </div>
+                <div className="biblioteca-pecas-form__field">
+                  <input
+                    type="text"
+                    className="biblioteca-pecas-form__input"
+                    placeholder={safeT?.codigoPecaBiblioteca || 'Código'}
+                    value={pecaBibliotecaForm.codigo}
+                    onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, codigo: e.target.value })}
+                  />
+                </div>
+                <div className="biblioteca-pecas-form__field">
+                  <input
+                    type="number"
+                    className="biblioteca-pecas-form__input"
+                    placeholder={safeT?.precoPecaBiblioteca || 'Preço (€)'}
+                    value={pecaBibliotecaForm.preco}
+                    onChange={(e) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, preco: e.target.value })}
+                  />
+                </div>
+                <div className="biblioteca-pecas-form__field">
+                  <AssistTextarea
+                    className="biblioteca-pecas-form__textarea"
+                    placeholder={safeT?.descricaoPecaBiblioteca || 'Descrição'}
+                    value={pecaBibliotecaForm.descricao}
+                    onValueChange={(v) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, descricao: v })}
+                    rows={3}
+                    style={{ resize: 'vertical' as const }}
+                  ></AssistTextarea>
+                </div>
+                <div className="biblioteca-pecas-form__actions">
                   <button className="btn-primary" onClick={() => {
                     if (!pecaBibliotecaForm.nome || !pecaBibliotecaForm.codigo) {
                       alert(safeT?.fillAllFields || 'Preencha todos os campos obrigatórios!')
@@ -60670,10 +60423,10 @@ A1;Peça exemplo;10`}
                     setTimeout(() => {
                       alert(safeT?.saveSuccess || 'Peça salva com sucesso!')
                     }, 0)
-                  }} style={{ flex: 1 }}>
+                  }}>
                     {safeT?.save || 'Salvar'}
                   </button>
-                  <button className="btn-primary" onClick={() => {
+                  <button className="btn-secondary" onClick={() => {
                     const voltarImportacao = salvarPecaBibliotecaVoltaParaImportacao
                     setSalvarPecaBibliotecaVoltaParaImportacao(false)
                     if (voltarImportacao) setAbaBibliotecaPecas('importacao')
@@ -60701,7 +60454,7 @@ A1;Peça exemplo;10`}
                     })
                     setPecaBibliotecaPickerCategoriaAberto(false)
                     setPecaBibliotecaPickerSubcategoriaAberto(false)
-                  }} style={{ flex: 1 }}>
+                  }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>
