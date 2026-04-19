@@ -60,6 +60,17 @@ let manuaisSaveAlertShownOnce = false
 /** Persistido até a carga terminar: se a flag for limpa cedo demais, o 2.º arranque (Strict Mode) deixa de fazer o wipe. */
 const NONATO_PENDING_FULL_SERVER_REPLACE_LS = 'nonato-pending-full-server-replace'
 
+/** Logo Nonato para exibição quando a peça não tem foto (não gravar este URL como `imagem` da peça). Colocar o ficheiro em `public/brand/nonato-logo-original.png`. */
+const PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC = '/brand/nonato-logo-original.png'
+
+function pecaBibliotecaTemImagemPropria(imagem: string | undefined | null): boolean {
+  return Boolean(imagem && String(imagem).trim() !== '')
+}
+
+function pecaBibliotecaSrcImagemDisplay(imagem: string | undefined | null): string {
+  return pecaBibliotecaTemImagemPropria(imagem) ? String(imagem).trim() : PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC
+}
+
 /** Restaura manuais no localStorage e no IndexedDB a partir de um backup JSON (string JSON ou objeto). */
 async function restoreManuaisFamiliasGruposFromBackupPayload(raw: unknown): Promise<void> {
   if (raw == null || raw === '') return
@@ -806,7 +817,12 @@ function ehImportacaoPendenteStrict(peca: PecaBiblioteca): boolean {
 }
 
 function sanitizarPecaBibliotecaImportacaoFlag(peca: PecaBiblioteca): PecaBiblioteca {
-  return { ...peca, importacaoPendente: ehImportacaoPendenteStrict(peca) }
+  const img = typeof peca.imagem === 'string' ? peca.imagem.trim() : ''
+  const imagem =
+    img === PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC
+      ? ''
+      : peca.imagem
+  return { ...peca, imagem, importacaoPendente: ehImportacaoPendenteStrict(peca) }
 }
 
 const BIBLIOTECA_PECAS_ULTIMA_SELECAO_KEY = 'nonato-biblioteca-pecas-ultima-selecao'
@@ -31313,40 +31329,52 @@ onKeyPress={(e) => {
                   </button>
                 </div>
                 
-                {pecaBibliotecaForm.imagem && (
-                  <div className="biblioteca-pecas-form__preview-wrap">
-                    <div className="biblioteca-pecas-form__preview-frame">
-                      <img
-                        src={pecaBibliotecaForm.imagem}
-                        alt={safeT?.imagemPecaBiblioteca || 'Imagem da Peça'}
-                        title={hubT.bibliotecaImagemHoverTitle || ''}
-                        style={{
-                          width: '100%',
-                          maxHeight: 200,
-                          objectFit: 'cover',
-                          display: 'block',
-                          transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
-                          cursor: 'zoom-in',
-                        }}
-                        onMouseEnter={(ev) => {
-                          showBibliotecaImgPreview(ev, pecaBibliotecaForm.imagem, pecaBibliotecaForm.nome || safeT?.imagemPecaBiblioteca || '')
+                <div className="biblioteca-pecas-form__preview-wrap">
+                  <div className="biblioteca-pecas-form__preview-frame">
+                    <img
+                      src={pecaBibliotecaSrcImagemDisplay(pecaBibliotecaForm.imagem)}
+                      alt={safeT?.imagemPecaBiblioteca || 'Imagem da Peça'}
+                      title={hubT.bibliotecaImagemHoverTitle || ''}
+                      className={
+                        pecaBibliotecaTemImagemPropria(pecaBibliotecaForm.imagem)
+                          ? undefined
+                          : 'biblioteca-pecas-form__preview-img--padrao'
+                      }
+                      style={{
+                        width: '100%',
+                        maxHeight: 200,
+                        objectFit: 'cover',
+                        display: 'block',
+                        transition: 'transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+                        cursor: pecaBibliotecaTemImagemPropria(pecaBibliotecaForm.imagem) ? 'zoom-in' : 'default',
+                      }}
+                      onMouseEnter={(ev) => {
+                        if (pecaBibliotecaTemImagemPropria(pecaBibliotecaForm.imagem)) {
+                          showBibliotecaImgPreview(
+                            ev,
+                            pecaBibliotecaForm.imagem,
+                            pecaBibliotecaForm.nome || safeT?.imagemPecaBiblioteca || ''
+                          )
                           ev.currentTarget.style.transform = 'scale(1.06)'
-                        }}
-                        onMouseLeave={(ev) => {
-                          hideBibliotecaImgPreview()
-                          ev.currentTarget.style.transform = 'scale(1)'
-                        }}
-                      />
-                    </div>
-                    <button 
-                      className="btn-danger" 
-                      onClick={() => setPecaBibliotecaForm({ ...pecaBibliotecaForm, imagem: '' })} 
+                        }
+                      }}
+                      onMouseLeave={(ev) => {
+                        hideBibliotecaImgPreview()
+                        ev.currentTarget.style.transform = 'scale(1)'
+                      }}
+                    />
+                  </div>
+                  {pecaBibliotecaTemImagemPropria(pecaBibliotecaForm.imagem) ? (
+                    <button
+                      type="button"
+                      className="btn-danger"
+                      onClick={() => setPecaBibliotecaForm({ ...pecaBibliotecaForm, imagem: '' })}
                       style={{ display: 'block', margin: 'auto', padding: '5px 10px', fontSize: '12px' }}
                     >
                       {safeT?.removeEquipamentoPhoto || 'Remover Imagem'}
                     </button>
-                  </div>
-                )}
+                  ) : null}
+                </div>
                 
                 <div className="biblioteca-pecas-form__field">
                   <label className="biblioteca-pecas-form__label">
@@ -32462,34 +32490,37 @@ onKeyPress={(e) => {
                           if (!isPendingChecklist && (!somenteLeituraBiblioteca || isFiltroSoSemCategoria)) handleEditPecaBiblioteca(peca)
                         }}
                       >
-                        {peca.imagem ? (
-                          <div className="biblioteca-pecas-hub__piece-thumb">
-                            <img
-                              src={peca.imagem}
-                              alt={peca.nome}
-                              title={hubT.bibliotecaImagemHoverTitle || ''}
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                                display: 'block',
-                                transition: 'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
-                              }}
-                              onMouseEnter={(ev) => {
-                                showBibliotecaImgPreview(ev, peca.imagem!, peca.nome)
-                                ev.currentTarget.style.transform = 'scale(1.08)'
-                              }}
-                              onMouseLeave={(ev) => {
-                                hideBibliotecaImgPreview()
-                                ev.currentTarget.style.transform = 'scale(1)'
-                              }}
-                            />
-                          </div>
-                        ) : (
-                          <div className="biblioteca-pecas-hub__piece-thumb biblioteca-pecas-hub__piece-thumb--empty">
-                            {safeT?.semImagem || 'Sem Imagem'}
-                          </div>
-                        )}
+                        <div className="biblioteca-pecas-hub__piece-thumb">
+                          <img
+                            src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                            alt={peca.nome}
+                            title={hubT.bibliotecaImagemHoverTitle || ''}
+                            className={
+                              pecaBibliotecaTemImagemPropria(peca.imagem)
+                                ? undefined
+                                : 'biblioteca-pecas-hub__piece-img--padrao'
+                            }
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              display: 'block',
+                              transition: 'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
+                            }}
+                            onMouseEnter={(ev) => {
+                              showBibliotecaImgPreview(
+                                ev,
+                                pecaBibliotecaSrcImagemDisplay(peca.imagem),
+                                peca.nome
+                              )
+                              ev.currentTarget.style.transform = 'scale(1.08)'
+                            }}
+                            onMouseLeave={(ev) => {
+                              hideBibliotecaImgPreview()
+                              ev.currentTarget.style.transform = 'scale(1)'
+                            }}
+                          />
+                        </div>
                         <h4 className="biblioteca-pecas-hub__piece-name">{peca.nome}</h4>
                         <div
                           style={{
@@ -33043,31 +33074,31 @@ onKeyPress={(e) => {
                                   }}
                                 >
                                   <td className="biblioteca-pecas-hub__catalog-td biblioteca-pecas-hub__catalog-td--thumb">
-                                    {peca.imagem ? (
-                                      <img
-                                        src={peca.imagem}
-                                        alt={peca.nome}
-                                        className="biblioteca-pecas-hub__catalog-img"
-                                        title={hubT.bibliotecaImagemHoverTitle || ''}
-                                        style={{
-                                          transition: 'transform 0.25s ease, box-shadow 0.25s ease',
-                                        }}
-                                        onMouseEnter={(ev) => {
-                                          showBibliotecaImgPreview(ev, peca.imagem!, peca.nome)
+                                    <img
+                                      src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                                      alt={peca.nome}
+                                      className={`biblioteca-pecas-hub__catalog-img${pecaBibliotecaTemImagemPropria(peca.imagem) ? '' : ' biblioteca-pecas-hub__catalog-img--padrao'}`}
+                                      title={hubT.bibliotecaImagemHoverTitle || ''}
+                                      style={{
+                                        transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                                      }}
+                                      onMouseEnter={(ev) => {
+                                        showBibliotecaImgPreview(
+                                          ev,
+                                          pecaBibliotecaSrcImagemDisplay(peca.imagem),
+                                          peca.nome
+                                        )
+                                        if (pecaBibliotecaTemImagemPropria(peca.imagem)) {
                                           ev.currentTarget.style.transform = 'scale(1.12)'
                                           ev.currentTarget.style.boxShadow = '0 8px 22px rgba(0,0,0,0.45)'
-                                        }}
-                                        onMouseLeave={(ev) => {
-                                          hideBibliotecaImgPreview()
-                                          ev.currentTarget.style.transform = 'scale(1)'
-                                          ev.currentTarget.style.boxShadow = 'none'
-                                        }}
-                                      />
-                                    ) : (
-                                      <div className="biblioteca-pecas-hub__catalog-img-ph">
-                                        {safeT?.semImagem || '—'}
-                                      </div>
-                                    )}
+                                        }
+                                      }}
+                                      onMouseLeave={(ev) => {
+                                        hideBibliotecaImgPreview()
+                                        ev.currentTarget.style.transform = 'scale(1)'
+                                        ev.currentTarget.style.boxShadow = 'none'
+                                      }}
+                                    />
                                   </td>
                                   <td className="biblioteca-pecas-hub__catalog-td">
                                     <span className="biblioteca-pecas-hub__catalog-name">{peca.nome}</span>
@@ -36720,13 +36751,18 @@ A1;Peça exemplo;10`}
                                 return (
                                   <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', backgroundColor: '#222222', borderRadius: '3px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
-                                      {peca.imagem && (
-                                        <img 
-                                          src={peca.imagem} 
-                                          alt={peca.nome}
-                                          style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
-                                        />
-                                      )}
+                                      <img
+                                        src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                                        alt={peca.nome}
+                                        style={{
+                                          width: '40px',
+                                          height: '40px',
+                                          objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
+                                          borderRadius: '4px',
+                                          backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#0f0f0f',
+                                          flexShrink: 0,
+                                        }}
+                                      />
                                       <div style={{ flex: 1 }}>
                                         <p style={{ margin: 0, fontSize: '12px', fontWeight: 'bold' }}>{peca.nome}</p>
                                         <p style={{ margin: 0, fontSize: '11px', opacity: 0.7 }}>{safeT?.codigo || 'Código'}: {peca.codigo}</p>
@@ -36999,13 +37035,18 @@ A1;Peça exemplo;10`}
                                       if (!peca) return null
                                       return (
                                         <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '10px' }}>
-                                          {peca.imagem && (
-                                            <img
-                                              src={peca.imagem}
-                                              alt={peca.nome}
-                                              style={{ width: '30px', height: '30px', objectFit: 'cover', borderRadius: '4px' }}
-                                            />
-                                          )}
+                                          <img
+                                            src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                                            alt={peca.nome}
+                                            style={{
+                                              width: '30px',
+                                              height: '30px',
+                                              objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
+                                              borderRadius: '4px',
+                                              backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#0f0f0f',
+                                              flexShrink: 0,
+                                            }}
+                                          />
                                           <span style={{ fontSize: '12px', opacity: 0.85 }}>
                                             • {peca.nome} ({peca.codigo})
                                           </span>
@@ -43960,19 +44001,19 @@ A1;Peça exemplo;10`}
                                       e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.2)'
                                     }}
                                   >
-                                    {peca.imagem && (
-                                      <img 
-                                        src={peca.imagem} 
-                                        alt={peca.nome}
-                                        style={{
-                                          width: '50px',
-                                          height: '50px',
-                                          objectFit: 'cover',
-                                          borderRadius: '4px',
-                                          border: '1px solid rgba(0, 255, 0, 0.2)'
-                                        }}
-                                      />
-                                    )}
+                                    <img
+                                      src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                                      alt={peca.nome}
+                                      style={{
+                                        width: '50px',
+                                        height: '50px',
+                                        objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
+                                        borderRadius: '4px',
+                                        border: '1px solid rgba(0, 255, 0, 0.2)',
+                                        backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#0f0f0f',
+                                        flexShrink: 0,
+                                      }}
+                                    />
                                     <div style={{ flex: 1 }}>
                                       <div style={{ color: '#00ff00', fontSize: '14px', fontWeight: 'bold' }}>
                                         {peca.codigo}
@@ -44038,19 +44079,19 @@ A1;Peça exemplo;10`}
                                     alignItems: 'center'
                                   }}
                                 >
-                                  {peca.imagem && (
-                                    <img 
-                                      src={peca.imagem} 
-                                      alt={peca.nome}
-                                      style={{
-                                        width: '50px',
-                                        height: '50px',
-                                        objectFit: 'cover',
-                                        borderRadius: '4px',
-                                        border: '1px solid rgba(0, 255, 0, 0.2)'
-                                      }}
-                                    />
-                                  )}
+                                  <img
+                                    src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                                    alt={peca.nome}
+                                    style={{
+                                      width: '50px',
+                                      height: '50px',
+                                      objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
+                                      borderRadius: '4px',
+                                      border: '1px solid rgba(0, 255, 0, 0.2)',
+                                      backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#0f0f0f',
+                                      flexShrink: 0,
+                                    }}
+                                  />
                                   <div style={{ flex: 1 }}>
                                     <div style={{ color: '#00ff00', fontSize: '14px', fontWeight: 'bold' }}>
                                       {peca.codigo}
@@ -53192,13 +53233,18 @@ A1;Peça exemplo;10`}
                                 e.currentTarget.style.backgroundColor = 'transparent'
                               }}
                             >
-                              {peca.imagem && (
-                                <img 
-                                  src={peca.imagem} 
-                                  alt={peca.nome}
-                                  style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }}
-                                />
-                              )}
+                              <img
+                                src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                                alt={peca.nome}
+                                style={{
+                                  width: '50px',
+                                  height: '50px',
+                                  objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
+                                  borderRadius: '4px',
+                                  backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#0f0f0f',
+                                  flexShrink: 0,
+                                }}
+                              />
                               <div style={{ flex: 1 }}>
                                 <div style={{ color: '#66b3ff', fontWeight: 'bold' }}>{peca.nome}</div>
                                 <div style={{ color: '#999', fontSize: '12px' }}>{peca.codigo}</div>
@@ -60290,34 +60336,46 @@ A1;Peça exemplo;10`}
                     {(safeT as any)?.pecaBibliotecaAplicarUrl || 'Aplicar URL'}
                   </button>
                 </div>
-                {pecaBibliotecaForm.imagem && (
-                  <div className="biblioteca-pecas-form__preview-wrap">
-                    <div className="biblioteca-pecas-form__preview-frame" style={{ maxWidth: 170 }}>
-                      <img
-                        src={pecaBibliotecaForm.imagem}
-                        alt={safeT?.imagemPecaBiblioteca || 'Imagem da Peça'}
-                        title={(safeT as { bibliotecaImagemHoverTitle?: string }).bibliotecaImagemHoverTitle || ''}
-                        style={{
-                          width: '100%',
-                          maxHeight: 150,
-                          objectFit: 'cover',
-                          display: 'block',
-                          transition: 'transform 0.28s ease',
-                          cursor: 'zoom-in',
-                        }}
-                        onMouseEnter={(ev) => {
+                <div className="biblioteca-pecas-form__preview-wrap">
+                  <div className="biblioteca-pecas-form__preview-frame" style={{ maxWidth: 170 }}>
+                    <img
+                      src={pecaBibliotecaSrcImagemDisplay(pecaBibliotecaForm.imagem)}
+                      alt={safeT?.imagemPecaBiblioteca || 'Imagem da Peça'}
+                      title={(safeT as { bibliotecaImagemHoverTitle?: string }).bibliotecaImagemHoverTitle || ''}
+                      className={
+                        pecaBibliotecaTemImagemPropria(pecaBibliotecaForm.imagem)
+                          ? undefined
+                          : 'biblioteca-pecas-form__preview-img--padrao'
+                      }
+                      style={{
+                        width: '100%',
+                        maxHeight: 150,
+                        objectFit: 'cover',
+                        display: 'block',
+                        transition: 'transform 0.28s ease',
+                        cursor: pecaBibliotecaTemImagemPropria(pecaBibliotecaForm.imagem) ? 'zoom-in' : 'default',
+                      }}
+                      onMouseEnter={(ev) => {
+                        if (pecaBibliotecaTemImagemPropria(pecaBibliotecaForm.imagem)) {
                           ev.currentTarget.style.transform = 'scale(1.12)'
-                        }}
-                        onMouseLeave={(ev) => {
-                          ev.currentTarget.style.transform = 'scale(1)'
-                        }}
-                      />
-                    </div>
-                    <button className="btn-danger" onClick={() => setPecaBibliotecaForm({ ...pecaBibliotecaForm, imagem: '' })} style={{ display: 'block', margin: 'auto' }}>
+                        }
+                      }}
+                      onMouseLeave={(ev) => {
+                        ev.currentTarget.style.transform = 'scale(1)'
+                      }}
+                    />
+                  </div>
+                  {pecaBibliotecaTemImagemPropria(pecaBibliotecaForm.imagem) ? (
+                    <button
+                      type="button"
+                      className="btn-danger"
+                      onClick={() => setPecaBibliotecaForm({ ...pecaBibliotecaForm, imagem: '' })}
+                      style={{ display: 'block', margin: 'auto' }}
+                    >
                       {safeT?.removeEquipamentoPhoto || 'Remover Imagem'}
                     </button>
-                  </div>
-                )}
+                  ) : null}
+                </div>
                 <div className="biblioteca-pecas-form__field">
                   <input
                     type="text"
@@ -60466,7 +60524,18 @@ A1;Peça exemplo;10`}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginTop: '20px' }}>
                 {pecasBiblioteca.map(peca => (
                   <div key={peca.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                    {peca.imagem && <img src={peca.imagem} alt="Imagem da Peça" style={{ maxWidth: '100%', maxHeight: '100px', objectFit: 'cover', marginBottom: '10px' }} />}
+                    <img
+                      src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                      alt="Imagem da Peça"
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '100px',
+                        objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
+                        marginBottom: '10px',
+                        backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#0f0f0f',
+                        borderRadius: '4px',
+                      }}
+                    />
                     <p><strong>{peca.nome}</strong> ({peca.codigo})</p>
                     {peca.preco && <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.preco || 'Preço'}: {peca.preco}€</p>}
                     {peca.descricao && <p style={{ fontSize: '12px', opacity: 0.7 }}>{peca.descricao}</p>}
@@ -60546,17 +60615,19 @@ A1;Peça exemplo;10`}
                         }}
                       >
                         <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                          {peca.imagem ? (
-                            <img 
-                              src={peca.imagem} 
-                              alt={peca.nome}
-                              style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px' }}
-                            />
-                          ) : (
-                            <div style={{ width: '60px', height: '60px', backgroundColor: '#222222', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
-                              📦
-                            </div>
-                          )}
+                          <img
+                            src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                            alt={peca.nome}
+                            style={{
+                              width: '60px',
+                              height: '60px',
+                              objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
+                              borderRadius: '4px',
+                              backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#0f0f0f',
+                              padding: pecaBibliotecaTemImagemPropria(peca.imagem) ? 0 : '4px',
+                              boxSizing: 'border-box',
+                            }}
+                          />
                           <div style={{ flex: 1 }}>
                             <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', marginBottom: '5px' }}>
                               {peca.nome}
@@ -62813,9 +62884,18 @@ A1;Peça exemplo;10`}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
                   {viewingRelatorioServico.pecasSubstituicao.map((peca, index) => (
                     <div key={peca.id || index} style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                      {peca.imagem && (
-                        <img src={peca.imagem} alt={peca.descricao} style={{ width: '100%', maxHeight: '100px', objectFit: 'cover', borderRadius: '4px', marginBottom: '8px' }} />
-                      )}
+                      <img
+                        src={pecaBibliotecaSrcImagemDisplay(peca.imagem)}
+                        alt={peca.descricao}
+                        style={{
+                          width: '100%',
+                          maxHeight: '100px',
+                          objectFit: pecaBibliotecaTemImagemPropria(peca.imagem) ? 'cover' : 'contain',
+                          borderRadius: '4px',
+                          marginBottom: '8px',
+                          backgroundColor: pecaBibliotecaTemImagemPropria(peca.imagem) ? undefined : '#0f0f0f',
+                        }}
+                      />
                       <p style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>{peca.descricao}</p>
                       <p style={{ fontSize: '11px', opacity: 0.8, marginBottom: '2px' }}>{safeT?.codigo || 'Código'}: {peca.codigo}</p>
                       <p style={{ fontSize: '11px', opacity: 0.8 }}>{safeT?.quantidade || 'Quantidade'}: {peca.quantidade}</p>

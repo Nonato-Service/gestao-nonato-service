@@ -5908,6 +5908,13 @@ button.dia-trabalho-acao-btn--del:hover {
   background: rgba(0, 0, 0, 0.22);
 }
 
+/* Miniatura na grelha: logo Nonato quando a peça não tem foto própria */
+.biblioteca-pecas-hub__piece-thumb img.biblioteca-pecas-hub__piece-img--padrao {
+  object-fit: contain;
+  padding: 10px 8px;
+  background: radial-gradient(circle at 50% 40%, rgba(30, 48, 38, 0.6), #080c0a 78%);
+}
+
 .biblioteca-pecas-hub__piece-name {
   margin: 0 0 10px;
   font-size: 15px;
@@ -6236,6 +6243,15 @@ button.dia-trabalho-acao-btn--del:hover {
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.38);
 }
 
+.biblioteca-pecas-form__preview-frame img.biblioteca-pecas-form__preview-img--padrao {
+  width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  display: block;
+  padding: 16px 20px;
+  background: radial-gradient(circle at 50% 35%, rgba(24, 42, 32, 0.55), #0a0e0c 80%);
+}
+
 .biblioteca-pecas-form__summary {
   margin-bottom: 16px;
   padding: 14px 16px;
@@ -6459,6 +6475,13 @@ button.dia-trabalho-acao-btn--del:hover {
   transition:
     transform 0.25s ease,
     box-shadow 0.25s ease;
+}
+
+.biblioteca-pecas-hub__catalog-img--padrao {
+  object-fit: contain;
+  padding: 4px;
+  background: radial-gradient(circle at 50% 35%, rgba(28, 44, 34, 0.75), #0a0e0c 85%);
+  cursor: default;
 }
 
 .biblioteca-pecas-hub__catalog-img-ph {
