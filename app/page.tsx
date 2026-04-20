@@ -725,6 +725,49 @@ type DiaTrabalho = {
   descricaoTrabalho: string
 }
 
+/** KM no formulário: vazio se zero; valor canónico sem zeros à esquerda (ex. dados antigos «095»). */
+function kmStringForNumberField(raw: string | undefined | null): string {
+  if (raw == null) return ''
+  const t = String(raw).trim().replace(',', '.')
+  if (t === '') return ''
+  const n = parseFloat(t)
+  if (!Number.isFinite(n) || n === 0) return ''
+  return String(n)
+}
+
+/** Durante a digitação: remove zeros à esquerda (095→95, 00→vazio); mantém decimais (0.5, 12.). */
+function sanitizeKmFieldTyping(raw: string): string {
+  if (raw === '') return ''
+  let v = raw.replace(',', '.').replace(/[^\d.]/g, '')
+  const firstDot = v.indexOf('.')
+  if (firstDot !== -1) {
+    v = v.slice(0, firstDot + 1) + v.slice(firstDot + 1).replace(/\./g, '')
+  }
+  if (!v.includes('.')) {
+    return v.replace(/^0+/, '')
+  }
+  const parts = v.split('.')
+  const intPart = parts[0] ?? ''
+  const fracPart = parts.slice(1).join('.')
+  let ai = intPart.replace(/^0+/, '')
+  if (ai === '' && (fracPart !== '' || v.endsWith('.'))) {
+    ai = '0'
+  }
+  if (v.endsWith('.') && fracPart === '') {
+    return `${ai}.`
+  }
+  return fracPart !== '' ? `${ai}.${fracPart}` : ai
+}
+
+/** Ao gravar o dia: string canónica ou vazio (totais usam parseFloat). */
+function normalizeKmForPersist(raw: string | undefined): string {
+  const t = (raw ?? '').trim().replace(',', '.')
+  if (t === '') return ''
+  const n = parseFloat(t)
+  if (!Number.isFinite(n) || n === 0) return ''
+  return String(n)
+}
+
 type PecaSubstituicao = {
   id: string
   imagem?: string
@@ -4411,8 +4454,8 @@ export default function Dashboard() {
     retornoSaida: '',
     retornoChegada: '',
     retornoDuracao: '',
-    kmIda: '0',
-    kmRetorno: '0',
+    kmIda: '',
+    kmRetorno: '',
     kmTotal: '',
     pausa: '',
     tempoPausa: '',
@@ -11679,8 +11722,8 @@ export default function Dashboard() {
       retornoSaida: '',
       retornoChegada: '',
       retornoDuracao: '',
-      kmIda: '0',
-      kmRetorno: '0',
+      kmIda: '',
+      kmRetorno: '',
       kmTotal: '',
       pausa: '',
       descricaoTrabalho: ''
@@ -16320,8 +16363,8 @@ export default function Dashboard() {
       retornoSaida: '',
       retornoChegada: '',
       retornoDuracao: '',
-      kmIda: '0',
-      kmRetorno: '0',
+      kmIda: '',
+      kmRetorno: '',
       kmTotal: '',
       pausa: '',
       tempoPausa: '',
@@ -16464,8 +16507,8 @@ export default function Dashboard() {
       retornoSaida: '',
       retornoChegada: '',
       retornoDuracao: '',
-      kmIda: '0',
-      kmRetorno: '0',
+      kmIda: '',
+      kmRetorno: '',
       kmTotal: '',
       pausa: '',
       tempoPausa: '',
@@ -16567,7 +16610,7 @@ export default function Dashboard() {
         })
         setNovoDiaTrabalho({
           data: new Date().toISOString().split('T')[0], idaHora: '', idaChegada: '', idaDuracao: '', horasInicio: '', horasFim: '', horasDuracao: '',
-          retornoSaida: '', retornoChegada: '', retornoDuracao: '', kmIda: '0', kmRetorno: '0', kmTotal: '', pausa: '', tempoPausa: '', descricaoTrabalho: ''
+          retornoSaida: '', retornoChegada: '', retornoDuracao: '', kmIda: '', kmRetorno: '', kmTotal: '', pausa: '', tempoPausa: '', descricaoTrabalho: ''
         })
         setNovaPeca({ id: '', descricao: '', codigo: '', quantidade: '' })
       }
@@ -16621,8 +16664,8 @@ export default function Dashboard() {
         retornoSaida: '',
         retornoChegada: '',
         retornoDuracao: '',
-        kmIda: '0',
-        kmRetorno: '0',
+        kmIda: '',
+        kmRetorno: '',
         kmTotal: '',
         pausa: '',
         tempoPausa: '',
@@ -16758,7 +16801,9 @@ export default function Dashboard() {
       idaDuracao,
       retornoDuracao,
       horasDuracao,
-      kmTotal
+      kmTotal,
+      kmIda: normalizeKmForPersist(novoDiaTrabalho.kmIda),
+      kmRetorno: normalizeKmForPersist(novoDiaTrabalho.kmRetorno),
     }
 
     if (editingDiaTrabalhoIndex !== null) {
@@ -16784,8 +16829,8 @@ export default function Dashboard() {
       retornoSaida: '',
       retornoChegada: '',
       retornoDuracao: '',
-      kmIda: '0',
-      kmRetorno: '0',
+      kmIda: '',
+      kmRetorno: '',
       kmTotal: '',
       pausa: '',
       tempoPausa: '',
@@ -16810,8 +16855,8 @@ export default function Dashboard() {
         retornoSaida: '',
         retornoChegada: '',
         retornoDuracao: '',
-        kmIda: '0',
-        kmRetorno: '0',
+        kmIda: '',
+        kmRetorno: '',
         kmTotal: '',
         pausa: '',
         tempoPausa: '',
@@ -27811,8 +27856,8 @@ onKeyPress={(e) => {
                                   retornoSaida: dia.retornoSaida || '',
                                   retornoChegada: dia.retornoChegada || '',
                                   retornoDuracao: dia.retornoDuracao || '',
-                                  kmIda: dia.kmIda || '0',
-                                  kmRetorno: dia.kmRetorno || '0',
+                                  kmIda: kmStringForNumberField(dia.kmIda),
+                                  kmRetorno: kmStringForNumberField(dia.kmRetorno),
                                   kmTotal: dia.kmTotal || '',
                                   pausa: dia.pausa || '',
                                   tempoPausa: dia.tempoPausa || '',
@@ -27846,8 +27891,8 @@ onKeyPress={(e) => {
                                   retornoSaida: dia.retornoSaida || '',
                                   retornoChegada: dia.retornoChegada || '',
                                   retornoDuracao: dia.retornoDuracao || '',
-                                  kmIda: dia.kmIda || '0',
-                                  kmRetorno: dia.kmRetorno || '0',
+                                  kmIda: kmStringForNumberField(dia.kmIda),
+                                  kmRetorno: kmStringForNumberField(dia.kmRetorno),
                                   kmTotal: dia.kmTotal || '',
                                   pausa: dia.pausa || '',
                                   tempoPausa: dia.tempoPausa || '',
@@ -28163,10 +28208,12 @@ onKeyPress={(e) => {
                             {safeT?.kmIda || 'KM Ida'}
                           </label>
                           <input
-                            type="number"
-                            step="0.01"
-                            value={novoDiaTrabalho.kmIda || '0'}
-                            onChange={(e) => setNovoDiaTrabalho({ ...novoDiaTrabalho, kmIda: e.target.value })}
+                            type="text"
+                            inputMode="decimal"
+                            value={novoDiaTrabalho.kmIda ?? ''}
+                            onChange={(e) =>
+                              setNovoDiaTrabalho({ ...novoDiaTrabalho, kmIda: sanitizeKmFieldTyping(e.target.value) })
+                            }
                             placeholder="0"
                             style={{ 
                               width: '100%', 
@@ -28189,10 +28236,12 @@ onKeyPress={(e) => {
                             {safeT?.kmVolta || 'KM Volta'}
                           </label>
                           <input
-                            type="number"
-                            step="0.01"
-                            value={novoDiaTrabalho.kmRetorno || '0'}
-                            onChange={(e) => setNovoDiaTrabalho({ ...novoDiaTrabalho, kmRetorno: e.target.value })}
+                            type="text"
+                            inputMode="decimal"
+                            value={novoDiaTrabalho.kmRetorno ?? ''}
+                            onChange={(e) =>
+                              setNovoDiaTrabalho({ ...novoDiaTrabalho, kmRetorno: sanitizeKmFieldTyping(e.target.value) })
+                            }
                             placeholder="0"
                             style={{ 
                               width: '100%', 
@@ -28399,8 +28448,8 @@ onKeyPress={(e) => {
                               retornoSaida: '',
                               retornoChegada: '',
                               retornoDuracao: '',
-                              kmIda: '0',
-                              kmRetorno: '0',
+                              kmIda: '',
+                              kmRetorno: '',
                               kmTotal: '',
                               pausa: '',
                               tempoPausa: '',
@@ -28496,8 +28545,8 @@ onKeyPress={(e) => {
                                               retornoSaida: dia.retornoSaida || '',
                                               retornoChegada: dia.retornoChegada || '',
                                               retornoDuracao: dia.retornoDuracao || '',
-                                              kmIda: dia.kmIda || '0',
-                                              kmRetorno: dia.kmRetorno || '0',
+                                              kmIda: kmStringForNumberField(dia.kmIda),
+                                              kmRetorno: kmStringForNumberField(dia.kmRetorno),
                                               kmTotal: dia.kmTotal || '',
                                               pausa: dia.pausa || '',
                                               tempoPausa: dia.tempoPausa || '',
@@ -29055,8 +29104,8 @@ onKeyPress={(e) => {
                       retornoSaida: '',
                       retornoChegada: '',
                       retornoDuracao: '',
-                      kmIda: '0',
-                      kmRetorno: '0',
+                      kmIda: '',
+                      kmRetorno: '',
                       kmTotal: '',
                       pausa: '',
                       tempoPausa: '',
