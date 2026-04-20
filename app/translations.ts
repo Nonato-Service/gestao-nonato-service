@@ -487,6 +487,7 @@ export const translations = {
     protocolosServicoBuscaPlaceholder: 'Pesquisar por cliente, equipamento, série ou marca…',
     protocolosServicoListaVaziaFiltro: 'Nenhum protocolo corresponde à pesquisa.',
     protocolosServicoFiltroClienteLabel: 'Filtrar por cliente',
+    protocolosServicoFiltroClienteOpcaoNenhum: 'Nenhum',
     protocolosServicoAgruparPorCliente: 'Agrupar por cliente',
     protocolosServicoModeloImpressao: 'Modelo para impressão',
     protocolosServicoEnvioEmailInstrucaoAnexo:
@@ -3076,6 +3077,7 @@ export const translations = {
     protocolosServicoBuscaPlaceholder: 'Buscar por cliente, equipo, serie o marca…',
     protocolosServicoListaVaziaFiltro: 'Ningún protocolo coincide con la búsqueda.',
     protocolosServicoFiltroClienteLabel: 'Filtrar por cliente',
+    protocolosServicoFiltroClienteOpcaoNenhum: 'Ninguno',
     protocolosServicoAgruparPorCliente: 'Agrupar por clientes',
     protocolosServicoModeloImpressao: 'Modelo para imprimir',
     protocolosServicoEnvioEmailInstrucaoAnexo:
@@ -5433,6 +5435,7 @@ export const translations = {
     protocolosServicoBuscaPlaceholder: 'Rechercher client, équipement, série ou marque…',
     protocolosServicoListaVaziaFiltro: 'Aucun protocole ne correspond à la recherche.',
     protocolosServicoFiltroClienteLabel: 'Filtrer par client',
+    protocolosServicoFiltroClienteOpcaoNenhum: 'Aucun',
     protocolosServicoAgruparPorCliente: 'Regrouper par client',
     protocolosServicoModeloImpressao: 'Modèle pour l’impression',
     protocolosServicoEnvioEmailInstrucaoAnexo:
@@ -7783,6 +7786,7 @@ export const translations = {
     protocolosServicoBuscaPlaceholder: 'Cerca cliente, attrezzatura, serie o marca…',
     protocolosServicoListaVaziaFiltro: 'Nessun protocollo corrisponde alla ricerca.',
     protocolosServicoFiltroClienteLabel: 'Filtra per cliente',
+    protocolosServicoFiltroClienteOpcaoNenhum: 'Nessuno',
     protocolosServicoAgruparPorCliente: 'Raggruppa per cliente',
     protocolosServicoModeloImpressao: 'Modello per la stampa',
     protocolosServicoEnvioEmailInstrucaoAnexo:
@@ -10127,6 +10131,7 @@ export const translations = {
     protocolosServicoBuscaPlaceholder: 'Suche nach Kunde, Gerät, Seriennummer oder Marke…',
     protocolosServicoListaVaziaFiltro: 'Kein Protokoll entspricht der Suche.',
     protocolosServicoFiltroClienteLabel: 'Nach Kunde filtern',
+    protocolosServicoFiltroClienteOpcaoNenhum: 'Keiner',
     protocolosServicoAgruparPorCliente: 'Nach Kunde gruppieren',
     protocolosServicoModeloImpressao: 'Modell für den Druck',
     protocolosServicoEnvioEmailInstrucaoAnexo:
@@ -12458,6 +12463,7 @@ export const translations = {
     protocolosServicoBuscaPlaceholder: 'Search by client, equipment, serial or brand…',
     protocolosServicoListaVaziaFiltro: 'No protocol matches your search.',
     protocolosServicoFiltroClienteLabel: 'Filter by client',
+    protocolosServicoFiltroClienteOpcaoNenhum: 'None',
     protocolosServicoAgruparPorCliente: 'Group by client',
     protocolosServicoModeloImpressao: 'Layout for printing',
     protocolosServicoEnvioEmailInstrucaoAnexo:

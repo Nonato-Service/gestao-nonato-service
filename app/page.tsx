@@ -4363,6 +4363,8 @@ export default function Dashboard() {
   const [protocoloServicoAgruparPorCliente, setProtocoloServicoAgruparPorCliente] = useState(true)
   const [protocoloModeloImpressaoLista, setProtocoloModeloImpressaoLista] = useState<Record<string, number>>({})
   const PROTOCOLO_SERVICO_DRAFT_KEY = 'nonato-protocolo-servico-draft'
+  /** Valor do <select> «Filtrar por cliente» que esconde todos os cartões (lista vazia). */
+  const PROTOCOLO_SERVICO_FILTRO_CLIENTE_NENHUM = '__proto_cliente_nenhum__'
   const [relatorioServicoForm, setRelatorioServicoForm] = useState<RelatorioServico>({
     id: '',
     numero: '',
@@ -11581,6 +11583,27 @@ export default function Dashboard() {
   }
 
   // Funções para gerenciar Relatórios de Serviço
+  const scrollRelatorioServicoFormIntoView = useCallback(() => {
+    const run = () => {
+      const form = document.getElementById('relatorio-servico-edit-form') as HTMLElement | null
+      if (!form) return
+      const main = mainContentAreaRef.current
+      const inner = main?.querySelector('.tab-inner-scroll') as HTMLElement | null
+      if (inner) {
+        const pad = 14
+        const innerRect = inner.getBoundingClientRect()
+        const formRect = form.getBoundingClientRect()
+        const nextTop = formRect.top - innerRect.top + inner.scrollTop - pad
+        inner.scrollTo({ top: Math.max(0, nextTop), behavior: 'smooth' })
+        return
+      }
+      form.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    queueMicrotask(run)
+    setTimeout(run, 80)
+    setTimeout(run, 320)
+  }, [])
+
   const handleAddRelatorioServico = () => {
     // Gerar número automático de relatório
     const numeroAuto = gerarNumeroRelatorio()
@@ -11639,18 +11662,21 @@ export default function Dashboard() {
       quantidade: ''
     })
     setShowRelatorioServicoForm(true)
+    scrollRelatorioServicoFormIntoView()
   }
 
   const handleEditRelatorioServico = (relatorio: RelatorioServico) => {
     setEditingRelatorioServico(relatorio)
     setEditingDiaTrabalhoIndex(null)
     // Garantir que todos os campos sejam preservados, especialmente arrays
-    setRelatorioServicoForm({ 
+    setRelatorioServicoForm({
       ...relatorio,
+      equipamentoOrigem: relatorio.equipamentoOrigem === 'armazem' ? 'armazem' : 'cliente',
       diasTrabalho: relatorio.diasTrabalho ? [...relatorio.diasTrabalho] : [],
-      pecasSubstituicao: relatorio.pecasSubstituicao ? [...relatorio.pecasSubstituicao] : []
+      pecasSubstituicao: relatorio.pecasSubstituicao ? [...relatorio.pecasSubstituicao] : [],
     })
     setShowRelatorioServicoForm(true)
+    scrollRelatorioServicoFormIntoView()
   }
 
   // Helper: HTML do logo para cabeçalho dos PDFs (respeita opção do Administrador e logo escolhido)
@@ -16067,7 +16093,8 @@ export default function Dashboard() {
   }
 
   // Função para calcular totais dos dias de trabalho
-  const calcularTotais = (dias: DiaTrabalho[]) => {
+  const calcularTotais = (dias: DiaTrabalho[] | undefined | null) => {
+    const listaDias = Array.isArray(dias) ? dias : []
     let totalHorasTrabalho = 0
     let totalKms = 0
     let totalHorasViagem = 0
@@ -16075,7 +16102,7 @@ export default function Dashboard() {
     let totalHorasViagemRetorno = 0
     let totalPausa = 0
 
-    dias.forEach(dia => {
+    listaDias.forEach(dia => {
       // Recalcular o dia antes de somar
       const diaCalculado = atualizarCalculosDia(dia)
 
@@ -26307,6 +26334,8 @@ onKeyPress={(e) => {
 
       case 'protocolos-servico': {
         const protoT = safeT as any
+        /** Textos de envio ao cliente (WhatsApp / e-mail): sempre em português, independentemente do idioma da interface. */
+        const protoEnvioClienteT = translations['pt-BR'] as any
         const tituloProto = protoT?.protocolosServicoTitle || 'PROTOCOLOS DE SERVIÇO'
         const descProto = protoT?.protocolosServicoDesc || 'Consulte e gere os protocolos de serviço (antes/depois, imagens e peças trocadas).'
         const clienteProto = clientes.find(c => c.id === protocoloServicoForm.clienteId)
@@ -26375,15 +26404,18 @@ onKeyPress={(e) => {
         }
         const enviarEmailProtocolo = (p: ProtocoloServico) => {
           const cl = clientes.find(c => c.id === p.clienteId)
-          const assunto = `${tituloProto} - ${cl?.nomeEmpresa || ''} - ${new Date(p.dataCriacao).toLocaleDateString()}`
+          const nomeCli = (cl?.nomeEmpresa || '').replace(/\s+/g, ' ').trim()
+          const rotEnvio =
+            protoEnvioClienteT?.protocolosServicoEnviarWhatsAppTexto || 'Protocolo de Serviço'
+          const assunto = `${rotEnvio} - ${nomeCli} - ${new Date(p.dataCriacao).toLocaleDateString('pt-PT')}`
           const corpoBase =
-            (protoT?.protocolosServicoEnviarEmailCorpo || 'Segue em anexo o protocolo de serviço.') +
+            (protoEnvioClienteT?.protocolosServicoEnviarEmailCorpo || 'Segue em anexo o protocolo de serviço.') +
             '\n\n' +
-            (cl?.nomeEmpresa || '') +
+            nomeCli +
             (cl?.equipamentos?.find((e) => e.numeroSerie === p.equipamentoNumeroSerie)
               ? ' - ' + (cl.equipamentos.find((e) => e.numeroSerie === p.equipamentoNumeroSerie)?.tipoEquipamento || '')
               : '')
-          const instrucao = protoT?.protocolosServicoEnvioEmailInstrucaoAnexo || ''
+          const instrucao = protoEnvioClienteT?.protocolosServicoEnvioEmailInstrucaoAnexo || ''
           const corpo = instrucao ? `${corpoBase}\n\n${instrucao}` : corpoBase
           const to = (cl?.email || '').trim().replace(/\s/g, '')
           const q = `subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`
@@ -26392,13 +26424,14 @@ onKeyPress={(e) => {
         }
         const enviarWhatsAppProtocolo = (p: ProtocoloServico) => {
           const cl = clientes.find(c => c.id === p.clienteId)
-          const waInstr = protoT?.protocolosServicoEnvioWhatsappInstrucao || ''
+          const nomeCli = (cl?.nomeEmpresa || '').replace(/\s+/g, ' ').trim()
+          const waInstr = protoEnvioClienteT?.protocolosServicoEnvioWhatsappInstrucao || ''
           const texto =
-            (protoT?.protocolosServicoEnviarWhatsAppTexto || 'Protocolo de Serviço') +
+            (protoEnvioClienteT?.protocolosServicoEnviarWhatsAppTexto || 'Protocolo de Serviço') +
             ': ' +
-            (cl?.nomeEmpresa || '') +
+            nomeCli +
             ' - ' +
-            new Date(p.dataCriacao).toLocaleDateString() +
+            new Date(p.dataCriacao).toLocaleDateString('pt-PT') +
             (waInstr ? `\n\n${waInstr}` : '')
           const num = telefoneDigitsParaWa(cl?.telefones || '')
           const href = num
@@ -26408,7 +26441,9 @@ onKeyPress={(e) => {
         }
         const mostrarFormulario = editingProtocoloServicoId !== null
         const filtroLista = protocoloServicoFiltroLista.trim().toLowerCase()
-        const filtroClienteLista = protocoloServicoClienteFiltroLista.trim()
+        const filtroClienteRaw = protocoloServicoClienteFiltroLista.trim()
+        const filtroClienteNenhum = filtroClienteRaw === PROTOCOLO_SERVICO_FILTRO_CLIENTE_NENHUM
+        const filtroClienteLista = filtroClienteNenhum ? '' : filtroClienteRaw
         const protocolosOrdenados = protocolosServico.slice().reverse()
         let protocolosFiltrados = filtroLista
           ? protocolosOrdenados.filter(p => {
@@ -26422,7 +26457,9 @@ onKeyPress={(e) => {
               return hay.includes(filtroLista)
             })
           : protocolosOrdenados
-        if (filtroClienteLista) {
+        if (filtroClienteNenhum) {
+          protocolosFiltrados = []
+        } else if (filtroClienteLista) {
           protocolosFiltrados = protocolosFiltrados.filter((p) => p.clienteId === filtroClienteLista)
         }
         const protocoloIdsComArquivo = new Set(protocolosServico.map((p) => p.clienteId).filter(Boolean))
@@ -27150,7 +27187,7 @@ onKeyPress={(e) => {
                       <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>{protoT?.protocolosServicoHubKpiVisiveis || 'Visíveis'}</div>
                       <div style={{ fontSize: 26, fontWeight: 700, color: '#f1f5f9', marginTop: 6, lineHeight: 1 }}>{visivelProto}</div>
                       <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
-                        {filtroLista || filtroClienteLista
+                        {filtroLista || filtroClienteRaw
                           ? (protoT?.protocolosServicoHubKpiFiltroOn || 'filtro inteligente ativo')
                           : (protoT?.protocolosServicoHubKpiFiltroOff || 'sem filtro de texto')}
                       </div>
@@ -27172,7 +27209,7 @@ onKeyPress={(e) => {
                       <h2 style={{ margin: 0, fontSize: 'clamp(1rem, 2.4vw, 1.15rem)', color: '#f1f5f9', fontWeight: 700, letterSpacing: '-0.02em' }}>{protoT?.protocolosServicoListaTitulo || 'Protocolos registados'}</h2>
                       <p style={{ margin: '8px 0 0', fontSize: 13, color: '#94a3b8' }}>
                         {(protoT?.protocolosServicoListaContagem || '{n} na lista').replace('{n}', String(protocolosFiltrados.length))}
-                        {filtroLista || filtroClienteLista
+                        {filtroLista || filtroClienteRaw
                           ? ` · ${protocolosOrdenados.length} ${protoT?.protocolosServicoListaTotal || 'no total'}`
                           : ''}
                       </p>
@@ -27208,6 +27245,9 @@ onKeyPress={(e) => {
                         style={{ ...inputBase, padding: '10px 12px' }}
                       >
                         <option value="">{safeT?.comprovantesTodosClientes || 'Todos os clientes'}</option>
+                        <option value={PROTOCOLO_SERVICO_FILTRO_CLIENTE_NENHUM}>
+                          {protoT?.protocolosServicoFiltroClienteOpcaoNenhum || 'Nenhum'}
+                        </option>
                         {clientesComProtocolo.map((c) => (
                           <option key={c.id} value={c.id}>
                             {c.nomeEmpresa}
@@ -27235,7 +27275,11 @@ onKeyPress={(e) => {
                       <p style={{ color: 'rgba(230, 245, 255, 0.82)', lineHeight: 1.65, margin: 0, maxWidth: 520, marginLeft: 'auto', marginRight: 'auto', fontSize: 14 }}>{protoT?.protocolosServicoSemProtocolos || 'Ainda não há protocolos.'}</p>
                     </div>
                   ) : protocolosFiltrados.length === 0 ? (
-                    <p style={{ color: 'rgba(200, 210, 230, 0.75)', padding: '24px 8px', fontSize: 14 }}>{protoT?.protocolosServicoListaVaziaFiltro || 'Nenhum protocolo corresponde à pesquisa.'}</p>
+                    filtroClienteNenhum ? (
+                      <div style={{ minHeight: 160 }} aria-hidden />
+                    ) : (
+                      <p style={{ color: 'rgba(200, 210, 230, 0.75)', padding: '24px 8px', fontSize: 14 }}>{protoT?.protocolosServicoListaVaziaFiltro || 'Nenhum protocolo corresponde à pesquisa.'}</p>
+                    )
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                       {protocoloServicoAgruparPorCliente
@@ -27427,7 +27471,11 @@ onKeyPress={(e) => {
             </div>
             
             {showRelatorioServicoForm && (
-              <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px', maxHeight: '90vh', overflowY: 'auto' }}>
+              <div
+                id="relatorio-servico-edit-form"
+                className="relatorio-servico-edit-form"
+                style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px', maxHeight: '90vh', overflowY: 'auto' }}
+              >
                 <h3 style={{ marginBottom: '15px' }}>{editingRelatorioServico ? (safeT?.editRelatorioServico || 'Editar Relatório de Serviço') : (safeT?.addRelatorioServico || 'Adicionar Relatório de Serviço')}</h3>
                 
                 {/* Informações Básicas */}
@@ -29388,7 +29436,11 @@ onKeyPress={(e) => {
                             <button 
                               className="btn-primary" 
                               type="button"
-                              onClick={() => handleEditRelatorioServico(relatorio)} 
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                handleEditRelatorioServico(relatorio)
+                              }} 
                               style={{ 
                                 height: '36px',
                                 padding: '8px 6px', 
@@ -29408,7 +29460,9 @@ onKeyPress={(e) => {
                                 boxSizing: 'border-box',
                                 letterSpacing: '0.5px',
                                 WebkitTapHighlightColor: 'transparent',
-                                touchAction: 'manipulation'
+                                touchAction: 'manipulation',
+                                position: 'relative',
+                                zIndex: 2,
                               }}
                               title={safeT?.edit || 'Editar'}
                             >

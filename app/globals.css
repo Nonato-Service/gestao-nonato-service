@@ -4072,6 +4072,11 @@ a:focus-visible {
   gap: 12px;
 }
 
+/* Ao clicar Editar/Adicionar: scrollIntoView no documento + margem no contentor com scroll interno */
+.relatorio-servico-edit-form {
+  scroll-margin-top: 20px;
+}
+
 @media (max-width: 768px) {
   .tab-content-wrapper.relatorio-servico-root {
     max-width: 100% !important;
