@@ -26722,12 +26722,13 @@ onKeyPress={(e) => {
                 </div>
               </div>
               <div className="protocolo-servico-card__actions">
-                <div className="protocolo-servico-card__actions-row protocolo-servico-card__actions-row--share protocolo-servico-card__actions-row--modelo">
-                  <label style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, flex: '1 1 160px' }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.06em' }}>
+                <div className="protocolo-servico-card__actions-row protocolo-servico-card__actions-row--modelo-select">
+                  <label className="protocolo-servico-card__modelo-field">
+                    <span className="protocolo-servico-card__modelo-label">
                       {protoT?.protocolosServicoModeloImpressao || 'Modelo para impressão'}
                     </span>
                     <select
+                      className="protocolo-servico-card__modelo-select"
                       value={String(modeloImpressao)}
                       onChange={(e) =>
                         setProtocoloModeloImpressaoLista((prev) => ({
@@ -26735,7 +26736,6 @@ onKeyPress={(e) => {
                           [p.id]: clampProtocoloPdfModelo(parseInt(e.target.value, 10) || 1),
                         }))
                       }
-                      style={{ ...inputBase, padding: '8px 10px', fontSize: 12 }}
                       aria-label={protoT?.protocolosServicoModeloImpressao || 'Modelo para impressão'}
                     >
                       {Array.from({ length: PROTOCOLO_SERVICO_PDF_MODELOS_MAX }, (_, i) => i + 1).map((n) => (
@@ -26745,6 +26745,8 @@ onKeyPress={(e) => {
                       ))}
                     </select>
                   </label>
+                </div>
+                <div className="protocolo-servico-card__actions-row protocolo-servico-card__actions-row--exports">
                   <button
                     type="button"
                     className="btn-primary protocolo-servico-card__btn--pdf"

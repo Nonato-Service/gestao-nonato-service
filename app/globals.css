@@ -5397,7 +5397,7 @@ button.dia-trabalho-acao-btn--del:hover {
   position: relative;
   overflow: hidden;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  grid-template-columns: minmax(0, 1fr) minmax(272px, 400px);
   gap: 18px;
   align-items: start;
   padding: 20px 22px;
@@ -5416,37 +5416,81 @@ button.dia-trabalho-acao-btn--del:hover {
 .tab-content-wrapper .protocolo-servico-card__actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   min-width: 0;
 }
 
 .tab-content-wrapper .protocolo-servico-card__actions-row {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
+}
+
+/* Linha 1: só o modelo de PDF — largura total, alinhado */
+.tab-content-wrapper .protocolo-servico-card__actions-row--modelo-select {
+  grid-template-columns: 1fr;
+}
+
+.tab-content-wrapper .protocolo-servico-card__modelo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+.tab-content-wrapper .protocolo-servico-card__modelo-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.tab-content-wrapper .protocolo-servico-card__modelo-select {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 42px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #f1f5f9;
+  background: #0f1419;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 10px;
+  outline: none;
+  cursor: pointer;
+}
+
+.tab-content-wrapper .protocolo-servico-card__modelo-select:focus-visible {
+  border-color: rgba(45, 212, 191, 0.55);
+  box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.2);
+}
+
+/* Linha 2: PDF | Email | WhatsApp — três colunas iguais, altura uniforme */
+.tab-content-wrapper .protocolo-servico-card__actions-row--exports {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
 }
 
 .tab-content-wrapper .protocolo-servico-card__actions-row--share {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.tab-content-wrapper .protocolo-servico-card__actions-row--modelo {
-  grid-template-columns: minmax(0, 1.35fr) repeat(3, minmax(0, 1fr));
-  align-items: end;
-}
-
-@media (max-width: 720px) {
-  .tab-content-wrapper .protocolo-servico-card__actions-row--modelo {
-    grid-template-columns: 1fr;
-  }
-}
-
 .tab-content-wrapper .protocolo-servico-card__actions-row--manage {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
 }
 
 @media (max-width: 420px) {
+  .tab-content-wrapper .protocolo-servico-card__actions-row--exports {
+    grid-template-columns: 1fr;
+  }
+
   .tab-content-wrapper .protocolo-servico-card__actions-row--share {
     grid-template-columns: 1fr;
   }
@@ -5456,11 +5500,11 @@ button.dia-trabalho-acao-btn--del:hover {
 .tab-content-wrapper .protocolo-servico-card__actions .btn-danger.btn-danger--inline {
   width: 100% !important;
   min-width: 0 !important;
-  min-height: 38px !important;
+  min-height: 42px !important;
   max-width: none !important;
-  padding: 8px 10px !important;
-  font-size: 11px !important;
-  line-height: 1.25 !important;
+  padding: 10px 12px !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
   font-weight: 700 !important;
   border-radius: 10px !important;
   box-sizing: border-box;
@@ -5470,6 +5514,16 @@ button.dia-trabalho-acao-btn--del:hover {
   text-align: center;
   white-space: normal !important;
   word-break: break-word !important;
+}
+
+/* Evita «WhatsA pp» e mantém rótulos de envio numa linha quando couber */
+.tab-content-wrapper .protocolo-servico-card__actions-row--exports .btn-primary,
+.tab-content-wrapper .protocolo-servico-card__actions-row--manage .btn-primary,
+.tab-content-wrapper .protocolo-servico-card__actions-row--manage .btn-danger.btn-danger--inline {
+  white-space: nowrap !important;
+  word-break: normal !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tab-content-wrapper .protocolo-servico-card__btn--pdf {
