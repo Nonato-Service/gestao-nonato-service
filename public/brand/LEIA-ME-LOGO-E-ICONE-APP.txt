@@ -72,13 +72,17 @@ FICHEIROS A NÃO APAGAR SEM SUBSTITUIR
 PAPEL TIMBRADO (A4)
 -------------------
   • Página: /papel-timbrado (atalho no Administrador, item 07 da grelha de atalhos)
-  • Logo vertical da marca (engrenagens + NONATO + SERVICE), por defeito:
+  • Logo vertical da marca (engrenagens + NONATO + SERVICE) em ficheiro PNG:
         public/brand/nonato-logo-papel-timbrado.png
-    — fundo transparente recomendado para impressão em papel branco.
-  • Para usar a tua arte oficial (export do teu ficheiro / designer):
+    — Formato oficial do papel timbrado: PNG (.png).
+    — Se o teu PNG tiver fundo preto (marca «neon em preto»), no papel branco
+      aparece um bloco preto com o logo — é correcto. Com fundo transparente,
+      lembra-te: texto branco desaparece no papel branco; nesse caso mantém
+      fundo escuro no PNG ou usa variante com texto escuro para impressão.
+  • Para usar a tua arte oficial:
         substitui o ficheiro acima mantendo o MESMO nome, OU
-        coloca outro PNG/SVG em public/brand/ e na página Papel timbrado altera
-        o campo «URL do logo» para /brand/nome-do-ficheiro.ext
+        coloca outro PNG em public/brand/ e na página Papel timbrado altera
+        o campo «URL do logo» para /brand/nome-do-ficheiro.png
   • Reserva vectorial (fallback se o URL falhar): public/brand/nonato-letterhead-logo.svg
   • Interface da app / favicon: continuam a usar public/brand/nonato-logo-original.png
     quando existir (independente do logo do papel timbrado).

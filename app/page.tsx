@@ -1861,7 +1861,7 @@ export default function Dashboard() {
   const [editFamiliaValue, setEditFamiliaValue] = useState('')
   const [editGrupoValue, setEditGrupoValue] = useState('')
   const [editGrupoNumeroValue, setEditGrupoNumeroValue] = useState('')
-  const [familiasCardExpanded, setFamiliasCardExpanded] = useState(true)
+  const [familiasCardExpanded, setFamiliasCardExpanded] = useState(false)
   const [gruposPorFamiliaExpandido, setGruposPorFamiliaExpandido] = useState<Record<string, boolean>>({})
   // Manuais e Informações Técnicas: famílias e grupos para organização
   const [manuaisFamilias, setManuaisFamilias] = useState<string[]>([])
@@ -2208,8 +2208,8 @@ export default function Dashboard() {
   const [showHelpModal, setShowHelpModal] = useState(false)
   /** Origem do modal de ajuda: painel inicial ou tipo da aba (texto contextual). */
   const [helpModalSource, setHelpModalSource] = useState<'dashboard' | TabType | null>(null)
-  /** Resumo do módulo no topo da área principal (expandir/ocultar). */
-  const [mainModuleIntroExpanded, setMainModuleIntroExpanded] = useState(true)
+  /** Resumo do módulo no topo da área principal (expandir/ocultar). Sempre inicia retraído; só expande ao clicar. */
+  const [mainModuleIntroExpanded, setMainModuleIntroExpanded] = useState(false)
 
   // Barra inferior: carregar/guardar ordem das abas (por tipo)
   useEffect(() => {
@@ -2276,10 +2276,6 @@ export default function Dashboard() {
     const t1 = setTimeout(run, 50)
     const t2 = setTimeout(run, 200)
     return () => { clearTimeout(t1); clearTimeout(t2) }
-  }, [activeTabId])
-
-  useEffect(() => {
-    if (activeTabId) setMainModuleIntroExpanded(true)
   }, [activeTabId])
 
   useEffect(() => {
@@ -2380,41 +2376,6 @@ export default function Dashboard() {
 
     const action = TAB_TO_SIDEBAR_ACTION[tab.type]
     if (action) setSelectedSidebarButton(action)
-
-    const expand = new Set<string>()
-    const ty = tab.type
-    if (['gestores', 'clientes', 'fornecedores', 'relatorio-servico', 'biblioteca-pecas', 'importacao-pecas', 'biblioteca-relatorios', 'relatorios-excluidos-clientes', 'cadastro-servicos', 'solicitacao-servico-tecnico', 'agenda', 'estado-visual-tecnico', 'informacoes-conhecimento-tecnicos', 'desmontados', 'equipamentos', 'pecas-substituicao'].includes(ty)) {
-      expand.add('gestao-tecnica')
-    }
-    if (['fechamento-relatorios-servicos', 'orcamentos-avulso', 'pedido-orcamentos-avulso', 'registro-despesas', 'mapa-visual-separacao-pecas', 'gestao-custos'].includes(ty)) {
-      expand.add('gestao-custos')
-    }
-    if (['familias-grupos', 'familias-grupos-equipamentos', 'manuais-informacoes-tecnicas', 'almoxarifado-armazem'].includes(ty)) {
-      expand.add('gestao-industrial')
-    }
-    if (ty === 'protocolos-servico') expand.add('protocolos-main')
-    if (ty === 'manual-programa') expand.add('manual-programa-main')
-    if (ty === 'cadastro-nonato-service' || ty === 'ficha-cadastral') expand.add('cadastro-nonato-main')
-    if (ty === 'manuais-informacoes-tecnicas') expand.add('manuais-informacoes-main')
-    if (ty === 'almoxarifado-armazem') expand.add('almoxarifado-main')
-    if (ty === 'administrador') expand.add('admin-main')
-    if (['clientes-financeiro', 'comprovantes-despesas', 'gestao-financeira'].includes(ty)) {
-      expand.add('gestao-financeira')
-    }
-    if (['pre-checklist', 'checklist', 'checklist-hub', 'gestao-grupos-checklist', 'ordem-preparacao', 'formularios-checklist-tecnicos', 'verificacao-final-entrega'].includes(ty)) {
-      expand.add('checklist-group')
-    }
-    if (['comunicacao-interna', 'hub-comunicacao', 'mensagens-internas', 'mensagens-internas-tecnicos', 'tecnicos-internos', 'tecnicos-externos', 'alerta-mensagens'].includes(ty)) {
-      expand.add('comunicacao-interna')
-    }
-    if (ty === 'translator') expand.add('extra')
-    if (expand.size > 0) {
-      setExpandedGroups(prev => {
-        const n = new Set(prev)
-        expand.forEach(g => n.add(g))
-        return n
-      })
-    }
 
     if (action) {
       const scrollT = window.setTimeout(() => {
@@ -3848,7 +3809,7 @@ export default function Dashboard() {
   const [classificacaoLoteSubcategoriaId, setClassificacaoLoteSubcategoriaId] = useState('')
   const [classificacaoLotePalavras, setClassificacaoLotePalavras] = useState('')
   const [classificacaoLoteSomenteSemGrupo, setClassificacaoLoteSomenteSemGrupo] = useState(true)
-  const [classificacaoLoteExpanded, setClassificacaoLoteExpanded] = useState(true)
+  const [classificacaoLoteExpanded, setClassificacaoLoteExpanded] = useState(false)
   const [regrasClassificacaoPecas, setRegrasClassificacaoPecas] = useState<RegraClassificacaoPeca[]>([])
   // Importação de peças por URL (lista de um site)
   const [urlImportacaoPecas, setUrlImportacaoPecas] = useState('')
@@ -4135,13 +4096,13 @@ export default function Dashboard() {
   const [demoLinkForm, setDemoLinkForm] = useState(createDefaultDemoLinkForm)
   const [demoModuleGridSearch, setDemoModuleGridSearch] = useState('')
   /** Lista completa da grelha visível ou só o cabeçalho (recolher tudo). */
-  const [demoModuleFineGridExpanded, setDemoModuleFineGridExpanded] = useState(true)
+  const [demoModuleFineGridExpanded, setDemoModuleFineGridExpanded] = useState(false)
   /** Por secção: expandir/recolher grupos de módulos. */
   const [demoModuleGroupsExpanded, setDemoModuleGroupsExpanded] = useState<Record<DemoModuleGroupId, boolean>>({
-    clientes: true,
-    tecnica: true,
-    gestao: true,
-    outros: true,
+    clientes: false,
+    tecnica: false,
+    gestao: false,
+    outros: false,
   })
   const demoRecipientsComEstado = useMemo(() => {
     const agora = Date.now()
@@ -18447,7 +18408,7 @@ export default function Dashboard() {
                 {DEMO_MODULE_GROUP_ORDER.map((groupId) => {
                   const items = grouped[groupId]
                   if (items.length === 0) return null
-                  const open = demoModuleGroupsExpanded[groupId] ?? true
+                  const open = demoModuleGroupsExpanded[groupId] ?? false
                   return (
                     <div key={groupId} style={{ marginBottom: '14px' }}>
                       <button
@@ -18455,7 +18416,7 @@ export default function Dashboard() {
                         onClick={() =>
                           setDemoModuleGroupsExpanded((p) => ({
                             ...p,
-                            [groupId]: !(p[groupId] ?? true),
+                            [groupId]: !(p[groupId] ?? false),
                           }))
                         }
                         style={{
@@ -19394,103 +19355,25 @@ export default function Dashboard() {
     } else if (action === 'open-equipamentos') {
       openTab('equipamentos', getTabTitle('equipamentos'))
     } else if (action === 'open-checklist-hub') {
-      // Expandir o grupo checklist-group automaticamente
-      if (!expandedGroups.has('checklist-group')) {
-        setExpandedGroups(prev => {
-          const newSet = new Set(prev)
-          newSet.add('checklist-group')
-          return newSet
-        })
-        // Aguardar a expansão antes de abrir a aba
-        setTimeout(() => {
-          openTab('checklist-hub', getTabTitle('checklist-hub'))
-        }, 50)
-      } else {
-        openTab('checklist-hub', getTabTitle('checklist-hub'))
-      }
+      openTab('checklist-hub', getTabTitle('checklist-hub'))
     } else if (action === 'open-pre-checklist') {
-      // Expandir o grupo checklist-group automaticamente
-      if (!expandedGroups.has('checklist-group')) {
-        setExpandedGroups(prev => {
-          const newSet = new Set(prev)
-          newSet.add('checklist-group')
-          return newSet
-        })
-        // Aguardar a expansão antes de abrir a aba
-        setTimeout(() => {
-          openTab('pre-checklist', getTabTitle('pre-checklist'))
-        }, 50)
-      } else {
-        openTab('pre-checklist', getTabTitle('pre-checklist'))
-      }
+      openTab('pre-checklist', getTabTitle('pre-checklist'))
     } else if (action === 'open-checklist') {
       // Área restrita: mostrar modal de credenciamento (senha do Gestor de Senhas)
       setChecklistAccessStep('message')
       setChecklistAccessPasswordInput('')
       setShowChecklistAccessModal(true)
     } else if (action === 'open-gestao-grupos-checklist') {
-      // Expandir o grupo checklist-group automaticamente
-      if (!expandedGroups.has('checklist-group')) {
-        setExpandedGroups(prev => {
-          const newSet = new Set(prev)
-          newSet.add('checklist-group')
-          return newSet
-        })
-        // Aguardar a expansão antes de abrir a aba
-        setTimeout(() => {
-          openTab('gestao-grupos-checklist', getTabTitle('gestao-grupos-checklist'))
-        }, 50)
-      } else {
-        openTab('gestao-grupos-checklist', getTabTitle('gestao-grupos-checklist'))
-      }
+      openTab('gestao-grupos-checklist', getTabTitle('gestao-grupos-checklist'))
     } else if (action === 'open-ordem-preparacao') {
-      // Expandir o grupo checklist-group automaticamente
-      if (!expandedGroups.has('checklist-group')) {
-        setExpandedGroups(prev => {
-          const newSet = new Set(prev)
-          newSet.add('checklist-group')
-          return newSet
-        })
-        // Aguardar a expansão antes de abrir a aba
-        setTimeout(() => {
-          openTab('ordem-preparacao', getTabTitle('ordem-preparacao'))
-        }, 50)
-      } else {
-        openTab('ordem-preparacao', getTabTitle('ordem-preparacao'))
-      }
+      openTab('ordem-preparacao', getTabTitle('ordem-preparacao'))
     } else if (action === 'open-formularios-checklist-tecnicos') {
-      // Expandir o grupo checklist-group automaticamente
-      if (!expandedGroups.has('checklist-group')) {
-        setExpandedGroups(prev => {
-          const newSet = new Set(prev)
-          newSet.add('checklist-group')
-          return newSet
-        })
-        // Aguardar a expansão antes de abrir a aba
-        setTimeout(() => {
-          openTab('formularios-checklist-tecnicos', getTabTitle('formularios-checklist-tecnicos'))
-        }, 50)
-      } else {
-        openTab('formularios-checklist-tecnicos', getTabTitle('formularios-checklist-tecnicos'))
-      }
+      openTab('formularios-checklist-tecnicos', getTabTitle('formularios-checklist-tecnicos'))
     } else if (action === 'open-verificacao-final-entrega') {
-      // Expandir o grupo checklist-group automaticamente
-      if (!expandedGroups.has('checklist-group')) {
-        setExpandedGroups(prev => {
-          const newSet = new Set(prev)
-          newSet.add('checklist-group')
-          return newSet
-        })
-        setTimeout(() => {
-          openTab('verificacao-final-entrega', getTabTitle('verificacao-final-entrega'))
-        }, 50)
-      } else {
-        openTab('verificacao-final-entrega', getTabTitle('verificacao-final-entrega'))
-      }
+      openTab('verificacao-final-entrega', getTabTitle('verificacao-final-entrega'))
     } else if (action === 'open-comunicacao-interna') {
       toggleOrOpenDashboardHub('comunicacao-interna', 'comunicacao-interna')
     } else if (action === 'open-hub-comunicacao') {
-      if (!expandedGroups.has('comunicacao-interna')) setExpandedGroups(prev => new Set(prev).add('comunicacao-interna'))
       openTab('hub-comunicacao', getTabTitle('hub-comunicacao'))
     } else if (action === 'open-mensagens-internas') {
       openTab('mensagens-internas', getTabTitle('mensagens-internas'))
@@ -19523,7 +19406,6 @@ export default function Dashboard() {
     } else if (action === 'open-importacao-pecas') {
       openTab('importacao-pecas', getTabTitle('importacao-pecas'))
     } else if (action === 'open-pecas-substituicao') {
-      setExpandedGroups((prev) => new Set(prev).add('gestao-tecnica'))
       openTab('pecas-substituicao', getTabTitle('pecas-substituicao'))
     } else if (action === 'open-solicitacao-servico-tecnico') {
       openTab('solicitacao-servico-tecnico', getTabTitle('solicitacao-servico-tecnico'))
@@ -19552,13 +19434,10 @@ export default function Dashboard() {
     } else if (action === 'open-almoxarifado-armazem') {
       openTab('almoxarifado-armazem', getTabTitle('almoxarifado-armazem'))
     } else if (action === 'open-quick-gestao-custos') {
-      setExpandedGroups(prev => new Set(prev).add('gestao-custos'))
       openTab('gestao-custos', getTabTitle('gestao-custos'))
     } else if (action === 'open-quick-gestao-financeira') {
-      setExpandedGroups(prev => new Set(prev).add('gestao-financeira'))
       openTab('gestao-financeira', getTabTitle('gestao-financeira'))
     } else if (action === 'open-quick-biblioteca-pecas') {
-      setExpandedGroups(prev => new Set(prev).add('gestao-tecnica'))
       openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
     } else if (action === 'open-gestao-tecnica') {
       toggleOrOpenDashboardHub('gestao-tecnica', 'gestao-tecnica')
@@ -19574,19 +19453,6 @@ export default function Dashboard() {
       toggleOrOpenDashboardHub('gestao-industrial', 'gestao-industrial')
     } else if (action === 'open-checklist-group') {
       toggleOrOpenDashboardHub('checklist-group', 'checklist-group')
-    } else if (action === 'open-checklist-hub') {
-      // Toggle do grupo CHECKLIST quando clicar no botão principal
-      setExpandedGroups(prev => {
-        const newSet = new Set(prev)
-        if (!newSet.has('checklist-group')) {
-          newSet.add('checklist-group')
-        }
-        return newSet
-      })
-      // Aguardar a expansão antes de abrir a aba
-      setTimeout(() => {
-        openTab('checklist-hub', getTabTitle('checklist-hub'))
-      }, 50)
     } else if (action === 'open-extra') {
       toggleOrOpenDashboardHub('extra', 'extra')
     } else if (action === 'open-translator') {
@@ -58198,12 +58064,7 @@ A1;Peça exemplo;10`}
                         setChecklistAccessStep('message')
                         setChecklistAccessNomeInput('')
                         setChecklistAccessPasswordInput('')
-                        if (!expandedGroups.has('checklist-group')) {
-                          setExpandedGroups(prev => { const newSet = new Set(prev); newSet.add('checklist-group'); return newSet })
-                          setTimeout(() => openTab('checklist', getTabTitle('checklist')), 50)
-                        } else {
-                          openTab('checklist', getTabTitle('checklist'))
-                        }
+                        openTab('checklist', getTabTitle('checklist'))
                       } else {
                         window.alert(safeT?.checklistNomeOuSenhaIncorretos || 'Nome ou senha incorretos. Use o nome e a senha cadastrados no Gestor de Senhas (Administrador).')
                       }
@@ -58270,12 +58131,7 @@ A1;Peça exemplo;10`}
                         setChecklistAccessStep('message')
                         setChecklistAccessNomeInput('')
                         setChecklistAccessPasswordInput('')
-                        if (!expandedGroups.has('checklist-group')) {
-                          setExpandedGroups(prev => { const newSet = new Set(prev); newSet.add('checklist-group'); return newSet })
-                          setTimeout(() => openTab('checklist', getTabTitle('checklist')), 50)
-                        } else {
-                          openTab('checklist', getTabTitle('checklist'))
-                        }
+                        openTab('checklist', getTabTitle('checklist'))
                       } else {
                         window.alert(safeT?.checklistNomeOuSenhaIncorretos || 'Nome ou senha incorretos. Use o nome e a senha cadastrados no Gestor de Senhas (Administrador).')
                       }
