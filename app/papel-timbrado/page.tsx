@@ -11,10 +11,17 @@ const FICHA_KEY = 'nonato-ficha-cadastral'
 
 export type PapelTimbradoConfig = {
   nomeEmpresa: string
-  linhaMorada: string
-  linhaLocal: string
+  cidade: string
+  freguesia: string
+  rua: string
+  cep: string
   telefone: string
   logoUrl: string
+}
+
+type PapelTimbradoStored = Partial<PapelTimbradoConfig> & {
+  linhaMorada?: string
+  linhaLocal?: string
 }
 
 type FichaCadastralLite = {
@@ -26,9 +33,11 @@ type FichaCadastralLite = {
 
 const DEFAULTS: PapelTimbradoConfig = {
   nomeEmpresa: 'NONATO SERVICE',
-  linhaMorada: 'Rua das Mimosas, 303',
-  linhaLocal: '4905-642 Viana do Castelo — Vila de Punhe',
-  telefone: '+351 911 115 470',
+  cidade: 'Viana do Castelo',
+  freguesia: 'Vila de Punhe',
+  rua: 'Rua das Mimosas, 303',
+  cep: '4905-642',
+  telefone: '+351-91111-5479',
   logoUrl: '/brand/nonato-logo-original.png',
 }
 
@@ -41,16 +50,58 @@ function getLang(): keyof typeof translations {
   return 'pt-BR'
 }
 
+function moradaStringParaPartial(morada: string): Partial<Pick<PapelTimbradoConfig, 'rua' | 'cep' | 'cidade' | 'freguesia'>> {
+  const { linhaMorada, linhaLocal } = moradaParaDuasLinhas(morada)
+  const out: Partial<Pick<PapelTimbradoConfig, 'rua' | 'cep' | 'cidade' | 'freguesia'>> = {}
+  if (linhaMorada) out.rua = linhaMorada
+  if (linhaLocal) {
+    const cepM = linhaLocal.match(/(\d{4}-\d{3})/)
+    if (cepM) out.cep = cepM[1]
+    const tail = linhaLocal
+      .replace(cepM?.[0] || '', '')
+      .trim()
+      .replace(/^[-—,\s]+/, '')
+    const chunks = tail
+      .split(/[—–]/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+    if (chunks.length >= 2) {
+      out.cidade = chunks[0]
+      out.freguesia = chunks[chunks.length - 1]
+    } else if (chunks.length === 1) {
+      out.cidade = chunks[0]
+    }
+  }
+  return out
+}
+
+function temCamposMoradaEstruturados(j: PapelTimbradoStored): boolean {
+  return (
+    (typeof j.rua === 'string' && j.rua.trim() !== '') ||
+    (typeof j.cidade === 'string' && j.cidade.trim() !== '') ||
+    (typeof j.freguesia === 'string' && j.freguesia.trim() !== '') ||
+    (typeof j.cep === 'string' && j.cep.trim() !== '')
+  )
+}
+
 function loadConfig(): PapelTimbradoConfig {
   if (typeof window === 'undefined') return { ...DEFAULTS }
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return { ...DEFAULTS }
-    const j = JSON.parse(raw) as Partial<PapelTimbradoConfig>
+    const j = JSON.parse(raw) as PapelTimbradoStored
+    const migrated = temCamposMoradaEstruturados(j)
+      ? {}
+      : moradaStringParaPartial(`${j.linhaMorada || ''}\n${j.linhaLocal || ''}`)
     return {
       nomeEmpresa: typeof j.nomeEmpresa === 'string' ? j.nomeEmpresa : DEFAULTS.nomeEmpresa,
-      linhaMorada: typeof j.linhaMorada === 'string' ? j.linhaMorada : DEFAULTS.linhaMorada,
-      linhaLocal: typeof j.linhaLocal === 'string' ? j.linhaLocal : DEFAULTS.linhaLocal,
+      cidade: typeof j.cidade === 'string' && j.cidade.trim() ? j.cidade.trim() : migrated.cidade ?? DEFAULTS.cidade,
+      freguesia:
+        typeof j.freguesia === 'string' && j.freguesia.trim()
+          ? j.freguesia.trim()
+          : migrated.freguesia ?? DEFAULTS.freguesia,
+      rua: typeof j.rua === 'string' && j.rua.trim() ? j.rua.trim() : migrated.rua ?? DEFAULTS.rua,
+      cep: typeof j.cep === 'string' && j.cep.trim() ? j.cep.trim() : migrated.cep ?? DEFAULTS.cep,
       telefone: typeof j.telefone === 'string' ? j.telefone : DEFAULTS.telefone,
       logoUrl: typeof j.logoUrl === 'string' && j.logoUrl.trim() ? j.logoUrl.trim() : DEFAULTS.logoUrl,
     }
@@ -76,14 +127,17 @@ function partialDesdeFichaCadastral(fc: FichaCadastralLite | null | undefined): 
   const out: Partial<PapelTimbradoConfig> = {}
   const nome = (fc.nomeEmpresa || '').trim()
   const tel = (fc.telefone || '').trim()
-  const { linhaMorada, linhaLocal } = moradaParaDuasLinhas(fc.morada)
   const logo = (fc.logo || '').trim()
+  const moradaBits = moradaStringParaPartial(fc.morada || '')
   if (nome) out.nomeEmpresa = nome
   if (tel) out.telefone = tel
-  if (linhaMorada) out.linhaMorada = linhaMorada
-  if (linhaLocal) out.linhaLocal = linhaLocal
+  if (moradaBits.rua) out.rua = moradaBits.rua
+  if (moradaBits.cep) out.cep = moradaBits.cep
+  if (moradaBits.cidade) out.cidade = moradaBits.cidade
+  if (moradaBits.freguesia) out.freguesia = moradaBits.freguesia
   if (logo) out.logoUrl = logo
-  if (!nome && !tel && !linhaMorada && !logo) return null
+  if (!nome && !tel && !logo && !moradaBits.rua && !moradaBits.cidade && !moradaBits.freguesia && !moradaBits.cep)
+    return null
   return out
 }
 
@@ -209,19 +263,35 @@ export default function PapelTimbradoPage() {
             />
           </div>
           <div className="papel-timbrado-field">
-            <label htmlFor="pt-mor">{tx.papelTimbradoLinhaMorada || 'Morada'}</label>
+            <label htmlFor="pt-cid">{tx.papelTimbradoCampoCidade || 'Cidade'}</label>
             <input
-              id="pt-mor"
-              value={cfg.linhaMorada}
-              onChange={(e) => setCfg((c) => ({ ...c, linhaMorada: e.target.value }))}
+              id="pt-cid"
+              value={cfg.cidade}
+              onChange={(e) => setCfg((c) => ({ ...c, cidade: e.target.value }))}
             />
           </div>
           <div className="papel-timbrado-field">
-            <label htmlFor="pt-loc">{tx.papelTimbradoLinhaLocal || 'Localidade'}</label>
+            <label htmlFor="pt-freg">{tx.papelTimbradoCampoFreguesia || 'Freguesia'}</label>
             <input
-              id="pt-loc"
-              value={cfg.linhaLocal}
-              onChange={(e) => setCfg((c) => ({ ...c, linhaLocal: e.target.value }))}
+              id="pt-freg"
+              value={cfg.freguesia}
+              onChange={(e) => setCfg((c) => ({ ...c, freguesia: e.target.value }))}
+            />
+          </div>
+          <div className="papel-timbrado-field">
+            <label htmlFor="pt-rua">{tx.papelTimbradoCampoRua || 'Rua'}</label>
+            <input
+              id="pt-rua"
+              value={cfg.rua}
+              onChange={(e) => setCfg((c) => ({ ...c, rua: e.target.value }))}
+            />
+          </div>
+          <div className="papel-timbrado-field">
+            <label htmlFor="pt-cep">{tx.papelTimbradoCampoCep || 'CEP'}</label>
+            <input
+              id="pt-cep"
+              value={cfg.cep}
+              onChange={(e) => setCfg((c) => ({ ...c, cep: e.target.value }))}
             />
           </div>
           <div className="papel-timbrado-field">
@@ -269,19 +339,46 @@ export default function PapelTimbradoPage() {
                 <img className="papel-timbrado-logo" src={logoSrc} alt="" onError={() => setLogoBroken(true)} />
                 <div className="papel-timbrado-header-text">
                   <h2>{cfg.nomeEmpresa}</h2>
-                  <p className="addr">
-                    {cfg.linhaMorada}
-                    <br />
-                    {cfg.linhaLocal}
-                  </p>
-                  <p className="tel">{cfg.telefone}</p>
                 </div>
               </header>
               <section className="papel-timbrado-body-zone">
                 <span>{tx.papelTimbradoAreaCorpo || 'Área da correspondência'}</span>
               </section>
-              <footer className="papel-timbrado-footer">
-                {cfg.nomeEmpresa} · {cfg.telefone}
+              <footer className="papel-timbrado-footer" aria-label="Contactos">
+                <div className="papel-timbrado-footer-row">
+                  <span className="papel-timbrado-footer-item">
+                    <span className="papel-timbrado-footer-label">{tx.papelTimbradoLabelCidade}</span>
+                    <span className="papel-timbrado-footer-val">{cfg.cidade}</span>
+                  </span>
+                  <span className="papel-timbrado-footer-sep" aria-hidden="true">
+                    |
+                  </span>
+                  <span className="papel-timbrado-footer-item">
+                    <span className="papel-timbrado-footer-label">{tx.papelTimbradoLabelFreguesia}</span>
+                    <span className="papel-timbrado-footer-val">{cfg.freguesia}</span>
+                  </span>
+                  <span className="papel-timbrado-footer-sep" aria-hidden="true">
+                    |
+                  </span>
+                  <span className="papel-timbrado-footer-item">
+                    <span className="papel-timbrado-footer-label">{tx.papelTimbradoLabelRua}</span>
+                    <span className="papel-timbrado-footer-val">{cfg.rua}</span>
+                  </span>
+                  <span className="papel-timbrado-footer-sep" aria-hidden="true">
+                    |
+                  </span>
+                  <span className="papel-timbrado-footer-item">
+                    <span className="papel-timbrado-footer-label">{tx.papelTimbradoLabelCep}</span>
+                    <span className="papel-timbrado-footer-val">{cfg.cep}</span>
+                  </span>
+                  <span className="papel-timbrado-footer-sep" aria-hidden="true">
+                    |
+                  </span>
+                  <span className="papel-timbrado-footer-item">
+                    <span className="papel-timbrado-footer-label">{tx.papelTimbradoLabelFone}</span>
+                    <span className="papel-timbrado-footer-val">{cfg.telefone}</span>
+                  </span>
+                </div>
               </footer>
             </div>
           </div>
