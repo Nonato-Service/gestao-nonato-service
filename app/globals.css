@@ -1363,6 +1363,131 @@ body,
     0 0 0 1px rgba(52, 211, 153, 0.06);
 }
 
+/* Bloco «Protocolos de serviço»: acento dedicado e tipografia em duas linhas */
+.sidebar-nav-cluster--protocolos {
+  border-color: rgba(56, 189, 248, 0.12);
+  background: linear-gradient(165deg, rgba(6, 10, 14, 0.55) 0%, rgba(4, 12, 10, 0.52) 100%);
+}
+
+.sidebar-nav-cluster--protocolos:has(.sidebar-action-buttons) {
+  border-color: rgba(56, 189, 248, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 4px 18px rgba(0, 0, 0, 0.32),
+    0 0 0 1px rgba(45, 212, 191, 0.07);
+}
+
+.sidebar button.sidebar-group-header--protocolos:not(.sidebar-group-btn-selected) {
+  border-left-color: rgba(45, 212, 191, 0.72) !important;
+}
+
+.sidebar button.sidebar-group-header--protocolos:not(.sidebar-group-btn-selected):hover {
+  border-left-color: rgba(125, 211, 252, 0.95) !important;
+}
+
+.sidebar .sidebar-nav-label--stacked {
+  align-items: flex-start !important;
+}
+
+.sidebar .sidebar-nav-label-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sidebar .sidebar-nav-label-sub {
+  display: block;
+  text-transform: none !important;
+  letter-spacing: 0.02em !important;
+  font-size: 9.5px !important;
+  font-weight: 500 !important;
+  line-height: 1.28 !important;
+  color: rgba(186, 230, 253, 0.62) !important;
+  max-width: 100%;
+}
+
+.sidebar button.sidebar-group-btn-selected .sidebar-nav-label-sub {
+  color: rgba(207, 250, 254, 0.78) !important;
+}
+
+.sidebar .sidebar-protocolos-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  color: rgba(94, 234, 212, 0.92);
+  filter: drop-shadow(0 0 10px rgba(45, 212, 191, 0.22));
+}
+
+.sidebar .sidebar-protocolos-icon--compact {
+  color: rgba(110, 231, 183, 0.88);
+  filter: none;
+}
+
+.sidebar .sidebar-action-btn--protocolos-entry {
+  min-height: 46px !important;
+  padding: 10px 36px 10px 12px !important;
+}
+
+.sidebar .sidebar-protocolos-entry-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.sidebar .sidebar-protocolos-entry-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sidebar .sidebar-protocolos-entry-title {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  line-height: 1.22 !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sidebar .sidebar-protocolos-entry-sub {
+  font-size: 9px !important;
+  font-weight: 500 !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0.02em;
+  text-transform: none !important;
+  color: rgba(226, 245, 236, 0.58) !important;
+}
+
+.sidebar .sidebar-action-btn--protocolos-entry.sidebar-action-btn-active .sidebar-protocolos-entry-sub {
+  color: rgba(220, 252, 231, 0.72) !important;
+}
+
+.sidebar .sidebar-nav-chevron--entry {
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1;
+  opacity: 0.88;
+  color: rgba(167, 243, 208, 0.85);
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  min-width: 22px;
+}
+
+.sidebar .sidebar-action-btn--protocolos-entry.sidebar-action-btn-active .sidebar-nav-chevron--entry {
+  color: rgba(220, 252, 231, 0.95);
+}
+
 .sidebar-brand {
   flex-shrink: 0;
   margin-bottom: 22px;
@@ -5304,6 +5429,17 @@ button.dia-trabalho-acao-btn--del:hover {
 
 .tab-content-wrapper .protocolo-servico-card__actions-row--share {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tab-content-wrapper .protocolo-servico-card__actions-row--modelo {
+  grid-template-columns: minmax(0, 1.35fr) repeat(3, minmax(0, 1fr));
+  align-items: end;
+}
+
+@media (max-width: 720px) {
+  .tab-content-wrapper .protocolo-servico-card__actions-row--modelo {
+    grid-template-columns: 1fr;
+  }
 }
 
 .tab-content-wrapper .protocolo-servico-card__actions-row--manage {

@@ -457,6 +457,13 @@ export const translations = {
     protocolosServicoListaTotal: 'no total',
     protocolosServicoBuscaPlaceholder: 'Pesquisar por cliente, equipamento, série ou marca…',
     protocolosServicoListaVaziaFiltro: 'Nenhum protocolo corresponde à pesquisa.',
+    protocolosServicoFiltroClienteLabel: 'Filtrar por cliente',
+    protocolosServicoAgruparPorCliente: 'Agrupar por cliente',
+    protocolosServicoModeloImpressao: 'Modelo para impressão',
+    protocolosServicoEnvioEmailInstrucaoAnexo:
+      'Para enviar o PDF: no documento que se abre com Imprimir, use «Guardar como PDF» no seu sistema e anexe o ficheiro a este email.',
+    protocolosServicoEnvioWhatsappInstrucao:
+      'Anexe o PDF: Imprimir → Guardar como PDF no navegador.',
     protocolosServicoResumoBlocos: '{n} blocos',
     protocolosServicoResumoPecas: '{n} peças',
     numeroSerie: 'Nº Série',
@@ -3010,6 +3017,13 @@ export const translations = {
     protocolosServicoListaTotal: 'en total',
     protocolosServicoBuscaPlaceholder: 'Buscar por cliente, equipo, serie o marca…',
     protocolosServicoListaVaziaFiltro: 'Ningún protocolo coincide con la búsqueda.',
+    protocolosServicoFiltroClienteLabel: 'Filtrar por cliente',
+    protocolosServicoAgruparPorCliente: 'Agrupar por clientes',
+    protocolosServicoModeloImpressao: 'Modelo para imprimir',
+    protocolosServicoEnvioEmailInstrucaoAnexo:
+      'Para enviar el PDF: en el documento que se abre con Imprimir, use «Guardar como PDF» en su sistema y adjunte el archivo a este correo.',
+    protocolosServicoEnvioWhatsappInstrucao:
+      'Adjunte el PDF: Imprimir → Guardar como PDF en el navegador.',
     protocolosServicoResumoBlocos: '{n} bloques',
     protocolosServicoResumoPecas: '{n} piezas',
     numeroSerie: 'Nº Serie',
@@ -5331,6 +5345,13 @@ export const translations = {
     protocolosServicoListaTotal: 'au total',
     protocolosServicoBuscaPlaceholder: 'Rechercher client, équipement, série ou marque…',
     protocolosServicoListaVaziaFiltro: 'Aucun protocole ne correspond à la recherche.',
+    protocolosServicoFiltroClienteLabel: 'Filtrer par client',
+    protocolosServicoAgruparPorCliente: 'Regrouper par client',
+    protocolosServicoModeloImpressao: 'Modèle pour l’impression',
+    protocolosServicoEnvioEmailInstrucaoAnexo:
+      'Pour envoyer le PDF : dans le document ouvert via Imprimer, utilisez « Enregistrer au format PDF » puis joignez le fichier à cet e-mail.',
+    protocolosServicoEnvioWhatsappInstrucao:
+      'Joignez le PDF : Imprimer → Enregistrer au format PDF dans le navigateur.',
     protocolosServicoResumoBlocos: '{n} blocs',
     protocolosServicoResumoPecas: '{n} pièces',
     numeroSerie: 'N° Série',
@@ -7645,6 +7666,13 @@ export const translations = {
     protocolosServicoListaTotal: 'in totale',
     protocolosServicoBuscaPlaceholder: 'Cerca cliente, attrezzatura, serie o marca…',
     protocolosServicoListaVaziaFiltro: 'Nessun protocollo corrisponde alla ricerca.',
+    protocolosServicoFiltroClienteLabel: 'Filtra per cliente',
+    protocolosServicoAgruparPorCliente: 'Raggruppa per cliente',
+    protocolosServicoModeloImpressao: 'Modello per la stampa',
+    protocolosServicoEnvioEmailInstrucaoAnexo:
+      'Per inviare il PDF: nel documento aperto con Stampa, usi «Salva come PDF» nel sistema e allegi il file a questa email.',
+    protocolosServicoEnvioWhatsappInstrucao:
+      'Allegare il PDF: Stampa → Salva come PDF nel browser.',
     protocolosServicoResumoBlocos: '{n} blocchi',
     protocolosServicoResumoPecas: '{n} parti',
     numeroSerie: 'N° Serie',
@@ -9953,6 +9981,13 @@ export const translations = {
     protocolosServicoListaTotal: 'insgesamt',
     protocolosServicoBuscaPlaceholder: 'Suche nach Kunde, Gerät, Seriennummer oder Marke…',
     protocolosServicoListaVaziaFiltro: 'Kein Protokoll entspricht der Suche.',
+    protocolosServicoFiltroClienteLabel: 'Nach Kunde filtern',
+    protocolosServicoAgruparPorCliente: 'Nach Kunde gruppieren',
+    protocolosServicoModeloImpressao: 'Modell für den Druck',
+    protocolosServicoEnvioEmailInstrucaoAnexo:
+      'Um das PDF zu senden: Im über Drucken geöffneten Dokument «Als PDF speichern» wählen und die Datei an diese E-Mail anhängen.',
+    protocolosServicoEnvioWhatsappInstrucao:
+      'PDF anhängen: Drucken → Im Browser als PDF speichern.',
     protocolosServicoResumoBlocos: '{n} Blöcke',
     protocolosServicoResumoPecas: '{n} Teile',
     numeroSerie: 'Serien-Nr.',
@@ -12248,6 +12283,13 @@ export const translations = {
     protocolosServicoListaTotal: 'total',
     protocolosServicoBuscaPlaceholder: 'Search by client, equipment, serial or brand…',
     protocolosServicoListaVaziaFiltro: 'No protocol matches your search.',
+    protocolosServicoFiltroClienteLabel: 'Filter by client',
+    protocolosServicoAgruparPorCliente: 'Group by client',
+    protocolosServicoModeloImpressao: 'Layout for printing',
+    protocolosServicoEnvioEmailInstrucaoAnexo:
+      'To send the PDF: in the document opened with Print, choose «Save as PDF» and attach the file to this email.',
+    protocolosServicoEnvioWhatsappInstrucao:
+      'Attach the PDF: Print → Save as PDF in the browser.',
     protocolosServicoResumoBlocos: '{n} blocks',
     protocolosServicoResumoPecas: '{n} parts',
     numeroSerie: 'Serial No.',
