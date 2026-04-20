@@ -122,7 +122,7 @@ export const translations = {
     papelTimbradoLabelFone: 'FONE:',
     papelTimbradoLogoUrl: 'URL do logo (opcional)',
     papelTimbradoLogoHint:
-      'Por defeito: /brand/nonato-logo-original.png. Coloque o ficheiro em public/brand/ ou indique outro URL / dados em base64.',
+      'Por defeito: /brand/nonato-logo-papel-timbrado.png (logo vertical). Coloque o ficheiro em public/brand/ ou indique outro URL / dados em base64.',
     papelTimbradoSalvarConfig: 'Guardar configuração',
     papelTimbradoRestaurarNonato: 'Restaurar dados Nonato Service',
     papelTimbradoImprimir: 'Imprimir / PDF',
@@ -2789,7 +2789,7 @@ export const translations = {
     papelTimbradoLabelFone: 'TEL.:',
     papelTimbradoLogoUrl: 'URL del logotipo (opcional)',
     papelTimbradoLogoHint:
-      'Por defecto: /brand/nonato-logo-original.png. Guarde el archivo en public/brand/ o indique otra URL / datos en base64.',
+      'Por defecto: /brand/nonato-logo-papel-timbrado.png (logo vertical). Guarde el archivo en public/brand/ o indique otra URL / datos en base64.',
     papelTimbradoSalvarConfig: 'Guardar configuración',
     papelTimbradoRestaurarNonato: 'Restaurar datos Nonato Service',
     papelTimbradoImprimir: 'Imprimir / PDF',
@@ -5146,7 +5146,7 @@ export const translations = {
     papelTimbradoLabelFone: 'TÉL. :',
     papelTimbradoLogoUrl: 'URL du logo (facultatif)',
     papelTimbradoLogoHint:
-      'Par défaut : /brand/nonato-logo-original.png. Placez le fichier dans public/brand/ ou indiquez une autre URL / données en base64.',
+      'Par défaut : /brand/nonato-logo-papel-timbrado.png (logo vertical). Placez le fichier dans public/brand/ ou indiquez une autre URL / données en base64.',
     papelTimbradoSalvarConfig: 'Enregistrer la configuration',
     papelTimbradoRestaurarNonato: 'Rétablir les données Nonato Service',
     papelTimbradoImprimir: 'Imprimer / PDF',
@@ -7496,7 +7496,7 @@ export const translations = {
     papelTimbradoLabelFone: 'TEL.:',
     papelTimbradoLogoUrl: 'URL del logo (facoltativo)',
     papelTimbradoLogoHint:
-      'Predefinito: /brand/nonato-logo-original.png. Salva il file in public/brand/ oppure indica un altro URL / dati in base64.',
+      'Predefinito: /brand/nonato-logo-papel-timbrado.png (logo verticale). Salva il file in public/brand/ oppure indica un altro URL / dati in base64.',
     papelTimbradoSalvarConfig: 'Salva configurazione',
     papelTimbradoRestaurarNonato: 'Ripristina dati Nonato Service',
     papelTimbradoImprimir: 'Stampa / PDF',
@@ -9848,7 +9848,7 @@ export const translations = {
     papelTimbradoLabelFone: 'TEL.:',
     papelTimbradoLogoUrl: 'Logo-URL (optional)',
     papelTimbradoLogoHint:
-      'Standard: /brand/nonato-logo-original.png. Datei in public/brand/ ablegen oder andere URL / Base64-Daten angeben.',
+      'Standard: /brand/nonato-logo-papel-timbrado.png (vertikales Logo). Datei in public/brand/ ablegen oder andere URL / Base64-Daten angeben.',
     papelTimbradoSalvarConfig: 'Konfiguration speichern',
     papelTimbradoRestaurarNonato: 'Nonato-Service-Daten wiederherstellen',
     papelTimbradoImprimir: 'Drucken / PDF',
@@ -12171,7 +12171,7 @@ export const translations = {
     papelTimbradoLabelFone: 'PHONE:',
     papelTimbradoLogoUrl: 'Logo URL (optional)',
     papelTimbradoLogoHint:
-      'Default: /brand/nonato-logo-original.png. Place the file in public/brand/ or enter another URL / base64 data.',
+      'Default: /brand/nonato-logo-papel-timbrado.png (vertical logo). Place the file in public/brand/ or enter another URL / base64 data.',
     papelTimbradoSalvarConfig: 'Save settings',
     papelTimbradoRestaurarNonato: 'Restore Nonato Service defaults',
     papelTimbradoImprimir: 'Print / PDF',

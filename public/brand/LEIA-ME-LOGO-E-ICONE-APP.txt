@@ -72,8 +72,16 @@ FICHEIROS A NÃO APAGAR SEM SUBSTITUIR
 PAPEL TIMBRADO (A4)
 -------------------
   • Página: /papel-timbrado (atalho no Administrador, item 07 da grelha de atalhos)
-  • Cabeçalho: usa public/brand/nonato-logo-original.png quando existir.
-  • Reserva vectorial: public/brand/nonato-letterhead-logo.svg
+  • Logo vertical da marca (engrenagens + NONATO + SERVICE), por defeito:
+        public/brand/nonato-logo-papel-timbrado.png
+    — fundo transparente recomendado para impressão em papel branco.
+  • Para usar a tua arte oficial (export do teu ficheiro / designer):
+        substitui o ficheiro acima mantendo o MESMO nome, OU
+        coloca outro PNG/SVG em public/brand/ e na página Papel timbrado altera
+        o campo «URL do logo» para /brand/nome-do-ficheiro.ext
+  • Reserva vectorial (fallback se o URL falhar): public/brand/nonato-letterhead-logo.svg
+  • Interface da app / favicon: continuam a usar public/brand/nonato-logo-original.png
+    quando existir (independente do logo do papel timbrado).
   • Pode «Puxar dados do Cadastro Nonato Service»: lê nonato-ficha-cadastral (nome, morada, telefone, logo).
 
 ================================================================================

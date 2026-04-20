@@ -38,7 +38,7 @@ const DEFAULTS: PapelTimbradoConfig = {
   rua: 'Rua das Mimosas, 303',
   cep: '4905-642',
   telefone: '+351-91111-5479',
-  logoUrl: '/brand/nonato-logo-original.png',
+  logoUrl: '/brand/nonato-logo-papel-timbrado.png',
 }
 
 const FALLBACK_LOGO = '/brand/nonato-letterhead-logo.svg'
@@ -313,7 +313,7 @@ export default function PapelTimbradoPage() {
                   setLogoBroken(false)
                   setCfg((c) => ({ ...c, logoUrl: e.target.value }))
                 }}
-                placeholder="/brand/nonato-logo-original.png"
+                placeholder="/brand/nonato-logo-papel-timbrado.png"
                 className="papel-timbrado-textarea-logo"
               />
             ) : (
@@ -324,7 +324,7 @@ export default function PapelTimbradoPage() {
                   setLogoBroken(false)
                   setCfg((c) => ({ ...c, logoUrl: e.target.value }))
                 }}
-                placeholder="/brand/nonato-logo-original.png"
+                placeholder="/brand/nonato-logo-papel-timbrado.png"
               />
             )}
           </div>
