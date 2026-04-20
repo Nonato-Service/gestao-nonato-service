@@ -22670,6 +22670,17 @@ const nextF = familias.filter(x => x !== f)
                   type="button"
                   className="admin-panel-jump"
                   onClick={() => {
+                    window.open('/papel-timbrado', '_blank', 'noopener,noreferrer')
+                  }}
+                >
+                  <span className="admin-panel-jump__k">07</span>
+                  <span className="admin-panel-jump__t">{(safeT as any)?.adminJumpPapelTimbradoTitle || 'Papel timbrado'}</span>
+                  <span className="admin-panel-jump__d">{(safeT as any)?.adminJumpPapelTimbradoDesc || 'Modelo A4 com logo e contactos'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="admin-panel-jump"
+                  onClick={() => {
                     const el = document.getElementById('admin-detail-passwords') as HTMLDetailsElement | null
                     if (el) {
                       el.open = true
@@ -22677,7 +22688,7 @@ const nextF = familias.filter(x => x !== f)
                     }
                   }}
                 >
-                  <span className="admin-panel-jump__k">07</span>
+                  <span className="admin-panel-jump__k">08</span>
                   <span className="admin-panel-jump__t">{safeT?.passwordManagerTitle || 'Gestor de senhas'}</span>
                   <span className="admin-panel-jump__d">{safeT?.adminJumpPasswordsDesc || 'Senhas de técnicos / checklist'}</span>
                 </button>
@@ -22692,7 +22703,7 @@ const nextF = familias.filter(x => x !== f)
                     }
                   }}
                 >
-                  <span className="admin-panel-jump__k">08</span>
+                  <span className="admin-panel-jump__k">09</span>
                   <span className="admin-panel-jump__t">{safeT?.backupRestore || 'Backup e segurança'}</span>
                   <span className="admin-panel-jump__d">{safeT?.adminJumpBackupDesc || 'Código, ZIP e restauração'}</span>
                 </button>

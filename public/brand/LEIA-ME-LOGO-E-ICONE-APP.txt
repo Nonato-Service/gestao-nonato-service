@@ -69,4 +69,11 @@ FICHEIROS A NÃO APAGAR SEM SUBSTITUIR
 
   (Contêm a referência ao logo; se apagares, recria conforme o repositório.)
 
+PAPEL TIMBRADO (A4)
+-------------------
+  • Página: /papel-timbrado (atalho no Administrador, item 07 da grelha de atalhos)
+  • Cabeçalho: usa public/brand/nonato-logo-original.png quando existir.
+  • Reserva vectorial: public/brand/nonato-letterhead-logo.svg
+  • Pode «Puxar dados do Cadastro Nonato Service»: lê nonato-ficha-cadastral (nome, morada, telefone, logo).
+
 ================================================================================
