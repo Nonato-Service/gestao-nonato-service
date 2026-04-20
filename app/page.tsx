@@ -11604,6 +11604,37 @@ export default function Dashboard() {
     setTimeout(run, 320)
   }, [])
 
+  /** Secção «Novo Dia de Trabalho» fica acima da tabela; com scroll interno no cartão do relatório, Editar parecia não fazer nada. */
+  const scrollRelatorioServicoDiaEditorIntoView = useCallback(() => {
+    const run = () => {
+      const target = document.getElementById('relatorio-servico-dia-trabalho-editor') as HTMLElement | null
+      if (!target) return
+      const formShell = document.getElementById('relatorio-servico-edit-form') as HTMLElement | null
+      if (formShell) {
+        const pad = 12
+        const fsRect = formShell.getBoundingClientRect()
+        const tRect = target.getBoundingClientRect()
+        const nextTop = tRect.top - fsRect.top + formShell.scrollTop - pad
+        formShell.scrollTo({ top: Math.max(0, nextTop), behavior: 'smooth' })
+      } else {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+      const main = mainContentAreaRef.current
+      const inner = main?.querySelector('.tab-inner-scroll') as HTMLElement | null
+      if (inner) {
+        const ir = inner.getBoundingClientRect()
+        const tr = target.getBoundingClientRect()
+        if (tr.top < ir.top + 18 || tr.bottom > ir.bottom - 18) {
+          const nextTop = tr.top - ir.top + inner.scrollTop - 20
+          inner.scrollTo({ top: Math.max(0, nextTop), behavior: 'smooth' })
+        }
+      }
+    }
+    queueMicrotask(run)
+    setTimeout(run, 50)
+    setTimeout(run, 200)
+  }, [])
+
   const handleAddRelatorioServico = () => {
     // Gerar número automático de relatório
     const numeroAuto = gerarNumeroRelatorio()
@@ -27703,13 +27734,17 @@ onKeyPress={(e) => {
                   <h4 style={{ marginBottom: '15px', color: '#00ff00' }}>{safeT?.diasTrabalho || 'Dias de Trabalho'}</h4>
                   
                   {/* Formulário para adicionar novo dia - Formato da Foto */}
-                  <div style={{ 
+                  <div
+                    id="relatorio-servico-dia-trabalho-editor"
+                    className="relatorio-servico-dia-trabalho-editor"
+                    style={{ 
                     border: '1px solid rgba(0, 255, 0, 0.2)', 
                     padding: '20px', 
                     borderRadius: '8px', 
                     marginBottom: '15px', 
                     backgroundColor: '#141414' 
-                  }}>
+                  }}
+                  >
                     <h5 style={{ 
                       marginBottom: '20px', 
                       fontSize: '16px', 
@@ -28425,8 +28460,8 @@ onKeyPress={(e) => {
                               const dataFormatada = dia.data ? new Date(dia.data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-';
                               const temDescricao = dia.descricaoTrabalho && dia.descricaoTrabalho.trim() !== '';
                               return (
-                                <>
-                                  <tr key={dia.id || `dia-${index}`} style={{ borderBottom: temDescricao ? 'none' : '1px solid rgba(0, 255, 0, 0.2)' }}>
+                                <React.Fragment key={dia.id || `dia-${index}`}>
+                                  <tr style={{ borderBottom: temDescricao ? 'none' : '1px solid rgba(0, 255, 0, 0.2)' }}>
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }} rowSpan={temDescricao ? 2 : 1}>{dataFormatada}</td>
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '10px', whiteSpace: 'nowrap' }}>{dia.idaHora || '-'}</td>
                                     <td style={{ padding: '6px 4px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '10px', whiteSpace: 'nowrap' }}>{dia.idaChegada || '-'}</td>
@@ -28446,7 +28481,9 @@ onKeyPress={(e) => {
                                         <button
                                           type="button"
                                           className="dia-trabalho-acao-btn dia-trabalho-acao-btn--edit"
-                                          onClick={() => {
+                                          onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
                                             setNovoDiaTrabalho({
                                               id: dia.id,
                                               data: dia.data || new Date().toISOString().split('T')[0],
@@ -28467,6 +28504,7 @@ onKeyPress={(e) => {
                                               descricaoTrabalho: dia.descricaoTrabalho || ''
                                             })
                                             setEditingDiaTrabalhoIndex(index)
+                                            scrollRelatorioServicoDiaEditorIntoView()
                                           }}
                                           title={(safeT as any)?.editar || safeT?.edit || 'Editar'}
                                         >
@@ -28493,7 +28531,7 @@ onKeyPress={(e) => {
                                       </td>
                                     </tr>
                                   )}
-                                </>
+                                </React.Fragment>
                               );
                             })}
                           </tbody>

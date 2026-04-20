@@ -4077,6 +4077,10 @@ a:focus-visible {
   scroll-margin-top: 20px;
 }
 
+.relatorio-servico-dia-trabalho-editor {
+  scroll-margin-top: 16px;
+}
+
 @media (max-width: 768px) {
   .tab-content-wrapper.relatorio-servico-root {
     max-width: 100% !important;
