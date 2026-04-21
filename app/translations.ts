@@ -2491,14 +2491,23 @@ export const translations = {
     pedidoOrcamentosAvulsoTitle: 'PEDIDO DE ORÇAMENTOS AVULSO',
     orcamentoServicoTecnicoTitle: 'ORÇAMENTO DE SERVIÇO TÉCNICO',
     orcamentoServicoTecnicoSubtitle:
-      'Monte a proposta no papel timbrado: escolha serviços cadastrados (hora, viagem, km, etc.), imprima ou guarde em PDF.',
+      'Monte a proposta no papel timbrado: escolha linhas a partir do cadastro de serviços / valores (hora, km, diárias, etc.), reveja as condições legais e gere PDF ou impressão.',
     helpOrcamentoServicoTecnico:
-      'Use o cadastro de serviços para definir preços por hora, quilómetro ou outro tipo. O texto sobre despesas de hotel, alimentação e viagens é editável — ajuste ao contrato em vigor. «Imprimir / PDF» usa o cabeçalho guardado em Papel timbrado.',
+      'Defina preços no cadastro de serviços. Este módulo gera um PDF claro com tabela de itens, condições gerais (viagens, hotel, alimentação, equipagem) e bloco de ciência para assinatura do contratante. Todo o texto jurídico é editável antes de imprimir.',
     orcamentoServicoTecnicoTituloForm: 'Orçamento de serviço técnico',
+    orcamentoServicoTecnicoFormAvisoCliente:
+      'O PDF inclui condições profissionais sobre despesas de deslocação, hotel, alimentação e transporte aéreo (por regra à cargo da empresa contratante), limites de equipagem e trabalhos extra. Ajuste o texto «Condições» se o contrato ou a negociação forem diferentes.',
     orcamentoServicoTecnicoIntroDefault:
-      'Documento sem valor fiscal. Valores meramente indicativos para serviço técnico, sujeitos a confirmação por escrito.',
+      'Documento informativo e proposta comercial sem valor fiscal. Os valores resultam exclusivamente das rubricas selecionadas do cadastro de serviços / valores. A execução de trabalhos no terreno ficará sujeita a ordem de serviço ou contrato próprio, sem prejuízo das condições gerais constantes deste documento.',
     orcamentoServicoTecnicoClausulasDefault:
-      'Orçamento relativo à prestação de serviço técnico, com base nos itens e valores indicados neste documento e nos serviços cadastrados no sistema.\n\nAs despesas de estadia (hotel), alimentação e passagens aéreas ou de transporte, quando necessárias à execução do serviço e previamente acordadas, correm por conta do cliente.\n\nDespesas pessoais ou extra-profissionais, bem como despesas não diretamente relacionadas com o trabalho contratado, não devem constar nem ser apresentadas neste documento.',
+      '1. Natureza do documento\nO presente documento constitui proposta de orçamento para prestação de serviço técnico, sem valor fiscal, elaborada com base nas rubricas e preços constantes do cadastro de serviços / valores aplicáveis. Não substitui ordem de serviço, contrato ou documentos fiscais próprios.\n\n2. Despesas de deslocação, alojamento, alimentação e transporte\nSalvo menção expressa e por escrito em contrário nesta proposta ou em documento posterior assinado pelas partes, todas as despesas com deslocação da equipa (incluindo transporte rodoviário, combustível, portagens e, quando aplicável, passagens aéreas ou outros meios de transporte necessários à execução do serviço), alojamento (hotel ou equivalente) e alimentação da equipa técnica são sempre suportadas pela entidade contratante (empresa cliente).\n\n3. Equipagem, horas extraordinárias e custos não previstos\nQualquer aumento do número de técnicos, prolongamento do período de intervenção, horas extraordinárias ou despesas fora do âmbito desta proposta carecem de autorização prévia e escrita da entidade contratante. Na ausência dessa autorização, não serão reconhecidos para efeitos de faturação.\n\n4. Despesas pessoais e não relacionadas com o serviço\nNão integram o presente orçamento despesas de natureza pessoal, social ou extra-profissional da equipa, nem quaisquer custos que não guardem relação direta e documentada com a execução do serviço técnico objeto da proposta.\n\n5. Validade e aceitação\nA aceitação desta proposta implica tomada de conhecimento das condições aqui descritas. Findo o prazo de validade indicado, valores, disponibilidades e condições poderão ser revistos.\n\n6. Foro e litígios\nPara a resolução de quaisquer litígios emergentes da interpretação ou execução da presente proposta, aplicável a legislação em vigor, com renúncia a qualquer outro, desde que legalmente admissível.',
+    orcamentoServicoTecnicoPdfCondicoesTitulo: 'CONDIÇÕES GERAIS E INFORMAÇÃO AO CONTRATANTE',
+    orcamentoServicoTecnicoPdfCientificacaoTitulo: 'DECLARAÇÃO DE CIÊNCIA (entidade contratante)',
+    orcamentoServicoTecnicoPdfCientificacaoTexto:
+      'A entidade contratante declara ter lido e compreendido a presente proposta, incluindo as condições relativas a despesas de deslocação, alojamento, alimentação e transporte aéreo, bem como limites de equipagem e trabalhos adicionais, nos termos acima.',
+    orcamentoServicoTecnicoPdfLinhaNomeCargo: 'Nome, cargo e empresa',
+    orcamentoServicoTecnicoPdfLinhaData: 'Data',
+    orcamentoServicoTecnicoPdfLinhaAssinatura: 'Assinatura e carimbo',
     orcamentoServicoTecnicoAtualizarPapel: 'Recarregar cabeçalho do papel timbrado',
     orcamentoServicoTecnicoConfigPapel: 'Abrir configuração do papel timbrado',
     orcamentoServicoTecnicoAbrirCadastroServicos: 'Abrir cadastro de serviços / valores',
@@ -4966,14 +4975,23 @@ export const translations = {
     pedidoOrcamentosAvulsoTitle: 'PEDIDO DE PRESUPUESTOS SUELTOS',
     orcamentoServicoTecnicoTitle: 'PRESUPUESTO DE SERVICIO TÉCNICO',
     orcamentoServicoTecnicoSubtitle:
-      'Arme la propuesta en papel membretado: seleccione servicios registrados (hora, viaje, km, etc.) e imprima o guarde en PDF.',
+      'Arme la propuesta en papel membretado: añada líneas del registro de servicios / valores, revise las condiciones legales e imprima o guarde en PDF.',
     helpOrcamentoServicoTecnico:
-      'Defina precios en el registro de servicios. El texto sobre hotel, comida y billetes es editable. «Imprimir / PDF» usa el membrete guardado.',
+      'Mantenga tarifas en el registro de servicios. Este módulo genera un PDF con tabla, condiciones generales (viajes, hotel, comidas, equipo) y bloque de reconocimiento firmable. Todo el texto jurídico es editable.',
     orcamentoServicoTecnicoTituloForm: 'Presupuesto de servicio técnico',
+    orcamentoServicoTecnicoFormAvisoCliente:
+      'El PDF incluye condiciones claras sobre gastos de viaje, hotel, comidas y vuelos (por regla a cargo de la empresa contratante), límites de equipo y trabajo adicional. Edite «Condiciones» si su contrato es distinto.',
     orcamentoServicoTecnicoIntroDefault:
-      'Documento sin valor fiscal. Importes orientativos para servicio técnico, sujetos a confirmación por escrito.',
+      'Documento informativo y propuesta comercial sin valor fiscal. Los importes provienen solo de las líneas seleccionadas del registro de servicios / valores. La ejecución en campo quedará sujeta a orden de trabajo o contrato aparte, sin perjuicio de las condiciones generales de este documento.',
     orcamentoServicoTecnicoClausulasDefault:
-      'Presupuesto relativo a la prestación de servicio técnico según los ítems indicados y los servicios dados de alta.\n\nLos gastos de alojamiento (hotel), manutención y billetes de avión o transporte, cuando sean necesarios para el servicio y acordados previamente, corren por cuenta del cliente.\n\nLos gastos personales o no ligados al trabajo contratado no deben figurar ni presentarse en este documento.',
+      '1. Naturaleza del documento\nPropuesta de presupuesto para servicio técnico sin valor fiscal, basada en el registro de servicios / valores. No sustituye orden de trabajo, contrato ni documentos fiscales.\n\n2. Desplazamiento, alojamiento, manutención y transporte\nSalvo pacto escrito en contrario, los gastos de desplazamiento del equipo (incl. combustible, peajes y, en su caso, billetes de avión u otros medios), hotel y manutención corren siempre por cuenta de la empresa contratante.\n\n3. Tamaño del equipo, horas extra y costes no previstos\nCualquier aumento de técnicos, prolongación, horas extra o gasto fuera de este presupuesto requiere autorización previa por escrito del cliente. Sin ella no se reconocerán cargos adicionales.\n\n4. Gastos personales o no vinculados al servicio\nQuedan excluidos gastos personales o sociales y cualquier coste no directamente relacionado con el servicio técnico objeto del presupuesto.\n\n5. Validez y aceptación\nLa aceptación implica conocimiento de estas condiciones. Pasada la validez indicada, precios y disponibilidad pueden revisarse.\n\n6. Litigios\nRige la legislación aplicable en la medida permitida.',
+    orcamentoServicoTecnicoPdfCondicoesTitulo: 'CONDICIONES GENERALES E INFORMACIÓN AL CONTRATANTE',
+    orcamentoServicoTecnicoPdfCientificacaoTitulo: 'DECLARACIÓN DE CONFORMIDAD (contratante)',
+    orcamentoServicoTecnicoPdfCientificacaoTexto:
+      'La entidad contratante declara haber leído y comprendido esta propuesta, incluidas las condiciones sobre desplazamiento, alojamiento, manutención y transporte aéreo, así como límites de equipo y trabajos adicionales, según lo anterior.',
+    orcamentoServicoTecnicoPdfLinhaNomeCargo: 'Nombre, cargo y empresa',
+    orcamentoServicoTecnicoPdfLinhaData: 'Fecha',
+    orcamentoServicoTecnicoPdfLinhaAssinatura: 'Firma y sello',
     orcamentoServicoTecnicoAtualizarPapel: 'Recargar membrete',
     orcamentoServicoTecnicoConfigPapel: 'Configurar papel membretado',
     orcamentoServicoTecnicoAbrirCadastroServicos: 'Abrir registro de servicios / valores',
@@ -7367,14 +7385,23 @@ export const translations = {
     pedidoOrcamentosAvulsoTitle: 'DEMANDE DE DEVIS VOLANT',
     orcamentoServicoTecnicoTitle: 'DEVIS DE PRESTATION TECHNIQUE',
     orcamentoServicoTecnicoSubtitle:
-      'Rédigez la proposition sur papier à en-tête : choisissez les services enregistrés (heures, déplacement, km, etc.), imprimez ou enregistrez en PDF.',
+      'Rédigez la proposition sur papier à en-tête : ajoutez des lignes issues du registre services / tarifs, contrôlez les clauses puis imprimez ou exportez en PDF.',
     helpOrcamentoServicoTecnico:
-      'Définissez les tarifs dans le registre des services. Le texte sur hôtel, repas et billets est modifiable. « Imprimer / PDF » utilise l’en-tête enregistré.',
+      'Maintenez les tarifs dans le registre des services. Ce module produit un PDF structuré (tableau, conditions générales, bloc de prise de connaissance). Tout le texte juridique est modifiable avant impression.',
     orcamentoServicoTecnicoTituloForm: 'Devis de prestation technique',
+    orcamentoServicoTecnicoFormAvisoCliente:
+      'Le PDF inclut des clauses professionnelles sur déplacements, hôtel, repas et vols (en principe à la charge du donneur d’ordre), effectifs et travaux supplémentaires. Ajustez « Conditions » si votre contrat diffère.',
     orcamentoServicoTecnicoIntroDefault:
-      'Document sans valeur fiscale. Montants indicatifs pour prestation technique, sous réserve de confirmation écrite.',
+      'Document d’information et proposition commerciale sans valeur fiscale. Les montants proviennent uniquement des lignes sélectionnées dans le registre services / tarifs. L’exécution sur site reste soumise à bon de commande ou contrat distinct, sans préjudice des présentes conditions générales.',
     orcamentoServicoTecnicoClausulasDefault:
-      'Devis relatif à la prestation de service technique selon les postes indiqués et les services enregistrés.\n\nLes frais d’hébergement (hôtel), de restauration et de transport aérien ou terrestre, lorsqu’ils sont nécessaires à la prestation et préalablement convenus, sont à la charge du client.\n\nLes dépenses personnelles ou sans lien avec la prestation ne doivent pas figurer sur ce document.',
+      '1. Nature du document\nProposition de devis pour prestation technique sans valeur fiscale, fondée sur le registre services / tarifs. Ne remplace pas bon de commande, contrat ni pièces fiscales.\n\n2. Déplacement, hébergement, repas et transport\nSauf accord écrit contraire, les frais de déplacement de l’équipe (carburant, péages, billets d’avion ou autres moyens nécessaires), hôtel et repas sont toujours supportés par le donneur d’ordre.\n\n3. Taille d’équipe, heures supplémentaires et coûts non prévus\nTout renfort d’effectif, prolongation, heures supplémentaires ou dépense hors devis nécessite une autorisation écrite préalable du client. Sans cela, aucun supplément ne sera reconnu.\n\n4. Dépenses personnelles ou sans lien avec la prestation\nExclues : dépenses personnelles ou sociales, et tout coût sans lien direct et documenté avec la prestation technique objet du devis.\n\n5. Validité et acceptation\nL’acceptation vaut prise de connaissance des présentes conditions. Après la date de validité, prix et disponibilités peuvent être révisés.\n\n6. Litiges\nDroit applicable dans les limites permises.',
+    orcamentoServicoTecnicoPdfCondicoesTitulo: 'CONDITIONS GÉNÉRALES ET INFORMATION AU DONNEUR D’ORDRE',
+    orcamentoServicoTecnicoPdfCientificacaoTitulo: 'ATTESTATION DE PRISE DE CONNAISSANCE (donneur d’ordre)',
+    orcamentoServicoTecnicoPdfCientificacaoTexto:
+      'Le donneur d’ordre déclare avoir lu et compris la présente proposition, y compris les dispositions relatives aux déplacements, hébergement, repas et transport aérien, aux effectifs et aux travaux supplémentaires, telles qu’énoncées ci-dessus.',
+    orcamentoServicoTecnicoPdfLinhaNomeCargo: 'Nom, fonction et société',
+    orcamentoServicoTecnicoPdfLinhaData: 'Date',
+    orcamentoServicoTecnicoPdfLinhaAssinatura: 'Signature et cachet',
     orcamentoServicoTecnicoAtualizarPapel: 'Recharger l’en-tête',
     orcamentoServicoTecnicoConfigPapel: 'Configurer le papier à en-tête',
     orcamentoServicoTecnicoAbrirCadastroServicos: 'Ouvrir le registre des services / tarifs',
@@ -9749,14 +9776,23 @@ export const translations = {
     pedidoOrcamentosAvulsoTitle: 'RICHIESTA PREVENTIVO SCOLLEGATO',
     orcamentoServicoTecnicoTitle: 'PREVENTIVO DI SERVIZIO TECNICO',
     orcamentoServicoTecnicoSubtitle:
-      'Compila la proposta su carta intestata: seleziona i servizi registrati (ore, viaggio, km, ecc.), stampa o salva in PDF.',
+      'Compila la proposta su carta intestata: aggiungi righe dal registro servizi / valori, verifica le clausole e stampa o salva in PDF.',
     helpOrcamentoServicoTecnico:
-      'Definisci i prezzi nel registro servizi. Il testo su hotel, vitto e biglietti è modificabile. «Stampa / PDF» usa l’intestazione salvata.',
+      'Aggiorna i prezzi nel registro servizi. Questo modulo genera un PDF con tabella, condizioni generali (viaggi, hotel, pasti, team) e blocco di presa visione. Tutto il testo legale è modificabile prima della stampa.',
     orcamentoServicoTecnicoTituloForm: 'Preventivo di servizio tecnico',
+    orcamentoServicoTecnicoFormAvisoCliente:
+      'Il PDF include clausole professionali su trasferte, hotel, pasti e voli (di regola a carico del committente), limiti di squadra e lavori extra. Modifica «Condizioni» se il contratto è diverso.',
     orcamentoServicoTecnicoIntroDefault:
-      'Documento senza valore fiscale. Importi indicativi per servizio tecnico, soggetti a conferma scritta.',
+      'Documento informativo e proposta commerciale senza valore fiscale. Gli importi derivano solo dalle righe selezionate nel registro servizi / valori. L’esecuzione in cantiere resta soggetta a ordine di lavoro o contratto separato, senza pregiudizio delle presenti condizioni generali.',
     orcamentoServicoTecnicoClausulasDefault:
-      'Preventivo relativo alla prestazione di servizio tecnico in base alle voci indicate e ai servizi registrati.\n\nLe spese di alloggio (hotel), vitto e biglietti aerei o di trasporto, se necessarie all’esecuzione e concordate in anticipo, sono a carico del cliente.\n\nSpese personali o non collegate al lavoro contrattuale non devono comparire in questo documento.',
+      '1. Natura del documento\nProposta di preventivo per servizio tecnico senza valore fiscale, basata sul registro servizi / valori. Non sostituisce ordine di lavoro, contratto o documenti fiscali.\n\n2. Trasferta, alloggio, pasti e trasporto\nSalvo diverso accordo scritto, i costi di spostamento del team (carburante, pedaggi, biglietti aerei o altri mezzi necessari), hotel e pasti sono sempre a carico del committente.\n\n3. Dimensione squadra, straordinari e costi non previsti\nOgni aumento di tecnici, prolungamento, straordinari o spesa fuori preventivo richiede autorizzazione scritta preventiva del cliente. In assenza, nessun addebito aggiuntivo sarà riconosciuto.\n\n4. Spese personali o non correlate\nEscluse spese personali o sociali e ogni costo non direttamente collegato al servizio tecnico oggetto del preventivo.\n\n5. Validità e accettazione\nL’accettazione implica presa visione delle condizioni. Scaduta la validità, prezzi e disponibilità possono essere rivisti.\n\n6. Controversie\nSi applica la legge vigente nei limiti consentiti.',
+    orcamentoServicoTecnicoPdfCondicoesTitulo: 'CONDIZIONI GENERALI E INFORMAZIONE AL COMMITTENTE',
+    orcamentoServicoTecnicoPdfCientificacaoTitulo: 'DICHIARAZIONE DI PRESA VISIONE (committente)',
+    orcamentoServicoTecnicoPdfCientificacaoTexto:
+      'Il committente dichiara di aver letto e compreso la presente proposta, incluse le disposizioni su trasferte, alloggio, pasti e trasporto aereo, nonché limiti di squadra e lavori aggiuntivi, come sopra indicato.',
+    orcamentoServicoTecnicoPdfLinhaNomeCargo: 'Nome, ruolo e azienda',
+    orcamentoServicoTecnicoPdfLinhaData: 'Data',
+    orcamentoServicoTecnicoPdfLinhaAssinatura: 'Firma e timbro',
     orcamentoServicoTecnicoAtualizarPapel: 'Ricarica carta intestata',
     orcamentoServicoTecnicoConfigPapel: 'Configura carta intestata',
     orcamentoServicoTecnicoAbrirCadastroServicos: 'Apri registro servizi / valori',
@@ -12142,14 +12178,23 @@ export const translations = {
     pedidoOrcamentosAvulsoTitle: 'ANFRAGE EINZELANGEBOT',
     orcamentoServicoTecnicoTitle: 'ANGEBOT TECHNISCHER SERVICE',
     orcamentoServicoTecnicoSubtitle:
-      'Erstellen Sie das Angebot auf Briefpapier: wählen Sie erfasste Leistungen (Stunden, Anfahrt, km usw.), drucken oder als PDF speichern.',
+      'Erstellen Sie das Angebot auf Briefpapier: Zeilen aus dem Leistungskatalog / Preisen hinzufügen, Klauseln prüfen, drucken oder als PDF speichern.',
     helpOrcamentoServicoTecnico:
-      'Preise im Leistungskatalog pflegen. Text zu Hotel, Verpflegung und Tickets ist editierbar. «Drucken / PDF» nutzt das gespeicherte Briefpapier.',
+      'Pflegen Sie Preise im Leistungskatalog. Dieses Modul erzeugt ein PDF mit Tabelle, Allgemeinen Bedingungen (Reise, Hotel, Verpflegung, Teamgröße) und einem unterzeichbaren Bestätigungsblock. Rechtstexte sind vor dem Druck editierbar.',
     orcamentoServicoTecnicoTituloForm: 'Angebot technischer Service',
+    orcamentoServicoTecnicoFormAvisoCliente:
+      'Das PDF enthält professionelle Klauseln zu Reise, Hotel, Verpflegung und Flügen (in der Regel vom Auftraggeber zu tragen), Teamgröße und Zusatzarbeiten. Passen Sie «Bedingungen» an, wenn Ihr Vertrag abweicht.',
     orcamentoServicoTecnicoIntroDefault:
-      'Dokument ohne steuerliche Relevanz. Beträge sind Richtwerte für technischen Service, vorbehaltlich schriftlicher Bestätigung.',
+      'Informations- und Handelsangebot ohne steuerliche Wirkung. Beträge ergeben sich ausschließlich aus den ausgewählten Zeilen des Leistungskatalogs / der Preise. Die Ausführung vor Ort unterliegt gesondertem Auftrag oder Vertrag, unbeschadet dieser Allgemeinen Bedingungen.',
     orcamentoServicoTecnicoClausulasDefault:
-      'Angebot für technischen Service gemäß den aufgeführten Positionen und den erfassten Leistungen.\n\nKosten für Unterkunft (Hotel), Verpflegung sowie Flug- oder Transporttickets, sofern für die Ausführung erforderlich und vorab vereinbart, trägt der Kunde.\n\nPersönliche oder nicht sachbezogene Ausgaben dürfen in diesem Dokument nicht ausgewiesen werden.',
+      '1. Art des Dokuments\nAngebotsvorschlag für technischen Service ohne steuerliche Wirkung, basierend auf Leistungskatalog / Preisen. Ersetzt weder Arbeitsauftrag, Vertrag noch Steuerbelege.\n\n2. Anreise, Unterkunft, Verpflegung und Transport\nSofern nicht schriftlich anders vereinbart, trägt der Auftraggeber sämtliche Kosten für Team-Anreise (Kraftstoff, Maut, Flugtickets oder sonstige notwendige Transportmittel), Hotel und Verpflegung.\n\n3. Teamgröße, Überstunden und nicht vorhergesehene Kosten\nMehr Techniker, längere Einsatzzeit, Überstunden oder Kosten außerhalb dieses Angebots bedürfen der vorherigen schriftlichen Freigabe durch den Auftraggeber. Ohne Freigabe werden keine Zusatzkosten anerkannt.\n\n4. Persönliche oder nicht sachbezogene Ausgaben\nAusgeschlossen sind persönliche/soziale Ausgaben sowie Kosten ohne direkten, nachweisbaren Bezug zum angebotenen technischen Service.\n\n5. Gültigkeit und Annahme\nMit Annahme wird bestätigt, dass diese Bedingungen zur Kenntnis genommen wurden. Nach Ablauf der Gültigkeit können Preise und Verfügbarkeit angepasst werden.\n\n6. Streitigkeiten\nEs gilt das anwendbare Recht im zulässigen Umfang.',
+    orcamentoServicoTecnicoPdfCondicoesTitulo: 'ALLGEMEINE BEDINGUNGEN UND HINWEIS FÜR DEN AUFTRAGGEBER',
+    orcamentoServicoTecnicoPdfCientificacaoTitulo: 'BESTÄTIGUNG DER KENNTNISNAHME (Auftraggeber)',
+    orcamentoServicoTecnicoPdfCientificacaoTexto:
+      'Der Auftraggeber bestätigt, dieses Angebot einschließlich der Regelungen zu Anreise, Unterkunft, Verpflegung und Flugtransport sowie zu Teamgröße und Zusatzarbeiten gelesen und verstanden zu haben.',
+    orcamentoServicoTecnicoPdfLinhaNomeCargo: 'Name, Funktion und Firma',
+    orcamentoServicoTecnicoPdfLinhaData: 'Datum',
+    orcamentoServicoTecnicoPdfLinhaAssinatura: 'Unterschrift und Stempel',
     orcamentoServicoTecnicoAtualizarPapel: 'Briefkopf neu laden',
     orcamentoServicoTecnicoConfigPapel: 'Briefpapier konfigurieren',
     orcamentoServicoTecnicoAbrirCadastroServicos: 'Leistungskatalog / Preise öffnen',
@@ -14590,14 +14635,23 @@ export const translations = {
     pedidoOrcamentosAvulsoTitle: 'STANDALONE QUOTE REQUEST',
     orcamentoServicoTecnicoTitle: 'TECHNICAL SERVICE QUOTE',
     orcamentoServicoTecnicoSubtitle:
-      'Build the proposal on letterhead: pick registered services (hours, travel, km, etc.), print or save as PDF.',
+      'Build the proposal on letterhead: add lines from the service / rate register, review legal wording, then print or save as PDF.',
     helpOrcamentoServicoTecnico:
-      'Maintain hourly rates and travel in the service register. The wording on hotel, meals and flights is editable. «Print / PDF» uses the saved letterhead.',
+      'Maintain rates in the service register. This module outputs a clear PDF with a line table, general terms (travel, hotel, meals, crew size) and a countersignature block. All legal text is editable before printing.',
     orcamentoServicoTecnicoTituloForm: 'Technical service quote',
+    orcamentoServicoTecnicoFormAvisoCliente:
+      'The PDF includes professional terms on travel, hotel, meals and flights (normally charged to the contracting company), crew limits and extra work. Edit the «Terms» box if your contract differs.',
     orcamentoServicoTecnicoIntroDefault:
-      'Non-fiscal document. Figures are indicative for technical service and subject to written confirmation.',
+      'Non-fiscal information and commercial proposal. Amounts come only from the selected lines in the service / rate register. Field work remains subject to a service order or separate contract, without prejudice to the general terms in this document.',
     orcamentoServicoTecnicoClausulasDefault:
-      'Quote for technical service based on the line items below and on services registered in the system.\n\nHotel, meals and air or ground travel, when required for the assignment and agreed in advance, are borne by the client.\n\nPersonal expenses or costs not directly related to the contracted work must not be shown on this document.',
+      '1. Nature of this document\nThis is a non-fiscal technical service quote based on the service / rate register. It does not replace a service order, contract or tax documents.\n\n2. Travel, accommodation, meals and transport\nUnless expressly agreed otherwise in writing, all costs for team travel (including road transport, fuel, tolls and, where applicable, air tickets), hotel accommodation and meals are borne by the contracting customer.\n\n3. Crew size, overtime and unforeseen costs\nAny increase in headcount, longer on-site time, overtime or costs outside this quote require prior written approval from the customer. Without such approval, no extra charges will be recognised.\n\n4. Personal or unrelated expenses\nPersonal, social or non-job-related expenses, and any cost not directly and demonstrably linked to the quoted technical service, are excluded.\n\n5. Validity and acceptance\nAccepting this quote means the conditions above were read and understood. After the stated validity, prices and availability may change.\n\n6. Disputes\nApplicable law governs interpretation and disputes, to the extent permitted.',
+    orcamentoServicoTecnicoPdfCondicoesTitulo: 'GENERAL TERMS AND INFORMATION FOR THE CONTRACTING PARTY',
+    orcamentoServicoTecnicoPdfCientificacaoTitulo: 'ACKNOWLEDGEMENT (contracting party)',
+    orcamentoServicoTecnicoPdfCientificacaoTexto:
+      'The contracting party declares that they have read and understood this proposal, including provisions on travel, accommodation, meals and air transport, crew limits and additional work, as stated above.',
+    orcamentoServicoTecnicoPdfLinhaNomeCargo: 'Name, role and company',
+    orcamentoServicoTecnicoPdfLinhaData: 'Date',
+    orcamentoServicoTecnicoPdfLinhaAssinatura: 'Signature and stamp',
     orcamentoServicoTecnicoAtualizarPapel: 'Reload letterhead',
     orcamentoServicoTecnicoConfigPapel: 'Configure letterhead',
     orcamentoServicoTecnicoAbrirCadastroServicos: 'Open service / rate register',

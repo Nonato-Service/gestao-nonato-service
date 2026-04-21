@@ -5263,30 +5263,23 @@ export default function Dashboard() {
   // Carregar logo, idioma e usuários salvos ao iniciar
   // Mensagens / peças armazém: carregadas em loadAllData com getData (mesmo snapshot que o resto) — não usar loadData em paralelo no arranque (causa resultados diferentes a cada F5).
 
-  // Atualizar clientes devedores quando faturas mudarem
-  // DESABILITADO TEMPORARIAMENTE para evitar loop infinito
-  // A função será chamada manualmente quando necessário (ex: ao salvar fatura)
-  /*
+  // Atualizar clientes devedores quando faturas ou clientes mudarem (ex.: estado da fatura sem mudar a contagem).
+  // `atualizarClientesDevedores` só chama setClientes quando o hash de isDevedor/saldoPendente muda — evita loop infinito.
   useEffect(() => {
-    // Evitar execuções simultâneas
+    if (typeof window === 'undefined') return
     if (isUpdatingDevedores.current) return
-    
-    // Só executar se houver dados
     if (faturasPecas.length === 0 && clientes.length === 0) return
-    
+
     isUpdatingDevedores.current = true
-    
-    // Usar requestAnimationFrame para garantir que a atualização aconteça no próximo frame
-    requestAnimationFrame(() => {
+    const raf = requestAnimationFrame(() => {
       atualizarClientesDevedores()
-      // Resetar flag após um delay para permitir que o estado seja atualizado
-      setTimeout(() => {
+      window.setTimeout(() => {
         isUpdatingDevedores.current = false
       }, 200)
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [faturasPecas.length, clientes.length]) // Usar apenas o length para evitar loop infinito
-  */
+    return () => cancelAnimationFrame(raf)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- atualizarClientesDevedores usa estado atual; não incluir na deps (identidade instável).
+  }, [faturasPecas, clientes])
 
   useEffect(() => {
     // Garantir que só executa no cliente

@@ -215,6 +215,92 @@
   color: #94a3b8;
 }
 
+/* Orçamento de serviço técnico — destaque no formulário e blocos no PDF */
+.orcamento-ost-form-callout {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  background: rgba(120, 53, 15, 0.22);
+  color: #fde68a;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.orcamento-ost-legal-wrap {
+  border: 1px solid #94a3b8;
+  border-radius: 6px;
+  padding: 10px 12px 8px;
+  background: #f1f5f9;
+  margin-bottom: 12px;
+}
+
+.orcamento-ost-legal-title {
+  font-size: 8.5pt;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  color: #0f172a;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.orcamento-ost-cientificacao {
+  border: 2px solid #0f172a;
+  border-radius: 6px;
+  padding: 10px 12px 12px;
+  margin-top: 4px;
+  background: #fff;
+}
+
+.orcamento-ost-cientificacao-title {
+  font-size: 8.5pt;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #0f172a;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+}
+
+.orcamento-ost-cientificacao-text {
+  margin: 0 0 10px;
+  font-size: 9.2pt;
+  line-height: 1.48;
+  color: #334155;
+}
+
+.orcamento-ost-sign-row {
+  margin-top: 10px;
+}
+
+.orcamento-ost-sign-row--split {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 14px;
+  align-items: end;
+}
+
+.orcamento-ost-sign-cell {
+  min-width: 0;
+}
+
+.orcamento-ost-sign-label {
+  display: block;
+  font-size: 7.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.orcamento-ost-sign-line {
+  display: block;
+  border-bottom: 1px solid #475569;
+  min-height: 20px;
+}
+
 .papel-timbrado-footer {
   margin-top: 12px;
   padding-top: 10px;

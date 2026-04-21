@@ -74,11 +74,23 @@ type LinhaOrcamento = {
   quantidadeStr: string
 }
 
-const TEXTO_CLAUSULAS_PADRAO_PT = `Orçamento relativo à prestação de serviço técnico, com base nos itens e valores indicados neste documento e nos serviços cadastrados no sistema.
+const TEXTO_CLAUSULAS_PADRAO_PT = `1. Natureza do documento
+O presente documento constitui proposta de orçamento para prestação de serviço técnico, sem valor fiscal, elaborada com base nas rubricas e preços constantes do cadastro de serviços / valores aplicáveis. Não substitui ordem de serviço, contrato ou documentos fiscais próprios.
 
-As despesas de estadia (hotel), alimentação e passagens aéreas ou de transporte, quando necessárias à execução do serviço e previamente acordadas, correm por conta do cliente.
+2. Despesas de deslocação, alojamento, alimentação e transporte
+Salvo menção expressa e por escrito em contrário nesta proposta ou em documento posterior assinado pelas partes, todas as despesas com deslocação da equipa (incluindo transporte rodoviário, combustível, portagens e, quando aplicável, passagens aéreas ou outros meios de transporte necessários à execução do serviço), alojamento (hotel ou equivalente) e alimentação da equipa técnica são sempre suportadas pela entidade contratante (empresa cliente).
 
-Despesas pessoais ou extra-profissionais, bem como despesas não diretamente relacionadas com o trabalho contratado, não devem constar nem ser apresentadas neste documento.`
+3. Equipagem, horas extraordinárias e custos não previstos
+Qualquer aumento do número de técnicos, prolongamento do período de intervenção, horas extraordinárias ou despesas fora do âmbito desta proposta carecem de autorização prévia e escrita da entidade contratante. Na ausência dessa autorização, não serão reconhecidos para efeitos de faturação.
+
+4. Despesas pessoais e não relacionadas com o serviço
+Não integram o presente orçamento despesas de natureza pessoal, social ou extra-profissional da equipa, nem quaisquer custos que não guardem relação direta e documentada com a execução do serviço técnico objeto da proposta.
+
+5. Validade e aceitação
+A aceitação desta proposta implica tomada de conhecimento das condições aqui descritas. Findo o prazo de validade indicado, valores, disponibilidades e condições poderão ser revistos.
+
+6. Foro e litígios
+Para a resolução de quaisquer litígios emergentes da interpretação ou execução da presente proposta, aplicável a legislação em vigor, com renúncia a qualquer outro, desde que legalmente admissível.`
 
 function parseDecimalInput(raw: string): number {
   const s = String(raw ?? '').trim().replace(/\s/g, '').replace(',', '.')
@@ -122,6 +134,15 @@ function unidadeQuantidade(tipo: ServicoOrcamentoLinha['tipoCobranca'], t: Recor
 function newRowId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
   return `r-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+}
+
+/** No PDF: parágrafos separados por linha em branco — mais legível que um único bloco. */
+function splitClausulasParagraphs(text: string): string[] {
+  return String(text ?? '')
+    .trim()
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean)
 }
 
 type Props = {
@@ -237,6 +258,10 @@ export function OrcamentoServicoTecnicoContent({ clientes, servicos, safeT, open
         <div className="papel-timbrado-form">
           <h1>{t.orcamentoServicoTecnicoTituloForm || t.orcamentoServicoTecnicoTitle || 'Orçamento de serviço técnico'}</h1>
           <p className="lead">{t.orcamentoServicoTecnicoSubtitle || ''}</p>
+          <div className="orcamento-ost-form-callout" role="note">
+            {t.orcamentoServicoTecnicoFormAvisoCliente ||
+              'O PDF inclui condições claras sobre despesas de viagem, hotel, alimentação e transporte aéreo (normalmente à cargo da empresa contratante), equipagem extra e ciência do cliente. Edite o quadro «Condições» se o contrato for diferente.'}
+          </div>
 
           <div className="papel-timbrado-field">
             <label>{t.orcamentoServicoTecnicoCliente || 'Cliente'}</label>
@@ -356,7 +381,7 @@ export function OrcamentoServicoTecnicoContent({ clientes, servicos, safeT, open
 
           <div className="papel-timbrado-field">
             <label>{t.orcamentoServicoTecnicoClausulas || 'Condições e exclusões (editável)'}</label>
-            <textarea value={clausulas} onChange={(e) => setClausulas(e.target.value)} rows={8} />
+            <textarea value={clausulas} onChange={(e) => setClausulas(e.target.value)} rows={14} />
           </div>
 
           <p className="papel-timbrado-hint">{tx.papelTimbradoDicaImpressao || ''}</p>
@@ -451,15 +476,52 @@ export function OrcamentoServicoTecnicoContent({ clientes, servicos, safeT, open
                   </tbody>
                 </table>
 
-                <div style={{ textAlign: 'right', fontSize: 11.5, fontWeight: 800, marginBottom: 14 }}>
+                <div style={{ textAlign: 'right', fontSize: 11.5, fontWeight: 800, marginBottom: 12 }}>
                   {t.orcamentoServicoTecnicoTotalGeral || 'Total'}: {formatMoneyEUR(totalGeral)}
                 </div>
 
                 {clausulas.trim() ? (
-                  <div style={{ fontSize: 9.5, lineHeight: 1.48, color: '#334155', whiteSpace: 'pre-wrap', borderTop: '1px solid #cbd5e1', paddingTop: 10 }}>
-                    {clausulas.trim()}
+                  <div className="orcamento-ost-legal-wrap">
+                    <div className="orcamento-ost-legal-title">
+                      {t.orcamentoServicoTecnicoPdfCondicoesTitulo || 'CONDIÇÕES GERAIS E INFORMAÇÃO AO CONTRATANTE'}
+                    </div>
+                    <div style={{ fontSize: 9.2, lineHeight: 1.5, color: '#1e293b' }}>
+                      {splitClausulasParagraphs(clausulas).map((para, idx) => (
+                        <p key={idx} style={{ margin: idx === 0 ? '0 0 8px' : '0 0 8px', whiteSpace: 'pre-wrap' }}>
+                          {para}
+                        </p>
+                      ))}
+                    </div>
                   </div>
                 ) : null}
+
+                <div className="orcamento-ost-cientificacao">
+                  <div className="orcamento-ost-cientificacao-title">
+                    {t.orcamentoServicoTecnicoPdfCientificacaoTitulo || 'DECLARAÇÃO DE CIÊNCIA (contratante)'}
+                  </div>
+                  <p className="orcamento-ost-cientificacao-text">
+                    {t.orcamentoServicoTecnicoPdfCientificacaoTexto ||
+                      'A entidade contratante declara ter lido e compreendido a presente proposta, incluindo as condições relativas a despesas de deslocação, alojamento, alimentação e transporte aéreo, bem como limites de equipagem e trabalhos adicionais, nos termos acima.'}
+                  </p>
+                  <div className="orcamento-ost-sign-row">
+                    <span className="orcamento-ost-sign-label">
+                      {t.orcamentoServicoTecnicoPdfLinhaNomeCargo || 'Nome, cargo e empresa'}
+                    </span>
+                    <span className="orcamento-ost-sign-line" aria-hidden />
+                  </div>
+                  <div className="orcamento-ost-sign-row orcamento-ost-sign-row--split">
+                    <div className="orcamento-ost-sign-cell">
+                      <span className="orcamento-ost-sign-label">{t.orcamentoServicoTecnicoPdfLinhaData || 'Data'}</span>
+                      <span className="orcamento-ost-sign-line" aria-hidden />
+                    </div>
+                    <div className="orcamento-ost-sign-cell">
+                      <span className="orcamento-ost-sign-label">
+                        {t.orcamentoServicoTecnicoPdfLinhaAssinatura || 'Assinatura e carimbo'}
+                      </span>
+                      <span className="orcamento-ost-sign-line" aria-hidden />
+                    </div>
+                  </div>
+                </div>
               </section>
 
               <footer className="papel-timbrado-footer" aria-label="Contactos">
