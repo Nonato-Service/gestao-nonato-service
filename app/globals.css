@@ -6961,7 +6961,18 @@ button.dia-trabalho-acao-btn--del:hover {
   border-radius: 8px;
 }
 
-/* Diário de pedidos do dia — barra lateral e cartões no modal */
+/* Diário de anotação — barra lateral e cartões no modal */
+.sidebar-diario-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 6px;
+  flex-shrink: 0;
+  color: rgba(167, 243, 208, 0.92);
+  opacity: 0.95;
+  vertical-align: middle;
+}
+
 .sidebar-action-btn.sidebar-action-btn--diario {
   transition:
     border-color 0.2s ease,
@@ -7033,6 +7044,364 @@ button.dia-trabalho-acao-btn--del:hover {
     box-shadow:
       0 0 22px rgba(250, 204, 21, 0.3),
       0 0 0 1px rgba(250, 204, 21, 0.22);
+  }
+}
+
+.ns-diario-overlay {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.ns-diario-modal.diario-pedidos-modal-shell {
+  max-width: 640px;
+  width: 100%;
+  max-height: min(90vh, 760px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 255, 122, 0.22);
+  background: linear-gradient(165deg, rgba(18, 28, 22, 0.98) 0%, rgba(8, 12, 10, 0.99) 100%);
+  box-shadow:
+    0 28px 64px rgba(0, 0, 0, 0.62),
+    0 0 0 1px rgba(0, 255, 122, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.ns-diario-modal__hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px 22px 18px;
+  border-bottom: 1px solid rgba(0, 255, 122, 0.16);
+  background: linear-gradient(125deg, rgba(6, 48, 28, 0.55) 0%, rgba(10, 14, 12, 0.2) 55%, transparent 100%);
+}
+
+.ns-diario-modal__title-wrap {
+  flex: 1;
+  min-width: 200px;
+}
+
+.ns-diario-modal__eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(110, 231, 183, 0.82);
+  margin-bottom: 6px;
+}
+
+.ns-diario-modal__title {
+  margin: 0 0 8px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #f0fdf4;
+  line-height: 1.2;
+}
+
+.ns-diario-modal__subtitle {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: rgba(186, 220, 198, 0.9);
+  max-width: 46ch;
+}
+
+.ns-diario-modal__date-card {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 255, 122, 0.35);
+  background: rgba(0, 0, 0, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  min-width: min(100%, 220px);
+}
+
+.ns-diario-modal__date-card-icon {
+  color: rgba(167, 243, 208, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.ns-diario-modal__date-card-body {
+  text-align: left;
+  min-width: 0;
+}
+
+.ns-diario-modal__date-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(110, 231, 183, 0.85);
+}
+
+.ns-diario-modal__date-long {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ecfdf5;
+  line-height: 1.35;
+  text-transform: capitalize;
+}
+
+.ns-diario-modal__date-time {
+  margin-top: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: rgba(148, 163, 184, 0.95);
+}
+
+.ns-diario-composer {
+  padding: 18px 22px;
+  background: rgba(15, 23, 42, 0.28);
+  border-bottom: 1px solid rgba(148, 163, 148, 0.12);
+}
+
+.ns-diario-composer__label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(167, 243, 208, 0.88);
+  margin-bottom: 10px;
+}
+
+.ns-diario-composer__input {
+  width: 100%;
+  resize: vertical;
+  min-height: 80px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(100, 116, 139, 0.4);
+  background: rgba(15, 23, 42, 0.45);
+  color: #f8fafc;
+  font-size: 14px;
+  line-height: 1.5;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  font-family: inherit;
+}
+
+.ns-diario-composer__input:focus {
+  border-color: rgba(0, 255, 122, 0.45);
+  box-shadow: 0 0 0 1px rgba(0, 255, 122, 0.18);
+}
+
+.ns-diario-composer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.ns-diario-list-wrap {
+  flex: 1;
+  min-height: 120px;
+  overflow-y: auto;
+  padding: 16px 22px 18px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ns-diario-list__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.ns-diario-list__label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.95);
+}
+
+.ns-diario-list__count {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(167, 243, 208, 0.75);
+}
+
+.ns-diario-empty {
+  border: 1px dashed rgba(100, 116, 139, 0.35);
+  border-radius: 14px;
+  padding: 28px 20px;
+  text-align: center;
+  background: rgba(15, 23, 42, 0.2);
+}
+
+.ns-diario-empty__text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(148, 163, 184, 0.95);
+}
+
+.ns-diario-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ns-diario-entry {
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.32);
+  border: 1px solid rgba(100, 116, 139, 0.28);
+}
+
+.ns-diario-entry__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px 0;
+}
+
+.ns-diario-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: #e2e8f0;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.ns-diario-badge--todo {
+  border-color: rgba(100, 116, 139, 0.45);
+  color: #cbd5e1;
+}
+
+.ns-diario-badge--progress {
+  border-color: rgba(234, 179, 8, 0.55);
+  color: #fef9c3;
+  background: rgba(66, 50, 8, 0.35);
+}
+
+.ns-diario-badge--done {
+  border-color: rgba(34, 197, 94, 0.5);
+  color: #d1fae5;
+  background: rgba(6, 40, 22, 0.35);
+}
+
+.ns-diario-entry__text {
+  margin: 0;
+  padding: 12px 16px 8px;
+  color: #e2e8f0;
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ns-diario-entry__meta {
+  padding: 0 16px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.ns-diario-entry__meta-label {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.ns-diario-entry__meta-value {
+  font-weight: 600;
+  color: rgba(186, 220, 198, 0.88);
+  font-variant-numeric: tabular-nums;
+}
+
+.ns-diario-entry__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 14px 12px;
+  background: rgba(0, 0, 0, 0.22);
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.ns-diario-btn {
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+.ns-diario-btn--primary {
+  padding: 10px 20px;
+}
+
+.ns-diario-btn--ghost {
+  padding: 10px 16px;
+  background: transparent !important;
+  border-color: rgba(148, 163, 184, 0.45) !important;
+  color: #cbd5e1 !important;
+}
+
+.ns-diario-btn--accent {
+  padding: 8px 14px;
+}
+
+.ns-diario-btn--danger-ghost {
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  background: rgba(127, 29, 29, 0.22);
+  color: #fecaca;
+  cursor: pointer;
+}
+
+.ns-diario-btn--danger-ghost:hover {
+  background: rgba(185, 28, 28, 0.35);
+}
+
+.ns-diario-modal__footer {
+  padding: 14px 22px 18px;
+  border-top: 1px solid rgba(0, 255, 122, 0.12);
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+@media (max-width: 520px) {
+  .ns-diario-modal__hero {
+    flex-direction: column;
+  }
+  .ns-diario-modal__date-card {
+    width: 100%;
   }
 }
 

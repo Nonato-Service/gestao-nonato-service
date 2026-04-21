@@ -28,7 +28,7 @@ import { RegistroDespesasContent } from './components/RegistroDespesasContent'
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 import { OrcamentoServicoTecnicoContent } from './components/OrcamentoServicoTecnicoContent'
 import { NonatoBrandLogo } from './components/NonatoBrandLogo'
-import { IconHelpCircle, IconHome, ModuleTabIcon } from './components/UiIcons'
+import { IconCalendar, IconHelpCircle, IconHome, ModuleTabIcon } from './components/UiIcons'
 import { HelpModalBody } from './components/HelpModalBody'
 import {
   PROTOCOLO_SERVICO_PDF_MODELOS_MAX,
@@ -1555,7 +1555,7 @@ function getDemoModuleLabelForGrid(action: string): string {
     'open-pecas-substituicao': 'Peças de substituição',
     'open-solicitacao-servico-tecnico': 'Solicitação de serviço técnico',
     'open-agenda': 'Agenda',
-    'open-diario-pedidos-dia': 'Diário de pedidos do dia',
+    'open-diario-pedidos-dia': 'Diário de anotação',
     'open-biblioteca-relatorios': 'Biblioteca de relatórios',
     'open-checklist-hub': 'Hub do Checklist',
     'open-pre-checklist': 'Pré-checklist',
@@ -4656,8 +4656,28 @@ export default function Dashboard() {
       'cadastro-servicos-default',
     ]
     
+    const novoTituloDiarioSync = String((translations['pt-BR'] as any)?.diarioPedidosTitle || 'DIÁRIO DE ANOTAÇÃO').trim()
+    const nomeDiarioPareceAntigo = (s: string) => {
+      const u = s.toUpperCase().trim()
+      return /PEDIDOS\s+DO\s+DIA/.test(s) || u === 'DIÁRIO DE PEDIDOS DO DIA' || u === 'DIARIO DE PEDIDOS DO DIA'
+    }
+
     let updated = false
     const updatedButtons = savedButtons.map((b: SidebarButton) => {
+      if (b.id === 'diario-pedidos-dia-default') {
+        const nm = String(b.name || '')
+        const nameNext = nomeDiarioPareceAntigo(nm) ? novoTituloDiarioSync : nm || novoTituloDiarioSync
+        const tk: 'diarioPedidosTitle' = 'diarioPedidosTitle'
+        const gr = b.group || 'gestao-tecnica'
+        const needs =
+          nameNext !== nm ||
+          b.customName === true ||
+          (b.translationKey || '') !== tk ||
+          (b.group || '') !== gr
+        if (needs) updated = true
+        if (!needs) return b
+        return { ...b, name: nameNext, translationKey: tk, customName: false, group: gr }
+      }
       // Se é botão da gestão técnica, FORÇAR customName = false para permitir tradução
       if (gestaoTecnicaButtonIds.includes(b.id || '')) {
         if (b.customName === true || b.customName === undefined) {
@@ -7032,7 +7052,7 @@ export default function Dashboard() {
       if (!hasDiarioPedidosDia) {
         const diarioPedidosButton: SidebarButton = {
           id: 'diario-pedidos-dia-default',
-          name: 'DIÁRIO DE PEDIDOS DO DIA',
+          name: 'DIÁRIO DE ANOTAÇÃO',
           action: 'open-diario-pedidos-dia',
           order: buttons.length,
           translationKey: 'diarioPedidosTitle',
@@ -7311,6 +7331,36 @@ export default function Dashboard() {
         }
       }
 
+      /* Renovar botão do diário no JSON guardado (nome antigo em localStorage / servidor). */
+      {
+        const novoTituloDiario = String((translations['pt-BR'] as any)?.diarioPedidosTitle || 'DIÁRIO DE ANOTAÇÃO').trim()
+        const nomePareceAntigo = (s: string) => {
+          const u = s.toUpperCase().trim()
+          return /PEDIDOS\s+DO\s+DIA/.test(s) || u === 'DIÁRIO DE PEDIDOS DO DIA' || u === 'DIARIO DE PEDIDOS DO DIA'
+        }
+        buttons = buttons.map((b: SidebarButton) => {
+          if (b.id !== 'diario-pedidos-dia-default') return b
+          const nm = String(b.name || '')
+          const nameNext = nomePareceAntigo(nm) ? novoTituloDiario : nm || novoTituloDiario
+          const gr = b.group || 'gestao-tecnica'
+          if (
+            nameNext === nm &&
+            b.customName !== true &&
+            (b.translationKey || '') === 'diarioPedidosTitle' &&
+            (b.group || '') === gr
+          ) {
+            return b
+          }
+          return {
+            ...b,
+            name: nameNext,
+            translationKey: 'diarioPedidosTitle',
+            customName: false,
+            group: gr,
+          }
+        })
+      }
+
       // Garantir que o botão de Gestão Financeira sempre existe
       const finalHasGestaoFinanceira = buttons.some((b: SidebarButton) => b.id === 'gestao-financeira-default')
       if (!finalHasGestaoFinanceira) {
@@ -7496,7 +7546,7 @@ export default function Dashboard() {
       if (!hasDiarioPedidosDiaAfter) {
         filteredButtons.push({
           id: 'diario-pedidos-dia-default',
-          name: 'DIÁRIO DE PEDIDOS DO DIA',
+          name: 'DIÁRIO DE ANOTAÇÃO',
           action: 'open-diario-pedidos-dia',
           order: filteredButtons.length,
           translationKey: 'diarioPedidosTitle',
@@ -8186,7 +8236,9 @@ export default function Dashboard() {
       } else if (button.id === 'agenda-default') {
         return safeT?.agendaTitle || button.name || ''
       } else if (button.id === 'diario-pedidos-dia-default') {
-        return (safeT as any)?.diarioPedidosTitle || button.name || ''
+        const titulo = (safeT as any)?.diarioPedidosTitle
+        if (titulo) return titulo
+        return 'DIÁRIO DE ANOTAÇÃO'
       } else if (button.id === 'estado-visual-tecnico-default') {
         return (safeT?.estadoVisualTecnico || button.name || '').toUpperCase()
       } else if (button.id === 'cadastro-servicos-default') {
@@ -19417,7 +19469,7 @@ export default function Dashboard() {
 
   const comunicacaoUnreadCount = mensagensComunicacaoNaoLidas.length
 
-  /** Cor do botão «Diário de pedidos» na sidebar: normal | lembrete (em curso) | tudo concluído */
+  /** Cor do botão «Diário de anotação» na sidebar: normal | lembrete (em curso) | tudo concluído */
   const diarioSidebarTone = useMemo(() => {
     const list = diarioPedidosItems
     if (!list.length) return 'neutral'
@@ -19432,6 +19484,38 @@ export default function Dashboard() {
       (a, b) => rank[a.status] - rank[b.status] || (a.criadoEm < b.criadoEm ? 1 : -1)
     )
   }, [diarioPedidosItems])
+
+  const diarioPedidosLocale = useMemo(() => {
+    switch (selectedLanguage) {
+      case 'pt-BR':
+        return 'pt-PT'
+      case 'en':
+        return 'en-GB'
+      case 'es':
+        return 'es-ES'
+      case 'fr':
+        return 'fr-FR'
+      case 'it':
+        return 'it-IT'
+      case 'de':
+        return 'de-DE'
+      default:
+        return 'pt-PT'
+    }
+  }, [selectedLanguage])
+
+  const diarioPedidosHeaderData = useMemo(() => {
+    const d = new Date()
+    return {
+      dataLonga: d.toLocaleDateString(diarioPedidosLocale, {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }),
+      hora: d.toLocaleTimeString(diarioPedidosLocale, { hour: '2-digit', minute: '2-digit' }),
+    }
+  }, [diarioPedidosLocale, showDiarioPedidosModal])
 
   // Marcar como lidas as mensagens destinadas ao usuário atual do Hub quando ele abre uma conversa
   useEffect(() => {
@@ -56626,7 +56710,9 @@ A1;Peça exemplo;10`}
                         {isDiarioSelected && (
                           <span className="sidebar-nav-check" aria-hidden>✓</span>
                         )}
-                        <span style={{ marginRight: 6 }} aria-hidden>🗒️</span>
+                        <span className="sidebar-diario-icon" aria-hidden>
+                          <IconCalendar size={17} />
+                        </span>
                         {getButtonName(button)}
                       </button>
                     )
@@ -58356,7 +58442,7 @@ A1;Peça exemplo;10`}
 
       {showDiarioPedidosModal && (
         <div
-          className="modal-overlay"
+          className="modal-overlay ns-diario-overlay"
           role="dialog"
           aria-modal="true"
           aria-labelledby="diario-pedidos-modal-title"
@@ -58372,56 +58458,48 @@ A1;Peça exemplo;10`}
           }}
           onClick={() => setShowDiarioPedidosModal(false)}
         >
-          <div
-            className="modal diario-pedidos-modal-shell"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              maxWidth: 560,
-              width: '100%',
-              maxHeight: 'min(88vh, 720px)',
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'column',
-              padding: 0,
-              background: 'linear-gradient(165deg, #141a18 0%, #0e1210 100%)',
-              borderRadius: 14,
-              border: '1px solid rgba(148, 163, 148, 0.22)',
-              boxShadow: '0 24px 56px rgba(0, 0, 0, 0.55)',
-            }}
-          >
-            <div style={{ padding: '18px 20px 14px', borderBottom: '1px solid rgba(148, 163, 148, 0.15)' }}>
-              <h2 id="diario-pedidos-modal-title" style={{ margin: 0, fontSize: 17, fontWeight: 700, color: '#ecfdf5', letterSpacing: '0.02em' }}>
-                {(safeT as any)?.diarioPedidosModalTitulo || 'Diário de pedidos do dia'}
-              </h2>
-              <p style={{ margin: '8px 0 0', fontSize: 12, color: '#94a3b8', lineHeight: 1.5 }}>
-                {(safeT as any)?.diarioPedidosModalSub ||
-                  'Anote o que não pode esquecer. Marque «Iniciado» ao começar e «Concluído» quando terminar — o botão na barra lateral muda de cor para o lembrar.'}
-              </p>
-            </div>
-            <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(148, 163, 148, 0.12)' }}>
+          <div className="modal diario-pedidos-modal-shell ns-diario-modal" onClick={(e) => e.stopPropagation()}>
+            <header className="ns-diario-modal__hero">
+              <div className="ns-diario-modal__title-wrap">
+                <div className="ns-diario-modal__eyebrow">{(safeT as any)?.diarioPedidosTitle || 'DIÁRIO DE ANOTAÇÃO'}</div>
+                <h2 id="diario-pedidos-modal-title" className="ns-diario-modal__title">
+                  {(safeT as any)?.diarioPedidosModalTitulo || 'Diário de anotação'}
+                </h2>
+                <p className="ns-diario-modal__subtitle">
+                  {(safeT as any)?.diarioPedidosModalSub ||
+                    'Anote o que não pode esquecer. O botão na barra lateral mantém o código de cores: neutro, amarelo quando há algo em execução, verde quando todas as anotações estão concluídas.'}
+                </p>
+              </div>
+              <div className="ns-diario-modal__date-card" aria-live="polite">
+                <div className="ns-diario-modal__date-card-icon" aria-hidden>
+                  <IconCalendar size={22} />
+                </div>
+                <div className="ns-diario-modal__date-card-body">
+                  <div className="ns-diario-modal__date-label">{(safeT as any)?.diarioPedidosDataHoje || 'Data'}</div>
+                  <div className="ns-diario-modal__date-long">{diarioPedidosHeaderData.dataLonga}</div>
+                  <div className="ns-diario-modal__date-time">
+                    {(safeT as any)?.diarioPedidosHoraRef || 'Referência'}: {diarioPedidosHeaderData.hora}
+                  </div>
+                </div>
+              </div>
+            </header>
+
+            <section className="ns-diario-composer" aria-label={(safeT as any)?.diarioPedidosSecComposer || 'Nova anotação'}>
+              <div className="ns-diario-composer__label">{(safeT as any)?.diarioPedidosSecComposer || 'Nova anotação'}</div>
               <textarea
+                className="ns-diario-composer__input"
                 value={diarioPedidoDraft}
                 onChange={(e) => setDiarioPedidoDraft(e.target.value)}
                 rows={3}
-                placeholder={(safeT as any)?.diarioPedidosPlaceholder || 'Ex.: Ligar ao cliente X · preparar peça Y · protocolo Z…'}
-                style={{
-                  width: '100%',
-                  resize: 'vertical',
-                  minHeight: 72,
-                  padding: '12px 14px',
-                  borderRadius: 10,
-                  border: '1px solid rgba(100, 116, 139, 0.35)',
-                  background: 'rgba(15, 23, 42, 0.35)',
-                  color: '#f8fafc',
-                  fontSize: 14,
-                  lineHeight: 1.45,
-                  outline: 'none',
-                }}
+                placeholder={
+                  (safeT as any)?.diarioPedidosPlaceholder ||
+                  'Contacto, peça, relatório, lembrete operacional…'
+                }
               />
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 12 }}>
+              <div className="ns-diario-composer__actions">
                 <button
                   type="button"
-                  className="btn-primary"
+                  className="btn-primary ns-diario-btn ns-diario-btn--primary"
                   onClick={() => {
                     const texto = diarioPedidoDraft.trim()
                     if (!texto) return
@@ -58430,172 +58508,165 @@ A1;Peça exemplo;10`}
                     setDiarioPedidosItems((p) => [...p, { id, texto, status: 'planeado', criadoEm }])
                     setDiarioPedidoDraft('')
                   }}
-                  style={{ padding: '10px 18px', fontWeight: 700, borderRadius: 10 }}
                 >
-                  {(safeT as any)?.diarioPedidosAdicionar || 'Adicionar à lista'}
+                  {(safeT as any)?.diarioPedidosAdicionar || 'Registar anotação'}
                 </button>
                 <button
                   type="button"
-                  className="btn-primary"
-                  style={{
-                    padding: '10px 16px',
-                    borderRadius: 10,
-                    background: 'transparent',
-                    borderColor: 'rgba(148, 163, 184, 0.45)',
-                    color: '#cbd5e1',
-                  }}
+                  className="btn-primary ns-diario-btn ns-diario-btn--ghost"
                   onClick={() => setDiarioPedidosItems((p) => p.filter((i) => i.status !== 'concluido'))}
                 >
-                  {(safeT as any)?.diarioPedidosLimparConcluidos || 'Remover concluídos'}
+                  {(safeT as any)?.diarioPedidosLimparConcluidos || 'Arquivar concluídos'}
                 </button>
               </div>
-            </div>
-            <div style={{ flex: 1, minHeight: 120, overflowY: 'auto', padding: '12px 20px 18px' }}>
+            </section>
+
+            <section className="ns-diario-list-wrap" aria-label={(safeT as any)?.diarioPedidosSecLista || 'Quadro do dia'}>
+              <div className="ns-diario-list__head">
+                <span className="ns-diario-list__label">{(safeT as any)?.diarioPedidosSecLista || 'Quadro do dia'}</span>
+                <span className="ns-diario-list__count">
+                  {diarioPedidosOrdenados.length}{' '}
+                  {diarioPedidosOrdenados.length === 1
+                    ? (safeT as any)?.diarioPedidosCountOne || 'anotação'
+                    : (safeT as any)?.diarioPedidosCountMany || 'anotações'}
+                </span>
+              </div>
               {diarioPedidosOrdenados.length === 0 ? (
-                <p style={{ margin: 0, padding: '22px 12px', textAlign: 'center', color: '#64748b', fontSize: 14 }}>
-                  {(safeT as any)?.diarioPedidosVazio || 'Ainda não há anotações. Escreva acima e adicione o primeiro pedido do dia.'}
-                </p>
+                <div className="ns-diario-empty">
+                  <p className="ns-diario-empty__text">
+                    {(safeT as any)?.diarioPedidosVazio ||
+                      'Nenhuma anotação no quadro. Utilize o campo acima para registar a primeira.'}
+                  </p>
+                </div>
               ) : (
-                <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {diarioPedidosOrdenados.map((item) => (
-                    <li
-                      key={item.id}
-                      className={
-                        item.status === 'em_curso'
-                          ? 'diario-pedido-card diario-pedido-card--em-curso'
-                          : item.status === 'concluido'
-                            ? 'diario-pedido-card diario-pedido-card--concluido'
-                            : 'diario-pedido-card diario-pedido-card--planeado'
-                      }
-                      style={{
-                        borderRadius: 12,
-                        padding: '14px 14px 12px',
-                        border: '1px solid rgba(148, 163, 184, 0.2)',
-                        background: 'rgba(15, 23, 42, 0.25)',
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' }}>
-                        <p
-                          style={{
-                            margin: 0,
-                            color: '#e2e8f0',
-                            fontSize: 14,
-                            lineHeight: 1.45,
-                            whiteSpace: 'pre-wrap',
-                            wordBreak: 'break-word',
-                            flex: 1,
-                          }}
-                        >
-                          {item.texto}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => setDiarioPedidosItems((p) => p.filter((x) => x.id !== item.id))}
-                          style={{
-                            flexShrink: 0,
-                            fontSize: 11,
-                            padding: '4px 8px',
-                            borderRadius: 6,
-                            border: '1px solid rgba(248, 113, 113, 0.45)',
-                            background: 'rgba(127, 29, 29, 0.25)',
-                            color: '#fecaca',
-                            cursor: 'pointer',
-                          }}
-                          title={safeT?.delete || 'Excluir'}
-                        >
-                          {(safeT as any)?.diarioPedidosBtnRemover || 'Remover'}
-                        </button>
-                      </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-                        {item.status === 'planeado' && (
-                          <button
-                            type="button"
-                            className="btn-primary"
-                            style={{ padding: '8px 14px', fontSize: 12, borderRadius: 8, fontWeight: 700 }}
-                            onClick={() =>
-                              setDiarioPedidosItems((p) =>
-                                p.map((x) =>
-                                  x.id === item.id ? { ...x, status: 'em_curso' as const, atualizadoEm: new Date().toISOString() } : x
-                                )
-                              )
+                <ul className="ns-diario-list">
+                  {diarioPedidosOrdenados.map((item) => {
+                    const statusLabel =
+                      item.status === 'em_curso'
+                        ? (safeT as any)?.diarioPedidosStatusEmCurso || 'Em execução'
+                        : item.status === 'concluido'
+                          ? (safeT as any)?.diarioPedidosStatusConcluido || 'Concluído'
+                          : (safeT as any)?.diarioPedidosStatusPlaneado || 'Planeado'
+                    let criadoFmt = '—'
+                    try {
+                      criadoFmt = new Date(item.criadoEm).toLocaleString(diarioPedidosLocale, {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                    } catch {
+                      criadoFmt = '—'
+                    }
+                    const cardTone =
+                      item.status === 'em_curso'
+                        ? 'diario-pedido-card diario-pedido-card--em-curso'
+                        : item.status === 'concluido'
+                          ? 'diario-pedido-card diario-pedido-card--concluido'
+                          : 'diario-pedido-card diario-pedido-card--planeado'
+                    return (
+                      <li key={item.id} className={`ns-diario-entry ${cardTone}`}>
+                        <div className="ns-diario-entry__head">
+                          <span
+                            className={
+                              item.status === 'em_curso'
+                                ? 'ns-diario-badge ns-diario-badge--progress'
+                                : item.status === 'concluido'
+                                  ? 'ns-diario-badge ns-diario-badge--done'
+                                  : 'ns-diario-badge ns-diario-badge--todo'
                             }
                           >
-                            {(safeT as any)?.diarioPedidosBtnIniciar || 'Iniciado — em execução'}
+                            {statusLabel}
+                          </span>
+                          <button
+                            type="button"
+                            className="ns-diario-btn ns-diario-btn--danger-ghost"
+                            onClick={() => setDiarioPedidosItems((p) => p.filter((x) => x.id !== item.id))}
+                            title={safeT?.delete || 'Eliminar'}
+                          >
+                            {(safeT as any)?.diarioPedidosBtnRemover || 'Eliminar'}
                           </button>
-                        )}
-                        {item.status === 'em_curso' && (
-                          <>
+                        </div>
+                        <p className="ns-diario-entry__text">{item.texto}</p>
+                        <div className="ns-diario-entry__meta">
+                          <span className="ns-diario-entry__meta-label">{(safeT as any)?.diarioPedidosMetaCriado || 'Registado'}</span>
+                          <span className="ns-diario-entry__meta-value">{criadoFmt}</span>
+                        </div>
+                        <div className="ns-diario-entry__toolbar">
+                          {item.status === 'planeado' && (
                             <button
                               type="button"
-                              className="btn-primary"
-                              style={{ padding: '8px 14px', fontSize: 12, borderRadius: 8, fontWeight: 700 }}
+                              className="btn-primary ns-diario-btn ns-diario-btn--accent"
                               onClick={() =>
                                 setDiarioPedidosItems((p) =>
                                   p.map((x) =>
-                                    x.id === item.id ? { ...x, status: 'concluido' as const, atualizadoEm: new Date().toISOString() } : x
+                                    x.id === item.id ? { ...x, status: 'em_curso' as const, atualizadoEm: new Date().toISOString() } : x
                                   )
                                 )
                               }
                             >
-                              {(safeT as any)?.diarioPedidosBtnConcluir || 'OK — concluído'}
+                              {(safeT as any)?.diarioPedidosBtnIniciar || 'Marcar em execução'}
                             </button>
+                          )}
+                          {item.status === 'em_curso' && (
+                            <>
+                              <button
+                                type="button"
+                                className="btn-primary ns-diario-btn ns-diario-btn--accent"
+                                onClick={() =>
+                                  setDiarioPedidosItems((p) =>
+                                    p.map((x) =>
+                                      x.id === item.id ? { ...x, status: 'concluido' as const, atualizadoEm: new Date().toISOString() } : x
+                                    )
+                                  )
+                                }
+                              >
+                                {(safeT as any)?.diarioPedidosBtnConcluir || 'Marcar concluído'}
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-primary ns-diario-btn ns-diario-btn--ghost"
+                                onClick={() =>
+                                  setDiarioPedidosItems((p) =>
+                                    p.map((x) =>
+                                      x.id === item.id ? { ...x, status: 'planeado' as const, atualizadoEm: new Date().toISOString() } : x
+                                    )
+                                  )
+                                }
+                              >
+                                {(safeT as any)?.diarioPedidosBtnVoltarPlaneado || 'Voltar a planeado'}
+                              </button>
+                            </>
+                          )}
+                          {item.status === 'concluido' && (
                             <button
                               type="button"
-                              className="btn-primary"
-                              style={{
-                                padding: '8px 12px',
-                                fontSize: 12,
-                                borderRadius: 8,
-                                background: 'transparent',
-                                borderColor: 'rgba(148, 163, 184, 0.45)',
-                                color: '#cbd5e1',
-                              }}
+                              className="btn-primary ns-diario-btn ns-diario-btn--ghost"
                               onClick={() =>
                                 setDiarioPedidosItems((p) =>
                                   p.map((x) =>
-                                    x.id === item.id ? { ...x, status: 'planeado' as const, atualizadoEm: new Date().toISOString() } : x
+                                    x.id === item.id ? { ...x, status: 'em_curso' as const, atualizadoEm: new Date().toISOString() } : x
                                   )
                                 )
                               }
                             >
-                              {(safeT as any)?.diarioPedidosBtnVoltarPlaneado || 'Voltar a planeado'}
+                              {(safeT as any)?.diarioPedidosBtnReabrir || 'Reabrir'}
                             </button>
-                          </>
-                        )}
-                        {item.status === 'concluido' && (
-                          <button
-                            type="button"
-                            className="btn-primary"
-                            style={{
-                              padding: '8px 12px',
-                              fontSize: 12,
-                              borderRadius: 8,
-                              background: 'transparent',
-                              borderColor: 'rgba(148, 163, 184, 0.45)',
-                              color: '#cbd5e1',
-                            }}
-                            onClick={() =>
-                              setDiarioPedidosItems((p) =>
-                                p.map((x) =>
-                                  x.id === item.id ? { ...x, status: 'em_curso' as const, atualizadoEm: new Date().toISOString() } : x
-                                )
-                              )
-                            }
-                          >
-                            {(safeT as any)?.diarioPedidosBtnReabrir || 'Reabrir (em execução)'}
-                          </button>
-                        )}
-                      </div>
-                    </li>
-                  ))}
+                          )}
+                        </div>
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
-            </div>
-            <div style={{ padding: '12px 20px 16px', borderTop: '1px solid rgba(148, 163, 148, 0.15)', display: 'flex', justifyContent: 'flex-end' }}>
-              <button type="button" className="btn-primary" onClick={() => setShowDiarioPedidosModal(false)} style={{ padding: '10px 22px', borderRadius: 10 }}>
+            </section>
+
+            <footer className="ns-diario-modal__footer">
+              <button type="button" className="btn-primary ns-diario-btn ns-diario-btn--primary" onClick={() => setShowDiarioPedidosModal(false)}>
                 {safeT?.close || 'Fechar'}
               </button>
-            </div>
+            </footer>
           </div>
         </div>
       )}
