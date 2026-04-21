@@ -3676,6 +3676,9 @@ body {
   background: rgba(0, 255, 0, 0.22);
 }
 .mobile-app-header-title {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -6956,10 +6959,24 @@ button.dia-trabalho-acao-btn--del:hover {
     0 4px 22px rgba(0, 0, 0, 0.55),
     0 0 0 1px rgba(0, 0, 0, 0.35);
 }
+/* Barra lateral: abaixo do logo, largura da coluna */
+.ns-sync-traffic--sidebar-embed {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 0 14px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+.sidebar .ns-sync-traffic--sidebar-embed {
+  margin-left: 0;
+  margin-right: 0;
+}
 .ns-sync-traffic__head {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 10px;
   flex-wrap: wrap;
 }
@@ -7040,13 +7057,13 @@ button.dia-trabalho-acao-btn--del:hover {
   font-size: 10px;
   line-height: 1.35;
   color: rgba(226, 245, 255, 0.88);
-  text-align: right;
+  text-align: left;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75);
 }
 @media (max-width: 420px) {
-  .ns-sync-traffic__caption {
+  .ns-sync-traffic--fixed-overlay-left .ns-sync-traffic__caption {
     font-size: 9px;
-    max-width: 38vw;
+    max-width: min(38vw, 200px);
   }
 }
 @keyframes ns-sync-traffic-pulse {

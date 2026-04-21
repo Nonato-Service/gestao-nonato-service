@@ -55991,17 +55991,27 @@ A1;Peça exemplo;10`}
       />
     </div>
   )
+  const syncTrafficLightsPanelInner = (
+    <>
+      <div className="ns-sync-traffic__head">
+        <span className="ns-sync-traffic__title">{syncTrafficTitle}</span>
+        {syncTrafficLightsRow}
+      </div>
+      <div className="ns-sync-traffic__caption">{syncTrafficStatusText}</div>
+    </>
+  )
+  /** Splash / login / demo: fixo no canto superior esquerdo (evita sobrepor F1 ou conteúdo à direita). */
   const syncTrafficLightsWidget = (
     <div
-      className="ns-sync-traffic ns-sync-traffic--panel"
+      className="ns-sync-traffic ns-sync-traffic--panel ns-sync-traffic--fixed-overlay-left"
       style={{
         position: 'fixed',
         top: `calc(${syncTrafficTopPad}px + env(safe-area-inset-top, 0px))`,
-        right: `max(10px, env(safe-area-inset-right, 0px))`,
+        left: `max(10px, env(safe-area-inset-left, 0px))`,
         zIndex: syncTrafficZ,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'flex-end',
+        alignItems: 'flex-start',
         gap: 8,
         pointerEvents: 'none',
         maxWidth: 'min(92vw, 280px)',
@@ -56010,23 +56020,20 @@ A1;Peça exemplo;10`}
       aria-live="polite"
       aria-label={`${syncTrafficTitle}. ${syncTrafficStatusText}`}
     >
-      <div className="ns-sync-traffic__head">
-        <span className="ns-sync-traffic__title">{syncTrafficTitle}</span>
-        {syncTrafficLightsRow}
-      </div>
-      <div className="ns-sync-traffic__caption">{syncTrafficStatusText}</div>
+      {syncTrafficLightsPanelInner}
     </div>
   )
-  const syncTrafficLightsMobileCompact = isCompactLayout ? (
+  /** Área autenticada: barra lateral, abaixo do logo e acima de «Gestão Técnica» (telefone e PC). */
+  const syncTrafficLightsSidebarEmbed = (
     <div
-      className="ns-sync-traffic ns-sync-traffic--header-compact"
+      className="ns-sync-traffic ns-sync-traffic--panel ns-sync-traffic--sidebar-embed"
       role="status"
+      aria-live="polite"
       aria-label={`${syncTrafficTitle}. ${syncTrafficStatusText}`}
-      title={`${syncTrafficTitle}: ${syncTrafficStatusText}`}
     >
-      {syncTrafficLightsRow}
+      {syncTrafficLightsPanelInner}
     </div>
-  ) : null
+  )
 
   // Tela inicial (dashboard): logo do dashboard, mensagem profissional e agressiva, métricas, CTA
   if (showSplashInicial) {
@@ -56473,7 +56480,6 @@ A1;Peça exemplo;10`}
     >
       <WritingAssistFieldContext.Provider value={writingAssistFieldApi}>
       {bootLoadingOverlay}
-      {!isCompactLayout ? syncTrafficLightsWidget : null}
       <WritingLanguageAssistModal
         open={writingAssistOpen}
         onClose={() => {
@@ -56555,7 +56561,6 @@ A1;Peça exemplo;10`}
             {mobileMenuOpen ? '✕' : '☰'}
           </button>
           <span className="mobile-app-header-title">NONATO SERVICE</span>
-          {syncTrafficLightsMobileCompact}
         </header>
       )}
       {/* Sidebar - em ecrã estreito: gaveta lateral (globals.css). Classe extra na vista de entrada: esconde de forma fiável face a media queries. */}
@@ -56613,6 +56618,8 @@ A1;Peça exemplo;10`}
             </div>
           )}
         </div>
+
+        {syncTrafficLightsSidebarEmbed}
 
         {/* Botões da Sidebar - Organizados por Grupos */}
         
