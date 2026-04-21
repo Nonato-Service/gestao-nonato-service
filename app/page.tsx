@@ -26,6 +26,7 @@ import { WritingAssistFieldContext } from './context/WritingAssistFieldContext'
 import { AssistTextarea, AssistInput } from './components/AssistTextFields'
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
+import { OrcamentoServicoTecnicoContent } from './components/OrcamentoServicoTecnicoContent'
 import { NonatoBrandLogo } from './components/NonatoBrandLogo'
 import { HelpModalBody } from './components/HelpModalBody'
 import {
@@ -272,6 +273,7 @@ const SIDEBAR_TRANSLATION_KEY_BY_ID: Record<string, string> = {
   'cadastro-servicos-default': 'cadastroServicosTitle',
   'fechamento-relatorios-servicos-default': 'fechamentoRelatoriosServicosTitle',
   'orcamentos-avulso-default': 'orcamentosAvulsoTitle',
+  'orcamento-servico-tecnico-default': 'orcamentoServicoTecnicoTitle',
   'pedido-orcamentos-avulso-default': 'pedidoOrcamentosAvulsoTitle',
   'registro-despesas-default': 'registroDespesasTitle',
   'mapa-visual-separacao-pecas-default': 'mapaVisualSeparacaoPecasTitle',
@@ -311,6 +313,7 @@ function getDefaultSidebarGroup(buttonId: string): SidebarGroup {
   if ([
     'fechamento-relatorios-servicos-default',
     'orcamentos-avulso-default',
+    'orcamento-servico-tecnico-default',
     'pedido-orcamentos-avulso-default',
     'registro-despesas-default',
     'mapa-visual-separacao-pecas-default',
@@ -1518,7 +1521,7 @@ type GrupoChecklist = {
   dataCriacao: string
 }
 
-type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-cadastral' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'gestao-demos' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa'
+type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-cadastral' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'gestao-demos' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'orcamento-servico-tecnico' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa'
 
 type Tab = {
   id: string
@@ -1574,6 +1577,7 @@ function getDemoModuleLabelForGrid(action: string): string {
     'open-gestao-grupos-checklist': 'Gestão de grupos (checklist)',
     'open-orcamentos-avulso': 'Orçamentos avulso',
     'open-pedido-orcamentos-avulso': 'Pedido de orçamentos avulso',
+    'open-orcamento-servico-tecnico': 'Orçamento de serviço técnico',
     'open-registro-despesas': 'Registro de despesas',
     'open-mapa-visual-separacao': 'Mapa visual separação',
     'open-mapa-visual-separacao-pecas': 'Mapa visual separação (peças)',
@@ -1651,6 +1655,7 @@ function getDemoModuleGroupId(action: string): DemoModuleGroupId {
     'open-gestao-financeira',
     'open-comunicacao-interna',
     'open-registro-despesas',
+    'open-orcamento-servico-tecnico',
     'open-comprovantes-despesas',
     'open-clientes-financeiro',
     'open-mapa-visual-separacao',
@@ -2451,6 +2456,7 @@ export default function Dashboard() {
       'gestao-custos': 'open-gestao-custos',
       'orcamentos-avulso': 'open-orcamentos-avulso',
       'pedido-orcamentos-avulso': 'open-pedido-orcamentos-avulso',
+      'orcamento-servico-tecnico': 'open-orcamento-servico-tecnico',
       'registro-despesas': 'open-registro-despesas',
       'mapa-visual-separacao-pecas': 'open-mapa-visual-separacao-pecas',
       'manuais-informacoes-tecnicas': 'open-manuais-informacoes-tecnicas',
@@ -3500,6 +3506,7 @@ export default function Dashboard() {
       'clientes-financeiro': t?.clientesFinanceiroTitle || 'Clientes / Financeiro',
       'orcamentos-avulso': t?.orcamentosAvulsoTitle || 'Orçamentos Avulso',
       'pedido-orcamentos-avulso': t?.pedidoOrcamentosAvulsoTitle || 'PEDIDO DE ORÇAMENTOS AVULSO',
+      'orcamento-servico-tecnico': (t as any)?.orcamentoServicoTecnicoTitle || 'ORÇAMENTO DE SERVIÇO TÉCNICO',
       'registro-despesas': t?.registroDespesasTitle || 'REGISTRO DE DESPESAS',
       'comprovantes-despesas': t?.comprovantesDespesasTitle || 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS',
       'mapa-visual-separacao-pecas': t?.mapaVisualSeparacaoPecasTitle || 'Mapa Visual de Separação de Peças / Cliente',
@@ -3544,6 +3551,7 @@ export default function Dashboard() {
       desmontados: ['desmontadosSubtitle'],
       'cadastro-servicos': ['cadastroServicosSubtitle'],
       'gestao-custos': ['quickAccessGestaoCustosDesc'],
+      'orcamento-servico-tecnico': ['orcamentoServicoTecnicoSubtitle'],
       'biblioteca-relatorios': ['quickAccessBibliotecaRelatoriosDesc'],
       'gestao-financeira': ['gestaoFinanceiraDesc'],
       'manuais-informacoes-tecnicas': ['manuaisInformacoesTecnicasDesc', 'manuaisInformacoesTecnicasConteudo'],
@@ -3573,6 +3581,7 @@ export default function Dashboard() {
       'clientes-financeiro': '💳',
       'comprovantes-despesas': '🧾',
       'orcamentos-avulso': '📝',
+      'orcamento-servico-tecnico': '🛠️',
       'registro-despesas': '📊',
       equipamentos: '🔧',
       'biblioteca-pecas': '📦',
@@ -3619,7 +3628,7 @@ export default function Dashboard() {
   }
 
   const getBottomTabAccentClass = (type: TabType): string => {
-    const fin: TabType[] = ['gestao-financeira', 'clientes-financeiro', 'comprovantes-despesas', 'orcamentos-avulso', 'pedido-orcamentos-avulso', 'registro-despesas']
+    const fin: TabType[] = ['gestao-financeira', 'clientes-financeiro', 'comprovantes-despesas', 'orcamentos-avulso', 'pedido-orcamentos-avulso', 'orcamento-servico-tecnico', 'registro-despesas']
     if (fin.includes(type)) return 'bottom-tab-item--accent-finance'
     if (type === 'alerta-mensagens') return 'bottom-tab-item--accent-alert'
     const chk: TabType[] = ['pre-checklist', 'checklist', 'checklist-hub', 'gestao-grupos-checklist']
@@ -4005,6 +4014,7 @@ export default function Dashboard() {
       'open-gestao-grupos-checklist',
       'open-orcamentos-avulso',
       'open-pedido-orcamentos-avulso',
+      'open-orcamento-servico-tecnico',
       'open-registro-despesas',
       'open-mapa-visual-separacao',
       'open-mapa-visual-separacao-pecas',
@@ -4090,6 +4100,7 @@ export default function Dashboard() {
         'open-cadastro-servicos',
         'open-orcamentos-avulso',
         'open-pedido-orcamentos-avulso',
+        'open-orcamento-servico-tecnico',
         'open-registro-despesas',
         'open-mapa-visual-separacao',
         'open-mapa-visual-separacao-pecas',
@@ -6442,6 +6453,7 @@ export default function Dashboard() {
           'fechamento-relatorios-servicos-default': { translationKey: 'fechamentoRelatoriosServicosTitle', group: 'gestao-custos' },
           'orcamentos-avulso-default': { translationKey: 'orcamentosAvulsoTitle', group: 'gestao-custos' },
           'pedido-orcamentos-avulso-default': { translationKey: 'pedidoOrcamentosAvulsoTitle', group: 'gestao-custos' },
+          'orcamento-servico-tecnico-default': { translationKey: 'orcamentoServicoTecnicoTitle', group: 'gestao-custos' },
           'registro-despesas-default': { translationKey: 'registroDespesasTitle', group: 'gestao-custos' },
           'mapa-visual-separacao-pecas-default': { translationKey: 'mapaVisualSeparacaoPecasTitle', group: 'gestao-custos' },
           'desmontados-default': { translationKey: 'desmontadosTitle', group: 'gestao-industrial' },
@@ -6511,6 +6523,7 @@ export default function Dashboard() {
                                b.id === 'fechamento-relatorios-servicos-default' ? 'open-fechamento-relatorios-servicos' :
                                b.id === 'orcamentos-avulso-default' ? 'open-orcamentos-avulso' :
                                b.id === 'pedido-orcamentos-avulso-default' ? 'open-pedido-orcamentos-avulso' :
+                               b.id === 'orcamento-servico-tecnico-default' ? 'open-orcamento-servico-tecnico' :
                                b.id === 'mapa-visual-separacao-pecas-default' ? 'open-mapa-visual-separacao-pecas' :
                                b.id === 'manuais-informacoes-tecnicas-default' ? 'open-manuais-informacoes-tecnicas' :
                                b.id === 'almoxarifado-armazem-default' ? 'open-almoxarifado-armazem' :
@@ -6670,6 +6683,7 @@ export default function Dashboard() {
       const hasCadastroServicos = buttons.some((b: SidebarButton) => b.id === 'cadastro-servicos-default')
       const hasOrcamentosAvulso = buttons.some((b: SidebarButton) => b.id === 'orcamentos-avulso-default')
       const hasPedidoOrcamentosAvulso = buttons.some((b: SidebarButton) => b.id === 'pedido-orcamentos-avulso-default')
+      const hasOrcamentoServicoTecnico = buttons.some((b: SidebarButton) => b.id === 'orcamento-servico-tecnico-default')
       const hasRegistroDespesas = buttons.some((b: SidebarButton) => b.id === 'registro-despesas-default')
       const hasMapaVisualSeparacaoPecas = buttons.some((b: SidebarButton) => b.id === 'mapa-visual-separacao-pecas-default')
       const hasAlmoxarifadoArmazem = buttons.some((b: SidebarButton) => b.id === 'almoxarifado-armazem-default')
@@ -7166,6 +7180,18 @@ export default function Dashboard() {
           group: 'gestao-custos'
         }
         buttons.push(pedidoOrcamentosAvulsoButton)
+      }
+
+      if (!hasOrcamentoServicoTecnico) {
+        const orcamentoServicoTecnicoButton: SidebarButton = {
+          id: 'orcamento-servico-tecnico-default',
+          name: 'ORÇAMENTO DE SERVIÇO TÉCNICO',
+          action: 'open-orcamento-servico-tecnico',
+          order: buttons.length,
+          translationKey: 'orcamentoServicoTecnicoTitle',
+          group: 'gestao-custos'
+        }
+        buttons.push(orcamentoServicoTecnicoButton)
       }
 
       if (!hasRegistroDespesas) {
@@ -8193,6 +8219,7 @@ export default function Dashboard() {
       'fechamento-relatorios-servicos-default',
       'orcamentos-avulso-default',
       'pedido-orcamentos-avulso-default',
+      'orcamento-servico-tecnico-default',
       'registro-despesas-default',
       'mapa-visual-separacao-pecas-default'
     ]
@@ -8235,6 +8262,10 @@ export default function Dashboard() {
         return (safeT as any)?.fechamentoRelatoriosServicosTitle || button.name || ''
       } else if (button.id === 'orcamentos-avulso-default') {
         return safeT?.orcamentosAvulsoTitle || button.name || ''
+      } else if (button.id === 'pedido-orcamentos-avulso-default') {
+        return safeT?.pedidoOrcamentosAvulsoTitle || button.name || ''
+      } else if (button.id === 'orcamento-servico-tecnico-default') {
+        return (safeT as any)?.orcamentoServicoTecnicoTitle || button.name || ''
       } else if (button.id === 'registro-despesas-default') {
         return safeT?.registroDespesasTitle || button.name || ''
       } else if (button.id === 'comprovantes-despesas-default') {
@@ -19333,6 +19364,7 @@ export default function Dashboard() {
     'open-almoxarifado': 'extras',
     'open-orcamentos-avulso': 'cadastroServicos',
     'open-pedido-orcamentos-avulso': 'cadastroServicos',
+    'open-orcamento-servico-tecnico': 'cadastroServicos',
     'open-registro-despesas': 'cadastroServicos',
     'open-mapa-visual-separacao': 'extras',
     'open-comunicacao-interna': 'extras',
@@ -19650,6 +19682,8 @@ export default function Dashboard() {
       openTab('orcamentos-avulso', getTabTitle('orcamentos-avulso'))
     } else if (action === 'open-pedido-orcamentos-avulso') {
       openTab('pedido-orcamentos-avulso', getTabTitle('pedido-orcamentos-avulso'))
+    } else if (action === 'open-orcamento-servico-tecnico') {
+      openTab('orcamento-servico-tecnico', getTabTitle('orcamento-servico-tecnico'))
     } else if (action === 'open-registro-despesas') {
       openTab('registro-despesas', getTabTitle('registro-despesas'))
     } else if (action === 'open-mapa-visual-separacao-pecas') {
@@ -39369,6 +39403,17 @@ A1;Peça exemplo;10`}
               setOpenOrcamentosGeradosView(true)
               openTab('orcamentos-avulso', getTabTitle('orcamentos-avulso'))
             }}
+          />
+        )
+
+      case 'orcamento-servico-tecnico':
+        return (
+          <OrcamentoServicoTecnicoContent
+            clientes={clientes}
+            servicos={servicos}
+            safeT={safeT}
+            openTab={(type, title) => openTab(type as TabType, title)}
+            getTabTitle={getTabTitle}
           />
         )
 
