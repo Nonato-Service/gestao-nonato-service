@@ -19485,6 +19485,14 @@ export default function Dashboard() {
     )
   }, [diarioPedidosItems])
 
+  const diarioPedidosResumo = useMemo(() => {
+    const list = diarioPedidosItems
+    const total = list.length
+    const resolvidas = list.filter((i) => i.status === 'concluido').length
+    const abertas = list.filter((i) => i.status === 'planeado' || i.status === 'em_curso').length
+    return { total, abertas, resolvidas }
+  }, [diarioPedidosItems])
+
   const diarioPedidosLocale = useMemo(() => {
     switch (selectedLanguage) {
       case 'pt-BR':
@@ -58484,13 +58492,37 @@ A1;Peça exemplo;10`}
               </div>
             </header>
 
+            <div className="ns-diario-resumo" role="group" aria-label={(safeT as any)?.diarioPedidosResumoAria || 'Resumo das anotações'}>
+              <div className="ns-diario-resumo__card ns-diario-resumo__card--total">
+                <span className="ns-diario-resumo__value" aria-hidden>
+                  {diarioPedidosResumo.total}
+                </span>
+                <span className="ns-diario-resumo__label">{(safeT as any)?.diarioPedidosResumoTotal || 'Total'}</span>
+                <span className="ns-diario-resumo__hint">{(safeT as any)?.diarioPedidosResumoTotalHint || 'registadas'}</span>
+              </div>
+              <div className="ns-diario-resumo__card ns-diario-resumo__card--abertas">
+                <span className="ns-diario-resumo__value" aria-hidden>
+                  {diarioPedidosResumo.abertas}
+                </span>
+                <span className="ns-diario-resumo__label">{(safeT as any)?.diarioPedidosResumoAbertas || 'Em aberto'}</span>
+                <span className="ns-diario-resumo__hint">{(safeT as any)?.diarioPedidosResumoAbertasHint || 'planeadas ou em execução'}</span>
+              </div>
+              <div className="ns-diario-resumo__card ns-diario-resumo__card--resolvidas">
+                <span className="ns-diario-resumo__value" aria-hidden>
+                  {diarioPedidosResumo.resolvidas}
+                </span>
+                <span className="ns-diario-resumo__label">{(safeT as any)?.diarioPedidosResumoResolvidas || 'Resolvidas'}</span>
+                <span className="ns-diario-resumo__hint">{(safeT as any)?.diarioPedidosResumoResolvidasHint || 'concluídas'}</span>
+              </div>
+            </div>
+
             <section className="ns-diario-composer" aria-label={(safeT as any)?.diarioPedidosSecComposer || 'Nova anotação'}>
               <div className="ns-diario-composer__label">{(safeT as any)?.diarioPedidosSecComposer || 'Nova anotação'}</div>
               <textarea
                 className="ns-diario-composer__input"
                 value={diarioPedidoDraft}
                 onChange={(e) => setDiarioPedidoDraft(e.target.value)}
-                rows={3}
+                rows={4}
                 placeholder={
                   (safeT as any)?.diarioPedidosPlaceholder ||
                   'Contacto, peça, relatório, lembrete operacional…'
