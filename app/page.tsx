@@ -55899,8 +55899,16 @@ A1;Peça exemplo;10`}
         ? 'pending'
         : 'ok'
   const syncTrafficTopPad = isDemoMode && !isCompactLayout ? 52 : 10
-  /** Acima do overlay de arranque; abaixo do modal de sincronização (z 10100) para não tapar a decisão. */
-  const syncTrafficZ = appInitialLoading ? 100000003 : 10050
+  /** Ecrãs de entrada (splash/login) usam z-index ~99999 — o semáforo tem de ficar por cima para ser visível. */
+  const syncTrafficOnEntryFullscreen =
+    showSplashInicial || showPasswordScreen || demoExpired || !loginUser
+  const syncTrafficZ = appInitialLoading
+    ? 100000003
+    : syncDecisionModalOpen && syncPendingRemote
+      ? 10080
+      : syncTrafficOnEntryFullscreen
+        ? 100000004
+        : 10005
   const syncTrafficStatusText =
     syncTrafficPhase === 'boot'
       ? trSync.syncTrafficBoot || 'A preparar ligação ao servidor…'
@@ -55909,9 +55917,28 @@ A1;Peça exemplo;10`}
         : syncTrafficPhase === 'pending'
           ? trSync.syncTrafficYellow || 'Há alterações no servidor — este aparelho ainda não está alinhado'
           : trSync.syncTrafficGreen || 'Atualizado — alinhado com o servidor'
+  const syncTrafficTitle = trSync.syncTrafficTitle || 'Sincronização'
+  const syncTrafficLightsRow = (
+    <div className="ns-sync-traffic__row" aria-hidden>
+      <span
+        className={`ns-sync-traffic__dot ns-sync-traffic__dot--yellow${syncTrafficPhase === 'pending' ? ' is-active' : ''}`}
+        title={trSync.syncTrafficYellowShort || 'Pendente'}
+      />
+      <span
+        className={`ns-sync-traffic__dot ns-sync-traffic__dot--blue${
+          syncTrafficPhase === 'boot' || syncTrafficPhase === 'syncing' ? ' is-active' : ''
+        }`}
+        title={trSync.syncTrafficBlueShort || 'A atualizar'}
+      />
+      <span
+        className={`ns-sync-traffic__dot ns-sync-traffic__dot--green${syncTrafficPhase === 'ok' ? ' is-active' : ''}`}
+        title={trSync.syncTrafficGreenShort || 'OK'}
+      />
+    </div>
+  )
   const syncTrafficLightsWidget = (
     <div
-      className="ns-sync-traffic"
+      className="ns-sync-traffic ns-sync-traffic--panel"
       style={{
         position: 'fixed',
         top: `calc(${syncTrafficTopPad}px + env(safe-area-inset-top, 0px))`,
@@ -55920,33 +55947,31 @@ A1;Peça exemplo;10`}
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'flex-end',
-        gap: 6,
+        gap: 8,
         pointerEvents: 'none',
-        maxWidth: 'min(92vw, 240px)',
+        maxWidth: 'min(92vw, 280px)',
       }}
       role="status"
       aria-live="polite"
-      aria-label={syncTrafficStatusText}
+      aria-label={`${syncTrafficTitle}. ${syncTrafficStatusText}`}
     >
-      <div className="ns-sync-traffic__row" aria-hidden>
-        <span
-          className={`ns-sync-traffic__dot ns-sync-traffic__dot--yellow${syncTrafficPhase === 'pending' ? ' is-active' : ''}`}
-          title={trSync.syncTrafficYellowShort || 'Pendente'}
-        />
-        <span
-          className={`ns-sync-traffic__dot ns-sync-traffic__dot--blue${
-            syncTrafficPhase === 'boot' || syncTrafficPhase === 'syncing' ? ' is-active' : ''
-          }`}
-          title={trSync.syncTrafficBlueShort || 'A atualizar'}
-        />
-        <span
-          className={`ns-sync-traffic__dot ns-sync-traffic__dot--green${syncTrafficPhase === 'ok' ? ' is-active' : ''}`}
-          title={trSync.syncTrafficGreenShort || 'OK'}
-        />
+      <div className="ns-sync-traffic__head">
+        <span className="ns-sync-traffic__title">{syncTrafficTitle}</span>
+        {syncTrafficLightsRow}
       </div>
       <div className="ns-sync-traffic__caption">{syncTrafficStatusText}</div>
     </div>
   )
+  const syncTrafficLightsMobileCompact = isCompactLayout ? (
+    <div
+      className="ns-sync-traffic ns-sync-traffic--header-compact"
+      role="status"
+      aria-label={`${syncTrafficTitle}. ${syncTrafficStatusText}`}
+      title={`${syncTrafficTitle}: ${syncTrafficStatusText}`}
+    >
+      {syncTrafficLightsRow}
+    </div>
+  ) : null
 
   // Tela inicial (dashboard): logo do dashboard, mensagem profissional e agressiva, métricas, CTA
   if (showSplashInicial) {
@@ -56393,7 +56418,7 @@ A1;Peça exemplo;10`}
     >
       <WritingAssistFieldContext.Provider value={writingAssistFieldApi}>
       {bootLoadingOverlay}
-      {syncTrafficLightsWidget}
+      {!isCompactLayout ? syncTrafficLightsWidget : null}
       <WritingLanguageAssistModal
         open={writingAssistOpen}
         onClose={() => {
@@ -56475,6 +56500,7 @@ A1;Peça exemplo;10`}
             {mobileMenuOpen ? '✕' : '☰'}
           </button>
           <span className="mobile-app-header-title">NONATO SERVICE</span>
+          {syncTrafficLightsMobileCompact}
         </header>
       )}
       {/* Sidebar - em ecrã estreito: gaveta lateral (globals.css). Classe extra na vista de entrada: esconde de forma fiável face a media queries. */}

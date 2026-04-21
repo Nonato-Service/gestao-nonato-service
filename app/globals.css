@@ -6946,7 +6946,48 @@ button.dia-trabalho-acao-btn--del:hover {
   }
 }
 
-/* Indicador fixo: amarelo = há dados mais recentes no servidor; azul = a sincronizar; verde = alinhado. */
+/* Semáforo sincronização: amarelo = pendência servidor; azul = a carregar/sincronizar; verde = alinhado. */
+.ns-sync-traffic--panel {
+  padding: 10px 12px 10px 14px;
+  border-radius: 12px;
+  background: rgba(8, 12, 10, 0.92);
+  border: 1px solid rgba(0, 255, 136, 0.28);
+  box-shadow:
+    0 4px 22px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+.ns-sync-traffic__head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ns-sync-traffic__title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(180, 255, 210, 0.95);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+.ns-sync-traffic--header-compact {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(0, 255, 100, 0.28);
+}
+.ns-sync-traffic--header-compact .ns-sync-traffic__dot {
+  width: 9px;
+  height: 9px;
+}
+.ns-sync-traffic--panel .ns-sync-traffic__dot {
+  width: 14px;
+  height: 14px;
+}
 .ns-sync-traffic__row {
   display: flex;
   align-items: center;

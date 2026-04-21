@@ -456,6 +456,7 @@ export const translations = {
     syncInitialLoadTitle: 'A carregar dados do servidor…',
     syncInitialLoadHint: 'Aguarde até esta mensagem desaparecer — depois o sistema fica pronto.',
     syncReloadFlushing: 'A guardar e a recarregar…',
+    syncTrafficTitle: 'Sincronização',
     syncTrafficBoot: 'A preparar ligação ao servidor…',
     syncTrafficYellow: 'Há dados mais recentes no servidor — este aparelho ainda não está alinhado.',
     syncTrafficBlue: 'A sincronizar com o servidor…',
@@ -12211,6 +12212,7 @@ export const translations = {
     papelTimbradoSemFichaCadastro:
       'No data in registration. Open the system, go to «Nonato Service registration», fill in and save, then use «Pull from registration».',
     syncAdminJumpHint: 'Server and other devices',
+    syncTrafficTitle: 'Sync',
     syncTrafficBoot: 'Connecting to server…',
     syncTrafficYellow: 'The server has newer data — this device is not aligned yet.',
     syncTrafficBlue: 'Synchronising with the server…',
