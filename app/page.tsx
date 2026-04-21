@@ -2043,8 +2043,6 @@ export default function Dashboard() {
     summaryLines: string[]
   } | null>(null)
   const [syncDecisionModalOpen, setSyncDecisionModalOpen] = useState(false)
-  /** «Mais tarde» ou fundo: não reabrir o modal da mesma revisão até o utilizador pedir no Admin. */
-  const syncModalDismissedRevisionRef = useRef<number | null>(null)
   const [syncPushLoading, setSyncPushLoading] = useState(false)
   const [syncPullChecking, setSyncPullChecking] = useState(false)
   /** Primeira carga: pedidos ao servidor + fusão de dados (evita parecer que «não termina»). */
@@ -4841,10 +4839,16 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!syncPendingRemote) {
-      syncModalDismissedRevisionRef.current = null
       setSyncDecisionModalOpen(false)
     }
   }, [syncPendingRemote])
+
+  /** Com atualização pendente, o fluxo de trabalho só continua após escolher carregar do servidor ou enviar para o servidor. */
+  useEffect(() => {
+    if (appInitialLoading) return
+    if (!syncPendingRemote) return
+    setSyncDecisionModalOpen(true)
+  }, [appInitialLoading, syncPendingRemote])
 
   /** Servidor: rever revisão em fundo e ao voltar ao ecrã — evita depender de F5 para ver alterações noutro aparelho. */
   useEffect(() => {
@@ -22823,7 +22827,6 @@ const nextF = familias.filter(x => x !== f)
                         type="button"
                         className="btn-primary"
                         onClick={() => {
-                          syncModalDismissedRevisionRef.current = null
                           setSyncDecisionModalOpen(true)
                         }}
                         style={{ padding: '8px 14px', fontSize: '12px', fontWeight: 600 }}
@@ -55887,6 +55890,64 @@ A1;Peça exemplo;10`}
       </div>
     ) : null
 
+  const trSync = safeT as Record<string, string | undefined>
+  const syncTrafficPhase: 'boot' | 'syncing' | 'pending' | 'ok' = appInitialLoading
+    ? 'boot'
+    : syncPullChecking || syncPushLoading
+      ? 'syncing'
+      : syncPendingRemote
+        ? 'pending'
+        : 'ok'
+  const syncTrafficTopPad = isDemoMode && !isCompactLayout ? 52 : 10
+  /** Acima do overlay de arranque; abaixo do modal de sincronização (z 10100) para não tapar a decisão. */
+  const syncTrafficZ = appInitialLoading ? 100000003 : 10050
+  const syncTrafficStatusText =
+    syncTrafficPhase === 'boot'
+      ? trSync.syncTrafficBoot || 'A preparar ligação ao servidor…'
+      : syncTrafficPhase === 'syncing'
+        ? trSync.syncTrafficBlue || 'A sincronizar…'
+        : syncTrafficPhase === 'pending'
+          ? trSync.syncTrafficYellow || 'Há alterações no servidor — este aparelho ainda não está alinhado'
+          : trSync.syncTrafficGreen || 'Atualizado — alinhado com o servidor'
+  const syncTrafficLightsWidget = (
+    <div
+      className="ns-sync-traffic"
+      style={{
+        position: 'fixed',
+        top: `calc(${syncTrafficTopPad}px + env(safe-area-inset-top, 0px))`,
+        right: `max(10px, env(safe-area-inset-right, 0px))`,
+        zIndex: syncTrafficZ,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        gap: 6,
+        pointerEvents: 'none',
+        maxWidth: 'min(92vw, 240px)',
+      }}
+      role="status"
+      aria-live="polite"
+      aria-label={syncTrafficStatusText}
+    >
+      <div className="ns-sync-traffic__row" aria-hidden>
+        <span
+          className={`ns-sync-traffic__dot ns-sync-traffic__dot--yellow${syncTrafficPhase === 'pending' ? ' is-active' : ''}`}
+          title={trSync.syncTrafficYellowShort || 'Pendente'}
+        />
+        <span
+          className={`ns-sync-traffic__dot ns-sync-traffic__dot--blue${
+            syncTrafficPhase === 'boot' || syncTrafficPhase === 'syncing' ? ' is-active' : ''
+          }`}
+          title={trSync.syncTrafficBlueShort || 'A atualizar'}
+        />
+        <span
+          className={`ns-sync-traffic__dot ns-sync-traffic__dot--green${syncTrafficPhase === 'ok' ? ' is-active' : ''}`}
+          title={trSync.syncTrafficGreenShort || 'OK'}
+        />
+      </div>
+      <div className="ns-sync-traffic__caption">{syncTrafficStatusText}</div>
+    </div>
+  )
+
   // Tela inicial (dashboard): logo do dashboard, mensagem profissional e agressiva, métricas, CTA
   if (showSplashInicial) {
     const dashboardLogo = logoUrlDashboard || logoUrl
@@ -56057,6 +56118,7 @@ A1;Peça exemplo;10`}
           </footer>
         </div>
         {bootLoadingOverlay}
+        {syncTrafficLightsWidget}
       </div>
     )
   }
@@ -56243,6 +56305,7 @@ A1;Peça exemplo;10`}
           </div>
         </div>
         {bootLoadingOverlay}
+        {syncTrafficLightsWidget}
       </div>
     )
   }
@@ -56295,6 +56358,7 @@ A1;Peça exemplo;10`}
           </div>
         </div>
         {bootLoadingOverlay}
+        {syncTrafficLightsWidget}
       </div>
     )
   }
@@ -56310,6 +56374,7 @@ A1;Peça exemplo;10`}
           Voltar ao início
         </a>
         {bootLoadingOverlay}
+        {syncTrafficLightsWidget}
       </div>
     )
   }
@@ -56328,6 +56393,7 @@ A1;Peça exemplo;10`}
     >
       <WritingAssistFieldContext.Provider value={writingAssistFieldApi}>
       {bootLoadingOverlay}
+      {syncTrafficLightsWidget}
       <WritingLanguageAssistModal
         open={writingAssistOpen}
         onClose={() => {
@@ -57982,10 +58048,6 @@ A1;Peça exemplo;10`}
           role="dialog"
           aria-modal="true"
           aria-labelledby="sync-decision-title"
-          onClick={() => {
-            if (syncPendingRemote) syncModalDismissedRevisionRef.current = syncPendingRemote.revision
-            setSyncDecisionModalOpen(false)
-          }}
           style={{
             position: 'fixed',
             inset: 0,
@@ -58018,6 +58080,10 @@ A1;Peça exemplo;10`}
             <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#ccc', lineHeight: 1.5 }}>
               {(safeT as any)?.syncModalIntro ||
                 'Outro equipamento gravou dados no servidor. Resumo em relação ao que estava neste aparelho:'}
+            </p>
+            <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#ffb84d', lineHeight: 1.45, fontWeight: 600 }}>
+              {(safeT as any)?.syncModalBlockingNote ||
+                'Enquanto existir esta diferença, o sistema não fica disponível para trabalho normal — escolha uma das opções abaixo.'}
             </p>
             {syncPendingRemote.updatedAt ? (
               <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#888' }}>
@@ -58088,29 +58154,6 @@ A1;Peça exemplo;10`}
               <p style={{ margin: '-4px 0 0', fontSize: '11px', color: '#888' }}>
                 {(safeT as any)?.syncModalPushDeviceHint ||
                   'Substitui o servidor pela cópia deste aparelho se AQUI está a informação certa.'}
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  if (syncPendingRemote) syncModalDismissedRevisionRef.current = syncPendingRemote.revision
-                  setSyncDecisionModalOpen(false)
-                }}
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(255,255,255,0.25)',
-                  background: 'transparent',
-                  color: '#aaa',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                }}
-              >
-                {(safeT as any)?.syncModalLater || 'Decidir mais tarde'}
-              </button>
-              <p style={{ margin: '-4px 0 0', fontSize: '11px', color: '#666' }}>
-                {(safeT as any)?.syncModalLaterHint ||
-                  'Pode reabrir este aviso no Administrador → Sincronização entre aparelhos.'}
               </p>
             </div>
           </div>
