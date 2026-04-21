@@ -6871,3 +6871,78 @@ button.dia-trabalho-acao-btn--del:hover {
   border-radius: 8px;
 }
 
+/* Diário de pedidos do dia — barra lateral e cartões no modal */
+.sidebar-action-btn.sidebar-action-btn--diario {
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.sidebar-action-btn.sidebar-action-btn--diario-pulse {
+  animation: ns-diario-sidebar-pulse 1.35s ease-in-out infinite;
+  border-color: rgba(234, 179, 8, 0.92) !important;
+  color: #fef9c3 !important;
+  background: rgba(66, 50, 8, 0.58) !important;
+  box-shadow:
+    0 0 0 1px rgba(250, 204, 21, 0.38),
+    0 0 20px rgba(250, 204, 21, 0.32);
+}
+
+.sidebar-action-btn.sidebar-action-btn--diario-done {
+  border-color: rgba(34, 197, 94, 0.88) !important;
+  color: #d1fae5 !important;
+  background: rgba(6, 40, 22, 0.52) !important;
+  box-shadow:
+    0 0 0 1px rgba(34, 197, 94, 0.28),
+    0 0 16px rgba(34, 197, 94, 0.2);
+}
+
+@keyframes ns-diario-sidebar-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 8px rgba(250, 204, 21, 0.22),
+      0 0 0 1px rgba(250, 204, 21, 0.28);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow:
+      0 0 22px rgba(250, 204, 21, 0.48),
+      0 0 0 1px rgba(250, 204, 21, 0.45);
+    filter: brightness(1.09);
+  }
+}
+
+.diario-pedido-card--em-curso {
+  animation: ns-diario-card-pulse 1.4s ease-in-out infinite;
+  border-color: rgba(234, 179, 8, 0.55) !important;
+  box-shadow:
+    0 0 0 1px rgba(250, 204, 21, 0.14),
+    0 0 18px rgba(250, 204, 21, 0.2);
+}
+
+.diario-pedido-card--concluido {
+  border-color: rgba(34, 197, 94, 0.45) !important;
+  opacity: 0.94;
+}
+
+.diario-pedido-card--planeado {
+  border-color: rgba(100, 116, 139, 0.28) !important;
+}
+
+@keyframes ns-diario-card-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 10px rgba(250, 204, 21, 0.14),
+      0 0 0 1px rgba(250, 204, 21, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 22px rgba(250, 204, 21, 0.3),
+      0 0 0 1px rgba(250, 204, 21, 0.22);
+  }
+}
+
