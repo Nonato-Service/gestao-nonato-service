@@ -1935,6 +1935,13 @@ export default function Dashboard() {
   const [editingGrupoManuaisId, setEditingGrupoManuaisId] = useState<string | null>(null)
   const [editingGrupoManuaisValue, setEditingGrupoManuaisValue] = useState('')
   const [manuaisModelos, setManuaisModelos] = useState<ManuaisModelo[]>([])
+  /** Evita gravar snapshot desatualizado de `modelos` quando o debounce dos textos dispara depois de adicionar PDF/imagem. */
+  const manuaisFamiliasRef = useRef(manuaisFamilias)
+  const manuaisGruposRef = useRef(manuaisGrupos)
+  const manuaisModelosRef = useRef(manuaisModelos)
+  manuaisFamiliasRef.current = manuaisFamilias
+  manuaisGruposRef.current = manuaisGrupos
+  manuaisModelosRef.current = manuaisModelos
   const [selectedGrupoManuais, setSelectedGrupoManuais] = useState<string | null>(null)
   const [selectedModeloManuaisId, setSelectedModeloManuaisId] = useState<string | null>(null)
   const [novoModeloManuais, setNovoModeloManuais] = useState('')
@@ -21495,8 +21502,12 @@ const nextF = familias.filter(x => x !== f)
                 if (!modelo) return <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>Modelo não encontrado.</p>
                 const documentos = Array.isArray(modelo.documentos) ? modelo.documentos : []
                 const imagens = Array.isArray(modelo.imagens) ? modelo.imagens : []
-                const runSaveManuaisModelos = (next: ManuaisModelo[]) => {
-                  saveData('nonato-manuais-familias-grupos', { familias, grupos, modelos: next })
+                const runSaveManuaisModelos = (modelosSnapshot: ManuaisModelo[]) => {
+                  saveData('nonato-manuais-familias-grupos', {
+                    familias: manuaisFamiliasRef.current,
+                    grupos: manuaisGruposRef.current,
+                    modelos: modelosSnapshot,
+                  })
                     .then(() => {
                       manuaisSaveAlertShownOnce = false
                     })
@@ -21508,24 +21519,27 @@ const nextF = familias.filter(x => x !== f)
                       }
                     })
                 }
-                const persistModelosImmediate = (next: ManuaisModelo[]) => {
+                const persistModelosImmediate = (modelosSnapshot: ManuaisModelo[]) => {
                   if (manuaisSaveDebounceTimer) {
                     clearTimeout(manuaisSaveDebounceTimer)
                     manuaisSaveDebounceTimer = null
                   }
-                  runSaveManuaisModelos(next)
+                  manuaisModelosRef.current = modelosSnapshot
+                  runSaveManuaisModelos(modelosSnapshot)
                 }
-                const persistModelosDebounced = (next: ManuaisModelo[]) => {
+                const persistModelosDebounced = () => {
                   if (manuaisSaveDebounceTimer) clearTimeout(manuaisSaveDebounceTimer)
                   manuaisSaveDebounceTimer = setTimeout(() => {
                     manuaisSaveDebounceTimer = null
-                    runSaveManuaisModelos(next)
+                    const latest = manuaisModelosRef.current
+                    runSaveManuaisModelos(latest)
                   }, 500)
                 }
                 const updateModelo = (updates: Partial<ManuaisModelo>) => {
                   setManuaisModelos(prev => {
                     const next = prev.map(mo => mo.id === modelo.id ? { ...mo, ...updates } : mo)
-                    persistModelosDebounced(next)
+                    manuaisModelosRef.current = next
+                    persistModelosDebounced()
                     return next
                   })
                 }
@@ -21615,7 +21629,7 @@ const nextF = familias.filter(x => x !== f)
 
                     <div style={cardStyle}>
                       <div style={sectionTitle}>📎 {(safeT as any)?.manuaisDocumentos || 'Documentos'}</div>
-                      <div style={{ maxHeight: '100px', overflowY: 'auto', marginBottom: '10px' }}>
+                      <div style={{ maxHeight: 'min(42vh, 280px)', overflowY: 'auto', marginBottom: '10px' }}>
                         {documentos.length === 0 ? (
                           <p style={{ color: '#666', fontSize: '12px', margin: 0 }}>Nenhum documento.</p>
                         ) : (
