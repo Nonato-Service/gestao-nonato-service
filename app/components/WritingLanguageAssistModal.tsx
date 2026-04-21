@@ -485,6 +485,7 @@ export function WritingAssistFab({
   return (
     <button
       type="button"
+      data-ns-print-hide="1"
       onClick={onClick}
       title={title}
       aria-label={title}

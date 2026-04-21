@@ -1,4 +1,10 @@
 /* Papel timbrado — ecrã + impressão A4 */
+/* Dentro do orçamento OST — não forçar altura de ecrã inteiro */
+.papel-timbrado-root--embedded {
+  min-height: auto;
+  padding-top: 8px;
+}
+
 .papel-timbrado-root {
   min-height: 100vh;
   background: #0f1419;
@@ -264,10 +270,35 @@
 }
 
 .orcamento-ost-cientificacao-text {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   font-size: 9.2pt;
   line-height: 1.48;
   color: #334155;
+}
+
+.orcamento-ost-concordo-box {
+  margin: 12px 0 16px;
+  padding: 12px 12px 14px;
+  border-radius: 6px;
+  border: 2px dashed #0f172a;
+  background: #f8fafc;
+}
+
+.orcamento-ost-concordo-frase {
+  margin: 0 0 8px;
+  font-size: 10pt;
+  font-weight: 800;
+  line-height: 1.45;
+  color: #0f172a;
+  text-align: center;
+}
+
+.orcamento-ost-concordo-leitura {
+  margin: 0;
+  font-size: 8.5pt;
+  line-height: 1.45;
+  color: #475569;
+  text-align: center;
 }
 
 .orcamento-ost-sign-row {
@@ -295,10 +326,28 @@
   margin-bottom: 4px;
 }
 
+.orcamento-ost-sign-label--emph {
+  color: #0f172a;
+  font-size: 8pt;
+  letter-spacing: 0.03em;
+}
+
 .orcamento-ost-sign-line {
   display: block;
   border-bottom: 1px solid #475569;
   min-height: 20px;
+}
+
+.orcamento-ost-sign-line--large {
+  min-height: 26px;
+  border-bottom-width: 2px;
+  border-color: #0f172a;
+}
+
+.orcamento-ost-sign-line--xlarge {
+  min-height: 40px;
+  border-bottom-width: 2px;
+  border-color: #0f172a;
 }
 
 .papel-timbrado-footer {
@@ -371,6 +420,46 @@
     background: #fff !important;
   }
 
+  /* Esconder toda a UI da app (sidebar, sincronização, abas, F1, etc.) ao imprimir só o documento */
+  body:has(.papel-timbrado-root) .sidebar,
+  body:has(.papel-timbrado-root) .mobile-app-header,
+  body:has(.papel-timbrado-root) .mobile-sidebar-backdrop,
+  body:has(.papel-timbrado-root) .app-top-bar,
+  body:has(.papel-timbrado-root) .bottom-tabs-bar,
+  body:has(.papel-timbrado-root) .main-module-context-panel,
+  body:has(.papel-timbrado-root) .ns-sync-traffic,
+  body:has(.papel-timbrado-root) [data-ns-print-hide='1'] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  body:has(.papel-timbrado-root) .app-layout {
+    display: block !important;
+    padding: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    min-height: 0 !important;
+  }
+
+  body:has(.papel-timbrado-root) .main-app-column {
+    display: block !important;
+    overflow: visible !important;
+    min-height: 0 !important;
+  }
+
+  body:has(.papel-timbrado-root) .main-content-area {
+    overflow: visible !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  body:has(.papel-timbrado-root) .tab-inner-scroll {
+    padding: 0 !important;
+    overflow: visible !important;
+    min-height: 0 !important;
+  }
+
+  .ost-subnav,
   .papel-timbrado-toolbar,
   .papel-timbrado-form {
     display: none !important;

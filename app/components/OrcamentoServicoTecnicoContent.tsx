@@ -2,49 +2,14 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import '../papel-timbrado/papel-timbrado.css'
-
-const PAPEL_STORAGE_KEY = 'nonato-papel-timbrado-v1'
-const FALLBACK_LOGO = '/brand/nonato-letterhead-logo.svg'
-
-type PapelTimbradoConfig = {
-  nomeEmpresa: string
-  cidade: string
-  freguesia: string
-  rua: string
-  cep: string
-  telefone: string
-  logoUrl: string
-}
-
-const PAPEL_DEFAULTS: PapelTimbradoConfig = {
-  nomeEmpresa: 'NONATO SERVICE',
-  cidade: 'Viana do Castelo',
-  freguesia: 'Vila de Punhe',
-  rua: 'Rua das Mimosas, 303',
-  cep: '4905-642',
-  telefone: '+351-91111-5479',
-  logoUrl: '/brand/nonato-logo-papel-timbrado.png',
-}
-
-function loadPapelTimbradoConfig(): PapelTimbradoConfig {
-  if (typeof window === 'undefined') return { ...PAPEL_DEFAULTS }
-  try {
-    const raw = localStorage.getItem(PAPEL_STORAGE_KEY)
-    if (!raw) return { ...PAPEL_DEFAULTS }
-    const j = JSON.parse(raw) as Partial<PapelTimbradoConfig>
-    return {
-      nomeEmpresa: typeof j.nomeEmpresa === 'string' && j.nomeEmpresa.trim() ? j.nomeEmpresa.trim() : PAPEL_DEFAULTS.nomeEmpresa,
-      cidade: typeof j.cidade === 'string' && j.cidade.trim() ? j.cidade.trim() : PAPEL_DEFAULTS.cidade,
-      freguesia: typeof j.freguesia === 'string' && j.freguesia.trim() ? j.freguesia.trim() : PAPEL_DEFAULTS.freguesia,
-      rua: typeof j.rua === 'string' && j.rua.trim() ? j.rua.trim() : PAPEL_DEFAULTS.rua,
-      cep: typeof j.cep === 'string' && j.cep.trim() ? j.cep.trim() : PAPEL_DEFAULTS.cep,
-      telefone: typeof j.telefone === 'string' && j.telefone.trim() ? j.telefone.trim() : PAPEL_DEFAULTS.telefone,
-      logoUrl: typeof j.logoUrl === 'string' && j.logoUrl.trim() ? j.logoUrl.trim() : PAPEL_DEFAULTS.logoUrl,
-    }
-  } catch {
-    return { ...PAPEL_DEFAULTS }
-  }
-}
+import { PapelTimbradoConfigurator } from '../papel-timbrado/PapelTimbradoConfigurator'
+import {
+  PAPEL_CHANGED_EVENT,
+  PAPEL_STORAGE_KEY,
+  FALLBACK_LOGO,
+  loadPapelTimbradoState,
+  type PapelTimbradoFullState,
+} from '../papel-timbrado/papelTimbradoStorage'
 
 export type ServicoOrcamentoLinha = {
   id: string
@@ -145,18 +110,24 @@ function splitClausulasParagraphs(text: string): string[] {
     .filter(Boolean)
 }
 
+type OstSection = 'orcamento' | 'papel' | 'servicos'
+
 type Props = {
   clientes: ClienteOrcamentoLite[]
   servicos: ServicoOrcamentoLinha[]
   safeT: Record<string, string | undefined>
   openTab: (type: string, title: string) => void
   getTabTitle: (type: string) => string
+  /** Abre o modal global de cadastro de serviços sem sair deste separador. */
+  onOpenCadastroServicosModal?: () => void
 }
 
-export function OrcamentoServicoTecnicoContent({ clientes, servicos, safeT, openTab, getTabTitle }: Props) {
+export function OrcamentoServicoTecnicoContent({ clientes, servicos, safeT, openTab, getTabTitle, onOpenCadastroServicosModal }: Props) {
   const t = safeT
-  const [cfg, setCfg] = useState<PapelTimbradoConfig>(() => loadPapelTimbradoConfig())
+  const [papel, setPapel] = useState<PapelTimbradoFullState>(() => loadPapelTimbradoState())
   const [logoBroken, setLogoBroken] = useState(false)
+  const cfg = papel.config
+  const mostrar = papel.mostrar
 
   const [clienteId, setClienteId] = useState('')
   const [clienteManual, setClienteManual] = useState('')
@@ -171,20 +142,26 @@ export function OrcamentoServicoTecnicoContent({ clientes, servicos, safeT, open
   )
   const [clausulas, setClausulas] = useState(() => t.orcamentoServicoTecnicoClausulasDefault || TEXTO_CLAUSULAS_PADRAO_PT)
   const [linhas, setLinhas] = useState<LinhaOrcamento[]>(() => [{ rowId: newRowId(), servicoId: '', quantidadeStr: '1' }])
+  const [section, setSection] = useState<OstSection>('orcamento')
 
   useEffect(() => {
+    const reload = () => {
+      setPapel(loadPapelTimbradoState())
+      setLogoBroken(false)
+    }
     const onStorage = (e: StorageEvent) => {
-      if (e.key === PAPEL_STORAGE_KEY || e.key === null) {
-        setCfg(loadPapelTimbradoConfig())
-        setLogoBroken(false)
-      }
+      if (e.key === PAPEL_STORAGE_KEY || e.key === null) reload()
     }
     window.addEventListener('storage', onStorage)
-    return () => window.removeEventListener('storage', onStorage)
+    window.addEventListener(PAPEL_CHANGED_EVENT, reload)
+    return () => {
+      window.removeEventListener('storage', onStorage)
+      window.removeEventListener(PAPEL_CHANGED_EVENT, reload)
+    }
   }, [])
 
   const refreshPapel = useCallback(() => {
-    setCfg(loadPapelTimbradoConfig())
+    setPapel(loadPapelTimbradoState())
     setLogoBroken(false)
   }, [])
 
@@ -210,7 +187,7 @@ export function OrcamentoServicoTecnicoContent({ clientes, servicos, safeT, open
   const logoSrc = logoBroken ? FALLBACK_LOGO : cfg.logoUrl || FALLBACK_LOGO
 
   const imprimir = useCallback(() => {
-    setCfg(loadPapelTimbradoConfig())
+    setPapel(loadPapelTimbradoState())
     setLogoBroken(false)
     requestAnimationFrame(() => window.print())
   }, [])
@@ -218,10 +195,6 @@ export function OrcamentoServicoTecnicoContent({ clientes, servicos, safeT, open
   const abrirCadastroServicos = useCallback(() => {
     openTab('cadastro-servicos', getTabTitle('cadastro-servicos'))
   }, [openTab, getTabTitle])
-
-  const abrirPapelTimbrado = useCallback(() => {
-    window.open('/papel-timbrado', '_blank', 'noopener,noreferrer')
-  }, [])
 
   const addLinha = useCallback(() => {
     setLinhas((prev) => [...prev, { rowId: newRowId(), servicoId: '', quantidadeStr: '1' }])
@@ -237,24 +210,40 @@ export function OrcamentoServicoTecnicoContent({ clientes, servicos, safeT, open
 
   const tx = t as Record<string, string>
 
+  const subNavBtn = (key: OstSection, label: string) => (
+    <button
+      type="button"
+      key={key}
+      role="tab"
+      aria-selected={section === key}
+      className={section === key ? 'primary' : 'secondary'}
+      onClick={() => setSection(key)}
+      style={{ flex: '1 1 auto', minWidth: 120 }}
+    >
+      {label}
+    </button>
+  )
+
   return (
     <div className="papel-timbrado-root">
-      <div className="papel-timbrado-toolbar">
-        <button type="button" className="secondary" onClick={refreshPapel}>
-          {t.orcamentoServicoTecnicoAtualizarPapel || 'Atualizar papel timbrado'}
-        </button>
-        <button type="button" className="secondary" onClick={abrirPapelTimbrado}>
-          {t.orcamentoServicoTecnicoConfigPapel || 'Configurar papel timbrado'}
-        </button>
-        <button type="button" className="secondary" onClick={abrirCadastroServicos}>
-          {t.orcamentoServicoTecnicoAbrirCadastroServicos || 'Abrir cadastro de serviços / valores'}
-        </button>
-        <button type="button" className="primary" onClick={imprimir}>
-          {tx.papelTimbradoImprimir || t.orcamentoServicoTecnicoImprimir || 'Imprimir / PDF'}
-        </button>
+      <div className="ost-subnav papel-timbrado-toolbar" role="tablist" aria-label={t.orcamentoServicoTecnicoSubnavAria || 'Secções'}>
+        {subNavBtn('orcamento', t.orcamentoServicoTecnicoSecOrcamento || 'Orçamento')}
+        {subNavBtn('papel', t.orcamentoServicoTecnicoSecPapel || 'Papel timbrado')}
+        {subNavBtn('servicos', t.orcamentoServicoTecnicoSecServicos || 'Serviços / valores')}
       </div>
 
-      <div className="papel-timbrado-layout">
+      {section === 'orcamento' ? (
+        <>
+          <div className="papel-timbrado-toolbar">
+            <button type="button" className="secondary" onClick={refreshPapel}>
+              {t.orcamentoServicoTecnicoAtualizarPapel || 'Atualizar papel timbrado'}
+            </button>
+            <button type="button" className="primary" onClick={imprimir}>
+              {tx.papelTimbradoImprimir || t.orcamentoServicoTecnicoImprimir || 'Imprimir / PDF'}
+            </button>
+          </div>
+
+          <div className="papel-timbrado-layout">
         <div className="papel-timbrado-form">
           <h1>{t.orcamentoServicoTecnicoTituloForm || t.orcamentoServicoTecnicoTitle || 'Orçamento de serviço técnico'}</h1>
           <p className="lead">{t.orcamentoServicoTecnicoSubtitle || ''}</p>
@@ -391,9 +380,9 @@ export function OrcamentoServicoTecnicoContent({ clientes, servicos, safeT, open
           <div className="papel-timbrado-sheet" id="orcamento-servico-tecnico-print-area">
             <div className="papel-timbrado-sheet-inner">
               <header className="papel-timbrado-header">
-                <img className="papel-timbrado-logo" src={logoSrc} alt="" onError={() => setLogoBroken(true)} />
+                {mostrar.logo ? <img className="papel-timbrado-logo" src={logoSrc} alt="" onError={() => setLogoBroken(true)} /> : null}
                 <div className="papel-timbrado-header-text">
-                  <strong>{cfg.nomeEmpresa}</strong>
+                  {mostrar.nomeEmpresa ? <strong>{cfg.nomeEmpresa}</strong> : null}
                 </div>
               </header>
 
@@ -497,73 +486,136 @@ export function OrcamentoServicoTecnicoContent({ clientes, servicos, safeT, open
 
                 <div className="orcamento-ost-cientificacao">
                   <div className="orcamento-ost-cientificacao-title">
-                    {t.orcamentoServicoTecnicoPdfCientificacaoTitulo || 'DECLARAÇÃO DE CIÊNCIA (contratante)'}
+                    {t.orcamentoServicoTecnicoPdfCientificacaoTitulo || 'ACEITAÇÃO DO ORÇAMENTO (cliente / contratante)'}
                   </div>
                   <p className="orcamento-ost-cientificacao-text">
                     {t.orcamentoServicoTecnicoPdfCientificacaoTexto ||
                       'A entidade contratante declara ter lido e compreendido a presente proposta, incluindo as condições relativas a despesas de deslocação, alojamento, alimentação e transporte aéreo, bem como limites de equipagem e trabalhos adicionais, nos termos acima.'}
                   </p>
-                  <div className="orcamento-ost-sign-row">
-                    <span className="orcamento-ost-sign-label">
-                      {t.orcamentoServicoTecnicoPdfLinhaNomeCargo || 'Nome, cargo e empresa'}
-                    </span>
-                    <span className="orcamento-ost-sign-line" aria-hidden />
+
+                  <div className="orcamento-ost-concordo-box">
+                    <p className="orcamento-ost-concordo-frase">
+                      {t.orcamentoServicoTecnicoPdfConcordoFrase ||
+                        'Ao assinar no espaço reservado abaixo, o cliente declara que CONCORDA com os valores, com a descrição dos serviços e com todas as condições constantes neste documento.'}
+                    </p>
+                    <p className="orcamento-ost-concordo-leitura">
+                      {t.orcamentoServicoTecnicoPdfLeituraObrigatoria ||
+                        'A assinatura vale como aceitação formal da proposta (sem prejuízo de contrato ou ordem de serviço posterior, se aplicável).'}
+                    </p>
                   </div>
+
+                  <div className="orcamento-ost-sign-row">
+                    <span className="orcamento-ost-sign-label orcamento-ost-sign-label--emph">
+                      {t.orcamentoServicoTecnicoPdfLinhaNomeCargo || 'Nome completo, cargo e empresa (cliente)'}
+                    </span>
+                    <span className="orcamento-ost-sign-line orcamento-ost-sign-line--large" aria-hidden />
+                  </div>
+
                   <div className="orcamento-ost-sign-row orcamento-ost-sign-row--split">
                     <div className="orcamento-ost-sign-cell">
-                      <span className="orcamento-ost-sign-label">{t.orcamentoServicoTecnicoPdfLinhaData || 'Data'}</span>
-                      <span className="orcamento-ost-sign-line" aria-hidden />
+                      <span className="orcamento-ost-sign-label orcamento-ost-sign-label--emph">
+                        {t.orcamentoServicoTecnicoPdfLinhaData || 'Data'}
+                      </span>
+                      <span className="orcamento-ost-sign-line orcamento-ost-sign-line--large" aria-hidden />
                     </div>
                     <div className="orcamento-ost-sign-cell">
-                      <span className="orcamento-ost-sign-label">
-                        {t.orcamentoServicoTecnicoPdfLinhaAssinatura || 'Assinatura e carimbo'}
+                      <span className="orcamento-ost-sign-label orcamento-ost-sign-label--emph">
+                        {t.orcamentoServicoTecnicoPdfLinhaAssinaturaConcordo ||
+                          'Assinatura do cliente (concordo) — ou carimbo da empresa'}
                       </span>
-                      <span className="orcamento-ost-sign-line" aria-hidden />
+                      <span className="orcamento-ost-sign-line orcamento-ost-sign-line--xlarge" aria-hidden />
                     </div>
                   </div>
                 </div>
               </section>
 
               <footer className="papel-timbrado-footer" aria-label="Contactos">
-                <div className="papel-timbrado-footer-row">
-                  <span className="papel-timbrado-footer-item">
-                    <span className="papel-timbrado-footer-label">{tx.papelTimbradoLabelCidade}</span>
-                    <span className="papel-timbrado-footer-val">{cfg.cidade}</span>
-                  </span>
-                  <span className="papel-timbrado-footer-sep" aria-hidden="true">
-                    |
-                  </span>
-                  <span className="papel-timbrado-footer-item">
-                    <span className="papel-timbrado-footer-label">{tx.papelTimbradoLabelFreguesia}</span>
-                    <span className="papel-timbrado-footer-val">{cfg.freguesia}</span>
-                  </span>
-                  <span className="papel-timbrado-footer-sep" aria-hidden="true">
-                    |
-                  </span>
-                  <span className="papel-timbrado-footer-item">
-                    <span className="papel-timbrado-footer-label">{tx.papelTimbradoLabelRua}</span>
-                    <span className="papel-timbrado-footer-val">{cfg.rua}</span>
-                  </span>
-                  <span className="papel-timbrado-footer-sep" aria-hidden="true">
-                    |
-                  </span>
-                  <span className="papel-timbrado-footer-item">
-                    <span className="papel-timbrado-footer-label">{tx.papelTimbradoLabelCep}</span>
-                    <span className="papel-timbrado-footer-val">{cfg.cep}</span>
-                  </span>
-                  <span className="papel-timbrado-footer-sep" aria-hidden="true">
-                    |
-                  </span>
-                  <span className="papel-timbrado-footer-item">
-                    <span className="papel-timbrado-footer-label">{tx.papelTimbradoLabelFone}</span>
-                    <span className="papel-timbrado-footer-val">{cfg.telefone}</span>
-                  </span>
-                </div>
+                {(() => {
+                  const items: { k: keyof typeof mostrar; label: string; val: string }[] = [
+                    { k: 'cidade', label: tx.papelTimbradoLabelCidade, val: cfg.cidade },
+                    { k: 'freguesia', label: tx.papelTimbradoLabelFreguesia, val: cfg.freguesia },
+                    { k: 'rua', label: tx.papelTimbradoLabelRua, val: cfg.rua },
+                    { k: 'cep', label: tx.papelTimbradoLabelCep, val: cfg.cep },
+                    { k: 'telefone', label: tx.papelTimbradoLabelFone, val: cfg.telefone },
+                  ]
+                  const visible = items.filter((it) => mostrar[it.k])
+                  if (visible.length === 0) return null
+                  return (
+                    <div className="papel-timbrado-footer-row">
+                      {visible.map((it, i) => (
+                        <React.Fragment key={it.k}>
+                          {i > 0 ? (
+                            <span className="papel-timbrado-footer-sep" aria-hidden="true">
+                              |
+                            </span>
+                          ) : null}
+                          <span className="papel-timbrado-footer-item">
+                            <span className="papel-timbrado-footer-label">{it.label}</span>
+                            <span className="papel-timbrado-footer-val">{it.val}</span>
+                          </span>
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  )
+                })()}
               </footer>
             </div>
           </div>
         </div>
       </div>
+        </>
+      ) : null}
+
+      {section === 'papel' ? <PapelTimbradoConfigurator variant="embedded" /> : null}
+
+      {section === 'servicos' ? (
+        <div className="papel-timbrado-form" style={{ maxWidth: 920, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+          <h2 style={{ marginTop: 0, fontSize: '1.2rem' }}>{t.orcamentoServicoTecnicoServicosListaTitulo || 'Serviços e valores cadastrados'}</h2>
+          <p className="papel-timbrado-hint" style={{ marginBottom: 16 }}>
+            {t.orcamentoServicoTecnicoServicosListaHint ||
+              'Para criar ou alterar rubricas use o editor completo. Pode voltar ao Orçamento quando quiser, sem fechar este separador.'}
+          </p>
+          {servicosLista.length === 0 ? (
+            <p className="papel-timbrado-hint" style={{ color: '#fbbf24' }}>
+              {t.orcamentoServicoTecnicoSemServicos || 'Não há serviços cadastrados.'}
+            </p>
+          ) : (
+            <div style={{ overflowX: 'auto', borderRadius: 10, border: '1px solid rgba(148,163,184,0.22)' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: 'rgba(15,23,42,0.85)', textAlign: 'left' }}>
+                    <th style={{ padding: '10px 12px' }}>{t.orcamentoServicoTecnicoColDescricao || 'Descrição'}</th>
+                    <th style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>{t.orcamentoServicoTecnicoColTipo || 'Tipo'}</th>
+                    <th style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>{t.orcamentoServicoTecnicoColPreco || 'Valor'}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {servicosLista.map((s) => (
+                    <tr key={s.id} style={{ borderTop: '1px solid rgba(148,163,184,0.15)' }}>
+                      <td style={{ padding: '10px 12px', verticalAlign: 'top' }}>
+                        {(s.cod ? `${s.cod} — ` : '') + s.nome}
+                        {s.descricao ? <div style={{ fontSize: 11, opacity: 0.85, marginTop: 4 }}>{s.descricao}</div> : null}
+                      </td>
+                      <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>{labelTipoCobranca(s.tipoCobranca, t)}</td>
+                      <td style={{ padding: '10px 12px', whiteSpace: 'nowrap' }}>{formatMoneyEUR(Number(s.valor) || 0)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 18 }}>
+            {onOpenCadastroServicosModal ? (
+              <button type="button" className="primary" onClick={onOpenCadastroServicosModal}>
+                {t.orcamentoServicoTecnicoServicosAbrirModal || 'Abrir editor completo (modal)'}
+              </button>
+            ) : null}
+            <button type="button" className={onOpenCadastroServicosModal ? 'secondary' : 'primary'} onClick={abrirCadastroServicos}>
+              {t.orcamentoServicoTecnicoServicosAbrirSeparador || 'Abrir cadastro no separador do sistema'}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

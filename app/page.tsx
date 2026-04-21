@@ -39403,6 +39403,7 @@ A1;Peça exemplo;10`}
             safeT={safeT}
             openTab={(type, title) => openTab(type as TabType, title)}
             getTabTitle={getTabTitle}
+            onOpenCadastroServicosModal={() => setShowCadastroServicosModal(true)}
           />
         )
 
