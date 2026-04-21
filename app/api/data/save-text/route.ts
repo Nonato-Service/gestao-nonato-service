@@ -3,7 +3,8 @@ import fs from 'fs'
 import path from 'path'
 import { ensureDataDir } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
-import { bumpSyncMeta } from '../syncMeta'
+import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
+import { textFileContentUnchanged } from '../writeIfChanged'
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,16 +28,21 @@ export async function POST(request: NextRequest) {
     }
 
     const filePath = path.join(dataDir, `${key}.txt`)
-    
-    // Salvar como texto puro (para vídeos/imagens em base64)
-    fs.writeFileSync(filePath, value, 'utf-8')
+    const textPayload = typeof value === 'string' ? value : String(value)
 
     let revision: number | undefined
     let updatedAt: string | undefined
     try {
-      const meta = bumpSyncMeta(dataDir)
-      revision = meta.revision
-      updatedAt = meta.updatedAt
+      if (textFileContentUnchanged(filePath, textPayload)) {
+        const meta = readSyncMeta(dataDir)
+        revision = meta.revision
+        updatedAt = meta.updatedAt
+      } else {
+        fs.writeFileSync(filePath, textPayload, 'utf-8')
+        const meta = bumpSyncMeta(dataDir)
+        revision = meta.revision
+        updatedAt = meta.updatedAt
+      }
     } catch (e) {
       console.error('bumpSyncMeta (save-text):', e)
     }

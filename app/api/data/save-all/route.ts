@@ -3,7 +3,8 @@ import fs from 'fs'
 import path from 'path'
 import { ensureDataDir, resolveDataDirForKey } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
-import { bumpSyncMeta } from '../syncMeta'
+import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
+import { jsonFileContentUnchanged, serializeJsonForDisk } from '../writeIfChanged'
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,7 +29,8 @@ export async function POST(request: NextRequest) {
     const saved: string[] = []
     const errors: string[] = []
 
-    const bumpedDirs = new Set<string>()
+    /** Pastas onde pelo menos um ficheiro .json mudou de conteúdo (uma revisão por pasta). */
+    const dirsWithContentChange = new Set<string>()
 
     // Salvar cada item
     for (const [key, value] of Object.entries(allData)) {
@@ -36,9 +38,12 @@ export async function POST(request: NextRequest) {
         const targetDir = resolveDataDirForKey(key, dataDir)
         ensureDemoDataDir(targetDir)
         const filePath = path.join(targetDir, `${key}.json`)
-        fs.writeFileSync(filePath, JSON.stringify(value, null, 2), 'utf-8')
+        if (jsonFileContentUnchanged(filePath, value)) {
+          continue
+        }
+        fs.writeFileSync(filePath, serializeJsonForDisk(value), 'utf-8')
         saved.push(key)
-        bumpedDirs.add(targetDir)
+        dirsWithContentChange.add(targetDir)
       } catch (error: any) {
         console.error(`Erro ao salvar ${key}:`, error)
         errors.push(`${key}: ${error.message}`)
@@ -48,11 +53,12 @@ export async function POST(request: NextRequest) {
     let revision: number | undefined
     let updatedAt: string | undefined
     try {
-      for (const dir of bumpedDirs) {
-        const meta = bumpSyncMeta(dir)
-        revision = meta.revision
-        updatedAt = meta.updatedAt
+      for (const dir of Array.from(dirsWithContentChange)) {
+        bumpSyncMeta(dir)
       }
+      const metaOut = readSyncMeta(dataDir)
+      revision = metaOut.revision
+      updatedAt = metaOut.updatedAt
     } catch (e) {
       console.error('bumpSyncMeta (save-all):', e)
     }
@@ -61,7 +67,10 @@ export async function POST(request: NextRequest) {
       success: true, 
       saved,
       errors: errors.length > 0 ? errors : undefined,
-      message: `Salvos ${saved.length} arquivo(s)`,
+      message:
+        saved.length > 0
+          ? `Salvos ${saved.length} arquivo(s)`
+          : 'Nenhum ficheiro alterado (dados já iguais ao servidor)',
       ...(revision !== undefined ? { revision, updatedAt } : {})
     })
   } catch (error: any) {

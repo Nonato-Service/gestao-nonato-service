@@ -3,7 +3,8 @@ import fs from 'fs'
 import path from 'path'
 import { ensureDataDir, resolveDataDirForKey } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
-import { bumpSyncMeta } from '../syncMeta'
+import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
+import { jsonFileContentUnchanged, serializeJsonForDisk } from '../writeIfChanged'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -31,16 +32,20 @@ export async function POST(request: NextRequest) {
     const targetDir = resolveDataDirForKey(key, dataDir)
     ensureDemoDataDir(targetDir)
     const filePath = path.join(targetDir, `${key}.json`)
-    
-    // Salvar o arquivo
-    fs.writeFileSync(filePath, JSON.stringify(value, null, 2), 'utf-8')
 
     let revision: number | undefined
     let updatedAt: string | undefined
     try {
-      const meta = bumpSyncMeta(targetDir)
-      revision = meta.revision
-      updatedAt = meta.updatedAt
+      if (jsonFileContentUnchanged(filePath, value)) {
+        const meta = readSyncMeta(targetDir)
+        revision = meta.revision
+        updatedAt = meta.updatedAt
+      } else {
+        fs.writeFileSync(filePath, serializeJsonForDisk(value), 'utf-8')
+        const meta = bumpSyncMeta(targetDir)
+        revision = meta.revision
+        updatedAt = meta.updatedAt
+      }
     } catch (e) {
       console.error('bumpSyncMeta (save):', e)
     }

@@ -5295,11 +5295,10 @@ export default function Dashboard() {
     const loadAllData = async () => {
       setAppInitialLoading(true)
       let preferServerOnlyAfterFullPullWipe = false
-      /** Bundle já obtido antes do wipe (tablet/PC) — evita segundo fetch e evita wipe se a rede falhar. */
+      /** Bundle já obtido antes do wipe — evita segundo fetch e evita wipe se a rede falhar. */
       let serverDataFromFullPullPrefetch: Record<string, any> | null = null
       if (typeof window !== 'undefined') {
         try {
-          const compactNow = window.innerWidth <= 1024
           const sessionWantsFullPull = sessionStorage.getItem('nonato-sync-full-server-apply')
           const lsWantsFullPull = localStorage.getItem(NONATO_PENDING_FULL_SERVER_REPLACE_LS)
           if (sessionWantsFullPull || lsWantsFullPull) {
@@ -5313,40 +5312,37 @@ export default function Dashboard() {
             } catch {
               /* ignorar */
             }
-            // Tablet/notebook: só apagar local depois de ler o servidor com sucesso (evita dashboard a zeros).
-            if (!compactNow) {
-              const pre = await loadAllFromServer()
-              if (pre.ok) {
-                preferServerOnlyAfterFullPullWipe = true
-                serverDataFromFullPullPrefetch = pre.data
-                await deleteAllNonatoKvFromIdb()
-                const keepLocalOnFullPull = new Set([
-                  'nonato-sync-last-accepted-revision',
-                  'nonato-language',
-                  'nonato-protocolo-servico-draft',
-                  'nonato-sync-queue',
-                  'nonato-auto-backups',
-                  'nonato-code-backups',
-                  'nonato-last-code-backup-date',
-                  'nonato-manuais-familias-grupos--idb',
-                ])
-                const toRemove: string[] = []
-                for (let i = 0; i < localStorage.length; i++) {
-                  const k = localStorage.key(i)
-                  if (k && k.startsWith('nonato-') && !keepLocalOnFullPull.has(k)) {
-                    toRemove.push(k)
-                  }
+            // Qualquer aparelho: só apagar local depois de ler o servidor com sucesso (evita dashboard a zeros).
+            const pre = await loadAllFromServer()
+            if (pre.ok) {
+              preferServerOnlyAfterFullPullWipe = true
+              serverDataFromFullPullPrefetch = pre.data
+              await deleteAllNonatoKvFromIdb()
+              const keepLocalOnFullPull = new Set([
+                'nonato-sync-last-accepted-revision',
+                'nonato-language',
+                'nonato-protocolo-servico-draft',
+                'nonato-sync-queue',
+                'nonato-auto-backups',
+                'nonato-code-backups',
+                'nonato-last-code-backup-date',
+                'nonato-manuais-familias-grupos--idb',
+              ])
+              const toRemove: string[] = []
+              for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i)
+                if (k && k.startsWith('nonato-') && !keepLocalOnFullPull.has(k)) {
+                  toRemove.push(k)
                 }
-                for (const k of toRemove) {
-                  try {
-                    localStorage.removeItem(k)
-                  } catch {
-                    /* ignorar */
-                  }
+              }
+              for (const k of toRemove) {
+                try {
+                  localStorage.removeItem(k)
+                } catch {
+                  /* ignorar */
                 }
               }
             }
-            // Telemóvel: não wipe; flags já removidas acima.
           }
         } catch {
           /* ignorar falha na limpeza; a carga continua */
