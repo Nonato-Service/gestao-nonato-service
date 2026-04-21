@@ -168,7 +168,7 @@ export function InstallPrompt() {
   if (!canShow || installed || isStandalone) return null
 
   return (
-    <>
+    <div data-ns-print-hide="1">
       {/* Botão flutuante "Instalar a app" */}
       <button
         type="button"
@@ -218,6 +218,7 @@ export function InstallPrompt() {
           onClick={() => setShowCard(false)}
         >
           <div
+            onClick={(e) => e.stopPropagation()}
             style={{
               background: '#1a1a1a',
               borderRadius: 16,
@@ -226,7 +227,6 @@ export function InstallPrompt() {
               maxWidth: 400,
               width: '100%',
               boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-              onClick: e => e.stopPropagation()
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -282,6 +282,6 @@ export function InstallPrompt() {
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }

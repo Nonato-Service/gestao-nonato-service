@@ -213,6 +213,12 @@
   background: linear-gradient(180deg, #fafafa 0%, #fff 40%);
 }
 
+/* Orçamento OST: corpo com conteúdo variável — não esticar com flex:1 (evita “buraco” e cortes na impressão) */
+.papel-timbrado-body-zone.papel-timbrado-body-zone--flow {
+  flex: 0 1 auto;
+  min-height: 0;
+}
+
 .papel-timbrado-body-zone span {
   font-size: 8.5pt;
   font-weight: 600;
@@ -397,6 +403,12 @@
 }
 
 @media print {
+  /* Qualquer UI marcada (ex.: Instalar app, FAB assistente) — não sair no PDF */
+  [data-ns-print-hide='1'] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
   .papel-timbrado-footer {
     font-size: 7pt;
   }
@@ -427,8 +439,7 @@
   body:has(.papel-timbrado-root) .app-top-bar,
   body:has(.papel-timbrado-root) .bottom-tabs-bar,
   body:has(.papel-timbrado-root) .main-module-context-panel,
-  body:has(.papel-timbrado-root) .ns-sync-traffic,
-  body:has(.papel-timbrado-root) [data-ns-print-hide='1'] {
+  body:has(.papel-timbrado-root) .ns-sync-traffic {
     display: none !important;
     visibility: hidden !important;
   }
@@ -485,11 +496,54 @@
     max-width: none !important;
     width: 100% !important;
     min-height: auto !important;
+    overflow: visible !important;
   }
 
+  /* Flex + impressão = fragmentação errada entre páginas; usar fluxo em bloco */
   .papel-timbrado-sheet-inner {
+    display: block !important;
     min-height: auto !important;
     padding: 12mm 16mm !important;
+  }
+
+  .papel-timbrado-header {
+    display: flex !important;
+    page-break-after: avoid;
+    break-after: avoid-page;
+  }
+
+  .papel-timbrado-body-zone {
+    flex: none !important;
+    display: block !important;
+    min-height: 0 !important;
+    page-break-inside: auto;
+    break-inside: auto;
+  }
+
+  .papel-timbrado-footer {
+    display: block !important;
+    page-break-before: avoid;
+    break-before: avoid-page;
+  }
+
+  .orcamento-ost-concordo-box {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+
+  .orcamento-ost-cientificacao-title {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+
+  .orcamento-ost-legal-title {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .orcamento-ost-sign-row {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
   }
 
   @page {

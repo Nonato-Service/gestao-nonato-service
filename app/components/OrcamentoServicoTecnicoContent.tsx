@@ -387,8 +387,9 @@ export function OrcamentoServicoTecnicoContent({ clientes, servicos, safeT, open
               </header>
 
               <section
-                className="papel-timbrado-body-zone"
+                className="papel-timbrado-body-zone papel-timbrado-body-zone--flow"
                 style={{
+                  flex: '0 1 auto',
                   minHeight: 'auto',
                   borderStyle: 'solid',
                   borderColor: '#e2e8f0',
