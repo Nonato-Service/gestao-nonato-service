@@ -409,6 +409,40 @@
     visibility: hidden !important;
   }
 
+  /* Base: margens reais do papel — margin:0 corta nas impressoras */
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  /* Cadeia da app: overflow hidden da aba cortava o PDF (Chromium) */
+  body:has(.papel-timbrado-root) .app-layout,
+  body:has(.papel-timbrado-root) .main-app-column,
+  body:has(.papel-timbrado-root) .main-content-area,
+  body:has(.papel-timbrado-root) .main-content-area.main-content-area-tab-open,
+  body:has(.papel-timbrado-root) .tab-inner-scroll,
+  body:has(.papel-timbrado-root) .tab-content-wrapper {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    max-height: none !important;
+    max-width: none !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  body:has(.papel-timbrado-root) .main-content-area.main-content-area-tab-open {
+    display: block !important;
+    flex: none !important;
+  }
+
   .papel-timbrado-footer {
     font-size: 7pt;
   }
@@ -493,17 +527,45 @@
   .papel-timbrado-sheet {
     box-shadow: none !important;
     border-radius: 0 !important;
-    max-width: none !important;
+    max-width: 100% !important;
     width: 100% !important;
     min-height: auto !important;
     overflow: visible !important;
+    box-sizing: border-box !important;
   }
 
-  /* Flex + impressão = fragmentação errada entre páginas; usar fluxo em bloco */
+  /* Conteúdo: margens via @page; aqui só alinhar à área útil (evita duplicar + estourar) */
   .papel-timbrado-sheet-inner {
     display: block !important;
     min-height: auto !important;
-    padding: 12mm 16mm !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Tabelas e texto longo: não ultrapassar a largura útil */
+  .papel-timbrado-body-zone table {
+    table-layout: fixed !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  .papel-timbrado-body-zone th,
+  .papel-timbrado-body-zone td {
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    width: auto !important;
+    box-sizing: border-box !important;
+    font-size: 8.5pt !important;
+  }
+
+  .papel-timbrado-body-zone img {
+    max-width: 100% !important;
+    height: auto !important;
   }
 
   .papel-timbrado-header {
@@ -531,12 +593,28 @@
     page-break-inside: avoid;
   }
 
-  .orcamento-ost-cientificacao-title {
-    break-after: avoid-page;
+  .orcamento-ost-legal-title {
+    break-after: avoid;
     page-break-after: avoid;
   }
 
-  .orcamento-ost-legal-title {
+  /* Parágrafos longos: permitir quebra natural (avoid-page inteiro cortava/clippava em Chromium) */
+  .orcamento-ost-legal-wrap p {
+    break-inside: auto;
+    page-break-inside: auto;
+    orphans: 2;
+    widows: 2;
+  }
+
+  /* ACEITAÇÃO: nova página para o bloco não ser “partido” pelo limite da página anterior */
+  .orcamento-ost-cientificacao {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .orcamento-ost-cientificacao-title {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
     break-after: avoid;
     page-break-after: avoid;
   }
@@ -548,6 +626,6 @@
 
   @page {
     size: A4;
-    margin: 0;
+    margin: 14mm 12mm 16mm 12mm;
   }
 }

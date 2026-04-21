@@ -46,6 +46,7 @@ export const SYNC_KEY_LABELS: Record<string, string> = {
   'nonato-checklists': 'Checklists',
   'nonato-pre-checks': 'Pré-checks',
   'nonato-pedidos-separacao': 'Pedidos de separação',
+  'nonato-ost-propostas-tecnico-v1': 'Orçamentos serviço técnico (propostas)',
 }
 
 function friendlyKey(key: string): string {

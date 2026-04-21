@@ -10,6 +10,13 @@ import {
   loadPapelTimbradoState,
   type PapelTimbradoFullState,
 } from '../papel-timbrado/papelTimbradoStorage'
+import {
+  loadOstPropostas,
+  saveOstPropostas,
+  OST_PROPOSTAS_STORAGE_KEY,
+  type OstPropostaSalva,
+  type OstPropostaPayload,
+} from './orcamentoOstPropostas'
 
 export type ServicoOrcamentoLinha = {
   id: string
@@ -120,9 +127,20 @@ type Props = {
   getTabTitle: (type: string) => string
   /** Abre o modal global de cadastro de serviços sem sair deste separador. */
   onOpenCadastroServicosModal?: () => void
+  saveData?: (key: string, value: unknown) => Promise<void>
+  loadData?: (key: string, fromServer?: boolean) => Promise<unknown>
 }
 
-export function OrcamentoServicoTecnicoContent({ clientes, servicos, safeT, openTab, getTabTitle, onOpenCadastroServicosModal }: Props) {
+export function OrcamentoServicoTecnicoContent({
+  clientes,
+  servicos,
+  safeT,
+  openTab,
+  getTabTitle,
+  onOpenCadastroServicosModal,
+  saveData,
+  loadData,
+}: Props) {
   const t = safeT
   const [papel, setPapel] = useState<PapelTimbradoFullState>(() => loadPapelTimbradoState())
   const [logoBroken, setLogoBroken] = useState(false)
@@ -143,14 +161,32 @@ export function OrcamentoServicoTecnicoContent({ clientes, servicos, safeT, open
   const [clausulas, setClausulas] = useState(() => t.orcamentoServicoTecnicoClausulasDefault || TEXTO_CLAUSULAS_PADRAO_PT)
   const [linhas, setLinhas] = useState<LinhaOrcamento[]>(() => [{ rowId: newRowId(), servicoId: '', quantidadeStr: '1' }])
   const [section, setSection] = useState<OstSection>('orcamento')
+  const [propostas, setPropostas] = useState<OstPropostaSalva[]>([])
+  const [propostaEditandoId, setPropostaEditandoId] = useState<string | null>(null)
+  const [propostaNome, setPropostaNome] = useState('')
+
+  useEffect(() => {
+    let cancel = false
+    void (async () => {
+      const list = await loadOstPropostas(loadData)
+      if (!cancel) setPropostas(list)
+    })()
+    return () => {
+      cancel = true
+    }
+  }, [loadData])
 
   useEffect(() => {
     const reload = () => {
       setPapel(loadPapelTimbradoState())
       setLogoBroken(false)
     }
+    const reloadPropostas = () => {
+      void loadOstPropostas(loadData).then(setPropostas)
+    }
     const onStorage = (e: StorageEvent) => {
       if (e.key === PAPEL_STORAGE_KEY || e.key === null) reload()
+      if (e.key === OST_PROPOSTAS_STORAGE_KEY || e.key === null) reloadPropostas()
     }
     window.addEventListener('storage', onStorage)
     window.addEventListener(PAPEL_CHANGED_EVENT, reload)
@@ -158,7 +194,7 @@ export function OrcamentoServicoTecnicoContent({ clientes, servicos, safeT, open
       window.removeEventListener('storage', onStorage)
       window.removeEventListener(PAPEL_CHANGED_EVENT, reload)
     }
-  }, [])
+  }, [loadData])
 
   const refreshPapel = useCallback(() => {
     setPapel(loadPapelTimbradoState())
@@ -208,6 +244,92 @@ export function OrcamentoServicoTecnicoContent({ clientes, servicos, safeT, open
     setLinhas((prev) => prev.map((x) => (x.rowId === rowId ? { ...x, ...patch } : x)))
   }, [])
 
+  const collectPayload = useCallback((): OstPropostaPayload => {
+    return {
+      clienteId,
+      clienteManual,
+      refDoc,
+      localServico,
+      dataDoc,
+      validade,
+      intro,
+      clausulas,
+      linhas: linhas.map(({ rowId, servicoId, quantidadeStr }) => ({ rowId, servicoId, quantidadeStr })),
+    }
+  }, [clienteId, clienteManual, refDoc, localServico, dataDoc, validade, intro, clausulas, linhas])
+
+  const guardarProposta = useCallback(async () => {
+    const nome = (propostaNome.trim() || refDoc.trim() || `OST ${dataDoc}`).trim().slice(0, 200)
+    const payload = collectPayload()
+    const now = new Date().toISOString()
+    const id = propostaEditandoId || newRowId()
+    setPropostas((prev) => {
+      const ix = prev.findIndex((p) => p.id === id)
+      const item: OstPropostaSalva = {
+        id,
+        nome,
+        criadoEm: ix >= 0 ? prev[ix]!.criadoEm : now,
+        atualizadoEm: now,
+        payload,
+      }
+      const next = ix >= 0 ? prev.map((p, i) => (i === ix ? item : p)) : [...prev, item]
+      void saveOstPropostas(next, saveData)
+      return next
+    })
+    setPropostaEditandoId(id)
+  }, [collectPayload, dataDoc, propostaEditandoId, propostaNome, refDoc, saveData])
+
+  const carregarProposta = useCallback((p: OstPropostaSalva) => {
+    const x = p.payload
+    setClienteId(x.clienteId || '')
+    setClienteManual(x.clienteManual || '')
+    setRefDoc(x.refDoc || '')
+    setLocalServico(x.localServico || '')
+    setDataDoc(x.dataDoc || new Date().toISOString().slice(0, 10))
+    setValidade(x.validade || '')
+    setIntro(x.intro || t.orcamentoServicoTecnicoIntroDefault || '')
+    setClausulas(x.clausulas || t.orcamentoServicoTecnicoClausulasDefault || TEXTO_CLAUSULAS_PADRAO_PT)
+    setLinhas(
+      x.linhas && x.linhas.length > 0
+        ? x.linhas.map((L) => ({
+            rowId: L.rowId && String(L.rowId).trim() ? L.rowId : newRowId(),
+            servicoId: L.servicoId || '',
+            quantidadeStr: L.quantidadeStr != null && String(L.quantidadeStr).trim() !== '' ? String(L.quantidadeStr) : '1',
+          }))
+        : [{ rowId: newRowId(), servicoId: '', quantidadeStr: '1' }]
+    )
+    setPropostaEditandoId(p.id)
+    setPropostaNome(p.nome)
+  }, [t])
+
+  const novaProposta = useCallback(() => {
+    setPropostaEditandoId(null)
+    setPropostaNome('')
+    setClienteId('')
+    setClienteManual('')
+    setRefDoc('')
+    setLocalServico('')
+    setDataDoc(new Date().toISOString().slice(0, 10))
+    setValidade('')
+    setIntro(t.orcamentoServicoTecnicoIntroDefault || 'Documento sem valor fiscal. Os valores apresentados constituem proposta comercial para serviço técnico.')
+    setClausulas(t.orcamentoServicoTecnicoClausulasDefault || TEXTO_CLAUSULAS_PADRAO_PT)
+    setLinhas([{ rowId: newRowId(), servicoId: '', quantidadeStr: '1' }])
+  }, [t])
+
+  const excluirProposta = useCallback(
+    async (id: string) => {
+      const msg = t.orcamentoServicoTecnicoPropostaConfirmExcluir || 'Eliminar esta proposta guardada?'
+      if (typeof window !== 'undefined' && !window.confirm(msg)) return
+      setPropostas((prev) => {
+        const next = prev.filter((p) => p.id !== id)
+        void saveOstPropostas(next, saveData)
+        return next
+      })
+      if (propostaEditandoId === id) novaProposta()
+    },
+    [propostaEditandoId, saveData, t, novaProposta]
+  )
+
   const tx = t as Record<string, string>
 
   const subNavBtn = (key: OstSection, label: string) => (
@@ -250,6 +372,85 @@ export function OrcamentoServicoTecnicoContent({ clientes, servicos, safeT, open
           <div className="orcamento-ost-form-callout" role="note">
             {t.orcamentoServicoTecnicoFormAvisoCliente ||
               'O PDF inclui condições claras sobre despesas de viagem, hotel, alimentação e transporte aéreo (normalmente à cargo da empresa contratante), equipagem extra e ciência do cliente. Edite o quadro «Condições» se o contrato for diferente.'}
+          </div>
+
+          <div
+            className="papel-timbrado-field"
+            style={{
+              background: 'rgba(15,23,42,0.45)',
+              borderRadius: 12,
+              padding: 14,
+              border: '1px solid rgba(148,163,184,0.25)',
+            }}
+          >
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 10 }}>
+              {t.orcamentoServicoTecnicoPropostasTitulo || 'Propostas guardadas'}
+            </div>
+            <p className="papel-timbrado-hint" style={{ marginTop: 0, marginBottom: 12 }}>
+              {t.orcamentoServicoTecnicoPropostasHint ||
+                'Guarde rascunhos ou propostas enviadas; pode reabrir, alterar e voltar a guardar. Os dados seguem a sincronização do sistema quando usa o servidor.'}
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'flex-end', marginBottom: 12 }}>
+              <div style={{ flex: '1 1 220px', minWidth: 0 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#64748b', marginBottom: 6 }}>
+                  {t.orcamentoServicoTecnicoPropostaNome || 'Nome da proposta'}
+                </label>
+                <input
+                  value={propostaNome}
+                  onChange={(e) => setPropostaNome(e.target.value)}
+                  placeholder={refDoc.trim() || `${t.orcamentoServicoTecnicoRef || 'Ref.'} / ${dataDoc}`}
+                  style={{ width: '100%', boxSizing: 'border-box', borderRadius: 10, padding: '10px 12px', background: '#0b1220', color: '#f1f5f9', border: '1px solid rgba(148,163,184,0.28)' }}
+                />
+              </div>
+              <button type="button" className="primary" onClick={() => void guardarProposta()}>
+                {t.orcamentoServicoTecnicoPropostaGuardar || 'Guardar proposta'}
+              </button>
+              <button type="button" className="secondary" onClick={novaProposta}>
+                {t.orcamentoServicoTecnicoPropostaNova || 'Nova proposta'}
+              </button>
+            </div>
+            {propostaEditandoId ? (
+              <p className="papel-timbrado-hint" style={{ marginBottom: 10, color: '#86efac' }}>
+                {t.orcamentoServicoTecnicoPropostaEditando || 'A editar uma proposta guardada — «Guardar» atualiza a mesma entrada.'}
+              </p>
+            ) : null}
+            {propostas.length === 0 ? (
+              <p className="papel-timbrado-hint" style={{ marginBottom: 0 }}>
+                {t.orcamentoServicoTecnicoPropostasVazio || 'Ainda não há propostas guardadas.'}
+              </p>
+            ) : (
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {[...propostas]
+                  .sort((a, b) => (b.atualizadoEm || '').localeCompare(a.atualizadoEm || ''))
+                  .map((p) => (
+                    <li
+                      key={p.id}
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: 8,
+                        alignItems: 'center',
+                        padding: '10px 12px',
+                        borderRadius: 10,
+                        background: 'rgba(15,23,42,0.55)',
+                        border: '1px solid rgba(148,163,184,0.2)',
+                      }}
+                    >
+                      <span style={{ fontWeight: 700, flex: '1 1 160px', minWidth: 0 }}>{p.nome}</span>
+                      <span className="papel-timbrado-hint" style={{ fontSize: 11, whiteSpace: 'nowrap' }}>
+                        {p.payload?.dataDoc || '—'}
+                      </span>
+                      <span style={{ flex: '1 1 8px' }} />
+                      <button type="button" className="secondary" style={{ padding: '8px 12px' }} onClick={() => carregarProposta(p)}>
+                        {t.orcamentoServicoTecnicoPropostaEditar || 'Abrir / editar'}
+                      </button>
+                      <button type="button" className="secondary" style={{ padding: '8px 12px' }} onClick={() => void excluirProposta(p.id)}>
+                        {t.orcamentoServicoTecnicoPropostaExcluir || 'Excluir'}
+                      </button>
+                    </li>
+                  ))}
+              </ul>
+            )}
           </div>
 
           <div className="papel-timbrado-field">

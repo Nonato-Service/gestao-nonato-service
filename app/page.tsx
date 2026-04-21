@@ -39404,6 +39404,8 @@ A1;Peça exemplo;10`}
             openTab={(type, title) => openTab(type as TabType, title)}
             getTabTitle={getTabTitle}
             onOpenCadastroServicosModal={() => setShowCadastroServicosModal(true)}
+            saveData={saveData}
+            loadData={loadData}
           />
         )
 
