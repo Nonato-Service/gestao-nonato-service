@@ -17,6 +17,7 @@ import {
   type OstPropostaSalva,
   type OstPropostaPayload,
 } from './orcamentoOstPropostas'
+import { IconClipboardList, IconCoins, IconLayers } from './UiIcons'
 
 export type ServicoOrcamentoLinha = {
   id: string
@@ -332,7 +333,7 @@ export function OrcamentoServicoTecnicoContent({
 
   const tx = t as Record<string, string>
 
-  const subNavBtn = (key: OstSection, label: string) => (
+  const subNavBtn = (key: OstSection, label: string, icon: React.ReactNode) => (
     <button
       type="button"
       key={key}
@@ -340,18 +341,28 @@ export function OrcamentoServicoTecnicoContent({
       aria-selected={section === key}
       className={section === key ? 'primary' : 'secondary'}
       onClick={() => setSection(key)}
-      style={{ flex: '1 1 auto', minWidth: 120 }}
+      style={{
+        flex: '1 1 auto',
+        minWidth: 120,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+      }}
     >
-      {label}
+      <span className="ost-subnav-svg" aria-hidden>
+        {icon}
+      </span>
+      <span>{label}</span>
     </button>
   )
 
   return (
     <div className="papel-timbrado-root">
       <div className="ost-subnav papel-timbrado-toolbar" role="tablist" aria-label={t.orcamentoServicoTecnicoSubnavAria || 'Secções'}>
-        {subNavBtn('orcamento', t.orcamentoServicoTecnicoSecOrcamento || 'Orçamento')}
-        {subNavBtn('papel', t.orcamentoServicoTecnicoSecPapel || 'Papel timbrado')}
-        {subNavBtn('servicos', t.orcamentoServicoTecnicoSecServicos || 'Serviços / valores')}
+        {subNavBtn('orcamento', t.orcamentoServicoTecnicoSecOrcamento || 'Orçamento', <IconClipboardList size={18} />)}
+        {subNavBtn('papel', t.orcamentoServicoTecnicoSecPapel || 'Papel timbrado', <IconLayers size={18} />)}
+        {subNavBtn('servicos', t.orcamentoServicoTecnicoSecServicos || 'Serviços / valores', <IconCoins size={18} />)}
       </div>
 
       {section === 'orcamento' ? (

@@ -29,6 +29,8 @@
   --ns-info-bg-soft: rgba(0, 100, 255, 0.1);
   --ns-info-bg-medium: rgba(0, 100, 255, 0.28);
   --ns-info-glow: rgba(102, 179, 255, 0.35);
+  --ns-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ns-shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.35);
 }
 
 html {
@@ -63,11 +65,21 @@ html {
 body {
   background-color: #1e1e1e;
   color: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   min-height: 100vh;
   line-height: 1.6;
   width: 100%;
@@ -2341,11 +2353,81 @@ button.btn-danger.btn-danger--inline {
 .bottom-tab-item--accent-check.active {
   border-color: rgba(52, 211, 153, 0.55);
 }
+/* Emojis / símbolos: pilha de fontes para Windows/macOS/Linux mostrarem ícones coloridos de forma consistente */
+.ui-inline-emoji {
+  font-family:
+    'Segoe UI Emoji',
+    'Segoe UI Symbol',
+    'Apple Color Emoji',
+    'Noto Color Emoji',
+    sans-serif;
+}
 .bottom-tab-emoji {
   flex-shrink: 0;
   font-size: 16px;
   line-height: 1;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+}
+.bottom-tab-svg {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(200, 255, 215, 0.92);
+  opacity: 0.94;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.45));
+}
+.bottom-tab-item.active .bottom-tab-svg {
+  color: #f4fff8;
+  opacity: 1;
+}
+.bottom-tab-item--accent-finance .bottom-tab-svg {
+  color: rgba(165, 220, 255, 0.95);
+}
+.bottom-tab-item--accent-finance.active .bottom-tab-svg {
+  color: #e8f6ff;
+}
+.bottom-tab-item--accent-alert .bottom-tab-svg {
+  color: rgba(253, 224, 130, 0.95);
+}
+.bottom-tab-item--accent-check .bottom-tab-svg {
+  color: rgba(167, 243, 208, 0.95);
+}
+.main-module-context-emoji {
+  font-size: 26px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.main-module-context-svg {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(190, 255, 205, 0.95);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+}
+.main-content-action-svg {
+  flex-shrink: 0;
+  display: inline-flex;
+  opacity: 0.95;
+}
+.main-content-action-btn--home .main-content-action-svg {
+  color: rgba(200, 230, 255, 0.95);
+}
+.main-content-action-btn--help .main-content-action-svg {
+  color: rgba(200, 255, 210, 0.95);
+}
+.ost-subnav-svg {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.95;
+}
+.ost-subnav-svg svg {
+  display: block;
 }
 
 /* Tela Famílias e Grupos: mesmo padrão Visualizar Equipamentos - 1px, texto branco */
@@ -3622,6 +3704,11 @@ body {
   -webkit-tap-highlight-color: transparent;
   white-space: nowrap;
   max-width: 100%;
+  transition:
+    background 0.2s var(--ns-ease-out, ease-out),
+    border-color 0.2s var(--ns-ease-out, ease-out),
+    box-shadow 0.2s var(--ns-ease-out, ease-out),
+    transform 0.18s var(--ns-ease-out, ease-out);
 }
 .main-content-action-btn:hover {
   background: rgba(0, 255, 122, 0.12);

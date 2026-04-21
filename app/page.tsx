@@ -28,6 +28,7 @@ import { RegistroDespesasContent } from './components/RegistroDespesasContent'
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 import { OrcamentoServicoTecnicoContent } from './components/OrcamentoServicoTecnicoContent'
 import { NonatoBrandLogo } from './components/NonatoBrandLogo'
+import { IconHelpCircle, IconHome, ModuleTabIcon } from './components/UiIcons'
 import { HelpModalBody } from './components/HelpModalBody'
 import {
   PROTOCOLO_SERVICO_PDF_MODELOS_MAX,
@@ -3568,63 +3569,6 @@ export default function Dashboard() {
     const txt = keys ? pick(keys) : ''
     if (txt) return txt
     return pick(['mainModuleIntroFallback'])
-  }
-
-  const getBottomTabEmoji = (type: TabType): string => {
-    const m: Partial<Record<TabType, string>> = {
-      administrador: '⚙️',
-      'gestao-demos': '🎯',
-      clientes: '👤',
-      fornecedores: '🏭',
-      'relatorio-servico': '📋',
-      'gestao-financeira': '💶',
-      'clientes-financeiro': '💳',
-      'comprovantes-despesas': '🧾',
-      'orcamentos-avulso': '📝',
-      'orcamento-servico-tecnico': '🛠️',
-      'registro-despesas': '📊',
-      equipamentos: '🔧',
-      'biblioteca-pecas': '📦',
-      agenda: '📅',
-      checklist: '✅',
-      'pre-checklist': '☑️',
-      'alerta-mensagens': '🔔',
-      gestores: '👷',
-      'comunicacao-interna': '💬',
-      translator: '🌐',
-      'manual-programa': '📖',
-      'protocolos-servico': '📑',
-      desmontados: '♻️',
-      'almoxarifado-armazem': '🏪',
-      'fechamento-relatorios-servicos': '📎',
-      'biblioteca-relatorios': '📚',
-      'gestao-custos': '💰',
-      'cadastro-nonato-service': '🏢',
-      'ficha-cadastral': '📇',
-      'pecas-substituicao': '🔩',
-      'importacao-pecas': '📥',
-      'solicitacao-servico-tecnico': '🛠️',
-      'cadastro-servicos': '📜',
-      'estado-visual-tecnico': '👁️',
-      'informacoes-conhecimento-tecnicos': '📘',
-      'relatorios-excluidos-clientes': '🗂️',
-      'mapa-visual-separacao-pecas': '🗺️',
-      'ordem-preparacao': '📋',
-      'formularios-checklist-tecnicos': '📃',
-      'verificacao-final-entrega': '✔️',
-      'hub-comunicacao': '📡',
-      'mensagens-internas': '💼',
-      'mensagens-internas-tecnicos': '👷',
-      'tecnicos-internos': '🧑‍🔧',
-      'tecnicos-externos': '👨‍🔧',
-      'familias-grupos': '📂',
-      'familias-grupos-equipamentos': '📂',
-      'checklist-hub': '📑',
-      'gestao-grupos-checklist': '📋',
-      users: '👥',
-      extras: '➕',
-    }
-    return m[type] || '📄'
   }
 
   const getBottomTabAccentClass = (type: TabType): string => {
@@ -57455,7 +57399,6 @@ A1;Peça exemplo;10`}
                 const activeTab = openTabs.find(t => t.id === activeTabId)
                 if (!activeTab) return null
                 const intro = getTabModuleIntroText(activeTab.type)
-                const emoji = activeTab.icon || getBottomTabEmoji(activeTab.type)
                 return (
                   <div
                     className="main-module-context-panel"
@@ -57495,9 +57438,15 @@ A1;Peça exemplo;10`}
                           padding: 0,
                         }}
                       >
-                        <span style={{ fontSize: 26, lineHeight: 1, display: 'inline-flex' }} aria-hidden>
-                          {emoji}
-                        </span>
+                        {activeTab.icon ? (
+                          <span className="main-module-context-emoji ui-inline-emoji" aria-hidden>
+                            {activeTab.icon}
+                          </span>
+                        ) : (
+                          <span className="main-module-context-svg" aria-hidden>
+                            <ModuleTabIcon tabType={activeTab.type} size={isCompactLayout ? 24 : 28} />
+                          </span>
+                        )}
                         <span style={{ flex: 1, minWidth: 0 }}>
                           <span
                             style={{
@@ -57518,7 +57467,7 @@ A1;Peça exemplo;10`}
                               fontWeight: 800,
                               fontSize: isCompactLayout ? 16 : 18,
                               lineHeight: 1.15,
-                              color: '#bfffbf',
+                              color: '#ffffff',
                             }}
                           >
                             {activeTab.title}
@@ -57535,7 +57484,7 @@ A1;Peça exemplo;10`}
                           onClick={voltarPaginaInicial}
                           title={safeT?.paginaInicial || 'Página Inicial'}
                         >
-                          <span aria-hidden>🏠</span>
+                          <IconHome size={17} className="main-content-action-svg" />
                           <span className="main-content-action-label">{safeT?.paginaInicial || 'Página Inicial'}</span>
                         </button>
                         <button
@@ -57545,7 +57494,7 @@ A1;Peça exemplo;10`}
                           aria-label={safeT?.helpTooltip || 'Pressione F1 para abrir a ajuda'}
                           title={safeT?.helpTooltip || 'Pressione F1 para abrir a ajuda'}
                         >
-                          <span aria-hidden>❓</span>
+                          <IconHelpCircle size={17} className="main-content-action-svg" />
                           <span className="main-content-action-label">{safeT?.help || 'HELP'}</span>
                           <span className="main-content-action-f1" aria-hidden>
                             F1
@@ -58077,7 +58026,15 @@ A1;Peça exemplo;10`}
                   onClick={() => setActiveTabId(tab.id)}
                   title={tab.title}
                 >
-                  <span className="bottom-tab-emoji" aria-hidden>{tab.icon || getBottomTabEmoji(tab.type)}</span>
+                  {tab.icon ? (
+                    <span className="bottom-tab-emoji ui-inline-emoji" aria-hidden>
+                      {tab.icon}
+                    </span>
+                  ) : (
+                    <span className="bottom-tab-svg" aria-hidden>
+                      <ModuleTabIcon tabType={tab.type} size={18} />
+                    </span>
+                  )}
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
                     {tab.title}
                   </span>
