@@ -21603,6 +21603,10 @@ const nextF = familias.filter(x => x !== f)
                   })
                 }
                 const addDocumento = (file: File) => {
+                  if (manuaisSaveDebounceTimer) {
+                    clearTimeout(manuaisSaveDebounceTimer)
+                    manuaisSaveDebounceTimer = null
+                  }
                   const reader = new FileReader()
                   reader.onload = () => {
                     const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `doc-${Date.now()}`
@@ -21631,6 +21635,10 @@ const nextF = familias.filter(x => x !== f)
                   })
                 }
                 const addImagem = (file: File) => {
+                  if (manuaisSaveDebounceTimer) {
+                    clearTimeout(manuaisSaveDebounceTimer)
+                    manuaisSaveDebounceTimer = null
+                  }
                   const reader = new FileReader()
                   reader.onload = () => {
                     const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `img-${Date.now()}`
@@ -26159,25 +26167,29 @@ onKeyPress={(e) => {
                             accept=".pdf"
                             onChange={(e) => {
                               const file = e.target.files?.[0]
-                              if (file) {
-                                const reader = new FileReader()
-                                reader.onloadend = () => {
-                                  const documentosAtual = viewingEquipamento.documentosPdf || []
-                                  const documentosAtualizados = [...documentosAtual, reader.result as string]
-                                  const equipamentoAtualizado = {
-                                    ...viewingEquipamento,
-                                    documentosPdf: documentosAtualizados
-                                  }
-                                  const equipamentosAtualizados = equipamentos.map(eq => 
-                                    eq.id === viewingEquipamento.id ? equipamentoAtualizado : eq
-                                  )
-                                  setEquipamentos(equipamentosAtualizados)
-                                  setViewingEquipamento(equipamentoAtualizado)
-                                  saveData('nonato-equipamentos', equipamentosAtualizados)
-                                  alert(t.pdfAddedSuccess || 'Documento PDF adicionado com sucesso!')
-                                }
-                                reader.readAsDataURL(file)
+                              if (!file) return
+                              const targetId = viewingEquipamento.id
+                              const reader = new FileReader()
+                              reader.onloadend = () => {
+                                const dataUrl = reader.result as string
+                                setEquipamentos((prev) => {
+                                  const next = prev.map((eq) => {
+                                    if (eq.id !== targetId) return eq
+                                    const docs = eq.documentosPdf || []
+                                    return { ...eq, documentosPdf: [...docs, dataUrl] }
+                                  })
+                                  void saveData('nonato-equipamentos', next)
+                                  return next
+                                })
+                                setViewingEquipamento((prev) => {
+                                  if (!prev || prev.id !== targetId) return prev
+                                  const docs = prev.documentosPdf || []
+                                  return { ...prev, documentosPdf: [...docs, dataUrl] }
+                                })
+                                alert(t.pdfAddedSuccess || 'Documento PDF adicionado com sucesso!')
                               }
+                              reader.readAsDataURL(file)
+                              e.target.value = ''
                             }}
                             style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                           />
@@ -26224,25 +26236,33 @@ onKeyPress={(e) => {
                             multiple
                             onChange={(e) => {
                               const files = Array.from(e.target.files || [])
-                              if (files.length > 0) {
-                                const promises = files.map(file => {
-                                  return new Promise<string>((resolve) => {
-                                    const reader = new FileReader()
-                                    reader.onloadend = () => resolve(reader.result as string)
-                                    reader.readAsDataURL(file)
+                              if (files.length === 0) return
+                              const targetId = viewingEquipamento.id
+                              const promises = files.map(file => {
+                                return new Promise<string>((resolve) => {
+                                  const reader = new FileReader()
+                                  reader.onloadend = () => resolve(reader.result as string)
+                                  reader.readAsDataURL(file)
+                                })
+                              })
+                              Promise.all(promises).then(fotos => {
+                                setEquipamentos((prev) => {
+                                  const next = prev.map((eq) => {
+                                    if (eq.id !== targetId) return eq
+                                    const cur = eq.photoLibrary || []
+                                    return { ...eq, photoLibrary: [...cur, ...fotos] }
                                   })
+                                  void saveData('nonato-equipamentos', next)
+                                  return next
                                 })
-                                Promise.all(promises).then(fotos => {
-                                  const fotosAtual = viewingEquipamento.photoLibrary || []
-                                  const fotosAtualizadas = [...fotosAtual, ...fotos]
-                                  const equipamentoAtualizado = { ...viewingEquipamento, photoLibrary: fotosAtualizadas }
-                                  const equipamentosAtualizados = equipamentos.map(eq => eq.id === viewingEquipamento.id ? equipamentoAtualizado : eq)
-                                  setEquipamentos(equipamentosAtualizados)
-                                  setViewingEquipamento(equipamentoAtualizado)
-                                  saveData('nonato-equipamentos', equipamentosAtualizados)
-                                  alert((t.fotosAdicionadasAlbum || '{count} foto(s) adicionada(s) ao álbum com sucesso!').replace('{count}', fotos.length.toString()))
+                                setViewingEquipamento((prev) => {
+                                  if (!prev || prev.id !== targetId) return prev
+                                  const cur = prev.photoLibrary || []
+                                  return { ...prev, photoLibrary: [...cur, ...fotos] }
                                 })
-                              }
+                                alert((t.fotosAdicionadasAlbum || '{count} foto(s) adicionada(s) ao álbum com sucesso!').replace('{count}', fotos.length.toString()))
+                              })
+                              e.target.value = ''
                             }}
                             style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                           />

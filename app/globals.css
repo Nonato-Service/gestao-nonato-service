@@ -3653,14 +3653,28 @@ body {
 }
 .mobile-help-f1 {
   position: relative;
-  overflow: visible;
+  isolation: isolate;
   flex-shrink: 0;
   min-width: 44px;
   height: 44px;
   padding: 0 10px;
   border-radius: 10px;
-  border: 1px solid rgba(0, 255, 0, 0.45);
-  background: rgba(0, 255, 0, 0.08);
+  border: 2px solid transparent;
+  box-sizing: border-box;
+  --help-f1-ring-angle: 0deg;
+  background:
+    linear-gradient(rgba(0, 255, 0, 0.08), rgba(0, 255, 0, 0.08)) padding-box,
+    conic-gradient(
+      from var(--help-f1-ring-angle),
+      rgba(0, 255, 0, 0.45) 0deg,
+      rgba(0, 255, 0, 0.45) 298deg,
+      rgba(255, 255, 255, 0.35) 318deg,
+      rgba(255, 255, 255, 1) 334deg,
+      rgba(255, 255, 255, 0.35) 350deg,
+      rgba(0, 255, 0, 0.45) 360deg
+    ) border-box;
+  background-clip: padding-box, border-box;
+  background-origin: border-box;
   color: #00ff00;
   font-size: 11px;
   font-weight: 700;
@@ -3671,9 +3685,24 @@ body {
   justify-content: center;
   gap: 4px;
   -webkit-tap-highlight-color: transparent;
+  animation:
+    main-help-f1-ring-angle 2.6s linear infinite,
+    main-help-f1-shake 0.55s ease-in-out infinite;
 }
 .mobile-help-f1:active {
-  background: rgba(0, 255, 0, 0.18);
+  background:
+    linear-gradient(rgba(0, 255, 0, 0.18), rgba(0, 255, 0, 0.18)) padding-box,
+    conic-gradient(
+      from var(--help-f1-ring-angle),
+      rgba(0, 255, 0, 0.55) 0deg,
+      rgba(0, 255, 0, 0.55) 298deg,
+      rgba(255, 255, 255, 0.35) 318deg,
+      rgba(255, 255, 255, 1) 334deg,
+      rgba(255, 255, 255, 0.35) 350deg,
+      rgba(0, 255, 0, 0.55) 360deg
+    ) border-box;
+  background-clip: padding-box, border-box;
+  background-origin: border-box;
 }
 
 /* Página inicial + Ajuda (F1): dentro da área principal / painel do módulo */
@@ -3727,51 +3756,105 @@ body {
   background: rgba(80, 140, 255, 0.12);
   box-shadow: 0 0 12px rgba(80, 140, 255, 0.22);
 }
-/* Luz branca no contorno do botão Ajuda / F1 (painel, módulos, cabeçalho móvel). */
-@keyframes main-help-f1-border-glow-spin {
+/**
+ * Ajuda / F1: luz branca a percorrer TODO o contorno (anel = conic-gradient só na borda).
+ * Usa @property para animar o ângulo — evita ::before a rodar fora do botão (máscara + transform).
+ */
+@property --help-f1-ring-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes main-help-f1-ring-angle {
   to {
-    transform: rotate(360deg);
+    --help-f1-ring-angle: 360deg;
+  }
+}
+@keyframes main-help-f1-shake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-1px, 0) rotate(-0.35deg);
+  }
+  40% {
+    transform: translate(1px, 0) rotate(0.35deg);
+  }
+  60% {
+    transform: translate(-1px, 0) rotate(-0.25deg);
+  }
+  80% {
+    transform: translate(1px, 0) rotate(0.25deg);
   }
 }
 .main-content-action-btn--help {
   position: relative;
-  overflow: visible;
-  border-color: rgba(0, 255, 122, 0.55);
-}
-.main-content-action-btn--help::before,
-.mobile-help-f1::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: 12px;
+  isolation: isolate;
+  border: 2px solid transparent;
   box-sizing: border-box;
-  padding: 2px;
-  background: conic-gradient(
-    from 0deg,
-    rgba(255, 255, 255, 0) 0deg,
-    rgba(255, 255, 255, 0) 258deg,
-    rgba(255, 255, 255, 0.98) 292deg,
-    rgba(255, 255, 255, 0.45) 318deg,
-    rgba(255, 255, 255, 0) 360deg
-  );
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  animation: main-help-f1-border-glow-spin 2.6s linear infinite;
-  pointer-events: none;
-  transform-origin: 50% 50%;
+  --help-f1-ring-angle: 0deg;
+  /* Não animar `transform` em transição — a vibração usa keyframes em transform. */
+  transition:
+    background 0.2s var(--ns-ease-out, ease-out),
+    border-color 0.2s var(--ns-ease-out, ease-out),
+    box-shadow 0.2s var(--ns-ease-out, ease-out),
+    filter 0.18s var(--ns-ease-out, ease-out);
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)) padding-box,
+    conic-gradient(
+      from var(--help-f1-ring-angle),
+      rgba(0, 255, 122, 0.35) 0deg,
+      rgba(0, 255, 122, 0.35) 298deg,
+      rgba(255, 255, 255, 0.25) 318deg,
+      rgba(255, 255, 255, 1) 334deg,
+      rgba(255, 255, 255, 0.25) 350deg,
+      rgba(0, 255, 122, 0.35) 360deg
+    ) border-box;
+  background-clip: padding-box, border-box;
+  background-origin: border-box;
+  animation:
+    main-help-f1-ring-angle 2.6s linear infinite,
+    main-help-f1-shake 0.55s ease-in-out infinite;
+}
+.main-content-action-btn--help:hover {
+  background:
+    linear-gradient(rgba(0, 255, 122, 0.12), rgba(0, 255, 122, 0.12)) padding-box,
+    conic-gradient(
+      from var(--help-f1-ring-angle),
+      rgba(0, 255, 122, 0.45) 0deg,
+      rgba(0, 255, 122, 0.45) 298deg,
+      rgba(255, 255, 255, 0.28) 318deg,
+      rgba(255, 255, 255, 1) 334deg,
+      rgba(255, 255, 255, 0.28) 350deg,
+      rgba(0, 255, 122, 0.45) 360deg
+    ) border-box;
+  background-clip: padding-box, border-box;
+  background-origin: border-box;
+}
+.main-content-action-btn--help:active {
+  background:
+    linear-gradient(rgba(0, 255, 122, 0.2), rgba(0, 255, 122, 0.2)) padding-box,
+    conic-gradient(
+      from var(--help-f1-ring-angle),
+      rgba(0, 255, 122, 0.55) 0deg,
+      rgba(0, 255, 122, 0.55) 298deg,
+      rgba(255, 255, 255, 0.3) 318deg,
+      rgba(255, 255, 255, 1) 334deg,
+      rgba(255, 255, 255, 0.3) 350deg,
+      rgba(0, 255, 122, 0.55) 360deg
+    ) border-box;
+  background-clip: padding-box, border-box;
+  background-origin: border-box;
 }
 @media (prefers-reduced-motion: reduce) {
-  .main-content-action-btn--help::before,
-  .mobile-help-f1::before {
+  .main-content-action-btn--help {
     animation: none;
-    transform: rotate(24deg);
-    opacity: 0.88;
+    --help-f1-ring-angle: 210deg;
+  }
+  .mobile-help-f1 {
+    animation: none;
+    --help-f1-ring-angle: 210deg;
   }
 }
 .main-content-action-f1 {
