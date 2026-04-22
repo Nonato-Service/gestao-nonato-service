@@ -1623,6 +1623,80 @@ function getDemoModuleLabelForGrid(action: string): string {
     .join(' ')
 }
 
+/** Chaves de tradução para subtítulo dos cartões do hub e das entradas da sidebar (por id de botão). */
+const HUB_CARD_DESC_BY_BUTTON_ID: Record<string, readonly string[]> = {
+  'gestores-default': ['gestoresSubtitle'],
+  'clientes-default': ['clientesSubtitle'],
+  'fornecedores-default': ['fornecedoresSubtitle'],
+  'relatorio-servico-default': ['relatorioServicoSubtitle'],
+  'biblioteca-relatorios-default': ['quickAccessBibliotecaRelatoriosDesc'],
+  'relatorios-excluidos-clientes-default': ['relatoriosExcluidosClientesDesc'],
+  'biblioteca-pecas-default': ['quickAccessBibliotecaPecasDesc'],
+  'agenda-default': ['quickAccessAgendaDesc'],
+  'diario-pedidos-dia-default': ['diarioPedidosHubCardDesc'],
+  'estado-visual-tecnico-default': ['estadoVisualHubCardDesc'],
+  'informacoes-conhecimento-tecnicos-default': ['informacoesConhecimentoTecnicosDesc'],
+  'cadastro-servicos-default': ['cadastroServicosSubtitle'],
+  'fechamento-relatorios-servicos-default': ['fechamentoRelatoriosServicosDesc'],
+  'orcamentos-avulso-default': ['orcamentosAvulsoHubCardDesc'],
+  'pedido-orcamentos-avulso-default': ['pedidoOrcamentosAvulsoHubCardDesc'],
+  'orcamento-servico-tecnico-default': ['orcamentoServicoTecnicoSubtitle'],
+  'registro-despesas-default': ['registroDespesasDesc'],
+  'mapa-visual-separacao-pecas-default': ['mapaVisualSeparacaoPecasHubCardDesc'],
+  'checklist-group-default': ['quickAccessChecklistHubDesc'],
+  'familias-grupos-equipamentos-default': ['familiasGruposEquipamentosHubCardDesc'],
+  'equipamentos-default': ['equipamentosSubtitle'],
+  'desmontados-default': ['desmontadosSubtitle'],
+  'familias-grupos-default': ['familiasGruposDesc'],
+  'pre-checklist-default': ['preChecklistDesc'],
+  'checklist-default': ['checklistDesc'],
+  'verificacao-final-entrega-default': ['verificacaoFinalEntregaDesc'],
+  'gestao-grupos-checklist-default': ['gestaoGruposChecklistDesc'],
+  'ordem-preparacao-default': ['ordemPreparacaoDesc'],
+  'formularios-checklist-tecnicos-default': ['formulariosChecklistTecnicosDesc'],
+  'hub-comunicacao-default': ['hubComunicacaoDesc'],
+  'mensagens-internas-default': ['mensagensInternasHubCardDesc'],
+  'mensagens-internas-tecnicos-default': ['mensagensInternasTecnicosHubCardDesc'],
+  'alerta-mensagens-default': ['alertaMensagensDesc'],
+  'manuais-informacoes-tecnicas-default': ['manuaisInformacoesTecnicasDesc', 'quickAccessManuaisDesc'],
+  'almoxarifado-armazem-default': ['quickAccessAlmoxarifadoDesc', 'almoxarifadoArmazemDesc'],
+  'administrador-default': ['administradorGeralDesc'],
+  'clientes-financeiro-default': ['clientesFinanceiroHubCardDesc'],
+  'comprovantes-despesas-default': ['comprovantesDespesasDesc'],
+  'open-translator': ['quickAccessTranslatorDesc'],
+  'open-manual-gestor': ['manualUsoGestorHubCardDesc'],
+}
+
+const HUB_CARD_DESC_BY_ACTION: Record<string, readonly string[]> = {
+  'open-gestao-demos': ['adminJumpDemosDesc'],
+  'open-manual-programa': ['manualProgramaSubtitle'],
+  'open-protocolos-servico': ['protocolosServicoDesc'],
+}
+
+function pickTrChain(tr: Record<string, string | undefined>, keys: readonly string[]): string {
+  for (const k of keys) {
+    const v = tr[k]
+    if (typeof v === 'string' && v.trim().length > 0) return v.trim()
+  }
+  return ''
+}
+
+function resolveActionCardDescription(
+  tr: Record<string, string | undefined>,
+  buttonId?: string,
+  action?: string,
+  fallback?: string
+): string {
+  const fromId = pickTrChain(tr, HUB_CARD_DESC_BY_BUTTON_ID[buttonId || ''] || [])
+  if (fromId) return fromId
+  if (action) {
+    const fromAction = pickTrChain(tr, HUB_CARD_DESC_BY_ACTION[action] || [])
+    if (fromAction) return fromAction
+  }
+  const fb = (fallback ?? pickTrChain(tr, ['mainHubCardHint'])) || ''
+  return fb
+}
+
 const DEMO_MODULE_GROUP_ORDER = ['clientes', 'tecnica', 'gestao', 'outros'] as const
 type DemoModuleGroupId = (typeof DEMO_MODULE_GROUP_ORDER)[number]
 
@@ -1811,7 +1885,11 @@ export default function Dashboard() {
   }, [selectedLanguage])
 
   const writingAssistLangOptions = useMemo(() => getLanguages(safeT), [safeT])
-  
+  const trCardDesc = useMemo(
+    () => (safeT && typeof safeT === 'object' ? (safeT as Record<string, string | undefined>) : {}),
+    [safeT]
+  )
+
   const [users, setUsers] = useState<User[]>([])
   const [showUserForm, setShowUserForm] = useState(false)
   const [verificacaoFinalAvisoReconhecido, setVerificacaoFinalAvisoReconhecido] = useState(false)
@@ -52058,67 +52136,8 @@ A1;Peça exemplo;10`}
     type HubRow = { key: string; title: string; desc: string; icon: string; action: string; buttonId?: string }
     const rows: HubRow[] = []
 
-    const pickHubLine = (keys: readonly string[]) => {
-      for (const k of keys) {
-        const v = tr[k]
-        if (typeof v === 'string' && v.trim().length > 0) return v.trim()
-      }
-      return ''
-    }
-    const hubCardDescByButtonId: Record<string, readonly string[]> = {
-      'gestores-default': ['gestoresSubtitle'],
-      'clientes-default': ['clientesSubtitle'],
-      'fornecedores-default': ['fornecedoresSubtitle'],
-      'relatorio-servico-default': ['relatorioServicoSubtitle'],
-      'biblioteca-relatorios-default': ['quickAccessBibliotecaRelatoriosDesc'],
-      'relatorios-excluidos-clientes-default': ['relatoriosExcluidosClientesDesc'],
-      'biblioteca-pecas-default': ['quickAccessBibliotecaPecasDesc'],
-      'agenda-default': ['quickAccessAgendaDesc'],
-      'diario-pedidos-dia-default': ['diarioPedidosHubCardDesc'],
-      'estado-visual-tecnico-default': ['estadoVisualHubCardDesc'],
-      'informacoes-conhecimento-tecnicos-default': ['informacoesConhecimentoTecnicosDesc'],
-      'cadastro-servicos-default': ['cadastroServicosSubtitle'],
-      'fechamento-relatorios-servicos-default': ['fechamentoRelatoriosServicosDesc'],
-      'orcamentos-avulso-default': ['orcamentosAvulsoHubCardDesc'],
-      'pedido-orcamentos-avulso-default': ['pedidoOrcamentosAvulsoHubCardDesc'],
-      'orcamento-servico-tecnico-default': ['orcamentoServicoTecnicoSubtitle'],
-      'registro-despesas-default': ['registroDespesasDesc'],
-      'mapa-visual-separacao-pecas-default': ['mapaVisualSeparacaoPecasHubCardDesc'],
-      'checklist-group-default': ['quickAccessChecklistHubDesc'],
-      'familias-grupos-equipamentos-default': ['familiasGruposEquipamentosHubCardDesc'],
-      'equipamentos-default': ['equipamentosSubtitle'],
-      'desmontados-default': ['desmontadosSubtitle'],
-      'familias-grupos-default': ['familiasGruposDesc'],
-      'pre-checklist-default': ['preChecklistDesc'],
-      'checklist-default': ['checklistDesc'],
-      'verificacao-final-entrega-default': ['verificacaoFinalEntregaDesc'],
-      'gestao-grupos-checklist-default': ['gestaoGruposChecklistDesc'],
-      'ordem-preparacao-default': ['ordemPreparacaoDesc'],
-      'formularios-checklist-tecnicos-default': ['formulariosChecklistTecnicosDesc'],
-      'hub-comunicacao-default': ['hubComunicacaoDesc'],
-      'mensagens-internas-default': ['mensagensInternasHubCardDesc'],
-      'mensagens-internas-tecnicos-default': ['mensagensInternasTecnicosHubCardDesc'],
-      'alerta-mensagens-default': ['alertaMensagensDesc'],
-      'manuais-informacoes-tecnicas-default': ['manuaisInformacoesTecnicasDesc', 'quickAccessManuaisDesc'],
-      'almoxarifado-armazem-default': ['quickAccessAlmoxarifadoDesc', 'almoxarifadoArmazemDesc'],
-      'administrador-default': ['administradorGeralDesc'],
-      'clientes-financeiro-default': ['clientesFinanceiroHubCardDesc'],
-      'comprovantes-despesas-default': ['comprovantesDespesasDesc'],
-      'open-translator': ['quickAccessTranslatorDesc'],
-      'open-manual-gestor': ['manualUsoGestorHubCardDesc'],
-    }
-    const hubCardDescByAction: Record<string, readonly string[]> = {
-      'open-gestao-demos': ['adminJumpDemosDesc'],
-    }
-    const descForHubRow = (buttonId: string | undefined, action?: string) => {
-      const fromId = pickHubLine(hubCardDescByButtonId[buttonId || ''] || [])
-      if (fromId) return fromId
-      if (action) {
-        const fromAction = pickHubLine(hubCardDescByAction[action] || [])
-        if (fromAction) return fromAction
-      }
-      return cardHint
-    }
+    const descForHubRow = (buttonId: string | undefined, action?: string) =>
+      resolveActionCardDescription(tr, buttonId, action, cardHint)
 
     if (hubId === 'gestao-tecnica') {
       const gestaoTecnicaHubIcon: Record<string, string> = {
@@ -52234,7 +52253,7 @@ A1;Peça exemplo;10`}
         rows.push({
           key: 'protocolos-servico',
           title: (tr as any).protocolosServicoTitle || 'Protocolos de serviço',
-          desc: pickHubLine(['protocolosServicoDesc']) || cardHint,
+          desc: pickTrChain(tr, ['protocolosServicoDesc']) || cardHint,
           icon: '📑',
           action: 'open-protocolos-servico'
         })
@@ -52244,7 +52263,7 @@ A1;Peça exemplo;10`}
         rows.push({
           key: 'manual-programa',
           title: (tr as any).manualProgramaTitle || 'Manual do programa',
-          desc: pickHubLine(['manualProgramaSubtitle']) || cardHint,
+          desc: pickTrChain(tr, ['manualProgramaSubtitle']) || cardHint,
           icon: '📘',
           action: 'open-manual-programa'
         })
@@ -56872,14 +56891,16 @@ A1;Peça exemplo;10`}
             {selectedSidebarButton === 'open-gestao-tecnica' && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
             )}
-            <span>
-              <span style={{ 
-                display: 'inline-block', 
-                marginRight: '8px'
-              }}>
+            <span className="sidebar-nav-label sidebar-nav-label--stacked">
+              <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
                 🔧
               </span>
-              {safeT?.gestaoTecnicaTitle || 'GESTÃO TÉCNICA'}
+              <span className="sidebar-nav-label-stack">
+                <span className="sidebar-nav-label-text">{safeT?.gestaoTecnicaTitle || 'GESTÃO TÉCNICA'}</span>
+                <span className="sidebar-nav-label-sub">
+                  {(safeT as any)?.sidebarGroupGestaoTecnicaDesc || ''}
+                </span>
+              </span>
             </span>
             <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('gestao-tecnica') ? '▼' : '▶'}</span>
           </button>
@@ -56896,13 +56917,33 @@ A1;Peça exemplo;10`}
                       selectedSidebarButton === 'open-biblioteca-pecas' ||
                       selectedSidebarButton === 'open-importacao-pecas' ||
                       selectedSidebarButton === 'open-pecas-substituicao'
+                    const bibSub = resolveActionCardDescription(
+                      trCardDesc,
+                      'biblioteca-pecas-default',
+                      'open-biblioteca-hub',
+                      pickTrChain(trCardDesc, ['mainHubCardHint'])
+                    )
                     return (
                       <button
                         key={button.id}
-                        className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
+                        className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                          isSelected ? ' sidebar-action-btn-active' : ''
+                        }`}
                         onClick={() => handleButtonClick('open-biblioteca-hub')}
                       >
-                        📚 {getButtonName(button)}
+                        {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
+                        <span className="sidebar-empresa-entry-row">
+                          <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                            📚
+                          </span>
+                          <span className="sidebar-empresa-entry-text">
+                            <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                            {bibSub ? <span className="sidebar-empresa-entry-sub">{bibSub}</span> : null}
+                          </span>
+                        </span>
+                        <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                          ›
+                        </span>
                       </button>
                     )
                   }
@@ -56914,37 +56955,69 @@ A1;Peça exemplo;10`}
                           ? ' sidebar-action-btn--diario sidebar-action-btn--diario-done'
                           : ' sidebar-action-btn--diario'
                     const isDiarioSelected = selectedSidebarButton === button.action
+                    const diarioSub = resolveActionCardDescription(
+                      trCardDesc,
+                      button.id,
+                      button.action,
+                      pickTrChain(trCardDesc, ['mainHubCardHint'])
+                    )
                     return (
                       <button
                         key={button.id}
                         type="button"
                         data-sidebar-nav-action={button.action}
-                        className={`btn-primary sidebar-action-btn${diarioExtra}${isDiarioSelected ? ' sidebar-action-btn-active' : ''}`}
+                        className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${diarioExtra}${
+                          isDiarioSelected ? ' sidebar-action-btn-active' : ''
+                        }`}
                         onClick={() => handleButtonClick(button.action)}
                       >
                         {isDiarioSelected && (
                           <span className="sidebar-nav-check" aria-hidden>✓</span>
                         )}
-                        <span className="sidebar-diario-icon" aria-hidden>
-                          <IconCalendar size={17} />
+                        <span className="sidebar-empresa-entry-row">
+                          <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                            <IconCalendar size={17} />
+                          </span>
+                          <span className="sidebar-empresa-entry-text">
+                            <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                            {diarioSub ? <span className="sidebar-empresa-entry-sub">{diarioSub}</span> : null}
+                          </span>
                         </span>
-                        {getButtonName(button)}
+                        <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                          ›
+                        </span>
                       </button>
                     )
                   }
                   const isSelected = selectedSidebarButton === button.action
+                  const rowSub = resolveActionCardDescription(
+                    trCardDesc,
+                    button.id,
+                    button.action,
+                    pickTrChain(trCardDesc, ['mainHubCardHint'])
+                  )
                   return (
                     <button
                       key={button.id}
                       type="button"
                       data-sidebar-nav-action={button.action}
-                      className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
+                      className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                        isSelected ? ' sidebar-action-btn-active' : ''
+                      }`}
                       onClick={() => handleButtonClick(button.action)}
                     >
                       {isSelected && (
                         <span className="sidebar-nav-check" aria-hidden>✓</span>
                       )}
-                      {getButtonName(button)}
+                      <span className="sidebar-empresa-entry-row">
+                        <span className="sidebar-empresa-entry-text">
+                          <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                          {rowSub ? <span className="sidebar-empresa-entry-sub">{rowSub}</span> : null}
+                        </span>
+                      </span>
+                      <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                        ›
+                      </span>
                     </button>
                   )
                 })}
@@ -56982,7 +57055,7 @@ A1;Peça exemplo;10`}
                   {(safeT as any)?.protocolosServicoTitle || 'Protocolos de Serviço'}
                 </span>
                 <span className="sidebar-nav-label-sub">
-                  {(safeT as any)?.protocolosServicoHeroBadge || 'Documentação técnica'}
+                  {pickTrChain(trCardDesc, ['protocolosServicoDesc']) || (safeT as any)?.protocolosServicoHeroBadge || ''}
                 </span>
               </span>
             </span>
@@ -57017,7 +57090,9 @@ A1;Peça exemplo;10`}
                       {(safeT as any)?.protocolosServicoTitle || 'Protocolos de Serviço'}
                     </span>
                     <span className="sidebar-protocolos-entry-sub">
-                      {(safeT as any)?.protocolosServicoListaTitulo || ''}
+                      {pickTrChain(trCardDesc, ['protocolosServicoDesc']) ||
+                        (safeT as any)?.protocolosServicoListaTitulo ||
+                        ''}
                     </span>
                   </span>
                 </span>
@@ -57037,10 +57112,15 @@ A1;Peça exemplo;10`}
             {selectedSidebarButton === 'open-manual-programa' && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
             )}
-            <span className="sidebar-nav-label">
-              <span className="sidebar-nav-label-icon" aria-hidden>📘</span>
-              <span className="sidebar-nav-label-text">
-                {(safeT as any)?.manualProgramaTitle || 'Manual do Programa'}
+            <span className="sidebar-nav-label sidebar-nav-label--stacked">
+              <span className="sidebar-nav-label-icon" aria-hidden>
+                📘
+              </span>
+              <span className="sidebar-nav-label-stack">
+                <span className="sidebar-nav-label-text">{(safeT as any)?.manualProgramaTitle || 'Manual do Programa'}</span>
+                <span className="sidebar-nav-label-sub">
+                  {pickTrChain(trCardDesc, ['manualProgramaSubtitle']) || ''}
+                </span>
               </span>
             </span>
             <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('manual-programa-main') ? '▼' : '▶'}</span>
@@ -57049,14 +57129,31 @@ A1;Peça exemplo;10`}
             <div className="sidebar-action-buttons">
               <button
                 type="button"
-                className={`btn-primary sidebar-action-btn${selectedSidebarButton === 'open-manual-programa' ? ' sidebar-action-btn-active' : ''}`}
+                className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                  selectedSidebarButton === 'open-manual-programa' ? ' sidebar-action-btn-active' : ''
+                }`}
                 data-sidebar-nav-action="open-manual-programa"
                 onClick={() => handleButtonClick('open-manual-programa')}
               >
                 {selectedSidebarButton === 'open-manual-programa' && (
                   <span className="sidebar-nav-check" aria-hidden>✓</span>
                 )}
-                {(safeT as any)?.manualProgramaTitle || 'Manual do Programa'}
+                <span className="sidebar-empresa-entry-row">
+                  <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                    📘
+                  </span>
+                  <span className="sidebar-empresa-entry-text">
+                    <span className="sidebar-empresa-entry-title">
+                      {(safeT as any)?.manualProgramaTitle || 'Manual do Programa'}
+                    </span>
+                    <span className="sidebar-empresa-entry-sub">
+                      {resolveActionCardDescription(trCardDesc, undefined, 'open-manual-programa', pickTrChain(trCardDesc, ['mainHubCardHint']))}
+                    </span>
+                  </span>
+                </span>
+                <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                  ›
+                </span>
               </button>
             </div>
           )}
@@ -57071,14 +57168,16 @@ A1;Peça exemplo;10`}
             {selectedSidebarButton === 'open-gestao-custos' && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
             )}
-            <span>
-              <span style={{ 
-                display: 'inline-block', 
-                marginRight: '8px'
-              }}>
+            <span className="sidebar-nav-label sidebar-nav-label--stacked">
+              <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
                 💵
               </span>
-              {safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS'}
+              <span className="sidebar-nav-label-stack">
+                <span className="sidebar-nav-label-text">{safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS'}</span>
+                <span className="sidebar-nav-label-sub">
+                  {pickTrChain(trCardDesc, ['quickAccessGestaoCustosDesc']) || ''}
+                </span>
+              </span>
             </span>
             <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('gestao-custos') ? '▼' : '▶'}</span>
           </button>
@@ -57089,18 +57188,34 @@ A1;Peça exemplo;10`}
                 .sort((a, b) => a.order - b.order)
                 .map((button) => {
                   const isSelected = selectedSidebarButton === button.action
+                  const custosSub = resolveActionCardDescription(
+                    trCardDesc,
+                    button.id,
+                    button.action,
+                    pickTrChain(trCardDesc, ['mainHubCardHint'])
+                  )
                   return (
                     <button
                       key={button.id}
                       type="button"
                       data-sidebar-nav-action={button.action}
-                      className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
+                      className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                        isSelected ? ' sidebar-action-btn-active' : ''
+                      }`}
                       onClick={() => handleButtonClick(button.action)}
                     >
                       {isSelected && (
                         <span className="sidebar-nav-check" aria-hidden>✓</span>
                       )}
-                      {getButtonName(button)}
+                      <span className="sidebar-empresa-entry-row">
+                        <span className="sidebar-empresa-entry-text">
+                          <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                          {custosSub ? <span className="sidebar-empresa-entry-sub">{custosSub}</span> : null}
+                        </span>
+                      </span>
+                      <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                        ›
+                      </span>
                     </button>
                   )
                 })}
@@ -57122,14 +57237,16 @@ A1;Peça exemplo;10`}
             {selectedSidebarButton === 'open-comunicacao-interna' && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
             )}
-            <span>
-              <span style={{ 
-                display: 'inline-block', 
-                marginRight: '8px'
-              }}>
+            <span className="sidebar-nav-label sidebar-nav-label--stacked" style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
                 💬
               </span>
-              {safeT?.comunicacaoInternaTitle || 'COMUNICAÇÃO INTERNA C/ GESTORES E TECNICOS'}
+              <span className="sidebar-nav-label-stack">
+                <span className="sidebar-nav-label-text">
+                  {safeT?.comunicacaoInternaTitle || 'COMUNICAÇÃO INTERNA C/ GESTORES E TECNICOS'}
+                </span>
+                <span className="sidebar-nav-label-sub">{safeT?.comunicacaoInternaDesc || ''}</span>
+              </span>
             </span>
             {comunicacaoUnreadCount > 0 && (
               <span className="hub-comunicacao-menu-badge" style={{ marginLeft: '8px', padding: '2px 8px', borderRadius: '999px', backgroundColor: '#ff5f5f', color: '#fff', fontSize: '11px', fontWeight: 800 }}>
@@ -57156,10 +57273,18 @@ A1;Peça exemplo;10`}
                   const shouldShowUnreadBadge =
                     comunicacaoUnreadCount > 0 &&
                     (action === 'open-hub-comunicacao' || action === 'open-alerta-mensagens')
+                  const comSub = resolveActionCardDescription(
+                    trCardDesc,
+                    id,
+                    action,
+                    pickTrChain(trCardDesc, ['mainHubCardHint'])
+                  )
                   return (
                     <button
                       key={id}
-                      className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
+                      className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                        isSelected ? ' sidebar-action-btn-active' : ''
+                      }`}
                       onClick={() => handleButtonClick(action)}
                     >
                       {isSelected && (
@@ -57185,7 +57310,15 @@ A1;Peça exemplo;10`}
                           {comunicacaoUnreadCount}
                         </span>
                       )}
-                      {getButtonName(button)}
+                      <span className="sidebar-empresa-entry-row">
+                        <span className="sidebar-empresa-entry-text">
+                          <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                          {comSub ? <span className="sidebar-empresa-entry-sub">{comSub}</span> : null}
+                        </span>
+                      </span>
+                      <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                        ›
+                      </span>
                     </button>
                   )
                 })
@@ -57193,13 +57326,32 @@ A1;Peça exemplo;10`}
               {/* Botão MENSAGENS INTERNAS (fallback legado - mantido por compatibilidade) */}
               {!sidebarButtons.some(btn => btn.id === 'mensagens-internas-default') && (
                 <button
-                  className={`btn-primary sidebar-action-btn${selectedSidebarButton === 'open-mensagens-internas' ? ' sidebar-action-btn-active' : ''}`}
+                  className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                    selectedSidebarButton === 'open-mensagens-internas' ? ' sidebar-action-btn-active' : ''
+                  }`}
                   onClick={() => handleButtonClick('open-mensagens-internas')}
                 >
                   {selectedSidebarButton === 'open-mensagens-internas' && (
                     <span className="sidebar-nav-check" aria-hidden>✓</span>
                   )}
-                  {safeT?.mensagensInternas || 'MENSAGENS INTERNAS'}
+                  <span className="sidebar-empresa-entry-row">
+                    <span className="sidebar-empresa-entry-text">
+                      <span className="sidebar-empresa-entry-title">
+                        {safeT?.mensagensInternas || 'MENSAGENS INTERNAS'}
+                      </span>
+                      <span className="sidebar-empresa-entry-sub">
+                        {resolveActionCardDescription(
+                          trCardDesc,
+                          'mensagens-internas-default',
+                          'open-mensagens-internas',
+                          pickTrChain(trCardDesc, ['mainHubCardHint'])
+                        )}
+                      </span>
+                    </span>
+                  </span>
+                  <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                    ›
+                  </span>
                 </button>
               )}
             </div>
@@ -57221,14 +57373,16 @@ A1;Peça exemplo;10`}
                     {isSelected && (
                       <span className="sidebar-nav-check" aria-hidden>✓</span>
                     )}
-                    <span>
-                      <span style={{ 
-                        display: 'inline-block', 
-                        marginRight: '8px'
-                      }}>
+                    <span className="sidebar-nav-label sidebar-nav-label--stacked">
+                      <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
                         📋
                       </span>
-                      {getButtonName(button)}
+                      <span className="sidebar-nav-label-stack">
+                        <span className="sidebar-nav-label-text">{getButtonName(button)}</span>
+                        <span className="sidebar-nav-label-sub">
+                          {pickTrChain(trCardDesc, ['quickAccessChecklistHubDesc']) || ''}
+                        </span>
+                      </span>
                     </span>
                     <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('checklist-group') ? '▼' : '▶'}</span>
                   </button>
@@ -57238,17 +57392,33 @@ A1;Peça exemplo;10`}
                         .sort((a, b) => a.order - b.order)
                         .map((subButton) => {
                           const isSubSelected = selectedSidebarButton === subButton.action
+                          const chkSub = resolveActionCardDescription(
+                            trCardDesc,
+                            subButton.id,
+                            subButton.action,
+                            pickTrChain(trCardDesc, ['mainHubCardHint'])
+                          )
                           return (
                             <button
                               key={subButton.id}
-                              className={`btn-primary sidebar-action-btn${isSubSelected ? ' sidebar-action-btn-active' : ''}`}
+                              className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                                isSubSelected ? ' sidebar-action-btn-active' : ''
+                              }`}
                               data-button-action={subButton.action}
                               onClick={() => handleButtonClick(subButton.action)}
                             >
                               {isSubSelected && (
                                 <span className="sidebar-nav-check" aria-hidden>✓</span>
                               )}
-                              {getButtonName(subButton)}
+                              <span className="sidebar-empresa-entry-row">
+                                <span className="sidebar-empresa-entry-text">
+                                  <span className="sidebar-empresa-entry-title">{getButtonName(subButton)}</span>
+                                  {chkSub ? <span className="sidebar-empresa-entry-sub">{chkSub}</span> : null}
+                                </span>
+                              </span>
+                              <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                                ›
+                              </span>
                             </button>
                           )
                         })}
@@ -57271,14 +57441,14 @@ A1;Peça exemplo;10`}
             {gestaoIndustrialActive && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
             )}
-            <span>
-              <span style={{ 
-                display: 'inline-block', 
-                marginRight: '8px'
-              }}>
+            <span className="sidebar-nav-label sidebar-nav-label--stacked">
+              <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
                 🏭
               </span>
-              {safeT?.gestaoIndustrialTitle || 'GESTÃO INDUSTRIAL'}
+              <span className="sidebar-nav-label-stack">
+                <span className="sidebar-nav-label-text">{safeT?.gestaoIndustrialTitle || 'GESTÃO INDUSTRIAL'}</span>
+                <span className="sidebar-nav-label-sub">{(safeT as any)?.sidebarGroupGestaoIndustrialDesc || ''}</span>
+              </span>
             </span>
             <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('gestao-industrial') ? '▼' : '▶'}</span>
           </button>
@@ -57295,13 +57465,22 @@ A1;Peça exemplo;10`}
                     return (
                       <div key={button.id} className="sidebar-nav-subcluster">
                         <button
-                          className={`btn-primary sidebar-action-btn sidebar-action-btn--row${isSelected ? ' sidebar-action-btn-active' : ''}`}
+                          className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                            isSelected ? ' sidebar-action-btn-active' : ''
+                          }`}
                           onClick={() => handleButtonClick(button.action)}
                         >
                           {isSelected && (
                             <span className="sidebar-nav-check" aria-hidden>✓</span>
                           )}
-                          <span>{getButtonName(button)}</span>
+                          <span className="sidebar-empresa-entry-row" style={{ flex: 1, minWidth: 0 }}>
+                            <span className="sidebar-empresa-entry-text">
+                              <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                              <span className="sidebar-empresa-entry-sub">
+                                {pickTrChain(trCardDesc, ['quickAccessChecklistHubDesc']) || ''}
+                              </span>
+                            </span>
+                          </span>
                           <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('checklist-group') ? '▼' : '▶'}</span>
                         </button>
                         {expandedGroups.has('checklist-group') && (
@@ -57310,17 +57489,33 @@ A1;Peça exemplo;10`}
                               .sort((a, b) => a.order - b.order)
                               .map((subButton) => {
                                 const isSubSelected = selectedSidebarButton === subButton.action
+                                const indChkSub = resolveActionCardDescription(
+                                  trCardDesc,
+                                  subButton.id,
+                                  subButton.action,
+                                  pickTrChain(trCardDesc, ['mainHubCardHint'])
+                                )
                                 return (
                                   <button
                                     key={subButton.id}
-                                    className={`btn-primary sidebar-action-btn${isSubSelected ? ' sidebar-action-btn-active' : ''}`}
+                                    className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                                      isSubSelected ? ' sidebar-action-btn-active' : ''
+                                    }`}
                                     data-button-action={subButton.action}
                                     onClick={() => handleButtonClick(subButton.action)}
                                   >
                                     {isSubSelected && (
                                       <span className="sidebar-nav-check" aria-hidden>✓</span>
                                     )}
-                                    {getButtonName(subButton)}
+                                    <span className="sidebar-empresa-entry-row">
+                                      <span className="sidebar-empresa-entry-text">
+                                        <span className="sidebar-empresa-entry-title">{getButtonName(subButton)}</span>
+                                        {indChkSub ? <span className="sidebar-empresa-entry-sub">{indChkSub}</span> : null}
+                                      </span>
+                                    </span>
+                                    <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                                      ›
+                                    </span>
                                   </button>
                                 )
                               })}
@@ -57331,16 +57526,32 @@ A1;Peça exemplo;10`}
                   }
                   // Para outros botões, renderizar normalmente (usar button.id na seleção para que dois botões com a mesma action não fiquem ambos ativos)
                   const isSelected = selectedSidebarButton === (button.id || button.action)
+                  const indSub = resolveActionCardDescription(
+                    trCardDesc,
+                    button.id,
+                    button.action,
+                    pickTrChain(trCardDesc, ['mainHubCardHint'])
+                  )
                   return (
                     <button
                       key={button.id}
-                      className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
+                      className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                        isSelected ? ' sidebar-action-btn-active' : ''
+                      }`}
                       onClick={() => handleButtonClick(button.action, button.id)}
                     >
                       {isSelected && (
                         <span className="sidebar-nav-check" aria-hidden>✓</span>
                       )}
-                      {getButtonName(button)}
+                      <span className="sidebar-empresa-entry-row">
+                        <span className="sidebar-empresa-entry-text">
+                          <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                          {indSub ? <span className="sidebar-empresa-entry-sub">{indSub}</span> : null}
+                        </span>
+                      </span>
+                      <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                        ›
+                      </span>
                     </button>
                   )
                 })}
@@ -57369,9 +57580,16 @@ A1;Peça exemplo;10`}
                   {isSelected && (
                     <span className="sidebar-nav-check" aria-hidden>✓</span>
                   )}
-                  <span>
-                    <span style={{ display: 'inline-block', marginRight: '8px' }}>📋</span>
-                    {getButtonName(button)}
+                  <span className="sidebar-nav-label sidebar-nav-label--stacked">
+                    <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
+                      📋
+                    </span>
+                    <span className="sidebar-nav-label-stack">
+                      <span className="sidebar-nav-label-text">{getButtonName(button)}</span>
+                      <span className="sidebar-nav-label-sub">
+                        {pickTrChain(trCardDesc, ['quickAccessManuaisDesc', 'manuaisInformacoesTecnicasDesc']) || ''}
+                      </span>
+                    </span>
                   </span>
                   <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('manuais-informacoes-main') ? '▼' : '▶'}</span>
                 </button>
@@ -57379,14 +57597,34 @@ A1;Peça exemplo;10`}
                   <div className="sidebar-action-buttons">
                     <button
                       type="button"
-                      className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
+                      className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                        isSelected ? ' sidebar-action-btn-active' : ''
+                      }`}
                       data-sidebar-nav-action={button.action}
                       onClick={() => handleButtonClick(button.action)}
                     >
                       {isSelected && (
                         <span className="sidebar-nav-check" aria-hidden>✓</span>
                       )}
-                      {getButtonName(button)}
+                      <span className="sidebar-empresa-entry-row">
+                        <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                          📖
+                        </span>
+                        <span className="sidebar-empresa-entry-text">
+                          <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                          <span className="sidebar-empresa-entry-sub">
+                            {resolveActionCardDescription(
+                              trCardDesc,
+                              button.id,
+                              button.action,
+                              pickTrChain(trCardDesc, ['mainHubCardHint'])
+                            )}
+                          </span>
+                        </span>
+                      </span>
+                      <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                        ›
+                      </span>
                     </button>
                   </div>
                 )}
@@ -57411,14 +57649,16 @@ A1;Peça exemplo;10`}
                   {isSelected && (
                     <span className="sidebar-nav-check" aria-hidden>✓</span>
                   )}
-                  <span>
-                    <span style={{ 
-                      display: 'inline-block', 
-                      marginRight: '8px'
-                    }}>
+                  <span className="sidebar-nav-label sidebar-nav-label--stacked">
+                    <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
                       📦
                     </span>
-                    {getButtonName(button)}
+                    <span className="sidebar-nav-label-stack">
+                      <span className="sidebar-nav-label-text">{getButtonName(button)}</span>
+                      <span className="sidebar-nav-label-sub">
+                        {pickTrChain(trCardDesc, ['quickAccessAlmoxarifadoDesc', 'almoxarifadoArmazemDesc']) || ''}
+                      </span>
+                    </span>
                   </span>
                   <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('almoxarifado-main') ? '▼' : '▶'}</span>
                 </button>
@@ -57426,14 +57666,34 @@ A1;Peça exemplo;10`}
                   <div className="sidebar-action-buttons">
                     <button
                       type="button"
-                      className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
+                      className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                        isSelected ? ' sidebar-action-btn-active' : ''
+                      }`}
                       data-sidebar-nav-action={button.action}
                       onClick={() => handleButtonClick(button.action)}
                     >
                       {isSelected && (
                         <span className="sidebar-nav-check" aria-hidden>✓</span>
                       )}
-                      {getButtonName(button)}
+                      <span className="sidebar-empresa-entry-row">
+                        <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                          📦
+                        </span>
+                        <span className="sidebar-empresa-entry-text">
+                          <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                          <span className="sidebar-empresa-entry-sub">
+                            {resolveActionCardDescription(
+                              trCardDesc,
+                              button.id,
+                              button.action,
+                              pickTrChain(trCardDesc, ['mainHubCardHint'])
+                            )}
+                          </span>
+                        </span>
+                      </span>
+                      <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                        ›
+                      </span>
                     </button>
                   </div>
                 )}
@@ -57451,14 +57711,14 @@ A1;Peça exemplo;10`}
             {selectedSidebarButton === 'open-gestao-financeira' && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
             )}
-            <span>
-              <span style={{ 
-                display: 'inline-block', 
-                marginRight: '8px'
-              }}>
+            <span className="sidebar-nav-label sidebar-nav-label--stacked">
+              <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
                 💰
               </span>
-              {safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}
+              <span className="sidebar-nav-label-stack">
+                <span className="sidebar-nav-label-text">{safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}</span>
+                <span className="sidebar-nav-label-sub">{safeT?.gestaoFinanceiraDesc || ''}</span>
+              </span>
             </span>
             <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('gestao-financeira') ? '▼' : '▶'}</span>
           </button>
@@ -57469,16 +57729,32 @@ A1;Peça exemplo;10`}
                 .sort((a, b) => a.order - b.order)
                 .map((button) => {
                   const isSelected = selectedSidebarButton === button.action
+                  const finSub = resolveActionCardDescription(
+                    trCardDesc,
+                    button.id,
+                    button.action,
+                    pickTrChain(trCardDesc, ['mainHubCardHint'])
+                  )
                   return (
                     <button
                       key={button.id}
-                      className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
+                      className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                        isSelected ? ' sidebar-action-btn-active' : ''
+                      }`}
                       onClick={() => handleButtonClick(button.action)}
                     >
                       {isSelected && (
                         <span className="sidebar-nav-check" aria-hidden>✓</span>
                       )}
-                      {getButtonName(button)}
+                      <span className="sidebar-empresa-entry-row">
+                        <span className="sidebar-empresa-entry-text">
+                          <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                          {finSub ? <span className="sidebar-empresa-entry-sub">{finSub}</span> : null}
+                        </span>
+                      </span>
+                      <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                        ›
+                      </span>
                     </button>
                   )
                 })}
@@ -57566,7 +57842,9 @@ A1;Peça exemplo;10`}
                             : button.id === 'solicitacao-servico-tecnico-default'
                               ? 'empresaInstSidebarItemSolicitacao'
                               : null
-                      const sub = subKey ? String((safeT as any)?.[subKey] || '').trim() : ''
+                      const sub =
+                        (subKey ? String((safeT as any)?.[subKey] || '').trim() : '') ||
+                        resolveActionCardDescription(trCardDesc, button.id, button.action, '')
                       return (
                         <button
                           key={button.id}
@@ -57640,14 +57918,14 @@ A1;Peça exemplo;10`}
             {selectedSidebarButton === 'open-extra' && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
             )}
-            <span>
-              <span style={{ 
-                display: 'inline-block', 
-                marginRight: '8px'
-              }}>
+            <span className="sidebar-nav-label sidebar-nav-label--stacked">
+              <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
                 ⚙️
               </span>
-              {safeT?.extras || 'EXTRAS'}
+              <span className="sidebar-nav-label-stack">
+                <span className="sidebar-nav-label-text">{safeT?.extras || 'EXTRAS'}</span>
+                <span className="sidebar-nav-label-sub">{(safeT as any)?.sidebarGroupExtraDesc || ''}</span>
+              </span>
             </span>
             <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('extra') ? '▼' : '▶'}</span>
           </button>
@@ -57673,25 +57951,66 @@ A1;Peça exemplo;10`}
 
               {/* Botão Tradutor de Idiomas */}
               <button
-                className={`btn-primary sidebar-action-btn${selectedSidebarButton === 'open-translator' ? ' sidebar-action-btn-active' : ''}`}
+                className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                  selectedSidebarButton === 'open-translator' ? ' sidebar-action-btn-active' : ''
+                }`}
                 onClick={() => handleButtonClick('open-translator')}
               >
                 {selectedSidebarButton === 'open-translator' && (
                   <span className="sidebar-nav-check" aria-hidden>✓</span>
                 )}
-                {safeT?.translator || 'Tradutor de Idiomas'}
+                <span className="sidebar-empresa-entry-row">
+                  <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                    🌐
+                  </span>
+                  <span className="sidebar-empresa-entry-text">
+                    <span className="sidebar-empresa-entry-title">{safeT?.translator || 'Tradutor de Idiomas'}</span>
+                    <span className="sidebar-empresa-entry-sub">
+                      {resolveActionCardDescription(
+                        trCardDesc,
+                        'open-translator',
+                        'open-translator',
+                        pickTrChain(trCardDesc, ['mainHubCardHint'])
+                      )}
+                    </span>
+                  </span>
+                </span>
+                <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                  ›
+                </span>
               </button>
 
               {/* Botão Manual de Uso do Gestor Nonato Service */}
               <button
-                className={`btn-primary sidebar-action-btn${selectedSidebarButton === 'open-manual-gestor' ? ' sidebar-action-btn-active' : ''}`}
+                className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                  selectedSidebarButton === 'open-manual-gestor' ? ' sidebar-action-btn-active' : ''
+                }`}
                 onClick={() => handleButtonClick('open-manual-gestor')}
               >
                 {selectedSidebarButton === 'open-manual-gestor' && (
                   <span className="sidebar-nav-check" aria-hidden>✓</span>
                 )}
-                <span style={{ display: 'inline-block', marginRight: '8px' }}>📖</span>
-                {(safeT as any)?.manualUsoGestorNonatoService || 'MANUAL DE USO DO GESTOR NONATO SERVICE'}
+                <span className="sidebar-empresa-entry-row">
+                  <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                    📖
+                  </span>
+                  <span className="sidebar-empresa-entry-text">
+                    <span className="sidebar-empresa-entry-title">
+                      {(safeT as any)?.manualUsoGestorNonatoService || 'MANUAL DE USO DO GESTOR NONATO SERVICE'}
+                    </span>
+                    <span className="sidebar-empresa-entry-sub">
+                      {resolveActionCardDescription(
+                        trCardDesc,
+                        'open-manual-gestor',
+                        'open-manual-gestor',
+                        pickTrChain(trCardDesc, ['mainHubCardHint'])
+                      )}
+                    </span>
+                  </span>
+                </span>
+                <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                  ›
+                </span>
               </button>
             </div>
           )}
@@ -57718,28 +58037,61 @@ A1;Peça exemplo;10`}
                 {isSelected && (
                   <span className="sidebar-nav-check" aria-hidden>✓</span>
                 )}
-                <span style={{ 
-                  display: 'inline-block', 
-                  marginRight: '8px',
-                  animation: 'lockPulse 2s ease-in-out infinite'
-                }}>
-                  🔒
+                <span className="sidebar-nav-label sidebar-nav-label--stacked" style={{ flex: 1, minWidth: 0 }}>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      flexShrink: 0,
+                      animation: 'lockPulse 2s ease-in-out infinite'
+                    }}
+                    aria-hidden
+                  >
+                    🔒
+                  </span>
+                  <span className="sidebar-nav-label-stack">
+                    <span className="sidebar-nav-label-text">{getButtonName(adminBtn)}</span>
+                    <span className="sidebar-nav-label-sub">
+                      {pickTrChain(trCardDesc, ['administradorGeralDesc']) || ''}
+                    </span>
+                  </span>
                 </span>
-                {getButtonName(adminBtn)}
-                <span className="sidebar-nav-chevron" aria-hidden style={{ marginLeft: 'auto' }}>{expandedGroups.has('admin-main') ? '▼' : '▶'}</span>
+                <span className="sidebar-nav-chevron" aria-hidden style={{ marginLeft: 'auto' }}>
+                  {expandedGroups.has('admin-main') ? '▼' : '▶'}
+                </span>
               </button>
               {expandedGroups.has('admin-main') && canAccessAction(adminBtn.action) && (
                 <div className="sidebar-action-buttons">
                   <button
                     type="button"
-                    className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
+                    className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                      isSelected ? ' sidebar-action-btn-active' : ''
+                    }`}
                     data-sidebar-nav-action={adminBtn.action}
                     onClick={() => handleButtonClick(adminBtn.action)}
                   >
                     {isSelected && (
                       <span className="sidebar-nav-check" aria-hidden>✓</span>
                     )}
-                    {getButtonName(adminBtn)}
+                    <span className="sidebar-empresa-entry-row">
+                      <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                        🔒
+                      </span>
+                      <span className="sidebar-empresa-entry-text">
+                        <span className="sidebar-empresa-entry-title">{getButtonName(adminBtn)}</span>
+                        <span className="sidebar-empresa-entry-sub">
+                          {resolveActionCardDescription(
+                            trCardDesc,
+                            adminBtn.id,
+                            adminBtn.action,
+                            pickTrChain(trCardDesc, ['mainHubCardHint'])
+                          )}
+                        </span>
+                      </span>
+                    </span>
+                    <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                      ›
+                    </span>
                   </button>
                 </div>
               )}

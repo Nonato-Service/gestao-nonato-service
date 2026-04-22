@@ -101,6 +101,7 @@ export const translations = {
     ferias: 'Férias',
     resumoMes: 'Resumo do mês',
     extras: 'EXTRAS', // Mantido para compatibilidade
+    sidebarGroupExtraDesc: 'Tradutor, manual do gestor, demonstrações e ferramentas auxiliares.',
     administrador: 'ADMINISTRADOR',
     adminPanelIndexTitle: 'Áreas do administrador',
     adminPanelIndexLead:
@@ -2001,6 +2002,7 @@ export const translations = {
     cadastroServicos: 'Cadastro de Serviços / Valores',
     cadastroServicosSubtitle: 'Gerenciamento de Serviços',
     gestaoTecnicaTitle: 'GESTÃO TÉCNICA',
+    sidebarGroupGestaoTecnicaDesc: 'Clientes, relatórios, agenda, peças, serviços e operação técnica.',
     gestaoCustosTitle: 'ORÇAMENTOS / CUSTOS',
     fechamentoRelatoriosServicosTitle: 'FECHAMENTO DOS RELATÓRIOS DE SERVIÇOS',
     fechamentoRelatoriosServicosDesc: 'Consulte e feche os relatórios de serviço. Use o botão acima para abrir o módulo de Relatório de Serviço e gerir ou gerar PDFs.',
@@ -2076,6 +2078,7 @@ export const translations = {
     voltarLista: 'Voltar à lista',
     outroItem: 'Outro item',
     gestaoIndustrialTitle: 'GESTÃO INDUSTRIAL',
+    sidebarGroupGestaoIndustrialDesc: 'Equipamentos, famílias, desmontados e ligação aos checklists.',
     manuaisInformacoesTecnicasTitle: 'MANUAIS E INFORMAÇÕES TÉCNICA DOS EQUIPAMENTOS',
     manuaisInformacoesTecnicasDesc: 'Acesso a manuais e informações técnicas dos equipamentos',
     manuaisInformacoesTecnicasConteudo: 'Conteúdo de manuais e informações técnicas dos equipamentos. Utilize o cadastro de equipamentos para associar manuais e documentação.',
@@ -2920,6 +2923,7 @@ export const translations = {
     ferias: 'Vacaciones',
     resumoMes: 'Resumen del mes',
     extras: 'EXTRAS', // Mantido para compatibilidad
+    sidebarGroupExtraDesc: 'Traductor, manual del gestor, demostraciones y herramientas auxiliares.',
     administrador: 'ADMINISTRADOR',
     adminPanelIndexTitle: 'Áreas del administrador',
     adminPanelIndexLead:
@@ -4569,6 +4573,7 @@ export const translations = {
     cadastroServicos: 'Registro de Servicios / Valores',
     cadastroServicosSubtitle: 'Gestión de Servicios',
     gestaoTecnicaTitle: 'GESTIÓN TÉCNICA',
+    sidebarGroupGestaoTecnicaDesc: 'Clientes, informes, agenda, piezas, servicios y operación técnica.',
     gestaoCustosTitle: 'PRESUPUESTOS / COSTOS',
     registroDespesasTitle: 'REGISTRO DE GASTOS',
     registroDespesasDesc: 'Escanee códigos de barras, haga fotos y vincule gastos a informes de servicio y clientes.',
@@ -4627,6 +4632,7 @@ export const translations = {
     dataFim: 'Fecha fin',
     outroItem: 'Otro item',
     gestaoIndustrialTitle: 'GESTIÓN INDUSTRIAL',
+    sidebarGroupGestaoIndustrialDesc: 'Equipos, familias, desmontados y enlace con listas de verificación.',
     manuaisInformacoesTecnicasTitle: 'MANUALES E INFORMACIÓN TÉCNICA DE LOS EQUIPOS',
     manuaisInformacoesTecnicasDesc: 'Acceso a manuales e información técnica de los equipos',
     manuaisInformacoesTecnicasConteudo: 'Contenido de manuales e información técnica de los equipos. Utilice el registro de equipos para asociar manuales y documentación.',
@@ -5418,6 +5424,7 @@ export const translations = {
     ferias: 'Vacances',
     resumoMes: 'Résumé du mois',
     extras: 'EXTRAS', // Conservé pour compatibilité
+    sidebarGroupExtraDesc: 'Traducteur, manuel du gestionnaire, démonstrations et outils complémentaires.',
     administrador: 'ADMINISTRATEUR',
     adminPanelIndexTitle: 'Zones administrateur',
     adminPanelIndexLead:
@@ -7054,6 +7061,7 @@ export const translations = {
     cadastroServicos: 'Enregistrement des Services / Valeurs',
     cadastroServicosSubtitle: 'Gestion des Services',
     gestaoTecnicaTitle: 'GESTION TECHNIQUE',
+    sidebarGroupGestaoTecnicaDesc: 'Clients, rapports, agenda, pièces, services et exploitation technique.',
     gestaoCustosTitle: 'DEVIS / COÛTS',
     registroDespesasTitle: 'REGISTRE DES DÉPENSES',
     registroDespesasDesc: 'Scannez les codes-barres, photographiez et liez les dépenses aux rapports de service et aux clients.',
@@ -7112,6 +7120,7 @@ export const translations = {
     dataFim: 'Date fin',
     outroItem: 'Autre article',
     gestaoIndustrialTitle: 'GESTION INDUSTRIELLE',
+    sidebarGroupGestaoIndustrialDesc: 'Équipements, familles, démontés et lien avec les checklists.',
     manuaisInformacoesTecnicasTitle: 'MANUELS ET INFORMATIONS TECHNIQUES DES ÉQUIPEMENTS',
     manuaisInformacoesTecnicasDesc: 'Accès aux manuels et informations techniques des équipements',
     manuaisInformacoesTecnicasConteudo: 'Contenu des manuels et informations techniques des équipements. Utilisez l\'enregistrement des équipements pour associer manuels et documentation.',
@@ -7906,6 +7915,7 @@ export const translations = {
     ferias: 'Ferie',
     resumoMes: 'Riepilogo del mese',
     extras: 'EXTRAS', // Mantenuto per compatibilità
+    sidebarGroupExtraDesc: 'Traduttore, manuale del gestore, dimostrazioni e strumenti di supporto.',
     administrador: 'AMMINISTRATORE',
     adminPanelIndexTitle: 'Aree amministratore',
     adminPanelIndexLead:
@@ -9547,6 +9557,7 @@ export const translations = {
     cadastroServicos: 'Registro Servizi / Valori',
     cadastroServicosSubtitle: 'Gestione Servizi',
     gestaoTecnicaTitle: 'GESTIONE TECNICA',
+    sidebarGroupGestaoTecnicaDesc: 'Clienti, rapporti, agenda, ricambi, servizi e operatività tecnica.',
     gestaoCustosTitle: 'PREVENTIVI / COSTI',
     registroDespesasTitle: 'REGISTRO SPESE',
     registroDespesasDesc: 'Scansiona codici a barre, fotografa e collega le spese ai rapporti di servizio e ai clienti.',
@@ -9577,6 +9588,7 @@ export const translations = {
     abrirBibliotecaRelatorios: 'Apri Biblioteca rapporti',
     visualizarDespesasBiblioteca: 'Visualizza',
     gestaoIndustrialTitle: 'GESTIONE INDUSTRIALE',
+    sidebarGroupGestaoIndustrialDesc: 'Attrezzature, famiglie, smontati e collegamento alle checklist.',
     manuaisInformacoesTecnicasTitle: 'MANUALI E INFORMAZIONI TECNICHE DELLE ATTREZZATURE',
     manuaisInformacoesTecnicasDesc: 'Accesso a manuali e informazioni tecniche delle attrezzature',
     manuaisInformacoesTecnicasConteudo: 'Contenuto di manuali e informazioni tecniche delle attrezzature. Utilizzare la scheda attrezzature per associare manuali e documentazione.',
@@ -10396,6 +10408,7 @@ export const translations = {
     ferias: 'Urlaub',
     resumoMes: 'Monatsübersicht',
     extras: 'EXTRAS', // Beibehalten für Kompatibilität
+    sidebarGroupExtraDesc: 'Übersetzer, Manager-Handbuch, Demonstrationen und Hilfswerkzeuge.',
     administrador: 'ADMINISTRATOR',
     adminPanelIndexTitle: 'Administratorbereiche',
     adminPanelIndexLead:
@@ -12053,6 +12066,7 @@ export const translations = {
     cadastroServicos: 'Service-Registrierung / Werte',
     cadastroServicosSubtitle: 'Serviceverwaltung',
     gestaoTecnicaTitle: 'TECHNISCHE VERWALTUNG',
+    sidebarGroupGestaoTecnicaDesc: 'Kunden, Berichte, Agenda, Teile, Leistungen und technischer Betrieb.',
     gestaoCustosTitle: 'ANGEBOTE / KOSTEN',
     registroDespesasTitle: 'AUSGABENERFASSUNG',
     registroDespesasDesc: 'Barcodes scannen, Fotos machen und Ausgaben mit Serviceberichten und Kunden verknüpfen.',
@@ -12083,6 +12097,7 @@ export const translations = {
     abrirBibliotecaRelatorios: 'Bibliothek öffnen',
     visualizarDespesasBiblioteca: 'Anzeigen',
     gestaoIndustrialTitle: 'INDUSTRIEVERWALTUNG',
+    sidebarGroupGestaoIndustrialDesc: 'Geräte, Familien, Demontagen und Anbindung an Checklisten.',
     manuaisInformacoesTecnicasTitle: 'HANDBÜCHER UND TECHNISCHE INFORMATIONEN DER GERÄTE',
     manuaisInformacoesTecnicasDesc: 'Zugang zu Handbüchern und technischen Informationen der Geräte',
     manuaisInformacoesTecnicasConteudo: 'Inhalt von Handbüchern und technischen Informationen der Geräte. Nutzen Sie die Geräteerfassung, um Handbücher und Dokumentation zuzuordnen.',
@@ -12857,6 +12872,7 @@ export const translations = {
     ferias: 'Vacation',
     resumoMes: 'Monthly summary',
     extras: 'EXTRAS', // Kept for compatibility
+    sidebarGroupExtraDesc: 'Translator, manager manual, demonstrations and supporting tools.',
     administrador: 'ADMINISTRATOR',
     adminPanelIndexTitle: 'Administrator areas',
     adminPanelIndexLead:
@@ -14591,6 +14607,7 @@ export const translations = {
     cadastroServicos: 'Service Registration / Values',
     cadastroServicosSubtitle: 'Service Management',
     gestaoTecnicaTitle: 'TECHNICAL MANAGEMENT',
+    sidebarGroupGestaoTecnicaDesc: 'Clients, reports, agenda, parts, services and day-to-day technical work.',
     gestaoCustosTitle: 'QUOTES / COSTS',
     registroDespesasTitle: 'EXPENSE RECORD',
     registroDespesasDesc: 'Scan barcodes, take photos and link expenses to service reports and clients.',
@@ -14621,6 +14638,7 @@ export const translations = {
     abrirBibliotecaRelatorios: 'Open Reports Library',
     visualizarDespesasBiblioteca: 'View',
     gestaoIndustrialTitle: 'INDUSTRIAL MANAGEMENT',
+    sidebarGroupGestaoIndustrialDesc: 'Equipment, families, dismantled units and link to checklists.',
     manuaisInformacoesTecnicasTitle: 'MANUALS AND TECHNICAL INFORMATION OF EQUIPMENT',
     manuaisInformacoesTecnicasDesc: 'Access to manuals and technical information of equipment',
     manuaisInformacoesTecnicasConteudo: 'Content of manuals and technical information of equipment. Use the equipment register to associate manuals and documentation.',
