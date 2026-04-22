@@ -4071,6 +4071,16 @@ body {
   color: var(--ns-text);
 }
 
+/* Área central (programas / dashboard / dock de abas): preto sólido. A barra lateral (.sidebar) mantém o gradiente próprio. */
+.main-app-column {
+  background: #000000 !important;
+}
+.main-content-area,
+.tab-inner-scroll {
+  background-color: #000000 !important;
+  background-image: none !important;
+}
+
 .container,
 .modal,
 .logo-container,
