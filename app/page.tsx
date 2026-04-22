@@ -3583,7 +3583,31 @@ export default function Dashboard() {
       'cadastro-nonato-service': ['cadastroNonatoServiceSubtitle', 'cadastroNonatoServiceInfo'],
       'ficha-cadastral': ['fichaCadastralSubtitle'],
       translator: ['quickAccessTranslatorDesc'],
-      'checklist-hub': ['quickAccessChecklistHubDesc']
+      'checklist-hub': ['quickAccessChecklistHubDesc'],
+      agenda: ['quickAccessAgendaDesc'],
+      'estado-visual-tecnico': ['estadoVisualHubCardDesc'],
+      'relatorios-excluidos-clientes': ['relatoriosExcluidosClientesDesc'],
+      'fechamento-relatorios-servicos': ['fechamentoRelatoriosServicosDesc'],
+      'orcamentos-avulso': ['orcamentosAvulsoHubCardDesc'],
+      'pedido-orcamentos-avulso': ['pedidoOrcamentosAvulsoHubCardDesc'],
+      'registro-despesas': ['registroDespesasDesc'],
+      'mapa-visual-separacao-pecas': ['mapaVisualSeparacaoPecasHubCardDesc'],
+      'clientes-financeiro': ['clientesFinanceiroHubCardDesc'],
+      'comprovantes-despesas': ['comprovantesDespesasDesc'],
+      'mensagens-internas': ['mensagensInternasHubCardDesc'],
+      'mensagens-internas-tecnicos': ['mensagensInternasTecnicosHubCardDesc'],
+      'alerta-mensagens': ['alertaMensagensDesc'],
+      'gestao-grupos-checklist': ['gestaoGruposChecklistDesc'],
+      'ordem-preparacao': ['ordemPreparacaoDesc'],
+      'formularios-checklist-tecnicos': ['formulariosChecklistTecnicosDesc'],
+      'verificacao-final-entrega': ['verificacaoFinalEntregaDesc'],
+      'gestao-demos': ['adminJumpDemosDesc'],
+      'familias-grupos': ['familiasGruposDesc'],
+      'familias-grupos-equipamentos': ['familiasGruposEquipamentosHubCardDesc'],
+      'pre-checklist': ['preChecklistDesc'],
+      checklist: ['checklistDesc'],
+      administrador: ['administradorGeralDesc'],
+      'informacoes-conhecimento-tecnicos': ['informacoesConhecimentoTecnicosDesc'],
     }
     const keys = introKeyMap[type]
     const txt = keys ? pick(keys) : ''
@@ -52034,14 +52058,69 @@ A1;Peça exemplo;10`}
     type HubRow = { key: string; title: string; desc: string; icon: string; action: string; buttonId?: string }
     const rows: HubRow[] = []
 
-    if (hubId === 'gestao-tecnica') {
-      const pickHubTr = (keys: readonly string[]) => {
-        for (const k of keys) {
-          const v = tr[k]
-          if (typeof v === 'string' && v.trim().length > 0) return v.trim()
-        }
-        return ''
+    const pickHubLine = (keys: readonly string[]) => {
+      for (const k of keys) {
+        const v = tr[k]
+        if (typeof v === 'string' && v.trim().length > 0) return v.trim()
       }
+      return ''
+    }
+    const hubCardDescByButtonId: Record<string, readonly string[]> = {
+      'gestores-default': ['gestoresSubtitle'],
+      'clientes-default': ['clientesSubtitle'],
+      'fornecedores-default': ['fornecedoresSubtitle'],
+      'relatorio-servico-default': ['relatorioServicoSubtitle'],
+      'biblioteca-relatorios-default': ['quickAccessBibliotecaRelatoriosDesc'],
+      'relatorios-excluidos-clientes-default': ['relatoriosExcluidosClientesDesc'],
+      'biblioteca-pecas-default': ['quickAccessBibliotecaPecasDesc'],
+      'agenda-default': ['quickAccessAgendaDesc'],
+      'diario-pedidos-dia-default': ['diarioPedidosHubCardDesc'],
+      'estado-visual-tecnico-default': ['estadoVisualHubCardDesc'],
+      'informacoes-conhecimento-tecnicos-default': ['informacoesConhecimentoTecnicosDesc'],
+      'cadastro-servicos-default': ['cadastroServicosSubtitle'],
+      'fechamento-relatorios-servicos-default': ['fechamentoRelatoriosServicosDesc'],
+      'orcamentos-avulso-default': ['orcamentosAvulsoHubCardDesc'],
+      'pedido-orcamentos-avulso-default': ['pedidoOrcamentosAvulsoHubCardDesc'],
+      'orcamento-servico-tecnico-default': ['orcamentoServicoTecnicoSubtitle'],
+      'registro-despesas-default': ['registroDespesasDesc'],
+      'mapa-visual-separacao-pecas-default': ['mapaVisualSeparacaoPecasHubCardDesc'],
+      'checklist-group-default': ['quickAccessChecklistHubDesc'],
+      'familias-grupos-equipamentos-default': ['familiasGruposEquipamentosHubCardDesc'],
+      'equipamentos-default': ['equipamentosSubtitle'],
+      'desmontados-default': ['desmontadosSubtitle'],
+      'familias-grupos-default': ['familiasGruposDesc'],
+      'pre-checklist-default': ['preChecklistDesc'],
+      'checklist-default': ['checklistDesc'],
+      'verificacao-final-entrega-default': ['verificacaoFinalEntregaDesc'],
+      'gestao-grupos-checklist-default': ['gestaoGruposChecklistDesc'],
+      'ordem-preparacao-default': ['ordemPreparacaoDesc'],
+      'formularios-checklist-tecnicos-default': ['formulariosChecklistTecnicosDesc'],
+      'hub-comunicacao-default': ['hubComunicacaoDesc'],
+      'mensagens-internas-default': ['mensagensInternasHubCardDesc'],
+      'mensagens-internas-tecnicos-default': ['mensagensInternasTecnicosHubCardDesc'],
+      'alerta-mensagens-default': ['alertaMensagensDesc'],
+      'manuais-informacoes-tecnicas-default': ['manuaisInformacoesTecnicasDesc', 'quickAccessManuaisDesc'],
+      'almoxarifado-armazem-default': ['quickAccessAlmoxarifadoDesc', 'almoxarifadoArmazemDesc'],
+      'administrador-default': ['administradorGeralDesc'],
+      'clientes-financeiro-default': ['clientesFinanceiroHubCardDesc'],
+      'comprovantes-despesas-default': ['comprovantesDespesasDesc'],
+      'open-translator': ['quickAccessTranslatorDesc'],
+      'open-manual-gestor': ['manualUsoGestorHubCardDesc'],
+    }
+    const hubCardDescByAction: Record<string, readonly string[]> = {
+      'open-gestao-demos': ['adminJumpDemosDesc'],
+    }
+    const descForHubRow = (buttonId: string | undefined, action?: string) => {
+      const fromId = pickHubLine(hubCardDescByButtonId[buttonId || ''] || [])
+      if (fromId) return fromId
+      if (action) {
+        const fromAction = pickHubLine(hubCardDescByAction[action] || [])
+        if (fromAction) return fromAction
+      }
+      return cardHint
+    }
+
+    if (hubId === 'gestao-tecnica') {
       const gestaoTecnicaHubIcon: Record<string, string> = {
         'gestores-default': '🧑‍💼',
         'clientes-default': '👥',
@@ -52056,32 +52135,16 @@ A1;Peça exemplo;10`}
         'informacoes-conhecimento-tecnicos-default': '🧠',
         'cadastro-servicos-default': '💼',
       }
-      const gestaoTecnicaHubDescKeys: Record<string, readonly string[]> = {
-        'gestores-default': ['gestoresSubtitle'],
-        'clientes-default': ['clientesSubtitle'],
-        'fornecedores-default': ['fornecedoresSubtitle'],
-        'relatorio-servico-default': ['relatorioServicoSubtitle'],
-        'biblioteca-relatorios-default': ['quickAccessBibliotecaRelatoriosDesc'],
-        'relatorios-excluidos-clientes-default': ['relatoriosExcluidosClientesDesc'],
-        'biblioteca-pecas-default': ['quickAccessBibliotecaPecasDesc'],
-        'agenda-default': ['quickAccessAgendaDesc'],
-        'diario-pedidos-dia-default': ['diarioPedidosHubCardDesc'],
-        'estado-visual-tecnico-default': ['estadoVisualHubCardDesc'],
-        'informacoes-conhecimento-tecnicos-default': ['informacoesConhecimentoTecnicosDesc'],
-        'cadastro-servicos-default': ['cadastroServicosSubtitle'],
-      }
       const sorted = [...getButtonsByGroup('gestao-tecnica')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       for (const button of sorted) {
         const perm =
           button.id === 'biblioteca-pecas-default' ? canAccessAction('open-biblioteca-pecas') : canAccessAction(button.action)
         if (!perm) continue
         const action = button.id === 'biblioteca-pecas-default' ? 'open-biblioteca-hub' : button.action
-        const descKeys = gestaoTecnicaHubDescKeys[button.id || ''] || []
-        const descLine = pickHubTr(descKeys) || cardHint
         rows.push({
           key: button.id,
           title: getButtonName(button),
-          desc: descLine,
+          desc: descForHubRow(button.id, button.action),
           icon: gestaoTecnicaHubIcon[button.id || ''] || '▸',
           action,
           buttonId: button.id
@@ -52091,25 +52154,53 @@ A1;Peça exemplo;10`}
       const sorted = [...getButtonsByGroup(hubId as SidebarGroup)].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       for (const button of sorted) {
         if (!canAccessAction(button.action)) continue
-        rows.push({ key: button.id, title: getButtonName(button), desc: cardHint, icon: '▸', action: button.action, buttonId: button.id })
+        rows.push({
+          key: button.id,
+          title: getButtonName(button),
+          desc: descForHubRow(button.id, button.action),
+          icon: '▸',
+          action: button.action,
+          buttonId: button.id
+        })
       }
     } else if (hubId === 'gestao-industrial') {
       const sorted = [...getButtonsByGroup('gestao-industrial')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       for (const button of sorted) {
         if (button.id === 'checklist-group-default') {
           if (canAccessAction(button.action)) {
-            rows.push({ key: button.id, title: getButtonName(button), desc: cardHint, icon: '📋', action: button.action, buttonId: button.id })
+            rows.push({
+              key: button.id,
+              title: getButtonName(button),
+              desc: descForHubRow(button.id, button.action),
+              icon: '📋',
+              action: button.action,
+              buttonId: button.id
+            })
           }
           continue
         }
         if (!canAccessAction(button.action)) continue
-        rows.push({ key: button.id, title: getButtonName(button), desc: cardHint, icon: '🏭', action: button.action, buttonId: button.id })
+        rows.push({
+          key: button.id,
+          title: getButtonName(button),
+          desc: descForHubRow(button.id, button.action),
+          icon: '🏭',
+          action: button.action,
+          buttonId: button.id
+        })
       }
     } else if (hubId === 'checklist-group') {
       const sorted = [...getButtonsByGroup('checklist-group')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       for (const button of sorted) {
         if (!canAccessAction(button.action)) continue
-        rows.push({ key: button.id, title: getButtonName(button), desc: cardHint, icon: '✅', action: button.action, buttonId: button.id })
+        rows.push({
+          key: button.id,
+          title: getButtonName(button),
+          desc: descForHubRow(button.id, button.action),
+          icon: '✅',
+          action: button.action,
+          buttonId: button.id
+        })
       }
     } else if (hubId === 'comunicacao-interna') {
       const defs: Array<{ id: string; action: string; translationKey: string }> = [
@@ -52129,14 +52220,21 @@ A1;Peça exemplo;10`}
           translationKey: d.translationKey,
           group: 'comunicacao-interna'
         }
-        rows.push({ key: d.id, title: getButtonName(button), desc: cardHint, icon: '💬', action: d.action, buttonId: d.id })
+        rows.push({
+          key: d.id,
+          title: getButtonName(button),
+          desc: descForHubRow(d.id, d.action),
+          icon: '💬',
+          action: d.action,
+          buttonId: d.id
+        })
       }
     } else if (hubId === 'protocolos-main') {
       if (canAccessAction('open-protocolos-servico')) {
         rows.push({
           key: 'protocolos-servico',
           title: (tr as any).protocolosServicoTitle || 'Protocolos de serviço',
-          desc: cardHint,
+          desc: pickHubLine(['protocolosServicoDesc']) || cardHint,
           icon: '📑',
           action: 'open-protocolos-servico'
         })
@@ -52146,7 +52244,7 @@ A1;Peça exemplo;10`}
         rows.push({
           key: 'manual-programa',
           title: (tr as any).manualProgramaTitle || 'Manual do programa',
-          desc: cardHint,
+          desc: pickHubLine(['manualProgramaSubtitle']) || cardHint,
           icon: '📘',
           action: 'open-manual-programa'
         })
@@ -52154,12 +52252,26 @@ A1;Peça exemplo;10`}
     } else if (hubId === 'manuais-informacoes-main') {
       const bb = sidebarButtons.find((b) => b.id === 'manuais-informacoes-tecnicas-default')
       if (bb && canAccessAction(bb.action)) {
-        rows.push({ key: bb.id, title: getButtonName(bb), desc: cardHint, icon: '📖', action: bb.action, buttonId: bb.id })
+        rows.push({
+          key: bb.id,
+          title: getButtonName(bb),
+          desc: descForHubRow(bb.id, bb.action),
+          icon: '📖',
+          action: bb.action,
+          buttonId: bb.id
+        })
       }
     } else if (hubId === 'almoxarifado-main') {
       const bb = sidebarButtons.find((b) => b.id === 'almoxarifado-armazem-default')
       if (bb && canAccessAction(bb.action)) {
-        rows.push({ key: bb.id, title: getButtonName(bb), desc: cardHint, icon: '📦', action: bb.action, buttonId: bb.id })
+        rows.push({
+          key: bb.id,
+          title: getButtonName(bb),
+          desc: descForHubRow(bb.id, bb.action),
+          icon: '📦',
+          action: bb.action,
+          buttonId: bb.id
+        })
       }
     } else if (
       (hubId === 'empresa-institucional-main' || hubId === 'cadastro-nonato-main' || hubId === 'empresa-institucional') &&
@@ -52209,17 +52321,30 @@ A1;Peça exemplo;10`}
           group: 'outros' as SidebarGroup
         } as SidebarButton)
       if (canAccessAction(adminBtn.action)) {
-        rows.push({ key: adminBtn.id, title: getButtonName(adminBtn), desc: cardHint, icon: '🔒', action: adminBtn.action, buttonId: adminBtn.id })
+        rows.push({
+          key: adminBtn.id,
+          title: getButtonName(adminBtn),
+          desc: descForHubRow(adminBtn.id, adminBtn.action),
+          icon: '🔒',
+          action: adminBtn.action,
+          buttonId: adminBtn.id
+        })
       }
     } else if (hubId === 'extra' && !isDemoMode) {
       if (canAccessAction('open-translator')) {
-        rows.push({ key: 'open-translator', title: tr.translator || 'Tradutor', desc: cardHint, icon: '🌐', action: 'open-translator' })
+        rows.push({
+          key: 'open-translator',
+          title: tr.translator || 'Tradutor',
+          desc: descForHubRow('open-translator', 'open-translator'),
+          icon: '🌐',
+          action: 'open-translator'
+        })
       }
       if (canAccessAction('open-manual-gestor')) {
         rows.push({
           key: 'open-manual-gestor',
           title: (tr as any).manualUsoGestorNonatoService || 'MANUAL DE USO DO GESTOR',
-          desc: cardHint,
+          desc: descForHubRow('open-manual-gestor', 'open-manual-gestor'),
           icon: '📖',
           action: 'open-manual-gestor'
         })
@@ -52229,7 +52354,14 @@ A1;Peça exemplo;10`}
         if (seen.has(button.action)) continue
         if (!canAccessAction(button.action)) continue
         seen.add(button.action)
-        rows.push({ key: button.id, title: getButtonName(button), desc: cardHint, icon: '⚙️', action: button.action, buttonId: button.id })
+        rows.push({
+          key: button.id,
+          title: getButtonName(button),
+          desc: descForHubRow(button.id, button.action),
+          icon: '⚙️',
+          action: button.action,
+          buttonId: button.id
+        })
       }
     }
 
