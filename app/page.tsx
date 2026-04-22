@@ -199,7 +199,17 @@ type UserFormState = {
   }
 }
 
-type SidebarGroup = 'gestao-tecnica' | 'gestao-custos' | 'gestao-industrial' | 'gestao-financeira' | 'checklist-group' | 'comunicacao-interna' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'outros'
+type SidebarGroup =
+  | 'gestao-tecnica'
+  | 'gestao-custos'
+  | 'gestao-industrial'
+  | 'gestao-financeira'
+  | 'checklist-group'
+  | 'comunicacao-interna'
+  | 'manuais-informacoes-tecnicas'
+  | 'almoxarifado-armazem'
+  | 'empresa-institucional'
+  | 'outros'
 
 type SidebarButton = {
   id: string
@@ -231,6 +241,7 @@ const SIDEBAR_GROUPS: SidebarGroup[] = [
   'manuais-informacoes-tecnicas',
   'almoxarifado-armazem',
   'gestao-financeira',
+  'empresa-institucional',
   'outros',
 ]
 
@@ -340,6 +351,15 @@ function getDefaultSidebarGroup(buttonId: string): SidebarGroup {
   if (['hub-comunicacao-default', 'mensagens-internas-default', 'mensagens-internas-tecnicos-default', 'alerta-mensagens-default'].includes(buttonId)) return 'comunicacao-interna'
   if (['manuais-informacoes-tecnicas-default'].includes(buttonId)) return 'manuais-informacoes-tecnicas'
   if (['almoxarifado-armazem-default'].includes(buttonId)) return 'almoxarifado-armazem'
+  if (
+    [
+      'cadastro-nonato-service-default',
+      'ficha-cadastral-default',
+      'solicitacao-servico-tecnico-default',
+    ].includes(buttonId)
+  ) {
+    return 'empresa-institucional'
+  }
   return 'outros'
 }
 
@@ -6379,10 +6399,10 @@ export default function Dashboard() {
       // Remove customName se o nome corresponde à tradução padrão em pt-BR
       buttons = (Array.isArray(buttons) ? buttons : []).map((b: SidebarButton) => {
         // Mapeamento de IDs para translationKeys e groups padrão
-        const buttonDefaults: { [key: string]: { translationKey: string, group?: 'gestao-tecnica' | 'gestao-custos' | 'gestao-industrial' | 'gestao-financeira' | 'checklist-group' | 'comunicacao-interna' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'outros' } } = {
+        const buttonDefaults: { [key: string]: { translationKey: string, group?: SidebarGroup } } = {
           'extras-default': { translationKey: 'administrador' },
-          'cadastro-nonato-service-default': { translationKey: 'cadastroNonatoServiceTitle', group: 'outros' },
-          'ficha-cadastral-default': { translationKey: 'fichaCadastralTitle', group: 'outros' },
+          'cadastro-nonato-service-default': { translationKey: 'cadastroNonatoServiceTitle', group: 'empresa-institucional' },
+          'ficha-cadastral-default': { translationKey: 'fichaCadastralTitle', group: 'empresa-institucional' },
           'gestores-default': { translationKey: 'gestoresTitle', group: 'gestao-tecnica' },
           'familias-grupos-default': { translationKey: 'familiasGruposTitle', group: 'checklist-group' },
           'familias-grupos-equipamentos-default': { translationKey: 'familiasGruposEquipamentosTitle', group: 'gestao-industrial' },
@@ -6395,7 +6415,7 @@ export default function Dashboard() {
           'fornecedores-default': { translationKey: 'fornecedoresTitle', group: 'gestao-tecnica' },
           'relatorio-servico-default': { translationKey: 'relatorioServicoTitle', group: 'gestao-tecnica' },
           'biblioteca-pecas-default': { translationKey: 'cadastroPecasBibliotecaTitle', group: 'gestao-tecnica' },
-          'solicitacao-servico-tecnico-default': { translationKey: 'solicitacaoServicoTecnicoTitle', group: 'gestao-tecnica' },
+          'solicitacao-servico-tecnico-default': { translationKey: 'solicitacaoServicoTecnicoTitle', group: 'empresa-institucional' },
           'agenda-default': { translationKey: 'agendaTitle', group: 'gestao-tecnica' },
           'diario-pedidos-dia-default': { translationKey: 'diarioPedidosTitle', group: 'gestao-tecnica' },
           'estado-visual-tecnico-default': { translationKey: 'estadoVisualTecnico', group: 'gestao-tecnica' },
@@ -6445,7 +6465,10 @@ export default function Dashboard() {
                                         b.id === 'relatorio-servico-default' || 
                                         b.id === 'biblioteca-pecas-default' || 
                                         b.id === 'agenda-default' ||
-                                        b.id === 'diario-pedidos-dia-default'
+                                        b.id === 'diario-pedidos-dia-default' ||
+                                        b.id === 'solicitacao-servico-tecnico-default' ||
+                                        b.id === 'cadastro-nonato-service-default' ||
+                                        b.id === 'ficha-cadastral-default'
           
           // Se é botão da gestão técnica E o nome corresponde ao padrão, FORÇAR customName = false
           const shouldRemoveCustomName = isGestaoTecnicaButton && isDefaultName
@@ -6518,9 +6541,14 @@ export default function Dashboard() {
         'relatorio-servico-default',
         'biblioteca-relatorios-default',
         'biblioteca-pecas-default',
-        'solicitacao-servico-tecnico-default',
         'agenda-default',
         'diario-pedidos-dia-default'
+      ]
+
+      const empresaInstitucionalButtonIds = [
+        'cadastro-nonato-service-default',
+        'ficha-cadastral-default',
+        'solicitacao-servico-tecnico-default',
       ]
       
       const translationKeys: { [key: string]: string } = {
@@ -6530,13 +6558,18 @@ export default function Dashboard() {
         'relatorio-servico-default': 'relatorioServicoTitle',
         'biblioteca-relatorios-default': 'bibliotecaRelatoriosTitle',
         'biblioteca-pecas-default': 'cadastroPecasBibliotecaTitle',
-        'solicitacao-servico-tecnico-default': 'solicitacaoServicoTecnicoTitle',
         'agenda-default': 'agendaTitle',
         'diario-pedidos-dia-default': 'diarioPedidosTitle',
         'cadastro-servicos-default': 'cadastroServicosTitle',
         'fechamento-relatorios-servicos-default': 'fechamentoRelatoriosServicosTitle',
       }
       
+      const empresaInstitucionalTranslationKeys: { [key: string]: string } = {
+        'cadastro-nonato-service-default': 'cadastroNonatoServiceTitle',
+        'ficha-cadastral-default': 'fichaCadastralTitle',
+        'solicitacao-servico-tecnico-default': 'solicitacaoServicoTecnicoTitle',
+      }
+
       // Atualizar translationKey e customName (mas NÃO forçar group - respeitar escolha do usuário no Organizador)
       buttons = buttons.map((b: SidebarButton) => {
         if (gestaoTecnicaButtonIds.includes(b.id || '')) {
@@ -6545,6 +6578,13 @@ export default function Dashboard() {
             customName: false, // SEMPRE false para permitir tradução
             translationKey: translationKeys[b.id || ''] || b.translationKey
             // group: preservar o que o usuário definiu no Organizador de Botões
+          }
+        }
+        if (empresaInstitucionalButtonIds.includes(b.id || '')) {
+          return {
+            ...b,
+            customName: false,
+            translationKey: empresaInstitucionalTranslationKeys[b.id || ''] || b.translationKey
           }
         }
         if (b.id === 'cadastro-servicos-default' || b.id === 'fechamento-relatorios-servicos-default') {
@@ -6609,6 +6649,21 @@ export default function Dashboard() {
         if (b.id === 'relatorios-excluidos-clientes-default' && b.group !== 'gestao-tecnica') {
           buttonsMigrated = true
           return { ...b, group: 'gestao-tecnica', translationKey: 'relatoriosExcluidosClientesTitle', action: 'open-relatorios-excluidos-clientes' }
+        }
+        return b
+      })
+
+      // Cadastro Nonato, ficha e solicitação de serviço: grupo lógico «Empresa & registos oficiais»
+      buttons = buttons.map((b: SidebarButton) => {
+        if (
+          b.id === 'cadastro-nonato-service-default' ||
+          b.id === 'ficha-cadastral-default' ||
+          b.id === 'solicitacao-servico-tecnico-default'
+        ) {
+          if (b.group !== 'empresa-institucional') {
+            buttonsMigrated = true
+            return { ...b, group: 'empresa-institucional' }
+          }
         }
         return b
       })
@@ -6708,7 +6763,7 @@ export default function Dashboard() {
           action: 'open-cadastro-nonato-service',
           order: 9998, // Acima do Extras (9999)
           translationKey: 'cadastroNonatoServiceTitle',
-          group: 'outros'
+          group: 'empresa-institucional'
         }
         buttons.push(cadastroNonatoButton)
         saveData('nonato-sidebar-buttons', buttons).then(() => {
@@ -6724,7 +6779,7 @@ export default function Dashboard() {
           action: 'open-ficha-cadastral',
           order: 10000, // Abaixo dos Extras (9999)
           translationKey: 'fichaCadastralTitle',
-          group: 'outros'
+          group: 'empresa-institucional'
         }
         buttons.push(fichaCadastralButton)
         saveData('nonato-sidebar-buttons', buttons)
@@ -7032,7 +7087,7 @@ export default function Dashboard() {
           action: 'open-solicitacao-servico-tecnico',
           order: buttons.length,
           translationKey: 'solicitacaoServicoTecnicoTitle',
-          group: 'gestao-tecnica'
+          group: 'empresa-institucional'
         }
         buttons.push(solicitacaoServicoTecnicoButton)
       }
@@ -7431,7 +7486,7 @@ export default function Dashboard() {
           action: 'open-cadastro-nonato-service',
           order: 9998,
           translationKey: 'cadastroNonatoServiceTitle',
-          group: 'outros'
+          group: 'empresa-institucional'
         })
       }
       const hasFichaCadastralAfter = filteredButtons.some((b: SidebarButton) => b.id === 'ficha-cadastral-default')
@@ -7442,7 +7497,7 @@ export default function Dashboard() {
           action: 'open-ficha-cadastral',
           order: 10000,
           translationKey: 'fichaCadastralTitle',
-          group: 'outros'
+          group: 'empresa-institucional'
         })
       }
       if (!hasGestoresAfter) {
@@ -7530,7 +7585,7 @@ export default function Dashboard() {
           action: 'open-solicitacao-servico-tecnico',
           order: filteredButtons.length,
           translationKey: 'solicitacaoServicoTecnicoTitle',
-          group: 'gestao-tecnica'
+          group: 'empresa-institucional'
         })
       }
       if (!hasAgendaAfter) {
@@ -51876,7 +51931,7 @@ A1;Peça exemplo;10`}
     action: 'open-cadastro-nonato-service',
     order: 1,
     translationKey: 'cadastroNonatoServiceTitle',
-    group: 'outros'
+    group: 'empresa-institucional'
   }
 
   // Função para obter os botões de cada grupo
@@ -51887,7 +51942,11 @@ A1;Peça exemplo;10`}
       .filter((btn) => isActionVisibleInDemo(btn.action))
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 
-    if (!isDemoMode && group === 'outros' && !normalized.some((b) => b.id === 'cadastro-nonato-service-default')) {
+    if (
+      !isDemoMode &&
+      group === 'empresa-institucional' &&
+      !normalized.some((b) => b.id === 'cadastro-nonato-service-default')
+    ) {
       return [cadastroNonatoServiceButton, ...normalized]
     }
     return normalized
@@ -51911,6 +51970,8 @@ A1;Peça exemplo;10`}
         return (safeT as any)?.manuaisInformacoesTecnicasTitle || 'MANUAIS E INFORMAÇÕES TÉCNICAS'
       case 'almoxarifado-armazem':
         return (safeT as any)?.almoxarifadoArmazemTitle || 'ALMOXARIFADO / ARMAZÉM'
+      case 'empresa-institucional':
+        return (safeT as any)?.empresaInstitucionalTitle || 'EMPRESA & REGISTOS OFICIAIS'
       default:
         return safeT?.outrosBotoes || 'OUTROS'
     }
@@ -51927,8 +51988,9 @@ A1;Peça exemplo;10`}
         return (t as any).manuaisInformacoesTecnicasTitle || 'Manuais e informações técnicas'
       case 'almoxarifado-main':
         return (t as any).almoxarifadoArmazemTitle || 'Almoxarifado / Armazém'
+      case 'empresa-institucional-main':
       case 'cadastro-nonato-main':
-        return t.cadastroNonatoServiceTitle || 'CADASTRO DA NONATO SERVICE'
+        return (t as any).empresaInstitucionalTitle || t.cadastroNonatoServiceTitle || 'EMPRESA & REGISTOS OFICIAIS'
       case 'admin-main':
         return t.administrador || 'ADMINISTRADOR'
       case 'extra':
@@ -52050,23 +52112,28 @@ A1;Peça exemplo;10`}
       if (bb && canAccessAction(bb.action)) {
         rows.push({ key: bb.id, title: getButtonName(bb), desc: cardHint, icon: '📦', action: bb.action, buttonId: bb.id })
       }
-    } else if (hubId === 'cadastro-nonato-main' && !isDemoMode) {
-      if (canAccessAction('open-cadastro-nonato-service')) {
+    } else if (
+      (hubId === 'empresa-institucional-main' || hubId === 'cadastro-nonato-main' || hubId === 'empresa-institucional') &&
+      !isDemoMode
+    ) {
+      const sorted = [...getButtonsByGroup('empresa-institucional')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      const iconFor = (id: string) =>
+        id === 'cadastro-nonato-service-default'
+          ? '📋'
+          : id === 'ficha-cadastral-default'
+            ? '📄'
+            : id === 'solicitacao-servico-tecnico-default'
+              ? '📝'
+              : '🏢'
+      for (const button of sorted) {
+        if (!canAccessAction(button.action)) continue
         rows.push({
-          key: 'cadastro-nonato',
-          title: tr.cadastroNonatoServiceTitle || 'CADASTRO DA NONATO SERVICE',
+          key: button.id,
+          title: getButtonName(button),
           desc: cardHint,
-          icon: '📋',
-          action: 'open-cadastro-nonato-service'
-        })
-      }
-      if (canAccessAction('open-ficha-cadastral')) {
-        rows.push({
-          key: 'ficha-cadastral',
-          title: tr.fichaCadastralTitle || 'FICHA CADASTRAL',
-          desc: cardHint,
-          icon: '📄',
-          action: 'open-ficha-cadastral'
+          icon: iconFor(button.id),
+          action: button.action,
+          buttonId: button.id
         })
       }
     } else if (hubId === 'admin-main' && !isDemoMode) {
@@ -57304,59 +57371,64 @@ A1;Peça exemplo;10`}
           )}
         </div>
 
-        {/* Botão CADASTRO DA NONATO SERVICE — expande para cadastro e ficha */}
-        {!isDemoMode && (
-        <div className="sidebar-nav-cluster">
-          <button
-            type="button"
-            className={`btn-primary sidebar-group-header${
-              selectedSidebarButton === 'open-cadastro-nonato-service' || selectedSidebarButton === 'open-ficha-cadastral'
-                ? ' sidebar-group-btn-selected'
-                : ''
-            }`}
-            onClick={() => toggleOrOpenDashboardHub('cadastro-nonato-main', 'cadastro-nonato-main')}
-          >
-            {(selectedSidebarButton === 'open-cadastro-nonato-service' || selectedSidebarButton === 'open-ficha-cadastral') && (
-              <span className="sidebar-nav-check" aria-hidden>✓</span>
-            )}
-            <span>
-              <span style={{ display: 'inline-block', marginRight: '8px' }}>📋</span>
-              {safeT?.cadastroNonatoServiceTitle || 'CADASTRO DA NONATO SERVICE'}
-            </span>
-            <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('cadastro-nonato-main') ? '▼' : '▶'}</span>
-          </button>
-          {expandedGroups.has('cadastro-nonato-main') && (
-            <div className="sidebar-action-buttons">
-              {canAccessAction('open-cadastro-nonato-service') && (
-                <button
-                  type="button"
-                  className={`btn-primary sidebar-action-btn${selectedSidebarButton === 'open-cadastro-nonato-service' ? ' sidebar-action-btn-active' : ''}`}
-                  data-sidebar-nav-action="open-cadastro-nonato-service"
-                  onClick={() => handleButtonClick('open-cadastro-nonato-service')}
-                >
-                  {selectedSidebarButton === 'open-cadastro-nonato-service' && (
-                    <span className="sidebar-nav-check" aria-hidden>✓</span>
-                  )}
-                  {safeT?.cadastroNonatoServiceTitle || 'CADASTRO DA NONATO SERVICE'}
-                </button>
-              )}
-              {canAccessAction('open-ficha-cadastral') && (
-                <button
-                  type="button"
-                  className={`btn-primary sidebar-action-btn${selectedSidebarButton === 'open-ficha-cadastral' ? ' sidebar-action-btn-active' : ''}`}
-                  data-sidebar-nav-action="open-ficha-cadastral"
-                  onClick={() => handleButtonClick('open-ficha-cadastral')}
-                >
-                  {selectedSidebarButton === 'open-ficha-cadastral' && (
-                    <span className="sidebar-nav-check" aria-hidden>✓</span>
-                  )}
-                  {safeT?.fichaCadastralTitle || 'FICHA CADASTRAL'}
-                </button>
+        {/* Grupo: empresa, cadastros oficiais e solicitação de serviço técnico */}
+        {!isDemoMode &&
+          getButtonsByGroup('empresa-institucional').some((b) => canAccessAction(b.action)) && (
+            <div className="sidebar-nav-cluster">
+              <button
+                type="button"
+                className={`btn-primary sidebar-group-header${
+                  selectedSidebarButton === 'open-cadastro-nonato-service' ||
+                  selectedSidebarButton === 'open-ficha-cadastral' ||
+                  selectedSidebarButton === 'open-solicitacao-servico-tecnico'
+                    ? ' sidebar-group-btn-selected'
+                    : ''
+                }`}
+                onClick={() =>
+                  toggleOrOpenDashboardHub('empresa-institucional-main', 'empresa-institucional-main')
+                }
+              >
+                {(selectedSidebarButton === 'open-cadastro-nonato-service' ||
+                  selectedSidebarButton === 'open-ficha-cadastral' ||
+                  selectedSidebarButton === 'open-solicitacao-servico-tecnico') && (
+                  <span className="sidebar-nav-check" aria-hidden>
+                    ✓
+                  </span>
+                )}
+                <span>
+                  <span style={{ display: 'inline-block', marginRight: '8px' }}>🏢</span>
+                  {(safeT as any)?.empresaInstitucionalTitle ||
+                    safeT?.cadastroNonatoServiceTitle ||
+                    'EMPRESA & REGISTOS OFICIAIS'}
+                </span>
+                <span className="sidebar-nav-chevron" aria-hidden>
+                  {expandedGroups.has('empresa-institucional-main') ? '▼' : '▶'}
+                </span>
+              </button>
+              {expandedGroups.has('empresa-institucional-main') && (
+                <div className="sidebar-action-buttons">
+                  {getButtonsByGroup('empresa-institucional')
+                    .filter((button) => canAccessAction(button.action))
+                    .sort((a, b) => a.order - b.order)
+                    .map((button) => {
+                      const isSelected = selectedSidebarButton === button.action
+                      return (
+                        <button
+                          key={button.id}
+                          type="button"
+                          className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
+                          data-sidebar-nav-action={button.action}
+                          onClick={() => handleButtonClick(button.action, button.id)}
+                        >
+                          {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
+                          {getButtonName(button)}
+                        </button>
+                      )
+                    })}
+                </div>
               )}
             </div>
           )}
-        </div>
-        )}
 
         {/* Grupo: EXTRA */}
         {!isDemoMode && (
@@ -59201,7 +59273,7 @@ A1;Peça exemplo;10`}
                             {!isMainButton && (
                               <select
                                 value={button.group || 'outros'}
-                                onChange={(e) => handleMoveButtonToGroup(button.id, e.target.value as 'gestao-tecnica' | 'gestao-custos' | 'gestao-industrial' | 'gestao-financeira' | 'checklist-group' | 'comunicacao-interna' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'outros')}
+                                onChange={(e) => handleMoveButtonToGroup(button.id, e.target.value as SidebarGroup)}
                                 style={{ 
                                   padding: '6px 10px', 
                                   backgroundColor: '#222222', 
