@@ -1500,6 +1500,99 @@ body,
   color: rgba(220, 252, 231, 0.95);
 }
 
+/* Bloco «Empresa & registos oficiais»: acento violeta / institucional */
+.sidebar-nav-cluster--empresa-institucional {
+  border-color: rgba(167, 139, 250, 0.14);
+  background: linear-gradient(165deg, rgba(14, 10, 22, 0.58) 0%, rgba(6, 8, 14, 0.52) 100%);
+}
+
+.sidebar-nav-cluster--empresa-institucional:has(.sidebar-action-buttons) {
+  border-color: rgba(167, 139, 250, 0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 4px 18px rgba(0, 0, 0, 0.32),
+    0 0 0 1px rgba(139, 92, 246, 0.08);
+}
+
+.sidebar button.sidebar-group-header--empresa-institucional:not(.sidebar-group-btn-selected) {
+  border-left-color: rgba(167, 139, 250, 0.72) !important;
+}
+
+.sidebar button.sidebar-group-header--empresa-institucional:not(.sidebar-group-btn-selected):hover {
+  border-left-color: rgba(196, 181, 253, 0.92) !important;
+}
+
+.sidebar .sidebar-nav-label-sub--empresa {
+  color: rgba(216, 201, 255, 0.62) !important;
+}
+
+.sidebar button.sidebar-group-btn-selected .sidebar-nav-label-sub--empresa {
+  color: rgba(233, 222, 255, 0.82) !important;
+}
+
+.sidebar .sidebar-empresa-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  color: rgba(196, 181, 253, 0.95);
+  filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.22));
+}
+
+.sidebar .sidebar-empresa-icon--compact {
+  color: rgba(196, 181, 253, 0.88);
+  filter: none;
+}
+
+.sidebar .sidebar-action-btn--empresa-entry {
+  min-height: 46px !important;
+  padding: 10px 36px 10px 12px !important;
+}
+
+.sidebar .sidebar-empresa-entry-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.sidebar .sidebar-empresa-entry-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sidebar .sidebar-empresa-entry-title {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  line-height: 1.22 !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sidebar .sidebar-empresa-entry-sub {
+  font-size: 9px !important;
+  font-weight: 500 !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0.02em;
+  text-transform: none !important;
+  color: rgba(226, 232, 255, 0.55) !important;
+}
+
+.sidebar .sidebar-action-btn--empresa-entry.sidebar-action-btn-active .sidebar-empresa-entry-sub {
+  color: rgba(237, 233, 254, 0.78) !important;
+}
+
+.sidebar .sidebar-action-btn--empresa-entry.sidebar-action-btn-active .sidebar-nav-chevron--entry {
+  color: rgba(237, 233, 254, 0.95);
+}
+
 .sidebar-brand {
   flex-shrink: 0;
   margin-bottom: 22px;

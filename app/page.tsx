@@ -6662,7 +6662,15 @@ export default function Dashboard() {
         ) {
           if (b.group !== 'empresa-institucional') {
             buttonsMigrated = true
-            return { ...b, group: 'empresa-institucional' }
+            const ord =
+              b.id === 'cadastro-nonato-service-default'
+                ? 10
+                : b.id === 'ficha-cadastral-default'
+                  ? 20
+                  : b.id === 'solicitacao-servico-tecnico-default'
+                    ? 30
+                    : b.order
+            return { ...b, group: 'empresa-institucional', order: ord }
           }
         }
         return b
@@ -6761,7 +6769,7 @@ export default function Dashboard() {
           id: 'cadastro-nonato-service-default',
           name: 'CADASTRO DA NONATO SERVICE',
           action: 'open-cadastro-nonato-service',
-          order: 9998, // Acima do Extras (9999)
+          order: 10,
           translationKey: 'cadastroNonatoServiceTitle',
           group: 'empresa-institucional'
         }
@@ -6777,7 +6785,7 @@ export default function Dashboard() {
           id: 'ficha-cadastral-default',
           name: 'FICHA CADASTRAL DA NONATO SERVICE',
           action: 'open-ficha-cadastral',
-          order: 10000, // Abaixo dos Extras (9999)
+          order: 20,
           translationKey: 'fichaCadastralTitle',
           group: 'empresa-institucional'
         }
@@ -7085,7 +7093,7 @@ export default function Dashboard() {
           id: 'solicitacao-servico-tecnico-default',
           name: 'SOLICITAÇÃO DE SERVIÇO TÉCNICO',
           action: 'open-solicitacao-servico-tecnico',
-          order: buttons.length,
+          order: 30,
           translationKey: 'solicitacaoServicoTecnicoTitle',
           group: 'empresa-institucional'
         }
@@ -7484,7 +7492,7 @@ export default function Dashboard() {
           id: 'cadastro-nonato-service-default',
           name: 'CADASTRO DA NONATO SERVICE',
           action: 'open-cadastro-nonato-service',
-          order: 9998,
+          order: 10,
           translationKey: 'cadastroNonatoServiceTitle',
           group: 'empresa-institucional'
         })
@@ -7495,7 +7503,7 @@ export default function Dashboard() {
           id: 'ficha-cadastral-default',
           name: 'FICHA CADASTRAL DA NONATO SERVICE',
           action: 'open-ficha-cadastral',
-          order: 10000,
+          order: 20,
           translationKey: 'fichaCadastralTitle',
           group: 'empresa-institucional'
         })
@@ -7583,7 +7591,7 @@ export default function Dashboard() {
           id: 'solicitacao-servico-tecnico-default',
           name: 'SOLICITAÇÃO DE SERVIÇO TÉCNICO',
           action: 'open-solicitacao-servico-tecnico',
-          order: filteredButtons.length,
+          order: 30,
           translationKey: 'solicitacaoServicoTecnicoTitle',
           group: 'empresa-institucional'
         })
@@ -51924,12 +51932,12 @@ A1;Peça exemplo;10`}
     }
   }
 
-  // Botão fixo CADASTRO DA NONATO SERVICE (sempre visível no grupo outros, acima do Extras)
+  // Cadastro Nonato: garantido no grupo «Empresa & registos oficiais» (ordem 10 = primeiro do bloco)
   const cadastroNonatoServiceButton: SidebarButton = {
     id: 'cadastro-nonato-service-default',
     name: 'CADASTRO DA NONATO SERVICE',
     action: 'open-cadastro-nonato-service',
-    order: 1,
+    order: 10,
     translationKey: 'cadastroNonatoServiceTitle',
     group: 'empresa-institucional'
   }
@@ -52018,7 +52026,11 @@ A1;Peça exemplo;10`}
       { border: 'rgba(52, 211, 153, 0.42)', borderH: 'rgba(52, 211, 153, 0.8)', shadow: 'rgba(52, 211, 153, 0.28)', glow: 'rgba(52, 211, 153, 0.14)', title: '#6ee7b7' }
     ]
     const cardHint = (tr as any).mainHubCardHint || 'Abrir no sistema.'
-    const hubIntro = (tr as any).mainHubIntro || tr.welcomeText2 || ''
+    const hubIntroDefault = (tr as any).mainHubIntro || tr.welcomeText2 || ''
+    const hubIntro =
+      hubId === 'empresa-institucional-main' || hubId === 'cadastro-nonato-main' || hubId === 'empresa-institucional'
+        ? ((tr as any).empresaInstitucionalHubIntro as string) || hubIntroDefault
+        : hubIntroDefault
     type HubRow = { key: string; title: string; desc: string; icon: string; action: string; buttonId?: string }
     const rows: HubRow[] = []
 
@@ -52125,12 +52137,24 @@ A1;Peça exemplo;10`}
             : id === 'solicitacao-servico-tecnico-default'
               ? '📝'
               : '🏢'
+      const descEmpresa = (id: string) => {
+        if (id === 'cadastro-nonato-service-default') {
+          return (tr as any).empresaInstHubCardCadastro || cardHint
+        }
+        if (id === 'ficha-cadastral-default') {
+          return (tr as any).empresaInstHubCardFicha || cardHint
+        }
+        if (id === 'solicitacao-servico-tecnico-default') {
+          return (tr as any).empresaInstHubCardSolicitacao || cardHint
+        }
+        return cardHint
+      }
       for (const button of sorted) {
         if (!canAccessAction(button.action)) continue
         rows.push({
           key: button.id,
           title: getButtonName(button),
-          desc: cardHint,
+          desc: descEmpresa(button.id),
           icon: iconFor(button.id),
           action: button.action,
           buttonId: button.id
@@ -57371,13 +57395,13 @@ A1;Peça exemplo;10`}
           )}
         </div>
 
-        {/* Grupo: empresa, cadastros oficiais e solicitação de serviço técnico */}
+        {/* Grupo: empresa e registos oficiais (cadastro, ficha, solicitação) — mesmo rigor visual que Protocolos */}
         {!isDemoMode &&
           getButtonsByGroup('empresa-institucional').some((b) => canAccessAction(b.action)) && (
-            <div className="sidebar-nav-cluster">
+            <div className="sidebar-nav-cluster sidebar-nav-cluster--empresa-institucional">
               <button
                 type="button"
-                className={`btn-primary sidebar-group-header${
+                className={`btn-primary sidebar-group-header sidebar-group-header--empresa-institucional${
                   selectedSidebarButton === 'open-cadastro-nonato-service' ||
                   selectedSidebarButton === 'open-ficha-cadastral' ||
                   selectedSidebarButton === 'open-solicitacao-servico-tecnico'
@@ -57387,6 +57411,8 @@ A1;Peça exemplo;10`}
                 onClick={() =>
                   toggleOrOpenDashboardHub('empresa-institucional-main', 'empresa-institucional-main')
                 }
+                aria-expanded={expandedGroups.has('empresa-institucional-main')}
+                aria-controls="sidebar-empresa-institucional-actions"
               >
                 {(selectedSidebarButton === 'open-cadastro-nonato-service' ||
                   selectedSidebarButton === 'open-ficha-cadastral' ||
@@ -57395,33 +57421,111 @@ A1;Peça exemplo;10`}
                     ✓
                   </span>
                 )}
-                <span>
-                  <span style={{ display: 'inline-block', marginRight: '8px' }}>🏢</span>
-                  {(safeT as any)?.empresaInstitucionalTitle ||
-                    safeT?.cadastroNonatoServiceTitle ||
-                    'EMPRESA & REGISTOS OFICIAIS'}
+                <span className="sidebar-nav-label sidebar-nav-label--stacked">
+                  <span className="sidebar-empresa-icon" aria-hidden>
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        d="M4 21V8l8-4 8 4v13"
+                        stroke="currentColor"
+                        strokeWidth="1.35"
+                        strokeLinejoin="round"
+                      />
+                      <path d="M9 21v-6h6v6" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" />
+                      <path d="M4 13h16" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" />
+                    </svg>
+                  </span>
+                  <span className="sidebar-nav-label-stack">
+                    <span className="sidebar-nav-label-text">
+                      {(safeT as any)?.empresaInstitucionalTitle ||
+                        safeT?.cadastroNonatoServiceTitle ||
+                        'EMPRESA & REGISTOS OFICIAIS'}
+                    </span>
+                    <span className="sidebar-nav-label-sub sidebar-nav-label-sub--empresa">
+                      {(safeT as any)?.empresaInstitucionalSubtitle ||
+                        'Cadastro, ficha oficial e solicitação de assistência'}
+                    </span>
+                  </span>
                 </span>
                 <span className="sidebar-nav-chevron" aria-hidden>
                   {expandedGroups.has('empresa-institucional-main') ? '▼' : '▶'}
                 </span>
               </button>
               {expandedGroups.has('empresa-institucional-main') && (
-                <div className="sidebar-action-buttons">
+                <div
+                  id="sidebar-empresa-institucional-actions"
+                  className="sidebar-action-buttons"
+                  role="region"
+                  aria-label={(safeT as any)?.empresaInstitucionalTitle || 'Empresa e registos oficiais'}
+                >
                   {getButtonsByGroup('empresa-institucional')
                     .filter((button) => canAccessAction(button.action))
                     .sort((a, b) => a.order - b.order)
                     .map((button) => {
                       const isSelected = selectedSidebarButton === button.action
+                      const subKey =
+                        button.id === 'cadastro-nonato-service-default'
+                          ? 'empresaInstSidebarItemCadastro'
+                          : button.id === 'ficha-cadastral-default'
+                            ? 'empresaInstSidebarItemFicha'
+                            : button.id === 'solicitacao-servico-tecnico-default'
+                              ? 'empresaInstSidebarItemSolicitacao'
+                              : null
+                      const sub = subKey ? String((safeT as any)?.[subKey] || '').trim() : ''
                       return (
                         <button
                           key={button.id}
                           type="button"
-                          className={`btn-primary sidebar-action-btn${isSelected ? ' sidebar-action-btn-active' : ''}`}
+                          className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                            isSelected ? ' sidebar-action-btn-active' : ''
+                          }`}
                           data-sidebar-nav-action={button.action}
                           onClick={() => handleButtonClick(button.action, button.id)}
                         >
                           {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
-                          {getButtonName(button)}
+                          <span className="sidebar-empresa-entry-row">
+                            <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                              {button.id === 'cadastro-nonato-service-default' ? (
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path
+                                    d="M4 21V8l8-4 8 4v13"
+                                    stroke="currentColor"
+                                    strokeWidth="1.35"
+                                    strokeLinejoin="round"
+                                  />
+                                  <path d="M9 21v-6h6v6" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" />
+                                </svg>
+                              ) : button.id === 'ficha-cadastral-default' ? (
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path
+                                    d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
+                                    stroke="currentColor"
+                                    strokeWidth="1.35"
+                                    strokeLinejoin="round"
+                                  />
+                                  <path d="M14 2v6h6" stroke="currentColor" strokeWidth="1.35" strokeLinejoin="round" />
+                                  <path d="M8 13h8M8 17h5" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" />
+                                </svg>
+                              ) : (
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path
+                                    d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7l-4-4H9z"
+                                    stroke="currentColor"
+                                    strokeWidth="1.35"
+                                    strokeLinejoin="round"
+                                  />
+                                  <path d="M9 5v4h4" stroke="currentColor" strokeWidth="1.35" strokeLinejoin="round" />
+                                  <path d="M9 14h6M9 17h4" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" />
+                                </svg>
+                              )}
+                            </span>
+                            <span className="sidebar-empresa-entry-text">
+                              <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                              {sub ? <span className="sidebar-empresa-entry-sub">{sub}</span> : null}
+                            </span>
+                          </span>
+                          <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                            ›
+                          </span>
                         </button>
                       )
                     })}
