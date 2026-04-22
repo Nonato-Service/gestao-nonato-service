@@ -30,6 +30,8 @@
   --ns-info-bg-medium: rgba(0, 100, 255, 0.28);
   --ns-info-glow: rgba(102, 179, 255, 0.35);
   --ns-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Micro-interação: ligeiramente «elástico» no hover (botões) */
+  --ns-ease-spring: cubic-bezier(0.34, 1.25, 0.64, 1);
   --ns-shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.35);
 }
 
@@ -212,7 +214,12 @@ body,
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: box-shadow 0.2s ease, filter 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.22s var(--ns-ease-spring),
+    box-shadow 0.22s var(--ns-ease-out),
+    filter 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
   position: relative;
   letter-spacing: 0.5px;
   box-shadow: none;
@@ -229,6 +236,17 @@ body,
 
 .btn-primary:active {
   box-shadow: 0 0 10px rgba(0, 255, 0, 0.25);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Excluir cabeçalhos da sidebar e subitens (têm animação própria) */
+  .btn-primary:hover:not(:disabled):not(.sidebar-group-header):not(.sidebar-action-btn) {
+    transform: translateY(-2px);
+  }
+  .btn-primary:active:not(:disabled):not(.sidebar-group-header):not(.sidebar-action-btn) {
+    transform: translateY(0) scale(0.98);
+    transition-duration: 0.12s;
+  }
 }
 
 /* Compacto: voltar / página inicial (barra de ferramentas) */
@@ -301,12 +319,25 @@ body,
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.18s var(--ns-ease-spring),
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .btn-chip-danger:hover {
   background-color: rgba(255, 68, 68, 0.28);
   box-shadow: 0 0 12px rgba(255, 68, 68, 0.3);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .btn-chip-danger:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+  .btn-chip-danger:active:not(:disabled) {
+    transform: scale(0.97);
+  }
 }
 
 /* Campos escuros alinhados ao tema */
@@ -1686,6 +1717,12 @@ body,
     0 0 30px rgba(52, 211, 153, 0.12) !important;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .sidebar button.btn-primary.sidebar-group-header:not(.sidebar-group-btn-selected):hover {
+    transform: translateY(-1px);
+  }
+}
+
 .sidebar button.btn-primary.sidebar-group-header:not(.sidebar-group-btn-selected):active,
 .sidebar button.btn-administrador.sidebar-group-header:not(.sidebar-group-btn-selected):active {
   transform: scale(0.992);
@@ -1879,6 +1916,12 @@ body,
     0 0 22px rgba(52, 211, 153, 0.07) !important;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .sidebar .sidebar-action-buttons > button.sidebar-action-btn:not(.sidebar-action-btn-active):hover {
+    transform: translateY(-2px);
+  }
+}
+
 /* Submenu ativo */
 .sidebar .sidebar-action-btn.sidebar-action-btn-active {
   border: 1px solid rgba(74, 222, 128, 0.42) !important;
@@ -1915,7 +1958,11 @@ body,
   border: 1px solid rgba(42, 95, 52, 0.78);
   color: #ffffff;
   box-shadow: none;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s var(--ns-ease-spring),
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .sidebar .sidebar-action-buttons > button.btn-primary.sidebar-action-btn {
@@ -1941,6 +1988,15 @@ body,
   color: #ffffff;
   box-shadow: none;
   filter: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sidebar .btn-primary:hover:not(.sidebar-group-header):not(.sidebar-action-btn):not(:disabled) {
+    transform: translateY(-2px);
+  }
+  .sidebar .btn-primary:active:not(.sidebar-group-header):not(.sidebar-action-btn):not(:disabled) {
+    transform: translateY(0) scale(0.99);
+  }
 }
 
 /* Grupo selecionado — acento mais vivo, halo discreto */
@@ -2007,6 +2063,12 @@ body,
   box-shadow: 0 4px 14px rgba(248, 113, 113, 0.12);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .sidebar-logout-btn:hover {
+    transform: translateY(-2px);
+  }
+}
+
 .sidebar-logout-btn:focus-visible {
   outline: 2px solid rgba(248, 113, 113, 0.55);
   outline-offset: 2px;
@@ -2032,6 +2094,24 @@ body,
 
   .sidebar .sidebar-action-buttons,
   .sidebar .sidebar-action-buttons .sidebar-action-buttons {
+    animation: none !important;
+  }
+
+  .btn-primary:hover,
+  .btn-primary:active,
+  .btn-danger:hover,
+  .btn-danger:active,
+  .btn-chip-danger:hover,
+  .btn-chip-danger:active {
+    transform: none !important;
+  }
+
+  .desktop-refresh-safe:hover,
+  .desktop-refresh-safe:active {
+    transform: none !important;
+  }
+
+  .bottom-tab-item.active {
     animation: none !important;
   }
 }
@@ -2226,7 +2306,12 @@ body,
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: box-shadow 0.2s ease, filter 0.2s ease;
+  transition:
+    transform 0.2s var(--ns-ease-spring),
+    box-shadow 0.22s var(--ns-ease-out),
+    filter 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
   width: 100%;
   letter-spacing: 0.5px;
   box-shadow: none;
@@ -2251,7 +2336,13 @@ button.btn-danger.btn-danger--inline {
 }
 
 .btn-danger:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.98);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .btn-danger:hover:not(:disabled) {
+    transform: translateY(-2px);
+  }
 }
 
 @keyframes bottomBarFadeIn {
@@ -3841,6 +3932,15 @@ body {
 .main-content-action-btn:active {
   background: rgba(0, 255, 122, 0.2);
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .main-content-action-btn--home:hover {
+    transform: translateY(-2px);
+  }
+  .main-content-action-btn--home:active {
+    transform: translateY(0) scale(0.97);
+  }
+}
 .main-content-action-btn--home {
   border-color: rgba(120, 185, 255, 0.55);
   color: #d6ecff;
@@ -3976,6 +4076,11 @@ body {
   letter-spacing: 0.3px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.2s var(--ns-ease-spring),
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 .desktop-refresh-safe:hover {
   background: rgba(0, 255, 0, 0.14);
@@ -3983,6 +4088,15 @@ body {
 }
 .desktop-refresh-safe:active {
   background: rgba(0, 255, 0, 0.22);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .desktop-refresh-safe:hover:not(:disabled) {
+    transform: translateY(-2px);
+  }
+  .desktop-refresh-safe:active:not(:disabled) {
+    transform: scale(0.98);
+  }
 }
 .mobile-app-header-title {
   flex: 1;

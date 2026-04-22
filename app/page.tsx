@@ -24241,7 +24241,7 @@ const nextF = familias.filter(x => x !== f)
                           onClick={() => setPasswordForm({ ...passwordForm, password: generatePassword(16) })}
                           style={{ padding: '10px 20px', fontSize: '13px', whiteSpace: 'nowrap' }}
                         >
-                          {safeT?.generatePassword || '🔑 Gerar'}
+                          {safeT?.generatePassword || 'Gerar senha'}
                         </button>
                       </div>
                       <p style={{ fontSize: '11px', opacity: 0.6, marginTop: '5px', marginBottom: 0 }}>
