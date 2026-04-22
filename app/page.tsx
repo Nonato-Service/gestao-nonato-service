@@ -2607,9 +2607,13 @@ export default function Dashboard() {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
         {logoUrl ? (
           logoType === 'video' ? (
-            <video src={logoUrl} autoPlay loop muted style={{ maxWidth: s.container, maxHeight: s.container }} />
+            <div className="ns-logo-in-box" style={{ width: s.container, height: s.container }}>
+              <video src={logoUrl} autoPlay loop muted playsInline />
+            </div>
           ) : (
-            <img src={logoUrl} alt="NONATO SERVICE" style={{ maxWidth: s.container, maxHeight: s.container }} />
+            <div className="ns-logo-in-box" style={{ width: s.container, height: s.container }}>
+              <img src={logoUrl} alt="NONATO SERVICE" />
+            </div>
           )
         ) : (
           <>
@@ -56827,13 +56831,15 @@ A1;Peça exemplo;10`}
         aria-hidden={hideSidebarForEntryDashboard ? true : undefined}
       >
         {/* Logo NONATO SERVICE — logo ocupa 100% do contorno verde, borda mantida */}
-        <div className="sidebar-brand">
+        <div className={`sidebar-brand${logoUrl ? ' sidebar-brand--has-media' : ''}`}>
           {logoUrl ? (
-            logoType === 'video' ? (
-              <video src={logoUrl} autoPlay loop muted style={{ width: '100%', maxHeight: 'min(26vh, 184px)', objectFit: 'contain', display: 'block' }} />
-            ) : (
-              <img src={logoUrl} alt="NONATO SERVICE" style={{ width: '100%', maxHeight: 'min(26vh, 184px)', objectFit: 'contain', display: 'block' }} />
-            )
+            <div className="sidebar-brand-media-wrap">
+              {logoType === 'video' ? (
+                <video src={logoUrl} autoPlay loop muted playsInline />
+              ) : (
+                <img src={logoUrl} alt="NONATO SERVICE" />
+              )}
+            </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', height: '100%', padding: '10px', boxSizing: 'border-box' }}>
               {/* Engrenagens e Círculo */}
