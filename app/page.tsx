@@ -52197,63 +52197,24 @@ A1;Peça exemplo;10`}
     }
 
     return (
-      <div style={{ width: '100%' }}>
-        <div style={{ marginBottom: isCompactLayout ? 16 : 24, display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+      <div className="ns-hub-root">
+        <div className="ns-hub-toolbar">
           <button
             type="button"
-            className="btn-primary"
+            className="btn-primary ns-hub-back-btn"
             onClick={() => setDashboardMainHubId(null)}
-            style={{
-              padding: '10px 18px',
-              fontSize: 13,
-              backgroundColor: '#1a1a1a',
-              border: '1px solid rgba(0, 255, 0, 0.45)',
-              color: '#bfffbf'
-            }}
           >
             {(tr as any).mainHubBackToDashboard || 'Voltar ao painel completo'}
           </button>
         </div>
-        <div
-          style={{
-            textAlign: 'center',
-            marginBottom: isCompactLayout ? 20 : 40,
-            padding: isCompactLayout ? '16px 12px' : '40px 28px',
-            background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.06) 0%, rgba(0, 0, 0, 0.85) 100%)',
-            borderRadius: isCompactLayout ? 12 : 18,
-            border: '2px solid rgba(0, 255, 0, 0.22)',
-            boxShadow: '0 8px 32px rgba(0, 255, 0, 0.08)'
-          }}
-        >
-          <h1
-            style={{
-              fontSize: isCompactLayout ? 20 : 36,
-              fontWeight: 800,
-              color: '#ffffff',
-              marginBottom: 12,
-              letterSpacing: isCompactLayout ? '0.06em' : '0.12em',
-              textTransform: 'uppercase',
-              textShadow: '0 0 18px rgba(0, 255, 0, 0.25)'
-            }}
-          >
-            {getDashboardMainHubTitle(hubId)}
-          </h1>
-          {hubIntro ? (
-            <p style={{ fontSize: isCompactLayout ? 13 : 15, color: 'rgba(200, 255, 210, 0.88)', maxWidth: 720, margin: '0 auto', lineHeight: 1.55 }}>
-              {hubIntro}
-            </p>
-          ) : null}
+        <div className={`ns-hub-hero${isCompactLayout ? ' ns-hub-hero--compact' : ''}`}>
+          <h1 className="ns-hub-title">{getDashboardMainHubTitle(hubId)}</h1>
+          {hubIntro ? <p className="ns-hub-intro">{hubIntro}</p> : null}
         </div>
         {rows.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#aaa', padding: 32 }}>{safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}</p>
+          <p className="ns-hub-empty">{safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}</p>
         ) : (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-              gap: 18
-            }}
-          >
+          <div className="ns-hub-grid">
             {rows.map((row, idx) => {
               const c = qaColors[idx % qaColors.length]
               return (
@@ -52261,63 +52222,29 @@ A1;Peça exemplo;10`}
                   key={row.key}
                   role="button"
                   tabIndex={0}
+                  className="ns-hub-card"
+                  style={
+                    {
+                      '--hub-border': c.border,
+                      '--hub-border-h': c.borderH,
+                      '--hub-shadow': c.shadow,
+                      '--hub-glow': c.glow,
+                      '--hub-title': c.title
+                    } as React.CSSProperties
+                  }
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault()
                       handleButtonClick(row.action, row.buttonId)
                     }
                   }}
-                  style={{
-                    padding: '26px 22px',
-                    backgroundColor: '#141414',
-                    borderRadius: 14,
-                    border: `2px solid ${c.border}`,
-                    transition: 'all 0.25s ease',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-6px) scale(1.01)'
-                    e.currentTarget.style.borderColor = c.borderH
-                    e.currentTarget.style.boxShadow = `0 12px 36px ${c.shadow}`
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                    e.currentTarget.style.borderColor = c.border
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
                   onClick={() => handleButtonClick(row.action, row.buttonId)}
                 >
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: -18,
-                      right: -18,
-                      width: 96,
-                      height: 96,
-                      background: `radial-gradient(circle, ${c.glow} 0%, transparent 72%)`,
-                      borderRadius: '50%'
-                    }}
-                  />
-                  <div style={{ fontSize: 44, marginBottom: 12, position: 'relative', zIndex: 1 }} aria-hidden>
+                  <div className="ns-hub-card-icon" aria-hidden>
                     {row.icon}
                   </div>
-                  <h3
-                    style={{
-                      color: c.title,
-                      fontSize: 16,
-                      fontWeight: 800,
-                      marginBottom: 8,
-                      position: 'relative',
-                      zIndex: 1,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.06em'
-                    }}
-                  >
-                    {row.title}
-                  </h3>
-                  <p style={{ color: '#bdbdbd', fontSize: 13, lineHeight: 1.55, position: 'relative', zIndex: 1, margin: 0 }}>{row.desc}</p>
+                  <h3 className="ns-hub-card-title">{row.title}</h3>
+                  <p className="ns-hub-card-desc">{row.desc}</p>
                 </div>
               )
             })}
@@ -57914,167 +57841,98 @@ A1;Peça exemplo;10`}
               {dashboardMainHubId ? (
                 renderDashboardMainHubContent(dashboardMainHubId)
               ) : (
-                <>
-              {/* Hero Section com Logo */}
-              <div style={{
-                textAlign: 'center',
-                marginBottom: isCompactLayout ? '20px' : '60px',
-                padding: isCompactLayout ? '16px 12px' : '50px 30px',
-                background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-                borderRadius: isCompactLayout ? '12px' : '20px',
-                border: '2px solid rgba(0, 255, 0, 0.2)',
-                boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
-              }}>
-                <div style={{ marginBottom: isCompactLayout ? '12px' : '30px' }}>
+                <div className="ns-dashboard-full">
+              {/* Hero — identidade visual alinhada ao resto do painel */}
+              <div
+                className={`ns-dashboard-full-hero${isCompactLayout ? ' ns-dashboard-full-hero--compact' : ''}`}
+                style={{ marginBottom: isCompactLayout ? 12 : 8 }}
+              >
+                <div style={{ marginBottom: isCompactLayout ? 12 : 28 }}>
                   <LogoComponent size={isCompactLayout ? 'small' : 'large'} />
                 </div>
-                <h1 style={{
-                  fontSize: isCompactLayout ? '22px' : '42px',
-                  fontWeight: 'bold',
-                  color: '#ffffff',
-                  marginBottom: '15px',
-                  letterSpacing: isCompactLayout ? '1px' : '3px',
-                  textShadow: '0 0 20px rgba(0, 255, 0, 0.3)'
-                }}>
-                  {safeT?.title || 'GESTÃO TÉCNICA'}
-                </h1>
-                <p style={{
-                  fontSize: isCompactLayout ? '14px' : '18px',
-                  color: '#00ff00',
-                  marginBottom: '10px',
-                  fontWeight: '500',
-                  letterSpacing: isCompactLayout ? '1px' : '2px'
-                }}>
-                  {safeT?.welcome || 'Sistema de Gestão Completo'}
-                </p>
-                <p style={{
-                  fontSize: isCompactLayout ? '12px' : '14px',
-                  color: '#ccc',
-                  maxWidth: '600px',
-                  margin: '0 auto',
-                  lineHeight: '1.6'
-                }}>
+                <h1 className="ns-dashboard-full-title">{safeT?.title || 'GESTÃO TÉCNICA'}</h1>
+                <p className="ns-dashboard-full-welcome">{safeT?.welcome || 'Sistema de Gestão Completo'}</p>
+                <p className="ns-dashboard-full-lead">
                   {safeT?.welcomeText2 || 'Gerencie clientes, equipamentos, relatórios e muito mais em um único lugar.'}
                 </p>
               </div>
 
-              {/* Estatísticas Rápidas */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: '20px',
-                marginBottom: '50px'
-              }}>
-                <div style={{
-                  padding: '25px',
-                  backgroundColor: '#141414',
-                  borderRadius: '12px',
-                  border: '2px solid rgba(0, 255, 0, 0.3)',
-                  textAlign: 'center',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)'
-                  e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.6)'
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 255, 0, 0.2)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-                onClick={() => handleButtonClick('open-clientes')}
+              {/* Estatísticas rápidas — cartões uniformes, hover em CSS */}
+              <div className="ns-dashboard-stats">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="ns-dashboard-stat"
+                  onClick={() => handleButtonClick('open-clientes')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handleButtonClick('open-clientes')
+                    }
+                  }}
                 >
-                  <div style={{ fontSize: '36px', marginBottom: '10px' }}>👥</div>
-                  <h3 style={{ color: '#00ff00', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                    {safeT?.clientes || 'Clientes'}
-                  </h3>
-                  <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#ffffff' }}>{clientes.length}</p>
+                  <div className="ns-dashboard-stat-emoji" aria-hidden>
+                    👥
+                  </div>
+                  <h3 className="ns-dashboard-stat-label">{safeT?.clientes || 'Clientes'}</h3>
+                  <p className="ns-dashboard-stat-value">{clientes.length}</p>
                 </div>
 
-                <div style={{
-                  padding: '25px',
-                  backgroundColor: '#141414',
-                  borderRadius: '12px',
-                  border: '2px solid rgba(0, 255, 0, 0.3)',
-                  textAlign: 'center',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)'
-                  e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.6)'
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 255, 0, 0.2)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-                onClick={() => handleButtonClick('open-equipamentos')}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="ns-dashboard-stat"
+                  onClick={() => handleButtonClick('open-equipamentos')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handleButtonClick('open-equipamentos')
+                    }
+                  }}
                 >
-                  <div style={{ fontSize: '36px', marginBottom: '10px' }}>⚙️</div>
-                  <h3 style={{ color: '#00ff00', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                    {safeT?.equipamentos || 'Equipamentos'}
-                  </h3>
-                  <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#ffffff' }}>{inventarioArmazem.totalAtivos}</p>
+                  <div className="ns-dashboard-stat-emoji" aria-hidden>
+                    ⚙️
+                  </div>
+                  <h3 className="ns-dashboard-stat-label">{safeT?.equipamentos || 'Equipamentos'}</h3>
+                  <p className="ns-dashboard-stat-value">{inventarioArmazem.totalAtivos}</p>
                 </div>
 
-                <div style={{
-                  padding: '25px',
-                  backgroundColor: '#141414',
-                  borderRadius: '12px',
-                  border: '2px solid rgba(0, 255, 0, 0.3)',
-                  textAlign: 'center',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)'
-                  e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.6)'
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 255, 0, 0.2)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-                onClick={() => handleButtonClick('open-relatorio-servico')}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="ns-dashboard-stat"
+                  onClick={() => handleButtonClick('open-relatorio-servico')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handleButtonClick('open-relatorio-servico')
+                    }
+                  }}
                 >
-                  <div style={{ fontSize: '36px', marginBottom: '10px' }}>📋</div>
-                  <h3 style={{ color: '#00ff00', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                    {safeT?.relatorios || 'Relatórios'}
-                  </h3>
-                  <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#ffffff' }}>{relatoriosServico.length}</p>
+                  <div className="ns-dashboard-stat-emoji" aria-hidden>
+                    📋
+                  </div>
+                  <h3 className="ns-dashboard-stat-label">{safeT?.relatorios || 'Relatórios'}</h3>
+                  <p className="ns-dashboard-stat-value">{relatoriosServico.length}</p>
                 </div>
 
-                <div style={{
-                  padding: '25px',
-                  backgroundColor: '#141414',
-                  borderRadius: '12px',
-                  border: '2px solid rgba(0, 255, 0, 0.3)',
-                  textAlign: 'center',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)'
-                  e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.6)'
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 255, 0, 0.2)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
-                onClick={() => handleButtonClick('open-gestores')}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="ns-dashboard-stat"
+                  onClick={() => handleButtonClick('open-gestores')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handleButtonClick('open-gestores')
+                    }
+                  }}
                 >
-                  <div style={{ fontSize: '36px', marginBottom: '10px' }}>👨‍💼</div>
-                  <h3 style={{ color: '#00ff00', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                    {safeT?.gestores || 'Gestores'}
-                  </h3>
-                  <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#ffffff' }}>{gestores.length + tecnicos.length}</p>
+                  <div className="ns-dashboard-stat-emoji" aria-hidden>
+                    👨‍💼
+                  </div>
+                  <h3 className="ns-dashboard-stat-label">{safeT?.gestores || 'Gestores'}</h3>
+                  <p className="ns-dashboard-stat-value">{gestores.length + tecnicos.length}</p>
                 </div>
               </div>
 
@@ -58117,23 +57975,9 @@ A1;Peça exemplo;10`}
                   { action: 'open-checklist-hub', titleKey: 'checklistGroupTitle', descKey: 'quickAccessChecklistHubDesc', icon: '✅', titleFallback: 'GESTÃO DOS CHECKLIST', descFallback: 'Hub de checklists, pré-checklist e montagem.' }
                 ]
                 return (
-              <div style={{ marginBottom: '50px' }}>
-                <h2 style={{
-                  fontSize: '24px',
-                  fontWeight: 'bold',
-                  color: '#00ff00',
-                  marginBottom: '30px',
-                  textAlign: 'center',
-                  letterSpacing: '2px',
-                  textTransform: 'uppercase'
-                }}>
-                  {tr?.acessoRapido || 'ACESSO RÁPIDO'}
-                </h2>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                  gap: '20px'
-                }}>
+              <div style={{ marginBottom: isCompactLayout ? 28 : 44 }}>
+                <h2 className="ns-dashboard-section-title">{tr?.acessoRapido || 'ACESSO RÁPIDO'}</h2>
+                <div className="ns-dashboard-qa-grid">
                   {quickAccessItems.map((item, idx) => {
                     if (!canAccessAction(item.action)) return null
                     const c = qaColors[idx % qaColors.length]
@@ -58142,57 +57986,31 @@ A1;Peça exemplo;10`}
                     return (
                   <div
                     key={item.action}
-                    style={{
-                    padding: '30px',
-                    backgroundColor: '#141414',
-                    borderRadius: '16px',
-                    border: `2px solid ${c.border}`,
-                    transition: 'all 0.3s ease',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)'
-                    e.currentTarget.style.borderColor = c.borderH
-                    e.currentTarget.style.boxShadow = `0 12px 40px ${c.shadow}`
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                    e.currentTarget.style.borderColor = c.border
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
-                  onClick={() => handleButtonClick(item.action)}
+                    role="button"
+                    tabIndex={0}
+                    className="ns-dashboard-qa-card"
+                    style={
+                      {
+                        '--qa-border': c.border,
+                        '--qa-border-h': c.borderH,
+                        '--qa-shadow': c.shadow,
+                        '--qa-glow': c.glow,
+                        '--qa-title': c.title
+                      } as React.CSSProperties
+                    }
+                    onClick={() => handleButtonClick(item.action)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        handleButtonClick(item.action)
+                      }
+                    }}
                   >
-                    <div style={{
-                      position: 'absolute',
-                      top: '-20px',
-                      right: '-20px',
-                      width: '100px',
-                      height: '100px',
-                      background: `radial-gradient(circle, ${c.glow} 0%, transparent 70%)`,
-                      borderRadius: '50%'
-                    }}></div>
-                    <div style={{ fontSize: '48px', marginBottom: '15px', position: 'relative', zIndex: 1 }}>{item.icon}</div>
-                    <h3 style={{
-                      color: c.title,
-                      fontSize: '18px',
-                      fontWeight: 'bold',
-                      marginBottom: '10px',
-                      position: 'relative',
-                      zIndex: 1
-                    }}>
-                      {title}
-                    </h3>
-                    <p style={{
-                      color: '#ccc',
-                      fontSize: '13px',
-                      lineHeight: '1.6',
-                      position: 'relative',
-                      zIndex: 1
-                    }}>
-                      {desc}
-                    </p>
+                    <div className="ns-dashboard-qa-card-icon" aria-hidden>
+                      {item.icon}
+                    </div>
+                    <h3 className="ns-dashboard-qa-card-title">{title}</h3>
+                    <p className="ns-dashboard-qa-card-desc">{desc}</p>
                   </div>
                     )
                   })}
@@ -58201,57 +58019,33 @@ A1;Peça exemplo;10`}
                 )
               })()}
 
-              {/* Inventário do Armazém */}
-              <div style={{
-                padding: '30px',
-                backgroundColor: '#141414',
-                borderRadius: '16px',
-                border: '2px solid rgba(0, 255, 0, 0.3)'
-              }}>
-                <h2 style={{
-                  fontSize: '20px',
-                  fontWeight: 'bold',
-                  color: '#00ff00',
-                  marginBottom: '25px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px'
-                }}>
+              {/* Inventário do armazém — painel alinhado ao resto do dashboard */}
+              <div className="ns-dashboard-inventory">
+                <h2 className="ns-dashboard-inventory-title">
                   {safeT?.inventarioArmazemTitle || 'Inventário do Armazém'}
                 </h2>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: '20px'
-                }}>
-                  <div style={{
-                    padding: '25px',
-                    backgroundColor: '#222222',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(0, 255, 0, 0.2)',
-                    textAlign: 'center'
-                  }}>
-                    <div style={{ fontSize: '32px', marginBottom: '10px' }}>✅</div>
-                    <h3 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
+                <div className="ns-dashboard-inventory-grid">
+                  <div className="ns-dashboard-inventory-tile">
+                    <div className="ns-dashboard-inventory-tile-emoji" aria-hidden>
+                      ✅
+                    </div>
+                    <h3 className="ns-dashboard-inventory-tile-label">
                       {safeT?.totalEquipamentosArmazem || 'Total no Armazém'}
                     </h3>
-                    <p style={{ fontSize: '36px', fontWeight: 'bold', color: '#ffffff' }}>{inventarioArmazem.totalAtivos}</p>
+                    <p className="ns-dashboard-inventory-tile-value">{inventarioArmazem.totalAtivos}</p>
                   </div>
-                  <div style={{
-                    padding: '25px',
-                    backgroundColor: '#222222',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(255, 68, 68, 0.3)',
-                    textAlign: 'center'
-                  }}>
-                    <div style={{ fontSize: '32px', marginBottom: '10px' }}>❌</div>
-                    <h3 style={{ color: '#ff4444', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
+                  <div className="ns-dashboard-inventory-tile ns-dashboard-inventory-tile--danger">
+                    <div className="ns-dashboard-inventory-tile-emoji" aria-hidden>
+                      ❌
+                    </div>
+                    <h3 className="ns-dashboard-inventory-tile-label ns-dashboard-inventory-tile-label--danger">
                       {safeT?.totalBaixados || 'Baixados'}
                     </h3>
-                    <p style={{ fontSize: '36px', fontWeight: 'bold', color: '#ffffff' }}>{inventarioArmazem.totalBaixados}</p>
+                    <p className="ns-dashboard-inventory-tile-value">{inventarioArmazem.totalBaixados}</p>
                   </div>
                 </div>
               </div>
-                </>
+                </div>
               )}
                 </>
               )}
