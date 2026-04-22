@@ -6425,6 +6425,21 @@ button.dia-trabalho-acao-btn--del:hover {
   font-size: clamp(38px, 5vw, 44px);
   margin-bottom: 12px;
   line-height: 1;
+  display: inline-block;
+  transform-origin: 50% 60%;
+  transition: transform 0.28s cubic-bezier(0.34, 1.45, 0.64, 1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ns-hub-card:hover .ns-hub-card-icon,
+  .ns-hub-card:focus-visible .ns-hub-card-icon {
+    transform: translateY(-3px) scale(1.06);
+  }
+
+  .ns-hub-card:active .ns-hub-card-icon {
+    transform: translateY(0) scale(0.98);
+    transition-duration: 0.12s;
+  }
 }
 
 .ns-hub-card-title {

@@ -52035,17 +52035,54 @@ A1;Peça exemplo;10`}
     const rows: HubRow[] = []
 
     if (hubId === 'gestao-tecnica') {
+      const pickHubTr = (keys: readonly string[]) => {
+        for (const k of keys) {
+          const v = tr[k]
+          if (typeof v === 'string' && v.trim().length > 0) return v.trim()
+        }
+        return ''
+      }
+      const gestaoTecnicaHubIcon: Record<string, string> = {
+        'gestores-default': '🧑‍💼',
+        'clientes-default': '👥',
+        'fornecedores-default': '🏭',
+        'relatorio-servico-default': '📄',
+        'biblioteca-relatorios-default': '📚',
+        'relatorios-excluidos-clientes-default': '🗃️',
+        'biblioteca-pecas-default': '🔩',
+        'agenda-default': '📅',
+        'diario-pedidos-dia-default': '📝',
+        'estado-visual-tecnico-default': '🎯',
+        'informacoes-conhecimento-tecnicos-default': '🧠',
+        'cadastro-servicos-default': '💼',
+      }
+      const gestaoTecnicaHubDescKeys: Record<string, readonly string[]> = {
+        'gestores-default': ['gestoresSubtitle'],
+        'clientes-default': ['clientesSubtitle'],
+        'fornecedores-default': ['fornecedoresSubtitle'],
+        'relatorio-servico-default': ['relatorioServicoSubtitle'],
+        'biblioteca-relatorios-default': ['quickAccessBibliotecaRelatoriosDesc'],
+        'relatorios-excluidos-clientes-default': ['relatoriosExcluidosClientesDesc'],
+        'biblioteca-pecas-default': ['quickAccessBibliotecaPecasDesc'],
+        'agenda-default': ['quickAccessAgendaDesc'],
+        'diario-pedidos-dia-default': ['diarioPedidosHubCardDesc'],
+        'estado-visual-tecnico-default': ['estadoVisualHubCardDesc'],
+        'informacoes-conhecimento-tecnicos-default': ['informacoesConhecimentoTecnicosDesc'],
+        'cadastro-servicos-default': ['cadastroServicosSubtitle'],
+      }
       const sorted = [...getButtonsByGroup('gestao-tecnica')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       for (const button of sorted) {
         const perm =
           button.id === 'biblioteca-pecas-default' ? canAccessAction('open-biblioteca-pecas') : canAccessAction(button.action)
         if (!perm) continue
         const action = button.id === 'biblioteca-pecas-default' ? 'open-biblioteca-hub' : button.action
+        const descKeys = gestaoTecnicaHubDescKeys[button.id || ''] || []
+        const descLine = pickHubTr(descKeys) || cardHint
         rows.push({
           key: button.id,
           title: getButtonName(button),
-          desc: cardHint,
-          icon: button.id === 'biblioteca-pecas-default' ? '📚' : '🔧',
+          desc: descLine,
+          icon: gestaoTecnicaHubIcon[button.id || ''] || '▸',
           action,
           buttonId: button.id
         })
