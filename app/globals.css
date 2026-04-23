@@ -1362,6 +1362,8 @@ body,
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
+  /* Espaço no fim da rolagem para o balão (por baixo do último botão) não ser cortado */
+  scroll-padding-bottom: min(120px, 22vh);
 }
 .sidebar .sidebar-scroll-inner::-webkit-scrollbar {
   width: 8px;
@@ -1482,13 +1484,18 @@ body,
 .sidebar-scroll-inner .sidebar-nav-subcluster:hover {
   z-index: 55;
 }
+/* Por baixo do botão: overflow-y:auto no .sidebar-scroll-inner força overflow-x a cortar —
+ * balões à direita (left:100%) ficavam totalmente invisíveis. */
 .sidebar .sidebar-tip-bubble {
   position: absolute;
-  left: calc(100% + 10px);
-  right: auto;
-  top: 50%;
-  transform: translateY(-50%);
-  width: min(280px, calc(100vw - 32px));
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  bottom: auto;
+  transform: none;
+  width: 100%;
+  max-width: min(280px, calc(100vw - 28px));
+  box-sizing: border-box;
   padding: 11px 12px 11px 13px;
   border-radius: 12px;
   background-color: rgba(8, 12, 10, 0.98) !important;
@@ -1537,13 +1544,8 @@ body,
 }
 .sidebar .sidebar-scroll-inner button:hover .sidebar-tip-bubble,
 .sidebar .sidebar-scroll-inner button:focus-visible .sidebar-tip-bubble {
-  opacity: 1;
-  visibility: visible;
-  /*
-   * Manter pointer-events: none — o balão fica à direita por cima do Hub / lista de mensagens.
-   * Com auto, o balão “comia” cliques e dava a sensação de que as mensagens tinham desaparecido.
-   * O texto da dica lê-se com o cursor ainda sobre o botão (sem deslizar para cima do balão).
-   */
+  opacity: 1 !important;
+  visibility: visible !important;
   pointer-events: none;
 }
 

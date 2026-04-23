@@ -56991,6 +56991,11 @@ A1;Peça exemplo;10`}
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-gestao-tecnica' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-tecnica')}
+            title={
+              String((safeT as any)?.sidebarGroupGestaoTecnicaDesc || '').trim()
+                ? String((safeT as any)?.sidebarGroupGestaoTecnicaDesc)
+                : undefined
+            }
           >
             {selectedSidebarButton === 'open-gestao-tecnica' && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57453,6 +57458,7 @@ A1;Peça exemplo;10`}
                         isSelected ? ' sidebar-action-btn-active' : ''
                       }`}
                       onClick={() => handleButtonClick(action)}
+                      title={comSub?.trim() ? comSub : undefined}
                     >
                       {isSelected && (
                         <span className="sidebar-nav-check" aria-hidden>✓</span>
