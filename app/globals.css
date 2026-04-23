@@ -1488,19 +1488,24 @@ body,
   top: 50%;
   transform: translateY(-50%);
   width: min(280px, calc(100vw - 32px));
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #152a18 0%, #0f1f12 100%);
-  border: 1px solid rgba(0, 255, 120, 0.42);
+  padding: 11px 12px 11px 13px;
+  border-radius: 12px;
+  /* Mesmo vocabulário visual que .sidebar-action-buttons (gaveta) — sem neon à parte */
+  background: linear-gradient(180deg, var(--sidebar-drawer-bg0) 0%, var(--sidebar-drawer-bg1) 100%);
+  border: 1px solid var(--sidebar-subtle-line);
+  border-left: 3px solid var(--sidebar-drawer-rail);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
   box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(0, 0, 0, 0.35);
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    inset 4px 0 0 rgba(52, 211, 153, 0.06),
+    0 8px 22px rgba(0, 0, 0, 0.38),
+    0 0 0 1px rgba(52, 211, 153, 0.05);
   font-size: 11px !important;
-  line-height: 1.45 !important;
+  line-height: 1.38 !important;
   font-weight: 500 !important;
   letter-spacing: 0.02em !important;
   text-transform: none !important;
-  color: rgba(240, 255, 245, 0.96) !important;
+  color: var(--sidebar-text-dim) !important;
   text-align: left;
   max-height: min(220px, 42vh);
   overflow-y: auto;
@@ -1510,9 +1515,17 @@ body,
   pointer-events: none;
   z-index: 100;
   transition:
-    opacity 0.14s ease,
-    visibility 0.14s ease;
+    opacity 0.18s ease,
+    visibility 0.18s ease;
   -webkit-overflow-scrolling: touch;
+}
+.sidebar .sidebar-tip-bubble::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar .sidebar-tip-bubble::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #3d4540 0%, #2a322e 100%);
+  border-radius: 6px;
+  border: 1px solid rgba(74, 222, 128, 0.14);
 }
 .sidebar button:has(.sidebar-tip-bubble):hover .sidebar-tip-bubble,
 .sidebar button:has(.sidebar-tip-bubble):focus-visible .sidebar-tip-bubble {
