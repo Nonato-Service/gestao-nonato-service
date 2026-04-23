@@ -1362,8 +1362,6 @@ body,
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
-  /* Espaço no fim da rolagem para o balão (por baixo do último botão) não ser cortado */
-  scroll-padding-bottom: min(120px, 22vh);
 }
 .sidebar .sidebar-scroll-inner::-webkit-scrollbar {
   width: 8px;
@@ -1484,69 +1482,65 @@ body,
 .sidebar-scroll-inner .sidebar-nav-subcluster:hover {
   z-index: 55;
 }
-/* Por baixo do botão: overflow-y:auto no .sidebar-scroll-inner força overflow-x a cortar —
- * balões à direita (left:100%) ficavam totalmente invisíveis. */
+/* Texto da dica fica neste span (para o JS); o balão visível é .sidebar-tip-flyout em portal (fixed). */
 .sidebar .sidebar-tip-bubble {
-  position: absolute;
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
   left: 0;
-  right: 0;
-  top: calc(100% + 8px);
-  bottom: auto;
-  transform: none;
-  width: 100%;
-  max-width: min(280px, calc(100vw - 28px));
+  top: 0;
+}
+
+/* Balão fixo no viewport — à direita do botão, sem ser cortado pelo overflow da lista. */
+.sidebar-tip-flyout {
   box-sizing: border-box;
+  max-width: min(280px, calc(100vw - 20px));
   padding: 11px 12px 11px 13px;
   border-radius: 12px;
-  background-color: rgba(8, 12, 10, 0.98) !important;
+  background-color: rgba(8, 12, 10, 0.98);
   background-image: linear-gradient(
     180deg,
     var(--sidebar-drawer-bg0, rgba(6, 10, 8, 0.96)) 0%,
     var(--sidebar-drawer-bg1, rgba(11, 15, 13, 0.99)) 100%
-  ) !important;
-  border: 1px solid var(--sidebar-subtle-line, rgba(255, 255, 255, 0.06)) !important;
-  border-left: 3px solid var(--sidebar-drawer-rail, rgba(74, 222, 128, 0.26)) !important;
+  );
+  border: 1px solid var(--sidebar-subtle-line, rgba(255, 255, 255, 0.06));
+  border-left: 3px solid var(--sidebar-drawer-rail, rgba(74, 222, 128, 0.26));
   border-top: 1px solid rgba(255, 255, 255, 0.07);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.035),
     inset 4px 0 0 rgba(52, 211, 153, 0.06),
     0 8px 22px rgba(0, 0, 0, 0.38),
     0 0 0 1px rgba(52, 211, 153, 0.05);
-  font-size: 11px !important;
-  line-height: 1.38 !important;
-  font-weight: 500 !important;
-  letter-spacing: 0.02em !important;
-  text-transform: none !important;
-  color: rgba(214, 250, 226, 0.92) !important;
-  -webkit-text-fill-color: rgba(214, 250, 226, 0.92) !important;
+  font-size: 11px;
+  line-height: 1.38;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: rgba(214, 250, 226, 0.92);
+  -webkit-text-fill-color: rgba(214, 250, 226, 0.92);
   text-align: left;
   max-height: min(220px, 42vh);
   overflow-y: auto;
   overflow-x: hidden;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  z-index: 100;
-  isolation: isolate;
-  mix-blend-mode: normal;
-  transition:
-    opacity 0.18s ease,
-    visibility 0.18s ease;
+  pointer-events: auto;
   -webkit-overflow-scrolling: touch;
 }
-.sidebar .sidebar-tip-bubble::-webkit-scrollbar {
+.sidebar-tip-flyout::-webkit-scrollbar {
   width: 6px;
 }
-.sidebar .sidebar-tip-bubble::-webkit-scrollbar-thumb {
+.sidebar-tip-flyout::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, #3d4540 0%, #2a322e 100%);
   border-radius: 6px;
   border: 1px solid rgba(74, 222, 128, 0.14);
-}
-.sidebar .sidebar-scroll-inner button:hover .sidebar-tip-bubble,
-.sidebar .sidebar-scroll-inner button:focus-visible .sidebar-tip-bubble {
-  opacity: 1 !important;
-  visibility: visible !important;
-  pointer-events: none;
 }
 
 .sidebar .sidebar-nav-label-sub {

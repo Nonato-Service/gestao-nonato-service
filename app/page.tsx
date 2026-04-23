@@ -2147,6 +2147,67 @@ export default function Dashboard() {
 
   const [expandedEquipamentos, setExpandedEquipamentos] = useState<Set<string>>(new Set())
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  /** Dica da sidebar à direita do botão (fixed + portal — evita corte por overflow-y na lista rolável). */
+  const [sidebarTipFlyout, setSidebarTipFlyout] = useState<{
+    text: string
+    left: number
+    top: number
+  } | null>(null)
+  const sidebarTipFlyoutRef = useRef<HTMLDivElement | null>(null)
+  const handleSidebarTipPointerCapture = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const root = e.currentTarget
+    const path = typeof e.composedPath === 'function' ? e.composedPath() : []
+    if (
+      path.some(
+        (n) =>
+          n instanceof HTMLElement &&
+          (n.classList.contains('sidebar-tip-flyout') || n.closest('.sidebar-tip-flyout'))
+      )
+    ) {
+      return
+    }
+    const stack = typeof document !== 'undefined' ? document.elementsFromPoint(e.clientX, e.clientY) : []
+    if (
+      stack.some(
+        (n) =>
+          n instanceof HTMLElement &&
+          (n.classList.contains('sidebar-tip-flyout') || n.closest('.sidebar-tip-flyout'))
+      )
+    ) {
+      return
+    }
+    let btn: HTMLButtonElement | null = null
+    for (const node of stack) {
+      if (!(node instanceof Element)) continue
+      const b = node.closest('button')
+      if (b instanceof HTMLButtonElement && root.contains(b) && b.closest('.sidebar-scroll-inner')) {
+        btn = b
+        break
+      }
+    }
+    if (!btn) {
+      setSidebarTipFlyout(null)
+      return
+    }
+    const bubble = btn.querySelector('.sidebar-tip-bubble')
+    const text = (bubble?.textContent ?? '').replace(/\s+/g, ' ').trim()
+    if (!text) {
+      setSidebarTipFlyout(null)
+      return
+    }
+    const r = btn.getBoundingClientRect()
+    const pad = 8
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1920
+    const flyoutW = Math.min(280, vw - 20)
+    let left = r.right + 10
+    left = Math.min(left, vw - flyoutW - pad)
+    left = Math.max(pad, left)
+    let top = r.top + r.height / 2
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 1080
+    const halfGuess = 110
+    top = Math.min(vh - pad - halfGuess, Math.max(pad + halfGuess, top))
+    setSidebarTipFlyout({ text, left, top })
+  }, [])
   /** Servidor tem revisão mais recente — modal único com resumo e escolha carregar / enviar. */
   const [syncPendingRemote, setSyncPendingRemote] = useState<{
     revision: number
@@ -2373,6 +2434,9 @@ export default function Dashboard() {
   const hideSidebarForEntryDashboard = !activeTabId && !dashboardWorkspaceExpanded
   useEffect(() => {
     if (hideSidebarForEntryDashboard) setMobileMenuOpen(false)
+  }, [hideSidebarForEntryDashboard])
+  useEffect(() => {
+    if (hideSidebarForEntryDashboard) setSidebarTipFlyout(null)
   }, [hideSidebarForEntryDashboard])
   const mainContentAreaRef = useRef<HTMLDivElement>(null)
   const [showHelpModal, setShowHelpModal] = useState(false)
@@ -56926,6 +56990,7 @@ A1;Peça exemplo;10`}
       <div
         className={`sidebar${isCompactLayout && mobileMenuOpen ? ' sidebar-mobile-open' : ''}${hideSidebarForEntryDashboard ? ' sidebar--hidden-entry' : ''}`}
         aria-hidden={hideSidebarForEntryDashboard ? true : undefined}
+        onPointerMoveCapture={hideSidebarForEntryDashboard ? undefined : handleSidebarTipPointerCapture}
       >
         {/* Logo NONATO SERVICE — logo ocupa 100% do contorno verde, borda mantida */}
         <div className={`sidebar-brand${logoUrl ? ' sidebar-brand--has-media' : ''}`}>
@@ -65524,6 +65589,25 @@ A1;Peça exemplo;10`}
           </div>
         </div>
       )}
+      {typeof document !== 'undefined' &&
+        sidebarTipFlyout != null &&
+        createPortal(
+          <div
+            ref={sidebarTipFlyoutRef}
+            className="sidebar-tip-flyout"
+            role="tooltip"
+            style={{
+              position: 'fixed',
+              left: sidebarTipFlyout.left,
+              top: sidebarTipFlyout.top,
+              transform: 'translateY(-50%)',
+              zIndex: 2147483646,
+            }}
+          >
+            {sidebarTipFlyout.text}
+          </div>,
+          document.body
+        )}
     </WritingAssistFieldContext.Provider>
     </div>
   )
