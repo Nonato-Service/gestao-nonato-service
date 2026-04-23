@@ -40080,26 +40080,105 @@ A1;Peça exemplo;10`}
           setFechamentoOsConsultaInput('')
         }
         const fechamentoJsx = (
-          <div style={{ padding: '24px 32px', maxWidth: '1600px', margin: '0 auto', minHeight: '100vh' }}>
-            <header style={{ background: 'linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%)', border: '1px solid rgba(0, 255, 0, 0.25)', borderRadius: '16px', padding: '24px 28px', marginBottom: '28px', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+          <div
+            style={{
+              padding: isCompactLayout ? '12px 10px' : '24px 32px',
+              maxWidth: '1600px',
+              margin: '0 auto',
+              minHeight: '100vh',
+              width: '100%',
+              boxSizing: 'border-box',
+            }}
+          >
+            <header
+              style={{
+                background: 'linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%)',
+                border: '1px solid rgba(0, 255, 0, 0.25)',
+                borderRadius: '16px',
+                padding: isCompactLayout ? '16px 14px' : '24px 28px',
+                marginBottom: '28px',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: isCompactLayout ? 'column' : 'row',
+                  flexWrap: 'wrap',
+                  alignItems: isCompactLayout ? 'stretch' : 'center',
+                  justifyContent: 'space-between',
+                  gap: isCompactLayout ? '14px' : '20px',
+                  width: '100%',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: isCompactLayout ? 'column' : 'row',
+                    alignItems: isCompactLayout ? 'flex-start' : 'center',
+                    gap: isCompactLayout ? '14px' : '24px',
+                    flex: isCompactLayout ? '0 1 auto' : '1 1 280px',
+                    minWidth: 0,
+                    width: isCompactLayout ? '100%' : undefined,
+                    maxWidth: '100%',
+                  }}
+                >
                   {typeof getLogoHtmlForFechamento === 'function' && getLogoHtmlForFechamento() ? (
-                    <div style={{ maxWidth: '240px', maxHeight: '88px' }} dangerouslySetInnerHTML={{ __html: getLogoHtmlForFechamento().replace(/style="[^"]*"/, 'style="max-height:88px;max-width:240px;object-fit:contain;display:block;"') }} />
+                    <div
+                      style={{
+                        maxWidth: isCompactLayout ? 'min(240px, 100%)' : '240px',
+                        maxHeight: isCompactLayout ? '72px' : '88px',
+                        flexShrink: 0,
+                      }}
+                      dangerouslySetInnerHTML={{
+                        __html: getLogoHtmlForFechamento().replace(
+                          /style="[^"]*"/,
+                          isCompactLayout
+                            ? 'style="max-height:72px;max-width:min(240px,100%);width:100%;object-fit:contain;display:block;"'
+                            : 'style="max-height:88px;max-width:240px;object-fit:contain;display:block;"'
+                        ),
+                      }}
+                    />
                   ) : (
-                    <div style={{ width: '56px', height: '56px', borderRadius: '12px', background: 'rgba(0, 255, 0, 0.12)', border: '1px solid rgba(0, 255, 0, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px' }}>📋</div>
+                    <div
+                      style={{
+                        width: '56px',
+                        height: '56px',
+                        borderRadius: '12px',
+                        background: 'rgba(0, 255, 0, 0.12)',
+                        border: '1px solid rgba(0, 255, 0, 0.35)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '28px',
+                        flexShrink: 0,
+                      }}
+                    >
+                      📋
+                    </div>
                   )}
-                  <div>
-                    <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '700', color: '#fff', letterSpacing: '0.5px' }}>
+                  <div style={{ minWidth: 0, width: isCompactLayout ? '100%' : undefined, flex: isCompactLayout ? 'none' : '1 1 160px' }}>
+                    <h1
+                      style={{
+                        margin: 0,
+                        fontSize: isCompactLayout ? 'clamp(1.05rem, 4.2vw, 1.35rem)' : '22px',
+                        fontWeight: '700',
+                        color: '#fff',
+                        letterSpacing: '0.5px',
+                        lineHeight: 1.25,
+                        wordBreak: 'normal',
+                        overflowWrap: 'break-word',
+                      }}
+                    >
                       {(safeT as any)?.fechamentoRelatoriosServicosTitle || 'Fechamento dos Relatórios de Serviços'}
                     </h1>
-                    <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.65)' }}>
+                    <p style={{ margin: '6px 0 0', fontSize: isCompactLayout ? '12px' : '13px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.4 }}>
                       {relatoriosServico.filter(r => !fechamentosGuardadosBibliotecaIds.includes(r.id)).length} {(safeT as any)?.relatoriosPendentesFechamento || 'pendentes de guardar na Biblioteca'}
                       {relatoriosServico.length > 0 && ` · ${fechamentosGuardadosBibliotecaIds.length} ${(safeT as any)?.naBibliotecaDespesas || 'já na Biblioteca (despesas)'}`}
                     </p>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', alignSelf: isCompactLayout ? 'stretch' : 'center' }}>
                   {fechamentoRelatorioSelecionadoId && (
                     <button
                       type="button"
