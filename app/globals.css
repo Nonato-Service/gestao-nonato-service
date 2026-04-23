@@ -1539,11 +1539,8 @@ body,
 .sidebar .sidebar-scroll-inner button:focus-visible .sidebar-tip-bubble {
   opacity: 1;
   visibility: visible;
-}
-@media (hover: none) and (pointer: coarse) {
-  .sidebar .sidebar-tip-bubble {
-    display: none !important;
-  }
+  /* Com pointer-events:none o rato “atravessa” o balão para a área principal e o :hover do botão perde-se. */
+  pointer-events: auto;
 }
 
 .sidebar .sidebar-nav-label-sub {
