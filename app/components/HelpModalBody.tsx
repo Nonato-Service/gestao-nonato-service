@@ -12,6 +12,11 @@ type Props = {
   titleResumo: string
 }
 
+/** Linha de agrupamento no bloco «Como fazer»: começa por «— » (em dash + espaço). */
+function isComoGroupHeading(line: string): boolean {
+  return line.startsWith('— ')
+}
+
 export function HelpModalBody({ text, titlePara, titleComo, titleResumo }: Props) {
   const raw = (text || '').trim()
   if (!raw) return null
@@ -71,13 +76,48 @@ export function HelpModalBody({ text, titlePara, titleComo, titleResumo }: Props
         >
           {titleComo}
         </h3>
-        <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.7 }}>
-          {lines.map((line, i) => (
-            <li key={i} style={{ marginBottom: 8 }}>
-              {line.replace(/^[•\-\*]\s*/, '')}
-            </li>
-          ))}
-        </ul>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {lines.map((line, i) => {
+            if (isComoGroupHeading(line)) {
+              return (
+                <div
+                  key={`g-${i}`}
+                  style={{
+                    fontWeight: 700,
+                    fontSize: 13,
+                    color: '#9efacb',
+                    letterSpacing: '0.04em',
+                    marginTop: i === 0 ? 0 : 14,
+                    marginBottom: 8,
+                    paddingBottom: 4,
+                    borderBottom: '1px solid rgba(0, 255, 136, 0.2)',
+                  }}
+                >
+                  {line.slice(2).trim()}
+                </div>
+              )
+            }
+            const itemText = line.replace(/^[•\-\*]\s*/, '')
+            return (
+              <div
+                key={`i-${i}`}
+                style={{
+                  display: 'flex',
+                  gap: 10,
+                  alignItems: 'flex-start',
+                  marginBottom: 10,
+                  lineHeight: 1.65,
+                  paddingLeft: 2,
+                }}
+              >
+                <span style={{ color: '#00cc66', flexShrink: 0, marginTop: 2 }} aria-hidden>
+                  •
+                </span>
+                <span style={{ flex: 1, minWidth: 0 }}>{itemText}</span>
+              </div>
+            )
+          })}
+        </div>
       </section>
     </div>
   )

@@ -1441,6 +1441,57 @@ body,
   flex: 1;
 }
 
+/* Balão de ajuda (descrição) ao pairar — texto fixo sob o botão foi removido do layout */
+.sidebar button:has(.sidebar-tip-bubble) {
+  position: relative;
+  overflow: visible;
+  z-index: 1;
+}
+.sidebar button:has(.sidebar-tip-bubble):hover,
+.sidebar button:has(.sidebar-tip-bubble):focus-visible {
+  z-index: 40;
+}
+.sidebar .sidebar-tip-bubble {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: calc(100% + 6px);
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #152a18 0%, #0f1f12 100%);
+  border: 1px solid rgba(0, 255, 120, 0.42);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(0, 0, 0, 0.35);
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+  color: rgba(240, 255, 245, 0.96) !important;
+  text-align: left;
+  max-height: min(220px, 42vh);
+  overflow-y: auto;
+  overflow-x: hidden;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.14s ease,
+    visibility 0.14s ease;
+  -webkit-overflow-scrolling: touch;
+}
+.sidebar button:has(.sidebar-tip-bubble):hover .sidebar-tip-bubble,
+.sidebar button:has(.sidebar-tip-bubble):focus-visible .sidebar-tip-bubble {
+  opacity: 1;
+  visibility: visible;
+}
+@media (hover: none) and (pointer: coarse) {
+  .sidebar .sidebar-tip-bubble {
+    display: none !important;
+  }
+}
+
 .sidebar .sidebar-nav-label-sub {
   display: block;
   text-transform: none !important;
