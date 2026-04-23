@@ -1018,6 +1018,38 @@ function countRelatorioIdInClientesRelatorios(
   return n
 }
 
+/** Número + data + cliente (id ou nome) — chave lógica para avisar duplicados na lista global. */
+function relatorioServicoMesmaChaveNegocio(
+  existente: RelatorioServico,
+  numero: string,
+  data: string,
+  clienteId: string | undefined,
+  clienteNome: string
+): boolean {
+  if (existente.numero.trim() !== numero.trim()) return false
+  const normData = (s: string) => s.trim().slice(0, 10)
+  if (normData(existente.data) !== normData(data)) return false
+  const idE = (existente.clienteId || '').trim()
+  const idN = (clienteId || '').trim()
+  if (idE && idN) return idE === idN
+  return existente.cliente.trim().toLowerCase() === clienteNome.trim().toLowerCase()
+}
+
+function encontrarRelatorioServicoDuplicado(
+  lista: RelatorioServico[],
+  numero: string,
+  data: string,
+  clienteId: string | undefined,
+  clienteNome: string,
+  excluirId?: string
+): RelatorioServico | undefined {
+  return lista.find(
+    (r) =>
+      (!excluirId || r.id !== excluirId) &&
+      relatorioServicoMesmaChaveNegocio(r, numero, data, clienteId, clienteNome)
+  )
+}
+
 /** Item de cobrança no fechamento de um relatório de serviço (vinculado ao Cadastro de Serviços) */
 type FechamentoItem = {
   id: string
@@ -16640,51 +16672,66 @@ export default function Dashboard() {
       horasViagem: totais.horasViagem
     }
 
+    const dupRelatorio = encontrarRelatorioServicoDuplicado(
+      relatoriosServico,
+      relatorioToSave.numero,
+      relatorioToSave.data,
+      relatorioToSave.clienteId,
+      relatorioToSave.cliente,
+      editingRelatorioServico?.id
+    )
+    if (dupRelatorio) {
+      alert(
+        `Já existe um relatório de serviço com o n.º «${dupRelatorio.numero}» na mesma data para este cliente.\n\nAbra o relatório existente para editar, ou altere o número ou a data antes de guardar.`
+      )
+      return
+    }
+
     let updatedRelatorios: RelatorioServico[]
-    
+    let savedRelatorio: RelatorioServico
+
     if (editingRelatorioServico) {
-      updatedRelatorios = relatoriosServico.map(r => 
-        r.id === editingRelatorioServico.id 
-          ? { ...relatorioToSave, id: editingRelatorioServico.id }
-          : r
+      savedRelatorio = { ...relatorioToSave, id: editingRelatorioServico.id }
+      updatedRelatorios = relatoriosServico.map((r) =>
+        r.id === editingRelatorioServico.id ? savedRelatorio : r
       )
     } else {
-      const newRelatorio: RelatorioServico = {
+      savedRelatorio = {
         ...relatorioToSave,
-        id: Date.now().toString()
+        id: Date.now().toString(),
       }
-      updatedRelatorios = [...relatoriosServico, newRelatorio]
+      updatedRelatorios = [...relatoriosServico, savedRelatorio]
     }
-    
+
     setRelatoriosServico(updatedRelatorios)
     saveData('nonato-relatorios-servico', updatedRelatorios)
-    
+
     // Biblioteca por cliente: só equipamento do cadastro do cliente (não duplicar chave com id de armazém)
     if (
-      relatorioToSave.equipamentoOrigem !== 'armazem' &&
-      relatorioToSave.clienteId &&
-      relatorioToSave.equipamentoId
+      savedRelatorio.equipamentoOrigem !== 'armazem' &&
+      savedRelatorio.clienteId &&
+      savedRelatorio.equipamentoId
     ) {
-      const clienteIndex = clientes.findIndex(c => c.id === relatorioToSave.clienteId)
+      const clienteIndex = clientes.findIndex((c) => c.id === savedRelatorio.clienteId)
       if (clienteIndex !== -1) {
         const updatedClientes = [...clientes]
         if (!updatedClientes[clienteIndex].relatorios) {
           updatedClientes[clienteIndex].relatorios = {}
         }
         // Usar equipamentoId como chave (pode ser numeroSerie ou outro identificador)
-        const equipamentoKey = relatorioToSave.equipamentoId
+        const equipamentoKey = savedRelatorio.equipamentoId
         if (!updatedClientes[clienteIndex].relatorios![equipamentoKey]) {
           updatedClientes[clienteIndex].relatorios![equipamentoKey] = []
         }
-        
-        // Adicionar ou atualizar relatório no equipamento
+
+        // Adicionar ou atualizar relatório no equipamento (sempre com o id persistido em savedRelatorio)
         const equipamentoRelatorios = updatedClientes[clienteIndex].relatorios![equipamentoKey]
-        const existingIndex = equipamentoRelatorios.findIndex(r => r.id === relatorioToSave.id)
-        
+        const existingIndex = equipamentoRelatorios.findIndex((r) => r.id === savedRelatorio.id)
+
         if (existingIndex !== -1) {
-          equipamentoRelatorios[existingIndex] = relatorioToSave
+          equipamentoRelatorios[existingIndex] = savedRelatorio
         } else {
-          equipamentoRelatorios.push(relatorioToSave)
+          equipamentoRelatorios.push(savedRelatorio)
         }
         
         // Ordenar por data (mais recente primeiro) - garantindo ordenação correta
@@ -16755,6 +16802,21 @@ export default function Dashboard() {
       horasTrabalho: totais.horasTrabalho,
       kmsPercorridos: totais.kmsPercorridos,
       horasViagem: totais.horasViagem
+    }
+
+    const dupRelatorioSaveGen = encontrarRelatorioServicoDuplicado(
+      relatoriosServico,
+      relatorioToSave.numero,
+      relatorioToSave.data,
+      relatorioToSave.clienteId,
+      relatorioToSave.cliente,
+      editingRelatorioServico?.id
+    )
+    if (dupRelatorioSaveGen) {
+      alert(
+        `Já existe um relatório de serviço com o n.º «${dupRelatorioSaveGen.numero}» na mesma data para este cliente.\n\nAbra o relatório existente para editar, ou altere o número ou a data antes de guardar.`
+      )
+      return
     }
 
     let updatedRelatorios: RelatorioServico[]
@@ -16903,6 +16965,20 @@ export default function Dashboard() {
       horasTrabalho: totais.horasTrabalho,
       kmsPercorridos: totais.kmsPercorridos,
       horasViagem: totais.horasViagem
+    }
+    const dupRelatorioPdf = encontrarRelatorioServicoDuplicado(
+      relatoriosServico,
+      relatorioToSave.numero,
+      relatorioToSave.data,
+      relatorioToSave.clienteId,
+      relatorioToSave.cliente,
+      editingRelatorioServico?.id
+    )
+    if (dupRelatorioPdf) {
+      alert(
+        `Já existe um relatório de serviço com o n.º «${dupRelatorioPdf.numero}» na mesma data para este cliente.\n\nAbra o relatório existente para editar, ou altere o número ou a data antes de guardar.`
+      )
+      return
     }
     let savedRelatorio: RelatorioServico
     let updatedRelatorios: RelatorioServico[]
