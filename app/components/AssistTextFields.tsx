@@ -26,22 +26,55 @@ const assistBtnStyleInline: React.CSSProperties = {
   alignSelf: 'stretch',
 }
 
-/** Ícone assistente de texto (linhas + destaque) — combina com o verde do programa */
+/** Ícone assistente: gradiente animado + estrela (SMIL) — cores vivas alinhadas ao Nonato */
 function AssistFieldGlyph() {
+  const uid = React.useId().replace(/[^a-zA-Z0-9_-]/g, '')
+  const gradStroke = `assist-stroke-${uid}`
+  const gradFill = `assist-fill-${uid}`
   return (
-    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-      <path d="M5 7.5h10M5 12h8M5 16.5h5" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" opacity={0.9} />
+    <svg
+      className="assist-field-glyph ns-vivid-icon"
+      width={20}
+      height={20}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
+    >
+      <defs>
+        <linearGradient id={gradStroke} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#4ade80">
+            <animate attributeName="stop-color" values="#4ade80;#22d3ee;#a78bfa;#f472b6;#fbbf24;#4ade80" dur="12s" repeatCount="indefinite" />
+          </stop>
+          <stop offset="100%" stopColor="#22d3ee">
+            <animate attributeName="stop-color" values="#22d3ee;#c084fc;#4ade80;#38bdf8;#f472b6;#22d3ee" dur="12s" repeatCount="indefinite" />
+          </stop>
+        </linearGradient>
+        <linearGradient id={gradFill} x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#34d399" stopOpacity="0.55">
+            <animate attributeName="stop-color" values="#34d399;#38bdf8;#a78bfa;#34d399" dur="8s" repeatCount="indefinite" />
+          </stop>
+          <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.35">
+            <animate attributeName="stop-color" values="#38bdf8;#f472b6;#fbbf24;#38bdf8" dur="8s" repeatCount="indefinite" />
+          </stop>
+        </linearGradient>
+      </defs>
       <path
-        d="m15.2 9.2 1.35 2.7 2.95.45-2.15 1.9.55 2.95-2.65-1.45-2.65 1.45.55-2.95-2.15-1.9 2.95-.45 1.35-2.7z"
-        fill="currentColor"
-        opacity={0.28}
+        d="M5 7.5h10M5 12h8M5 16.5h5"
+        stroke={`url(#${gradStroke})`}
+        strokeWidth="1.45"
+        strokeLinecap="round"
       />
       <path
         d="m15.2 9.2 1.35 2.7 2.95.45-2.15 1.9.55 2.95-2.65-1.45-2.65 1.45.55-2.95-2.15-1.9 2.95-.45 1.35-2.7z"
-        stroke="currentColor"
+        fill={`url(#${gradFill})`}
+      />
+      <path
+        d="m15.2 9.2 1.35 2.7 2.95.45-2.15 1.9.55 2.95-2.65-1.45-2.65 1.45.55-2.95-2.15-1.9 2.95-.45 1.35-2.7z"
+        stroke={`url(#${gradStroke})`}
         strokeWidth={0.85}
         strokeLinejoin="round"
-        opacity={0.55}
+        fill="none"
       />
     </svg>
   )

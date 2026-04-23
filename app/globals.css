@@ -1923,22 +1923,81 @@ body,
   line-height: 1;
 }
 
-/* Comunicação interna: ícone vetorial (substitui emoji) — esmeralda como o resto da sidebar */
+/* Ícones vívidos: movimento suave + brilho multicor (respeita prefers-reduced-motion) */
+@keyframes ns-vivid-bob {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-3px) scale(1.08);
+  }
+}
+@keyframes ns-vivid-glow-cycle {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.7)) drop-shadow(0 0 2px rgba(56, 189, 248, 0.45));
+  }
+  33% {
+    filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.8)) drop-shadow(0 0 6px rgba(167, 139, 250, 0.55));
+  }
+  66% {
+    filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.6)) drop-shadow(0 0 10px rgba(52, 211, 153, 0.65));
+  }
+}
+@keyframes ns-vivid-color-shift {
+  0%,
+  100% {
+    color: #6ee7b7;
+  }
+  20% {
+    color: #38bdf8;
+  }
+  40% {
+    color: #a78bfa;
+  }
+  60% {
+    color: #f472b6;
+  }
+  80% {
+    color: #fbbf24;
+  }
+}
+
+svg.ns-vivid-icon--chat {
+  animation: ns-vivid-bob 2.7s ease-in-out infinite, ns-vivid-glow-cycle 4s ease-in-out infinite,
+    ns-vivid-color-shift 9s ease-in-out infinite;
+  transform-origin: center center;
+  will-change: transform, filter;
+}
+
+svg.ns-vivid-icon.assist-field-glyph {
+  animation: ns-vivid-bob 2.4s ease-in-out infinite, ns-vivid-glow-cycle 3.6s ease-in-out infinite;
+  transform-origin: center center;
+  will-change: transform, filter;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  svg.ns-vivid-icon--chat,
+  svg.ns-vivid-icon.assist-field-glyph {
+    animation: none !important;
+    will-change: auto;
+  }
+}
+
+/* Comunicação interna: ícone vetorial animado na sidebar */
 .sidebar .sidebar-comunicacao-nav-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   margin-top: 1px;
-  color: rgba(110, 231, 183, 0.96);
-  filter: drop-shadow(0 0 10px rgba(52, 211, 153, 0.2));
 }
 .sidebar .sidebar-comunicacao-nav-icon svg {
   display: block;
 }
-.sidebar button.sidebar-group-btn-selected .sidebar-comunicacao-nav-icon {
-  color: rgba(220, 252, 231, 0.98);
-  filter: drop-shadow(0 0 12px rgba(52, 211, 153, 0.32));
+.sidebar button.sidebar-group-btn-selected .sidebar-comunicacao-nav-icon svg {
+  animation-duration: 2s, 3s, 6s;
 }
 
 /* Botão do assistente ao lado de Assunto / Mensagem */
@@ -1946,9 +2005,34 @@ body,
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.28s ease,
+    border-color 0.25s ease,
+    background-color 0.25s ease;
+}
+.assist-field-btn:hover {
+  transform: scale(1.06);
+  box-shadow:
+    0 0 18px rgba(52, 211, 153, 0.45),
+    0 0 28px rgba(56, 189, 248, 0.25);
+  border-color: rgba(125, 211, 252, 0.65) !important;
+  background-color: rgba(22, 58, 40, 0.98) !important;
+}
+.assist-field-btn:active {
+  transform: scale(0.98);
 }
 .assist-field-btn svg {
   display: block;
+}
+@media (prefers-reduced-motion: reduce) {
+  .assist-field-btn {
+    transition: none;
+  }
+  .assist-field-btn:hover,
+  .assist-field-btn:active {
+    transform: none;
+  }
 }
 
 .sidebar .sidebar-group-header .sidebar-nav-label-text {
@@ -6416,8 +6500,10 @@ button.dia-trabalho-acao-btn--del:hover {
   height: 0.85em;
   margin: 0 auto;
   color: var(--qa-title);
-  opacity: 0.95;
-  filter: drop-shadow(0 0 14px var(--qa-glow));
+  opacity: 0.98;
+}
+.ns-dashboard-qa-card:hover .ns-dashboard-qa-card-svg-msg.ns-vivid-icon--chat {
+  animation-duration: 2.2s, 3.2s, 7s;
 }
 
 .ns-dashboard-qa-card-title {
@@ -6766,11 +6852,10 @@ button.dia-trabalho-acao-btn--del:hover {
   display: block;
 }
 .ns-dashboard-entry-card-svg--comunicacao {
-  color: rgba(110, 231, 183, 0.96);
-  filter: drop-shadow(0 0 12px rgba(52, 211, 153, 0.26));
+  color: rgba(110, 231, 183, 0.98);
 }
-.ns-dashboard-entry-card:hover .ns-dashboard-entry-card-svg--comunicacao {
-  color: rgba(190, 242, 208, 0.99);
+.ns-dashboard-entry-card:hover .ns-dashboard-entry-card-svg--comunicacao.ns-vivid-icon--chat {
+  animation-duration: 2.2s, 3.4s, 7.5s;
 }
 
 .ns-dashboard-entry-card-title {
