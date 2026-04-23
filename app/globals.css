@@ -1539,8 +1539,12 @@ body,
 .sidebar .sidebar-scroll-inner button:focus-visible .sidebar-tip-bubble {
   opacity: 1;
   visibility: visible;
-  /* Com pointer-events:none o rato “atravessa” o balão para a área principal e o :hover do botão perde-se. */
-  pointer-events: auto;
+  /*
+   * Manter pointer-events: none — o balão fica à direita por cima do Hub / lista de mensagens.
+   * Com auto, o balão “comia” cliques e dava a sensação de que as mensagens tinham desaparecido.
+   * O texto da dica lê-se com o cursor ainda sobre o botão (sem deslizar para cima do balão).
+   */
+  pointer-events: none;
 }
 
 .sidebar .sidebar-nav-label-sub {
