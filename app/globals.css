@@ -1465,20 +1465,21 @@ body,
   flex: 1;
 }
 
-/* Balão de ajuda ao pairar: à direita do botão, por cima dos itens abaixo e da área principal */
-.sidebar button:has(.sidebar-tip-bubble) {
+/* Balão de ajuda: evitar :has() no hover (suporte); o .btn-primary:hover global aplica
+ * filter: brightness(1.06) ao botão inteiro — inclui o balão — e “lava” o contraste
+ * (parecia caixa clara com texto branco). filter:none ao pairar/focar no botão da lista. */
+.sidebar .sidebar-scroll-inner button {
   position: relative;
   overflow: visible;
   z-index: 1;
 }
-.sidebar button:has(.sidebar-tip-bubble):hover,
-.sidebar button:has(.sidebar-tip-bubble):focus-visible {
+.sidebar .sidebar-scroll-inner button:hover,
+.sidebar .sidebar-scroll-inner button:focus-visible {
   z-index: 50;
+  filter: none !important;
 }
-.sidebar-scroll-inner .sidebar-nav-cluster:has(button:has(.sidebar-tip-bubble):hover),
-.sidebar-scroll-inner .sidebar-nav-cluster:has(button:has(.sidebar-tip-bubble):focus-visible),
-.sidebar-scroll-inner .sidebar-nav-subcluster:has(button:has(.sidebar-tip-bubble):hover),
-.sidebar-scroll-inner .sidebar-nav-subcluster:has(button:has(.sidebar-tip-bubble):focus-visible) {
+.sidebar-scroll-inner .sidebar-nav-cluster:hover,
+.sidebar-scroll-inner .sidebar-nav-subcluster:hover {
   z-index: 55;
 }
 .sidebar .sidebar-tip-bubble {
@@ -1490,18 +1491,14 @@ body,
   width: min(280px, calc(100vw - 32px));
   padding: 11px 12px 11px 13px;
   border-radius: 12px;
-  /*
-   * Cores literais + fallback em var(): se var() falhar, a regra inteira não fica inválida
-   * (evita herdar color:#fff !important do .btn-parent e fundo transparente sobre a área branca).
-   */
-  background-color: rgba(8, 12, 10, 0.98);
+  background-color: rgba(8, 12, 10, 0.98) !important;
   background-image: linear-gradient(
     180deg,
     var(--sidebar-drawer-bg0, rgba(6, 10, 8, 0.96)) 0%,
     var(--sidebar-drawer-bg1, rgba(11, 15, 13, 0.99)) 100%
-  );
-  border: 1px solid var(--sidebar-subtle-line, rgba(255, 255, 255, 0.06));
-  border-left: 3px solid var(--sidebar-drawer-rail, rgba(74, 222, 128, 0.26));
+  ) !important;
+  border: 1px solid var(--sidebar-subtle-line, rgba(255, 255, 255, 0.06)) !important;
+  border-left: 3px solid var(--sidebar-drawer-rail, rgba(74, 222, 128, 0.26)) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.035),
@@ -1514,7 +1511,7 @@ body,
   letter-spacing: 0.02em !important;
   text-transform: none !important;
   color: rgba(214, 250, 226, 0.92) !important;
-  -webkit-text-fill-color: rgba(214, 250, 226, 0.92);
+  -webkit-text-fill-color: rgba(214, 250, 226, 0.92) !important;
   text-align: left;
   max-height: min(220px, 42vh);
   overflow-y: auto;
@@ -1523,6 +1520,8 @@ body,
   visibility: hidden;
   pointer-events: none;
   z-index: 100;
+  isolation: isolate;
+  mix-blend-mode: normal;
   transition:
     opacity 0.18s ease,
     visibility 0.18s ease;
@@ -1536,8 +1535,8 @@ body,
   border-radius: 6px;
   border: 1px solid rgba(74, 222, 128, 0.14);
 }
-.sidebar button:has(.sidebar-tip-bubble):hover .sidebar-tip-bubble,
-.sidebar button:has(.sidebar-tip-bubble):focus-visible .sidebar-tip-bubble {
+.sidebar .sidebar-scroll-inner button:hover .sidebar-tip-bubble,
+.sidebar .sidebar-scroll-inner button:focus-visible .sidebar-tip-bubble {
   opacity: 1;
   visibility: visible;
 }

@@ -56991,11 +56991,6 @@ A1;Peça exemplo;10`}
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-gestao-tecnica' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-tecnica')}
-            title={
-              String((safeT as any)?.sidebarGroupGestaoTecnicaDesc || '').trim()
-                ? String((safeT as any)?.sidebarGroupGestaoTecnicaDesc)
-                : undefined
-            }
           >
             {selectedSidebarButton === 'open-gestao-tecnica' && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57041,7 +57036,6 @@ A1;Peça exemplo;10`}
                           isSelected ? ' sidebar-action-btn-active' : ''
                         }`}
                         onClick={() => handleButtonClick('open-biblioteca-hub')}
-                        title={bibSub?.trim() ? bibSub : undefined}
                       >
                         {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
                         <span className="sidebar-empresa-entry-row">
@@ -57086,7 +57080,6 @@ A1;Peça exemplo;10`}
                           isDiarioSelected ? ' sidebar-action-btn-active' : ''
                         }`}
                         onClick={() => handleButtonClick(button.action)}
-                        title={diarioSub?.trim() ? diarioSub : undefined}
                       >
                         {isDiarioSelected && (
                           <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57126,7 +57119,6 @@ A1;Peça exemplo;10`}
                         isSelected ? ' sidebar-action-btn-active' : ''
                       }`}
                       onClick={() => handleButtonClick(button.action)}
-                      title={rowSub?.trim() ? rowSub : undefined}
                     >
                       {isSelected && (
                         <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57159,17 +57151,6 @@ A1;Peça exemplo;10`}
             className={`btn-primary sidebar-group-header sidebar-group-header--protocolos${selectedSidebarButton === 'open-protocolos-servico' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => toggleOrOpenDashboardHub('protocolos-main', 'protocolos-main')}
             aria-expanded={expandedGroups.has('protocolos-main')}
-            title={
-              String(
-                pickTrChain(trCardDesc, ['protocolosServicoDesc']) || (safeT as any)?.protocolosServicoHeroBadge || ''
-              ).trim()
-                ? String(
-                    pickTrChain(trCardDesc, ['protocolosServicoDesc']) ||
-                      (safeT as any)?.protocolosServicoHeroBadge ||
-                      ''
-                  )
-                : undefined
-            }
           >
             {selectedSidebarButton === 'open-protocolos-servico' && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57211,19 +57192,6 @@ A1;Peça exemplo;10`}
                 className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--protocolos-entry${selectedSidebarButton === 'open-protocolos-servico' ? ' sidebar-action-btn-active' : ''}`}
                 data-sidebar-nav-action="open-protocolos-servico"
                 onClick={() => handleButtonClick('open-protocolos-servico')}
-                title={
-                  String(
-                    pickTrChain(trCardDesc, ['protocolosServicoDesc']) ||
-                      (safeT as any)?.protocolosServicoListaTitulo ||
-                      ''
-                  ).trim()
-                    ? String(
-                        pickTrChain(trCardDesc, ['protocolosServicoDesc']) ||
-                          (safeT as any)?.protocolosServicoListaTitulo ||
-                          ''
-                      )
-                    : undefined
-                }
               >
                 {selectedSidebarButton === 'open-protocolos-servico' && (
                   <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57270,11 +57238,6 @@ A1;Peça exemplo;10`}
             type="button"
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-manual-programa' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => toggleOrOpenDashboardHub('manual-programa-main', 'manual-programa-main')}
-            title={
-              String(pickTrChain(trCardDesc, ['manualProgramaSubtitle']) || '').trim()
-                ? String(pickTrChain(trCardDesc, ['manualProgramaSubtitle']) || '')
-                : undefined
-            }
           >
             {selectedSidebarButton === 'open-manual-programa' && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57303,15 +57266,6 @@ A1;Peça exemplo;10`}
                 }`}
                 data-sidebar-nav-action="open-manual-programa"
                 onClick={() => handleButtonClick('open-manual-programa')}
-                title={(() => {
-                  const mh = resolveActionCardDescription(
-                    trCardDesc,
-                    undefined,
-                    'open-manual-programa',
-                    pickTrChain(trCardDesc, ['mainHubCardHint'])
-                  )
-                  return mh?.trim() ? mh : undefined
-                })()}
               >
                 {selectedSidebarButton === 'open-manual-programa' && (
                   <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57352,11 +57306,6 @@ A1;Peça exemplo;10`}
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-gestao-custos' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-custos')}
-            title={
-              String(pickTrChain(trCardDesc, ['quickAccessGestaoCustosDesc']) || '').trim()
-                ? String(pickTrChain(trCardDesc, ['quickAccessGestaoCustosDesc']) || '')
-                : undefined
-            }
           >
             {selectedSidebarButton === 'open-gestao-custos' && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57398,7 +57347,6 @@ A1;Peça exemplo;10`}
                         isSelected ? ' sidebar-action-btn-active' : ''
                       }`}
                       onClick={() => handleButtonClick(button.action)}
-                      title={custosSub?.trim() ? custosSub : undefined}
                     >
                       {isSelected && (
                         <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57433,7 +57381,6 @@ A1;Peça exemplo;10`}
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-comunicacao-interna' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-comunicacao-interna')}
-            title={String(safeT?.comunicacaoInternaDesc || '').trim() ? safeT?.comunicacaoInternaDesc : undefined}
           >
             {selectedSidebarButton === 'open-comunicacao-interna' && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57506,7 +57453,6 @@ A1;Peça exemplo;10`}
                         isSelected ? ' sidebar-action-btn-active' : ''
                       }`}
                       onClick={() => handleButtonClick(action)}
-                      title={comSub?.trim() ? comSub : undefined}
                     >
                       {isSelected && (
                         <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57555,15 +57501,6 @@ A1;Peça exemplo;10`}
                     selectedSidebarButton === 'open-mensagens-internas' ? ' sidebar-action-btn-active' : ''
                   }`}
                   onClick={() => handleButtonClick('open-mensagens-internas')}
-                  title={(() => {
-                    const s = resolveActionCardDescription(
-                      trCardDesc,
-                      'mensagens-internas-default',
-                      'open-mensagens-internas',
-                      pickTrChain(trCardDesc, ['mainHubCardHint'])
-                    )
-                    return s?.trim() ? s : undefined
-                  })()}
                 >
                   {selectedSidebarButton === 'open-mensagens-internas' && (
                     <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57608,11 +57545,6 @@ A1;Peça exemplo;10`}
                   <button
                     className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
                     onClick={() => handleButtonClick(button.action)}
-                    title={
-                      String(pickTrChain(trCardDesc, ['quickAccessChecklistHubDesc']) || '').trim()
-                        ? String(pickTrChain(trCardDesc, ['quickAccessChecklistHubDesc']) || '')
-                        : undefined
-                    }
                   >
                     {isSelected && (
                       <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57652,7 +57584,6 @@ A1;Peça exemplo;10`}
                               }`}
                               data-button-action={subButton.action}
                               onClick={() => handleButtonClick(subButton.action)}
-                              title={chkSub?.trim() ? chkSub : undefined}
                             >
                               {isSubSelected && (
                                 <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57688,11 +57619,6 @@ A1;Peça exemplo;10`}
           <button
             className={`btn-primary sidebar-group-header${gestaoIndustrialActive ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-industrial')}
-            title={
-              String((safeT as any)?.sidebarGroupGestaoIndustrialDesc || '').trim()
-                ? String((safeT as any)?.sidebarGroupGestaoIndustrialDesc)
-                : undefined
-            }
           >
             {gestaoIndustrialActive && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57729,11 +57655,6 @@ A1;Peça exemplo;10`}
                             isSelected ? ' sidebar-action-btn-active' : ''
                           }`}
                           onClick={() => handleButtonClick(button.action)}
-                          title={
-                            String(pickTrChain(trCardDesc, ['quickAccessChecklistHubDesc']) || '').trim()
-                              ? String(pickTrChain(trCardDesc, ['quickAccessChecklistHubDesc']) || '')
-                              : undefined
-                          }
                         >
                           {isSelected && (
                             <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57770,7 +57691,6 @@ A1;Peça exemplo;10`}
                                     }`}
                                     data-button-action={subButton.action}
                                     onClick={() => handleButtonClick(subButton.action)}
-                                    title={indChkSub?.trim() ? indChkSub : undefined}
                                   >
                                     {isSubSelected && (
                                       <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57811,7 +57731,6 @@ A1;Peça exemplo;10`}
                         isSelected ? ' sidebar-action-btn-active' : ''
                       }`}
                       onClick={() => handleButtonClick(button.action, button.id)}
-                      title={indSub?.trim() ? indSub : undefined}
                     >
                       {isSelected && (
                         <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57853,15 +57772,6 @@ A1;Peça exemplo;10`}
                   type="button"
                   className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
                   onClick={() => toggleOrOpenDashboardHub('manuais-informacoes-main', 'manuais-informacoes-main')}
-                  title={
-                    String(
-                      pickTrChain(trCardDesc, ['quickAccessManuaisDesc', 'manuaisInformacoesTecnicasDesc']) || ''
-                    ).trim()
-                      ? String(
-                          pickTrChain(trCardDesc, ['quickAccessManuaisDesc', 'manuaisInformacoesTecnicasDesc']) || ''
-                        )
-                      : undefined
-                  }
                 >
                   {isSelected && (
                     <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57892,15 +57802,6 @@ A1;Peça exemplo;10`}
                       }`}
                       data-sidebar-nav-action={button.action}
                       onClick={() => handleButtonClick(button.action)}
-                      title={(() => {
-                        const mh = resolveActionCardDescription(
-                          trCardDesc,
-                          button.id,
-                          button.action,
-                          pickTrChain(trCardDesc, ['mainHubCardHint'])
-                        )
-                        return mh?.trim() ? mh : undefined
-                      })()}
                     >
                       {isSelected && (
                         <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57949,15 +57850,6 @@ A1;Peça exemplo;10`}
                   type="button"
                   className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
                   onClick={() => toggleOrOpenDashboardHub('almoxarifado-main', 'almoxarifado-main')}
-                  title={
-                    String(
-                      pickTrChain(trCardDesc, ['quickAccessAlmoxarifadoDesc', 'almoxarifadoArmazemDesc']) || ''
-                    ).trim()
-                      ? String(
-                          pickTrChain(trCardDesc, ['quickAccessAlmoxarifadoDesc', 'almoxarifadoArmazemDesc']) || ''
-                        )
-                      : undefined
-                  }
                 >
                   {isSelected && (
                     <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -57988,15 +57880,6 @@ A1;Peça exemplo;10`}
                       }`}
                       data-sidebar-nav-action={button.action}
                       onClick={() => handleButtonClick(button.action)}
-                      title={(() => {
-                        const mh = resolveActionCardDescription(
-                          trCardDesc,
-                          button.id,
-                          button.action,
-                          pickTrChain(trCardDesc, ['mainHubCardHint'])
-                        )
-                        return mh?.trim() ? mh : undefined
-                      })()}
                     >
                       {isSelected && (
                         <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -58038,7 +57921,6 @@ A1;Peça exemplo;10`}
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-gestao-financeira' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-gestao-financeira')}
-            title={String(safeT?.gestaoFinanceiraDesc || '').trim() ? safeT?.gestaoFinanceiraDesc : undefined}
           >
             {selectedSidebarButton === 'open-gestao-financeira' && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -58078,7 +57960,6 @@ A1;Peça exemplo;10`}
                         isSelected ? ' sidebar-action-btn-active' : ''
                       }`}
                       onClick={() => handleButtonClick(button.action)}
-                      title={finSub?.trim() ? finSub : undefined}
                     >
                       {isSelected && (
                         <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -58126,17 +58007,6 @@ A1;Peça exemplo;10`}
                 }
                 aria-expanded={expandedGroups.has('empresa-institucional-main')}
                 aria-controls="sidebar-empresa-institucional-actions"
-                title={
-                  String(
-                    (safeT as any)?.empresaInstitucionalSubtitle ||
-                      'Cadastro, ficha oficial e solicitação de assistência'
-                  ).trim()
-                    ? String(
-                        (safeT as any)?.empresaInstitucionalSubtitle ||
-                          'Cadastro, ficha oficial e solicitação de assistência'
-                      )
-                    : undefined
-                }
               >
                 {(selectedSidebarButton === 'open-cadastro-nonato-service' ||
                   selectedSidebarButton === 'open-ficha-cadastral' ||
@@ -58211,7 +58081,6 @@ A1;Peça exemplo;10`}
                           }`}
                           data-sidebar-nav-action={button.action}
                           onClick={() => handleButtonClick(button.action, button.id)}
-                          title={String(sub || '').trim() ? sub : undefined}
                         >
                           {isSelected && <span className="sidebar-nav-check" aria-hidden>✓</span>}
                           <span className="sidebar-empresa-entry-row">
@@ -58276,11 +58145,6 @@ A1;Peça exemplo;10`}
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-extra' ? ' sidebar-group-btn-selected' : ''}`}
             onClick={() => handleButtonClick('open-extra')}
-            title={
-              String((safeT as any)?.sidebarGroupExtraDesc || '').trim()
-                ? String((safeT as any)?.sidebarGroupExtraDesc)
-                : undefined
-            }
           >
             {selectedSidebarButton === 'open-extra' && (
               <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -58326,15 +58190,6 @@ A1;Peça exemplo;10`}
                   selectedSidebarButton === 'open-translator' ? ' sidebar-action-btn-active' : ''
                 }`}
                 onClick={() => handleButtonClick('open-translator')}
-                title={(() => {
-                  const t = resolveActionCardDescription(
-                    trCardDesc,
-                    'open-translator',
-                    'open-translator',
-                    pickTrChain(trCardDesc, ['mainHubCardHint'])
-                  )
-                  return t?.trim() ? t : undefined
-                })()}
               >
                 {selectedSidebarButton === 'open-translator' && (
                   <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -58371,15 +58226,6 @@ A1;Peça exemplo;10`}
                   selectedSidebarButton === 'open-manual-gestor' ? ' sidebar-action-btn-active' : ''
                 }`}
                 onClick={() => handleButtonClick('open-manual-gestor')}
-                title={(() => {
-                  const mg = resolveActionCardDescription(
-                    trCardDesc,
-                    'open-manual-gestor',
-                    'open-manual-gestor',
-                    pickTrChain(trCardDesc, ['mainHubCardHint'])
-                  )
-                  return mg?.trim() ? mg : undefined
-                })()}
               >
                 {selectedSidebarButton === 'open-manual-gestor' && (
                   <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -58432,11 +58278,6 @@ A1;Peça exemplo;10`}
                 type="button"
                 className={`btn-administrador sidebar-group-header sidebar-admin-footer${isSelected ? ' sidebar-group-btn-selected' : ''}`}
                 onClick={() => toggleOrOpenDashboardHub('admin-main', 'admin-main')}
-                title={
-                  String(pickTrChain(trCardDesc, ['administradorGeralDesc']) || '').trim()
-                    ? String(pickTrChain(trCardDesc, ['administradorGeralDesc']) || '')
-                    : undefined
-                }
               >
                 {isSelected && (
                   <span className="sidebar-nav-check" aria-hidden>✓</span>
@@ -58475,15 +58316,6 @@ A1;Peça exemplo;10`}
                     }`}
                     data-sidebar-nav-action={adminBtn.action}
                     onClick={() => handleButtonClick(adminBtn.action)}
-                    title={(() => {
-                      const ad = resolveActionCardDescription(
-                        trCardDesc,
-                        adminBtn.id,
-                        adminBtn.action,
-                        pickTrChain(trCardDesc, ['mainHubCardHint'])
-                      )
-                      return ad?.trim() ? ad : undefined
-                    })()}
                   >
                     {isSelected && (
                       <span className="sidebar-nav-check" aria-hidden>✓</span>
