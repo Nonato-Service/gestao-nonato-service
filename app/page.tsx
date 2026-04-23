@@ -57439,8 +57439,16 @@ A1;Peça exemplo;10`}
               <span className="sidebar-nav-check" aria-hidden>✓</span>
             )}
             <span className="sidebar-nav-label sidebar-nav-label--stacked" style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
-                💬
+              <span className="sidebar-comunicacao-nav-icon" aria-hidden>
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M6 9.5h12a2 2 0 012 2v5.5a2 2 0 01-2 2h-3.2l-3.3 3.2V18.5H6a2 2 0 01-2-2v-5.5a2 2 0 012-2z"
+                    stroke="currentColor"
+                    strokeWidth="1.35"
+                    strokeLinejoin="round"
+                  />
+                  <path d="M9.5 13h6M9.5 15.5h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.78" />
+                </svg>
               </span>
               <span className="sidebar-nav-label-stack">
                 <span className="sidebar-nav-label-text">
@@ -58740,8 +58748,30 @@ A1;Peça exemplo;10`}
                           { icon: '📋', t: (safeT as any)?.dashboardEntradaCard1Titulo, d: (safeT as any)?.dashboardEntradaCard1Desc },
                           { icon: '👥', t: (safeT as any)?.dashboardEntradaCard2Titulo, d: (safeT as any)?.dashboardEntradaCard2Desc },
                           { icon: '🏭', t: (safeT as any)?.dashboardEntradaCard3Titulo, d: (safeT as any)?.dashboardEntradaCard3Desc },
-                          { icon: '💬', t: (safeT as any)?.dashboardEntradaCard4Titulo, d: (safeT as any)?.dashboardEntradaCard4Desc },
-                        ] as const
+                          {
+                            icon: (
+                              <svg
+                                className="ns-dashboard-entry-card-svg ns-dashboard-entry-card-svg--comunicacao"
+                                viewBox="0 0 24 24"
+                                width="26"
+                                height="26"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                aria-hidden
+                              >
+                                <path
+                                  d="M5.5 9.5h13a2 2 0 012 2v5.5a2 2 0 01-2 2h-3.4l-3.4 3.1V18.5H5.5a2 2 0 01-2-2v-5.5a2 2 0 012-2z"
+                                  stroke="currentColor"
+                                  strokeWidth="1.35"
+                                  strokeLinejoin="round"
+                                />
+                                <path d="M9 13h6M9 15.5h4" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" opacity="0.75" />
+                              </svg>
+                            ),
+                            t: (safeT as any)?.dashboardEntradaCard4Titulo,
+                            d: (safeT as any)?.dashboardEntradaCard4Desc,
+                          },
+                        ] as { icon: React.ReactNode; t: string | undefined; d: string | undefined }[]
                       ).map((row, i) => (
                         <div key={i} className="ns-dashboard-entry-card">
                           <div className="ns-dashboard-entry-card-icon" aria-hidden>{row.icon}</div>
@@ -58885,7 +58915,7 @@ A1;Peça exemplo;10`}
                   action: string
                   titleKey: string
                   descKey: string
-                  icon: string
+                  icon: React.ReactNode
                   titleFallback: string
                   descFallback: string
                 }> = [
@@ -58897,7 +58927,32 @@ A1;Peça exemplo;10`}
                   { action: 'open-manuais-informacoes-tecnicas', titleKey: 'manuaisInformacoesTecnicasTitle', descKey: 'quickAccessManuaisDesc', icon: '📖', titleFallback: 'MANUAIS E INFORMAÇÕES TÉCNICAS', descFallback: 'Manuais por família, grupo e modelo.' },
                   { action: 'open-almoxarifado-armazem', titleKey: 'almoxarifadoArmazemTitle', descKey: 'quickAccessAlmoxarifadoDesc', icon: '🏪', titleFallback: 'ALMOXARIFADO / ARMAZÉM', descFallback: 'Stock, pedidos e armazém.' },
                   { action: 'open-quick-gestao-financeira', titleKey: 'gestaoFinanceiraTitle', descKey: 'gestaoFinanceiraDesc', icon: '📊', titleFallback: 'GESTÃO FINANCEIRA', descFallback: 'Finanças e controlo.' },
-                  { action: 'open-hub-comunicacao', titleKey: 'hubComunicacao', descKey: 'hubComunicacaoDesc', icon: '💬', titleFallback: 'HUB DE COMUNICAÇÃO', descFallback: 'Mensagens e participantes.' },
+                  {
+                    action: 'open-hub-comunicacao',
+                    titleKey: 'hubComunicacao',
+                    descKey: 'hubComunicacaoDesc',
+                    icon: (
+                      <svg
+                        className="ns-dashboard-qa-card-svg-msg"
+                        viewBox="0 0 24 24"
+                        width="1em"
+                        height="1em"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden
+                      >
+                        <path
+                          d="M5.5 9.5h13a2 2 0 012 2v5.5a2 2 0 01-2 2h-3.4l-3.4 3.1V18.5H5.5a2 2 0 01-2-2v-5.5a2 2 0 012-2z"
+                          stroke="currentColor"
+                          strokeWidth="1.35"
+                          strokeLinejoin="round"
+                        />
+                        <path d="M9 13h6M9 15.5h4" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" opacity="0.75" />
+                      </svg>
+                    ),
+                    titleFallback: 'HUB DE COMUNICAÇÃO',
+                    descFallback: 'Mensagens e participantes.',
+                  },
                   { action: 'open-agenda', titleKey: 'agendaTitle', descKey: 'quickAccessAgendaDesc', icon: '📅', titleFallback: 'AGENDA TÉCNICA', descFallback: 'Agenda técnica e agendamentos.' },
                   { action: 'open-translator', titleKey: 'translator', descKey: 'quickAccessTranslatorDesc', icon: '🌐', titleFallback: 'Tradutor', descFallback: 'Tradução rápida entre idiomas.' },
                   { action: 'open-checklist-hub', titleKey: 'checklistGroupTitle', descKey: 'quickAccessChecklistHubDesc', icon: '✅', titleFallback: 'GESTÃO DOS CHECKLIST', descFallback: 'Hub de checklists, pré-checklist e montagem.' }

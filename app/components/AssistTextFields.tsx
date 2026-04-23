@@ -26,6 +26,27 @@ const assistBtnStyleInline: React.CSSProperties = {
   alignSelf: 'stretch',
 }
 
+/** Ícone assistente de texto (linhas + destaque) — combina com o verde do programa */
+function AssistFieldGlyph() {
+  return (
+    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <path d="M5 7.5h10M5 12h8M5 16.5h5" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" opacity={0.9} />
+      <path
+        d="m15.2 9.2 1.35 2.7 2.95.45-2.15 1.9.55 2.95-2.65-1.45-2.65 1.45.55-2.95-2.15-1.9 2.95-.45 1.35-2.7z"
+        fill="currentColor"
+        opacity={0.28}
+      />
+      <path
+        d="m15.2 9.2 1.35 2.7 2.95.45-2.15 1.9.55 2.95-2.65-1.45-2.65 1.45.55-2.95-2.15-1.9 2.95-.45 1.35-2.7z"
+        stroke="currentColor"
+        strokeWidth={0.85}
+        strokeLinejoin="round"
+        opacity={0.55}
+      />
+    </svg>
+  )
+}
+
 type TextareaRest = Omit<
   React.TextareaHTMLAttributes<HTMLTextAreaElement>,
   'value' | 'onChange' | 'children'
@@ -71,12 +92,13 @@ export function AssistTextarea(
       />
       <button
         type="button"
+        className="assist-field-btn"
         title={assistButtonTitle}
         aria-label={assistButtonTitle}
         onClick={() => openForField(value, onValueChange)}
         style={assistBtnStyle}
       >
-        🌐
+        <AssistFieldGlyph />
       </button>
     </div>
   )
@@ -137,12 +159,13 @@ export function AssistInput(props: InputRest) {
       />
       <button
         type="button"
+        className="assist-field-btn"
         title={assistButtonTitle}
         aria-label={assistButtonTitle}
         onClick={() => openForField(value, onValueChange)}
         style={assistBtnStyleInline}
       >
-        🌐
+        <AssistFieldGlyph />
       </button>
     </div>
   )

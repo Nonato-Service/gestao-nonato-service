@@ -1923,6 +1923,34 @@ body,
   line-height: 1;
 }
 
+/* Comunicação interna: ícone vetorial (substitui emoji) — esmeralda como o resto da sidebar */
+.sidebar .sidebar-comunicacao-nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: rgba(110, 231, 183, 0.96);
+  filter: drop-shadow(0 0 10px rgba(52, 211, 153, 0.2));
+}
+.sidebar .sidebar-comunicacao-nav-icon svg {
+  display: block;
+}
+.sidebar button.sidebar-group-btn-selected .sidebar-comunicacao-nav-icon {
+  color: rgba(220, 252, 231, 0.98);
+  filter: drop-shadow(0 0 12px rgba(52, 211, 153, 0.32));
+}
+
+/* Botão do assistente ao lado de Assunto / Mensagem */
+.assist-field-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.assist-field-btn svg {
+  display: block;
+}
+
 .sidebar .sidebar-group-header .sidebar-nav-label-text {
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -6382,6 +6410,15 @@ button.dia-trabalho-acao-btn--del:hover {
   margin-bottom: 12px;
   line-height: 1;
 }
+.ns-dashboard-qa-card-icon .ns-dashboard-qa-card-svg-msg {
+  display: block;
+  width: 0.85em;
+  height: 0.85em;
+  margin: 0 auto;
+  color: var(--qa-title);
+  opacity: 0.95;
+  filter: drop-shadow(0 0 14px var(--qa-glow));
+}
 
 .ns-dashboard-qa-card-title {
   position: relative;
@@ -6723,6 +6760,17 @@ button.dia-trabalho-acao-btn--del:hover {
   font-size: 22px;
   margin-bottom: 8px;
   line-height: 1;
+}
+
+.ns-dashboard-entry-card-icon .ns-dashboard-entry-card-svg {
+  display: block;
+}
+.ns-dashboard-entry-card-svg--comunicacao {
+  color: rgba(110, 231, 183, 0.96);
+  filter: drop-shadow(0 0 12px rgba(52, 211, 153, 0.26));
+}
+.ns-dashboard-entry-card:hover .ns-dashboard-entry-card-svg--comunicacao {
+  color: rgba(190, 242, 208, 0.99);
 }
 
 .ns-dashboard-entry-card-title {
