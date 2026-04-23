@@ -56982,6 +56982,7 @@ A1;Peça exemplo;10`}
 
         {syncTrafficLightsSidebarEmbed}
 
+        <div className="sidebar-scroll-inner">
         {/* Botões da Sidebar - Organizados por Grupos */}
         
         {/* Grupo: GESTÃO TÉCNICA — só mostra se o usuário tiver permissão em algum botão */}
@@ -58502,6 +58503,8 @@ A1;Peça exemplo;10`}
             </div>
           )
         })()}
+
+        </div>
 
         {/* Botão Sair do Sistema - fixo no rodapé da sidebar */}
         <button

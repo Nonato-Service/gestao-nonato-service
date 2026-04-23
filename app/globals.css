@@ -1321,10 +1321,9 @@ body,
   display: flex;
   flex-direction: column;
   gap: 10px;
-  overflow-x: hidden;
-  overflow-y: auto;
+  /* Rolagem no .sidebar-scroll-inner para o balão poder sair à direita sem ser cortado */
+  overflow: visible;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
   background: linear-gradient(165deg, #1a221e 0%, #121815 48%, #0d1210 100%);
   border-right: 1px solid rgba(74, 222, 128, 0.13);
   box-shadow:
@@ -1350,17 +1349,42 @@ body,
   position: relative;
   z-index: 1;
 }
-.sidebar::-webkit-scrollbar {
+
+/* Área rolável da navegação (logo + “Sair” ficam fora; balões podem ultrapassar a borda direita) */
+.sidebar .sidebar-scroll-inner {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-x: visible;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+.sidebar .sidebar-scroll-inner::-webkit-scrollbar {
   width: 8px;
 }
-.sidebar::-webkit-scrollbar-track {
+.sidebar .sidebar-scroll-inner::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.28);
   border-radius: 8px;
 }
-.sidebar::-webkit-scrollbar-thumb {
+.sidebar .sidebar-scroll-inner::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, #3d4540 0%, #2a322e 100%);
   border-radius: 8px;
   border: 1px solid rgba(74, 222, 128, 0.17);
+}
+
+/* Desktop: sidebar por cima da coluna central para o balão (à direita) não ficar tapado pelo conteúdo */
+@media (min-width: 1025px) {
+  .app-layout:not(.app-compact-layout) > .sidebar {
+    z-index: 8;
+  }
+  .app-layout:not(.app-compact-layout) > .main-app-column {
+    z-index: 1;
+    position: relative;
+  }
 }
 
 @keyframes sidebar-nav-drawer-in {
@@ -1441,7 +1465,7 @@ body,
   flex: 1;
 }
 
-/* Balão de ajuda (descrição) ao pairar — texto fixo sob o botão foi removido do layout */
+/* Balão de ajuda ao pairar: à direita do botão, por cima dos itens abaixo e da área principal */
 .sidebar button:has(.sidebar-tip-bubble) {
   position: relative;
   overflow: visible;
@@ -1449,13 +1473,21 @@ body,
 }
 .sidebar button:has(.sidebar-tip-bubble):hover,
 .sidebar button:has(.sidebar-tip-bubble):focus-visible {
-  z-index: 40;
+  z-index: 50;
+}
+.sidebar-scroll-inner .sidebar-nav-cluster:has(button:has(.sidebar-tip-bubble):hover),
+.sidebar-scroll-inner .sidebar-nav-cluster:has(button:has(.sidebar-tip-bubble):focus-visible),
+.sidebar-scroll-inner .sidebar-nav-subcluster:has(button:has(.sidebar-tip-bubble):hover),
+.sidebar-scroll-inner .sidebar-nav-subcluster:has(button:has(.sidebar-tip-bubble):focus-visible) {
+  z-index: 55;
 }
 .sidebar .sidebar-tip-bubble {
   position: absolute;
-  left: 4px;
-  right: 4px;
-  top: calc(100% + 6px);
+  left: calc(100% + 10px);
+  right: auto;
+  top: 50%;
+  transform: translateY(-50%);
+  width: min(280px, calc(100vw - 32px));
   padding: 10px 12px;
   border-radius: 10px;
   background: linear-gradient(180deg, #152a18 0%, #0f1f12 100%);
@@ -1476,6 +1508,7 @@ body,
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+  z-index: 100;
   transition:
     opacity 0.14s ease,
     visibility 0.14s ease;
@@ -3157,7 +3190,8 @@ html, body {
     text-align: center !important;
   }
   /* Botões de grupo (GESTÃO TÉCNICA, etc): legíveis no telefone */
-  .sidebar > div:not(:first-child) > button {
+  .sidebar .sidebar-scroll-inner .sidebar-nav-cluster > button.sidebar-group-header,
+  .sidebar .sidebar-scroll-inner .sidebar-nav-subcluster > button.sidebar-group-header {
     width: 100% !important;
     max-width: 100% !important;
     padding: 8px 10px !important;
@@ -3372,7 +3406,8 @@ html, body {
     word-break: break-word !important;
     text-align: center !important;
   }
-  .sidebar:not(.sidebar-mobile-open) > div:not(:first-child) > button {
+  .sidebar:not(.sidebar-mobile-open) .sidebar-scroll-inner .sidebar-nav-cluster > button.sidebar-group-header,
+  .sidebar:not(.sidebar-mobile-open) .sidebar-scroll-inner .sidebar-nav-subcluster > button.sidebar-group-header {
     padding: 6px 8px !important;
     font-size: max(12px, 0.75rem) !important;
     min-height: 40px !important;
@@ -4257,7 +4292,7 @@ body {
     z-index: 2090 !important;
     transform: translate3d(-105%, 0, 0) !important;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    overflow-y: auto !important;
+    overflow-y: visible !important;
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     overscroll-behavior: contain;
@@ -4269,6 +4304,14 @@ body {
     flex-shrink: 0 !important;
     display: flex !important;
     flex-direction: column !important;
+  }
+  .app-compact-layout .sidebar .sidebar-scroll-inner {
+    flex: 1 !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
   }
   .app-compact-layout .sidebar.sidebar-mobile-open {
     transform: translate3d(0, 0, 0) !important;
@@ -4315,7 +4358,8 @@ body {
     max-width: none !important;
   }
   /* Gaveta: só cabeçalhos de grupo (não os botões dentro de .sidebar-action-buttons) */
-  .app-compact-layout .sidebar > div:not(.sidebar-action-buttons) > button.btn-primary {
+  .app-compact-layout .sidebar .sidebar-scroll-inner button.btn-primary.sidebar-group-header,
+  .app-compact-layout .sidebar .sidebar-scroll-inner button.btn-administrador.sidebar-group-header {
     flex-wrap: wrap !important;
     align-items: flex-start !important;
     row-gap: 6px !important;
