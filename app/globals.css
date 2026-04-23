@@ -1490,10 +1490,18 @@ body,
   width: min(280px, calc(100vw - 32px));
   padding: 11px 12px 11px 13px;
   border-radius: 12px;
-  /* Mesmo vocabulário visual que .sidebar-action-buttons (gaveta) — sem neon à parte */
-  background: linear-gradient(180deg, var(--sidebar-drawer-bg0) 0%, var(--sidebar-drawer-bg1) 100%);
-  border: 1px solid var(--sidebar-subtle-line);
-  border-left: 3px solid var(--sidebar-drawer-rail);
+  /*
+   * Cores literais + fallback em var(): se var() falhar, a regra inteira não fica inválida
+   * (evita herdar color:#fff !important do .btn-parent e fundo transparente sobre a área branca).
+   */
+  background-color: rgba(8, 12, 10, 0.98);
+  background-image: linear-gradient(
+    180deg,
+    var(--sidebar-drawer-bg0, rgba(6, 10, 8, 0.96)) 0%,
+    var(--sidebar-drawer-bg1, rgba(11, 15, 13, 0.99)) 100%
+  );
+  border: 1px solid var(--sidebar-subtle-line, rgba(255, 255, 255, 0.06));
+  border-left: 3px solid var(--sidebar-drawer-rail, rgba(74, 222, 128, 0.26));
   border-top: 1px solid rgba(255, 255, 255, 0.07);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.035),
@@ -1505,7 +1513,8 @@ body,
   font-weight: 500 !important;
   letter-spacing: 0.02em !important;
   text-transform: none !important;
-  color: var(--sidebar-text-dim) !important;
+  color: rgba(214, 250, 226, 0.92) !important;
+  -webkit-text-fill-color: rgba(214, 250, 226, 0.92);
   text-align: left;
   max-height: min(220px, 42vh);
   overflow-y: auto;
