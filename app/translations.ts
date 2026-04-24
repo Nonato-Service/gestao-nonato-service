@@ -2948,7 +2948,10 @@ export const translations = {
     clear: 'Limpar',
     opPendingOrders: 'Ordens de Preparação Recebidas',
     opStartChecklist: 'Iniciar checklist para esta ordem (Em breve)',
-    opExecute: 'Executar'
+    opExecute: 'Executar',
+    confirmarSair:
+      'Deseja realmente sair do sistema? Confirme para fechar esta janela ou separador com segurança.\n\nPara sair em condições normais use sempre «Sair do sistema» no fim do menu lateral.',
+    sairDoSistema: 'Sair do sistema',
   },
   'es': {
     title: 'Gestión Técnica de Nonato Service',
@@ -5552,7 +5555,10 @@ export const translations = {
     opFillMandatory: 'Complete el Código SME_UP (ID o No. Serie) para guardar.',
     opPendingOrders: 'Órdenes de Preparación Recibidas',
     opStartChecklist: 'Iniciar lista de verificación para esta orden (Próximamente)',
-    opExecute: 'Ejecutar'
+    opExecute: 'Ejecutar',
+    confirmarSair:
+      '¿Desea salir del sistema? Confirme para cerrar esta ventana o pestaña de forma segura.\n\nPara salir con normalidad use siempre «Salir del sistema» al final del menú lateral.',
+    sairDoSistema: 'Salir del sistema',
   },
   'fr': {
     title: 'Gestion Technique de BOA TRADE',
@@ -8149,7 +8155,10 @@ export const translations = {
     nenhumPedidoSeparacao: 'Aucune commande de séparation trouvée',
     statusGeral: 'Statut Général',
     itens: 'articles',
-    statusItem: 'Statut de l\'Article'
+    statusItem: 'Statut de l\'Article',
+    confirmarSair:
+      'Voulez-vous vraiment quitter l\'application ? Confirmez pour fermer cette fenêtre ou cet onglet en toute sécurité.\n\nPour quitter normalement, utilisez toujours « Quitter l\'application » en bas du menu latéral.',
+    sairDoSistema: 'Quitter l\'application',
   },
   'it': {
     title: 'Gestione Tecnica di BOA TRADE',
@@ -10746,7 +10755,10 @@ export const translations = {
     nenhumPedidoSeparacao: 'Nessun ordine di separazione trovato',
     statusGeral: 'Stato Generale',
     itens: 'articoli',
-    statusItem: 'Stato dell\'Articolo'
+    statusItem: 'Stato dell\'Articolo',
+    confirmarSair:
+      'Uscire dal sistema? Conferma per chiudere in modo sicuro finestra o scheda.\n\nPer uscire in modo corretto usi sempre « Esci dal sistema » in fondo al menu laterale.',
+    sairDoSistema: 'Esci dal sistema',
   },
   'de': {
     title: 'Technisches Management von BOA TRADE',
@@ -13314,7 +13326,10 @@ export const translations = {
     equipamentosAtivos: 'aktive(s) Ausrüstung(en)',
     configuracoesSistema: 'Systemeinstellungen',
     biblioteca: 'Bibliothek',
-    relatoriosCadastrados: 'Bericht(e) registriert'
+    relatoriosCadastrados: 'Bericht(e) registriert',
+    confirmarSair:
+      'Möchten Sie das Programm wirklich beenden? Bestätigen Sie, um dieses Fenster oder den Tab sicher zu schließen.\n\nZum regulären Beenden nutzen Sie immer « Programm beenden » am Ende des Seitenmenüs.',
+    sairDoSistema: 'Programm beenden',
   },
   'en': {
     title: 'Technical Management of BOA TRADE',
@@ -15936,7 +15951,10 @@ export const translations = {
     equipamentosAtivos: 'active equipment',
     configuracoesSistema: 'System Settings',
     biblioteca: 'Library',
-    relatoriosCadastrados: 'report(s) registered'
+    relatoriosCadastrados: 'report(s) registered',
+    confirmarSair:
+      'Do you really want to exit? Confirm to safely close this window or tab.\n\nTo leave the app under normal conditions, always use « Exit system » at the bottom of the side menu.',
+    sairDoSistema: 'Exit system',
   }
 }
 

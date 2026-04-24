@@ -1998,6 +1998,8 @@ export default function Dashboard() {
   const [showDiarioPedidosModal, setShowDiarioPedidosModal] = useState(false)
   const [diarioPedidoDraft, setDiarioPedidoDraft] = useState('')
   const diarioPedidosHydratedRef = useRef(false)
+  /** true só após «Sair do sistema» confirmado — evita aviso ao fechar de forma segura. */
+  const allowUnsafeBrowserExitRef = useRef(false)
   const [checklistAccessStep, setChecklistAccessStep] = useState<'message' | 'password'>('message')
   const [checklistAccessNomeInput, setChecklistAccessNomeInput] = useState('')
   const [checklistAccessPasswordInput, setChecklistAccessPasswordInput] = useState('')
@@ -20138,18 +20140,39 @@ export default function Dashboard() {
     })
   }, [currentCommunicationIdentity?.id, hubUsuarioAtual?.id, hubDestinatarioSelecionado.join(',')])
 
-  // Função para sair do sistema (fechar aplicação/aba)
+  // Função para sair do sistema (fechar aplicação/aba) — saída segura; desativa o aviso de beforeunload
   const handleSairDoSistema = useCallback(() => {
     const t = translations[selectedLanguage as keyof typeof translations] || translations['pt-BR']
     const msg = (t as { confirmarSair?: string }).confirmarSair || 'Deseja realmente sair do sistema?'
     if (typeof window !== 'undefined' && window.confirm(msg)) {
+      allowUnsafeBrowserExitRef.current = true
       window.close()
       // Fallback: em alguns navegadores window.close() não fecha a aba; redireciona para página em branco
       setTimeout(() => {
         if (typeof window !== 'undefined') window.location.href = 'about:blank'
       }, 300)
+      // Se o fecho falhar, voltar a proteger o utilizador após alguns segundos
+      setTimeout(() => {
+        allowUnsafeBrowserExitRef.current = false
+      }, 8000)
     }
   }, [selectedLanguage])
+
+  // Bloquear fecho/recarregar inadequado do separador; saída segura = botão «Sair do sistema» (confirmação)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const sessaoPrincipalAtiva =
+      Boolean(loginUser) && !showSplashInicial && !showPasswordScreen && !demoExpired
+
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (allowUnsafeBrowserExitRef.current) return
+      if (!sessaoPrincipalAtiva) return
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [loginUser, showSplashInicial, showPasswordScreen, demoExpired])
 
   // Rolar apenas a área CENTRAL para o topo (não tocar na barra lateral nem na janela)
   const scrollMainContentToTop = useCallback(() => {
@@ -59550,9 +59573,8 @@ A1;Peça exemplo;10`}
                           title={safeT?.helpTooltip || 'Pressione F1 para abrir a ajuda'}
                         >
                           <IconHelpCircle size={17} className="main-content-action-svg" />
-                          <span className="main-content-action-label">{safeT?.help || 'HELP'}</span>
-                          <span className="main-content-action-f1" aria-hidden>
-                            F1
+                          <span className="main-content-action-label">
+                            {safeT?.help || 'HELP'} - F1
                           </span>
                         </button>
                       </div>
@@ -59625,9 +59647,8 @@ A1;Peça exemplo;10`}
                   title={safeT?.helpTooltip || 'Pressione F1 para abrir a ajuda'}
                 >
                   <span aria-hidden>❓</span>
-                  <span className="main-content-action-label">{safeT?.help || 'HELP'}</span>
-                  <span className="main-content-action-f1" aria-hidden>
-                    F1
+                  <span className="main-content-action-label">
+                    {safeT?.help || 'HELP'} - F1
                   </span>
                 </button>
               </div>

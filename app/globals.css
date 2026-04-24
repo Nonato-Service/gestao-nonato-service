@@ -4289,8 +4289,7 @@ body {
   background-origin: border-box;
   animation: main-help-f1-ring-angle 2.6s linear infinite;
 }
-.main-content-action-btn--help .main-content-action-label,
-.main-content-action-btn--help .main-content-action-f1 {
+.main-content-action-btn--help .main-content-action-label {
   text-shadow: none;
 }
 .main-content-action-btn--help:hover {
@@ -4344,18 +4343,6 @@ body {
       0 0 0 1px rgba(255, 255, 255, 0.18),
       0 0 22px rgba(255, 255, 255, 0.2);
   }
-}
-.main-content-action-f1 {
-  font-size: inherit;
-  font-weight: inherit;
-  letter-spacing: inherit;
-  line-height: inherit;
-  opacity: 1;
-  padding: 0;
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  text-shadow: none;
 }
 .app-compact-layout .main-content-action-label {
   max-width: 42vw;
