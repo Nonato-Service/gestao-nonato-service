@@ -2186,7 +2186,16 @@ export default function Dashboard() {
     top: number
   } | null>(null)
   const sidebarTipFlyoutRef = useRef<HTMLDivElement | null>(null)
+  const sidebarTipCanHoverFine = useCallback(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return true
+    // Em touch (tablet/telemóvel), o "hover" não é fiável e o balão pode ficar preso.
+    return window.matchMedia('(hover: hover) and (pointer: fine)').matches
+  }, [])
   const handleSidebarTipPointerCapture = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!sidebarTipCanHoverFine()) {
+      setSidebarTipFlyout(null)
+      return
+    }
     const root = e.currentTarget
     const path = typeof e.composedPath === 'function' ? e.composedPath() : []
     if (
@@ -2239,7 +2248,7 @@ export default function Dashboard() {
     const halfGuess = 110
     top = Math.min(vh - pad - halfGuess, Math.max(pad + halfGuess, top))
     setSidebarTipFlyout({ text, left, top })
-  }, [])
+  }, [sidebarTipCanHoverFine])
   /** Servidor tem revisão mais recente — modal único com resumo e escolha carregar / enviar. */
   const [syncPendingRemote, setSyncPendingRemote] = useState<{
     revision: number
@@ -2470,6 +2479,10 @@ export default function Dashboard() {
   useEffect(() => {
     if (hideSidebarForEntryDashboard) setSidebarTipFlyout(null)
   }, [hideSidebarForEntryDashboard])
+  useEffect(() => {
+    // Fechar dica ao mudar de função/aba ou abrir/fechar menu mobile.
+    setSidebarTipFlyout(null)
+  }, [activeTabId, mobileMenuOpen, selectedSidebarButton])
   const mainContentAreaRef = useRef<HTMLDivElement>(null)
   const [showHelpModal, setShowHelpModal] = useState(false)
   /** Origem do modal de ajuda: painel inicial ou tipo da aba (texto contextual). */
@@ -57067,6 +57080,8 @@ A1;Peça exemplo;10`}
         className={`sidebar${isCompactLayout && mobileMenuOpen ? ' sidebar-mobile-open' : ''}${hideSidebarForEntryDashboard ? ' sidebar--hidden-entry' : ''}`}
         aria-hidden={hideSidebarForEntryDashboard ? true : undefined}
         onPointerMoveCapture={hideSidebarForEntryDashboard ? undefined : handleSidebarTipPointerCapture}
+        onPointerDownCapture={hideSidebarForEntryDashboard ? undefined : () => setSidebarTipFlyout(null)}
+        onPointerLeaveCapture={hideSidebarForEntryDashboard ? undefined : () => setSidebarTipFlyout(null)}
       >
         {/* Logo NONATO SERVICE — logo ocupa 100% do contorno verde, borda mantida */}
         <div className={`sidebar-brand${logoUrl ? ' sidebar-brand--has-media' : ''}`}>
