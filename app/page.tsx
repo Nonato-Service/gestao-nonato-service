@@ -20110,6 +20110,17 @@ export default function Dashboard() {
     }
   }, [diarioPedidosLocale, showDiarioPedidosModal])
 
+  useEffect(() => {
+    if (!showDiarioPedidosModal) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      e.preventDefault()
+      setShowDiarioPedidosModal(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [showDiarioPedidosModal])
+
   // Marcar como lidas as mensagens destinadas ao usuário atual do Hub quando ele abre uma conversa
   useEffect(() => {
     const hubIdentity = currentCommunicationIdentity || hubUsuarioAtual
@@ -22180,12 +22191,12 @@ const nextF = familias.filter(x => x !== f)
                   }, 500)
                 }
                 const updateModelo = (updates: Partial<ManuaisModelo>) => {
-                  setManuaisModelos(prev => {
-                    const next = prev.map(mo => mo.id === modelo.id ? { ...mo, ...updates } : mo)
+                  setManuaisModelos((prev) => {
+                    const next = prev.map((mo) => (mo.id === modelo.id ? { ...mo, ...updates } : mo))
                     manuaisModelosRef.current = next
-                    persistModelosDebounced()
                     return next
                   })
+                  persistModelosDebounced()
                 }
                 const addDocumento = (file: File) => {
                   if (manuaisSaveDebounceTimer) {
@@ -22196,28 +22207,33 @@ const nextF = familias.filter(x => x !== f)
                   reader.onload = () => {
                     const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `doc-${Date.now()}`
                     const novo: ManuaisDocumento = { id, nome: file.name, tipo: file.type, dados: reader.result as string }
-                    setManuaisModelos(prev => {
-                      const next = prev.map(mo => {
+                    let snapshot: ManuaisModelo[] = []
+                    setManuaisModelos((prev) => {
+                      snapshot = prev.map((mo) => {
                         if (mo.id !== modelo.id) return mo
                         const docs = Array.isArray(mo.documentos) ? mo.documentos : []
+                        if (docs.some((d) => d.id === id)) return mo
                         return { ...mo, documentos: [...docs, novo] }
                       })
-                      persistModelosImmediate(next)
-                      return next
+                      manuaisModelosRef.current = snapshot
+                      return snapshot
                     })
+                    void Promise.resolve().then(() => persistModelosImmediate(snapshot))
                   }
                   reader.readAsDataURL(file)
                 }
                 const removeDocumento = (docId: string) => {
-                  setManuaisModelos(prev => {
-                    const next = prev.map(mo => {
+                  let snapshot: ManuaisModelo[] = []
+                  setManuaisModelos((prev) => {
+                    snapshot = prev.map((mo) => {
                       if (mo.id !== modelo.id) return mo
                       const docs = Array.isArray(mo.documentos) ? mo.documentos : []
-                      return { ...mo, documentos: docs.filter(d => d.id !== docId) }
+                      return { ...mo, documentos: docs.filter((d) => d.id !== docId) }
                     })
-                    persistModelosImmediate(next)
-                    return next
+                    manuaisModelosRef.current = snapshot
+                    return snapshot
                   })
+                  void Promise.resolve().then(() => persistModelosImmediate(snapshot))
                 }
                 const addImagem = (file: File) => {
                   if (manuaisSaveDebounceTimer) {
@@ -22228,28 +22244,33 @@ const nextF = familias.filter(x => x !== f)
                   reader.onload = () => {
                     const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `img-${Date.now()}`
                     const novo: ManuaisImagem = { id, nome: file.name, dados: reader.result as string }
-                    setManuaisModelos(prev => {
-                      const next = prev.map(mo => {
+                    let snapshot: ManuaisModelo[] = []
+                    setManuaisModelos((prev) => {
+                      snapshot = prev.map((mo) => {
                         if (mo.id !== modelo.id) return mo
                         const imgs = Array.isArray(mo.imagens) ? mo.imagens : []
+                        if (imgs.some((i) => i.id === id)) return mo
                         return { ...mo, imagens: [...imgs, novo] }
                       })
-                      persistModelosImmediate(next)
-                      return next
+                      manuaisModelosRef.current = snapshot
+                      return snapshot
                     })
+                    void Promise.resolve().then(() => persistModelosImmediate(snapshot))
                   }
                   reader.readAsDataURL(file)
                 }
                 const removeImagem = (imgId: string) => {
-                  setManuaisModelos(prev => {
-                    const next = prev.map(mo => {
+                  let snapshot: ManuaisModelo[] = []
+                  setManuaisModelos((prev) => {
+                    snapshot = prev.map((mo) => {
                       if (mo.id !== modelo.id) return mo
                       const imgs = Array.isArray(mo.imagens) ? mo.imagens : []
-                      return { ...mo, imagens: imgs.filter(i => i.id !== imgId) }
+                      return { ...mo, imagens: imgs.filter((i) => i.id !== imgId) }
                     })
-                    persistModelosImmediate(next)
-                    return next
+                    manuaisModelosRef.current = snapshot
+                    return snapshot
                   })
+                  void Promise.resolve().then(() => persistModelosImmediate(snapshot))
                 }
                 const cardStyle = { background: '#141414', border: '1px solid rgba(0,255,0,0.2)', borderRadius: '10px', padding: '14px 16px', marginBottom: '14px' }
                 const sectionTitle = { fontSize: '12px', fontWeight: 700, color: '#00ff00', marginBottom: '10px', letterSpacing: '0.5px', textTransform: 'uppercase' as const }
@@ -60321,6 +60342,17 @@ A1;Peça exemplo;10`}
           onClick={() => setShowDiarioPedidosModal(false)}
         >
           <div className="modal diario-pedidos-modal-shell ns-diario-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="ns-diario-modal__topbar">
+              <button
+                type="button"
+                className="ns-diario-btn ns-diario-btn--ghost ns-diario-modal__sair"
+                onClick={() => setShowDiarioPedidosModal(false)}
+                title={(safeT as any)?.diarioPedidosBtnSair || 'Sair'}
+                aria-label={(safeT as any)?.diarioPedidosBtnSair || 'Sair'}
+              >
+                {(safeT as any)?.diarioPedidosBtnSair || 'Sair'}
+              </button>
+            </div>
             <header className="ns-diario-modal__hero">
               <div className="ns-diario-modal__title-wrap">
                 <div className="ns-diario-modal__eyebrow">{(safeT as any)?.diarioPedidosTitle || 'DIÁRIO DE ANOTAÇÃO'}</div>
@@ -60550,7 +60582,7 @@ A1;Peça exemplo;10`}
 
             <footer className="ns-diario-modal__footer">
               <button type="button" className="btn-primary ns-diario-btn ns-diario-btn--primary" onClick={() => setShowDiarioPedidosModal(false)}>
-                {safeT?.close || 'Fechar'}
+                {(safeT as any)?.diarioPedidosBtnSair || safeT?.close || 'Sair'}
               </button>
             </footer>
           </div>
