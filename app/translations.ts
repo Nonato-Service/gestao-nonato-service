@@ -1967,7 +1967,7 @@ export const translations = {
     agendaHistoricoDataAte: 'Data do serviço (até)',
     agendaHistoricoLimparDatas: 'Limpar datas',
     agendaHistoricoConcluidosHint:
-      'Os concluídos não aparecem na lista nem no calendário. Use pelo menos 2 caracteres na pesquisa ou um intervalo de datas (ou ambos). A pesquisa abrange cliente, técnico, equipamento, tipo de serviço e texto do relatório. O filtro de técnico (acima) também se aplica.',
+      'Para uma lista longa ou antiga, use esta pesquisa (mín. 2 caracteres ou datas). Na vista em lista vê até 60 concluídos recentes; no calendário pode activar «Mostrar concluídos». O filtro de técnico (acima) também se aplica.',
     agendaHistoricoConcluidosMinChars: 'Escreva pelo menos 2 caracteres para pesquisar.',
     agendaHistoricoConcluidosMinCharsOuDatas:
       'Escreva pelo menos 2 caracteres na pesquisa ou escolha datas «desde» / «até» (ou combine os dois).',
@@ -1975,7 +1975,7 @@ export const translations = {
     agendaHistoricoLimiteResultados:
       'A mostrar no máximo {n} resultados — afinar datas ou pesquisa se precisar de mais.',
     agendaListaSoConcluidosMsg:
-      'Com estes filtros só existem trabalhos já concluídos. Eles não são mostrados nesta lista.',
+      'Com estes filtros só existem trabalhos já concluídos (aparecem na secção «Concluídos» da lista, até 60).',
     agendaListaSoConcluidosMsgCurto:
       'Com estes filtros só há trabalhos concluídos — os mais recentes aparecem na secção abaixo.',
     agendaListaSoConcluidosDica: 'Abra «Histórico — trabalhos concluídos» acima e pesquise ou filtre por datas.',
@@ -1988,7 +1988,14 @@ export const translations = {
     agendaListaConcluidosHintRodape: 'Pesquisa completa no histórico abaixo.',
     agendaSecaoCanceladosHint: 'Cancelado — mantido para registo',
     agendaLegendaOcultaConcluidos:
-      'Trabalhos concluídos não aparecem no calendário nem na lista — use «Histórico — trabalhos concluídos» (pesquisa ou datas).',
+      'Por defeito os concluídos não aparecem no calendário — marque «Mostrar concluídos no calendário» nos controlos ou use «Histórico — trabalhos concluídos». Na lista vê até 60 concluídos recentes com os filtros.',
+    agendaLegendaComConcluidosCal:
+      'Concluídos visíveis no calendário (opção activada). Marcador verde. Na lista: até 60 recentes; histórico abaixo para pesquisa completa.',
+    agendaCalendarioMostrarConcluidos: 'Mostrar concluídos no calendário',
+    agendaCalendarioMostrarConcluidosHint:
+      'Quando activo, os trabalhos concluídos aparecem na grelha do mês (fundo verde). A opção fica guardada neste navegador.',
+    legendaConcluidoCalendarioOn: 'Concluído — fundo verde',
+    legendaConcluidoCalendarioOff: 'Concluído — fundo verde (active «Mostrar concluídos» para ver no calendário)',
     todos: 'Todos',
     todosTecnicos: 'Todos os técnicos',
     limparFiltros: 'Limpar Filtros',
@@ -14739,7 +14746,7 @@ export const translations = {
     agendaHistoricoDataAte: 'Service date (to)',
     agendaHistoricoLimparDatas: 'Clear dates',
     agendaHistoricoConcluidosHint:
-      'Completed jobs are not shown in the list or calendar. Use at least 2 characters in the search or a date range (or both). Search covers client, technician, equipment, service type and report text. The technician filter above also applies.',
+      'For long or older records, use this search (min. 2 characters or dates). The list view shows up to 60 recent completed jobs; on the calendar you can enable «Show completed». The technician filter above also applies.',
     agendaHistoricoConcluidosMinChars: 'Type at least 2 characters to search.',
     agendaHistoricoConcluidosMinCharsOuDatas:
       'Type at least 2 characters in the search or pick From / To dates (or combine both).',
@@ -14747,7 +14754,7 @@ export const translations = {
     agendaHistoricoLimiteResultados:
       'Showing at most {n} results — narrow dates or search if you need more.',
     agendaListaSoConcluidosMsg:
-      'With these filters there are only completed jobs. They are not shown in this list.',
+      'With these filters there are only completed jobs (they appear in the «Completed» section of the list, up to 60).',
     agendaListaSoConcluidosMsgCurto:
       'With these filters there are only completed jobs — the most recent appear in the section below.',
     agendaListaSoConcluidosDica: 'Open «History — completed work» above and search or filter by date.',
@@ -14760,7 +14767,14 @@ export const translations = {
     agendaListaConcluidosHintRodape: 'Full search in the history section below.',
     agendaSecaoCanceladosHint: 'Cancelled — kept for records',
     agendaLegendaOcultaConcluidos:
-      'Completed jobs do not appear on the calendar or list — use «History — completed work» (search or dates).',
+      'By default completed jobs are hidden from the calendar — tick «Show completed on calendar» in the controls or use «History — completed work». The list shows up to 60 recent completed items with your filters.',
+    agendaLegendaComConcluidosCal:
+      'Completed jobs are visible on the calendar (option on). Green markers. List: up to 60 recent; use history below for full search.',
+    agendaCalendarioMostrarConcluidos: 'Show completed on calendar',
+    agendaCalendarioMostrarConcluidosHint:
+      'When enabled, completed jobs appear on the month grid (green background). The setting is saved in this browser.',
+    legendaConcluidoCalendarioOn: 'Completed — green background',
+    legendaConcluidoCalendarioOff: 'Completed — green background (tick «Show completed» to see on the calendar)',
     todos: 'All',
     todosTecnicos: 'All technicians',
     limparFiltros: 'Clear Filters',

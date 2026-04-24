@@ -1240,6 +1240,12 @@ function normalizeStatusAgendamento(ag: { status?: string }): Agendamento['statu
   return 'pendente'
 }
 
+/** Máx. de concluídos na vista em lista; painéis usam valores menores para não sobrecarregar o ecrã. */
+const AGENDA_CONCLUIDOS_LISTA_MAX = 60
+const AGENDA_PAINEL_CONCLUIDOS_MAX = 40
+const AGENDA_PAINEL_CANCELADOS_MAX = 40
+const LS_AGENDA_CAL_CONCLUIDOS = 'nonato-agenda-cal-concluidos'
+
 /** Normaliza chave YYYY-MM-DD (evita falha em includes por zeros à esquerda). */
 function normalizeDataKeyAgenda(s: string): string {
   const m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(s ?? '').trim())
@@ -3947,6 +3953,14 @@ export default function Dashboard() {
   const [filtroTecnicoAgenda, setFiltroTecnicoAgenda] = useState('')
   const [filtroDataAgenda, setFiltroDataAgenda] = useState('')
   const [visualizacaoAgenda, setVisualizacaoAgenda] = useState<'lista' | 'calendario'>('lista')
+  const [agendaCalendarioMostrarConcluidos, setAgendaCalendarioMostrarConcluidos] = useState(() => {
+    if (typeof window === 'undefined') return false
+    try {
+      return window.localStorage.getItem(LS_AGENDA_CAL_CONCLUIDOS) === '1'
+    } catch {
+      return false
+    }
+  })
   const [agendaDiasRascunho, setAgendaDiasRascunho] = useState<string[]>([])
   const [agendaPickerMes, setAgendaPickerMes] = useState(() => new Date().getMonth())
   const [agendaPickerAno, setAgendaPickerAno] = useState(() => new Date().getFullYear())
@@ -36965,7 +36979,7 @@ A1;Peça exemplo;10`}
               flexWrap: 'wrap',
               gap: '15px'
             }}>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <button
                   onClick={() => setVisualizacaoAgenda('lista')}
                   style={{
@@ -36999,6 +37013,40 @@ A1;Peça exemplo;10`}
                   📅 {safeT?.calendario || 'Calendário'}
                 </button>
               </div>
+              {visualizacaoAgenda === 'calendario' ? (
+                <label
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    color: '#ddd',
+                    userSelect: 'none',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(0, 255, 0, 0.25)',
+                    backgroundColor: agendaCalendarioMostrarConcluidos ? 'rgba(0, 80, 40, 0.35)' : 'rgba(0,0,0,0.2)',
+                  }}
+                  title={(safeT as any)?.agendaCalendarioMostrarConcluidosHint || ''}
+                >
+                  <input
+                    type="checkbox"
+                    checked={agendaCalendarioMostrarConcluidos}
+                    onChange={(e) => {
+                      const v = e.target.checked
+                      setAgendaCalendarioMostrarConcluidos(v)
+                      try {
+                        window.localStorage.setItem(LS_AGENDA_CAL_CONCLUIDOS, v ? '1' : '0')
+                      } catch {
+                        /* ignorar */
+                      }
+                    }}
+                    style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#00ff00' }}
+                  />
+                  <span>{(safeT as any)?.agendaCalendarioMostrarConcluidos || 'Mostrar concluídos no calendário'}</span>
+                </label>
+              ) : null}
             </div>
 
             {/* Filtros */}
@@ -37101,12 +37149,12 @@ A1;Peça exemplo;10`}
                   .filter((a) => normalizeStatusAgendamento(a) === 'cancelado')
                   .sort(ordenarDataHoraDescPainel)
                 const canceladosPainelCount = canceladosPainelFull.length
-                const canceladosPainel = canceladosPainelFull.slice(0, 15)
+                const canceladosPainel = canceladosPainelFull.slice(0, AGENDA_PAINEL_CANCELADOS_MAX)
                 const concluidosPainelFull = agBasePainel
                   .filter((a) => normalizeStatusAgendamento(a) === 'concluido')
                   .sort(ordenarDataHoraDescPainel)
                 const concluidosPainelCount = concluidosPainelFull.length
-                const concluidosPainel = concluidosPainelFull.slice(0, 15)
+                const concluidosPainel = concluidosPainelFull.slice(0, AGENDA_PAINEL_CONCLUIDOS_MAX)
 
                 const cabecalhoPainelColuna = (
                   variant: 'exec' | 'agend' | 'pre' | 'pend' | 'canc' | 'done',
@@ -37576,7 +37624,7 @@ A1;Peça exemplo;10`}
                   </div>
                   <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: '#888', maxWidth: '720px' }}>
                     {(safeT as any)?.agendaHistoricoConcluidosHint ||
-                      'Os concluídos não aparecem na lista nem no calendário. Use pelo menos 2 caracteres na pesquisa ou defina um intervalo de datas (ou ambos). O filtro de técnico (acima) também se aplica.'}
+                      'Para listas longas use esta pesquisa. Na lista vê até 60 concluídos recentes; no calendário pode activar «Mostrar concluídos». O filtro de técnico (acima) também se aplica.'}
                   </p>
                   {(() => {
                     const q = buscaAgendaHistoricoConcluidos.trim().toLowerCase()
@@ -38233,7 +38281,7 @@ A1;Peça exemplo;10`}
                   const agConcluidosLista = agendamentosFiltrados
                     .filter((ag) => normalizeStatusAgendamento(ag) === 'concluido')
                     .sort(ordenarAgendaDesc)
-                    .slice(0, 20)
+                    .slice(0, AGENDA_CONCLUIDOS_LISTA_MAX)
                   const agConcluidosListaTotal = agendamentosFiltrados.filter((ag) => normalizeStatusAgendamento(ag) === 'concluido').length
 
                   const agPreAgendamento = agendamentosListaAtivos
@@ -38599,9 +38647,9 @@ A1;Peça exemplo;10`}
                 if (filtroDataAgenda && ag.data !== filtroDataAgenda) return false
                 return true
               })
-              const agendamentosCalendarioVisiveis = agendamentosFiltrados.filter(
-                (ag) => normalizeStatusAgendamento(ag) !== 'concluido'
-              )
+              const agendamentosCalendarioVisiveis = agendaCalendarioMostrarConcluidos
+                ? agendamentosFiltrados
+                : agendamentosFiltrados.filter((ag) => normalizeStatusAgendamento(ag) !== 'concluido')
 
               // Obter primeiro dia do mês e número de dias
               const primeiroDia = new Date(calendarioAno, calendarioMes, 1)
@@ -38934,8 +38982,11 @@ A1;Peça exemplo;10`}
                     </h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       <div style={{ fontSize: '12px', color: 'rgba(120, 200, 255, 0.85)', lineHeight: 1.45 }}>
-                        {(safeT as any)?.agendaLegendaOcultaConcluidos ||
-                          'Trabalhos concluídos não aparecem no calendário nem na lista — use «Histórico — trabalhos concluídos» e pesquise pelo cliente.'}
+                        {agendaCalendarioMostrarConcluidos
+                          ? (safeT as any)?.agendaLegendaComConcluidosCal ||
+                            'Concluídos visíveis no calendário (opção acima). Fundo verde nos marcadores. Na lista vê até 60 recentes; pesquisa completa no histórico.'
+                          : (safeT as any)?.agendaLegendaOcultaConcluidos ||
+                            'Por defeito os concluídos não aparecem no calendário — marque «Mostrar concluídos no calendário» acima ou use «Histórico — trabalhos concluídos».'}
                       </div>
                       <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.45 }}>
                         {(safeT as any)?.legendaFundoNeutro ||
@@ -39021,6 +39072,28 @@ A1;Peça exemplo;10`}
                             09:00 Cliente
                           </div>
                           <span style={{ fontSize: '12px' }}>{safeT?.cancelado || 'Cancelado'}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: agendaCalendarioMostrarConcluidos ? 1 : 0.72 }}>
+                          <div
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                              backgroundColor: 'rgba(0, 128, 58, 0.94)',
+                              border: '1px solid rgba(0, 255, 150, 0.5)',
+                              fontSize: '11px',
+                              color: '#fff',
+                              fontWeight: 800,
+                              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                            }}
+                          >
+                            09:00 Cliente
+                          </div>
+                          <span style={{ fontSize: '12px' }}>
+                            {agendaCalendarioMostrarConcluidos
+                              ? (safeT as any)?.legendaConcluidoCalendarioOn || 'Concluído — fundo verde'
+                              : (safeT as any)?.legendaConcluidoCalendarioOff ||
+                                'Concluído — fundo verde (active «Mostrar concluídos» para ver no calendário)'}
+                          </span>
                         </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
