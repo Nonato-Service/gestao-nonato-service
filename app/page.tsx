@@ -1050,6 +1050,43 @@ function encontrarRelatorioServicoDuplicado(
   )
 }
 
+/** AAAAMMDD a partir de YYYY-MM-DD ou, se inválido, da data de hoje (calendário local). */
+function dataIsoParaYYYYMMDDRelatorio(dataIso: string | undefined): string {
+  const s = (dataIso || '').trim().slice(0, 10)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    return s.replace(/-/g, '')
+  }
+  const d = new Date()
+  const y = d.getFullYear()
+  const mo = String(d.getMonth() + 1).padStart(2, '0')
+  const da = String(d.getDate()).padStart(2, '0')
+  return `${y}${mo}${da}`
+}
+
+function yyyymmddRelatorioValido(yyyymmdd: string): boolean {
+  if (!/^\d{8}$/.test(yyyymmdd)) return false
+  const y = Number(yyyymmdd.slice(0, 4))
+  const mo = Number(yyyymmdd.slice(4, 6))
+  const da = Number(yyyymmdd.slice(6, 8))
+  if (mo < 1 || mo > 12 || da < 1 || da > 31) return false
+  const d = new Date(y, mo - 1, da)
+  return d.getFullYear() === y && d.getMonth() === mo - 1 && d.getDate() === da
+}
+
+/**
+ * Número oficial de relatório de serviço: AAAAMMDD-NNN
+ * — data (8 dígitos ISO) + ordem dentro desse dia (001, 002…). Vários clientes no mesmo dia: 001, 002…
+ */
+function parseRelatorioServicoNumeroDataSeq(numero: string): { yyyymmdd: string; seq: number } | null {
+  const m = (numero || '').trim().match(/^(\d{8})-(\d{1,4})$/i)
+  if (!m) return null
+  const yyyymmdd = m[1]
+  if (!yyyymmddRelatorioValido(yyyymmdd)) return null
+  const seq = parseInt(m[2], 10)
+  if (!Number.isFinite(seq) || seq < 1) return null
+  return { yyyymmdd, seq }
+}
+
 /** Item de cobrança no fechamento de um relatório de serviço (vinculado ao Cadastro de Serviços) */
 type FechamentoItem = {
   id: string
@@ -2000,7 +2037,6 @@ export default function Dashboard() {
       extras: true
     }
   }) // Usuário logado — define o acesso conforme Administrador
-  const [relatorioContador, setRelatorioContador] = useState<number>(1) // Contador de relatórios para numeração automática
   const [incluirLogoNosRelatorios, setIncluirLogoNosRelatorios] = useState<boolean>(true) // Incluir logo nos PDFs (Administrador)
   const [logosRelatorios, setLogosRelatorios] = useState<LogoRelatorio[]>([]) // Logos disponíveis para escolha nos relatórios
   const [logoRelatorioSelecionadoId, setLogoRelatorioSelecionadoId] = useState<string>('') // '' = logo principal
@@ -6239,12 +6275,7 @@ export default function Dashboard() {
       if (savedRelExcl && savedRelExcl.pastas && typeof savedRelExcl.pastas === 'object') {
         setRelatoriosExcluidosClientes(savedRelExcl)
       }
-      
-      // Carregar contador de relatórios
-      const savedContador = getData('nonato-relatorio-contador')
-      if (savedContador) {
-        setRelatorioContador(savedContador)
-      }
+
       const savedIncluirLogo = getData('nonato-relatorios-incluir-logo')
       if (savedIncluirLogo !== undefined && savedIncluirLogo !== null) {
         setIncluirLogoNosRelatorios(savedIncluirLogo === true || savedIncluirLogo === 'true')
@@ -12006,21 +12037,22 @@ export default function Dashboard() {
     }
   }
 
-  // Função para gerar número automático de relatório no formato 123-0126
-  const gerarNumeroRelatorio = (): string => {
-    const hoje = new Date()
-    const ano = hoje.getFullYear().toString().slice(-2) // Últimos 2 dígitos do ano
-    const mes = String(hoje.getMonth() + 1).padStart(2, '0') // Mês com 2 dígitos
-    const anoMes = `${mes}${ano}` // Formato: 0126 (mês + ano)
-    
-    // Usar o contador atual e incrementar
-    const numeroSequencial = relatorioContador
-    const novoContador = numeroSequencial + 1
-    setRelatorioContador(novoContador)
-    saveData('nonato-relatorio-contador', novoContador)
-    
-    return `${numeroSequencial}-${anoMes}`
-  }
+  /**
+   * Próximo número oficial: AAAAMMDD-NNN (data completa + ordem nesse dia).
+   * Vários clientes no mesmo dia: …-001, …-002, …-003 (sem ambiguidade de «dia» vs «mês»).
+   */
+  const preverProximoNumeroRelatorio = useCallback((dataReferenciaIso?: string): string => {
+    const yyyymmdd = dataIsoParaYYYYMMDDRelatorio(dataReferenciaIso)
+    let maxSeq = 0
+    for (const r of relatoriosServico) {
+      const p = parseRelatorioServicoNumeroDataSeq(r.numero || '')
+      if (p && p.yyyymmdd === yyyymmdd) maxSeq = Math.max(maxSeq, p.seq)
+    }
+    return `${yyyymmdd}-${String(maxSeq + 1).padStart(3, '0')}`
+  }, [relatoriosServico])
+
+  const gerarNumeroRelatorio = (dataReferenciaIso?: string): string =>
+    preverProximoNumeroRelatorio(dataReferenciaIso)
 
   // Funções para gerenciar Relatórios de Serviço
   const scrollRelatorioServicoFormIntoView = useCallback(() => {
@@ -12076,9 +12108,9 @@ export default function Dashboard() {
   }, [])
 
   const handleAddRelatorioServico = () => {
-    // Gerar número automático de relatório
-    const numeroAuto = gerarNumeroRelatorio()
-    
+    const dataInicial = new Date().toISOString().split('T')[0]
+    const numeroAuto = gerarNumeroRelatorio(dataInicial)
+
     setEditingRelatorioServico(null)
     setRelatorioServicoForm({
       id: '',
@@ -12087,7 +12119,7 @@ export default function Dashboard() {
       cliente: '',
       cidade: '',
       telefone: '',
-      data: new Date().toISOString().split('T')[0],
+      data: dataInicial,
       maquinaModelo: '',
       numeroMaquina: '',
       tipoServico: '',
@@ -17063,9 +17095,9 @@ export default function Dashboard() {
   // Função para limpar todos os campos do formulário
   const handleLimparRelatorio = () => {
     if (window.confirm((t as any)?.confirmLimpar || 'Tem certeza que deseja limpar todos os campos do formulário?')) {
-      // Gerar novo número automático
-      const numeroAuto = gerarNumeroRelatorio()
-      
+      const dataLimpar = new Date().toISOString().split('T')[0]
+      const numeroAuto = gerarNumeroRelatorio(dataLimpar)
+
       setRelatorioServicoForm({
         id: '',
         numero: numeroAuto,
@@ -17073,7 +17105,7 @@ export default function Dashboard() {
         cliente: '',
         cidade: '',
         telefone: '',
-        data: new Date().toISOString().split('T')[0],
+        data: dataLimpar,
         maquinaModelo: '',
         numeroMaquina: '',
         tipoServico: '',
@@ -23510,44 +23542,25 @@ const nextF = familias.filter(x => x !== f)
               <div className="admin-disclosure__body">
             <div className="admin-section admin-section--violet">
               
-              {/* Configuração de Contador de Relatórios */}
+              {/* Numeração automática dos relatórios de serviço (AAAAMMDD-NNN) */}
               <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
                 <h4 style={{ color: '#00ff00', marginBottom: '15px', fontSize: '16px' }}>
                   {safeT?.configuracaoRelatorios || 'CONFIGURAÇÃO DE RELATÓRIOS'}
                 </h4>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
-                  <div style={{ flex: 1, minWidth: '200px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
-                      {safeT?.contadorRelatorios || 'Contador de Relatórios'}
-                    </label>
-                    <input
-                      type="number"
-                      value={relatorioContador}
-                      onChange={(e) => {
-                        const novoValor = parseInt(e.target.value) || 1
-                        setRelatorioContador(novoValor)
-                        saveData('nonato-relatorio-contador', novoValor)
-                      }}
-                      min="1"
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                    <p style={{ fontSize: '12px', opacity: 0.7, marginTop: '5px' }}>
-                      {safeT?.contadorRelatoriosDesc || 'Próximo número será gerado automaticamente no formato: NÚMERO-MÊS/ANO (ex: 123-0126)'}
-                    </p>
-                  </div>
-                  <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                    <p style={{ fontSize: '12px', marginBottom: '5px', opacity: 0.8 }}>
-                      {safeT?.proximoNumero || 'Próximo Número'}
-                    </p>
-                    <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>
-                      {(() => {
-                        const hoje = new Date()
-                        const ano = hoje.getFullYear().toString().slice(-2)
-                        const mes = String(hoje.getMonth() + 1).padStart(2, '0')
-                        return `${relatorioContador}-${mes}${ano}`
-                      })()}
-                    </p>
-                  </div>
+                <div style={{ padding: '12px 14px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.88)', margin: '0 0 10px', lineHeight: 1.45 }}>
+                    {(safeT as any)?.numeracaoRelatoriosAutoTitle || 'Numeração automática dos relatórios de serviço'}
+                  </p>
+                  <p style={{ fontSize: '12px', opacity: 0.72, margin: '0 0 12px', lineHeight: 1.45 }}>
+                    {safeT?.contadorRelatoriosDesc ||
+                      'Formato: AAAAMMDD-NNN (ano, mês, dia, hífen, ordem do dia). O mesmo dia com vários clientes fica 001, 002, 003… sem confundir com o mês.'}
+                  </p>
+                  <p style={{ fontSize: '12px', marginBottom: '6px', opacity: 0.8 }}>
+                    {(safeT as any)?.preverNumeroRelatorioHojeLabel || 'Próximo número sugerido para a data de hoje'}
+                  </p>
+                  <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#00ff00', margin: 0, letterSpacing: '0.02em' }}>
+                    {preverProximoNumeroRelatorio(new Date().toISOString().split('T')[0])}
+                  </p>
                 </div>
               </div>
 
@@ -28097,6 +28110,10 @@ onKeyPress={(e) => {
                         onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, numero: e.target.value })}
                         style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                       />
+                      <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', margin: '6px 0 0', lineHeight: 1.35 }}>
+                        {(safeT as any)?.numeroRelatorioAutoAjuda ||
+                          'Formato automático: AAAAMMDD-NNN (8 dígitos da data + ordem do dia). Ex.: 20260417-002 = 17/04/2026, 2.º relatório desse dia. Ao mudar a data no cartão, o número é recalculado (modo novo relatório). Relatórios antigos com outro formato mantêm-se como estão.'}
+                      </p>
                     </div>
                     
                     <div>
@@ -28104,7 +28121,18 @@ onKeyPress={(e) => {
                       <input
                         type="date"
                         value={relatorioServicoForm.data}
-                        onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, data: e.target.value })}
+                        onChange={(e) => {
+                          const v = e.target.value
+                          if (editingRelatorioServico) {
+                            setRelatorioServicoForm({ ...relatorioServicoForm, data: v })
+                            return
+                          }
+                          setRelatorioServicoForm({
+                            ...relatorioServicoForm,
+                            data: v,
+                            numero: preverProximoNumeroRelatorio(v),
+                          })
+                        }}
                         style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                       />
                     </div>
@@ -40231,24 +40259,35 @@ A1;Peça exemplo;10`}
             return
           }
           const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '')
-          const candidatos = relatoriosPendentesFechamentoLista
-          let found = candidatos.find(r => (r.numero || '').trim() === raw)
-          if (!found) found = candidatos.find(r => norm(r.numero || '') === norm(raw))
-          if (!found) {
-            const apenasDig = raw.replace(/\D/g, '')
-            if (apenasDig.length > 0) {
-              found = candidatos.find(r => {
-                const d = (r.numero || '').replace(/\D/g, '')
-                return d === apenasDig || (apenasDig.length >= 3 && d.includes(apenasDig))
-              })
+          const encontrarRelatorioPorOsInput = (lista: RelatorioServico[]) => {
+            let hit = lista.find((r) => (r.numero || '').trim() === raw)
+            if (!hit) hit = lista.find((r) => norm(r.numero || '') === norm(raw))
+            if (!hit) {
+              const apenasDig = raw.replace(/\D/g, '')
+              if (apenasDig.length > 0) {
+                hit = lista.find((r) => {
+                  const d = (r.numero || '').replace(/\D/g, '')
+                  return d === apenasDig || (apenasDig.length >= 3 && d.includes(apenasDig))
+                })
+              }
             }
+            return hit
           }
-          if (!found) {
-            alert((safeT as any)?.fechamentoOsNaoEncontrado || 'Nenhum relatório pendente encontrado com esse número de OS.')
+          const found = encontrarRelatorioPorOsInput(relatoriosPendentesFechamentoLista)
+          if (found) {
+            setFechamentoRelatorioSelecionadoId(found.id)
+            setFechamentoOsConsultaInput('')
             return
           }
-          setFechamentoRelatorioSelecionadoId(found.id)
-          setFechamentoOsConsultaInput('')
+          const foundBiblioteca = encontrarRelatorioPorOsInput(relatoriosServico)
+          if (foundBiblioteca && fechamentosGuardadosBibliotecaIds.includes(foundBiblioteca.id)) {
+            const msgBase =
+              (safeT as any)?.fechamentoOsJaNaBiblioteca ||
+              'Este fechamento já foi guardado na Biblioteca de Relatórios. No menu lateral abra «Biblioteca de Relatórios», localize o cliente e na secção «Relatórios de Despesas» encontra o relatório (consultar ou «Editar despesas»). O ecrã «Fechamento» só mostra relatórios ainda por guardar na Biblioteca.'
+            alert(`${msgBase}\n\n«${foundBiblioteca.numero}» — ${foundBiblioteca.cliente}`)
+            return
+          }
+          alert((safeT as any)?.fechamentoOsNaoEncontrado || 'Nenhum relatório pendente encontrado com esse número de OS.')
         }
         const fechamentoJsx = (
           <div
@@ -62522,7 +62561,18 @@ A1;Peça exemplo;10`}
                   type="date"
                   placeholder={safeT?.data || 'Data'}
                   value={relatorioServicoForm.data}
-                  onChange={(e) => setRelatorioServicoForm({ ...relatorioServicoForm, data: e.target.value })}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    if (editingRelatorioServico) {
+                      setRelatorioServicoForm({ ...relatorioServicoForm, data: v })
+                      return
+                    }
+                    setRelatorioServicoForm({
+                      ...relatorioServicoForm,
+                      data: v,
+                      numero: preverProximoNumeroRelatorio(v),
+                    })
+                  }}
                   style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
                 <input

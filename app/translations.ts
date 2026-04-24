@@ -154,7 +154,7 @@ export const translations = {
     adminJumpSidebarDesc: 'Ordem e botões da barra',
     adminJumpPasswordsDesc: 'Senhas de técnicos / checklist',
     adminJumpBackupDesc: 'Código, ZIP e restauração',
-    adminGeralSummarySub: 'Contador de relatórios, logos na interface, identidade da marca e logos nos PDFs.',
+    adminGeralSummarySub: 'Numeração dos relatórios de serviço, logos na interface, identidade da marca e logos nos PDFs.',
     adminDemosSummaryTitle: 'Gestão de envio de demonstrações',
     adminDemosSummarySub: 'Destinatários, pacotes de módulos e cópia de links com identificação.',
     adminUsersSummarySub: 'Contas, permissões e vínculo com gestores ou técnicos.',
@@ -1300,9 +1300,14 @@ export const translations = {
     deepseekDone: 'Tradução concluída. Reveja o texto antes de guardar.',
     exitDemoLink: 'Sair da demonstração (usar app normal)',
     numeroRelatorio: 'Número do Relatório',
+    numeroRelatorioAutoAjuda:
+      'Formato oficial: AAAAMMDD-NNN — os 8 primeiros dígitos são a data (ano completo, mês, dia); depois do hífen vem a ordem desse dia (001, 002…). Vários clientes no mesmo dia: 001, 002… sem confundir «dia» com «mês». Ao alterar a data no cartão (novo relatório), o número é recalculado. Pode editar manualmente.',
     gerarPedidoOrcamento: '📋 Gerar Pedido de Orçamento',
-    contadorRelatorios: 'Contador de Relatórios',
-    contadorRelatoriosDesc: 'Próximo número será gerado automaticamente no formato: NÚMERO-MÊS/ANO (ex: 123-0126)',
+    contadorRelatorios: 'Numeração automática',
+    contadorRelatoriosDesc:
+      'Cada relatório novo recebe AAAAMMDD-NNN: data completa + número sequencial só dentro desse dia. Ex.: 20260417-002 = 17/04/2026, segundo relatório desse dia.',
+    numeracaoRelatoriosAutoTitle: 'Numeração automática dos relatórios de serviço',
+    preverNumeroRelatorioHojeLabel: 'Próximo número sugerido para a data de hoje',
     proximoNumero: 'Próximo Número',
     configuracaoRelatorios: 'CONFIGURAÇÃO DE RELATÓRIOS',
     pedidoOrcamentoGerado: 'Pedido de orçamento gerado com sucesso!',
@@ -1354,9 +1359,11 @@ export const translations = {
     fechamentoInformeNumeroOsTexto:
       'Indique o número da OS. Depois de confirmar, aparece o resumo de trabalho com COD, descrição e valores, com opção de adicionar itens.',
     fechamentoCampoNumeroOs: 'N.º OS',
-    fechamentoPlaceholderOs: 'Ex.: 12-202504',
+    fechamentoPlaceholderOs: 'Ex.: 20260417-002',
     fechamentoConfirmarOs: 'Confirmar',
     fechamentoOsNaoEncontrado: 'Nenhum relatório pendente encontrado com esse número de OS.',
+    fechamentoOsJaNaBiblioteca:
+      'Este fechamento já foi guardado na Biblioteca de Relatórios. Abra «Biblioteca de Relatórios» no menu lateral, localize o cliente e na secção «Relatórios de Despesas» encontra o documento (consultar ou «Editar despesas»). O ecrã «Fechamento dos Relatórios de Serviços» só lista relatórios ainda por guardar na Biblioteca.',
     fechamentoOsInformeNumero: 'Indique o número da OS (relatório de serviço).',
     fechamentoVoltarConsultaOs: 'Consultar outra OS',
     resultadosTrabalho: 'Resultados do Trabalho',
@@ -3031,7 +3038,7 @@ export const translations = {
     adminJumpPasswordsDesc: 'Contraseñas de técnicos / checklist',
     adminJumpBackupDesc: 'Código, ZIP y restauración',
     adminGeralSummarySub:
-      'Contador de informes, logotipos en la interfaz, identidad de marca y logotipos en los PDF.',
+      'Numeración de informes de servicio, logotipos en la interfaz, identidad de marca y logotipos en los PDF.',
     adminDemosSummaryTitle: 'Gestión de envío de demostraciones',
     adminDemosSummarySub: 'Destinatarios, paquetes de módulos y copia de enlaces con identificación.',
     adminUsersSummarySub: 'Cuentas, permisos y vínculo con responsables o técnicos.',
@@ -3989,9 +3996,14 @@ export const translations = {
     confirmDeleteRelatorioServico: '¿Está seguro de que desea eliminar este informe de servicio?',
     relatorioServicoSaved: '¡Informe de servicio guardado con éxito!',
     numeroRelatorio: 'Número del Informe',
+    numeroRelatorioAutoAjuda:
+      'Formato oficial: AAAAMMDD-NNN — 8 dígitos de fecha (año completo, mes, día) y orden del día (001, 002…). Varios clientes el mismo día: 001, 002… Al cambiar la fecha (informe nuevo), se recalcula. Editable.',
     gerarPedidoOrcamento: '📋 Generar Pedido de Presupuesto',
-    contadorRelatorios: 'Contador de Informes',
-    contadorRelatoriosDesc: 'El próximo número se generará automáticamente en el formato: NÚMERO-MES/AÑO (ej: 123-0126)',
+    contadorRelatorios: 'Numeración automática',
+    contadorRelatoriosDesc:
+      'Cada informe nuevo usa AAAAMMDD-NNN: fecha completa + secuencia solo de ese día. Ej.: 20260417-002 = 17/04/2026, segundo informe del día.',
+    numeracaoRelatoriosAutoTitle: 'Numeración automática de informes de servicio',
+    preverNumeroRelatorioHojeLabel: 'Siguiente número sugerido para la fecha de hoy',
     proximoNumero: 'Próximo Número',
     configuracaoRelatorios: 'CONFIGURACIÓN DE INFORMES',
     pedidoOrcamentoGerado: '¡Solicitud de presupuesto generada con éxito!',
@@ -4024,9 +4036,11 @@ export const translations = {
     fechamentoInformeNumeroOsTexto:
       'Indique el número de OS. Tras confirmar, se muestra el resumen con COD, descripción e importes, con opción de añadir ítems.',
     fechamentoCampoNumeroOs: 'N.º OS',
-    fechamentoPlaceholderOs: 'Ej.: 12-202504',
+    fechamentoPlaceholderOs: 'Ej.: 20260417-002',
     fechamentoConfirmarOs: 'Confirmar',
     fechamentoOsNaoEncontrado: 'No hay ningún informe pendiente con ese número de OS.',
+    fechamentoOsJaNaBiblioteca:
+      'Este cierre ya está guardado en la Biblioteca de informes. Abra «Biblioteca de informes» en el menú, localice el cliente y en «Informes de gastos» encontrará el documento. La pantalla de «Cierre» solo lista informes que aún no se guardaron en la Biblioteca.',
     fechamentoOsInformeNumero: 'Indique el número de OS (informe de servicio).',
     fechamentoVoltarConsultaOs: 'Consultar otra OS',
     resultadosTrabalho: 'Resultados del Trabajo',
@@ -5532,7 +5546,7 @@ export const translations = {
     adminJumpPasswordsDesc: 'Mots de passe techniciens / checklist',
     adminJumpBackupDesc: 'Code, ZIP et restauration',
     adminGeralSummarySub:
-      'Compteur de rapports, logos dans l’interface, identité de marque et logos dans les PDF.',
+      'Numérotation des rapports de service, logos dans l’interface, identité de marque et logos dans les PDF.',
     adminDemosSummaryTitle: 'Gestion de l’envoi des démonstrations',
     adminDemosSummarySub: 'Destinataires, paquets de modules et copie de liens identifiés.',
     adminUsersSummarySub: 'Comptes, autorisations et lien avec responsables ou techniciens.',
@@ -6484,9 +6498,14 @@ export const translations = {
     confirmDeleteRelatorioServico: 'Êtes-vous sûr de vouloir supprimer ce rapport de service?',
     relatorioServicoSaved: 'Rapport de service enregistré avec succès!',
     numeroRelatorio: 'Numéro du Rapport',
+    numeroRelatorioAutoAjuda:
+      'Format officiel : AAAAMMJJ-NNN — 8 chiffres de date (année complète, mois, jour) puis ordre du jour (001, 002…). Plusieurs clients le même jour : 001, 002… La date modifiée (nouveau rapport) recalcule le numéro. Modifiable.',
     gerarPedidoOrcamento: '📋 Générer un Devis',
-    contadorRelatorios: 'Compteur de Rapports',
-    contadorRelatoriosDesc: 'Le prochain numéro sera généré automatiquement au format: NUMÉRO-MOIS/ANNÉE (ex: 123-0126)',
+    contadorRelatorios: 'Numérotation automatique',
+    contadorRelatoriosDesc:
+      'Chaque nouveau rapport : AAAAMMJJ-NNN (date complète + séquence ce jour-là). Ex. : 20260417-002 = 17/04/2026, 2e rapport du jour.',
+    numeracaoRelatoriosAutoTitle: 'Numérotation automatique des rapports de service',
+    preverNumeroRelatorioHojeLabel: 'Prochain numéro suggéré pour la date du jour',
     proximoNumero: 'Prochain Numéro',
     configuracaoRelatorios: 'CONFIGURATION DES RAPPORTS',
     pedidoOrcamentoGerado: 'Devis généré avec succès!',
@@ -6526,9 +6545,11 @@ export const translations = {
     fechamentoInformeNumeroOsTexto:
       'Indiquez le numéro d’OS. Après confirmation, le résumé s’affiche avec COD, description et montants, avec possibilité d’ajouter des lignes.',
     fechamentoCampoNumeroOs: 'N° OS',
-    fechamentoPlaceholderOs: 'Ex. : 12-202504',
+    fechamentoPlaceholderOs: 'Ex. : 20260417-002',
     fechamentoConfirmarOs: 'Confirmer',
     fechamentoOsNaoEncontrado: 'Aucun rapport en attente trouvé avec ce numéro d’OS.',
+    fechamentoOsJaNaBiblioteca:
+      'Cette clôture est déjà enregistrée dans la Bibliothèque de rapports. Ouvrez «Bibliothèque de rapports», repérez le client puis la section «Rapports de dépenses». L’écran «Clôture» ne liste que les rapports pas encore enregistrés dans la Bibliothèque.',
     fechamentoOsInformeNumero: 'Indiquez le numéro d’OS (rapport de service).',
     fechamentoVoltarConsultaOs: 'Consulter une autre OS',
     resultadosTrabalho: 'Résultats du Travail',
@@ -8023,7 +8044,7 @@ export const translations = {
     adminJumpPasswordsDesc: 'Password tecnici / checklist',
     adminJumpBackupDesc: 'Codice, ZIP e ripristino',
     adminGeralSummarySub:
-      'Contatore report, loghi nell’interfaccia, identità del marchio e loghi nei PDF.',
+      'Numerazione rapporti di servizio, loghi nell’interfaccia, identità del marchio e loghi nei PDF.',
     adminDemosSummaryTitle: 'Gestione invio dimostrazioni',
     adminDemosSummarySub: 'Destinatari, pacchetti di moduli e copia di link con identificazione.',
     adminUsersSummarySub: 'Account, permessi e collegamento a responsabili o tecnici.',
@@ -8976,9 +8997,14 @@ export const translations = {
     confirmDeleteRelatorioServico: 'Sei sicuro di voler eliminare questo rapporto di servizio?',
     relatorioServicoSaved: 'Rapporto di servizio salvato con successo!',
     numeroRelatorio: 'Numero del Rapporto',
+    numeroRelatorioAutoAjuda:
+      'Formato ufficiale: AAAAMMGG-NNN — 8 cifre di data (anno completo, mese, giorno) e ordine del giorno (001, 002…). Più clienti lo stesso giorno: 001, 002… Cambiando la data (nuovo rapporto) si ricalcola. Modificabile.',
     gerarPedidoOrcamento: '📋 Genera Richiesta di Preventivo',
-    contadorRelatorios: 'Contatore Rapporti',
-    contadorRelatoriosDesc: 'Il prossimo numero sarà generato automaticamente nel formato: NUMERO-MESE/ANNO (es: 123-0126)',
+    contadorRelatorios: 'Numerazione automatica',
+    contadorRelatoriosDesc:
+      'Ogni nuovo rapporto: AAAAMMGG-NNN (data completa + sequenza solo quel giorno). Es.: 20260417-002 = 17/04/2026, secondo rapporto del giorno.',
+    numeracaoRelatoriosAutoTitle: 'Numerazione automatica dei rapporti di servizio',
+    preverNumeroRelatorioHojeLabel: 'Prossimo numero suggerito per la data di oggi',
     proximoNumero: 'Prossimo Numero',
     configuracaoRelatorios: 'CONFIGURAZIONE RAPPORTI',
     pedidoOrcamentoGerado: 'Richiesta di preventivo generata con successo!',
@@ -9030,9 +9056,11 @@ export const translations = {
     fechamentoInformeNumeroOsTexto:
       'Inserisci il numero OS. Dopo la conferma compare il riepilogo con COD, descrizione e importi, con possibilità di aggiungere voci.',
     fechamentoCampoNumeroOs: 'N. OS',
-    fechamentoPlaceholderOs: 'Es.: 12-202504',
+    fechamentoPlaceholderOs: 'Es.: 20260417-002',
     fechamentoConfirmarOs: 'Conferma',
     fechamentoOsNaoEncontrado: 'Nessun rapporto in sospeso trovato con questo numero OS.',
+    fechamentoOsJaNaBiblioteca:
+      'Questa chiusura è già salvata nella Biblioteca rapporti. Apri «Biblioteca rapporti», trova il cliente e la sezione «Rapporti spese». La schermata «Chiusura» elenca solo i rapporti non ancora salvati in Biblioteca.',
     fechamentoOsInformeNumero: 'Inserisci il numero OS (rapporto di servizio).',
     fechamentoVoltarConsultaOs: 'Consulta un’altra OS',
     resultadosTrabalho: 'Risultati del Lavoro',
@@ -10516,7 +10544,7 @@ export const translations = {
     adminJumpPasswordsDesc: 'Techniker-Passwörter / Checkliste',
     adminJumpBackupDesc: 'Code, ZIP und Wiederherstellung',
     adminGeralSummarySub:
-      'Berichtszähler, Logos in der Benutzeroberfläche, Markenauftritt und Logos in PDFs.',
+      'Nummerierung von Serviceberichten, Logos in der Benutzeroberfläche, Markenauftritt und Logos in PDFs.',
     adminDemosSummaryTitle: 'Versand von Demonstrationen verwalten',
     adminDemosSummarySub: 'Empfänger, Modulpakete und Kopieren von Links mit Kennung.',
     adminUsersSummarySub: 'Konten, Berechtigungen und Verknüpfung mit Verantwortlichen oder Technikern.',
@@ -11467,9 +11495,14 @@ export const translations = {
     confirmDeleteRelatorioServico: 'Sind Sie sicher, dass Sie diesen Servicebericht löschen möchten?',
     relatorioServicoSaved: 'Servicebericht erfolgreich gespeichert!',
     numeroRelatorio: 'Berichtsnummer',
+    numeroRelatorioAutoAjuda:
+      'Offizielles Format: JJJJMMTT-NNN — 8 Ziffern Datum (volles Jahr, Monat, Tag) und Tagesfolge (001, 002…). Mehrere Kunden am selben Tag: 001, 002… Bei Datumsänderung (neuer Bericht) wird neu berechnet. Bearbeitbar.',
     gerarPedidoOrcamento: '📋 Angebot anfordern',
-    contadorRelatorios: 'Berichtszähler',
-    contadorRelatoriosDesc: 'Die nächste Nummer wird automatisch im Format generiert: NUMMER-MONAT/JAHR (z.B. 123-0126)',
+    contadorRelatorios: 'Automatische Nummerierung',
+    contadorRelatoriosDesc:
+      'Jeder neue Bericht: JJJJMMTT-NNN (volles Datum + laufende Nummer nur an diesem Tag). z. B. 20260417-002 = 17.04.2026, zweiter Bericht des Tages.',
+    numeracaoRelatoriosAutoTitle: 'Automatische Nummerierung der Serviceberichte',
+    preverNumeroRelatorioHojeLabel: 'Vorgeschlagene nächste Nummer für heute',
     proximoNumero: 'Nächste Nummer',
     configuracaoRelatorios: 'BERICHTSKONFIGURATION',
     pedidoOrcamentoGerado: 'Angebotsanfrage erfolgreich generiert!',
@@ -11521,9 +11554,11 @@ export const translations = {
     fechamentoInformeNumeroOsTexto:
       'Geben Sie die OS-Nummer ein. Nach Bestätigung erscheint die Übersicht mit COD, Beschreibung und Beträgen; Positionen können ergänzt werden.',
     fechamentoCampoNumeroOs: 'OS-Nr.',
-    fechamentoPlaceholderOs: 'z. B. 12-202504',
+    fechamentoPlaceholderOs: 'z. B. 20260417-002',
     fechamentoConfirmarOs: 'Bestätigen',
     fechamentoOsNaoEncontrado: 'Kein ausstehender Bericht mit dieser OS-Nummer gefunden.',
+    fechamentoOsJaNaBiblioteca:
+      'Dieser Abschluss ist bereits in der Berichtsbibliothek gespeichert. Öffnen Sie «Berichtsbibliothek», wählen Sie den Kunden und den Bereich «Ausgabenberichte». Die Seite «Abschluss» listet nur Berichte, die noch nicht in der Bibliothek gespeichert sind.',
     fechamentoOsInformeNumero: 'Geben Sie die OS-Nummer (Servicebericht) ein.',
     fechamentoVoltarConsultaOs: 'Weitere OS abfragen',
     resultadosTrabalho: 'Arbeitsergebnisse',
@@ -12990,7 +13025,7 @@ export const translations = {
     adminJumpPasswordsDesc: 'Technician passwords / checklist',
     adminJumpBackupDesc: 'Code, ZIP and restore',
     adminGeralSummarySub:
-      'Report counter, interface logos, brand identity and logos on PDFs.',
+      'Service report numbering, interface logos, brand identity and logos on PDFs.',
     adminDemosSummaryTitle: 'Demonstration delivery management',
     adminDemosSummarySub: 'Recipients, module packages and copying identified links.',
     adminUsersSummarySub: 'Accounts, permissions and link to managers or technicians.',
@@ -13963,9 +13998,14 @@ export const translations = {
     confirmDeleteRelatorioServico: 'Are you sure you want to delete this service report?',
     relatorioServicoSaved: 'Service report saved successfully!',
     numeroRelatorio: 'Report Number',
+    numeroRelatorioAutoAjuda:
+      'Official format: YYYYMMDD-NNN — 8 date digits (full year, month, day) then the order for that day (001, 002…). Several clients on the same day: 001, 002… Changing the date (new report) recalculates. Editable.',
     gerarPedidoOrcamento: '📋 Generate Quote Request',
-    contadorRelatorios: 'Report Counter',
-    contadorRelatoriosDesc: 'The next number will be automatically generated in the format: NUMBER-MONTH/YEAR (e.g. 123-0126)',
+    contadorRelatorios: 'Automatic numbering',
+    contadorRelatoriosDesc:
+      'Each new report: YYYYMMDD-NNN (full calendar date + sequence for that day only). E.g. 20260417-002 = 17 Apr 2026, second report that day.',
+    numeracaoRelatoriosAutoTitle: 'Automatic service report numbering',
+    preverNumeroRelatorioHojeLabel: 'Suggested next number for today’s date',
     proximoNumero: 'Next Number',
     configuracaoRelatorios: 'REPORT CONFIGURATION',
     pedidoOrcamentoGerado: 'Quote request generated successfully!',
@@ -14017,9 +14057,11 @@ export const translations = {
     fechamentoInformeNumeroOsTexto:
       'Enter the OS number. After you confirm, the summary appears with code, description and amounts, and you can add items.',
     fechamentoCampoNumeroOs: 'OS no.',
-    fechamentoPlaceholderOs: 'e.g. 12-202504',
+    fechamentoPlaceholderOs: 'e.g. 20260417-002',
     fechamentoConfirmarOs: 'Confirm',
     fechamentoOsNaoEncontrado: 'No pending report found with that OS number.',
+    fechamentoOsJaNaBiblioteca:
+      'This closure is already saved in the Saved Reports Library. Open «Saved Reports Library» from the menu, find the client, then «Expense reports» for that document. The «Closure» screen only lists reports not yet saved to the Library.',
     fechamentoOsInformeNumero: 'Enter the OS number (service report).',
     fechamentoVoltarConsultaOs: 'Look up another OS',
     resultadosTrabalho: 'Work Results',

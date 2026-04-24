@@ -133,7 +133,7 @@ export async function GET() {
     <div class="passo"><strong>Fluxo:</strong> Fornecedores → Adicionar Fornecedor → preencher dados (incluindo IBAN) → Salvar. Depois pode adicionar faturas ao fornecedor e gerir faturas a pagar.</div>
 
     <h3 id="relatorio">5.4. Relatório de Serviço</h3>
-    <p>Relatórios com numeração automática no formato <strong>NÚMERO-MÊS/ANO</strong>. Associação a cliente e equipamento. Campos principais: técnico, cidade, telefone, data, máquina/modelo, número da máquina, tipo de serviço, dias de trabalho, horas de trabalho, KM percorridos, horas de viagem, serviço concluído, retorno necessário, entrega documentação, liberação produção, instrução funcionários, necessidade de troca de peças, observações.</p>
+    <p>Relatórios com numeração automática no formato <strong>AAAAMMDD-NNN</strong> (data completa ano-mês-dia + ordem desse dia: 001, 002…). Vários clientes no mesmo dia ficam com números distintos sem ambiguidade. Associação a cliente e equipamento. Campos principais: técnico, cidade, telefone, data, máquina/modelo, número da máquina, tipo de serviço, dias de trabalho, horas de trabalho, KM percorridos, horas de viagem, serviço concluído, retorno necessário, entrega documentação, liberação produção, instrução funcionários, necessidade de troca de peças, observações.</p>
     <p><strong>Dias de trabalho:</strong> Cada dia pode ter ida/volta, KM, pausa. As peças de substituição podem ser buscadas na Biblioteca de Peças, no PDF do equipamento ou inseridas manualmente por código.</p>
     <div class="passo"><strong>Gerar pedido de orçamento:</strong> Ao preencher as peças no relatório, use «Gerar Pedido de Orçamento» para criar um pedido em Gestão de Custos. O pedido aparece com status Pendente e pode ser enviado, recebido, aprovado ou rejeitado.</div>
     <p>Existem modelos de PDF para impressão: clássico e Ferwood.</p>
@@ -216,7 +216,7 @@ export async function GET() {
       <li><strong>Backup do código:</strong> fazer backup manual; listar e restaurar backups anteriores.</li>
       <li><strong>Tradutor:</strong> ferramenta de tradução entre idiomas; biblioteca de termos para manter consistência.</li>
     </ul>
-    <p><strong>Contador de relatórios:</strong> O formato de numeração (NÚMERO-MÊS/ANO) pode ser configurado no Administrador.</p>
+    <p><strong>Numeração de relatórios:</strong> O formato automático (AAAAMMDD-NNN) e um exemplo para a data de hoje estão descritos no Administrador.</p>
 
     <h2 id="scripts" class="page-break">11. Scripts e servidor</h2>
     <p>Na pasta do projeto existem scripts para Windows:</p>
