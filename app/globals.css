@@ -2869,6 +2869,7 @@ button.btn-danger.btn-danger--inline {
 }
 .main-content-action-btn--help .main-content-action-svg {
   color: rgba(200, 255, 210, 0.95);
+  filter: none;
 }
 .ost-subnav-svg {
   flex-shrink: 0;
@@ -4136,21 +4137,25 @@ body {
   border: 2px solid transparent;
   box-sizing: border-box;
   --help-f1-ring-angle: 0deg;
+  text-shadow: none;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 0 18px rgba(255, 255, 255, 0.16);
   background:
-    linear-gradient(rgba(0, 255, 0, 0.08), rgba(0, 255, 0, 0.08)) padding-box,
+    linear-gradient(rgba(14, 16, 15, 0.92), rgba(8, 10, 9, 0.96)) padding-box,
     conic-gradient(
       from var(--help-f1-ring-angle),
-      rgba(0, 255, 0, 0.45) 0deg,
-      rgba(0, 255, 0, 0.45) 298deg,
-      rgba(255, 255, 255, 0.35) 318deg,
-      rgba(255, 255, 255, 1) 334deg,
-      rgba(255, 255, 255, 0.35) 350deg,
-      rgba(0, 255, 0, 0.45) 360deg
+      rgba(255, 255, 255, 0.2) 0deg,
+      rgba(255, 255, 255, 0.2) 282deg,
+      rgba(255, 255, 255, 0.55) 308deg,
+      rgba(255, 255, 255, 1) 328deg,
+      rgba(255, 255, 255, 0.55) 352deg,
+      rgba(255, 255, 255, 0.2) 360deg
     ) border-box;
   background-clip: padding-box, border-box;
   background-origin: border-box;
-  color: #00ff00;
-  font-size: 11px;
+  color: rgba(220, 255, 228, 0.96);
+  font-size: 12px;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
@@ -4159,21 +4164,22 @@ body {
   justify-content: center;
   gap: 4px;
   -webkit-tap-highlight-color: transparent;
-  animation:
-    main-help-f1-ring-angle 2.6s linear infinite,
-    main-help-f1-shake 0.55s ease-in-out infinite;
+  animation: main-help-f1-ring-angle 2.6s linear infinite;
 }
 .mobile-help-f1:active {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 0 22px rgba(255, 255, 255, 0.22);
   background:
-    linear-gradient(rgba(0, 255, 0, 0.18), rgba(0, 255, 0, 0.18)) padding-box,
+    linear-gradient(rgba(24, 28, 26, 0.95), rgba(12, 14, 13, 0.98)) padding-box,
     conic-gradient(
       from var(--help-f1-ring-angle),
-      rgba(0, 255, 0, 0.55) 0deg,
-      rgba(0, 255, 0, 0.55) 298deg,
-      rgba(255, 255, 255, 0.35) 318deg,
-      rgba(255, 255, 255, 1) 334deg,
-      rgba(255, 255, 255, 0.35) 350deg,
-      rgba(0, 255, 0, 0.55) 360deg
+      rgba(255, 255, 255, 0.26) 0deg,
+      rgba(255, 255, 255, 0.26) 282deg,
+      rgba(255, 255, 255, 0.62) 308deg,
+      rgba(255, 255, 255, 1) 328deg,
+      rgba(255, 255, 255, 0.62) 352deg,
+      rgba(255, 255, 255, 0.26) 360deg
     ) border-box;
   background-clip: padding-box, border-box;
   background-origin: border-box;
@@ -4240,8 +4246,8 @@ body {
   box-shadow: 0 0 12px rgba(80, 140, 255, 0.22);
 }
 /**
- * Ajuda / F1: luz branca a percorrer TODO o contorno (anel = conic-gradient só na borda).
- * Usa @property para animar o ângulo — evita ::before a rodar fora do botão (máscara + transform).
+ * Ajuda / F1: contorno com luz branca (anel + box-shadow); sem brilho no texto.
+ * Só o anel roda (sem tremer o botão). @property anima o ângulo do conic-gradient na borda.
  */
 @property --help-f1-ring-angle {
   syntax: "<angle>";
@@ -4253,79 +4259,72 @@ body {
     --help-f1-ring-angle: 360deg;
   }
 }
-@keyframes main-help-f1-shake {
-  0%,
-  100% {
-    transform: translate(0, 0);
-  }
-  20% {
-    transform: translate(-1px, 0) rotate(-0.35deg);
-  }
-  40% {
-    transform: translate(1px, 0) rotate(0.35deg);
-  }
-  60% {
-    transform: translate(-1px, 0) rotate(-0.25deg);
-  }
-  80% {
-    transform: translate(1px, 0) rotate(0.25deg);
-  }
-}
 .main-content-action-btn--help {
   position: relative;
   isolation: isolate;
   border: 2px solid transparent;
   box-sizing: border-box;
   --help-f1-ring-angle: 0deg;
-  /* Não animar `transform` em transição — a vibração usa keyframes em transform. */
+  text-shadow: none;
   transition:
     background 0.2s var(--ns-ease-out, ease-out),
     border-color 0.2s var(--ns-ease-out, ease-out),
     box-shadow 0.2s var(--ns-ease-out, ease-out),
     filter 0.18s var(--ns-ease-out, ease-out);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 0 20px rgba(255, 255, 255, 0.16);
   background:
-    linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)) padding-box,
+    linear-gradient(rgba(14, 16, 15, 0.92), rgba(8, 10, 9, 0.96)) padding-box,
     conic-gradient(
       from var(--help-f1-ring-angle),
-      rgba(0, 255, 122, 0.35) 0deg,
-      rgba(0, 255, 122, 0.35) 298deg,
-      rgba(255, 255, 255, 0.25) 318deg,
-      rgba(255, 255, 255, 1) 334deg,
-      rgba(255, 255, 255, 0.25) 350deg,
-      rgba(0, 255, 122, 0.35) 360deg
+      rgba(255, 255, 255, 0.2) 0deg,
+      rgba(255, 255, 255, 0.2) 282deg,
+      rgba(255, 255, 255, 0.55) 308deg,
+      rgba(255, 255, 255, 1) 328deg,
+      rgba(255, 255, 255, 0.55) 352deg,
+      rgba(255, 255, 255, 0.2) 360deg
     ) border-box;
   background-clip: padding-box, border-box;
   background-origin: border-box;
-  animation:
-    main-help-f1-ring-angle 2.6s linear infinite,
-    main-help-f1-shake 0.55s ease-in-out infinite;
+  animation: main-help-f1-ring-angle 2.6s linear infinite;
+}
+.main-content-action-btn--help .main-content-action-label,
+.main-content-action-btn--help .main-content-action-f1 {
+  text-shadow: none;
 }
 .main-content-action-btn--help:hover {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.2),
+    0 0 26px rgba(255, 255, 255, 0.22);
   background:
-    linear-gradient(rgba(0, 255, 122, 0.12), rgba(0, 255, 122, 0.12)) padding-box,
+    linear-gradient(rgba(24, 32, 28, 0.88), rgba(12, 18, 15, 0.94)) padding-box,
     conic-gradient(
       from var(--help-f1-ring-angle),
-      rgba(0, 255, 122, 0.45) 0deg,
-      rgba(0, 255, 122, 0.45) 298deg,
-      rgba(255, 255, 255, 0.28) 318deg,
-      rgba(255, 255, 255, 1) 334deg,
-      rgba(255, 255, 255, 0.28) 350deg,
-      rgba(0, 255, 122, 0.45) 360deg
+      rgba(255, 255, 255, 0.24) 0deg,
+      rgba(255, 255, 255, 0.24) 282deg,
+      rgba(255, 255, 255, 0.62) 308deg,
+      rgba(255, 255, 255, 1) 328deg,
+      rgba(255, 255, 255, 0.62) 352deg,
+      rgba(255, 255, 255, 0.24) 360deg
     ) border-box;
   background-clip: padding-box, border-box;
   background-origin: border-box;
 }
 .main-content-action-btn--help:active {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 0 28px rgba(255, 255, 255, 0.24);
   background:
-    linear-gradient(rgba(0, 255, 122, 0.2), rgba(0, 255, 122, 0.2)) padding-box,
+    linear-gradient(rgba(28, 40, 32, 0.92), rgba(14, 22, 18, 0.96)) padding-box,
     conic-gradient(
       from var(--help-f1-ring-angle),
-      rgba(0, 255, 122, 0.55) 0deg,
-      rgba(0, 255, 122, 0.55) 298deg,
-      rgba(255, 255, 255, 0.3) 318deg,
-      rgba(255, 255, 255, 1) 334deg,
-      rgba(255, 255, 255, 0.3) 350deg,
-      rgba(0, 255, 122, 0.55) 360deg
+      rgba(255, 255, 255, 0.28) 0deg,
+      rgba(255, 255, 255, 0.28) 282deg,
+      rgba(255, 255, 255, 0.68) 308deg,
+      rgba(255, 255, 255, 1) 328deg,
+      rgba(255, 255, 255, 0.68) 352deg,
+      rgba(255, 255, 255, 0.28) 360deg
     ) border-box;
   background-clip: padding-box, border-box;
   background-origin: border-box;
@@ -4334,20 +4333,29 @@ body {
   .main-content-action-btn--help {
     animation: none;
     --help-f1-ring-angle: 210deg;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.18),
+      0 0 22px rgba(255, 255, 255, 0.2);
   }
   .mobile-help-f1 {
     animation: none;
     --help-f1-ring-angle: 210deg;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.18),
+      0 0 22px rgba(255, 255, 255, 0.2);
   }
 }
 .main-content-action-f1 {
-  font-size: 10px;
-  font-weight: 800;
-  opacity: 0.9;
-  padding: 2px 6px;
-  border-radius: 6px;
-  border: 1px solid rgba(0, 255, 122, 0.35);
-  background: rgba(0, 0, 0, 0.35);
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  opacity: 1;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  text-shadow: none;
 }
 .app-compact-layout .main-content-action-label {
   max-width: 42vw;
@@ -4540,7 +4548,7 @@ body {
     min-height: 42px !important;
     height: 42px !important;
     padding: 0 8px !important;
-    font-size: max(11px, 0.7rem) !important;
+    font-size: max(12px, 0.75rem) !important;
   }
   .bottom-tabs-bar {
     min-height: 52px !important;
