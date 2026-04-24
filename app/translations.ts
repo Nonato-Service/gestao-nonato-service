@@ -528,7 +528,8 @@ export const translations = {
       'Confirma mesmo que quer substituir os dados deste aparelho pela cópia do servidor, sabendo que pode perder o indicado acima?',
     syncPullRiskCaution:
       'Antes de atualizar, verifique: a cópia do servidor parece mais pequena ou diferente neste aparelho.',
-    syncPullChecking: 'A verificar servidor…',
+    syncPullChecking: 'A atualizar do servidor',
+    syncPushSending: 'A enviar para o servidor',
     syncInitialLoadTitle: 'A carregar dados do servidor…',
     syncInitialLoadHint: 'Aguarde até esta mensagem desaparecer — depois o sistema fica pronto.',
     syncReloadFlushing: 'A guardar e a recarregar…',

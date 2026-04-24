@@ -2319,6 +2319,10 @@ export default function Dashboard() {
   const [syncDecisionModalOpen, setSyncDecisionModalOpen] = useState(false)
   const [syncPushLoading, setSyncPushLoading] = useState(false)
   const [syncPullChecking, setSyncPullChecking] = useState(false)
+  /** Progresso 0–100 ao aplicar dados do servidor no arranque (`loadAllData`). */
+  const [syncBootstrapPercent, setSyncBootstrapPercent] = useState(0)
+  /** Progresso 0–100 em operações explícitas «carregar do servidor» / «enviar ao servidor» (sem arranque completo). */
+  const [syncOperationPercent, setSyncOperationPercent] = useState(0)
   /** Primeira carga: pedidos ao servidor + fusão de dados (evita parecer que «não termina»). */
   const [appInitialLoading, setAppInitialLoading] = useState(true)
   const [showDashboardView, setShowDashboardView] = useState(true) // Dashboard central por padrão
@@ -5198,9 +5202,17 @@ export default function Dashboard() {
   const aceitarSincronizacaoServidor = useCallback(async () => {
     if (typeof window === 'undefined') return
     setSyncPullChecking(true)
+    setSyncOperationPercent(6)
+    const bumpOp = async (p: number) => {
+      setSyncOperationPercent((prev) => Math.max(prev, Math.min(100, Math.round(p))))
+      await new Promise((r) => setTimeout(r, 0))
+    }
     try {
+      await bumpOp(10)
       const localNow = collectLocalNonatoSnapshot()
+      await bumpOp(18)
       const { data: serverNow, ok: serverPullOk } = await loadAllFromServer()
+      await bumpOp(52)
       const sk = Object.keys(serverNow || {}).filter((k) => k.startsWith('nonato-'))
       if (
         (!serverPullOk || sk.length === 0) &&
@@ -5212,8 +5224,10 @@ export default function Dashboard() {
             'Não foi possível ler o servidor. Não é seguro atualizar agora.'
         )
         setSyncPullChecking(false)
+        setSyncOperationPercent(0)
         return
       }
+      await bumpOp(58)
       const { severity, lines } = assessPullServerRisk(serverNow || {}, localNow)
       if (severity === 'severe') {
         const intro =
@@ -5226,6 +5240,7 @@ export default function Dashboard() {
           : intro
         if (!window.confirm(msg)) {
           setSyncPullChecking(false)
+          setSyncOperationPercent(0)
           return
         }
         if (
@@ -5235,6 +5250,7 @@ export default function Dashboard() {
           )
         ) {
           setSyncPullChecking(false)
+          setSyncOperationPercent(0)
           return
         }
       } else if (severity === 'caution') {
@@ -5248,9 +5264,11 @@ export default function Dashboard() {
           : intro
         if (!window.confirm(msg)) {
           setSyncPullChecking(false)
+          setSyncOperationPercent(0)
           return
         }
       }
+      await bumpOp(68)
       const stLatest = await fetchSyncStatus()
       const rev = Math.max(syncPendingRemote?.revision ?? 0, stLatest?.revision ?? 0)
       if (Number.isFinite(rev) && rev >= 0) {
@@ -5268,11 +5286,14 @@ export default function Dashboard() {
       } catch {
         /* ignorar */
       }
+      await bumpOp(92)
       setSyncPullChecking(false)
-      await new Promise((r) => setTimeout(r, 80))
+      setSyncOperationPercent(100)
+      await new Promise((r) => setTimeout(r, 120))
       window.location.reload()
     } catch {
       setSyncPullChecking(false)
+      setSyncOperationPercent(0)
     }
   }, [syncPendingRemote, safeT])
 
@@ -5302,6 +5323,7 @@ export default function Dashboard() {
       'Isto vai SUBSTITUIR os dados no servidor pelos deste aparelho. Os outros equipamentos passarão a poder carregar esta versão. Continuar?'
     if (!window.confirm(msg)) return
     setSyncPushLoading(true)
+    setSyncOperationPercent(18)
     try {
       const r = await pushAllLocalStorageToServer()
       if (!r.ok) {
@@ -5311,8 +5333,10 @@ export default function Dashboard() {
               ? 'Não há dados locais para enviar.'
               : 'Não foi possível enviar. Verifique a ligação ao servidor e tente de novo.')
         )
+        setSyncOperationPercent(0)
         return
       }
+      setSyncOperationPercent(100)
       window.alert((safeT as any)?.syncPushOk || 'Dados enviados ao servidor. Os outros aparelhos verão «Carregar do servidor» na próxima vez que abrirem a página.')
       setSyncPendingRemote(null)
       const stAfterPush = await fetchSyncStatus()
@@ -5328,6 +5352,7 @@ export default function Dashboard() {
       window.location.reload()
     } finally {
       setSyncPushLoading(false)
+      setSyncOperationPercent(0)
     }
   }, [safeT])
 
@@ -5562,6 +5587,12 @@ export default function Dashboard() {
 
     const loadAllData = async () => {
       setAppInitialLoading(true)
+      setSyncBootstrapPercent(2)
+      const reportBoot = async (p: number) => {
+        setSyncBootstrapPercent((prev) => Math.max(prev, Math.min(100, Math.round(p))))
+        await new Promise((r) => setTimeout(r, 0))
+      }
+      await reportBoot(4)
       let preferServerOnlyAfterFullPullWipe = false
       /** Bundle já obtido antes do wipe — evita segundo fetch e evita wipe se a rede falhar. */
       let serverDataFromFullPullPrefetch: Record<string, any> | null = null
@@ -5616,7 +5647,9 @@ export default function Dashboard() {
           /* ignorar falha na limpeza; a carga continua */
         }
       }
+      await reportBoot(14)
       const localSnapshotBeforeMerge = collectLocalNonatoSnapshot()
+      let bootstrapLoadErrored = false
       try {
         setBlockImplicitServerPushDuringBootstrap(true)
         const lastAccepted = getLastAcceptedRevision()
@@ -5629,6 +5662,7 @@ export default function Dashboard() {
           serverDataFromFullPullPrefetch !== null
             ? serverDataFromFullPullPrefetch
             : (await loadAllFromServer()).data
+        await reportBoot(28)
 
         /** Após wipe total, não bloquear por dados locais residuais; usar só servidor para sidebar/manuais nesta carga. */
         const deferServerMerge = preferServerOnlyAfterFullPullWipe
@@ -5790,6 +5824,8 @@ export default function Dashboard() {
         }
         return null
       }
+
+      await reportBoot(34)
 
       // Carregar logo - sempre tentar do servidor primeiro para vídeos
       let savedLogo = null
@@ -5983,6 +6019,8 @@ export default function Dashboard() {
         setSelectedLanguage(savedLanguage)
       }
 
+      await reportBoot(40)
+
       // Carregar usuários
       const savedUsers = getData('nonato-users')
       if (savedUsers && Array.isArray(savedUsers) && savedUsers.length > 0) {
@@ -6162,6 +6200,8 @@ export default function Dashboard() {
       } catch {
         /* IDB pode falhar em modo privado; estado em memória mantém-se */
       }
+
+      await reportBoot(52)
 
       // Carregar clientes (fallback IndexedDB se localStorage encheu só com cópia em IDB)
       let savedClientes = getData('nonato-clientes')
@@ -6456,6 +6496,8 @@ export default function Dashboard() {
         setRegrasClassificacaoPecas(savedRegrasClassificacaoPecas)
       }
 
+      await reportBoot(64)
+
       // Carregar agendamentos (migra tipo para cores do calendário funcionarem)
       const savedAgendamentos = getData('nonato-agendamentos')
       if (savedAgendamentos && Array.isArray(savedAgendamentos)) {
@@ -6697,6 +6739,8 @@ export default function Dashboard() {
 
       const dataParentesCk = getData('nonato-parentes-checklist')
       if (dataParentesCk && Array.isArray(dataParentesCk)) setParentesChecklist(dataParentesCk)
+
+      await reportBoot(80)
 
       // Carregar botões da sidebar
       // Evitar executar múltiplas vezes se já foi inicializado
@@ -8156,6 +8200,7 @@ export default function Dashboard() {
        * e a revisão sobe várias vezes. Se gravarmos só a revisão «do início», o aviso de sync voltava.
        * Alinhamos com a revisão atual do servidor no fim da carga quando não há conflito pendente.
        */
+      await reportBoot(92)
       const stFinal = await fetchSyncStatus()
       if (!deferServerMerge && stFinal !== null) {
         const cur = getLastAcceptedRevision()
@@ -8177,6 +8222,8 @@ export default function Dashboard() {
           : null
       )
       } catch (error) {
+        bootstrapLoadErrored = true
+        setSyncBootstrapPercent(0)
         console.error('Erro ao carregar dados iniciais:', error)
       } finally {
         setBlockImplicitServerPushDuringBootstrap(false)
@@ -8188,7 +8235,12 @@ export default function Dashboard() {
           }
         }
         dataBootstrapCompleteRef.current = true
+        if (!bootstrapLoadErrored) {
+          setSyncBootstrapPercent(100)
+          await new Promise((r) => setTimeout(r, 40))
+        }
         setAppInitialLoading(false)
+        setSyncBootstrapPercent(0)
       }
     } // Fim do try-catch e da função loadAllData
 
@@ -57247,6 +57299,23 @@ A1;Peça exemplo;10`}
         <p style={{ color: '#e8fff0', fontSize: 15, fontWeight: 700, textAlign: 'center', maxWidth: 320, margin: 0 }}>
           {(safeT as any)?.syncInitialLoadTitle || 'A carregar dados do servidor…'}
         </p>
+        <p
+          style={{
+            color: '#00ff88',
+            fontSize: 36,
+            fontWeight: 900,
+            textAlign: 'center',
+            margin: 0,
+            letterSpacing: '0.04em',
+            textShadow: '0 0 24px rgba(0, 255, 136, 0.35)',
+          }}
+          aria-valuenow={syncBootstrapPercent}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          role="progressbar"
+        >
+          {syncBootstrapPercent}%
+        </p>
         <p style={{ color: '#9ab0a2', fontSize: 12, textAlign: 'center', maxWidth: 320, lineHeight: 1.45, margin: 0 }}>
           {(safeT as any)?.syncInitialLoadHint || 'Aguarde até esta mensagem desaparecer.'}
         </p>
@@ -57306,6 +57375,21 @@ A1;Peça exemplo;10`}
         {syncTrafficLightsRow}
       </div>
       <div className="ns-sync-traffic__caption">{syncTrafficStatusText}</div>
+      {(appInitialLoading || syncPullChecking || syncPushLoading) && (
+        <div
+          className="ns-sync-traffic__pct"
+          style={{
+            marginTop: 4,
+            fontSize: 13,
+            fontWeight: 800,
+            color: appInitialLoading ? '#7dffb0' : '#9fd4ff',
+            letterSpacing: '0.06em',
+          }}
+          aria-live="polite"
+        >
+          {appInitialLoading ? syncBootstrapPercent : syncOperationPercent}%
+        </div>
+      )}
     </>
   )
   /** Splash / login / demo: fixo no canto superior esquerdo (evita sobrepor F1 ou conteúdo à direita). */
@@ -60030,7 +60114,7 @@ A1;Peça exemplo;10`}
                 onClick={() => void aceitarSincronizacaoServidor()}
               >
                 {syncPullChecking
-                  ? (safeT as any)?.syncPullChecking || 'A verificar servidor…'
+                  ? `${(safeT as any)?.syncPullChecking || 'A atualizar com o servidor…'} (${syncOperationPercent}%)`
                   : (safeT as any)?.syncModalLoadServer || 'Sim — atualizar este aparelho com o servidor'}
               </button>
               <p style={{ margin: '-4px 0 0', fontSize: '11px', color: '#888' }}>
@@ -60053,7 +60137,7 @@ A1;Peça exemplo;10`}
                 }}
               >
                 {syncPushLoading
-                  ? '…'
+                  ? `${(safeT as any)?.syncPushSending || 'A enviar…'} (${syncOperationPercent}%)`
                   : (safeT as any)?.syncModalPushDevice || 'Não — enviar deste aparelho para o servidor'}
               </button>
               <p style={{ margin: '-4px 0 0', fontSize: '11px', color: '#888' }}>
