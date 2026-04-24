@@ -106,6 +106,19 @@ function servicoValorToInputString(v: number): string {
   return String(v)
 }
 
+/** Grupo lógico no cadastro de serviços (ex.: «Horas trabalhadas»). */
+type ServicoCadastroGrupo = {
+  id: string
+  nome: string
+  ordem: number
+}
+
+const DEFAULT_SERVICO_GRUPO_ID = 'servico-grupo-geral'
+
+function ordenarServicoGrupos(grupos: ServicoCadastroGrupo[]): ServicoCadastroGrupo[] {
+  return [...grupos].sort((a, b) => (a.ordem !== b.ordem ? a.ordem - b.ordem : a.nome.localeCompare(b.nome)))
+}
+
 /**
  * Legado: `nome` = "COD-DESCRIÇÃO" (ex.: HTT-HORA TECNICA TRABALHADA) sem `cod` →
  * `cod`, `nome` em formato título a partir do texto após o hífen e `descricao` em maiúsculas (se ainda vazia).
@@ -119,6 +132,7 @@ function migrarServicoLegacyCodNomeDesc<
     valor: number
     tipoCobranca: 'unidade' | 'km' | 'hora' | 'valor-fixo' | 'diarias' | 'extras'
     categoria: 'servico' | 'despesa'
+    grupoId?: string
   }
 >(s: T): { row: T; touched: boolean } {
   const codExistente = (typeof s.cod === 'string' ? s.cod : '').trim()
@@ -4764,6 +4778,7 @@ export default function Dashboard() {
   const [showCadastroServicosModal, setShowCadastroServicosModal] = useState(false)
   const [servicos, setServicos] = useState<Array<{
     id: string
+    grupoId: string
     cod?: string
     nome: string
     descricao?: string
@@ -4771,10 +4786,15 @@ export default function Dashboard() {
     tipoCobranca: 'unidade' | 'km' | 'hora' | 'valor-fixo' | 'diarias' | 'extras'
     categoria: 'servico' | 'despesa'
   }>>([])
+  const [servicoGrupos, setServicoGrupos] = useState<ServicoCadastroGrupo[]>([])
+  const [servicoGrupoSelecionadoId, setServicoGrupoSelecionadoId] = useState<string | null>(null)
+  const [novoServicoGrupoNome, setNovoServicoGrupoNome] = useState('')
+  const [servicoGrupoNomeEdicao, setServicoGrupoNomeEdicao] = useState('')
   const [showServicoForm, setShowServicoForm] = useState(false)
-  const [servicosActiveTab, setServicosActiveTab] = useState<'cadastrar' | 'listar'>('cadastrar')
+  const [servicosActiveTab, setServicosActiveTab] = useState<'grupos' | 'listar'>('grupos')
   const [editingServico, setEditingServico] = useState<{
     id: string
+    grupoId: string
     cod?: string
     nome: string
     descricao?: string
@@ -4787,6 +4807,7 @@ export default function Dashboard() {
     nome: '',
     descricao: '',
     valor: 0,
+    grupoId: '',
     tipoCobranca: 'unidade' as 'unidade' | 'km' | 'hora' | 'valor-fixo' | 'diarias' | 'extras',
     categoria: 'servico' as 'servico' | 'despesa'
   })
@@ -5977,23 +5998,59 @@ export default function Dashboard() {
         setTiposGestores(savedTiposGestores)
       }
 
-      // Carregar serviços (migrar legado "COD-TEXTO" no `nome` → cod + nome + descricao; gravar se mudou)
+      // Carregar serviços + grupos (migrar legado nome/cod; garantir grupoId e grupo default)
+      const savedGruposRaw = getData('nonato-servicos-grupos')
+      let gruposInicial: ServicoCadastroGrupo[] = []
+      if (Array.isArray(savedGruposRaw) && savedGruposRaw.length > 0) {
+        gruposInicial = (savedGruposRaw as unknown[]).map((raw, i) => {
+          const g = raw as { id?: unknown; nome?: unknown; ordem?: unknown }
+          return {
+            id: String(g.id ?? `servico-grupo-${i}`),
+            nome: (typeof g.nome === 'string' ? g.nome.trim() : '') || 'Grupo',
+            ordem: typeof g.ordem === 'number' && Number.isFinite(g.ordem) ? g.ordem : i,
+          }
+        })
+      }
+
       const savedServicos = getData('nonato-servicos')
+      let servicosLista: Array<(typeof servicos)[number]> = []
+      let persistServicosMigrados = false
       if (savedServicos && Array.isArray(savedServicos)) {
-        let persistServicosMigrados = false
-        const aposMigracao = savedServicos.map((s: (typeof servicos)[number]) => {
+        const aposMigracao = savedServicos.map((s: any) => {
           const { row, touched } = migrarServicoLegacyCodNomeDesc(s)
           if (touched) persistServicosMigrados = true
           return row
         })
-        const servicosNormalizados = aposMigracao.map((s) => ({
+        servicosLista = aposMigracao.map((s) => ({
           ...s,
           valor: normalizeServicoValorStored(s.valor),
-        }))
-        setServicos(servicosNormalizados)
-        if (persistServicosMigrados) {
-          void saveData('nonato-servicos', servicosNormalizados, false).catch(() => {})
-        }
+        })) as Array<(typeof servicos)[number]>
+      }
+
+      let persistGrupos = false
+      if (gruposInicial.length === 0) {
+        gruposInicial = [{ id: DEFAULT_SERVICO_GRUPO_ID, nome: 'Geral', ordem: 0 }]
+        persistGrupos = true
+      }
+
+      const idsGrupo = new Set(gruposInicial.map((g) => g.id))
+      servicosLista = servicosLista.map((s) => {
+        const gid = typeof s.grupoId === 'string' && idsGrupo.has(s.grupoId) ? s.grupoId : gruposInicial[0].id
+        if (gid !== s.grupoId) persistServicosMigrados = true
+        return { ...s, grupoId: gid }
+      })
+
+      setServicoGrupos(gruposInicial)
+      setServicos(servicosLista)
+      const primeiroG = ordenarServicoGrupos(gruposInicial)[0]?.id ?? null
+      setServicoGrupoSelecionadoId(primeiroG)
+      setServicoGrupoNomeEdicao(gruposInicial.find((g) => g.id === primeiroG)?.nome ?? '')
+
+      if (persistServicosMigrados) {
+        void saveData('nonato-servicos', servicosLista, false).catch(() => {})
+      }
+      if (persistGrupos) {
+        void saveData('nonato-servicos-grupos', gruposInicial, false).catch(() => {})
       }
 
       // Carregar biblioteca do tradutor (separada por idiomas)
@@ -10059,6 +10116,17 @@ export default function Dashboard() {
   }
 
   // Funções para gerenciar Serviços
+  const servicoGrupoIdPadrao = () =>
+    servicoGrupoSelecionadoId ||
+    ordenarServicoGrupos(servicoGrupos)[0]?.id ||
+    DEFAULT_SERVICO_GRUPO_ID
+
+  const persistServicosEGrupos = async (nextServicos: typeof servicos, nextGrupos?: ServicoCadastroGrupo[]) => {
+    const g = nextGrupos ?? servicoGrupos
+    await saveData('nonato-servicos', nextServicos)
+    await saveData('nonato-servicos-grupos', g)
+  }
+
   const handleAddServico = () => {
     setEditingServico(null)
     setServicoValorInput('')
@@ -10067,6 +10135,7 @@ export default function Dashboard() {
       nome: '',
       descricao: '',
       valor: 0,
+      grupoId: servicoGrupoIdPadrao(),
       tipoCobranca: 'unidade',
       categoria: 'servico'
     })
@@ -10082,6 +10151,7 @@ export default function Dashboard() {
       nome: servico.nome,
       descricao: servico.descricao || '',
       valor: valorN,
+      grupoId: servico.grupoId || servicoGrupoIdPadrao(),
       tipoCobranca: servico.tipoCobranca,
       categoria: servico.categoria
     })
@@ -10097,11 +10167,18 @@ export default function Dashboard() {
 
     createAutoBackupBeforeOperation()
 
+    const idsG = new Set(servicoGrupos.map((g) => g.id))
+    const grupoId =
+      typeof servicoForm.grupoId === 'string' && idsG.has(servicoForm.grupoId)
+        ? servicoForm.grupoId
+        : (ordenarServicoGrupos(servicoGrupos)[0]?.id ?? DEFAULT_SERVICO_GRUPO_ID)
+
     let updatedServicos: typeof servicos
     let savedServico: typeof servicos[number]
     if (editingServico) {
       savedServico = {
         ...editingServico,
+        grupoId,
         cod: servicoForm.cod || undefined,
         nome: servicoForm.nome,
         descricao: servicoForm.descricao || undefined,
@@ -10117,6 +10194,7 @@ export default function Dashboard() {
     } else {
       const newServico = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        grupoId,
         cod: servicoForm.cod || undefined,
         nome: servicoForm.nome,
         descricao: servicoForm.descricao || undefined,
@@ -10130,7 +10208,7 @@ export default function Dashboard() {
     setServicos(updatedServicos)
 
     try {
-      await saveData('nonato-servicos', updatedServicos)
+      await persistServicosEGrupos(updatedServicos)
     } catch (err) {
       console.error('Erro ao salvar serviços:', err)
       alert((t as any).erroAoSalvarServico || 'Não foi possível salvar. Verifique se o navegador permite armazenamento local (não use modo anônimo sem permissão) ou tente novamente.')
@@ -10142,6 +10220,7 @@ export default function Dashboard() {
       nome: savedServico.nome,
       descricao: savedServico.descricao || '',
       valor: savedServico.valor,
+      grupoId: savedServico.grupoId,
       tipoCobranca: savedServico.tipoCobranca,
       categoria: savedServico.categoria
     })
@@ -10353,9 +10432,90 @@ export default function Dashboard() {
       createAutoBackupBeforeOperation()
       const updatedServicos = servicos.filter(s => s.id !== id)
       setServicos(updatedServicos)
-      saveData('nonato-servicos', updatedServicos)
+      void persistServicosEGrupos(updatedServicos)
       alert((t as any).servicoExcluido || 'Serviço excluído com sucesso!')
     }
+  }
+
+  const handleAddServicoGrupo = () => {
+    const nome = novoServicoGrupoNome.trim()
+    if (!nome) {
+      alert((safeT as any)?.servicosGrupoNomeVazio || 'Digite um nome para o grupo.')
+      return
+    }
+    createAutoBackupBeforeOperation()
+    const maxOrd = servicoGrupos.length ? Math.max(...servicoGrupos.map((g) => g.ordem)) : -1
+    const id = Date.now().toString() + Math.random().toString(36).slice(2, 10)
+    const novo: ServicoCadastroGrupo = { id, nome, ordem: maxOrd + 1 }
+    const next = [...servicoGrupos, novo]
+    setServicoGrupos(next)
+    setNovoServicoGrupoNome('')
+    setServicoGrupoSelecionadoId(id)
+    setServicoGrupoNomeEdicao(nome)
+    void saveData('nonato-servicos-grupos', next)
+    alert((safeT as any)?.servicosGrupoSalvo || 'Grupo criado.')
+  }
+
+  const handleSalvarNomeServicoGrupo = () => {
+    if (!servicoGrupoSelecionadoId) return
+    const nome = servicoGrupoNomeEdicao.trim()
+    if (!nome) {
+      alert((safeT as any)?.servicosGrupoNomeVazio || 'Digite um nome para o grupo.')
+      return
+    }
+    createAutoBackupBeforeOperation()
+    const next = servicoGrupos.map((g) => (g.id === servicoGrupoSelecionadoId ? { ...g, nome } : g))
+    setServicoGrupos(next)
+    void saveData('nonato-servicos-grupos', next)
+  }
+
+  const handleDeleteServicoGrupo = (grupoId: string) => {
+    if (servicoGrupos.length <= 1) {
+      alert((safeT as any)?.servicosNaoExcluirUltimoGrupo || 'Tem de existir pelo menos um grupo.')
+      return
+    }
+    const nItens = servicos.filter((s) => s.grupoId === grupoId).length
+    const msgComItens =
+      (safeT as any)?.servicosConfirmExcluirGrupoComItens ||
+      'Este grupo tem itens. Deseja movê-los para o primeiro grupo restante e excluir este grupo?'
+    const msgVazio = (safeT as any)?.servicosConfirmExcluirGrupo || 'Excluir este grupo?'
+    if (!window.confirm(nItens > 0 ? msgComItens : msgVazio)) return
+
+    createAutoBackupBeforeOperation()
+    const outros = servicoGrupos.filter((g) => g.id !== grupoId)
+    const destino = ordenarServicoGrupos(outros)[0]?.id
+    if (!destino) return
+
+    const nextServicos =
+      nItens > 0
+        ? servicos.map((s) => (s.grupoId === grupoId ? { ...s, grupoId: destino } : s))
+        : servicos
+
+    setServicoGrupos(outros)
+    setServicos(nextServicos)
+    setServicoGrupoSelecionadoId(destino)
+    setServicoGrupoNomeEdicao(outros.find((g) => g.id === destino)?.nome ?? '')
+    void persistServicosEGrupos(nextServicos, outros)
+    if (nItens > 0) {
+      alert((safeT as any)?.servicosItensMovidosGrupo || 'Itens movidos para outro grupo.')
+    }
+  }
+
+  const handleMoveServicoGrupo = (grupoId: string, dir: 'up' | 'down') => {
+    const sorted = ordenarServicoGrupos(servicoGrupos)
+    const idx = sorted.findIndex((g) => g.id === grupoId)
+    const j = dir === 'up' ? idx - 1 : idx + 1
+    if (idx < 0 || j < 0 || j >= sorted.length) return
+    const a = sorted[idx]
+    const b = sorted[j]
+    createAutoBackupBeforeOperation()
+    const next = servicoGrupos.map((g) => {
+      if (g.id === a.id) return { ...g, ordem: b.ordem }
+      if (g.id === b.id) return { ...g, ordem: a.ordem }
+      return g
+    })
+    setServicoGrupos(next)
+    void saveData('nonato-servicos-grupos', next)
   }
 
   // Funções para Desmontados - Grupos
@@ -39009,16 +39169,16 @@ A1;Peça exemplo;10`}
                 ↶ {safeT?.voltar || 'Voltar'}
               </button>
               <button
-                className={`mobile-toolbar-btn ${servicosActiveTab === 'cadastrar' ? 'active' : ''}`}
-                onClick={() => setServicosActiveTab('cadastrar')}
+                className={`mobile-toolbar-btn ${servicosActiveTab === 'grupos' ? 'active' : ''}`}
+                onClick={() => setServicosActiveTab('grupos')}
               >
-                ➕ {safeT?.adicionarServico || 'Novo Serviço'}
+                📁 {(safeT as any)?.servicosPorGrupoTab || 'Por grupos'}
               </button>
               <button
                 className={`mobile-toolbar-btn ${servicosActiveTab === 'listar' ? 'active' : ''}`}
                 onClick={() => setServicosActiveTab('listar')}
               >
-                📋 {safeT?.servicosCadastrados || 'Serviços'} ({servicos.length})
+                📋 {(safeT as any)?.servicosListarTodosTab || 'Ver todos'} ({servicos.length})
               </button>
               <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>
                 🏠
@@ -39034,7 +39194,8 @@ A1;Peça exemplo;10`}
                     {safeT?.cadastroServicosTitle || 'CADASTRO DE SERVIÇOS / VALORES'}
                   </h1>
                   <p className="tab-glass-hero-meta">
-                    {servicos.length} {safeT?.servicosCadastrados || 'serviço(s) cadastrado(s)'}
+                    {servicoGrupos.length} {(safeT as any)?.servicosGruposTitulo || 'grupo(s)'} · {servicos.length}{' '}
+                    {safeT?.servicosCadastrados || 'serviço(s) cadastrado(s)'}
                   </p>
                 </div>
                 <div className="tab-glass-hero-actions">
@@ -39106,21 +39267,21 @@ A1;Peça exemplo;10`}
               <button 
                 className="btn-primary"
                 type="button"
-                onClick={() => setServicosActiveTab('cadastrar')}
+                onClick={() => setServicosActiveTab('grupos')}
                 style={{
                   padding: '12px 24px',
                   fontSize: '14px',
                   fontWeight: 'bold',
                   border: '1px solid',
-                  borderColor: servicosActiveTab === 'cadastrar' ? 'rgba(0, 200, 80, 0.55)' : 'rgba(0, 255, 0, 0.22)',
-                  backgroundColor: servicosActiveTab === 'cadastrar' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
+                  borderColor: servicosActiveTab === 'grupos' ? 'rgba(0, 200, 80, 0.55)' : 'rgba(0, 255, 0, 0.22)',
+                  backgroundColor: servicosActiveTab === 'grupos' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
                   color: '#ffffff',
                   transition: 'border-color 0.2s ease, background-color 0.2s ease',
                   borderRadius: '8px',
                   cursor: 'pointer'
                 }}
               >
-                ➕ {safeT?.adicionarServico || 'Novo Serviço'}
+                📁 {(safeT as any)?.servicosPorGrupoTab || 'Por grupos'}
               </button>
               <button 
                 className="btn-primary"
@@ -39139,18 +39300,178 @@ A1;Peça exemplo;10`}
                   cursor: 'pointer'
                 }}
               >
-                📋 {safeT?.servicosCadastrados || 'Serviços cadastrados'} ({servicos.length})
+                📋 {(safeT as any)?.servicosListarTodosTab || 'Ver todos'} ({servicos.length})
               </button>
             </div>
 
-            {servicosActiveTab === 'cadastrar' ? (
-              <div>
-                <button className="btn-primary" onClick={handleAddServico} style={{ marginBottom: '20px' }}>
-                  {safeT?.adicionarServico || 'Adicionar Serviço ou Despesa'}
-                </button>
-            {showServicoForm && (
-              <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '15px' }}>
-                <h4 style={{ color: '#ffffff' }}>{editingServico ? (safeT?.editarServico || 'Editar Serviço') : (safeT?.adicionarServico || 'Adicionar Serviço ou Despesa')}</h4>
+            {servicosActiveTab === 'grupos' ? (
+              <div style={{ display: 'flex', gap: '18px', alignItems: 'stretch', flexWrap: 'wrap', marginTop: '12px' }}>
+                <aside
+                  style={{
+                    ...glassCardStyle(ACCENT_GREEN, { padding: '16px', radius: '12px', borderAlpha: 0.2 }),
+                    flex: '0 1 280px',
+                    minWidth: '220px',
+                    maxHeight: '70vh',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  <h3 style={{ margin: '0 0 8px', color: '#ffffff', fontSize: '16px' }}>
+                    {(safeT as any)?.servicosGruposTitulo || 'Grupos'}
+                  </h3>
+                  <p style={{ margin: '0 0 12px', fontSize: '12px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.45 }}>
+                    {(safeT as any)?.servicosGruposAjuda ||
+                      'Crie grupos (ex.: Horas trabalhadas). Em cada grupo, cadastre trabalhos e valores.'}
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto', flex: 1, marginBottom: '12px' }}>
+                    {ordenarServicoGrupos(servicoGrupos).map((g) => {
+                      const n = servicos.filter((s) => s.grupoId === g.id).length
+                      const sel = servicoGrupoSelecionadoId === g.id
+                      return (
+                        <button
+                          key={g.id}
+                          type="button"
+                          onClick={() => {
+                            setServicoGrupoSelecionadoId(g.id)
+                            setServicoGrupoNomeEdicao(g.nome)
+                          }}
+                          style={{
+                            textAlign: 'left',
+                            padding: '10px 12px',
+                            borderRadius: '8px',
+                            border: sel ? '1px solid rgba(0, 200, 80, 0.65)' : '1px solid rgba(0, 255, 0, 0.18)',
+                            background: sel ? 'rgba(18, 52, 24, 0.95)' : 'rgba(22, 28, 28, 0.75)',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                          }}
+                        >
+                          <span style={{ fontWeight: 700 }}>{g.nome}</span>
+                          <span style={{ opacity: 0.65, fontSize: '12px' }}> ({n})</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div style={{ borderTop: '1px solid rgba(0,255,0,0.15)', paddingTop: '12px' }}>
+                    <input
+                      type="text"
+                      value={novoServicoGrupoNome}
+                      onChange={(e) => setNovoServicoGrupoNome(e.target.value)}
+                      placeholder={(safeT as any)?.servicosGrupoNomePlaceholder || 'Nome do novo grupo'}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        marginBottom: '8px',
+                        backgroundColor: '#222',
+                        color: '#fff',
+                        border: '1px solid rgba(0, 255, 0, 0.3)',
+                        borderRadius: '6px',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                    <button className="btn-primary" type="button" onClick={handleAddServicoGrupo} style={{ width: '100%' }}>
+                      + {(safeT as any)?.servicosNovoGrupo || 'Criar grupo'}
+                    </button>
+                  </div>
+                </aside>
+                <section style={{ flex: '1 1 360px', minWidth: 0 }}>
+                  {servicoGrupoSelecionadoId ? (
+                    <>
+                      <div
+                        style={{
+                          ...glassCardStyle(ACCENT_GREEN, { padding: '14px', radius: '12px', borderAlpha: 0.18 }),
+                          marginBottom: '14px',
+                        }}
+                      >
+                        <div style={{ fontSize: '12px', color: '#7dff9e', marginBottom: '6px' }}>
+                          {(safeT as any)?.servicosRenomearGrupo || 'Nome do grupo'}
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <input
+                            type="text"
+                            value={servicoGrupoNomeEdicao}
+                            onChange={(e) => setServicoGrupoNomeEdicao(e.target.value)}
+                            style={{
+                              flex: '1 1 180px',
+                              minWidth: 0,
+                              padding: '8px',
+                              backgroundColor: '#222',
+                              color: '#fff',
+                              border: '1px solid rgba(0, 255, 0, 0.3)',
+                              borderRadius: '6px',
+                            }}
+                          />
+                          <button className="btn-primary" type="button" onClick={handleSalvarNomeServicoGrupo}>
+                            {safeT?.save || 'Salvar'}
+                          </button>
+                          <button
+                            className="btn-primary"
+                            type="button"
+                            onClick={() => handleMoveServicoGrupo(servicoGrupoSelecionadoId, 'up')}
+                            title={(safeT as any)?.servicosSubirGrupo || 'Subir'}
+                          >
+                            ↑
+                          </button>
+                          <button
+                            className="btn-primary"
+                            type="button"
+                            onClick={() => handleMoveServicoGrupo(servicoGrupoSelecionadoId, 'down')}
+                            title={(safeT as any)?.servicosDescerGrupo || 'Descer'}
+                          >
+                            ↓
+                          </button>
+                          <button
+                            className="btn-danger"
+                            type="button"
+                            onClick={() => handleDeleteServicoGrupo(servicoGrupoSelecionadoId)}
+                          >
+                            {(safeT as any)?.servicosExcluirGrupo || 'Excluir grupo'}
+                          </button>
+                        </div>
+                      </div>
+                      <h3 style={{ color: '#fff', margin: '0 0 12px', fontSize: '17px' }}>
+                        {(safeT as any)?.servicosItensDoGrupo || 'Trabalhos e valores'}
+                      </h3>
+                      <button className="btn-primary" onClick={handleAddServico} style={{ marginBottom: '16px' }}>
+                        {safeT?.adicionarServico || 'Adicionar Serviço ou Despesa'}
+                      </button>
+                      {showServicoForm && (
+                        <div
+                          style={{
+                            ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }),
+                            marginBottom: '15px',
+                          }}
+                        >
+                          <h4 style={{ color: '#ffffff' }}>
+                            {editingServico ? safeT?.editarServico || 'Editar Serviço' : safeT?.adicionarServico || 'Adicionar Serviço ou Despesa'}
+                          </h4>
+                          <label style={{ display: 'block', color: 'rgba(255,255,255,0.85)', fontSize: '12px', marginBottom: '4px' }}>
+                            {(safeT as any)?.servicosServicoGrupo || 'Grupo'}
+                          </label>
+                          <select
+                            value={
+                              servicoForm.grupoId ||
+                              servicoGrupoSelecionadoId ||
+                              ordenarServicoGrupos(servicoGrupos)[0]?.id ||
+                              ''
+                            }
+                            onChange={(e) => setServicoForm({ ...servicoForm, grupoId: e.target.value })}
+                            style={{
+                              width: '100%',
+                              padding: '8px',
+                              marginBottom: '10px',
+                              backgroundColor: '#222222',
+                              color: '#fff',
+                              border: '1px solid rgba(0, 255, 0, 0.3)',
+                              borderRadius: '4px',
+                            }}
+                          >
+                            {ordenarServicoGrupos(servicoGrupos).map((g) => (
+                              <option key={g.id} value={g.id}>
+                                {g.nome}
+                              </option>
+                            ))}
+                          </select>
                 <select
                   value={servicoForm.categoria}
                   onChange={(e) => setServicoForm({ ...servicoForm, categoria: e.target.value as 'servico' | 'despesa' })}
@@ -39234,52 +39555,190 @@ A1;Peça exemplo;10`}
                   <button className="btn-primary" onClick={handleSaveServico} style={{ flex: 1, backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff' }}>
                     {safeT?.save || 'Salvar'}
                   </button>
-                  <button className="btn-primary" onClick={() => { setShowServicoForm(false); setEditingServico(null); setServicoValorInput(''); setServicoForm({ cod: '', nome: '', descricao: '', valor: 0, categoria: 'servico', tipoCobranca: 'valor-fixo' }); }} style={{ flex: 1, backgroundColor: 'rgba(22, 28, 28, 0.88)', border: '1px solid rgba(0, 255, 0, 0.22)', color: '#ffffff' }}>
+                  <button className="btn-primary" onClick={() => { setShowServicoForm(false); setEditingServico(null); setServicoValorInput(''); setServicoForm({ cod: '', nome: '', descricao: '', valor: 0, grupoId: servicoGrupoIdPadrao(), categoria: 'servico', tipoCobranca: 'valor-fixo' }); }} style={{ flex: 1, backgroundColor: 'rgba(22, 28, 28, 0.88)', border: '1px solid rgba(0, 255, 0, 0.22)', color: '#ffffff' }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>
               </div>
             )}
+                      {servicos.filter((s) => s.grupoId === servicoGrupoSelecionadoId).length === 0 ? (
+                        <p style={{ color: 'rgba(255,255,255,0.55)', marginTop: '8px' }}>
+                          {(safeT as any)?.servicosNenhumItemNoGrupo || 'Nenhum item neste grupo.'}
+                        </p>
+                      ) : (
+                        <div className="tab-glass-cards-grid" style={{ marginTop: '20px' }}>
+                          {servicos
+                            .filter((s) => s.grupoId === servicoGrupoSelecionadoId)
+                            .map((servico) => {
+                              const codExibirServico = servicoCodParaExibicao(servico)
+                              return (
+                                <div
+                                  key={servico.id}
+                                  style={{
+                                    ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }),
+                                    height: 'fit-content',
+                                  }}
+                                  onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)}
+                                  onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}
+                                >
+                                  <h3 style={{ marginBottom: '10px', color: '#ffffff' }}>
+                                    {codExibirServico ? (
+                                      <span style={{ color: '#7dff9e' }}>COD: {codExibirServico}</span>
+                                    ) : null}
+                                    {codExibirServico ? <span style={{ color: 'rgba(255,255,255,0.45)' }}> · </span> : null}
+                                    {servico.nome}
+                                  </h3>
+                                  <p style={{ fontSize: '14px', marginBottom: '5px' }}>
+                                    <strong>{safeT?.valorServico || 'Valor'}:</strong> {servico.valor}€
+                                  </p>
+                                  <p style={{ fontSize: '14px', marginBottom: '5px' }}>
+                                    <strong>{safeT?.tipoCobranca || 'Tipo de Cobrança'}:</strong> {servico.tipoCobranca}
+                                  </p>
+                                  <p style={{ fontSize: '14px', marginBottom: '5px', opacity: 0.8 }}>
+                                    <strong>{safeT?.tipo || 'Tipo'}:</strong> {servico.categoria}
+                                  </p>
+                                  {servico.descricao?.trim() ? (
+                                    <p style={{ fontSize: '13px', marginBottom: '10px', opacity: 0.92 }}>
+                                      <strong>{safeT?.descricao || 'Descrição'}:</strong> {servico.descricao.trim()}
+                                    </p>
+                                  ) : null}
+                                  <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
+                                    <button
+                                      className="btn-primary"
+                                      type="button"
+                                      onClick={() => {
+                                        setServicoGrupoSelecionadoId(servico.grupoId)
+                                        const gg = servicoGrupos.find((x) => x.id === servico.grupoId)
+                                        if (gg) setServicoGrupoNomeEdicao(gg.nome)
+                                        handleEditServico(servico)
+                                      }}
+                                      style={{
+                                        flex: 1,
+                                        padding: '8px',
+                                        fontSize: '12px',
+                                        backgroundColor: 'rgba(18, 52, 24, 0.96)',
+                                        border: '1px solid rgba(0, 200, 80, 0.55)',
+                                        color: '#ffffff',
+                                      }}
+                                    >
+                                      {safeT?.edit || 'Editar'}
+                                    </button>
+                                    <button
+                                      className="btn-danger"
+                                      onClick={() => handleDeleteServico(servico.id)}
+                                      style={{
+                                        flex: 1,
+                                        padding: '8px',
+                                        fontSize: '12px',
+                                        backgroundColor: 'rgba(52, 22, 22, 0.96)',
+                                        border: '1px solid rgba(255, 100, 100, 0.5)',
+                                        color: '#ffffff',
+                                      }}
+                                    >
+                                      {safeT?.delete || 'Excluir'}
+                                    </button>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p style={{ color: 'rgba(255,255,255,0.55)' }}>
+                      {(safeT as any)?.servicosEscolhaGrupo || 'Escolha um grupo à esquerda.'}
+                    </p>
+                  )}
+                </section>
               </div>
             ) : (
               <div>
             {servicos.length === 0 ? (
               <p style={{ color: 'rgba(255,255,255,0.55)' }}>{safeT?.noServicos || 'Nenhum serviço ou despesa cadastrado.'}</p>
             ) : (
-              <div className="tab-glass-cards-grid" style={{ marginTop: '20px' }}>
-                {servicos.map((servico) => {
-                  const codExibirServico = servicoCodParaExibicao(servico)
+              <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+                {ordenarServicoGrupos(servicoGrupos).map((g) => {
+                  const itens = servicos.filter((s) => s.grupoId === g.id)
+                  if (itens.length === 0) return null
                   return (
-                  <div key={servico.id} style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }), height: 'fit-content' }} onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)} onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}>
-                    <h3 style={{ marginBottom: '10px', color: '#ffffff' }}>
-                      {codExibirServico ? (
-                        <span style={{ color: '#7dff9e' }}>COD: {codExibirServico}</span>
-                      ) : null}
-                      {codExibirServico ? <span style={{ color: 'rgba(255,255,255,0.45)' }}> · </span> : null}
-                      {servico.nome}
-                    </h3>
-                    <p style={{ fontSize: '14px', marginBottom: '5px' }}><strong>{safeT?.valorServico || 'Valor'}:</strong> {servico.valor}€</p>
-                    <p style={{ fontSize: '14px', marginBottom: '5px' }}><strong>{safeT?.tipoCobranca || 'Tipo de Cobrança'}:</strong> {servico.tipoCobranca}</p>
-                    <p style={{ fontSize: '14px', marginBottom: '5px', opacity: 0.8 }}><strong>{safeT?.tipo || 'Tipo'}:</strong> {servico.categoria}</p>
-                    {servico.descricao?.trim() ? (
-                      <p style={{ fontSize: '13px', marginBottom: '10px', opacity: 0.92 }}>
-                        <strong>{safeT?.descricao || 'Descrição'}:</strong> {servico.descricao.trim()}
-                      </p>
-                    ) : null}
-                    <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
-                      <button
-                        className="btn-primary"
-                        type="button"
-                        onClick={() => { setServicosActiveTab('cadastrar'); handleEditServico(servico); }}
-                        style={{ flex: 1, padding: '8px', fontSize: '12px', backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff' }}
-                      >
-                        {safeT?.edit || 'Editar'}
-                      </button>
-                      <button className="btn-danger" onClick={() => handleDeleteServico(servico.id)} style={{ flex: 1, padding: '8px', fontSize: '12px', backgroundColor: 'rgba(52, 22, 22, 0.96)', border: '1px solid rgba(255, 100, 100, 0.5)', color: '#ffffff' }}>
-                        {safeT?.delete || 'Excluir'}
-                      </button>
+                    <div key={g.id}>
+                      <h2 style={{ margin: '0 0 12px', fontSize: '18px', color: '#7dff9e', letterSpacing: '0.04em' }}>{g.nome}</h2>
+                      <div className="tab-glass-cards-grid">
+                        {itens.map((servico) => {
+                          const codExibirServico = servicoCodParaExibicao(servico)
+                          return (
+                            <div
+                              key={servico.id}
+                              style={{
+                                ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }),
+                                height: 'fit-content',
+                              }}
+                              onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)}
+                              onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}
+                            >
+                              <h3 style={{ marginBottom: '10px', color: '#ffffff' }}>
+                                {codExibirServico ? (
+                                  <span style={{ color: '#7dff9e' }}>COD: {codExibirServico}</span>
+                                ) : null}
+                                {codExibirServico ? <span style={{ color: 'rgba(255,255,255,0.45)' }}> · </span> : null}
+                                {servico.nome}
+                              </h3>
+                              <p style={{ fontSize: '14px', marginBottom: '5px' }}>
+                                <strong>{safeT?.valorServico || 'Valor'}:</strong> {servico.valor}€
+                              </p>
+                              <p style={{ fontSize: '14px', marginBottom: '5px' }}>
+                                <strong>{safeT?.tipoCobranca || 'Tipo de Cobrança'}:</strong> {servico.tipoCobranca}
+                              </p>
+                              <p style={{ fontSize: '14px', marginBottom: '5px', opacity: 0.8 }}>
+                                <strong>{safeT?.tipo || 'Tipo'}:</strong> {servico.categoria}
+                              </p>
+                              {servico.descricao?.trim() ? (
+                                <p style={{ fontSize: '13px', marginBottom: '10px', opacity: 0.92 }}>
+                                  <strong>{safeT?.descricao || 'Descrição'}:</strong> {servico.descricao.trim()}
+                                </p>
+                              ) : null}
+                              <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
+                                <button
+                                  className="btn-primary"
+                                  type="button"
+                                  onClick={() => {
+                                    setServicosActiveTab('grupos')
+                                    setServicoGrupoSelecionadoId(servico.grupoId)
+                                    const gg = servicoGrupos.find((x) => x.id === servico.grupoId)
+                                    if (gg) setServicoGrupoNomeEdicao(gg.nome)
+                                    handleEditServico(servico)
+                                  }}
+                                  style={{
+                                    flex: 1,
+                                    padding: '8px',
+                                    fontSize: '12px',
+                                    backgroundColor: 'rgba(18, 52, 24, 0.96)',
+                                    border: '1px solid rgba(0, 200, 80, 0.55)',
+                                    color: '#ffffff',
+                                  }}
+                                >
+                                  {safeT?.edit || 'Editar'}
+                                </button>
+                                <button
+                                  className="btn-danger"
+                                  onClick={() => handleDeleteServico(servico.id)}
+                                  style={{
+                                    flex: 1,
+                                    padding: '8px',
+                                    fontSize: '12px',
+                                    backgroundColor: 'rgba(52, 22, 22, 0.96)',
+                                    border: '1px solid rgba(255, 100, 100, 0.5)',
+                                    color: '#ffffff',
+                                  }}
+                                >
+                                  {safeT?.delete || 'Excluir'}
+                                </button>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
-                  </div>
                   )
                 })}
               </div>
@@ -63813,14 +64272,123 @@ A1;Peça exemplo;10`}
       {/* Modal de Cadastro de Serviços */}
       {showCadastroServicosModal && (
         <div className="modal-overlay" onClick={() => setShowCadastroServicosModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>{safeT?.cadastroServicosTitle || 'CADASTRO DE SERVIÇOS / VALORES'}</h2>
-            <button className="btn-primary" onClick={handleAddServico} style={{ marginBottom: '15px' }}>
-              {safeT?.adicionarServico || 'Adicionar Serviço ou Despesa'}
-            </button>
+          <div
+            className="modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '760px', width: '96%', maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+          >
+            <h2 style={{ flexShrink: 0 }}>{safeT?.cadastroServicosTitle || 'CADASTRO DE SERVIÇOS / VALORES'}</h2>
+            <div style={{ display: 'flex', gap: '12px', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+              <div
+                style={{
+                  flex: '0 0 200px',
+                  minWidth: 0,
+                  overflowY: 'auto',
+                  border: '1px solid rgba(0, 255, 0, 0.2)',
+                  borderRadius: '8px',
+                  padding: '10px',
+                  background: '#141414',
+                }}
+              >
+                <div style={{ fontSize: '12px', color: '#7dff9e', marginBottom: '8px' }}>
+                  {(safeT as any)?.servicosGruposTitulo || 'Grupos'}
+                </div>
+                {ordenarServicoGrupos(servicoGrupos).map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => {
+                      setServicoGrupoSelecionadoId(g.id)
+                      setServicoGrupoNomeEdicao(g.nome)
+                    }}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      textAlign: 'left',
+                      marginBottom: '6px',
+                      padding: '8px',
+                      borderRadius: '6px',
+                      border:
+                        servicoGrupoSelecionadoId === g.id
+                          ? '1px solid rgba(0, 200, 80, 0.65)'
+                          : '1px solid rgba(0, 255, 0, 0.15)',
+                      background: servicoGrupoSelecionadoId === g.id ? 'rgba(18, 52, 24, 0.95)' : '#1a1a1a',
+                      color: '#fff',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                    }}
+                  >
+                    {g.nome}{' '}
+                    <span style={{ opacity: 0.6 }}>({servicos.filter((s) => s.grupoId === g.id).length})</span>
+                  </button>
+                ))}
+                <input
+                  type="text"
+                  value={novoServicoGrupoNome}
+                  onChange={(e) => setNovoServicoGrupoNome(e.target.value)}
+                  placeholder={(safeT as any)?.servicosGrupoNomePlaceholder || 'Novo grupo'}
+                  style={{
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    padding: '6px',
+                    marginTop: '8px',
+                    marginBottom: '6px',
+                    background: '#222',
+                    color: '#fff',
+                    border: '1px solid rgba(0, 255, 0, 0.25)',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                  }}
+                />
+                <button className="btn-primary" type="button" onClick={handleAddServicoGrupo} style={{ width: '100%', fontSize: '12px', padding: '6px' }}>
+                  + {(safeT as any)?.servicosNovoGrupo || 'Criar'}
+                </button>
+              </div>
+              <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', paddingRight: '4px' }}>
+                {servicoGrupoSelecionadoId ? (
+                  <>
+                    <div style={{ marginBottom: '10px', display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <input
+                        type="text"
+                        value={servicoGrupoNomeEdicao}
+                        onChange={(e) => setServicoGrupoNomeEdicao(e.target.value)}
+                        style={{
+                          flex: 1,
+                          minWidth: '120px',
+                          padding: '6px 8px',
+                          background: '#141414',
+                          color: '#fff',
+                          border: '1px solid rgba(0, 255, 0, 0.3)',
+                          borderRadius: '4px',
+                        }}
+                      />
+                      <button className="btn-primary" type="button" style={{ fontSize: '12px', padding: '6px 10px' }} onClick={handleSalvarNomeServicoGrupo}>
+                        {safeT?.save || 'OK'}
+                      </button>
+                    </div>
+                    <button className="btn-primary" onClick={handleAddServico} style={{ marginBottom: '12px', width: '100%' }}>
+                      {safeT?.adicionarServico || 'Adicionar Serviço ou Despesa'}
+                    </button>
             {showServicoForm && (
               <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
                 <h4>{editingServico ? (safeT?.editarServico || 'Editar Serviço') : (safeT?.adicionarServico || 'Adicionar Serviço ou Despesa')}</h4>
+                <label style={{ fontSize: '12px', color: '#aaa' }}>{(safeT as any)?.servicosServicoGrupo || 'Grupo'}</label>
+                <select
+                  value={
+                    servicoForm.grupoId ||
+                    servicoGrupoSelecionadoId ||
+                    ordenarServicoGrupos(servicoGrupos)[0]?.id ||
+                    ''
+                  }
+                  onChange={(e) => setServicoForm({ ...servicoForm, grupoId: e.target.value })}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                >
+                  {ordenarServicoGrupos(servicoGrupos).map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.nome}
+                    </option>
+                  ))}
+                </select>
                 <select
                   value={servicoForm.categoria}
                   onChange={(e) => setServicoForm({ ...servicoForm, categoria: e.target.value as 'servico' | 'despesa' })}
@@ -63886,17 +64454,19 @@ A1;Peça exemplo;10`}
                   <button className="btn-primary" onClick={handleSaveServico} style={{ flex: 1 }}>
                     {safeT?.save || 'Salvar'}
                   </button>
-                  <button className="btn-primary" onClick={() => { setShowServicoForm(false); setEditingServico(null); setServicoValorInput(''); setServicoForm({ cod: '', nome: '', descricao: '', valor: 0, categoria: 'servico', tipoCobranca: 'valor-fixo' }); }} style={{ flex: 1 }}>
+                  <button className="btn-primary" onClick={() => { setShowServicoForm(false); setEditingServico(null); setServicoValorInput(''); setServicoForm({ cod: '', nome: '', descricao: '', valor: 0, grupoId: servicoGrupoIdPadrao(), categoria: 'servico', tipoCobranca: 'valor-fixo' }); }} style={{ flex: 1 }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>
               </div>
             )}
-            {servicos.length === 0 ? (
-              <p>{safeT?.noServicos || 'Nenhum serviço ou despesa cadastrado.'}</p>
+            {servicos.filter((s) => s.grupoId === servicoGrupoSelecionadoId).length === 0 ? (
+              <p style={{ fontSize: '14px', opacity: 0.85 }}>{(safeT as any)?.servicosNenhumItemNoGrupo || 'Nenhum item neste grupo.'}</p>
             ) : (
-              <ul style={{ listStyle: 'none', padding: 0, marginTop: '20px' }}>
-                {servicos.map((servico) => {
+              <ul style={{ listStyle: 'none', padding: 0, marginTop: '12px' }}>
+                {servicos
+                  .filter((s) => s.grupoId === servicoGrupoSelecionadoId)
+                  .map((servico) => {
                   const codExModal = servicoCodParaExibicao(servico)
                   return (
                   <li key={servico.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
@@ -63931,7 +64501,13 @@ A1;Peça exemplo;10`}
                 })}
               </ul>
             )}
-            <button className="btn-primary" onClick={() => setShowCadastroServicosModal(false)} style={{ width: '100%', marginTop: '20px' }}>
+                  </>
+                ) : (
+                  <p>{(safeT as any)?.servicosEscolhaGrupo || 'Escolha um grupo.'}</p>
+                )}
+              </div>
+            </div>
+            <button className="btn-primary" onClick={() => setShowCadastroServicosModal(false)} style={{ width: '100%', marginTop: '16px', flexShrink: 0 }}>
               {safeT?.close || 'Fechar'}
             </button>
           </div>
