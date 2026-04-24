@@ -92,6 +92,11 @@ function normalizeServicoValorStored(v: unknown): number {
   return Number.isFinite(n) ? n : 0
 }
 
+/** Exibição nos cartões/listas do cadastro: sempre 2 casas e ponto decimal (ex.: 0.60, 70.00). */
+function formatServicoValorExibicao(v: unknown): string {
+  return normalizeServicoValorStored(v).toFixed(2)
+}
+
 /** Campo de valor (texto): aceita vírgula ou ponto; vazio trata-se como 0 ao guardar. */
 function parseServicoValorInput(raw: string): number {
   const t = raw.trim().replace(/\s/g, '').replace(/€/g, '').replace(',', '.')
@@ -37044,7 +37049,7 @@ A1;Peça exemplo;10`}
               )}
             </div>
 
-            {/* Painel operacional: execução, agendados, pré-agendados e registos de trabalho concluído */}
+            {/* Painel operacional: execução, agendados, pré-agendados, pendentes, cancelados, concluídos recentes */}
             <div
               style={{
                 marginBottom: '22px',
@@ -37059,9 +37064,9 @@ A1;Peça exemplo;10`}
                   <h2 style={{ margin: 0, fontSize: '17px', color: '#00ff00', letterSpacing: '0.5px' }}>
                     {(safeT as any)?.agendaPainelOperacionalTitulo || 'Situação operacional'}
                   </h2>
-                  <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#999', maxWidth: '720px' }}>
+                  <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#999', maxWidth: '900px' }}>
                     {(safeT as any)?.agendaPainelOperacionalHint ||
-                      'Resumo em tempo real. O filtro de técnico acima aplica-se aqui; tipo e data da lista não ocultam este painel.'}
+                      'Resumo em tempo real: execução, confirmados, pré-agendados, pendentes (ag. técnico), cancelados e concluídos recentes. O filtro de técnico acima aplica-se aqui; tipo e data da lista não ocultam este painel.'}
                   </p>
                 </div>
               </div>
@@ -37085,41 +37090,106 @@ A1;Peça exemplo;10`}
                   )
                   .sort(ordenarDataHoraAsc)
 
+                const ordenarDataHoraDescPainel = (x: Agendamento, y: Agendamento) => {
+                  const c = String(y.data || '').localeCompare(String(x.data || ''))
+                  return c !== 0 ? c : String(y.hora || '').localeCompare(String(x.hora || ''))
+                }
+                const pendentesPainel = agBasePainel
+                  .filter((a) => normalizeTipoAgendamento(a) === 'agendamento-tecnico' && normalizeStatusAgendamento(a) === 'pendente')
+                  .sort(ordenarDataHoraAsc)
+                const canceladosPainelFull = agBasePainel
+                  .filter((a) => normalizeStatusAgendamento(a) === 'cancelado')
+                  .sort(ordenarDataHoraDescPainel)
+                const canceladosPainelCount = canceladosPainelFull.length
+                const canceladosPainel = canceladosPainelFull.slice(0, 15)
+                const concluidosPainelFull = agBasePainel
+                  .filter((a) => normalizeStatusAgendamento(a) === 'concluido')
+                  .sort(ordenarDataHoraDescPainel)
+                const concluidosPainelCount = concluidosPainelFull.length
+                const concluidosPainel = concluidosPainelFull.slice(0, 15)
+
                 const cabecalhoPainelColuna = (
-                  variant: 'exec' | 'agend' | 'pre',
+                  variant: 'exec' | 'agend' | 'pre' | 'pend' | 'canc' | 'done',
                   titulo: string,
                   n: number
                 ) => {
-                  const cfg =
-                    variant === 'exec'
-                      ? {
-                          icon: '▶',
-                          tag: (safeT as any)?.agendaPainelHeadTagExecucao || 'AO VIVO',
-                          bar: '#ff6b2d',
-                          grad: 'linear-gradient(105deg, rgba(255,95,40,0.42) 0%, rgba(18,10,8,0.97) 48%, rgba(12,12,12,0.98) 100%)',
-                          iconBox: 'rgba(255, 110, 50, 0.22)',
-                          iconBorder: '1px solid rgba(255, 160, 100, 0.55)',
-                          titleTint: '#ffd4bc',
-                        }
-                      : variant === 'agend'
-                        ? {
-                            icon: '✓',
-                            tag: (safeT as any)?.agendaPainelHeadTagAgendados || 'CONFIRMADO',
-                            bar: '#3b82f6',
-                            grad: 'linear-gradient(105deg, rgba(45,120,255,0.38) 0%, rgba(8,14,28,0.97) 48%, rgba(12,12,14,0.98) 100%)',
-                            iconBox: 'rgba(55, 130, 235, 0.22)',
-                            iconBorder: '1px solid rgba(130, 185, 255, 0.5)',
-                            titleTint: '#cfe6ff',
-                          }
-                        : {
-                            icon: '⏱',
-                            tag: (safeT as any)?.agendaPainelHeadTagPre || 'RASCUNHO',
-                            bar: '#e6b422',
-                            grad: 'linear-gradient(105deg, rgba(230,190,50,0.34) 0%, rgba(26,22,8,0.97) 48%, rgba(14,14,12,0.98) 100%)',
-                            iconBox: 'rgba(220, 180, 40, 0.2)',
-                            iconBorder: '1px solid rgba(240, 210, 100, 0.45)',
-                            titleTint: '#f5ecc8',
-                          }
+                  const trAny = safeT as Record<string, string | undefined>
+                  let cfg: {
+                    icon: string
+                    tag: string
+                    bar: string
+                    grad: string
+                    iconBox: string
+                    iconBorder: string
+                    titleTint: string
+                  }
+                  switch (variant) {
+                    case 'exec':
+                      cfg = {
+                        icon: '▶',
+                        tag: trAny.agendaPainelHeadTagExecucao || 'AO VIVO',
+                        bar: '#ff6b2d',
+                        grad: 'linear-gradient(105deg, rgba(255,95,40,0.42) 0%, rgba(18,10,8,0.97) 48%, rgba(12,12,12,0.98) 100%)',
+                        iconBox: 'rgba(255, 110, 50, 0.22)',
+                        iconBorder: '1px solid rgba(255, 160, 100, 0.55)',
+                        titleTint: '#ffd4bc',
+                      }
+                      break
+                    case 'agend':
+                      cfg = {
+                        icon: '✓',
+                        tag: trAny.agendaPainelHeadTagAgendados || 'CONFIRMADO',
+                        bar: '#3b82f6',
+                        grad: 'linear-gradient(105deg, rgba(45,120,255,0.38) 0%, rgba(8,14,28,0.97) 48%, rgba(12,12,14,0.98) 100%)',
+                        iconBox: 'rgba(55, 130, 235, 0.22)',
+                        iconBorder: '1px solid rgba(130, 185, 255, 0.5)',
+                        titleTint: '#cfe6ff',
+                      }
+                      break
+                    case 'pre':
+                      cfg = {
+                        icon: '⏱',
+                        tag: trAny.agendaPainelHeadTagPre || 'RASCUNHO',
+                        bar: '#e6b422',
+                        grad: 'linear-gradient(105deg, rgba(230,190,50,0.34) 0%, rgba(26,22,8,0.97) 48%, rgba(14,14,12,0.98) 100%)',
+                        iconBox: 'rgba(220, 180, 40, 0.2)',
+                        iconBorder: '1px solid rgba(240, 210, 100, 0.45)',
+                        titleTint: '#f5ecc8',
+                      }
+                      break
+                    case 'pend':
+                      cfg = {
+                        icon: '⏸',
+                        tag: trAny.agendaPainelHeadTagPendente || 'PENDENTE',
+                        bar: '#ea580c',
+                        grad: 'linear-gradient(105deg, rgba(234,88,12,0.4) 0%, rgba(28,12,6,0.97) 48%, rgba(14,12,12,0.98) 100%)',
+                        iconBox: 'rgba(234, 88, 12, 0.22)',
+                        iconBorder: '1px solid rgba(255, 140, 90, 0.55)',
+                        titleTint: '#ffdcc4',
+                      }
+                      break
+                    case 'canc':
+                      cfg = {
+                        icon: '✕',
+                        tag: trAny.agendaPainelHeadTagCancelado || 'CANCELADO',
+                        bar: '#71717a',
+                        grad: 'linear-gradient(105deg, rgba(100,100,110,0.45) 0%, rgba(16,16,20,0.97) 48%, rgba(12,12,14,0.98) 100%)',
+                        iconBox: 'rgba(90, 90, 100, 0.28)',
+                        iconBorder: '1px solid rgba(160, 160, 175, 0.45)',
+                        titleTint: '#e4e4e7',
+                      }
+                      break
+                    default:
+                      cfg = {
+                        icon: '🏁',
+                        tag: trAny.agendaPainelHeadTagConcluido || 'CONCLUÍDO',
+                        bar: '#16a34a',
+                        grad: 'linear-gradient(105deg, rgba(22,163,74,0.42) 0%, rgba(6,22,12,0.97) 48%, rgba(10,14,12,0.98) 100%)',
+                        iconBox: 'rgba(34, 197, 94, 0.22)',
+                        iconBorder: '1px solid rgba(110, 220, 150, 0.5)',
+                        titleTint: '#bbf7d0',
+                      }
+                  }
                   return (
                     <div
                       style={{
@@ -37207,7 +37277,7 @@ A1;Peça exemplo;10`}
                   )
                 }
 
-                const miniAgendaBtn = (a: Agendamento, borda: string) => (
+                const miniAgendaBtn = (a: Agendamento, borda: string, opts?: { muted?: boolean }) => (
                   <button
                     key={`painel-${a.id}`}
                     type="button"
@@ -37224,9 +37294,19 @@ A1;Peça exemplo;10`}
                       cursor: 'pointer',
                       fontSize: '12px',
                       lineHeight: 1.35,
+                      opacity: opts?.muted ? 0.88 : 1,
                     }}
                   >
-                    <div style={{ fontWeight: 800, color: '#fff', marginBottom: '4px' }}>{a.cliente}</div>
+                    <div
+                      style={{
+                        fontWeight: 800,
+                        color: '#fff',
+                        marginBottom: '4px',
+                        textDecoration: opts?.muted ? 'line-through' : undefined,
+                      }}
+                    >
+                      {a.cliente}
+                    </div>
                     <div style={{ opacity: 0.88 }}>
                       {new Date(a.data + 'T12:00:00').toLocaleDateString('pt-PT')} · {a.hora} · {a.tecnico}
                     </div>
@@ -37243,7 +37323,7 @@ A1;Peça exemplo;10`}
                     <div
                       style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                         gap: '14px',
                         marginBottom: '18px',
                       }}
@@ -37306,6 +37386,81 @@ A1;Peça exemplo;10`}
                           {preAgendados.length === 0
                             ? vazio((safeT as any)?.agendaPainelVazioPre || 'Nenhum pré-agendamento ativo.')
                             : preAgendados.map((a) => miniAgendaBtn(a, 'rgba(230, 200, 80, 0.4)'))}
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          borderRadius: '12px',
+                          overflow: 'hidden',
+                          backgroundColor: 'rgba(36, 18, 10, 0.58)',
+                          border: '1px solid rgba(234, 88, 12, 0.48)',
+                          boxShadow: '0 4px 18px rgba(200, 80, 20, 0.1)',
+                        }}
+                      >
+                        {cabecalhoPainelColuna(
+                          'pend',
+                          (safeT as any)?.agendaPainelPendentes || 'Pendentes (ag. técnico)',
+                          pendentesPainel.length
+                        )}
+                        <div style={{ padding: '0 12px 12px' }}>
+                          {pendentesPainel.length === 0
+                            ? vazio((safeT as any)?.agendaPainelVazioPendentes || 'Nenhum agendamento técnico pendente.')
+                            : pendentesPainel.map((a) => miniAgendaBtn(a, 'rgba(255, 120, 60, 0.5)'))}
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          borderRadius: '12px',
+                          overflow: 'hidden',
+                          backgroundColor: 'rgba(22, 22, 26, 0.65)',
+                          border: '1px solid rgba(120, 120, 135, 0.5)',
+                          boxShadow: '0 4px 18px rgba(0, 0, 0, 0.2)',
+                        }}
+                      >
+                        {cabecalhoPainelColuna(
+                          'canc',
+                          (safeT as any)?.agendaPainelCancelados || 'Cancelados',
+                          canceladosPainelCount
+                        )}
+                        <div style={{ padding: '0 12px 12px' }}>
+                          {canceladosPainelCount === 0
+                            ? vazio((safeT as any)?.agendaPainelVazioCancelados || 'Nenhum agendamento cancelado.')
+                            : canceladosPainel.map((a) => miniAgendaBtn(a, 'rgba(130, 130, 145, 0.45)', { muted: true }))}
+                          {canceladosPainelCount > canceladosPainel.length ? (
+                            <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#777' }}>
+                              +{canceladosPainelCount - canceladosPainel.length}{' '}
+                              {(safeT as any)?.agendaPainelListaTruncada || 'outros — clique num item ou use a lista/calendário.'}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          borderRadius: '12px',
+                          overflow: 'hidden',
+                          backgroundColor: 'rgba(8, 28, 16, 0.58)',
+                          border: '1px solid rgba(34, 197, 94, 0.45)',
+                          boxShadow: '0 4px 18px rgba(0, 160, 70, 0.1)',
+                        }}
+                      >
+                        {cabecalhoPainelColuna(
+                          'done',
+                          (safeT as any)?.agendaPainelConcluidosRecentes || 'Concluídos (recentes)',
+                          concluidosPainelCount
+                        )}
+                        <div style={{ padding: '0 12px 12px' }}>
+                          {concluidosPainelCount === 0
+                            ? vazio((safeT as any)?.agendaPainelVazioConcluidos || 'Nenhum trabalho concluído.')
+                            : concluidosPainel.map((a) => miniAgendaBtn(a, 'rgba(50, 200, 100, 0.45)'))}
+                          {concluidosPainelCount > 0 ? (
+                            <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#6a8f6f', lineHeight: 1.35 }}>
+                              {(safeT as any)?.agendaPainelConcluidosDicaHistorico ||
+                                'Para pesquisa completa por cliente ou datas, use «Histórico — trabalhos concluídos» abaixo.'}
+                              {concluidosPainelCount > concluidosPainel.length
+                                ? ` (+${concluidosPainelCount - concluidosPainel.length} ${(safeT as any)?.agendaPainelOutrosRegistos || 'outros registos'})`
+                                : ''}
+                            </p>
+                          ) : null}
                         </div>
                       </div>
                     </div>
@@ -38064,31 +38219,22 @@ A1;Peça exemplo;10`}
                   const agendamentosListaAtivos = agendamentosFiltrados.filter(
                     (ag) => normalizeStatusAgendamento(ag) !== 'concluido'
                   )
-                  const soConcluidosNosFiltros =
-                    agendamentosListaAtivos.length === 0 &&
-                    agendamentosFiltrados.some((ag) => normalizeStatusAgendamento(ag) === 'concluido')
-
-                  if (soConcluidosNosFiltros) {
-                    return (
-                      <div style={{ padding: '28px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                        <p style={{ fontSize: '15px', color: '#ccc', marginBottom: '10px' }}>
-                          {(safeT as any)?.agendaListaSoConcluidosMsg ||
-                            'Com estes filtros só existem trabalhos já concluídos. Eles não são mostrados nesta lista.'}
-                        </p>
-                        <p style={{ fontSize: '13px', color: '#888', margin: 0 }}>
-                          {(safeT as any)?.agendaListaSoConcluidosDica ||
-                            'Abra «Histórico — trabalhos concluídos» acima e pesquise pelo nome do cliente.'}
-                        </p>
-                      </div>
-                    )
-                  }
-
                   const ordenarAgenda = (a: Agendamento, b: Agendamento) => {
                     const da = String(a.data || '')
                     const db = String(b.data || '')
                     if (da !== db) return da.localeCompare(db)
                     return String(a.hora || '').localeCompare(String(b.hora || ''))
                   }
+                  const ordenarAgendaDesc = (a: Agendamento, b: Agendamento) => {
+                    const da = String(b.data || '').localeCompare(String(a.data || ''))
+                    if (da !== 0) return da
+                    return String(b.hora || '').localeCompare(String(a.hora || ''))
+                  }
+                  const agConcluidosLista = agendamentosFiltrados
+                    .filter((ag) => normalizeStatusAgendamento(ag) === 'concluido')
+                    .sort(ordenarAgendaDesc)
+                    .slice(0, 20)
+                  const agConcluidosListaTotal = agendamentosFiltrados.filter((ag) => normalizeStatusAgendamento(ag) === 'concluido').length
 
                   const agPreAgendamento = agendamentosListaAtivos
                     .filter((ag) => normalizeTipoAgendamento(ag) === 'pre-agendamento' && normalizeStatusAgendamento(ag) !== 'concluido' && normalizeStatusAgendamento(ag) !== 'cancelado')
@@ -38096,14 +38242,17 @@ A1;Peça exemplo;10`}
                   const agPendencias = agendamentosListaAtivos
                     .filter((ag) => normalizeTipoAgendamento(ag) === 'agendamento-tecnico' && normalizeStatusAgendamento(ag) === 'pendente')
                     .sort(ordenarAgenda)
-                  const agAgendadosConfirmados = agendamentosListaAtivos
-                    .filter((ag) => normalizeTipoAgendamento(ag) === 'agendamento-tecnico' && ['confirmado', 'em-andamento'].includes(normalizeStatusAgendamento(ag)))
+                  const agEmExecucao = agendamentosListaAtivos
+                    .filter((ag) => normalizeTipoAgendamento(ag) === 'agendamento-tecnico' && normalizeStatusAgendamento(ag) === 'em-andamento')
+                    .sort(ordenarAgenda)
+                  const agConfirmadosSomente = agendamentosListaAtivos
+                    .filter((ag) => normalizeTipoAgendamento(ag) === 'agendamento-tecnico' && normalizeStatusAgendamento(ag) === 'confirmado')
                     .sort(ordenarAgenda)
                   const agCancelados = agendamentosListaAtivos
                     .filter((ag) => normalizeStatusAgendamento(ag) === 'cancelado')
                     .sort(ordenarAgenda)
 
-                  const renderAgendaCard = (agendamento: Agendamento, accent: string, pulseClass?: string) => (
+                  const renderAgendaCard = (agendamento: Agendamento, accent: string, pulseClass?: string, opts?: { muted?: boolean }) => (
                     <div
                       key={agendamento.id}
                       className={pulseClass || undefined}
@@ -38113,11 +38262,19 @@ A1;Peça exemplo;10`}
                         borderRadius: '10px',
                         border: `1px solid ${accent}`,
                         borderLeft: `6px solid ${accent}`,
+                        opacity: opts?.muted ? 0.92 : 1,
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
                         <div style={{ flex: 1 }}>
-                          <h3 style={{ marginBottom: '8px', fontSize: '18px', color: '#ffffff' }}>
+                          <h3
+                            style={{
+                              marginBottom: '8px',
+                              fontSize: '18px',
+                              color: '#ffffff',
+                              textDecoration: opts?.muted ? 'line-through' : undefined,
+                            }}
+                          >
                             {agendamento.cliente}
                           </h3>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', fontSize: '14px', marginBottom: '10px' }}>
@@ -38287,9 +38444,12 @@ A1;Peça exemplo;10`}
                     cor: string,
                     itens: Agendamento[],
                     hint?: string,
-                    pulse?: 'pendencias' | 'pre'
+                    pulse?: 'pendencias' | 'pre',
+                    mutedCards?: boolean,
+                    contagemBadge?: number
                   ) => {
                     if (itens.length === 0) return null
+                    const nBadge = typeof contagemBadge === 'number' ? contagemBadge : itens.length
                     const headerPulseClass =
                       pulse === 'pendencias'
                         ? 'agenda-section-header agenda-section-header--pulse-pendencias'
@@ -38339,24 +38499,89 @@ A1;Peça exemplo;10`}
                             ) : null}
                           </div>
                           <span style={{ padding: '6px 10px', borderRadius: 999, backgroundColor: `${cor}22`, border: `1px solid ${cor}55`, color: '#fff', fontSize: '12px', fontWeight: 800 }}>
-                            {itens.length}
+                            {nBadge}
                           </span>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                          {itens.map((ag) => renderAgendaCard(ag, cor, cardPulseClass))}
+                          {itens.map((ag) => renderAgendaCard(ag, cor, cardPulseClass, mutedCards ? { muted: true } : undefined))}
                         </div>
                       </div>
                     )
                   }
 
+                  const soConcluidosNosFiltros =
+                    agendamentosListaAtivos.length === 0 && agConcluidosLista.length > 0
+
                   return (
                     <div>
-                      {renderAgendaSection((safeT as any)?.agendaSecaoPendencias || 'Pendências', 'rgba(255, 90, 60, 0.92)', agPendencias, (safeT as any)?.agendaSecaoPendenciasHint || 'Pendente (a confirmar/fechar)', 'pendencias')}
-                      {renderAgendaSection((safeT as any)?.agendaSecaoPreAgendamento || (safeT?.preAgendamento || 'Pré-Agendamento'), 'rgba(255, 190, 50, 0.95)', agPreAgendamento, (safeT as any)?.agendaSecaoPreHint || 'Amarelo = pré', 'pre')}
-                      {renderAgendaSection((safeT as any)?.agendaSecaoAgendado || (safeT?.confirmado || 'Agendado/Confirmado'), 'rgba(55, 130, 235, 0.92)', agAgendadosConfirmados, (safeT as any)?.agendaSecaoAgendadoHint || 'Azul = agendado/confirmado')}
-                      {agCancelados.length > 0 ? (
-                        <div style={{ opacity: 0.9 }}>
-                          {renderAgendaSection((safeT as any)?.agendaSecaoCancelados || (safeT?.cancelado || 'Cancelados'), 'rgba(180, 180, 180, 0.55)', agCancelados)}
+                      {soConcluidosNosFiltros ? (
+                        <div
+                          style={{
+                            marginBottom: '16px',
+                            padding: '14px 16px',
+                            backgroundColor: 'rgba(18, 40, 24, 0.55)',
+                            borderRadius: '10px',
+                            border: '1px solid rgba(0, 200, 90, 0.28)',
+                          }}
+                        >
+                          <p style={{ fontSize: '14px', color: '#b8e8c8', margin: '0 0 6px 0' }}>
+                            {(safeT as any)?.agendaListaSoConcluidosMsgCurto ||
+                              'Com estes filtros só há trabalhos concluídos — mostramos os mais recentes abaixo.'}
+                          </p>
+                          <p style={{ fontSize: '12px', color: '#7a9d82', margin: 0 }}>
+                            {(safeT as any)?.agendaListaSoConcluidosDica ||
+                              'Para pesquisa completa, use «Histórico — trabalhos concluídos» acima.'}
+                          </p>
+                        </div>
+                      ) : null}
+                      {renderAgendaSection(
+                        (safeT as any)?.agendaSecaoEmExecucao || (safeT as any)?.agendaPainelEmExecucao || 'Em execução',
+                        'rgba(255, 107, 45, 0.92)',
+                        agEmExecucao,
+                        (safeT as any)?.agendaSecaoEmExecucaoHint || 'Ao vivo — agendamento técnico em andamento'
+                      )}
+                      {renderAgendaSection(
+                        (safeT as any)?.agendaSecaoConfirmados || (safeT as any)?.agendaPainelAgendados || 'Agendados (confirmados)',
+                        'rgba(55, 130, 235, 0.92)',
+                        agConfirmadosSomente,
+                        (safeT as any)?.agendaSecaoAgendadoHint || 'Confirmado — ainda não iniciado'
+                      )}
+                      {renderAgendaSection(
+                        (safeT as any)?.agendaSecaoPreAgendamento || (safeT as any)?.agendaPainelPreAgendados || (safeT?.preAgendamento || 'Pré-Agendamento'),
+                        'rgba(255, 190, 50, 0.95)',
+                        agPreAgendamento,
+                        (safeT as any)?.agendaSecaoPreHint || 'Pré-agendamento ativo',
+                        'pre'
+                      )}
+                      {renderAgendaSection(
+                        (safeT as any)?.agendaSecaoPendencias || (safeT as any)?.agendaPainelPendentes || 'Pendentes',
+                        'rgba(234, 88, 12, 0.92)',
+                        agPendencias,
+                        (safeT as any)?.agendaSecaoPendenciasHint || 'Ag. técnico pendente de confirmação',
+                        'pendencias'
+                      )}
+                      {renderAgendaSection(
+                        (safeT as any)?.agendaSecaoCancelados || (safeT as any)?.agendaPainelCancelados || (safeT?.cancelado || 'Cancelados'),
+                        'rgba(140, 140, 155, 0.75)',
+                        agCancelados,
+                        (safeT as any)?.agendaSecaoCanceladosHint || 'Cancelado — mantido para registo',
+                        undefined,
+                        true
+                      )}
+                      {agConcluidosLista.length > 0 ? (
+                        <div style={{ marginBottom: '18px' }}>
+                          {renderAgendaSection(
+                            (safeT as any)?.agendaListaSecaoConcluidos || (safeT as any)?.agendaPainelConcluidosRecentes || 'Concluídos (recentes)',
+                            'rgba(34, 197, 94, 0.88)',
+                            agConcluidosLista,
+                            agConcluidosListaTotal > agConcluidosLista.length
+                              ? `${(safeT as any)?.agendaListaConcluidosTruncado || 'Lista'}: ${agConcluidosLista.length} ${(safeT as any)?.agendaListaConcluidosDe || 'de'} ${agConcluidosListaTotal} · ${(safeT as any)?.agendaListaConcluidosHintRodape || 'Pesquisa completa no histórico abaixo.'}`
+                              : (safeT as any)?.agendaListaConcluidosHintRodape ||
+                                'Últimos concluídos com estes filtros — pesquisa completa no histórico abaixo.',
+                            undefined,
+                            false,
+                            agConcluidosListaTotal
+                          )}
                         </div>
                       ) : null}
                     </div>
@@ -39589,7 +39814,7 @@ A1;Peça exemplo;10`}
                                     {servico.nome}
                                   </h3>
                                   <p style={{ fontSize: '14px', marginBottom: '5px' }}>
-                                    <strong>{safeT?.valorServico || 'Valor'}:</strong> {servico.valor}€
+                                    <strong>{safeT?.valorServico || 'Valor'}:</strong> {formatServicoValorExibicao(servico.valor)} €
                                   </p>
                                   <p style={{ fontSize: '14px', marginBottom: '5px' }}>
                                     <strong>{safeT?.tipoCobranca || 'Tipo de Cobrança'}:</strong> {servico.tipoCobranca}
@@ -39684,7 +39909,7 @@ A1;Peça exemplo;10`}
                                 {servico.nome}
                               </h3>
                               <p style={{ fontSize: '14px', marginBottom: '5px' }}>
-                                <strong>{safeT?.valorServico || 'Valor'}:</strong> {servico.valor}€
+                                <strong>{safeT?.valorServico || 'Valor'}:</strong> {formatServicoValorExibicao(servico.valor)} €
                               </p>
                               <p style={{ fontSize: '14px', marginBottom: '5px' }}>
                                 <strong>{safeT?.tipoCobranca || 'Tipo de Cobrança'}:</strong> {servico.tipoCobranca}
@@ -41063,7 +41288,7 @@ A1;Peça exemplo;10`}
                                     return (
                                     <option key={s.id} value={s.id}>
                                       {copt ? `COD: ${copt} · ` : ''}
-                                      {s.nome} – {s.valor}€
+                                      {s.nome} – {formatServicoValorExibicao(s.valor)} €
                                     </option>
                                     )
                                   })}
@@ -64475,7 +64700,7 @@ A1;Peça exemplo;10`}
                         {codExModal ? <>COD: {codExModal} · </> : null}
                         {servico.nome}
                       </strong>{' '}
-                      - {servico.valor}€ ({servico.tipoCobranca})
+                      - {formatServicoValorExibicao(servico.valor)} € ({servico.tipoCobranca})
                     </p>
                     {servico.descricao?.trim() ? (
                       <p style={{ fontSize: '13px', opacity: 0.85, marginBottom: '6px' }}>
