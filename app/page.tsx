@@ -52114,25 +52114,78 @@ A1;Peça exemplo;10`}
                         const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '')
                         const qn = norm(q)
                         const exata = ordensServico.find(os => norm(os.numeroOS) === qn)
-                        if (!exata) return null
                         const tx = safeT as Record<string, string>
+                        const rel = !exata
+                          ? relatoriosServico.find(r => norm(String(r.numero ?? '')) === qn)
+                          : null
+                        if (!exata && !rel) return null
                         return (
-                          <div style={{ marginTop: '10px', padding: '10px 12px', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.25)', background: 'rgba(0, 255, 0, 0.06)' }}>
+                          <div style={{ marginTop: '10px', padding: '10px 12px', borderRadius: '10px', border: exata ? '1px solid rgba(0, 255, 0, 0.25)' : '1px solid rgba(0, 150, 255, 0.25)', background: exata ? 'rgba(0, 255, 0, 0.06)' : 'rgba(0, 150, 255, 0.06)' }}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '10px', alignItems: 'center' }}>
                               <div style={{ minWidth: 0 }}>
-                                <div style={{ color: '#00ff00', fontWeight: 800, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                                  {tx.osEncontradaLabel || 'OS encontrada'}
-                                </div>
-                                <div style={{ color: '#fff', fontSize: '13px', marginTop: '4px' }}>
-                                  <strong style={{ color: '#fff' }}>{exata.numeroOS}</strong> · {tx.cliente || safeT?.cliente || 'Cliente'}: {exata.clienteNome}
-                                </div>
-                                <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px', marginTop: '3px' }}>
-                                  {tx.dataAbertura || safeT?.dataAbertura || 'Data Abertura'}: {new Date(exata.dataAbertura).toLocaleDateString('pt-BR')} · {tx.valorTotal || safeT?.valorTotal || 'Valor Total'}: €{exata.valorTotal.toFixed(2)}
-                                </div>
+                                {exata ? (
+                                  <>
+                                    <div style={{ color: '#00ff00', fontWeight: 800, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                                      {tx.osEncontradaLabel || 'OS encontrada'}
+                                    </div>
+                                    <div style={{ color: '#fff', fontSize: '13px', marginTop: '4px' }}>
+                                      <strong style={{ color: '#fff' }}>{exata.numeroOS}</strong> · {tx.cliente || safeT?.cliente || 'Cliente'}: {exata.clienteNome}
+                                    </div>
+                                    <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px', marginTop: '3px' }}>
+                                      {tx.dataAbertura || safeT?.dataAbertura || 'Data Abertura'}: {new Date(exata.dataAbertura).toLocaleDateString('pt-BR')} · {tx.valorTotal || safeT?.valorTotal || 'Valor Total'}: €{exata.valorTotal.toFixed(2)}
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div style={{ color: '#66b3ff', fontWeight: 800, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                                      {tx.relatorioEncontradoLabel || 'Relatório encontrado (não é OS)'}
+                                    </div>
+                                    <div style={{ color: '#fff', fontSize: '13px', marginTop: '4px' }}>
+                                      <strong style={{ color: '#fff' }}>{tx.relatorioNumeroLabel || 'Rel.'} {rel?.numero}</strong> · {tx.cliente || safeT?.cliente || 'Cliente'}: {rel?.cliente}
+                                    </div>
+                                    <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px', marginTop: '3px' }}>
+                                      {rel?.maquinaModelo} · {rel?.data}
+                                    </div>
+                                  </>
+                                )}
                               </div>
-                              <button type="button" className="btn-primary" onClick={() => openOSEditor(exata)} style={{ padding: '8px 12px', fontSize: '12px', borderRadius: '8px', whiteSpace: 'nowrap' }}>
-                                {tx.abrirOS || 'Abrir OS'}
-                              </button>
+                              {exata ? (
+                                <button type="button" className="btn-primary" onClick={() => openOSEditor(exata)} style={{ padding: '8px 12px', fontSize: '12px', borderRadius: '8px', whiteSpace: 'nowrap' }}>
+                                  {tx.abrirOS || 'Abrir OS'}
+                                </button>
+                              ) : (
+                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                  <button type="button" className="btn-primary" onClick={() => { if (rel) setViewingRelatorioServico(rel) }} style={{ padding: '8px 12px', fontSize: '12px', borderRadius: '8px', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 150, 255, 0.12)', border: '1px solid rgba(0, 150, 255, 0.55)' }}>
+                                    👁️ {tx.verRelatorio || safeT?.view || 'Ver'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn-primary"
+                                    onClick={() => {
+                                      if (!rel) return
+                                      const clienteObj = clientes.find(c => c.id === rel.clienteId)
+                                      setOSForm({
+                                        numeroOS: `OS-${Date.now()}`,
+                                        clienteId: rel.clienteId || '',
+                                        clienteNome: clienteObj?.nomeEmpresa || rel.cliente || '',
+                                        dataAbertura: (rel.data || new Date().toISOString()).split('T')[0],
+                                        status: 'aberta',
+                                        valorServico: 0,
+                                        valorPecas: 0,
+                                        taxaIVA: 23,
+                                        observacoes: `${tx.criadaDeRelatorio || 'Criada a partir do relatório'} ${rel.numero}`,
+                                        tecnicoResponsavel: rel.tecnico || '',
+                                        equipamentoId: ''
+                                      })
+                                      setEditingOS(null)
+                                      setShowOSForm(true)
+                                    }}
+                                    style={{ padding: '8px 12px', fontSize: '12px', borderRadius: '8px', whiteSpace: 'nowrap' }}
+                                  >
+                                    {tx.criarOSDoRelatorio || 'Criar OS deste relatório'}
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           </div>
                         )
