@@ -973,11 +973,19 @@ const BIBLIOTECA_FILTRO_SEM_CATEGORIA = '__sem_categoria__'
 const RESUMO_COBRANCA_DECISAO_KEY = 'nonato-resumo-cobranca-decisao'
 /** Linhas fixas do fechamento (resumo) que podem ser retiradas da cobrança e restauradas depois */
 const FECHAMENTO_ITENS_OMITIDOS_KEY = 'nonato-fechamentos-itens-omitidos-por-relatorio'
-/** Por relatório de serviço com fechamento na biblioteca: fluxo fatura → gestão financeira (pagamento) */
+/** Por relatório de serviço com fechamento na biblioteca: fluxo fatura → pagamento (com/sem fatura) */
 const FECHAMENTO_FLUXO_FINANCEIRO_KEY = 'nonato-fechamentos-fluxo-financeiro'
 const FECHAMENTO_IDS_FIXOS_TEMPLATE = ['ht', 'km', 'diarias', 'hida', 'hret'] as const
 
 type FechamentoFluxoFinanceiroEtapa = 'none' | 'enviado_fatura' | 'controlo_pagamento'
+type FechamentoFluxoFinanceiroModo = 'com_fatura' | 'sem_fatura'
+type FechamentoFluxoFinanceiroPagamento = 'pendente' | 'pago' | 'devedor'
+type FechamentoFluxoFinanceiroEntry = {
+  etapa: Exclude<FechamentoFluxoFinanceiroEtapa, 'none'>
+  modo: FechamentoFluxoFinanceiroModo
+  pagamento: FechamentoFluxoFinanceiroPagamento
+  updatedAt: string
+}
 
 type PasswordEntry = {
   id: string
@@ -3814,11 +3822,25 @@ export default function Dashboard() {
     return titles[type] || type
   }
 
-  function setFechamentoEtapaFinanceira(relatorioId: string, etapa: FechamentoFluxoFinanceiroEtapa) {
+  function setFechamentoEtapaFinanceira(
+    relatorioId: string,
+    etapa: FechamentoFluxoFinanceiroEtapa,
+    opts?: { modo?: FechamentoFluxoFinanceiroModo; pagamento?: FechamentoFluxoFinanceiroPagamento }
+  ) {
     setFechamentoFluxoFinanceiroPorRelatorioId(prev => {
       const next = { ...prev }
-      if (etapa === 'none') delete next[relatorioId]
-      else next[relatorioId] = etapa
+      if (etapa === 'none') {
+        delete next[relatorioId]
+      } else {
+        const curr = next[relatorioId]
+        const currObj = curr && typeof curr === 'object' && !Array.isArray(curr) ? (curr as FechamentoFluxoFinanceiroEntry) : null
+        next[relatorioId] = {
+          etapa,
+          modo: opts?.modo || currObj?.modo || (etapa === 'enviado_fatura' ? 'com_fatura' : 'com_fatura'),
+          pagamento: opts?.pagamento || currObj?.pagamento || 'pendente',
+          updatedAt: new Date().toISOString(),
+        }
+      }
       void saveData(FECHAMENTO_FLUXO_FINANCEIRO_KEY, next)
       return next
     })
@@ -3842,7 +3864,11 @@ export default function Dashboard() {
 
   function FechamentoFluxoFinanceiroStrip(props: { relatorioId: string; compact?: boolean }) {
     const { relatorioId, compact } = props
-    const etapa = fechamentoFluxoFinanceiroPorRelatorioId[relatorioId] || 'none'
+    const raw = fechamentoFluxoFinanceiroPorRelatorioId[relatorioId]
+    const obj = raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as FechamentoFluxoFinanceiroEntry) : null
+    const etapa: FechamentoFluxoFinanceiroEtapa = obj?.etapa || (raw as FechamentoFluxoFinanceiroEtapa) || 'none'
+    const modo: FechamentoFluxoFinanceiroModo = obj?.modo || 'com_fatura'
+    const pagamento: FechamentoFluxoFinanceiroPagamento = obj?.pagamento || 'pendente'
     const tx = safeT as Record<string, string>
     const chip: React.CSSProperties = {
       padding: compact ? '3px 8px' : '4px 10px',
@@ -3882,15 +3908,60 @@ export default function Dashboard() {
               {tx.fechamentoFluxoBadgeControloPagamento || 'Controlo de pagamento'}
             </span>
           )}
+          {etapa !== 'none' && (
+            <span
+              style={{
+                ...chip,
+                background: modo === 'sem_fatura' ? 'rgba(147, 197, 253, 0.12)' : 'rgba(255, 255, 255, 0.06)',
+                border: modo === 'sem_fatura' ? '1px solid rgba(147, 197, 253, 0.5)' : '1px solid rgba(255,255,255,0.16)',
+                color: modo === 'sem_fatura' ? '#dbeafe' : 'rgba(255,255,255,0.85)',
+              }}
+              title={modo === 'sem_fatura' ? (tx.fechamentoFluxoModoSemFatura || 'Pagamento sem fatura') : (tx.fechamentoFluxoModoComFatura || 'Com fatura')}
+            >
+              {modo === 'sem_fatura' ? (tx.fechamentoFluxoModoSemFaturaShort || 'sem fatura') : (tx.fechamentoFluxoModoComFaturaShort || 'c/ fatura')}
+            </span>
+          )}
+          {etapa === 'controlo_pagamento' && (
+            <>
+              {pagamento === 'pendente' && (
+                <span style={{ ...chip, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.85)' }}>
+                  {tx.fechamentoFluxoPagamentoPendente || 'Não pago'}
+                </span>
+              )}
+              {pagamento === 'pago' && (
+                <span style={{ ...chip, background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.55)', color: '#dcfce7' }}>
+                  {tx.fechamentoFluxoPagamentoPago || 'Pago'}
+                </span>
+              )}
+              {pagamento === 'devedor' && (
+                <span style={{ ...chip, background: 'rgba(248,113,113,0.14)', border: '1px solid rgba(248,113,113,0.55)', color: '#fee2e2' }}>
+                  {tx.fechamentoFluxoPagamentoDevedor || 'Devedor'}
+                </span>
+              )}
+            </>
+          )}
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
           {etapa === 'none' && (
             <button
               type="button"
               style={{ ...btnSm, borderColor: 'rgba(251, 191, 36, 0.45)', background: 'rgba(251, 191, 36, 0.08)' }}
-              onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'enviado_fatura')}
+              onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'enviado_fatura', { modo: 'com_fatura', pagamento: 'pendente' })}
             >
               {tx.fechamentoFluxoBtnEnviarFatura || 'Marcar: enviado para criar fatura'}
+            </button>
+          )}
+          {etapa === 'none' && (
+            <button
+              type="button"
+              style={{ ...btnSm, borderColor: 'rgba(147, 197, 253, 0.5)', background: 'rgba(147, 197, 253, 0.08)', color: '#dbeafe' }}
+              onClick={() => {
+                setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { modo: 'sem_fatura', pagamento: 'pendente' })
+                openTab('clientes-financeiro', getTabTitle('clientes-financeiro'))
+                setClientesFinanceiroActiveTab('despesasControle')
+              }}
+            >
+              {tx.fechamentoFluxoBtnPagamentoSemFatura || 'Marcar: pagamento sem fatura'}
             </button>
           )}
           {etapa === 'enviado_fatura' && (
@@ -3899,7 +3970,7 @@ export default function Dashboard() {
                 type="button"
                 style={{ ...btnSm, borderColor: 'rgba(52, 211, 153, 0.5)', background: 'rgba(22, 60, 40, 0.55)' }}
                 onClick={() => {
-                  setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento')
+                  setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { modo: 'com_fatura' })
                   openTab('clientes-financeiro', getTabTitle('clientes-financeiro'))
                   setClientesFinanceiroActiveTab('despesasControle')
                 }}
@@ -3913,6 +3984,27 @@ export default function Dashboard() {
           )}
           {etapa === 'controlo_pagamento' && (
             <>
+              <button
+                type="button"
+                style={{ ...btnSm, borderColor: 'rgba(34,197,94,0.5)', background: 'rgba(34,197,94,0.12)', color: '#dcfce7' }}
+                onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { pagamento: 'pago' })}
+              >
+                {tx.fechamentoFluxoBtnMarcarPago || 'Marcar: pago'}
+              </button>
+              <button
+                type="button"
+                style={{ ...btnSm, borderColor: 'rgba(255,255,255,0.22)', background: 'rgba(255,255,255,0.06)', color: '#fff' }}
+                onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { pagamento: 'pendente' })}
+              >
+                {tx.fechamentoFluxoBtnMarcarNaoPago || 'Marcar: não pago'}
+              </button>
+              <button
+                type="button"
+                style={{ ...btnSm, borderColor: 'rgba(248,113,113,0.55)', background: 'rgba(248,113,113,0.12)', color: '#fee2e2' }}
+                onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { pagamento: 'devedor' })}
+              >
+                {tx.fechamentoFluxoBtnMarcarDevedor || 'Marcar: devedor'}
+              </button>
               <button type="button" style={btnSm} onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'enviado_fatura')}>
                 {tx.fechamentoFluxoBtnVoltarEnviado || 'Voltar a «só enviado p/ fatura»'}
               </button>
@@ -4822,9 +4914,9 @@ export default function Dashboard() {
   const [fechamentoItensOmitidosPorRelatorio, setFechamentoItensOmitidosPorRelatorio] = useState<Record<string, string[]>>({})
   /** IDs de relatórios cujo fechamento de despesas foi guardado na Biblioteca (só aparecem lá até editar de novo) */
   const [fechamentosGuardadosBibliotecaIds, setFechamentosGuardadosBibliotecaIds] = useState<string[]>([])
-  /** Fechamento na biblioteca: etapa «enviado p/ fatura» ou «controlo de pagamento» na gestão financeira */
+  /** Fechamento na biblioteca: etapa e pagamento (com/sem fatura) */
   const [fechamentoFluxoFinanceiroPorRelatorioId, setFechamentoFluxoFinanceiroPorRelatorioId] = useState<
-    Record<string, FechamentoFluxoFinanceiroEtapa>
+    Record<string, FechamentoFluxoFinanceiroEntry | FechamentoFluxoFinanceiroEtapa>
   >({})
   /** Por relatório: 'sim' = aguarda fechamento na Biblioteca; 'nao' = sem cobrança (verde fixo no resumo) */
   const [resumoCobrancaDecisaoPorRelatorio, setResumoCobrancaDecisaoPorRelatorio] = useState<Record<string, 'sim' | 'nao'>>({})
@@ -6515,12 +6607,31 @@ export default function Dashboard() {
       setFechamentoItensOmitidosPorRelatorio(fechamentoOmitidosMap)
 
       const savedFluxoFin = getData(FECHAMENTO_FLUXO_FINANCEIRO_KEY)
-      let fluxoFinMap: Record<string, FechamentoFluxoFinanceiroEtapa> = {}
+      let fluxoFinMap: Record<string, FechamentoFluxoFinanceiroEntry | FechamentoFluxoFinanceiroEtapa> = {}
       if (savedFluxoFin && typeof savedFluxoFin === 'object' && !Array.isArray(savedFluxoFin)) {
         const rawFlux = savedFluxoFin as Record<string, unknown>
         for (const k of Object.keys(rawFlux)) {
           const v = rawFlux[k]
-          if (v === 'enviado_fatura' || v === 'controlo_pagamento') fluxoFinMap[k] = v
+          if (v === 'enviado_fatura' || v === 'controlo_pagamento') {
+            fluxoFinMap[k] = v
+            continue
+          }
+          if (v && typeof v === 'object' && !Array.isArray(v)) {
+            const o = v as any
+            const etapa = o.etapa
+            const modo = o.modo
+            const pagamento = o.pagamento
+            if ((etapa === 'enviado_fatura' || etapa === 'controlo_pagamento') &&
+              (modo === 'com_fatura' || modo === 'sem_fatura') &&
+              (pagamento === 'pendente' || pagamento === 'pago' || pagamento === 'devedor')) {
+              fluxoFinMap[k] = {
+                etapa,
+                modo,
+                pagamento,
+                updatedAt: typeof o.updatedAt === 'string' ? o.updatedAt : new Date().toISOString(),
+              }
+            }
+          }
         }
         if (removedRelatorioIds.size > 0) {
           let fluxDirty = false
