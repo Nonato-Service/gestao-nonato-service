@@ -52475,6 +52475,8 @@ A1;Peça exemplo;10`}
         }> = []
 
         let totalRelatorios = 0
+        const cmpLocale = (a: string, b: string) =>
+          (a || '').localeCompare(b || '', undefined, { sensitivity: 'base', numeric: true })
 
         clientes.forEach(cliente => {
           const equipamentosComRelatorios: Array<{
@@ -52503,10 +52505,10 @@ A1;Peça exemplo;10`}
                 equipamentosComRelatorios.push({
                   equipamento: equipamentoFallback,
                   equipamentoKey,
-                  relatorios: relatorios.sort((a, b) => {
-                    const dataA = new Date(a.data).getTime()
-                    const dataB = new Date(b.data).getTime()
-                    return dataB - dataA
+                  relatorios: [...relatorios].sort((a, b) => {
+                    const byNum = cmpLocale(String(a.numero ?? ''), String(b.numero ?? ''))
+                    if (byNum !== 0) return byNum
+                    return cmpLocale(String(a.tipoServico ?? ''), String(b.tipoServico ?? ''))
                   })
                 })
               }
@@ -52529,8 +52531,6 @@ A1;Peça exemplo;10`}
           })
         })
 
-        const cmpLocale = (a: string, b: string) =>
-          (a || '').localeCompare(b || '', undefined, { sensitivity: 'base', numeric: true })
         relatoriosPorCliente.sort((x, y) =>
           cmpLocale(x.cliente.nomeEmpresa || '', y.cliente.nomeEmpresa || '')
         )
@@ -52545,6 +52545,17 @@ A1;Peça exemplo;10`}
           )
         })
 
+        const totalRelatoriosDespesasBiblioteca = relatoriosPorCliente.reduce((s, row) => s + row.despesas.length, 0)
+        const totalRelatoriosNaBiblioteca = totalRelatorios + totalRelatoriosDespesasBiblioteca
+        const tplBibliotecaHeroTotais = String(safeT?.bibliotecaRelatoriosHeroTotais || '')
+          .replace(/\{ns\}/g, String(totalRelatorios))
+          .replace(/\{nd\}/g, String(totalRelatoriosDespesasBiblioteca))
+          .replace(/\{nc\}/g, String(relatoriosPorCliente.length))
+        const linhaHeroBibliotecaTotais =
+          tplBibliotecaHeroTotais.trim() !== ''
+            ? tplBibliotecaHeroTotais
+            : `${totalRelatorios} relatório(s) de serviço · ${totalRelatoriosDespesasBiblioteca} relatório(s) de despesas · ${relatoriosPorCliente.length} cliente(s)`
+
         return (
           <>
             <div className="biblioteca-relatorios-root">
@@ -52558,22 +52569,17 @@ A1;Peça exemplo;10`}
                   <h1 className="biblioteca-relatorios-hero-title">
                     {safeT?.bibliotecaRelatoriosTitle || 'BIBLIOTECA DE RELATÓRIOS'}
                   </h1>
-                  {totalRelatorios > 0 ? (
-                    <p style={{
-                      margin: 0,
-                      fontSize: '14px',
-                      color: '#ffffff',
-                      opacity: 0.95
-                    }}>
-                      {totalRelatorios} {safeT?.relatorios || 'relatório(s)'} em {relatoriosPorCliente.length} {safeT?.clientes || 'cliente(s)'}
-                    </p>
+                  {totalRelatoriosNaBiblioteca > 0 ? (
+                    <div className="biblioteca-relatorios-hero-subwrap">
+                      <p className="biblioteca-relatorios-hero-subtitle">
+                        {linhaHeroBibliotecaTotais}
+                      </p>
+                      <p className="biblioteca-relatorios-hero-hint">
+                        {safeT?.bibliotecaRelatoriosOrdemAlfabetica || 'Clientes, equipamentos e relatórios em ordem alfabética (A–Z).'}
+                      </p>
+                    </div>
                   ) : (
-                    <p style={{
-                      margin: 0,
-                      fontSize: '14px',
-                      color: '#ffffff',
-                      opacity: 0.95
-                    }}>
+                    <p className="biblioteca-relatorios-hero-subtitle biblioteca-relatorios-hero-subtitle--solo">
                       {relatoriosPorCliente.length === 0
                         ? (safeT?.nenhumClienteCadastrado || 'Nenhum cliente cadastrado. Crie um cliente para ver a pasta na biblioteca.')
                         : (safeT?.nenhumRelatorioSalvo || 'Nenhum relatório salvo ainda. Cada cliente tem a sua pasta.')}
@@ -52581,45 +52587,25 @@ A1;Peça exemplo;10`}
                   )}
                 </div>
                 <div className="biblioteca-relatorios-hero-actions">
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                    <div style={{ position: 'relative', width: 'min(340px, 52vw)' }}>
+                  <div className="biblioteca-relatorios-toolbar">
+                    <div className="biblioteca-relatorios-search">
                       <input
                         type="text"
+                        className={
+                          'biblioteca-relatorios-search__input' +
+                          (buscaBibliotecaRelatoriosCliente.trim() ? ' biblioteca-relatorios-search__input--clear' : '')
+                        }
                         value={buscaBibliotecaRelatoriosCliente}
                         onChange={(e) => setBuscaBibliotecaRelatoriosCliente(e.target.value)}
                         placeholder={(safeT as any)?.buscarClientePlaceholder || 'Buscar cliente (nome, NIF, telefone, e-mail)...'}
-                        style={{
-                          width: '100%',
-                          padding: buscaBibliotecaRelatoriosCliente ? '7px 34px 7px 10px' : '7px 10px',
-                          background: 'rgba(0,0,0,0.35)',
-                          border: '1px solid rgba(0, 255, 0, 0.35)',
-                          borderRadius: '10px',
-                          color: '#fff',
-                          fontSize: '12px',
-                          boxSizing: 'border-box',
-                        }}
                       />
                       {buscaBibliotecaRelatoriosCliente.trim() !== '' && (
                         <button
                           type="button"
+                          className="biblioteca-relatorios-search__clear"
                           onClick={() => setBuscaBibliotecaRelatoriosCliente('')}
                           aria-label={(safeT as any)?.limparBusca || 'Limpar busca'}
                           title={(safeT as any)?.limparBusca || 'Limpar busca'}
-                          style={{
-                            position: 'absolute',
-                            right: 6,
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            width: 24,
-                            height: 24,
-                            borderRadius: 8,
-                            border: '1px solid rgba(255,255,255,0.18)',
-                            background: 'rgba(255,255,255,0.06)',
-                            color: '#fff',
-                            cursor: 'pointer',
-                            lineHeight: 1,
-                            fontWeight: 900,
-                          }}
                         >
                           ×
                         </button>
@@ -52627,34 +52613,16 @@ A1;Peça exemplo;10`}
                     </div>
                     <button
                       type="button"
+                      className="biblioteca-relatorios-toolbar__btn"
                       onClick={() => setBibliotecaRelatoriosClientesExpandidos(new Set(relatoriosPorCliente.map(r => r.cliente.id)))}
-                      style={{
-                        padding: '6px 10px',
-                        fontSize: '12px',
-                        backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.25)',
-                        borderRadius: '10px',
-                        color: '#ffffff',
-                        cursor: 'pointer',
-                        fontWeight: 700,
-                      }}
                       title={(safeT as any)?.expandirTodos || 'Expandir todos'}
                     >
                       {(safeT as any)?.expandirTodos || 'Expandir todos'}
                     </button>
                     <button
                       type="button"
+                      className="biblioteca-relatorios-toolbar__btn biblioteca-relatorios-toolbar__btn--muted"
                       onClick={() => setBibliotecaRelatoriosClientesExpandidos(new Set())}
-                      style={{
-                        padding: '6px 10px',
-                        fontSize: '12px',
-                        backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                        border: '1px solid rgba(255, 255, 255, 0.18)',
-                        borderRadius: '10px',
-                        color: '#ffffff',
-                        cursor: 'pointer',
-                        fontWeight: 700,
-                      }}
                       title={(safeT as any)?.retrairTodos || 'Retrair todos'}
                     >
                       {(safeT as any)?.retrairTodos || 'Retrair todos'}
@@ -52738,7 +52706,7 @@ A1;Peça exemplo;10`}
                 </p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="biblioteca-relatorios-client-list">
                 {relatoriosPorCliente
                   .filter(({ cliente }) => {
                     const q = buscaBibliotecaRelatoriosCliente.trim().toLowerCase()
@@ -52754,11 +52722,21 @@ A1;Peça exemplo;10`}
                       email.includes(q)
                     )
                   })
+                  .sort((a, b) => cmpLocale(a.cliente.nomeEmpresa || '', b.cliente.nomeEmpresa || ''))
                   .map(({ cliente, equipamentos, despesas: despesasCliente }) => {
-                  const totalRelatoriosCliente = equipamentos.reduce((sum, eq) => sum + eq.relatorios.length, 0)
+                  const totalRelatoriosServicoCliente = equipamentos.reduce((sum, eq) => sum + eq.relatorios.length, 0)
+                  const totalRelatoriosDespesasCliente = despesasCliente.length
+                  const tplClienteResumo = String(safeT?.bibliotecaRelatoriosClienteResumoTitle || '')
+                    .replace(/\{ns\}/g, String(totalRelatoriosServicoCliente))
+                    .replace(/\{nd\}/g, String(totalRelatoriosDespesasCliente))
+                  const tituloContagensCliente =
+                    tplClienteResumo.trim() !== ''
+                      ? tplClienteResumo
+                      : `${totalRelatoriosServicoCliente} relatório(s) de serviço, ${totalRelatoriosDespesasCliente} relatório(s) de despesas neste cliente`
                   return (
                     <details
-                      key={cliente.id} 
+                      key={cliente.id}
+                      className="biblioteca-relatorios-cliente"
                       open={bibliotecaRelatoriosClientesExpandidos.has(cliente.id)}
                       onToggle={(e) => {
                         const opened = (e.currentTarget as HTMLDetailsElement).open
@@ -52769,56 +52747,42 @@ A1;Peça exemplo;10`}
                           return next
                         })
                       }}
-                      style={{ 
-                        ...glassCardStyle(ACCENT_GREEN, { padding: '12px 14px', radius: '12px', borderAlpha: 0.2 }),
+                      style={{
+                        ...glassCardStyle(ACCENT_GREEN, { padding: '0', radius: '14px', borderAlpha: 0.22 }),
                         minWidth: 0,
                         maxWidth: '100%',
                         height: 'fit-content',
-                        alignSelf: 'start'
+                        alignSelf: 'start',
+                        overflow: 'hidden',
                       }}
                     >
-                      <summary
-                        style={{
-                          listStyle: 'none',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: '10px',
-                          userSelect: 'none',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
-                          <span aria-hidden style={{ color: '#7dff9a', fontSize: '14px', lineHeight: 1, flexShrink: 0 }}>▸</span>
-                          <h3 style={{ margin: 0, color: '#ffffff', fontSize: '15px', fontWeight: 'bold', minWidth: 0, lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <summary className="biblioteca-relatorios-cliente__summary">
+                        <div className="biblioteca-relatorios-cliente__title-row">
+                          <span className="biblioteca-relatorios-cliente__chevron" aria-hidden>▸</span>
+                          <h3 className="biblioteca-relatorios-cliente__title">
                             {cliente.nomeEmpresa}
                           </h3>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                          <span style={{
-                            backgroundColor: 'rgba(0, 255, 0, 0.1)',
-                            border: '1px solid rgba(0, 255, 0, 0.55)',
-                            color: '#ffffff',
-                            padding: '2px 8px',
-                            borderRadius: '8px',
-                            fontSize: '10px',
-                            fontWeight: 'bold'
-                          }}>
-                            {totalRelatoriosCliente} {(safeT as any)?.relatoriosServicoShort || 'rel.'}
-                          </span>
+                        <div className="biblioteca-relatorios-cliente__actions">
+                          <div
+                            className="biblioteca-relatorios-cliente__counts"
+                            title={tituloContagensCliente}
+                          >
+                            <span className="biblioteca-relatorios-cliente__count">
+                              <span className="biblioteca-relatorios-cliente__count-num">{totalRelatoriosServicoCliente}</span>
+                              {' '}
+                              <span>{(safeT as any)?.bibliotecaRelatoriosLegendaServico ?? (safeT as any)?.relatoriosServicoShort ?? 'serv.'}</span>
+                            </span>
+                            <span className="biblioteca-relatorios-cliente__count biblioteca-relatorios-cliente__count--desp">
+                              <span className="biblioteca-relatorios-cliente__count-num">{totalRelatoriosDespesasCliente}</span>
+                              {' '}
+                              <span>{(safeT as any)?.bibliotecaRelatoriosLegendaDespesas ?? 'desp.'}</span>
+                            </span>
+                          </div>
                           <button
                             type="button"
+                            className="biblioteca-relatorios-cliente__delete"
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteCliente(cliente.id) }}
-                            style={{
-                              padding: '4px 10px',
-                              fontSize: '10px',
-                              backgroundColor: 'rgba(255, 68, 68, 0.1)',
-                              border: '1px solid rgba(255, 68, 68, 0.58)',
-                              color: '#ffffff',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontWeight: 'bold'
-                            }}
                             title={(safeT as any)?.excluirPastaBiblioteca || 'Excluir pasta (e cliente)'}
                           >
                             🗑️ {(safeT as any)?.excluirPasta || 'Excluir'}
@@ -52827,16 +52791,15 @@ A1;Peça exemplo;10`}
                       </summary>
 
                       {/* Conteúdo do Cliente (expandido) */}
-                      <div style={{
-                        marginTop: '10px',
-                        paddingTop: '10px',
-                        borderTop: '1px solid rgba(0, 255, 0, 0.32)'
-                      }}>
+                      <div className="biblioteca-relatorios-cliente__body">
 
                       {/* Secção: Relatórios de Serviço */}
                       <div style={{ marginBottom: '6px' }}>
-                        <h4 style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#ffffff', fontWeight: 'bold' }}>
+                        <h4 className="biblioteca-relatorios-cliente__section-label">
                           {(safeT as any)?.relatoriosServicoTitle || 'Relatórios de Serviço'}
+                          <span className="biblioteca-relatorios-cliente__section-count" aria-hidden>
+                            ({totalRelatoriosServicoCliente})
+                          </span>
                         </h4>
                         {equipamentos.length === 0 && (
                           <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)' }}>
@@ -52851,12 +52814,14 @@ A1;Peça exemplo;10`}
                         {equipamentos.map(({ equipamento, equipamentoKey, relatorios }) => (
                           <div 
                             key={equipamentoKey || equipamento.numeroSerie || equipamento.modelo} 
+                            className="biblioteca-relatorios-equip"
                             style={glassNestedStyle(ACCENT_GREEN)}
                           >
                             {/* Cabeçalho do Equipamento */}
                             <div style={{ marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid rgba(0, 255, 0, 0.24)' }}>
                               <h4 style={{ margin: 0, color: '#ffffff', fontSize: '13px', fontWeight: 'bold', marginBottom: '3px' }}>
                                 🔧 {equipamento.modelo} {equipamento.marca}
+                                <span style={{ fontWeight: 700, opacity: 0.85, fontSize: '12px' }}>{' '}({relatorios.length})</span>
                               </h4>
                               {equipamento.numeroSerie && (
                                 <p style={{ margin: 0, fontSize: '10px', opacity: 0.9, color: '#ffffff' }}>
@@ -52885,8 +52850,12 @@ A1;Peça exemplo;10`}
                                     <div style={{ marginBottom: '8px' }}>
                                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '5px' }}>
                                         <div style={{ flex: 1 }}>
-                                          <p style={{ margin: 0, fontWeight: 'bold', color: '#ffffff', fontSize: '13px', marginBottom: '2px' }}>
-                                            {relatorio.numero}
+                                          <p
+                                            style={{ margin: 0, fontWeight: 'bold', color: '#ffffff', fontSize: '13px', marginBottom: '2px' }}
+                                            title={`${(safeT as any)?.relatorioNumeroLabel || 'Relatório'} ${relatorio.numero ?? ''}`.trim()}
+                                          >
+                                            {(safeT as any)?.relatorioNumeroLabel || 'Rel.'}{' '}
+                                            <span style={{ fontVariantNumeric: 'tabular-nums' }}>{relatorio.numero}</span>
                                           </p>
                                           {relatorio.tipoServico && (
                                             <p style={{ margin: 0, fontSize: '11px', color: '#ffffff', opacity: 0.95 }}>
@@ -53029,9 +52998,12 @@ A1;Peça exemplo;10`}
                       )}
 
                         {/* Secção: Relatórios de Despesas (fechamentos) */}
-                        <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(0, 255, 0, 0.3)' }}>
-                          <h4 style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#ffffff', fontWeight: 'bold' }}>
+                        <div className="biblioteca-relatorios-cliente__despesas-block">
+                          <h4 className="biblioteca-relatorios-cliente__section-label">
                             {(safeT as any)?.relatoriosDespesasTitle || 'Relatórios de Despesas'}
+                            <span className="biblioteca-relatorios-cliente__section-count" aria-hidden>
+                              ({totalRelatoriosDespesasCliente})
+                            </span>
                           </h4>
                           {despesasCliente.length === 0 ? (
                             <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)' }}>
@@ -53060,7 +53032,10 @@ A1;Peça exemplo;10`}
                                   >
                                     <div style={{ marginBottom: '12px' }}>
                                       <div style={{ fontWeight: 'bold', color: '#ffffff', fontSize: '15px' }}>
-                                        {(safeT as any)?.fechamentoRelatorio || 'Fechamento'} {relatorio.numero}
+                                        {(safeT as any)?.fechamentoRelatorio || 'Fechamento'}{' '}
+                                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                          {(safeT as any)?.relatorioNumeroLabel || 'Rel.'} {relatorio.numero}
+                                        </span>
                                       </div>
                                       <div style={{ fontSize: '12px', color: '#ffffff', opacity: 0.92, marginTop: '4px' }}>
                                         {relatorio.cliente} · {relatorio.maquinaModelo} · {(safeT as any)?.total || 'Total'}: <strong style={{ color: '#ffffff' }}>€{totalCobranca.toFixed(2)}</strong>
@@ -53099,7 +53074,12 @@ A1;Peça exemplo;10`}
             return (
               <div className="biblioteca-despesas-modal-overlay" onClick={() => setModalVisualizarDespesasBiblioteca(null)}>
                 <div className="biblioteca-despesas-modal-inner" onClick={e => e.stopPropagation()}>
-                  <h3 style={{ color: '#ffffff', margin: '0 0 8px', fontSize: 'clamp(16px, 4vw, 18px)', wordBreak: 'break-word' }}>{(safeT as any)?.fechamentoRelatorio || 'Fechamento'} {relV.numero}</h3>
+                  <h3 style={{ color: '#ffffff', margin: '0 0 8px', fontSize: 'clamp(16px, 4vw, 18px)', wordBreak: 'break-word' }}>
+                    {(safeT as any)?.fechamentoRelatorio || 'Fechamento'}{' '}
+                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                      {(safeT as any)?.relatorioNumeroLabel || 'Rel.'} {relV.numero}
+                    </span>
+                  </h3>
                   <p style={{ color: '#ffffff', opacity: 0.92, fontSize: '13px', margin: '0 0 16px', wordBreak: 'break-word' }}>{relV.cliente} · {relV.maquinaModelo} · {relV.data}</p>
                   <div className="biblioteca-despesas-modal-table-wrap">
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: '#ffffff', minWidth: '520px' }}>

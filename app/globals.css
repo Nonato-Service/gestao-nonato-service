@@ -4883,22 +4883,31 @@ a:focus-visible {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
 }
 
-/* Biblioteca de Relatórios: pasta/accordion por cliente (details/summary) */
-.biblioteca-relatorios-root details > summary::-webkit-details-marker {
+/* Biblioteca de Relatórios: acordeão por cliente */
+.biblioteca-relatorios-cliente > summary::-webkit-details-marker {
   display: none;
 }
-.biblioteca-relatorios-root details > summary {
-  outline: none;
+.biblioteca-relatorios-cliente > summary {
+  list-style: none;
 }
-.biblioteca-relatorios-root details[open] > summary span[aria-hidden] {
+.biblioteca-relatorios-cliente > summary:focus-visible {
+  outline: 2px solid rgba(52, 211, 153, 0.65);
+  outline-offset: 2px;
+}
+.biblioteca-relatorios-cliente[open] > summary .biblioteca-relatorios-cliente__chevron {
   transform: rotate(90deg);
-  transition: transform 0.18s ease;
-  display: inline-block;
 }
-.biblioteca-relatorios-root details:not([open]) > summary span[aria-hidden] {
+.biblioteca-relatorios-cliente:not([open]) > summary .biblioteca-relatorios-cliente__chevron {
   transform: rotate(0deg);
-  transition: transform 0.18s ease;
+}
+.biblioteca-relatorios-cliente__chevron {
   display: inline-block;
+  transition: transform 0.2s ease;
+  color: #6ee7a8;
+  font-size: 13px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 /* Biblioteca e Relatório de Serviço: cartões com altura ao conteúdo */
 .biblioteca-relatorios-cards-grid,
@@ -4997,6 +5006,246 @@ a:focus-visible {
   flex-shrink: 0;
 }
 
+.biblioteca-relatorios-hero-subwrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+.biblioteca-relatorios-hero-subtitle {
+  margin: 0;
+  font-size: clamp(13px, 2.8vw, 15px);
+  color: #f4fff7;
+  opacity: 0.96;
+  line-height: 1.35;
+  max-width: 52ch;
+}
+.biblioteca-relatorios-hero-subtitle--solo {
+  max-width: 56ch;
+}
+.biblioteca-relatorios-hero-hint {
+  margin: 0;
+  font-size: clamp(11px, 2.2vw, 12px);
+  color: rgba(244, 255, 247, 0.72);
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+  max-width: 56ch;
+}
+
+.biblioteca-relatorios-toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.biblioteca-relatorios-search {
+  position: relative;
+  width: min(360px, 54vw);
+  flex: 1 1 200px;
+}
+.biblioteca-relatorios-search__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #f4fff7;
+  letter-spacing: 0.02em;
+  background: rgba(8, 12, 10, 0.78);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.biblioteca-relatorios-search__input--clear {
+  padding-right: 40px;
+}
+.biblioteca-relatorios-search__input::placeholder {
+  color: rgba(244, 255, 247, 0.45);
+}
+.biblioteca-relatorios-search__input:focus {
+  border-color: rgba(52, 211, 153, 0.72);
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.12);
+}
+.biblioteca-relatorios-search__clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.biblioteca-relatorios-search__clear:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(52, 211, 153, 0.45);
+}
+
+.biblioteca-relatorios-toolbar__btn {
+  padding: 9px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #f4fff7;
+  border: 1px solid rgba(52, 211, 153, 0.38);
+  background: linear-gradient(180deg, rgba(22, 42, 32, 0.95) 0%, rgba(12, 22, 16, 0.98) 100%);
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.12s ease;
+  white-space: nowrap;
+}
+.biblioteca-relatorios-toolbar__btn:hover {
+  border-color: rgba(52, 211, 153, 0.62);
+  background: linear-gradient(180deg, rgba(28, 52, 38, 0.98) 0%, rgba(14, 26, 18, 1) 100%);
+}
+.biblioteca-relatorios-toolbar__btn:active {
+  transform: translateY(1px);
+}
+.biblioteca-relatorios-toolbar__btn--muted {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+}
+.biblioteca-relatorios-toolbar__btn--muted:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.biblioteca-relatorios-client-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.biblioteca-relatorios-cliente__summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  user-select: none;
+  background: linear-gradient(180deg, rgba(20, 28, 24, 0.98) 0%, rgba(10, 14, 12, 0.99) 100%);
+  border-bottom: 1px solid rgba(52, 211, 153, 0.14);
+}
+.biblioteca-relatorios-cliente[open] .biblioteca-relatorios-cliente__summary {
+  border-bottom-color: rgba(52, 211, 153, 0.28);
+}
+.biblioteca-relatorios-cliente__title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+.biblioteca-relatorios-cliente__title {
+  margin: 0;
+  color: #f4fff7;
+  font-size: clamp(14px, 2.6vw, 16px);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  min-width: 0;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.biblioteca-relatorios-cliente__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.biblioteca-relatorios-cliente__counts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  max-width: min(100%, 220px);
+}
+.biblioteca-relatorios-cliente__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #ecfdf5;
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  border-radius: 999px;
+}
+.biblioteca-relatorios-cliente__count--desp {
+  color: #fffbeb;
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.48);
+}
+.biblioteca-relatorios-cliente__count-num {
+  font-variant-numeric: tabular-nums;
+}
+.biblioteca-relatorios-cliente__delete {
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 10px;
+  border: 1px solid rgba(248, 113, 113, 0.55);
+  background: rgba(127, 29, 29, 0.35);
+  transition: background 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+}
+.biblioteca-relatorios-cliente__delete:hover {
+  background: rgba(185, 28, 28, 0.45);
+  border-color: rgba(252, 165, 165, 0.75);
+}
+
+.biblioteca-relatorios-cliente__body {
+  padding: 16px 16px 18px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.biblioteca-relatorios-cliente__section-label {
+  margin: 0 0 8px 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(209, 250, 229, 0.88);
+}
+.biblioteca-relatorios-cliente__section-count {
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: rgba(244, 255, 247, 0.72);
+  margin-left: 0.35em;
+}
+
+.biblioteca-relatorios-equip {
+  border-radius: 12px;
+}
+
+.biblioteca-relatorios-cliente__despesas-block {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(52, 211, 153, 0.22);
+}
+
 @media (max-width: 768px) {
   .biblioteca-relatorios-hero-top {
     flex-direction: column;
@@ -5010,6 +5259,19 @@ a:focus-visible {
     flex-direction: row;
     justify-content: center;
     width: 100%;
+    flex-wrap: wrap;
+  }
+  .biblioteca-relatorios-toolbar {
+    width: 100%;
+    justify-content: stretch;
+  }
+  .biblioteca-relatorios-search {
+    width: 100%;
+    max-width: none;
+  }
+  .biblioteca-relatorios-toolbar__btn {
+    flex: 1 1 auto;
+    justify-content: center;
   }
 }
 
