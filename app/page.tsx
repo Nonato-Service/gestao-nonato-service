@@ -4713,6 +4713,9 @@ export default function Dashboard() {
   const [fechamentoOsConsultaInput, setFechamentoOsConsultaInput] = useState('')
   const [fechamentoPdfModelo, setFechamentoPdfModelo] = useState<number>(1) // 1-8 modelos de PDF
   const [modalVisualizarDespesasBiblioteca, setModalVisualizarDespesasBiblioteca] = useState<{ relatorio: RelatorioServico; itens: FechamentoItem[] } | null>(null)
+  // Biblioteca de Relatórios: pesquisa por cliente e expandir/retrair todos
+  const [buscaBibliotecaRelatoriosCliente, setBuscaBibliotecaRelatoriosCliente] = useState('')
+  const [bibliotecaRelatoriosClientesExpandidos, setBibliotecaRelatoriosClientesExpandidos] = useState<Set<string>>(new Set())
   const [showRelatorioServicoModal, setShowRelatorioServicoModal] = useState(false)
   const [showRelatorioServicoForm, setShowRelatorioServicoForm] = useState(false)
   const [editingRelatorioServico, setEditingRelatorioServico] = useState<RelatorioServico | null>(null)
@@ -21572,6 +21575,19 @@ export default function Dashboard() {
     const familias = Array.isArray(manuaisFamilias) ? manuaisFamilias : []
     const grupos = Array.isArray(manuaisGrupos) ? manuaisGrupos : []
     const modelos = Array.isArray(manuaisModelos) ? manuaisModelos : []
+    const persistManuaisFG = (familiasSnapshot: string[], gruposSnapshot: ManuaisGrupo[], modelosSnapshot: ManuaisModelo[]) => {
+      const payloadFull = { familias: familiasSnapshot, grupos: gruposSnapshot, modelos: modelosSnapshot }
+      const payloadLite = {
+        familias: familiasSnapshot,
+        grupos: gruposSnapshot,
+        modelos: modelosSnapshot.map((m: any) => {
+          const { documentos: _d, imagens: _i, ...rest } = m || {}
+          return rest
+        }),
+      }
+      saveManuaisFamiliasGruposToIdb(payloadFull).catch(() => {})
+      saveData('nonato-manuais-familias-grupos', payloadLite).catch(() => {})
+    }
     const familiasListManuais = [...familias].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
     const gruposDaFamiliaManuais = selectedFamiliaManuais
       ? grupos.filter((g: ManuaisGrupo) => g.familia === selectedFamiliaManuais).sort((a, b) => a.nome.localeCompare(b.nome, undefined, { sensitivity: 'base' }))
@@ -21672,7 +21688,7 @@ export default function Dashboard() {
                         setManuaisFamilias(next)
                         setNovaFamiliaManuais('')
                         setSelectedFamiliaManuais(nome)
-                        saveData('nonato-manuais-familias-grupos', { familias: next, grupos: grupos, modelos: manuaisModelos })
+                        persistManuaisFG(next, grupos, manuaisModelosRef.current)
                       }
                     }
                   }}
@@ -21697,7 +21713,7 @@ export default function Dashboard() {
                       setManuaisFamilias(next)
                       setNovaFamiliaManuais('')
                       setSelectedFamiliaManuais(nome)
-                      saveData('nonato-manuais-familias-grupos', { familias: next, grupos: grupos, modelos: manuaisModelos })
+                      persistManuaisFG(next, grupos, manuaisModelosRef.current)
                     }
                   }}
                   style={{ padding: '10px 16px', whiteSpace: 'nowrap', alignSelf: 'flex-start', minWidth: '100px' }}
@@ -21744,7 +21760,7 @@ export default function Dashboard() {
                                 setManuaisGrupos(nextG)
                                 setSelectedFamiliaManuais(nome)
                                 setEditingFamiliaManuais(null)
-                                saveData('nonato-manuais-familias-grupos', { familias: nextF, grupos: nextG, modelos: manuaisModelos })
+                                persistManuaisFG(nextF, nextG, manuaisModelosRef.current)
                               }
                             }
                             if (e.key === 'Escape') setEditingFamiliaManuais(null)
@@ -21763,7 +21779,7 @@ export default function Dashboard() {
                               setManuaisGrupos(nextG)
                               setSelectedFamiliaManuais(nome)
                               setEditingFamiliaManuais(null)
-                              saveData('nonato-manuais-familias-grupos', { familias: nextF, grupos: nextG, modelos: manuaisModelos })
+                              persistManuaisFG(nextF, nextG, manuaisModelosRef.current)
                             }
                           }}
                           style={{ padding: '4px 8px', fontSize: '12px', border: '1px solid rgba(0,255,0,0.5)', borderRadius: '4px', color: '#00ff00', background: 'transparent', cursor: 'pointer' }}
@@ -21794,7 +21810,7 @@ const nextF = familias.filter(x => x !== f)
                               setManuaisFamilias(nextF)
                               setManuaisGrupos(nextG)
                               if (selectedFamiliaManuais === f) setSelectedFamiliaManuais(nextF[0] || null)
-                              saveData('nonato-manuais-familias-grupos', { familias: nextF, grupos: nextG, modelos: manuaisModelos })
+                              persistManuaisFG(nextF, nextG, manuaisModelosRef.current)
                             }
                           }}
                           style={{ padding: '4px 6px', fontSize: '11px', width: 'auto', minWidth: 'auto' }}
@@ -21838,7 +21854,7 @@ const nextF = familias.filter(x => x !== f)
                           const next = [...grupos, novo]
                           setManuaisGrupos(next)
                           setNovoGrupoManuais('')
-                          saveData('nonato-manuais-familias-grupos', { familias: familias, grupos: next, modelos: manuaisModelos })
+                          persistManuaisFG(familias, next, manuaisModelosRef.current)
                         }
                       }
                     }}
@@ -21863,7 +21879,7 @@ const nextF = familias.filter(x => x !== f)
                         const next = [...grupos, novo]
                         setManuaisGrupos(next)
                         setNovoGrupoManuais('')
-                        saveData('nonato-manuais-familias-grupos', { familias: familias, grupos: next, modelos: manuaisModelos })
+                        persistManuaisFG(familias, next, manuaisModelosRef.current)
                       }
                     }}
                     style={{ padding: '10px 16px', whiteSpace: 'nowrap', alignSelf: 'flex-start', minWidth: '100px' }}
@@ -21918,7 +21934,7 @@ const nextF = familias.filter(x => x !== f)
                                 const next = manuaisGrupos.map(gr => gr.id === g.id ? { ...gr, nome } : gr)
                                 setManuaisGrupos(next)
                                 setEditingGrupoManuaisId(null)
-                                saveData('nonato-manuais-familias-grupos', { familias: familias, grupos: next, modelos: manuaisModelos })
+                                persistManuaisFG(familias, next, manuaisModelosRef.current)
                               }
                             }
                             if (e.key === 'Escape') setEditingGrupoManuaisId(null)
@@ -21934,7 +21950,7 @@ const nextF = familias.filter(x => x !== f)
                               const next = manuaisGrupos.map(gr => gr.id === g.id ? { ...gr, nome } : gr)
                               setManuaisGrupos(next)
                               setEditingGrupoManuaisId(null)
-                              saveData('nonato-manuais-familias-grupos', { familias: familias, grupos: next, modelos: manuaisModelos })
+                              persistManuaisFG(familias, next, manuaisModelosRef.current)
                             }
                           }}
                           style={{ padding: '4px 8px', fontSize: '12px', border: '1px solid rgba(0,255,0,0.5)', borderRadius: '4px', color: '#00ff00', background: 'transparent', cursor: 'pointer' }}
@@ -21965,7 +21981,7 @@ const nextF = familias.filter(x => x !== f)
                               setManuaisModelos(nextMo)
                               setEditingGrupoManuaisId(null)
                               if (selectedGrupoManuais === g.id) setSelectedGrupoManuais(null)
-                              saveData('nonato-manuais-familias-grupos', { familias: familias, grupos: nextGr, modelos: nextMo })
+                              persistManuaisFG(familias, nextGr, nextMo)
                             }
                           }}
                           style={{ padding: '4px 6px', fontSize: '11px', width: 'auto', minWidth: 'auto' }}
@@ -22009,7 +22025,7 @@ const nextF = familias.filter(x => x !== f)
                           const next = [...manuaisModelos, novo]
                           setManuaisModelos(next)
                           setNovoModeloManuais('')
-                          saveData('nonato-manuais-familias-grupos', { familias: familias, grupos: grupos, modelos: next })
+                          persistManuaisFG(familias, grupos, next)
                         }
                       }
                     }}
@@ -22034,7 +22050,7 @@ const nextF = familias.filter(x => x !== f)
                         const next = [...manuaisModelos, novo]
                         setManuaisModelos(next)
                         setNovoModeloManuais('')
-                        saveData('nonato-manuais-familias-grupos', { familias: familias, grupos: grupos, modelos: next })
+                        persistManuaisFG(familias, grupos, next)
                       }
                     }}
                     style={{ padding: '10px 16px', whiteSpace: 'nowrap', alignSelf: 'flex-start', minWidth: '100px' }}
@@ -22090,7 +22106,7 @@ const nextF = familias.filter(x => x !== f)
                                 const next = manuaisModelos.map(mo => mo.id === m.id ? { ...mo, nome } : mo)
                                 setManuaisModelos(next)
                                 setEditingModeloManuaisId(null)
-                                saveData('nonato-manuais-familias-grupos', { familias: familias, grupos: grupos, modelos: next })
+                                persistManuaisFG(familias, grupos, next)
                               }
                             }
                             if (e.key === 'Escape') setEditingModeloManuaisId(null)
@@ -22106,7 +22122,7 @@ const nextF = familias.filter(x => x !== f)
                               const next = manuaisModelos.map(mo => mo.id === m.id ? { ...mo, nome } : mo)
                               setManuaisModelos(next)
                               setEditingModeloManuaisId(null)
-                              saveData('nonato-manuais-familias-grupos', { familias: familias, grupos: grupos, modelos: next })
+                              persistManuaisFG(familias, grupos, next)
                             }
                           }}
                           style={{ padding: '4px 8px', fontSize: '12px', border: '1px solid rgba(0,255,0,0.5)', borderRadius: '4px', color: '#00ff00', background: 'transparent', cursor: 'pointer' }}
@@ -22135,7 +22151,7 @@ const nextF = familias.filter(x => x !== f)
                               setManuaisModelos(next)
                               setEditingModeloManuaisId(null)
                               if (selectedModeloManuaisId === m.id) setSelectedModeloManuaisId(null)
-                              saveData('nonato-manuais-familias-grupos', { familias: familias, grupos: grupos, modelos: next })
+                              persistManuaisFG(familias, grupos, next)
                             }
                           }}
                           style={{ padding: '4px 6px', fontSize: '11px', width: 'auto', minWidth: 'auto' }}
@@ -22180,22 +22196,37 @@ const nextF = familias.filter(x => x !== f)
                 if (!modelo) return <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>Modelo não encontrado.</p>
                 const documentos = Array.isArray(modelo.documentos) ? modelo.documentos : []
                 const imagens = Array.isArray(modelo.imagens) ? modelo.imagens : []
-                const runSaveManuaisModelos = (modelosSnapshot: ManuaisModelo[]) => {
-                  saveData('nonato-manuais-familias-grupos', {
+                const runSaveManuaisModelos = async (modelosSnapshot: ManuaisModelo[]) => {
+                  const payloadFull = {
                     familias: manuaisFamiliasRef.current,
                     grupos: manuaisGruposRef.current,
                     modelos: modelosSnapshot,
-                  })
-                    .then(() => {
-                      manuaisSaveAlertShownOnce = false
-                    })
-                    .catch((err) => {
-                      console.error('Erro ao guardar manuais:', err)
-                      if (!manuaisSaveAlertShownOnce) {
-                        manuaisSaveAlertShownOnce = true
-                        alert((safeT as any)?.manuaisErroAoGuardar || 'Não foi possível guardar. O ficheiro pode ser grande demais para o navegador; tente um PDF mais pequeno ou exporte um backup.')
-                      }
-                    })
+                  }
+                  // LocalStorage costuma estourar com PDFs em base64. Guardar SEM anexos aqui evita falhas e evita
+                  // que um stub do localStorage sobrescreva os dados completos do IndexedDB no merge de arranque.
+                  const payloadLite = {
+                    familias: payloadFull.familias,
+                    grupos: payloadFull.grupos,
+                    modelos: modelosSnapshot.map((m: any) => {
+                      const { documentos: _d, imagens: _i, ...rest } = m || {}
+                      return rest
+                    }),
+                  }
+                  try {
+                    await saveManuaisFamiliasGruposToIdb(payloadFull)
+                    // `saveData` aqui serve para sincronização/backup leve; pode falhar em storage cheio.
+                    await saveData('nonato-manuais-familias-grupos', payloadLite)
+                    manuaisSaveAlertShownOnce = false
+                  } catch (err) {
+                    console.error('Erro ao guardar manuais:', err)
+                    if (!manuaisSaveAlertShownOnce) {
+                      manuaisSaveAlertShownOnce = true
+                      alert(
+                        (safeT as any)?.manuaisErroAoGuardar ||
+                          'Não foi possível guardar. O navegador pode estar sem espaço; tente um PDF mais pequeno ou exporte um backup.'
+                      )
+                    }
+                  }
                 }
                 const persistModelosImmediate = (modelosSnapshot: ManuaisModelo[]) => {
                   if (manuaisSaveDebounceTimer) {
@@ -22203,14 +22234,14 @@ const nextF = familias.filter(x => x !== f)
                     manuaisSaveDebounceTimer = null
                   }
                   manuaisModelosRef.current = modelosSnapshot
-                  runSaveManuaisModelos(modelosSnapshot)
+                  void runSaveManuaisModelos(modelosSnapshot)
                 }
                 const persistModelosDebounced = () => {
                   if (manuaisSaveDebounceTimer) clearTimeout(manuaisSaveDebounceTimer)
                   manuaisSaveDebounceTimer = setTimeout(() => {
                     manuaisSaveDebounceTimer = null
                     const latest = manuaisModelosRef.current
-                    runSaveManuaisModelos(latest)
+                    void runSaveManuaisModelos(latest)
                   }, 500)
                 }
                 const updateModelo = (updates: Partial<ManuaisModelo>) => {
@@ -52461,17 +52492,23 @@ A1;Peça exemplo;10`}
                   eq.numeroSerie === equipamentoKey ||
                   `${eq.modelo} ${eq.marca}`.trim() === equipamentoKey
                 )
-                if (equipamento) {
-                  equipamentosComRelatorios.push({
-                    equipamento,
-                    equipamentoKey,
-                    relatorios: relatorios.sort((a, b) => {
-                      const dataA = new Date(a.data).getTime()
-                      const dataB = new Date(b.data).getTime()
-                      return dataB - dataA
-                    })
+                // Compatibilidade: relatórios antigos podem estar guardados com uma chave que já não bate com a ficha do equipamento.
+                // Ainda assim, mostrar agrupado por essa chave para não "sumir" da biblioteca.
+                const equipamentoFallback: EquipamentoCliente = equipamento || ({
+                  id: `legacy-${cliente.id}-${equipamentoKey}`,
+                  modelo: equipamentoKey,
+                  marca: '',
+                  numeroSerie: equipamentoKey,
+                } as any)
+                equipamentosComRelatorios.push({
+                  equipamento: equipamentoFallback,
+                  equipamentoKey,
+                  relatorios: relatorios.sort((a, b) => {
+                    const dataA = new Date(a.data).getTime()
+                    const dataB = new Date(b.data).getTime()
+                    return dataB - dataA
                   })
-                }
+                })
               }
             })
           }
@@ -52544,6 +52581,85 @@ A1;Peça exemplo;10`}
                   )}
                 </div>
                 <div className="biblioteca-relatorios-hero-actions">
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    <div style={{ position: 'relative', width: 'min(340px, 52vw)' }}>
+                      <input
+                        type="text"
+                        value={buscaBibliotecaRelatoriosCliente}
+                        onChange={(e) => setBuscaBibliotecaRelatoriosCliente(e.target.value)}
+                        placeholder={(safeT as any)?.buscarClientePlaceholder || 'Buscar cliente (nome, NIF, telefone, e-mail)...'}
+                        style={{
+                          width: '100%',
+                          padding: buscaBibliotecaRelatoriosCliente ? '7px 34px 7px 10px' : '7px 10px',
+                          background: 'rgba(0,0,0,0.35)',
+                          border: '1px solid rgba(0, 255, 0, 0.35)',
+                          borderRadius: '10px',
+                          color: '#fff',
+                          fontSize: '12px',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                      {buscaBibliotecaRelatoriosCliente.trim() !== '' && (
+                        <button
+                          type="button"
+                          onClick={() => setBuscaBibliotecaRelatoriosCliente('')}
+                          aria-label={(safeT as any)?.limparBusca || 'Limpar busca'}
+                          title={(safeT as any)?.limparBusca || 'Limpar busca'}
+                          style={{
+                            position: 'absolute',
+                            right: 6,
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            width: 24,
+                            height: 24,
+                            borderRadius: 8,
+                            border: '1px solid rgba(255,255,255,0.18)',
+                            background: 'rgba(255,255,255,0.06)',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            lineHeight: 1,
+                            fontWeight: 900,
+                          }}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setBibliotecaRelatoriosClientesExpandidos(new Set(relatoriosPorCliente.map(r => r.cliente.id)))}
+                      style={{
+                        padding: '6px 10px',
+                        fontSize: '12px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                        border: '1px solid rgba(255, 255, 255, 0.25)',
+                        borderRadius: '10px',
+                        color: '#ffffff',
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                      }}
+                      title={(safeT as any)?.expandirTodos || 'Expandir todos'}
+                    >
+                      {(safeT as any)?.expandirTodos || 'Expandir todos'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBibliotecaRelatoriosClientesExpandidos(new Set())}
+                      style={{
+                        padding: '6px 10px',
+                        fontSize: '12px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                        border: '1px solid rgba(255, 255, 255, 0.18)',
+                        borderRadius: '10px',
+                        color: '#ffffff',
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                      }}
+                      title={(safeT as any)?.retrairTodos || 'Retrair todos'}
+                    >
+                      {(safeT as any)?.retrairTodos || 'Retrair todos'}
+                    </button>
+                  </div>
                   <button 
                     type="button"
                     onClick={() => closeTab(activeTabId || '')}
@@ -52622,12 +52738,37 @@ A1;Peça exemplo;10`}
                 </p>
               </div>
             ) : (
-              <div className="biblioteca-relatorios-cards-grid">
-                {relatoriosPorCliente.map(({ cliente, equipamentos, despesas: despesasCliente }) => {
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {relatoriosPorCliente
+                  .filter(({ cliente }) => {
+                    const q = buscaBibliotecaRelatoriosCliente.trim().toLowerCase()
+                    if (!q) return true
+                    const nome = String(cliente.nomeEmpresa || '').toLowerCase()
+                    const nif = String((cliente as any).numeroContribuicaoFiscal || '').toLowerCase()
+                    const telefones = String((cliente as any).telefones || '').toLowerCase()
+                    const email = String((cliente as any).email || '').toLowerCase()
+                    return (
+                      nome.includes(q) ||
+                      nif.includes(q) ||
+                      telefones.includes(q) ||
+                      email.includes(q)
+                    )
+                  })
+                  .map(({ cliente, equipamentos, despesas: despesasCliente }) => {
                   const totalRelatoriosCliente = equipamentos.reduce((sum, eq) => sum + eq.relatorios.length, 0)
                   return (
-                    <div 
+                    <details
                       key={cliente.id} 
+                      open={bibliotecaRelatoriosClientesExpandidos.has(cliente.id)}
+                      onToggle={(e) => {
+                        const opened = (e.currentTarget as HTMLDetailsElement).open
+                        setBibliotecaRelatoriosClientesExpandidos(prev => {
+                          const next = new Set(prev)
+                          if (opened) next.add(cliente.id)
+                          else next.delete(cliente.id)
+                          return next
+                        })
+                      }}
                       style={{ 
                         ...glassCardStyle(ACCENT_GREEN, { padding: '12px 14px', radius: '12px', borderAlpha: 0.2 }),
                         minWidth: 0,
@@ -52635,51 +52776,62 @@ A1;Peça exemplo;10`}
                         height: 'fit-content',
                         alignSelf: 'start'
                       }}
-                      onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)}
-                      onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}
                     >
-                      {/* Cabeçalho do Cliente + Excluir pasta */}
-                      <div style={{ 
-                        marginBottom: '8px', 
-                        paddingBottom: '8px',
-                        borderBottom: '1px solid rgba(0, 255, 0, 0.4)'
-                      }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2px', flexWrap: 'wrap', gap: '8px' }}>
-                          <h3 style={{ margin: 0, color: '#ffffff', fontSize: '15px', fontWeight: 'bold', flex: '1 1 140px', minWidth: 0, lineHeight: 1.25 }}>
-                            📋 {cliente.nomeEmpresa}
+                      <summary
+                        style={{
+                          listStyle: 'none',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '10px',
+                          userSelect: 'none',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
+                          <span aria-hidden style={{ color: '#7dff9a', fontSize: '14px', lineHeight: 1, flexShrink: 0 }}>▸</span>
+                          <h3 style={{ margin: 0, color: '#ffffff', fontSize: '15px', fontWeight: 'bold', minWidth: 0, lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {cliente.nomeEmpresa}
                           </h3>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, paddingTop: '1px' }}>
-                            <span style={{ 
-                              backgroundColor: 'rgba(0, 255, 0, 0.1)', 
-                              border: '1px solid rgba(0, 255, 0, 0.55)',
-                              color: '#ffffff',
-                              padding: '2px 8px',
-                              borderRadius: '8px',
-                              fontSize: '10px',
-                              fontWeight: 'bold'
-                            }}>
-                              {totalRelatoriosCliente} {(safeT as any)?.relatoriosServicoShort || 'rel.'}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteCliente(cliente.id)}
-                              style={{
-                                padding: '4px 10px',
-                                fontSize: '10px',
-                                backgroundColor: 'rgba(255, 68, 68, 0.1)',
-                                border: '1px solid rgba(255, 68, 68, 0.58)',
-                                color: '#ffffff',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                fontWeight: 'bold'
-                              }}
-                              title={(safeT as any)?.excluirPastaBiblioteca || 'Excluir pasta (e cliente)'}
-                            >
-                              🗑️ {(safeT as any)?.excluirPasta || 'Excluir pasta'}
-                            </button>
-                          </div>
                         </div>
-                      </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                          <span style={{
+                            backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                            border: '1px solid rgba(0, 255, 0, 0.55)',
+                            color: '#ffffff',
+                            padding: '2px 8px',
+                            borderRadius: '8px',
+                            fontSize: '10px',
+                            fontWeight: 'bold'
+                          }}>
+                            {totalRelatoriosCliente} {(safeT as any)?.relatoriosServicoShort || 'rel.'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteCliente(cliente.id) }}
+                            style={{
+                              padding: '4px 10px',
+                              fontSize: '10px',
+                              backgroundColor: 'rgba(255, 68, 68, 0.1)',
+                              border: '1px solid rgba(255, 68, 68, 0.58)',
+                              color: '#ffffff',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontWeight: 'bold'
+                            }}
+                            title={(safeT as any)?.excluirPastaBiblioteca || 'Excluir pasta (e cliente)'}
+                          >
+                            🗑️ {(safeT as any)?.excluirPasta || 'Excluir'}
+                          </button>
+                        </div>
+                      </summary>
+
+                      {/* Conteúdo do Cliente (expandido) */}
+                      <div style={{
+                        marginTop: '10px',
+                        paddingTop: '10px',
+                        borderTop: '1px solid rgba(0, 255, 0, 0.32)'
+                      }}>
 
                       {/* Secção: Relatórios de Serviço */}
                       <div style={{ marginBottom: '6px' }}>
@@ -52934,7 +53086,7 @@ A1;Peça exemplo;10`}
                             </div>
                           )}
                         </div>
-                    </div>
+                    </details>
                   )
                 })}
               </div>

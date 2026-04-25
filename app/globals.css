@@ -4882,6 +4882,24 @@ a:focus-visible {
   box-sizing: border-box;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
 }
+
+/* Biblioteca de Relatórios: pasta/accordion por cliente (details/summary) */
+.biblioteca-relatorios-root details > summary::-webkit-details-marker {
+  display: none;
+}
+.biblioteca-relatorios-root details > summary {
+  outline: none;
+}
+.biblioteca-relatorios-root details[open] > summary span[aria-hidden] {
+  transform: rotate(90deg);
+  transition: transform 0.18s ease;
+  display: inline-block;
+}
+.biblioteca-relatorios-root details:not([open]) > summary span[aria-hidden] {
+  transform: rotate(0deg);
+  transition: transform 0.18s ease;
+  display: inline-block;
+}
 /* Biblioteca e Relatório de Serviço: cartões com altura ao conteúdo */
 .biblioteca-relatorios-cards-grid,
 .relatorio-servico-cards-grid {
