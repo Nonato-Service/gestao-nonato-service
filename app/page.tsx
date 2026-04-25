@@ -52108,6 +52108,35 @@ A1;Peça exemplo;10`}
                           outline: 'none'
                         }}
                       />
+                      {(() => {
+                        const q = buscaOS.trim()
+                        if (!q) return null
+                        const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '')
+                        const qn = norm(q)
+                        const exata = ordensServico.find(os => norm(os.numeroOS) === qn)
+                        if (!exata) return null
+                        const tx = safeT as Record<string, string>
+                        return (
+                          <div style={{ marginTop: '10px', padding: '10px 12px', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.25)', background: 'rgba(0, 255, 0, 0.06)' }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '10px', alignItems: 'center' }}>
+                              <div style={{ minWidth: 0 }}>
+                                <div style={{ color: '#00ff00', fontWeight: 800, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                                  {tx.osEncontradaLabel || 'OS encontrada'}
+                                </div>
+                                <div style={{ color: '#fff', fontSize: '13px', marginTop: '4px' }}>
+                                  <strong style={{ color: '#fff' }}>{exata.numeroOS}</strong> · {tx.cliente || safeT?.cliente || 'Cliente'}: {exata.clienteNome}
+                                </div>
+                                <div style={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px', marginTop: '3px' }}>
+                                  {tx.dataAbertura || safeT?.dataAbertura || 'Data Abertura'}: {new Date(exata.dataAbertura).toLocaleDateString('pt-BR')} · {tx.valorTotal || safeT?.valorTotal || 'Valor Total'}: €{exata.valorTotal.toFixed(2)}
+                                </div>
+                              </div>
+                              <button type="button" className="btn-primary" onClick={() => openOSEditor(exata)} style={{ padding: '8px 12px', fontSize: '12px', borderRadius: '8px', whiteSpace: 'nowrap' }}>
+                                {tx.abrirOS || 'Abrir OS'}
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      })()}
                     </div>
                     <button
                       className="btn-primary"
