@@ -52547,7 +52547,7 @@ A1;Peça exemplo;10`}
 
         return (
           <>
-          <div className="biblioteca-relatorios-root">
+            <div className="biblioteca-relatorios-root">
             {/* Cabeçalho Profissional — responsivo (globals.css .biblioteca-relatorios-hero*) */}
             <div className="biblioteca-relatorios-hero">
               <div className="biblioteca-relatorios-hero-top">
@@ -53086,6 +53086,7 @@ A1;Peça exemplo;10`}
                             </div>
                           )}
                         </div>
+                      </div>
                     </details>
                   )
                 })}
