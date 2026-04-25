@@ -973,7 +973,11 @@ const BIBLIOTECA_FILTRO_SEM_CATEGORIA = '__sem_categoria__'
 const RESUMO_COBRANCA_DECISAO_KEY = 'nonato-resumo-cobranca-decisao'
 /** Linhas fixas do fechamento (resumo) que podem ser retiradas da cobrança e restauradas depois */
 const FECHAMENTO_ITENS_OMITIDOS_KEY = 'nonato-fechamentos-itens-omitidos-por-relatorio'
+/** Por relatório de serviço com fechamento na biblioteca: fluxo fatura → gestão financeira (pagamento) */
+const FECHAMENTO_FLUXO_FINANCEIRO_KEY = 'nonato-fechamentos-fluxo-financeiro'
 const FECHAMENTO_IDS_FIXOS_TEMPLATE = ['ht', 'km', 'diarias', 'hida', 'hret'] as const
+
+type FechamentoFluxoFinanceiroEtapa = 'none' | 'enviado_fatura' | 'controlo_pagamento'
 
 type PasswordEntry = {
   id: string
@@ -3810,6 +3814,118 @@ export default function Dashboard() {
     return titles[type] || type
   }
 
+  function setFechamentoEtapaFinanceira(relatorioId: string, etapa: FechamentoFluxoFinanceiroEtapa) {
+    setFechamentoFluxoFinanceiroPorRelatorioId(prev => {
+      const next = { ...prev }
+      if (etapa === 'none') delete next[relatorioId]
+      else next[relatorioId] = etapa
+      void saveData(FECHAMENTO_FLUXO_FINANCEIRO_KEY, next)
+      return next
+    })
+  }
+
+  function removerFechamentoFluxoParaRelatorios(relatorioIds: string[]) {
+    if (!relatorioIds.length) return
+    setFechamentoFluxoFinanceiroPorRelatorioId(prev => {
+      let changed = false
+      const next = { ...prev }
+      for (const id of relatorioIds) {
+        if (id in next) {
+          delete next[id]
+          changed = true
+        }
+      }
+      if (changed) void saveData(FECHAMENTO_FLUXO_FINANCEIRO_KEY, next)
+      return changed ? next : prev
+    })
+  }
+
+  function FechamentoFluxoFinanceiroStrip(props: { relatorioId: string; compact?: boolean }) {
+    const { relatorioId, compact } = props
+    const etapa = fechamentoFluxoFinanceiroPorRelatorioId[relatorioId] || 'none'
+    const tx = safeT as Record<string, string>
+    const chip: React.CSSProperties = {
+      padding: compact ? '3px 8px' : '4px 10px',
+      borderRadius: '999px',
+      fontSize: compact ? '10px' : '11px',
+      fontWeight: 700,
+      letterSpacing: '0.04em',
+    }
+    const btnSm: React.CSSProperties = {
+      padding: compact ? '6px 10px' : '8px 12px',
+      fontSize: compact ? '10px' : '11px',
+      fontWeight: 700,
+      borderRadius: '8px',
+      cursor: 'pointer',
+      border: '1px solid rgba(255,255,255,0.2)',
+      background: 'rgba(255,255,255,0.06)',
+      color: '#fff',
+    }
+    return (
+      <div style={{ marginBottom: compact ? '8px' : '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+          <span style={{ fontSize: compact ? '10px' : '11px', color: 'rgba(255,255,255,0.72)' }}>
+            {tx.fechamentoFluxoTitulo || 'Fatura / pagamento:'}
+          </span>
+          {etapa === 'none' && (
+            <span style={{ ...chip, background: 'rgba(120,120,120,0.2)', border: '1px solid rgba(255,255,255,0.18)' }}>
+              {tx.fechamentoFluxoBadgePendente || 'Pendente'}
+            </span>
+          )}
+          {etapa === 'enviado_fatura' && (
+            <span style={{ ...chip, background: 'rgba(251, 191, 36, 0.15)', border: '1px solid rgba(251, 191, 36, 0.55)', color: '#fffbeb' }}>
+              {tx.fechamentoFluxoBadgeEnviadoFatura || 'Enviado p/ fatura'}
+            </span>
+          )}
+          {etapa === 'controlo_pagamento' && (
+            <span style={{ ...chip, background: 'rgba(52, 211, 153, 0.15)', border: '1px solid rgba(52, 211, 153, 0.55)', color: '#ecfdf5' }}>
+              {tx.fechamentoFluxoBadgeControloPagamento || 'Controlo de pagamento'}
+            </span>
+          )}
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+          {etapa === 'none' && (
+            <button
+              type="button"
+              style={{ ...btnSm, borderColor: 'rgba(251, 191, 36, 0.45)', background: 'rgba(251, 191, 36, 0.08)' }}
+              onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'enviado_fatura')}
+            >
+              {tx.fechamentoFluxoBtnEnviarFatura || 'Marcar: enviado para criar fatura'}
+            </button>
+          )}
+          {etapa === 'enviado_fatura' && (
+            <>
+              <button
+                type="button"
+                style={{ ...btnSm, borderColor: 'rgba(52, 211, 153, 0.5)', background: 'rgba(22, 60, 40, 0.55)' }}
+                onClick={() => {
+                  setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento')
+                  openTab('clientes-financeiro', getTabTitle('clientes-financeiro'))
+                  setClientesFinanceiroActiveTab('despesasControle')
+                }}
+              >
+                {tx.fechamentoFluxoBtnControloFinanceiro || 'Em gestão financeira (pagamento)'}
+              </button>
+              <button type="button" style={btnSm} onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'none')}>
+                {tx.fechamentoFluxoBtnVoltarPendente || 'Limpar «enviado p/ fatura»'}
+              </button>
+            </>
+          )}
+          {etapa === 'controlo_pagamento' && (
+            <>
+              <button type="button" style={btnSm} onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'enviado_fatura')}>
+                {tx.fechamentoFluxoBtnVoltarEnviado || 'Voltar a «só enviado p/ fatura»'}
+              </button>
+              <button type="button" style={btnSm} onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'none')}>
+                {tx.fechamentoFluxoBtnLimparMarcas || 'Limpar tudo'}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   const getTabModuleIntroText = (type: TabType): string => {
     const tr = safeT as Record<string, string | undefined>
     const pick = (keys: readonly string[]) => {
@@ -4534,7 +4650,9 @@ export default function Dashboard() {
   const lastClientesDevedoresHash = useRef<string>('') // Hash do último estado de clientes para evitar atualizações desnecessárias
   const [ivaControles, setIvaControles] = useState<IVAControle[]>([])
   const [relatoriosFinanceiros, setRelatoriosFinanceiros] = useState<RelatorioFinanceiro[]>([])
-  const [clientesFinanceiroActiveTab, setClientesFinanceiroActiveTab] = useState<'os' | 'faturas' | 'devedores' | 'iva' | 'relatorios'>('os')
+  const [clientesFinanceiroActiveTab, setClientesFinanceiroActiveTab] = useState<
+    'os' | 'faturas' | 'devedores' | 'iva' | 'relatorios' | 'despesasControle'
+  >('os')
   const [comprovantesDespesas, setComprovantesDespesas] = useState<ComprovanteDespesa[]>([])
   const [comprovantesFiltroMes, setComprovantesFiltroMes] = useState<string>('')
   const [comprovantesFiltroSemana, setComprovantesFiltroSemana] = useState<string>('')
@@ -4704,6 +4822,10 @@ export default function Dashboard() {
   const [fechamentoItensOmitidosPorRelatorio, setFechamentoItensOmitidosPorRelatorio] = useState<Record<string, string[]>>({})
   /** IDs de relatórios cujo fechamento de despesas foi guardado na Biblioteca (só aparecem lá até editar de novo) */
   const [fechamentosGuardadosBibliotecaIds, setFechamentosGuardadosBibliotecaIds] = useState<string[]>([])
+  /** Fechamento na biblioteca: etapa «enviado p/ fatura» ou «controlo de pagamento» na gestão financeira */
+  const [fechamentoFluxoFinanceiroPorRelatorioId, setFechamentoFluxoFinanceiroPorRelatorioId] = useState<
+    Record<string, FechamentoFluxoFinanceiroEtapa>
+  >({})
   /** Por relatório: 'sim' = aguarda fechamento na Biblioteca; 'nao' = sem cobrança (verde fixo no resumo) */
   const [resumoCobrancaDecisaoPorRelatorio, setResumoCobrancaDecisaoPorRelatorio] = useState<Record<string, 'sim' | 'nao'>>({})
   const [relatoriosExcluidosClientes, setRelatoriosExcluidosClientes] = useState<RelatoriosExcluidosClientesStorage>({ pastas: {} })
@@ -6391,6 +6513,27 @@ export default function Dashboard() {
         }
       }
       setFechamentoItensOmitidosPorRelatorio(fechamentoOmitidosMap)
+
+      const savedFluxoFin = getData(FECHAMENTO_FLUXO_FINANCEIRO_KEY)
+      let fluxoFinMap: Record<string, FechamentoFluxoFinanceiroEtapa> = {}
+      if (savedFluxoFin && typeof savedFluxoFin === 'object' && !Array.isArray(savedFluxoFin)) {
+        const rawFlux = savedFluxoFin as Record<string, unknown>
+        for (const k of Object.keys(rawFlux)) {
+          const v = rawFlux[k]
+          if (v === 'enviado_fatura' || v === 'controlo_pagamento') fluxoFinMap[k] = v
+        }
+        if (removedRelatorioIds.size > 0) {
+          let fluxDirty = false
+          for (const id of removedRelatorioIds) {
+            if (id in fluxoFinMap) {
+              delete fluxoFinMap[id]
+              fluxDirty = true
+            }
+          }
+          if (fluxDirty) void saveData(FECHAMENTO_FLUXO_FINANCEIRO_KEY, fluxoFinMap)
+        }
+      }
+      setFechamentoFluxoFinanceiroPorRelatorioId(fluxoFinMap)
 
       const savedRelExcl = getData('nonato-relatorios-excluidos-clientes') as RelatoriosExcluidosClientesStorage | null
       if (savedRelExcl && savedRelExcl.pastas && typeof savedRelExcl.pastas === 'object') {
@@ -11026,6 +11169,7 @@ export default function Dashboard() {
       // Remover relatórios de serviço e fechamentos deste cliente
       const reportIdsDoCliente = relatoriosServico.filter(r => r.clienteId === clienteId).map(r => r.id)
       if (reportIdsDoCliente.length > 0) {
+        removerFechamentoFluxoParaRelatorios(reportIdsDoCliente)
         const updatedRelatorios = relatoriosServico.filter(r => r.clienteId !== clienteId)
         setRelatoriosServico(updatedRelatorios)
         saveData('nonato-relatorios-servico', updatedRelatorios)
@@ -11060,6 +11204,7 @@ export default function Dashboard() {
 
   const handleDeleteFechamentoRelatorio = (relatorioId: string) => {
     if (window.confirm((safeT as any)?.confirmDeleteFechamentoDespesas || 'Remover o fechamento de despesas deste relatório?')) {
+      removerFechamentoFluxoParaRelatorios([relatorioId])
       const { [relatorioId]: _, ...rest } = fechamentosRelatorios
       setFechamentosRelatorios(rest)
       saveData('nonato-fechamentos-relatorios', rest)
@@ -16720,6 +16865,7 @@ export default function Dashboard() {
         saveData('nonato-fechamentos-guardados-biblioteca', next)
         return next
       })
+      removerFechamentoFluxoParaRelatorios([relatorioId])
       setResumoCobrancaDecisaoPorRelatorio(prev => {
         const { [relatorioId]: __, ...rest } = prev
         void saveData(RESUMO_COBRANCA_DECISAO_KEY, rest)
@@ -16731,6 +16877,75 @@ export default function Dashboard() {
         return restO
       })
     }
+  }
+
+  const handleRestoreRelatorioExcluidoSelecionado = (pastaKey: string, archiveId: string) => {
+    const pasta = relatoriosExcluidosClientes.pastas[pastaKey]
+    const item = pasta?.itens?.find(i => i.archiveId === archiveId)
+    if (!pasta || !item) {
+      alert((safeT as any)?.restaurarRelatorioNaoEncontrado || 'Arquivo não encontrado. Atualize a página.')
+      return
+    }
+    if (item.tipo !== 'servico') {
+      alert((safeT as any)?.restaurarSomenteRelatorioServico || 'Só é possível restaurar relatórios de serviço.')
+      return
+    }
+    const rel = JSON.parse(JSON.stringify(item.relatorio)) as RelatorioServico
+
+    const msg = (safeT as any)?.confirmRestaurarRelatorioSelecionado || 'Restaurar somente este relatório selecionado?'
+    if (!window.confirm(msg)) return
+
+    // 1) Restaurar relatório em `relatoriosServico`
+    const jaExiste = relatoriosServico.some(r => r.id === rel.id)
+    const updatedRelatorios = jaExiste ? relatoriosServico : [...relatoriosServico, rel]
+    if (!jaExiste) {
+      setRelatoriosServico(updatedRelatorios)
+      saveData('nonato-relatorios-servico', updatedRelatorios)
+    }
+
+    // 2) Restaurar pasta dentro do cliente (biblioteca)
+    const equipamentoKey = (rel.numeroMaquina || rel.maquinaModelo || 'Sem equipamento').trim()
+    const updatedClientes = clientes.map(c => {
+      if (c.id !== rel.clienteId) return c
+      const relMap: Record<string, RelatorioServico[]> = { ...(c.relatorios || {}) }
+      const arr = Array.isArray(relMap[equipamentoKey]) ? [...relMap[equipamentoKey]] : []
+      if (!arr.some(r => r.id === rel.id)) arr.push(rel)
+      relMap[equipamentoKey] = arr
+      return { ...c, relatorios: relMap }
+    })
+    if (updatedClientes.some((c, i) => c !== clientes[i])) {
+      setClientes(updatedClientes)
+      saveData('nonato-clientes', updatedClientes)
+    }
+
+    // 3) Restaurar fechamento (se existia)
+    if (item.fechamentoItens && item.fechamentoItens.length > 0) {
+      setFechamentosRelatorios(prev => {
+        const next = { ...prev, [rel.id]: JSON.parse(JSON.stringify(item.fechamentoItens)) as FechamentoItem[] }
+        saveData('nonato-fechamentos-relatorios', next)
+        return next
+      })
+      if (item.tinhaFechamentoBiblioteca) {
+        setFechamentosGuardadosBibliotecaIds(prev => {
+          const next = prev.includes(rel.id) ? prev : [...prev, rel.id]
+          saveData('nonato-fechamentos-guardados-biblioteca', next)
+          return next
+        })
+      }
+    }
+
+    // 4) Remover somente o arquivo selecionado da cópia de segurança
+    setRelatoriosExcluidosClientes(prev => {
+      const pastas = { ...prev.pastas }
+      const p = pastas[pastaKey]
+      if (!p) return prev
+      const itens = p.itens.filter(i => i.archiveId !== archiveId)
+      if (itens.length === 0) delete pastas[pastaKey]
+      else pastas[pastaKey] = { ...p, itens }
+      const next = { pastas }
+      saveData('nonato-relatorios-excluidos-clientes', next)
+      return next
+    })
   }
 
   const persistResumoCobrancaDecisaoMap = (next: Record<string, 'sim' | 'nao'>) => {
@@ -30913,6 +31128,94 @@ onKeyPress={(e) => {
                     </ul>
                   </div>
                 ) : null}
+
+                {editingCliente ? (() => {
+                  const txc = safeT as Record<string, string>
+                  const relsDespBib = relatoriosServico
+                    .filter(
+                      r =>
+                        r.clienteId === editingCliente.id &&
+                        fechamentosGuardadosBibliotecaIds.includes(r.id) &&
+                        Array.isArray(fechamentosRelatorios[r.id]) &&
+                        (fechamentosRelatorios[r.id]?.length ?? 0) > 0
+                    )
+                    .sort((a, b) =>
+                      String(a.numero ?? '').localeCompare(String(b.numero ?? ''), undefined, { sensitivity: 'base', numeric: true })
+                    )
+                  if (relsDespBib.length === 0) return null
+                  return (
+                    <div
+                      style={{
+                        marginTop: '18px',
+                        padding: '16px',
+                        borderRadius: '10px',
+                        border: '1px solid rgba(255, 170, 0, 0.4)',
+                        background: 'rgba(40, 32, 14, 0.45)',
+                      }}
+                    >
+                      <h4 style={{ margin: '0 0 6px 0', fontSize: '14px', color: '#ffcc80' }}>
+                        {txc.clienteCadastroDespesasBibliotecaTitulo || 'Relatórios de despesas (biblioteca)'}
+                      </h4>
+                      <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.45 }}>
+                        {txc.clienteCadastroDespesasBibliotecaDesc ||
+                          'Fechamentos guardados na biblioteca: totais, estado (fatura / pagamento) e ações iguais à biblioteca de relatórios.'}
+                      </p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {relsDespBib.map(rel => {
+                          const itens = fechamentosRelatorios[rel.id] || []
+                          const itensVis = filtrarFechamentoItensPorOmitidos(fechamentoItensOmitidosPorRelatorio, rel.id, itens)
+                          const tot = itensVis.reduce(
+                            (s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)),
+                            0
+                          )
+                          return (
+                            <div
+                              key={rel.id}
+                              style={{
+                                padding: '12px 14px',
+                                borderRadius: '8px',
+                                background: 'rgba(0,0,0,0.35)',
+                                border: '1px solid rgba(255, 200, 120, 0.25)',
+                              }}
+                            >
+                              <div style={{ fontWeight: 700, color: '#fff', fontSize: '13px', marginBottom: '4px' }}>
+                                {(txc.fechamentoRelatorio || 'Fechamento')}{' '}
+                                <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                  {(txc.relatorioNumeroLabel || 'Rel.')} {rel.numero}
+                                </span>
+                                <span style={{ fontWeight: 600, color: '#fbbf77', marginLeft: '8px' }}>
+                                  · {txc.total || 'Total'} €{tot.toFixed(2)}
+                                </span>
+                              </div>
+                              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.75)', marginBottom: '8px' }}>
+                                {rel.maquinaModelo} · {rel.data}
+                              </div>
+                              <FechamentoFluxoFinanceiroStrip relatorioId={rel.id} compact />
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                                <button
+                                  type="button"
+                                  className="btn-primary"
+                                  style={{ padding: '6px 10px', fontSize: '11px' }}
+                                  onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio: rel, itens: itensVis })}
+                                >
+                                  👁️ {txc.visualizarDespesasBiblioteca || safeT?.view || 'Ver'}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn-primary"
+                                  style={{ padding: '6px 10px', fontSize: '11px' }}
+                                  onClick={() => imprimirPDFDespesasDaBiblioteca(rel, itensVis)}
+                                >
+                                  📄 {txc.gerarPDF || safeT?.gerarPDF || 'PDF'}
+                                </button>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })() : null}
                 
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button className="btn-primary" onClick={handleSaveCliente} style={{ flex: 1, padding: '8px 16px' }}>
@@ -51435,6 +51738,32 @@ A1;Peça exemplo;10`}
                 >
                   {safeT?.clientesFinanceiro || 'Clientes / Financeiro'}
                 </button>
+                <button
+                  className="btn-primary"
+                  onClick={() => {
+                    handleButtonClick('open-clientes-financeiro')
+                    setClientesFinanceiroActiveTab('despesasControle')
+                  }}
+                  style={{
+                    padding: '15px 30px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    backgroundColor: 'rgba(255, 170, 0, 0.08)',
+                    border: '2px solid rgba(255, 170, 0, 0.55)',
+                    borderRadius: '10px',
+                    color: '#ffcc66',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    minWidth: '250px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                    justifyContent: 'center',
+                  }}
+                >
+                  📒 {(safeT as any)?.gestaoFinanceiraBtnControloDespesasBiblioteca || 'Despesas na biblioteca (fatura / pagamento)'}
+                </button>
               </div>
             </div>
           </div>
@@ -51551,7 +51880,7 @@ A1;Peça exemplo;10`}
               gap: '10px',
               flexWrap: 'wrap'
             }}>
-              {(['os', 'faturas', 'devedores', 'iva', 'relatorios'] as const).map((tab) => (
+              {(['os', 'faturas', 'devedores', 'iva', 'relatorios', 'despesasControle'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setClientesFinanceiroActiveTab(tab)}
@@ -51586,6 +51915,7 @@ A1;Peça exemplo;10`}
                   {tab === 'devedores' && (safeT?.clientesDevedores || 'CLIENTES DEVEDORES')}
                   {tab === 'iva' && (safeT?.controleIVA || 'CONTROLE DE IVA')}
                   {tab === 'relatorios' && (safeT?.relatoriosFinanceiros || 'RELATÓRIOS')}
+                  {tab === 'despesasControle' && ((safeT as any)?.financeiroTabDespesasFaturaPagamento || 'DESPESAS · FATURA / PAGAMENTO')}
                 </button>
               ))}
             </div>
@@ -52458,6 +52788,104 @@ A1;Peça exemplo;10`}
                   </div>
                 </div>
               )}
+
+              {clientesFinanceiroActiveTab === 'despesasControle' && (() => {
+                const tx = safeT as Record<string, string>
+                const cmpFin = (a: string, b: string) =>
+                  (a || '').localeCompare(b || '', undefined, { sensitivity: 'base', numeric: true })
+                const lista = relatoriosServico
+                  .filter(
+                    r =>
+                      r.clienteId &&
+                      fechamentosGuardadosBibliotecaIds.includes(r.id) &&
+                      Array.isArray(fechamentosRelatorios[r.id]) &&
+                      fechamentosRelatorios[r.id]!.length > 0
+                  )
+                  .sort((a, b) => {
+                    const ca = clientes.find(c => c.id === a.clienteId)?.nomeEmpresa || a.cliente || ''
+                    const cb = clientes.find(c => c.id === b.clienteId)?.nomeEmpresa || b.cliente || ''
+                    const byC = cmpFin(ca, cb)
+                    if (byC !== 0) return byC
+                    return cmpFin(String(a.numero ?? ''), String(b.numero ?? ''))
+                  })
+                return (
+                  <div>
+                    <h2 style={{ color: '#00ff00', fontSize: '22px', margin: '0 0 8px' }}>
+                      {tx.financeiroDespesasControleTitulo || 'Relatórios de despesas (biblioteca)'}
+                    </h2>
+                    <p style={{ color: '#aaa', fontSize: '13px', margin: '0 0 20px', maxWidth: '720px', lineHeight: 1.45 }}>
+                      {tx.financeiroDespesasControleDesc ||
+                        'Marque o envio para fatura e, após criada, o controlo de pagamento. A mesma informação aparece na Biblioteca de relatórios e no cadastro do cliente.'}
+                    </p>
+                    {lista.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '36px', color: '#888', border: '1px dashed rgba(0,255,0,0.25)', borderRadius: '10px' }}>
+                        {tx.financeiroDespesasControleEmpty || 'Nenhum relatório de despesas na biblioteca com fechamento guardado.'}
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        {lista.map(rel => {
+                          const itens = fechamentosRelatorios[rel.id] || []
+                          const itensVis = filtrarFechamentoItensPorOmitidos(fechamentoItensOmitidosPorRelatorio, rel.id, itens)
+                          const tot = itensVis.reduce(
+                            (s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)),
+                            0
+                          )
+                          const nomeCli =
+                            clientes.find(c => c.id === rel.clienteId)?.nomeEmpresa || rel.cliente || '—'
+                          return (
+                            <div
+                              key={rel.id}
+                              style={{
+                                padding: '16px 18px',
+                                backgroundColor: '#1f1f1f',
+                                border: '1px solid rgba(255, 170, 0, 0.35)',
+                                borderRadius: '10px',
+                              }}
+                            >
+                              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '10px', marginBottom: '8px' }}>
+                                <div>
+                                  <div style={{ fontWeight: 800, color: '#fff', fontSize: '15px' }}>
+                                    {(tx.fechamentoRelatorio || 'Fechamento')}{' '}
+                                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                      {(tx.relatorioNumeroLabel || 'Rel.')} {rel.numero}
+                                    </span>
+                                  </div>
+                                  <div style={{ fontSize: '12px', color: '#ccc', marginTop: '4px' }}>
+                                    <strong style={{ color: '#9fdf9f' }}>{nomeCli}</strong>
+                                    {' · '}
+                                    {rel.maquinaModelo}
+                                    {' · '}
+                                    {tx.total || 'Total'}: <strong style={{ color: '#ffcc66' }}>€{tot.toFixed(2)}</strong>
+                                  </div>
+                                </div>
+                              </div>
+                              <FechamentoFluxoFinanceiroStrip relatorioId={rel.id} />
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                <button
+                                  type="button"
+                                  className="btn-primary"
+                                  onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio: rel, itens: itensVis })}
+                                  style={{ padding: '8px 12px', fontSize: '12px' }}
+                                >
+                                  👁️ {tx.visualizarDespesasBiblioteca || safeT?.view || 'Ver'}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn-primary"
+                                  onClick={() => imprimirPDFDespesasDaBiblioteca(rel, itensVis)}
+                                  style={{ padding: '8px 12px', fontSize: '12px' }}
+                                >
+                                  📄 {tx.gerarPDF || safeT?.gerarPDF || 'PDF'}
+                                </button>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
             </div>
           </div>
         )
@@ -53041,6 +53469,7 @@ A1;Peça exemplo;10`}
                                         {relatorio.cliente} · {relatorio.maquinaModelo} · {(safeT as any)?.total || 'Total'}: <strong style={{ color: '#ffffff' }}>€{totalCobranca.toFixed(2)}</strong>
                                       </div>
                                     </div>
+                                    <FechamentoFluxoFinanceiroStrip relatorioId={relatorio.id} />
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                                       <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens: itensDespesasVisiveis })} style={{ ...btnBase, backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff' }}>
                                         👁️ {(safeT as any)?.visualizarDespesasBiblioteca ?? safeT?.view ?? 'View'}
@@ -53245,6 +53674,16 @@ A1;Peça exemplo;10`}
                                     style={{ padding: '8px 14px', fontSize: '12px', background: 'rgba(150,100,255,0.2)', border: '1px solid rgba(150,100,255,0.5)', color: '#fff' }}
                                   >
                                     👁️ {safeT?.view || 'Ver'}
+                                  </button>
+                                )}
+                                {item.tipo === 'servico' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRestoreRelatorioExcluidoSelecionado(pastaKey, item.archiveId)}
+                                    style={{ padding: '8px 14px', fontSize: '12px', background: 'rgba(0, 150, 255, 0.12)', border: '1px solid rgba(0, 150, 255, 0.55)', color: '#cce6ff', cursor: 'pointer', borderRadius: '6px' }}
+                                    title={(tx.restaurarRelatorioSelecionadoTitle || 'Restaurar somente este relatório') as any}
+                                  >
+                                    ♻️ {tx.restaurar || 'Restaurar'}
                                   </button>
                                 )}
                                 <button
