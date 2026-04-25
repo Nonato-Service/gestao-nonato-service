@@ -11976,6 +11976,24 @@ export default function Dashboard() {
     })
   }
 
+  const openOSEditor = (os: OrdemServico) => {
+    setEditingOS(os)
+    setOSForm({
+      numeroOS: os.numeroOS,
+      clienteId: os.clienteId,
+      clienteNome: os.clienteNome,
+      dataAbertura: os.dataAbertura.split('T')[0],
+      status: os.status,
+      valorServico: os.valorServico,
+      valorPecas: os.valorPecas,
+      taxaIVA: (os.valorIVA / os.valorSemIVA) * 100 || 23,
+      observacoes: os.observacoes || '',
+      tecnicoResponsavel: os.tecnicoResponsavel || '',
+      equipamentoId: os.equipamentoId || ''
+    })
+    setShowOSForm(true)
+  }
+
   // Função para agrupar faturas por mês
   const agruparFaturasPorMes = (faturas: FaturaFornecedor[]) => {
     const agrupadas: { [mes: string]: FaturaFornecedor[] } = {}
@@ -51950,6 +51968,24 @@ A1;Peça exemplo;10`}
                         placeholder={safeT?.buscarPorNumeroOS || 'Buscar por número de OS...'}
                         value={buscaOS}
                         onChange={(e) => setBuscaOS(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key !== 'Enter') return
+                          const q = buscaOS.trim()
+                          if (!q) return
+                          const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, '')
+                          const qn = norm(q)
+                          const exata = ordensServico.find(os => norm(os.numeroOS) === qn)
+                          if (exata) {
+                            openOSEditor(exata)
+                            return
+                          }
+                          const filtradas = ordensServico.filter(os => norm(os.numeroOS).includes(qn))
+                          if (filtradas.length === 1) {
+                            openOSEditor(filtradas[0])
+                            return
+                          }
+                          alert((safeT as any)?.osNaoEncontrada || 'OS não encontrada (ou há mais de uma).')
+                        }}
                         style={{
                           width: '100%',
                           padding: '10px 14px',
@@ -52044,21 +52080,7 @@ A1;Peça exemplo;10`}
                             <button
                               className="btn-primary"
                               onClick={() => {
-                                setEditingOS(os)
-                                setOSForm({
-                                  numeroOS: os.numeroOS,
-                                  clienteId: os.clienteId,
-                                  clienteNome: os.clienteNome,
-                                  dataAbertura: os.dataAbertura.split('T')[0],
-                                  status: os.status,
-                                  valorServico: os.valorServico,
-                                  valorPecas: os.valorPecas,
-                                  taxaIVA: (os.valorIVA / os.valorSemIVA) * 100 || 23,
-                                  observacoes: os.observacoes || '',
-                                  tecnicoResponsavel: os.tecnicoResponsavel || '',
-                                  equipamentoId: os.equipamentoId || ''
-                                })
-                                setShowOSForm(true)
+                                openOSEditor(os)
                               }}
                               style={{
                                 padding: '8px 16px',
