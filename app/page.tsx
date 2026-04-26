@@ -62023,10 +62023,10 @@ A1;Peça exemplo;10`}
                 )}
               </div>
 
-              {/* Grupo: GESTÃO DE CUSTOS (Orçamentos/Custos) */}
+              {/* Grupo: fechamento OS / custos / orçamentos */}
               <div className="admin-group-panel">
                 <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                  {safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS (Orçamentos/Custos)'}
+                  {safeT?.gestaoCustosTitle || 'FECHAMENTO DE OS/CUSTOS/ORÇAMENTOS'}
                 </h4>
                 {getButtonsByGroup('gestao-custos').length === 0 ? (
                   <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center' }}>
