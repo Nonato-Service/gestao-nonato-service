@@ -3962,194 +3962,6 @@ export default function Dashboard() {
     })
   }
 
-  function FechamentoFluxoFinanceiroStrip(props: { relatorioId: string; compact?: boolean; readOnly?: boolean }) {
-    const { relatorioId, compact, readOnly } = props
-    const raw = fechamentoFluxoFinanceiroPorRelatorioId[relatorioId]
-    const obj = raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as FechamentoFluxoFinanceiroEntry) : null
-    const etapa: FechamentoFluxoFinanceiroEtapa = obj?.etapa || (raw as FechamentoFluxoFinanceiroEtapa) || 'none'
-    const modo: FechamentoFluxoFinanceiroModo = obj?.modo || 'com_fatura'
-    const pagamento: FechamentoFluxoFinanceiroPagamento = obj?.pagamento || 'pendente'
-    const situacaoFatura = obj?.situacaoFatura
-    const numeroFaturaRef = obj?.numeroFatura?.trim()
-    const tx = safeT as Record<string, string>
-    const chip: React.CSSProperties = {
-      padding: compact ? '3px 8px' : '4px 10px',
-      borderRadius: '999px',
-      fontSize: compact ? '10px' : '11px',
-      fontWeight: 700,
-      letterSpacing: '0.04em',
-    }
-    const btnSm: React.CSSProperties = {
-      padding: compact ? '6px 10px' : '8px 12px',
-      fontSize: compact ? '10px' : '11px',
-      fontWeight: 700,
-      borderRadius: '8px',
-      cursor: 'pointer',
-      border: '1px solid rgba(255,255,255,0.2)',
-      background: 'rgba(255,255,255,0.06)',
-      color: '#fff',
-    }
-    return (
-      <div style={{ marginBottom: compact ? '8px' : '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
-          <span style={{ fontSize: compact ? '10px' : '11px', color: 'rgba(255,255,255,0.72)' }}>
-            {tx.fechamentoFluxoTitulo || 'Fatura / pagamento:'}
-          </span>
-          {etapa === 'none' && (
-            <span style={{ ...chip, background: 'rgba(120,120,120,0.2)', border: '1px solid rgba(255,255,255,0.18)' }}>
-              {tx.fechamentoFluxoBadgePendente || 'Pendente'}
-            </span>
-          )}
-          {etapa === 'enviado_fatura' && (
-            <span style={{ ...chip, background: 'rgba(251, 191, 36, 0.15)', border: '1px solid rgba(251, 191, 36, 0.55)', color: '#fffbeb' }}>
-              {tx.fechamentoFluxoBadgeEnviadoFatura || 'Enviado p/ fatura'}
-            </span>
-          )}
-          {etapa === 'controlo_pagamento' && (
-            <span style={{ ...chip, background: 'rgba(52, 211, 153, 0.15)', border: '1px solid rgba(52, 211, 153, 0.55)', color: '#ecfdf5' }}>
-              {tx.fechamentoFluxoBadgeControloPagamento || 'Controlo de pagamento'}
-            </span>
-          )}
-          {etapa !== 'none' && (
-            <span
-              style={{
-                ...chip,
-                background: modo === 'sem_fatura' ? 'rgba(147, 197, 253, 0.12)' : 'rgba(255, 255, 255, 0.06)',
-                border: modo === 'sem_fatura' ? '1px solid rgba(147, 197, 253, 0.5)' : '1px solid rgba(255,255,255,0.16)',
-                color: modo === 'sem_fatura' ? '#dbeafe' : 'rgba(255,255,255,0.85)',
-              }}
-              title={modo === 'sem_fatura' ? (tx.fechamentoFluxoModoSemFatura || 'Pagamento sem fatura') : (tx.fechamentoFluxoModoComFatura || 'Com fatura')}
-            >
-              {modo === 'sem_fatura' ? (tx.fechamentoFluxoModoSemFaturaShort || 'sem fatura') : (tx.fechamentoFluxoModoComFaturaShort || 'c/ fatura')}
-            </span>
-          )}
-          {etapa === 'controlo_pagamento' && (
-            <>
-              {pagamento === 'pendente' && (
-                <span style={{ ...chip, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.85)' }}>
-                  {tx.fechamentoFluxoPagamentoPendente || 'Não pago'}
-                </span>
-              )}
-              {pagamento === 'pago' && (
-                <span style={{ ...chip, background: 'rgba(34,197,94,0.14)', border: '1px solid rgba(34,197,94,0.55)', color: '#dcfce7' }}>
-                  {tx.fechamentoFluxoPagamentoPago || 'Pago'}
-                </span>
-              )}
-              {pagamento === 'devedor' && (
-                <span style={{ ...chip, background: 'rgba(248,113,113,0.14)', border: '1px solid rgba(248,113,113,0.55)', color: '#fee2e2' }}>
-                  {tx.fechamentoFluxoPagamentoDevedor || 'Devedor'}
-                </span>
-              )}
-            </>
-          )}
-          {situacaoFatura === 'emitida' && (
-            <span style={{ ...chip, background: 'rgba(251, 191, 36, 0.12)', border: '1px solid rgba(251, 191, 36, 0.45)', color: '#fffbeb' }}>
-              {tx.fechamentoSituacaoEmitida || 'Emitida'}
-            </span>
-          )}
-          {situacaoFatura === 'no_prazo' && (
-            <span style={{ ...chip, background: 'rgba(56, 189, 248, 0.12)', border: '1px solid rgba(56, 189, 248, 0.45)', color: '#e0f2fe' }}>
-              {tx.fechamentoSituacaoNoPrazo || 'No prazo de pagamento'}
-            </span>
-          )}
-          {situacaoFatura === 'paga' && (
-            <span style={{ ...chip, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.45)', color: '#ecfdf5' }}>
-              {tx.fechamentoSituacaoPaga || 'Paga'}
-            </span>
-          )}
-          {situacaoFatura === 'nao_paga' && (
-            <span style={{ ...chip, background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.45)', color: '#fee2e2' }}>
-              {tx.fechamentoSituacaoNaoPaga || 'Não paga'}
-            </span>
-          )}
-          {numeroFaturaRef ? (
-            <span
-              style={{ ...chip, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.88)' }}
-              title={tx.fechamentoNumeroFaturaTitulo || 'Nº fatura'}
-            >
-              {tx.fechamentoNumeroFaturaShort || 'Fatura'}: {numeroFaturaRef}
-            </span>
-          ) : null}
-        </div>
-        {!readOnly && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-            {etapa === 'none' && (
-              <button
-                type="button"
-                style={{ ...btnSm, borderColor: 'rgba(251, 191, 36, 0.45)', background: 'rgba(251, 191, 36, 0.08)' }}
-                onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'enviado_fatura', { modo: 'com_fatura', pagamento: 'pendente' })}
-              >
-                {tx.fechamentoFluxoBtnEnviarFatura || 'Marcar: enviado para criar fatura'}
-              </button>
-            )}
-            {etapa === 'none' && (
-              <button
-                type="button"
-                style={{ ...btnSm, borderColor: 'rgba(147, 197, 253, 0.5)', background: 'rgba(147, 197, 253, 0.08)', color: '#dbeafe' }}
-                onClick={() => {
-                  setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { modo: 'sem_fatura', pagamento: 'pendente' })
-                  openTab('clientes-financeiro', getTabTitle('clientes-financeiro'))
-                  setClientesFinanceiroActiveTab('despesasControle')
-                }}
-              >
-                {tx.fechamentoFluxoBtnPagamentoSemFatura || 'Marcar: pagamento sem fatura'}
-              </button>
-            )}
-            {etapa === 'enviado_fatura' && (
-              <>
-                <button
-                  type="button"
-                  style={{ ...btnSm, borderColor: 'rgba(52, 211, 153, 0.5)', background: 'rgba(22, 60, 40, 0.55)' }}
-                  onClick={() => {
-                    setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { modo: 'com_fatura' })
-                    openTab('clientes-financeiro', getTabTitle('clientes-financeiro'))
-                    setClientesFinanceiroActiveTab('despesasControle')
-                  }}
-                >
-                  {tx.fechamentoFluxoBtnControloFinanceiro || 'Em gestão financeira (pagamento)'}
-                </button>
-                <button type="button" style={btnSm} onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'none')}>
-                  {tx.fechamentoFluxoBtnVoltarPendente || 'Limpar «enviado p/ fatura»'}
-                </button>
-              </>
-            )}
-            {etapa === 'controlo_pagamento' && (
-              <>
-                <button
-                  type="button"
-                  style={{ ...btnSm, borderColor: 'rgba(34,197,94,0.5)', background: 'rgba(34,197,94,0.12)', color: '#dcfce7' }}
-                  onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { pagamento: 'pago' })}
-                >
-                  {tx.fechamentoFluxoBtnMarcarPago || 'Marcar: pago'}
-                </button>
-                <button
-                  type="button"
-                  style={{ ...btnSm, borderColor: 'rgba(255,255,255,0.22)', background: 'rgba(255,255,255,0.06)', color: '#fff' }}
-                  onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { pagamento: 'pendente' })}
-                >
-                  {tx.fechamentoFluxoBtnMarcarNaoPago || 'Marcar: não pago'}
-                </button>
-                <button
-                  type="button"
-                  style={{ ...btnSm, borderColor: 'rgba(248,113,113,0.55)', background: 'rgba(248,113,113,0.12)', color: '#fee2e2' }}
-                  onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { pagamento: 'devedor' })}
-                >
-                  {tx.fechamentoFluxoBtnMarcarDevedor || 'Marcar: devedor'}
-                </button>
-                <button type="button" style={btnSm} onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'enviado_fatura')}>
-                  {tx.fechamentoFluxoBtnVoltarEnviado || 'Voltar a «só enviado p/ fatura»'}
-                </button>
-                <button type="button" style={btnSm} onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'none')}>
-                  {tx.fechamentoFluxoBtnLimparMarcas || 'Limpar tudo'}
-                </button>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-    )
-  }
-
   const getTabModuleIntroText = (type: TabType): string => {
     const tr = safeT as Record<string, string | undefined>
     const pick = (keys: readonly string[]) => {
@@ -31550,7 +31362,7 @@ onKeyPress={(e) => {
                       </h4>
                       <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.45 }}>
                         {txc.clienteCadastroDespesasBibliotecaDesc ||
-                          'Fechamentos guardados na biblioteca: totais, estado (fatura / pagamento) e ações iguais à biblioteca de relatórios.'}
+                          'Fechamentos guardados na biblioteca: totais, consultar despesas e PDF (como na Biblioteca de relatórios).'}
                       </p>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {relsDespBib.map(rel => {
@@ -31582,7 +31394,6 @@ onKeyPress={(e) => {
                               <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.75)', marginBottom: '8px' }}>
                                 {rel.maquinaModelo} · {rel.data}
                               </div>
-                              <FechamentoFluxoFinanceiroStrip relatorioId={rel.id} compact />
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
                                 <button
                                   type="button"
@@ -52247,7 +52058,7 @@ A1;Peça exemplo;10`}
                     justifyContent: 'center',
                   }}
                 >
-                  📒 {(safeT as any)?.gestaoFinanceiraBtnControloDespesasBiblioteca || 'Despesas na biblioteca (fatura / pagamento)'}
+                  📒 {(safeT as any)?.gestaoFinanceiraBtnControloDespesasBiblioteca || 'Despesas na biblioteca'}
                 </button>
               </div>
             </div>
@@ -52400,7 +52211,7 @@ A1;Peça exemplo;10`}
                   {tab === 'devedores' && (safeT?.clientesDevedores || 'CLIENTES DEVEDORES')}
                   {tab === 'iva' && (safeT?.controleIVA || 'CONTROLE DE IVA')}
                   {tab === 'relatorios' && (safeT?.relatoriosFinanceiros || 'RELATÓRIOS')}
-                  {tab === 'despesasControle' && ((safeT as any)?.financeiroTabDespesasFaturaPagamento || 'DESPESAS · FATURA / PAGAMENTO')}
+                  {tab === 'despesasControle' && ((safeT as any)?.financeiroTabDespesasFaturaPagamento || 'DESPESAS · BIBLIOTECA')}
                 </button>
               ))}
             </div>
@@ -52676,7 +52487,7 @@ A1;Peça exemplo;10`}
                           </h3>
                           <p style={{ color: '#999', fontSize: '12px', margin: '0 0 14px', lineHeight: 1.45 }}>
                             {txOs.financeiroOsFechamentoDesc ||
-                              'Os mesmos fechamentos guardados na biblioteca de relatórios. Para alterar fatura/pagamento use o separador «Despesas · fatura / pagamento».'}
+                              'Os mesmos fechamentos guardados na biblioteca de relatórios. Consulte totais, PDF ou edite as despesas na Biblioteca (Editar despesas).'}
                           </p>
                           {listaFechOs.length === 0 ? (
                             <div style={{ color: '#777', fontSize: '13px' }}>
@@ -52714,9 +52525,6 @@ A1;Peça exemplo;10`}
                                     </div>
                                     <div style={{ fontSize: '12px', color: '#aaa', marginTop: '4px' }}>
                                       {txOs.total || 'Total'}: <strong style={{ color: '#ffcc66' }}>€{tot.toFixed(2)}</strong>
-                                    </div>
-                                    <div style={{ marginTop: '10px' }}>
-                                      <FechamentoFluxoFinanceiroStrip relatorioId={rel.id} readOnly />
                                     </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
                                       <button
@@ -52880,9 +52688,6 @@ A1;Peça exemplo;10`}
                                 >
                                   <div style={{ color: '#fff', fontWeight: 700, fontSize: '13px' }}>
                                     {rel.numero} · {clientes.find(c => c.id === rel.clienteId)?.nomeEmpresa || rel.cliente}
-                                  </div>
-                                  <div style={{ marginTop: '8px' }}>
-                                    <FechamentoFluxoFinanceiroStrip relatorioId={rel.id} compact readOnly />
                                   </div>
                                   <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                                     <span style={{ fontSize: '10px', color: '#aaa', width: '100%', marginBottom: '2px' }}>
@@ -53726,7 +53531,7 @@ A1;Peça exemplo;10`}
                     </h2>
                     <p style={{ color: '#aaa', fontSize: '13px', margin: '0 0 20px', maxWidth: '720px', lineHeight: 1.45 }}>
                       {tx.financeiroDespesasControleDesc ||
-                        'Marque o envio para fatura e, após criada, o controlo de pagamento. A mesma informação aparece na Biblioteca de relatórios e no cadastro do cliente.'}
+                        'Lista dos fechamentos na biblioteca: Ver, PDF ou editar despesas na pasta do cliente (Biblioteca de relatórios).'}
                     </p>
                     {lista.length === 0 ? (
                       <div style={{ textAlign: 'center', padding: '36px', color: '#888', border: '1px dashed rgba(0,255,0,0.25)', borderRadius: '10px' }}>
@@ -53770,7 +53575,6 @@ A1;Peça exemplo;10`}
                                   </div>
                                 </div>
                               </div>
-                              <FechamentoFluxoFinanceiroStrip relatorioId={rel.id} />
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                 <button
                                   type="button"
@@ -54380,7 +54184,6 @@ A1;Peça exemplo;10`}
                                         {relatorio.cliente} · {relatorio.maquinaModelo} · {(safeT as any)?.total || 'Total'}: <strong style={{ color: '#ffffff' }}>€{totalCobranca.toFixed(2)}</strong>
                                       </div>
                                     </div>
-                                    <FechamentoFluxoFinanceiroStrip relatorioId={relatorio.id} />
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                                       <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens: itensDespesasVisiveis })} style={{ ...btnBase, backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff' }}>
                                         👁️ {(safeT as any)?.visualizarDespesasBiblioteca ?? safeT?.view ?? 'View'}
