@@ -4708,7 +4708,13 @@ export default function Dashboard() {
     contato: '',
     photo: ''
   })
-  
+
+  /** Antes de gerar PDF/mail: valor, nota e anexos opcionais para a contabilidade. */
+  const [modalEnvioContabilidadeCliente, setModalEnvioContabilidadeCliente] = useState<Cliente | null>(null)
+  const [contabEnvioValor, setContabEnvioValor] = useState('')
+  const [contabEnvioNota, setContabEnvioNota] = useState('')
+  const [contabEnvioAnexos, setContabEnvioAnexos] = useState<File[]>([])
+
   // Estados para Sistema Financeiro
   const [ordensServico, setOrdensServico] = useState<OrdemServico[]>([])
   const [faturasPecas, setFaturasPecas] = useState<FaturaPecas[]>([])
@@ -10674,10 +10680,115 @@ export default function Dashboard() {
     return e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) ? `mailto:${e}` : 'mailto:'
   }
 
-  /** Ficha resumida (NIF, morada, contactos) para enviar à contabilidade — imprimir, PDF ou e-mail. */
-  const abrirClienteDadosContabilidade = (cliente: Cliente) => {
+  type ClienteContabEnvioModalOpts = { valorFatura?: string; notaFatura?: string; anexos?: File[] }
+
+  /** Corpo de texto (e-mail, WhatsApp, etc.) com dados + pedido faturação + ficheiros. */
+  const construirTextoPlanoClienteDadosContabilidade = (cliente: Cliente, opts?: ClienteContabEnvioModalOpts) => {
     const st = translations[selectedLanguage as keyof typeof translations] || translations['pt-BR']
-    const t = st as Record<string, string>
+    const t = st as Record<string, string> & {
+      contabilidadeBlocoPedidoFatura?: string
+      contabilidadeFaturaValorLabel?: string
+      contabilidadeFaturaNotaLabel?: string
+      contabilidadeAnexosListaTitulo?: string
+      contabilidadeAnexosInstrucaoCorpo?: string
+    }
+    const valorF = (opts?.valorFatura || '').trim()
+    const notaF = (opts?.notaFatura || '').trim()
+    const anexos = opts?.anexos && opts.anexos.length > 0 ? opts.anexos : []
+    const anexosLinhas = anexos.map(f => `${f.name} (${(f.size / 1024).toFixed(1)} KB)`)
+    const hasPedido = Boolean(valorF || notaF || anexosLinhas.length)
+    const val = (x: string | undefined) => (x && String(x).trim() ? String(x).trim() : '—')
+    const lblEmpresa = t.nomeEmpresa || 'Nome da Empresa'
+    const lblNif = t.identificacaoFiscal || 'NIF'
+    const lblMorada = t.morada || 'Morada'
+    const lblLocal = t.localidade || 'Localidade'
+    const lblCp = t.codigoPostal || 'Código Postal'
+    const lblFreg = t.freguesia || 'Freguesia'
+    const lblCons = t.conselho || 'Conselho'
+    const lblPais = t.pais || 'País'
+    const lblTel = t.telefones || 'Telefones'
+    const lblMail = t.email || 'E-mail'
+    const lblCont = t.contato || 'Contato'
+    const titulo = t.clienteDadosContabilidadeTitulo || 'Dados do cliente — contabilidade / faturação'
+    const docGerado = t.pdfDocumentoGeradoEm || 'Documento gerado em'
+    const localeStr =
+      selectedLanguage === 'pt-BR'
+        ? 'pt-PT'
+        : selectedLanguage === 'es'
+          ? 'es-ES'
+          : selectedLanguage === 'fr'
+            ? 'fr-FR'
+            : selectedLanguage === 'it'
+              ? 'it-IT'
+              : selectedLanguage === 'de'
+                ? 'de-DE'
+                : 'en-GB'
+    const dataHora = new Date().toLocaleString(localeStr)
+    const linhas: string[] = [
+      titulo,
+      '',
+      `${lblEmpresa}: ${val(cliente.nomeEmpresa)}`,
+      `${lblNif}: ${val(cliente.numeroContribuicaoFiscal)}`,
+      `${lblMorada}: ${val(cliente.morada)}`,
+      `${lblLocal}: ${val(cliente.localidade)}`,
+      `${lblCp}: ${val(cliente.codigoPostal)}`,
+      `${lblFreg}: ${val(cliente.freguesia)}`,
+      `${lblCons}: ${val(cliente.conselho)}`,
+      `${lblPais}: ${val(cliente.pais)}`,
+      `${lblTel}: ${val(cliente.telefones)}`,
+      `${lblMail}: ${val(cliente.email)}`,
+      `${lblCont}: ${val(cliente.contato)}`,
+    ]
+    if (hasPedido) {
+      const subPed = t.contabilidadeBlocoPedidoFatura || 'Pedido de faturação / referência'
+      const lVal = t.contabilidadeFaturaValorLabel || 'Valor (referência) a faturar'
+      const lNota = t.contabilidadeFaturaNotaLabel || 'Nota / instrução p/ a contabilidade'
+      const lAnx =
+        t.contabilidadeAnexosListaTitulo || 'Ficheiros a anexar ao e-mail (indicar no aparelho ao enviar):'
+      linhas.push(
+        '',
+        '— ' + subPed + ' —',
+        '',
+        ...(valorF ? [`${lVal}: ${valorF}`] : []),
+        ...(notaF ? [`${lNota}: ${notaF}`] : []),
+        ...(anexosLinhas.length ? [lAnx, ...anexosLinhas.map(n => '  • ' + n), ''] : []),
+        t.contabilidadeAnexosInstrucaoCorpo ||
+          'Nota: o atalho «Enviar por e-mail» do navegador não anexa ficheiros. Anexa-os no programa de e-mail, ou no telemóvel usa Partilhar se o sistema o permitir.',
+        '',
+      )
+    } else {
+      linhas.push('')
+    }
+    linhas.push(`${docGerado} ${dataHora}`)
+    return linhas.join('\n')
+  }
+
+  /** Abre o passo intermédio: valor, nota e ficheiros opcionais antes de gerar o documento. */
+  const abrirClienteDadosContabilidade = (cliente: Cliente) => {
+    setModalEnvioContabilidadeCliente(cliente)
+    setContabEnvioValor('')
+    setContabEnvioNota('')
+    setContabEnvioAnexos([])
+  }
+
+  /** Ficha resumida (NIF, morada, contactos) + pedido de faturação e lista de anexos — HTML para impressão e mailto. */
+  const gerarJanelaClienteDadosContabilidade = (cliente: Cliente, opts?: ClienteContabEnvioModalOpts) => {
+    const st = translations[selectedLanguage as keyof typeof translations] || translations['pt-BR']
+    const t = st as Record<string, string> & {
+      contabilidadeBlocoPedidoFatura?: string
+      contabilidadeFaturaValorLabel?: string
+      contabilidadeFaturaNotaLabel?: string
+      contabilidadeAnexosListaTitulo?: string
+      contabilidadeAnexosInstrucaoCorpo?: string
+      contabilidadeAnexosAvisoManual?: string
+    }
+    const valorF = (opts?.valorFatura || '').trim()
+    const notaF = (opts?.notaFatura || '').trim()
+    const anexos = opts?.anexos && opts.anexos.length > 0 ? opts.anexos : []
+    const anexosLinhas = anexos.map(f => `${f.name} (${(f.size / 1024).toFixed(1)} KB)`)
+    const hasPedido = Boolean(valorF || notaF || anexosLinhas.length)
+    const textoPlano = construirTextoPlanoClienteDadosContabilidade(cliente, opts)
+
     const escAttr = (s: string) =>
       String(s ?? '')
         .replace(/&/g, '&amp;')
@@ -10719,27 +10830,11 @@ export default function Dashboard() {
                 ? 'de-DE'
                 : 'en-GB'
     const dataHora = new Date().toLocaleString(localeStr)
-    const linhas = [
-      titulo,
-      '',
-      `${lblEmpresa}: ${val(cliente.nomeEmpresa)}`,
-      `${lblNif}: ${val(cliente.numeroContribuicaoFiscal)}`,
-      `${lblMorada}: ${val(cliente.morada)}`,
-      `${lblLocal}: ${val(cliente.localidade)}`,
-      `${lblCp}: ${val(cliente.codigoPostal)}`,
-      `${lblFreg}: ${val(cliente.freguesia)}`,
-      `${lblCons}: ${val(cliente.conselho)}`,
-      `${lblPais}: ${val(cliente.pais)}`,
-      `${lblTel}: ${val(cliente.telefones)}`,
-      `${lblMail}: ${val(cliente.email)}`,
-      `${lblCont}: ${val(cliente.contato)}`,
-      '',
-      `${docGerado} ${dataHora}`,
-    ]
-    const textoPlano = linhas.join('\n')
     const row = (label: string, cell: string) =>
       `<tr><td style="padding:10px 14px;border:1px solid #c8e6c9;font-weight:700;background:#e8f5e9;width:34%;vertical-align:top">${escAttr(label)}</td><td style="padding:10px 14px;border:1px solid #c8e6c9;vertical-align:top;word-break:break-word">${escAttr(cell)}</td></tr>`
-    const tableRows = [
+    const rowPed = (label: string, cell: string) =>
+      `<tr><td style="padding:10px 14px;border:1px solid #90caf9;font-weight:700;background:#e3f2fd;width:34%;vertical-align:top">${escAttr(label)}</td><td style="padding:10px 14px;border:1px solid #90caf9;vertical-align:top;word-break:break-word;white-space:pre-wrap">${escAttr(cell)}</td></tr>`
+    const mainRows = [
       row(lblEmpresa, val(cliente.nomeEmpresa)),
       row(lblNif, val(cliente.numeroContribuicaoFiscal)),
       row(lblMorada, val(cliente.morada)),
@@ -10752,10 +10847,33 @@ export default function Dashboard() {
       row(lblMail, val(cliente.email)),
       row(lblCont, val(cliente.contato)),
     ].join('')
+    let pedidoTableHtml = ''
+    if (hasPedido) {
+      const pTit = t.contabilidadeBlocoPedidoFatura || 'Pedido de faturação / referência'
+      const pRows: string[] = []
+      if (valorF) pRows.push(rowPed(t.contabilidadeFaturaValorLabel || 'Valor (referência) a faturar', valorF))
+      if (notaF) pRows.push(rowPed(t.contabilidadeFaturaNotaLabel || 'Nota / instrução', notaF))
+      if (anexosLinhas.length) {
+        pRows.push(
+          rowPed(
+            t.contabilidadeAnexosListaTitulo || 'Ficheiros selecionados p/ anexar',
+            anexosLinhas.join('\n')
+          )
+        )
+      }
+      pedidoTableHtml = `<div style="margin:20px 0 10px"><div style="font-size:15px;font-weight:700;color:#1565c0">${escAttr(
+        pTit
+      )}</div></div><table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px">${pRows.join('')}</table>
+      <p style="font-size:12px;color:#0d47a1;line-height:1.4;margin:0 0 16px">${escAttr(
+        t.contabilidadeAnexosInstrucaoCorpo ||
+          'O atalho de e-mail não anexa ficheiros. Anexa no teu correio, ou partilha pelo teu aparelho.'
+      )}</p>`
+    }
+    const tableRows = mainRows
     const mailSub = `${assuntoMail}${cliente.nomeEmpresa?.trim() ? ` — ${cliente.nomeEmpresa.trim().slice(0, 60)}` : ''}`
     const mailtoHref = `${mailtoPrefixContabilidade()}?subject=${encodeURIComponent(mailSub)}&body=${encodeURIComponent(textoPlano)}`
     const headerHtml = `<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:3px solid #00a650"><div style="font-size:20px;font-weight:700;color:#00a650">${escAttr(titulo)}</div><p style="margin:10px 0 0;font-size:13px;color:#444;line-height:1.45">${escAttr(sub)}</p></div>`
-    const tableHtml = `<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:24px">${tableRows}</table>`
+    const tableHtml = `<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px">${tableRows}</table>${pedidoTableHtml}`
     const rodape = `<div style="margin-top:28px;padding-top:16px;border-top:1px solid #e0e0e0;font-size:11px;color:#666">${escAttr(docGerado)} ${escAttr(dataHora)}</div><div style="font-size:10px;color:#999;margin-top:6px">Nonato Service</div>`
     const preHidden = `<pre id="dados-cli-pre-contab" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;margin:0">${preEsc(textoPlano)}</pre>`
     const btns = `<div class="no-print" style="margin-bottom:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center"><button type="button" onclick="window.print()" style="padding:12px 24px;background:#00a650;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">${escAttr(lblImprimir)}</button><button type="button" onclick="window.close()" style="padding:12px 20px;background:#37474f;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px">${escAttr(lblFechar)}</button><a href="${escAttr(mailtoHref)}" style="padding:12px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;text-decoration:none;display:inline-block;font-weight:600;font-size:13px">${escAttr(lblEmail)}</a><button type="button" data-msg="${escAttr(lblCopiado)}" onclick="(function(b){var el=document.getElementById('dados-cli-pre-contab');var tx=el?el.textContent:'';var m=b.getAttribute('data-msg')||'';if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(tx).then(function(){alert(m);}).catch(function(){window.prompt(m,tx);});}else{window.prompt(m,tx);}})(this)" style="padding:12px 20px;background:#5d4037;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">${escAttr(lblCopiar)}</button></div>`
@@ -10769,6 +10887,69 @@ export default function Dashboard() {
     printWin.document.write(html)
     printWin.document.close()
     printWin.focus()
+    if (anexos.length) {
+      const lembrete = (names: string) =>
+        (t.contabilidadeAnexosAvisoManual || 'Lembrete: o e-mail deste ecrã não envia ficheiros automaticamente. Anexa: ') +
+        names
+      const nomes = anexos.map(f => f.name).join(', ')
+      const n = navigator as Navigator & { share?: (data: ShareData) => Promise<void>; canShare?: (d: ShareData) => boolean }
+      try {
+        if (typeof n.share === 'function' && typeof n.canShare === 'function' && n.canShare({ files: anexos })) {
+          void n
+            .share({ title: mailSub, text: textoPlano, files: anexos })
+            .catch(() => window.alert(lembrete(nomes)))
+        } else {
+          window.alert(lembrete(nomes))
+        }
+      } catch {
+        window.alert(lembrete(nomes))
+      }
+    }
+  }
+
+  const fecharModalEnvioContabilidade = () => {
+    setModalEnvioContabilidadeCliente(null)
+    setContabEnvioValor('')
+    setContabEnvioNota('')
+    setContabEnvioAnexos([])
+  }
+
+  const confirmarEnvioDadosContabilidadeCliente = () => {
+    const c = modalEnvioContabilidadeCliente
+    if (!c) return
+    const v = contabEnvioValor
+    const n = contabEnvioNota
+    const a = contabEnvioAnexos
+    fecharModalEnvioContabilidade()
+    gerarJanelaClienteDadosContabilidade(c, { valorFatura: v, notaFatura: n, anexos: a })
+  }
+
+  const copiarTextoContabilidadeModalParaOutrosCanais = () => {
+    const c = modalEnvioContabilidadeCliente
+    if (!c) return
+    const st = translations[selectedLanguage as keyof typeof translations] || translations['pt-BR']
+    const t = st as Record<string, string> & { clienteDadosContabilidadeCopiado?: string }
+    const text = construirTextoPlanoClienteDadosContabilidade(c, {
+      valorFatura: contabEnvioValor,
+      notaFatura: contabEnvioNota,
+      anexos: contabEnvioAnexos,
+    })
+    const tr = t as Record<string, string>
+    const base = t.clienteDadosContabilidadeCopiado || 'Texto copiado para a área de transferência.'
+    const dicaF =
+      contabEnvioAnexos.length > 0
+        ? (tr as any).contabilidadeEnvioCopiarCanaisDicaFicheiros ||
+          'Ficheiros não vão no texto. Envia esses ficheiros à parte (p. ex. noutro anexo) ou anexa depois no e-mail.'
+        : ''
+    const msgAposCopiar = dicaF ? `${base}\n\n${dicaF}` : base
+    if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+      void navigator.clipboard.writeText(text).then(
+        () => window.alert(msgAposCopiar),
+        () => window.prompt(base, text)
+      )
+    } else {
+      window.prompt(base, text)
+    }
   }
 
   /** Documento de fechamento (linhas + total + dados fiscais do cliente) para a contabilidade emitir fatura. */
@@ -42881,6 +43062,130 @@ A1;Peça exemplo;10`}
                   </div>
                 </div>
 
+                <div
+                  style={{
+                    marginBottom: 18,
+                    padding: '16px 18px',
+                    borderRadius: 12,
+                    border: '1px solid rgba(56, 189, 248, 0.4)',
+                    background: 'linear-gradient(165deg, rgba(15, 30, 48, 0.95), rgba(10, 18, 32, 0.98))',
+                    boxShadow: '0 0 24px rgba(56, 189, 248, 0.08)',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 800,
+                      color: '#7dd3fc',
+                      marginBottom: 4,
+                      letterSpacing: 0.02,
+                    }}
+                  >
+                    {(safeT as any)?.fechamentoIvaTitulo || 'IVA no fecho (ordem de serviço / relatório)'}
+                  </div>
+                  <p
+                    style={{
+                      margin: '0 0 12px 0',
+                      fontSize: 12,
+                      lineHeight: 1.45,
+                      color: 'rgba(226, 232, 240, 0.88)',
+                      maxWidth: 720,
+                    }}
+                  >
+                    {(safeT as any)?.fechamentoIvaIntro ||
+                      'Escolhe o valor que o cliente paga: «sem IVA» = linhas no total (B2B ou excluído); «com IVA» = acrescenta IVA na taxa que meteres. Fica guardado para este número de relatório / OS.'}
+                  </p>
+                  <div
+                    style={{
+                      display: 'inline-block',
+                      marginBottom: 12,
+                      padding: '6px 10px',
+                      borderRadius: 8,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      color: ivaOptsFech.incluirIva ? '#7dd3fc' : '#86efac',
+                      background: ivaOptsFech.incluirIva
+                        ? 'rgba(56, 189, 248, 0.12)'
+                        : 'rgba(34, 197, 94, 0.12)',
+                    }}
+                  >
+                    {ivaOptsFech.incluirIva
+                      ? (
+                          (safeT as any)?.fechamentoBadgeComIva ||
+                          'Modo: com IVA a {{taxa}}% — total final a enviar'
+                        )
+                          .replace(/\{\{taxa\}\}/g, String(ivaOptsFech.taxaIva))
+                      : (safeT as any)?.fechamentoBadgeSemIva || 'Modo: s/ IVA — soma das linhas a enviar'}
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginBottom: 12 }}>
+                    <button
+                      type="button"
+                      onClick={() => patchFechamentoIvaLocal({ incluirIva: false })}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: 8,
+                        border: !ivaOptsFech.incluirIva ? '2px solid #22c55e' : '1px solid #555',
+                        background: !ivaOptsFech.incluirIva ? 'rgba(34, 197, 94, 0.2)' : 'transparent',
+                        color: !ivaOptsFech.incluirIva ? '#86efac' : '#888',
+                        cursor: 'pointer',
+                        fontWeight: !ivaOptsFech.incluirIva ? 700 : 500,
+                        fontSize: 13,
+                      }}
+                    >
+                      {(safeT as any)?.fechamentoSemIvaBtn || 'Fechamento sem IVA'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => patchFechamentoIvaLocal({ incluirIva: true })}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: 8,
+                        border: ivaOptsFech.incluirIva ? '2px solid #38bdf8' : '1px solid #555',
+                        background: ivaOptsFech.incluirIva ? 'rgba(56, 189, 248, 0.18)' : 'transparent',
+                        color: ivaOptsFech.incluirIva ? '#bae6fd' : '#888',
+                        cursor: 'pointer',
+                        fontWeight: ivaOptsFech.incluirIva ? 700 : 500,
+                        fontSize: 13,
+                      }}
+                    >
+                      {(safeT as any)?.fechamentoComIvaBtn || 'Fechamento com IVA'}
+                    </button>
+                  </div>
+                  {ivaOptsFech.incluirIva && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
+                      <label
+                        style={{ fontSize: 12, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 8 }}
+                      >
+                        {(safeT as any)?.fechamentoIvaTaxaLabel || 'Taxa de IVA (%)'}
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={0.5}
+                          value={ivaOptsFech.taxaIva}
+                          onChange={e => patchFechamentoIvaLocal({ taxaIva: parseFloat(e.target.value) || 0 })}
+                          style={{
+                            width: 88,
+                            padding: '8px 10px',
+                            borderRadius: 8,
+                            border: '1px solid rgba(56, 189, 248, 0.45)',
+                            background: '#141414',
+                            color: '#fff',
+                            fontSize: 14,
+                          }}
+                        />
+                      </label>
+                      <span
+                        style={{ fontSize: 11, color: '#64748b', maxWidth: 420, lineHeight: 1.45 }}
+                      >
+                        {(safeT as any)?.fechamentoIvaTaxaHint ||
+                          'Ex.: 23 Portugal, 21 Espanha, 22 Itália. Sobre a soma das linhas (base). O valor em cada linha é s/ IVA.'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
                 <div style={{ padding: '20px', backgroundColor: '#1e1e1e', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.25)' }}>
                   <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '16px' }}>
                     <h3 style={{ margin: 0, color: '#00ff00', fontSize: '16px' }}>{(safeT as any)?.itensCobrancaFechamento || 'Itens a cobrar (ajuste com o Cadastro de Serviços)'}</h3>
@@ -42924,81 +43229,6 @@ A1;Peça exemplo;10`}
                       ))}
                     </div>
                   )}
-                  <div
-                    style={{
-                      marginBottom: '16px',
-                      padding: '14px 16px',
-                      borderRadius: '12px',
-                      border: '1px solid rgba(56, 189, 248, 0.35)',
-                      background: 'rgba(15, 23, 42, 0.55)',
-                    }}
-                  >
-                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#7dd3fc', marginBottom: '10px', letterSpacing: '0.04em' }}>
-                      {(safeT as any)?.fechamentoIvaTitulo || 'IVA no fecho (ordem de serviço / relatório)'}
-                    </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', marginBottom: '12px' }}>
-                      <button
-                        type="button"
-                        onClick={() => patchFechamentoIvaLocal({ incluirIva: false })}
-                        style={{
-                          padding: '8px 16px',
-                          borderRadius: '8px',
-                          border: !ivaOptsFech.incluirIva ? '2px solid #22c55e' : '1px solid #555',
-                          background: !ivaOptsFech.incluirIva ? 'rgba(34, 197, 94, 0.2)' : 'transparent',
-                          color: !ivaOptsFech.incluirIva ? '#86efac' : '#888',
-                          cursor: 'pointer',
-                          fontWeight: !ivaOptsFech.incluirIva ? 700 : 500,
-                          fontSize: '13px',
-                        }}
-                      >
-                        {(safeT as any)?.fechamentoSemIvaBtn || 'Fechamento sem IVA'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => patchFechamentoIvaLocal({ incluirIva: true })}
-                        style={{
-                          padding: '8px 16px',
-                          borderRadius: '8px',
-                          border: ivaOptsFech.incluirIva ? '2px solid #38bdf8' : '1px solid #555',
-                          background: ivaOptsFech.incluirIva ? 'rgba(56, 189, 248, 0.18)' : 'transparent',
-                          color: ivaOptsFech.incluirIva ? '#bae6fd' : '#888',
-                          cursor: 'pointer',
-                          fontWeight: ivaOptsFech.incluirIva ? 700 : 500,
-                          fontSize: '13px',
-                        }}
-                      >
-                        {(safeT as any)?.fechamentoComIvaBtn || 'Fechamento com IVA'}
-                      </button>
-                    </div>
-                    {ivaOptsFech.incluirIva && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px' }}>
-                        <label style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {(safeT as any)?.fechamentoIvaTaxaLabel || 'Taxa de IVA (%)'}
-                          <input
-                            type="number"
-                            min={0}
-                            max={100}
-                            step={0.5}
-                            value={ivaOptsFech.taxaIva}
-                            onChange={e => patchFechamentoIvaLocal({ taxaIva: parseFloat(e.target.value) || 0 })}
-                            style={{
-                              width: '88px',
-                              padding: '8px 10px',
-                              borderRadius: '8px',
-                              border: '1px solid rgba(56, 189, 248, 0.45)',
-                              background: '#141414',
-                              color: '#fff',
-                              fontSize: '14px',
-                            }}
-                          />
-                        </label>
-                        <span style={{ fontSize: '11px', color: '#64748b', maxWidth: '420px', lineHeight: 1.45 }}>
-                          {(safeT as any)?.fechamentoIvaTaxaHint ||
-                            'Ex.: 23 Portugal, 21 Espanha, 22 Itália. Aplica-se sobre a soma das linhas (base).'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
                   <div className="fechamento-relatorios-servicos-table-host" style={{ width: '100%', overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', color: '#ccc' }}>
                     <thead>
@@ -43122,12 +43352,12 @@ A1;Peça exemplo;10`}
                             ? (safeT as any)?.fechamentoTotalBaseLinhas || 'Soma das linhas (s/ IVA)'
                             : (safeT as any)?.somaTotal || 'SOMA TOTAL'}
                         </td>
-                        <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', fontSize: '16px', color: '#00ff00' }}>{totalCobranca.toFixed(2)} €</td>
+                        <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', fontSize: '16px', color: '#00ff00' }}>{fechTotIva.liquido.toFixed(2)} €</td>
                         <td style={{ padding: '12px 8px' }}></td>
                         {itensParaExibir.some(i => i.origem === 'manual') && <td style={{ padding: '12px 8px' }}></td>}
                         <td style={{ padding: '12px 8px' }}></td>
                       </tr>
-                      {ivaOptsFech.incluirIva && fechTotIva.iva > 0.0001 && (
+                      {ivaOptsFech.incluirIva && (
                         <>
                           <tr style={{ background: 'rgba(56, 189, 248, 0.08)' }}>
                             <td colSpan={4} style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 600, color: '#7dd3fc' }}>
@@ -43154,8 +43384,52 @@ A1;Peça exemplo;10`}
                   </div>
                   <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                     <button type="button" className="btn-primary" onClick={adicionarItemManual} style={{ padding: '8px 16px' }}>+ {(safeT as any)?.adicionarItemCobranca || 'Adicionar item a cobrar'}</button>
-                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>
-                      {(safeT as any)?.totalComIva || 'Total (com IVA se aplicável)'}: {fechTotIva.comIva.toFixed(2)} €
+                    <div
+                      style={{
+                        textAlign: 'right',
+                        fontSize: 12,
+                        color: 'rgba(255,255,255,0.85)',
+                        maxWidth: 520,
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {ivaOptsFech.incluirIva ? (
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 18,
+                              fontWeight: 'bold',
+                              color: '#7dd3fc',
+                              marginBottom: 4,
+                            }}
+                          >
+                            {(safeT as any)?.fechamentoResumoTotalComIva || 'Total a enviar (com IVA)'}:{' '}
+                            {fechTotIva.comIva.toFixed(2)} €
+                          </div>
+                          <div style={{ fontSize: 12, color: 'rgba(148, 163, 184, 0.95)' }}>
+                            {(safeT as any)?.fechamentoResumoComIvaDetalhe || 'Inclui'} {fechTotIva.liquido.toFixed(2)} €
+                            {` ${(safeT as any)?.fechamentoResumoMaisIva || '+'} `}
+                            {fechTotIva.iva.toFixed(2)} € {(safeT as any)?.valorIva || 'IVA'} ({fechTotIva.taxa}%)
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 18,
+                              fontWeight: 'bold',
+                              color: '#4ade80',
+                              marginBottom: 4,
+                            }}
+                          >
+                            {(safeT as any)?.fechamentoResumoTotalSemIva || 'Total a enviar (s/ IVA)'}:{' '}
+                            {fechTotIva.liquido.toFixed(2)} €
+                          </div>
+                          <div style={{ fontSize: 12, color: 'rgba(148, 163, 184, 0.95)' }}>
+                            {(safeT as any)?.fechamentoResumoSemIvaDica || 'Clica em «Fechamento com IVA» acima se o cliente paga IVA em cima destes valores.'}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
@@ -66048,6 +66322,167 @@ A1;Peça exemplo;10`}
             <button className="btn-primary" onClick={() => setShowClientesModal(false)} style={{ width: '100%', marginTop: '20px' }}>
               {safeT?.close || 'Fechar'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {modalEnvioContabilidadeCliente && (
+        <div
+          className="modal-overlay"
+          style={{ zIndex: 10056 }}
+          onClick={fecharModalEnvioContabilidade}
+        >
+          <div
+            className="modal"
+            onClick={e => e.stopPropagation()}
+            style={{
+              maxWidth: 520,
+              width: '100%',
+              border: '1px solid rgba(100, 181, 246, 0.45)',
+              background: 'linear-gradient(180deg, rgba(18, 32, 48, 0.98), rgba(12, 20, 28, 0.99))',
+            }}
+          >
+            <h2 style={{ margin: '0 0 6px 0', fontSize: 18, color: '#7dd3fc' }}>
+              {(safeT as any)?.contabilidadeEnvioModalTitulo || 'Enviar à contabilidade'}
+            </h2>
+            <p style={{ margin: '0 0 14px', fontSize: 13, color: 'rgba(255,255,255,0.82)' }}>
+              {modalEnvioContabilidadeCliente.nomeEmpresa}
+            </p>
+            <label
+              style={{ display: 'block', marginBottom: 4, fontSize: 12, color: '#a5d4fa' }}
+              htmlFor="contab-envio-valor"
+            >
+              {(safeT as any)?.contabilidadeEnvioValorLabel || 'Valor a faturar (opcional)'}
+            </label>
+            <input
+              id="contab-envio-valor"
+              type="text"
+              value={contabEnvioValor}
+              onChange={e => setContabEnvioValor(e.target.value)}
+              placeholder={(safeT as any)?.contabilidadeEnvioValorPlaceholder || 'Ex.: 150,00 ou 150,00 €'}
+              style={{
+                width: '100%',
+                boxSizing: 'border-box',
+                marginBottom: 12,
+                padding: '8px 10px',
+                borderRadius: 6,
+                border: '1px solid rgba(100, 181, 246, 0.35)',
+                background: 'rgba(0,0,0,0.35)',
+                color: '#fff',
+              }}
+            />
+            <label
+              style={{ display: 'block', marginBottom: 4, fontSize: 12, color: '#a5d4fa' }}
+              htmlFor="contab-envio-nota"
+            >
+              {(safeT as any)?.contabilidadeEnvioNotaLabel || 'Nota para a contabilidade (opcional)'}
+            </label>
+            <textarea
+              id="contab-envio-nota"
+              value={contabEnvioNota}
+              onChange={e => setContabEnvioNota(e.target.value)}
+              rows={2}
+              placeholder={
+                (safeT as any)?.contabilidadeEnvioNotaPlaceholder || 'Nº requisição, proposta, serviço a faturar…'
+              }
+              style={{
+                width: '100%',
+                boxSizing: 'border-box',
+                marginBottom: 12,
+                padding: '8px 10px',
+                borderRadius: 6,
+                border: '1px solid rgba(100, 181, 246, 0.35)',
+                background: 'rgba(0,0,0,0.35)',
+                color: '#fff',
+                resize: 'vertical',
+                minHeight: 44,
+              }}
+            />
+            <label
+              style={{ display: 'block', marginBottom: 4, fontSize: 12, color: '#a5d4fa' }}
+              htmlFor="contab-envio-anx"
+            >
+              {(safeT as any)?.contabilidadeEnvioAnexosLabel || 'Ficheiros em anexo (opcional)'}
+            </label>
+            <input
+              id="contab-envio-anx"
+              type="file"
+              multiple
+              onChange={e => setContabEnvioAnexos(Array.from(e.target.files || []))}
+              style={{ width: '100%', marginBottom: 8, fontSize: 12, color: '#e2e8f0' }}
+            />
+            {contabEnvioAnexos.length > 0 && (
+              <ul style={{ margin: '0 0 10px', paddingLeft: 18, fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>
+                {contabEnvioAnexos.map(f => (
+                  <li key={f.name + f.size}>
+                    {f.name} <span style={{ color: '#94a3b8' }}>({(f.size / 1024).toFixed(1)} KB)</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p
+              style={{
+                margin: '0 0 12px',
+                fontSize: 11,
+                lineHeight: 1.45,
+                color: 'rgba(255,255,255,0.68)',
+                borderLeft: '3px solid rgba(100, 181, 246, 0.45)',
+                paddingLeft: 10,
+              }}
+            >
+              {(safeT as any)?.contabilidadeEnvioAnexosHelp ||
+                'O texto e os dados do cliente entram no documento e no e-mail. Os ficheiros não seguem sozinhos: no PC anexa-os depois de abrir o e-mail, ou no telemóvel usa «Partilhar» se o browser o permitir.'}
+            </p>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={copiarTextoContabilidadeModalParaOutrosCanais}
+              style={{
+                width: '100%',
+                marginBottom: 12,
+                padding: '10px 14px',
+                fontSize: 12,
+                lineHeight: 1.35,
+                background: 'rgba(93, 64, 55, 0.55)',
+                borderColor: 'rgba(188, 170, 164, 0.45)',
+                boxSizing: 'border-box',
+              }}
+            >
+              {(safeT as any)?.contabilidadeEnvioBotaoCopiarCanais ||
+                'Copiar texto p/ colar noutro canal (WhatsApp, Teams, e-mail, etc.)'}
+            </button>
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 10,
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: 0,
+              }}
+            >
+              <button type="button" className="btn-primary" onClick={fecharModalEnvioContabilidade}>
+                {(safeT as any)?.contabilidadeEnvioCancelar || safeT?.voltar || 'Voltar'}
+              </button>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  style={{ background: 'rgba(100, 116, 139, 0.45)' }}
+                  onClick={() => {
+                    const c = modalEnvioContabilidadeCliente
+                    if (!c) return
+                    fecharModalEnvioContabilidade()
+                    gerarJanelaClienteDadosContabilidade(c, undefined)
+                  }}
+                >
+                  {(safeT as any)?.contabilidadeEnvioSaltar || 'Apenas dados (sem anexos)'}
+                </button>
+                <button type="button" className="btn-primary" onClick={confirmarEnvioDadosContabilidadeCliente}>
+                  {(safeT as any)?.contabilidadeEnvioContinuar || 'Continuar e abrir documento / e-mail'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
