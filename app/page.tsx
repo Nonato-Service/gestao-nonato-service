@@ -31249,7 +31249,14 @@ onKeyPress={(e) => {
               <div>
                 {showClienteForm && (
               <div
-                className={editingCliente && clienteCadastroAlertaDevedorId === editingCliente.id ? 'cliente-form-alerta-devedor' : undefined}
+                className={
+                  editingCliente &&
+                  (clienteCadastroAlertaDevedorId === editingCliente.id ||
+                    (Boolean(editingCliente.isDevedor) &&
+                      Number(editingCliente.saldoPendente ?? 0) > 0))
+                    ? 'cliente-form-alerta-devedor'
+                    : undefined
+                }
                 style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', flexWrap: 'wrap', gap: '10px' }}>
@@ -31265,6 +31272,62 @@ onKeyPress={(e) => {
                     </button>
                   )}
                 </div>
+
+                {editingCliente &&
+                  Boolean(editingCliente.isDevedor) &&
+                  Number(editingCliente.saldoPendente ?? 0) > 0 && (
+                    <div
+                      style={{
+                        marginBottom: '14px',
+                        padding: '12px 14px',
+                        borderRadius: '8px',
+                        background: 'rgba(70, 0, 0, 0.5)',
+                        border: '1px solid rgba(255, 100, 100, 0.48)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          color: '#fecaca',
+                          letterSpacing: '0.05em',
+                        }}
+                      >
+                        {(safeT as any)?.clienteDevedorBadge || 'Devedor'}
+                      </div>
+                      <div style={{ fontSize: '15px', color: '#fff', marginTop: '6px', fontWeight: 700 }}>
+                        {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
+                        {Number(editingCliente.saldoPendente ?? 0).toFixed(2)}
+                      </div>
+                      {(() => {
+                        const nums = (
+                          clientesDevedores.find(
+                            d => d.clienteId === editingCliente.id && d.isDevedor
+                          )?.faturasPendentes ?? []
+                        )
+                          .map(f => f.numeroFatura)
+                          .filter(Boolean)
+                        if (nums.length === 0) return null
+                        const txt =
+                          nums.length <= 6
+                            ? nums.join(', ')
+                            : `${nums.slice(0, 6).join(', ')} (+${nums.length - 6})`
+                        return (
+                          <div
+                            style={{
+                              fontSize: '12px',
+                              color: '#fca5a5',
+                              marginTop: '8px',
+                              wordBreak: 'break-word',
+                              lineHeight: 1.35,
+                            }}
+                          >
+                            {(safeT as any)?.clienteDevedorFaturasLabel || 'Faturas em aberto'}: {txt}
+                          </div>
+                        )
+                      })()}
+                    </div>
+                  )}
                 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
                   <div>
@@ -31632,17 +31695,44 @@ onKeyPress={(e) => {
                               : (safeT as any)?.semFaturas || 'Sem Faturas'
                       const badgeF = getClienteFaturaBadgeProps(cliente.id)
                       const alertaDevedor = clienteCadastroAlertaDevedorId === cliente.id
-                      
+                      const devedorDetalhe = clientesDevedores.find(
+                        d => d.clienteId === cliente.id && d.isDevedor && d.saldoPendente > 0
+                      )
+                      const ehDevedor =
+                        Boolean(cliente.isDevedor) && Number(cliente.saldoPendente ?? 0) > 0
+                      const highlightDevedor = ehDevedor || alertaDevedor
+                      const valorDividaPecas =
+                        devedorDetalhe?.saldoPendente ?? Number(cliente.saldoPendente ?? 0)
+                      const numsFaturaPecas = (devedorDetalhe?.faturasPendentes ?? [])
+                        .map(f => f.numeroFatura)
+                        .filter(Boolean)
+                      const faturasResumoPecas =
+                        numsFaturaPecas.length === 0
+                          ? ''
+                          : numsFaturaPecas.length <= 5
+                            ? numsFaturaPecas.join(', ')
+                            : `${numsFaturaPecas.slice(0, 5).join(', ')} (+${numsFaturaPecas.length - 5})`
+
                       return (
                         <div 
                           key={cliente.id}
                           data-cliente-card-id={cliente.id}
-                          className={`cliente-lista-card${alertaDevedor ? ' cliente-card-alerta-devedor' : ''}`}
+                          className={[
+                            'cliente-lista-card',
+                            ehDevedor ? 'cliente-lista-card-devedor' : '',
+                            highlightDevedor ? 'cliente-card-alerta-devedor' : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' ')}
                           style={{ 
-                            backgroundColor: '#222222', 
+                            ...(ehDevedor
+                              ? {}
+                              : {
+                                  backgroundColor: '#222222',
+                                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                                }),
                             padding: '8px', 
                             borderRadius: '6px', 
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
                             display: 'flex',
                             gap: '8px',
                             alignItems: 'center',
@@ -31699,7 +31789,7 @@ onKeyPress={(e) => {
                               <div style={{ flex: 1, minWidth: 0 }}>
                                 <h3 style={{ 
                                   margin: 0, 
-                                  color: alertaDevedor ? '#ff6666' : '#fff', 
+                                  color: highlightDevedor ? (ehDevedor ? '#fff' : '#ff6666') : '#fff', 
                                   fontSize: '14px',
                                   fontWeight: 'bold',
                                   wordBreak: 'break-word',
@@ -31709,7 +31799,7 @@ onKeyPress={(e) => {
                                 </h3>
                                 <p style={{ 
                                   margin: 0, 
-                                  color: alertaDevedor ? '#ff8888' : '#888', 
+                                  color: highlightDevedor ? (ehDevedor ? '#fecaca' : '#ff8888') : '#888', 
                                   fontSize: '11px',
                                   wordBreak: 'break-word',
                                   lineHeight: 1.3
@@ -31722,9 +31812,13 @@ onKeyPress={(e) => {
                                 {/* Badge de Status */}
                                 <div
                                   style={{
-                                    backgroundColor: alertaDevedor ? 'rgba(160, 0, 0, 0.9)' : badgeF.bg,
-                                    color: alertaDevedor ? '#ffcccc' : badgeF.fg,
-                                    border: alertaDevedor ? '1px solid rgba(255, 120, 120, 0.55)' : badgeF.border,
+                                    backgroundColor:
+                                      ehDevedor || alertaDevedor ? 'rgba(160, 0, 0, 0.9)' : badgeF.bg,
+                                    color: ehDevedor || alertaDevedor ? '#ffcccc' : badgeF.fg,
+                                    border:
+                                      ehDevedor || alertaDevedor
+                                        ? '1px solid rgba(255, 120, 120, 0.55)'
+                                        : badgeF.border,
                                     padding: '2px 6px',
                                     borderRadius: '10px',
                                     fontSize: '9px',
@@ -31734,25 +31828,33 @@ onKeyPress={(e) => {
                                     gap: '3px',
                                     whiteSpace: 'nowrap',
                                     boxShadow:
-                                      !alertaDevedor && statusFaturas === 'pendente'
+                                      !ehDevedor && !alertaDevedor && statusFaturas === 'pendente'
                                         ? '0 0 12px rgba(253, 224, 71, 0.42)'
-                                        : !alertaDevedor && statusFaturas === 'sem-faturas'
+                                        : !ehDevedor && !alertaDevedor && statusFaturas === 'sem-faturas'
                                           ? '0 0 10px rgba(255, 255, 255, 0.22)'
-                                          : !alertaDevedor && statusFaturas === 'atrasado'
+                                          : !ehDevedor && !alertaDevedor && statusFaturas === 'atrasado'
                                             ? '0 0 12px rgba(220, 38, 38, 0.45)'
                                             : undefined,
                                   }}
                                 >
-                                  {!alertaDevedor && (
+                                  {!ehDevedor && !alertaDevedor && (
                                     <span style={{ fontWeight: 800, lineHeight: 1 }}>{badgeF.mark}</span>
                                   )}
-                                  {alertaDevedor && <span style={{ fontWeight: 800 }}>!</span>}
-                                  <span>{alertaDevedor ? statusText : badgeF.label}</span>
+                                  {(ehDevedor || alertaDevedor) && (
+                                    <span style={{ fontWeight: 800 }}>!</span>
+                                  )}
+                                  <span>
+                                    {ehDevedor
+                                      ? (safeT as any)?.clienteDevedorBadge || 'Devedor'
+                                      : alertaDevedor
+                                        ? statusText
+                                        : badgeF.label}
+                                  </span>
                                 </div>
                                 
                                 {/* Menu de Opções */}
                                 <div style={{ cursor: 'pointer', padding: '1px' }}>
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={alertaDevedor ? '#ff6666' : '#888'} strokeWidth="2">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={highlightDevedor ? '#ff6666' : '#888'} strokeWidth="2">
                                     <circle cx="12" cy="5" r="1.5"/>
                                     <circle cx="12" cy="12" r="1.5"/>
                                     <circle cx="12" cy="19" r="1.5"/>
@@ -31764,8 +31866,8 @@ onKeyPress={(e) => {
                             {/* Endereço e NIF em linha */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
                               {(cliente.morada || cliente.codigoPostal) && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: alertaDevedor ? '#ff9999' : '#aaa', fontSize: '10px', flexWrap: 'wrap' }}>
-                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={alertaDevedor ? '#ff7777' : '#888'} strokeWidth="2">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: highlightDevedor ? '#ff9999' : '#aaa', fontSize: '10px', flexWrap: 'wrap' }}>
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={highlightDevedor ? '#ff7777' : '#888'} strokeWidth="2">
                                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
                                   </svg>
@@ -31777,7 +31879,7 @@ onKeyPress={(e) => {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     title={(safeT as any)?.abrirGoogleMaps || 'Abrir no Google Maps'}
-                                    style={{ marginLeft: '4px', color: alertaDevedor ? '#ff8888' : '#6ba3f6', textDecoration: 'none', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
+                                    style={{ marginLeft: '4px', color: highlightDevedor ? '#ff8888' : '#6ba3f6', textDecoration: 'none', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
                                   >
                                     🗺️ {(safeT as any)?.verNoMaps || 'Ver no Maps'}
                                   </a>
@@ -31785,8 +31887,8 @@ onKeyPress={(e) => {
                               )}
                               
                               {cliente.numeroContribuicaoFiscal && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: alertaDevedor ? '#ff9999' : '#aaa', fontSize: '10px' }}>
-                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={alertaDevedor ? '#ff7777' : '#888'} strokeWidth="2">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: highlightDevedor ? '#ff9999' : '#aaa', fontSize: '10px' }}>
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={highlightDevedor ? '#ff7777' : '#888'} strokeWidth="2">
                                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                                     <line x1="3" y1="10" x2="21" y2="10"></line>
                                     <line x1="7" y1="2" x2="7" y2="6"></line>
@@ -31796,6 +31898,39 @@ onKeyPress={(e) => {
                                 </div>
                               )}
                             </div>
+
+                            {ehDevedor && valorDividaPecas > 0 && (
+                              <div
+                                style={{
+                                  marginTop: '6px',
+                                  padding: '8px 9px',
+                                  borderRadius: '6px',
+                                  background: 'rgba(0, 0, 0, 0.42)',
+                                  border: '1px solid rgba(255, 120, 120, 0.5)',
+                                  width: '100%',
+                                  boxSizing: 'border-box',
+                                }}
+                              >
+                                <div style={{ fontSize: '12px', color: '#fff', fontWeight: 700 }}>
+                                  {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
+                                  {valorDividaPecas.toFixed(2)}
+                                </div>
+                                {faturasResumoPecas ? (
+                                  <div
+                                    style={{
+                                      fontSize: '10px',
+                                      color: '#fecaca',
+                                      marginTop: '4px',
+                                      wordBreak: 'break-word',
+                                      lineHeight: 1.35,
+                                    }}
+                                  >
+                                    {(safeT as any)?.clienteDevedorFaturasLabel || 'Faturas em aberto'}:{' '}
+                                    {faturasResumoPecas}
+                                  </div>
+                                ) : null}
+                              </div>
+                            )}
                             
                             {/* Botões: Editar | Excluir na mesma linha (metade cada); Equipamentos em largura total por baixo */}
                             <div
@@ -64188,7 +64323,14 @@ A1;Peça exemplo;10`}
             </button>
             {showClienteForm && (
               <div
-                className={editingCliente && clienteCadastroAlertaDevedorId === editingCliente.id ? 'cliente-form-alerta-devedor' : undefined}
+                className={
+                  editingCliente &&
+                  (clienteCadastroAlertaDevedorId === editingCliente.id ||
+                    (Boolean(editingCliente.isDevedor) &&
+                      Number(editingCliente.saldoPendente ?? 0) > 0))
+                    ? 'cliente-form-alerta-devedor'
+                    : undefined
+                }
                 style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
@@ -64204,6 +64346,62 @@ A1;Peça exemplo;10`}
                     </button>
                   )}
                 </div>
+
+                {editingCliente &&
+                  Boolean(editingCliente.isDevedor) &&
+                  Number(editingCliente.saldoPendente ?? 0) > 0 && (
+                    <div
+                      style={{
+                        marginBottom: '12px',
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        background: 'rgba(70, 0, 0, 0.5)',
+                        border: '1px solid rgba(255, 100, 100, 0.48)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          color: '#fecaca',
+                          letterSpacing: '0.05em',
+                        }}
+                      >
+                        {(safeT as any)?.clienteDevedorBadge || 'Devedor'}
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#fff', marginTop: '6px', fontWeight: 700 }}>
+                        {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
+                        {Number(editingCliente.saldoPendente ?? 0).toFixed(2)}
+                      </div>
+                      {(() => {
+                        const nums = (
+                          clientesDevedores.find(
+                            d => d.clienteId === editingCliente.id && d.isDevedor
+                          )?.faturasPendentes ?? []
+                        )
+                          .map(f => f.numeroFatura)
+                          .filter(Boolean)
+                        if (nums.length === 0) return null
+                        const txt =
+                          nums.length <= 6
+                            ? nums.join(', ')
+                            : `${nums.slice(0, 6).join(', ')} (+${nums.length - 6})`
+                        return (
+                          <div
+                            style={{
+                              fontSize: '11px',
+                              color: '#fca5a5',
+                              marginTop: '6px',
+                              wordBreak: 'break-word',
+                              lineHeight: 1.35,
+                            }}
+                          >
+                            {(safeT as any)?.clienteDevedorFaturasLabel || 'Faturas em aberto'}: {txt}
+                          </div>
+                        )
+                      })()}
+                    </div>
+                  )}
                 <input
                   type="text"
                   placeholder={safeT?.nomeEmpresa || 'Nome da Empresa'}
@@ -64345,17 +64543,43 @@ A1;Peça exemplo;10`}
                           : (safeT as any)?.semFaturas || 'Sem Faturas'
                   const badgeF = getClienteFaturaBadgeProps(cliente.id)
                   const alertaDevedor = clienteCadastroAlertaDevedorId === cliente.id
-                  
+                  const devedorDetalhe = clientesDevedores.find(
+                    d => d.clienteId === cliente.id && d.isDevedor && d.saldoPendente > 0
+                  )
+                  const ehDevedor =
+                    Boolean(cliente.isDevedor) && Number(cliente.saldoPendente ?? 0) > 0
+                  const highlightDevedor = ehDevedor || alertaDevedor
+                  const valorDividaPecas =
+                    devedorDetalhe?.saldoPendente ?? Number(cliente.saldoPendente ?? 0)
+                  const numsFaturaPecas = (devedorDetalhe?.faturasPendentes ?? [])
+                    .map(f => f.numeroFatura)
+                    .filter(Boolean)
+                  const faturasResumoPecas =
+                    numsFaturaPecas.length === 0
+                      ? ''
+                      : numsFaturaPecas.length <= 5
+                        ? numsFaturaPecas.join(', ')
+                        : `${numsFaturaPecas.slice(0, 5).join(', ')} (+${numsFaturaPecas.length - 5})`
+
                   return (
                     <div 
                       key={cliente.id}
                       data-cliente-card-id={cliente.id}
-                      className={alertaDevedor ? 'cliente-card-alerta-devedor' : undefined}
+                      className={[
+                        ehDevedor ? 'cliente-lista-card-devedor' : '',
+                        highlightDevedor ? 'cliente-card-alerta-devedor' : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ') || undefined}
                       style={{ 
-                        backgroundColor: '#222222', 
+                        ...(ehDevedor
+                          ? {}
+                          : {
+                              backgroundColor: '#222222',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                            }),
                         padding: '8px', 
                         borderRadius: '6px', 
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
                         display: 'flex',
                         gap: '8px',
                         alignItems: 'center',
@@ -64412,7 +64636,7 @@ A1;Peça exemplo;10`}
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <h3 style={{ 
                               margin: 0, 
-                              color: alertaDevedor ? '#ff6666' : '#fff', 
+                              color: highlightDevedor ? (ehDevedor ? '#fff' : '#ff6666') : '#fff', 
                               fontSize: '14px',
                               fontWeight: 'bold',
                               whiteSpace: 'nowrap',
@@ -64423,7 +64647,7 @@ A1;Peça exemplo;10`}
                             </h3>
                             <p style={{ 
                               margin: 0, 
-                              color: alertaDevedor ? '#ff8888' : '#888', 
+                              color: highlightDevedor ? (ehDevedor ? '#fecaca' : '#ff8888') : '#888', 
                               fontSize: '11px',
                               whiteSpace: 'nowrap',
                               overflow: 'hidden',
@@ -64437,9 +64661,13 @@ A1;Peça exemplo;10`}
                             {/* Badge de Status */}
                             <div
                               style={{
-                                backgroundColor: alertaDevedor ? 'rgba(160, 0, 0, 0.9)' : badgeF.bg,
-                                color: alertaDevedor ? '#ffcccc' : badgeF.fg,
-                                border: alertaDevedor ? '1px solid rgba(255, 120, 120, 0.55)' : badgeF.border,
+                                backgroundColor:
+                                  ehDevedor || alertaDevedor ? 'rgba(160, 0, 0, 0.9)' : badgeF.bg,
+                                color: ehDevedor || alertaDevedor ? '#ffcccc' : badgeF.fg,
+                                border:
+                                  ehDevedor || alertaDevedor
+                                    ? '1px solid rgba(255, 120, 120, 0.55)'
+                                    : badgeF.border,
                                 padding: '2px 6px',
                                 borderRadius: '10px',
                                 fontSize: '9px',
@@ -64449,25 +64677,33 @@ A1;Peça exemplo;10`}
                                 gap: '3px',
                                 whiteSpace: 'nowrap',
                                 boxShadow:
-                                  !alertaDevedor && statusFaturas === 'pendente'
+                                  !ehDevedor && !alertaDevedor && statusFaturas === 'pendente'
                                     ? '0 0 12px rgba(253, 224, 71, 0.42)'
-                                    : !alertaDevedor && statusFaturas === 'sem-faturas'
+                                    : !ehDevedor && !alertaDevedor && statusFaturas === 'sem-faturas'
                                       ? '0 0 10px rgba(255, 255, 255, 0.22)'
-                                      : !alertaDevedor && statusFaturas === 'atrasado'
+                                      : !ehDevedor && !alertaDevedor && statusFaturas === 'atrasado'
                                         ? '0 0 12px rgba(220, 38, 38, 0.45)'
                                         : undefined,
                               }}
                             >
-                              {!alertaDevedor && (
+                              {!ehDevedor && !alertaDevedor && (
                                 <span style={{ fontWeight: 800, lineHeight: 1 }}>{badgeF.mark}</span>
                               )}
-                              {alertaDevedor && <span style={{ fontWeight: 800 }}>!</span>}
-                              <span>{alertaDevedor ? statusText : badgeF.label}</span>
+                              {(ehDevedor || alertaDevedor) && (
+                                <span style={{ fontWeight: 800 }}>!</span>
+                              )}
+                              <span>
+                                {ehDevedor
+                                  ? (safeT as any)?.clienteDevedorBadge || 'Devedor'
+                                  : alertaDevedor
+                                    ? statusText
+                                    : badgeF.label}
+                              </span>
                             </div>
                             
                             {/* Menu de Opções */}
                             <div style={{ cursor: 'pointer', padding: '1px' }}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={alertaDevedor ? '#ff6666' : '#888'} strokeWidth="2">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={highlightDevedor ? '#ff6666' : '#888'} strokeWidth="2">
                                 <circle cx="12" cy="5" r="1.5"/>
                                 <circle cx="12" cy="12" r="1.5"/>
                                 <circle cx="12" cy="19" r="1.5"/>
@@ -64479,8 +64715,8 @@ A1;Peça exemplo;10`}
                         {/* Endereço e NIF em linha */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
                           {(cliente.morada || cliente.codigoPostal) && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: alertaDevedor ? '#ff9999' : '#aaa', fontSize: '10px' }}>
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={alertaDevedor ? '#ff7777' : '#888'} strokeWidth="2">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: highlightDevedor ? '#ff9999' : '#aaa', fontSize: '10px' }}>
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={highlightDevedor ? '#ff7777' : '#888'} strokeWidth="2">
                                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                                 <circle cx="12" cy="10" r="3"></circle>
                               </svg>
@@ -64491,8 +64727,8 @@ A1;Peça exemplo;10`}
                           )}
                           
                           {cliente.numeroContribuicaoFiscal && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: alertaDevedor ? '#ff9999' : '#aaa', fontSize: '10px' }}>
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={alertaDevedor ? '#ff7777' : '#888'} strokeWidth="2">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: highlightDevedor ? '#ff9999' : '#aaa', fontSize: '10px' }}>
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={highlightDevedor ? '#ff7777' : '#888'} strokeWidth="2">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                                 <line x1="3" y1="10" x2="21" y2="10"></line>
                                 <line x1="7" y1="2" x2="7" y2="6"></line>
@@ -64502,6 +64738,39 @@ A1;Peça exemplo;10`}
                             </div>
                           )}
                         </div>
+
+                        {ehDevedor && valorDividaPecas > 0 && (
+                          <div
+                            style={{
+                              marginTop: '6px',
+                              padding: '8px 9px',
+                              borderRadius: '6px',
+                              background: 'rgba(0, 0, 0, 0.42)',
+                              border: '1px solid rgba(255, 120, 120, 0.5)',
+                              width: '100%',
+                              boxSizing: 'border-box',
+                            }}
+                          >
+                            <div style={{ fontSize: '12px', color: '#fff', fontWeight: 700 }}>
+                              {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
+                              {valorDividaPecas.toFixed(2)}
+                            </div>
+                            {faturasResumoPecas ? (
+                              <div
+                                style={{
+                                  fontSize: '10px',
+                                  color: '#fecaca',
+                                  marginTop: '4px',
+                                  wordBreak: 'break-word',
+                                  lineHeight: 1.35,
+                                }}
+                              >
+                                {(safeT as any)?.clienteDevedorFaturasLabel || 'Faturas em aberto'}:{' '}
+                                {faturasResumoPecas}
+                              </div>
+                            ) : null}
+                          </div>
+                        )}
                         
                         {/* Botões de Ação — sem encolher o texto do terceiro botão */}
                         <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-start', width: '100%', boxSizing: 'border-box' }}>

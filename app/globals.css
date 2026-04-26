@@ -4654,6 +4654,36 @@ a:focus-visible {
   box-shadow: 0 0 0 4px rgba(0, 255, 122, 0.18);
 }
 
+/* Cartão de cliente com dívida (faturas de peças): fundo e borda vermelhos */
+.cliente-lista-card-devedor {
+  background: linear-gradient(
+    165deg,
+    rgba(110, 14, 14, 0.98) 0%,
+    rgba(52, 8, 8, 0.99) 48%,
+    rgba(16, 0, 0, 1) 100%
+  ) !important;
+  border: 2px solid #f87171 !important;
+  box-shadow:
+    0 0 22px rgba(248, 113, 113, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  align-items: flex-start !important;
+}
+
+.cliente-lista-card-devedor .btn-primary,
+.cliente-lista-card-devedor .btn-danger,
+.cliente-lista-card-devedor button {
+  color: #ffeeee !important;
+  border: 2px solid #ff5555 !important;
+  background: rgba(70, 0, 0, 0.55) !important;
+}
+
+.cliente-lista-card-devedor .btn-primary:focus-visible,
+.cliente-lista-card-devedor .btn-danger:focus-visible,
+.cliente-lista-card-devedor button:focus-visible {
+  outline: 2px solid rgba(255, 100, 100, 0.95) !important;
+  box-shadow: 0 0 0 4px rgba(255, 0, 0, 0.2) !important;
+}
+
 /* Alerta de devedor: destaque vermelho no cartão e no formulário de cliente */
 .cliente-card-alerta-devedor {
   border: 2px solid #ff4444 !important;
