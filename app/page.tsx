@@ -4721,6 +4721,7 @@ export default function Dashboard() {
   const lastClientesDevedoresHash = useRef<string>('') // Hash do último estado de clientes para evitar atualizações desnecessárias
   const [ivaControles, setIvaControles] = useState<IVAControle[]>([])
   const [relatoriosFinanceiros, setRelatoriosFinanceiros] = useState<RelatorioFinanceiro[]>([])
+  const [contabilidadeConfig, setContabilidadeConfig] = useState<ContabilidadeConfig>(defaultContabilidadeConfig)
   const [clientesFinanceiroActiveTab, setClientesFinanceiroActiveTab] = useState<
     'os' | 'faturas' | 'devedores' | 'iva' | 'relatorios' | 'despesasControle'
   >('os')
@@ -32200,6 +32201,42 @@ onKeyPress={(e) => {
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>
+                {editingCliente ? (
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() =>
+                      abrirClienteDadosContabilidade({
+                        ...editingCliente,
+                        nomeEmpresa: clienteForm.nomeEmpresa,
+                        morada: clienteForm.morada,
+                        localidade: clienteForm.localidade,
+                        conselho: clienteForm.conselho,
+                        pais: clienteForm.pais,
+                        codigoPostal: clienteForm.codigoPostal,
+                        freguesia: clienteForm.freguesia,
+                        numeroContribuicaoFiscal: clienteForm.numeroContribuicaoFiscal,
+                        telefones: clienteForm.telefones,
+                        email: clienteForm.email,
+                        contato: clienteForm.contato,
+                        photo: clienteForm.photo,
+                      })
+                    }
+                    style={{
+                      width: '100%',
+                      marginTop: '10px',
+                      padding: '10px 16px',
+                      fontSize: '12px',
+                      lineHeight: 1.3,
+                      boxSizing: 'border-box',
+                      backgroundColor: 'rgba(21, 101, 192, 0.35)',
+                      borderColor: 'rgba(100, 181, 246, 0.55)',
+                    }}
+                    title={(safeT as any)?.clienteDadosContabilidadeSub || ''}
+                  >
+                    📄 {(safeT as any)?.clienteDadosContabilidade || 'Dados p/ contabilidade'}
+                  </button>
+                ) : null}
               </div>
             )}
               </div>
@@ -32575,6 +32612,23 @@ onKeyPress={(e) => {
                                 }}
                               >
                                 {safeT?.equipamentosDoCliente || 'Equipamentos'}
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-primary"
+                                onClick={() => abrirClienteDadosContabilidade(cliente)}
+                                style={{
+                                  width: '100%',
+                                  padding: '8px 12px',
+                                  fontSize: '10px',
+                                  lineHeight: 1.25,
+                                  boxSizing: 'border-box',
+                                  backgroundColor: 'rgba(21, 101, 192, 0.35)',
+                                  borderColor: 'rgba(100, 181, 246, 0.55)',
+                                }}
+                                title={(safeT as any)?.clienteDadosContabilidadeSub || ''}
+                              >
+                                📄 {(safeT as any)?.clienteDadosContabilidade || 'Dados p/ contabilidade'}
                               </button>
                             </div>
                           </div>
