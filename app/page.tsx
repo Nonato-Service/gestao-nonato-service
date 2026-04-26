@@ -62,6 +62,88 @@ let manuaisSaveAlertShownOnce = false
 /** Persistido até a carga terminar: se a flag for limpa cedo demais, o 2.º arranque (Strict Mode) deixa de fazer o wipe. */
 const NONATO_PENDING_FULL_SERVER_REPLACE_LS = 'nonato-pending-full-server-replace'
 
+/** CSS das janelas de impressão/PDF (contabilidade) — `viewport` + tabelas com scroll + botões em coluna no telemóvel */
+const CONTAB_PRINT_WINDOW_STYLES = `
+@page{size:A4;margin:10mm}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{
+  font-family:Segoe UI,Arial,sans-serif;
+  margin:0;
+  box-sizing:border-box;
+  max-width:100%;
+  width:100%;
+  background:#fff;
+  color:#222;
+  font-size:14px;
+  line-height:1.45;
+  padding:max(10px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));
+}
+.contab-dica{
+  margin:0 0 12px;
+  padding:12px 12px;
+  background:#e3f2fd;
+  border:1px solid #90caf9;
+  border-radius:8px;
+  font-size:12px;
+  line-height:1.5;
+  color:#0d47a1;
+  white-space:pre-wrap;
+  word-break:break-word;
+  overflow-wrap:break-word;
+  max-width:100%;
+  box-sizing:border-box
+}
+.contab-actions{
+  display:flex;
+  flex-direction:row;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:stretch;
+  margin-bottom:16px
+}
+.contab-actions button,
+.contab-actions a{
+  flex:1 1 auto;
+  min-height:48px;
+  min-width:0;
+  -webkit-tap-highlight-color:transparent;
+  box-sizing:border-box
+}
+@media (max-width: 600px){
+  body{ font-size:13px; padding:10px 8px 14px }
+  .contab-dica{ font-size:11px; padding:10px 8px; margin-bottom:10px }
+  .contab-actions{ flex-direction:column; flex-wrap:nowrap; gap:8px; margin-bottom:12px }
+  .contab-actions > button,
+  .contab-actions > a{
+    width:100% !important;
+    flex:0 0 auto;
+    text-align:center;
+    justify-content:center;
+    padding:14px 10px;
+    font-size:14px
+  }
+  .contab-h-title{ font-size:17px !important }
+  .contab-h-sub{ font-size:12px !important }
+}
+.contab-scroll{
+  width:100%;
+  max-width:100%;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  margin:0 0 12px;
+  box-sizing:border-box
+}
+table.contab-items-table{ min-width:640px }
+table.contab-client-tbl{ min-width: 100% }
+.contab-info-card{ word-wrap:break-word; overflow-wrap:break-word; box-sizing:border-box; max-width:100% }
+.contab-fiscal{ word-wrap:break-word; box-sizing:border-box; max-width:100% }
+@media print{
+  .no-print{ display:none !important }
+  body{ padding:10px }
+  .contab-scroll{ overflow:visible }
+}
+`
+
 /** Logo Nonato para exibição quando a peça não tem foto (não gravar este URL como `imagem` da peça). Colocar o ficheiro em `public/brand/nonato-logo-original.png`. */
 const PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC = '/brand/nonato-logo-original.png'
 
@@ -10816,6 +10898,52 @@ export default function Dashboard() {
     const lblCopiar = t.clienteDadosContabilidadeCopiar || 'Copiar texto'
     const lblCopiado = t.clienteDadosContabilidadeCopiado || 'Texto copiado para a área de transferência.'
     const assuntoMail = t.clienteDadosContabilidadeEmailAssunto || 'Dados de cliente para faturação'
+    const tCliMail = t as Record<string, string> & {
+      clienteDadosContabEmailCorpoIntro?: string
+      clienteDadosContabEmailCorpoFim?: string
+      clienteDadosContabDicaPassos?: string
+    }
+    const emIntroCli =
+      tCliMail.clienteDadosContabEmailCorpoIntro ||
+      'Resumo de dados do cliente. Gerar PDF na janela (Imprimir → Guardar como PDF) e anexar a este e-mail.\n'
+    const emFimCli =
+      tCliMail.clienteDadosContabEmailCorpoFim || '\n(Todos os campos, morada, pedido: PDF ou «Copiar texto».)'
+    const notaCorta = notaF.length > 200 ? notaF.slice(0, 197).trim() + '…' : notaF
+    const tFechBtns = t as Record<string, string> & {
+      contabilidadeFechamentoBtnGerarPdf?: string
+      contabilidadeFechamentoBtnEmail?: string
+    }
+    const lblPdfCli = tFechBtns.contabilidadeFechamentoBtnGerarPdf || lblImprimir
+    const lblMailCli = tFechBtns.contabilidadeFechamentoBtnEmail || lblEmail
+    const dicaCli =
+      tCliMail.clienteDadosContabDicaPassos ||
+      'Gere o PDF a partir do botão verde; o atalho de e-mail traz resumo. Anexar o PDF no correio. Texto completo: «Copiar».'
+    const dicaBlockCli = `<div class="no-print contab-dica">${escAttr(dicaCli)}</div>`
+    const textoPlanoEmail = (() => {
+      const lin: string[] = [emIntroCli.trimEnd(), '', `${lblEmpresa}: ${val(cliente.nomeEmpresa)}`, `${lblNif}: ${val(cliente.numeroContribuicaoFiscal)}`]
+      if (hasPedido) {
+        lin.push(
+          '',
+          `${lblMorada}: ${val(cliente.morada)}`,
+          `${lblCp} / ${lblLocal}: ${val(cliente.codigoPostal)} — ${val(cliente.localidade)}`
+        )
+        if (valorF) lin.push(`${t.contabilidadeFaturaValorLabel || 'Valor'}: ${valorF}`)
+        if (notaCorta) lin.push(`${t.contabilidadeFaturaNotaLabel || 'Nota'}: ${notaCorta}`)
+        if (anexosLinhas.length) {
+          const tit = t.contabilidadeAnexosListaTitulo || 'Ficheiros'
+          lin.push(`${tit}:`, ...anexosLinhas.map(x => `  • ${x}`))
+        }
+      } else {
+        lin.push(
+          `${lblMorada}: ${val(cliente.morada)}`,
+          `${lblCp} / ${lblLocal}: ${val(cliente.codigoPostal)} — ${val(cliente.localidade)}`,
+          `${lblTel}: ${val(cliente.telefones)}`,
+          `${lblMail}: ${val(cliente.email)}`
+        )
+      }
+      lin.push(emFimCli)
+      return lin.join('\n')
+    })()
     const docGerado = t.pdfDocumentoGeradoEm || 'Documento gerado em'
     const localeStr =
       selectedLanguage === 'pt-BR'
@@ -10861,24 +10989,41 @@ export default function Dashboard() {
           )
         )
       }
-      pedidoTableHtml = `<div style="margin:20px 0 10px"><div style="font-size:15px;font-weight:700;color:#1565c0">${escAttr(
+      pedidoTableHtml = `<div style="margin:20px 0 10px;max-width:100%;box-sizing:border-box"><div style="font-size:15px;font-weight:700;color:#1565c0;word-wrap:break-word">${escAttr(
         pTit
-      )}</div></div><table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px">${pRows.join('')}</table>
-      <p style="font-size:12px;color:#0d47a1;line-height:1.4;margin:0 0 16px">${escAttr(
+      )}</div></div><div class="contab-scroll"><table class="contab-client-tbl" style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px">${pRows.join('')}</table></div>
+      <p style="font-size:12px;color:#0d47a1;line-height:1.4;margin:0 0 16px;word-wrap:break-word">${escAttr(
         t.contabilidadeAnexosInstrucaoCorpo ||
           'O atalho de e-mail não anexa ficheiros. Anexa no teu correio, ou partilha pelo teu aparelho.'
       )}</p>`
     }
     const tableRows = mainRows
     const mailSub = `${assuntoMail}${cliente.nomeEmpresa?.trim() ? ` — ${cliente.nomeEmpresa.trim().slice(0, 60)}` : ''}`
-    const mailtoHref = `${mailtoPrefixContabilidade()}?subject=${encodeURIComponent(mailSub)}&body=${encodeURIComponent(textoPlano)}`
-    const headerHtml = `<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:3px solid #00a650"><div style="font-size:20px;font-weight:700;color:#00a650">${escAttr(titulo)}</div><p style="margin:10px 0 0;font-size:13px;color:#444;line-height:1.45">${escAttr(sub)}</p></div>`
-    const tableHtml = `<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px">${tableRows}</table>${pedidoTableHtml}`
+    const mailtoHref = `${mailtoPrefixContabilidade()}?subject=${encodeURIComponent(mailSub)}&body=${encodeURIComponent(textoPlanoEmail)}`
+    const headerHtml = `<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:3px solid #00a650;max-width:100%;box-sizing:border-box"><div class="contab-h-title" style="font-size:20px;font-weight:700;color:#00a650;word-wrap:break-word">${escAttr(
+      titulo
+    )}</div><p class="contab-h-sub" style="margin:10px 0 0;font-size:13px;color:#444;line-height:1.45;word-wrap:break-word">${escAttr(
+      sub
+    )}</p></div>`
+    const tableHtml = `<div class="contab-scroll"><table class="contab-client-tbl" style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px">${tableRows}</table></div>${pedidoTableHtml}`
     const rodape = `<div style="margin-top:28px;padding-top:16px;border-top:1px solid #e0e0e0;font-size:11px;color:#666">${escAttr(docGerado)} ${escAttr(dataHora)}</div><div style="font-size:10px;color:#999;margin-top:6px">Nonato Service</div>`
     const preHidden = `<pre id="dados-cli-pre-contab" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;margin:0">${preEsc(textoPlano)}</pre>`
-    const btns = `<div class="no-print" style="margin-bottom:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center"><button type="button" onclick="window.print()" style="padding:12px 24px;background:#00a650;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">${escAttr(lblImprimir)}</button><button type="button" onclick="window.close()" style="padding:12px 20px;background:#37474f;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px">${escAttr(lblFechar)}</button><a href="${escAttr(mailtoHref)}" style="padding:12px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;text-decoration:none;display:inline-block;font-weight:600;font-size:13px">${escAttr(lblEmail)}</a><button type="button" data-msg="${escAttr(lblCopiado)}" onclick="(function(b){var el=document.getElementById('dados-cli-pre-contab');var tx=el?el.textContent:'';var m=b.getAttribute('data-msg')||'';if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(tx).then(function(){alert(m);}).catch(function(){window.prompt(m,tx);});}else{window.prompt(m,tx);}})(this)" style="padding:12px 20px;background:#5d4037;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">${escAttr(lblCopiar)}</button></div>`
+    const btns = `<div class="no-print contab-actions"><button type="button" onclick="window.print()" style="padding:12px 16px;background:#00a650;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">${escAttr(
+      lblPdfCli
+    )}</button><a href="${escAttr(mailtoHref)}" style="padding:12px 16px;background:#1565c0;color:#fff;border:none;border-radius:8px;text-decoration:none;display:inline-block;font-weight:600;font-size:13px">${escAttr(
+      lblMailCli
+    )}</a><button type="button" data-msg="${escAttr(lblCopiado)}" onclick="(function(b){var el=document.getElementById('dados-cli-pre-contab');var tx=el?el.textContent:'';var m=b.getAttribute('data-msg')||'';if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(tx).then(function(){alert(m);}).catch(function(){window.prompt(m,tx);});}else{window.prompt(m,tx);}})(this)" style="padding:12px 16px;background:#5d4037;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">${escAttr(
+      lblCopiar
+    )}</button><button type="button" onclick="window.close()" style="padding:12px 16px;background:#37474f;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px">${escAttr(
+      lblFechar
+    )}</button></div>`
     const docTitle = `${titulo} — ${cliente.nomeEmpresa || cliente.id}`.slice(0, 120)
-    const html = `<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"><title>${escAttr(docTitle)}</title><style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:24px;font-size:13px;background:#fff;color:#222}.no-print{display:block}@media print{.no-print{display:none!important}body{padding:12px}}</style></head><body>${btns}${preHidden}${headerHtml}${tableHtml}${rodape}</body></html>`
+    const html = `<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light only">
+<title>${escAttr(docTitle)}</title>
+<style>${CONTAB_PRINT_WINDOW_STYLES}</style>
+</head><body>${dicaBlockCli}${btns}${preHidden}${headerHtml}${tableHtml}${rodape}</body></html>`
     const printWin = window.open('', '_blank')
     if (!printWin) {
       alert(t.permitaPopupsPDF || 'Permita pop-ups para gerar o PDF.')
@@ -11050,6 +11195,51 @@ export default function Dashboard() {
     ]
       .filter(Boolean)
       .join('\n')
+
+    /** Corpo curto p/ `mailto` — o mail não anexa PDF; pormenor completo fica no PDF (imprimir) e em «Copiar». */
+    const tMail = t as Record<string, string> & {
+      contabilidadeFechamentoEmailCorpoIntro?: string
+      contabilidadeFechamentoEmailCorpoFim?: string
+    }
+    const emIntro =
+      tMail.contabilidadeFechamentoEmailCorpoIntro ||
+      'Segue resumo para a contabilidade. Anexar ficheiro PDF: na janela, botão verde → Imprimir → Guardar como PDF; depois anexar a este e-mail.\n\n'
+    const emFim =
+      tMail.contabilidadeFechamentoEmailCorpoFim ||
+      '\n(Detalhe e linhas: no ficheiro PDF, ou com «Copiar texto» na mesma janela.)\n'
+    const resumoFiscalShort = clienteFiscal
+      ? [
+          `${t.nomeEmpresa || 'Empresa'}: ${val(clienteFiscal.nomeEmpresa)}`,
+          `${t.identificacaoFiscal || 'NIF'}: ${val(clienteFiscal.numeroContribuicaoFiscal)}`,
+        ].join('\n')
+      : ''
+    const textoPlanoEmail = (() => {
+      const a: string[] = [
+        emIntro.trimEnd(),
+        '',
+        `${lblNum}: ${relatorio.numero}`,
+        `${lblCliente}: ${relatorio.cliente}`,
+        `${lblEquip}: ${relatorio.maquinaModelo} ${relatorio.numeroMaquina || ''}`.trim(),
+        `${lblData}: ${relatorio.data}`,
+        '',
+      ]
+      if (resumoFiscalShort) {
+        a.push(resumoFiscalShort, '')
+      }
+      a.push(
+        `${t.totalSemIva || 'Total s/ IVA'}: ${ivContab.liquido.toFixed(2)} €`
+      )
+      if (ivContab.incluir && ivContab.iva > 0.0001) {
+        a.push(
+          `${t.valorIva || 'IVA'} (${ivContab.taxa}%): ${ivContab.iva.toFixed(2)} €`,
+          `${t.totalComIva || 'Total com IVA'}: ${total.toFixed(2)} €`
+        )
+      } else {
+        a.push(`${t.somaTotal || t.totalComIva || 'Total a cobrar'}: ${total.toFixed(2)} €`)
+      }
+      a.push(emFim)
+      return a.join('\n')
+    })()
     const rowsHtml = itens
       .map(item => {
         const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
@@ -11072,22 +11262,48 @@ export default function Dashboard() {
       ivContab.incluir && ivContab.iva > 0.0001
         ? `<tr><td colspan="4" style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;background:#fafafa">${escAttr(t.totalSemIva || 'Total s/ IVA')}</td><td style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;font-weight:600;background:#fafafa">${ivContab.liquido.toFixed(2)} €</td></tr><tr><td colspan="4" style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;background:#fafafa">${escAttr(t.valorIva || 'IVA')} (${ivContab.taxa}%)</td><td style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;font-weight:600;background:#fafafa">${ivContab.iva.toFixed(2)} €</td></tr><tr><td colspan="4" style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:700;background:#f1f8e9">${escAttr(t.totalComIva || 'Total com IVA')}</td><td style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:800;background:#f1f8e9">${total.toFixed(2)} €</td></tr>`
         : `<tr><td colspan="4" style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:700;background:#f1f8e9">${escAttr(lblSoma)}</td><td style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:800;background:#f1f8e9">${total.toFixed(2)} €</td></tr>`
-    const tableHtml = `<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px"><thead><tr><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:left">${escAttr(lblCod)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:left">${escAttr(lblDesc)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:right">${escAttr(lblQtd)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:right">${escAttr(lblVu)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:right">${escAttr(lblTot)}</th></tr></thead><tbody>${rowsHtml}</tbody><tfoot>${footIvaRows}</tfoot></table>`
-    const infoRel = `<div style="margin-bottom:16px;padding:14px;border-radius:10px;background:#f1f8e9;border:1px solid #c8e6c9;font-size:13px;line-height:1.5"><div><strong>${escAttr(lblNum)}:</strong> ${escAttr(relatorio.numero)}</div><div><strong>${escAttr(lblCliente)}:</strong> ${escAttr(relatorio.cliente)}</div><div><strong>${escAttr(lblEquip)}:</strong> ${escAttr(`${relatorio.maquinaModelo} ${relatorio.numeroMaquina || ''}`.trim())}</div><div><strong>${escAttr(lblData)}:</strong> ${escAttr(relatorio.data)}</div></div>`
+    const tableHtml = `<div class="contab-scroll"><table class="contab-items-table" style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:0"><thead><tr><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:left">${escAttr(lblCod)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:left">${escAttr(lblDesc)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:right">${escAttr(lblQtd)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:right">${escAttr(lblVu)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:right">${escAttr(lblTot)}</th></tr></thead><tbody>${rowsHtml}</tbody><tfoot>${footIvaRows}</tfoot></table></div>`
+    const infoRel = `<div class="contab-info-card" style="margin-bottom:16px;padding:14px;border-radius:10px;background:#f1f8e9;border:1px solid #c8e6c9;font-size:13px;line-height:1.5"><div style="word-wrap:break-word"><strong>${escAttr(lblNum)}:</strong> ${escAttr(relatorio.numero)}</div><div style="word-wrap:break-word"><strong>${escAttr(lblCliente)}:</strong> ${escAttr(relatorio.cliente)}</div><div style="word-wrap:break-word"><strong>${escAttr(lblEquip)}:</strong> ${escAttr(`${relatorio.maquinaModelo} ${relatorio.numeroMaquina || ''}`.trim())}</div><div><strong>${escAttr(lblData)}:</strong> ${escAttr(relatorio.data)}</div></div>`
     const rowFiscalHtml = (a: string, b: string) =>
       `<tr><td style="padding:6px 8px;color:#666;width:34%">${a}</td><td style="padding:6px 8px;font-weight:600">${b}</td></tr>`
     let fiscalHtml = ''
     if (clienteFiscal) {
-      fiscalHtml = `<div style="margin-bottom:18px;padding:14px;border-radius:10px;background:#fff8e1;border:1px solid #ffcc80"><div style="font-weight:700;color:#e65100;margin-bottom:8px">${escAttr(blocoFiscal)}</div><table style="width:100%;font-size:12px">${rowFiscalHtml(escAttr(t.nomeEmpresa || 'Empresa'), escAttr(val(clienteFiscal.nomeEmpresa)))}${rowFiscalHtml(escAttr(t.identificacaoFiscal || 'NIF'), escAttr(val(clienteFiscal.numeroContribuicaoFiscal)))}${rowFiscalHtml(escAttr(t.morada || 'Morada'), escAttr(val(clienteFiscal.morada)))}${rowFiscalHtml(escAttr(t.email || 'E-mail'), escAttr(val(clienteFiscal.email)))}${rowFiscalHtml(escAttr(t.telefones || 'Telefones'), escAttr(val(clienteFiscal.telefones)))}</table></div>`
+      fiscalHtml = `<div class="contab-fiscal" style="margin-bottom:18px;padding:14px;border-radius:10px;background:#fff8e1;border:1px solid #ffcc80"><div style="font-weight:700;color:#e65100;margin-bottom:8px;word-wrap:break-word">${escAttr(blocoFiscal)}</div><div class="contab-scroll"><table class="contab-client-tbl" style="width:100%;font-size:12px">${rowFiscalHtml(escAttr(t.nomeEmpresa || 'Empresa'), escAttr(val(clienteFiscal.nomeEmpresa)))}${rowFiscalHtml(escAttr(t.identificacaoFiscal || 'NIF'), escAttr(val(clienteFiscal.numeroContribuicaoFiscal)))}${rowFiscalHtml(escAttr(t.morada || 'Morada'), escAttr(val(clienteFiscal.morada)))}${rowFiscalHtml(escAttr(t.email || 'E-mail'), escAttr(val(clienteFiscal.email)))}${rowFiscalHtml(escAttr(t.telefones || 'Telefones'), escAttr(val(clienteFiscal.telefones)))}</table></div></div>`
     }
     const assuntoMail = `${t.contabilidadeFechamentoEmailAssunto || 'Fechamento para faturação'} — ${relatorio.numero}`
-    const mailtoHref = `${mailtoPrefixContabilidade()}?subject=${encodeURIComponent(assuntoMail)}&body=${encodeURIComponent(textoPlano)}`
-    const headerHtml = `<div style="margin-bottom:16px;padding-bottom:14px;border-bottom:3px solid #00a650"><div style="font-size:19px;font-weight:700;color:#00a650">${escAttr(titulo)}</div><p style="margin:8px 0 0;font-size:12px;color:#555;line-height:1.45">${escAttr(sub)}</p></div>`
+    const mailtoHref = `${mailtoPrefixContabilidade()}?subject=${encodeURIComponent(assuntoMail)}&body=${encodeURIComponent(textoPlanoEmail)}`
+    const tFech = t as Record<string, string> & {
+      contabilidadeFechamentoDicaPassos?: string
+      contabilidadeFechamentoBtnGerarPdf?: string
+      contabilidadeFechamentoBtnEmail?: string
+    }
+    const dicaFech =
+      tFech.contabilidadeFechamentoDicaPassos ||
+      'O documento formal é o PDF: Imprimir → Guardar como PDF, depois anexar no e-mail. O atalho de e-mail traz um resumo no texto; linhas e totais a fundo estão no PDF ou em «Copiar texto».'
+    const lblPdfFech = tFech.contabilidadeFechamentoBtnGerarPdf || lblImprimir
+    const lblMailFech = tFech.contabilidadeFechamentoBtnEmail || lblEmail
+    const dicaBlock = `<div class="no-print contab-dica">${escAttr(dicaFech)}</div>`
+    const headerHtml = `<div style="margin-bottom:16px;padding-bottom:14px;border-bottom:3px solid #00a650;max-width:100%;box-sizing:border-box"><div class="contab-h-title" style="font-size:19px;font-weight:700;color:#00a650;word-wrap:break-word">${escAttr(
+      titulo
+    )}</div><p class="contab-h-sub" style="margin:8px 0 0;font-size:12px;color:#555;line-height:1.45;word-wrap:break-word">${escAttr(sub)}</p></div>`
     const rodape = `<div style="margin-top:20px;padding-top:12px;border-top:1px solid #e0e0e0;font-size:11px;color:#666">${escAttr(docGerado)} ${escAttr(dataHora)}</div><div style="font-size:10px;color:#999;margin-top:4px">Nonato Service</div>`
     const preHidden = `<pre id="fech-contab-pre" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;margin:0">${preEsc(textoPlano)}</pre>`
-    const btns = `<div class="no-print" style="margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center"><button type="button" onclick="window.print()" style="padding:12px 22px;background:#00a650;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">${escAttr(lblImprimir)}</button><button type="button" onclick="window.close()" style="padding:12px 18px;background:#37474f;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px">${escAttr(lblFechar)}</button><a href="${escAttr(mailtoHref)}" style="padding:12px 18px;background:#1565c0;color:#fff;border-radius:8px;text-decoration:none;display:inline-block;font-weight:600;font-size:13px">${escAttr(lblEmail)}</a><button type="button" data-msg="${escAttr(lblCopiado)}" onclick="(function(b){var el=document.getElementById('fech-contab-pre');var tx=el?el.textContent:'';var m=b.getAttribute('data-msg')||'';if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(tx).then(function(){alert(m);}).catch(function(){window.prompt(m,tx);});}else{window.prompt(m,tx);}})(this)" style="padding:12px 18px;background:#5d4037;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">${escAttr(lblCopiar)}</button></div>`
+    const btns = `<div class="no-print contab-actions"><button type="button" onclick="window.print()" style="padding:12px 16px;background:#00a650;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">${escAttr(
+      lblPdfFech
+    )}</button><a href="${escAttr(mailtoHref)}" style="padding:12px 16px;background:#1565c0;color:#fff;border-radius:8px;text-decoration:none;display:inline-block;font-weight:600;font-size:13px">${escAttr(
+      lblMailFech
+    )}</a><button type="button" data-msg="${escAttr(lblCopiado)}" onclick="(function(b){var el=document.getElementById('fech-contab-pre');var tx=el?el.textContent:'';var m=b.getAttribute('data-msg')||'';if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(tx).then(function(){alert(m);}).catch(function(){window.prompt(m,tx);});}else{window.prompt(m,tx);}})(this)" style="padding:12px 16px;background:#5d4037;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">${escAttr(
+      lblCopiar
+    )}</button><button type="button" onclick="window.close()" style="padding:12px 16px;background:#37474f;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px">${escAttr(
+      lblFechar
+    )}</button></div>`
     const docTitle = `${titulo} — ${relatorio.numero}`.slice(0, 120)
-    const html = `<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"><title>${escAttr(docTitle)}</title><style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:22px;font-size:13px;background:#fff;color:#222}.no-print{display:block}@media print{.no-print{display:none!important}body{padding:10px}}</style></head><body>${btns}${preHidden}${headerHtml}${infoRel}${fiscalHtml}${tableHtml}${rodape}</body></html>`
+    const html = `<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light only">
+<title>${escAttr(docTitle)}</title>
+<style>${CONTAB_PRINT_WINDOW_STYLES}</style>
+</head><body>${dicaBlock}${btns}${preHidden}${headerHtml}${infoRel}${fiscalHtml}${tableHtml}${rodape}</body></html>`
     const printWin = window.open('', '_blank')
     if (!printWin) {
       alert(t.permitaPopupsPDF || 'Permita pop-ups para gerar o PDF.')
@@ -24876,6 +25092,36 @@ const nextF = familias.filter(x => x !== f)
                       {(safeT as any)?.syncAdminNoPending || 'Neste momento não há diferença de revisão pendente de decisão.'}
                     </p>
                   )}
+                  <div
+                    className="admin-sync-force-block"
+                    style={{
+                      marginTop: 14,
+                      paddingTop: 12,
+                      borderTop: '1px solid rgba(100, 180, 100, 0.25)',
+                    }}
+                  >
+                    <p style={{ fontSize: '12px', color: '#7cb87c', margin: '0 0 6px' }}>
+                      {(safeT as any)?.syncAdminForcePushIntro ||
+                        'Dados guardados no PC no aparecem no telemóvel? O servidor pode não ter recebido a última gravação em segundo plano. Enviar tudo a partir de onde está o dado certo (normalmente o PC) e, depois, no outro aparelho use «atualizar com o servidor» no aviso laranja.'}
+                    </p>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      disabled={syncPushLoading}
+                      onClick={() => {
+                        void enviarEsteAparelhoParaServidor()
+                      }}
+                      style={{ padding: '8px 14px', fontSize: '12px', fontWeight: 600 }}
+                    >
+                      {syncPushLoading
+                        ? (safeT as any)?.syncPushSending || 'A enviar…'
+                        : (safeT as any)?.syncAdminForcePush || 'Enviar tudo o que está neste aparelho para o servidor'}
+                    </button>
+                    <p style={{ fontSize: '10px', color: '#666', margin: '8px 0 0', lineHeight: 1.45 }}>
+                      {(safeT as any)?.syncAdminForcePushHint ||
+                        'Confirmação pedida. Se o outro aparelho tem o que o servidor ainda não tem, faça o envio a partir desse aparelho, não a partir de um vazio (senão piora a divergência).'}
+                    </p>
+                  </div>
                 </div>
               </div>
             </details>

@@ -520,6 +520,11 @@ export const translations = {
       'O sistema verifica o servidor automaticamente para detetar diferenças entre aparelhos, mas a decisão é manual no Administrador. Quando quiser, abra Sincronização entre aparelhos para escolher «atualizar este aparelho» ou «enviar para o servidor».',
     syncReopenModal: 'Abrir aviso de sincronização',
     syncAdminNoPending: 'Neste momento não há diferença de revisão pendente de decisão.',
+    syncAdminForcePush: 'Enviar tudo o que está neste aparelho para o servidor',
+    syncAdminForcePushIntro:
+      'Criou um equipamento no PC e o telemóvel ou tablet não vê? Cada “Guardar” devia ir ao servidor em segundo plano; se a rede cai, pode ficar só nesse aparelho. A partir de onde a informação está certa (muitas vezes o PC), clique abaixo para reenviar tudo. Depois, noutro aparelho, escolha «atualizar com o servidor» no aviso laranja.',
+    syncAdminForcePushHint:
+      'A confirmação evita ativar sem querer. Se a informação completa estiver noutro aparelho, envie a partir desse — não a partir de um ecrã que ainda está desatualizado, para não sobrescrever o servidor com versão vazia.',
     syncPullServerUnreadable:
       'Não foi possível ler os dados do servidor (resposta vazia). Não é seguro «atualizar» agora — verifique a ligação e tente de novo.',
     syncPullRiskSevereIntro:
@@ -1244,11 +1249,17 @@ export const translations = {
     clienteDadosContabilidade: 'Dados p/ contabilidade',
     clienteDadosContabilidadeTitulo: 'Dados do cliente — contabilidade / faturação',
     clienteDadosContabilidadeSub:
-      'Envie este documento à sua contabilidade ou use os dados para emitir nota fiscal. No diálogo de impressão do navegador escolha «Guardar como PDF» para guardar o ficheiro.',
+      'Dados fiscais e de contacto para a contabilidade. Ficheiro completo: Imprimir → «Guardar como PDF» e anexar no e-mail; o atalho de e-mail traz resumo (o navegador não anexa o PDF sozinho).',
     clienteDadosContabilidadeEnviarEmail: 'Enviar por e-mail',
     clienteDadosContabilidadeCopiar: 'Copiar texto',
     clienteDadosContabilidadeCopiado: 'Texto copiado para a área de transferência.',
     clienteDadosContabilidadeEmailAssunto: 'Dados de cliente para faturação',
+    clienteDadosContabDicaPassos:
+      'Dados fiscais para a contabilidade: o documento completo é o PDF (Imprimir → «Guardar como PDF»), não só texto no e-mail.\n(1) Clicar em «1. Gerar PDF…».\n(2) No diálogo, destino: «Guardar como PDF» (Chrome) ou «Microsoft Print to PDF» (Windows).\n(3) Clicar em «2. E-mail…» e, no correio, anexar o PDF. O corpo traz resumo; morada, contactos e tabela p/ faturação vêm no PDF (ou com «Copiar texto»).',
+    clienteDadosContabEmailCorpoIntro:
+      'Segue resumo dos dados do cliente para a contabilidade. Ficheiro PDF: gerar com o botão verde na janela (Imprimir → Guardar como PDF), depois anexar a este e-mail.\n',
+    clienteDadosContabEmailCorpoFim:
+      '\n(Morada, contactos e, se houver, pedido de faturação/lista de anexos: ficheiro PDF, ou com «Copiar texto».)\n',
     contabilidadePainelTitulo: 'Contabilidade / faturas',
     contabilidadeEmailLabel: 'E-mail da contabilidade',
     contabilidadeEmailPlaceholder: 'contabilidade@empresa.pt',
@@ -1259,9 +1270,17 @@ export const translations = {
       'O e-mail preenche o destinatário nos envios. Ao guardar o fechamento na Biblioteca com total superior a zero, abre-se o resumo para PDF/impressão se a opção acima estiver ativa.',
     contabilidadeFechamentoDocTitulo: 'Fechamento para contabilidade / fatura',
     contabilidadeFechamentoDocSub:
-      'Resumo para emissão de fatura. Use Imprimir e «Guardar como PDF» no navegador, ou Enviar por e-mail.',
+      'O documento com linhas e totais para a contabilidade é o ficheiro PDF (Imprimir → «Guardar como PDF»). O atalho de e-mail só leva um resumo no corpo: abre o correio, anexa o PDF, depois envia.',
     contabilidadeBlocoClienteFiscal: 'Dados fiscais do cliente (cadastro)',
     contabilidadeFechamentoEmailAssunto: 'Fechamento para faturação',
+    contabilidadeFechamentoDicaPassos:
+      'Para a contabilidade, o profissional é anexar um ficheiro PDF (não só texto no e-mail):\n(1) Clicar abaixo em «Gerar PDF (imprimir…)».\n(2) No diálogo, escolher Impressora/Destino: «Guardar como PDF» (Chrome) ou «Microsoft Print to PDF» (Windows) e guardar o ficheiro.\n(3) Clicar em «E-mail c/ resumo (anexar PDF)» e, no correio, anexar o PDF. O corpo traz só um resumo curto; o pormenor está no PDF (ou use «Copiar texto»).',
+    contabilidadeFechamentoEmailCorpoIntro:
+      'Segue resumo para faturação. Ficheiro PDF a anexar: gerado na janela do Nonato (botão verde «Gerar PDF» → Guardar como PDF), depois anexar a este e-mail.\n',
+    contabilidadeFechamentoEmailCorpoFim:
+      '\n(Detalhe e tabela completos: no PDF, ou com «Copiar texto» na janela do resumo.)\n',
+    contabilidadeFechamentoBtnGerarPdf: '1. Gerar PDF (imprimir → guardar como PDF)',
+    contabilidadeFechamentoBtnEmail: '2. E-mail c/ resumo (anexar o PDF no correio)',
     contabilidadeDocManualButton: 'Documento p/ contabilidade',
     contabilidadeDocManualHint: 'Abre o mesmo resumo (sem guardar de novo) para enviar ou guardar PDF.',
     contabilidadeEnvioModalTitulo: 'Enviar dados à contabilidade',
@@ -4216,11 +4235,17 @@ export const translations = {
     clienteDadosContabilidade: 'Datos p/ contabilidad',
     clienteDadosContabilidadeTitulo: 'Datos del cliente — contabilidad / facturación',
     clienteDadosContabilidadeSub:
-      'Envíe este documento a su gestor o úselo para emitir factura. En imprimir elija «Guardar como PDF».',
+      'Datos fiscales y contacto para contabilidad. El documento entero: Imprimir → «Guardar como PDF» y adjuntar; el atajo de correo solo añade un resumen (no anexa el PDF solo).',
     clienteDadosContabilidadeEnviarEmail: 'Enviar por correo',
     clienteDadosContabilidadeCopiar: 'Copiar texto',
     clienteDadosContabilidadeCopiado: 'Texto copiado al portapapeles.',
     clienteDadosContabilidadeEmailAssunto: 'Datos de cliente para facturación',
+    clienteDadosContabDicaPassos:
+      'El documento con todos los datos es el PDF (Imprimir → «Guardar como PDF»), no solo texto en el e-mail.\n(1) «1. Generar PDF…».\n(2) En el diálogo, destino: PDF o «Microsoft Print to PDF» (Windows).\n(3) «2. E-mail…» y adjuntar el PDF. El cuerpo es resumen; el detalle (dirección, anexos…) en el PDF o con «Copiar».',
+    clienteDadosContabEmailCorpoIntro:
+      'Resumen de datos del cliente para contabilidad. El PDF: botón verde (Imprimir → Guardar como PDF), luego anexar a este correo.\n',
+    clienteDadosContabEmailCorpoFim:
+      '\n(Dirección, contacto y, si aplica, pedido/lista: en el PDF o con «Copiar»).\n',
     contabilidadePainelTitulo: 'Contabilidad / facturas',
     contabilidadeEmailLabel: 'Correo de la contabilidad',
     contabilidadeEmailPlaceholder: 'contabilidad@empresa.es',
@@ -4230,9 +4255,18 @@ export const translations = {
     contabilidadePainelAjuda:
       'El correo rellena el destinatario. Al guardar en la Biblioteca con total mayor que cero, se abre el resumen si la opción está activa.',
     contabilidadeFechamentoDocTitulo: 'Cierre para contabilidad / factura',
-    contabilidadeFechamentoDocSub: 'Resumen para facturar. Imprimir / Guardar como PDF o enviar por correo.',
+    contabilidadeFechamentoDocSub:
+      'El documento completo (líneas e totales) es un PDF (Imprimir → Guardar como PDF). El enlace de correo solo añade un resumen en el texto: adjunta el PDF y envía.',
     contabilidadeBlocoClienteFiscal: 'Datos fiscales del cliente (registro)',
     contabilidadeFechamentoEmailAssunto: 'Cierre para facturación',
+    contabilidadeFechamentoDicaPassos:
+      'Adjunte un PDF, no solo texto:\n(1) Pulse «Generar PDF».\n(2) En el diálogo, destino «Guardar como PDF» / «Microsoft Print to PDF» y guarde.\n(3) En el correo, anexe el PDF. El cuerpo es resumen; el detalle en el PDF.',
+    contabilidadeFechamentoEmailCorpoIntro:
+      'Resumen. Adjunte el PDF creado en la ventana (imprimir → guardar como PDF), luego anexar a este e-mail.\n',
+    contabilidadeFechamentoEmailCorpoFim:
+      '\n(Detalle: en el PDF o «Copiar texto».)\n',
+    contabilidadeFechamentoBtnGerarPdf: '1. Generar PDF (imprimir → guardar)',
+    contabilidadeFechamentoBtnEmail: '2. E-mail (adjuntar PDF en el correo)',
     contabilidadeDocManualButton: 'Documento p/ contabilidad',
     contabilidadeDocManualHint: 'Abre el mismo resumen sin volver a guardar.',
     contabilidadeEnvioModalTitulo: 'Enviar datos a contabilidad',
@@ -7020,11 +7054,17 @@ export const translations = {
     clienteDadosContabilidade: 'Données p/ comptabilité',
     clienteDadosContabilidadeTitulo: 'Données client — comptabilité / facturation',
     clienteDadosContabilidadeSub:
-      'Envoyez ce document à votre comptable ou utilisez-le pour la facturation. À l’impression, choisissez « Enregistrer au format PDF ».',
+      'Données fiscales et contacts pour le cabinet. Fichier complet: Imprimer → «Enregistrer en PDF» à joindre; le raccourci e-mail n’y met qu’un résumé.',
     clienteDadosContabilidadeEnviarEmail: 'Envoyer par e-mail',
     clienteDadosContabilidadeCopiar: 'Copier le texte',
     clienteDadosContabilidadeCopiado: 'Texte copié dans le presse-papiers.',
     clienteDadosContabilidadeEmailAssunto: 'Données client pour facturation',
+    clienteDadosContabDicaPassos:
+      'Le document d’impression complet (PDF) est l’exemplaire fiable, pas seulement l’e-mail en texte.\n(1) «1. Générer PDF…».\n(2) Dans la boîte d’impression, destination : «Enregistrer en PDF» ou «Microsoft Print to PDF».\n(3) «2. E-mail…» et joindre le PDF. Le texte n’est qu’un résumé ; l’adresse, les pièces jointes listées, etc. sont sur le PDF ou via «Copier le texte».',
+    clienteDadosContabEmailCorpoIntro:
+      'Résumé des coordonnées client. Joindre le PDF créé dans la fenêtre (imprimer → enregistrer en PDF), puis à cet e-mail.\n',
+    clienteDadosContabEmailCorpoFim:
+      '\n(Adresse complète, suivi, pièces : PDF ou copier le texte.)\n',
     contabilidadePainelTitulo: 'Comptabilité / factures',
     contabilidadeEmailLabel: 'E-mail du cabinet comptable',
     contabilidadeEmailPlaceholder: 'compta@entreprise.fr',
@@ -7034,9 +7074,16 @@ export const translations = {
     contabilidadePainelAjuda:
       'L’e-mail remplit le destinataire. Après enregistrement avec total > 0, le résumé s’ouvre si l’option est cochée.',
     contabilidadeFechamentoDocTitulo: 'Clôture pour comptabilité / facture',
-    contabilidadeFechamentoDocSub: 'Résumé pour facturation. Imprimer / PDF ou envoyer par e-mail.',
+    contabilidadeFechamentoDocSub:
+      'Le document de référence (lignes, totaux) est le PDF (Imprimer → Enregistrer en PDF). Le raccourci e-mail n’inclut qu’un résumé: joindre le PDF, puis envoyer.',
     contabilidadeBlocoClienteFiscal: 'Données fiscales du client (fiche)',
     contabilidadeFechamentoEmailAssunto: 'Clôture pour facturation',
+    contabilidadeFechamentoDicaPassos:
+      'Recommandé : joint PDF. (1) Générer PDF. (2) Enregistrer en PDF. (3) E-mail, joindre. Corps = résumé.',
+    contabilidadeFechamentoEmailCorpoIntro: 'Résumé. Joindre le PDF (imprimer → enregistrer en PDF).\n',
+    contabilidadeFechamentoEmailCorpoFim: '\n(Détail : le PDF.)\n',
+    contabilidadeFechamentoBtnGerarPdf: '1. Générer PDF (imprimer…)',
+    contabilidadeFechamentoBtnEmail: '2. E-mail (résumé, joindre le PDF)',
     contabilidadeDocManualButton: 'Document pour la comptabilité',
     contabilidadeDocManualHint: 'Ouvre le même résumé sans enregistrer à nouveau.',
     contabilidadeEnvioModalTitulo: 'Envoi à la comptabilité',
@@ -9822,11 +9869,17 @@ export const translations = {
     clienteDadosContabilidade: 'Dati p/ contabilità',
     clienteDadosContabilidadeTitulo: 'Dati cliente — contabilità / fatturazione',
     clienteDadosContabilidadeSub:
-      'Invii il documento al commercialista o lo usi per la fattura. Stampa: «Salva come PDF».',
+      'Dati fiscali e contatti. Documento completo: Stampa → «Salva come PDF» da allegare; l’e-mail precompilato contiene un riepilogo.',
     clienteDadosContabilidadeEnviarEmail: 'Invia e-mail',
     clienteDadosContabilidadeCopiar: 'Copia testo',
     clienteDadosContabilidadeCopiado: 'Testo copiato negli appunti.',
     clienteDadosContabilidadeEmailAssunto: 'Dati cliente per fatturazione',
+    clienteDadosContabDicaPassos:
+      'L’informativa completa è il PDF (Stampa → «Salva come PDF»), non solo testo in e-mail.\n(1) Pulsante «1. Genera PDF…».\n(2) Nella finestra, destinazione: PDF o «Microsoft Print to PDF» (Windows).\n(3) «2. E-mail…» e allega il PDF. L’e-mail contiene un riepilogo; l’indirizzo e l’elenco in PDF o con «Copia testo».',
+    clienteDadosContabEmailCorpoIntro:
+      'Riepilogo dati cliente per fatturazione. PDF: pulsante verde (stampa → salva come PDF), quindi allega a questa e-mail.\n',
+    clienteDadosContabEmailCorpoFim:
+      '\n(Indirizzo, contatti e, se c’è, nota o elenco allegati: PDF o copia.)\n',
     contabilidadePainelTitulo: 'Contabilità / fatture',
     contabilidadeEmailLabel: 'E-mail dello studio contabile',
     contabilidadeEmailPlaceholder: 'contabilita@azienda.it',
@@ -9836,9 +9889,16 @@ export const translations = {
     contabilidadePainelAjuda:
       'L’e-mail imposta il destinatario. Con totale > 0 si apre il riepilogo se l’opzione è attiva.',
     contabilidadeFechamentoDocTitulo: 'Chiusura per contabilità / fattura',
-    contabilidadeFechamentoDocSub: 'Riepilogo per fatturazione. Stampa / PDF o invio e-mail.',
+    contabilidadeFechamentoDocSub:
+      'Il documento ufficiale (righe, totali) è il PDF (Stampa → Salva come PDF). L’e-mail in bozza contiene un riepilogo: allega il PDF e invia.',
     contabilidadeBlocoClienteFiscal: 'Dati fiscali del cliente (anagrafica)',
     contabilidadeFechamentoEmailAssunto: 'Chiusura per fatturazione',
+    contabilidadeFechamentoDicaPassos:
+      'Allegare PDF: (1) Genera PDF. (2) Salva come PDF. (3) E-mail, allega. Testo = riepilogo.',
+    contabilidadeFechamentoEmailCorpoIntro: 'Riepilogo. Allegare il PDF (stampa → salva come PDF), poi in e-mail.\n',
+    contabilidadeFechamentoEmailCorpoFim: '\n(Dettaglio: PDF.)\n',
+    contabilidadeFechamentoBtnGerarPdf: '1. Genera PDF (stampa…)',
+    contabilidadeFechamentoBtnEmail: '2. E-mail (allega PDF)',
     contabilidadeDocManualButton: 'Documento per contabilità',
     contabilidadeDocManualHint: 'Apre lo stesso riepilogo senza salvare di nuovo.',
     contabilidadeEnvioModalTitulo: 'Invio alla contabilità',
@@ -12622,11 +12682,17 @@ export const translations = {
     clienteDadosContabilidade: 'Daten f. Buchhaltung',
     clienteDadosContabilidadeTitulo: 'Kundendaten — Buchhaltung / Rechnung',
     clienteDadosContabilidadeSub:
-      'Dokument an die Buchhaltung senden oder für die Rechnung nutzen. Beim Drucken «Als PDF speichern» wählen.',
+      'Kundendaten: vollständiges Belegbild per PDF (Drucken → als PDF speichern) anhängen; E-Mail-Link nur mit Kurztext.',
     clienteDadosContabilidadeEnviarEmail: 'Per E-Mail senden',
     clienteDadosContabilidadeCopiar: 'Text kopieren',
     clienteDadosContabilidadeCopiado: 'Text in die Zwischenablage kopiert.',
     clienteDadosContabilidadeEmailAssunto: 'Kundendaten zur Rechnungsstellung',
+    clienteDadosContabDicaPassos:
+      'Vollständige Kundendaten: als PDF (Drucken → «Als PDF speichern»), nicht nur Text in der E-Mail.\n(1) «1. PDF (Drucken…)».\n(2) Ziel: PDF speichern oder «Microsoft Print to PDF» (Windows).\n(3) «2. E-Mail…» – PDF anhängen. Der E-Mail-Text ist kurz; vollständige Adresse, Anhänge usw. im PDF oder per «Kopieren».',
+    clienteDadosContabEmailCorpoIntro:
+      'Kurzinfo: Kundendaten für die Buchhaltung. PDF: grüne Schaltfläche in diesem Fenster (drucken → speichern), danach anhängen.\n',
+    clienteDadosContabEmailCorpoFim:
+      '\n(Vollständige Adresse, Kontakt, ggf. Betrag/Anmerkung/Dateinamen: PDF oder Kopie.)\n',
     contabilidadePainelTitulo: 'Buchhaltung / Rechnungen',
     contabilidadeEmailLabel: 'E-Mail der Buchhaltung',
     contabilidadeEmailPlaceholder: 'buchhaltung@firma.de',
@@ -12636,9 +12702,16 @@ export const translations = {
     contabilidadePainelAjuda:
       'Die E-Mail füllt den Empfänger. Bei Total > 0 öffnet sich die Zusammenfassung, wenn die Option aktiv ist.',
     contabilidadeFechamentoDocTitulo: 'Abschluss für Buchhaltung / Rechnung',
-    contabilidadeFechamentoDocSub: 'Übersicht zur Rechnungserstellung. Drucken / PDF oder E-Mail.',
+    contabilidadeFechamentoDocSub:
+      'Das vollständige Belegdokument (Positionen, Summen) ist die PDF-Datei (Drucken → Als PDF speichern). Der E-Mail-Link enthält nur eine kurze Zusammenfassung: PDF anhängen, dann senden.',
     contabilidadeBlocoClienteFiscal: 'Steuerdaten des Kunden (Stamm)',
     contabilidadeFechamentoEmailAssunto: 'Abschluss zur Rechnungsstellung',
+    contabilidadeFechamentoDicaPassos:
+      'PDF anhängen: (1) PDF erzeugen. (2) Als PDF speichern. (3) E-Mail, anhängen. Text = Kurz',
+    contabilidadeFechamentoEmailCorpoIntro: 'Kurzinfo. PDF anhängen (drucken → speichern unter … PDF).\n',
+    contabilidadeFechamentoEmailCorpoFim: '\n(Details: PDF.)\n',
+    contabilidadeFechamentoBtnGerarPdf: '1. PDF (Drucken → speichern)',
+    contabilidadeFechamentoBtnEmail: '2. E-Mail (Kurz + PDF anhängen)',
     contabilidadeDocManualButton: 'Dokument für Buchhaltung',
     contabilidadeDocManualHint: 'Öffnet dieselbe Übersicht ohne erneutes Speichern.',
     contabilidadeEnvioModalTitulo: 'An die Buchhaltung senden',
@@ -15427,11 +15500,17 @@ export const translations = {
     clienteDadosContabilidade: 'Details for accounting',
     clienteDadosContabilidadeTitulo: 'Customer details — accounting / invoicing',
     clienteDadosContabilidadeSub:
-      'Send this to your accountant or use it for invoicing. In the print dialog choose «Save as PDF».',
+      'Tax/Contact details. Full document: print → save as PDF and attach; the mailto link pre-fills a short summary (it does not attach a file).',
     clienteDadosContabilidadeEnviarEmail: 'Send by email',
     clienteDadosContabilidadeCopiar: 'Copy text',
     clienteDadosContabilidadeCopiado: 'Text copied to clipboard.',
     clienteDadosContabilidadeEmailAssunto: 'Customer details for invoicing',
+    clienteDadosContabDicaPassos:
+      'The reliable document for the accountant is the PDF (Print → Save as PDF), not a wall of text in the e-mail.\n(1) «1. Create PDF…».\n(2) In the print dialog, choose Save as PDF or Microsoft Print to PDF.\n(3) «2. E-mail…» and attach that PDF. The e-mail body is a short summary; full address, line items, attachment list, etc. are in the PDF or from «Copy text».',
+    clienteDadosContabEmailCorpoIntro:
+      'Short summary of customer/billing data. Create the PDF from the green button (Print → Save as PDF in this window), then attach to this e-mail.\n',
+    clienteDadosContabEmailCorpoFim:
+      '\n(Full table, address, and optional order/attachment list: the PDF, or use Copy.)\n',
     contabilidadePainelTitulo: 'Accounting / invoicing',
     contabilidadeEmailLabel: 'Accountant e-mail',
     contabilidadeEmailPlaceholder: 'accounts@company.com',
@@ -15441,9 +15520,16 @@ export const translations = {
     contabilidadePainelAjuda:
       'The e-mail fills the recipient. When the total saved is greater than zero, the summary opens if this option is on.',
     contabilidadeFechamentoDocTitulo: 'Closure for accounting / invoice',
-    contabilidadeFechamentoDocSub: 'Summary for invoicing. Print / Save as PDF or send by e-mail.',
+    contabilidadeFechamentoDocSub:
+      'The full itemised document for accounting is a PDF (Print → Save as PDF). The e-mail link only pre-fills a short body: attach the PDF in your mail client, then send.',
     contabilidadeBlocoClienteFiscal: 'Customer tax details (on file)',
     contabilidadeFechamentoEmailAssunto: 'Closure for invoicing',
+    contabilidadeFechamentoDicaPassos:
+      'Attach a PDF, not just plain text: (1) Create PDF. (2) Print dialog → Save as PDF / Microsoft Print to PDF. (3) E-mail, attach. Body is a short summary.',
+    contabilidadeFechamentoEmailCorpoIntro: 'Short summary. Attach the PDF (green button on the summary page → Print → Save as PDF), then open e-mail and attach the file.\n',
+    contabilidadeFechamentoEmailCorpoFim: '\n(Full line items: in the PDF or use Copy.)\n',
+    contabilidadeFechamentoBtnGerarPdf: '1. Create PDF (print → save as PDF)',
+    contabilidadeFechamentoBtnEmail: '2. E-mail (summary — attach the PDF in your client)',
     contabilidadeDocManualButton: 'Document for accounting',
     contabilidadeDocManualHint: 'Opens the same summary without saving again.',
     contabilidadeEnvioModalTitulo: 'Send to accounting',

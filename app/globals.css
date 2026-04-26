@@ -7079,6 +7079,22 @@ button.dia-trabalho-acao-btn--del:hover {
   border: 1px solid rgba(251, 191, 36, 0.45);
   box-shadow: 0 8px 32px rgba(251, 191, 36, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
+
+/* Telemóvel: botão e texto do envio forçado à sincronização (Administrador) */
+@media (max-width: 600px) {
+  .admin-sync-card .admin-sync-force-block p {
+    font-size: 11px !important;
+    line-height: 1.5;
+  }
+  .admin-sync-card .admin-sync-force-block .btn-primary {
+    width: 100%;
+    min-height: 48px;
+    box-sizing: border-box;
+  }
+  .admin-disclosure__body {
+    padding: 4px 12px 16px;
+  }
+}
 .admin-sync-card h3 {
   margin: 0 0 8px;
   font-size: 15px;
