@@ -53906,35 +53906,35 @@ A1;Peça exemplo;10`}
                             {cliente.nomeEmpresa}
                           </h3>
                         </div>
-                        <div className="biblioteca-relatorios-cliente__actions">
-                          <div
-                            className="biblioteca-relatorios-cliente__counts"
-                            title={tituloContagensCliente}
-                          >
-                            <span className="biblioteca-relatorios-cliente__count">
-                              <span className="biblioteca-relatorios-cliente__count-num">{totalRelatoriosServicoCliente}</span>
-                              {' '}
-                              <span>{(safeT as any)?.bibliotecaRelatoriosLegendaServico ?? (safeT as any)?.relatoriosServicoShort ?? 'serv.'}</span>
-                            </span>
-                            <span className="biblioteca-relatorios-cliente__count biblioteca-relatorios-cliente__count--desp">
-                              <span className="biblioteca-relatorios-cliente__count-num">{totalRelatoriosDespesasCliente}</span>
-                              {' '}
-                              <span>{(safeT as any)?.bibliotecaRelatoriosLegendaDespesas ?? 'desp.'}</span>
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            className="biblioteca-relatorios-cliente__delete"
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteCliente(cliente.id) }}
-                            title={(safeT as any)?.excluirPastaBiblioteca || 'Excluir pasta (e cliente)'}
-                          >
-                            🗑️ {(safeT as any)?.excluirPasta || 'Excluir'}
-                          </button>
-                        </div>
                       </summary>
 
                       {/* Conteúdo do Cliente (expandido) */}
                       <div className="biblioteca-relatorios-cliente__body">
+                      <div className="biblioteca-relatorios-cliente__meta">
+                        <div
+                          className="biblioteca-relatorios-cliente__counts"
+                          title={tituloContagensCliente}
+                        >
+                          <span className="biblioteca-relatorios-cliente__count">
+                            <span className="biblioteca-relatorios-cliente__count-num">{totalRelatoriosServicoCliente}</span>
+                            {' '}
+                            <span>{(safeT as any)?.bibliotecaRelatoriosLegendaServico ?? (safeT as any)?.relatoriosServicoShort ?? 'serv.'}</span>
+                          </span>
+                          <span className="biblioteca-relatorios-cliente__count biblioteca-relatorios-cliente__count--desp">
+                            <span className="biblioteca-relatorios-cliente__count-num">{totalRelatoriosDespesasCliente}</span>
+                            {' '}
+                            <span>{(safeT as any)?.bibliotecaRelatoriosLegendaDespesas ?? 'desp.'}</span>
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          className="biblioteca-relatorios-cliente__delete"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteCliente(cliente.id) }}
+                          title={(safeT as any)?.excluirPastaBiblioteca || 'Excluir pasta (e cliente)'}
+                        >
+                          🗑️ {(safeT as any)?.excluirPasta || 'Excluir'}
+                        </button>
+                      </div>
 
                       {/* Secção: Relatórios de Serviço */}
                       <div style={{ marginBottom: '6px' }}>
@@ -54045,21 +54045,13 @@ A1;Peça exemplo;10`}
                                       </div>
                                     </div>
                                     
-                                    {/* Botões de Ação */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px' }}>
+                                    {/* Modelo PDF + ações em grelha */}
+                                    <div className="biblioteca-relatorios-servico-actions">
                                       <select
+                                        className="biblioteca-relatorios-servico-actions__modelo"
                                         value={selectedPDFModel}
                                         onChange={(e) => setSelectedPDFModel(e.target.value)}
-                                        style={{
-                                          width: '100%',
-                                          padding: '4px',
-                                          fontSize: '9px',
-                                          backgroundColor: 'rgba(20, 20, 20, 0.45)',
-                                          color: '#ffffff',
-                                          border: '1px solid rgba(0, 150, 255, 0.65)',
-                                          borderRadius: '3px',
-                                          cursor: 'pointer'
-                                        }}
+                                        aria-label={safeT?.gerarPDF || 'Modelo PDF'}
                                       >
                                         <option value="classico">{safeT?.modeloClassico || 'Clássico'}</option>
                                         <option value="detalhado">{safeT?.modeloDetalhado || 'Detalhado'}</option>
@@ -54076,55 +54068,29 @@ A1;Peça exemplo;10`}
                                         <option value="formal">{safeT?.modeloFormal || 'Formal'}</option>
                                         <option value="lista">{safeT?.modeloLista || 'Lista'}</option>
                                       </select>
-                                      <div style={{ display: 'flex', gap: '6px', width: '100%', flexWrap: 'wrap' }}>
+                                      <div className="biblioteca-relatorios-servico-actions__grid">
                                         <button 
-                                          className="btn-primary" 
+                                          type="button"
+                                          className="btn-primary biblioteca-relatorios-servico-actions__btn biblioteca-relatorios-servico-actions__btn--ver" 
                                           onClick={() => setViewingRelatorioServico(relatorio)}
-                                          style={{ 
-                                            flex: 1,
-                                            minWidth: '60px',
-                                            padding: '6px 10px', 
-                                            fontSize: '10px',
-                                            backgroundColor: 'rgba(18, 52, 24, 0.96)',
-                                            border: '1px solid rgba(0, 200, 80, 0.55)',
-                                            color: '#ffffff'
-                                          }}
                                         >
                                           👁️ {safeT?.view || 'Ver'}
                                         </button>
                                         <button 
-                                          className="btn-primary" 
+                                          type="button"
+                                          className="btn-primary biblioteca-relatorios-servico-actions__btn biblioteca-relatorios-servico-actions__btn--pdf" 
                                           onClick={() => handlePrintRelatorio(relatorio)}
-                                          style={{ 
-                                            flex: 1,
-                                            minWidth: '60px',
-                                            padding: '6px 10px', 
-                                            fontSize: '10px', 
-                                            backgroundColor: 'rgba(18, 38, 62, 0.96)', 
-                                            border: '1px solid rgba(80, 160, 255, 0.55)',
-                                            color: '#ffffff'
-                                          }}
                                         >
                                           📄 {safeT?.gerarPDF || 'PDF'}
                                         </button>
                                         <button 
                                           type="button"
+                                          className="biblioteca-relatorios-servico-actions__btn biblioteca-relatorios-servico-actions__btn--del"
                                           onClick={() => handleDeleteRelatorioServico(relatorio.id, {
                                             clienteId: cliente.id,
                                             equipamentoKey,
                                             indexInEquipamento: relIndex
                                           })}
-                                          style={{ 
-                                            flex: 1,
-                                            minWidth: '60px',
-                                            padding: '6px 10px', 
-                                            fontSize: '10px', 
-                                            backgroundColor: 'rgba(52, 22, 22, 0.96)', 
-                                            border: '1px solid rgba(255, 100, 100, 0.5)',
-                                            color: '#ffffff',
-                                            borderRadius: '4px',
-                                            cursor: 'pointer'
-                                          }}
                                           title={(safeT as any)?.confirmDeleteRelatorioServico || (safeT?.delete || 'Excluir')}
                                         >
                                           🗑️ {safeT?.delete || 'Excluir'}
@@ -54157,7 +54123,6 @@ A1;Peça exemplo;10`}
                               {despesasCliente.map(({ relatorio, itens }) => {
                                 const itensDespesasVisiveis = filtrarFechamentoItensPorOmitidos(fechamentoItensOmitidosPorRelatorio, relatorio.id, itens)
                                 const totalCobranca = itensDespesasVisiveis.reduce((s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)), 0)
-                                const btnBase = { padding: '10px 14px', fontSize: '13px', borderRadius: '8px', cursor: 'pointer' as const, fontWeight: 600 as const, border: 'none' }
                                 return (
                                   <div 
                                     key={relatorio.id} 
@@ -54184,17 +54149,17 @@ A1;Peça exemplo;10`}
                                         {relatorio.cliente} · {relatorio.maquinaModelo} · {(safeT as any)?.total || 'Total'}: <strong style={{ color: '#ffffff' }}>€{totalCobranca.toFixed(2)}</strong>
                                       </div>
                                     </div>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                                      <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens: itensDespesasVisiveis })} style={{ ...btnBase, backgroundColor: 'rgba(18, 52, 24, 0.96)', border: '1px solid rgba(0, 200, 80, 0.55)', color: '#ffffff' }}>
+                                    <div className="biblioteca-relatorios-despesas-actions">
+                                      <button type="button" className="biblioteca-relatorios-despesas-actions__btn biblioteca-relatorios-despesas-actions__btn--ver" onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio, itens: itensDespesasVisiveis })}>
                                         👁️ {(safeT as any)?.visualizarDespesasBiblioteca ?? safeT?.view ?? 'View'}
                                       </button>
-                                      <button type="button" onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(26, 28, 26, 0.92)', border: '2px solid rgba(255, 170, 0, 0.75)', color: '#ffaa00' }}>
+                                      <button type="button" className="biblioteca-relatorios-despesas-actions__btn biblioteca-relatorios-despesas-actions__btn--edit" onClick={() => handleEditarDespesasNaBiblioteca(relatorio.id)}>
                                         ✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}
                                       </button>
-                                      <button type="button" onClick={() => imprimirPDFDespesasDaBiblioteca(relatorio, itensDespesasVisiveis)} style={{ ...btnBase, backgroundColor: 'rgba(40, 26, 52, 0.96)', border: '1px solid rgba(180, 130, 255, 0.5)', color: '#ffffff' }}>
+                                      <button type="button" className="biblioteca-relatorios-despesas-actions__btn biblioteca-relatorios-despesas-actions__btn--pdf" onClick={() => imprimirPDFDespesasDaBiblioteca(relatorio, itensDespesasVisiveis)}>
                                         📄 {(safeT as any)?.gerarPDF || 'PDF'}
                                       </button>
-                                      <button type="button" onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)} style={{ ...btnBase, backgroundColor: 'rgba(52, 22, 22, 0.96)', border: '1px solid rgba(255, 100, 100, 0.5)', color: '#ffffff' }}>
+                                      <button type="button" className="biblioteca-relatorios-despesas-actions__btn biblioteca-relatorios-despesas-actions__btn--del" onClick={() => handleDeleteFechamentoRelatorio(relatorio.id)}>
                                         🗑️ {safeT?.delete || 'Excluir'}
                                       </button>
                                     </div>

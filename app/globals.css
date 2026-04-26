@@ -5163,7 +5163,7 @@ a:focus-visible {
   cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 12px;
   padding: 14px 16px;
   user-select: none;
@@ -5183,7 +5183,7 @@ a:focus-visible {
 .biblioteca-relatorios-cliente__title {
   margin: 0;
   color: #f4fff7;
-  font-size: clamp(14px, 2.6vw, 16px);
+  font-size: clamp(14px, 2.6vw, 17px);
   font-weight: 700;
   letter-spacing: 0.02em;
   min-width: 0;
@@ -5192,11 +5192,21 @@ a:focus-visible {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.biblioteca-relatorios-cliente__actions {
+.biblioteca-relatorios-cliente__meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: rgba(52, 211, 153, 0.07);
+  border: 1px solid rgba(52, 211, 153, 0.22);
+  border-radius: 10px;
+}
+.biblioteca-relatorios-cliente__meta .biblioteca-relatorios-cliente__counts {
+  max-width: none;
+  justify-content: flex-start;
 }
 .biblioteca-relatorios-cliente__counts {
   display: inline-flex;
@@ -5249,6 +5259,110 @@ a:focus-visible {
 .biblioteca-relatorios-cliente__body {
   padding: 16px 16px 18px;
   background: rgba(0, 0, 0, 0.12);
+}
+
+/* Relatório de serviço: modelo PDF + Ver / PDF / Excluir em grelha */
+.biblioteca-relatorios-servico-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+.biblioteca-relatorios-servico-actions__modelo {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #f4fff7;
+  background: rgba(12, 18, 16, 0.85);
+  border: 1px solid rgba(0, 150, 255, 0.55);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.biblioteca-relatorios-servico-actions__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+.biblioteca-relatorios-servico-actions__btn {
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.2;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  transition: filter 0.15s ease, border-color 0.15s ease;
+}
+.biblioteca-relatorios-servico-actions__btn:hover {
+  filter: brightness(1.08);
+}
+.biblioteca-relatorios-servico-actions__btn--ver {
+  background: rgba(18, 52, 24, 0.96);
+  border-color: rgba(0, 200, 80, 0.55);
+}
+.biblioteca-relatorios-servico-actions__btn--pdf {
+  background: rgba(18, 38, 62, 0.96);
+  border-color: rgba(80, 160, 255, 0.55);
+}
+.biblioteca-relatorios-servico-actions__btn--del {
+  background: rgba(52, 22, 22, 0.96);
+  border-color: rgba(255, 100, 100, 0.5);
+}
+
+/* Fechamento / despesas: quatro ações alinhadas */
+.biblioteca-relatorios-despesas-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+.biblioteca-relatorios-despesas-actions__btn {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.25;
+  border: none;
+  color: #fff;
+  transition: filter 0.15s ease;
+}
+.biblioteca-relatorios-despesas-actions__btn:hover {
+  filter: brightness(1.08);
+}
+.biblioteca-relatorios-despesas-actions__btn--ver {
+  background: rgba(18, 52, 24, 0.96);
+  border: 1px solid rgba(0, 200, 80, 0.55);
+}
+.biblioteca-relatorios-despesas-actions__btn--edit {
+  background: rgba(26, 28, 26, 0.92);
+  border: 2px solid rgba(255, 170, 0, 0.75);
+  color: #ffaa00;
+}
+.biblioteca-relatorios-despesas-actions__btn--pdf {
+  background: rgba(40, 26, 52, 0.96);
+  border: 1px solid rgba(180, 130, 255, 0.5);
+}
+.biblioteca-relatorios-despesas-actions__btn--del {
+  background: rgba(52, 22, 22, 0.96);
+  border: 1px solid rgba(255, 100, 100, 0.5);
+}
+
+@media (max-width: 400px) {
+  .biblioteca-relatorios-servico-actions__grid {
+    grid-template-columns: 1fr;
+  }
+  .biblioteca-relatorios-cliente__title {
+    white-space: normal;
+  }
 }
 
 .biblioteca-relatorios-cliente__section-label {
