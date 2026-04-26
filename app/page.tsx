@@ -12310,6 +12310,46 @@ export default function Dashboard() {
     return 'pago'
   }
 
+  /** Selo ao lado do nome no cadastro de clientes: cores por situação das faturas (fornecedor → cliente). */
+  function getClienteFaturaBadgeProps(clienteId: string) {
+    const st = getStatusFaturasCliente(clienteId)
+    const tr = safeT as Record<string, string>
+    if (st === 'sem-faturas') {
+      return {
+        bg: 'rgba(255, 255, 255, 0.14)',
+        fg: '#ffffff',
+        border: '1px solid rgba(255, 255, 255, 0.65)',
+        label: tr.semFaturas || tr.semFatura || 'Sem Faturas',
+        mark: '—',
+      }
+    }
+    if (st === 'pendente') {
+      return {
+        bg: '#fde047',
+        fg: '#1c1917',
+        border: '1px solid rgba(202, 138, 8, 0.95)',
+        label: tr.clienteBadgeFaturaAReceber || 'Fatura a receber',
+        mark: '\u23F3',
+      }
+    }
+    if (st === 'atrasado') {
+      return {
+        bg: '#dc2626',
+        fg: '#ffffff',
+        border: '1px solid rgba(252, 165, 165, 0.7)',
+        label: tr.clienteBadgeNaoPago || 'Não pago',
+        mark: '!',
+      }
+    }
+    return {
+      bg: '#15803d',
+      fg: '#ecfdf5',
+      border: '1px solid rgba(74, 222, 128, 0.55)',
+      label: tr.clienteBadgeEmDia || 'Em Dia',
+      mark: '\u2713',
+    }
+  }
+
   // Função para obter o status das faturas de um fornecedor
   const getStatusFaturasFornecedor = (fornecedor: Fornecedor): 'pago' | 'pendente' | 'atrasado' | 'sem-faturas' => {
     const faturas = fornecedor.faturas || []
@@ -31582,8 +31622,15 @@ onKeyPress={(e) => {
                       
                       const iniciais = getIniciais(cliente.nomeEmpresa)
                       const statusFaturas = getStatusFaturasCliente(cliente.id)
-                      const statusText = statusFaturas === 'pago' ? 'Em Dia' : statusFaturas === 'pendente' ? 'Pendente' : statusFaturas === 'atrasado' ? 'Atrasado' : 'Sem Faturas'
-                      const statusColor = statusFaturas === 'pago' ? '#00ff00' : statusFaturas === 'pendente' ? '#ffaa00' : statusFaturas === 'atrasado' ? '#ff0000' : '#888888'
+                      const statusText =
+                        statusFaturas === 'pago'
+                          ? (safeT as any)?.clienteBadgeEmDia || 'Em Dia'
+                          : statusFaturas === 'pendente'
+                            ? (safeT as any)?.pendente || 'Pendente'
+                            : statusFaturas === 'atrasado'
+                              ? (safeT as any)?.atrasado || 'Atrasado'
+                              : (safeT as any)?.semFaturas || 'Sem Faturas'
+                      const badgeF = getClienteFaturaBadgeProps(cliente.id)
                       const alertaDevedor = clienteCadastroAlertaDevedorId === cliente.id
                       
                       return (
@@ -31673,20 +31720,34 @@ onKeyPress={(e) => {
                               
                               <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
                                 {/* Badge de Status */}
-                                <div style={{
-                                  backgroundColor: alertaDevedor ? 'rgba(160, 0, 0, 0.9)' : statusColor,
-                                  color: alertaDevedor ? '#ffcccc' : '#fff',
-                                  padding: '2px 6px',
-                                  borderRadius: '10px',
-                                  fontSize: '9px',
-                                  fontWeight: '500',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '2px',
-                                  whiteSpace: 'nowrap'
-                                }}>
-                                  <span>✓</span>
-                                  <span>{statusText}</span>
+                                <div
+                                  style={{
+                                    backgroundColor: alertaDevedor ? 'rgba(160, 0, 0, 0.9)' : badgeF.bg,
+                                    color: alertaDevedor ? '#ffcccc' : badgeF.fg,
+                                    border: alertaDevedor ? '1px solid rgba(255, 120, 120, 0.55)' : badgeF.border,
+                                    padding: '2px 6px',
+                                    borderRadius: '10px',
+                                    fontSize: '9px',
+                                    fontWeight: 600,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '3px',
+                                    whiteSpace: 'nowrap',
+                                    boxShadow:
+                                      !alertaDevedor && statusFaturas === 'pendente'
+                                        ? '0 0 12px rgba(253, 224, 71, 0.42)'
+                                        : !alertaDevedor && statusFaturas === 'sem-faturas'
+                                          ? '0 0 10px rgba(255, 255, 255, 0.22)'
+                                          : !alertaDevedor && statusFaturas === 'atrasado'
+                                            ? '0 0 12px rgba(220, 38, 38, 0.45)'
+                                            : undefined,
+                                  }}
+                                >
+                                  {!alertaDevedor && (
+                                    <span style={{ fontWeight: 800, lineHeight: 1 }}>{badgeF.mark}</span>
+                                  )}
+                                  {alertaDevedor && <span style={{ fontWeight: 800 }}>!</span>}
+                                  <span>{alertaDevedor ? statusText : badgeF.label}</span>
                                 </div>
                                 
                                 {/* Menu de Opções */}
@@ -64274,8 +64335,15 @@ A1;Peça exemplo;10`}
                   
                   const iniciais = getIniciais(cliente.nomeEmpresa)
                   const statusFaturas = getStatusFaturasCliente(cliente.id)
-                  const statusText = statusFaturas === 'pago' ? 'Em Dia' : statusFaturas === 'pendente' ? 'Pendente' : statusFaturas === 'atrasado' ? 'Atrasado' : 'Sem Faturas'
-                  const statusColor = statusFaturas === 'pago' ? '#00ff00' : statusFaturas === 'pendente' ? '#ffaa00' : statusFaturas === 'atrasado' ? '#ff0000' : '#888888'
+                  const statusText =
+                    statusFaturas === 'pago'
+                      ? (safeT as any)?.clienteBadgeEmDia || 'Em Dia'
+                      : statusFaturas === 'pendente'
+                        ? (safeT as any)?.pendente || 'Pendente'
+                        : statusFaturas === 'atrasado'
+                          ? (safeT as any)?.atrasado || 'Atrasado'
+                          : (safeT as any)?.semFaturas || 'Sem Faturas'
+                  const badgeF = getClienteFaturaBadgeProps(cliente.id)
                   const alertaDevedor = clienteCadastroAlertaDevedorId === cliente.id
                   
                   return (
@@ -64367,20 +64435,34 @@ A1;Peça exemplo;10`}
                           
                           <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
                             {/* Badge de Status */}
-                            <div style={{
-                              backgroundColor: alertaDevedor ? 'rgba(160, 0, 0, 0.9)' : statusColor,
-                              color: alertaDevedor ? '#ffcccc' : '#fff',
-                              padding: '2px 6px',
-                              borderRadius: '10px',
-                              fontSize: '9px',
-                              fontWeight: '500',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '2px',
-                              whiteSpace: 'nowrap'
-                            }}>
-                              <span>✓</span>
-                              <span>{statusText}</span>
+                            <div
+                              style={{
+                                backgroundColor: alertaDevedor ? 'rgba(160, 0, 0, 0.9)' : badgeF.bg,
+                                color: alertaDevedor ? '#ffcccc' : badgeF.fg,
+                                border: alertaDevedor ? '1px solid rgba(255, 120, 120, 0.55)' : badgeF.border,
+                                padding: '2px 6px',
+                                borderRadius: '10px',
+                                fontSize: '9px',
+                                fontWeight: 600,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '3px',
+                                whiteSpace: 'nowrap',
+                                boxShadow:
+                                  !alertaDevedor && statusFaturas === 'pendente'
+                                    ? '0 0 12px rgba(253, 224, 71, 0.42)'
+                                    : !alertaDevedor && statusFaturas === 'sem-faturas'
+                                      ? '0 0 10px rgba(255, 255, 255, 0.22)'
+                                      : !alertaDevedor && statusFaturas === 'atrasado'
+                                        ? '0 0 12px rgba(220, 38, 38, 0.45)'
+                                        : undefined,
+                              }}
+                            >
+                              {!alertaDevedor && (
+                                <span style={{ fontWeight: 800, lineHeight: 1 }}>{badgeF.mark}</span>
+                              )}
+                              {alertaDevedor && <span style={{ fontWeight: 800 }}>!</span>}
+                              <span>{alertaDevedor ? statusText : badgeF.label}</span>
                             </div>
                             
                             {/* Menu de Opções */}
