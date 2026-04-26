@@ -980,11 +980,16 @@ const FECHAMENTO_IDS_FIXOS_TEMPLATE = ['ht', 'km', 'diarias', 'hida', 'hret'] as
 type FechamentoFluxoFinanceiroEtapa = 'none' | 'enviado_fatura' | 'controlo_pagamento'
 type FechamentoFluxoFinanceiroModo = 'com_fatura' | 'sem_fatura'
 type FechamentoFluxoFinanceiroPagamento = 'pendente' | 'pago' | 'devedor'
+/** Situação explícita da fatura (complementa etapa/pagamento na gestão financeira / OS) */
+type FechamentoSituacaoFatura = 'emitida' | 'no_prazo' | 'paga' | 'nao_paga'
 type FechamentoFluxoFinanceiroEntry = {
   etapa: Exclude<FechamentoFluxoFinanceiroEtapa, 'none'>
   modo: FechamentoFluxoFinanceiroModo
   pagamento: FechamentoFluxoFinanceiroPagamento
   updatedAt: string
+  numeroFatura?: string
+  situacaoFatura?: FechamentoSituacaoFatura
+  dataVencimentoFatura?: string
 }
 
 type PasswordEntry = {
@@ -1335,6 +1340,51 @@ type Cliente = {
   saldoPendente?: number // Saldo pendente do cliente
   /** Formulários de solicitação técnica devolvidos (PDF/imagem), associados ao registo do cliente */
   anexosSolicitacaoServico?: SolicitacaoDocDevolvidoCliente[]
+}
+
+function cmpClienteRelatorioFinanceiro(a: string, b: string): number {
+  return (a || '').localeCompare(b || '', undefined, { sensitivity: 'base', numeric: true })
+}
+
+/** Relatórios de serviço com fechamento guardado na biblioteca (lista global ordenada A–Z por cliente e nº). */
+function relatoriosComFechamentoNaBibliotecaOrdenados(
+  relatoriosServico: RelatorioServico[],
+  clientes: Cliente[],
+  fechamentosGuardadosBibliotecaIds: string[],
+  fechamentosRelatorios: Record<string, FechamentoItem[]>
+): RelatorioServico[] {
+  return relatoriosServico
+    .filter(
+      r =>
+        Boolean(r.clienteId) &&
+        fechamentosGuardadosBibliotecaIds.includes(r.id) &&
+        Array.isArray(fechamentosRelatorios[r.id]) &&
+        fechamentosRelatorios[r.id]!.length > 0
+    )
+    .sort((a, b) => {
+      const ca = clientes.find(c => c.id === a.clienteId)?.nomeEmpresa || a.cliente || ''
+      const cb = clientes.find(c => c.id === b.clienteId)?.nomeEmpresa || b.cliente || ''
+      const byC = cmpClienteRelatorioFinanceiro(ca, cb)
+      if (byC !== 0) return byC
+      return cmpClienteRelatorioFinanceiro(String(a.numero ?? ''), String(b.numero ?? ''))
+    })
+}
+
+function normalizarTextoFaturaBusca(s: string): string {
+  return s.trim().toLowerCase().replace(/\s+/g, '')
+}
+
+/**
+ * Correspondência exata (normalizada) ou parcial: exige pelo menos 2 caracteres na consulta
+ * para evitar coincidências com um único dígito/letra.
+ */
+function numeroFaturaCorrespondeConsulta(numeroGuardado: string, consulta: string): boolean {
+  const a = normalizarTextoFaturaBusca(numeroGuardado)
+  const b = normalizarTextoFaturaBusca(consulta)
+  if (!a || !b) return false
+  if (a === b) return true
+  if (b.length < 2) return false
+  return a.includes(b) || b.includes(a)
 }
 
 // Protocolo de Serviço: antes/depois com texto, imagens e peças trocadas
@@ -3825,7 +3875,13 @@ export default function Dashboard() {
   function setFechamentoEtapaFinanceira(
     relatorioId: string,
     etapa: FechamentoFluxoFinanceiroEtapa,
-    opts?: { modo?: FechamentoFluxoFinanceiroModo; pagamento?: FechamentoFluxoFinanceiroPagamento }
+    opts?: {
+      modo?: FechamentoFluxoFinanceiroModo
+      pagamento?: FechamentoFluxoFinanceiroPagamento
+      numeroFatura?: string
+      situacaoFatura?: FechamentoSituacaoFatura
+      dataVencimentoFatura?: string
+    }
   ) {
     setFechamentoFluxoFinanceiroPorRelatorioId(prev => {
       const next = { ...prev }
@@ -3834,15 +3890,59 @@ export default function Dashboard() {
       } else {
         const curr = next[relatorioId]
         const currObj = curr && typeof curr === 'object' && !Array.isArray(curr) ? (curr as FechamentoFluxoFinanceiroEntry) : null
-        next[relatorioId] = {
+        const numeroFatura =
+          opts?.numeroFatura !== undefined ? opts.numeroFatura : currObj?.numeroFatura
+        const situacaoFatura =
+          opts?.situacaoFatura !== undefined ? opts.situacaoFatura : currObj?.situacaoFatura
+        const dataVencimentoFatura =
+          opts?.dataVencimentoFatura !== undefined ? opts.dataVencimentoFatura : currObj?.dataVencimentoFatura
+        const entry: FechamentoFluxoFinanceiroEntry = {
           etapa,
           modo: opts?.modo || currObj?.modo || (etapa === 'enviado_fatura' ? 'com_fatura' : 'com_fatura'),
           pagamento: opts?.pagamento || currObj?.pagamento || 'pendente',
           updatedAt: new Date().toISOString(),
         }
+        if (numeroFatura !== undefined && String(numeroFatura).trim() !== '') entry.numeroFatura = String(numeroFatura).trim()
+        if (situacaoFatura !== undefined) entry.situacaoFatura = situacaoFatura
+        if (dataVencimentoFatura !== undefined && String(dataVencimentoFatura).trim() !== '') {
+          entry.dataVencimentoFatura = String(dataVencimentoFatura).trim()
+        }
+        next[relatorioId] = entry
       }
       void saveData(FECHAMENTO_FLUXO_FINANCEIRO_KEY, next)
       return next
+    })
+  }
+
+  function aplicarSituacaoFaturaNoRelatorio(relatorioId: string, situacao: FechamentoSituacaoFatura) {
+    if (situacao === 'emitida') {
+      setFechamentoEtapaFinanceira(relatorioId, 'enviado_fatura', {
+        modo: 'com_fatura',
+        pagamento: 'pendente',
+        situacaoFatura: 'emitida',
+      })
+      return
+    }
+    if (situacao === 'no_prazo') {
+      setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', {
+        modo: 'com_fatura',
+        pagamento: 'pendente',
+        situacaoFatura: 'no_prazo',
+      })
+      return
+    }
+    if (situacao === 'paga') {
+      setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', {
+        modo: 'com_fatura',
+        pagamento: 'pago',
+        situacaoFatura: 'paga',
+      })
+      return
+    }
+    setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', {
+      modo: 'com_fatura',
+      pagamento: 'pendente',
+      situacaoFatura: 'nao_paga',
     })
   }
 
@@ -3862,13 +3962,15 @@ export default function Dashboard() {
     })
   }
 
-  function FechamentoFluxoFinanceiroStrip(props: { relatorioId: string; compact?: boolean }) {
-    const { relatorioId, compact } = props
+  function FechamentoFluxoFinanceiroStrip(props: { relatorioId: string; compact?: boolean; readOnly?: boolean }) {
+    const { relatorioId, compact, readOnly } = props
     const raw = fechamentoFluxoFinanceiroPorRelatorioId[relatorioId]
     const obj = raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as FechamentoFluxoFinanceiroEntry) : null
     const etapa: FechamentoFluxoFinanceiroEtapa = obj?.etapa || (raw as FechamentoFluxoFinanceiroEtapa) || 'none'
     const modo: FechamentoFluxoFinanceiroModo = obj?.modo || 'com_fatura'
     const pagamento: FechamentoFluxoFinanceiroPagamento = obj?.pagamento || 'pendente'
+    const situacaoFatura = obj?.situacaoFatura
+    const numeroFaturaRef = obj?.numeroFatura?.trim()
     const tx = safeT as Record<string, string>
     const chip: React.CSSProperties = {
       padding: compact ? '3px 8px' : '4px 10px',
@@ -3940,80 +4042,110 @@ export default function Dashboard() {
               )}
             </>
           )}
+          {situacaoFatura === 'emitida' && (
+            <span style={{ ...chip, background: 'rgba(251, 191, 36, 0.12)', border: '1px solid rgba(251, 191, 36, 0.45)', color: '#fffbeb' }}>
+              {tx.fechamentoSituacaoEmitida || 'Emitida'}
+            </span>
+          )}
+          {situacaoFatura === 'no_prazo' && (
+            <span style={{ ...chip, background: 'rgba(56, 189, 248, 0.12)', border: '1px solid rgba(56, 189, 248, 0.45)', color: '#e0f2fe' }}>
+              {tx.fechamentoSituacaoNoPrazo || 'No prazo de pagamento'}
+            </span>
+          )}
+          {situacaoFatura === 'paga' && (
+            <span style={{ ...chip, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.45)', color: '#ecfdf5' }}>
+              {tx.fechamentoSituacaoPaga || 'Paga'}
+            </span>
+          )}
+          {situacaoFatura === 'nao_paga' && (
+            <span style={{ ...chip, background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.45)', color: '#fee2e2' }}>
+              {tx.fechamentoSituacaoNaoPaga || 'Não paga'}
+            </span>
+          )}
+          {numeroFaturaRef ? (
+            <span
+              style={{ ...chip, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.88)' }}
+              title={tx.fechamentoNumeroFaturaTitulo || 'Nº fatura'}
+            >
+              {tx.fechamentoNumeroFaturaShort || 'Fatura'}: {numeroFaturaRef}
+            </span>
+          ) : null}
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-          {etapa === 'none' && (
-            <button
-              type="button"
-              style={{ ...btnSm, borderColor: 'rgba(251, 191, 36, 0.45)', background: 'rgba(251, 191, 36, 0.08)' }}
-              onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'enviado_fatura', { modo: 'com_fatura', pagamento: 'pendente' })}
-            >
-              {tx.fechamentoFluxoBtnEnviarFatura || 'Marcar: enviado para criar fatura'}
-            </button>
-          )}
-          {etapa === 'none' && (
-            <button
-              type="button"
-              style={{ ...btnSm, borderColor: 'rgba(147, 197, 253, 0.5)', background: 'rgba(147, 197, 253, 0.08)', color: '#dbeafe' }}
-              onClick={() => {
-                setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { modo: 'sem_fatura', pagamento: 'pendente' })
-                openTab('clientes-financeiro', getTabTitle('clientes-financeiro'))
-                setClientesFinanceiroActiveTab('despesasControle')
-              }}
-            >
-              {tx.fechamentoFluxoBtnPagamentoSemFatura || 'Marcar: pagamento sem fatura'}
-            </button>
-          )}
-          {etapa === 'enviado_fatura' && (
-            <>
+        {!readOnly && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+            {etapa === 'none' && (
               <button
                 type="button"
-                style={{ ...btnSm, borderColor: 'rgba(52, 211, 153, 0.5)', background: 'rgba(22, 60, 40, 0.55)' }}
+                style={{ ...btnSm, borderColor: 'rgba(251, 191, 36, 0.45)', background: 'rgba(251, 191, 36, 0.08)' }}
+                onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'enviado_fatura', { modo: 'com_fatura', pagamento: 'pendente' })}
+              >
+                {tx.fechamentoFluxoBtnEnviarFatura || 'Marcar: enviado para criar fatura'}
+              </button>
+            )}
+            {etapa === 'none' && (
+              <button
+                type="button"
+                style={{ ...btnSm, borderColor: 'rgba(147, 197, 253, 0.5)', background: 'rgba(147, 197, 253, 0.08)', color: '#dbeafe' }}
                 onClick={() => {
-                  setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { modo: 'com_fatura' })
+                  setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { modo: 'sem_fatura', pagamento: 'pendente' })
                   openTab('clientes-financeiro', getTabTitle('clientes-financeiro'))
                   setClientesFinanceiroActiveTab('despesasControle')
                 }}
               >
-                {tx.fechamentoFluxoBtnControloFinanceiro || 'Em gestão financeira (pagamento)'}
+                {tx.fechamentoFluxoBtnPagamentoSemFatura || 'Marcar: pagamento sem fatura'}
               </button>
-              <button type="button" style={btnSm} onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'none')}>
-                {tx.fechamentoFluxoBtnVoltarPendente || 'Limpar «enviado p/ fatura»'}
-              </button>
-            </>
-          )}
-          {etapa === 'controlo_pagamento' && (
-            <>
-              <button
-                type="button"
-                style={{ ...btnSm, borderColor: 'rgba(34,197,94,0.5)', background: 'rgba(34,197,94,0.12)', color: '#dcfce7' }}
-                onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { pagamento: 'pago' })}
-              >
-                {tx.fechamentoFluxoBtnMarcarPago || 'Marcar: pago'}
-              </button>
-              <button
-                type="button"
-                style={{ ...btnSm, borderColor: 'rgba(255,255,255,0.22)', background: 'rgba(255,255,255,0.06)', color: '#fff' }}
-                onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { pagamento: 'pendente' })}
-              >
-                {tx.fechamentoFluxoBtnMarcarNaoPago || 'Marcar: não pago'}
-              </button>
-              <button
-                type="button"
-                style={{ ...btnSm, borderColor: 'rgba(248,113,113,0.55)', background: 'rgba(248,113,113,0.12)', color: '#fee2e2' }}
-                onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { pagamento: 'devedor' })}
-              >
-                {tx.fechamentoFluxoBtnMarcarDevedor || 'Marcar: devedor'}
-              </button>
-              <button type="button" style={btnSm} onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'enviado_fatura')}>
-                {tx.fechamentoFluxoBtnVoltarEnviado || 'Voltar a «só enviado p/ fatura»'}
-              </button>
-              <button type="button" style={btnSm} onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'none')}>
-                {tx.fechamentoFluxoBtnLimparMarcas || 'Limpar tudo'}
-              </button>
-            </>
-          )}
-        </div>
+            )}
+            {etapa === 'enviado_fatura' && (
+              <>
+                <button
+                  type="button"
+                  style={{ ...btnSm, borderColor: 'rgba(52, 211, 153, 0.5)', background: 'rgba(22, 60, 40, 0.55)' }}
+                  onClick={() => {
+                    setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { modo: 'com_fatura' })
+                    openTab('clientes-financeiro', getTabTitle('clientes-financeiro'))
+                    setClientesFinanceiroActiveTab('despesasControle')
+                  }}
+                >
+                  {tx.fechamentoFluxoBtnControloFinanceiro || 'Em gestão financeira (pagamento)'}
+                </button>
+                <button type="button" style={btnSm} onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'none')}>
+                  {tx.fechamentoFluxoBtnVoltarPendente || 'Limpar «enviado p/ fatura»'}
+                </button>
+              </>
+            )}
+            {etapa === 'controlo_pagamento' && (
+              <>
+                <button
+                  type="button"
+                  style={{ ...btnSm, borderColor: 'rgba(34,197,94,0.5)', background: 'rgba(34,197,94,0.12)', color: '#dcfce7' }}
+                  onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { pagamento: 'pago' })}
+                >
+                  {tx.fechamentoFluxoBtnMarcarPago || 'Marcar: pago'}
+                </button>
+                <button
+                  type="button"
+                  style={{ ...btnSm, borderColor: 'rgba(255,255,255,0.22)', background: 'rgba(255,255,255,0.06)', color: '#fff' }}
+                  onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { pagamento: 'pendente' })}
+                >
+                  {tx.fechamentoFluxoBtnMarcarNaoPago || 'Marcar: não pago'}
+                </button>
+                <button
+                  type="button"
+                  style={{ ...btnSm, borderColor: 'rgba(248,113,113,0.55)', background: 'rgba(248,113,113,0.12)', color: '#fee2e2' }}
+                  onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', { pagamento: 'devedor' })}
+                >
+                  {tx.fechamentoFluxoBtnMarcarDevedor || 'Marcar: devedor'}
+                </button>
+                <button type="button" style={btnSm} onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'enviado_fatura')}>
+                  {tx.fechamentoFluxoBtnVoltarEnviado || 'Voltar a «só enviado p/ fatura»'}
+                </button>
+                <button type="button" style={btnSm} onClick={() => setFechamentoEtapaFinanceira(relatorioId, 'none')}>
+                  {tx.fechamentoFluxoBtnLimparMarcas || 'Limpar tudo'}
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
     )
   }
@@ -4757,6 +4889,15 @@ export default function Dashboard() {
   const [showEnvioModal, setShowEnvioModal] = useState(false)
   const [envioForm, setEnvioForm] = useState<{ templateId: 1|2|3|4|5; whatsapp: boolean; email: boolean; telefone: string; emailDestino: string; tecnicoId: string }>({ templateId: 1, whatsapp: true, email: false, telefone: '', emailDestino: '', tecnicoId: '' })
   const [buscaOS, setBuscaOS] = useState('')
+  /** Gestão financeira › Clientes › Ordem de serviço: recebimento sem fatura e consulta de fatura */
+  const [osTabRecebSemFaturaRelId, setOsTabRecebSemFaturaRelId] = useState('')
+  const [osTabConsultaFaturaNum, setOsTabConsultaFaturaNum] = useState('')
+  const [osTabConsultaFaturaResult, setOsTabConsultaFaturaResult] = useState<{
+    flux: RelatorioServico[]
+    fat: FaturaPecas[]
+  } | null>(null)
+  /** Rascunhos do nº de fatura na consulta (Ordem de serviço); chave = id do relatório */
+  const [osTabConsultaNfDraft, setOsTabConsultaNfDraft] = useState<Record<string, string>>({})
   const [filtroPeriodo, setFiltroPeriodo] = useState<'semanal' | 'mensal' | 'anual'>('mensal')
   const [showOSForm, setShowOSForm] = useState(false)
   const [showFaturaForm, setShowFaturaForm] = useState(false)
@@ -4918,6 +5059,16 @@ export default function Dashboard() {
   const [fechamentoFluxoFinanceiroPorRelatorioId, setFechamentoFluxoFinanceiroPorRelatorioId] = useState<
     Record<string, FechamentoFluxoFinanceiroEntry | FechamentoFluxoFinanceiroEtapa>
   >({})
+  const relatoriosFechamentoBibliotecaOrdenados = useMemo(
+    () =>
+      relatoriosComFechamentoNaBibliotecaOrdenados(
+        relatoriosServico,
+        clientes,
+        fechamentosGuardadosBibliotecaIds,
+        fechamentosRelatorios
+      ),
+    [relatoriosServico, clientes, fechamentosGuardadosBibliotecaIds, fechamentosRelatorios]
+  )
   /** Por relatório: 'sim' = aguarda fechamento na Biblioteca; 'nao' = sem cobrança (verde fixo no resumo) */
   const [resumoCobrancaDecisaoPorRelatorio, setResumoCobrancaDecisaoPorRelatorio] = useState<Record<string, 'sim' | 'nao'>>({})
   const [relatoriosExcluidosClientes, setRelatoriosExcluidosClientes] = useState<RelatoriosExcluidosClientesStorage>({ pastas: {} })
@@ -6624,12 +6775,21 @@ export default function Dashboard() {
             if ((etapa === 'enviado_fatura' || etapa === 'controlo_pagamento') &&
               (modo === 'com_fatura' || modo === 'sem_fatura') &&
               (pagamento === 'pendente' || pagamento === 'pago' || pagamento === 'devedor')) {
-              fluxoFinMap[k] = {
+              const situ = o.situacaoFatura
+              const situOk =
+                situ === 'emitida' || situ === 'no_prazo' || situ === 'paga' || situ === 'nao_paga' ? situ : undefined
+              const entryLoad: FechamentoFluxoFinanceiroEntry = {
                 etapa,
                 modo,
                 pagamento,
                 updatedAt: typeof o.updatedAt === 'string' ? o.updatedAt : new Date().toISOString(),
               }
+              if (typeof o.numeroFatura === 'string' && o.numeroFatura.trim()) entryLoad.numeroFatura = o.numeroFatura.trim()
+              if (situOk) entryLoad.situacaoFatura = situOk
+              if (typeof o.dataVencimentoFatura === 'string' && o.dataVencimentoFatura.trim()) {
+                entryLoad.dataVencimentoFatura = o.dataVencimentoFatura.trim()
+              }
+              fluxoFinMap[k] = entryLoad
             }
           }
         }
@@ -52301,6 +52461,362 @@ A1;Peça exemplo;10`}
                       </div>
                     )}
                   </div>
+
+                  {(() => {
+                    const txOs = safeT as Record<string, string>
+                    const listaFechOs = relatoriosFechamentoBibliotecaOrdenados
+                    const cardOs: React.CSSProperties = {
+                      marginTop: '22px',
+                      padding: '18px 20px',
+                      backgroundColor: '#1a1a1a',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(0, 255, 0, 0.22)',
+                    }
+                    return (
+                      <>
+                        <div style={cardOs}>
+                          <h3 style={{ color: '#00ff00', margin: '0 0 8px', fontSize: '16px' }}>
+                            {txOs.financeiroOsFechamentoTitulo || 'Fechamento financeiro (só visualização)'}
+                          </h3>
+                          <p style={{ color: '#999', fontSize: '12px', margin: '0 0 14px', lineHeight: 1.45 }}>
+                            {txOs.financeiroOsFechamentoDesc ||
+                              'Os mesmos fechamentos guardados na biblioteca de relatórios. Para alterar fatura/pagamento use o separador «Despesas · fatura / pagamento».'}
+                          </p>
+                          {listaFechOs.length === 0 ? (
+                            <div style={{ color: '#777', fontSize: '13px' }}>
+                              {txOs.financeiroOsFechamentoEmpty || 'Nenhum fechamento na biblioteca.'}
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                              {listaFechOs.map(rel => {
+                                const itens = fechamentosRelatorios[rel.id] || []
+                                const itensVis = filtrarFechamentoItensPorOmitidos(
+                                  fechamentoItensOmitidosPorRelatorio,
+                                  rel.id,
+                                  itens
+                                )
+                                const tot = itensVis.reduce(
+                                  (s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)),
+                                  0
+                                )
+                                const nomeCli =
+                                  clientes.find(c => c.id === rel.clienteId)?.nomeEmpresa || rel.cliente || '—'
+                                return (
+                                  <div
+                                    key={rel.id}
+                                    style={{
+                                      padding: '14px 16px',
+                                      backgroundColor: '#141414',
+                                      border: '1px solid rgba(0, 200, 120, 0.25)',
+                                      borderRadius: '10px',
+                                    }}
+                                  >
+                                    <div style={{ fontWeight: 700, color: '#fff', fontSize: '14px' }}>
+                                      {(txOs.relatorioNumeroLabel || 'Rel.')}{' '}
+                                      <span style={{ fontVariantNumeric: 'tabular-nums' }}>{rel.numero}</span>
+                                      <span style={{ color: '#9fdf9f', fontWeight: 600, marginLeft: '8px' }}>{nomeCli}</span>
+                                    </div>
+                                    <div style={{ fontSize: '12px', color: '#aaa', marginTop: '4px' }}>
+                                      {txOs.total || 'Total'}: <strong style={{ color: '#ffcc66' }}>€{tot.toFixed(2)}</strong>
+                                    </div>
+                                    <div style={{ marginTop: '10px' }}>
+                                      <FechamentoFluxoFinanceiroStrip relatorioId={rel.id} readOnly />
+                                    </div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                                      <button
+                                        type="button"
+                                        className="btn-primary"
+                                        onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio: rel, itens: itensVis })}
+                                        style={{ padding: '8px 12px', fontSize: '12px' }}
+                                      >
+                                        👁️ {txOs.visualizarDespesasBiblioteca || safeT?.view || 'Ver'}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn-primary"
+                                        onClick={() => imprimirPDFDespesasDaBiblioteca(rel, itensVis)}
+                                        style={{ padding: '8px 12px', fontSize: '12px' }}
+                                      >
+                                        📄 {txOs.gerarPDF || safeT?.gerarPDF || 'PDF'}
+                                      </button>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
+
+                        <div style={{ ...cardOs, border: '1px solid rgba(147, 197, 253, 0.35)' }}>
+                          <h3 style={{ color: '#93c5fd', margin: '0 0 8px', fontSize: '16px' }}>
+                            {txOs.financeiroOsRecebSemFaturaTitulo || 'Recebimento s/ fatura'}
+                          </h3>
+                          <p style={{ color: '#999', fontSize: '12px', margin: '0 0 12px' }}>
+                            {txOs.financeiroOsRecebSemFaturaDesc ||
+                              'Regista recebimento sem fatura no fluxo do relatório de serviço (fechamento já na biblioteca).'}
+                          </p>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+                            <select
+                              value={osTabRecebSemFaturaRelId}
+                              onChange={e => setOsTabRecebSemFaturaRelId(e.target.value)}
+                              style={{
+                                flex: '1 1 220px',
+                                minWidth: '180px',
+                                padding: '10px 12px',
+                                borderRadius: '8px',
+                                background: '#222',
+                                color: '#fff',
+                                border: '1px solid rgba(147, 197, 253, 0.45)',
+                              }}
+                            >
+                              <option value="">{txOs.financeiroOsRecebSemFaturaSelect || 'Escolher relatório…'}</option>
+                              {listaFechOs.map(r => (
+                                <option key={r.id} value={r.id}>
+                                  {r.numero} — {clientes.find(c => c.id === r.clienteId)?.nomeEmpresa || r.cliente}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              disabled={!osTabRecebSemFaturaRelId}
+                              onClick={() => {
+                                if (!osTabRecebSemFaturaRelId) return
+                                setFechamentoEtapaFinanceira(osTabRecebSemFaturaRelId, 'controlo_pagamento', {
+                                  modo: 'sem_fatura',
+                                  pagamento: 'pendente',
+                                })
+                                alert(txOs.financeiroOsRecebSemFaturaOk || 'Recebimento sem fatura registado.')
+                              }}
+                              style={{ padding: '10px 16px', fontSize: '13px' }}
+                            >
+                              {txOs.financeiroOsRecebSemFaturaBtn || 'Confirmar'}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div style={{ ...cardOs, border: '1px solid rgba(251, 191, 36, 0.35)' }}>
+                          <h3 style={{ color: '#fde047', margin: '0 0 8px', fontSize: '16px' }}>
+                            {txOs.financeiroOsConsultaFaturaTitulo || 'Consultar nº da fatura'}
+                          </h3>
+                          <p style={{ color: '#999', fontSize: '12px', margin: '0 0 12px' }}>
+                            {txOs.financeiroOsConsultaFaturaDesc ||
+                              'Pesquisa no fluxo dos relatórios (nº guardado) e nas faturas de peças. Pode definir a situação nos resultados do relatório.'}
+                          </p>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+                            <input
+                              type="text"
+                              value={osTabConsultaFaturaNum}
+                              onChange={e => setOsTabConsultaFaturaNum(e.target.value)}
+                              placeholder={txOs.financeiroOsConsultaFaturaPlaceholder || 'Número da fatura…'}
+                              style={{
+                                flex: '1 1 200px',
+                                minWidth: '160px',
+                                padding: '10px 12px',
+                                borderRadius: '8px',
+                                background: '#222',
+                                color: '#fff',
+                                border: '1px solid rgba(251, 191, 36, 0.45)',
+                              }}
+                            />
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              onClick={() => {
+                                const raw = osTabConsultaFaturaNum.trim()
+                                if (!raw) {
+                                  alert(txOs.financeiroOsConsultaFaturaEmpty || 'Indique o número da fatura.')
+                                  setOsTabConsultaFaturaResult(null)
+                                  setOsTabConsultaNfDraft({})
+                                  return
+                                }
+                                const fluxHits: RelatorioServico[] = []
+                                for (const r of relatoriosServico) {
+                                  const fr = fechamentoFluxoFinanceiroPorRelatorioId[r.id]
+                                  const obj =
+                                    fr && typeof fr === 'object' && !Array.isArray(fr)
+                                      ? (fr as FechamentoFluxoFinanceiroEntry)
+                                      : null
+                                  const num = obj?.numeroFatura?.trim()
+                                  if (num && numeroFaturaCorrespondeConsulta(num, raw)) fluxHits.push(r)
+                                }
+                                const fatHits = faturasPecas.filter(
+                                  f => f.numeroFatura && numeroFaturaCorrespondeConsulta(f.numeroFatura, raw)
+                                )
+                                const draft: Record<string, string> = {}
+                                for (const r of fluxHits) {
+                                  const fr = fechamentoFluxoFinanceiroPorRelatorioId[r.id]
+                                  const o =
+                                    fr && typeof fr === 'object' && !Array.isArray(fr)
+                                      ? (fr as FechamentoFluxoFinanceiroEntry)
+                                      : null
+                                  draft[r.id] = o?.numeroFatura?.trim() ?? ''
+                                }
+                                setOsTabConsultaNfDraft(draft)
+                                setOsTabConsultaFaturaResult({ flux: fluxHits, fat: fatHits })
+                              }}
+                              style={{ padding: '10px 16px', fontSize: '13px' }}
+                            >
+                              {txOs.financeiroOsConsultaFaturaBtn || 'Consultar'}
+                            </button>
+                          </div>
+                          {osTabConsultaFaturaResult &&
+                            osTabConsultaFaturaResult.flux.length === 0 &&
+                            osTabConsultaFaturaResult.fat.length === 0 && (
+                              <div style={{ marginTop: '14px', color: '#c084fc', fontSize: '13px' }}>
+                                {txOs.financeiroOsConsultaFaturaNada || 'Nenhum registo encontrado com esse número.'}
+                              </div>
+                            )}
+                          {osTabConsultaFaturaResult && osTabConsultaFaturaResult.flux.length > 0 && (
+                            <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                              <div style={{ color: '#86efac', fontSize: '12px', fontWeight: 700 }}>
+                                {txOs.financeiroOsConsultaFluxLabel || 'Relatórios de serviço (fechamento)'}
+                              </div>
+                              {osTabConsultaFaturaResult.flux.map(rel => (
+                                <div
+                                  key={rel.id}
+                                  style={{
+                                    padding: '12px',
+                                    background: '#101910',
+                                    borderRadius: '8px',
+                                    border: '1px solid rgba(34, 197, 94, 0.35)',
+                                  }}
+                                >
+                                  <div style={{ color: '#fff', fontWeight: 700, fontSize: '13px' }}>
+                                    {rel.numero} · {clientes.find(c => c.id === rel.clienteId)?.nomeEmpresa || rel.cliente}
+                                  </div>
+                                  <div style={{ marginTop: '8px' }}>
+                                    <FechamentoFluxoFinanceiroStrip relatorioId={rel.id} compact readOnly />
+                                  </div>
+                                  <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                    <span style={{ fontSize: '10px', color: '#aaa', width: '100%', marginBottom: '2px' }}>
+                                      {txOs.financeiroOsSituacaoDefinir || 'Situação:'}
+                                    </span>
+                                    {(['emitida', 'no_prazo', 'paga', 'nao_paga'] as const).map(sit => (
+                                      <button
+                                        key={sit}
+                                        type="button"
+                                        onClick={() => aplicarSituacaoFaturaNoRelatorio(rel.id, sit)}
+                                        style={{
+                                          padding: '6px 10px',
+                                          fontSize: '11px',
+                                          fontWeight: 700,
+                                          borderRadius: '6px',
+                                          cursor: 'pointer',
+                                          border: '1px solid rgba(255,255,255,0.2)',
+                                          background: 'rgba(255,255,255,0.06)',
+                                          color: '#fff',
+                                        }}
+                                      >
+                                        {sit === 'emitida' && (txOs.financeiroOsSitEmitida || 'Emitida')}
+                                        {sit === 'no_prazo' && (txOs.financeiroOsSitNoPrazo || 'No prazo')}
+                                        {sit === 'paga' && (txOs.financeiroOsSitPaga || 'Paga')}
+                                        {sit === 'nao_paga' && (txOs.financeiroOsSitNaoPaga || 'Não paga')}
+                                      </button>
+                                    ))}
+                                  </div>
+                                  <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                                    <input
+                                      type="text"
+                                      value={osTabConsultaNfDraft[rel.id] ?? ''}
+                                      onChange={e =>
+                                        setOsTabConsultaNfDraft(prev => ({ ...prev, [rel.id]: e.target.value }))
+                                      }
+                                      placeholder={txOs.financeiroOsNumFaturaGuardar || 'Guardar nº fatura'}
+                                      style={{
+                                        flex: '1 1 140px',
+                                        padding: '8px 10px',
+                                        fontSize: '12px',
+                                        borderRadius: '6px',
+                                        background: '#1e1e1e',
+                                        color: '#fff',
+                                        border: '1px solid rgba(255,255,255,0.2)',
+                                      }}
+                                      aria-label={txOs.financeiroOsNumFaturaGuardar || 'Número da fatura'}
+                                    />
+                                    <button
+                                      type="button"
+                                      className="btn-primary"
+                                      onClick={() => {
+                                        const v = (osTabConsultaNfDraft[rel.id] ?? '').trim()
+                                        const curr = fechamentoFluxoFinanceiroPorRelatorioId[rel.id]
+                                        const currObj =
+                                          curr && typeof curr === 'object' && !Array.isArray(curr)
+                                            ? (curr as FechamentoFluxoFinanceiroEntry)
+                                            : null
+                                        if (!currObj) {
+                                          setFechamentoEtapaFinanceira(rel.id, 'enviado_fatura', {
+                                            modo: 'com_fatura',
+                                            pagamento: 'pendente',
+                                            numeroFatura: v,
+                                          })
+                                        } else {
+                                          setFechamentoEtapaFinanceira(rel.id, currObj.etapa, {
+                                            modo: currObj.modo,
+                                            pagamento: currObj.pagamento,
+                                            numeroFatura: v,
+                                            situacaoFatura: currObj.situacaoFatura,
+                                            dataVencimentoFatura: currObj.dataVencimentoFatura,
+                                          })
+                                        }
+                                        setOsTabConsultaNfDraft(prev => ({ ...prev, [rel.id]: v }))
+                                        alert(txOs.financeiroOsNumFaturaOk || 'Número da fatura guardado.')
+                                      }}
+                                      style={{ padding: '8px 12px', fontSize: '12px' }}
+                                    >
+                                      {txOs.financeiroOsNumFaturaBtn || 'Guardar nº'}
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {osTabConsultaFaturaResult && osTabConsultaFaturaResult.fat.length > 0 && (
+                            <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                              <div style={{ color: '#fde047', fontSize: '12px', fontWeight: 700 }}>
+                                {txOs.financeiroOsConsultaFatPecasLabel || 'Faturas de peças'}
+                              </div>
+                              {osTabConsultaFaturaResult.fat.map(ft => {
+                                const hoje = new Date()
+                                hoje.setHours(0, 0, 0, 0)
+                                let rotulo = ''
+                                if (ft.status === 'paga') rotulo = txOs.financeiroOsSitPaga || 'Paga'
+                                else if (ft.status === 'cancelada') rotulo = txOs.faturaSignalCancelada || 'Cancelada'
+                                else if (ft.status === 'vencida') rotulo = txOs.financeiroOsSitNaoPaga || 'Não paga'
+                                else if (ft.dataVencimento) {
+                                  const dv = new Date(ft.dataVencimento)
+                                  dv.setHours(0, 0, 0, 0)
+                                  rotulo =
+                                    dv.getTime() >= hoje.getTime()
+                                      ? txOs.financeiroOsSitNoPrazo || 'No prazo de pagamento'
+                                      : txOs.financeiroOsSitNaoPaga || 'Não paga'
+                                } else rotulo = txOs.faturaSignalPendente || 'Pendente'
+                                return (
+                                  <div
+                                    key={ft.id}
+                                    style={{
+                                      padding: '12px',
+                                      background: '#19150a',
+                                      borderRadius: '8px',
+                                      border: '1px solid rgba(251, 191, 36, 0.35)',
+                                      fontSize: '13px',
+                                      color: '#eee',
+                                    }}
+                                  >
+                                    <strong style={{ color: '#fde047' }}>{ft.numeroFatura}</strong> · {ft.clienteNome} · OS:{' '}
+                                    {ft.numeroOS || '—'}
+                                    <div style={{ marginTop: '6px', color: '#cbd5e1' }}>
+                                      {txOs.financeiroOsConsultaSituacao || 'Situação'}: <strong>{rotulo}</strong>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )
+                  })()}
                 </div>
               )}
 
@@ -53006,23 +53522,7 @@ A1;Peça exemplo;10`}
 
               {clientesFinanceiroActiveTab === 'despesasControle' && (() => {
                 const tx = safeT as Record<string, string>
-                const cmpFin = (a: string, b: string) =>
-                  (a || '').localeCompare(b || '', undefined, { sensitivity: 'base', numeric: true })
-                const lista = relatoriosServico
-                  .filter(
-                    r =>
-                      r.clienteId &&
-                      fechamentosGuardadosBibliotecaIds.includes(r.id) &&
-                      Array.isArray(fechamentosRelatorios[r.id]) &&
-                      fechamentosRelatorios[r.id]!.length > 0
-                  )
-                  .sort((a, b) => {
-                    const ca = clientes.find(c => c.id === a.clienteId)?.nomeEmpresa || a.cliente || ''
-                    const cb = clientes.find(c => c.id === b.clienteId)?.nomeEmpresa || b.cliente || ''
-                    const byC = cmpFin(ca, cb)
-                    if (byC !== 0) return byC
-                    return cmpFin(String(a.numero ?? ''), String(b.numero ?? ''))
-                  })
+                const lista = relatoriosFechamentoBibliotecaOrdenados
                 return (
                   <div>
                     <h2 style={{ color: '#00ff00', fontSize: '22px', margin: '0 0 8px' }}>
