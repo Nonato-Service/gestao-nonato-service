@@ -4689,6 +4689,10 @@ export default function Dashboard() {
   const [clientesFinanceiroActiveTab, setClientesFinanceiroActiveTab] = useState<
     'os' | 'faturas' | 'devedores' | 'iva' | 'relatorios' | 'despesasControle'
   >('os')
+  /** Clientes/Financeiro › Despesas (biblioteca): grupos por cliente abertos no painel */
+  const [financeiroDespesasBibClienteAberto, setFinanceiroDespesasBibClienteAberto] = useState<Set<string>>(
+    () => new Set()
+  )
   const [comprovantesDespesas, setComprovantesDespesas] = useState<ComprovanteDespesa[]>([])
   const [comprovantesFiltroMes, setComprovantesFiltroMes] = useState<string>('')
   const [comprovantesFiltroSemana, setComprovantesFiltroSemana] = useState<string>('')
@@ -22880,6 +22884,179 @@ const nextF = familias.filter(x => x !== f)
           </div>
         </div>
       </div>
+    )
+  }
+
+  /** Modal «Visualizar despesas» — portal no body para funcionar em qualquer separador (ex.: Clientes/Financeiro). */
+  const renderModalVisualizarDespesasBibliotecaOverlay = () => {
+    if (!modalVisualizarDespesasBiblioteca || typeof document === 'undefined') return null
+    const { relatorio: relV, itens: itensV } = modalVisualizarDespesasBiblioteca
+    const totV = itensV.reduce(
+      (s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)),
+      0
+    )
+    const tm = safeT as Record<string, string>
+    return createPortal(
+      <div
+        className="biblioteca-despesas-modal-overlay"
+        onClick={() => setModalVisualizarDespesasBiblioteca(null)}
+        role="presentation"
+      >
+        <div className="biblioteca-despesas-modal-inner" onClick={e => e.stopPropagation()}>
+          <h3
+            style={{
+              color: '#ffffff',
+              margin: '0 0 8px',
+              fontSize: 'clamp(16px, 4vw, 18px)',
+              wordBreak: 'break-word',
+            }}
+          >
+            {tm.fechamentoRelatorio || 'Fechamento'}{' '}
+            <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {tm.relatorioNumeroLabel || 'Rel.'} {relV.numero}
+            </span>
+          </h3>
+          <p
+            style={{
+              color: '#ffffff',
+              opacity: 0.92,
+              fontSize: '13px',
+              margin: '0 0 16px',
+              wordBreak: 'break-word',
+            }}
+          >
+            {relV.cliente} · {relV.maquinaModelo} · {relV.data}
+          </p>
+          <div className="biblioteca-despesas-modal-table-wrap">
+            <table
+              style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                fontSize: '13px',
+                color: '#ffffff',
+                minWidth: '520px',
+              }}
+            >
+              <thead>
+                <tr style={{ borderBottom: '2px solid rgba(255, 170, 0, 0.75)' }}>
+                  <th style={{ textAlign: 'left', padding: '10px 8px', color: '#ffffff' }}>
+                    {tm.codigoOuCod || 'COD'}
+                  </th>
+                  <th style={{ textAlign: 'left', padding: '10px 8px', color: '#ffffff' }}>
+                    {tm.descricao || 'Descrição'}
+                  </th>
+                  <th style={{ textAlign: 'right', padding: '10px 8px', color: '#ffffff' }}>
+                    {tm.quantidade || 'Qtd'}
+                  </th>
+                  <th style={{ textAlign: 'right', padding: '10px 8px', color: '#ffffff' }}>
+                    {tm.valorUnitario || 'Unit.'}
+                  </th>
+                  <th style={{ textAlign: 'right', padding: '10px 8px', color: '#ffffff' }}>
+                    {tm.total || 'Total'}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {itensV.map(item => {
+                  const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
+                  const cod = ((item.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—').toString()
+                  const qtd =
+                    item.tipoCobranca === 'hora'
+                      ? item.quantidade.toFixed(2) + ' h'
+                      : item.tipoCobranca === 'km'
+                        ? item.quantidade.toFixed(0) + ' km'
+                        : String(item.quantidade)
+                  const linTot = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
+                  return (
+                    <tr key={item.id} style={{ borderBottom: '1px solid #333' }}>
+                      <td style={{ padding: '10px 8px', color: '#ffffff', fontWeight: 600 }}>{cod}</td>
+                      <td style={{ padding: '10px 8px', color: '#ffffff' }}>{item.descricao || '—'}</td>
+                      <td style={{ padding: '10px 8px', textAlign: 'right', color: '#ffffff' }}>{qtd}</td>
+                      <td style={{ padding: '10px 8px', textAlign: 'right', color: '#ffffff' }}>
+                        {item.valorUnitario.toFixed(2)} €
+                      </td>
+                      <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 700, color: '#ffffff' }}>
+                        {linTot.toFixed(2)} €
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div
+            style={{
+              marginTop: '16px',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              color: '#ffffff',
+              textAlign: 'right',
+            }}
+          >
+            {tm.somaTotal || 'SOMA TOTAL'}: €{totV.toFixed(2)}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '10px',
+              marginTop: '20px',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setModalVisualizarDespesasBiblioteca(null)}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '8px',
+                border: '1px solid rgba(102, 102, 102, 0.92)',
+                background: 'rgba(51, 51, 51, 0.96)',
+                color: '#ffffff',
+                cursor: 'pointer',
+              }}
+            >
+              {safeT?.close || 'Fechar'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                imprimirPDFDespesasDaBiblioteca(relV, itensV)
+              }}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '8px',
+                border: '1px solid rgba(180, 130, 255, 0.5)',
+                background: 'rgba(40, 26, 52, 0.96)',
+                color: '#ffffff',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              📄 {tm.gerarPDF || 'PDF'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setModalVisualizarDespesasBiblioteca(null)
+                handleEditarDespesasNaBiblioteca(relV.id)
+              }}
+              style={{
+                padding: '10px 20px',
+                borderRadius: '8px',
+                border: '2px solid rgba(255, 170, 0, 0.75)',
+                background: 'rgba(26, 28, 26, 0.92)',
+                color: '#ffaa00',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              ✏️ {tm.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
     )
   }
 
@@ -53800,79 +53977,198 @@ A1;Peça exemplo;10`}
               {clientesFinanceiroActiveTab === 'despesasControle' && (() => {
                 const tx = safeT as Record<string, string>
                 const lista = relatoriosFechamentoBibliotecaOrdenados
+                type GrupoCli = { key: string; nome: string; rels: RelatorioServico[] }
+                const gruposMap = new Map<string, GrupoCli>()
+                for (const rel of lista) {
+                  const key = (rel.clienteId && rel.clienteId.trim()) || '__sem_cliente__'
+                  const nome =
+                    clientes.find(c => c.id === rel.clienteId)?.nomeEmpresa ||
+                    rel.cliente ||
+                    tx.cliente ||
+                    '—'
+                  if (!gruposMap.has(key)) gruposMap.set(key, { key, nome, rels: [] })
+                  gruposMap.get(key)!.rels.push(rel)
+                }
+                const porCliente = Array.from(gruposMap.values()).sort((a, b) =>
+                  a.nome.localeCompare(b.nome, undefined, { sensitivity: 'base', numeric: true })
+                )
+                for (const g of porCliente) {
+                  g.rels.sort((a, b) =>
+                    String(a.numero ?? '').localeCompare(String(b.numero ?? ''), undefined, {
+                      numeric: true,
+                      sensitivity: 'base',
+                    })
+                  )
+                }
+                const metaFech =
+                  tx.financeiroDespesasControleMetaFechamentos || 'fechamento(s)'
+                const expandirTodos = () =>
+                  setFinanceiroDespesasBibClienteAberto(new Set(porCliente.map(gr => gr.key)))
+                const retrairTodos = () => setFinanceiroDespesasBibClienteAberto(new Set())
+                const toggleCliente = (key: string) => {
+                  setFinanceiroDespesasBibClienteAberto(prev => {
+                    const n = new Set(prev)
+                    if (n.has(key)) n.delete(key)
+                    else n.add(key)
+                    return n
+                  })
+                }
+                const totVisRel = (rel: RelatorioServico) => {
+                  const itens = fechamentosRelatorios[rel.id] || []
+                  const itensVis = filtrarFechamentoItensPorOmitidos(
+                    fechamentoItensOmitidosPorRelatorio,
+                    rel.id,
+                    itens
+                  )
+                  return itensVis.reduce(
+                    (s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)),
+                    0
+                  )
+                }
                 return (
-                  <div>
+                  <div className="financeiro-despesas-bib">
                     <h2 style={{ color: '#00ff00', fontSize: '22px', margin: '0 0 8px' }}>
                       {tx.financeiroDespesasControleTitulo || 'Relatórios de despesas (biblioteca)'}
                     </h2>
-                    <p style={{ color: '#aaa', fontSize: '13px', margin: '0 0 20px', maxWidth: '720px', lineHeight: 1.45 }}>
+                    <p
+                      style={{
+                        color: '#aaa',
+                        fontSize: '13px',
+                        margin: '0 0 16px',
+                        maxWidth: '820px',
+                        lineHeight: 1.5,
+                      }}
+                    >
                       {tx.financeiroDespesasControleDesc ||
-                        'Lista dos fechamentos na biblioteca: Ver, PDF ou editar despesas na pasta do cliente (Biblioteca de relatórios).'}
+                        'Cada item é um fechamento já guardado na Biblioteca de relatórios (linhas de cobrança: serviços, deslocação, diárias, etc.). Clique no cliente para expandir. Visualizar abre o detalhe; o total entra no mapa da Gestão financeira.'}
                     </p>
                     {lista.length === 0 ? (
-                      <div style={{ textAlign: 'center', padding: '36px', color: '#888', border: '1px dashed rgba(0,255,0,0.25)', borderRadius: '10px' }}>
-                        {tx.financeiroDespesasControleEmpty || 'Nenhum relatório de despesas na biblioteca com fechamento guardado.'}
+                      <div
+                        style={{
+                          textAlign: 'center',
+                          padding: '36px',
+                          color: '#888',
+                          border: '1px dashed rgba(0,255,0,0.25)',
+                          borderRadius: '10px',
+                        }}
+                      >
+                        {tx.financeiroDespesasControleEmpty ||
+                          'Nenhum relatório de despesas na biblioteca com fechamento guardado.'}
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                        {lista.map(rel => {
-                          const itens = fechamentosRelatorios[rel.id] || []
-                          const itensVis = filtrarFechamentoItensPorOmitidos(fechamentoItensOmitidosPorRelatorio, rel.id, itens)
-                          const tot = itensVis.reduce(
-                            (s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)),
-                            0
-                          )
-                          const nomeCli =
-                            clientes.find(c => c.id === rel.clienteId)?.nomeEmpresa || rel.cliente || '—'
-                          return (
-                            <div
-                              key={rel.id}
-                              style={{
-                                padding: '16px 18px',
-                                backgroundColor: '#1f1f1f',
-                                border: '1px solid rgba(255, 170, 0, 0.35)',
-                                borderRadius: '10px',
-                              }}
-                            >
-                              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '10px', marginBottom: '8px' }}>
-                                <div>
-                                  <div style={{ fontWeight: 800, color: '#fff', fontSize: '15px' }}>
-                                    {(tx.fechamentoRelatorio || 'Fechamento')}{' '}
-                                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                                      {(tx.relatorioNumeroLabel || 'Rel.')} {rel.numero}
-                                    </span>
-                                  </div>
-                                  <div style={{ fontSize: '12px', color: '#ccc', marginTop: '4px' }}>
-                                    <strong style={{ color: '#9fdf9f' }}>{nomeCli}</strong>
-                                    {' · '}
-                                    {rel.maquinaModelo}
-                                    {' · '}
-                                    {tx.total || 'Total'}: <strong style={{ color: '#ffcc66' }}>€{tot.toFixed(2)}</strong>
-                                  </div>
-                                </div>
-                              </div>
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      <>
+                        <div className="financeiro-despesas-bib-toolbar">
+                          <button
+                            type="button"
+                            className="financeiro-despesas-bib-toolbar__btn"
+                            onClick={expandirTodos}
+                          >
+                            {(safeT as any)?.expandirTodos || 'Expandir todos'}
+                          </button>
+                          <button
+                            type="button"
+                            className="financeiro-despesas-bib-toolbar__btn financeiro-despesas-bib-toolbar__btn--muted"
+                            onClick={retrairTodos}
+                          >
+                            {(safeT as any)?.retrairTodos || 'Retrair todos'}
+                          </button>
+                        </div>
+                        <div className="financeiro-despesas-bib-list">
+                          {porCliente.map(grupo => {
+                            const aberto = financeiroDespesasBibClienteAberto.has(grupo.key)
+                            const totGrupo = grupo.rels.reduce((s, rel) => s + totVisRel(rel), 0)
+                            return (
+                              <div key={grupo.key} className="financeiro-despesas-bib-grupo">
                                 <button
                                   type="button"
-                                  className="btn-primary"
-                                  onClick={() => setModalVisualizarDespesasBiblioteca({ relatorio: rel, itens: itensVis })}
-                                  style={{ padding: '8px 12px', fontSize: '12px' }}
+                                  className="financeiro-despesas-bib-grupo__header"
+                                  onClick={() => toggleCliente(grupo.key)}
+                                  aria-expanded={aberto}
                                 >
-                                  👁️ {tx.visualizarDespesasBiblioteca || safeT?.view || 'Ver'}
+                                  <span className="financeiro-despesas-bib-grupo__chev" aria-hidden>
+                                    {aberto ? '▼' : '▶'}
+                                  </span>
+                                  <span className="financeiro-despesas-bib-grupo__nome">{grupo.nome}</span>
+                                  <span className="financeiro-despesas-bib-grupo__meta">
+                                    {grupo.rels.length} {metaFech} · {tx.total || 'Total'}{' '}
+                                    <strong>€{totGrupo.toFixed(2)}</strong>
+                                  </span>
                                 </button>
-                                <button
-                                  type="button"
-                                  className="btn-primary"
-                                  onClick={() => imprimirPDFDespesasDaBiblioteca(rel, itensVis)}
-                                  style={{ padding: '8px 12px', fontSize: '12px' }}
-                                >
-                                  📄 {tx.gerarPDF || safeT?.gerarPDF || 'PDF'}
-                                </button>
+                                {aberto ? (
+                                  <div className="financeiro-despesas-bib-grupo__body">
+                                    {grupo.rels.map(rel => {
+                                      const itens = fechamentosRelatorios[rel.id] || []
+                                      const itensVis = filtrarFechamentoItensPorOmitidos(
+                                        fechamentoItensOmitidosPorRelatorio,
+                                        rel.id,
+                                        itens
+                                      )
+                                      const tot = itensVis.reduce(
+                                        (s, i) =>
+                                          s +
+                                          (i.id === 'diarias' && i.cobrarDiaria === false
+                                            ? 0
+                                            : (i.valorTotal || 0)),
+                                        0
+                                      )
+                                      const nomeCli =
+                                        clientes.find(c => c.id === rel.clienteId)?.nomeEmpresa ||
+                                        rel.cliente ||
+                                        '—'
+                                      return (
+                                        <div key={rel.id} className="financeiro-despesas-bib-card">
+                                          <div className="financeiro-despesas-bib-card__head">
+                                            <div>
+                                              <div className="financeiro-despesas-bib-card__title">
+                                                {(tx.fechamentoRelatorio || 'Fechamento')}{' '}
+                                                <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                                                  {(tx.relatorioNumeroLabel || 'Rel.')} {rel.numero}
+                                                </span>
+                                              </div>
+                                              <div className="financeiro-despesas-bib-card__sub">
+                                                <strong style={{ color: '#9fdf9f' }}>{nomeCli}</strong>
+                                                {' · '}
+                                                {rel.maquinaModelo}
+                                                {' · '}
+                                                {tx.total || 'Total'}:{' '}
+                                                <strong style={{ color: '#ffcc66' }}>€{tot.toFixed(2)}</strong>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div className="financeiro-despesas-bib-card__actions">
+                                            <button
+                                              type="button"
+                                              className="btn-primary"
+                                              onClick={() =>
+                                                setModalVisualizarDespesasBiblioteca({
+                                                  relatorio: rel,
+                                                  itens: itensVis,
+                                                })
+                                              }
+                                              style={{ padding: '8px 12px', fontSize: '12px' }}
+                                            >
+                                              👁️{' '}
+                                              {tx.visualizarDespesasBiblioteca || safeT?.view || 'Ver'}
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className="btn-primary"
+                                              onClick={() => imprimirPDFDespesasDaBiblioteca(rel, itensVis)}
+                                              style={{ padding: '8px 12px', fontSize: '12px' }}
+                                            >
+                                              📄 {tx.gerarPDF || safeT?.gerarPDF || 'PDF'}
+                                            </button>
+                                          </div>
+                                        </div>
+                                      )
+                                    })}
+                                  </div>
+                                ) : null}
                               </div>
-                            </div>
-                          )
-                        })}
-                      </div>
+                            )
+                          })}
+                        </div>
+                      </>
                     )}
                   </div>
                 )
@@ -54452,59 +54748,6 @@ A1;Peça exemplo;10`}
               </div>
             )}
           </div>
-          {modalVisualizarDespesasBiblioteca && (() => {
-            const { relatorio: relV, itens: itensV } = modalVisualizarDespesasBiblioteca
-            const totV = itensV.reduce((s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)), 0)
-            return (
-              <div className="biblioteca-despesas-modal-overlay" onClick={() => setModalVisualizarDespesasBiblioteca(null)}>
-                <div className="biblioteca-despesas-modal-inner" onClick={e => e.stopPropagation()}>
-                  <h3 style={{ color: '#ffffff', margin: '0 0 8px', fontSize: 'clamp(16px, 4vw, 18px)', wordBreak: 'break-word' }}>
-                    {(safeT as any)?.fechamentoRelatorio || 'Fechamento'}{' '}
-                    <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-                      {(safeT as any)?.relatorioNumeroLabel || 'Rel.'} {relV.numero}
-                    </span>
-                  </h3>
-                  <p style={{ color: '#ffffff', opacity: 0.92, fontSize: '13px', margin: '0 0 16px', wordBreak: 'break-word' }}>{relV.cliente} · {relV.maquinaModelo} · {relV.data}</p>
-                  <div className="biblioteca-despesas-modal-table-wrap">
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', color: '#ffffff', minWidth: '520px' }}>
-                    <thead>
-                      <tr style={{ borderBottom: '2px solid rgba(255, 170, 0, 0.75)' }}>
-                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#ffffff' }}>{(safeT as any)?.codigoOuCod || 'COD'}</th>
-                        <th style={{ textAlign: 'left', padding: '10px 8px', color: '#ffffff' }}>{(safeT as any)?.descricao || 'Descrição'}</th>
-                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#ffffff' }}>{(safeT as any)?.quantidade || 'Qtd'}</th>
-                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#ffffff' }}>{(safeT as any)?.valorUnitario || 'Unit.'}</th>
-                        <th style={{ textAlign: 'right', padding: '10px 8px', color: '#ffffff' }}>{(safeT as any)?.total || 'Total'}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {itensV.map(item => {
-                        const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
-                        const cod = ((item.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—').toString()
-                        const qtd = item.tipoCobranca === 'hora' ? item.quantidade.toFixed(2) + ' h' : item.tipoCobranca === 'km' ? item.quantidade.toFixed(0) + ' km' : String(item.quantidade)
-                        const linTot = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
-                        return (
-                          <tr key={item.id} style={{ borderBottom: '1px solid #333' }}>
-                            <td style={{ padding: '10px 8px', color: '#ffffff', fontWeight: 600 }}>{cod}</td>
-                            <td style={{ padding: '10px 8px', color: '#ffffff' }}>{item.descricao || '—'}</td>
-                            <td style={{ padding: '10px 8px', textAlign: 'right', color: '#ffffff' }}>{qtd}</td>
-                            <td style={{ padding: '10px 8px', textAlign: 'right', color: '#ffffff' }}>{item.valorUnitario.toFixed(2)} €</td>
-                            <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 700, color: '#ffffff' }}>{linTot.toFixed(2)} €</td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                  </div>
-                  <div style={{ marginTop: '16px', fontSize: '18px', fontWeight: 'bold', color: '#ffffff', textAlign: 'right' }}>{(safeT as any)?.somaTotal || 'SOMA TOTAL'}: €{totV.toFixed(2)}</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
-                    <button type="button" onClick={() => setModalVisualizarDespesasBiblioteca(null)} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(102, 102, 102, 0.92)', background: 'rgba(51, 51, 51, 0.96)', color: '#ffffff', cursor: 'pointer' }}>{safeT?.close || 'Fechar'}</button>
-                    <button type="button" onClick={() => { imprimirPDFDespesasDaBiblioteca(relV, itensV) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(180, 130, 255, 0.5)', background: 'rgba(40, 26, 52, 0.96)', color: '#ffffff', cursor: 'pointer', fontWeight: 600 }}>📄 {(safeT as any)?.gerarPDF || 'PDF'}</button>
-                    <button type="button" onClick={() => { setModalVisualizarDespesasBiblioteca(null); handleEditarDespesasNaBiblioteca(relV.id) }} style={{ padding: '10px 20px', borderRadius: '8px', border: '2px solid rgba(255, 170, 0, 0.75)', background: 'rgba(26, 28, 26, 0.92)', color: '#ffaa00', cursor: 'pointer', fontWeight: 600 }}>✏️ {(safeT as any)?.editarRelatorioDespesas ?? safeT?.edit ?? 'Edit'}</button>
-                  </div>
-                </div>
-              </div>
-            )
-          })()}
           </>
         )
 
@@ -61140,7 +61383,12 @@ A1;Peça exemplo;10`}
                 {(() => {
                   const activeTab = openTabs.find(t => t.id === activeTabId)
                   if (!activeTab) return null
-                  return renderTabContent(activeTab)
+                  return (
+                    <>
+                      {renderTabContent(activeTab)}
+                      {renderModalVisualizarDespesasBibliotecaOverlay()}
+                    </>
+                  )
                 })()}
               </div>
             </>

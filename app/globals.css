@@ -5848,6 +5848,121 @@ button.dia-trabalho-acao-btn--del:hover {
   margin: 0 0 8px;
 }
 
+/* Clientes/Financeiro › Despesas na biblioteca — grupos expansíveis */
+.financeiro-despesas-bib {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+}
+.financeiro-despesas-bib-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.financeiro-despesas-bib-toolbar__btn {
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid rgba(0, 255, 0, 0.45);
+  background: rgba(0, 255, 0, 0.1);
+  color: #86efac;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.financeiro-despesas-bib-toolbar__btn:hover {
+  background: rgba(0, 255, 0, 0.18);
+  border-color: rgba(0, 255, 0, 0.65);
+}
+.financeiro-despesas-bib-toolbar__btn--muted {
+  border-color: rgba(148, 163, 184, 0.45);
+  background: rgba(30, 41, 59, 0.5);
+  color: rgba(226, 232, 240, 0.9);
+}
+.financeiro-despesas-bib-toolbar__btn--muted:hover {
+  border-color: rgba(148, 163, 184, 0.65);
+  background: rgba(30, 41, 59, 0.72);
+}
+.financeiro-despesas-bib-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.financeiro-despesas-bib-grupo {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 170, 0, 0.35);
+  background: rgba(15, 15, 18, 0.92);
+  overflow: hidden;
+}
+.financeiro-despesas-bib-grupo__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  width: 100%;
+  text-align: left;
+  padding: 12px 16px;
+  margin: 0;
+  border: none;
+  cursor: pointer;
+  background: rgba(255, 170, 0, 0.08);
+  color: #fff;
+  font: inherit;
+  transition: background 0.2s ease;
+}
+.financeiro-despesas-bib-grupo__header:hover {
+  background: rgba(255, 170, 0, 0.14);
+}
+.financeiro-despesas-bib-grupo__chev {
+  font-size: 11px;
+  opacity: 0.85;
+  min-width: 1.1em;
+}
+.financeiro-despesas-bib-grupo__nome {
+  font-weight: 800;
+  font-size: 14px;
+  flex: 1 1 140px;
+}
+.financeiro-despesas-bib-grupo__meta {
+  font-size: 12px;
+  color: rgba(226, 232, 240, 0.88);
+}
+.financeiro-despesas-bib-grupo__body {
+  padding: 12px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid rgba(255, 170, 0, 0.2);
+  background: rgba(0, 0, 0, 0.25);
+}
+.financeiro-despesas-bib-card {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #1f1f1f;
+  border: 1px solid rgba(255, 170, 0, 0.28);
+}
+.financeiro-despesas-bib-card__head {
+  margin-bottom: 10px;
+}
+.financeiro-despesas-bib-card__title {
+  font-weight: 800;
+  color: #fff;
+  font-size: 15px;
+}
+.financeiro-despesas-bib-card__sub {
+  font-size: 12px;
+  color: #ccc;
+  margin-top: 4px;
+}
+.financeiro-despesas-bib-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 /* Resumo numérico (6 caixas) — empilha no telemóvel */
 .relatorio-servico-resumo-totais-grid {
   display: grid;
