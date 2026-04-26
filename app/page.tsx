@@ -21281,7 +21281,8 @@ export default function Dashboard() {
     } else if (action === 'open-gestao-custos') {
       toggleOrOpenDashboardHub('gestao-custos', 'gestao-custos')
     } else if (action === 'open-gestao-financeira') {
-      toggleOrOpenDashboardHub('gestao-financeira', 'gestao-financeira')
+      // Abre a aba completa (painel executivo, IVA, etc.). O hub só listava atalhos e não mostrava esse conteúdo.
+      openTab('gestao-financeira', getTabTitle('gestao-financeira'))
     } else if (action === 'open-clientes-financeiro') {
       openTab('clientes-financeiro', getTabTitle('clientes-financeiro'))
     } else if (action === 'open-comprovantes-despesas') {
