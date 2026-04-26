@@ -4710,6 +4710,10 @@ export default function Dashboard() {
   } | null>(null)
   /** Rascunhos do nº de fatura na consulta (Ordem de serviço); chave = id do relatório */
   const [osTabConsultaNfDraft, setOsTabConsultaNfDraft] = useState<Record<string, string>>({})
+  /** Gestão financeira › mapa: marcar «pago» em fechamento s/ NF pendente */
+  const [gestaoFinMapaMarcarPagoRelId, setGestaoFinMapaMarcarPagoRelId] = useState('')
+  const [gestaoFinMapaMarcarPagoOkMsg, setGestaoFinMapaMarcarPagoOkMsg] = useState('')
+  const gestaoFinMapaMarcarPagoOkHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [filtroPeriodo, setFiltroPeriodo] = useState<'semanal' | 'mensal' | 'anual'>('mensal')
   const [showOSForm, setShowOSForm] = useState(false)
   const [showFaturaForm, setShowFaturaForm] = useState(false)
@@ -4881,6 +4885,95 @@ export default function Dashboard() {
       ),
     [relatoriosServico, clientes, fechamentosGuardadosBibliotecaIds, fechamentosRelatorios]
   )
+
+  /** Resumo para mapa visual: NF (faturas de peças) vs. dinheiro s/ NF (fluxo sem_fatura + pago) vs. total fechamentos na biblioteca */
+  const mapaValoresGestaoFinanceira = useMemo(() => {
+    let valorComNotaFiscal = 0
+    let nFaturasComNF = 0
+    for (const f of faturasPecas) {
+      if (f.status === 'cancelada') continue
+      valorComNotaFiscal += Number(f.valorTotal) || 0
+      nFaturasComNF++
+    }
+
+    let valorDinheiroSemNFPago = 0
+    let nFechamentosDinheiroPago = 0
+    let valorDinheiroSemNFPendente = 0
+    let nFechamentosDinheiroPendente = 0
+    for (const rel of relatoriosServico) {
+      if (!fechamentosGuardadosBibliotecaIds.includes(rel.id)) continue
+      const fr = fechamentoFluxoFinanceiroPorRelatorioId[rel.id]
+      const obj =
+        fr && typeof fr === 'object' && !Array.isArray(fr) ? (fr as FechamentoFluxoFinanceiroEntry) : null
+      if (!obj || obj.modo !== 'sem_fatura') continue
+      const itens = fechamentosRelatorios[rel.id]
+      if (!itens?.length) continue
+      const vis = filtrarFechamentoItensPorOmitidos(fechamentoItensOmitidosPorRelatorio, rel.id, itens)
+      const tot = vis.reduce(
+        (s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)),
+        0
+      )
+      if (obj.pagamento === 'pago') {
+        valorDinheiroSemNFPago += tot
+        nFechamentosDinheiroPago++
+      } else if (obj.pagamento === 'pendente') {
+        valorDinheiroSemNFPendente += tot
+        nFechamentosDinheiroPendente++
+      }
+    }
+
+    let totalFechamentosBiblioteca = 0
+    for (const relId of fechamentosGuardadosBibliotecaIds) {
+      const itens = fechamentosRelatorios[relId]
+      if (!itens?.length) continue
+      const vis = filtrarFechamentoItensPorOmitidos(fechamentoItensOmitidosPorRelatorio, relId, itens)
+      totalFechamentosBiblioteca += vis.reduce(
+        (s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)),
+        0
+      )
+    }
+
+    return {
+      valorComNotaFiscal,
+      nFaturasComNF,
+      valorDinheiroSemNFPago,
+      nFechamentosDinheiroPago,
+      valorDinheiroSemNFPendente,
+      nFechamentosDinheiroPendente,
+      totalFechamentosBiblioteca,
+    }
+  }, [
+    faturasPecas,
+    relatoriosServico,
+    fechamentosGuardadosBibliotecaIds,
+    fechamentoFluxoFinanceiroPorRelatorioId,
+    fechamentosRelatorios,
+    fechamentoItensOmitidosPorRelatorio,
+  ])
+
+  const relatoriosSemNFPendenteMapaGestaoFin = useMemo(() => {
+    const out: RelatorioServico[] = []
+    for (const rel of relatoriosServico) {
+      if (!fechamentosGuardadosBibliotecaIds.includes(rel.id)) continue
+      const itens = fechamentosRelatorios[rel.id]
+      if (!itens?.length) continue
+      const fr = fechamentoFluxoFinanceiroPorRelatorioId[rel.id]
+      const obj =
+        fr && typeof fr === 'object' && !Array.isArray(fr) ? (fr as FechamentoFluxoFinanceiroEntry) : null
+      if (!obj || obj.modo !== 'sem_fatura' || obj.pagamento !== 'pendente') continue
+      out.push(rel)
+    }
+    out.sort((a, b) =>
+      String(a.numero ?? '').localeCompare(String(b.numero ?? ''), undefined, { numeric: true, sensitivity: 'base' })
+    )
+    return out
+  }, [
+    relatoriosServico,
+    fechamentosGuardadosBibliotecaIds,
+    fechamentosRelatorios,
+    fechamentoFluxoFinanceiroPorRelatorioId,
+  ])
+
   /** Por relatório: 'sim' = aguarda fechamento na Biblioteca; 'nao' = sem cobrança (verde fixo no resumo) */
   const [resumoCobrancaDecisaoPorRelatorio, setResumoCobrancaDecisaoPorRelatorio] = useState<Record<string, 'sim' | 'nao'>>({})
   const [relatoriosExcluidosClientes, setRelatoriosExcluidosClientes] = useState<RelatoriosExcluidosClientesStorage>({ pastas: {} })
@@ -51982,6 +52075,189 @@ A1;Peça exemplo;10`}
                 <p style={{ color: '#ccc', fontSize: '16px', marginBottom: '30px', opacity: 0.8, textAlign: 'center' }}>
                   {safeT?.gestaoFinanceiraDesc || 'Gerencie finanças, faturas e pagamentos'}
                 </p>
+
+                {(() => {
+                  const txM = safeT as Record<string, string>
+                  const mf = mapaValoresGestaoFinanceira
+                  const sumBar =
+                    mf.valorComNotaFiscal + mf.valorDinheiroSemNFPago + mf.valorDinheiroSemNFPendente
+                  const denomBar = sumBar > 0 ? sumBar : 1
+                  const pctNf = (mf.valorComNotaFiscal / denomBar) * 100
+                  const pctDinPago = (mf.valorDinheiroSemNFPago / denomBar) * 100
+                  const pctDinPend = (mf.valorDinheiroSemNFPendente / denomBar) * 100
+                  const fmt = (n: number) =>
+                    n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                  const pendentesLista = relatoriosSemNFPendenteMapaGestaoFin
+                  return (
+                    <div className="gestao-financeira-mapa-valores" style={{ width: '100%', maxWidth: '1100px', marginBottom: '28px' }}>
+                      <h3 className="gestao-financeira-mapa-valores__titulo">
+                        {txM.gestaoFinanceiraMapaValoresTitulo || 'Mapa de valores'}
+                      </h3>
+                      <p className="gestao-financeira-mapa-valores__sub">
+                        {txM.gestaoFinanceiraMapaValoresSubtitulo ||
+                          'Totais de cobrança na biblioteca, faturas de peças (com nota fiscal) e recebimentos em dinheiro sem NF.'}
+                      </p>
+                      <div className="gestao-financeira-mapa-valores__cards gestao-financeira-mapa-valores__cards--four">
+                        <div className="gestao-financeira-mapa-valores__card gestao-financeira-mapa-valores__card--total">
+                          <span className="gestao-financeira-mapa-valores__card-label">
+                            {txM.gestaoFinanceiraMapaTotalFechamentos || 'Valores gerados (fechamentos na biblioteca)'}
+                          </span>
+                          <span className="gestao-financeira-mapa-valores__card-valor">€{fmt(mf.totalFechamentosBiblioteca)}</span>
+                          <span className="gestao-financeira-mapa-valores__card-hint">
+                            {txM.gestaoFinanceiraMapaTotalFechamentosHint || 'Soma dos relatórios de despesas guardados na Biblioteca.'}
+                          </span>
+                        </div>
+                        <div className="gestao-financeira-mapa-valores__card gestao-financeira-mapa-valores__card--nf">
+                          <span className="gestao-financeira-mapa-valores__card-label">
+                            {txM.gestaoFinanceiraMapaComNF || 'Com nota fiscal (faturas de peças)'}
+                          </span>
+                          <span className="gestao-financeira-mapa-valores__card-valor">€{fmt(mf.valorComNotaFiscal)}</span>
+                          <span className="gestao-financeira-mapa-valores__card-hint">
+                            {(txM.gestaoFinanceiraMapaComNFHint || '{n} fatura(s) ativa(s)')
+                              .replace(/\{n\}/g, String(mf.nFaturasComNF))}
+                          </span>
+                        </div>
+                        <div className="gestao-financeira-mapa-valores__card gestao-financeira-mapa-valores__card--din">
+                          <span className="gestao-financeira-mapa-valores__card-label">
+                            {txM.gestaoFinanceiraMapaDinheiroSemNF || 'Pago em dinheiro (sem nota fiscal)'}
+                          </span>
+                          <span className="gestao-financeira-mapa-valores__card-valor">€{fmt(mf.valorDinheiroSemNFPago)}</span>
+                          <span className="gestao-financeira-mapa-valores__card-hint">
+                            {(txM.gestaoFinanceiraMapaDinheiroSemNFHint || '{n} fechamento(s) com fluxo sem NF e pagamento pago')
+                              .replace(/\{n\}/g, String(mf.nFechamentosDinheiroPago))}
+                          </span>
+                        </div>
+                        <div className="gestao-financeira-mapa-valores__card gestao-financeira-mapa-valores__card--pend">
+                          <span className="gestao-financeira-mapa-valores__card-label">
+                            {txM.gestaoFinanceiraMapaDinheiroSemNFPendente || 'Dinheiro s/ NF (registado, a receber)'}
+                          </span>
+                          <span className="gestao-financeira-mapa-valores__card-valor">€{fmt(mf.valorDinheiroSemNFPendente)}</span>
+                          <span className="gestao-financeira-mapa-valores__card-hint">
+                            {(txM.gestaoFinanceiraMapaDinheiroSemNFPendenteHint ||
+                              '{n} fechamento(s) sem NF ainda não marcados como pagos')
+                              .replace(/\{n\}/g, String(mf.nFechamentosDinheiroPendente))}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="gestao-financeira-mapa-valores__bar-wrap">
+                        <span className="gestao-financeira-mapa-valores__bar-caption">
+                          {txM.gestaoFinanceiraMapaBarTituloTres || 'NF × dinheiro pago × dinheiro a receber (s/ NF)'}
+                        </span>
+                        <div className="gestao-financeira-mapa-valores__bar" role="img" aria-label={txM.gestaoFinanceiraMapaBarTituloTres || 'Comparativo'}>
+                          {sumBar > 0 ? (
+                            <>
+                              <div
+                                className="gestao-financeira-mapa-valores__bar-seg gestao-financeira-mapa-valores__bar-seg--nf"
+                                style={{ width: `${pctNf}%` }}
+                                title={`${txM.gestaoFinanceiraMapaLegendaNF || 'NF'}: €${fmt(mf.valorComNotaFiscal)}`}
+                              />
+                              <div
+                                className="gestao-financeira-mapa-valores__bar-seg gestao-financeira-mapa-valores__bar-seg--din"
+                                style={{ width: `${pctDinPago}%` }}
+                                title={`${txM.gestaoFinanceiraMapaLegendaDin || 'Dinheiro pago'}: €${fmt(mf.valorDinheiroSemNFPago)}`}
+                              />
+                              <div
+                                className="gestao-financeira-mapa-valores__bar-seg gestao-financeira-mapa-valores__bar-seg--pend"
+                                style={{ width: `${pctDinPend}%` }}
+                                title={`${txM.gestaoFinanceiraMapaLegendaPend || 'A receber'}: €${fmt(mf.valorDinheiroSemNFPendente)}`}
+                              />
+                            </>
+                          ) : (
+                            <div className="gestao-financeira-mapa-valores__bar-empty">
+                              {txM.gestaoFinanceiraMapaBarVazio || 'Sem valores de NF ou dinheiro s/ NF para comparar.'}
+                            </div>
+                          )}
+                        </div>
+                        <div className="gestao-financeira-mapa-valores__legend gestao-financeira-mapa-valores__legend--tres">
+                          <span>
+                            <i className="gestao-financeira-mapa-valores__dot gestao-financeira-mapa-valores__dot--nf" />{' '}
+                            {txM.gestaoFinanceiraMapaLegendaNF || 'Nota fiscal'} · €{fmt(mf.valorComNotaFiscal)}
+                          </span>
+                          <span>
+                            <i className="gestao-financeira-mapa-valores__dot gestao-financeira-mapa-valores__dot--din" />{' '}
+                            {txM.gestaoFinanceiraMapaLegendaDin || 'Dinheiro s/ NF pago'} · €{fmt(mf.valorDinheiroSemNFPago)}
+                          </span>
+                          <span>
+                            <i className="gestao-financeira-mapa-valores__dot gestao-financeira-mapa-valores__dot--pend" />{' '}
+                            {txM.gestaoFinanceiraMapaLegendaPend || 'S/ NF a receber'} · €{fmt(mf.valorDinheiroSemNFPendente)}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="gestao-financeira-mapa-marcar-pago">
+                        <span className="gestao-financeira-mapa-marcar-pago__titulo">
+                          {txM.gestaoFinanceiraMapaMarcarPagoTitulo || 'Marcar como pago (dinheiro s/ NF)'}
+                        </span>
+                        {gestaoFinMapaMarcarPagoOkMsg ? (
+                          <p
+                            className="gestao-financeira-mapa-marcar-pago__ok"
+                            role="status"
+                            aria-live="polite"
+                          >
+                            {gestaoFinMapaMarcarPagoOkMsg}
+                          </p>
+                        ) : null}
+                        {pendentesLista.length === 0 ? (
+                          <p className="gestao-financeira-mapa-marcar-pago__empty">
+                            {txM.gestaoFinanceiraMapaMarcarPagoEmpty || 'Nenhum fechamento s/ NF pendente.'}
+                          </p>
+                        ) : (
+                          <div className="gestao-financeira-mapa-marcar-pago__row">
+                            <select
+                              className="gestao-financeira-mapa-marcar-pago__select"
+                              value={gestaoFinMapaMarcarPagoRelId}
+                              onChange={e => setGestaoFinMapaMarcarPagoRelId(e.target.value)}
+                              aria-label={txM.gestaoFinanceiraMapaMarcarPagoSelect || 'Relatório'}
+                            >
+                              <option value="">
+                                {txM.gestaoFinanceiraMapaMarcarPagoSelect || 'Escolher fechamento s/ NF pendente…'}
+                              </option>
+                              {pendentesLista.map(r => (
+                                <option key={r.id} value={r.id}>
+                                  {(txM.relatorioNumeroLabel || 'Rel.')}{' '}
+                                  {r.numero} — {clientes.find(c => c.id === r.clienteId)?.nomeEmpresa || r.cliente}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              className="btn-primary gestao-financeira-mapa-marcar-pago__btn"
+                              disabled={!gestaoFinMapaMarcarPagoRelId}
+                              onClick={() => {
+                                const id = gestaoFinMapaMarcarPagoRelId
+                                if (!id) return
+                                setFechamentoEtapaFinanceira(id, 'controlo_pagamento', {
+                                  modo: 'sem_fatura',
+                                  pagamento: 'pago',
+                                })
+                                setGestaoFinMapaMarcarPagoRelId('')
+                                if (gestaoFinMapaMarcarPagoOkHideTimerRef.current) {
+                                  clearTimeout(gestaoFinMapaMarcarPagoOkHideTimerRef.current)
+                                  gestaoFinMapaMarcarPagoOkHideTimerRef.current = null
+                                }
+                                const okMsg =
+                                  txM.gestaoFinanceiraMapaMarcarPagoOk ||
+                                  'Marcado como pago. O mapa atualiza de seguida.'
+                                setGestaoFinMapaMarcarPagoOkMsg(okMsg)
+                                gestaoFinMapaMarcarPagoOkHideTimerRef.current = setTimeout(() => {
+                                  setGestaoFinMapaMarcarPagoOkMsg('')
+                                  gestaoFinMapaMarcarPagoOkHideTimerRef.current = null
+                                }, 3200)
+                              }}
+                            >
+                              {txM.gestaoFinanceiraMapaMarcarPagoBtn || 'Marcar como pago'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <p className="gestao-financeira-mapa-valores__nota">
+                        {txM.gestaoFinanceiraMapaNotaRodape ||
+                          'Registe recebimento s/ NF em Clientes › Financeiro › Ordem de serviço; marque «pago» aqui ou nessa área. «A receber» = sem fatura e pagamento ainda pendente.'}
+                      </p>
+                    </div>
+                  )
+                })()}
                 
                 {/* Botão Comprovantes de Despesas */}
                 <button
