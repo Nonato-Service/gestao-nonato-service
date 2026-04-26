@@ -975,7 +975,19 @@ const RESUMO_COBRANCA_DECISAO_KEY = 'nonato-resumo-cobranca-decisao'
 const FECHAMENTO_ITENS_OMITIDOS_KEY = 'nonato-fechamentos-itens-omitidos-por-relatorio'
 /** Por relatório de serviço com fechamento na biblioteca: fluxo fatura → pagamento (com/sem fatura) */
 const FECHAMENTO_FLUXO_FINANCEIRO_KEY = 'nonato-fechamentos-fluxo-financeiro'
+/** Por relatório: fecho com IVA opcional e taxa (ex.: PT/ES/IT) */
+const FECHAMENTO_IVA_POR_RELATORIO_KEY = 'nonato-fechamentos-iva-por-relatorio'
 const FECHAMENTO_IDS_FIXOS_TEMPLATE = ['ht', 'km', 'diarias', 'hida', 'hret'] as const
+/** E-mail da contabilidade e opção de abrir envio após guardar fechamento na Biblioteca */
+const CONTABILIDADE_CONFIG_KEY = 'nonato-contabilidade-config'
+type ContabilidadeConfig = {
+  emailContabilidade: string
+  enviarFechamentoContabilidadeAuto: boolean
+}
+const defaultContabilidadeConfig: ContabilidadeConfig = {
+  emailContabilidade: '',
+  enviarFechamentoContabilidadeAuto: true,
+}
 
 type FechamentoFluxoFinanceiroEtapa = 'none' | 'enviado_fatura' | 'controlo_pagamento'
 type FechamentoFluxoFinanceiroModo = 'com_fatura' | 'sem_fatura'
@@ -1147,6 +1159,29 @@ function filtrarFechamentoItensPorOmitidos(
   if (!omit || omit.length === 0) return itens
   const setO = new Set(omit)
   return itens.filter(i => !setO.has(i.id))
+}
+
+/** Opções de IVA no fechamento de despesas (por relatório / OS). */
+type FechamentoIvaOpcoesRelatorio = { incluirIva: boolean; taxaIva: number }
+
+/** Soma linhas (base) e, se ativo, IVA e total com IVA. */
+function totaisFechamentoLiquidoComIva(
+  itens: FechamentoItem[],
+  opts?: FechamentoIvaOpcoesRelatorio | null
+): { liquido: number; iva: number; comIva: number; incluir: boolean; taxa: number } {
+  const liquido = itens.reduce(
+    (s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : Number(i.valorTotal) || 0),
+    0
+  )
+  const o = opts ?? { incluirIva: false, taxaIva: 23 }
+  const incluir = Boolean(o.incluirIva)
+  let taxa = Number(o.taxaIva)
+  if (!Number.isFinite(taxa) || taxa < 0) taxa = 0
+  if (taxa > 100) taxa = 100
+  taxa = Math.round(taxa * 100) / 100
+  const iva = incluir ? Math.round(liquido * (taxa / 100) * 100) / 100 : 0
+  const comIva = Math.round((liquido + iva) * 100) / 100
+  return { liquido, iva, comIva, incluir, taxa }
 }
 
 /** Item arquivado ao excluir relatório (cópia de segurança por pasta de cliente) */
@@ -4879,6 +4914,9 @@ export default function Dashboard() {
   const [fechamentoFluxoFinanceiroPorRelatorioId, setFechamentoFluxoFinanceiroPorRelatorioId] = useState<
     Record<string, FechamentoFluxoFinanceiroEntry | FechamentoFluxoFinanceiroEtapa>
   >({})
+  const [fechamentoIvaPorRelatorioId, setFechamentoIvaPorRelatorioId] = useState<
+    Record<string, FechamentoIvaOpcoesRelatorio>
+  >({})
   const relatoriosFechamentoBibliotecaOrdenados = useMemo(
     () =>
       relatoriosComFechamentoNaBibliotecaOrdenados(
@@ -4913,10 +4951,7 @@ export default function Dashboard() {
       const itens = fechamentosRelatorios[rel.id]
       if (!itens?.length) continue
       const vis = filtrarFechamentoItensPorOmitidos(fechamentoItensOmitidosPorRelatorio, rel.id, itens)
-      const tot = vis.reduce(
-        (s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)),
-        0
-      )
+      const tot = totaisFechamentoLiquidoComIva(vis, fechamentoIvaPorRelatorioId[rel.id]).comIva
       if (obj.pagamento === 'pago') {
         valorDinheiroSemNFPago += tot
         nFechamentosDinheiroPago++
@@ -4931,10 +4966,7 @@ export default function Dashboard() {
       const itens = fechamentosRelatorios[relId]
       if (!itens?.length) continue
       const vis = filtrarFechamentoItensPorOmitidos(fechamentoItensOmitidosPorRelatorio, relId, itens)
-      totalFechamentosBiblioteca += vis.reduce(
-        (s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)),
-        0
-      )
+      totalFechamentosBiblioteca += totaisFechamentoLiquidoComIva(vis, fechamentoIvaPorRelatorioId[relId]).comIva
     }
 
     return {
@@ -4953,6 +4985,7 @@ export default function Dashboard() {
     fechamentoFluxoFinanceiroPorRelatorioId,
     fechamentosRelatorios,
     fechamentoItensOmitidosPorRelatorio,
+    fechamentoIvaPorRelatorioId,
   ])
 
   const relatoriosSemNFPendenteMapaGestaoFin = useMemo(() => {
@@ -4976,6 +5009,144 @@ export default function Dashboard() {
     fechamentosGuardadosBibliotecaIds,
     fechamentosRelatorios,
     fechamentoFluxoFinanceiroPorRelatorioId,
+  ])
+
+  /** Painel executivo — recebíveis, atraso em NF e exposição por cliente (Gestão Financeira). */
+  const painelControleFinanceiroExec = useMemo(() => {
+    const hoje = new Date()
+    hoje.setHours(0, 0, 0, 0)
+
+    let fatAbertoValor = 0
+    let fatAbertoN = 0
+    let fatAbertoIva = 0
+    let fatAtrasoValor = 0
+    let fatAtrasoN = 0
+    let fatPendenteNoPrazoValor = 0
+    let fatPendenteNoPrazoN = 0
+    const clientesIdsFaturaAberta = new Set<string>()
+
+    for (const f of faturasPecas) {
+      if (f.status === 'cancelada' || f.status === 'paga') continue
+      const v = Number(f.valorTotal) || 0
+      const vi = Number(f.valorIVA) || 0
+      fatAbertoValor += v
+      fatAbertoIva += vi
+      fatAbertoN++
+      clientesIdsFaturaAberta.add(f.clienteId)
+      if (f.status === 'vencida') {
+        fatAtrasoValor += v
+        fatAtrasoN++
+        continue
+      }
+      let atraso = false
+      if (f.dataVencimento) {
+        const dv = new Date(f.dataVencimento)
+        dv.setHours(0, 0, 0, 0)
+        if (dv < hoje) atraso = true
+      }
+      if (atraso) {
+        fatAtrasoValor += v
+        fatAtrasoN++
+      } else {
+        fatPendenteNoPrazoValor += v
+        fatPendenteNoPrazoN++
+      }
+    }
+
+    const cds = clientesDevedores.filter(d => d.isDevedor && Number(d.saldoPendente) > 0)
+    const clientesDividaN = cds.length
+    const clientesDividaValor = cds.reduce((s, d) => s + (Number(d.saldoPendente) || 0), 0)
+    const clientesComFaturaVencidaN = cds.filter(d => d.numeroFaturasVencidas > 0).length
+    const clientesComFaturaVencidaValor = cds.reduce(
+      (s, d) => s + (d.numeroFaturasVencidas > 0 ? Number(d.saldoPendente) || 0 : 0),
+      0
+    )
+
+    let valorComFaturaFluxoPendente = 0
+    let nComFaturaFluxoPendente = 0
+    for (const rel of relatoriosServico) {
+      if (!fechamentosGuardadosBibliotecaIds.includes(rel.id)) continue
+      const fr = fechamentoFluxoFinanceiroPorRelatorioId[rel.id]
+      const obj =
+        fr && typeof fr === 'object' && !Array.isArray(fr) ? (fr as FechamentoFluxoFinanceiroEntry) : null
+      if (!obj || obj.modo !== 'com_fatura') continue
+      if (obj.pagamento === 'pago') continue
+      const itens = fechamentosRelatorios[rel.id]
+      if (!itens?.length) continue
+      const vis = filtrarFechamentoItensPorOmitidos(fechamentoItensOmitidosPorRelatorio, rel.id, itens)
+      const tot = totaisFechamentoLiquidoComIva(vis, fechamentoIvaPorRelatorioId[rel.id]).comIva
+      valorComFaturaFluxoPendente += tot
+      nComFaturaFluxoPendente++
+    }
+
+    const mf = mapaValoresGestaoFinanceira
+    const servicoSemNfPendenteVal = mf.valorDinheiroSemNFPendente
+    const servicoSemNfPendenteN = mf.nFechamentosDinheiroPendente
+
+    const totalCarteiraReceber = fatAbertoValor + servicoSemNfPendenteVal + valorComFaturaFluxoPendente
+    const pressaoAtrasoPct = fatAbertoValor > 0.0001 ? Math.min(100, (fatAtrasoValor / fatAbertoValor) * 100) : 0
+
+    let ivaServSemNfEst = 0
+    for (const rel of relatoriosServico) {
+      if (!fechamentosGuardadosBibliotecaIds.includes(rel.id)) continue
+      const fr = fechamentoFluxoFinanceiroPorRelatorioId[rel.id]
+      const obj =
+        fr && typeof fr === 'object' && !Array.isArray(fr) ? (fr as FechamentoFluxoFinanceiroEntry) : null
+      if (!obj || obj.modo !== 'sem_fatura' || obj.pagamento !== 'pendente') continue
+      const itens = fechamentosRelatorios[rel.id]
+      if (!itens?.length) continue
+      const vis = filtrarFechamentoItensPorOmitidos(fechamentoItensOmitidosPorRelatorio, rel.id, itens)
+      ivaServSemNfEst += totaisFechamentoLiquidoComIva(vis, fechamentoIvaPorRelatorioId[rel.id]).iva
+    }
+    let ivaServComFatFluxoEst = 0
+    for (const rel of relatoriosServico) {
+      if (!fechamentosGuardadosBibliotecaIds.includes(rel.id)) continue
+      const fr = fechamentoFluxoFinanceiroPorRelatorioId[rel.id]
+      const obj =
+        fr && typeof fr === 'object' && !Array.isArray(fr) ? (fr as FechamentoFluxoFinanceiroEntry) : null
+      if (!obj || obj.modo !== 'com_fatura' || obj.pagamento === 'pago') continue
+      const itens = fechamentosRelatorios[rel.id]
+      if (!itens?.length) continue
+      const vis = filtrarFechamentoItensPorOmitidos(fechamentoItensOmitidosPorRelatorio, rel.id, itens)
+      ivaServComFatFluxoEst += totaisFechamentoLiquidoComIva(vis, fechamentoIvaPorRelatorioId[rel.id]).iva
+    }
+    const ivaServBibliotecaEst = Math.round((ivaServSemNfEst + ivaServComFatFluxoEst) * 100) / 100
+    const ivaTotalProvisionEstado = Math.round((fatAbertoIva + ivaServBibliotecaEst) * 100) / 100
+
+    return {
+      fatAbertoValor,
+      fatAbertoN,
+      fatAbertoIva,
+      fatAtrasoValor,
+      fatAtrasoN,
+      fatPendenteNoPrazoValor,
+      fatPendenteNoPrazoN,
+      clientesComFaturaAberta: clientesIdsFaturaAberta.size,
+      clientesDividaN,
+      clientesDividaValor,
+      clientesComFaturaVencidaN,
+      clientesComFaturaVencidaValor,
+      valorComFaturaFluxoPendente,
+      nComFaturaFluxoPendente,
+      servicoSemNfPendenteVal,
+      servicoSemNfPendenteN,
+      totalCarteiraReceber,
+      pressaoAtrasoPct,
+      ivaServSemNfEst,
+      ivaServComFatFluxoEst,
+      ivaServBibliotecaEst,
+      ivaTotalProvisionEstado,
+    }
+  }, [
+    faturasPecas,
+    clientesDevedores,
+    mapaValoresGestaoFinanceira,
+    relatoriosServico,
+    fechamentosGuardadosBibliotecaIds,
+    fechamentoFluxoFinanceiroPorRelatorioId,
+    fechamentosRelatorios,
+    fechamentoItensOmitidosPorRelatorio,
+    fechamentoIvaPorRelatorioId,
   ])
 
   /** Por relatório: 'sim' = aguarda fechamento na Biblioteca; 'nao' = sem cobrança (verde fixo no resumo) */
@@ -6554,6 +6725,15 @@ export default function Dashboard() {
         setRelatoriosFinanceiros(savedRelatoriosFinanceiros)
       }
 
+      const savedContabilidade = getData(CONTABILIDADE_CONFIG_KEY) as Partial<ContabilidadeConfig> | null
+      if (savedContabilidade && typeof savedContabilidade === 'object') {
+        setContabilidadeConfig({
+          emailContabilidade:
+            typeof savedContabilidade.emailContabilidade === 'string' ? savedContabilidade.emailContabilidade : '',
+          enviarFechamentoContabilidadeAuto: savedContabilidade.enviarFechamentoContabilidadeAuto !== false,
+        })
+      }
+
       // Carregar pedidos de separação
       const savedPedidosSeparacao = getData('nonato-pedidos-separacao')
       if (savedPedidosSeparacao && Array.isArray(savedPedidosSeparacao)) {
@@ -6714,6 +6894,33 @@ export default function Dashboard() {
         }
       }
       setFechamentoFluxoFinanceiroPorRelatorioId(fluxoFinMap)
+
+      const savedFechamentoIva = getData(FECHAMENTO_IVA_POR_RELATORIO_KEY)
+      let fechamentoIvaMap: Record<string, FechamentoIvaOpcoesRelatorio> = {}
+      if (savedFechamentoIva && typeof savedFechamentoIva === 'object' && !Array.isArray(savedFechamentoIva)) {
+        const rawIva = savedFechamentoIva as Record<string, unknown>
+        for (const k of Object.keys(rawIva)) {
+          const v = rawIva[k]
+          if (!v || typeof v !== 'object' || Array.isArray(v)) continue
+          const o = v as Record<string, unknown>
+          const tx = Number(o.taxaIva)
+          fechamentoIvaMap[k] = {
+            incluirIva: o.incluirIva === true,
+            taxaIva: Number.isFinite(tx) ? Math.min(100, Math.max(0, Math.round(tx * 100) / 100)) : 23,
+          }
+        }
+        if (removedRelatorioIds.size > 0) {
+          let ivaDirty = false
+          for (const id of removedRelatorioIds) {
+            if (id in fechamentoIvaMap) {
+              delete fechamentoIvaMap[id]
+              ivaDirty = true
+            }
+          }
+          if (ivaDirty) void saveData(FECHAMENTO_IVA_POR_RELATORIO_KEY, fechamentoIvaMap)
+        }
+      }
+      setFechamentoIvaPorRelatorioId(fechamentoIvaMap)
 
       const savedRelExcl = getData('nonato-relatorios-excluidos-clientes') as RelatoriosExcluidosClientesStorage | null
       if (savedRelExcl && savedRelExcl.pastas && typeof savedRelExcl.pastas === 'object') {
@@ -10456,6 +10663,259 @@ export default function Dashboard() {
     setShowClienteForm(true)
   }
 
+  const persistContabilidadeConfig = (next: ContabilidadeConfig) => {
+    setContabilidadeConfig(next)
+    void saveData(CONTABILIDADE_CONFIG_KEY, next)
+  }
+
+  const mailtoPrefixContabilidade = () => {
+    const e = contabilidadeConfig.emailContabilidade.trim()
+    return e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) ? `mailto:${e}` : 'mailto:'
+  }
+
+  /** Ficha resumida (NIF, morada, contactos) para enviar à contabilidade — imprimir, PDF ou e-mail. */
+  const abrirClienteDadosContabilidade = (cliente: Cliente) => {
+    const st = translations[selectedLanguage as keyof typeof translations] || translations['pt-BR']
+    const t = st as Record<string, string>
+    const escAttr = (s: string) =>
+      String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+    const preEsc = (s: string) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const val = (x: string | undefined) => (x && String(x).trim() ? String(x).trim() : '—')
+    const lblEmpresa = t.nomeEmpresa || 'Nome da Empresa'
+    const lblNif = t.identificacaoFiscal || 'NIF'
+    const lblMorada = t.morada || 'Morada'
+    const lblLocal = t.localidade || 'Localidade'
+    const lblCp = t.codigoPostal || 'Código Postal'
+    const lblFreg = t.freguesia || 'Freguesia'
+    const lblCons = t.conselho || 'Conselho'
+    const lblPais = t.pais || 'País'
+    const lblTel = t.telefones || 'Telefones'
+    const lblMail = t.email || 'E-mail'
+    const lblCont = t.contato || 'Contato'
+    const titulo = t.clienteDadosContabilidadeTitulo || 'Dados do cliente — contabilidade / faturação'
+    const sub = t.clienteDadosContabilidadeSub || ''
+    const lblImprimir = t.imprimirGuardarPDF || 'Imprimir / Guardar como PDF'
+    const lblFechar = t.close || 'Fechar'
+    const lblEmail = t.clienteDadosContabilidadeEnviarEmail || 'Enviar por e-mail'
+    const lblCopiar = t.clienteDadosContabilidadeCopiar || 'Copiar texto'
+    const lblCopiado = t.clienteDadosContabilidadeCopiado || 'Texto copiado para a área de transferência.'
+    const assuntoMail = t.clienteDadosContabilidadeEmailAssunto || 'Dados de cliente para faturação'
+    const docGerado = t.pdfDocumentoGeradoEm || 'Documento gerado em'
+    const localeStr =
+      selectedLanguage === 'pt-BR'
+        ? 'pt-PT'
+        : selectedLanguage === 'es'
+          ? 'es-ES'
+          : selectedLanguage === 'fr'
+            ? 'fr-FR'
+            : selectedLanguage === 'it'
+              ? 'it-IT'
+              : selectedLanguage === 'de'
+                ? 'de-DE'
+                : 'en-GB'
+    const dataHora = new Date().toLocaleString(localeStr)
+    const linhas = [
+      titulo,
+      '',
+      `${lblEmpresa}: ${val(cliente.nomeEmpresa)}`,
+      `${lblNif}: ${val(cliente.numeroContribuicaoFiscal)}`,
+      `${lblMorada}: ${val(cliente.morada)}`,
+      `${lblLocal}: ${val(cliente.localidade)}`,
+      `${lblCp}: ${val(cliente.codigoPostal)}`,
+      `${lblFreg}: ${val(cliente.freguesia)}`,
+      `${lblCons}: ${val(cliente.conselho)}`,
+      `${lblPais}: ${val(cliente.pais)}`,
+      `${lblTel}: ${val(cliente.telefones)}`,
+      `${lblMail}: ${val(cliente.email)}`,
+      `${lblCont}: ${val(cliente.contato)}`,
+      '',
+      `${docGerado} ${dataHora}`,
+    ]
+    const textoPlano = linhas.join('\n')
+    const row = (label: string, cell: string) =>
+      `<tr><td style="padding:10px 14px;border:1px solid #c8e6c9;font-weight:700;background:#e8f5e9;width:34%;vertical-align:top">${escAttr(label)}</td><td style="padding:10px 14px;border:1px solid #c8e6c9;vertical-align:top;word-break:break-word">${escAttr(cell)}</td></tr>`
+    const tableRows = [
+      row(lblEmpresa, val(cliente.nomeEmpresa)),
+      row(lblNif, val(cliente.numeroContribuicaoFiscal)),
+      row(lblMorada, val(cliente.morada)),
+      row(lblLocal, val(cliente.localidade)),
+      row(lblCp, val(cliente.codigoPostal)),
+      row(lblFreg, val(cliente.freguesia)),
+      row(lblCons, val(cliente.conselho)),
+      row(lblPais, val(cliente.pais)),
+      row(lblTel, val(cliente.telefones)),
+      row(lblMail, val(cliente.email)),
+      row(lblCont, val(cliente.contato)),
+    ].join('')
+    const mailSub = `${assuntoMail}${cliente.nomeEmpresa?.trim() ? ` — ${cliente.nomeEmpresa.trim().slice(0, 60)}` : ''}`
+    const mailtoHref = `${mailtoPrefixContabilidade()}?subject=${encodeURIComponent(mailSub)}&body=${encodeURIComponent(textoPlano)}`
+    const headerHtml = `<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:3px solid #00a650"><div style="font-size:20px;font-weight:700;color:#00a650">${escAttr(titulo)}</div><p style="margin:10px 0 0;font-size:13px;color:#444;line-height:1.45">${escAttr(sub)}</p></div>`
+    const tableHtml = `<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:24px">${tableRows}</table>`
+    const rodape = `<div style="margin-top:28px;padding-top:16px;border-top:1px solid #e0e0e0;font-size:11px;color:#666">${escAttr(docGerado)} ${escAttr(dataHora)}</div><div style="font-size:10px;color:#999;margin-top:6px">Nonato Service</div>`
+    const preHidden = `<pre id="dados-cli-pre-contab" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;margin:0">${preEsc(textoPlano)}</pre>`
+    const btns = `<div class="no-print" style="margin-bottom:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center"><button type="button" onclick="window.print()" style="padding:12px 24px;background:#00a650;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">${escAttr(lblImprimir)}</button><button type="button" onclick="window.close()" style="padding:12px 20px;background:#37474f;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px">${escAttr(lblFechar)}</button><a href="${escAttr(mailtoHref)}" style="padding:12px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;text-decoration:none;display:inline-block;font-weight:600;font-size:13px">${escAttr(lblEmail)}</a><button type="button" data-msg="${escAttr(lblCopiado)}" onclick="(function(b){var el=document.getElementById('dados-cli-pre-contab');var tx=el?el.textContent:'';var m=b.getAttribute('data-msg')||'';if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(tx).then(function(){alert(m);}).catch(function(){window.prompt(m,tx);});}else{window.prompt(m,tx);}})(this)" style="padding:12px 20px;background:#5d4037;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">${escAttr(lblCopiar)}</button></div>`
+    const docTitle = `${titulo} — ${cliente.nomeEmpresa || cliente.id}`.slice(0, 120)
+    const html = `<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"><title>${escAttr(docTitle)}</title><style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:24px;font-size:13px;background:#fff;color:#222}.no-print{display:block}@media print{.no-print{display:none!important}body{padding:12px}}</style></head><body>${btns}${preHidden}${headerHtml}${tableHtml}${rodape}</body></html>`
+    const printWin = window.open('', '_blank')
+    if (!printWin) {
+      alert(t.permitaPopupsPDF || 'Permita pop-ups para gerar o PDF.')
+      return
+    }
+    printWin.document.write(html)
+    printWin.document.close()
+    printWin.focus()
+  }
+
+  /** Documento de fechamento (linhas + total + dados fiscais do cliente) para a contabilidade emitir fatura. */
+  const abrirFechamentoParaContabilidade = (
+    relatorio: RelatorioServico,
+    itens: FechamentoItem[],
+    clienteFiscal?: Cliente | null
+  ) => {
+    const t =
+      (translations[selectedLanguage as keyof typeof translations] || translations['pt-BR']) as Record<
+        string,
+        string
+      >
+    const escAttr = (s: string) =>
+      String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+    const preEsc = (s: string) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const val = (x: string | undefined) => (x && String(x).trim() ? String(x).trim() : '—')
+    const titulo = t.contabilidadeFechamentoDocTitulo || 'Fechamento para contabilidade / fatura'
+    const sub = t.contabilidadeFechamentoDocSub || ''
+    const lblImprimir = t.imprimirGuardarPDF || 'Imprimir / Guardar como PDF'
+    const lblFechar = t.close || 'Fechar'
+    const lblEmail = t.clienteDadosContabilidadeEnviarEmail || 'Enviar por e-mail'
+    const lblCopiar = t.clienteDadosContabilidadeCopiar || 'Copiar texto'
+    const lblCopiado = t.clienteDadosContabilidadeCopiado || 'Texto copiado para a área de transferência.'
+    const docGerado = t.pdfDocumentoGeradoEm || 'Documento gerado em'
+    const lblCliente = t.cliente || 'Cliente'
+    const lblNum = t.numeroRelatorio || 'Nº Relatório'
+    const lblEquip = t.equipamento || 'Equipamento'
+    const lblData = t.data || 'Data'
+    const lblCod = t.codigoOuCod || 'COD'
+    const lblDesc = t.descricao || 'Descrição'
+    const lblQtd = t.quantidade || 'Quantidade'
+    const lblVu = t.valorUnitario || 'Valor unit.'
+    const lblTot = t.total || 'Total'
+    const lblSoma = t.somaTotal || 'Total geral'
+    const blocoFiscal = t.contabilidadeBlocoClienteFiscal || 'Dados fiscais do cliente (cadastro)'
+    const localeStr =
+      selectedLanguage === 'pt-BR'
+        ? 'pt-PT'
+        : selectedLanguage === 'es'
+          ? 'es-ES'
+          : selectedLanguage === 'fr'
+            ? 'fr-FR'
+            : selectedLanguage === 'it'
+              ? 'it-IT'
+              : selectedLanguage === 'de'
+                ? 'de-DE'
+                : 'en-GB'
+    const dataHora = new Date().toLocaleString(localeStr)
+    const ivContab = totaisFechamentoLiquidoComIva(itens, fechamentoIvaPorRelatorioId[relatorio.id])
+    const total = ivContab.comIva
+    const linhasItens = itens.map(i => {
+      const sv = i.servicoId ? servicos.find(s => s.id === i.servicoId) : null
+      const cod = ((i.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—').toString()
+      const desc = (i.descricao || '').trim() || '—'
+      const qtd =
+        i.tipoCobranca === 'hora'
+          ? `${i.quantidade.toFixed(2)} h`
+          : i.tipoCobranca === 'km'
+            ? `${i.quantidade.toFixed(0)} km`
+            : String(i.quantidade)
+      const vl = i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal
+      return `  • ${cod} — ${desc} | ${qtd} × ${i.valorUnitario.toFixed(2)} € = ${vl.toFixed(2)} €`
+    })
+    const textoPlano = [
+      titulo,
+      sub ? `${sub}\n` : '',
+      `${lblNum}: ${relatorio.numero}`,
+      `${lblCliente}: ${relatorio.cliente}`,
+      `${lblEquip}: ${relatorio.maquinaModelo} ${relatorio.numeroMaquina || ''}`.trim(),
+      `${lblData}: ${relatorio.data}`,
+      '',
+      ...(clienteFiscal
+        ? [
+            `— ${blocoFiscal} —`,
+            `${t.nomeEmpresa || 'Empresa'}: ${val(clienteFiscal.nomeEmpresa)}`,
+            `${t.identificacaoFiscal || 'NIF'}: ${val(clienteFiscal.numeroContribuicaoFiscal)}`,
+            `${t.morada || 'Morada'}: ${val(clienteFiscal.morada)}`,
+            `${t.codigoPostal || 'CP'}: ${val(clienteFiscal.codigoPostal)} ${val(clienteFiscal.localidade)}`.trim(),
+            `${t.email || 'E-mail'}: ${val(clienteFiscal.email)}`,
+            `${t.telefones || 'Telefones'}: ${val(clienteFiscal.telefones)}`,
+            '',
+          ]
+        : []),
+      `${t.itensCobrancaFechamento || 'Itens a cobrar'}:`,
+      ...linhasItens,
+      '',
+      `${t.totalSemIva || 'Total s/ IVA'}: ${ivContab.liquido.toFixed(2)} €`,
+      ...(ivContab.incluir && ivContab.iva > 0.0001
+        ? [`${t.valorIva || 'IVA'} (${ivContab.taxa}%): ${ivContab.iva.toFixed(2)} €`, `${t.totalComIva || 'Total com IVA'}: ${total.toFixed(2)} €`]
+        : [`${lblSoma}: ${total.toFixed(2)} €`]),
+      '',
+      `${docGerado} ${dataHora}`,
+    ]
+      .filter(Boolean)
+      .join('\n')
+    const rowsHtml = itens
+      .map(item => {
+        const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
+        const cod = escAttr(
+          ((item.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—').toString()
+        )
+        const desc = escAttr((item.descricao || '').trim() || '—')
+        const qtd = escAttr(
+          item.tipoCobranca === 'hora'
+            ? `${item.quantidade.toFixed(2)} h`
+            : item.tipoCobranca === 'km'
+              ? `${item.quantidade.toFixed(0)} km`
+              : String(item.quantidade)
+        )
+        const totalLinha = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
+        return `<tr><td style="padding:8px 10px;border:1px solid #c8e6c9;font-weight:600">${cod}</td><td style="padding:8px 10px;border:1px solid #c8e6c9">${desc}</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right">${qtd}</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right">${item.valorUnitario.toFixed(2)} €</td><td style="padding:8px 10px;border:1px solid #c8e6c9;text-align:right;font-weight:700">${totalLinha.toFixed(2)} €</td></tr>`
+      })
+      .join('')
+    const footIvaRows =
+      ivContab.incluir && ivContab.iva > 0.0001
+        ? `<tr><td colspan="4" style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;background:#fafafa">${escAttr(t.totalSemIva || 'Total s/ IVA')}</td><td style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;font-weight:600;background:#fafafa">${ivContab.liquido.toFixed(2)} €</td></tr><tr><td colspan="4" style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;background:#fafafa">${escAttr(t.valorIva || 'IVA')} (${ivContab.taxa}%)</td><td style="padding:8px 10px;border:1px solid #a5d6a7;text-align:right;font-weight:600;background:#fafafa">${ivContab.iva.toFixed(2)} €</td></tr><tr><td colspan="4" style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:700;background:#f1f8e9">${escAttr(t.totalComIva || 'Total com IVA')}</td><td style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:800;background:#f1f8e9">${total.toFixed(2)} €</td></tr>`
+        : `<tr><td colspan="4" style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:700;background:#f1f8e9">${escAttr(lblSoma)}</td><td style="padding:10px;border:1px solid #a5d6a7;text-align:right;font-weight:800;background:#f1f8e9">${total.toFixed(2)} €</td></tr>`
+    const tableHtml = `<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px"><thead><tr><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:left">${escAttr(lblCod)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:left">${escAttr(lblDesc)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:right">${escAttr(lblQtd)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:right">${escAttr(lblVu)}</th><th style="padding:10px;border:1px solid #a5d6a7;background:#e8f5e9;text-align:right">${escAttr(lblTot)}</th></tr></thead><tbody>${rowsHtml}</tbody><tfoot>${footIvaRows}</tfoot></table>`
+    const infoRel = `<div style="margin-bottom:16px;padding:14px;border-radius:10px;background:#f1f8e9;border:1px solid #c8e6c9;font-size:13px;line-height:1.5"><div><strong>${escAttr(lblNum)}:</strong> ${escAttr(relatorio.numero)}</div><div><strong>${escAttr(lblCliente)}:</strong> ${escAttr(relatorio.cliente)}</div><div><strong>${escAttr(lblEquip)}:</strong> ${escAttr(`${relatorio.maquinaModelo} ${relatorio.numeroMaquina || ''}`.trim())}</div><div><strong>${escAttr(lblData)}:</strong> ${escAttr(relatorio.data)}</div></div>`
+    const rowFiscalHtml = (a: string, b: string) =>
+      `<tr><td style="padding:6px 8px;color:#666;width:34%">${a}</td><td style="padding:6px 8px;font-weight:600">${b}</td></tr>`
+    let fiscalHtml = ''
+    if (clienteFiscal) {
+      fiscalHtml = `<div style="margin-bottom:18px;padding:14px;border-radius:10px;background:#fff8e1;border:1px solid #ffcc80"><div style="font-weight:700;color:#e65100;margin-bottom:8px">${escAttr(blocoFiscal)}</div><table style="width:100%;font-size:12px">${rowFiscalHtml(escAttr(t.nomeEmpresa || 'Empresa'), escAttr(val(clienteFiscal.nomeEmpresa)))}${rowFiscalHtml(escAttr(t.identificacaoFiscal || 'NIF'), escAttr(val(clienteFiscal.numeroContribuicaoFiscal)))}${rowFiscalHtml(escAttr(t.morada || 'Morada'), escAttr(val(clienteFiscal.morada)))}${rowFiscalHtml(escAttr(t.email || 'E-mail'), escAttr(val(clienteFiscal.email)))}${rowFiscalHtml(escAttr(t.telefones || 'Telefones'), escAttr(val(clienteFiscal.telefones)))}</table></div>`
+    }
+    const assuntoMail = `${t.contabilidadeFechamentoEmailAssunto || 'Fechamento para faturação'} — ${relatorio.numero}`
+    const mailtoHref = `${mailtoPrefixContabilidade()}?subject=${encodeURIComponent(assuntoMail)}&body=${encodeURIComponent(textoPlano)}`
+    const headerHtml = `<div style="margin-bottom:16px;padding-bottom:14px;border-bottom:3px solid #00a650"><div style="font-size:19px;font-weight:700;color:#00a650">${escAttr(titulo)}</div><p style="margin:8px 0 0;font-size:12px;color:#555;line-height:1.45">${escAttr(sub)}</p></div>`
+    const rodape = `<div style="margin-top:20px;padding-top:12px;border-top:1px solid #e0e0e0;font-size:11px;color:#666">${escAttr(docGerado)} ${escAttr(dataHora)}</div><div style="font-size:10px;color:#999;margin-top:4px">Nonato Service</div>`
+    const preHidden = `<pre id="fech-contab-pre" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;margin:0">${preEsc(textoPlano)}</pre>`
+    const btns = `<div class="no-print" style="margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center"><button type="button" onclick="window.print()" style="padding:12px 22px;background:#00a650;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">${escAttr(lblImprimir)}</button><button type="button" onclick="window.close()" style="padding:12px 18px;background:#37474f;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px">${escAttr(lblFechar)}</button><a href="${escAttr(mailtoHref)}" style="padding:12px 18px;background:#1565c0;color:#fff;border-radius:8px;text-decoration:none;display:inline-block;font-weight:600;font-size:13px">${escAttr(lblEmail)}</a><button type="button" data-msg="${escAttr(lblCopiado)}" onclick="(function(b){var el=document.getElementById('fech-contab-pre');var tx=el?el.textContent:'';var m=b.getAttribute('data-msg')||'';if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(tx).then(function(){alert(m);}).catch(function(){window.prompt(m,tx);});}else{window.prompt(m,tx);}})(this)" style="padding:12px 18px;background:#5d4037;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">${escAttr(lblCopiar)}</button></div>`
+    const docTitle = `${titulo} — ${relatorio.numero}`.slice(0, 120)
+    const html = `<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"><title>${escAttr(docTitle)}</title><style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:22px;font-size:13px;background:#fff;color:#222}.no-print{display:block}@media print{.no-print{display:none!important}body{padding:10px}}</style></head><body>${btns}${preHidden}${headerHtml}${infoRel}${fiscalHtml}${tableHtml}${rodape}</body></html>`
+    const printWin = window.open('', '_blank')
+    if (!printWin) {
+      alert(t.permitaPopupsPDF || 'Permita pop-ups para gerar o PDF.')
+      return
+    }
+    printWin.document.write(html)
+    printWin.document.close()
+    printWin.focus()
+  }
+
   const abrirClienteCadastroAlertaDevedor = (clienteId: string) => {
     const cl = clientes.find(c => c.id === clienteId)
     if (!cl) {
@@ -11378,6 +11838,14 @@ export default function Dashboard() {
           void saveData(FECHAMENTO_ITENS_OMITIDOS_KEY, next)
           return next
         })
+        setFechamentoIvaPorRelatorioId(prev => {
+          const next = { ...prev }
+          reportIdsDoCliente.forEach(id => {
+            delete next[id]
+          })
+          void saveData(FECHAMENTO_IVA_POR_RELATORIO_KEY, next)
+          return next
+        })
       }
     }
   }
@@ -11394,6 +11862,11 @@ export default function Dashboard() {
       setFechamentoItensOmitidosPorRelatorio(prev => {
         const { [relatorioId]: _, ...rest } = prev
         void saveData(FECHAMENTO_ITENS_OMITIDOS_KEY, rest)
+        return rest
+      })
+      setFechamentoIvaPorRelatorioId(prev => {
+        const { [relatorioId]: __, ...rest } = prev
+        void saveData(FECHAMENTO_IVA_POR_RELATORIO_KEY, rest)
         return rest
       })
     }
@@ -13014,7 +13487,8 @@ export default function Dashboard() {
       const totalLinha = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
       return `<tr><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;font-weight:600">${cod}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px">${desc}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right">${item.valorUnitario.toFixed(2)} €</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right;font-weight:700">${totalLinha.toFixed(2)} €</td></tr>`
     }).join('')
-    const totalCobranca = itens.reduce((s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal), 0)
+    const ivPdf = totaisFechamentoLiquidoComIva(itens, fechamentoIvaPorRelatorioId[relatorio.id])
+    const totalCobranca = ivPdf.comIva
     const titFechamento = tAny.fechamentoDespesasRelatorio || 'Fechamento de Despesas'
     const lblImprimir = tAny.imprimirGuardarPDF || 'Imprimir / Guardar como PDF'
     const lblFechar = tAny.close || 'Fechar'
@@ -13038,7 +13512,11 @@ export default function Dashboard() {
     const localeStr = selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : selectedLanguage === 'de' ? 'de-DE' : 'en-GB'
     const docGeradoEm = tAny.pdfDocumentoGeradoEm || 'Documento gerado em'
     const dataHoraGerado = new Date().toLocaleString(localeStr)
-    const tableContent = `<div style="margin:24px 0;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);border:1px solid #a5d6a7"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="padding:14px 18px;text-align:left;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblCOD)}</th><th style="padding:14px 18px;text-align:left;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblDescricao)}</th><th style="padding:14px 18px;text-align:right;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblQuantidade)}</th><th style="padding:14px 18px;text-align:right;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblValorUnit)}</th><th style="padding:14px 18px;text-align:right;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblTotal)}</th></tr></thead><tbody class="pdf-tbody">${rows}</tbody><tfoot><tr><td colspan="3" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:700;font-size:13px;border-top:3px solid #a5d6a7;color:#00a650">${esc(lblSomaTotal)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:800;font-size:18px;border-top:3px solid #a5d6a7;color:#00a650">${totalCobranca.toFixed(2)} €</td></tr></tfoot></table></div>`
+    const footPdf =
+      ivPdf.incluir && ivPdf.iva > 0.0001
+        ? `<tr><td colspan="3" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-size:12px;border-top:1px solid #c8e6c9">${esc(tAny.totalSemIva || 'Total s/ IVA')}</td><td colspan="2" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-weight:700;border-top:1px solid #c8e6c9">${ivPdf.liquido.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-size:12px">${esc(tAny.valorIva || 'IVA')} (${ivPdf.taxa}%)</td><td colspan="2" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-weight:700">${ivPdf.iva.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:700;font-size:13px;border-top:3px solid #a5d6a7;color:#00a650">${esc(tAny.totalComIva || 'Total com IVA')}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:800;font-size:18px;border-top:3px solid #a5d6a7;color:#00a650">${totalCobranca.toFixed(2)} €</td></tr>`
+        : `<tr><td colspan="3" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:700;font-size:13px;border-top:3px solid #a5d6a7;color:#00a650">${esc(lblSomaTotal)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:800;font-size:18px;border-top:3px solid #a5d6a7;color:#00a650">${totalCobranca.toFixed(2)} €</td></tr>`
+    const tableContent = `<div style="margin:24px 0;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);border:1px solid #a5d6a7"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="padding:14px 18px;text-align:left;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblCOD)}</th><th style="padding:14px 18px;text-align:left;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblDescricao)}</th><th style="padding:14px 18px;text-align:right;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblQuantidade)}</th><th style="padding:14px 18px;text-align:right;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblValorUnit)}</th><th style="padding:14px 18px;text-align:right;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblTotal)}</th></tr></thead><tbody class="pdf-tbody">${rows}</tbody><tfoot>${footPdf}</tfoot></table></div>`
     const infoGrid = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px"><div style="background:#f1f8e9;border:1px solid #c8e6c9;padding:14px 18px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;color:#2e7d32">${esc(lblCliente)}</div><div style="font-size:13px;font-weight:600;color:#1b5e20">${clienteVal}</div></div><div style="background:#f1f8e9;border:1px solid #c8e6c9;padding:14px 18px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;color:#2e7d32">${esc(lblNumRelatorio)}</div><div style="font-size:13px;font-weight:600;color:#1b5e20">${numVal}</div></div><div style="background:#f1f8e9;border:1px solid #c8e6c9;padding:14px 18px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;color:#2e7d32">${esc(lblEquipamento)}</div><div style="font-size:13px;font-weight:600;color:#1b5e20">${equipVal}</div></div><div style="background:#f1f8e9;border:1px solid #c8e6c9;padding:14px 18px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;color:#2e7d32">${esc(lblData)}</div><div style="font-size:13px;font-weight:600;color:#1b5e20">${dataVal}</div></div></div>`
     const headerHtml = `<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:20px;border-bottom:3px solid #00a650;flex-wrap:wrap;gap:16px">${logoPart ? '<div style="flex-shrink:0">' + logoPart + '</div>' : ''}<div style="flex:1;min-width:200px"><div style="font-size:20px;font-weight:700;color:#00a650;margin-bottom:8px">${tituloDoc}</div>${infoGrid}</div></div>`
     const rodape = `<div style="margin-top:32px;padding-top:20px;border-top:1px solid #e0e0e0;text-align:center"><div style="font-size:11px;color:#666">${esc(docGeradoEm)} ${dataHoraGerado}</div><div style="font-size:10px;color:#999">Nonato Service</div></div>`
@@ -22891,10 +23369,8 @@ const nextF = familias.filter(x => x !== f)
   const renderModalVisualizarDespesasBibliotecaOverlay = () => {
     if (!modalVisualizarDespesasBiblioteca || typeof document === 'undefined') return null
     const { relatorio: relV, itens: itensV } = modalVisualizarDespesasBiblioteca
-    const totV = itensV.reduce(
-      (s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)),
-      0
-    )
+    const ivModal = totaisFechamentoLiquidoComIva(itensV, fechamentoIvaPorRelatorioId[relV.id])
+    const totV = ivModal.comIva
     const tm = safeT as Record<string, string>
     return createPortal(
       <div
@@ -22987,13 +23463,24 @@ const nextF = familias.filter(x => x !== f)
           <div
             style={{
               marginTop: '16px',
-              fontSize: '18px',
+              fontSize: '15px',
               fontWeight: 'bold',
               color: '#ffffff',
               textAlign: 'right',
+              lineHeight: 1.55,
             }}
           >
-            {tm.somaTotal || 'SOMA TOTAL'}: €{totV.toFixed(2)}
+            <div>
+              {tm.totalSemIva || 'Total s/ IVA'}: €{ivModal.liquido.toFixed(2)}
+            </div>
+            {ivModal.incluir && ivModal.iva > 0.0001 && (
+              <div style={{ marginTop: '6px', color: '#bae6fd' }}>
+                {tm.valorIva || 'IVA'} ({ivModal.taxa}%): €{ivModal.iva.toFixed(2)}
+              </div>
+            )}
+            <div style={{ marginTop: '8px', fontSize: '18px' }}>
+              {tm.totalComIva || 'Total com IVA'}: €{totV.toFixed(2)}
+            </div>
           </div>
           <div
             style={{
@@ -31638,10 +32125,7 @@ onKeyPress={(e) => {
                         {relsDespBib.map(rel => {
                           const itens = fechamentosRelatorios[rel.id] || []
                           const itensVis = filtrarFechamentoItensPorOmitidos(fechamentoItensOmitidosPorRelatorio, rel.id, itens)
-                          const tot = itensVis.reduce(
-                            (s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)),
-                            0
-                          )
+                          const tot = totaisFechamentoLiquidoComIva(itensVis, fechamentoIvaPorRelatorioId[rel.id]).comIva
                           return (
                             <div
                               key={rel.id}
@@ -41840,6 +42324,27 @@ A1;Peça exemplo;10`}
           return servicos
         }
         const totalCobranca = itensVisiveisFechamento.reduce((s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal), 0)
+        const ridFechIva = relatorioSelecionado?.id
+        const ivaOptsFech = ridFechIva
+          ? fechamentoIvaPorRelatorioId[ridFechIva] ?? { incluirIva: false, taxaIva: 23 }
+          : { incluirIva: false, taxaIva: 23 }
+        const fechTotIva = totaisFechamentoLiquidoComIva(itensVisiveisFechamento, ivaOptsFech)
+        const patchFechamentoIvaLocal = (patch: Partial<FechamentoIvaOpcoesRelatorio>) => {
+          if (!ridFechIva) return
+          setFechamentoIvaPorRelatorioId(prev => {
+            const cur = prev[ridFechIva] ?? { incluirIva: false, taxaIva: 23 }
+            const merged = { ...cur, ...patch }
+            if ('taxaIva' in patch) {
+              let tx = Number(merged.taxaIva)
+              if (!Number.isFinite(tx) || tx < 0) tx = 0
+              if (tx > 100) tx = 100
+              merged.taxaIva = Math.round(tx * 100) / 100
+            }
+            const next = { ...prev, [ridFechIva]: merged }
+            void saveData(FECHAMENTO_IVA_POR_RELATORIO_KEY, next)
+            return next
+          })
+        }
         const atualizarItem = (id: string, upd: Partial<FechamentoItem>) => {
           const list = itensParaExibir
           const idx = list.findIndex(i => i.id === id)
@@ -41882,6 +42387,10 @@ A1;Peça exemplo;10`}
         }
         const handleSalvarFechamentoNaBiblioteca = () => {
           if (!relatorioSelecionado) return
+          const relSnap = relatorioSelecionado
+          const itensSnap = [...itensVisiveisFechamento]
+          const totalSnap = fechTotIva.comIva
+          const cliSnap = relSnap.clienteId ? clientes.find(c => c.id === relSnap.clienteId) : undefined
           setItensFechamento(itensParaExibir)
           const rid = relatorioSelecionado.id
           setFechamentosGuardadosBibliotecaIds(prev => {
@@ -41904,6 +42413,9 @@ A1;Peça exemplo;10`}
             return nextTabs
           })
           alert((safeT as any)?.fechamentoSalvoNaBiblioteca || 'Guardado na Biblioteca.')
+          if (contabilidadeConfig.enviarFechamentoContabilidadeAuto && totalSnap > 0.0001) {
+            queueMicrotask(() => abrirFechamentoParaContabilidade(relSnap, itensSnap, cliSnap))
+          }
         }
         const handleGerarPDFFechamento = () => {
           if (!relatorioSelecionado) return
@@ -41935,6 +42447,9 @@ A1;Peça exemplo;10`}
           const lblValorUnit = (safeT as any)?.valorUnitario || 'Valor unit.'
           const lblTotal = (safeT as any)?.total || 'Total'
           const lblSomaTotal = (safeT as any)?.somaTotal || 'SOMA TOTAL'
+          const lblTotalSemIva = (safeT as any)?.totalSemIva || 'Total s/ IVA'
+          const lblValorIva = (safeT as any)?.valorIva || 'IVA'
+          const lblTotalComIva = (safeT as any)?.totalComIva || 'Total com IVA'
           const modelo = fechamentoPdfModelo
           const logoPart = logoSrc ? '<img src="' + esc(logoSrc) + '" alt="Logo" style="max-height:80px;max-width:220px;object-fit:contain;display:block"/>' : ''
           const lblRelatorio = (safeT as any)?.relatorio || 'Relatório'
@@ -41945,7 +42460,11 @@ A1;Peça exemplo;10`}
           const tituloDoc = esc(titFechamento) + ' — ' + lblRelatorio + ' ' + numVal
           const localeStr = selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : selectedLanguage === 'de' ? 'de-DE' : 'en-GB'
           const dataHoraGerado = new Date().toLocaleString(localeStr)
-          const tableContent = (thBg: string, thColor: string, footBg: string, footColor: string, borderColor: string) => `<div style="margin:24px 0;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);border:1px solid ${borderColor}"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="padding:14px 18px;text-align:left;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblCOD)}</th><th style="padding:14px 18px;text-align:left;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblDescricao)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblQuantidade)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblValorUnit)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblTotal)}</th></tr></thead><tbody class="pdf-tbody">${rows}</tbody><tfoot><tr><td colspan="3" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:700;font-size:13px;border-top:3px solid ${borderColor}">${esc(lblSomaTotal)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:800;font-size:18px;border-top:3px solid ${borderColor}">${totalCobranca.toFixed(2)} €</td></tr></tfoot></table></div>`
+          const footPdfFech =
+            fechTotIva.incluir && fechTotIva.iva > 0.0001
+              ? `<tr><td colspan="3" style="padding:12px 16px;text-align:right;background:rgba(0,0,0,0.04);font-size:12px;border-top:1px solid ${borderColor}">${esc(lblTotalSemIva)}</td><td colspan="2" style="padding:12px 16px;text-align:right;font-weight:600;border-top:1px solid ${borderColor}">${fechTotIva.liquido.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:12px 16px;text-align:right;background:rgba(0,0,0,0.04);font-size:12px">${esc(lblValorIva)} (${fechTotIva.taxa}%)</td><td colspan="2" style="padding:12px 16px;text-align:right;font-weight:600">${fechTotIva.iva.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:700;font-size:13px;border-top:3px solid ${borderColor}">${esc(lblTotalComIva)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:800;font-size:18px;border-top:3px solid ${borderColor}">${fechTotIva.comIva.toFixed(2)} €</td></tr>`
+              : `<tr><td colspan="3" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:700;font-size:13px;border-top:3px solid ${borderColor}">${esc(lblSomaTotal)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:800;font-size:18px;border-top:3px solid ${borderColor}">${fechTotIva.comIva.toFixed(2)} €</td></tr>`
+          const tableContent = (thBg: string, thColor: string, footBg: string, footColor: string, borderColor: string) => `<div style="margin:24px 0;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);border:1px solid ${borderColor}"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="padding:14px 18px;text-align:left;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblCOD)}</th><th style="padding:14px 18px;text-align:left;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblDescricao)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblQuantidade)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblValorUnit)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblTotal)}</th></tr></thead><tbody class="pdf-tbody">${rows}</tbody><tfoot>${footPdfFech}</tfoot></table></div>`
           const rodape = `<div style="margin-top:32px;padding-top:20px;border-top:1px solid #e0e0e0;text-align:center"><div style="font-size:11px;color:#666;margin-bottom:4px">${esc(docGeradoEm)} ${dataHoraGerado}</div><div style="font-size:10px;color:#999">Nonato Service — Gestão Técnica</div></div>`
           const btnsNoPrint = `<div class="no-print" style="margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap"><button onclick="window.print()" style="padding:12px 24px;background:#00a650;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;box-shadow:0 2px 8px rgba(0,166,80,0.3)">${esc(lblImprimir)}</button><button onclick="window.close()" style="padding:12px 20px;background:#37474f;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px">${esc(lblFechar)}</button></div>`
           let headerHtml: string
@@ -41994,15 +42513,23 @@ A1;Peça exemplo;10`}
         const handleEnviarWhatsAppFechamento = () => {
           if (!relatorioSelecionado) return
           const linhas = itensVisiveisFechamento.map(i => `• ${(i.cod || i.descricao || '').toString().slice(0, 30)}: ${(i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal).toFixed(2)} €`).join('\n')
-          const texto = `Fechamento Relatório ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento: ${relatorioSelecionado.maquinaModelo} ${relatorioSelecionado.numeroMaquina || ''}\nData: ${relatorioSelecionado.data}\n\nItens:\n${linhas}\n\n*Total: ${totalCobranca.toFixed(2)} €*`
+          const extraIva =
+            fechTotIva.incluir && fechTotIva.iva > 0.0001
+              ? `\n${(safeT as any)?.totalSemIva || 'Total s/ IVA'}: ${fechTotIva.liquido.toFixed(2)} €\n${(safeT as any)?.valorIva || 'IVA'} (${fechTotIva.taxa}%): ${fechTotIva.iva.toFixed(2)} €\n`
+              : '\n'
+          const texto = `Fechamento Relatório ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento: ${relatorioSelecionado.maquinaModelo} ${relatorioSelecionado.numeroMaquina || ''}\nData: ${relatorioSelecionado.data}\n\nItens:\n${linhas}${extraIva}\n*${(safeT as any)?.totalComIva || 'Total'}: ${fechTotIva.comIva.toFixed(2)} €*`
           window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener')
         }
         const handleEnviarEmailFechamento = () => {
           if (!relatorioSelecionado) return
           const linhas = itensVisiveisFechamento.map(i => `  • ${(i.cod || i.descricao || '').toString().slice(0, 40)}: ${(i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal).toFixed(2)} €`).join('\n')
           const assunto = `Fechamento Relatório ${relatorioSelecionado.numero} - ${relatorioSelecionado.cliente}`
-          const corpo = `Fechamento de despesas do relatório de serviço.\n\nRelatório: ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento: ${relatorioSelecionado.maquinaModelo} ${relatorioSelecionado.numeroMaquina || ''}\nData: ${relatorioSelecionado.data}\n\nItens a cobrar:\n${linhas}\n\nTotal: ${totalCobranca.toFixed(2)} €\n\n--\nEnviado pela Gestão Técnica Nonato Service`
-          window.location.href = `mailto:?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`
+          const extraIvaMail =
+            fechTotIva.incluir && fechTotIva.iva > 0.0001
+              ? `\n${(safeT as any)?.totalSemIva || 'Total s/ IVA'}: ${fechTotIva.liquido.toFixed(2)} €\n${(safeT as any)?.valorIva || 'IVA'} (${fechTotIva.taxa}%): ${fechTotIva.iva.toFixed(2)} €\n`
+              : '\n'
+          const corpo = `Fechamento de despesas do relatório de serviço.\n\nRelatório: ${relatorioSelecionado.numero}\nCliente: ${relatorioSelecionado.cliente}\nEquipamento: ${relatorioSelecionado.maquinaModelo} ${relatorioSelecionado.numeroMaquina || ''}\nData: ${relatorioSelecionado.data}\n\nItens a cobrar:\n${linhas}${extraIvaMail}\n${(safeT as any)?.totalComIva || 'Total com IVA'}: ${fechTotIva.comIva.toFixed(2)} €\n\n--\nEnviado pela Gestão Técnica Nonato Service`
+          window.location.href = `${mailtoPrefixContabilidade()}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`
         }
         const relatoriosPendentesFechamentoLista = relatoriosServico.filter(r => !fechamentosGuardadosBibliotecaIds.includes(r.id))
         const confirmarOsFechamento = () => {
@@ -42160,6 +42687,69 @@ A1;Peça exemplo;10`}
               </div>
             </header>
 
+            <div
+              style={{
+                marginBottom: '20px',
+                padding: isCompactLayout ? '14px 12px' : '18px 20px',
+                borderRadius: '12px',
+                border: '1px solid rgba(100, 181, 246, 0.45)',
+                background: 'rgba(21, 101, 192, 0.12)',
+              }}
+            >
+              <div style={{ fontWeight: 700, color: '#90caf9', marginBottom: '10px', fontSize: '13px' }}>
+                {(safeT as any)?.contabilidadePainelTitulo || 'Contabilidade / faturas'}
+              </div>
+              <label style={{ display: 'block', fontSize: '12px', color: '#aaa', marginBottom: '6px' }}>
+                {(safeT as any)?.contabilidadeEmailLabel || 'E-mail da contabilidade'}
+              </label>
+              <input
+                type="email"
+                value={contabilidadeConfig.emailContabilidade}
+                onChange={e =>
+                  setContabilidadeConfig({ ...contabilidadeConfig, emailContabilidade: e.target.value })
+                }
+                placeholder={(safeT as any)?.contabilidadeEmailPlaceholder || 'contabilidade@empresa.pt'}
+                style={{
+                  width: '100%',
+                  maxWidth: '420px',
+                  padding: '10px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  background: '#141414',
+                  color: '#fff',
+                  fontSize: '14px',
+                  marginBottom: '12px',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '13px', color: '#ddd', marginBottom: '12px', flexWrap: 'wrap' }}>
+                <input
+                  type="checkbox"
+                  checked={contabilidadeConfig.enviarFechamentoContabilidadeAuto}
+                  onChange={e =>
+                    persistContabilidadeConfig({
+                      ...contabilidadeConfig,
+                      enviarFechamentoContabilidadeAuto: e.target.checked,
+                    })
+                  }
+                />
+                {(safeT as any)?.contabilidadeAutoAposBiblioteca ||
+                  'Abrir documento para a contabilidade ao guardar na Biblioteca (quando houver valor a cobrar)'}
+              </label>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => persistContabilidadeConfig({ ...contabilidadeConfig })}
+                style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '8px' }}
+              >
+                {(safeT as any)?.contabilidadeSalvarEmail || 'Guardar e-mail da contabilidade'}
+              </button>
+              <p style={{ margin: '10px 0 0', fontSize: '11px', color: '#888', lineHeight: 1.45, maxWidth: '640px' }}>
+                {(safeT as any)?.contabilidadePainelAjuda ||
+                  'O e-mail é usado nos botões «Enviar por e-mail» dos documentos. Ao guardar o fechamento na Biblioteca com total superior a zero, abre-se automaticamente o resumo (PDF/imprimir) se a opção acima estiver ativa.'}
+              </p>
+            </div>
+
             {!relatorioSelecionado ? (
               <div style={{ display: 'grid', gap: '16px' }}>
                 {relatoriosServico.length === 0 ? (
@@ -42279,6 +42869,81 @@ A1;Peça exemplo;10`}
                       ))}
                     </div>
                   )}
+                  <div
+                    style={{
+                      marginBottom: '16px',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(56, 189, 248, 0.35)',
+                      background: 'rgba(15, 23, 42, 0.55)',
+                    }}
+                  >
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#7dd3fc', marginBottom: '10px', letterSpacing: '0.04em' }}>
+                      {(safeT as any)?.fechamentoIvaTitulo || 'IVA no fecho (ordem de serviço / relatório)'}
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', marginBottom: '12px' }}>
+                      <button
+                        type="button"
+                        onClick={() => patchFechamentoIvaLocal({ incluirIva: false })}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '8px',
+                          border: !ivaOptsFech.incluirIva ? '2px solid #22c55e' : '1px solid #555',
+                          background: !ivaOptsFech.incluirIva ? 'rgba(34, 197, 94, 0.2)' : 'transparent',
+                          color: !ivaOptsFech.incluirIva ? '#86efac' : '#888',
+                          cursor: 'pointer',
+                          fontWeight: !ivaOptsFech.incluirIva ? 700 : 500,
+                          fontSize: '13px',
+                        }}
+                      >
+                        {(safeT as any)?.fechamentoSemIvaBtn || 'Fechamento sem IVA'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => patchFechamentoIvaLocal({ incluirIva: true })}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '8px',
+                          border: ivaOptsFech.incluirIva ? '2px solid #38bdf8' : '1px solid #555',
+                          background: ivaOptsFech.incluirIva ? 'rgba(56, 189, 248, 0.18)' : 'transparent',
+                          color: ivaOptsFech.incluirIva ? '#bae6fd' : '#888',
+                          cursor: 'pointer',
+                          fontWeight: ivaOptsFech.incluirIva ? 700 : 500,
+                          fontSize: '13px',
+                        }}
+                      >
+                        {(safeT as any)?.fechamentoComIvaBtn || 'Fechamento com IVA'}
+                      </button>
+                    </div>
+                    {ivaOptsFech.incluirIva && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px' }}>
+                        <label style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {(safeT as any)?.fechamentoIvaTaxaLabel || 'Taxa de IVA (%)'}
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            step={0.5}
+                            value={ivaOptsFech.taxaIva}
+                            onChange={e => patchFechamentoIvaLocal({ taxaIva: parseFloat(e.target.value) || 0 })}
+                            style={{
+                              width: '88px',
+                              padding: '8px 10px',
+                              borderRadius: '8px',
+                              border: '1px solid rgba(56, 189, 248, 0.45)',
+                              background: '#141414',
+                              color: '#fff',
+                              fontSize: '14px',
+                            }}
+                          />
+                        </label>
+                        <span style={{ fontSize: '11px', color: '#64748b', maxWidth: '420px', lineHeight: 1.45 }}>
+                          {(safeT as any)?.fechamentoIvaTaxaHint ||
+                            'Ex.: 23 Portugal, 21 Espanha, 22 Itália. Aplica-se sobre a soma das linhas (base).'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                   <div className="fechamento-relatorios-servicos-table-host" style={{ width: '100%', overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', color: '#ccc' }}>
                     <thead>
@@ -42397,22 +43062,76 @@ A1;Peça exemplo;10`}
                     </tbody>
                     <tfoot>
                       <tr style={{ borderTop: '2px solid rgba(0,255,0,0.5)', background: 'rgba(0,255,0,0.06)' }}>
-                        <td colSpan={4} style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', color: '#00ff00' }}>{(safeT as any)?.somaTotal || 'SOMA TOTAL'}</td>
+                        <td colSpan={4} style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', color: '#00ff00' }}>
+                          {ivaOptsFech.incluirIva
+                            ? (safeT as any)?.fechamentoTotalBaseLinhas || 'Soma das linhas (s/ IVA)'
+                            : (safeT as any)?.somaTotal || 'SOMA TOTAL'}
+                        </td>
                         <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', fontSize: '16px', color: '#00ff00' }}>{totalCobranca.toFixed(2)} €</td>
                         <td style={{ padding: '12px 8px' }}></td>
                         {itensParaExibir.some(i => i.origem === 'manual') && <td style={{ padding: '12px 8px' }}></td>}
                         <td style={{ padding: '12px 8px' }}></td>
                       </tr>
+                      {ivaOptsFech.incluirIva && fechTotIva.iva > 0.0001 && (
+                        <>
+                          <tr style={{ background: 'rgba(56, 189, 248, 0.08)' }}>
+                            <td colSpan={4} style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 600, color: '#7dd3fc' }}>
+                              {(safeT as any)?.valorIva || 'IVA'} ({fechTotIva.taxa}%)
+                            </td>
+                            <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 700, fontSize: '15px', color: '#7dd3fc' }}>{fechTotIva.iva.toFixed(2)} €</td>
+                            <td style={{ padding: '10px 8px' }}></td>
+                            {itensParaExibir.some(i => i.origem === 'manual') && <td style={{ padding: '10px 8px' }}></td>}
+                            <td style={{ padding: '10px 8px' }}></td>
+                          </tr>
+                          <tr style={{ borderTop: '2px solid rgba(56, 189, 248, 0.45)', background: 'rgba(56, 189, 248, 0.12)' }}>
+                            <td colSpan={4} style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', color: '#e0f2fe' }}>
+                              {(safeT as any)?.totalComIva || 'TOTAL com IVA'}
+                            </td>
+                            <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', fontSize: '17px', color: '#f0f9ff' }}>{fechTotIva.comIva.toFixed(2)} €</td>
+                            <td style={{ padding: '12px 8px' }}></td>
+                            {itensParaExibir.some(i => i.origem === 'manual') && <td style={{ padding: '12px 8px' }}></td>}
+                            <td style={{ padding: '12px 8px' }}></td>
+                          </tr>
+                        </>
+                      )}
                     </tfoot>
                   </table>
                   </div>
                   <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                     <button type="button" className="btn-primary" onClick={adicionarItemManual} style={{ padding: '8px 16px' }}>+ {(safeT as any)?.adicionarItemCobranca || 'Adicionar item a cobrar'}</button>
-                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>{(safeT as any)?.total || 'Total'}: {totalCobranca.toFixed(2)} €</div>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#00ff00' }}>
+                      {(safeT as any)?.totalComIva || 'Total (com IVA se aplicável)'}: {fechTotIva.comIva.toFixed(2)} €
+                    </div>
                   </div>
                   <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
                     <button type="button" className="btn-primary" onClick={handleSalvarFechamentoNaBiblioteca} style={{ padding: '10px 20px', fontSize: '13px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(0, 200, 83, 0.25)', border: '1px solid rgba(0, 255, 0, 0.6)', color: '#00ff00', fontWeight: '600' }}>
                       💾 {(safeT as any)?.salvarEnviarBiblioteca || 'Salvar e enviar para a Biblioteca'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={() => {
+                        if (!relatorioSelecionado) return
+                        const cli = relatorioSelecionado.clienteId
+                          ? clientes.find(c => c.id === relatorioSelecionado.clienteId)
+                          : undefined
+                        abrirFechamentoParaContabilidade(relatorioSelecionado, itensVisiveisFechamento, cli)
+                      }}
+                      style={{
+                        padding: '10px 18px',
+                        fontSize: '13px',
+                        borderRadius: '10px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        background: 'rgba(21, 101, 192, 0.35)',
+                        border: '1px solid rgba(100, 181, 246, 0.55)',
+                        color: '#b3e5fc',
+                        fontWeight: '600',
+                      }}
+                      title={(safeT as any)?.contabilidadeDocManualHint || ''}
+                    >
+                      📋 {(safeT as any)?.contabilidadeDocManualButton || 'Documento p/ contabilidade'}
                     </button>
                     <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', marginRight: '4px' }}>{(safeT as any)?.modeloPDFFechamento || 'Modelo PDF'}:</span>
                     <select value={fechamentoPdfModelo} onChange={e => setFechamentoPdfModelo(Number(e.target.value))} style={{ padding: '8px 12px', fontSize: '12px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.4)', borderRadius: '8px', cursor: 'pointer', minWidth: '160px' }}>
@@ -52244,14 +52963,185 @@ A1;Peça exemplo;10`}
               borderRadius: '12px', 
               border: '2px solid rgba(0, 255, 0, 0.3)'
             }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center' }}>
-                <div style={{ fontSize: '64px', marginBottom: '10px' }}>💰</div>
-                <h2 style={{ color: '#00ff00', marginBottom: '15px', fontSize: '24px', textAlign: 'center' }}>
-                  {safeT?.gestaoFinanceira || 'Gestão Financeira'}
-                </h2>
-                <p style={{ color: '#ccc', fontSize: '16px', marginBottom: '30px', opacity: 0.8, textAlign: 'center' }}>
-                  {safeT?.gestaoFinanceiraDesc || 'Gerencie finanças, faturas e pagamentos'}
-                </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', alignItems: 'stretch', width: '100%' }}>
+                {(() => {
+                  const txP = safeT as Record<string, string>
+                  const pc = painelControleFinanceiroExec
+                  const fmtE = (n: number) =>
+                    n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                  const pctE = (x: number) => `${x.toFixed(1)}%`
+                  const subIva =
+                    txP.gestaoFinanceiraPainelIvaSub ||
+                    'Faturas de peças: IVA da fatura. Serviço (biblioteca): IVA conforme a opção «Fechamento com IVA» e a taxa indicada em cada fecho na área de fechamento de relatórios.'
+                  return (
+                    <section className="gf-painel-exec" aria-labelledby="gf-painel-exec-titulo">
+                      <header className="gf-painel-exec__head">
+                        <div>
+                          <h2 id="gf-painel-exec-titulo" className="gf-painel-exec__title">
+                            {txP.gestaoFinanceiraPainelExecTitulo || 'Painel de controlo — recebíveis e risco'}
+                          </h2>
+                          <p className="gf-painel-exec__lead">
+                            {txP.gestaoFinanceiraPainelExecSub ||
+                              'Síntese executiva: faturas de peças, exposição por cliente, atrasos e serviço (fechamentos) na biblioteca.'}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          className="gf-painel-exec__cta"
+                          onClick={() => handleButtonClick('open-clientes-financeiro')}
+                        >
+                          {txP.gestaoFinanceiraPainelBtnAbrirFin || 'Abrir Clientes / Financeiro'}
+                        </button>
+                      </header>
+
+                      <div className="gf-painel-exec__hero">
+                        <div className="gf-painel-exec__hero-main">
+                          <span className="gf-painel-exec__hero-label">
+                            {txP.gestaoFinanceiraPainelHeroCarteira || 'Total a receber (cartera)'}
+                          </span>
+                          <span className="gf-painel-exec__hero-value">€{fmtE(pc.totalCarteiraReceber)}</span>
+                          <span className="gf-painel-exec__hero-hint">
+                            {txP.gestaoFinanceiraPainelHeroCarteiraHint ||
+                              'Soma: faturas de peças em aberto + serviço sem NF pendente + fechamentos com NF em controlo de pagamento.'}
+                          </span>
+                        </div>
+                        <div className="gf-painel-exec__hero-side">
+                          <div className="gf-painel-exec__meter">
+                            <div className="gf-painel-exec__meter-top">
+                              <span>{txP.gestaoFinanceiraPainelPressao || 'Pressão: faturas em atraso / em aberto'}</span>
+                              <span className="gf-painel-exec__meter-pct">{pctE(pc.pressaoAtrasoPct)}</span>
+                            </div>
+                            <div
+                              className="gf-painel-exec__meter-bar"
+                              role="progressbar"
+                              aria-valuenow={Math.round(pc.pressaoAtrasoPct)}
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                            >
+                              <div
+                                className="gf-painel-exec__meter-fill"
+                                style={{ width: `${Math.min(100, Math.max(0, pc.pressaoAtrasoPct))}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="gf-painel-exec__grid">
+                        <article className="gf-painel-exec__col">
+                          <h3 className="gf-painel-exec__col-title">{txP.gestaoFinanceiraPainelSecPecas || 'Peças / faturas (NF)'}</h3>
+                          <dl className="gf-painel-exec__stats">
+                            <div className="gf-painel-exec__stat gf-painel-exec__stat--accent">
+                              <dt>{txP.gestaoFinanceiraPainelPecasAbertoVal || 'Em aberto (€)'}</dt>
+                              <dd>€{fmtE(pc.fatAbertoValor)}</dd>
+                            </div>
+                            <div className="gf-painel-exec__stat">
+                              <dt>{txP.gestaoFinanceiraPainelPecasAbertoN || 'Faturas em aberto'}</dt>
+                              <dd>{pc.fatAbertoN}</dd>
+                            </div>
+                            <div className="gf-painel-exec__stat">
+                              <dt>{txP.gestaoFinanceiraPainelPecasClientes || 'Clientes c/ fatura em aberto'}</dt>
+                              <dd>{pc.clientesComFaturaAberta}</dd>
+                            </div>
+                            <div className="gf-painel-exec__stat gf-painel-exec__stat--warn">
+                              <dt>{txP.gestaoFinanceiraPainelPecasAtrasoVal || 'Em atraso (€)'}</dt>
+                              <dd>€{fmtE(pc.fatAtrasoValor)}</dd>
+                            </div>
+                            <div className="gf-painel-exec__stat">
+                              <dt>{txP.gestaoFinanceiraPainelPecasAtrasoN || 'Faturas em atraso'}</dt>
+                              <dd>{pc.fatAtrasoN}</dd>
+                            </div>
+                            <div className="gf-painel-exec__stat">
+                              <dt>{txP.gestaoFinanceiraPainelPecasNoPrazoVal || 'Pendentes no prazo (€)'}</dt>
+                              <dd>€{fmtE(pc.fatPendenteNoPrazoValor)}</dd>
+                            </div>
+                          </dl>
+                        </article>
+
+                        <article className="gf-painel-exec__col">
+                          <h3 className="gf-painel-exec__col-title">{txP.gestaoFinanceiraPainelSecClientes || 'Clientes — exposição'}</h3>
+                          <dl className="gf-painel-exec__stats">
+                            <div className="gf-painel-exec__stat gf-painel-exec__stat--accent">
+                              <dt>{txP.gestaoFinanceiraPainelCliDividaSaldo || 'Saldo em dívida (peças)'}</dt>
+                              <dd>€{fmtE(pc.clientesDividaValor)}</dd>
+                            </div>
+                            <div className="gf-painel-exec__stat">
+                              <dt>{txP.gestaoFinanceiraPainelCliDividaN || 'Clientes c/ saldo em aberto'}</dt>
+                              <dd>{pc.clientesDividaN}</dd>
+                            </div>
+                            <div className="gf-painel-exec__stat gf-painel-exec__stat--danger">
+                              <dt>{txP.gestaoFinanceiraPainelCliNaoPagadores || 'Com fatura vencida / fora do prazo'}</dt>
+                              <dd>{pc.clientesComFaturaVencidaN}</dd>
+                            </div>
+                            <div className="gf-painel-exec__stat gf-painel-exec__stat--muted">
+                              <dt>{txP.gestaoFinanceiraPainelCliNaoPagadoresHint || 'Exposição (€) nesses clientes'}</dt>
+                              <dd>€{fmtE(pc.clientesComFaturaVencidaValor)}</dd>
+                            </div>
+                          </dl>
+                        </article>
+
+                        <article className="gf-painel-exec__col">
+                          <h3 className="gf-painel-exec__col-title">{txP.gestaoFinanceiraPainelSecServico || 'Serviço (biblioteca)'}</h3>
+                          <dl className="gf-painel-exec__stats">
+                            <div className="gf-painel-exec__stat gf-painel-exec__stat--accent">
+                              <dt>{txP.gestaoFinanceiraPainelSrvSemNf || 'Sem NF — a receber'}</dt>
+                              <dd>€{fmtE(pc.servicoSemNfPendenteVal)}</dd>
+                            </div>
+                            <div className="gf-painel-exec__stat">
+                              <dt>{txP.gestaoFinanceiraPainelSrvSemNfN || 'Fechamentos pendentes'}</dt>
+                              <dd>{pc.servicoSemNfPendenteN}</dd>
+                            </div>
+                            <div className="gf-painel-exec__stat gf-painel-exec__stat--warn">
+                              <dt>{txP.gestaoFinanceiraPainelSrvComNf || 'Com NF — pagamento / controlo pendente'}</dt>
+                              <dd>€{fmtE(pc.valorComFaturaFluxoPendente)}</dd>
+                            </div>
+                            <div className="gf-painel-exec__stat">
+                              <dt>{txP.gestaoFinanceiraPainelSrvComNfN || 'Relatórios nessa situação'}</dt>
+                              <dd>{pc.nComFaturaFluxoPendente}</dd>
+                            </div>
+                          </dl>
+                        </article>
+                      </div>
+
+                      <div className="gf-painel-exec__iva">
+                        <div className="gf-painel-exec__iva-head">
+                          <h3 className="gf-painel-exec__iva-title">
+                            {txP.gestaoFinanceiraPainelIvaTitulo || 'IVA a provisionar (cobranças em aberto)'}
+                          </h3>
+                          <p className="gf-painel-exec__iva-sub">{subIva}</p>
+                        </div>
+                        <div className="gf-painel-exec__iva-grid">
+                          <div className="gf-painel-exec__iva-cell">
+                            <span className="gf-painel-exec__iva-cell-label">
+                              {txP.gestaoFinanceiraPainelIvaNfPecas || 'IVA — faturas de peças (em aberto)'}
+                            </span>
+                            <span className="gf-painel-exec__iva-cell-val">€{fmtE(pc.fatAbertoIva)}</span>
+                          </div>
+                          <div className="gf-painel-exec__iva-cell gf-painel-exec__iva-cell--est">
+                            <span className="gf-painel-exec__iva-cell-label">
+                              {txP.gestaoFinanceiraPainelIvaSrvSemNf || 'IVA estimado — serviço sem NF (pendente)'}
+                            </span>
+                            <span className="gf-painel-exec__iva-cell-val">€{fmtE(pc.ivaServSemNfEst)}</span>
+                          </div>
+                          <div className="gf-painel-exec__iva-cell gf-painel-exec__iva-cell--est">
+                            <span className="gf-painel-exec__iva-cell-label">
+                              {txP.gestaoFinanceiraPainelIvaSrvComNf || 'IVA estimado — serviço com NF (fluxo pendente)'}
+                            </span>
+                            <span className="gf-painel-exec__iva-cell-val">€{fmtE(pc.ivaServComFatFluxoEst)}</span>
+                          </div>
+                          <div className="gf-painel-exec__iva-cell gf-painel-exec__iva-cell--total">
+                            <span className="gf-painel-exec__iva-cell-label">
+                              {txP.gestaoFinanceiraPainelIvaTotalEstado || 'Total IVA a provisionar para o Estado'}
+                            </span>
+                            <span className="gf-painel-exec__iva-cell-val gf-painel-exec__iva-cell-val--total">
+                              €{fmtE(pc.ivaTotalProvisionEstado)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+                  )
+                })()}
 
                 {(() => {
                   const txM = safeT as Record<string, string>
@@ -52955,10 +53845,7 @@ A1;Peça exemplo;10`}
                                   rel.id,
                                   itens
                                 )
-                                const tot = itensVis.reduce(
-                                  (s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)),
-                                  0
-                                )
+                                const tot = totaisFechamentoLiquidoComIva(itensVis, fechamentoIvaPorRelatorioId[rel.id]).comIva
                                 const nomeCli =
                                   clientes.find(c => c.id === rel.clienteId)?.nomeEmpresa || rel.cliente || '—'
                                 return (
@@ -54020,10 +54907,7 @@ A1;Peça exemplo;10`}
                     rel.id,
                     itens
                   )
-                  return itensVis.reduce(
-                    (s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)),
-                    0
-                  )
+                  return totaisFechamentoLiquidoComIva(itensVis, fechamentoIvaPorRelatorioId[rel.id]).comIva
                 }
                 return (
                   <div className="financeiro-despesas-bib">
@@ -54103,14 +54987,7 @@ A1;Peça exemplo;10`}
                                         rel.id,
                                         itens
                                       )
-                                      const tot = itensVis.reduce(
-                                        (s, i) =>
-                                          s +
-                                          (i.id === 'diarias' && i.cobrarDiaria === false
-                                            ? 0
-                                            : (i.valorTotal || 0)),
-                                        0
-                                      )
+                                      const tot = totVisRel(rel)
                                       const nomeCli =
                                         clientes.find(c => c.id === rel.clienteId)?.nomeEmpresa ||
                                         rel.cliente ||
@@ -54694,7 +55571,10 @@ A1;Peça exemplo;10`}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                               {despesasCliente.map(({ relatorio, itens }) => {
                                 const itensDespesasVisiveis = filtrarFechamentoItensPorOmitidos(fechamentoItensOmitidosPorRelatorio, relatorio.id, itens)
-                                const totalCobranca = itensDespesasVisiveis.reduce((s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : (i.valorTotal || 0)), 0)
+                                const totalCobranca = totaisFechamentoLiquidoComIva(
+                                  itensDespesasVisiveis,
+                                  fechamentoIvaPorRelatorioId[relatorio.id]
+                                ).comIva
                                 return (
                                   <div 
                                     key={relatorio.id} 
@@ -65084,6 +65964,24 @@ A1;Peça exemplo;10`}
                           </button>
                           <button className="btn-primary" onClick={() => handleViewClienteEquipamentos(cliente)} style={{ padding: '6px 14px', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: '1.25', flex: '1 1 auto', minWidth: 'min-content', flexShrink: 0, boxSizing: 'border-box' }}>
                             {safeT?.equipamentosDoCliente || 'Equipamentos'}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={() => abrirClienteDadosContabilidade(cliente)}
+                            style={{
+                              width: '100%',
+                              padding: '6px 12px',
+                              fontSize: '10px',
+                              lineHeight: 1.25,
+                              marginTop: '4px',
+                              boxSizing: 'border-box',
+                              backgroundColor: 'rgba(21, 101, 192, 0.35)',
+                              borderColor: 'rgba(100, 181, 246, 0.55)',
+                            }}
+                            title={(safeT as any)?.clienteDadosContabilidadeSub || ''}
+                          >
+                            📄 {(safeT as any)?.clienteDadosContabilidade || 'Dados p/ contabilidade'}
                           </button>
                         </div>
                       </div>

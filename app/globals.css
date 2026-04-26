@@ -5604,12 +5604,314 @@ a:focus-visible {
   line-height: 1.45;
   color: rgba(148, 163, 184, 0.88);
 }
+
+/* Painel executivo — Gestão Financeira */
+.gf-painel-exec {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 8px;
+  padding: 28px 28px 32px;
+  border-radius: 18px;
+  background: linear-gradient(165deg, rgba(15, 23, 42, 0.98) 0%, rgba(8, 12, 22, 0.99) 45%, rgba(6, 10, 18, 1) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.45),
+    0 24px 48px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.gf-painel-exec__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+.gf-painel-exec__title {
+  margin: 0 0 8px;
+  font-size: clamp(1.15rem, 2.2vw, 1.45rem);
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  color: #f1f5f9;
+  line-height: 1.25;
+}
+.gf-painel-exec__lead {
+  margin: 0;
+  max-width: 720px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(148, 163, 184, 0.92);
+}
+.gf-painel-exec__cta {
+  flex-shrink: 0;
+  padding: 12px 22px;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0f172a;
+  background: linear-gradient(135deg, #38bdf8 0%, #22d3ee 100%);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(34, 211, 238, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.gf-painel-exec__cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(34, 211, 238, 0.35);
+}
+.gf-painel-exec__hero {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 22px;
+  margin-bottom: 26px;
+}
+@media (max-width: 900px) {
+  .gf-painel-exec__hero {
+    grid-template-columns: 1fr;
+  }
+}
+.gf-painel-exec__hero-main {
+  padding: 22px 24px;
+  border-radius: 14px;
+  background: radial-gradient(120% 80% at 0% 0%, rgba(34, 211, 238, 0.12) 0%, transparent 55%),
+    linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
+  border: 1px solid rgba(45, 212, 191, 0.28);
+}
+.gf-painel-exec__hero-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(94, 234, 212, 0.85);
+  margin-bottom: 8px;
+}
+.gf-painel-exec__hero-value {
+  display: block;
+  font-size: clamp(2rem, 5vw, 2.65rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #f8fafc;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.gf-painel-exec__hero-hint {
+  display: block;
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(148, 163, 184, 0.88);
+}
+.gf-painel-exec__hero-side {
+  display: flex;
+  align-items: stretch;
+}
+.gf-painel-exec__meter {
+  flex: 1;
+  padding: 18px 20px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(248, 113, 113, 0.22);
+}
+.gf-painel-exec__meter-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fecaca;
+}
+.gf-painel-exec__meter-pct {
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  font-weight: 800;
+  color: #fda4af;
+}
+.gf-painel-exec__meter-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(30, 41, 59, 0.9);
+  overflow: hidden;
+}
+.gf-painel-exec__meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f87171 0%, #fb923c 50%, #fbbf24 100%);
+  transition: width 0.35s ease;
+}
+.gf-painel-exec__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+@media (max-width: 1024px) {
+  .gf-painel-exec__grid {
+    grid-template-columns: 1fr;
+  }
+}
+.gf-painel-exec__col {
+  padding: 18px 18px 20px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(51, 65, 85, 0.65);
+}
+.gf-painel-exec__col-title {
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(71, 85, 105, 0.5);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+.gf-painel-exec__stats {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gf-painel-exec__stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(30, 41, 59, 0.45);
+  border: 1px solid rgba(51, 65, 85, 0.4);
+}
+.gf-painel-exec__stat dt {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(148, 163, 184, 0.95);
+  line-height: 1.35;
+  flex: 1;
+  min-width: 0;
+}
+.gf-painel-exec__stat dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  color: #e2e8f0;
+  white-space: nowrap;
+}
+.gf-painel-exec__stat--accent {
+  border-color: rgba(45, 212, 191, 0.35);
+  background: rgba(6, 78, 59, 0.22);
+}
+.gf-painel-exec__stat--accent dd {
+  color: #5eead4;
+  font-size: 16px;
+}
+.gf-painel-exec__stat--warn {
+  border-color: rgba(251, 191, 36, 0.35);
+  background: rgba(120, 53, 15, 0.15);
+}
+.gf-painel-exec__stat--warn dd {
+  color: #fcd34d;
+}
+.gf-painel-exec__stat--danger {
+  border-color: rgba(248, 113, 113, 0.35);
+  background: rgba(127, 29, 29, 0.18);
+}
+.gf-painel-exec__stat--danger dd {
+  color: #fca5a5;
+}
+.gf-painel-exec__stat--muted dd {
+  color: #cbd5e1;
+  font-size: 13px;
+}
+
+.gf-painel-exec__iva {
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+.gf-painel-exec__iva-head {
+  margin-bottom: 16px;
+}
+.gf-painel-exec__iva-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c4b5fd;
+}
+.gf-painel-exec__iva-sub {
+  margin: 0;
+  max-width: 920px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(167, 139, 250, 0.72);
+}
+.gf-painel-exec__iva-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 960px) {
+  .gf-painel-exec__iva-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 520px) {
+  .gf-painel-exec__iva-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.gf-painel-exec__iva-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(30, 27, 75, 0.35);
+  border: 1px solid rgba(139, 92, 246, 0.28);
+}
+.gf-painel-exec__iva-cell--est {
+  border-style: dashed;
+  border-color: rgba(167, 139, 250, 0.35);
+}
+.gf-painel-exec__iva-cell--total {
+  background: linear-gradient(135deg, rgba(76, 29, 149, 0.45), rgba(30, 27, 75, 0.55));
+  border: 1px solid rgba(196, 181, 253, 0.45);
+}
+.gf-painel-exec__iva-cell-label {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: rgba(221, 214, 254, 0.88);
+}
+.gf-painel-exec__iva-cell-val {
+  font-size: 17px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #e9d5ff;
+}
+.gf-painel-exec__iva-cell-val--total {
+  font-size: 20px;
+  color: #f5f3ff;
+}
+
 @media (max-width: 720px) {
   .gestao-financeira-mapa-valores__cards {
     grid-template-columns: 1fr;
   }
   .gestao-financeira-mapa-valores__cards--four {
     grid-template-columns: 1fr;
+  }
+  .gf-painel-exec {
+    padding: 18px 16px 22px;
   }
 }
 
