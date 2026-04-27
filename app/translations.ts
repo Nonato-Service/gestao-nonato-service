@@ -548,6 +548,15 @@ export const translations = {
     syncTrafficGreenShort: 'Alinhado',
     syncModalBlockingNote:
       'Enquanto existir esta diferença, o sistema não fica disponível para trabalho normal — escolha uma das opções abaixo.',
+    syncModalIntroSimple:
+      'Há dados mais recentes no servidor. Toque em OK para este aparelho ficar igual aos outros.',
+    syncModalBlockingNoteSimple:
+      'A cópia do servidor parece completa face ao que tem aqui — basta confirmar.',
+    syncModalOkSimple: 'OK',
+    syncModalAdvancedPush:
+      'Preciso de enviar deste aparelho para o servidor (situação rara)',
+    syncPullRiskWaitingBody: 'Só um instante — a ver se pode confirmar com um toque.',
+    syncPullRiskChecking: 'A verificar…',
     protocolosServicoModeloPDF: 'Modelo do PDF',
     protocolosServicoPdfModelo1: '1 — Clássico (verde)',
     protocolosServicoPdfModelo2: '2 — Minimalista (azul)',
@@ -14563,6 +14572,14 @@ export const translations = {
     syncPushSending: 'Sending to server',
     syncModalBlockingNote:
       'While this mismatch exists, the app stays blocked for normal work — choose one of the options below.',
+    syncModalIntroSimple:
+      'There is newer data on the server. Tap OK to align this device with the others.',
+    syncModalBlockingNoteSimple:
+      'The server copy looks complete compared to what you have here — one tap to finish.',
+    syncModalOkSimple: 'OK',
+    syncModalAdvancedPush: 'I need to send from this device to the server instead (rare)',
+    syncPullRiskWaitingBody: 'One moment — checking if you can confirm with a single tap.',
+    syncPullRiskChecking: 'Checking…',
     adminJumpDemosTitle: 'Demonstrations',
     adminJumpDemosDesc: 'Links, recipients and deadlines',
     adminJumpGeralDesc: 'Reports, logos and PDFs',

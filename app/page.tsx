@@ -13,7 +13,7 @@ import {
 } from './utils/dataStorage'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData } from './utils/syncRevision'
 import { collectLocalNonatoSnapshot, summarizeDataDiff } from './utils/syncDiff'
-import { assessPullServerRisk } from './utils/syncRisk'
+import { assessPullServerRisk, type PullRiskSeverity } from './utils/syncRisk'
 import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
 import {
   loadManuaisFamiliasGruposFromIdb,
@@ -2504,6 +2504,9 @@ export default function Dashboard() {
   const [syncBootstrapPercent, setSyncBootstrapPercent] = useState(0)
   /** Progresso 0–100 em operações explícitas «carregar do servidor» / «enviar ao servidor» (sem arranque completo). */
   const [syncOperationPercent, setSyncOperationPercent] = useState(0)
+  /** Pré-cálculo do risco de «puxar» servidor — permite modal mínimo (só OK) quando `none`. */
+  const [syncPullRiskReady, setSyncPullRiskReady] = useState(false)
+  const [syncPendingPullRisk, setSyncPendingPullRisk] = useState<PullRiskSeverity>('none')
   /** Primeira carga: pedidos ao servidor + fusão de dados (evita parecer que «não termina»). */
   const [appInitialLoading, setAppInitialLoading] = useState(true)
   const [showDashboardView, setShowDashboardView] = useState(true) // Dashboard central por padrão
@@ -5691,8 +5694,44 @@ export default function Dashboard() {
   useEffect(() => {
     if (!syncPendingRemote) {
       setSyncDecisionModalOpen(false)
+      setSyncPullRiskReady(false)
     }
   }, [syncPendingRemote])
+
+  /** Antes de mostrar escolhas longas, avalia risco: caso seguro (`none`) → um só botão OK. */
+  useEffect(() => {
+    if (!syncPendingRemote) return
+    setSyncPullRiskReady(false)
+    let cancelled = false
+    void (async () => {
+      try {
+        const localNow = collectLocalNonatoSnapshot()
+        const { data: serverNow, ok: serverPullOk } = await loadAllFromServer()
+        if (cancelled) return
+        const sk = Object.keys(serverNow || {}).filter((k) => k.startsWith('nonato-'))
+        if (!serverPullOk || sk.length === 0) {
+          if (!cancelled) {
+            setSyncPendingPullRisk('caution')
+            setSyncPullRiskReady(true)
+          }
+          return
+        }
+        const { severity } = assessPullServerRisk(serverNow || {}, localNow)
+        if (!cancelled) {
+          setSyncPendingPullRisk(severity)
+          setSyncPullRiskReady(true)
+        }
+      } catch {
+        if (!cancelled) {
+          setSyncPendingPullRisk('caution')
+          setSyncPullRiskReady(true)
+        }
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [syncPendingRemote?.revision])
 
   /** Com atualização pendente, o fluxo de trabalho só continua após escolher carregar do servidor ou enviar para o servidor. */
   useEffect(() => {
@@ -63428,85 +63467,181 @@ A1;Peça exemplo;10`}
             <h2 id="sync-decision-title" style={{ margin: '0 0 10px', fontSize: '18px', color: '#ffcc66' }}>
               {(safeT as any)?.syncModalTitle || 'Alterações noutro aparelho'}
             </h2>
-            <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#ccc', lineHeight: 1.5 }}>
-              {(safeT as any)?.syncModalIntro ||
-                'Outro equipamento gravou dados no servidor. Resumo em relação ao que estava neste aparelho:'}
-            </p>
-            <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#ffb84d', lineHeight: 1.45, fontWeight: 600 }}>
-              {(safeT as any)?.syncModalBlockingNote ||
-                'Enquanto existir esta diferença, o sistema não fica disponível para trabalho normal — escolha uma das opções abaixo.'}
-            </p>
-            {syncPendingRemote.updatedAt ? (
-              <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#888' }}>
-                {(safeT as any)?.syncModalUpdatedAt || 'Última gravação no servidor'}:{' '}
-                {new Date(syncPendingRemote.updatedAt).toLocaleString()}
-              </p>
-            ) : null}
-            <p style={{ margin: '0 0 6px', fontSize: '12px', color: '#aaa' }}>
-              {(safeT as any)?.syncRevisionLabel || 'revisão'} {syncPendingRemote.revision}
-            </p>
-            <ul
-              style={{
-                margin: '0 0 16px',
-                paddingLeft: '18px',
-                fontSize: '12px',
-                color: '#ddd',
-                lineHeight: 1.55,
-                maxHeight: 'min(52vh, 360px)',
-                overflowY: 'auto',
-                paddingRight: '6px',
-                whiteSpace: 'pre-wrap',
-              }}
-            >
-              {syncPendingRemote.summaryLines.map((line, i) => (
-                <li key={i} style={{ marginBottom: '6px' }}>
-                  {line.startsWith('•') ? line.slice(1).trim() : line}
-                </li>
-              ))}
-            </ul>
-            <p style={{ margin: '0 0 14px', fontSize: '13px', color: '#fff', fontWeight: 600 }}>
-              {(safeT as any)?.syncModalQuestion || 'O que deseja fazer?'}
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button
-                type="button"
-                className="btn-primary"
-                disabled={syncPullChecking || syncPushLoading}
-                style={{ width: '100%', justifyContent: 'center', opacity: syncPullChecking ? 0.75 : 1 }}
-                onClick={() => void aceitarSincronizacaoServidor()}
-              >
-                {syncPullChecking
-                  ? `${(safeT as any)?.syncPullChecking || 'A atualizar com o servidor…'} (${syncOperationPercent}%)`
-                  : (safeT as any)?.syncModalLoadServer || 'Sim — atualizar este aparelho com o servidor'}
-              </button>
-              <p style={{ margin: '-4px 0 0', fontSize: '11px', color: '#888' }}>
-                {(safeT as any)?.syncModalLoadServerHint ||
-                  'Substitui aqui pelos dados do servidor se o outro equipamento tem a versão certa.'}
-              </p>
-              <button
-                type="button"
-                className="btn-primary"
-                style={{
-                  width: '100%',
-                  justifyContent: 'center',
-                  borderColor: 'rgba(56, 189, 248, 0.65)',
-                  color: '#e0f7ff',
-                }}
-                disabled={syncPushLoading}
-                onClick={() => {
-                  setSyncDecisionModalOpen(false)
-                  void enviarEsteAparelhoParaServidor()
-                }}
-              >
-                {syncPushLoading
-                  ? `${(safeT as any)?.syncPushSending || 'A enviar…'} (${syncOperationPercent}%)`
-                  : (safeT as any)?.syncModalPushDevice || 'Não — enviar deste aparelho para o servidor'}
-              </button>
-              <p style={{ margin: '-4px 0 0', fontSize: '11px', color: '#888' }}>
-                {(safeT as any)?.syncModalPushDeviceHint ||
-                  'Substitui o servidor pela cópia deste aparelho se AQUI está a informação certa.'}
-              </p>
-            </div>
+            {!syncPullRiskReady ? (
+              <>
+                <p style={{ margin: '0 0 14px', fontSize: '14px', color: '#ccc', lineHeight: 1.55 }}>
+                  {(safeT as any)?.syncPullRiskWaitingBody ||
+                    'Só um instante — a ver se pode confirmar com um toque.'}
+                </p>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  disabled
+                  style={{ width: '100%', justifyContent: 'center', opacity: 0.65, cursor: 'wait' }}
+                >
+                  {(safeT as any)?.syncPullRiskChecking || 'A verificar…'}
+                </button>
+              </>
+            ) : syncPendingPullRisk === 'none' ? (
+              <>
+                <p style={{ margin: '0 0 10px', fontSize: '14px', color: '#e8e8e8', lineHeight: 1.55 }}>
+                  {(safeT as any)?.syncModalIntroSimple ||
+                    'Há dados mais recentes no servidor. Toque em OK para este aparelho ficar igual aos outros.'}
+                </p>
+                <p style={{ margin: '0 0 12px', fontSize: '12px', color: '#9ad99a', lineHeight: 1.45, fontWeight: 600 }}>
+                  {(safeT as any)?.syncModalBlockingNoteSimple ||
+                    'A cópia do servidor parece completa face ao que tem aqui — basta confirmar.'}
+                </p>
+                {syncPendingRemote.updatedAt ? (
+                  <p style={{ margin: '0 0 8px', fontSize: '12px', color: '#888' }}>
+                    {(safeT as any)?.syncModalUpdatedAt || 'Última gravação no servidor'}:{' '}
+                    {new Date(syncPendingRemote.updatedAt).toLocaleString()}
+                  </p>
+                ) : null}
+                <p style={{ margin: '0 0 12px', fontSize: '12px', color: '#aaa' }}>
+                  {(safeT as any)?.syncRevisionLabel || 'revisão'} {syncPendingRemote.revision}
+                </p>
+                {syncPendingRemote.summaryLines.length > 0 ? (
+                  <p
+                    style={{
+                      margin: '0 0 16px',
+                      fontSize: '11px',
+                      color: '#999',
+                      lineHeight: 1.5,
+                      maxHeight: '4.5em',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {syncPendingRemote.summaryLines
+                      .slice(0, 2)
+                      .map((line) => (line.startsWith('•') ? line.slice(1).trim() : line))
+                      .join(' · ')}
+                  </p>
+                ) : null}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    disabled={syncPullChecking || syncPushLoading}
+                    style={{
+                      width: '100%',
+                      justifyContent: 'center',
+                      fontSize: '16px',
+                      padding: '14px 16px',
+                      opacity: syncPullChecking ? 0.75 : 1,
+                    }}
+                    onClick={() => void aceitarSincronizacaoServidor()}
+                  >
+                    {syncPullChecking
+                      ? `${(safeT as any)?.syncPullChecking || 'A atualizar com o servidor…'} (${syncOperationPercent}%)`
+                      : (safeT as any)?.syncModalOkSimple || 'OK'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={syncPushLoading || syncPullChecking}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      fontSize: '12px',
+                      color: '#9ecbff',
+                      background: 'transparent',
+                      border: '1px solid rgba(56, 189, 248, 0.35)',
+                      borderRadius: '8px',
+                      cursor: syncPushLoading || syncPullChecking ? 'not-allowed' : 'pointer',
+                    }}
+                    onClick={() => {
+                      setSyncDecisionModalOpen(false)
+                      void enviarEsteAparelhoParaServidor()
+                    }}
+                  >
+                    {(safeT as any)?.syncModalAdvancedPush ||
+                      'Preciso de enviar deste aparelho para o servidor (situação rara)'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p style={{ margin: '0 0 8px', fontSize: '13px', color: '#ccc', lineHeight: 1.5 }}>
+                  {(safeT as any)?.syncModalIntro ||
+                    'Outro equipamento gravou dados no servidor. Resumo em relação ao que estava neste aparelho:'}
+                </p>
+                <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#ffb84d', lineHeight: 1.45, fontWeight: 600 }}>
+                  {(safeT as any)?.syncModalBlockingNote ||
+                    'Enquanto existir esta diferença, o sistema não fica disponível para trabalho normal — escolha uma das opções abaixo.'}
+                </p>
+                {syncPendingRemote.updatedAt ? (
+                  <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#888' }}>
+                    {(safeT as any)?.syncModalUpdatedAt || 'Última gravação no servidor'}:{' '}
+                    {new Date(syncPendingRemote.updatedAt).toLocaleString()}
+                  </p>
+                ) : null}
+                <p style={{ margin: '0 0 6px', fontSize: '12px', color: '#aaa' }}>
+                  {(safeT as any)?.syncRevisionLabel || 'revisão'} {syncPendingRemote.revision}
+                </p>
+                <ul
+                  style={{
+                    margin: '0 0 16px',
+                    paddingLeft: '18px',
+                    fontSize: '12px',
+                    color: '#ddd',
+                    lineHeight: 1.55,
+                    maxHeight: 'min(52vh, 360px)',
+                    overflowY: 'auto',
+                    paddingRight: '6px',
+                    whiteSpace: 'pre-wrap',
+                  }}
+                >
+                  {syncPendingRemote.summaryLines.map((line, i) => (
+                    <li key={i} style={{ marginBottom: '6px' }}>
+                      {line.startsWith('•') ? line.slice(1).trim() : line}
+                    </li>
+                  ))}
+                </ul>
+                <p style={{ margin: '0 0 14px', fontSize: '13px', color: '#fff', fontWeight: 600 }}>
+                  {(safeT as any)?.syncModalQuestion || 'O que deseja fazer?'}
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    disabled={syncPullChecking || syncPushLoading}
+                    style={{ width: '100%', justifyContent: 'center', opacity: syncPullChecking ? 0.75 : 1 }}
+                    onClick={() => void aceitarSincronizacaoServidor()}
+                  >
+                    {syncPullChecking
+                      ? `${(safeT as any)?.syncPullChecking || 'A atualizar com o servidor…'} (${syncOperationPercent}%)`
+                      : (safeT as any)?.syncModalLoadServer || 'Sim — atualizar este aparelho com o servidor'}
+                  </button>
+                  <p style={{ margin: '-4px 0 0', fontSize: '11px', color: '#888' }}>
+                    {(safeT as any)?.syncModalLoadServerHint ||
+                      'Substitui aqui pelos dados do servidor se o outro equipamento tem a versão certa.'}
+                  </p>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    style={{
+                      width: '100%',
+                      justifyContent: 'center',
+                      borderColor: 'rgba(56, 189, 248, 0.65)',
+                      color: '#e0f7ff',
+                    }}
+                    disabled={syncPushLoading}
+                    onClick={() => {
+                      setSyncDecisionModalOpen(false)
+                      void enviarEsteAparelhoParaServidor()
+                    }}
+                  >
+                    {syncPushLoading
+                      ? `${(safeT as any)?.syncPushSending || 'A enviar…'} (${syncOperationPercent}%)`
+                      : (safeT as any)?.syncModalPushDevice || 'Não — enviar deste aparelho para o servidor'}
+                  </button>
+                  <p style={{ margin: '-4px 0 0', fontSize: '11px', color: '#888' }}>
+                    {(safeT as any)?.syncModalPushDeviceHint ||
+                      'Substitui o servidor pela cópia deste aparelho se AQUI está a informação certa.'}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
