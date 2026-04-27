@@ -1459,6 +1459,57 @@ type Cliente = {
   anexosSolicitacaoServico?: SolicitacaoDocDevolvidoCliente[]
 }
 
+/**
+ * Com `deferServerMerge`, o arranque não substitui chaves inteiras pelo servidor se o local já tem JSON —
+ * mas `nonato-clientes` fica preso a cópias antigas (ex.: cliente sem equipamentos no tablet enquanto o PC já gravou no servidor).
+ * Funde por id de cliente: campos do servidor prevalecem em conflito; equipamentos = união por n.º de série (servidor ganha em duplicado).
+ */
+function equipamentoClienteDedupeKey(e: EquipamentoCliente): string {
+  const s = String(e?.numeroSerie ?? '').trim()
+  if (s) return `s:${s}`
+  const id = String(e?.id ?? '').trim()
+  if (id) return `i:${id}`
+  return `h:${JSON.stringify({ m: e?.modelo, t: e?.tipoEquipamento })}`
+}
+
+function mergeEquipamentosClienteLists(
+  serverEq: EquipamentoCliente[] | undefined,
+  localEq: EquipamentoCliente[] | undefined
+): EquipamentoCliente[] {
+  const sm = Array.isArray(serverEq) ? serverEq : []
+  const lm = Array.isArray(localEq) ? localEq : []
+  const by = new Map<string, EquipamentoCliente>()
+  for (const e of lm) by.set(equipamentoClienteDedupeKey(e), e)
+  for (const e of sm) by.set(equipamentoClienteDedupeKey(e), e)
+  return Array.from(by.values())
+}
+
+function mergeNonatoClientesDeferServerLocal(serverList: unknown, localList: unknown): Cliente[] {
+  if (!Array.isArray(serverList)) return Array.isArray(localList) ? (localList as Cliente[]) : []
+  if (!Array.isArray(localList)) return serverList as Cliente[]
+  const srv = serverList as Cliente[]
+  const loc = localList as Cliente[]
+  const localById = new Map(loc.map(c => [c.id, c]))
+  const serverIds = new Set(srv.map(c => c.id))
+  const out: Cliente[] = []
+  for (const sc of srv) {
+    const lc = localById.get(sc.id)
+    if (!lc) {
+      out.push(sc)
+    } else {
+      out.push({
+        ...lc,
+        ...sc,
+        equipamentos: mergeEquipamentosClienteLists(sc.equipamentos, lc.equipamentos),
+      })
+    }
+  }
+  for (const lc of loc) {
+    if (!serverIds.has(lc.id)) out.push(lc)
+  }
+  return out
+}
+
 function cmpClienteRelatorioFinanceiro(a: string, b: string): number {
   return (a || '').localeCompare(b || '', undefined, { sensitivity: 'base', numeric: true })
 }
@@ -6334,6 +6385,34 @@ export default function Dashboard() {
                   localStorage.setItem(key, JSON.stringify(merged))
                 } catch (e) {
                   console.error('Erro ao gravar manuais fundidos no localStorage:', e)
+                }
+                saveData(key, merged, false).catch(() => {})
+                return merged
+              }
+            } catch (e) {
+              /* continuar com a lógica normal */
+            }
+          }
+        }
+        // Clientes: com divergência de revisão o local «conta» como não vazio e bloqueava o servidor inteiro —
+        // fundir para trazer equipamentos/alterações gravadas noutro aparelho sem apagar clientes só locais.
+        if (
+          key === 'nonato-clientes' &&
+          !preferServerOnlyAfterFullPullWipe &&
+          deferServerMerge &&
+          typeof window !== 'undefined'
+        ) {
+          const serverValue = serverData[key]
+          const localData = localStorage.getItem(key)
+          if (serverValue != null && Array.isArray(serverValue) && localData !== null && localData !== '') {
+            try {
+              const local = JSON.parse(localData) as Cliente[]
+              if (Array.isArray(local)) {
+                const merged = mergeNonatoClientesDeferServerLocal(serverValue, local)
+                try {
+                  localStorage.setItem(key, JSON.stringify(merged))
+                } catch (e) {
+                  console.error('Erro ao gravar clientes fundidos no localStorage:', e)
                 }
                 saveData(key, merged, false).catch(() => {})
                 return merged
