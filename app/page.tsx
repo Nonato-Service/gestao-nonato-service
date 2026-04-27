@@ -5017,6 +5017,21 @@ export default function Dashboard() {
     [relatoriosServico, clientes, fechamentosGuardadosBibliotecaIds, fechamentosRelatorios]
   )
 
+  /** Modal de equipamentos do cliente: quando `clientes` muda (sync / outro separador), manter a lista alinhada ao estado global. */
+  const equipModalClienteId = selectedClienteForEquipamento?.id
+  useEffect(() => {
+    if (!equipModalClienteId) return
+    const latest = clientes.find(c => c.id === equipModalClienteId)
+    if (!latest) return
+    setSelectedClienteForEquipamento(prev => {
+      if (!prev || prev.id !== equipModalClienteId) return prev
+      const pe = JSON.stringify(prev.equipamentos ?? [])
+      const le = JSON.stringify(latest.equipamentos ?? [])
+      if (pe === le && prev.nomeEmpresa === latest.nomeEmpresa) return prev
+      return latest
+    })
+  }, [clientes, equipModalClienteId])
+
   /** Resumo para mapa visual: NF (faturas de peças) vs. dinheiro s/ NF (fluxo sem_fatura + pago) vs. total fechamentos na biblioteca */
   const mapaValoresGestaoFinanceira = useMemo(() => {
     let valorComNotaFiscal = 0
@@ -6754,13 +6769,20 @@ export default function Dashboard() {
           /* ignorar */
         }
       }
+      const normalizeClienteEquipamentos = (arr: Cliente[]) =>
+        arr.map((c: Cliente) => ({
+          ...c,
+          equipamentos: Array.isArray(c.equipamentos) ? c.equipamentos : [],
+          relatorios: c.relatorios && typeof c.relatorios === 'object' && !Array.isArray(c.relatorios) ? c.relatorios : {},
+        }))
       if (savedClientes && Array.isArray(savedClientes) && savedClientes.length > 0) {
-        setClientes(savedClientes)
+        const normalized = normalizeClienteEquipamentos(savedClientes as Cliente[])
+        setClientes(normalized)
         // Garantir que está salvo no servidor
-        saveData('nonato-clientes', savedClientes, false).catch(() => {})
+        saveData('nonato-clientes', normalized, false).catch(() => {})
       } else if (savedClientes && Array.isArray(savedClientes)) {
         // Array vazio - manter mas não salvar
-        setClientes(savedClientes)
+        setClientes(normalizeClienteEquipamentos(savedClientes as Cliente[]))
       }
 
       // Carregar cliente prioritário
@@ -53431,44 +53453,69 @@ A1;Peça exemplo;10`}
           </div>
         )
 
-      case 'gestao-financeira':
+      case 'gestao-financeira': {
+        const gfPad = isCompactLayout ? '10px 8px' : '30px'
+        const gfHeroPad = isCompactLayout ? '14px 12px' : '30px'
+        const gfInnerPad = isCompactLayout ? '14px 10px' : '40px'
+        const gfTitleFs = isCompactLayout ? 'clamp(17px, 5.5vw, 24px)' : '32px'
+        const gfLetter = isCompactLayout ? '1px' : '3px'
         return (
-          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
+          <div
+            className="gestao-financeira-panel"
+            style={{ padding: gfPad, maxWidth: '1600px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}
+          >
             {/* Cabeçalho no padrão Visualizar Equipamento (verde) */}
-            <div style={{
-              marginBottom: '40px',
-              padding: '30px',
-              background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-              borderRadius: '20px',
-              border: '2px solid rgba(0, 255, 0, 0.3)',
-              boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+            <div
+              className="gestao-financeira-hero"
+              style={{
+                marginBottom: isCompactLayout ? '16px' : '40px',
+                padding: gfHeroPad,
+                background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
+                borderRadius: isCompactLayout ? '14px' : '20px',
+                border: '2px solid rgba(0, 255, 0, 0.3)',
+                boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: isCompactLayout ? '12px' : '16px',
+                }}
+              >
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexShrink: 0 }}>
                   <LogoComponent size="small" />
                 </div>
-                <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 style={{
-                    margin: 0,
-                    fontSize: '32px',
-                    fontWeight: 'bold',
-                    color: '#00ff00',
-                    letterSpacing: '3px',
-                    textShadow: '0 0 20px rgba(0, 255, 0, 0.3)',
-                    marginBottom: '8px'
-                  }}>
+                <div style={{ textAlign: 'center', flex: '1 1 200px', minWidth: 0, order: isCompactLayout ? 0 : undefined }}>
+                  <h1
+                    style={{
+                      margin: 0,
+                      fontSize: gfTitleFs,
+                      fontWeight: 'bold',
+                      color: '#00ff00',
+                      letterSpacing: gfLetter,
+                      textShadow: '0 0 20px rgba(0, 255, 0, 0.3)',
+                      marginBottom: '8px',
+                      lineHeight: 1.15,
+                      wordBreak: 'break-word',
+                    }}
+                  >
                     {safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}
                   </h1>
-                  <p style={{
-                    margin: 0,
-                    fontSize: '14px',
-                    color: '#ccc',
-                    opacity: 0.8
-                  }}>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: isCompactLayout ? '12px' : '14px',
+                      color: '#ccc',
+                      opacity: 0.8,
+                    }}
+                  >
                     {safeT?.gestaoFinanceiraDesc || 'Gerencie finanças, faturas e pagamentos'}
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0, marginLeft: 'auto' }}>
                   <button 
                     onClick={() => closeTab(activeTabId || '')}
                     style={{ 
@@ -53532,12 +53579,17 @@ A1;Peça exemplo;10`}
             </div>
 
             {/* Conteúdo da Gestão Financeira - padrão Visualizar Equipamento */}
-            <div style={{ 
-              padding: '40px', 
-              backgroundColor: '#141414', 
-              borderRadius: '12px', 
-              border: '2px solid rgba(0, 255, 0, 0.3)'
-            }}>
+            <div
+              className="gestao-financeira-inner"
+              style={{
+                padding: gfInnerPad,
+                backgroundColor: '#141414',
+                borderRadius: '12px',
+                border: '2px solid rgba(0, 255, 0, 0.3)',
+                boxSizing: 'border-box',
+                width: '100%',
+              }}
+            >
               <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', alignItems: 'stretch', width: '100%' }}>
                 {(() => {
                   const txP = safeT as Record<string, string>
@@ -53900,102 +53952,127 @@ A1;Peça exemplo;10`}
                     </div>
                   )
                 })()}
-                
-                {/* Botão Comprovantes de Despesas */}
-                <button
-                  className="btn-primary"
-                  onClick={() => handleButtonClick('open-comprovantes-despesas')}
-                  style={{
-                    padding: '15px 30px',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                    backgroundColor: 'rgba(0, 255, 0, 0.1)',
-                    border: '2px solid rgba(0, 255, 0, 0.5)',
-                    borderRadius: '10px',
-                    color: '#00ff00',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px'
-                  }}
-                >
-                  📄 {safeT?.comprovantesDespesasTitle || 'COMPROVANTES DE DESPESAS'}
-                </button>
-                {/* Botão Clientes / Financeiro */}
-                <button
-                  className="btn-primary"
-                  onClick={() => handleButtonClick('open-clientes-financeiro')}
-                  style={{
-                    padding: '15px 30px',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                    backgroundColor: 'rgba(0, 255, 0, 0.1)',
-                    border: '2px solid rgba(0, 255, 0, 0.5)',
-                    borderRadius: '8px',
-                    color: '#00ff00',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    minWidth: '250px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '1px'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.2)'
-                    e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.8)'
-                    e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 255, 0, 0.3)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
-                    e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
-                >
-                  {safeT?.clientesFinanceiro || 'Clientes / Financeiro'}
-                </button>
-                <button
-                  className="btn-primary"
-                  onClick={() => {
-                    handleButtonClick('open-clientes-financeiro')
-                    setClientesFinanceiroActiveTab('despesasControle')
-                  }}
-                  style={{
-                    padding: '15px 30px',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                    backgroundColor: 'rgba(255, 170, 0, 0.08)',
-                    border: '2px solid rgba(255, 170, 0, 0.55)',
-                    borderRadius: '10px',
-                    color: '#ffcc66',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    minWidth: '250px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '1px',
-                    justifyContent: 'center',
-                  }}
-                >
-                  📒 {(safeT as any)?.gestaoFinanceiraBtnControloDespesasBiblioteca || 'Despesas na biblioteca'}
-                </button>
+
+                <div className="gestao-financeira-cta-row">
+                  {/* Botão Comprovantes de Despesas */}
+                  <button
+                    className="btn-primary"
+                    onClick={() => handleButtonClick('open-comprovantes-despesas')}
+                    style={{
+                      padding: isCompactLayout ? '12px 16px' : '15px 30px',
+                      fontSize: isCompactLayout ? '13px' : '16px',
+                      fontWeight: 'bold',
+                      backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                      border: '2px solid rgba(0, 255, 0, 0.5)',
+                      borderRadius: '10px',
+                      color: '#00ff00',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      flex: '0 0 auto',
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    📄 {safeT?.comprovantesDespesasTitle || 'COMPROVANTES DE DESPESAS'}
+                  </button>
+                  {/* Botão Clientes / Financeiro */}
+                  <button
+                    className="btn-primary"
+                    onClick={() => handleButtonClick('open-clientes-financeiro')}
+                    style={{
+                      padding: isCompactLayout ? '12px 16px' : '15px 30px',
+                      fontSize: isCompactLayout ? '13px' : '16px',
+                      fontWeight: 'bold',
+                      backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                      border: '2px solid rgba(0, 255, 0, 0.5)',
+                      borderRadius: '8px',
+                      color: '#00ff00',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      minWidth: isCompactLayout ? 'min(280px, 78vw)' : '250px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                      flex: '0 0 auto',
+                      boxSizing: 'border-box',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.2)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.8)'
+                      e.currentTarget.style.boxShadow = '0 0 20px rgba(0, 255, 0, 0.3)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
+                      e.currentTarget.style.boxShadow = 'none'
+                    }}
+                  >
+                    {safeT?.clientesFinanceiro || 'Clientes / Financeiro'}
+                  </button>
+                  <button
+                    className="btn-primary"
+                    onClick={() => {
+                      handleButtonClick('open-clientes-financeiro')
+                      setClientesFinanceiroActiveTab('despesasControle')
+                    }}
+                    style={{
+                      padding: isCompactLayout ? '12px 16px' : '15px 30px',
+                      fontSize: isCompactLayout ? '13px' : '16px',
+                      fontWeight: 'bold',
+                      backgroundColor: 'rgba(255, 170, 0, 0.08)',
+                      border: '2px solid rgba(255, 170, 0, 0.55)',
+                      borderRadius: '10px',
+                      color: '#ffcc66',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      minWidth: isCompactLayout ? 'min(280px, 78vw)' : '250px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                      justifyContent: 'center',
+                      flex: '0 0 auto',
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    📒 {(safeT as any)?.gestaoFinanceiraBtnControloDespesasBiblioteca || 'Despesas na biblioteca'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         )
+      }
 
-      case 'clientes-financeiro':
+      case 'clientes-financeiro': {
+        const cfPad = isCompactLayout ? '10px 8px' : '30px'
+        const cfHeadPad = isCompactLayout ? '12px 10px' : '16px 24px'
+        const cfContPad = isCompactLayout ? '14px 10px' : '30px'
         return (
-          <div className="clientes-financeiro-panel" style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
+          <div
+            className="clientes-financeiro-panel"
+            style={{ padding: cfPad, maxWidth: '1600px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}
+          >
             {/* Cabeçalho — padrão Visualizar Equipamento (Equipamentos do armazém) */}
-            <div style={{
-              marginBottom: '20px',
-              padding: '16px 24px',
-              background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-              borderRadius: '12px',
-              border: '1px solid rgba(0, 255, 0, 0.25)',
-              boxShadow: '0 2px 12px rgba(0, 255, 0, 0.08)'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div
+              style={{
+                marginBottom: '20px',
+                padding: cfHeadPad,
+                background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
+                borderRadius: '12px',
+                border: '1px solid rgba(0, 255, 0, 0.25)',
+                boxShadow: '0 2px 12px rgba(0, 255, 0, 0.08)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: isCompactLayout ? '10px' : '12px',
+                }}
+              >
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
                 </div>
@@ -54083,25 +54160,32 @@ A1;Peça exemplo;10`}
               </div>
             </div>
 
-            {/* Barra de abas — padrão Visualizar Equipamento (card #2a2a2a, borda 1px verde) */}
-            <div style={{
-              marginBottom: '20px',
-              padding: '14px 18px',
-              backgroundColor: '#222222',
-              borderRadius: '8px',
-              border: '1px solid rgba(0, 255, 0, 0.2)',
-              display: 'flex',
-              gap: '10px',
-              flexWrap: 'wrap'
-            }}>
+            {/* Barra de abas — scroll horizontal no telemóvel para não empilhar tudo na vertical */}
+            <div
+              className="clientes-financeiro-tabs"
+              style={{
+                marginBottom: '20px',
+                padding: isCompactLayout ? '10px 10px' : '14px 18px',
+                backgroundColor: '#222222',
+                borderRadius: '8px',
+                border: '1px solid rgba(0, 255, 0, 0.2)',
+                display: 'flex',
+                gap: '8px',
+                flexWrap: isCompactLayout ? 'nowrap' : 'wrap',
+                overflowX: isCompactLayout ? 'auto' : 'visible',
+                WebkitOverflowScrolling: 'touch',
+                boxSizing: 'border-box',
+              }}
+            >
               {(['os', 'faturas', 'devedores', 'iva', 'relatorios', 'despesasControle'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setClientesFinanceiroActiveTab(tab)}
                   style={{
-                    padding: '10px 20px',
-                    fontSize: '13px',
+                    padding: isCompactLayout ? '10px 12px' : '10px 20px',
+                    fontSize: isCompactLayout ? '11px' : '13px',
                     fontWeight: 'bold',
+                    flex: isCompactLayout ? '0 0 auto' : undefined,
                     backgroundColor: clientesFinanceiroActiveTab === tab ? 'rgba(0, 255, 0, 0.2)' : 'transparent',
                     border: `1px solid ${clientesFinanceiroActiveTab === tab ? 'rgba(0, 255, 0, 0.5)' : 'rgba(0, 255, 0, 0.2)'}`,
                     borderRadius: '6px',
@@ -54135,13 +54219,18 @@ A1;Peça exemplo;10`}
             </div>
 
             {/* Conteúdo das Abas — padrão Visualizar Equipamento (fundo #1a1a1a, borda 1px verde) */}
-            <div className="clientes-financeiro-conteudo" style={{
-              padding: '30px',
-              backgroundColor: '#141414',
-              borderRadius: '12px',
-              border: '1px solid rgba(0, 255, 0, 0.2)',
-              minHeight: '500px'
-            }}>
+            <div
+              className="clientes-financeiro-conteudo"
+              style={{
+                padding: cfContPad,
+                backgroundColor: '#141414',
+                borderRadius: '12px',
+                border: '1px solid rgba(0, 255, 0, 0.2)',
+                minHeight: isCompactLayout ? '280px' : '500px',
+                boxSizing: 'border-box',
+                width: '100%',
+              }}
+            >
               {clientesFinanceiroActiveTab === 'os' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   {/* Barra de ações: título + busca + adicionar */}
@@ -55628,6 +55717,7 @@ A1;Peça exemplo;10`}
             </div>
           </div>
         )
+      }
 
       case 'biblioteca-relatorios':
         // Uma pasta por cliente: Relatórios de Serviço + Relatórios de Despesas (fechamentos). Todos os clientes aparecem.
