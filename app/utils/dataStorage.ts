@@ -328,7 +328,8 @@ export async function loadFromServer(key: string): Promise<any | null> {
   try {
     // Tentar carregar como texto primeiro (para vídeos/imagens grandes)
     const response = await fetch(`${API_BASE}/load-text?key=${encodeURIComponent(key)}`, {
-      signal: createTimeoutSignal(5000) // Timeout de 5 segundos (compatível com todos os navegadores)
+      signal: createTimeoutSignal(5000), // Timeout de 5 segundos (compatível com todos os navegadores)
+      cache: 'no-store',
     })
     
     if (!response.ok) {
@@ -370,6 +371,7 @@ async function loadAllFromServerOnce(): Promise<LoadAllFromServerResult> {
     // Não abortar aqui só porque `serverOffline` — evita ficar preso a `{}` durante ~30s após um timeout.
     const response = await fetch(`${API_BASE}/load`, {
       signal: createTimeoutSignal(LOAD_ALL_TIMEOUT_MS),
+      cache: 'no-store',
     })
 
     if (!response.ok) {

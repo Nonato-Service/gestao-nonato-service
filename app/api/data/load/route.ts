@@ -7,13 +7,19 @@ import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+/** Evita respostas antigas em CDN/proxy ou cache HTTP do browser ao sincronizar entre aparelhos. */
+const NO_STORE_HEADERS: HeadersInit = {
+  'Cache-Control': 'private, no-store, no-cache, must-revalidate',
+  Pragma: 'no-cache',
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { isDemo, expired, dataDir } = getDemoContext(request)
     if (isDemo && expired) {
       return NextResponse.json(
         { error: 'demo_expired', message: 'Período de demonstração expirado (15 dias).' },
-        { status: 403 }
+        { status: 403, headers: NO_STORE_HEADERS }
       )
     }
     ensureDataDir()
@@ -73,7 +79,7 @@ export async function GET(request: NextRequest) {
         }
       }
       
-      return NextResponse.json({ success: true, data: allData })
+      return NextResponse.json({ success: true, data: allData }, { headers: NO_STORE_HEADERS })
     }
 
     // Carregar um arquivo específico
@@ -81,40 +87,49 @@ export async function GET(request: NextRequest) {
     const filePath = path.join(targetDir, `${key}.json`)
     
     if (!fs.existsSync(filePath)) {
-      return NextResponse.json({ 
-        success: true, 
-        data: null,
-        message: `Arquivo ${key} não encontrado` 
-      })
+      return NextResponse.json(
+        {
+          success: true,
+          data: null,
+          message: `Arquivo ${key} não encontrado`,
+        },
+        { headers: NO_STORE_HEADERS }
+      )
     }
 
     const content = fs.readFileSync(filePath, 'utf-8')
     // Verificar se o conteúdo não está vazio
     if (!content || content.trim() === '') {
-      return NextResponse.json({ 
-        success: true, 
-        data: null,
-        message: `Arquivo ${key} está vazio` 
-      })
+      return NextResponse.json(
+        {
+          success: true,
+          data: null,
+          message: `Arquivo ${key} está vazio`,
+        },
+        { headers: NO_STORE_HEADERS }
+      )
     }
-    
+
     try {
       const data = JSON.parse(content)
-      return NextResponse.json({ success: true, data })
+      return NextResponse.json({ success: true, data }, { headers: NO_STORE_HEADERS })
     } catch (parseError: any) {
       console.error(`Erro ao fazer parse do arquivo ${key}:`, parseError)
-      return NextResponse.json({ 
-        success: true, 
-        data: null,
-        message: `Arquivo ${key} contém JSON inválido` 
-      })
+      return NextResponse.json(
+        {
+          success: true,
+          data: null,
+          message: `Arquivo ${key} contém JSON inválido`,
+        },
+        { headers: NO_STORE_HEADERS }
+      )
     }
   } catch (error: any) {
     console.error('Erro ao carregar dados:', error)
     const msg = process.env.NODE_ENV === 'development' ? error.message : 'Erro ao carregar dados'
     return NextResponse.json(
       { error: 'Erro ao carregar dados', details: msg },
-      { status: 500 }
+      { status: 500, headers: NO_STORE_HEADERS }
     )
   }
 }

@@ -36,13 +36,16 @@ export async function POST(request: NextRequest) {
     let revision: number | undefined
     let updatedAt: string | undefined
     try {
+      // Revisão multi-dispositivo: sempre na pasta da sessão (`dataDir`), igual a `/api/data/sync-status`.
+      // Antes usava-se `targetDir` (ex.: `data/` para chaves globais em modo demo) e os outros aparelhos
+      // liam `data/demo/.../_sync-meta.json` — a revisão não subia e o aviso não batia com os dados.
       if (jsonFileContentUnchanged(filePath, value)) {
-        const meta = readSyncMeta(targetDir)
+        const meta = readSyncMeta(dataDir)
         revision = meta.revision
         updatedAt = meta.updatedAt
       } else {
         fs.writeFileSync(filePath, serializeJsonForDisk(value), 'utf-8')
-        const meta = bumpSyncMeta(targetDir)
+        const meta = bumpSyncMeta(dataDir)
         revision = meta.revision
         updatedAt = meta.updatedAt
       }

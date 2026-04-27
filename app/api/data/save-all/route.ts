@@ -53,12 +53,17 @@ export async function POST(request: NextRequest) {
     let revision: number | undefined
     let updatedAt: string | undefined
     try {
-      for (const dir of Array.from(dirsWithContentChange)) {
-        bumpSyncMeta(dir)
+      // Uma revisão por operação, na pasta da sessão (igual a sync-status). Evita gravar revisão em
+      // `data/` enquanto o cliente lê `data/demo/...` ou vários `_sync-meta.json` dessincronizados.
+      if (dirsWithContentChange.size > 0) {
+        const metaOut = bumpSyncMeta(dataDir)
+        revision = metaOut.revision
+        updatedAt = metaOut.updatedAt
+      } else {
+        const metaOut = readSyncMeta(dataDir)
+        revision = metaOut.revision
+        updatedAt = metaOut.updatedAt
       }
-      const metaOut = readSyncMeta(dataDir)
-      revision = metaOut.revision
-      updatedAt = metaOut.updatedAt
     } catch (e) {
       console.error('bumpSyncMeta (save-all):', e)
     }
