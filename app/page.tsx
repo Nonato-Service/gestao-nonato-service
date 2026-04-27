@@ -6296,9 +6296,24 @@ export default function Dashboard() {
       let bootstrapLoadErrored = false
       try {
         setBlockImplicitServerPushDuringBootstrap(true)
-        const lastAccepted = getLastAcceptedRevision()
-        let serverRevision = lastAccepted
         const syncSt = await fetchSyncStatus()
+        let lastAccepted = getLastAcceptedRevision()
+        /**
+         * Se o contador em `_sync-meta.json` no servidor ficou abaixo do que este browser guardou
+         * (ficheiro novo, restauração, mudança de pasta), `serverRevision > lastAccepted` nunca é verdadeiro:
+         * some o aviso laranja e no Admin só se destaca «Enviar tudo ao servidor» — o utilizador interpreta como
+         * ter de empurrar dados para o servidor em vez de puxar. Repor a revisão aceite remove o impasse.
+         */
+        if (syncSt !== null && lastAccepted > syncSt.revision) {
+          lastAccepted = 0
+          setLastAcceptedRevision(0)
+          try {
+            localStorage.setItem('nonato-sync-last-accepted-revision', '0')
+          } catch {
+            /* ignorar */
+          }
+        }
+        let serverRevision = lastAccepted
         if (syncSt) serverRevision = syncSt.revision
 
         // Primeiro, tentar carregar tudo do servidor (ou reutilizar bundle do full-pull já obtido antes do wipe)
@@ -25228,9 +25243,51 @@ const nextF = familias.filter(x => x !== f)
                       </button>
                     </>
                   ) : (
-                    <p style={{ fontSize: '12px', color: '#666', margin: 0 }}>
-                      {(safeT as any)?.syncAdminNoPending || 'Neste momento não há diferença de revisão pendente de decisão.'}
-                    </p>
+                    <>
+                      <p style={{ fontSize: '12px', color: '#666', margin: '0 0 10px' }}>
+                        {(safeT as any)?.syncAdminNoPending || 'Neste momento não há diferença de revisão pendente de decisão.'}
+                      </p>
+                      <p style={{ fontSize: '11px', color: '#999', margin: '0 0 10px', lineHeight: 1.45 }}>
+                        {(safeT as any)?.syncAdminManualPullHint ||
+                          'Se o PC tem os dados certos mas aqui parece desatualizado (revisão local «à frente» do servidor), use primeiro o botão abaixo — não use «Enviar tudo» a partir de um aparelho vazio ou velho.'}
+                      </p>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        style={{
+                          padding: '8px 14px',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          marginBottom: '12px',
+                          borderColor: 'rgba(255, 170, 80, 0.55)',
+                          backgroundColor: 'rgba(255, 140, 40, 0.18)',
+                          color: '#ffddaa',
+                        }}
+                        onClick={() => {
+                          const msg =
+                            (safeT as any)?.syncAdminManualPullConfirm ||
+                            'Recarregar a partir do servidor como no aviso laranja? A revisão local é reposta e a página recarrega (rascunhos seguros mantêm-se conforme o sistema já fazia).'
+                          if (!window.confirm(msg)) return
+                          setLastAcceptedRevision(0)
+                          try {
+                            localStorage.setItem('nonato-sync-last-accepted-revision', '0')
+                          } catch {
+                            /* ignorar */
+                          }
+                          try {
+                            sessionStorage.setItem('nonato-sync-full-server-apply', '1')
+                            localStorage.setItem(NONATO_PENDING_FULL_SERVER_REPLACE_LS, '1')
+                          } catch {
+                            /* ignorar */
+                          }
+                          window.location.reload()
+                        }}
+                      >
+                        {(safeT as any)?.syncLoadFromServer || 'Carregar do servidor'}
+                        {' — '}
+                        {(safeT as any)?.syncAdminManualPullShort || 'forçar alinhamento'}
+                      </button>
+                    </>
                   )}
                   <div
                     className="admin-sync-force-block"
@@ -25242,7 +25299,7 @@ const nextF = familias.filter(x => x !== f)
                   >
                     <p style={{ fontSize: '12px', color: '#7cb87c', margin: '0 0 6px' }}>
                       {(safeT as any)?.syncAdminForcePushIntro ||
-                        'Dados guardados no PC no aparecem no telemóvel? O servidor pode não ter recebido a última gravação em segundo plano. Enviar tudo a partir de onde está o dado certo (normalmente o PC) e, depois, no outro aparelho use «atualizar com o servidor» no aviso laranja.'}
+                        'Só use isto se o dado certo está NESTE aparelho e o servidor não recebeu (rede). Se o dado certo está no PC, não envie a partir do telemóvel vazio — use «Carregar do servidor» acima.'}
                     </p>
                     <button
                       type="button"

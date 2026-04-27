@@ -520,9 +520,14 @@ export const translations = {
       'O sistema verifica o servidor automaticamente para detetar diferenças entre aparelhos, mas a decisão é manual no Administrador. Quando quiser, abra Sincronização entre aparelhos para escolher «atualizar este aparelho» ou «enviar para o servidor».',
     syncReopenModal: 'Abrir aviso de sincronização',
     syncAdminNoPending: 'Neste momento não há diferença de revisão pendente de decisão.',
+    syncAdminManualPullHint:
+      'Se o PC tem os dados certos mas aqui parece desatualizado (a revisão guardada neste aparelho pode estar «à frente» do contador do servidor), use primeiro o botão laranja abaixo — não use «Enviar tudo» a partir de um telemóvel vazio ou desatualizado.',
+    syncAdminManualPullConfirm:
+      'Recarregar a partir do servidor como no aviso laranja? A revisão local é reposta e a página recarrega; idioma, rascunhos e filas de sincronização mantêm-se como no fluxo normal de «Carregar do servidor».',
+    syncAdminManualPullShort: 'forçar alinhamento',
     syncAdminForcePush: 'Enviar tudo o que está neste aparelho para o servidor',
     syncAdminForcePushIntro:
-      'Criou um equipamento no PC e o telemóvel ou tablet não vê? Cada “Guardar” devia ir ao servidor em segundo plano; se a rede cai, pode ficar só nesse aparelho. A partir de onde a informação está certa (muitas vezes o PC), clique abaixo para reenviar tudo. Depois, noutro aparelho, escolha «atualizar com o servidor» no aviso laranja.',
+      'Use só se o dado certo está NESTE aparelho e o servidor não recebeu (rede). Se o dado certo está no PC, não envie a partir do telemóvel vazio — use «Carregar do servidor» acima; caso contrário pode sobrescrever o servidor com dados velhos.',
     syncAdminForcePushHint:
       'A confirmação evita ativar sem querer. Se a informação completa estiver noutro aparelho, envie a partir desse — não a partir de um ecrã que ainda está desatualizado, para não sobrescrever o servidor com versão vazia.',
     syncPullServerUnreadable:
