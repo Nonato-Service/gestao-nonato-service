@@ -31981,30 +31981,13 @@ onKeyPress={(e) => {
                           )}
                         </div>
 
-                        {/* Cabeçalho do Card — data no topo; cliente linha completa; n.º por baixo */}
+                        {/* Cabeçalho do Card — cliente em linha completa (evita coluna estreita ao lado do n.º / data) */}
                         <div style={{
                           marginBottom: '15px',
                           paddingBottom: '12px',
                           borderBottom: '1px solid rgba(0, 255, 0, 0.24)',
                           minWidth: 0,
                         }}>
-                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px', minWidth: 0 }}>
-                            <span
-                              style={{
-                                backgroundColor: 'rgba(0, 255, 0, 0.08)',
-                                color: '#ffffff',
-                                padding: '4px 10px',
-                                borderRadius: '5px',
-                                fontSize: '12px',
-                                fontWeight: 'bold',
-                                border: '1px solid rgba(0, 255, 0, 0.52)',
-                                flexShrink: 0,
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {dataFormatada}
-                            </span>
-                          </div>
                           <p
                             className="relatorio-servico-report-card__cliente-nome"
                             style={{
@@ -32020,21 +32003,49 @@ onKeyPress={(e) => {
                           >
                             {(relatorio.cliente && String(relatorio.cliente).trim()) || '—'}
                           </p>
-                          <h3
+                          <div
                             style={{
-                              margin: 0,
-                              color: '#ffffff',
-                              fontSize: 'clamp(15px, 4.2vw, 20px)',
-                              fontWeight: 'bold',
-                              letterSpacing: '0.06em',
-                              lineHeight: 1.25,
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'flex-start',
+                              flexWrap: 'wrap',
+                              gap: '10px',
                               minWidth: 0,
-                              overflowWrap: 'anywhere',
-                              wordBreak: 'break-word',
                             }}
                           >
-                            {relatorio.numero}
-                          </h3>
+                            <h3
+                              style={{
+                                margin: 0,
+                                color: '#ffffff',
+                                fontSize: 'clamp(15px, 4.2vw, 20px)',
+                                fontWeight: 'bold',
+                                letterSpacing: '0.06em',
+                                lineHeight: 1.25,
+                                minWidth: 0,
+                                flex: '1 1 auto',
+                                overflowWrap: 'anywhere',
+                                wordBreak: 'break-word',
+                              }}
+                            >
+                              {relatorio.numero}
+                            </h3>
+                            <span
+                              style={{
+                                backgroundColor: 'rgba(0, 255, 0, 0.08)',
+                                color: '#ffffff',
+                                padding: '4px 10px',
+                                borderRadius: '5px',
+                                fontSize: '12px',
+                                fontWeight: 'bold',
+                                border: '1px solid rgba(0, 255, 0, 0.52)',
+                                flexShrink: 0,
+                                whiteSpace: 'nowrap',
+                                alignSelf: 'flex-start',
+                              }}
+                            >
+                              {dataFormatada}
+                            </span>
+                          </div>
                         </div>
 
                         {/* Informações Principais */}
