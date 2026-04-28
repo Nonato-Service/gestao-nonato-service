@@ -4965,6 +4965,53 @@ a:focus-visible {
   hyphens: none;
 }
 
+/* Lista de relatórios — identificação e campos alinhados */
+.relatorio-servico-report-card__ident {
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(0, 255, 0, 0.24);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.relatorio-servico-report-card__ident-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+.relatorio-servico-report-card__field-label {
+  display: block;
+  font-size: 10px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+.relatorio-servico-report-card__field-value {
+  margin: 0;
+  font-size: 14px;
+  color: #f2f2f2;
+  font-weight: 600;
+  line-height: 1.38;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+.relatorio-servico-report-card__field-value--numero {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+.relatorio-servico-report-card__detalhes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
+  margin-bottom: 15px;
+  min-width: 0;
+}
+.relatorio-servico-report-card__detalhes-row {
+  grid-column: 1 / -1;
+}
+
 /* Grelha 4 métricas no cartão: colunas com minmax(0,1fr) evita texto a empurrar fora da célula */
 .relatorio-servico-resumo-view-grid--card {
   display: grid;

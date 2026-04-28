@@ -31893,11 +31893,7 @@ onKeyPress={(e) => {
                   })
                   .map(relatorio => {
                     const totais = calcularTotais(relatorio.diasTrabalho)
-                    const dataFormatada = new Date(relatorio.data).toLocaleDateString('pt-BR', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric'
-                    })
+                    const dataFormatada = formatDiaTrabalhoCurtoPt(relatorio.data)
                     return (
                       <div 
                         key={relatorio.id} 
@@ -31981,115 +31977,79 @@ onKeyPress={(e) => {
                           )}
                         </div>
 
-                        {/* Cabeçalho do Card — cliente em linha completa (evita coluna estreita ao lado do n.º / data) */}
-                        <div style={{
-                          marginBottom: '15px',
-                          paddingBottom: '12px',
-                          borderBottom: '1px solid rgba(0, 255, 0, 0.24)',
-                          minWidth: 0,
-                        }}>
-                          <p
-                            className="relatorio-servico-report-card__cliente-nome"
-                            style={{
-                              margin: '0 0 12px 0',
-                              fontSize: 'clamp(15px, 3.5vw, 18px)',
-                              color: '#f5f5f5',
-                              fontWeight: 600,
-                              lineHeight: 1.38,
-                              letterSpacing: '0.02em',
-                              textTransform: 'none',
-                              fontVariantLigatures: 'none',
-                            }}
-                          >
-                            {(relatorio.cliente && String(relatorio.cliente).trim()) || '—'}
-                          </p>
-                          <div
-                            style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'flex-start',
-                              flexWrap: 'wrap',
-                              gap: '10px',
-                              minWidth: 0,
-                            }}
-                          >
-                            <h3
+                        {/* Identificação — data, n.º e cliente com rótulos */}
+                        <div className="relatorio-servico-report-card__ident">
+                          <div className="relatorio-servico-report-card__ident-grid">
+                            <div style={{ minWidth: 0 }}>
+                              <span className="relatorio-servico-report-card__field-label">{safeT?.data || 'Data'}</span>
+                              <p className="relatorio-servico-report-card__field-value">{dataFormatada}</p>
+                            </div>
+                            <div style={{ minWidth: 0 }}>
+                              <span className="relatorio-servico-report-card__field-label">{safeT?.numeroRelatorio || 'N.º relatório'}</span>
+                              <p className="relatorio-servico-report-card__field-value relatorio-servico-report-card__field-value--numero">{relatorio.numero || '—'}</p>
+                            </div>
+                          </div>
+                          <div style={{ minWidth: 0 }}>
+                            <span className="relatorio-servico-report-card__field-label">{safeT?.cliente || 'Cliente'}</span>
+                            <p
+                              className="relatorio-servico-report-card__cliente-nome"
                               style={{
-                                margin: 0,
-                                color: '#ffffff',
-                                fontSize: 'clamp(15px, 4.2vw, 20px)',
-                                fontWeight: 'bold',
-                                letterSpacing: '0.06em',
-                                lineHeight: 1.25,
-                                minWidth: 0,
-                                flex: '1 1 auto',
-                                overflowWrap: 'anywhere',
-                                wordBreak: 'break-word',
+                                fontSize: 'clamp(15px, 3.5vw, 18px)',
+                                color: '#f5f5f5',
+                                fontWeight: 600,
+                                lineHeight: 1.38,
+                                letterSpacing: '0.02em',
+                                textTransform: 'none',
+                                fontVariantLigatures: 'none',
                               }}
                             >
-                              {relatorio.numero}
-                            </h3>
-                            <span
-                              style={{
-                                backgroundColor: 'rgba(0, 255, 0, 0.08)',
-                                color: '#ffffff',
-                                padding: '4px 10px',
-                                borderRadius: '5px',
-                                fontSize: '12px',
-                                fontWeight: 'bold',
-                                border: '1px solid rgba(0, 255, 0, 0.52)',
-                                flexShrink: 0,
-                                whiteSpace: 'nowrap',
-                                alignSelf: 'flex-start',
-                              }}
-                            >
-                              {dataFormatada}
-                            </span>
+                              {(relatorio.cliente && String(relatorio.cliente).trim()) || '—'}
+                            </p>
                           </div>
                         </div>
 
-                        {/* Informações Principais */}
-                        <div
-                          style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                            gap: '12px',
-                            marginBottom: '15px',
-                            minWidth: 0,
-                          }}
-                        >
+                        {/* Detalhes — técnico, local, contacto, tipo e equipamento (sempre visíveis quando vazio: — ) */}
+                        <div className="relatorio-servico-report-card__detalhes">
                           <div style={{ minWidth: 0 }}>
-                            <p style={{ fontSize: '10px', color: '#999', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                              {safeT?.tecnico || 'Técnico'}
+                            <span className="relatorio-servico-report-card__field-label">{safeT?.tecnico || 'Técnico'}</span>
+                            <p className="relatorio-servico-report-card__field-value" style={{ fontWeight: 500 }}>
+                              {(relatorio.tecnico && String(relatorio.tecnico).trim()) || '—'}
                             </p>
-                            <p style={{ fontSize: '13px', color: '#fff', fontWeight: '500', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{relatorio.tecnico}</p>
                           </div>
-                          {relatorio.tipoServico && (
-                            <div style={{ minWidth: 0 }}>
-                              <p style={{ fontSize: '10px', color: '#999', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                {safeT?.tipoServico || 'Tipo de Serviço'}
-                              </p>
-                              <p style={{ fontSize: '13px', color: '#fff', fontWeight: '500', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{relatorio.tipoServico}</p>
-                            </div>
-                          )}
-                          {relatorio.maquinaModelo && (
-                            <div style={{ gridColumn: '1 / -1', minWidth: 0 }}>
-                              <p style={{ fontSize: '10px', color: '#999', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                {safeT?.maquinaModelo || 'Máquina/Modelo'}
-                              </p>
-                              <p style={{ fontSize: '13px', color: '#fff', fontWeight: '500', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
-                                {relatorio.equipamentoOrigem === 'armazem' && relatorio.equipamentoId && (
-                                  <span style={{ color: '#66b3ff' }}>ID {relatorio.equipamentoId} · </span>
-                                )}
-                                {relatorio.maquinaModelo}
-                                {relatorio.numeroMaquina && ` · S/N ${relatorio.numeroMaquina}`}
-                              </p>
-                            </div>
-                          )}
+                          <div style={{ minWidth: 0 }}>
+                            <span className="relatorio-servico-report-card__field-label">{safeT?.cidade || 'Cidade'}</span>
+                            <p className="relatorio-servico-report-card__field-value" style={{ fontWeight: 500 }}>
+                              {(relatorio.cidade && String(relatorio.cidade).trim()) || '—'}
+                            </p>
+                          </div>
+                          <div style={{ minWidth: 0 }}>
+                            <span className="relatorio-servico-report-card__field-label">{safeT?.telefone || 'Telefone'}</span>
+                            <p className="relatorio-servico-report-card__field-value" style={{ fontWeight: 500 }}>
+                              {(relatorio.telefone && String(relatorio.telefone).trim()) || '—'}
+                            </p>
+                          </div>
+                          <div style={{ minWidth: 0 }}>
+                            <span className="relatorio-servico-report-card__field-label">{safeT?.tipoServico || 'Tipo de Serviço'}</span>
+                            <p className="relatorio-servico-report-card__field-value" style={{ fontWeight: 500 }}>
+                              {(relatorio.tipoServico && String(relatorio.tipoServico).trim()) || '—'}
+                            </p>
+                          </div>
+                          <div className="relatorio-servico-report-card__detalhes-row" style={{ minWidth: 0 }}>
+                            <span className="relatorio-servico-report-card__field-label">{safeT?.maquinaModelo || 'Máquina/Modelo'}</span>
+                            <p className="relatorio-servico-report-card__field-value" style={{ fontWeight: 500 }}>
+                              {relatorio.equipamentoOrigem === 'armazem' && relatorio.equipamentoId && (
+                                <span style={{ color: '#66b3ff' }}>ID {relatorio.equipamentoId} · </span>
+                              )}
+                              {(relatorio.maquinaModelo && String(relatorio.maquinaModelo).trim()) || '—'}
+                              {relatorio.numeroMaquina && String(relatorio.numeroMaquina).trim()
+                                ? ` · S/N ${String(relatorio.numeroMaquina).trim()}`
+                                : ''}
+                            </p>
+                          </div>
                         </div>
 
                         {/* Resumo de Trabalho — mesmos estados laranja/azul/verde que no formulário (cobrar / fechamento) */}
-                        {relatorio.diasTrabalho.length > 0 && (() => {
+                        {relatorio.diasTrabalho.length > 0 ? (() => {
                           const ridCard = relatorio.id
                           const faseCard = getResumoCobrancaVisualClass(ridCard)
                           const wrapCard =
@@ -32158,7 +32118,25 @@ onKeyPress={(e) => {
                             </div>
                           </div>
                           )
-                        })()}
+                        })() : (
+                          <div
+                            style={{
+                              marginBottom: '15px',
+                              padding: '12px 14px',
+                              borderRadius: '10px',
+                              border: '1px dashed rgba(0, 255, 0, 0.28)',
+                              background: 'rgba(0, 0, 0, 0.2)',
+                              minWidth: 0,
+                            }}
+                          >
+                            <span className="relatorio-servico-report-card__field-label" style={{ marginBottom: '6px' }}>
+                              {safeT?.diasTrabalho || 'Dias de trabalho'}
+                            </span>
+                            <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255, 255, 255, 0.72)', lineHeight: 1.45 }}>
+                              {safeT?.nenhumDiaTrabalhoAdicionado || 'Nenhum dia de trabalho adicionado ainda'}
+                            </p>
+                          </div>
+                        )}
 
                         {/* Peças Substituídas */}
                         {relatorio.pecasSubstituicao.length > 0 && (
