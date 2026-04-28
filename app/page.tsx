@@ -5054,7 +5054,8 @@ export default function Dashboard() {
   const [faturaFornecedorForm, setFaturaFornecedorForm] = useState({
     numeroFatura: '',
     mes: new Date().toISOString().slice(0, 7), // YYYY-MM
-    valor: 0,
+    /** Texto do valor em formato PT (ex.: 350,00); evita input type=number com zero inicial. */
+    valorText: '',
     clienteId: '',
     clienteNome: '',
     dataVencimento: '',
@@ -12254,13 +12255,40 @@ export default function Dashboard() {
     return 'pendente'
   }
 
+  /** Converte texto com formato PT (350,50 ou 350) em número. */
+  function parseMoedaPtFaturaFornecedor(s: string): number {
+    const t = String(s ?? '')
+      .trim()
+      .replace(/\s/g, '')
+    if (!t) return NaN
+    const normalized = t.replace(/\./g, '').replace(',', '.')
+    const n = parseFloat(normalized)
+    return n
+  }
+
+  /** Durante a digitação: só dígitos e uma vírgula; remove zeros à esquerda na parte inteira. */
+  function sanitizeFaturaFornecedorValorDigitando(raw: string): string {
+    let s = String(raw ?? '').replace(/[^\d,]/g, '')
+    const firstComma = s.indexOf(',')
+    if (firstComma !== -1) {
+      s = s.slice(0, firstComma + 1) + s.slice(firstComma + 1).replace(/,/g, '')
+    }
+    const parts = s.split(',')
+    let intPart = parts[0] ?? ''
+    const frac = (parts[1] ?? '').slice(0, 2)
+    intPart = intPart.replace(/^0+(?=\d)/, '')
+    if (intPart === '' && frac !== '') intPart = '0'
+    if (parts.length > 1) return intPart + ',' + frac
+    return intPart
+  }
+
   const handleAddFatura = (fornecedor: Fornecedor) => {
     setSelectedFornecedorForFatura(fornecedor)
     setEditingFaturaFornecedor(null)
     setFaturaFornecedorForm({
       numeroFatura: '',
       mes: new Date().toISOString().slice(0, 7), // YYYY-MM
-      valor: 0,
+      valorText: '',
       clienteId: '',
       clienteNome: '',
       dataVencimento: '',
@@ -12277,7 +12305,9 @@ export default function Dashboard() {
     setFaturaFornecedorForm({
       numeroFatura: fatura.numeroFatura,
       mes: fatura.mes,
-      valor: fatura.valor,
+      valorText: Number.isFinite(fatura.valor)
+        ? fatura.valor.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : '',
       clienteId: fatura.clienteId,
       clienteNome: fatura.clienteNome,
       dataVencimento: fatura.dataVencimento || '',
@@ -12289,18 +12319,24 @@ export default function Dashboard() {
   }
 
   const handleSaveFaturaFornecedor = () => {
-    if (!selectedFornecedorForFatura || !faturaFornecedorForm.numeroFatura || !faturaFornecedorForm.mes || !faturaFornecedorForm.valor || !faturaFornecedorForm.clienteId) {
+    const valor = parseMoedaPtFaturaFornecedor(faturaFornecedorForm.valorText)
+    if (
+      !selectedFornecedorForFatura ||
+      !faturaFornecedorForm.numeroFatura ||
+      !faturaFornecedorForm.mes ||
+      !faturaFornecedorForm.clienteId ||
+      !String(faturaFornecedorForm.valorText).trim() ||
+      !Number.isFinite(valor)
+    ) {
       alert(t.fillAllFields || 'Preencha todos os campos obrigatórios!')
+      return
+    }
+    if (valor <= 0) {
+      alert(t.invalidValue || 'Valor inválido!')
       return
     }
 
     createAutoBackupBeforeOperation()
-
-    const valor = faturaFornecedorForm.valor
-    if (isNaN(valor) || valor <= 0) {
-      alert(t.invalidValue || 'Valor inválido!')
-      return
-    }
 
     const origem = faturaFornecedorForm.entidadeOrigem
     let nomeEntidade = ''
@@ -12368,7 +12404,10 @@ export default function Dashboard() {
       setFaturaFornecedorForm({
         numeroFatura: savedFaturaFornecedor.numeroFatura,
         mes: savedFaturaFornecedor.mes,
-        valor: savedFaturaFornecedor.valor,
+        valorText: savedFaturaFornecedor.valor.toLocaleString('pt-PT', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }),
         clienteId: savedFaturaFornecedor.clienteId,
         clienteNome: savedFaturaFornecedor.clienteNome,
         dataVencimento: savedFaturaFornecedor.dataVencimento || '',
@@ -69274,7 +69313,50 @@ A1;Peça exemplo;10`}
                 <h4>{editingFaturaFornecedor ? (safeT?.editarFatura || 'Editar Fatura') : (safeT?.adicionarFatura || 'Adicionar Fatura')}</h4>
                 <input type="text" placeholder={safeT?.numeroFatura || 'Número da Fatura'} value={faturaFornecedorForm.numeroFatura} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, numeroFatura: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
                 <input type="month" placeholder={safeT?.mes || 'Mês'} value={faturaFornecedorForm.mes} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, mes: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
-                <input type="number" placeholder={safeT?.valorFatura || 'Valor'} value={faturaFornecedorForm.valor} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, valor: parseFloat(e.target.value) || 0 })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.92)' }}>
+                    {(safeT as any)?.faturaFornecedorValorTitulo || 'Valor total da fatura (€)'}
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    autoComplete="off"
+                    placeholder={(safeT as any)?.faturaFornecedorValorPlaceholder || '350,00'}
+                    value={faturaFornecedorForm.valorText}
+                    onChange={(e) =>
+                      setFaturaFornecedorForm({
+                        ...faturaFornecedorForm,
+                        valorText: sanitizeFaturaFornecedorValorDigitando(e.target.value),
+                      })
+                    }
+                    onBlur={() => {
+                      setFaturaFornecedorForm((f) => {
+                        const v = String(f.valorText).trim()
+                        if (!v) return f
+                        const n = parseMoedaPtFaturaFornecedor(v)
+                        if (!Number.isFinite(n) || n < 0) return f
+                        return {
+                          ...f,
+                          valorText: n.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                        }
+                      })
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '10px 10px',
+                      backgroundColor: '#141414',
+                      color: '#fff',
+                      border: '1px solid rgba(0, 255, 0, 0.35)',
+                      borderRadius: '6px',
+                      fontSize: '15px',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <p style={{ margin: '8px 0 0', fontSize: '11px', lineHeight: 1.45, color: 'rgba(255,255,255,0.55)' }}>
+                    {(safeT as any)?.faturaFornecedorValorAjuda ||
+                      'Introduza o valor em euros; use vírgula para cêntimos. Ex.: 350 ou 350,5 — ao sair do campo, o valor fica com duas casas decimais (350,00). Zeros à esquerda na parte inteira são removidos (0350 → 350,00).'}
+                  </p>
+                </div>
                 <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: '0 0 8px 0', lineHeight: 1.45 }}>
                   {(safeT as any)?.faturaFornecedorHint || 'Por defeito: só fornecedores. Se a pessoa já está em Clientes, escolha «Cliente» para reutilizar o cadastro.'}
                 </p>
@@ -69410,7 +69492,12 @@ A1;Peça exemplo;10`}
                         <span style={{ color: '#e5e5e5', fontSize: '13px', fontWeight: 700 }}>{labelFf}</span>
                       </div>
                     </div>
-                    <p style={{ fontSize: '14px', opacity: 0.8 }}>{safeT?.valorFatura || 'Valor'}: {fatura.valor}€</p>
+                    <p style={{ fontSize: '14px', opacity: 0.8 }}>
+                      {safeT?.valorFatura || 'Valor'}: €
+                      {Number.isFinite(fatura.valor)
+                        ? fatura.valor.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        : '—'}
+                    </p>
                     <p style={{ fontSize: '14px', opacity: 0.8 }}>
                       {(safeT as any)?.faturaFornecedorLigadoA || 'Ligado a'}: {fatura.clienteNome}
                       <span style={{ opacity: 0.75, fontSize: '12px', marginLeft: '6px' }}>
@@ -69806,7 +69893,10 @@ A1;Peça exemplo;10`}
                                       <div>
                                         <strong style={{ color: statusColor }}>{fatura.numeroFatura}</strong>
                                         <span style={{ fontSize: '12px', marginLeft: '10px', opacity: 0.7 }}>
-                                          {formatarMes(fatura.mes)} - {fatura.valor}€
+                                          {formatarMes(fatura.mes)} — €
+                                          {Number.isFinite(fatura.valor)
+                                            ? fatura.valor.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                            : '—'}
                                         </span>
                                         {fatura.dataVencimento && (
                                           <span style={{ fontSize: '11px', marginLeft: '10px', opacity: 0.6 }}>
