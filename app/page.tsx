@@ -30292,7 +30292,7 @@ onKeyPress={(e) => {
                       </p>
                     </div>
                     
-                    <div>
+                    <div style={{ gridColumn: '1 / -1' }}>
                       <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.selecioneCliente || 'Cliente'}</label>
                       <select
                         value={relatorioServicoForm.clienteId || ''}
@@ -32035,16 +32035,19 @@ onKeyPress={(e) => {
                           <p
                             style={{
                               margin: 0,
-                              fontSize: '14px',
-                              color: '#ffffff',
-                              fontWeight: '500',
-                              overflowWrap: 'anywhere',
-                              wordBreak: 'break-word',
-                              lineHeight: 1.35,
+                              fontSize: 'clamp(15px, 3.5vw, 18px)',
+                              color: '#f5f5f5',
+                              fontWeight: 600,
+                              overflowWrap: 'break-word',
+                              wordBreak: 'normal',
+                              lineHeight: 1.38,
                               minWidth: 0,
+                              letterSpacing: '0.02em',
+                              textTransform: 'none',
+                              fontVariantLigatures: 'none',
                             }}
                           >
-                            {relatorio.cliente}
+                            {(relatorio.cliente && String(relatorio.cliente).trim()) || '—'}
                           </p>
                         </div>
 
@@ -70181,22 +70184,47 @@ A1;Peça exemplo;10`}
               <h3 style={{ color: '#00ff00', marginBottom: '15px', fontSize: '16px' }}>
                 {safeT?.dadosClienteEquipamento || 'Dados do Cliente e Equipamento'}
               </h3>
+              <div
+                style={{
+                  marginBottom: '18px',
+                  paddingBottom: '16px',
+                  borderBottom: '1px solid rgba(0, 255, 0, 0.22)',
+                  minWidth: 0,
+                }}
+              >
+                <p style={{ fontSize: '11px', color: '#888', margin: '0 0 8px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                  {safeT?.cliente || 'Cliente'}
+                </p>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 'clamp(17px, 3.2vw, 22px)',
+                    fontWeight: 600,
+                    color: '#f2f2f2',
+                    lineHeight: 1.35,
+                    letterSpacing: '0.02em',
+                    textTransform: 'none',
+                    fontVariantLigatures: 'none',
+                    overflowWrap: 'break-word',
+                    wordBreak: 'normal',
+                    hyphens: 'none',
+                  }}
+                >
+                  {(viewingRelatorioServico.cliente && String(viewingRelatorioServico.cliente).trim()) || '—'}
+                </p>
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '15px' }}>
                 <div style={{ minWidth: 0 }}>
                   <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>{safeT?.tecnico || 'Técnico'}</p>
-                  <p style={{ fontSize: '14px', fontWeight: 'bold', overflowWrap: 'anywhere', wordBreak: 'break-word', lineHeight: 1.35 }}>{viewingRelatorioServico.tecnico || '-'}</p>
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>{safeT?.cliente || 'Cliente'}</p>
-                  <p style={{ fontSize: '15px', fontWeight: 'bold', overflowWrap: 'anywhere', wordBreak: 'break-word', lineHeight: 1.4, textTransform: 'none' }}>{viewingRelatorioServico.cliente || '-'}</p>
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>{safeT?.cidade || 'Cidade'}</p>
-                  <p style={{ fontSize: '14px', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{viewingRelatorioServico.cidade || '-'}</p>
+                  <p style={{ fontSize: '14px', fontWeight: 'bold', overflowWrap: 'break-word', wordBreak: 'normal', lineHeight: 1.35 }}>{viewingRelatorioServico.tecnico || '-'}</p>
                 </div>
                 <div style={{ minWidth: 0 }}>
                   <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>{safeT?.telefone || 'Telefone'}</p>
-                  <p style={{ fontSize: '14px', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{viewingRelatorioServico.telefone || '-'}</p>
+                  <p style={{ fontSize: '14px', overflowWrap: 'break-word', wordBreak: 'normal' }}>{viewingRelatorioServico.telefone || '-'}</p>
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>{safeT?.cidade || 'Cidade'}</p>
+                  <p style={{ fontSize: '14px', overflowWrap: 'break-word', wordBreak: 'normal' }}>{viewingRelatorioServico.cidade || '-'}</p>
                 </div>
                 <div style={{ minWidth: 0 }}>
                   <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>{safeT?.data || 'Data'}</p>
