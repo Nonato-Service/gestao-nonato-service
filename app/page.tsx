@@ -31981,40 +31981,14 @@ onKeyPress={(e) => {
                           )}
                         </div>
 
-                        {/* Cabeçalho do Card */}
+                        {/* Cabeçalho do Card — data no topo; cliente linha completa; n.º por baixo */}
                         <div style={{
                           marginBottom: '15px',
                           paddingBottom: '12px',
                           borderBottom: '1px solid rgba(0, 255, 0, 0.24)',
                           minWidth: 0,
                         }}>
-                          <div
-                            style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'flex-start',
-                              flexWrap: 'wrap',
-                              gap: '10px',
-                              marginBottom: '10px',
-                              minWidth: 0,
-                            }}
-                          >
-                            <h3
-                              style={{
-                                margin: 0,
-                                color: '#ffffff',
-                                fontSize: 'clamp(15px, 4.2vw, 20px)',
-                                fontWeight: 'bold',
-                                letterSpacing: '0.06em',
-                                lineHeight: 1.25,
-                                minWidth: 0,
-                                flex: '1 1 12rem',
-                                overflowWrap: 'anywhere',
-                                wordBreak: 'break-word',
-                              }}
-                            >
-                              {relatorio.numero}
-                            </h3>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px', minWidth: 0 }}>
                             <span
                               style={{
                                 backgroundColor: 'rgba(0, 255, 0, 0.08)',
@@ -32026,22 +32000,19 @@ onKeyPress={(e) => {
                                 border: '1px solid rgba(0, 255, 0, 0.52)',
                                 flexShrink: 0,
                                 whiteSpace: 'nowrap',
-                                alignSelf: 'flex-start',
                               }}
                             >
                               {dataFormatada}
                             </span>
                           </div>
                           <p
+                            className="relatorio-servico-report-card__cliente-nome"
                             style={{
-                              margin: 0,
+                              margin: '0 0 12px 0',
                               fontSize: 'clamp(15px, 3.5vw, 18px)',
                               color: '#f5f5f5',
                               fontWeight: 600,
-                              overflowWrap: 'break-word',
-                              wordBreak: 'normal',
                               lineHeight: 1.38,
-                              minWidth: 0,
                               letterSpacing: '0.02em',
                               textTransform: 'none',
                               fontVariantLigatures: 'none',
@@ -32049,6 +32020,21 @@ onKeyPress={(e) => {
                           >
                             {(relatorio.cliente && String(relatorio.cliente).trim()) || '—'}
                           </p>
+                          <h3
+                            style={{
+                              margin: 0,
+                              color: '#ffffff',
+                              fontSize: 'clamp(15px, 4.2vw, 20px)',
+                              fontWeight: 'bold',
+                              letterSpacing: '0.06em',
+                              lineHeight: 1.25,
+                              minWidth: 0,
+                              overflowWrap: 'anywhere',
+                              wordBreak: 'break-word',
+                            }}
+                          >
+                            {relatorio.numero}
+                          </h3>
                         </div>
 
                         {/* Informações Principais */}

@@ -4954,6 +4954,17 @@ a:focus-visible {
   max-width: 100%;
 }
 
+/* Nome do cliente: largura total do cartão; sem quebra no meio de palavras (ex.: IVO RODRIGUES) */
+.relatorio-servico-report-card__cliente-nome {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  hyphens: none;
+}
+
 /* Grelha 4 métricas no cartão: colunas com minmax(0,1fr) evita texto a empurrar fora da célula */
 .relatorio-servico-resumo-view-grid--card {
   display: grid;
