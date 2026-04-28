@@ -69471,36 +69471,54 @@ A1;Peça exemplo;10`}
                   return (
                   <div
                     key={fatura.id}
+                    className="fatura-fornecedor-lista-card"
                     style={{
                       backgroundColor: '#141414',
-                      padding: '15px',
-                      borderRadius: '8px',
+                      padding: '18px 16px',
+                      borderRadius: '10px',
                       border: borderFf,
-                      marginBottom: '10px',
-                      boxShadow: shadowFf
+                      marginBottom: '12px',
+                      boxShadow: shadowFf,
+                      minWidth: 0,
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap', marginBottom: '8px' }}>
-                      <p style={{ margin: 0 }}>
-                        <strong>{fatura.numeroFatura}</strong> - {formatarMes(fatura.mes)}
-                      </p>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} title={labelFf}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                      <div style={{ minWidth: 0, flex: '1 1 12rem' }}>
+                        <p style={{ margin: 0, lineHeight: 1.35 }}>
+                          <strong style={{ fontSize: '17px', color: '#ffffff', fontWeight: 700 }}>{fatura.numeroFatura}</strong>
+                          <span style={{ fontSize: '15px', color: 'rgba(255,255,255,0.82)', marginLeft: '8px' }}>· {formatarMes(fatura.mes)}</span>
+                        </p>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }} title={labelFf}>
                         <span
                           className={`ns-fatura-sphere ${pulseFf}`}
                           style={{ color: corFf, backgroundColor: corFf, boxShadow: `0 0 10px ${corFf}` }}
                         />
-                        <span style={{ color: '#e5e5e5', fontSize: '13px', fontWeight: 700 }}>{labelFf}</span>
+                        <span style={{ color: '#e8e8e8', fontSize: '15px', fontWeight: 700 }}>{labelFf}</span>
                       </div>
                     </div>
-                    <p style={{ fontSize: '14px', opacity: 0.8 }}>
-                      {safeT?.valorFatura || 'Valor'}: €
-                      {Number.isFinite(fatura.valor)
-                        ? fatura.valor.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                        : '—'}
-                    </p>
-                    <p style={{ fontSize: '14px', opacity: 0.8 }}>
-                      {(safeT as any)?.faturaFornecedorLigadoA || 'Ligado a'}: {fatura.clienteNome}
-                      <span style={{ opacity: 0.75, fontSize: '12px', marginLeft: '6px' }}>
+                    <div style={{ marginBottom: '12px', padding: '12px 14px', borderRadius: '8px', backgroundColor: 'rgba(0, 40, 20, 0.45)', border: '1px solid rgba(0, 255, 100, 0.22)' }}>
+                      <span style={{ display: 'block', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.07em', color: 'rgba(255,255,255,0.55)', marginBottom: '6px' }}>
+                        {safeT?.valorFatura || 'Valor da fatura'}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 'clamp(1.25rem, 4vw, 1.65rem)',
+                          fontWeight: 700,
+                          color: '#f0fff4',
+                          fontVariantNumeric: 'tabular-nums',
+                          letterSpacing: '0.02em',
+                        }}
+                      >
+                        €{' '}
+                        {Number.isFinite(fatura.valor)
+                          ? fatura.valor.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                          : '—'}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '15px', lineHeight: 1.45, color: 'rgba(255,255,255,0.88)', margin: '0 0 12px 0' }}>
+                      {(safeT as any)?.faturaFornecedorLigadoA || 'Ligado a'}: <strong style={{ fontWeight: 600 }}>{fatura.clienteNome}</strong>
+                      <span style={{ opacity: 0.78, fontSize: '13px', marginLeft: '8px' }}>
                         (
                         {inferFaturaFornecedorEntidadeOrigem(fatura) === 'fornecedor'
                           ? ((safeT as any)?.faturaFornecedorTagFornecedor || 'cadastro fornecedor')
@@ -69508,9 +69526,9 @@ A1;Peça exemplo;10`}
                         )
                       </span>
                     </p>
-                    <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
-                      <button className="btn-primary" onClick={() => handleEditFatura(selectedFornecedorForFatura, fatura)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>{safeT?.edit || 'Editar'}</button>
-                      <button className="btn-danger" onClick={() => handleDeleteFatura(selectedFornecedorForFatura.id, fatura.id)} style={{ flex: 1, padding: '5px', fontSize: '12px' }}>{safeT?.delete || 'Excluir'}</button>
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                      <button className="btn-primary" onClick={() => handleEditFatura(selectedFornecedorForFatura, fatura)} style={{ flex: 1, padding: '10px 8px', fontSize: '13px', fontWeight: 700 }}>{safeT?.edit || 'Editar'}</button>
+                      <button className="btn-danger" onClick={() => handleDeleteFatura(selectedFornecedorForFatura.id, fatura.id)} style={{ flex: 1, padding: '10px 8px', fontSize: '13px', fontWeight: 700 }}>{safeT?.delete || 'Excluir'}</button>
                     </div>
                   </div>
                   )
@@ -69883,33 +69901,42 @@ A1;Peça exemplo;10`}
 
                                 return (
                                   <div key={fatura.id} style={{ 
-                                    padding: '10px', 
-                                    marginBottom: '8px', 
+                                    padding: '14px 14px', 
+                                    marginBottom: '10px', 
                                     backgroundColor: '#141414', 
-                                    borderRadius: '4px',
-                                    borderLeft: `4px solid ${statusColor}`
+                                    borderRadius: '8px',
+                                    borderLeft: `4px solid ${statusColor}`,
+                                    minWidth: 0,
                                   }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                                      <div>
-                                        <strong style={{ color: statusColor }}>{fatura.numeroFatura}</strong>
-                                        <span style={{ fontSize: '12px', marginLeft: '10px', opacity: 0.7 }}>
-                                          {formatarMes(fatura.mes)} — €
-                                          {Number.isFinite(fatura.valor)
-                                            ? fatura.valor.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                                            : '—'}
-                                        </span>
-                                        {fatura.dataVencimento && (
-                                          <span style={{ fontSize: '11px', marginLeft: '10px', opacity: 0.6 }}>
-                                            Venc: {new Date(fatura.dataVencimento).toLocaleDateString('pt-BR')}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
+                                      <div style={{ minWidth: 0, flex: '1 1 14rem' }}>
+                                        <div style={{ marginBottom: '8px' }}>
+                                          <strong style={{ color: statusColor, fontSize: '16px' }}>{fatura.numeroFatura}</strong>
+                                          <span style={{ fontSize: '14px', marginLeft: '10px', color: 'rgba(255,255,255,0.75)' }}>{formatarMes(fatura.mes)}</span>
+                                        </div>
+                                        <div style={{ padding: '8px 10px', borderRadius: '6px', backgroundColor: 'rgba(0, 40, 20, 0.4)', border: '1px solid rgba(0, 255, 100, 0.18)', display: 'inline-block', maxWidth: '100%' }}>
+                                          <span style={{ display: 'block', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}>
+                                            {safeT?.valorFatura || 'Valor'}
                                           </span>
+                                          <span style={{ fontSize: 'clamp(1.15rem, 3.2vw, 1.45rem)', fontWeight: 700, color: '#f0fff4', fontVariantNumeric: 'tabular-nums' }}>
+                                            €{' '}
+                                            {Number.isFinite(fatura.valor)
+                                              ? fatura.valor.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                              : '—'}
+                                          </span>
+                                        </div>
+                                        {fatura.dataVencimento && (
+                                          <div style={{ fontSize: '13px', marginTop: '8px', color: 'rgba(255,255,255,0.65)' }}>
+                                            {safeT?.vencimento || 'Venc.'}: {new Date(fatura.dataVencimento).toLocaleDateString('pt-BR')}
+                                          </div>
                                         )}
                                       </div>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, flexWrap: 'wrap' }}>
                                         <span
                                           className={`ns-fatura-sphere ${pulseGeral}`}
                                           style={{ color: corGeral, backgroundColor: corGeral, boxShadow: `0 0 10px ${corGeral}` }}
                                         />
-                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#ddd' }}>{labelGeral}</span>
+                                        <span style={{ fontSize: '14px', fontWeight: 700, color: '#e5e5e5' }}>{labelGeral}</span>
                                         <button 
                                           className="btn-primary" 
                                           onClick={() => {
@@ -69917,9 +69944,9 @@ A1;Peça exemplo;10`}
                                             handleEditFatura(fornecedor, fatura)
                                             setShowFaturasGeralModal(false)
                                           }}
-                                          style={{ padding: '5px 10px', fontSize: '11px' }}
+                                          style={{ padding: '8px 12px', fontSize: '13px', fontWeight: 600 }}
                                         >
-                                          Editar
+                                          {safeT?.edit || 'Editar'}
                                         </button>
                                       </div>
                                     </div>
