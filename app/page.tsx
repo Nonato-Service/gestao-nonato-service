@@ -863,6 +863,31 @@ type DiaTrabalho = {
   descricaoTrabalho: string
 }
 
+/** Normaliza a data do dia para YYYY-MM-DD (alinhado ao campo do formulário) para ordenação. */
+function diaTrabalhoDataChaveOrdenacao(data: string | undefined): string {
+  if (!data) return ''
+  const s = String(data).trim()
+  if (!s) return ''
+  if (s.includes('T') && s.length >= 10) return s.slice(0, 10)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+  const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+  if (m) return `${m[3]}-${m[2]}-${m[1]}`
+  const d = new Date(s)
+  if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10)
+  return s
+}
+
+/** Ordena dias de trabalho por data crescente (ex. 26 → 27 → 28), mesmo que tenham sido introduzidos fora de ordem. */
+function sortDiasTrabalhoCronologicamente(dias: DiaTrabalho[]): DiaTrabalho[] {
+  return [...dias].sort((a, b) => {
+    const ka = diaTrabalhoDataChaveOrdenacao(a.data)
+    const kb = diaTrabalhoDataChaveOrdenacao(b.data)
+    const c = ka.localeCompare(kb)
+    if (c !== 0) return c
+    return String(a.id ?? '').localeCompare(String(b.id ?? ''))
+  })
+}
+
 /** KM no formulário: vazio se zero; valor canónico sem zeros à esquerda (ex. dados antigos «095»). */
 function kmStringForNumberField(raw: string | undefined | null): string {
   if (raw == null) return ''
@@ -13820,7 +13845,9 @@ export default function Dashboard() {
     setRelatorioServicoForm({
       ...relatorio,
       equipamentoOrigem: relatorio.equipamentoOrigem === 'armazem' ? 'armazem' : 'cliente',
-      diasTrabalho: relatorio.diasTrabalho ? [...relatorio.diasTrabalho] : [],
+      diasTrabalho: sortDiasTrabalhoCronologicamente(
+        relatorio.diasTrabalho ? [...relatorio.diasTrabalho] : []
+      ),
       pecasSubstituicao: relatorio.pecasSubstituicao ? [...relatorio.pecasSubstituicao] : [],
     })
     setShowRelatorioServicoForm(true)
@@ -18423,9 +18450,11 @@ export default function Dashboard() {
       return
     }
 
-    // Recalcular todos os dias antes de salvar
-    const diasRecalculados = relatorioServicoForm.diasTrabalho.map(dia => atualizarCalculosDia(dia))
-    
+    // Recalcular todos os dias antes de salvar e ordenar por data (ordem cronológica no PDF e na lista)
+    const diasRecalculados = sortDiasTrabalhoCronologicamente(
+      relatorioServicoForm.diasTrabalho.map((dia) => atualizarCalculosDia(dia))
+    )
+
     // Calcular totais automaticamente
     const totais = calcularTotais(diasRecalculados)
 
@@ -18555,9 +18584,11 @@ export default function Dashboard() {
       return
     }
 
-    // Recalcular todos os dias antes de salvar
-    const diasRecalculados = relatorioServicoForm.diasTrabalho.map(dia => atualizarCalculosDia(dia))
-    
+    // Recalcular todos os dias antes de salvar e ordenar por data crescente
+    const diasRecalculados = sortDiasTrabalhoCronologicamente(
+      relatorioServicoForm.diasTrabalho.map((dia) => atualizarCalculosDia(dia))
+    )
+
     // Calcular totais automaticamente
     const totais = calcularTotais(diasRecalculados)
 
@@ -18722,7 +18753,9 @@ export default function Dashboard() {
       alert('Selecione o equipamento no armazém (gestão industrial) ou mude a origem para “Cliente”.')
       return
     }
-    const diasRecalculados = relatorioServicoForm.diasTrabalho.map(dia => atualizarCalculosDia(dia))
+    const diasRecalculados = sortDiasTrabalhoCronologicamente(
+      relatorioServicoForm.diasTrabalho.map((dia) => atualizarCalculosDia(dia))
+    )
     const totais = calcularTotais(diasRecalculados)
     const relatorioToSave: RelatorioServico = {
       ...relatorioServicoForm,
@@ -19002,12 +19035,18 @@ export default function Dashboard() {
     if (editingDiaTrabalhoIndex !== null) {
       const updatedDias = [...relatorioServicoForm.diasTrabalho]
       updatedDias[editingDiaTrabalhoIndex] = diaAtualizado
-      setRelatorioServicoForm({ ...relatorioServicoForm, diasTrabalho: updatedDias })
+      setRelatorioServicoForm({
+        ...relatorioServicoForm,
+        diasTrabalho: sortDiasTrabalhoCronologicamente(updatedDias),
+      })
       setEditingDiaTrabalhoIndex(null)
     } else {
       setRelatorioServicoForm({
         ...relatorioServicoForm,
-        diasTrabalho: [...relatorioServicoForm.diasTrabalho, diaAtualizado]
+        diasTrabalho: sortDiasTrabalhoCronologicamente([
+          ...relatorioServicoForm.diasTrabalho,
+          diaAtualizado,
+        ]),
       })
     }
 
@@ -19034,7 +19073,10 @@ export default function Dashboard() {
   const handleRemoveDiaTrabalho = (index: number) => {
     const updatedDias = [...relatorioServicoForm.diasTrabalho]
     updatedDias.splice(index, 1)
-    setRelatorioServicoForm({ ...relatorioServicoForm, diasTrabalho: updatedDias })
+    setRelatorioServicoForm({
+      ...relatorioServicoForm,
+      diasTrabalho: sortDiasTrabalhoCronologicamente(updatedDias),
+    })
     if (editingDiaTrabalhoIndex === index) {
       setEditingDiaTrabalhoIndex(null)
       setNovoDiaTrabalho({
@@ -31836,28 +31878,32 @@ onKeyPress={(e) => {
                     return (
                       <div 
                         key={relatorio.id} 
+                        className="relatorio-servico-report-card"
                         style={{ 
                           ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }),
                           position: 'relative',
-                          overflow: 'visible',
+                          overflow: 'hidden',
                           minWidth: 0,
                           maxWidth: '100%',
                           height: 'fit-content',
-                          alignSelf: 'start'
+                          alignSelf: 'start',
+                          boxSizing: 'border-box',
                         }}
                         onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)}
                         onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}
                       >
-                        {/* Indicador de Status */}
-                        <div style={{
-                          position: 'absolute',
-                          top: '10px',
-                          right: '10px',
-                          display: 'flex',
-                          gap: '4px',
-                          flexWrap: 'wrap',
-                          justifyContent: 'flex-end'
-                        }}>
+                        {/* Indicador de Status — fluxo normal (evita sobrepor número/cliente em ecrãs estreitos) */}
+                        <div
+                          className="relatorio-servico-report-card__badges"
+                          style={{
+                            display: 'flex',
+                            gap: '4px',
+                            flexWrap: 'wrap',
+                            justifyContent: 'flex-end',
+                            marginBottom: '10px',
+                            minWidth: 0,
+                          }}
+                        >
                           {relatorio.servicoConcluido && (
                             <span style={{
                               padding: '3px 8px',
@@ -31916,68 +31962,99 @@ onKeyPress={(e) => {
                         <div style={{
                           marginBottom: '15px',
                           paddingBottom: '12px',
-                          borderBottom: '1px solid rgba(0, 255, 0, 0.24)'
+                          borderBottom: '1px solid rgba(0, 255, 0, 0.24)',
+                          minWidth: 0,
                         }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                            <h3 style={{
-                              margin: 0,
-                              color: '#ffffff',
-                              fontSize: '20px',
-                              fontWeight: 'bold',
-                              letterSpacing: '1px'
-                            }}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'flex-start',
+                              flexWrap: 'wrap',
+                              gap: '10px',
+                              marginBottom: '10px',
+                              minWidth: 0,
+                            }}
+                          >
+                            <h3
+                              style={{
+                                margin: 0,
+                                color: '#ffffff',
+                                fontSize: 'clamp(15px, 4.2vw, 20px)',
+                                fontWeight: 'bold',
+                                letterSpacing: '0.06em',
+                                lineHeight: 1.25,
+                                minWidth: 0,
+                                flex: '1 1 12rem',
+                                overflowWrap: 'anywhere',
+                                wordBreak: 'break-word',
+                              }}
+                            >
                               {relatorio.numero}
                             </h3>
-                            <span style={{
-                              backgroundColor: 'rgba(0, 255, 0, 0.08)',
-                              color: '#ffffff',
-                              padding: '4px 10px',
-                              borderRadius: '5px',
-                              fontSize: '12px',
-                              fontWeight: 'bold',
-                              whiteSpace: 'nowrap',
-                              border: '1px solid rgba(0, 255, 0, 0.52)'
-                            }}>
+                            <span
+                              style={{
+                                backgroundColor: 'rgba(0, 255, 0, 0.08)',
+                                color: '#ffffff',
+                                padding: '4px 10px',
+                                borderRadius: '5px',
+                                fontSize: '12px',
+                                fontWeight: 'bold',
+                                border: '1px solid rgba(0, 255, 0, 0.52)',
+                                flexShrink: 0,
+                                whiteSpace: 'nowrap',
+                                alignSelf: 'flex-start',
+                              }}
+                            >
                               {dataFormatada}
                             </span>
                           </div>
-                          <p style={{
-                            margin: 0,
-                            fontSize: '14px',
-                            color: '#ffffff',
-                            fontWeight: '500'
-                          }}>
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: '14px',
+                              color: '#ffffff',
+                              fontWeight: '500',
+                              overflowWrap: 'anywhere',
+                              wordBreak: 'break-word',
+                              lineHeight: 1.35,
+                              minWidth: 0,
+                            }}
+                          >
                             {relatorio.cliente}
                           </p>
                         </div>
 
                         {/* Informações Principais */}
-                        <div style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(2, 1fr)',
-                          gap: '12px',
-                          marginBottom: '15px'
-                        }}>
-                          <div>
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                            gap: '12px',
+                            marginBottom: '15px',
+                            minWidth: 0,
+                          }}
+                        >
+                          <div style={{ minWidth: 0 }}>
                             <p style={{ fontSize: '10px', color: '#999', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                               {safeT?.tecnico || 'Técnico'}
                             </p>
-                            <p style={{ fontSize: '13px', color: '#fff', fontWeight: '500' }}>{relatorio.tecnico}</p>
+                            <p style={{ fontSize: '13px', color: '#fff', fontWeight: '500', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{relatorio.tecnico}</p>
                           </div>
                           {relatorio.tipoServico && (
-                            <div>
+                            <div style={{ minWidth: 0 }}>
                               <p style={{ fontSize: '10px', color: '#999', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                                 {safeT?.tipoServico || 'Tipo de Serviço'}
                               </p>
-                              <p style={{ fontSize: '13px', color: '#fff', fontWeight: '500' }}>{relatorio.tipoServico}</p>
+                              <p style={{ fontSize: '13px', color: '#fff', fontWeight: '500', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{relatorio.tipoServico}</p>
                             </div>
                           )}
                           {relatorio.maquinaModelo && (
-                            <div style={{ gridColumn: '1 / -1' }}>
+                            <div style={{ gridColumn: '1 / -1', minWidth: 0 }}>
                               <p style={{ fontSize: '10px', color: '#999', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                                 {safeT?.maquinaModelo || 'Máquina/Modelo'}
                               </p>
-                              <p style={{ fontSize: '13px', color: '#fff', fontWeight: '500' }}>
+                              <p style={{ fontSize: '13px', color: '#fff', fontWeight: '500', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                                 {relatorio.equipamentoOrigem === 'armazem' && relatorio.equipamentoId && (
                                   <span style={{ color: '#66b3ff' }}>ID {relatorio.equipamentoId} · </span>
                                 )}
@@ -32038,12 +32115,7 @@ onKeyPress={(e) => {
                             <p className="relatorio-resumo-cobranca-titulo" style={{ marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.95 }}>
                               {safeT?.resumoTrabalho || 'Resumo de Trabalho'}
                             </p>
-                            <div className="relatorio-servico-resumo-view-grid" style={{
-                              display: 'grid',
-                              gridTemplateColumns: 'repeat(4, 1fr)',
-                              gap: '8px',
-                              textAlign: 'center'
-                            }}>
+                            <div className="relatorio-servico-resumo-view-grid relatorio-servico-resumo-view-grid--card">
                               <div>
                                 <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '9px', marginBottom: '3px', opacity: 0.85 }}>{diasLbl}</p>
                                 <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '16px' }}>{relatorio.diasTrabalho.length}</p>

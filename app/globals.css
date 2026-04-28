@@ -4944,6 +4944,40 @@ a:focus-visible {
 .relatorio-servico-cards-grid {
   align-items: start;
 }
+
+/* Cartão individual na lista de relatórios: conteúdo não “passa” por cima das bordas */
+.relatorio-servico-report-card {
+  overflow: hidden;
+  min-width: 0;
+}
+.relatorio-servico-report-card__badges {
+  max-width: 100%;
+}
+
+/* Grelha 4 métricas no cartão: colunas com minmax(0,1fr) evita texto a empurrar fora da célula */
+.relatorio-servico-resumo-view-grid--card {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  text-align: center;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.relatorio-servico-resumo-view-grid--card > div {
+  min-width: 0;
+}
+.relatorio-servico-resumo-view-grid--card .relatorio-resumo-cobranca-valor,
+.relatorio-servico-resumo-view-grid--card .relatorio-resumo-cobranca-label {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+}
+@media (max-width: 420px) {
+  .relatorio-servico-resumo-view-grid--card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 @media (max-width: 480px) {
   .tab-content-wrapper.relatorio-servico-root {
     width: calc(100vw - 2px) !important;
