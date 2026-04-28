@@ -872,6 +872,13 @@ function diaTrabalhoDataChaveOrdenacao(data: string | undefined): string {
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
   const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
   if (m) return `${m[3]}-${m[2]}-${m[1]}`
+  /** DD/MM/AA como na UI (ex. 27/04/26) — evita `new Date` ambíguo e corrige a ordenação. */
+  const m2 = s.match(/^(\d{2})\/(\d{2})\/(\d{2})$/)
+  if (m2) {
+    const yy = parseInt(m2[3], 10)
+    const yyyy = Number.isFinite(yy) ? 2000 + yy : 2000
+    return `${yyyy}-${m2[2]}-${m2[1]}`
+  }
   const d = new Date(s)
   if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10)
   return s
@@ -886,6 +893,21 @@ function sortDiasTrabalhoCronologicamente(dias: DiaTrabalho[]): DiaTrabalho[] {
     if (c !== 0) return c
     return String(a.id ?? '').localeCompare(String(b.id ?? ''))
   })
+}
+
+/** Dias na ordem cronológica para listas, modal de ver e PDF (dados antigos podem estar gravados fora de ordem). */
+function diasTrabalhoRelatorioOrdenados(relatorio: { diasTrabalho?: DiaTrabalho[] }): DiaTrabalho[] {
+  return sortDiasTrabalhoCronologicamente(Array.isArray(relatorio.diasTrabalho) ? relatorio.diasTrabalho : [])
+}
+
+/** Data do dia em DD/MM/AA sem deslocar o dia por fuso (evita `Date('YYYY-MM-DD')` em UTC). */
+function formatDiaTrabalhoCurtoPt(dataRaw: string | undefined, localeTag: string = 'pt-BR'): string {
+  const key = diaTrabalhoDataChaveOrdenacao(dataRaw)
+  if (!key || !/^\d{4}-\d{2}-\d{2}$/.test(key)) return (dataRaw && String(dataRaw).trim()) || '-'
+  const [y, m, d] = key.split('-').map((x) => parseInt(x, 10))
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return '-'
+  const dt = new Date(y, m - 1, d)
+  return dt.toLocaleDateString(localeTag, { day: '2-digit', month: '2-digit', year: '2-digit' })
 }
 
 /** KM no formulário: vazio se zero; valor canónico sem zeros à esquerda (ex. dados antigos «095»). */
@@ -14342,9 +14364,9 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                ${relatorio.diasTrabalho.map((dia: DiaTrabalho) => {
+                ${diasTrabalhoRelatorioOrdenados(relatorio).map((dia: DiaTrabalho) => {
                   const diaCalc = atualizarCalculosDia(dia);
-                  const dataFormatada = dia.data ? new Date(dia.data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-';
+                  const dataFormatada = formatDiaTrabalhoCurtoPt(dia.data);
                   return `
                     <tr>
                       <td>${dataFormatada}</td>
@@ -14682,9 +14704,9 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                ${relatorio.diasTrabalho.map((dia: DiaTrabalho) => {
+                ${diasTrabalhoRelatorioOrdenados(relatorio).map((dia: DiaTrabalho) => {
                   const diaCalc = atualizarCalculosDia(dia);
-                  const dataFormatada = dia.data ? new Date(dia.data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-';
+                  const dataFormatada = formatDiaTrabalhoCurtoPt(dia.data);
                   return `
                     <tr>
                       <td>${dataFormatada}</td>
@@ -15039,9 +15061,9 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                ${relatorio.diasTrabalho.map((dia: DiaTrabalho) => {
+                ${diasTrabalhoRelatorioOrdenados(relatorio).map((dia: DiaTrabalho) => {
                   const diaCalc = atualizarCalculosDia(dia);
-                  const dataFormatada = dia.data ? new Date(dia.data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-';
+                  const dataFormatada = formatDiaTrabalhoCurtoPt(dia.data);
                   return `
                     <tr>
                       <td>${dataFormatada}</td>
@@ -15441,9 +15463,9 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                ${relatorio.diasTrabalho.map((dia: DiaTrabalho) => {
+                ${diasTrabalhoRelatorioOrdenados(relatorio).map((dia: DiaTrabalho) => {
                   const diaCalc = atualizarCalculosDia(dia);
-                  const dataFormatada = dia.data ? new Date(dia.data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-';
+                  const dataFormatada = formatDiaTrabalhoCurtoPt(dia.data);
                   return `
                     <tr>
                       <td>${dataFormatada}</td>
@@ -15817,9 +15839,9 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                ${relatorio.diasTrabalho.map((dia: DiaTrabalho) => {
+                ${diasTrabalhoRelatorioOrdenados(relatorio).map((dia: DiaTrabalho) => {
                   const diaCalc = atualizarCalculosDia(dia);
-                  const dataFormatada = dia.data ? new Date(dia.data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-';
+                  const dataFormatada = formatDiaTrabalhoCurtoPt(dia.data);
                   return `
                     <tr>
                       <td>${dataFormatada}</td>
@@ -16207,9 +16229,9 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  ${relatorio.diasTrabalho.map((dia: DiaTrabalho) => {
+                  ${diasTrabalhoRelatorioOrdenados(relatorio).map((dia: DiaTrabalho) => {
                     const diaCalc = atualizarCalculosDia(dia);
-                    const dataFormatada = dia.data ? new Date(dia.data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-';
+                    const dataFormatada = formatDiaTrabalhoCurtoPt(dia.data);
                     return `
                       <tr>
                         <td>${dataFormatada}</td>
@@ -16598,9 +16620,9 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                ${relatorio.diasTrabalho.map((dia: DiaTrabalho) => {
+                ${diasTrabalhoRelatorioOrdenados(relatorio).map((dia: DiaTrabalho) => {
                   const diaCalc = atualizarCalculosDia(dia);
-                  const dataFormatada = dia.data ? new Date(dia.data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-';
+                  const dataFormatada = formatDiaTrabalhoCurtoPt(dia.data);
                   return `
                     <tr>
                       <td>${dataFormatada}</td>
@@ -17009,9 +17031,9 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  ${relatorio.diasTrabalho.map((dia: DiaTrabalho) => {
+                  ${diasTrabalhoRelatorioOrdenados(relatorio).map((dia: DiaTrabalho) => {
                     const diaCalc = atualizarCalculosDia(dia);
-                    const dataFormatada = dia.data ? new Date(dia.data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-';
+                    const dataFormatada = formatDiaTrabalhoCurtoPt(dia.data);
                     return `
                       <tr>
                         <td>${dataFormatada}</td>
@@ -17299,19 +17321,20 @@ export default function Dashboard() {
       // Preparar tabela de viagens
       let tabelaViagens = '';
       if (relatorio.diasTrabalho && relatorio.diasTrabalho.length > 0) {
-        relatorio.diasTrabalho.forEach((dia, index) => {
-          let dataDia = '-';
-          if (dia.data) {
-            try {
-              // Tentar formatar a data corretamente
-              const dataObj = dia.data.includes('T') ? new Date(dia.data) : new Date(dia.data + 'T00:00:00');
-              if (!isNaN(dataObj.getTime())) {
-                dataDia = dataObj.toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE');
-              }
-            } catch (e) {
-              dataDia = dia.data;
-            }
-          }
+        const locFer =
+          selectedLanguage === 'pt-BR'
+            ? 'pt-BR'
+            : selectedLanguage === 'en'
+              ? 'en-US'
+              : selectedLanguage === 'es'
+                ? 'es-ES'
+                : selectedLanguage === 'fr'
+                  ? 'fr-FR'
+                  : selectedLanguage === 'it'
+                    ? 'it-IT'
+                    : 'de-DE'
+        diasTrabalhoRelatorioOrdenados(relatorio).forEach((dia, index) => {
+          const dataDia = formatDiaTrabalhoCurtoPt(dia.data, locFer)
           const idaViagem = dia.idaHora && dia.idaChegada ? `${dia.idaHora} - ${dia.idaChegada}` : (dia.idaHora || dia.idaChegada || '-');
           const horasTarefa = dia.horasInicio && dia.horasFim ? `${dia.horasInicio} - ${dia.horasFim}` : (dia.horasInicio || dia.horasFim || '-');
           const retornoViagem = dia.retornoSaida && dia.retornoChegada ? `${dia.retornoSaida} - ${dia.retornoChegada}` : (dia.retornoSaida || dia.retornoChegada || '-');
@@ -17780,9 +17803,9 @@ export default function Dashboard() {
           <th>${t.data || 'DATA'}</th><th>${t.ida || 'IDA'}</th><th>${t.horas || 'HORAS'}</th><th>${t.retorno || 'RETORNO'}</th><th>${t.km || 'KM'}</th>
         </tr></thead>
         <tbody>
-          ${relatorio.diasTrabalho.map((dia: DiaTrabalho) => {
+          ${diasTrabalhoRelatorioOrdenados(relatorio).map((dia: DiaTrabalho) => {
             const diaCalc = atualizarCalculosDia(dia);
-            const df = dia.data ? new Date(dia.data + 'T00:00:00').toLocaleDateString(localeReport, { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-';
+            const df = formatDiaTrabalhoCurtoPt(dia.data, localeReport);
             const linha = `<tr><td>${df}</td><td>${diaCalc.idaDuracao || '-'}</td><td>${diaCalc.horasDuracao || '-'}</td><td>${diaCalc.retornoDuracao || '-'}</td><td>${diaCalc.kmTotal || '0'}</td></tr>`;
             const desc = (dia.descricaoTrabalho || '').trim() !== ''
               ? `<tr><td colspan="5" style="text-align:left;padding:6px 8px;font-size:9px;vertical-align:top;background:#f5f5f5;"><strong>${t.descricaoTrabalho || 'Descrição do Trabalho'}:</strong> ${escapePdfHtml(dia.descricaoTrabalho)}</td></tr>`
@@ -31151,7 +31174,7 @@ onKeyPress={(e) => {
                           <tbody>
                             {relatorioServicoForm.diasTrabalho.map((dia, index) => {
                               const diaCalculado = atualizarCalculosDia(dia);
-                              const dataFormatada = dia.data ? new Date(dia.data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-';
+                              const dataFormatada = formatDiaTrabalhoCurtoPt(dia.data);
                               const temDescricao = dia.descricaoTrabalho && dia.descricaoTrabalho.trim() !== '';
                               return (
                                 <React.Fragment key={dia.id || `dia-${index}`}>
@@ -70143,45 +70166,45 @@ A1;Peça exemplo;10`}
       {/* Modal de Visualização Completa do Relatório de Serviço */}
       {viewingRelatorioServico && (
         <div className="modal-overlay" onClick={() => setViewingRelatorioServico(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1200px', maxHeight: '90vh', overflowY: 'auto', backgroundColor: '#141414' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid rgba(0, 255, 0, 0.3)', paddingBottom: '15px' }}>
-              <h2 style={{ color: '#00ff00', margin: 0 }}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1200px', maxHeight: '90vh', overflowY: 'auto', backgroundColor: '#141414', minWidth: 0, width: 'min(100%, 1200px)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '20px', borderBottom: '2px solid rgba(0, 255, 0, 0.3)', paddingBottom: '15px', minWidth: 0 }}>
+              <h2 style={{ color: '#00ff00', margin: 0, flex: '1 1 12rem', minWidth: 0, lineHeight: 1.25, overflowWrap: 'anywhere', wordBreak: 'break-word', fontSize: 'clamp(16px, 4vw, 22px)' }}>
                 📋 {safeT?.relatorioServico || 'Relatório de Serviço'} - {viewingRelatorioServico.numero}
               </h2>
-              <button className="btn-primary" onClick={() => setViewingRelatorioServico(null)} style={{ padding: '8px 16px' }}>
+              <button className="btn-primary" onClick={() => setViewingRelatorioServico(null)} style={{ padding: '8px 16px', flexShrink: 0 }}>
                 {safeT?.close || 'Fechar'}
               </button>
             </div>
 
             {/* Informações Principais */}
-            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', minWidth: 0 }}>
               <h3 style={{ color: '#00ff00', marginBottom: '15px', fontSize: '16px' }}>
                 {safeT?.dadosClienteEquipamento || 'Dados do Cliente e Equipamento'}
               </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
-                <div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '15px' }}>
+                <div style={{ minWidth: 0 }}>
                   <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>{safeT?.tecnico || 'Técnico'}</p>
-                  <p style={{ fontSize: '14px', fontWeight: 'bold' }}>{viewingRelatorioServico.tecnico || '-'}</p>
+                  <p style={{ fontSize: '14px', fontWeight: 'bold', overflowWrap: 'anywhere', wordBreak: 'break-word', lineHeight: 1.35 }}>{viewingRelatorioServico.tecnico || '-'}</p>
                 </div>
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>{safeT?.cliente || 'Cliente'}</p>
-                  <p style={{ fontSize: '14px', fontWeight: 'bold' }}>{viewingRelatorioServico.cliente || '-'}</p>
+                  <p style={{ fontSize: '15px', fontWeight: 'bold', overflowWrap: 'anywhere', wordBreak: 'break-word', lineHeight: 1.4, textTransform: 'none' }}>{viewingRelatorioServico.cliente || '-'}</p>
                 </div>
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>{safeT?.cidade || 'Cidade'}</p>
-                  <p style={{ fontSize: '14px' }}>{viewingRelatorioServico.cidade || '-'}</p>
+                  <p style={{ fontSize: '14px', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{viewingRelatorioServico.cidade || '-'}</p>
                 </div>
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>{safeT?.telefone || 'Telefone'}</p>
-                  <p style={{ fontSize: '14px' }}>{viewingRelatorioServico.telefone || '-'}</p>
+                  <p style={{ fontSize: '14px', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{viewingRelatorioServico.telefone || '-'}</p>
                 </div>
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>{safeT?.data || 'Data'}</p>
-                  <p style={{ fontSize: '14px' }}>{viewingRelatorioServico.data ? new Date(viewingRelatorioServico.data).toLocaleDateString('pt-BR') : '-'}</p>
+                  <p style={{ fontSize: '14px' }}>{viewingRelatorioServico.data ? formatDiaTrabalhoCurtoPt(viewingRelatorioServico.data) : '-'}</p>
                 </div>
-                <div style={{ gridColumn: viewingRelatorioServico.equipamentoOrigem === 'armazem' ? '1 / -1' : undefined }}>
+                <div style={{ gridColumn: viewingRelatorioServico.equipamentoOrigem === 'armazem' ? '1 / -1' : undefined, minWidth: 0 }}>
                   <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>{safeT?.maquinaModelo || 'Máquina/Modelo'}</p>
-                  <p style={{ fontSize: '14px', lineHeight: 1.45 }}>
+                  <p style={{ fontSize: '14px', lineHeight: 1.45, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                     {viewingRelatorioServico.equipamentoOrigem === 'armazem' && viewingRelatorioServico.equipamentoId && (
                       <span style={{ color: '#66b3ff', fontWeight: 'bold' }}>ID: {viewingRelatorioServico.equipamentoId}</span>
                     )}
@@ -70198,14 +70221,14 @@ A1;Peça exemplo;10`}
                   </p>
                 </div>
                 {viewingRelatorioServico.equipamentoOrigem !== 'armazem' && (
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>{safeT?.numeroMaquina || 'Número da Máquina'}</p>
-                  <p style={{ fontSize: '14px' }}>{viewingRelatorioServico.numeroMaquina || '-'}</p>
+                  <p style={{ fontSize: '14px', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{viewingRelatorioServico.numeroMaquina || '-'}</p>
                 </div>
                 )}
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <p style={{ fontSize: '12px', color: '#999', marginBottom: '5px' }}>{safeT?.tipoServico || 'Tipo de Serviço'}</p>
-                  <p style={{ fontSize: '14px' }}>{viewingRelatorioServico.tipoServico || '-'}</p>
+                  <p style={{ fontSize: '14px', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{viewingRelatorioServico.tipoServico || '-'}</p>
                 </div>
               </div>
             </div>
@@ -70243,13 +70266,14 @@ A1;Peça exemplo;10`}
                       </tr>
                     </thead>
                     <tbody>
-                      {viewingRelatorioServico.diasTrabalho.map((dia, index) => {
+                      {diasTrabalhoRelatorioOrdenados(viewingRelatorioServico).map((dia, index) => {
                         const diaCalculado = atualizarCalculosDia(dia)
-                        const dataFormatada = dia.data ? new Date(dia.data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-'
+                        const dataFormatada = formatDiaTrabalhoCurtoPt(dia.data)
                         const temDescricao = dia.descricaoTrabalho && dia.descricaoTrabalho.trim() !== ''
+                        const rowKey = dia.id || `dia-view-${index}`
                         return (
-                          <>
-                            <tr key={dia.id || `dia-${index}`} style={{ borderBottom: temDescricao ? 'none' : '1px solid rgba(0, 255, 0, 0.2)' }}>
+                          <React.Fragment key={rowKey}>
+                            <tr style={{ borderBottom: temDescricao ? 'none' : '1px solid rgba(0, 255, 0, 0.2)' }}>
                               <td style={{ padding: '8px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '11px', fontWeight: 'bold' }} rowSpan={temDescricao ? 2 : 1}>{dataFormatada}</td>
                               <td style={{ padding: '8px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '11px' }}>{dia.idaHora || '-'}</td>
                               <td style={{ padding: '8px', textAlign: 'center', border: '1px solid rgba(0, 255, 0, 0.2)', fontSize: '11px' }}>{dia.idaChegada || '-'}</td>
@@ -70275,7 +70299,7 @@ A1;Peça exemplo;10`}
                                 </td>
                               </tr>
                             )}
-                          </>
+                          </React.Fragment>
                         )
                       })}
                     </tbody>
@@ -70284,7 +70308,7 @@ A1;Peça exemplo;10`}
 
                 {/* Resumo de Totais */}
                 {(() => {
-                  const totais = calcularTotais(viewingRelatorioServico.diasTrabalho)
+                  const totais = calcularTotais(diasTrabalhoRelatorioOrdenados(viewingRelatorioServico))
                   const ridView = viewingRelatorioServico.id
                   const faseView = getResumoCobrancaVisualClass(ridView)
                   const wrapModView =
@@ -70324,7 +70348,7 @@ A1;Peça exemplo;10`}
                         </div>
                         <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                           <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.diarias || 'DIÁRIAS'}</p>
-                          <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{viewingRelatorioServico.diasTrabalho.length}</p>
+                          <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{diasTrabalhoRelatorioOrdenados(viewingRelatorioServico).length}</p>
                         </div>
                         <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)', textAlign: 'center' }}>
                           <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8 }}>{safeT?.horasViagemIda || 'Horas de Viagem de Ida'}</p>
