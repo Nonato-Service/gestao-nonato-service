@@ -3000,7 +3000,22 @@ export const translations = {
     selecioneOuDigiteCliente: 'Selecione ou digite o nome do cliente.',
     adicionePeloMenosUmaPeca: 'Adicione pelo menos uma peça ao pedido.',
     registroDespesasTitle: 'REGISTRO DE DESPESAS',
-    registroDespesasDesc: 'Escaneie códigos de barras, tire fotos e vincule despesas a relatórios de serviço e clientes.',
+    registroDespesasDesc:
+      'Associe despesas do serviço ao cliente e ao relatório; pode gerar PDF. Este fluxo é para o cliente (reembolso / comprovativo), não substitui comprovantes para IRS.',
+    registroDespesasFotoOcrBtn: '📷 Foto do recibo (OCR)',
+    registroDespesasFotoOcrHint:
+      'Com o registo iniciado: fotografe o comprovante; sugere valor, data e descrição e adiciona uma linha com foto ao documento que segue para o cliente.',
+    registroDespesasOcrTitulo: 'Recibo — leitura automática',
+    registroDespesasOcrProcessando: 'A ler o recibo neste aparelho… A primeira vez pode demorar.',
+    registroDespesasOcrCancelar: 'Cancelar',
+    registroDespesasOcrSemValor: 'Valor em € não detetado com confiança.',
+    registroDespesasOcrTipoLinha: 'Tipo de despesa (esta linha)',
+    registroDespesasOcrConfirmar: 'Adicionar ao documento',
+    registroDespesasOcrOk: 'Linha de despesa adicionada. Confira o valor.',
+    registroDespesasOcrErro: 'Não foi possível ler a imagem.',
+    registroDespesasOcrSnippet: 'Texto lido (OCR)',
+    registroDespesasOcrNotaCliente:
+      'As linhas integram o documento/PDF destinado ao cliente (despesas ligadas ao serviço). Comprovantes para IRS usam o outro módulo.',
     iniciarRegistroDespesas: 'Iniciar registo de despesas',
     comprovantesDespesasTitle: 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS',
     comprovantesDespesasDesc: 'Registe comprovantes de despesas pagas com cartão para apoiar a declaração de IRS. Adicione imagens, filtre por mês e cliente, valores unitários e totais por operação.',
@@ -3018,6 +3033,28 @@ export const translations = {
     comprovantesDescricao: 'Descrição',
     comprovantesImagem: 'Imagem do comprovante',
     comprovantesAdicionar: 'Adicionar comprovante',
+    comprovantesReciboRapidoBtn: '📷 Foto do recibo → registo',
+    comprovantesReciboRapidoHint:
+      'Tire foto ao recibo ou comprovante: o programa tenta ler valor, data e descrição e grava como despesa pessoal sem preencher o formulário.',
+    comprovantesReciboRapidoTitulo: 'Recibo — leitura automática',
+    comprovantesReciboRapidoProcessando:
+      'A ler o recibo neste aparelho… A primeira utilização pode demorar (descarrega dados de português/inglês para o OCR).',
+    comprovantesReciboRapidoCancelarOcr: 'Cancelar',
+    comprovantesReciboRapidoSemValor:
+      'Não foi detetado um valor em € com confiança. Pode guardar mesmo assim ou abrir o formulário para corrigir.',
+    comprovantesReciboRapidoValor: 'Valor (€)',
+    comprovantesReciboRapidoData: 'Data',
+    comprovantesReciboRapidoDescricao: 'Descrição',
+    comprovantesReciboRapidoOcrPreview: 'Texto lido (OCR)',
+    comprovantesReciboRapidoTipoPessoal:
+      'Será guardado como despesa pessoal (IRS). Para associar a um cliente, use «Abrir formulário» e escolha o cliente.',
+    comprovantesReciboRapidoFechar: 'Fechar',
+    comprovantesReciboRapidoAbrirFormulario: 'Abrir formulário',
+    comprovantesReciboRapidoGuardarPessoal: 'Guardar (pessoal)',
+    comprovantesReciboRapidoOk:
+      'Comprovante guardado como despesa pessoal. Confira o valor na lista; o OCR pode errar.',
+    comprovantesReciboRapidoErroOcr:
+      'Não foi possível ler a imagem. Tente melhor luz e foco, ou use «Adicionar comprovante».',
     comprovantesTotalMes: 'Total do mês',
     comprovantesTotalGeral: 'Total geral',
     comprovantesTodosMeses: 'Todos os meses',
@@ -3030,6 +3067,8 @@ export const translations = {
     comprovantesTotalPorCliente: 'Total por cliente',
     comprovantesSemana: 'Semana',
     comprovantesTodasSemanas: 'Todas as semanas',
+    comprovantesListaPorData: 'Lista agrupada por data',
+    comprovantesSubtotalDia: 'Subtotal do dia',
     comprovantesEnvioTitulo: 'Enviar por WhatsApp e Email',
     comprovantesEnvioDesc: 'Escolha um dos 5 modelos, selecione o canal e gere a mensagem para copiar ou abrir diretamente.',
     comprovantesModelo1: 'Resumo simples',
@@ -5097,7 +5136,22 @@ export const translations = {
     sidebarGroupGestaoTecnicaDesc: 'Clientes, informes, agenda, piezas, servicios y operación técnica.',
     gestaoCustosTitle: 'CIERRE DE OS/COSTOS/PRESUPUESTOS',
     registroDespesasTitle: 'REGISTRO DE GASTOS',
-    registroDespesasDesc: 'Escanee códigos de barras, haga fotos y vincule gastos a informes de servicio y clientes.',
+    registroDespesasDesc:
+      'Vincule gastos del servicio al cliente y al informe; puede generar PDF. Este flujo es para el cliente (reembolso / justificante), no sustituye comprobantes para la renta.',
+    registroDespesasFotoOcrBtn: '📷 Foto del recibo (OCR)',
+    registroDespesasFotoOcrHint:
+      'Con el registro iniciado: foto del justificante; sugiere importe, fecha y descripción y añade una línea con imagen al documento que va al cliente.',
+    registroDespesasOcrTitulo: 'Recibo — lectura automática',
+    registroDespesasOcrProcessando: 'Leyendo el recibo…',
+    registroDespesasOcrCancelar: 'Cancelar',
+    registroDespesasOcrSemValor: 'Importe en € no detectado con seguridad.',
+    registroDespesasOcrTipoLinha: 'Tipo de gasto (esta línea)',
+    registroDespesasOcrConfirmar: 'Añadir al documento',
+    registroDespesasOcrOk: 'Línea añadida. Revise el importe.',
+    registroDespesasOcrErro: 'No se pudo leer la imagen.',
+    registroDespesasOcrSnippet: 'Texto leído (OCR)',
+    registroDespesasOcrNotaCliente:
+      'Las líneas forman el documento/PDF destinado al cliente (gastos del servicio). Los comprobantes para impuestos van en el otro módulo.',
     iniciarRegistroDespesas: 'Iniciar registro de gastos',
     fechamentoRelatoriosServicosTitle: 'CIERRE DE INFORMES DE SERVICIO',
     fechamentoRelatoriosServicosDesc: 'Consulte y cierre los informes de servicio. Use el botón de arriba para abrir el módulo de Informe de Servicio y gestionar o generar PDFs.',
@@ -5665,6 +5719,22 @@ export const translations = {
     comprovantesDescricao: 'Descripción',
     comprovantesImagem: 'Imagen del comprobante',
     comprovantesAdicionar: 'Añadir comprobante',
+    comprovantesReciboRapidoBtn: '📷 Foto del recibo → registro',
+    comprovantesReciboRapidoHint: 'Foto del justificante: intenta leer importe y fecha y guarda como gasto personal.',
+    comprovantesReciboRapidoTitulo: 'Recibo — lectura automática',
+    comprovantesReciboRapidoProcessando: 'Leyendo el recibo en este dispositivo… La primera vez puede tardar.',
+    comprovantesReciboRapidoCancelarOcr: 'Cancelar',
+    comprovantesReciboRapidoSemValor: 'No se detectó un importe en € con seguridad.',
+    comprovantesReciboRapidoValor: 'Importe (€)',
+    comprovantesReciboRapidoData: 'Fecha',
+    comprovantesReciboRapidoDescricao: 'Descripción',
+    comprovantesReciboRapidoOcrPreview: 'Texto leído (OCR)',
+    comprovantesReciboRapidoTipoPessoal: 'Se guardará como gasto personal. Para cliente, abra el formulario.',
+    comprovantesReciboRapidoFechar: 'Cerrar',
+    comprovantesReciboRapidoAbrirFormulario: 'Abrir formulario',
+    comprovantesReciboRapidoGuardarPessoal: 'Guardar (personal)',
+    comprovantesReciboRapidoOk: 'Comprobante guardado. Revise el importe.',
+    comprovantesReciboRapidoErroOcr: 'No se pudo leer la imagen.',
     comprovantesTotalMes: 'Total del mes',
     comprovantesTotalGeral: 'Total general',
     comprovantesTodosMeses: 'Todos los meses',
@@ -5677,6 +5747,8 @@ export const translations = {
     comprovantesTotalPorCliente: 'Total por cliente',
     comprovantesSemana: 'Semana',
     comprovantesTodasSemanas: 'Todas las semanas',
+    comprovantesListaPorData: 'Lista agrupada por fecha',
+    comprovantesSubtotalDia: 'Subtotal del día',
     comprovantesEnvioTitulo: 'Enviar por WhatsApp y Email',
     comprovantesEnvioDesc: 'Elija uno de los 5 modelos, seleccione el canal y genere el mensaje para copiar o abrir.',
     comprovantesModelo1: 'Resumen simple',
@@ -7919,7 +7991,22 @@ export const translations = {
     sidebarGroupGestaoTecnicaDesc: 'Clients, rapports, agenda, pièces, services et exploitation technique.',
     gestaoCustosTitle: 'CLÔTURE OS / COÛTS / DEVIS',
     registroDespesasTitle: 'REGISTRE DES DÉPENSES',
-    registroDespesasDesc: 'Scannez les codes-barres, photographiez et liez les dépenses aux rapports de service et aux clients.',
+    registroDespesasDesc:
+      'Liez les dépenses du service au client et au rapport ; PDF possible. Ce flux est pour le client (remboursement / justificatif), pas un substitut aux reçus fiscaux.',
+    registroDespesasFotoOcrBtn: '📷 Photo du reçu (OCR)',
+    registroDespesasFotoOcrHint:
+      'Après démarrage : photo du justificatif ; montant, date et description suggérés, ligne avec image ajoutée au document destiné au client.',
+    registroDespesasOcrTitulo: 'Reçu — lecture auto',
+    registroDespesasOcrProcessando: 'Lecture du reçu…',
+    registroDespesasOcrCancelar: 'Annuler',
+    registroDespesasOcrSemValor: 'Montant en € non détecté avec certitude.',
+    registroDespesasOcrTipoLinha: 'Type de dépense (cette ligne)',
+    registroDespesasOcrConfirmar: 'Ajouter au document',
+    registroDespesasOcrOk: 'Ligne ajoutée. Vérifiez le montant.',
+    registroDespesasOcrErro: 'Lecture de l’image impossible.',
+    registroDespesasOcrSnippet: 'Texte lu (OCR)',
+    registroDespesasOcrNotaCliente:
+      'Les lignes composent le document/PDF destiné au client (dépenses liées au service). Les justificatifs fiscaux utilisent l’autre module.',
     iniciarRegistroDespesas: "Démarrer l'enregistrement des dépenses",
     fechamentoRelatoriosServicosTitle: 'CLÔTURE DES RAPPORTS DE SERVICE',
     fechamentoRelatoriosServicosDesc: 'Consultez et clôturez les rapports de service. Utilisez le bouton ci-dessus pour ouvrir le module Rapport de service et gérer ou générer des PDF.',
@@ -8495,6 +8582,22 @@ export const translations = {
     comprovantesDescricao: 'Description',
     comprovantesImagem: 'Image du justificatif',
     comprovantesAdicionar: 'Ajouter un justificatif',
+    comprovantesReciboRapidoBtn: '📷 Photo du reçu → enregistrement',
+    comprovantesReciboRapidoHint: 'Photo du justificatif : lecture du montant et de la date, enregistrement personnel.',
+    comprovantesReciboRapidoTitulo: 'Reçu — lecture auto',
+    comprovantesReciboRapidoProcessando: 'Lecture du reçu sur cet appareil…',
+    comprovantesReciboRapidoCancelarOcr: 'Annuler',
+    comprovantesReciboRapidoSemValor: 'Montant en € non détecté avec certitude.',
+    comprovantesReciboRapidoValor: 'Montant (€)',
+    comprovantesReciboRapidoData: 'Date',
+    comprovantesReciboRapidoDescricao: 'Description',
+    comprovantesReciboRapidoOcrPreview: 'Texte lu (OCR)',
+    comprovantesReciboRapidoTipoPessoal: 'Enregistrement en dépense personnelle. Pour un client, ouvrez le formulaire.',
+    comprovantesReciboRapidoFechar: 'Fermer',
+    comprovantesReciboRapidoAbrirFormulario: 'Ouvrir le formulaire',
+    comprovantesReciboRapidoGuardarPessoal: 'Enregistrer (personnel)',
+    comprovantesReciboRapidoOk: 'Justificatif enregistré. Vérifiez le montant.',
+    comprovantesReciboRapidoErroOcr: 'Lecture de l’image impossible.',
     comprovantesTotalMes: 'Total du mois',
     comprovantesTotalGeral: 'Total général',
     comprovantesTodosMeses: 'Tous les mois',
@@ -8507,6 +8610,8 @@ export const translations = {
     comprovantesTotalPorCliente: 'Total par client',
     comprovantesSemana: 'Semaine',
     comprovantesTodasSemanas: 'Toutes les semaines',
+    comprovantesListaPorData: 'Liste groupée par date',
+    comprovantesSubtotalDia: 'Sous-total du jour',
     comprovantesEnvioTitulo: 'Envoyer par WhatsApp et Email',
     comprovantesEnvioDesc: 'Choisissez l\'un des 5 modèles, sélectionnez le canal et générez le message.',
     comprovantesModelo1: 'Résumé simple',
@@ -10747,7 +10852,22 @@ export const translations = {
     sidebarGroupGestaoTecnicaDesc: 'Clienti, rapporti, agenda, ricambi, servizi e operatività tecnica.',
     gestaoCustosTitle: 'CHIUSURA OS / COSTI / PREVENTIVI',
     registroDespesasTitle: 'REGISTRO SPESE',
-    registroDespesasDesc: 'Scansiona codici a barre, fotografa e collega le spese ai rapporti di servizio e ai clienti.',
+    registroDespesasDesc:
+      'Collega le spese di servizio al cliente e al rapporto; PDF disponibile. Flusso per il cliente (rimborso / giustificativo), non sostituisce ricevute fiscali.',
+    registroDespesasFotoOcrBtn: '📷 Foto ricevuta (OCR)',
+    registroDespesasFotoOcrHint:
+      'Con registro avviato: foto dello scontrino; suggerisce importo, data e descrizione e aggiunge una riga con immagine al documento per il cliente.',
+    registroDespesasOcrTitulo: 'Ricevuta — lettura automatica',
+    registroDespesasOcrProcessando: 'Lettura in corso…',
+    registroDespesasOcrCancelar: 'Annulla',
+    registroDespesasOcrSemValor: 'Importo in € non rilevato con sicurezza.',
+    registroDespesasOcrTipoLinha: 'Tipo di spesa (questa riga)',
+    registroDespesasOcrConfirmar: 'Aggiungi al documento',
+    registroDespesasOcrOk: 'Riga aggiunta. Controlla l’importo.',
+    registroDespesasOcrErro: 'Impossibile leggere l’immagine.',
+    registroDespesasOcrSnippet: 'Testo letto (OCR)',
+    registroDespesasOcrNotaCliente:
+      'Le righe compongono il documento/PDF destinato al cliente (spese del servizio). Le ricevute fiscali usano l’altro modulo.',
     iniciarRegistroDespesas: 'Avvia registro spese',
     fechamentoRelatoriosServicosTitle: 'CHIUSURA DEI RAPPORTI DI SERVIZIO',
     fechamentoRelatoriosServicosDesc: 'Consultare e chiudere i rapporti di servizio. Usare il pulsante sopra per aprire il modulo Rapporto di servizio e gestire o generare PDF.',
@@ -11305,6 +11425,22 @@ export const translations = {
     comprovantesDescricao: 'Descrizione',
     comprovantesImagem: 'Immagine del giustificativo',
     comprovantesAdicionar: 'Aggiungi giustificativo',
+    comprovantesReciboRapidoBtn: '📷 Foto ricevuta → registrazione',
+    comprovantesReciboRapidoHint: 'Foto della ricevuta: lettura importo e data, salva come spesa personale.',
+    comprovantesReciboRapidoTitulo: 'Ricevuta — lettura automatica',
+    comprovantesReciboRapidoProcessando: 'Lettura in corso su questo dispositivo…',
+    comprovantesReciboRapidoCancelarOcr: 'Annulla',
+    comprovantesReciboRapidoSemValor: 'Importo in € non rilevato con sicurezza.',
+    comprovantesReciboRapidoValor: 'Importo (€)',
+    comprovantesReciboRapidoData: 'Data',
+    comprovantesReciboRapidoDescricao: 'Descrizione',
+    comprovantesReciboRapidoOcrPreview: 'Testo OCR',
+    comprovantesReciboRapidoTipoPessoal: 'Salvato come spesa personale. Per cliente, apri il modulo.',
+    comprovantesReciboRapidoFechar: 'Chiudi',
+    comprovantesReciboRapidoAbrirFormulario: 'Apri modulo',
+    comprovantesReciboRapidoGuardarPessoal: 'Salva (personale)',
+    comprovantesReciboRapidoOk: 'Giustificativo salvato. Controlla l’importo.',
+    comprovantesReciboRapidoErroOcr: 'Impossibile leggere l’immagine.',
     comprovantesTotalMes: 'Totale del mese',
     comprovantesTotalGeral: 'Totale generale',
     comprovantesTodosMeses: 'Tutti i mesi',
@@ -11317,6 +11453,8 @@ export const translations = {
     comprovantesTotalPorCliente: 'Totale per cliente',
     comprovantesSemana: 'Settimana',
     comprovantesTodasSemanas: 'Tutte le settimane',
+    comprovantesListaPorData: 'Lista raggruppata per data',
+    comprovantesSubtotalDia: 'Subtotale del giorno',
     comprovantesEnvioTitulo: 'Invia tramite WhatsApp e Email',
     comprovantesEnvioDesc: 'Scegli uno dei 5 modelli, seleziona il canale e genera il messaggio.',
     comprovantesModelo1: 'Riepilogo semplice',
@@ -13589,7 +13727,22 @@ export const translations = {
     sidebarGroupGestaoTecnicaDesc: 'Kunden, Berichte, Agenda, Teile, Leistungen und technischer Betrieb.',
     gestaoCustosTitle: 'OS-ABSCHLUSS / KOSTEN / ANGEBOTE',
     registroDespesasTitle: 'AUSGABENERFASSUNG',
-    registroDespesasDesc: 'Barcodes scannen, Fotos machen und Ausgaben mit Serviceberichten und Kunden verknüpfen.',
+    registroDespesasDesc:
+      'Serviceausgaben mit Kunde und Bericht verknüpfen; PDF möglich. Dieser Ablauf ist für den Kunden (Erstattung / Nachweis), kein Ersatz für Steuerbelege.',
+    registroDespesasFotoOcrBtn: '📷 Foto Beleg (OCR)',
+    registroDespesasFotoOcrHint:
+      'Nach Start: Beleg fotografieren; schlägt Betrag, Datum und Text vor und fügt eine Zeile mit Bild zum kundenbezogenen Dokument hinzu.',
+    registroDespesasOcrTitulo: 'Beleg — automatische Erfassung',
+    registroDespesasOcrProcessando: 'Beleg wird gelesen…',
+    registroDespesasOcrCancelar: 'Abbrechen',
+    registroDespesasOcrSemValor: 'Betrag in € nicht zuverlässig erkannt.',
+    registroDespesasOcrTipoLinha: 'Ausgabenart (diese Zeile)',
+    registroDespesasOcrConfirmar: 'Zum Dokument hinzufügen',
+    registroDespesasOcrOk: 'Zeile hinzugefügt. Betrag prüfen.',
+    registroDespesasOcrErro: 'Bild konnte nicht gelesen werden.',
+    registroDespesasOcrSnippet: 'Gelesener Text (OCR)',
+    registroDespesasOcrNotaCliente:
+      'Die Zeilen bilden das PDF/Dokument für den Kunden (servicebezogene Ausgaben). Steuerliche Belege nutzen das andere Modul.',
     iniciarRegistroDespesas: 'Ausgabenerfassung starten',
     fechamentoRelatoriosServicosTitle: 'ABSCHLUSS DER SERVICEBERICHTE',
     fechamentoRelatoriosServicosDesc: 'Serviceberichte einsehen und abschließen. Verwenden Sie die Schaltfläche oben, um das Modul Servicebericht zu öffnen und PDFs zu verwalten oder zu erstellen.',
@@ -14126,6 +14279,22 @@ export const translations = {
     comprovantesDescricao: 'Beschreibung',
     comprovantesImagem: 'Bild des Belegs',
     comprovantesAdicionar: 'Beleg hinzufügen',
+    comprovantesReciboRapidoBtn: '📷 Foto Beleg → Eintrag',
+    comprovantesReciboRapidoHint: 'Foto des Belegs: Betrag und Datum werden gelesen, als Privatausgabe gespeichert.',
+    comprovantesReciboRapidoTitulo: 'Beleg — automatische Erfassung',
+    comprovantesReciboRapidoProcessando: 'Beleg wird auf diesem Gerät gelesen… Beim ersten Mal kann es länger dauern.',
+    comprovantesReciboRapidoCancelarOcr: 'Abbrechen',
+    comprovantesReciboRapidoSemValor: 'Betrag in € nicht zuverlässig erkannt.',
+    comprovantesReciboRapidoValor: 'Betrag (€)',
+    comprovantesReciboRapidoData: 'Datum',
+    comprovantesReciboRapidoDescricao: 'Beschreibung',
+    comprovantesReciboRapidoOcrPreview: 'OCR-Text',
+    comprovantesReciboRapidoTipoPessoal: 'Wird als Privatausgabe gespeichert. Für Kunden Formular öffnen.',
+    comprovantesReciboRapidoFechar: 'Schließen',
+    comprovantesReciboRapidoAbrirFormulario: 'Formular öffnen',
+    comprovantesReciboRapidoGuardarPessoal: 'Speichern (privat)',
+    comprovantesReciboRapidoOk: 'Beleg gespeichert. Betrag prüfen.',
+    comprovantesReciboRapidoErroOcr: 'Bild konnte nicht gelesen werden.',
     comprovantesTotalMes: 'Summe des Monats',
     comprovantesTotalGeral: 'Gesamtsumme',
     comprovantesTodosMeses: 'Alle Monate',
@@ -14138,6 +14307,8 @@ export const translations = {
     comprovantesTotalPorCliente: 'Gesamt pro Kunde',
     comprovantesSemana: 'Woche',
     comprovantesTodasSemanas: 'Alle Wochen',
+    comprovantesListaPorData: 'Liste nach Datum gruppiert',
+    comprovantesSubtotalDia: 'Tagessumme',
     comprovantesEnvioTitulo: 'Per WhatsApp und E-Mail senden',
     comprovantesEnvioDesc: 'Wählen Sie eine der 5 Vorlagen, den Kanal und generieren Sie die Nachricht.',
     comprovantesModelo1: 'Einfache Zusammenfassung',
@@ -16429,7 +16600,22 @@ export const translations = {
     sidebarGroupGestaoTecnicaDesc: 'Clients, reports, agenda, parts, services and day-to-day technical work.',
     gestaoCustosTitle: 'SO CLOSURE / COSTS / QUOTES',
     registroDespesasTitle: 'EXPENSE RECORD',
-    registroDespesasDesc: 'Scan barcodes, take photos and link expenses to service reports and clients.',
+    registroDespesasDesc:
+      'Link service expenses to the client and report; PDF available. This flow is for the client (reimbursement / proof), not a substitute for tax receipts.',
+    registroDespesasFotoOcrBtn: '📷 Receipt photo (OCR)',
+    registroDespesasFotoOcrHint:
+      'After starting: photograph the receipt; suggests amount, date and description and adds a line with image to the document that goes to the client.',
+    registroDespesasOcrTitulo: 'Receipt — auto read',
+    registroDespesasOcrProcessando: 'Reading receipt…',
+    registroDespesasOcrCancelar: 'Cancel',
+    registroDespesasOcrSemValor: '€ amount not detected reliably.',
+    registroDespesasOcrTipoLinha: 'Expense type (this line)',
+    registroDespesasOcrConfirmar: 'Add to document',
+    registroDespesasOcrOk: 'Line added. Check the amount.',
+    registroDespesasOcrErro: 'Could not read the image.',
+    registroDespesasOcrSnippet: 'Text read (OCR)',
+    registroDespesasOcrNotaCliente:
+      'Lines make up the PDF/document for the client (service-related expenses). Tax receipts use the other module.',
     iniciarRegistroDespesas: 'Start expense record',
     fechamentoRelatoriosServicosTitle: 'CLOSING OF SERVICE REPORTS',
     fechamentoRelatoriosServicosDesc: 'View and close service reports. Use the button above to open the Service Report module and manage or generate PDFs.',
@@ -16971,6 +17157,22 @@ export const translations = {
     comprovantesDescricao: 'Description',
     comprovantesImagem: 'Receipt image',
     comprovantesAdicionar: 'Add receipt',
+    comprovantesReciboRapidoBtn: '📷 Photo receipt → save',
+    comprovantesReciboRapidoHint: 'Photo of receipt: reads amount and date, saves as personal expense.',
+    comprovantesReciboRapidoTitulo: 'Receipt — auto read',
+    comprovantesReciboRapidoProcessando: 'Reading receipt on this device… First run may take a while.',
+    comprovantesReciboRapidoCancelarOcr: 'Cancel',
+    comprovantesReciboRapidoSemValor: 'Could not detect € amount reliably.',
+    comprovantesReciboRapidoValor: 'Amount (€)',
+    comprovantesReciboRapidoData: 'Date',
+    comprovantesReciboRapidoDescricao: 'Description',
+    comprovantesReciboRapidoOcrPreview: 'OCR text',
+    comprovantesReciboRapidoTipoPessoal: 'Saved as personal expense. For a client, open the form.',
+    comprovantesReciboRapidoFechar: 'Close',
+    comprovantesReciboRapidoAbrirFormulario: 'Open form',
+    comprovantesReciboRapidoGuardarPessoal: 'Save (personal)',
+    comprovantesReciboRapidoOk: 'Receipt saved. Check the amount.',
+    comprovantesReciboRapidoErroOcr: 'Could not read the image.',
     comprovantesTotalMes: 'Total for month',
     comprovantesTotalGeral: 'Total',
     comprovantesTodosMeses: 'All months',
@@ -16983,6 +17185,8 @@ export const translations = {
     comprovantesTotalPorCliente: 'Total per client',
     comprovantesSemana: 'Week',
     comprovantesTodasSemanas: 'All weeks',
+    comprovantesListaPorData: 'List grouped by date',
+    comprovantesSubtotalDia: 'Day subtotal',
     comprovantesEnvioTitulo: 'Send via WhatsApp and Email',
     comprovantesEnvioDesc: 'Choose one of 5 templates, select the channel and generate the message.',
     comprovantesModelo1: 'Simple summary',
@@ -17349,3 +17553,59 @@ export const translations = {
 }
 
 export type TranslationKey = keyof typeof translations['pt-BR']
+
+export type TranslationBundleKey = keyof typeof translations
+
+/** Código guardado (ex.: `en-US`) → chave existente em `translations` (`en` partilha o bundle UK). */
+export function translationBundleKey(lang: string): TranslationBundleKey {
+  if (lang === 'en-US') return 'en'
+  const k = lang as TranslationBundleKey
+  if (Object.prototype.hasOwnProperty.call(translations, k)) return k
+  return 'pt-BR'
+}
+
+export function isEnglishUi(lang: string): boolean {
+  return lang === 'en' || lang === 'en-US'
+}
+
+/** `toLocaleString` em blocos longos (ex.: dados contabilidade): PT pt-PT; EN UK en-GB; EN US en-US. */
+export function localeForLongDatetime(lang: string): string {
+  if (lang === 'pt-BR') return 'pt-PT'
+  if (lang === 'en-US') return 'en-US'
+  if (lang === 'en') return 'en-GB'
+  if (lang === 'es') return 'es-ES'
+  if (lang === 'fr') return 'fr-FR'
+  if (lang === 'it') return 'it-IT'
+  if (lang === 'de') return 'de-DE'
+  return 'pt-PT'
+}
+
+/** Datas curtas em listagens (comportamento anterior: inglês → en-US). */
+export function localeDateShort(lang: string): string {
+  if (lang === 'pt-BR') return 'pt-BR'
+  if (isEnglishUi(lang)) return 'en-US'
+  if (lang === 'es') return 'es-ES'
+  if (lang === 'fr') return 'fr-FR'
+  if (lang === 'it') return 'it-IT'
+  if (lang === 'de') return 'de-DE'
+  return 'pt-BR'
+}
+
+/** PDF protocolo: pt-PT; en en-GB; en-US en-US; resto = código do idioma. */
+export function documentPdfDateLocale(lang: string): string {
+  if (lang === 'pt-BR') return 'pt-PT'
+  if (lang === 'en') return 'en-GB'
+  if (lang === 'en-US') return 'en-US'
+  return lang
+}
+
+/** `toLocaleString` onde o UI antigo usava pt-BR e «resto» = en-US (en UK e en US). */
+export function localeDatetimeGeneral(lang: string): string {
+  if (lang === 'pt-BR') return 'pt-BR'
+  if (lang === 'es') return 'es-ES'
+  if (lang === 'fr') return 'fr-FR'
+  if (lang === 'it') return 'it-IT'
+  if (lang === 'de') return 'de-DE'
+  if (isEnglishUi(lang)) return 'en-US'
+  return 'pt-BR'
+}

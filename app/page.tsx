@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { translations } from './translations'
+import {
+  translations,
+  translationBundleKey,
+  isEnglishUi,
+  localeForLongDatetime,
+  localeDateShort,
+  documentPdfDateLocale,
+  localeDatetimeGeneral,
+} from './translations'
 import {
   loadData,
   saveData,
@@ -14,6 +22,11 @@ import {
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData } from './utils/syncRevision'
 import { collectLocalNonatoSnapshot, summarizeDataDiff } from './utils/syncDiff'
 import { assessPullServerRisk, type PullRiskSeverity } from './utils/syncRisk'
+import {
+  parseTotalEurosFromReceiptText,
+  parseDataReciboIso,
+  extrairDescricaoRecibo,
+} from './lib/reciboComprovanteParser'
 import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
 import {
   loadManuaisFamiliasGruposFromIdb,
@@ -2229,7 +2242,7 @@ export default function Dashboard() {
   // Definir traduções de forma segura e atualizada quando o idioma muda
   const t = useMemo(() => {
     try {
-      const currentT = translations[selectedLanguage as keyof typeof translations] || translations['pt-BR']
+      const currentT = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
       if (currentT && typeof currentT === 'object') {
         return currentT as any
       }
@@ -2245,7 +2258,7 @@ export default function Dashboard() {
   
   const safeT = useMemo(() => {
     try {
-      const currentT = translations[selectedLanguage as keyof typeof translations] || translations['pt-BR']
+      const currentT = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
       if (currentT && typeof currentT === 'object') {
         return currentT as any
       }
@@ -4929,6 +4942,20 @@ export default function Dashboard() {
   const [showComprovantesForm, setShowComprovantesForm] = useState(false)
   const [formComp, setFormComp] = useState<{ tipo: 'cliente' | 'pessoal'; cliente: string; data: string; valorUnitario: number; quantidade: number; descricao: string; imagemBase64: string }>({ tipo: 'cliente', cliente: '', data: new Date().toISOString().slice(0, 10), valorUnitario: 0, quantidade: 1, descricao: '', imagemBase64: '' })
   const [showFormComp, setShowFormComp] = useState(false)
+  /** Foto de recibo → OCR → pré-visualização antes de gravar comprovante (despesa pessoal por defeito) */
+  const [comprovanteReciboRapido, setComprovanteReciboRapido] = useState<
+    | null
+    | { step: 'ocr'; imagemBase64: string }
+    | {
+        step: 'preview'
+        imagemBase64: string
+        valorUnitario: number
+        data: string
+        descricao: string
+        ocrSnippet: string
+      }
+  >(null)
+  const reciboRapidoFileRef = useRef<HTMLInputElement>(null)
   const [showEnvioModal, setShowEnvioModal] = useState(false)
   const [envioForm, setEnvioForm] = useState<{ templateId: 1|2|3|4|5; whatsapp: boolean; email: boolean; telefone: string; emailDestino: string; tecnicoId: string }>({ templateId: 1, whatsapp: true, email: false, telefone: '', emailDestino: '', tecnicoId: '' })
   const [buscaOS, setBuscaOS] = useState('')
@@ -10971,7 +10998,7 @@ export default function Dashboard() {
 
   /** Corpo de texto (e-mail, WhatsApp, etc.) com dados + pedido faturação + ficheiros. */
   const construirTextoPlanoClienteDadosContabilidade = (cliente: Cliente, opts?: ClienteContabEnvioModalOpts) => {
-    const st = translations[selectedLanguage as keyof typeof translations] || translations['pt-BR']
+    const st = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
     const t = st as Record<string, string> & {
       contabilidadeBlocoPedidoFatura?: string
       contabilidadeFaturaValorLabel?: string
@@ -10998,18 +11025,7 @@ export default function Dashboard() {
     const lblCont = t.contato || 'Contato'
     const titulo = t.clienteDadosContabilidadeTitulo || 'Dados do cliente — contabilidade / faturação'
     const docGerado = t.pdfDocumentoGeradoEm || 'Documento gerado em'
-    const localeStr =
-      selectedLanguage === 'pt-BR'
-        ? 'pt-PT'
-        : selectedLanguage === 'es'
-          ? 'es-ES'
-          : selectedLanguage === 'fr'
-            ? 'fr-FR'
-            : selectedLanguage === 'it'
-              ? 'it-IT'
-              : selectedLanguage === 'de'
-                ? 'de-DE'
-                : 'en-GB'
+    const localeStr = localeForLongDatetime(selectedLanguage)
     const dataHora = new Date().toLocaleString(localeStr)
     const linhas: string[] = [
       titulo,
@@ -11060,7 +11076,7 @@ export default function Dashboard() {
 
   /** Ficha resumida (NIF, morada, contactos) + pedido de faturação e lista de anexos — HTML para impressão e mailto. */
   const gerarJanelaClienteDadosContabilidade = (cliente: Cliente, opts?: ClienteContabEnvioModalOpts) => {
-    const st = translations[selectedLanguage as keyof typeof translations] || translations['pt-BR']
+    const st = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
     const t = st as Record<string, string> & {
       contabilidadeBlocoPedidoFatura?: string
       contabilidadeFaturaValorLabel?: string
@@ -11150,18 +11166,7 @@ export default function Dashboard() {
       return lin.join('\n')
     })()
     const docGerado = t.pdfDocumentoGeradoEm || 'Documento gerado em'
-    const localeStr =
-      selectedLanguage === 'pt-BR'
-        ? 'pt-PT'
-        : selectedLanguage === 'es'
-          ? 'es-ES'
-          : selectedLanguage === 'fr'
-            ? 'fr-FR'
-            : selectedLanguage === 'it'
-              ? 'it-IT'
-              : selectedLanguage === 'de'
-                ? 'de-DE'
-                : 'en-GB'
+    const localeStr = localeForLongDatetime(selectedLanguage)
     const dataHora = new Date().toLocaleString(localeStr)
     const row = (label: string, cell: string) =>
       `<tr><td style="padding:10px 14px;border:1px solid #c8e6c9;font-weight:700;background:#e8f5e9;width:34%;vertical-align:top">${escAttr(label)}</td><td style="padding:10px 14px;border:1px solid #c8e6c9;vertical-align:top;word-break:break-word">${escAttr(cell)}</td></tr>`
@@ -11277,7 +11282,7 @@ export default function Dashboard() {
   const copiarTextoContabilidadeModalParaOutrosCanais = () => {
     const c = modalEnvioContabilidadeCliente
     if (!c) return
-    const st = translations[selectedLanguage as keyof typeof translations] || translations['pt-BR']
+    const st = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
     const t = st as Record<string, string> & { clienteDadosContabilidadeCopiado?: string }
     const text = construirTextoPlanoClienteDadosContabilidade(c, {
       valorFatura: contabEnvioValor,
@@ -11309,7 +11314,7 @@ export default function Dashboard() {
     clienteFiscal?: Cliente | null
   ) => {
     const t =
-      (translations[selectedLanguage as keyof typeof translations] || translations['pt-BR']) as Record<
+      (translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']) as Record<
         string,
         string
       >
@@ -11340,18 +11345,7 @@ export default function Dashboard() {
     const lblTot = t.total || 'Total'
     const lblSoma = t.somaTotal || 'Total geral'
     const blocoFiscal = t.contabilidadeBlocoClienteFiscal || 'Dados fiscais do cliente (cadastro)'
-    const localeStr =
-      selectedLanguage === 'pt-BR'
-        ? 'pt-PT'
-        : selectedLanguage === 'es'
-          ? 'es-ES'
-          : selectedLanguage === 'fr'
-            ? 'fr-FR'
-            : selectedLanguage === 'it'
-              ? 'it-IT'
-              : selectedLanguage === 'de'
-                ? 'de-DE'
-                : 'en-GB'
+    const localeStr = localeForLongDatetime(selectedLanguage)
     const dataHora = new Date().toLocaleString(localeStr)
     const ivContab = totaisFechamentoLiquidoComIva(itens, fechamentoIvaPorRelatorioId[relatorio.id])
     const total = ivContab.comIva
@@ -14156,7 +14150,7 @@ export default function Dashboard() {
 
   /** PDF de fechamento de despesas a partir da Biblioteca */
   const imprimirPDFDespesasDaBiblioteca = (relatorio: RelatorioServico, itens: FechamentoItem[]) => {
-    const st = translations[selectedLanguage as keyof typeof translations] || translations['pt-BR']
+    const st = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
     const tAny = st as Record<string, string>
     const logoHtml = getLogoHtmlForFechamento()
     const logoSrc = logoHtml && logoHtml.includes('src="') ? logoHtml.replace(/.*src="([^"]+)".*/, '$1') : ''
@@ -14193,7 +14187,7 @@ export default function Dashboard() {
     const equipVal = esc(relatorio.maquinaModelo + (relatorio.numeroMaquina ? ' ' + relatorio.numeroMaquina : ''))
     const dataVal = esc(relatorio.data)
     const tituloDoc = esc(titFechamento) + ' — ' + lblRelatorio + ' ' + numVal
-    const localeStr = selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : selectedLanguage === 'de' ? 'de-DE' : 'en-GB'
+    const localeStr = localeForLongDatetime(selectedLanguage)
     const docGeradoEm = tAny.pdfDocumentoGeradoEm || 'Documento gerado em'
     const dataHoraGerado = new Date().toLocaleString(localeStr)
     const footPdf =
@@ -14232,7 +14226,7 @@ export default function Dashboard() {
       }
       const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
-      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE') : '-';
+      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
       
       const htmlContent = `
       <!DOCTYPE html>
@@ -14598,7 +14592,7 @@ export default function Dashboard() {
       }
       const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
-    const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE') : '-';
+    const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
     
     const htmlContent = `
       <!DOCTYPE html>
@@ -14920,7 +14914,7 @@ export default function Dashboard() {
       }
       const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
-    const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE') : '-';
+    const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
     
     const htmlContent = `
       <!DOCTYPE html>
@@ -15301,7 +15295,7 @@ export default function Dashboard() {
       }
       const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
-      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE') : '-';
+      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
       
       const htmlContent = `
       <!DOCTYPE html>
@@ -15697,7 +15691,7 @@ export default function Dashboard() {
       }
       const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
-      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE') : '-';
+      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
       
       const htmlContent = `
       <!DOCTYPE html>
@@ -16073,7 +16067,7 @@ export default function Dashboard() {
       }
       const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
-      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE') : '-';
+      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
       
       const htmlContent = `
       <!DOCTYPE html>
@@ -16468,7 +16462,7 @@ export default function Dashboard() {
       }
       const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
-      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE') : '-';
+      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
       
       const htmlContent = `
       <!DOCTYPE html>
@@ -16854,7 +16848,7 @@ export default function Dashboard() {
       }
       const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
-      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE') : '-';
+      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
       
       const htmlContent = `
       <!DOCTYPE html>
@@ -17385,7 +17379,7 @@ export default function Dashboard() {
       }
       const headerLogoContent = getLogoHtmlForReport() || '';
       const totais = calcularTotais(relatorio.diasTrabalho);
-      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE') : '-';
+      const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
       
       // Preparar dados das máquinas
       const maquinasInfo = relatorio.maquinaModelo || '-';
@@ -17403,18 +17397,7 @@ export default function Dashboard() {
       // Preparar tabela de viagens
       let tabelaViagens = '';
       if (relatorio.diasTrabalho && relatorio.diasTrabalho.length > 0) {
-        const locFer =
-          selectedLanguage === 'pt-BR'
-            ? 'pt-BR'
-            : selectedLanguage === 'en'
-              ? 'en-US'
-              : selectedLanguage === 'es'
-                ? 'es-ES'
-                : selectedLanguage === 'fr'
-                  ? 'fr-FR'
-                  : selectedLanguage === 'it'
-                    ? 'it-IT'
-                    : 'de-DE'
+        const locFer = localeDateShort(selectedLanguage)
         diasTrabalhoRelatorioOrdenados(relatorio).forEach((dia, index) => {
           const dataDia = formatDiaTrabalhoCurtoPt(dia.data, locFer)
           const idaViagem = dia.idaHora && dia.idaChegada ? `${dia.idaHora} - ${dia.idaChegada}` : (dia.idaHora || dia.idaChegada || '-');
@@ -17447,7 +17430,7 @@ export default function Dashboard() {
             try {
               const dataObj = relatorio.data.includes('T') ? new Date(relatorio.data) : new Date(relatorio.data + 'T00:00:00');
               if (!isNaN(dataObj.getTime())) {
-                dataPeca = dataObj.toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE');
+                dataPeca = dataObj.toLocaleDateString(localeDateShort(selectedLanguage));
               }
             } catch (e) {
               dataPeca = relatorio.data;
@@ -17870,7 +17853,7 @@ export default function Dashboard() {
     }
   };
 
-  const localeReport = selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'en' ? 'en-US' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : 'de-DE';
+  const localeReport = localeDateShort(selectedLanguage);
 
   const renderReportDiasTable = (relatorio: RelatorioServico, totais: { horasTrabalho: string; kmsPercorridos: string; horasViagem: string; horasViagemIda?: string; horasViagemRetorno?: string }) => {
     if (!relatorio.diasTrabalho || relatorio.diasTrabalho.length === 0) return '';
@@ -21776,7 +21759,7 @@ export default function Dashboard() {
 
   // Função para sair do sistema (fechar aplicação/aba) — saída segura; desativa o aviso de beforeunload
   const handleSairDoSistema = useCallback(() => {
-    const t = translations[selectedLanguage as keyof typeof translations] || translations['pt-BR']
+    const t = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
     const msg = (t as { confirmarSair?: string }).confirmarSair || 'Deseja realmente sair do sistema?'
     if (typeof window !== 'undefined' && window.confirm(msg)) {
       allowUnsafeBrowserExitRef.current = true
@@ -22643,7 +22626,7 @@ export default function Dashboard() {
     }
 
     // Obter traduções
-    const t = translations[currentLanguage] || translations['pt-BR']
+    const t = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
     
     // Preparar dados para impressão
     const formatArray = (arr: string[]) => arr.length > 0 ? arr.join(', ') : '-'
@@ -26760,7 +26743,7 @@ const nextF = familias.filter(x => x !== f)
                               {entry.tecnicoName}
                             </strong>
                             <span style={{ fontSize: '11px', opacity: 0.6 }}>
-                              {safeT?.createdAt || 'Criado em:'} {new Date(entry.createdAt).toLocaleString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : selectedLanguage === 'de' ? 'de-DE' : 'en-US')}
+                              {safeT?.createdAt || 'Criado em:'} {new Date(entry.createdAt).toLocaleString(localeDatetimeGeneral(selectedLanguage))}
                             </span>
                           </div>
                           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -26903,7 +26886,7 @@ const nextF = familias.filter(x => x !== f)
                               {(safeT?.backupNumber || 'Backup {number}').replace('{number}', String(index + 1))}
                             </strong>
                             <span style={{ fontSize: '11px', opacity: 0.7, display: 'block' }}>
-                              {new Date(backup.timestamp).toLocaleString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : selectedLanguage === 'de' ? 'de-DE' : 'en-US')}
+                              {new Date(backup.timestamp).toLocaleString(localeDatetimeGeneral(selectedLanguage))}
                             </span>
                             <span style={{ fontSize: '11px', opacity: 0.6, display: 'block', marginTop: '2px' }}>
                               {(safeT?.filesCount || '{count} arquivos').replace('{count}', String(backup.filesCount || 'N/A'))} • {backup.path || (safeT?.locationNotSpecified || 'Local não especificado')}
@@ -28642,7 +28625,7 @@ onKeyPress={(e) => {
                                   <div>
                                     <strong style={{ color: '#00ff00' }}>{evento.tipo.charAt(0).toUpperCase() + evento.tipo.slice(1)}</strong>
                                     <span style={{ marginLeft: '10px', fontSize: '12px', opacity: 0.7 }}>
-                                      {new Date(evento.data).toLocaleString(selectedLanguage === 'pt-BR' ? 'pt-BR' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : selectedLanguage === 'de' ? 'de-DE' : 'en-US')}
+                                      {new Date(evento.data).toLocaleString(localeDatetimeGeneral(selectedLanguage))}
                                     </span>
                                   </div>
                                   <button
@@ -29180,7 +29163,7 @@ onKeyPress={(e) => {
           const pecasStrong = pecasList.length
             ? `<div class="pecas-line" style="margin-top:18px;padding:14px 16px;border-radius:10px;font-size:11px;line-height:1.5;background:rgba(241,245,249,0.9);border:1px solid #e2e8f0;"><strong style="display:block;margin-bottom:6px;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:#475569;">${protoT?.protocolosServicoPecasTrocadas || 'Peças trocadas'}</strong><span style="color:#0f172a;">${esc(pecasList.join(', '))}</span></div>`
             : ''
-          const dataDoc = new Date(p.dataCriacao).toLocaleDateString(selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'en' ? 'en-GB' : selectedLanguage)
+          const dataDoc = new Date(p.dataCriacao).toLocaleDateString(documentPdfDateLocale(selectedLanguage))
           const refDoc = `REF-${String(p.id).replace(/[^a-zA-Z0-9]/g, '').slice(-12).toUpperCase() || 'NS'}`
           const clientRows: string[] = []
           if (cl) {
@@ -29364,7 +29347,7 @@ onKeyPress={(e) => {
           const cl = clientes.find((c) => c.id === p.clienteId)
           const eq = cl?.equipamentos?.find((e) => e.numeroSerie === p.equipamentoNumeroSerie)
           const dataStr = new Date(p.dataCriacao).toLocaleDateString(
-            selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'en' ? 'en-GB' : selectedLanguage
+            documentPdfDateLocale(selectedLanguage)
           )
           const modeloGuardado = clampProtocoloPdfModelo(p.pdfModelo)
           const modeloImpressao =
@@ -38067,7 +38050,7 @@ A1;Peça exemplo;10`}
           return null
         }
         const buildSolicitacaoBody = (s: typeof solicitacaoServicoTecnicoForm | SolicitacaoServicoTecnico) => {
-          const t = translations[selectedLanguage as keyof typeof translations] as typeof translations['pt-BR']
+          const t = translations[translationBundleKey(selectedLanguage)] as typeof translations['pt-BR']
           const labels = {
             nomeCliente: t?.solicitacaoServicoTecnicoNomeCliente ?? 'Nome do cliente',
             identificacaoFiscal: (t as any)?.solicitacaoServicoTecnicoIdentificacaoFiscal ?? 'Identificação fiscal',
@@ -38197,7 +38180,7 @@ A1;Peça exemplo;10`}
           setEditingSolicitacaoServicoTecnico(null)
           setSolicitacaoServicoTecnicoForm(emptySolicitacaoServicoTecnicoFormState())
         }
-        const localePdfSst = selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'en' ? 'en-GB' : selectedLanguage
+        const localePdfSst = documentPdfDateLocale(selectedLanguage)
         const solicitacaoSstComoRegisto = (s?: SolicitacaoServicoTecnico): SolicitacaoServicoTecnico => {
           const base =
             s ||
@@ -38209,7 +38192,7 @@ A1;Peça exemplo;10`}
           return enriquecerSolicitacaoComClienteCadastrado(base)
         }
         const montarHtmlSolicitacao = (rec: SolicitacaoServicoTecnico) => {
-          const tr = translations[selectedLanguage as keyof typeof translations] as (typeof translations)['pt-BR']
+          const tr = translations[translationBundleKey(selectedLanguage)] as (typeof translations)['pt-BR']
           const dataCriStr = new Date(rec.dataCriacao).toLocaleDateString(localePdfSst)
           const refVal = `SST-${String(rec.id).replace(/[^a-zA-Z0-9]/g, '').slice(-10).toUpperCase() || 'DOC'}`
           const nu = rec.nivelUrgencia
@@ -38294,7 +38277,7 @@ A1;Peça exemplo;10`}
             dataSolicitacaoStr: dataCriStr,
           }
           const htmlLang =
-            selectedLanguage === 'en'
+            isEnglishUi(selectedLanguage)
               ? 'en'
               : selectedLanguage === 'de'
                 ? 'de'
@@ -43343,7 +43326,7 @@ A1;Peça exemplo;10`}
           const equipVal = esc(relatorioSelecionado.maquinaModelo + (relatorioSelecionado.numeroMaquina ? ' ' + relatorioSelecionado.numeroMaquina : ''))
           const dataVal = esc(relatorioSelecionado.data)
           const tituloDoc = esc(titFechamento) + ' — ' + lblRelatorio + ' ' + numVal
-          const localeStr = selectedLanguage === 'pt-BR' ? 'pt-PT' : selectedLanguage === 'es' ? 'es-ES' : selectedLanguage === 'fr' ? 'fr-FR' : selectedLanguage === 'it' ? 'it-IT' : selectedLanguage === 'de' ? 'de-DE' : 'en-GB'
+          const localeStr = localeForLongDatetime(selectedLanguage)
           const dataHoraGerado = new Date().toLocaleString(localeStr)
           const footPdfFech =
             fechTotIva.incluir && fechTotIva.iva > 0.0001
@@ -44179,6 +44162,52 @@ A1;Peça exemplo;10`}
           if (filtroCliente && clienteOuPessoal !== filtroCliente) return false
           return true
         })
+        const comprovantesListLocale =
+          selectedLanguage === 'pt-BR'
+            ? 'pt-PT'
+            : selectedLanguage === 'es'
+              ? 'es-ES'
+              : selectedLanguage === 'fr'
+                ? 'fr-FR'
+                : selectedLanguage === 'it'
+                  ? 'it-IT'
+                  : selectedLanguage === 'de'
+                    ? 'de-DE'
+                    : 'en-GB'
+        const formatarDataListaComprovante = (iso: string) => {
+          if (!iso || iso === '—') return '—'
+          const d = new Date(iso.slice(0, 10) + 'T12:00:00')
+          return Number.isNaN(d.getTime())
+            ? iso
+            : d.toLocaleDateString(comprovantesListLocale, {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })
+        }
+        const filtradosPorData = (() => {
+          const m = new Map<string, ComprovanteDespesa[]>()
+          for (const c of filtrados) {
+            const key = String(c.data ?? '')
+              .trim()
+              .slice(0, 10)
+            const k = key || '—'
+            if (!m.has(k)) m.set(k, [])
+            m.get(k)!.push(c)
+          }
+          return [...m.entries()]
+            .sort((a, b) => {
+              if (a[0] === '—') return 1
+              if (b[0] === '—') return -1
+              return b[0].localeCompare(a[0])
+            })
+            .map(([data, items]) => ({
+              data,
+              items: [...items].sort((a, b) => String(b.id).localeCompare(String(a.id))),
+              subtotal: items.reduce((s, x) => s + (Number(x.valorTotal) || 0), 0),
+            }))
+        })()
         const totalGeral = filtrados.reduce((s, c) => s + c.valorTotal, 0)
         const totalPorMes = filtrados.reduce((acc, c) => {
           const d = new Date(c.data)
@@ -44298,6 +44327,68 @@ A1;Peça exemplo;10`}
               </h1>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <button onClick={() => closeTab(activeTabId || '')} style={{ padding: '8px 12px', background: 'transparent', border: '1px solid rgba(0,255,0,0.5)', borderRadius: '6px', color: '#00ff00', cursor: 'pointer' }}>↶ {(safeT as any)?.voltar || 'Voltar'}</button>
+                <input
+                  ref={reciboRapidoFileRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  style={{ display: 'none' }}
+                  aria-hidden
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    e.target.value = ''
+                    if (!file || !file.type.startsWith('image/')) return
+                    const reader = new FileReader()
+                    const imagemBase64 = await new Promise<string>((resolve, reject) => {
+                      reader.onload = () => resolve(String(reader.result || ''))
+                      reader.onerror = () => reject(new Error('read'))
+                      reader.readAsDataURL(file)
+                    })
+                    setComprovanteReciboRapido({ step: 'ocr', imagemBase64 })
+                    try {
+                      const { createWorker } = await import('tesseract.js')
+                      const worker = await createWorker('por+eng')
+                      const r = await worker.recognize(file)
+                      await worker.terminate()
+                      const text = r.data.text || ''
+                      const valorUnitario = parseTotalEurosFromReceiptText(text)
+                      const dataParsed = parseDataReciboIso(text)
+                      const data = dataParsed || new Date().toISOString().slice(0, 10)
+                      const descricao = extrairDescricaoRecibo(text)
+                      setComprovanteReciboRapido({
+                        step: 'preview',
+                        imagemBase64,
+                        valorUnitario,
+                        data,
+                        descricao,
+                        ocrSnippet: text.slice(0, 500),
+                      })
+                    } catch (err) {
+                      console.error(err)
+                      alert(
+                        (safeT as any)?.comprovantesReciboRapidoErroOcr ||
+                          'Não foi possível ler a imagem. Tente melhor luz e foco, ou use «Adicionar comprovante».'
+                      )
+                      setComprovanteReciboRapido(null)
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => reciboRapidoFileRef.current?.click()}
+                  style={{
+                    padding: '10px 20px',
+                    background: 'rgba(147, 197, 253, 0.18)',
+                    border: '1px solid rgba(147, 197, 253, 0.65)',
+                    borderRadius: '8px',
+                    color: '#bfdbfe',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                  title={(safeT as any)?.comprovantesReciboRapidoHint || ''}
+                >
+                  {(safeT as any)?.comprovantesReciboRapidoBtn || '📷 Foto do recibo → registo'}
+                </button>
                 <button onClick={() => setShowFormComp(true)} style={{ padding: '10px 20px', background: 'rgba(0,255,0,0.2)', border: '1px solid #00ff00', borderRadius: '8px', color: '#00ff00', fontWeight: 600, cursor: 'pointer' }}>
                   + {(safeT as any)?.comprovantesAdicionar || 'Adicionar comprovante'}
                 </button>
@@ -44356,18 +44447,53 @@ A1;Peça exemplo;10`}
                 </div>
               </div>
             </div>
-            {/* Lista */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* Lista — agrupada por data (mais recente primeiro) */}
+            <div style={{ marginBottom: '10px' }}>
+              <span style={{ color: '#86efac', fontSize: '13px', fontWeight: 600 }}>
+                {(safeT as any)?.comprovantesListaPorData || 'Lista agrupada por data'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               {filtrados.length === 0 && <p style={{ color: '#888', textAlign: 'center', padding: '24px' }}>{(safeT as any)?.comprovantesNenhumComprovante || 'Nenhum comprovante. Clique em "Adicionar comprovante".'}</p>}
-              {filtrados.map(c => (
-                <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '14px', backgroundColor: '#222', borderRadius: '10px', border: '1px solid rgba(0,255,0,0.15)' }}>
-                  {c.imagemBase64 ? <img src={c.imagemBase64} alt="Recibo" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: '6px', border: '1px solid rgba(0,255,0,0.2)' }} /> : <div style={{ width: 60, height: 60, borderRadius: '6px', background: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: '11px' }}>📄</div>}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: '#fff', fontWeight: 600 }}>{getClienteOuPessoal(c)}</div>
-                    <div style={{ color: '#aaa', fontSize: '13px' }}>{c.data} · {(safeT as any)?.comprovantesValorUnitario || 'Valor unit.'}: {c.valorUnitario.toFixed(2)} × {c.quantidade} = <strong style={{ color: '#00ff00' }}>{c.valorTotal.toFixed(2)} €</strong></div>
-                    {c.descricao && <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>{c.descricao}</div>}
+              {filtradosPorData.map(grupo => (
+                <div key={grupo.data} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '10px 14px',
+                      background: 'rgba(0, 55, 28, 0.55)',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(34, 197, 94, 0.45)',
+                    }}
+                  >
+                    <span style={{ color: '#bbf7d0', fontWeight: 700, fontSize: '15px' }}>
+                      {formatarDataListaComprovante(grupo.data)}
+                    </span>
+                    <span style={{ color: '#a7f3d0', fontSize: '13px' }}>
+                      {(safeT as any)?.comprovantesSubtotalDia || 'Subtotal do dia'}:{' '}
+                      <strong style={{ color: '#4ade80' }}>{grupo.subtotal.toFixed(2)} €</strong>
+                      <span style={{ color: '#6ee7b7', marginLeft: '8px', opacity: 0.9 }}>
+                        ({grupo.items.length})
+                      </span>
+                    </span>
                   </div>
-                  <button onClick={() => handleRemoverComp(c.id)} style={{ padding: '6px 10px', background: 'rgba(255,68,68,0.2)', border: '1px solid rgba(255,68,68,0.5)', borderRadius: '6px', color: '#ff4444', cursor: 'pointer', fontSize: '12px' }}>{(safeT as any)?.remover || (safeT as any)?.remove || 'Remover'}</button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingLeft: '4px' }}>
+                    {grupo.items.map(c => (
+                      <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '14px', backgroundColor: '#222', borderRadius: '10px', border: '1px solid rgba(0,255,0,0.15)' }}>
+                        {c.imagemBase64 ? <img src={c.imagemBase64} alt="Recibo" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: '6px', border: '1px solid rgba(0,255,0,0.2)' }} /> : <div style={{ width: 60, height: 60, borderRadius: '6px', background: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: '11px' }}>📄</div>}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ color: '#fff', fontWeight: 600 }}>{getClienteOuPessoal(c)}</div>
+                          <div style={{ color: '#aaa', fontSize: '13px' }}>{c.data} · {(safeT as any)?.comprovantesValorUnitario || 'Valor unit.'}: {c.valorUnitario.toFixed(2)} × {c.quantidade} = <strong style={{ color: '#00ff00' }}>{c.valorTotal.toFixed(2)} €</strong></div>
+                          {c.descricao && <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>{c.descricao}</div>}
+                        </div>
+                        <button onClick={() => handleRemoverComp(c.id)} style={{ padding: '6px 10px', background: 'rgba(255,68,68,0.2)', border: '1px solid rgba(255,68,68,0.5)', borderRadius: '6px', color: '#ff4444', cursor: 'pointer', fontSize: '12px' }}>{(safeT as any)?.remover || (safeT as any)?.remove || 'Remover'}</button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
@@ -44482,6 +44608,210 @@ A1;Peça exemplo;10`}
                       {envioForm.email && <button type="button" onClick={handleAbrirEmail} style={{ padding: '10px 18px', background: 'rgba(0,150,255,0.2)', border: '1px solid #0096ff', borderRadius: '8px', color: '#0096ff', fontWeight: 600, cursor: 'pointer' }}>{(safeT as any)?.comprovantesAbrirEmail || 'Abrir cliente de email'}</button>}
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+            {comprovanteReciboRapido && (
+              <div
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  background: 'rgba(0,0,0,0.88)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 10002,
+                }}
+                onClick={() => {
+                  if (comprovanteReciboRapido.step === 'preview') setComprovanteReciboRapido(null)
+                }}
+              >
+                <div
+                  style={{
+                    background: '#1e1e1e',
+                    padding: '24px',
+                    borderRadius: '14px',
+                    border: '2px solid rgba(147,197,253,0.45)',
+                    maxWidth: '480px',
+                    width: '100%',
+                    maxHeight: '92vh',
+                    overflowY: 'auto',
+                    boxSizing: 'border-box',
+                  }}
+                  onClick={(ev) => ev.stopPropagation()}
+                >
+                  {comprovanteReciboRapido.step === 'ocr' ? (
+                    <>
+                      <h3 style={{ margin: '0 0 12px', color: '#93c5fd' }}>
+                        {(safeT as any)?.comprovantesReciboRapidoTitulo || 'Foto do recibo'}
+                      </h3>
+                      <p style={{ color: '#aaa', fontSize: '13px', marginBottom: '16px', lineHeight: 1.45 }}>
+                        {(safeT as any)?.comprovantesReciboRapidoProcessando ||
+                          'A ler o recibo no dispositivo… A primeira vez pode demorar (descarrega o idioma).'}
+                      </p>
+                      {comprovanteReciboRapido.imagemBase64 ? (
+                        <img
+                          src={comprovanteReciboRapido.imagemBase64}
+                          alt=""
+                          style={{ width: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: '8px', marginBottom: '12px' }}
+                        />
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => setComprovanteReciboRapido(null)}
+                        style={{
+                          marginTop: '8px',
+                          padding: '8px 14px',
+                          background: 'transparent',
+                          border: '1px solid #666',
+                          borderRadius: '8px',
+                          color: '#ccc',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {(safeT as any)?.comprovantesReciboRapidoCancelarOcr || 'Cancelar'}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <h3 style={{ margin: '0 0 12px', color: '#93c5fd' }}>
+                        {(safeT as any)?.comprovantesReciboRapidoTitulo || 'Foto do recibo'}
+                      </h3>
+                      <img
+                        src={comprovanteReciboRapido.imagemBase64}
+                        alt=""
+                        style={{ width: '100%', maxHeight: 220, objectFit: 'contain', borderRadius: '8px', marginBottom: '14px' }}
+                      />
+                      {comprovanteReciboRapido.valorUnitario <= 0 ? (
+                        <p style={{ color: '#fb923c', fontSize: '13px', marginBottom: '12px' }}>
+                          {(safeT as any)?.comprovantesReciboRapidoSemValor ||
+                            'Não foi detetado um valor em € com confiança. Pode guardar mesmo assim ou abrir o formulário para corrigir.'}
+                        </p>
+                      ) : null}
+                      <div style={{ fontSize: '13px', color: '#e5e5e5', marginBottom: '8px' }}>
+                        <strong style={{ color: '#93c5fd' }}>
+                          {(safeT as any)?.comprovantesReciboRapidoValor || 'Valor (€)'}:
+                        </strong>{' '}
+                        {comprovanteReciboRapido.valorUnitario.toFixed(2)} €
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#e5e5e5', marginBottom: '8px' }}>
+                        <strong style={{ color: '#93c5fd' }}>
+                          {(safeT as any)?.comprovantesReciboRapidoData || 'Data'}:
+                        </strong>{' '}
+                        {comprovanteReciboRapido.data}
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#e5e5e5', marginBottom: '12px' }}>
+                        <strong style={{ color: '#93c5fd' }}>
+                          {(safeT as any)?.comprovantesReciboRapidoDescricao || 'Descrição'}:
+                        </strong>{' '}
+                        {comprovanteReciboRapido.descricao}
+                      </div>
+                      <details style={{ marginBottom: '16px', fontSize: '11px', color: '#888' }}>
+                        <summary style={{ cursor: 'pointer', color: '#aaa' }}>
+                          {(safeT as any)?.comprovantesReciboRapidoOcrPreview || 'Texto lido (OCR)'}
+                        </summary>
+                        <pre
+                          style={{
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word',
+                            marginTop: '8px',
+                            padding: '8px',
+                            background: '#111',
+                            borderRadius: '6px',
+                            maxHeight: 120,
+                            overflow: 'auto',
+                          }}
+                        >
+                          {comprovanteReciboRapido.ocrSnippet}
+                        </pre>
+                      </details>
+                      <p style={{ fontSize: '11px', color: '#777', marginBottom: '14px' }}>
+                        {(safeT as any)?.comprovantesReciboRapidoTipoPessoal ||
+                          'Será guardado como despesa pessoal (IRS). Para cliente, use «Abrir formulário» e escolha o cliente.'}
+                      </p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'flex-end' }}>
+                        <button
+                          type="button"
+                          onClick={() => setComprovanteReciboRapido(null)}
+                          style={{
+                            padding: '10px 16px',
+                            background: 'transparent',
+                            border: '1px solid #666',
+                            borderRadius: '8px',
+                            color: '#ccc',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {(safeT as any)?.comprovantesReciboRapidoFechar || 'Fechar'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const p = comprovanteReciboRapido
+                            if (p.step !== 'preview') return
+                            setFormComp({
+                              tipo: 'pessoal',
+                              cliente: '',
+                              data: p.data,
+                              valorUnitario: p.valorUnitario,
+                              quantidade: 1,
+                              descricao: p.descricao,
+                              imagemBase64: p.imagemBase64,
+                            })
+                            setComprovanteReciboRapido(null)
+                            setShowFormComp(true)
+                          }}
+                          style={{
+                            padding: '10px 16px',
+                            background: 'rgba(255,255,255,0.08)',
+                            border: '1px solid #888',
+                            borderRadius: '8px',
+                            color: '#ddd',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {(safeT as any)?.comprovantesReciboRapidoAbrirFormulario || 'Abrir formulário'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const p = comprovanteReciboRapido
+                            if (p.step !== 'preview') return
+                            const novo: ComprovanteDespesa = {
+                              id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+                              tipo: 'pessoal',
+                              cliente: '',
+                              data: p.data,
+                              valorUnitario: p.valorUnitario,
+                              quantidade: 1,
+                              valorTotal: p.valorUnitario,
+                              descricao: p.descricao || undefined,
+                              imagemBase64: p.imagemBase64,
+                            }
+                            const atualizados = [...comprovantesDespesas, novo]
+                            setComprovantesDespesas(atualizados)
+                            saveData('nonato-comprovantes-despesas', atualizados)
+                            setComprovanteReciboRapido(null)
+                            alert(
+                              (safeT as any)?.comprovantesReciboRapidoOk ||
+                                'Comprovante guardado como despesa pessoal. Confira o valor na lista.'
+                            )
+                          }}
+                          style={{
+                            padding: '10px 16px',
+                            background: 'rgba(34,197,94,0.25)',
+                            border: '1px solid #22c55e',
+                            borderRadius: '8px',
+                            color: '#86efac',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {(safeT as any)?.comprovantesReciboRapidoGuardarPessoal || 'Guardar (pessoal)'}
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -59825,7 +60155,7 @@ A1;Peça exemplo;10`}
                     const numOrc = dadosOrcamento.numeroOrcamento || 'XXXX'
                     
                     // Carregar traduções do sistema
-                    const currentT = translations[lang as keyof typeof translations] || translations['pt-BR']
+                    const currentT = translations[translationBundleKey(lang)] || translations['pt-BR']
                     const t = currentT as any
                     
                     if (btnOS) btnOS.textContent = `📄 ${t?.confirmacaoPedidoOS || 'Confirmação de Pedido da Ordem de Serviço'} ${relatorioNum}`
@@ -59846,7 +60176,8 @@ A1;Peça exemplo;10`}
                   defaultValue={selectedLanguage}
                 >
                   <option value="pt-BR">🇧🇷 Português</option>
-                  <option value="en">🇬🇧 English</option>
+                  <option value="en">🇬🇧 English (UK)</option>
+                  <option value="en-US">🇺🇸 English (US)</option>
                   <option value="es">🇪🇸 Español</option>
                   <option value="fr">🇫🇷 Français</option>
                   <option value="de">🇩🇪 Deutsch</option>
@@ -60346,7 +60677,7 @@ A1;Peça exemplo;10`}
                               const btnSep = document.getElementById(`btn-sep-${orcamento.id}`)
                               
                               // Carregar traduções do sistema
-                              const currentT = translations[lang as keyof typeof translations] || translations['pt-BR']
+                              const currentT = translations[translationBundleKey(lang)] || translations['pt-BR']
                               const t = currentT as any
                               
                               if (btnOS) btnOS.textContent = `📄 ${t?.confirmacaoPedidoOS || 'Confirmação de Pedido da Ordem de Serviço'} ${orcamento.relatorioNumero || 'N/A'}`
@@ -60366,7 +60697,8 @@ A1;Peça exemplo;10`}
                             defaultValue={selectedLanguage}
                           >
                             <option value="pt-BR">🇧🇷 Português</option>
-                            <option value="en">🇬🇧 English</option>
+                            <option value="en">🇬🇧 English (UK)</option>
+                            <option value="en-US">🇺🇸 English (US)</option>
                             <option value="es">🇪🇸 Español</option>
                             <option value="fr">🇫🇷 Français</option>
                             <option value="de">🇩🇪 Deutsch</option>

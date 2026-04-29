@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 import { getDemoContext } from '../../../data/demo-context'
+import { translationBundleKey } from '../../../../translations'
 
 export const dynamic = 'force-dynamic'
 
@@ -97,7 +98,7 @@ export async function GET(
       }
     }
 
-    const t = translations[lang] || translations['pt-BR']
+    const t = translations[translationBundleKey(lang)] || translations['pt-BR']
     const dataFormatada = new Date().toLocaleString('pt-BR')
 
     // Gerar HTML

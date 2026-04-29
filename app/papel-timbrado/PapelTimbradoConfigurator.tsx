@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { translations } from '../translations'
+import { translations, translationBundleKey } from '../translations'
 import { loadData } from '../utils/dataStorage'
 import {
   PAPEL_DEFAULTS,
@@ -31,7 +31,7 @@ type FichaCadastralLite = {
 function getLang(): keyof typeof translations {
   if (typeof window === 'undefined') return 'pt-BR'
   const v = localStorage.getItem('nonato-language')
-  if (v && v in translations) return v as keyof typeof translations
+  if (v) return translationBundleKey(v)
   return 'pt-BR'
 }
 

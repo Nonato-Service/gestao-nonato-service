@@ -1,6 +1,25 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
+import {
+  parseTotalEurosFromReceiptText,
+  parseDataReciboIso,
+  extrairDescricaoRecibo
+} from '../lib/reciboComprovanteParser'
+
+type RegistroOcrModalState =
+  | null
+  | { step: 'ocr'; imagemBase64: string }
+  | {
+      step: 'preview'
+      imagemBase64: string
+      valor: number
+      data: string
+      descricao: string
+      ocrSnippet: string
+      tipoId: string
+      tipoNome: string
+    }
 
 export type DespesaRegistro = {
   id: string
@@ -68,6 +87,8 @@ export function RegistroDespesasContent({
   const [buscaCliente, setBuscaCliente] = useState('')
   const [buscaRelatorio, setBuscaRelatorio] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const ocrReciboFileRef = useRef<HTMLInputElement>(null)
+  const [registroOcrModal, setRegistroOcrModal] = useState<RegistroOcrModalState>(null)
 
   const despesasCadastradas = servicos.filter(s => s.categoria === 'despesa')
   const clientesFiltrados = clientes.filter(c =>
@@ -196,6 +217,32 @@ export function RegistroDespesasContent({
     window.open(`/api/pdf/despesas-documento/${docId}?lang=pt-BR`, '_blank')
   }
 
+  const defaultTipoOcr = (): { tipoId: string; tipoNome: string } => {
+    const first = despesasCadastradas[0]
+    if (first) return { tipoId: first.id, tipoNome: first.nome }
+    return { tipoId: 'outros', tipoNome: 'Outros' }
+  }
+
+  const confirmarOcrRegistro = () => {
+    if (!docAtual || !registroOcrModal || registroOcrModal.step !== 'preview') return
+    const p = registroOcrModal
+    const nova: DespesaRegistro = {
+      id: 'd-' + Date.now(),
+      tipoId: p.tipoId,
+      tipoNome: p.tipoNome,
+      valor: p.valor,
+      descricao: p.descricao,
+      fotos: [p.imagemBase64],
+      data: p.data
+    }
+    setDocAtual({
+      ...docAtual,
+      despesas: [...docAtual.despesas, nova]
+    })
+    setRegistroOcrModal(null)
+    alert(safeT?.registroDespesasOcrOk || 'Linha de despesa adicionada. Confira o valor.')
+  }
+
   return (
     <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{
@@ -307,13 +354,78 @@ export function RegistroDespesasContent({
           </div>
 
           {!showDespesaForm ? (
-            <button
-              className="btn-primary"
-              onClick={() => setShowDespesaForm(true)}
-              style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}
-            >
-              <span>+</span> {safeT?.adicionarDespesa || 'Adicionar Despesa'}
-            </button>
+            <div style={{ marginBottom: '20px', display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+              <input
+                ref={ocrReciboFileRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                style={{ display: 'none' }}
+                aria-hidden
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  e.target.value = ''
+                  if (!file || !file.type.startsWith('image/') || !docAtual) return
+                  const reader = new FileReader()
+                  const imagemBase64 = await new Promise<string>((resolve, reject) => {
+                    reader.onload = () => resolve(String(reader.result || ''))
+                    reader.onerror = () => reject(new Error('read'))
+                    reader.readAsDataURL(file)
+                  })
+                  setRegistroOcrModal({ step: 'ocr', imagemBase64 })
+                  try {
+                    const { createWorker } = await import('tesseract.js')
+                    const worker = await createWorker('por+eng')
+                    const r = await worker.recognize(file)
+                    await worker.terminate()
+                    const text = r.data.text || ''
+                    const valorParsed = parseTotalEurosFromReceiptText(text)
+                    const dataParsed = parseDataReciboIso(text)
+                    const data = dataParsed || new Date().toISOString().slice(0, 10)
+                    const descricao = extrairDescricaoRecibo(text)
+                    const def = defaultTipoOcr()
+                    setRegistroOcrModal({
+                      step: 'preview',
+                      imagemBase64,
+                      valor: valorParsed,
+                      data,
+                      descricao,
+                      ocrSnippet: text.slice(0, 500),
+                      tipoId: def.tipoId,
+                      tipoNome: def.tipoNome
+                    })
+                  } catch (err) {
+                    console.error(err)
+                    alert(safeT?.registroDespesasOcrErro || 'Não foi possível ler a imagem.')
+                    setRegistroOcrModal(null)
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => setShowDespesaForm(true)}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                <span>+</span> {safeT?.adicionarDespesa || 'Adicionar Despesa'}
+              </button>
+              <button
+                type="button"
+                onClick={() => ocrReciboFileRef.current?.click()}
+                title={safeT?.registroDespesasFotoOcrHint || ''}
+                style={{
+                  padding: '10px 18px',
+                  background: 'rgba(147, 197, 253, 0.15)',
+                  border: '1px solid rgba(147, 197, 253, 0.55)',
+                  borderRadius: '8px',
+                  color: '#bfdbfe',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                {safeT?.registroDespesasFotoOcrBtn || '📷 Foto do recibo (OCR)'}
+              </button>
+            </div>
           ) : (
             <div style={{
               padding: '20px',
@@ -466,6 +578,240 @@ export function RegistroDespesasContent({
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {registroOcrModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.88)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10002
+          }}
+          onClick={() => {
+            if (registroOcrModal.step === 'preview') setRegistroOcrModal(null)
+          }}
+        >
+          <div
+            style={{
+              background: '#1e1e1e',
+              padding: '24px',
+              borderRadius: '14px',
+              border: '2px solid rgba(147,197,253,0.45)',
+              maxWidth: '480px',
+              width: '100%',
+              maxHeight: '92vh',
+              overflowY: 'auto',
+              boxSizing: 'border-box'
+            }}
+            onClick={ev => ev.stopPropagation()}
+          >
+            {registroOcrModal.step === 'ocr' ? (
+              <>
+                <h3 style={{ margin: '0 0 12px', color: '#93c5fd' }}>
+                  {safeT?.registroDespesasOcrTitulo || 'Recibo — leitura automática'}
+                </h3>
+                <p style={{ color: '#aaa', fontSize: '13px', marginBottom: '16px', lineHeight: 1.45 }}>
+                  {safeT?.registroDespesasOcrProcessando || 'A ler o recibo…'}
+                </p>
+                {registroOcrModal.imagemBase64 ? (
+                  <img
+                    src={registroOcrModal.imagemBase64}
+                    alt=""
+                    style={{ width: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: '8px', marginBottom: '12px' }}
+                  />
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => setRegistroOcrModal(null)}
+                  style={{
+                    marginTop: '8px',
+                    padding: '8px 14px',
+                    background: 'transparent',
+                    border: '1px solid #666',
+                    borderRadius: '8px',
+                    color: '#ccc',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {safeT?.registroDespesasOcrCancelar || 'Cancelar'}
+                </button>
+              </>
+            ) : (
+              <>
+                <h3 style={{ margin: '0 0 12px', color: '#93c5fd' }}>
+                  {safeT?.registroDespesasOcrTitulo || 'Recibo — leitura automática'}
+                </h3>
+                <img
+                  src={registroOcrModal.imagemBase64}
+                  alt=""
+                  style={{ width: '100%', maxHeight: 220, objectFit: 'contain', borderRadius: '8px', marginBottom: '14px' }}
+                />
+                {registroOcrModal.valor <= 0 ? (
+                  <p style={{ color: '#fb923c', fontSize: '13px', marginBottom: '12px' }}>
+                    {safeT?.registroDespesasOcrSemValor || 'Valor em € não detetado com confiança.'}
+                  </p>
+                ) : null}
+                <div style={{ fontSize: '13px', color: '#e5e5e5', marginBottom: '10px' }}>
+                  <strong style={{ color: '#93c5fd' }}>{safeT?.valor || 'Valor (€)'}:</strong>{' '}
+                  <input
+                    type="number"
+                    step={0.01}
+                    value={registroOcrModal.valor === 0 ? '' : registroOcrModal.valor}
+                    onChange={ev =>
+                      setRegistroOcrModal(prev =>
+                        prev && prev.step === 'preview'
+                          ? { ...prev, valor: parseFloat(ev.target.value) || 0 }
+                          : prev
+                      )
+                    }
+                    style={{
+                      width: '120px',
+                      padding: '6px 8px',
+                      marginLeft: '6px',
+                      background: '#111',
+                      border: '1px solid rgba(147,197,253,0.35)',
+                      borderRadius: '6px',
+                      color: '#fff'
+                    }}
+                  />
+                </div>
+                <div style={{ fontSize: '13px', color: '#e5e5e5', marginBottom: '10px' }}>
+                  <strong style={{ color: '#93c5fd' }}>{safeT?.data || 'Data'}:</strong>{' '}
+                  <input
+                    type="date"
+                    value={registroOcrModal.data}
+                    onChange={ev =>
+                      setRegistroOcrModal(prev =>
+                        prev && prev.step === 'preview' ? { ...prev, data: ev.target.value } : prev
+                      )
+                    }
+                    style={{
+                      padding: '6px 8px',
+                      marginLeft: '6px',
+                      background: '#111',
+                      border: '1px solid rgba(147,197,253,0.35)',
+                      borderRadius: '6px',
+                      color: '#fff'
+                    }}
+                  />
+                </div>
+                <div style={{ fontSize: '13px', color: '#e5e5e5', marginBottom: '12px' }}>
+                  <strong style={{ color: '#93c5fd' }}>{safeT?.descricao || 'Descrição'}:</strong>
+                  <input
+                    type="text"
+                    value={registroOcrModal.descricao}
+                    onChange={ev =>
+                      setRegistroOcrModal(prev =>
+                        prev && prev.step === 'preview' ? { ...prev, descricao: ev.target.value } : prev
+                      )
+                    }
+                    style={{
+                      width: '100%',
+                      marginTop: '6px',
+                      padding: '8px',
+                      background: '#111',
+                      border: '1px solid rgba(147,197,253,0.35)',
+                      borderRadius: '6px',
+                      color: '#fff',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', color: '#93c5fd', fontSize: '12px', marginBottom: '6px' }}>
+                    {safeT?.registroDespesasOcrTipoLinha || 'Tipo de despesa (esta linha)'}
+                  </label>
+                  <select
+                    value={registroOcrModal.tipoId}
+                    onChange={ev => {
+                      const id = ev.target.value
+                      const s = despesasCadastradas.find(x => x.id === id)
+                      setRegistroOcrModal(prev =>
+                        prev && prev.step === 'preview'
+                          ? { ...prev, tipoId: id, tipoNome: s?.nome || (id === 'outros' ? 'Outros' : prev.tipoNome) }
+                          : prev
+                      )
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      background: '#111',
+                      border: '1px solid rgba(147,197,253,0.35)',
+                      borderRadius: '6px',
+                      color: '#fff'
+                    }}
+                  >
+                    {despesasCadastradas.map(s => (
+                      <option key={s.id} value={s.id}>
+                        {s.nome}
+                      </option>
+                    ))}
+                    {despesasCadastradas.length === 0 && <option value="outros">Outros</option>}
+                  </select>
+                </div>
+                {safeT?.registroDespesasOcrNotaCliente ? (
+                  <p style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '12px', lineHeight: 1.45 }}>
+                    {safeT.registroDespesasOcrNotaCliente}
+                  </p>
+                ) : null}
+                <details style={{ marginBottom: '16px', fontSize: '11px', color: '#888' }}>
+                  <summary style={{ cursor: 'pointer', color: '#aaa' }}>
+                    {safeT?.registroDespesasOcrSnippet || 'Texto lido (OCR)'}
+                  </summary>
+                  <pre
+                    style={{
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                      marginTop: '8px',
+                      padding: '8px',
+                      background: '#111',
+                      borderRadius: '6px',
+                      maxHeight: 120,
+                      overflow: 'auto'
+                    }}
+                  >
+                    {registroOcrModal.ocrSnippet}
+                  </pre>
+                </details>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={() => setRegistroOcrModal(null)}
+                    style={{
+                      padding: '10px 16px',
+                      background: 'transparent',
+                      border: '1px solid #666',
+                      borderRadius: '8px',
+                      color: '#ccc',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {safeT?.registroDespesasOcrCancelar || 'Cancelar'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmarOcrRegistro}
+                    style={{
+                      padding: '10px 16px',
+                      background: 'rgba(34,197,94,0.25)',
+                      border: '1px solid #22c55e',
+                      borderRadius: '8px',
+                      color: '#86efac',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {safeT?.registroDespesasOcrConfirmar || 'Adicionar ao documento'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
 
