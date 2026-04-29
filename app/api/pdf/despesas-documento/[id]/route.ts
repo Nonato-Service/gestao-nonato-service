@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 import { getDemoContext } from '../../../data/demo-context'
+import { translationBundleKey } from '../../../../translations'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,7 +16,8 @@ export async function GET(
       return new NextResponse('Demonstração expirada.', { status: 403 })
     }
     const { searchParams } = new URL(request.url)
-    const lang = searchParams.get('lang') || 'pt-BR'
+    const langRaw = searchParams.get('lang') || 'pt-BR'
+    const lang = translationBundleKey(langRaw)
     const docId = params.id
 
     const filePath = path.join(dataDir, 'nonato-despesas-documentos.json')
@@ -39,11 +41,14 @@ export async function GET(
         relatorio: 'Relatório de Serviço',
         data: 'Data',
         tipo: 'Tipo',
+        cartao: 'Cartão',
+        semCartao: 'Não especificado',
         valor: 'Valor',
         descricao: 'Descrição',
         codigoBarras: 'Código de Barras',
         comprovantes: 'Comprovantes',
         total: 'Total',
+        totalPorCartao: 'Conferência por cartão (soma das linhas)',
         rodape: 'Documento gerado em',
         nonato: 'NONATO SERVICE'
       },
@@ -54,11 +59,14 @@ export async function GET(
         relatorio: 'Informe de servicio',
         data: 'Fecha',
         tipo: 'Tipo',
+        cartao: 'Tarjeta',
+        semCartao: 'No especificado',
         valor: 'Importe',
         descricao: 'Descripción',
         codigoBarras: 'Código de barras',
         comprovantes: 'Justificantes',
         total: 'Total',
+        totalPorCartao: 'Totales por tarjeta',
         rodape: 'Documento generado el',
         nonato: 'NONATO SERVICE'
       },
@@ -69,11 +77,14 @@ export async function GET(
         relatorio: 'Rapport de service',
         data: 'Date',
         tipo: 'Type',
+        cartao: 'Carte',
+        semCartao: 'Non spécifié',
         valor: 'Montant',
         descricao: 'Description',
         codigoBarras: 'Code-barres',
         comprovantes: 'Justificatifs',
         total: 'Total',
+        totalPorCartao: 'Totaux par carte',
         rodape: 'Document généré le',
         nonato: 'NONATO SERVICE'
       },
@@ -84,11 +95,14 @@ export async function GET(
         relatorio: 'Rapporto di servizio',
         data: 'Data',
         tipo: 'Tipo',
+        cartao: 'Carta',
+        semCartao: 'Non specificato',
         valor: 'Importo',
         descricao: 'Descrizione',
         codigoBarras: 'Codice a barre',
         comprovantes: 'Giustificativi',
         total: 'Totale',
+        totalPorCartao: 'Totali per carta',
         rodape: 'Documento generato il',
         nonato: 'NONATO SERVICE'
       },
@@ -99,11 +113,14 @@ export async function GET(
         relatorio: 'Servicebericht',
         data: 'Datum',
         tipo: 'Typ',
+        cartao: 'Karte',
+        semCartao: 'Nicht angegeben',
         valor: 'Betrag',
         descricao: 'Beschreibung',
         codigoBarras: 'Barcode',
         comprovantes: 'Belege',
         total: 'Gesamt',
+        totalPorCartao: 'Summen pro Karte',
         rodape: 'Dokument erstellt am',
         nonato: 'NONATO SERVICE'
       },
@@ -114,35 +131,51 @@ export async function GET(
         relatorio: 'Service Report',
         data: 'Date',
         tipo: 'Type',
+        cartao: 'Card',
+        semCartao: 'Not specified',
         valor: 'Amount',
         descricao: 'Description',
         codigoBarras: 'Barcode',
         comprovantes: 'Attachments',
         total: 'Total',
+        totalPorCartao: 'Totals per card (line sum check)',
         rodape: 'Document generated on',
         nonato: 'NONATO SERVICE'
       }
     }
     const labels = t[lang] || t['pt-BR']
 
+    const esc = (s: string) =>
+      String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+
     const totalGeral = (doc.despesas || []).reduce((s: number, d: any) => s + (d.valor || 0), 0)
+    const totaisPorCartao: Record<string, number> = {}
+    for (const d of doc.despesas || []) {
+      const rot = String(d.cartaoRotulo || '').trim() || labels.semCartao
+      totaisPorCartao[rot] = (totaisPorCartao[rot] || 0) + (Number(d.valor) || 0)
+    }
     const dataFormatada = new Date().toLocaleString('pt-BR')
 
     const despesasHtml = (doc.despesas || []).map((d: any, i: number) => {
       const fotosHtml = (d.fotos || []).map((f: string) =>
         `<img src="${f}" alt="Comprovante" style="max-width: 100%; max-height: 200px; margin: 4px; border: 1px solid #ddd; border-radius: 4px;" />`
       ).join('')
+      const cartaoCell = esc(String(d.cartaoRotulo || '').trim()) || '—'
       return `
         <tr>
           <td>${i + 1}</td>
           <td>${d.tipoNome || '-'}</td>
+          <td style="font-size:9pt;white-space:nowrap;">${cartaoCell}</td>
           <td>€ ${(d.valor || 0).toFixed(2)}</td>
           <td>${(d.descricao || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>
           <td>${d.codigoBarras || '-'}</td>
         </tr>
         ${d.fotos?.length ? `
         <tr>
-          <td colspan="5" style="padding: 12px; background: #f9f9f9;">
+          <td colspan="6" style="padding: 12px; background: #f9f9f9;">
             <strong>${labels.comprovantes}:</strong><br/>
             <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px;">${fotosHtml}</div>
           </td>
@@ -151,8 +184,19 @@ export async function GET(
       `
     }).join('')
 
+    const totaisCartaoHtml = Object.entries(totaisPorCartao)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(
+        ([rotulo, tot]) => `
+      <tr>
+        <td style="padding:8px 12px;border:1px solid #ccc;">${esc(rotulo)}</td>
+        <td style="padding:8px 12px;border:1px solid #ccc;font-weight:600;">€ ${tot.toFixed(2)}</td>
+      </tr>`
+      )
+      .join('')
+
     const html = `<!DOCTYPE html>
-<html lang="${lang}">
+<html lang="${langRaw}">
 <head>
   <meta charset="UTF-8">
   <title>${labels.titulo} - ${doc.clienteNome}</title>
@@ -189,6 +233,7 @@ export async function GET(
       <tr>
         <th>#</th>
         <th>${labels.tipo}</th>
+        <th>${labels.cartao}</th>
         <th>${labels.valor}</th>
         <th>${labels.descricao}</th>
         <th>${labels.codigoBarras}</th>
@@ -197,12 +242,19 @@ export async function GET(
     <tbody>
       ${despesasHtml}
       <tr class="total-row">
-        <td colspan="2">${labels.total}</td>
+        <td colspan="3">${labels.total}</td>
         <td>€ ${totalGeral.toFixed(2)}</td>
         <td colspan="2"></td>
       </tr>
     </tbody>
   </table>
+
+  <div class="info-block" style="margin-top:16px;">
+    <p style="margin:0 0 8px;font-weight:700;color:#006600;">${labels.totalPorCartao}</p>
+    <table style="margin:0;max-width:520px;">
+      <tbody>${totaisCartaoHtml}</tbody>
+    </table>
+  </div>
 
   <div class="footer">
     <p>${labels.rodape} ${dataFormatada} — ${labels.nonato}${isDemo ? ' — DEMO' : ''}</p>

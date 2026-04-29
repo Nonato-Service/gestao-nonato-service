@@ -19,7 +19,16 @@ type RegistroOcrModalState =
       ocrSnippet: string
       tipoId: string
       tipoNome: string
+      cartaoId: string
     }
+
+/** Cartão corporativo: só apelido + últimos 4 dígitos (nunca o PAN completo). */
+export type CartaoEmpresaDespesas = {
+  id: string
+  apelido: string
+  ultimos4: string
+  criadoEm: string
+}
 
 export type DespesaRegistro = {
   id: string
@@ -30,6 +39,10 @@ export type DespesaRegistro = {
   codigoBarras?: string
   fotos: string[]
   data: string
+  /** Id do cartão no cadastro; opcional */
+  cartaoId?: string
+  /** Rótulo fixo na linha (ex.: "Combustível •••• 1234") para PDF mesmo se o cartão for removido depois */
+  cartaoRotulo?: string
 }
 
 export type DespesaDocumento = {
@@ -82,8 +95,12 @@ export function RegistroDespesasContent({
     descricao: '',
     codigoBarras: '',
     fotos: [],
-    data: new Date().toISOString().split('T')[0]
+    data: new Date().toISOString().split('T')[0],
+    cartaoId: ''
   })
+  const [cartoesEmpresa, setCartoesEmpresa] = useState<CartaoEmpresaDespesas[]>([])
+  const [cartaoFormApelido, setCartaoFormApelido] = useState('')
+  const [cartaoFormUltimos4, setCartaoFormUltimos4] = useState('')
   const [buscaCliente, setBuscaCliente] = useState('')
   const [buscaRelatorio, setBuscaRelatorio] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -108,9 +125,65 @@ export function RegistroDespesasContent({
     }
   }
 
+  const loadCartoes = async () => {
+    try {
+      const data = await loadData('nonato-cartoes-empresa-despesas')
+      setCartoesEmpresa(Array.isArray(data) ? data : [])
+    } catch {
+      setCartoesEmpresa([])
+    }
+  }
+
   useEffect(() => {
     loadDocumentos()
+    loadCartoes()
   }, [activeTabId])
+
+  const rotuloCartao = (c: CartaoEmpresaDespesas): string => {
+    const u = String(c.ultimos4 || '').replace(/\D/g, '').slice(-4).padStart(4, '0')
+    return `${String(c.apelido || '').trim()} •••• ${u}`
+  }
+
+  const rotuloLinhaParaCartaoId = (cartaoId: string | undefined): string | undefined => {
+    if (!cartaoId) return undefined
+    const c = cartoesEmpresa.find(x => x.id === cartaoId)
+    return c ? rotuloCartao(c) : undefined
+  }
+
+  const guardarCartaoEmpresa = async () => {
+    const apelido = cartaoFormApelido.trim()
+    const digitos = cartaoFormUltimos4.replace(/\D/g, '').slice(-4)
+    if (!apelido) {
+      alert(safeT?.registroDespesasCartaoErroApelido || 'Indique um nome para identificar o cartão.')
+      return
+    }
+    if (digitos.length !== 4) {
+      alert(safeT?.registroDespesasCartaoErroUltimos4 || 'Indique exatamente 4 dígitos (final do cartão).')
+      return
+    }
+    const novo: CartaoEmpresaDespesas = {
+      id: 'card-' + Date.now(),
+      apelido,
+      ultimos4: digitos,
+      criadoEm: new Date().toISOString()
+    }
+    const atualizados = [...cartoesEmpresa, novo]
+    await saveData('nonato-cartoes-empresa-despesas', atualizados)
+    setCartoesEmpresa(atualizados)
+    setCartaoFormApelido('')
+    setCartaoFormUltimos4('')
+  }
+
+  const removerCartaoEmpresa = async (id: string) => {
+    if (!window.confirm(safeT?.registroDespesasCartaoConfirmarRemover || 'Remover este cartão da lista?')) return
+    const atualizados = cartoesEmpresa.filter(c => c.id !== id)
+    await saveData('nonato-cartoes-empresa-despesas', atualizados)
+    setCartoesEmpresa(atualizados)
+    setDespesaForm(prev => (prev.cartaoId === id ? { ...prev, cartaoId: '' } : prev))
+    setRegistroOcrModal(prev =>
+      prev && prev.step === 'preview' && prev.cartaoId === id ? { ...prev, cartaoId: '' } : prev
+    )
+  }
 
   const iniciarNovoDocumento = () => {
     if (!clienteSelecionado) {
@@ -137,6 +210,8 @@ export function RegistroDespesasContent({
       alert(safeT?.selecioneTipoDespesa || 'Selecione o tipo de despesa.')
       return
     }
+    const cid = despesaForm.cartaoId?.trim()
+    const rotuloCart = cid ? rotuloLinhaParaCartaoId(cid) : undefined
     const nova: DespesaRegistro = {
       id: 'd-' + Date.now(),
       tipoId: despesaForm.tipoId || '',
@@ -145,7 +220,8 @@ export function RegistroDespesasContent({
       descricao: despesaForm.descricao || '',
       codigoBarras: despesaForm.codigoBarras,
       fotos: despesaForm.fotos || [],
-      data: despesaForm.data || new Date().toISOString().split('T')[0]
+      data: despesaForm.data || new Date().toISOString().split('T')[0],
+      ...(cid ? { cartaoId: cid, cartaoRotulo: rotuloCart || cid } : {})
     }
     setDocAtual({
       ...docAtual,
@@ -158,7 +234,8 @@ export function RegistroDespesasContent({
       descricao: '',
       codigoBarras: '',
       fotos: [],
-      data: new Date().toISOString().split('T')[0]
+      data: new Date().toISOString().split('T')[0],
+      cartaoId: ''
     })
     setShowDespesaForm(false)
   }
@@ -226,6 +303,8 @@ export function RegistroDespesasContent({
   const confirmarOcrRegistro = () => {
     if (!docAtual || !registroOcrModal || registroOcrModal.step !== 'preview') return
     const p = registroOcrModal
+    const cid = p.cartaoId?.trim()
+    const rotuloCart = cid ? rotuloLinhaParaCartaoId(cid) : undefined
     const nova: DespesaRegistro = {
       id: 'd-' + Date.now(),
       tipoId: p.tipoId,
@@ -233,7 +312,8 @@ export function RegistroDespesasContent({
       valor: p.valor,
       descricao: p.descricao,
       fotos: [p.imagemBase64],
-      data: p.data
+      data: p.data,
+      ...(cid ? { cartaoId: cid, cartaoRotulo: rotuloCart || cid } : {})
     }
     setDocAtual({
       ...docAtual,
@@ -258,6 +338,105 @@ export function RegistroDespesasContent({
         <p style={{ margin: 0, opacity: 0.9, color: '#ccc' }}>
           {safeT?.registroDespesasDesc || 'Escaneie códigos de barras, tire fotos e vincule despesas a relatórios de serviço e clientes.'}
         </p>
+      </div>
+
+      <div
+        style={{
+          marginBottom: '20px',
+          padding: '18px',
+          backgroundColor: '#1e1e24',
+          borderRadius: '10px',
+          border: '1px solid rgba(251, 191, 36, 0.35)'
+        }}
+      >
+        <h3 style={{ margin: '0 0 6px', color: '#fbbf24', fontSize: '16px' }}>
+          {safeT?.registroDespesasCartoesTitulo || 'Cartões da empresa'}
+        </h3>
+        <p style={{ margin: '0 0 14px', fontSize: '12px', color: '#a8a8b3', lineHeight: 1.45 }}>
+          {safeT?.registroDespesasCartoesDesc ||
+            'Cadastre um nome e apenas os últimos 4 dígitos para identificar o cartão. Não introduza o número completo.'}
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-end', marginBottom: '14px' }}>
+          <div style={{ flex: '1 1 160px' }}>
+            <label style={{ display: 'block', fontSize: '11px', color: '#ccc', marginBottom: '4px' }}>
+              {safeT?.registroDespesasCartaoApelido || 'Nome / identificação'}
+            </label>
+            <input
+              type="text"
+              value={cartaoFormApelido}
+              onChange={e => setCartaoFormApelido(e.target.value)}
+              placeholder={safeT?.registroDespesasCartaoApelidoPh || 'Ex.: Visa empresa'}
+              autoComplete="off"
+              style={{
+                width: '100%',
+                padding: '8px',
+                backgroundColor: '#2a2a2a',
+                color: '#fff',
+                border: '1px solid rgba(251, 191, 36, 0.35)',
+                borderRadius: '6px'
+              }}
+            />
+          </div>
+          <div style={{ flex: '0 0 120px' }}>
+            <label style={{ display: 'block', fontSize: '11px', color: '#ccc', marginBottom: '4px' }}>
+              {safeT?.registroDespesasCartaoUltimos4 || 'Últimos 4'}
+            </label>
+            <input
+              type="password"
+              inputMode="numeric"
+              autoComplete="off"
+              maxLength={4}
+              value={cartaoFormUltimos4}
+              onChange={e => setCartaoFormUltimos4(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              placeholder="••••"
+              style={{
+                width: '100%',
+                padding: '8px',
+                backgroundColor: '#2a2a2a',
+                color: '#fff',
+                border: '1px solid rgba(251, 191, 36, 0.35)',
+                borderRadius: '6px',
+                letterSpacing: '0.15em'
+              }}
+            />
+          </div>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => void guardarCartaoEmpresa()}
+            style={{ padding: '10px 16px' }}
+          >
+            {safeT?.registroDespesasCartaoAdicionar || 'Guardar cartão'}
+          </button>
+        </div>
+        {cartoesEmpresa.length === 0 ? (
+          <p style={{ margin: 0, fontSize: '13px', color: '#888' }}>
+            {safeT?.registroDespesasCartaoListaVazia || 'Nenhum cartão cadastrado.'}
+          </p>
+        ) : (
+          <ul style={{ margin: 0, paddingLeft: '18px', color: '#e5e5e5', fontSize: '13px' }}>
+            {cartoesEmpresa.map(c => (
+              <li key={c.id} style={{ marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <span style={{ fontFamily: 'ui-monospace, monospace' }}>{rotuloCartao(c)}</span>
+                <button
+                  type="button"
+                  onClick={() => void removerCartaoEmpresa(c.id)}
+                  style={{
+                    padding: '2px 8px',
+                    fontSize: '11px',
+                    background: 'rgba(239, 68, 68, 0.15)',
+                    border: '1px solid rgba(239, 68, 68, 0.5)',
+                    borderRadius: '4px',
+                    color: '#f87171',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {safeT?.registroDespesasCartaoRemover || 'Remover'}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {!docAtual ? (
@@ -392,7 +571,8 @@ export function RegistroDespesasContent({
                       descricao,
                       ocrSnippet: text.slice(0, 500),
                       tipoId: def.tipoId,
-                      tipoNome: def.tipoNome
+                      tipoNome: def.tipoNome,
+                      cartaoId: ''
                     })
                   } catch (err) {
                     console.error(err)
@@ -474,6 +654,22 @@ export function RegistroDespesasContent({
                   placeholder={safeT?.descricaoPlaceholder || 'Ex: Combustível, refeição, peças...'}
                   style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
+              </div>
+
+              <div style={{ marginBottom: '12px' }}>
+                <label>{safeT?.registroDespesasLinhaCartao || 'Cartão utilizado'}</label>
+                <select
+                  value={despesaForm.cartaoId || ''}
+                  onChange={e => setDespesaForm(prev => ({ ...prev, cartaoId: e.target.value }))}
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#2a2a2a', color: '#fff', border: '1px solid rgba(251, 191, 36, 0.35)', borderRadius: '4px' }}
+                >
+                  <option value="">{safeT?.registroDespesasCartaoNenhum || '— Não especificado —'}</option>
+                  {cartoesEmpresa.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {rotuloCartao(c)}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div style={{ marginBottom: '12px' }}>
@@ -568,6 +764,11 @@ export function RegistroDespesasContent({
                 >
                   <div>
                     <strong>{d.tipoNome}</strong> — € {d.valor.toFixed(2)} — {d.descricao}
+                    {d.cartaoRotulo && (
+                      <span style={{ marginLeft: '8px', color: '#fbbf24', fontSize: '12px' }} title={safeT?.registroDespesasLinhaCartao || ''}>
+                        💳 {d.cartaoRotulo}
+                      </span>
+                    )}
                     {d.codigoBarras && <span style={{ marginLeft: '8px', color: '#888', fontSize: '12px' }}>| {d.codigoBarras}</span>}
                     {d.fotos.length > 0 && <span style={{ marginLeft: '8px', color: '#00ff00' }}>📷 {d.fotos.length}</span>}
                   </div>
@@ -752,6 +953,34 @@ export function RegistroDespesasContent({
                       </option>
                     ))}
                     {despesasCadastradas.length === 0 && <option value="outros">Outros</option>}
+                  </select>
+                </div>
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', color: '#93c5fd', fontSize: '12px', marginBottom: '6px' }}>
+                    {safeT?.registroDespesasLinhaCartao || 'Cartão utilizado'}
+                  </label>
+                  <select
+                    value={registroOcrModal.cartaoId}
+                    onChange={ev =>
+                      setRegistroOcrModal(prev =>
+                        prev && prev.step === 'preview' ? { ...prev, cartaoId: ev.target.value } : prev
+                      )
+                    }
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      background: '#111',
+                      border: '1px solid rgba(251, 191, 36, 0.35)',
+                      borderRadius: '6px',
+                      color: '#fff'
+                    }}
+                  >
+                    <option value="">{safeT?.registroDespesasCartaoNenhum || '— Não especificado —'}</option>
+                    {cartoesEmpresa.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {rotuloCartao(c)}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 {safeT?.registroDespesasOcrNotaCliente ? (
