@@ -1502,6 +1502,8 @@ type Cliente = {
   relatorios?: { [equipamentoId: string]: RelatorioServico[] } // Relatórios organizados por equipamento
   isDevedor?: boolean // Indica se o cliente é devedor
   saldoPendente?: number // Saldo pendente do cliente
+  /** Quantidade de relatórios de serviço com situação «não pago» no fluxo financeiro */
+  relatoriosNaoPagoCount?: number
   /** Formulários de solicitação técnica devolvidos (PDF/imagem), associados ao registo do cliente */
   anexosSolicitacaoServico?: SolicitacaoDocDevolvidoCliente[]
 }
@@ -1767,6 +1769,8 @@ type ClienteDevedor = {
     diasVencido?: number
   }>
   isDevedor: boolean // Flag para indicar se é devedor
+  /** Relatórios de serviço com fechamento marcado «não pago» / devedor (gestão financeira) */
+  relatoriosNaoPagoCount?: number
 }
 
 type IVAControle = {
@@ -4142,8 +4146,8 @@ export default function Dashboard() {
       return
     }
     if (situacao === 'no_prazo') {
+      // Preserva `sem_fatura` quando o fechamento é sem fatura (clientes que não faturam)
       setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', {
-        modo: 'com_fatura',
         pagamento: 'pendente',
         situacaoFatura: 'no_prazo',
       })
@@ -4151,15 +4155,13 @@ export default function Dashboard() {
     }
     if (situacao === 'paga') {
       setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', {
-        modo: 'com_fatura',
         pagamento: 'pago',
         situacaoFatura: 'paga',
       })
       return
     }
     setFechamentoEtapaFinanceira(relatorioId, 'controlo_pagamento', {
-      modo: 'com_fatura',
-      pagamento: 'pendente',
+      pagamento: 'devedor',
       situacaoFatura: 'nao_paga',
     })
   }
@@ -6255,12 +6257,12 @@ export default function Dashboard() {
   // Carregar logo, idioma e usuários salvos ao iniciar
   // Mensagens / peças armazém: carregadas em loadAllData com getData (mesmo snapshot que o resto) — não usar loadData em paralelo no arranque (causa resultados diferentes a cada F5).
 
-  // Atualizar clientes devedores quando faturas ou clientes mudarem (ex.: estado da fatura sem mudar a contagem).
-  // `atualizarClientesDevedores` só chama setClientes quando o hash de isDevedor/saldoPendente muda — evita loop infinito.
+  // Atualizar clientes devedores quando faturas, clientes, relatórios ou fluxo financeiro (ex.: «Não pago») mudarem.
+  // `atualizarClientesDevedores` só chama setClientes quando o hash relevante muda — evita loop infinito.
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (isUpdatingDevedores.current) return
-    if (faturasPecas.length === 0 && clientes.length === 0) return
+    if (faturasPecas.length === 0 && clientes.length === 0 && relatoriosServico.length === 0) return
 
     isUpdatingDevedores.current = true
     const raf = requestAnimationFrame(() => {
@@ -6271,7 +6273,7 @@ export default function Dashboard() {
     })
     return () => cancelAnimationFrame(raf)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- atualizarClientesDevedores usa estado atual; não incluir na deps (identidade instável).
-  }, [faturasPecas, clientes])
+  }, [faturasPecas, clientes, relatoriosServico, fechamentoFluxoFinanceiroPorRelatorioId])
 
   useEffect(() => {
     // Garantir que só executa no cliente
@@ -12891,7 +12893,12 @@ export default function Dashboard() {
   }
 
   const clienteFaturaEhDevedor = (clienteId: string) =>
-    clientesDevedores.some(cd => cd.clienteId === clienteId && cd.isDevedor && cd.saldoPendente > 0)
+    clientesDevedores.some(
+      cd =>
+        cd.clienteId === clienteId &&
+        cd.isDevedor &&
+        (Number(cd.saldoPendente) > 0 || Number(cd.relatoriosNaoPagoCount ?? 0) > 0)
+    )
 
   const primeiroTelefoneSoDigitosCliente = (telefones: string): string => {
     const partes = (telefones || '')
@@ -13119,7 +13126,8 @@ export default function Dashboard() {
             numeroFaturasVencidas: 0,
             ultimaAtualizacao: new Date().toISOString(),
             faturasPendentes: [],
-            isDevedor: false
+            isDevedor: false,
+            relatoriosNaoPagoCount: 0,
           })
         }
 
@@ -13157,9 +13165,42 @@ export default function Dashboard() {
       }
     })
 
-    // Marcar como devedor se tiver saldo pendente
+    // Relatórios de serviço com fechamento «não pago» / devedor (sincroniza cartão vermelho no cadastro de clientes)
+    for (const rel of relatoriosServico) {
+      const fr = fechamentoFluxoFinanceiroPorRelatorioId[rel.id]
+      const frObj =
+        fr && typeof fr === 'object' && !Array.isArray(fr) ? (fr as FechamentoFluxoFinanceiroEntry) : null
+      if (!frObj) continue
+      const naoPagoRel =
+        frObj.situacaoFatura === 'nao_paga' || frObj.pagamento === 'devedor'
+      if (!naoPagoRel) continue
+      const clienteId = String(rel.clienteId ?? '').trim()
+      if (!clienteId) continue
+
+      if (!devedoresMap.has(clienteId)) {
+        const cliente = clientes.find(c => c.id === clienteId)
+        devedoresMap.set(clienteId, {
+          clienteId,
+          clienteNome: cliente?.nomeEmpresa || rel.cliente,
+          totalDevido: 0,
+          totalPago: 0,
+          saldoPendente: 0,
+          numeroFaturasPendentes: 0,
+          numeroFaturasVencidas: 0,
+          ultimaAtualizacao: new Date().toISOString(),
+          faturasPendentes: [],
+          isDevedor: false,
+          relatoriosNaoPagoCount: 0,
+        })
+      }
+      const devedorRel = devedoresMap.get(clienteId)!
+      devedorRel.relatoriosNaoPagoCount = (devedorRel.relatoriosNaoPagoCount ?? 0) + 1
+    }
+
+    // Marcar como devedor: faturas de peças em aberto ou relatório(s) de serviço «não pago»
     devedoresMap.forEach((devedor, clienteId) => {
-      devedor.isDevedor = devedor.saldoPendente > 0
+      devedor.isDevedor =
+        devedor.saldoPendente > 0 || (devedor.relatoriosNaoPagoCount ?? 0) > 0
     })
 
     const novosDevedores = Array.from(devedoresMap.values())
@@ -13172,7 +13213,8 @@ export default function Dashboard() {
       return {
         ...cliente,
         isDevedor: devedor?.isDevedor || false,
-        saldoPendente: devedor?.saldoPendente || 0
+        saldoPendente: devedor?.saldoPendente || 0,
+        relatoriosNaoPagoCount: devedor?.relatoriosNaoPagoCount ?? 0,
       }
     })
     
@@ -13181,7 +13223,8 @@ export default function Dashboard() {
     const newHash = JSON.stringify(clientesAtualizados.map(c => ({ 
       id: c.id, 
       isDevedor: c.isDevedor || false, 
-      saldoPendente: c.saldoPendente || 0 
+      saldoPendente: c.saldoPendente || 0,
+      relatoriosNaoPagoCount: c.relatoriosNaoPagoCount ?? 0,
     })).sort((a, b) => a.id.localeCompare(b.id)))
     
     // Só atualizar se o hash mudou
@@ -33034,11 +33077,16 @@ onKeyPress={(e) => {
                               : (safeT as any)?.semFaturas || 'Sem Faturas'
                       const badgeF = getClienteFaturaBadgeProps(cliente.id)
                       const alertaDevedor = clienteCadastroAlertaDevedorId === cliente.id
+                      const relNaoPagoCount = Number(cliente.relatoriosNaoPagoCount ?? 0)
                       const devedorDetalhe = clientesDevedores.find(
-                        d => d.clienteId === cliente.id && d.isDevedor && d.saldoPendente > 0
+                        d =>
+                          d.clienteId === cliente.id &&
+                          d.isDevedor &&
+                          (d.saldoPendente > 0 || Number(d.relatoriosNaoPagoCount ?? 0) > 0)
                       )
                       const ehDevedor =
-                        Boolean(cliente.isDevedor) && Number(cliente.saldoPendente ?? 0) > 0
+                        Boolean(cliente.isDevedor) &&
+                        (Number(cliente.saldoPendente ?? 0) > 0 || relNaoPagoCount > 0)
                       const highlightDevedor = ehDevedor || alertaDevedor
                       const valorDividaPecas =
                         devedorDetalhe?.saldoPendente ?? Number(cliente.saldoPendente ?? 0)
@@ -33238,7 +33286,7 @@ onKeyPress={(e) => {
                               )}
                             </div>
 
-                            {ehDevedor && valorDividaPecas > 0 && (
+                            {ehDevedor && (valorDividaPecas > 0 || relNaoPagoCount > 0) && (
                               <div
                                 style={{
                                   marginTop: '6px',
@@ -33250,22 +33298,38 @@ onKeyPress={(e) => {
                                   boxSizing: 'border-box',
                                 }}
                               >
-                                <div style={{ fontSize: '12px', color: '#fff', fontWeight: 700 }}>
-                                  {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
-                                  {valorDividaPecas.toFixed(2)}
-                                </div>
+                                {valorDividaPecas > 0 ? (
+                                  <div style={{ fontSize: '12px', color: '#fff', fontWeight: 700 }}>
+                                    {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
+                                    {valorDividaPecas.toFixed(2)}
+                                  </div>
+                                ) : null}
                                 {faturasResumoPecas ? (
                                   <div
                                     style={{
                                       fontSize: '10px',
                                       color: '#fecaca',
-                                      marginTop: '4px',
+                                      marginTop: valorDividaPecas > 0 ? '4px' : 0,
                                       wordBreak: 'break-word',
                                       lineHeight: 1.35,
                                     }}
                                   >
                                     {(safeT as any)?.clienteDevedorFaturasLabel || 'Faturas em aberto'}:{' '}
                                     {faturasResumoPecas}
+                                  </div>
+                                ) : null}
+                                {relNaoPagoCount > 0 ? (
+                                  <div
+                                    style={{
+                                      fontSize: '10px',
+                                      color: '#fecaca',
+                                      marginTop: '4px',
+                                      lineHeight: 1.35,
+                                    }}
+                                  >
+                                    {(safeT as any)?.clienteDevedorRelatoriosNaoPagoLabel ||
+                                      'Relatório(s) de serviço marcados como não pago'}
+                                    : {relNaoPagoCount}
                                   </div>
                                 ) : null}
                               </div>
@@ -54887,6 +54951,25 @@ A1;Peça exemplo;10`}
                             >
                               {txOs.financeiroOsRecebSemFaturaBtn || 'Confirmar'}
                             </button>
+                            <button
+                              type="button"
+                              className="btn-danger"
+                              disabled={!osTabRecebSemFaturaRelId}
+                              onClick={() => {
+                                if (!osTabRecebSemFaturaRelId) return
+                                setFechamentoEtapaFinanceira(osTabRecebSemFaturaRelId, 'controlo_pagamento', {
+                                  modo: 'sem_fatura',
+                                  pagamento: 'devedor',
+                                })
+                                alert(
+                                  txOs.financeiroOsSemFaturaNaoPagoOk ||
+                                    'Cliente marcado como não pago (sem fatura). O cartão no cadastro de clientes fica em alerta vermelho.'
+                                )
+                              }}
+                              style={{ padding: '10px 16px', fontSize: '13px' }}
+                            >
+                              {txOs.financeiroOsSemFaturaNaoPagoBtn || 'Cliente não pagou (s/ fatura)'}
+                            </button>
                           </div>
                         </div>
 
@@ -55425,8 +55508,15 @@ A1;Peça exemplo;10`}
                   {/* Lista de Clientes Devedores — padrão card #2a2a2a, borda 1px (vermelho para devedores) */}
                   <div style={{ display: 'grid', gap: '15px' }}>
                     {clientesDevedores
-                      .filter(cd => cd.isDevedor && cd.saldoPendente > 0)
-                      .sort((a, b) => b.saldoPendente - a.saldoPendente)
+                      .filter(
+                        cd =>
+                          cd.isDevedor &&
+                          (cd.saldoPendente > 0 || Number(cd.relatoriosNaoPagoCount ?? 0) > 0)
+                      )
+                      .sort((a, b) => {
+                        if (b.saldoPendente !== a.saldoPendente) return b.saldoPendente - a.saldoPendente
+                        return (b.relatoriosNaoPagoCount ?? 0) - (a.relatoriosNaoPagoCount ?? 0)
+                      })
                       .map((devedor) => (
                         <div
                           key={devedor.clienteId}
@@ -55465,6 +55555,24 @@ A1;Peça exemplo;10`}
                               <p style={{ color: '#ff0000', margin: 0, fontSize: '20px', fontWeight: 'bold' }}>{devedor.numeroFaturasVencidas}</p>
                             </div>
                           </div>
+                          {(devedor.relatoriosNaoPagoCount ?? 0) > 0 && (
+                            <div
+                              style={{
+                                marginTop: '12px',
+                                padding: '10px 12px',
+                                backgroundColor: 'rgba(80, 0, 0, 0.35)',
+                                border: '1px solid rgba(255, 100, 100, 0.45)',
+                                borderRadius: '6px',
+                                color: '#fecaca',
+                                fontSize: '13px',
+                                fontWeight: 600,
+                              }}
+                            >
+                              {(safeT as any)?.clienteDevedorRelatoriosNaoPagoLabel ||
+                                'Relatório(s) de serviço marcados como não pago'}
+                              : {devedor.relatoriosNaoPagoCount}
+                            </div>
+                          )}
                           {devedor.faturasPendentes.length > 0 && (
                             <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid rgba(255, 0, 0, 0.3)' }}>
                               <p style={{ color: '#ccc', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
@@ -55514,7 +55622,11 @@ A1;Peça exemplo;10`}
                           </div>
                         </div>
                       ))}
-                    {clientesDevedores.filter(cd => cd.isDevedor && cd.saldoPendente > 0).length === 0 && (
+                    {clientesDevedores.filter(
+                      cd =>
+                        cd.isDevedor &&
+                        (cd.saldoPendente > 0 || Number(cd.relatoriosNaoPagoCount ?? 0) > 0)
+                    ).length === 0 && (
                       <div style={{ textAlign: 'center', padding: '40px', color: '#ccc' }}>
                         {safeT?.nenhumClienteDevedor || 'Nenhum cliente devedor encontrado'}
                       </div>
@@ -55704,7 +55816,11 @@ A1;Peça exemplo;10`}
                           const totalVendas = osNoPeriodo.reduce((sum, os) => sum + os.valorTotal, 0)
                           const totalRecebido = faturasNoPeriodo.filter(f => f.status === 'paga').reduce((sum, f) => sum + f.valorTotal, 0)
                           const totalIVA = osNoPeriodo.reduce((sum, os) => sum + os.valorIVA, 0)
-                          const devedores = clientesDevedores.filter(cd => cd.isDevedor && cd.saldoPendente > 0)
+                          const devedores = clientesDevedores.filter(
+                            cd =>
+                              cd.isDevedor &&
+                              (cd.saldoPendente > 0 || Number(cd.relatoriosNaoPagoCount ?? 0) > 0)
+                          )
 
                           const novoRelatorio: RelatorioFinanceiro = {
                             id: `rel-${Date.now()}`,
@@ -66763,11 +66879,16 @@ A1;Peça exemplo;10`}
                           : (safeT as any)?.semFaturas || 'Sem Faturas'
                   const badgeF = getClienteFaturaBadgeProps(cliente.id)
                   const alertaDevedor = clienteCadastroAlertaDevedorId === cliente.id
+                  const relNaoPagoCount = Number(cliente.relatoriosNaoPagoCount ?? 0)
                   const devedorDetalhe = clientesDevedores.find(
-                    d => d.clienteId === cliente.id && d.isDevedor && d.saldoPendente > 0
+                    d =>
+                      d.clienteId === cliente.id &&
+                      d.isDevedor &&
+                      (d.saldoPendente > 0 || Number(d.relatoriosNaoPagoCount ?? 0) > 0)
                   )
                   const ehDevedor =
-                    Boolean(cliente.isDevedor) && Number(cliente.saldoPendente ?? 0) > 0
+                    Boolean(cliente.isDevedor) &&
+                    (Number(cliente.saldoPendente ?? 0) > 0 || relNaoPagoCount > 0)
                   const highlightDevedor = ehDevedor || alertaDevedor
                   const valorDividaPecas =
                     devedorDetalhe?.saldoPendente ?? Number(cliente.saldoPendente ?? 0)
@@ -66959,7 +67080,7 @@ A1;Peça exemplo;10`}
                           )}
                         </div>
 
-                        {ehDevedor && valorDividaPecas > 0 && (
+                        {ehDevedor && (valorDividaPecas > 0 || relNaoPagoCount > 0) && (
                           <div
                             style={{
                               marginTop: '6px',
@@ -66971,22 +67092,38 @@ A1;Peça exemplo;10`}
                               boxSizing: 'border-box',
                             }}
                           >
-                            <div style={{ fontSize: '12px', color: '#fff', fontWeight: 700 }}>
-                              {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
-                              {valorDividaPecas.toFixed(2)}
-                            </div>
+                            {valorDividaPecas > 0 ? (
+                              <div style={{ fontSize: '12px', color: '#fff', fontWeight: 700 }}>
+                                {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
+                                {valorDividaPecas.toFixed(2)}
+                              </div>
+                            ) : null}
                             {faturasResumoPecas ? (
                               <div
                                 style={{
                                   fontSize: '10px',
                                   color: '#fecaca',
-                                  marginTop: '4px',
+                                  marginTop: valorDividaPecas > 0 ? '4px' : 0,
                                   wordBreak: 'break-word',
                                   lineHeight: 1.35,
                                 }}
                               >
                                 {(safeT as any)?.clienteDevedorFaturasLabel || 'Faturas em aberto'}:{' '}
                                 {faturasResumoPecas}
+                              </div>
+                            ) : null}
+                            {relNaoPagoCount > 0 ? (
+                              <div
+                                style={{
+                                  fontSize: '10px',
+                                  color: '#fecaca',
+                                  marginTop: '4px',
+                                  lineHeight: 1.35,
+                                }}
+                              >
+                                {(safeT as any)?.clienteDevedorRelatoriosNaoPagoLabel ||
+                                  'Relatório(s) de serviço marcados como não pago'}
+                                : {relNaoPagoCount}
                               </div>
                             ) : null}
                           </div>

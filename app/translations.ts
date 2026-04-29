@@ -2181,6 +2181,7 @@ export const translations = {
     clienteDevedorBadge: 'Devedor',
     clienteDevedorDividaLabel: 'Dívida',
     clienteDevedorFaturasLabel: 'Faturas em aberto',
+    clienteDevedorRelatoriosNaoPagoLabel: 'Relatório(s) de serviço marcados como não pago',
     faturasDe: 'Faturas de',
     clienteNaoEncontrado: 'Cliente não encontrado',
     cadastroServicosTitle: 'CADASTRO DE SERVIÇOS / VALORES',
@@ -2676,6 +2677,9 @@ export const translations = {
     financeiroOsRecebSemFaturaSelect: 'Escolher relatório…',
     financeiroOsRecebSemFaturaBtn: 'Confirmar',
     financeiroOsRecebSemFaturaOk: 'Recebimento sem fatura registado.',
+    financeiroOsSemFaturaNaoPagoBtn: 'Cliente não pagou (s/ fatura)',
+    financeiroOsSemFaturaNaoPagoOk:
+      'Cliente marcado como não pago (sem fatura). O cartão no cadastro de clientes fica em alerta vermelho.',
     financeiroOsConsultaFaturaTitulo: 'Consultar nº da fatura',
     financeiroOsConsultaFaturaDesc:
       'Pesquisa no fluxo dos relatórios (nº guardado) e nas faturas de peças. Pode usar parte do número (correspondência parcial). Nos resultados do relatório pode definir a situação.',
@@ -5081,6 +5085,7 @@ export const translations = {
     clienteDevedorBadge: 'Deudor',
     clienteDevedorDividaLabel: 'Deuda',
     clienteDevedorFaturasLabel: 'Facturas pendientes',
+    clienteDevedorRelatoriosNaoPagoLabel: 'Informe(s) de servicio marcados como no pagados',
     faturasDe: 'Facturas de',
     clienteNaoEncontrado: 'Cliente no encontrado',
     cadastroServicosTitle: 'REGISTRO DE SERVICIOS / VALORES',
@@ -5525,6 +5530,9 @@ export const translations = {
     financeiroOsRecebSemFaturaSelect: 'Elegir informe…',
     financeiroOsRecebSemFaturaBtn: 'Confirmar',
     financeiroOsRecebSemFaturaOk: 'Cobro sin factura registrado.',
+    financeiroOsSemFaturaNaoPagoBtn: 'Cliente no pagó (sin factura)',
+    financeiroOsSemFaturaNaoPagoOk:
+      'Cliente marcado como no pagado (sin factura). La ficha en clientes muestra alerta roja.',
     financeiroOsConsultaFaturaTitulo: 'Consultar nº de factura',
     financeiroOsConsultaFaturaDesc:
       'Busca en el flujo de informes (nº guardado) y en facturas de piezas. Puede usar parte del número (coincidencia parcial).',
@@ -7897,6 +7905,7 @@ export const translations = {
     clienteDevedorBadge: 'Débiteur',
     clienteDevedorDividaLabel: 'Dette',
     clienteDevedorFaturasLabel: 'Factures ouvertes',
+    clienteDevedorRelatoriosNaoPagoLabel: 'Rapport(s) de service marqué(s) comme non payé(s)',
     faturasDe: 'Factures de',
     clienteNaoEncontrado: 'Client introuvable',
     cadastroServicosTitle: 'ENREGISTREMENT DES SERVICES / VALEURS',
@@ -8343,6 +8352,9 @@ export const translations = {
     financeiroOsRecebSemFaturaSelect: 'Choisir un rapport…',
     financeiroOsRecebSemFaturaBtn: 'Confirmer',
     financeiroOsRecebSemFaturaOk: 'Encaissement sans facture enregistré.',
+    financeiroOsSemFaturaNaoPagoBtn: 'Client n’a pas payé (sans facture)',
+    financeiroOsSemFaturaNaoPagoOk:
+      'Client marqué comme non payé (sans facture). La fiche client s’affiche en alerte rouge.',
     financeiroOsConsultaFaturaTitulo: 'Rechercher un nº de facture',
     financeiroOsConsultaFaturaDesc:
       'Recherche dans le flux des rapports (nº enregistré) et dans les factures pièces. Partie du numéro acceptée (correspondance partielle).',
@@ -10719,6 +10731,7 @@ export const translations = {
     clienteDevedorBadge: 'Debitore',
     clienteDevedorDividaLabel: 'Debito',
     clienteDevedorFaturasLabel: 'Fatture aperte',
+    clienteDevedorRelatoriosNaoPagoLabel: 'Rapporto/i di servizio segnato/i come non pagato/i',
     faturasDe: 'Fatture di',
     clienteNaoEncontrado: 'Cliente non trovato',
     cadastroServicosTitle: 'REGISTRO SERVIZI / VALORI',
@@ -11154,6 +11167,9 @@ export const translations = {
     financeiroOsRecebSemFaturaSelect: 'Scegli rapporto…',
     financeiroOsRecebSemFaturaBtn: 'Conferma',
     financeiroOsRecebSemFaturaOk: 'Incasso senza fattura registrato.',
+    financeiroOsSemFaturaNaoPagoBtn: 'Cliente non ha pagato (senza fattura)',
+    financeiroOsSemFaturaNaoPagoOk:
+      'Cliente segnato come non pagante (senza fattura). La scheda clienti mostra l’alerta rossa.',
     financeiroOsConsultaFaturaTitulo: 'Cerca nº fattura',
     financeiroOsConsultaFaturaDesc:
       'Cerca nel flusso rapporti (nº salvato) e nelle fatture ricambi. È possibile usare parte del numero (corrispondenza parziale).',
@@ -13555,6 +13571,7 @@ export const translations = {
     clienteDevedorBadge: 'Schuldner',
     clienteDevedorDividaLabel: 'Offener Betrag',
     clienteDevedorFaturasLabel: 'Offene Rechnungen',
+    clienteDevedorRelatoriosNaoPagoLabel: 'Servicebericht(e) als nicht bezahlt markiert',
     faturasDe: 'Rechnungen von',
     clienteNaoEncontrado: 'Kunde nicht gefunden',
     cadastroServicosTitle: 'SERVICE-REGISTRIERUNG / WERTE',
@@ -13967,6 +13984,9 @@ export const translations = {
     financeiroOsRecebSemFaturaSelect: 'Bericht wählen…',
     financeiroOsRecebSemFaturaBtn: 'Bestätigen',
     financeiroOsRecebSemFaturaOk: 'Eingang ohne Rechnung gespeichert.',
+    financeiroOsSemFaturaNaoPagoBtn: 'Kunde nicht bezahlt (ohne Rechnung)',
+    financeiroOsSemFaturaNaoPagoOk:
+      'Kunde als nicht bezahlt markiert (ohne Rechnung). Die Kundenkarte zeigt die rote Warnung.',
     financeiroOsConsultaFaturaTitulo: 'Rechnungsnr. suchen',
     financeiroOsConsultaFaturaDesc:
       'Sucht im Berichtsworkflow (gespeicherte Nr.) und in Teile-Rechnungen. Teilstrings möglich (Teiltreffer).',
@@ -16389,6 +16409,7 @@ export const translations = {
     clienteDevedorBadge: 'Debtor',
     clienteDevedorDividaLabel: 'Amount due',
     clienteDevedorFaturasLabel: 'Open invoices',
+    clienteDevedorRelatoriosNaoPagoLabel: 'Service report(s) marked as unpaid',
     faturasDe: 'Invoices from',
     clienteNaoEncontrado: 'Client not found',
     cadastroServicosTitle: 'SERVICE REGISTRATION / VALUES',
@@ -16806,6 +16827,9 @@ export const translations = {
     financeiroOsRecebSemFaturaSelect: 'Choose report…',
     financeiroOsRecebSemFaturaBtn: 'Confirm',
     financeiroOsRecebSemFaturaOk: 'Receipt without invoice saved.',
+    financeiroOsSemFaturaNaoPagoBtn: 'Customer did not pay (no invoice)',
+    financeiroOsSemFaturaNaoPagoOk:
+      'Marked as unpaid (no invoice). The customer card shows the red alert.',
     financeiroOsConsultaFaturaTitulo: 'Look up invoice no.',
     financeiroOsConsultaFaturaDesc:
       'Searches report flow (saved no.) and parts invoices. Partial number match is allowed.',
