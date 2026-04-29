@@ -2796,6 +2796,8 @@ export const translations = {
     gestaoFinanceiraPainelIvaTotalEstado: 'Total IVA a provisionar para o Estado',
     emDesenvolvimento: 'Funcionalidade em desenvolvimento',
     clientesFinanceiro: 'Clientes / Financeiro',
+    clientesAvisoOndeFinanceiro:
+      'Pagamento, «não pago» (com ou sem fatura) e alerta vermelho: módulo Clientes / Financeiro → Ordem de serviço (desça após a lista de OS). No menu lateral: expanda Gestão financeira.',
     clientesFinanceiroTitle: 'CLIENTES / FINANCEIRO',
     clientesFinanceiroHubCardDesc: 'Saldos, faturas e situação financeira por cliente.',
     ordemServico: 'ORDEM DE SERVIÇO',
@@ -5643,6 +5645,8 @@ export const translations = {
     gestaoFinanceiraPainelIvaTotalEstado: 'Total IVA a provisionar para la Hacienda',
     emDesenvolvimento: 'Funcionalidad en desarrollo',
     clientesFinanceiro: 'Clientes / Financiero',
+    clientesAvisoOndeFinanceiro:
+      'Pago / «no pagado» (con o sin factura) y alerta roja: Clientes / Financiero → Orden de servicio (baje tras la lista de OS). En el menú: expanda Gestión financiera.',
     clientesFinanceiroTitle: 'CLIENTES / FINANCIERO',
     clientesFinanceiroHubCardDesc: 'Saldos, facturas y situación financiera por cliente.',
     comprovantesDespesasTitle: 'REGISTRO DE GASTOS PAGADOS CON TARJETA PARA DECLARACIÓN DEL IRPF',
@@ -8471,6 +8475,8 @@ export const translations = {
     gestaoFinanceiraPainelIvaTotalEstado: 'Total TVA à provisionner pour l’État',
     emDesenvolvimento: 'Fonctionnalité en développement',
     clientesFinanceiro: 'Clients / Financier',
+    clientesAvisoOndeFinanceiro:
+      'Paiement / « non payé » (avec ou sans facture) et alerte rouge : Clients / Financier → Ordre de service (descendez après la liste d’OS). Menu : développez Gestion financière.',
     clientesFinanceiroTitle: 'CLIENTS / FINANCIER',
     clientesFinanceiroHubCardDesc: 'Soldes, factures et situation financière par client.',
     comprovantesDespesasTitle: 'REGISTRE DES DÉPENSES PAYÉES PAR CARTE POUR LA DÉCLARATION IR',
@@ -11279,6 +11285,8 @@ export const translations = {
     gestaoFinanceiraPainelIvaTotalEstado: 'Totale IVA da accantonare per l’Erario',
     view: 'Visualizza',
     clientesFinanceiro: 'Clienti / Finanziario',
+    clientesAvisoOndeFinanceiro:
+      'Pagamento / «non pagato» (con o senza fattura) e avviso rosso: Clienti / Finanziario → Ordine di servizio (scorri sotto l’elenco OS). Menu: espandi Gestione finanziaria.',
     clientesFinanceiroTitle: 'CLIENTI / FINANZIARIO',
     clientesFinanceiroHubCardDesc: 'Saldi, fatture e situazione finanziaria per cliente.',
     comprovantesDespesasTitle: 'REGISTRO SPESE PAGATE CON CARTA PER LA DICHIARAZIONE IRPEF',
@@ -14098,6 +14106,8 @@ export const translations = {
     gestaoFinanceiraPainelIvaTotalEstado: 'MwSt. gesamt für das Finanzamt zurückzustellen',
     emDesenvolvimento: 'Funktion in Entwicklung',
     clientesFinanceiro: 'Kunden / Finanzen',
+    clientesAvisoOndeFinanceiro:
+      'Zahlung / «nicht bezahlt» (mit/ohne Rechnung) und rote Warnung: Kunden / Finanzen → Serviceauftrag (nach der OS-Liste scrollen). Menü: Finanzverwaltung aufklappen.',
     clientesFinanceiroTitle: 'KUNDEN / FINANZEN',
     clientesFinanceiroHubCardDesc: 'Salden, Rechnungen und Finanzlage pro Kunde.',
     comprovantesDespesasTitle: 'KARTENZAHLUNGEN FÜR DIE STEUERERKLÄRUNG (AUSGABENBELEGE)',
@@ -16941,6 +16951,8 @@ export const translations = {
     gestaoFinanceiraPainelIvaTotalEstado: 'Total VAT to provision for the tax authority',
     emDesenvolvimento: 'Feature under development',
     clientesFinanceiro: 'Clients / Financial',
+    clientesAvisoOndeFinanceiro:
+      'Payment / «unpaid» (with or without invoice) and red alert: Clients / Financial → Service order (scroll below the OS list). Sidebar: expand Financial management.',
     clientesFinanceiroTitle: 'CLIENTS / FINANCIAL',
     clientesFinanceiroHubCardDesc: 'Balances, invoices and financial status per customer.',
     comprovantesDespesasTitle: 'CARD-PAID EXPENSES LOG FOR TAX RETURN',

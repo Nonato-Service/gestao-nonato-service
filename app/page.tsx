@@ -32594,6 +32594,35 @@ onKeyPress={(e) => {
                 </button>
               )}
             </div>
+
+            <div
+              className="clientes-financeiro-aviso"
+              style={{
+                margin: '12px 0 8px',
+                padding: '12px 14px',
+                borderRadius: '10px',
+                border: '1px solid rgba(251, 191, 36, 0.45)',
+                background: 'rgba(60, 45, 0, 0.35)',
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                gap: '10px',
+                justifyContent: 'space-between',
+              }}
+            >
+              <span style={{ color: '#fde68a', fontSize: '13px', lineHeight: 1.45 }}>
+                {(safeT as any)?.clientesAvisoOndeFinanceiro ||
+                  'Pagamento, «não pago» (com ou sem fatura) e alerta vermelho de devedor: use o módulo Clientes / Financeiro → separador Ordem de serviço (desça após a lista de OS). No menu lateral fica dentro de Gestão financeira.'}
+              </span>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => handleButtonClick('open-clientes-financeiro')}
+                style={{ padding: '8px 14px', fontSize: '13px', flexShrink: 0, whiteSpace: 'nowrap' }}
+              >
+                {safeT?.clientesFinanceiro || 'Clientes / Financeiro'}
+              </button>
+            </div>
             
             {clientesActiveTab === 'cadastrar' ? (
               <div>
@@ -32603,7 +32632,8 @@ onKeyPress={(e) => {
                   editingCliente &&
                   (clienteCadastroAlertaDevedorId === editingCliente.id ||
                     (Boolean(editingCliente.isDevedor) &&
-                      Number(editingCliente.saldoPendente ?? 0) > 0))
+                      (Number(editingCliente.saldoPendente ?? 0) > 0 ||
+                        Number(editingCliente.relatoriosNaoPagoCount ?? 0) > 0)))
                     ? 'cliente-form-alerta-devedor'
                     : undefined
                 }
