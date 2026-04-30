@@ -7910,6 +7910,42 @@ button.dia-trabalho-acao-btn--del:hover {
   gap: clamp(14px, 2vw, 20px);
 }
 
+.ns-hub-subsection-title {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: clamp(10px, 1.6vw, 14px) 2px 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(186, 250, 210, 0.88);
+  border-top: 1px solid rgba(0, 255, 120, 0.14);
+}
+
+.ns-hub-subsection-title:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.sidebar-fin-subgroup {
+  margin-top: 10px;
+}
+
+.sidebar-fin-subgroup:first-of-type {
+  margin-top: 0;
+}
+
+.sidebar-fin-subgroup-label {
+  padding: 6px 10px 5px 12px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(200, 255, 215, 0.72);
+  border-bottom: 1px solid rgba(0, 255, 100, 0.12);
+  margin-bottom: 5px;
+}
+
 .ns-hub-card {
   --hub-border: rgba(148, 163, 184, 0.28);
   --hub-border-h: rgba(148, 163, 184, 0.55);

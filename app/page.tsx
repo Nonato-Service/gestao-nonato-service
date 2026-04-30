@@ -521,6 +521,13 @@ function normalizeSidebarButtons(buttons: SidebarButton[]): SidebarButton[] {
   })
 }
 
+/** Subsecções fixas dentro da Gestão Financeira (sidebar e hub) — botões desconhecidos ficam em «outros». */
+function getGestaoFinanceiraUiSubgroup(buttonId: string): 'clientes' | 'despesas' | 'outros' {
+  if (buttonId === 'clientes-financeiro-default') return 'clientes'
+  if (buttonId === 'registro-despesas-default' || buttonId === 'comprovantes-despesas-default') return 'despesas'
+  return 'outros'
+}
+
 type TipoGestor = {
   id: string
   nome: string
@@ -57520,7 +57527,16 @@ A1;Peça exemplo;10`}
       hubId === 'empresa-institucional-main' || hubId === 'cadastro-nonato-main' || hubId === 'empresa-institucional'
         ? ((tr as any).empresaInstitucionalHubIntro as string) || hubIntroDefault
         : hubIntroDefault
-    type HubRow = { key: string; title: string; desc: string; icon: string; action: string; buttonId?: string }
+    type HubRow = {
+      key: string
+      title: string
+      desc: string
+      icon: string
+      action: string
+      buttonId?: string
+      /** Título de subsecção (ex.: Gestão financeira) — largura total na grelha do hub */
+      subsection?: string
+    }
     const rows: HubRow[] = []
 
     const descForHubRow = (buttonId: string | undefined, action?: string) =>
@@ -57586,8 +57602,70 @@ A1;Peça exemplo;10`}
           buttonId: button.id
         })
       }
-    } else if (hubId === 'gestao-custos' || hubId === 'gestao-financeira') {
-      const sorted = [...getButtonsByGroup(hubId as SidebarGroup)].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    } else if (hubId === 'gestao-financeira') {
+      const tp = (tr as any).gestaoFinanceiraSubgroupPainel || 'Visão geral'
+      const tc = (tr as any).gestaoFinanceiraSubgroupClientes || 'Clientes e cobranças'
+      const td = (tr as any).gestaoFinanceiraSubgroupDespesas || 'Despesas e declarações fiscais'
+      const to = (tr as any).gestaoFinanceiraSubgroupOutros || 'Outros'
+      const panelTitle =
+        (tr as any).gestaoFinanceiraPainelEntryTitle || tr.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'
+      const sorted = [...getButtonsByGroup('gestao-financeira')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      const bySub: { clientes: typeof sorted; despesas: typeof sorted; outros: typeof sorted } = {
+        clientes: [],
+        despesas: [],
+        outros: [],
+      }
+      for (const b of sorted) {
+        const sg = getGestaoFinanceiraUiSubgroup(b.id)
+        if (sg === 'clientes') bySub.clientes.push(b)
+        else if (sg === 'despesas') bySub.despesas.push(b)
+        else bySub.outros.push(b)
+      }
+      const finIcon = (id: string) => {
+        if (id === 'clientes-financeiro-default') return '💳'
+        if (id === 'comprovantes-despesas-default') return '🧾'
+        if (id === 'registro-despesas-default') return '📝'
+        return '💰'
+      }
+      const pushFin = (button: SidebarButton, subsection: string | undefined) => {
+        if (!canAccessAction(button.action)) return
+        rows.push({
+          key: button.id,
+          title: getButtonName(button),
+          desc: descForHubRow(button.id, button.action),
+          icon: finIcon(button.id),
+          action: button.action,
+          buttonId: button.id,
+          subsection,
+        })
+      }
+      if (canAccessAction('open-gestao-financeira')) {
+        rows.push({
+          key: 'gestao-financeira-hub-entry',
+          title: panelTitle,
+          desc: pickTrChain(tr, ['gestaoFinanceiraDesc']) || cardHint,
+          icon: '📊',
+          action: 'open-gestao-financeira',
+          subsection: tp,
+        })
+      }
+      let firstC = true
+      for (const b of bySub.clientes) {
+        pushFin(b, firstC ? tc : undefined)
+        firstC = false
+      }
+      let firstD = true
+      for (const b of bySub.despesas) {
+        pushFin(b, firstD ? td : undefined)
+        firstD = false
+      }
+      let firstO = true
+      for (const b of bySub.outros) {
+        pushFin(b, firstO ? to : undefined)
+        firstO = false
+      }
+    } else if (hubId === 'gestao-custos') {
+      const sorted = [...getButtonsByGroup('gestao-custos')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       for (const button of sorted) {
         if (!canAccessAction(button.action)) continue
         rows.push({
@@ -57828,34 +57906,38 @@ A1;Peça exemplo;10`}
             {rows.map((row, idx) => {
               const c = qaColors[idx % qaColors.length]
               return (
-                <div
-                  key={row.key}
-                  role="button"
-                  tabIndex={0}
-                  className="ns-hub-card"
-                  style={
-                    {
-                      '--hub-border': c.border,
-                      '--hub-border-h': c.borderH,
-                      '--hub-shadow': c.shadow,
-                      '--hub-glow': c.glow,
-                      '--hub-title': c.title
-                    } as React.CSSProperties
-                  }
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      handleButtonClick(row.action, row.buttonId)
+                <React.Fragment key={row.key}>
+                  {row.subsection ? (
+                    <h3 className="ns-hub-subsection-title">{row.subsection}</h3>
+                  ) : null}
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    className="ns-hub-card"
+                    style={
+                      {
+                        '--hub-border': c.border,
+                        '--hub-border-h': c.borderH,
+                        '--hub-shadow': c.shadow,
+                        '--hub-glow': c.glow,
+                        '--hub-title': c.title
+                      } as React.CSSProperties
                     }
-                  }}
-                  onClick={() => handleButtonClick(row.action, row.buttonId)}
-                >
-                  <div className="ns-hub-card-icon" aria-hidden>
-                    {row.icon}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        handleButtonClick(row.action, row.buttonId)
+                      }
+                    }}
+                    onClick={() => handleButtonClick(row.action, row.buttonId)}
+                  >
+                    <div className="ns-hub-card-icon" aria-hidden>
+                      {row.icon}
+                    </div>
+                    <h3 className="ns-hub-card-title">{row.title}</h3>
+                    <p className="ns-hub-card-desc">{row.desc}</p>
                   </div>
-                  <h3 className="ns-hub-card-title">{row.title}</h3>
-                  <p className="ns-hub-card-desc">{row.desc}</p>
-                </div>
+                </React.Fragment>
               )
             })}
           </div>
@@ -63458,77 +63540,164 @@ A1;Peça exemplo;10`}
           </div>
         )}
 
-        {/* Grupo: GESTÃO FINANCEIRA */}
+        {/* Grupo: GESTÃO FINANCEIRA (subsecções: painel, clientes, despesas, outros) */}
         <div className="sidebar-nav-cluster">
-          <button
-            className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-gestao-financeira' ? ' sidebar-group-btn-selected' : ''}`}
-            onClick={() => handleButtonClick('open-gestao-financeira')}
-          >
-            {selectedSidebarButton === 'open-gestao-financeira' && (
-              <span className="sidebar-nav-check" aria-hidden>✓</span>
-            )}
-            <span className="sidebar-nav-label sidebar-nav-label--stacked">
-              <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
-                💰
-              </span>
-              <span className="sidebar-nav-label-stack">
-                <span className="sidebar-nav-label-text">{safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}</span>
-              </span>
-            </span>
-            <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('gestao-financeira') ? '▼' : '▶'}</span>
-            {String(safeT?.gestaoFinanceiraDesc || '').trim() ? (
-              <span className="sidebar-tip-bubble" role="tooltip">
-                {safeT?.gestaoFinanceiraDesc}
-              </span>
-            ) : null}
-          </button>
-          
-          {expandedGroups.has('gestao-financeira') && (
-            <div className="sidebar-action-buttons">
-              {getButtonsByGroup('gestao-financeira')
-                .sort((a, b) => a.order - b.order)
-                .map((button) => {
-                  const isSelected = selectedSidebarButton === button.action
-                  const finSub = resolveActionCardDescription(
-                    trCardDesc,
-                    button.id,
-                    button.action,
-                    pickTrChain(trCardDesc, ['mainHubCardHint'])
-                  )
-                  return (
-                    <button
-                      key={button.id}
-                      className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
-                        isSelected ? ' sidebar-action-btn-active' : ''
-                      }`}
-                      onClick={() => handleButtonClick(button.action)}
-                    >
-                      {isSelected && (
-                        <span className="sidebar-nav-check" aria-hidden>✓</span>
-                      )}
-                      <span className="sidebar-empresa-entry-row">
-                        <span className="sidebar-empresa-entry-text">
-                          <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
-                        </span>
-                      </span>
-                      <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
-                        ›
-                      </span>
-                      {finSub?.trim() ? (
-                        <span className="sidebar-tip-bubble" role="tooltip">
-                          {finSub}
-                        </span>
-                      ) : null}
-                    </button>
-                  )
-                })}
-              {getButtonsByGroup('gestao-financeira').length === 0 && (
-                <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center', color: '#ffffff' }}>
-                  {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                </p>
-              )}
-            </div>
-          )}
+          {(() => {
+            const finClusterActive =
+              selectedSidebarButton === 'open-gestao-financeira' ||
+              getButtonsByGroup('gestao-financeira').some(
+                (b) => selectedSidebarButton === b.action || selectedSidebarButton === b.id
+              )
+            const finSorted = [...getButtonsByGroup('gestao-financeira')].sort((a, b) => a.order - b.order)
+            const finBy: { clientes: typeof finSorted; despesas: typeof finSorted; outros: typeof finSorted } = {
+              clientes: [],
+              despesas: [],
+              outros: [],
+            }
+            for (const b of finSorted) {
+              const sg = getGestaoFinanceiraUiSubgroup(b.id)
+              if (sg === 'clientes') finBy.clientes.push(b)
+              else if (sg === 'despesas') finBy.despesas.push(b)
+              else finBy.outros.push(b)
+            }
+            const labPainel = (safeT as any)?.gestaoFinanceiraSubgroupPainel || 'Visão geral'
+            const labCli = (safeT as any)?.gestaoFinanceiraSubgroupClientes || 'Clientes e cobranças'
+            const labDesp = (safeT as any)?.gestaoFinanceiraSubgroupDespesas || 'Despesas e declarações fiscais'
+            const labOut = (safeT as any)?.gestaoFinanceiraSubgroupOutros || 'Outros'
+            const painelEntryTitle =
+              (safeT as any)?.gestaoFinanceiraPainelEntryTitle || safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'
+            const renderFinRow = (button: SidebarButton) => {
+              const isSel = selectedSidebarButton === button.action || selectedSidebarButton === button.id
+              const finSub = resolveActionCardDescription(
+                trCardDesc,
+                button.id,
+                button.action,
+                pickTrChain(trCardDesc, ['mainHubCardHint'])
+              )
+              return (
+                <button
+                  key={button.id}
+                  type="button"
+                  data-sidebar-nav-action={button.action}
+                  className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                    isSel ? ' sidebar-action-btn-active' : ''
+                  }`}
+                  onClick={() => handleButtonClick(button.action, button.id)}
+                >
+                  {isSel ? <span className="sidebar-nav-check" aria-hidden>✓</span> : null}
+                  <span className="sidebar-empresa-entry-row">
+                    <span className="sidebar-empresa-entry-text">
+                      <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                    </span>
+                  </span>
+                  <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                    ›
+                  </span>
+                  {finSub?.trim() ? (
+                    <span className="sidebar-tip-bubble" role="tooltip">
+                      {finSub}
+                    </span>
+                  ) : null}
+                </button>
+              )
+            }
+            const anyFinChild = finSorted.some((b) => canAccessAction(b.action))
+            const showFinExpand = anyFinChild || canAccessAction('open-gestao-financeira')
+            return (
+              <>
+                <button
+                  type="button"
+                  className={`btn-primary sidebar-group-header${finClusterActive ? ' sidebar-group-btn-selected' : ''}`}
+                  onClick={() => handleButtonClick('open-gestao-financeira')}
+                >
+                  {finClusterActive ? <span className="sidebar-nav-check" aria-hidden>✓</span> : null}
+                  <span className="sidebar-nav-label sidebar-nav-label--stacked">
+                    <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
+                      💰
+                    </span>
+                    <span className="sidebar-nav-label-stack">
+                      <span className="sidebar-nav-label-text">{safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}</span>
+                    </span>
+                  </span>
+                  <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('gestao-financeira') ? '▼' : '▶'}</span>
+                  {String(safeT?.gestaoFinanceiraDesc || '').trim() ? (
+                    <span className="sidebar-tip-bubble" role="tooltip">
+                      {safeT?.gestaoFinanceiraDesc}
+                    </span>
+                  ) : null}
+                </button>
+                {expandedGroups.has('gestao-financeira') && showFinExpand && (
+                  <div className="sidebar-action-buttons">
+                    {canAccessAction('open-gestao-financeira') && (
+                      <div className="sidebar-fin-subgroup">
+                        <div className="sidebar-fin-subgroup-label">{labPainel}</div>
+                        <button
+                          type="button"
+                          data-sidebar-nav-action="open-gestao-financeira"
+                          className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                            selectedSidebarButton === 'open-gestao-financeira' ? ' sidebar-action-btn-active' : ''
+                          }`}
+                          onClick={() => handleButtonClick('open-gestao-financeira')}
+                        >
+                          {selectedSidebarButton === 'open-gestao-financeira' ? (
+                            <span className="sidebar-nav-check" aria-hidden>✓</span>
+                          ) : null}
+                          <span className="sidebar-empresa-entry-row">
+                            <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                              📊
+                            </span>
+                            <span className="sidebar-empresa-entry-text">
+                              <span className="sidebar-empresa-entry-title">{painelEntryTitle}</span>
+                            </span>
+                          </span>
+                          <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                            ›
+                          </span>
+                          {String(safeT?.gestaoFinanceiraDesc || '').trim() ? (
+                            <span className="sidebar-tip-bubble" role="tooltip">
+                              {safeT?.gestaoFinanceiraDesc}
+                            </span>
+                          ) : null}
+                        </button>
+                      </div>
+                    )}
+                    {finBy.clientes.some((b) => canAccessAction(b.action)) && (
+                      <div className="sidebar-fin-subgroup">
+                        <div className="sidebar-fin-subgroup-label">{labCli}</div>
+                        {finBy.clientes.filter((b) => canAccessAction(b.action)).map(renderFinRow)}
+                      </div>
+                    )}
+                    {finBy.despesas.some((b) => canAccessAction(b.action)) && (
+                      <div className="sidebar-fin-subgroup">
+                        <div className="sidebar-fin-subgroup-label">{labDesp}</div>
+                        {finBy.despesas.filter((b) => canAccessAction(b.action)).map(renderFinRow)}
+                      </div>
+                    )}
+                    {finBy.outros.some((b) => canAccessAction(b.action)) && (
+                      <div className="sidebar-fin-subgroup">
+                        <div className="sidebar-fin-subgroup-label">{labOut}</div>
+                        {finBy.outros.filter((b) => canAccessAction(b.action)).map(renderFinRow)}
+                      </div>
+                    )}
+                    {!anyFinChild && !canAccessAction('open-gestao-financeira') && (
+                      <p
+                        style={{
+                          fontSize: '12px',
+                          opacity: 0.6,
+                          padding: '10px',
+                          fontStyle: 'italic',
+                          textAlign: 'center',
+                          color: '#ffffff',
+                        }}
+                      >
+                        {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </>
+            )
+          })()}
         </div>
 
         {/* Grupo: empresa e registos oficiais (cadastro, ficha, solicitação) — mesmo rigor visual que Protocolos */}
