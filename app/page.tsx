@@ -3098,6 +3098,21 @@ export default function Dashboard() {
     }
   }, [activeTabId, openTabs])
 
+  // Ao estar num separador financeiro, manter o grupo «Gestão financeira» expandido na sidebar (subsecções visíveis).
+  useEffect(() => {
+    if (!activeTabId) return
+    const tab = openTabs.find((t) => t.id === activeTabId)
+    if (!tab) return
+    const finTypes = new Set<string>(['gestao-financeira', 'clientes-financeiro', 'comprovantes-despesas', 'registro-despesas'])
+    if (!finTypes.has(tab.type)) return
+    setExpandedGroups((prev) => {
+      if (prev.has('gestao-financeira')) return prev
+      const next = new Set(prev)
+      next.add('gestao-financeira')
+      return next
+    })
+  }, [activeTabId, openTabs])
+
   // Componente de botões de navegação (retorno e página inicial)
   // Componente de Logo
   const LogoComponent = ({ size = 'medium' }: { size?: 'small' | 'medium' | 'large' }) => {
@@ -21980,6 +21995,16 @@ export default function Dashboard() {
     [activeTabId, dashboardMainHubId, expandedGroups, openDashboardHubFromSidebar, scrollMainContentToTop]
   )
 
+  /** Gestão financeira abre abas diretamente (não usa toggleOrOpenDashboardHub); sem expandir o grupo, os subitens na sidebar ficam sempre ocultos. */
+  const ensureGestaoFinanceiraSidebarExpanded = useCallback(() => {
+    setExpandedGroups((prev) => {
+      if (prev.has('gestao-financeira')) return prev
+      const next = new Set(prev)
+      next.add('gestao-financeira')
+      return next
+    })
+  }, [])
+
   // Função para lidar com cliques nos botões da sidebar (buttonId opcional: quando dois botões abrem a mesma aba, usar id para só um ficar ativo)
   const handleButtonClick = useCallback((action: string, buttonId?: string) => {
     const groupToggles = [
@@ -22102,6 +22127,7 @@ export default function Dashboard() {
     } else if (action === 'open-orcamento-servico-tecnico') {
       openTab('orcamento-servico-tecnico', getTabTitle('orcamento-servico-tecnico'))
     } else if (action === 'open-registro-despesas') {
+      ensureGestaoFinanceiraSidebarExpanded()
       openTab('registro-despesas', getTabTitle('registro-despesas'))
     } else if (action === 'open-mapa-visual-separacao-pecas') {
       openTab('mapa-visual-separacao-pecas', getTabTitle('mapa-visual-separacao-pecas'))
@@ -22112,6 +22138,7 @@ export default function Dashboard() {
     } else if (action === 'open-quick-gestao-custos') {
       openTab('gestao-custos', getTabTitle('gestao-custos'))
     } else if (action === 'open-quick-gestao-financeira') {
+      ensureGestaoFinanceiraSidebarExpanded()
       openTab('gestao-financeira', getTabTitle('gestao-financeira'))
     } else if (action === 'open-quick-biblioteca-pecas') {
       openTab('biblioteca-pecas', getTabTitle('biblioteca-pecas'))
@@ -22124,11 +22151,14 @@ export default function Dashboard() {
     } else if (action === 'open-gestao-custos') {
       toggleOrOpenDashboardHub('gestao-custos', 'gestao-custos')
     } else if (action === 'open-gestao-financeira') {
-      // Abre a aba completa (painel executivo, IVA, etc.). O hub só listava atalhos e não mostrava esse conteúdo.
+      // Abre a aba completa (painel executivo, IVA, etc.) e expande o grupo na sidebar para mostrar subsecções.
+      ensureGestaoFinanceiraSidebarExpanded()
       openTab('gestao-financeira', getTabTitle('gestao-financeira'))
     } else if (action === 'open-clientes-financeiro') {
+      ensureGestaoFinanceiraSidebarExpanded()
       openTab('clientes-financeiro', getTabTitle('clientes-financeiro'))
     } else if (action === 'open-comprovantes-despesas') {
+      ensureGestaoFinanceiraSidebarExpanded()
       openTab('comprovantes-despesas', getTabTitle('comprovantes-despesas'))
     } else if (action === 'open-gestao-industrial') {
       toggleOrOpenDashboardHub('gestao-industrial', 'gestao-industrial')
@@ -22160,7 +22190,7 @@ export default function Dashboard() {
       ])
       if (!keepDrawerOpen.has(action)) setMobileMenuOpen(false)
     }
-  }, [expandedGroups, openTab, getTabTitle, canAccessAction, isDemoTeaserAction, safeT, scrollMainContentToTop, isCompactLayout, activeTabId, dashboardWorkspaceExpanded, openDashboardHubFromSidebar, dashboardMainHubId, toggleOrOpenDashboardHub])
+  }, [expandedGroups, openTab, getTabTitle, canAccessAction, isDemoTeaserAction, safeT, scrollMainContentToTop, isCompactLayout, activeTabId, dashboardWorkspaceExpanded, openDashboardHubFromSidebar, dashboardMainHubId, toggleOrOpenDashboardHub, ensureGestaoFinanceiraSidebarExpanded])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
