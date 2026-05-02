@@ -8030,6 +8030,10 @@ button.dia-trabalho-acao-btn--del:hover {
 
 .sidebar-fin-subgroup {
   margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  /* Espaço entre o rótulo do subgrupo e cada botão (ex.: comprov. vs registo despesas) */
+  gap: 12px;
 }
 
 .sidebar-fin-subgroup:first-of-type {
@@ -8044,7 +8048,7 @@ button.dia-trabalho-acao-btn--del:hover {
   text-transform: uppercase;
   color: rgba(200, 255, 215, 0.72);
   border-bottom: 1px solid rgba(0, 255, 100, 0.12);
-  margin-bottom: 5px;
+  margin-bottom: 0;
 }
 
 .ns-hub-card {
