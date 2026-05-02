@@ -2193,7 +2193,10 @@ type ComprovanteDespesa = {
   id: string
   tipo: 'cliente' | 'pessoal'  // cliente = despesa por cliente; pessoal = despesas pessoais
   cliente: string
+  /** Data da transação / no recibo (YYYY-MM-DD) — aparece no PDF e na lista por dia */
   data: string
+  /** Mês de arquivo / IRS (YYYY-MM). Se omitido, usa-se o mês derivado de `data`. Pode diferir da data (ex.: foto hoje, recibo de março). */
+  mesCompetencia?: string
   valorUnitario: number
   quantidade: number
   valorTotal: number
@@ -4991,7 +4994,25 @@ export default function Dashboard() {
   const [comprovantesFiltroCliente, setComprovantesFiltroCliente] = useState<string>('')
   const [comprovantesForm, setComprovantesForm] = useState({ cliente: '', data: new Date().toISOString().slice(0, 10), valorUnitario: 0, quantidade: 1, descricao: '', imagemBase64: '' })
   const [showComprovantesForm, setShowComprovantesForm] = useState(false)
-  const [formComp, setFormComp] = useState<{ tipo: 'cliente' | 'pessoal'; cliente: string; data: string; valorUnitario: number; quantidade: number; descricao: string; imagemBase64: string }>({ tipo: 'cliente', cliente: '', data: new Date().toISOString().slice(0, 10), valorUnitario: 0, quantidade: 1, descricao: '', imagemBase64: '' })
+  const [formComp, setFormComp] = useState<{
+    tipo: 'cliente' | 'pessoal'
+    cliente: string
+    data: string
+    mesCompetencia: string
+    valorUnitario: number
+    quantidade: number
+    descricao: string
+    imagemBase64: string
+  }>({
+    tipo: 'cliente',
+    cliente: '',
+    data: new Date().toISOString().slice(0, 10),
+    mesCompetencia: new Date().toISOString().slice(0, 7),
+    valorUnitario: 0,
+    quantidade: 1,
+    descricao: '',
+    imagemBase64: '',
+  })
   const [showFormComp, setShowFormComp] = useState(false)
   /** Foto de recibo → OCR → pré-visualização antes de gravar comprovante (despesa pessoal por defeito) */
   const [comprovanteReciboRapido, setComprovanteReciboRapido] = useState<
@@ -5002,6 +5023,7 @@ export default function Dashboard() {
         imagemBase64: string
         valorUnitario: number
         data: string
+        mesCompetencia: string
         descricao: string
         ocrSnippet: string
       }
@@ -5309,12 +5331,19 @@ export default function Dashboard() {
     let fatAtrasoN = 0
     let fatPendenteNoPrazoValor = 0
     let fatPendenteNoPrazoN = 0
+    let fatPagaValor = 0
+    let fatPagaN = 0
     const clientesIdsFaturaAberta = new Set<string>()
 
     for (const f of faturasPecas) {
-      if (f.status === 'cancelada' || f.status === 'paga') continue
+      if (f.status === 'cancelada') continue
       const v = Number(f.valorTotal) || 0
       const vi = Number(f.valorIVA) || 0
+      if (f.status === 'paga') {
+        fatPagaValor += v
+        fatPagaN++
+        continue
+      }
       fatAbertoValor += v
       fatAbertoIva += vi
       fatAbertoN++
@@ -5403,6 +5432,8 @@ export default function Dashboard() {
       fatAbertoValor,
       fatAbertoN,
       fatAbertoIva,
+      fatPagaValor,
+      fatPagaN,
       fatAtrasoValor,
       fatAtrasoN,
       fatPendenteNoPrazoValor,
@@ -7081,10 +7112,16 @@ export default function Dashboard() {
 
       const savedComprovantesDespesas = getData('nonato-comprovantes-despesas')
       if (savedComprovantesDespesas && Array.isArray(savedComprovantesDespesas)) {
-        setComprovantesDespesas(savedComprovantesDespesas.map((c: any) => ({
-          ...c,
-          tipo: c.tipo === 'pessoal' ? 'pessoal' : 'cliente'
-        })))
+        setComprovantesDespesas(
+          savedComprovantesDespesas.map((c: any) => {
+            const tipo = c.tipo === 'pessoal' ? 'pessoal' : 'cliente'
+            const mc =
+              typeof c.mesCompetencia === 'string' && /^\d{4}-\d{2}$/.test(c.mesCompetencia)
+                ? c.mesCompetencia
+                : undefined
+            return { ...c, tipo, mesCompetencia: mc }
+          })
+        )
       }
 
       const savedIVAControles = getData('nonato-iva-controles')
@@ -44329,6 +44366,15 @@ A1;Peça exemplo;10`}
           const weekNum = Math.ceil(dayOfYear / 7)
           return `${d.getFullYear()}-W${String(weekNum).padStart(2, '0')}`
         }
+        /** Mês de arquivo / IRS (YYYY-MM): explícito no registo ou derivado da data do recibo */
+        const mesCompetenciaKey = (c: ComprovanteDespesa) => {
+          const m = c.mesCompetencia
+          if (typeof m === 'string' && /^\d{4}-\d{2}$/.test(m)) return m
+          const ds = String(c.data ?? '').trim().slice(0, 10)
+          const d = new Date(ds + 'T12:00:00')
+          if (Number.isNaN(d.getTime())) return ''
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+        }
         const filtroMes = comprovantesFiltroMes
         const setFiltroMes = setComprovantesFiltroMes
         const filtroSemana = comprovantesFiltroSemana
@@ -44337,10 +44383,14 @@ A1;Peça exemplo;10`}
         const setFiltroPeriodoView = setComprovantesFiltroPeriodoView
         const filtroCliente = comprovantesFiltroCliente
         const setFiltroCliente = setComprovantesFiltroCliente
-        const mesesAnos = Array.from(new Set(comprovantesDespesas.map(c => {
-          const d = new Date(c.data)
-          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-        }))).sort().reverse()
+        const mesesDosRegistos = comprovantesDespesas.map(mesCompetenciaKey).filter(Boolean)
+        const mesesRolling: string[] = []
+        for (let i = 0; i < 30; i++) {
+          const d = new Date()
+          d.setMonth(d.getMonth() - i)
+          mesesRolling.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+        }
+        const mesesAnos = Array.from(new Set([...mesesDosRegistos, ...mesesRolling])).sort().reverse()
         const semanasDisponiveis = Array.from(new Set(comprovantesDespesas.map(c => getWeekKey(c.data)))).sort().reverse()
         const getClienteOuPessoal = (c: ComprovanteDespesa) => (c.tipo === 'pessoal' ? labelPessoal : c.cliente) || '—'
         const nomesDosComprovantes = Array.from(new Set(comprovantesDespesas.map(c => (c.tipo === 'pessoal' ? labelPessoal : c.cliente)).filter(Boolean)))
@@ -44349,8 +44399,7 @@ A1;Peça exemplo;10`}
           (a === labelPessoal ? 1 : b === labelPessoal ? -1 : a.localeCompare(b, 'pt-BR'))
         )
         const filtrados = comprovantesDespesas.filter(c => {
-          const d = new Date(c.data)
-          const mesAno = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+          const mesAno = mesCompetenciaKey(c)
           const semanaKey = getWeekKey(c.data)
           if (filtroPeriodoView === 'mensal' && filtroMes && mesAno !== filtroMes) return false
           if (filtroPeriodoView === 'semanal' && filtroSemana && semanaKey !== filtroSemana) return false
@@ -44406,8 +44455,8 @@ A1;Peça exemplo;10`}
         })()
         const totalGeral = filtrados.reduce((s, c) => s + c.valorTotal, 0)
         const totalPorMes = filtrados.reduce((acc, c) => {
-          const d = new Date(c.data)
-          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+          const key = mesCompetenciaKey(c)
+          if (!key) return acc
           acc[key] = (acc[key] || 0) + c.valorTotal
           return acc
         }, {} as Record<string, number>)
@@ -44434,11 +44483,18 @@ A1;Peça exemplo;10`}
             }
           }
           const valorTotal = formComp.valorUnitario * formComp.quantidade
+          const dataNorm = String(formComp.data || '').slice(0, 10)
+          const mesFromData = dataNorm.length >= 7 ? dataNorm.slice(0, 7) : new Date().toISOString().slice(0, 7)
+          const mesPick =
+            typeof formComp.mesCompetencia === 'string' && /^\d{4}-\d{2}$/.test(formComp.mesCompetencia)
+              ? formComp.mesCompetencia
+              : mesFromData
           const novo: ComprovanteDespesa = {
             id: Date.now().toString(),
             tipo: formComp.tipo,
             cliente: formComp.tipo === 'cliente' ? formComp.cliente.trim() : '',
-            data: formComp.data,
+            data: dataNorm || new Date().toISOString().slice(0, 10),
+            mesCompetencia: mesPick !== mesFromData ? mesPick : undefined,
             valorUnitario: formComp.valorUnitario,
             quantidade: formComp.quantidade,
             valorTotal,
@@ -44448,7 +44504,18 @@ A1;Peça exemplo;10`}
           const atualizados = [...comprovantesDespesas, novo]
           setComprovantesDespesas(atualizados)
           saveData('nonato-comprovantes-despesas', atualizados)
-          setFormComp({ tipo: 'cliente', cliente: '', data: new Date().toISOString().slice(0, 10), valorUnitario: 0, quantidade: 1, descricao: '', imagemBase64: '' })
+          const hoje = new Date().toISOString().slice(0, 10)
+          const mesHoje = hoje.slice(0, 7)
+          setFormComp({
+            tipo: 'cliente',
+            cliente: '',
+            data: hoje,
+            mesCompetencia: mesHoje,
+            valorUnitario: 0,
+            quantidade: 1,
+            descricao: '',
+            imagemBase64: '',
+          })
           setShowFormComp(false)
         }
         const handleRemoverComp = (id: string) => {
@@ -44498,7 +44565,17 @@ A1;Peça exemplo;10`}
         const handleGerarPDF = async () => {
           const periodo = filtroPeriodoView === 'mensal' && filtroMes ? filtroMes : filtroPeriodoView === 'semanal' && filtroSemana ? filtroSemana : ''
           const payload = {
-            comprovantes: filtrados.map(c => ({ id: c.id, tipo: c.tipo, cliente: c.cliente, data: c.data, valorUnitario: c.valorUnitario, quantidade: c.quantidade, valorTotal: c.valorTotal, descricao: c.descricao })),
+            comprovantes: filtrados.map(c => ({
+              id: c.id,
+              tipo: c.tipo,
+              cliente: c.cliente,
+              data: c.data,
+              mesCompetencia: mesCompetenciaKey(c),
+              valorUnitario: c.valorUnitario,
+              quantidade: c.quantidade,
+              valorTotal: c.valorTotal,
+              descricao: c.descricao,
+            })),
             totalGeral,
             totalPorCliente,
             modelo: envioForm.templateId,
@@ -44550,12 +44627,14 @@ A1;Peça exemplo;10`}
                       const valorUnitario = parseTotalEurosFromReceiptText(text)
                       const dataParsed = parseDataReciboIso(text)
                       const data = dataParsed || new Date().toISOString().slice(0, 10)
+                      const mesCompetencia = (dataParsed || data).slice(0, 7)
                       const descricao = extrairDescricaoRecibo(text)
                       setComprovanteReciboRapido({
                         step: 'preview',
                         imagemBase64,
                         valorUnitario,
                         data,
+                        mesCompetencia,
                         descricao,
                         ocrSnippet: text.slice(0, 500),
                       })
@@ -44622,6 +44701,12 @@ A1;Peça exemplo;10`}
                 <option value="">{(safeT as any)?.comprovantesTodosClientes || 'Todos os clientes'}</option>
                 {clientesOuPessoalUnicos.map(cl => (<option key={cl} value={cl}>{cl}</option>))}
               </select>
+              {filtroPeriodoView === 'mensal' ? (
+                <p style={{ flex: '1 1 100%', margin: '4px 0 0', fontSize: '11px', color: '#888', lineHeight: 1.45 }}>
+                  {(safeT as any)?.comprovantesFiltroMesArquivoHint ||
+                    'O mês do filtro é o mês de arquivo (IRS): pode ser diferente da data do recibo. Na foto rápida ou no formulário, ajuste «Mês de arquivo» e a «Data do recibo» para o PDF.'}
+                </p>
+              ) : null}
             </div>
             {/* Resumo: Total geral + por período + por cliente */}
             <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#141414', borderRadius: '10px', border: '1px solid rgba(0,255,0,0.25)' }}>
@@ -44648,6 +44733,10 @@ A1;Peça exemplo;10`}
               <span style={{ color: '#86efac', fontSize: '13px', fontWeight: 600 }}>
                 {(safeT as any)?.comprovantesListaPorData || 'Lista agrupada por data'}
               </span>
+              <div style={{ color: '#6b7280', fontSize: '11px', marginTop: '4px', lineHeight: 1.4 }}>
+                {(safeT as any)?.comprovantesListaPorDataSub ||
+                  'Agrupa pela data do recibo (documento). O filtro «por mês» acima usa o mês de arquivo, que pode ser outro.'}
+              </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               {filtrados.length === 0 && <p style={{ color: '#888', textAlign: 'center', padding: '24px' }}>{(safeT as any)?.comprovantesNenhumComprovante || 'Nenhum comprovante. Clique em "Adicionar comprovante".'}</p>}
@@ -44683,7 +44772,19 @@ A1;Peça exemplo;10`}
                         {c.imagemBase64 ? <img src={c.imagemBase64} alt="Recibo" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: '6px', border: '1px solid rgba(0,255,0,0.2)' }} /> : <div style={{ width: 60, height: 60, borderRadius: '6px', background: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: '11px' }}>📄</div>}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ color: '#fff', fontWeight: 600 }}>{getClienteOuPessoal(c)}</div>
-                          <div style={{ color: '#aaa', fontSize: '13px' }}>{c.data} · {(safeT as any)?.comprovantesValorUnitario || 'Valor unit.'}: {c.valorUnitario.toFixed(2)} × {c.quantidade} = <strong style={{ color: '#00ff00' }}>{c.valorTotal.toFixed(2)} €</strong></div>
+                          <div style={{ color: '#aaa', fontSize: '13px' }}>
+                            <span style={{ color: '#d1d5db' }}>
+                              {(safeT as any)?.comprovantesDataRecibo || 'Data recibo'}: {c.data}
+                            </span>
+                            {mesCompetenciaKey(c) !== String(c.data || '').trim().slice(0, 7) ? (
+                              <span style={{ marginLeft: '8px', color: '#fde68a', fontSize: '12px' }}>
+                                {(safeT as any)?.comprovantesMesArquivoAbrev || 'Arquivo'}: {mesCompetenciaKey(c)}
+                              </span>
+                            ) : null}
+                            {' · '}
+                            {(safeT as any)?.comprovantesValorUnitario || 'Valor unit.'}: {c.valorUnitario.toFixed(2)} × {c.quantidade} ={' '}
+                            <strong style={{ color: '#00ff00' }}>{c.valorTotal.toFixed(2)} €</strong>
+                          </div>
                           {c.descricao && <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>{c.descricao}</div>}
                         </div>
                         <button onClick={() => handleRemoverComp(c.id)} style={{ padding: '6px 10px', background: 'rgba(255,68,68,0.2)', border: '1px solid rgba(255,68,68,0.5)', borderRadius: '6px', color: '#ff4444', cursor: 'pointer', fontSize: '12px' }}>{(safeT as any)?.remover || (safeT as any)?.remove || 'Remover'}</button>
@@ -44734,7 +44835,23 @@ A1;Peça exemplo;10`}
                       )}
                     </div>
                   )}
+                  <label style={{ display: 'block', color: '#00ff00', fontSize: '12px', marginBottom: '6px' }}>
+                    {(safeT as any)?.comprovantesDataRecibo || 'Data do recibo (no documento / PDF)'}
+                  </label>
                   <input type="date" value={formComp.data} onChange={e => setFormComp(prev => ({ ...prev, data: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
+                  <label style={{ display: 'block', color: '#00ff00', fontSize: '12px', marginBottom: '6px' }}>
+                    {(safeT as any)?.comprovantesMesArquivo || 'Mês de arquivo (IRS / filtro por mês)'}
+                  </label>
+                  <input
+                    type="month"
+                    value={formComp.mesCompetencia}
+                    onChange={e => setFormComp(prev => ({ ...prev, mesCompetencia: e.target.value }))}
+                    style={{ width: '100%', padding: '10px', marginBottom: '8px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }}
+                  />
+                  <p style={{ margin: '0 0 12px', fontSize: '11px', color: '#888', lineHeight: 1.4 }}>
+                    {(safeT as any)?.comprovantesMesArquivoHint ||
+                      'Se fotografou hoje um recibo de outro mês, escolha aqui o mês em que a despesa deve entrar; a data acima deve refletir o recibo para o PDF.'}
+                  </p>
                   <input type="number" step={0.01} placeholder={(safeT as any)?.comprovantesValorUnitario || 'Valor unitário'} value={formComp.valorUnitario || ''} onChange={e => setFormComp(prev => ({ ...prev, valorUnitario: Number(e.target.value) || 0 }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
                   <input type="number" min={1} placeholder={(safeT as any)?.comprovantesQuantidade || 'Quantidade'} value={formComp.quantidade || ''} onChange={e => setFormComp(prev => ({ ...prev, quantidade: Number(e.target.value) || 1 }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
                   <input placeholder={(safeT as any)?.comprovantesDescricaoOpcional || (safeT as any)?.comprovantesDescricao || 'Descrição (opcional)'} value={formComp.descricao} onChange={e => setFormComp(prev => ({ ...prev, descricao: e.target.value }))} style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }} />
@@ -44884,24 +45001,65 @@ A1;Peça exemplo;10`}
                             'Não foi detetado um valor em € com confiança. Pode guardar mesmo assim ou abrir o formulário para corrigir.'}
                         </p>
                       ) : null}
-                      <div style={{ fontSize: '13px', color: '#e5e5e5', marginBottom: '8px' }}>
-                        <strong style={{ color: '#93c5fd' }}>
-                          {(safeT as any)?.comprovantesReciboRapidoValor || 'Valor (€)'}:
-                        </strong>{' '}
-                        {comprovanteReciboRapido.valorUnitario.toFixed(2)} €
-                      </div>
-                      <div style={{ fontSize: '13px', color: '#e5e5e5', marginBottom: '8px' }}>
-                        <strong style={{ color: '#93c5fd' }}>
-                          {(safeT as any)?.comprovantesReciboRapidoData || 'Data'}:
-                        </strong>{' '}
-                        {comprovanteReciboRapido.data}
-                      </div>
-                      <div style={{ fontSize: '13px', color: '#e5e5e5', marginBottom: '12px' }}>
-                        <strong style={{ color: '#93c5fd' }}>
-                          {(safeT as any)?.comprovantesReciboRapidoDescricao || 'Descrição'}:
-                        </strong>{' '}
-                        {comprovanteReciboRapido.descricao}
-                      </div>
+                      <label style={{ display: 'block', color: '#93c5fd', fontSize: '12px', marginBottom: '4px' }}>
+                        {(safeT as any)?.comprovantesReciboRapidoValor || 'Valor (€)'}
+                      </label>
+                      <input
+                        type="number"
+                        step={0.01}
+                        value={comprovanteReciboRapido.valorUnitario || ''}
+                        onChange={e =>
+                          setComprovanteReciboRapido(prev =>
+                            prev && prev.step === 'preview'
+                              ? { ...prev, valorUnitario: Number(e.target.value) || 0 }
+                              : prev
+                          )
+                        }
+                        style={{ width: '100%', padding: '10px', marginBottom: '12px', background: '#111', border: '1px solid rgba(147,197,253,0.35)', borderRadius: '8px', color: '#fff' }}
+                      />
+                      <label style={{ display: 'block', color: '#93c5fd', fontSize: '12px', marginBottom: '4px' }}>
+                        {(safeT as any)?.comprovantesDataRecibo || 'Data do recibo (documento / PDF)'}
+                      </label>
+                      <input
+                        type="date"
+                        value={String(comprovanteReciboRapido.data || '').slice(0, 10)}
+                        onChange={e =>
+                          setComprovanteReciboRapido(prev =>
+                            prev && prev.step === 'preview' ? { ...prev, data: e.target.value } : prev
+                          )
+                        }
+                        style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#111', border: '1px solid rgba(147,197,253,0.35)', borderRadius: '8px', color: '#fff' }}
+                      />
+                      <label style={{ display: 'block', color: '#93c5fd', fontSize: '12px', marginBottom: '4px' }}>
+                        {(safeT as any)?.comprovantesMesArquivo || 'Mês de arquivo (filtro por mês / IRS)'}
+                      </label>
+                      <input
+                        type="month"
+                        value={comprovanteReciboRapido.mesCompetencia}
+                        onChange={e =>
+                          setComprovanteReciboRapido(prev =>
+                            prev && prev.step === 'preview' ? { ...prev, mesCompetencia: e.target.value } : prev
+                          )
+                        }
+                        style={{ width: '100%', padding: '10px', marginBottom: '8px', background: '#111', border: '1px solid rgba(147,197,253,0.35)', borderRadius: '8px', color: '#fff' }}
+                      />
+                      <p style={{ fontSize: '11px', color: '#78716c', margin: '0 0 12px', lineHeight: 1.45 }}>
+                        {(safeT as any)?.comprovantesReciboRapidoMesArquivoHint ||
+                          'A data deve corresponder ao recibo (para o PDF). O mês de arquivo define em que mês o registo aparece ao filtrar — pode ser março mesmo que a foto seja de hoje.'}
+                      </p>
+                      <label style={{ display: 'block', color: '#93c5fd', fontSize: '12px', marginBottom: '4px' }}>
+                        {(safeT as any)?.comprovantesReciboRapidoDescricao || 'Descrição'}
+                      </label>
+                      <input
+                        type="text"
+                        value={comprovanteReciboRapido.descricao}
+                        onChange={e =>
+                          setComprovanteReciboRapido(prev =>
+                            prev && prev.step === 'preview' ? { ...prev, descricao: e.target.value } : prev
+                          )
+                        }
+                        style={{ width: '100%', padding: '10px', marginBottom: '12px', background: '#111', border: '1px solid rgba(147,197,253,0.35)', borderRadius: '8px', color: '#fff' }}
+                      />
                       <details style={{ marginBottom: '16px', fontSize: '11px', color: '#888' }}>
                         <summary style={{ cursor: 'pointer', color: '#aaa' }}>
                           {(safeT as any)?.comprovantesReciboRapidoOcrPreview || 'Texto lido (OCR)'}
@@ -44948,7 +45106,11 @@ A1;Peça exemplo;10`}
                             setFormComp({
                               tipo: 'pessoal',
                               cliente: '',
-                              data: p.data,
+                              data: String(p.data || '').slice(0, 10),
+                              mesCompetencia:
+                                typeof p.mesCompetencia === 'string' && /^\d{4}-\d{2}$/.test(p.mesCompetencia)
+                                  ? p.mesCompetencia
+                                  : String(p.data || '').slice(0, 7),
                               valorUnitario: p.valorUnitario,
                               quantidade: 1,
                               descricao: p.descricao,
@@ -44973,11 +45135,18 @@ A1;Peça exemplo;10`}
                           onClick={() => {
                             const p = comprovanteReciboRapido
                             if (p.step !== 'preview') return
+                            const dataNorm = String(p.data || '').slice(0, 10)
+                            const mesFromData = dataNorm.length >= 7 ? dataNorm.slice(0, 7) : new Date().toISOString().slice(0, 7)
+                            const mesPick =
+                              typeof p.mesCompetencia === 'string' && /^\d{4}-\d{2}$/.test(p.mesCompetencia)
+                                ? p.mesCompetencia
+                                : mesFromData
                             const novo: ComprovanteDespesa = {
                               id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
                               tipo: 'pessoal',
                               cliente: '',
-                              data: p.data,
+                              data: dataNorm || new Date().toISOString().slice(0, 10),
+                              mesCompetencia: mesPick !== mesFromData ? mesPick : undefined,
                               valorUnitario: p.valorUnitario,
                               quantidade: 1,
                               valorTotal: p.valorUnitario,
@@ -54366,6 +54535,11 @@ A1;Peça exemplo;10`}
         const gfInnerPad = isCompactLayout ? '14px 10px' : '40px'
         const gfTitleFs = isCompactLayout ? 'clamp(17px, 5.5vw, 24px)' : '32px'
         const gfLetter = isCompactLayout ? '1px' : '3px'
+        const txGf = safeT as Record<string, string>
+        const scrollGfSec = (id: string) => {
+          if (typeof document === 'undefined') return
+          document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
         return (
           <div
             className="gestao-financeira-panel"
@@ -54498,8 +54672,50 @@ A1;Peça exemplo;10`}
               }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', alignItems: 'stretch', width: '100%' }}>
+                <nav className="gf-fin-index" aria-label={txGf.gestaoFinanceiraIndiceAria || 'Secções deste painel'}>
+                  <p className="gf-fin-index__intro">
+                    {txGf.gestaoFinanceiraIndiceIntro || 'Índice — salte para a zona que precisa:'}
+                  </p>
+                  <div className="gf-fin-index__links">
+                    <button type="button" className="gf-fin-index__btn" onClick={() => scrollGfSec('gf-sec-painel-exec')}>
+                      <span className="gf-fin-index__btn-title">{txGf.gestaoFinanceiraIndicePainel || '1. Painel e carteira'}</span>
+                      <span className="gf-fin-index__btn-hint">
+                        {txGf.gestaoFinanceiraIndicePainelHint || 'O que está em aberto, atrasos e IVA estimado.'}
+                      </span>
+                    </button>
+                    <button type="button" className="gf-fin-index__btn" onClick={() => scrollGfSec('gf-sec-mapa-valores')}>
+                      <span className="gf-fin-index__btn-title">{txGf.gestaoFinanceiraIndiceMapa || '2. Mapa de valores'}</span>
+                      <span className="gf-fin-index__btn-hint">
+                        {txGf.gestaoFinanceiraIndiceMapaHint ||
+                          'Totais na biblioteca, NF de peças e dinheiro s/ NF (pago vs. a receber).'}
+                      </span>
+                    </button>
+                    <button type="button" className="gf-fin-index__btn" onClick={() => scrollGfSec('gf-sec-atalhos-gf')}>
+                      <span className="gf-fin-index__btn-title">{txGf.gestaoFinanceiraIndiceAcoes || '3. Atalhos'}</span>
+                      <span className="gf-fin-index__btn-hint">
+                        {txGf.gestaoFinanceiraIndiceAcoesHint || 'Abrir comprov., clientes e despesas na biblioteca.'}
+                      </span>
+                    </button>
+                  </div>
+                </nav>
+
+                <div className="gf-fin-sec" id="gf-sec-painel-exec">
+                  <header className="gf-fin-sec__band">
+                    <span className="gf-fin-sec__band-num" aria-hidden>
+                      1
+                    </span>
+                    <div className="gf-fin-sec__band-body">
+                      <strong className="gf-fin-sec__band-title">
+                        {txGf.gestaoFinanceiraSecPainelBand || 'Painel executivo'}
+                      </strong>
+                      <span className="gf-fin-sec__band-hint">
+                        {txGf.gestaoFinanceiraSecPainelBandHint ||
+                          'Carteira a receber, peças (NF), clientes, serviço na biblioteca e IVA em aberto.'}
+                      </span>
+                    </div>
+                  </header>
                 {(() => {
-                  const txP = safeT as Record<string, string>
+                  const txP = txGf
                   const pc = painelControleFinanceiroExec
                   const fmtE = (n: number) =>
                     n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -54565,6 +54781,14 @@ A1;Peça exemplo;10`}
                         <article className="gf-painel-exec__col">
                           <h3 className="gf-painel-exec__col-title">{txP.gestaoFinanceiraPainelSecPecas || 'Peças / faturas (NF)'}</h3>
                           <dl className="gf-painel-exec__stats">
+                            <div className="gf-painel-exec__stat gf-painel-exec__stat--ok">
+                              <dt>{txP.gestaoFinanceiraPainelPecasPagoVal || 'Já recebido — faturas pagas (€)'}</dt>
+                              <dd>€{fmtE(pc.fatPagaValor)}</dd>
+                            </div>
+                            <div className="gf-painel-exec__stat">
+                              <dt>{txP.gestaoFinanceiraPainelPecasPagoN || 'Faturas de peças liquidadas'}</dt>
+                              <dd>{pc.fatPagaN}</dd>
+                            </div>
                             <div className="gf-painel-exec__stat gf-painel-exec__stat--accent">
                               <dt>{txP.gestaoFinanceiraPainelPecasAbertoVal || 'Em aberto (€)'}</dt>
                               <dd>€{fmtE(pc.fatAbertoValor)}</dd>
@@ -54676,9 +54900,10 @@ A1;Peça exemplo;10`}
                     </section>
                   )
                 })()}
+                </div>
 
                 {(() => {
-                  const txM = safeT as Record<string, string>
+                  const txM = txGf
                   const mf = mapaValoresGestaoFinanceira
                   const sumBar =
                     mf.valorComNotaFiscal + mf.valorDinheiroSemNFPago + mf.valorDinheiroSemNFPendente
@@ -54690,6 +54915,21 @@ A1;Peça exemplo;10`}
                     n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                   const pendentesLista = relatoriosSemNFPendenteMapaGestaoFin
                   return (
+                    <div className="gf-fin-sec" id="gf-sec-mapa-valores">
+                      <header className="gf-fin-sec__band">
+                        <span className="gf-fin-sec__band-num" aria-hidden>
+                          2
+                        </span>
+                        <div className="gf-fin-sec__band-body">
+                          <strong className="gf-fin-sec__band-title">
+                            {txM.gestaoFinanceiraSecMapaBand || 'Mapa de valores'}
+                          </strong>
+                          <span className="gf-fin-sec__band-hint">
+                            {txM.gestaoFinanceiraSecMapaBandHint ||
+                              'Comparar volumes; marcar fechos s/ NF como pagos quando o dinheiro já entrou.'}
+                          </span>
+                        </div>
+                      </header>
                     <div className="gestao-financeira-mapa-valores" style={{ width: '100%', maxWidth: '1100px', marginBottom: '28px' }}>
                       <h3 className="gestao-financeira-mapa-valores__titulo">
                         {txM.gestaoFinanceiraMapaValoresTitulo || 'Mapa de valores'}
@@ -54857,9 +55097,25 @@ A1;Peça exemplo;10`}
                           'Registe recebimento s/ NF em Clientes › Financeiro › Ordem de serviço; marque «pago» aqui ou nessa área. «A receber» = sem fatura e pagamento ainda pendente.'}
                       </p>
                     </div>
+                    </div>
                   )
                 })()}
 
+                <div className="gf-fin-sec" id="gf-sec-atalhos-gf">
+                  <header className="gf-fin-sec__band">
+                    <span className="gf-fin-sec__band-num" aria-hidden>
+                      3
+                    </span>
+                    <div className="gf-fin-sec__band-body">
+                      <strong className="gf-fin-sec__band-title">
+                        {txGf.gestaoFinanceiraSecAcoesBand || 'Ir para outros ecrãs'}
+                      </strong>
+                      <span className="gf-fin-sec__band-hint">
+                        {txGf.gestaoFinanceiraSecAcoesBandHint ||
+                          'Documentos, faturação por cliente e despesas guardadas na biblioteca.'}
+                      </span>
+                    </div>
+                  </header>
                 <div className="gestao-financeira-cta-row">
                   {/* Botão Comprovantes de Despesas */}
                   <button
@@ -54944,6 +55200,7 @@ A1;Peça exemplo;10`}
                   >
                     📒 {(safeT as any)?.gestaoFinanceiraBtnControloDespesasBiblioteca || 'Despesas na biblioteca'}
                   </button>
+                </div>
                 </div>
               </div>
             </div>

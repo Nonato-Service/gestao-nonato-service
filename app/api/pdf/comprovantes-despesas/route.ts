@@ -7,6 +7,8 @@ type ComprovantePayload = {
   tipo: 'cliente' | 'pessoal'
   cliente: string
   data: string
+  /** YYYY-MM — mês de arquivo / IRS (pode diferir da data do recibo) */
+  mesCompetencia?: string
   valorUnitario: number
   quantidade: number
   valorTotal: number
@@ -80,10 +82,15 @@ function buildHtml(body: Body): string {
   } else if (modelo === 2) {
     mainContent = `
       <table>
-        <thead><tr><th>Data</th><th>Cliente / Beneficiário</th><th>Valor (€)</th><th>Descrição</th></tr></thead>
+        <thead><tr><th>Data (recibo)</th><th>Mês arquivo</th><th>Cliente / Beneficiário</th><th>Valor (€)</th><th>Descrição</th></tr></thead>
         <tbody>
-          ${comprovantes.map(c => `<tr><td>${c.data}</td><td>${getClienteOuPessoal(c, labelPessoal)}</td><td>${c.valorTotal.toFixed(2)}</td><td>${(c.descricao || '').replace(/</g, '&lt;')}</td></tr>`).join('')}
-          <tr class="total-row"><td colspan="2">Total</td><td>${totalGeral.toFixed(2)} €</td><td></td></tr>
+          ${comprovantes
+            .map(c => {
+              const mesArq = (c.mesCompetencia || '').replace(/</g, '&lt;') || '—'
+              return `<tr><td>${String(c.data).replace(/</g, '&lt;')}</td><td>${mesArq}</td><td>${getClienteOuPessoal(c, labelPessoal)}</td><td>${c.valorTotal.toFixed(2)}</td><td>${(c.descricao || '').replace(/</g, '&lt;')}</td></tr>`
+            })
+            .join('')}
+          <tr class="total-row"><td colspan="3">Total</td><td>${totalGeral.toFixed(2)} €</td><td></td></tr>
         </tbody>
       </table>
     `

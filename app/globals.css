@@ -5954,6 +5954,107 @@ a:focus-visible {
   color: #cbd5e1;
   font-size: 13px;
 }
+.gf-painel-exec__stat--ok {
+  border-color: rgba(34, 197, 94, 0.4);
+  background: rgba(20, 83, 45, 0.2);
+}
+.gf-painel-exec__stat--ok dd {
+  color: #86efac;
+  font-size: 16px;
+}
+
+/* Gestão financeira — índice e faixas por secção */
+.gf-fin-index {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(34, 197, 94, 0.22);
+}
+.gf-fin-index__intro {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(148, 163, 184, 0.95);
+  line-height: 1.45;
+}
+.gf-fin-index__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.gf-fin-index__btn {
+  flex: 1 1 200px;
+  min-width: min(100%, 180px);
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(51, 65, 85, 0.65);
+  background: rgba(30, 41, 59, 0.5);
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.gf-fin-index__btn:hover {
+  border-color: rgba(34, 197, 94, 0.45);
+  background: rgba(6, 78, 59, 0.18);
+}
+.gf-fin-index__btn-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 750;
+  color: #86efac;
+  margin-bottom: 4px;
+}
+.gf-fin-index__btn-hint {
+  display: block;
+  font-size: 11px;
+  line-height: 1.4;
+  color: rgba(148, 163, 184, 0.92);
+}
+.gf-fin-sec {
+  scroll-margin-top: 12px;
+}
+.gf-fin-sec__band {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.12), rgba(15, 23, 42, 0.4));
+  border: 1px solid rgba(34, 197, 94, 0.28);
+}
+.gf-fin-sec__band-num {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #bbf7d0;
+  background: rgba(22, 101, 52, 0.45);
+  border: 1px solid rgba(74, 222, 128, 0.35);
+}
+.gf-fin-sec__band-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gf-fin-sec__band-title {
+  font-size: 13px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  color: #ecfccb;
+}
+.gf-fin-sec__band-hint {
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(163, 230, 53, 0.55);
+}
 
 .gf-painel-exec__iva {
   margin-top: 22px;

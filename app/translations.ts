@@ -353,7 +353,7 @@ export const translations = {
     helpClientesFinanceiro:
       'Extrato financeiro por cliente: faturas, recibos, saldos e documentos em aberto.\n\n---COMO---\n\n• Escolha o cliente na lista ou pesquisa.\n• Defina período contabilístico relevante.\n• Abra cada linha para ver PDF ou detalhe de pagamento.\n• Cruze valores com «Gestão financeira» e «Comprovantes de despesas».\n• Gere extrato para enviar ao cliente quando autorizado.',
     helpComprovantesDespesas:
-      'Digitalização ou registo de comprovantes de cartão para IRS ou reembolso (despesa de cliente ou pessoal).\n\n---COMO---\n\n• Escolha o tipo (cliente vs pessoal) antes de gravar.\n• Anexe foto ou PDF legível do comprovante.\n• Preencha valor em euros, data da transação e estabelecimento.\n• Guarde; no fim do mês filtre por período e confira totais.\n• Entregue pacote zip/PDF ao contabilista conforme modelo acordado.',
+      'Digitalização ou registo de comprovantes de cartão para IRS ou reembolso (despesa de cliente ou pessoal).\n\n---COMO---\n\n• Escolha o tipo (cliente vs pessoal) antes de gravar.\n• Anexe foto ou PDF legível do comprovante.\n• Preencha valor em euros, a data do recibo (para o documento/PDF) e o mês de arquivo (para filtrar e totalizar por mês — podem diferir, ex. foto hoje, recibo de março).\n• Guarde; no fim do mês filtre por período e confira totais.\n• Entregue pacote zip/PDF ao contabilista conforme modelo acordado.',
     helpOrcamentosAvulso:
       'Emissão de orçamentos comerciais simples (linhas, totais, impostos) fora do fluxo de serviço técnico padrão.\n\n---COMO---\n\n• Crie documento novo e associe cliente.\n• Adicione linhas com descrição, quantidade, preço unitário e IVA se aplicável.\n• Revise totais na pré-visualização.\n• Gere PDF e envie por e-mail ou guarde versão com número de revisão.\n• Arquive versão antiga quando o cliente aprovar uma nova.',
     helpPedidoOrcamentosAvulso:
@@ -2772,6 +2772,21 @@ export const translations = {
     gestaoFinanceiraMapaMarcarPagoOk: 'Marcado como pago. O mapa atualiza de seguida.',
     gestaoFinanceiraMapaNotaRodape:
       'Registe recebimentos s/ NF em Clientes › Financeiro › Ordem de serviço. «A receber» = sem fatura e pagamento ainda pendente; após marcar como pago, o valor passa a contar no cartão de dinheiro pago.',
+    gestaoFinanceiraIndiceAria: 'Secções deste painel',
+    gestaoFinanceiraIndiceIntro: 'Índice — salte para a zona que precisa:',
+    gestaoFinanceiraIndicePainel: '1. Painel e carteira',
+    gestaoFinanceiraIndicePainelHint: 'O que está em aberto, atrasos e IVA estimado.',
+    gestaoFinanceiraIndiceMapa: '2. Mapa de valores',
+    gestaoFinanceiraIndiceMapaHint: 'Totais na biblioteca, NF de peças e dinheiro s/ NF (pago vs. a receber).',
+    gestaoFinanceiraIndiceAcoes: '3. Atalhos',
+    gestaoFinanceiraIndiceAcoesHint: 'Abrir comprov., clientes e despesas na biblioteca.',
+    gestaoFinanceiraSecPainelBand: 'Painel executivo',
+    gestaoFinanceiraSecPainelBandHint:
+      'Carteira a receber, peças (NF), clientes, serviço na biblioteca e IVA em aberto.',
+    gestaoFinanceiraSecMapaBand: 'Mapa de valores',
+    gestaoFinanceiraSecMapaBandHint: 'Comparar volumes; marcar fechos s/ NF como pagos quando o dinheiro já entrou.',
+    gestaoFinanceiraSecAcoesBand: 'Ir para outros ecrãs',
+    gestaoFinanceiraSecAcoesBandHint: 'Documentos, faturação por cliente e despesas guardadas na biblioteca.',
     gestaoFinanceiraPainelExecTitulo: 'Painel de controlo — recebíveis e risco',
     gestaoFinanceiraPainelExecSub:
       'Síntese executiva: faturas de peças (NF), exposição por cliente, atrasos e serviço (fechamentos na biblioteca).',
@@ -2786,6 +2801,8 @@ export const translations = {
     gestaoFinanceiraPainelPecasAtrasoVal: 'Em atraso (€)',
     gestaoFinanceiraPainelPecasAtrasoN: 'Faturas em atraso',
     gestaoFinanceiraPainelPecasNoPrazoVal: 'Pendentes no prazo (€)',
+    gestaoFinanceiraPainelPecasPagoVal: 'Já recebido — faturas pagas (€)',
+    gestaoFinanceiraPainelPecasPagoN: 'Faturas de peças liquidadas',
     gestaoFinanceiraPainelSecClientes: 'Clientes — exposição',
     gestaoFinanceiraPainelCliDividaSaldo: 'Saldo em dívida (peças)',
     gestaoFinanceiraPainelCliDividaN: 'Clientes c/ saldo em aberto',
@@ -3044,6 +3061,17 @@ export const translations = {
     comprovantesDespesasTitle: 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS',
     comprovantesDespesasDesc: 'Registe comprovantes de despesas pagas com cartão para apoiar a declaração de IRS. Adicione imagens, filtre por mês e cliente, valores unitários e totais por operação.',
     comprovantesFiltroMes: 'Filtrar por mês',
+    comprovantesFiltroMesArquivoHint:
+      'Este mês é o de arquivo (IRS): pode ser diferente da data do recibo. Na foto rápida ou no formulário, defina «Mês de arquivo» e a «Data do recibo» para o PDF.',
+    comprovantesDataRecibo: 'Data do recibo (documento / PDF)',
+    comprovantesMesArquivo: 'Mês de arquivo (IRS / filtro por mês)',
+    comprovantesMesArquivoHint:
+      'Se fotografou hoje um recibo de outro mês, escolha o mês em que a despesa deve entrar; a data acima deve corresponder ao papel do recibo.',
+    comprovantesMesArquivoAbrev: 'Arquivo',
+    comprovantesListaPorDataSub:
+      'Agrupa pela data do recibo. O filtro «por mês» usa o mês de arquivo, que pode ser diferente.',
+    comprovantesReciboRapidoMesArquivoHint:
+      'A data deve corresponder ao recibo (para o PDF). O mês de arquivo define em que mês o registo entra ao filtrar — pode ser março mesmo que a foto seja de hoje.',
     comprovantesFiltroCliente: 'Filtrar por cliente',
     comprovantesData: 'Data',
     comprovantesValorUnitario: 'Valor unitário',
@@ -5713,6 +5741,21 @@ export const translations = {
     gestaoFinanceiraMapaMarcarPagoOk: 'Marcado como pagado. El mapa se actualizará en seguida.',
     gestaoFinanceiraMapaNotaRodape:
       'Registre cobros s/ factura en Clientes › Financiero › Orden de servicio. «Por cobrar» = sin factura y pago aún pendiente; al marcar como pagado, el importe pasa al bloque de efectivo pagado.',
+    gestaoFinanceiraIndiceAria: 'Secciones de este panel',
+    gestaoFinanceiraIndiceIntro: 'Índice — salte a la zona que necesita:',
+    gestaoFinanceiraIndicePainel: '1. Panel y cartera',
+    gestaoFinanceiraIndicePainelHint: 'Lo abierto, retrasos e IVA estimado.',
+    gestaoFinanceiraIndiceMapa: '2. Mapa de importes',
+    gestaoFinanceiraIndiceMapaHint: 'Totales en biblioteca, NF de piezas y efectivo s/ NF (pagado vs. por cobrar).',
+    gestaoFinanceiraIndiceAcoes: '3. Accesos',
+    gestaoFinanceiraIndiceAcoesHint: 'Abrir justificantes, clientes y gastos en biblioteca.',
+    gestaoFinanceiraSecPainelBand: 'Panel ejecutivo',
+    gestaoFinanceiraSecPainelBandHint:
+      'Cartera por cobrar, piezas (NF), clientes, servicio en biblioteca e IVA pendiente.',
+    gestaoFinanceiraSecMapaBand: 'Mapa de importes',
+    gestaoFinanceiraSecMapaBandHint: 'Comparar volúmenes; marcar cierres s/ NF como pagados cuando ya cobró.',
+    gestaoFinanceiraSecAcoesBand: 'Ir a otras pantallas',
+    gestaoFinanceiraSecAcoesBandHint: 'Documentos, facturación por cliente y gastos guardados en biblioteca.',
     gestaoFinanceiraPainelExecTitulo: 'Panel de control — cobros y riesgo',
     gestaoFinanceiraPainelExecSub:
       'Resumen ejecutivo: facturas de piezas, exposición por cliente, retrasos y servicio (cierres en biblioteca).',
@@ -5727,6 +5770,8 @@ export const translations = {
     gestaoFinanceiraPainelPecasAtrasoVal: 'Vencido / fuera de plazo (€)',
     gestaoFinanceiraPainelPecasAtrasoN: 'Facturas en atraso',
     gestaoFinanceiraPainelPecasNoPrazoVal: 'Pendientes en plazo (€)',
+    gestaoFinanceiraPainelPecasPagoVal: 'Ya cobrado — facturas pagadas (€)',
+    gestaoFinanceiraPainelPecasPagoN: 'Facturas de piezas liquidadas',
     gestaoFinanceiraPainelSecClientes: 'Clientes — exposición',
     gestaoFinanceiraPainelCliDividaSaldo: 'Saldo adeudado (piezas)',
     gestaoFinanceiraPainelCliDividaN: 'Clientes con saldo abierto',
@@ -5754,6 +5799,17 @@ export const translations = {
     comprovantesDespesasTitle: 'REGISTRO DE GASTOS PAGADOS CON TARJETA PARA DECLARACIÓN DEL IRPF',
     comprovantesDespesasDesc: 'Registre comprobantes de gastos pagados con tarjeta para la declaración del IRPF. Añada imágenes, filtre por mes y cliente, valores unitarios y totales por operación.',
     comprovantesFiltroMes: 'Filtrar por mes',
+    comprovantesFiltroMesArquivoHint:
+      'Este mes es el de archivo (IRPF): puede diferir de la fecha del ticket. En la foto rápida o el formulario, ajuste «Mes de archivo» y la «Fecha del ticket» para el PDF.',
+    comprovantesDataRecibo: 'Fecha del ticket (documento / PDF)',
+    comprovantesMesArquivo: 'Mes de archivo (IRPF / filtro por mes)',
+    comprovantesMesArquivoHint:
+      'Si fotografió hoy un ticket de otro mes, elija el mes contable; la fecha debe coincidir con el papel del ticket.',
+    comprovantesMesArquivoAbrev: 'Archivo',
+    comprovantesListaPorDataSub:
+      'Agrupa por la fecha del ticket. El filtro por mes usa el mes de archivo, que puede ser distinto.',
+    comprovantesReciboRapidoMesArquivoHint:
+      'La fecha debe coincidir con el ticket (PDF). El mes de archivo define en qué mes aparece al filtrar.',
     comprovantesFiltroCliente: 'Filtrar por cliente',
     comprovantesData: 'Fecha',
     comprovantesValorUnitario: 'Valor unitario',
@@ -8600,6 +8656,21 @@ export const translations = {
     gestaoFinanceiraMapaMarcarPagoOk: 'Marqué comme payé. La carte se met à jour tout de suite.',
     gestaoFinanceiraMapaNotaRodape:
       'Enregistrez les encaissements s/ facture dans Clients › Financier › Ordre de service. « À recevoir » = sans facture et paiement encore en attente ; une fois payé, le montant compte dans le bloc espèces payées.',
+    gestaoFinanceiraIndiceAria: 'Sections de ce panneau',
+    gestaoFinanceiraIndiceIntro: 'Index — allez à la zone utile :',
+    gestaoFinanceiraIndicePainel: '1. Tableau et encours',
+    gestaoFinanceiraIndicePainelHint: 'Ce qui est ouvert, retards et TVA estimée.',
+    gestaoFinanceiraIndiceMapa: '2. Carte des montants',
+    gestaoFinanceiraIndiceMapaHint: 'Totaux bibliothèque, NF pièces et espèces s/ NF (payé vs. à recevoir).',
+    gestaoFinanceiraIndiceAcoes: '3. Raccourcis',
+    gestaoFinanceiraIndiceAcoesHint: 'Justificatifs, clients et dépenses en bibliothèque.',
+    gestaoFinanceiraSecPainelBand: 'Tableau exécutif',
+    gestaoFinanceiraSecPainelBandHint:
+      'Encours à recevoir, pièces (NF), clients, service en bibliothèque et TVA ouverte.',
+    gestaoFinanceiraSecMapaBand: 'Carte des montants',
+    gestaoFinanceiraSecMapaBandHint: 'Comparer les volumes ; marquer les clôtures s/ NF payées une fois l’argent encaissé.',
+    gestaoFinanceiraSecAcoesBand: 'Aller vers d’autres écrans',
+    gestaoFinanceiraSecAcoesBandHint: 'Documents, facturation par client et dépenses enregistrées en bibliothèque.',
     gestaoFinanceiraPainelExecTitulo: 'Tableau de pilotage — encours et risque',
     gestaoFinanceiraPainelExecSub:
       'Synthèse exécutive : factures pièces, exposition par client, retards et service (clôtures en bibliothèque).',
@@ -8614,6 +8685,8 @@ export const translations = {
     gestaoFinanceiraPainelPecasAtrasoVal: 'En retard (€)',
     gestaoFinanceiraPainelPecasAtrasoN: 'Factures en retard',
     gestaoFinanceiraPainelPecasNoPrazoVal: 'En attente à échéance (€)',
+    gestaoFinanceiraPainelPecasPagoVal: 'Déjà encaissé — factures payées (€)',
+    gestaoFinanceiraPainelPecasPagoN: 'Factures pièces soldées',
     gestaoFinanceiraPainelSecClientes: 'Clients — exposition',
     gestaoFinanceiraPainelCliDividaSaldo: 'Solde dû (pièces)',
     gestaoFinanceiraPainelCliDividaN: 'Clients avec solde ouvert',
@@ -8641,6 +8714,17 @@ export const translations = {
     comprovantesDespesasTitle: 'REGISTRE DES DÉPENSES PAYÉES PAR CARTE POUR LA DÉCLARATION IR',
     comprovantesDespesasDesc: 'Enregistrez des justificatifs de dépenses payées par carte pour la déclaration d’impôt. Ajoutez des images, filtrez par mois et client, valeurs unitaires et totaux par opération.',
     comprovantesFiltroMes: 'Filtrer par mois',
+    comprovantesFiltroMesArquivoHint:
+      'Ce mois est le mois d’archivage (IR) : il peut différer de la date du ticket. Réglez « Mois d’archivage » et la « Date du ticket » pour le PDF.',
+    comprovantesDataRecibo: 'Date du ticket (document / PDF)',
+    comprovantesMesArquivo: 'Mois d’archivage (IR / filtre par mois)',
+    comprovantesMesArquivoHint:
+      'Si vous photographiez aujourd’hui un ticket d’un autre mois, choisissez le mois comptable ; la date doit correspondre au ticket.',
+    comprovantesMesArquivoAbrev: 'Arch.',
+    comprovantesListaPorDataSub:
+      'Groupement par date du ticket. Le filtre par mois utilise le mois d’archivage, qui peut différer.',
+    comprovantesReciboRapidoMesArquivoHint:
+      'La date doit correspondre au ticket (PDF). Le mois d’archivage fixe le mois du filtre — ex. mars même si la photo est d’aujourd’hui.',
     comprovantesFiltroCliente: 'Filtrer par client',
     comprovantesData: 'Date',
     comprovantesValorUnitario: 'Montant unitaire',
@@ -11467,6 +11551,21 @@ export const translations = {
     gestaoFinanceiraMapaMarcarPagoOk: 'Segnato come pagato. La mappa si aggiorna subito.',
     gestaoFinanceiraMapaNotaRodape:
       'Registra gli incassi s/ fattura in Clienti › Finanziario › Ordine di servizio. « Da incassare » = senza fattura e pagamento ancora in sospeso; dopo aver segnato pagato, l’importo va nel blocco contanti pagati.',
+    gestaoFinanceiraIndiceAria: 'Sezioni di questo pannello',
+    gestaoFinanceiraIndiceIntro: 'Indice — vai alla zona che ti serve:',
+    gestaoFinanceiraIndicePainel: '1. Cruscotto e crediti',
+    gestaoFinanceiraIndicePainelHint: 'Aperti, ritardi e IVA stimata.',
+    gestaoFinanceiraIndiceMapa: '2. Mappa importi',
+    gestaoFinanceiraIndiceMapaHint: 'Totali in biblioteca, NF ricambi e contanti s/ NF (pagato vs. da incassare).',
+    gestaoFinanceiraIndiceAcoes: '3. Scorciatoie',
+    gestaoFinanceiraIndiceAcoesHint: 'Apri giustificativi, clienti e spese in biblioteca.',
+    gestaoFinanceiraSecPainelBand: 'Cruscotto esecutivo',
+    gestaoFinanceiraSecPainelBandHint:
+      'Crediti da incassare, ricambi (NF), clienti, servizio in biblioteca e IVA aperta.',
+    gestaoFinanceiraSecMapaBand: 'Mappa importi',
+    gestaoFinanceiraSecMapaBandHint: 'Confronta i volumi; segna chiusure s/ NF come pagate quando l’incasso c’è.',
+    gestaoFinanceiraSecAcoesBand: 'Vai ad altre schermate',
+    gestaoFinanceiraSecAcoesBandHint: 'Documenti, fatturazione per cliente e spese salvate in biblioteca.',
     gestaoFinanceiraPainelExecTitulo: 'Cruscotto — crediti e rischio',
     gestaoFinanceiraPainelExecSub:
       'Sintesi esecutiva: fatture ricambi, esposizione per cliente, ritardi e servizio (chiusure in biblioteca).',
@@ -11481,6 +11580,8 @@ export const translations = {
     gestaoFinanceiraPainelPecasAtrasoVal: 'In ritardo (€)',
     gestaoFinanceiraPainelPecasAtrasoN: 'Fatture in ritardo',
     gestaoFinanceiraPainelPecasNoPrazoVal: 'In scadenza regolare (€)',
+    gestaoFinanceiraPainelPecasPagoVal: 'Già incassato — fatture pagate (€)',
+    gestaoFinanceiraPainelPecasPagoN: 'Fatture ricambi saldate',
     gestaoFinanceiraPainelSecClientes: 'Clienti — esposizione',
     gestaoFinanceiraPainelCliDividaSaldo: 'Saldo dovuto (ricambi)',
     gestaoFinanceiraPainelCliDividaN: 'Clienti con saldo aperto',
@@ -11508,6 +11609,17 @@ export const translations = {
     comprovantesDespesasTitle: 'REGISTRO SPESE PAGATE CON CARTA PER LA DICHIARAZIONE IRPEF',
     comprovantesDespesasDesc: 'Registra giustificativi di spese pagate con carta per la dichiarazione dei redditi. Aggiungi immagini, filtra per mese e cliente, valori unitari e totali per operazione.',
     comprovantesFiltroMes: 'Filtra per mese',
+    comprovantesFiltroMesArquivoHint:
+      'Questo mese è quello di archivio (IRPEF): può differire dalla data dello scontrino. Imposta «Mese di archivio» e «Data scontrino» per il PDF.',
+    comprovantesDataRecibo: 'Data scontrino (documento / PDF)',
+    comprovantesMesArquivo: 'Mese di archivio (IRPEF / filtro per mese)',
+    comprovantesMesArquivoHint:
+      'Se oggi fotografi uno scontrino di un altro mese, scegli il mese contabile; la data deve coincidere con lo scontrino.',
+    comprovantesMesArquivoAbrev: 'Arch.',
+    comprovantesListaPorDataSub:
+      'Raggruppa per data dello scontrino. Il filtro per mese usa il mese di archivio, che può essere diverso.',
+    comprovantesReciboRapidoMesArquivoHint:
+      'La data deve coincidere con lo scontrino (PDF). Il mese di archivio definisce il mese nel filtro.',
     comprovantesFiltroCliente: 'Filtra per cliente',
     comprovantesData: 'Data',
     comprovantesValorUnitario: 'Valore unitario',
@@ -14345,6 +14457,21 @@ export const translations = {
     gestaoFinanceiraMapaMarcarPagoOk: 'Als bezahlt markiert. Die Übersicht aktualisiert sich gleich.',
     gestaoFinanceiraMapaNotaRodape:
       'Barzahlungen o. Rechnung erfassen unter Kunden › Finanzen › Serviceauftrag. « Offen » = ohne Rechnung und Zahlung noch ausstehend; nach « bezahlt » zählt der Betrag im Block Bar bezahlt.',
+    gestaoFinanceiraIndiceAria: 'Abschnitte dieses Panels',
+    gestaoFinanceiraIndiceIntro: 'Inhalt — springen Sie zum passenden Bereich:',
+    gestaoFinanceiraIndicePainel: '1. Übersicht und Forderungen',
+    gestaoFinanceiraIndicePainelHint: 'Offene Posten, Verzug und geschätzte MwSt.',
+    gestaoFinanceiraIndiceMapa: '2. Wertekarte',
+    gestaoFinanceiraIndiceMapaHint: 'Summen in der Bibliothek, Teile-NF und Bar o. Rechnung (bezahlt vs. offen).',
+    gestaoFinanceiraIndiceAcoes: '3. Kurzlinks',
+    gestaoFinanceiraIndiceAcoesHint: 'Belege, Kunden und Ausgaben in der Bibliothek öffnen.',
+    gestaoFinanceiraSecPainelBand: 'Management-Übersicht',
+    gestaoFinanceiraSecPainelBandHint:
+      'Offene Forderungen, Teile (NF), Kunden, Service in der Bibliothek und offene MwSt.',
+    gestaoFinanceiraSecMapaBand: 'Wertekarte',
+    gestaoFinanceiraSecMapaBandHint: 'Volumen vergleichen; Abschlüsse o. Rechnung als bezahlt markieren, wenn das Geld da ist.',
+    gestaoFinanceiraSecAcoesBand: 'Zu weiteren Bildschirmen',
+    gestaoFinanceiraSecAcoesBandHint: 'Belege, Kundenabrechnung und gespeicherte Ausgaben in der Bibliothek.',
     gestaoFinanceiraPainelExecTitulo: 'Steuerungsübersicht — Forderungen und Risiko',
     gestaoFinanceiraPainelExecSub:
       'Management-Kurzüberblick: Teile-Rechnungen, Kundenexposition, Verzug und Service (Abschlüsse in der Bibliothek).',
@@ -14359,6 +14486,8 @@ export const translations = {
     gestaoFinanceiraPainelPecasAtrasoVal: 'Überfällig (€)',
     gestaoFinanceiraPainelPecasAtrasoN: 'Überfällige Rechnungen',
     gestaoFinanceiraPainelPecasNoPrazoVal: 'Noch fällig im Termin (€)',
+    gestaoFinanceiraPainelPecasPagoVal: 'Bereits erhalten — bezahlte Rechnungen (€)',
+    gestaoFinanceiraPainelPecasPagoN: 'Ausgeglichene Teile-Rechnungen',
     gestaoFinanceiraPainelSecClientes: 'Kunden — Exposition',
     gestaoFinanceiraPainelCliDividaSaldo: 'Offener Saldo (Teile)',
     gestaoFinanceiraPainelCliDividaN: 'Kunden mit offenem Saldo',
@@ -14386,6 +14515,17 @@ export const translations = {
     comprovantesDespesasTitle: 'KARTENZAHLUNGEN FÜR DIE STEUERERKLÄRUNG (AUSGABENBELEGE)',
     comprovantesDespesasDesc: 'Erfassen Sie Belege für kartengezahlte Ausgaben zur Steuererklärung. Bilder hinzufügen, nach Monat und Kunde filtern, Einzelwerte und Summen pro Vorgang.',
     comprovantesFiltroMes: 'Nach Monat filtern',
+    comprovantesFiltroMesArquivoHint:
+      'Dieser Monat ist der Archiv-/Steuermonat und kann von der Belegdatumszeile abweichen. «Archivmonat» und «Belegdatum» für das PDF setzen.',
+    comprovantesDataRecibo: 'Belegdatum (Dokument / PDF)',
+    comprovantesMesArquivo: 'Archivmonat (Steuer / Monatsfilter)',
+    comprovantesMesArquivoHint:
+      'Fotografieren Sie heute einen Beleg aus einem anderen Monat, wählen Sie den Archivmonat; das Datum sollte dem Beleg entsprechen.',
+    comprovantesMesArquivoAbrev: 'Archiv',
+    comprovantesListaPorDataSub:
+      'Gruppierung nach Belegdatum. Der Monatsfilter nutzt den Archivmonat, der abweichen kann.',
+    comprovantesReciboRapidoMesArquivoHint:
+      'Datum muss zum Beleg passen (PDF). Archivmonat bestimmt den Filtermonat — z. B. März trotz Foto von heute.',
     comprovantesFiltroCliente: 'Nach Kunde filtern',
     comprovantesData: 'Datum',
     comprovantesValorUnitario: 'Einzelpreis',
@@ -17247,6 +17387,21 @@ export const translations = {
     gestaoFinanceiraMapaMarcarPagoOk: 'Marked as paid. The map updates shortly.',
     gestaoFinanceiraMapaNotaRodape:
       'Record no-invoice receipts under Clients › Finance › Work order. « Outstanding » means no invoice and payment still pending; after marking paid, the amount moves to the paid-cash card.',
+    gestaoFinanceiraIndiceAria: 'Sections on this panel',
+    gestaoFinanceiraIndiceIntro: 'Jump to the area you need:',
+    gestaoFinanceiraIndicePainel: '1. Control panel & receivables',
+    gestaoFinanceiraIndicePainelHint: 'What is open, delays and estimated VAT.',
+    gestaoFinanceiraIndiceMapa: '2. Value map',
+    gestaoFinanceiraIndiceMapaHint: 'Library totals, parts invoices and cash without invoice (paid vs. outstanding).',
+    gestaoFinanceiraIndiceAcoes: '3. Shortcuts',
+    gestaoFinanceiraIndiceAcoesHint: 'Open receipts, clients and library expenses.',
+    gestaoFinanceiraSecPainelBand: 'Executive panel',
+    gestaoFinanceiraSecPainelBandHint:
+      'Receivables, parts (invoices), clients, library service work and VAT still open.',
+    gestaoFinanceiraSecMapaBand: 'Value map',
+    gestaoFinanceiraSecMapaBandHint: 'Compare volumes; mark no-invoice closings paid once cash is in.',
+    gestaoFinanceiraSecAcoesBand: 'Go to other screens',
+    gestaoFinanceiraSecAcoesBandHint: 'Documents, per-client billing and expenses saved in the library.',
     gestaoFinanceiraPainelExecTitulo: 'Control tower — receivables and risk',
     gestaoFinanceiraPainelExecSub:
       'Executive snapshot: parts invoices, exposure by client, delays and service (library closings).',
@@ -17261,6 +17416,8 @@ export const translations = {
     gestaoFinanceiraPainelPecasAtrasoVal: 'Overdue (€)',
     gestaoFinanceiraPainelPecasAtrasoN: 'Overdue invoices',
     gestaoFinanceiraPainelPecasNoPrazoVal: 'Still within terms (€)',
+    gestaoFinanceiraPainelPecasPagoVal: 'Already received — paid invoices (€)',
+    gestaoFinanceiraPainelPecasPagoN: 'Settled parts invoices',
     gestaoFinanceiraPainelSecClientes: 'Clients — exposure',
     gestaoFinanceiraPainelCliDividaSaldo: 'Outstanding balance (parts)',
     gestaoFinanceiraPainelCliDividaN: 'Clients with an open balance',
@@ -17288,6 +17445,17 @@ export const translations = {
     comprovantesDespesasTitle: 'CARD-PAID EXPENSES LOG FOR TAX RETURN',
     comprovantesDespesasDesc: 'Log receipts for card-paid expenses to support your tax return. Add images, filter by month and client, unit values and totals per operation.',
     comprovantesFiltroMes: 'Filter by month',
+    comprovantesFiltroMesArquivoHint:
+      'This month is the filing month (tax): it may differ from the receipt date. Set «Filing month» and «Receipt date» for the PDF.',
+    comprovantesDataRecibo: 'Receipt date (document / PDF)',
+    comprovantesMesArquivo: 'Filing month (tax / month filter)',
+    comprovantesMesArquivoHint:
+      'If you photograph today a receipt from another month, pick the filing month; the date should match the paper receipt.',
+    comprovantesMesArquivoAbrev: 'Filing',
+    comprovantesListaPorDataSub:
+      'Grouped by receipt date. The month filter uses the filing month, which may differ.',
+    comprovantesReciboRapidoMesArquivoHint:
+      'Date should match the receipt (PDF). Filing month controls which month the entry appears in when filtering.',
     comprovantesFiltroCliente: 'Filter by client',
     comprovantesData: 'Date',
     comprovantesValorUnitario: 'Unit value',
