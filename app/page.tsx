@@ -1172,6 +1172,14 @@ type FechamentoFluxoFinanceiroEntry = {
   dataVencimentoFatura?: string
 }
 
+/** Fluxo financeiro da OS: «não pago» ou marcado devedor — mesmo critério do cartão devedor no cadastro. */
+function relatorioServicoFluxoFinanceiroPendente(fr: unknown): boolean {
+  const frObj =
+    fr && typeof fr === 'object' && !Array.isArray(fr) ? (fr as FechamentoFluxoFinanceiroEntry) : null
+  if (!frObj) return false
+  return frObj.situacaoFatura === 'nao_paga' || frObj.pagamento === 'devedor'
+}
+
 type PasswordEntry = {
   id: string
   tecnicoName: string
@@ -32226,10 +32234,19 @@ onKeyPress={(e) => {
                   .map(relatorio => {
                     const totais = calcularTotais(relatorio.diasTrabalho)
                     const dataFormatada = formatDiaTrabalhoCurtoPt(relatorio.data)
+                    const fluxoPendenteFinanceiro = relatorioServicoFluxoFinanceiroPendente(
+                      fechamentoFluxoFinanceiroPorRelatorioId[relatorio.id]
+                    )
                     return (
                       <div 
                         key={relatorio.id} 
-                        className="relatorio-servico-report-card"
+                        className={`relatorio-servico-report-card${fluxoPendenteFinanceiro ? ' relatorio-servico-report-card--fluxo-pendente' : ''}`}
+                        title={
+                          fluxoPendenteFinanceiro
+                            ? (safeT as any)?.clienteRelatorioDividaTooltip ||
+                              'Relatório com fluxo «não pago» / devedor. Ao regularizar, o destaque some.'
+                            : undefined
+                        }
                         style={{ 
                           ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }),
                           position: 'relative',
@@ -32239,6 +32256,12 @@ onKeyPress={(e) => {
                           height: 'fit-content',
                           alignSelf: 'start',
                           boxSizing: 'border-box',
+                          ...(fluxoPendenteFinanceiro
+                            ? {
+                                backgroundColor: 'rgba(45, 18, 18, 0.55)',
+                                border: '1px solid rgba(248, 113, 113, 0.38)',
+                              }
+                            : {}),
                         }}
                         onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)}
                         onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}
@@ -68912,8 +68935,30 @@ A1;Peça exemplo;10`}
               <p>{safeT?.noRelatoriosServico || 'Nenhum relatório de serviço cadastrado.'}</p>
             ) : (
               <ul style={{ listStyle: 'none', padding: 0, marginTop: '20px' }}>
-                {relatoriosServico.map(relatorio => (
-                  <li key={relatorio.id} style={{ backgroundColor: '#141414', padding: '15px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '10px' }}>
+                {relatoriosServico.map(relatorio => {
+                  const fluxoPendenteFinanceiro = relatorioServicoFluxoFinanceiroPendente(
+                    fechamentoFluxoFinanceiroPorRelatorioId[relatorio.id]
+                  )
+                  return (
+                  <li
+                    key={relatorio.id}
+                    className={fluxoPendenteFinanceiro ? 'cliente-relatorio-linha-divida' : undefined}
+                    title={
+                      fluxoPendenteFinanceiro
+                        ? (safeT as any)?.clienteRelatorioDividaTooltip ||
+                          'Relatório com fluxo «não pago» / devedor. Ao regularizar, o destaque some.'
+                        : undefined
+                    }
+                    style={{
+                      backgroundColor: fluxoPendenteFinanceiro ? 'rgba(60, 12, 12, 0.35)' : '#141414',
+                      padding: '15px',
+                      borderRadius: '8px',
+                      border: fluxoPendenteFinanceiro
+                        ? '1px solid rgba(248, 113, 113, 0.35)'
+                        : '1px solid rgba(0, 255, 0, 0.2)',
+                      marginBottom: '10px',
+                    }}
+                  >
                     <p>
                       <strong>{relatorio.numero}</strong> — {relatorio.cliente}
                       {relatorio.equipamentoOrigem === 'armazem' && (
@@ -68939,7 +68984,8 @@ A1;Peça exemplo;10`}
                       </button>
                     </div>
                   </li>
-                ))}
+                  )
+                })}
               </ul>
             )}
             <button className="btn-primary" onClick={() => setShowRelatorioServicoModal(false)} style={{ width: '100%', marginTop: '20px' }}>
@@ -70586,9 +70632,9 @@ A1;Peça exemplo;10`}
                                       <div key={dataKey} style={{ marginBottom: '10px' }}>
                                         <p style={{ fontSize: '10px', fontWeight: '600', color: 'rgba(0, 255, 0, 0.85)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>📅 {dataKey}</p>
                                         {relatoriosPorData[dataKey].map((relatorio) => {
-                                          const marcaRelatorioDivida =
-                                            Boolean(selectedClienteForEquipamento.ultimoRelatorioDevedorId) &&
-                                            selectedClienteForEquipamento.ultimoRelatorioDevedorId === relatorio.id
+                                          const marcaRelatorioDivida = relatorioServicoFluxoFinanceiroPendente(
+                                            fechamentoFluxoFinanceiroPorRelatorioId[relatorio.id]
+                                          )
                                           return (
                                           <div
                                             key={relatorio.id}
@@ -71657,9 +71703,35 @@ A1;Peça exemplo;10`}
       {/* Modal de Visualização Completa do Relatório de Serviço */}
       {viewingRelatorioServico && (
         <div className="modal-overlay" onClick={() => setViewingRelatorioServico(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '1200px', maxHeight: '90vh', overflowY: 'auto', backgroundColor: '#141414', minWidth: 0, width: 'min(100%, 1200px)' }}>
+          <div
+            className="modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: '1200px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              backgroundColor: '#141414',
+              minWidth: 0,
+              width: 'min(100%, 1200px)',
+              ...(relatorioServicoFluxoFinanceiroPendente(
+                fechamentoFluxoFinanceiroPorRelatorioId[viewingRelatorioServico.id]
+              )
+                ? { boxShadow: 'inset 4px 0 0 rgba(248, 113, 113, 0.92)' }
+                : {}),
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '20px', borderBottom: '2px solid rgba(0, 255, 0, 0.3)', paddingBottom: '15px', minWidth: 0 }}>
-              <h2 style={{ color: '#00ff00', margin: 0, flex: '1 1 12rem', minWidth: 0, lineHeight: 1.25, overflowWrap: 'anywhere', wordBreak: 'break-word', fontSize: 'clamp(16px, 4vw, 22px)' }}>
+              <h2
+                style={{ color: '#00ff00', margin: 0, flex: '1 1 12rem', minWidth: 0, lineHeight: 1.25, overflowWrap: 'anywhere', wordBreak: 'break-word', fontSize: 'clamp(16px, 4vw, 22px)' }}
+                title={
+                  relatorioServicoFluxoFinanceiroPendente(
+                    fechamentoFluxoFinanceiroPorRelatorioId[viewingRelatorioServico.id]
+                  )
+                    ? (safeT as any)?.clienteRelatorioDividaTooltip ||
+                      'Relatório com fluxo «não pago» / devedor. Ao regularizar, o destaque some.'
+                    : undefined
+                }
+              >
                 📋 {safeT?.relatorioServico || 'Relatório de Serviço'} - {viewingRelatorioServico.numero}
               </h2>
               <button className="btn-primary" onClick={() => setViewingRelatorioServico(null)} style={{ padding: '8px 16px', flexShrink: 0 }}>

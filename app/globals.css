@@ -10116,3 +10116,17 @@ button.dia-trabalho-acao-btn--del:hover {
   box-shadow: inset 3px 0 0 rgba(248, 113, 113, 0.95);
 }
 
+/* Cartão na grelha «Relatório de Serviço»: barra fina à esquerda (não usa box-shadow no elemento — o hover do cartão zera box-shadow) */
+.relatorio-servico-report-card.relatorio-servico-report-card--fluxo-pendente::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 12px 0 0 12px;
+  background: rgba(248, 113, 113, 0.95);
+  pointer-events: none;
+  z-index: 2;
+}
+
