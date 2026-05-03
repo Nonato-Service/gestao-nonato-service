@@ -234,13 +234,15 @@ async function _doSaveToServer(key: string, value: any): Promise<boolean> {
       (value.startsWith('data:image/') || value.startsWith('data:video/') || value.startsWith('data:application/pdf'))
     /** Manuais com PDFs em base64: JSON grande — usar save-text para não estourar limites do /save */
     const isLargeManuaisJson = key === MANUAIS_KEY && payloadStr.length > 80000
-    const useTextEndpoint = isLargeString || isLargeManuaisJson
+    /** Biblioteca de logos PDF: várias imagens base64 — mesmo tratamento que manuais grandes */
+    const isLargeLogosRelatoriosJson = key === 'nonato-logos-relatorios' && payloadStr.length > 80000
+    const useTextEndpoint = isLargeString || isLargeManuaisJson || isLargeLogosRelatoriosJson
     const endpoint = useTextEndpoint ? `${API_BASE}/save-text` : `${API_BASE}/save`
     const body =
-      isLargeManuaisJson && typeof value === 'object'
+      (isLargeManuaisJson && typeof value === 'object') || isLargeLogosRelatoriosJson
         ? JSON.stringify({ key, value: payloadStr })
         : JSON.stringify({ key, value })
-    const payloadNeedsSlowUpload = isLargeManuaisJson || isLargeString
+    const payloadNeedsSlowUpload = isLargeManuaisJson || isLargeLogosRelatoriosJson || isLargeString
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -566,7 +568,12 @@ export async function saveAllToServer(
 }
 
 // Função híbrida: salva no localStorage E no servidor
-export async function saveData(key: string, value: any, saveToLocalStorage = true): Promise<void> {
+export async function saveData(
+  key: string,
+  value: any,
+  saveToLocalStorage = true,
+  awaitServer = false
+): Promise<void> {
   /** Manuais: IndexedDB primeiro (PDFs grandes); localStorage é opcional; não falhar se quota estourar */
   if (key === MANUAIS_KEY && typeof window !== 'undefined') {
     /** IndexedDB é a fonte de verdade local; o servidor pode ser lento ou falhar (413, rede) — não bloquear a UI */
@@ -584,7 +591,8 @@ export async function saveData(key: string, value: any, saveToLocalStorage = tru
       }
     }
     if (!shouldDeferImplicitServerPush()) {
-      void saveToServer(key, value).catch(() => {})
+      const p = saveToServer(key, value).catch(() => {})
+      if (awaitServer) await p
     }
     if (typeof window !== 'undefined') {
       try {
@@ -616,9 +624,10 @@ export async function saveData(key: string, value: any, saveToLocalStorage = tru
     }
   }
 
-  // Servidor em segundo plano — o localStorage/IndexedDB já foi gravado; não bloquear a UI se a rede falhar
+  // Servidor — por defeito em segundo plano; `awaitServer` para alinhar revisão de sync (logos, etc.)
   if (!shouldDeferImplicitServerPush()) {
-    void saveToServer(key, value).catch(() => {})
+    const p = saveToServer(key, value).catch(() => {})
+    if (awaitServer) await p
   }
 
   if (typeof window !== 'undefined' && saveToLocalStorage) {
@@ -642,6 +651,15 @@ export async function loadData(key: string, parseJson = true): Promise<any | nul
           serverData = JSON.parse(serverData)
         } catch {
           serverData = null
+        }
+      }
+      // Biblioteca de logos em .txt (JSON serializado) — devolver array como no .json
+      if (key === 'nonato-logos-relatorios' && typeof serverData === 'string' && parseJson) {
+        try {
+          const parsed = JSON.parse(serverData) as unknown
+          if (Array.isArray(parsed)) serverData = parsed
+        } catch {
+          /* manter string; consumidor valida */
         }
       }
       // Manuais: nunca substituir o local só pelo servidor — fundir para não perder PDFs

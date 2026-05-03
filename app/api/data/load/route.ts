@@ -71,7 +71,15 @@ export async function GET(request: NextRequest) {
           try {
             const content = fs.readFileSync(filePath, 'utf-8')
             if (content && content.trim() !== '') {
-              allData[fileKey] = content
+              if (fileKey === 'nonato-logos-relatorios' && content.trim().startsWith('[')) {
+                try {
+                  allData[fileKey] = JSON.parse(content)
+                } catch {
+                  allData[fileKey] = content
+                }
+              } else {
+                allData[fileKey] = content
+              }
             }
           } catch (e) {
             console.error(`Erro ao ler arquivo ${file}:`, e)

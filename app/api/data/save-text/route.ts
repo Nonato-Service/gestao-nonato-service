@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import { ensureDataDir } from '../shared'
+import { ensureDataDir, resolveDataDirForKey } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
 import { textFileContentUnchanged } from '../writeIfChanged'
@@ -42,6 +42,15 @@ export async function POST(request: NextRequest) {
         const meta = bumpSyncMeta(dataDir)
         revision = meta.revision
         updatedAt = meta.updatedAt
+        // Evitar que um .json antigo (pequeno) prevaleça sobre o .txt grande no /load bundle
+        if (key === 'nonato-logos-relatorios') {
+          try {
+            const jsonPath = path.join(resolveDataDirForKey(key, dataDir), `${key}.json`)
+            if (fs.existsSync(jsonPath)) fs.unlinkSync(jsonPath)
+          } catch {
+            /* ignorar */
+          }
+        }
       }
     } catch (e) {
       console.error('bumpSyncMeta (save-text):', e)

@@ -2272,6 +2272,24 @@ export default function Dashboard() {
   const [logoType, setLogoType] = useState<'image' | 'video' | null>(null)
   const [logoUrlDashboard, setLogoUrlDashboard] = useState<string | null>(null)
   const [logoTypeDashboard, setLogoTypeDashboard] = useState<'image' | 'video' | null>(null)
+  /** Rascunho no Administrador (só persiste com «Guardar») — barra lateral / dashboard */
+  type AdminInterfaceLogoDraft = {
+    previewUrl: string
+    isVideo: boolean
+    imageDataUrl?: string
+  }
+  const [adminSidebarLogoDraft, setAdminSidebarLogoDraft] = useState<AdminInterfaceLogoDraft | null>(null)
+  const [adminDashboardLogoDraft, setAdminDashboardLogoDraft] = useState<AdminInterfaceLogoDraft | null>(null)
+  const adminSidebarLogoDraftVideoFileRef = useRef<File | null>(null)
+  const adminDashboardLogoDraftVideoFileRef = useRef<File | null>(null)
+  const [adminBibliotecaLogoDraft, setAdminBibliotecaLogoDraft] = useState<{
+    previewUrl: string
+    dataUrl: string
+    fileName: string
+  } | null>(null)
+  const [adminLogoSavingSidebar, setAdminLogoSavingSidebar] = useState(false)
+  const [adminLogoSavingDashboard, setAdminLogoSavingDashboard] = useState(false)
+  const [adminBibliotecaLogoSaving, setAdminBibliotecaLogoSaving] = useState(false)
   // Carregar idioma do localStorage imediatamente, antes de qualquer renderização
   const getInitialLanguage = (): string => {
     if (typeof window !== 'undefined') {
@@ -7363,9 +7381,17 @@ export default function Dashboard() {
       if (savedIncluirLogo !== undefined && savedIncluirLogo !== null) {
         setIncluirLogoNosRelatorios(savedIncluirLogo === true || savedIncluirLogo === 'true')
       }
-      const savedLogosRelatorios = getData('nonato-logos-relatorios')
+      const savedLogosRelatoriosRaw = getData('nonato-logos-relatorios')
+      let savedLogosRelatorios: unknown = savedLogosRelatoriosRaw
+      if (typeof savedLogosRelatorios === 'string' && savedLogosRelatorios.trim().startsWith('[')) {
+        try {
+          savedLogosRelatorios = JSON.parse(savedLogosRelatorios)
+        } catch {
+          /* ignorar */
+        }
+      }
       if (Array.isArray(savedLogosRelatorios)) {
-        setLogosRelatorios(savedLogosRelatorios)
+        setLogosRelatorios(savedLogosRelatorios as LogoRelatorio[])
       }
       const savedLogoRelatorioId = getData('nonato-relatorios-logo-id')
       if (typeof savedLogoRelatorioId === 'string') {
@@ -9338,6 +9364,34 @@ export default function Dashboard() {
     }
   }, [])
 
+  const discardAdminSidebarLogoDraft = () => {
+    setAdminSidebarLogoDraft((prev) => {
+      if (prev?.isVideo && prev.previewUrl.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(prev.previewUrl)
+        } catch {
+          /* ignorar */
+        }
+      }
+      return null
+    })
+    adminSidebarLogoDraftVideoFileRef.current = null
+  }
+
+  const discardAdminDashboardLogoDraft = () => {
+    setAdminDashboardLogoDraft((prev) => {
+      if (prev?.isVideo && prev.previewUrl.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(prev.previewUrl)
+        } catch {
+          /* ignorar */
+        }
+      }
+      return null
+    })
+    adminDashboardLogoDraftVideoFileRef.current = null
+  }
+
   const handleFileChangeSidebarLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -9346,46 +9400,107 @@ export default function Dashboard() {
     const isVideo = isMp4 || file.type === 'video/mp4' || file.type === 'video/mpeg' || file.type.startsWith('video/')
     if (!isImage && !isVideo) {
       alert((t as any).selectImageOrVideoError || 'Por favor, selecione uma imagem ou um vídeo MP4')
+      e.target.value = ''
       return
     }
     const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024
     if (file.size > maxSize) {
       alert(((t as any).fileTooLarge || 'Arquivo muito grande! Tamanho máximo: {size}').replace('{size}', isVideo ? '50MB' : '5MB'))
+      e.target.value = ''
       return
     }
+    setAdminSidebarLogoDraft((prev) => {
+      if (prev?.isVideo && prev.previewUrl.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(prev.previewUrl)
+        } catch {
+          /* ignorar */
+        }
+      }
+      return null
+    })
+    adminSidebarLogoDraftVideoFileRef.current = null
     if (isVideo) {
-      const formData = new FormData()
-      formData.append('video', file)
-      fetch('/api/video/logo', { method: 'POST', body: formData })
-        .then(r => r.ok ? r.json() : r.json().then(d => { throw new Error(d.error) }))
-        .then(async () => {
-          setLogoUrl('/api/video/logo')
-          setLogoType('video')
-          await saveData('nonato-logo-type', 'video', false)
-          alert(t.videoUpdatedSuccess || 'Vídeo atualizado com sucesso!')
-        })
-        .catch(() => alert(t.errorSavingVideo || 'Erro ao salvar o vídeo. Tente novamente.'))
+      adminSidebarLogoDraftVideoFileRef.current = file
+      setAdminSidebarLogoDraft({ previewUrl: URL.createObjectURL(file), isVideo: true })
     } else {
       const reader = new FileReader()
-      reader.onload = async (ev) => {
-        const result = ev.target?.result as string
+      reader.onload = () => {
+        const result = reader.result as string
         if (!result) return
-        setLogoUrl(result)
-        setLogoType('image')
-        try {
-          await saveData('nonato-logo', result, true)
-          await saveData('nonato-logo-type', 'image', false)
-          // Remover MP4 antigo no servidor para outros aparelhos não mostrarem vídeo em vez da imagem nova
-          await fetch('/api/video/logo', { method: 'DELETE' }).catch(() => {})
-          alert(t.logoUpdatedSuccess || 'Logo atualizado com sucesso!')
-        } catch {
-          alert(t.logoLoadedButError || 'Logo carregado, mas houve um problema ao salvar.')
-        }
+        setAdminSidebarLogoDraft({ previewUrl: result, isVideo: false, imageDataUrl: result })
       }
       reader.onerror = () => alert(t.errorReadingFile || 'Erro ao ler o arquivo.')
       reader.readAsDataURL(file)
     }
     e.target.value = ''
+  }
+
+  const commitAdminSidebarLogoDraft = async () => {
+    const draft = adminSidebarLogoDraft
+    if (!draft) return
+    setAdminLogoSavingSidebar(true)
+    try {
+      if (draft.isVideo) {
+        const vf = adminSidebarLogoDraftVideoFileRef.current
+        if (!vf) {
+          alert(t.errorSavingVideo || 'Erro ao salvar o vídeo. Tente novamente.')
+          return
+        }
+        const formData = new FormData()
+        formData.append('video', vf)
+        const r = await fetch('/api/video/logo', { method: 'POST', body: formData })
+        let errMsg = ''
+        if (!r.ok) {
+          try {
+            const d = (await r.json()) as { error?: string }
+            errMsg = typeof d?.error === 'string' ? d.error : ''
+          } catch {
+            /* ignorar */
+          }
+          alert(errMsg || t.errorSavingVideo || 'Erro ao salvar o vídeo. Tente novamente.')
+          return
+        }
+        setLogoUrl('/api/video/logo')
+        setLogoType('video')
+        await saveData('nonato-logo-type', 'video', true, true)
+      } else {
+        const result = draft.imageDataUrl || draft.previewUrl
+        if (!result) return
+        setLogoUrl(result)
+        setLogoType('image')
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('nonato-logo', result)
+            localStorage.setItem('nonato-logo-type', 'image')
+          } catch {
+            /* quota */
+          }
+        }
+        await saveData('nonato-logo', result, true, true)
+        await saveData('nonato-logo-type', 'image', true, true)
+        await fetch('/api/video/logo', { method: 'DELETE' }).catch(() => {})
+      }
+      try {
+        const st = await fetchSyncStatus()
+        if (st && Number.isFinite(st.revision) && st.revision >= 0) setLastAcceptedRevision(st.revision)
+      } catch {
+        /* ignorar */
+      }
+      if (draft.isVideo && draft.previewUrl.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(draft.previewUrl)
+        } catch {
+          /* ignorar */
+        }
+      }
+      adminSidebarLogoDraftVideoFileRef.current = null
+      setAdminSidebarLogoDraft(null)
+    } catch {
+      alert(t.logoLoadedButError || 'Logo carregado, mas houve um problema ao salvar.')
+    } finally {
+      setAdminLogoSavingSidebar(false)
+    }
   }
 
   const handleFileChangeDashboardLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -9396,43 +9511,35 @@ export default function Dashboard() {
     const isVideo = isMp4 || file.type === 'video/mp4' || file.type === 'video/mpeg' || file.type.startsWith('video/')
     if (!isImage && !isVideo) {
       alert((t as any).selectImageOrVideoError || 'Por favor, selecione uma imagem ou um vídeo MP4')
+      e.target.value = ''
       return
     }
     const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024
     if (file.size > maxSize) {
       alert(((t as any).fileTooLarge || 'Arquivo muito grande! Tamanho máximo: {size}').replace('{size}', isVideo ? '50MB' : '5MB'))
+      e.target.value = ''
       return
     }
+    setAdminDashboardLogoDraft((prev) => {
+      if (prev?.isVideo && prev.previewUrl.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(prev.previewUrl)
+        } catch {
+          /* ignorar */
+        }
+      }
+      return null
+    })
+    adminDashboardLogoDraftVideoFileRef.current = null
     if (isVideo) {
-      const formData = new FormData()
-      formData.append('video', file)
-      fetch('/api/video/logo-dashboard', { method: 'POST', body: formData })
-        .then(r => r.ok ? r.json() : r.json().then(d => { throw new Error(d.error) }))
-        .then(async () => {
-          setLogoUrlDashboard('/api/video/logo-dashboard')
-          setLogoTypeDashboard('video')
-          await saveData('nonato-logo-dashboard-type', 'video', false)
-          alert(t.videoUpdatedSuccess || 'Vídeo atualizado com sucesso!')
-        })
-        .catch(() => alert(t.errorSavingVideo || 'Erro ao salvar o vídeo. Tente novamente.'))
+      adminDashboardLogoDraftVideoFileRef.current = file
+      setAdminDashboardLogoDraft({ previewUrl: URL.createObjectURL(file), isVideo: true })
     } else {
       const reader = new FileReader()
-      reader.onload = async (ev) => {
-        const result = ev.target?.result as string
+      reader.onload = () => {
+        const result = reader.result as string
         if (!result) return
-        setLogoUrlDashboard(result)
-        setLogoTypeDashboard('image')
-        try {
-          await saveData('nonato-logo-dashboard', result, true)
-          await saveData('nonato-logo-dashboard-type', 'image', false)
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('nonato-logo-dashboard', result)
-            localStorage.setItem('nonato-logo-dashboard-type', 'image')
-          }
-          alert(t.logoUpdatedSuccess || 'Logo atualizado com sucesso!')
-        } catch {
-          alert(t.logoLoadedButError || 'Logo carregado, mas houve um problema ao salvar.')
-        }
+        setAdminDashboardLogoDraft({ previewUrl: result, isVideo: false, imageDataUrl: result })
       }
       reader.onerror = () => alert(t.errorReadingFile || 'Erro ao ler o arquivo.')
       reader.readAsDataURL(file)
@@ -9440,7 +9547,74 @@ export default function Dashboard() {
     e.target.value = ''
   }
 
+  const commitAdminDashboardLogoDraft = async () => {
+    const draft = adminDashboardLogoDraft
+    if (!draft) return
+    setAdminLogoSavingDashboard(true)
+    try {
+      if (draft.isVideo) {
+        const vf = adminDashboardLogoDraftVideoFileRef.current
+        if (!vf) {
+          alert(t.errorSavingVideo || 'Erro ao salvar o vídeo. Tente novamente.')
+          return
+        }
+        const formData = new FormData()
+        formData.append('video', vf)
+        const r = await fetch('/api/video/logo-dashboard', { method: 'POST', body: formData })
+        let errMsg = ''
+        if (!r.ok) {
+          try {
+            const d = (await r.json()) as { error?: string }
+            errMsg = typeof d?.error === 'string' ? d.error : ''
+          } catch {
+            /* ignorar */
+          }
+          alert(errMsg || t.errorSavingVideo || 'Erro ao salvar o vídeo. Tente novamente.')
+          return
+        }
+        setLogoUrlDashboard('/api/video/logo-dashboard')
+        setLogoTypeDashboard('video')
+        await saveData('nonato-logo-dashboard-type', 'video', true, true)
+      } else {
+        const result = draft.imageDataUrl || draft.previewUrl
+        if (!result) return
+        setLogoUrlDashboard(result)
+        setLogoTypeDashboard('image')
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('nonato-logo-dashboard', result)
+            localStorage.setItem('nonato-logo-dashboard-type', 'image')
+          } catch {
+            /* quota */
+          }
+        }
+        await saveData('nonato-logo-dashboard', result, true, true)
+        await saveData('nonato-logo-dashboard-type', 'image', true, true)
+      }
+      try {
+        const st = await fetchSyncStatus()
+        if (st && Number.isFinite(st.revision) && st.revision >= 0) setLastAcceptedRevision(st.revision)
+      } catch {
+        /* ignorar */
+      }
+      if (draft.isVideo && draft.previewUrl.startsWith('blob:')) {
+        try {
+          URL.revokeObjectURL(draft.previewUrl)
+        } catch {
+          /* ignorar */
+        }
+      }
+      adminDashboardLogoDraftVideoFileRef.current = null
+      setAdminDashboardLogoDraft(null)
+    } catch {
+      alert(t.logoLoadedButError || 'Logo carregado, mas houve um problema ao salvar.')
+    } finally {
+      setAdminLogoSavingDashboard(false)
+    }
+  }
+
   const handleRemoveSidebarLogo = async () => {
+    discardAdminSidebarLogoDraft()
     setLogoUrl(null)
     setLogoType(null)
     if (typeof window !== 'undefined') {
@@ -9449,14 +9623,21 @@ export default function Dashboard() {
     }
     try {
       await fetch('/api/video/logo', { method: 'DELETE' }).catch(() => {})
-      await saveData('nonato-logo', '', false)
-      await saveData('nonato-logo-type', '', false)
+      await saveData('nonato-logo', '', true, true)
+      await saveData('nonato-logo-type', '', true, true)
+      try {
+        const st = await fetchSyncStatus()
+        if (st && Number.isFinite(st.revision) && st.revision >= 0) setLastAcceptedRevision(st.revision)
+      } catch {
+        /* ignorar */
+      }
     } catch (e) {
       console.error('Erro ao remover logo do servidor:', e)
     }
   }
 
   const handleRemoveDashboardLogo = async () => {
+    discardAdminDashboardLogoDraft()
     setLogoUrlDashboard(null)
     setLogoTypeDashboard(null)
     if (typeof window !== 'undefined') {
@@ -9465,8 +9646,14 @@ export default function Dashboard() {
     }
     try {
       await fetch('/api/video/logo-dashboard', { method: 'DELETE' }).catch(() => {})
-      await saveData('nonato-logo-dashboard', '', false)
-      await saveData('nonato-logo-dashboard-type', '', false)
+      await saveData('nonato-logo-dashboard', '', true, true)
+      await saveData('nonato-logo-dashboard-type', '', true, true)
+      try {
+        const st = await fetchSyncStatus()
+        if (st && Number.isFinite(st.revision) && st.revision >= 0) setLastAcceptedRevision(st.revision)
+      } catch {
+        /* ignorar */
+      }
     } catch (e) {
       console.error('Erro ao remover logo do dashboard:', e)
     }
@@ -14387,25 +14574,63 @@ export default function Dashboard() {
     saveData('nonato-protocolo-servico-logo-id', logoId)
   }
 
-  const administradorAddBibliotecaLogo = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    afterAdd?: (id: string) => void
-  ) => {
+  const discardAdminBibliotecaLogoDraft = () => {
+    setAdminBibliotecaLogoDraft(null)
+  }
+
+  const administradorAddBibliotecaLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    const inputEl = e.target
     const reader = new FileReader()
-    reader.onload = (ev) => {
-      const data = ev.target?.result as string
-      if (!data || !data.startsWith('data:image/')) return
+    reader.onload = () => {
+      const data = reader.result as string
+      if (!data || !data.startsWith('data:image/')) {
+        inputEl.value = ''
+        return
+      }
       const name = file.name.replace(/\.[^.]+$/, '') || `Logo ${logosRelatorios.length + 1}`
-      const id = `logo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-      const next = [...logosRelatorios, { id, name, data, type: 'image' as const }]
-      setLogosRelatorios(next)
-      saveData('nonato-logos-relatorios', next)
-      afterAdd?.(id)
-      e.target.value = ''
+      setAdminBibliotecaLogoDraft({
+        previewUrl: data,
+        dataUrl: data,
+        fileName: name,
+      })
+      inputEl.value = ''
+    }
+    reader.onerror = () => {
+      inputEl.value = ''
+      alert(t.errorReadingFile || 'Erro ao ler o arquivo.')
     }
     reader.readAsDataURL(file)
+  }
+
+  const commitAdminBibliotecaLogoDraft = async () => {
+    const draft = adminBibliotecaLogoDraft
+    if (!draft) return
+    const prevList = logosRelatorios
+    const id = `logo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    const next = [...prevList, { id, name: draft.fileName, data: draft.dataUrl, type: 'image' as const }]
+    setLogosRelatorios(next)
+    setAdminBibliotecaLogoSaving(true)
+    try {
+      await saveData('nonato-logos-relatorios', next, true, true)
+      try {
+        const st = await fetchSyncStatus()
+        if (st && Number.isFinite(st.revision) && st.revision >= 0) setLastAcceptedRevision(st.revision)
+      } catch {
+        /* ignorar */
+      }
+      setAdminBibliotecaLogoDraft(null)
+    } catch (err) {
+      console.error('[nonato-logos-relatorios]', err)
+      setLogosRelatorios(prevList)
+      alert(
+        (t as any)?.logoBibliotecaSaveFail ||
+          'Não foi possível guardar a biblioteca de logos (espaço em disco ou rede). Tente uma imagem mais pequena ou verifique a ligação.'
+      )
+    } finally {
+      setAdminBibliotecaLogoSaving(false)
+    }
   }
 
   /** PDF de fechamento de despesas a partir da Biblioteca */
@@ -26064,20 +26289,83 @@ const nextF = familias.filter(x => x !== f)
                           <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeSidebarLogo} style={{ display: 'none' }} />
                         </label>
                       </div>
-                      <div style={{ minHeight: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px dashed rgba(0,255,0,0.25)', padding: '10px' }}>
-                        {logoUrl ? (
-                          logoType === 'video' ? (
-                            <video src={logoUrl} autoPlay loop muted style={{ maxWidth: '100%', maxHeight: '96px', borderRadius: '6px', objectFit: 'contain' }} />
+                      <div
+                        style={{
+                          minHeight: '100px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          backgroundColor: adminSidebarLogoDraft ? 'rgba(255,160,0,0.08)' : '#0d0d0d',
+                          borderRadius: '8px',
+                          border: adminSidebarLogoDraft ? '1px solid rgba(255,180,0,0.45)' : '1px dashed rgba(0,255,0,0.25)',
+                          padding: '10px',
+                        }}
+                      >
+                        {adminSidebarLogoDraft ? (
+                          <span style={{ fontSize: '10px', fontWeight: 700, color: '#ffb74d', letterSpacing: '0.08em' }}>
+                            {(safeT as any)?.adminLogoRascunhoBadge || 'Rascunho'}
+                          </span>
+                        ) : null}
+                        {adminSidebarLogoDraft || logoUrl ? (
+                          (adminSidebarLogoDraft ? adminSidebarLogoDraft.isVideo : logoType === 'video') ? (
+                            <video
+                              src={adminSidebarLogoDraft ? adminSidebarLogoDraft.previewUrl : logoUrl || ''}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              style={{ maxWidth: '100%', maxHeight: '96px', borderRadius: '6px', objectFit: 'contain' }}
+                            />
                           ) : (
-                            <img src={logoUrl} alt="" style={{ maxWidth: '100%', maxHeight: '96px', objectFit: 'contain', borderRadius: '6px' }} />
+                            <img
+                              src={adminSidebarLogoDraft ? adminSidebarLogoDraft.previewUrl : logoUrl || ''}
+                              alt=""
+                              style={{ maxWidth: '100%', maxHeight: '96px', objectFit: 'contain', borderRadius: '6px' }}
+                            />
                           )
                         ) : (
                           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>{(safeT as any)?.adminSemLogoPreview || 'Sem logo'}</span>
                         )}
                       </div>
-                      {logoUrl && (
+                      {adminSidebarLogoDraft ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <p style={{ fontSize: '11px', color: 'rgba(255,200,140,0.95)', margin: 0, lineHeight: 1.45 }}>
+                            {(safeT as any)?.adminLogoSalvarParaAplicar ||
+                              'Ainda não gravado — use «Guardar» para aplicar ou «Descartar rascunho» para cancelar.'}
+                          </p>
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              disabled={adminLogoSavingSidebar}
+                              onClick={() => void commitAdminSidebarLogoDraft()}
+                              style={{ padding: '6px 14px', fontSize: '12px' }}
+                            >
+                              {(safeT as any)?.guardar || safeT?.save || 'Guardar'}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              disabled={adminLogoSavingSidebar}
+                              onClick={discardAdminSidebarLogoDraft}
+                              style={{
+                                padding: '6px 14px',
+                                fontSize: '12px',
+                                backgroundColor: 'rgba(255,255,255,0.06)',
+                                borderColor: 'rgba(255,255,255,0.25)',
+                                color: 'rgba(255,255,255,0.88)',
+                              }}
+                            >
+                              {(safeT as any)?.adminLogoDescartarRascunho || safeT?.cancel || 'Descartar rascunho'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : null}
+                      {logoUrl && !adminSidebarLogoDraft ? (
                         <button type="button" className="btn-danger" onClick={handleRemoveSidebarLogo} style={{ padding: '6px 12px', fontSize: '12px', alignSelf: 'flex-start' }}>{safeT?.removeLogo || 'Remover logo'}</button>
-                      )}
+                      ) : null}
                     </div>
                     <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
@@ -26091,20 +26379,83 @@ const nextF = familias.filter(x => x !== f)
                           <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeDashboardLogo} style={{ display: 'none' }} />
                         </label>
                       </div>
-                      <div style={{ minHeight: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px dashed rgba(0,255,0,0.25)', padding: '10px' }}>
-                        {logoUrlDashboard ? (
-                          logoTypeDashboard === 'video' ? (
-                            <video src={logoUrlDashboard} autoPlay loop muted style={{ maxWidth: '100%', maxHeight: '96px', borderRadius: '6px', objectFit: 'contain' }} />
+                      <div
+                        style={{
+                          minHeight: '100px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          backgroundColor: adminDashboardLogoDraft ? 'rgba(255,160,0,0.08)' : '#0d0d0d',
+                          borderRadius: '8px',
+                          border: adminDashboardLogoDraft ? '1px solid rgba(255,180,0,0.45)' : '1px dashed rgba(0,255,0,0.25)',
+                          padding: '10px',
+                        }}
+                      >
+                        {adminDashboardLogoDraft ? (
+                          <span style={{ fontSize: '10px', fontWeight: 700, color: '#ffb74d', letterSpacing: '0.08em' }}>
+                            {(safeT as any)?.adminLogoRascunhoBadge || 'Rascunho'}
+                          </span>
+                        ) : null}
+                        {adminDashboardLogoDraft || logoUrlDashboard ? (
+                          (adminDashboardLogoDraft ? adminDashboardLogoDraft.isVideo : logoTypeDashboard === 'video') ? (
+                            <video
+                              src={adminDashboardLogoDraft ? adminDashboardLogoDraft.previewUrl : logoUrlDashboard || ''}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              style={{ maxWidth: '100%', maxHeight: '96px', borderRadius: '6px', objectFit: 'contain' }}
+                            />
                           ) : (
-                            <img src={logoUrlDashboard} alt="" style={{ maxWidth: '100%', maxHeight: '96px', objectFit: 'contain', borderRadius: '6px' }} />
+                            <img
+                              src={adminDashboardLogoDraft ? adminDashboardLogoDraft.previewUrl : logoUrlDashboard || ''}
+                              alt=""
+                              style={{ maxWidth: '100%', maxHeight: '96px', objectFit: 'contain', borderRadius: '6px' }}
+                            />
                           )
                         ) : (
                           <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>{(safeT as any)?.adminSemLogoPreview || 'Sem logo'}</span>
                         )}
                       </div>
-                      {logoUrlDashboard && (
+                      {adminDashboardLogoDraft ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <p style={{ fontSize: '11px', color: 'rgba(255,200,140,0.95)', margin: 0, lineHeight: 1.45 }}>
+                            {(safeT as any)?.adminLogoSalvarParaAplicar ||
+                              'Ainda não gravado — use «Guardar» para aplicar ou «Descartar rascunho» para cancelar.'}
+                          </p>
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              disabled={adminLogoSavingDashboard}
+                              onClick={() => void commitAdminDashboardLogoDraft()}
+                              style={{ padding: '6px 14px', fontSize: '12px' }}
+                            >
+                              {(safeT as any)?.guardar || safeT?.save || 'Guardar'}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              disabled={adminLogoSavingDashboard}
+                              onClick={discardAdminDashboardLogoDraft}
+                              style={{
+                                padding: '6px 14px',
+                                fontSize: '12px',
+                                backgroundColor: 'rgba(255,255,255,0.06)',
+                                borderColor: 'rgba(255,255,255,0.25)',
+                                color: 'rgba(255,255,255,0.88)',
+                              }}
+                            >
+                              {(safeT as any)?.adminLogoDescartarRascunho || safeT?.cancel || 'Descartar rascunho'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : null}
+                      {logoUrlDashboard && !adminDashboardLogoDraft ? (
                         <button type="button" className="btn-danger" onClick={handleRemoveDashboardLogo} style={{ padding: '6px 12px', fontSize: '12px', alignSelf: 'flex-start' }}>{safeT?.removeLogo || 'Remover logo'}</button>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                   <div style={{ marginTop: '18px', paddingTop: '16px', borderTop: '1px solid rgba(0,255,122,0.18)' }}>
@@ -26187,9 +26538,82 @@ const nextF = familias.filter(x => x !== f)
                         <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => administradorAddBibliotecaLogo(e)} />
                       </label>
                     </div>
-                    {logosRelatorios.length === 0 ? (
+                    {adminBibliotecaLogoDraft ? (
+                      <div
+                        style={{
+                          marginBottom: '12px',
+                          padding: '12px',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(255,180,0,0.45)',
+                          backgroundColor: 'rgba(255,160,0,0.08)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '10px',
+                        }}
+                      >
+                        <span style={{ fontSize: '10px', fontWeight: 700, color: '#ffb74d', letterSpacing: '0.08em' }}>
+                          {(safeT as any)?.adminLogoRascunhoBadge || 'Rascunho'}
+                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                          <div
+                            style={{
+                              width: '72px',
+                              height: '52px',
+                              flexShrink: 0,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              backgroundColor: '#0d0d0d',
+                              borderRadius: '6px',
+                            }}
+                          >
+                            <img
+                              src={adminBibliotecaLogoDraft.previewUrl}
+                              alt=""
+                              style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                            />
+                          </div>
+                          <div style={{ minWidth: 0, flex: '1 1 160px' }}>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff', wordBreak: 'break-word' }}>
+                              {adminBibliotecaLogoDraft.fileName}
+                            </div>
+                            <p style={{ fontSize: '11px', color: 'rgba(255,200,140,0.95)', margin: '6px 0 0', lineHeight: 1.45 }}>
+                              {(safeT as any)?.adminLogoSalvarParaAplicar ||
+                                'Ainda não gravado — use «Guardar na biblioteca» ou «Descartar rascunho».'}
+                            </p>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            disabled={adminBibliotecaLogoSaving}
+                            onClick={() => void commitAdminBibliotecaLogoDraft()}
+                            style={{ padding: '8px 14px', fontSize: '13px' }}
+                          >
+                            {(safeT as any)?.adminBibliotecaSalvarNaBiblioteca || 'Guardar na biblioteca'}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            disabled={adminBibliotecaLogoSaving}
+                            onClick={discardAdminBibliotecaLogoDraft}
+                            style={{
+                              padding: '8px 14px',
+                              fontSize: '13px',
+                              backgroundColor: 'rgba(255,255,255,0.06)',
+                              borderColor: 'rgba(255,255,255,0.25)',
+                              color: 'rgba(255,255,255,0.88)',
+                            }}
+                          >
+                            {(safeT as any)?.adminLogoDescartarRascunho || safeT?.cancel || 'Descartar rascunho'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+                    {logosRelatorios.length === 0 && !adminBibliotecaLogoDraft ? (
                       <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', margin: 0 }}>{safeT?.nenhumLogoRelatorio || 'Nenhum logo adicional. Adicione imagens para além do logo principal.'}</p>
-                    ) : (
+                    ) : logosRelatorios.length > 0 ? (
                       <div
                         style={{
                           display: 'grid',
@@ -26251,7 +26675,7 @@ const nextF = familias.filter(x => x !== f)
                           </div>
                         ))}
                       </div>
-                    )}
+                    ) : null}
                   </div>
                   {pdfLogosModoUnificado ? (
                   <div style={{ padding: '16px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '2px solid rgba(0, 180, 90, 0.45)', marginBottom: '4px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
