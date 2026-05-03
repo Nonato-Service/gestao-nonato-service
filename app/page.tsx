@@ -64973,7 +64973,14 @@ A1;Peça exemplo;10`}
               <button
                 type="button"
                 className={`btn-administrador sidebar-group-header sidebar-admin-footer${isSelected ? ' sidebar-group-btn-selected' : ''}`}
-                onClick={() => toggleOrOpenDashboardHub('admin-main', 'admin-main')}
+                onClick={() => {
+                  if (!canAccessAction(adminBtn.action)) {
+                    window.alert('Você não tem permissão para acessar esta função.')
+                    return
+                  }
+                  setExpandedGroups((prev) => new Set(prev).add('admin-main'))
+                  handleButtonClick(adminBtn.action)
+                }}
               >
                 {isSelected && (
                   <span className="sidebar-nav-check" aria-hidden>✓</span>
