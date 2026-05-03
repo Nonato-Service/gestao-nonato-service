@@ -66600,16 +66600,84 @@ A1;Peça exemplo;10`}
                     <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeSidebarLogo} style={{ display: 'none' }} />
                   </label>
                 </div>
-                {logoUrl && (
-                  <div style={{ padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
+                {(adminSidebarLogoDraft || logoUrl) && (
+                  <div
+                    style={{
+                      padding: '12px',
+                      backgroundColor: '#222222',
+                      borderRadius: '6px',
+                      border: adminSidebarLogoDraft ? '1px solid rgba(255,180,0,0.45)' : undefined,
+                    }}
+                  >
                     <div style={{ marginBottom: '10px' }}>
-                      {logoType === 'video' ? (
-                        <video src={logoUrl} autoPlay loop muted style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
+                      {adminSidebarLogoDraft ? (
+                        adminSidebarLogoDraft.isVideo ? (
+                          <video
+                            src={adminSidebarLogoDraft.previewUrl}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }}
+                          />
+                        ) : (
+                          <img
+                            src={adminSidebarLogoDraft.previewUrl}
+                            alt=""
+                            style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }}
+                          />
+                        )
+                      ) : logoType === 'video' ? (
+                        <video
+                          src={logoUrl || ''}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }}
+                        />
                       ) : (
-                        <img src={logoUrl} alt="Logo barra lateral" style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
+                        <img src={logoUrl || ''} alt="Logo barra lateral" style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
                       )}
                     </div>
-                    <button className="btn-danger" onClick={handleRemoveSidebarLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>{safeT?.removeLogo || 'Remover Logo'}</button>
+                    {adminSidebarLogoDraft ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <p style={{ fontSize: '11px', color: 'rgba(255,200,140,0.95)', margin: 0, lineHeight: 1.45 }}>
+                          {(safeT as any)?.adminLogoSalvarParaAplicar ||
+                            'Ainda não gravado — clique em «Guardar» para aplicar ou «Descartar rascunho» para cancelar.'}
+                        </p>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            disabled={adminLogoSavingSidebar}
+                            onClick={() => void commitAdminSidebarLogoDraft()}
+                            style={{ padding: '6px 12px', fontSize: '12px' }}
+                          >
+                            {(safeT as any)?.guardar || safeT?.save || 'Guardar'}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            disabled={adminLogoSavingSidebar}
+                            onClick={discardAdminSidebarLogoDraft}
+                            style={{
+                              padding: '6px 12px',
+                              fontSize: '12px',
+                              backgroundColor: 'rgba(255,255,255,0.06)',
+                              borderColor: 'rgba(255,255,255,0.25)',
+                              color: 'rgba(255,255,255,0.88)',
+                            }}
+                          >
+                            {(safeT as any)?.adminLogoDescartarRascunho || safeT?.cancel || 'Descartar rascunho'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button className="btn-danger" onClick={handleRemoveSidebarLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>
+                        {safeT?.removeLogo || 'Remover Logo'}
+                      </button>
+                    )}
                   </div>
                 )}
                 <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
@@ -66623,16 +66691,85 @@ A1;Peça exemplo;10`}
                       <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeDashboardLogo} style={{ display: 'none' }} />
                     </label>
                   </div>
-                  {logoUrlDashboard && (
-                    <div style={{ padding: '12px', backgroundColor: '#222222', borderRadius: '6px', marginTop: '10px' }}>
+                  {(adminDashboardLogoDraft || logoUrlDashboard) && (
+                    <div
+                      style={{
+                        padding: '12px',
+                        backgroundColor: '#222222',
+                        borderRadius: '6px',
+                        marginTop: '10px',
+                        border: adminDashboardLogoDraft ? '1px solid rgba(255,180,0,0.45)' : undefined,
+                      }}
+                    >
                       <div style={{ marginBottom: '10px' }}>
-                        {logoTypeDashboard === 'video' ? (
-                          <video src={logoUrlDashboard} autoPlay loop muted style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
+                        {adminDashboardLogoDraft ? (
+                          adminDashboardLogoDraft.isVideo ? (
+                            <video
+                              src={adminDashboardLogoDraft.previewUrl}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }}
+                            />
+                          ) : (
+                            <img
+                              src={adminDashboardLogoDraft.previewUrl}
+                              alt=""
+                              style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }}
+                            />
+                          )
+                        ) : logoTypeDashboard === 'video' ? (
+                          <video
+                            src={logoUrlDashboard || ''}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }}
+                          />
                         ) : (
-                          <img src={logoUrlDashboard} alt="Logo dashboard" style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
+                          <img src={logoUrlDashboard || ''} alt="Logo dashboard" style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
                         )}
                       </div>
-                      <button className="btn-danger" onClick={handleRemoveDashboardLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>{safeT?.removeLogo || 'Remover Logo'}</button>
+                      {adminDashboardLogoDraft ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <p style={{ fontSize: '11px', color: 'rgba(255,200,140,0.95)', margin: 0, lineHeight: 1.45 }}>
+                            {(safeT as any)?.adminLogoSalvarParaAplicar ||
+                              'Ainda não gravado — clique em «Guardar» para aplicar ou «Descartar rascunho» para cancelar.'}
+                          </p>
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              disabled={adminLogoSavingDashboard}
+                              onClick={() => void commitAdminDashboardLogoDraft()}
+                              style={{ padding: '6px 12px', fontSize: '12px' }}
+                            >
+                              {(safeT as any)?.guardar || safeT?.save || 'Guardar'}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              disabled={adminLogoSavingDashboard}
+                              onClick={discardAdminDashboardLogoDraft}
+                              style={{
+                                padding: '6px 12px',
+                                fontSize: '12px',
+                                backgroundColor: 'rgba(255,255,255,0.06)',
+                                borderColor: 'rgba(255,255,255,0.25)',
+                                color: 'rgba(255,255,255,0.88)',
+                              }}
+                            >
+                              {(safeT as any)?.adminLogoDescartarRascunho || safeT?.cancel || 'Descartar rascunho'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button className="btn-danger" onClick={handleRemoveDashboardLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>
+                          {safeT?.removeLogo || 'Remover Logo'}
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
