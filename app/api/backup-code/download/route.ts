@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     const pass = new PassThrough()
     const archive = archiver('zip', { zlib: { level: 6 } })
 
-    archive.on('error', (err) => {
+    archive.on('error', (err: Error) => {
       console.error('[backup-code/download] Erro no ZIP:', err)
       pass.destroy(err)
     })

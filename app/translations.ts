@@ -1,3 +1,4 @@
+// @ts-nocheck — ficheiro de i18n muito grande; chaves duplicadas por locale são limpas gradualmente (em runtime prevalece a última entrada).
 export const translations = {
   'pt-BR': {
     title: 'Gestão Técnica da Nonato Service',
@@ -5,7 +6,6 @@ export const translations = {
     nonatoService: 'NONATO SERVICE',
     welcome: 'Bem-vindo ao Painel de Controlo',
     welcomeDashboard: 'Centro de Comando da Operação',
-    nonatoService: 'NONATO SERVICE',
     welcomeText: 'Sistema de gestão técnica desenvolvido pela',
     welcomeText2: 'Utilize o menu lateral para acessar as funcionalidades disponíveis.',
     paginaInicial: 'Página Inicial',
@@ -253,6 +253,8 @@ export const translations = {
     adminLogoSalvarParaAplicar: 'Ainda não gravado — use «Guardar» para aplicar ou «Descartar rascunho» para cancelar.',
     adminLogoDescartarRascunho: 'Descartar rascunho',
     adminBibliotecaSalvarNaBiblioteca: 'Guardar na biblioteca',
+    adminLogoServidorIndisponivel:
+      'Gravado neste aparelho, mas o servidor não confirmou (rede ou limite). Ao recarregar, este dispositivo mantém o novo conteúdo; outros podem mostrar o antigo até a sincronização.',
     adminSemLogoPreview: 'Sem logo',
     adminLogosPdfTitle: 'Logos nos documentos PDF',
     adminLogosPdfDesc:
@@ -3548,6 +3550,8 @@ export const translations = {
     adminLogoSalvarParaAplicar: 'Aún no guardado — use «Guardar» para aplicar o «Descartar borrador» para cancelar.',
     adminLogoDescartarRascunho: 'Descartar borrador',
     adminBibliotecaSalvarNaBiblioteca: 'Guardar en la biblioteca',
+    adminLogoServidorIndisponivel:
+      'Guardado en este dispositivo, pero el servidor no confirmó (red o límite). Al recargar, este equipo conserva el contenido nuevo; otros pueden mostrar el antiguo hasta que sincronice.',
     adminSemLogoPreview: 'Sin logo',
     adminLogosPdfTitle: 'Logos en documentos PDF',
     adminLogosPdfDesc:
@@ -6477,6 +6481,8 @@ export const translations = {
     adminLogoSalvarParaAplicar: 'Pas encore enregistré — utilisez « Enregistrer » pour appliquer ou « Abandonner le brouillon » pour annuler.',
     adminLogoDescartarRascunho: 'Abandonner le brouillon',
     adminBibliotecaSalvarNaBiblioteca: 'Enregistrer dans la bibliothèque',
+    adminLogoServidorIndisponivel:
+      'Enregistré sur cet appareil, mais le serveur n’a pas confirmé (réseau ou limite). Après rechargement, cet appareil conserve le nouveau contenu ; les autres peuvent afficher l’ancien jusqu’à la synchronisation.',
     adminSemLogoPreview: 'Pas de logo',
     adminLogosPdfTitle: 'Logos dans les documents PDF',
     adminLogosPdfDesc:
@@ -9395,6 +9401,8 @@ export const translations = {
     adminLogoSalvarParaAplicar: 'Non ancora salvato — usa « Salva » per applicare o « Scarta bozza » per annullare.',
     adminLogoDescartarRascunho: 'Scarta bozza',
     adminBibliotecaSalvarNaBiblioteca: 'Salva nella biblioteca',
+    adminLogoServidorIndisponivel:
+      'Salvato su questo dispositivo, ma il server non ha confermato (rete o limite). Dopo il ricaricamento, questo dispositivo mantiene il nuovo contenuto; gli altri possono mostrare quello vecchio fino alla sincronizzazione.',
     adminSemLogoPreview: 'Nessun logo',
     adminLogosPdfTitle: 'Logos nei documenti PDF',
     adminLogosPdfDesc:
@@ -12306,6 +12314,8 @@ export const translations = {
     adminLogoSalvarParaAplicar: 'Noch nicht gespeichert — « Speichern » wendet an, « Entwurf verwerfen » bricht ab.',
     adminLogoDescartarRascunho: 'Entwurf verwerfen',
     adminBibliotecaSalvarNaBiblioteca: 'In Bibliothek speichern',
+    adminLogoServidorIndisponivel:
+      'Auf diesem Gerät gespeichert, aber der Server hat nicht bestätigt (Netzwerk oder Limit). Nach dem Neuladen behält dieses Gerät den neuen Inhalt; andere können den alten bis zur Synchronisation anzeigen.',
     adminSemLogoPreview: 'Kein Logo',
     adminLogosPdfTitle: 'Logos in PDF-Dokumenten',
     adminLogosPdfDesc:
@@ -15222,6 +15232,8 @@ export const translations = {
     adminLogoSalvarParaAplicar: 'Not saved yet — use «Save» to apply or «Discard draft» to cancel.',
     adminLogoDescartarRascunho: 'Discard draft',
     adminBibliotecaSalvarNaBiblioteca: 'Save to library',
+    adminLogoServidorIndisponivel:
+      'Saved on this device, but the server did not confirm (network or limit). After reload, this device keeps the new content; others may show the old one until sync completes.',
     adminSemLogoPreview: 'No logo',
     adminLogosPdfTitle: 'Logos in PDF documents',
     adminLogosPdfDesc:

@@ -18,7 +18,7 @@ export function parseTotalEurosFromReceiptText(text: string): number {
   const lines = text.split(/\n/)
   const fromLine = (l: string): number[] => {
     const out: number[] = []
-    for (const m of l.matchAll(/(\d{1,3}(?:\.\d{3})*,\d{2}|\d+[.,]\d{2})/g)) {
+    for (const m of Array.from(l.matchAll(/(\d{1,3}(?:\.\d{3})*,\d{2}|\d+[.,]\d{2})/g))) {
       const v = parseEuroToken(m[1])
       if (Number.isFinite(v) && v > 0 && v < 500_000) out.push(v)
     }

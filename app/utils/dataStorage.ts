@@ -472,7 +472,7 @@ export async function collectAllLocalNonatoDataForSync(): Promise<Record<string,
     }
   }
 
-  for (const key of keys) {
+  for (const key of Array.from(keys)) {
     const raw = localStorage.getItem(key)
     if (raw === null || raw === '') continue
     try {
@@ -568,12 +568,13 @@ export async function saveAllToServer(
 }
 
 // Função híbrida: salva no localStorage E no servidor
+/** @returns `true` se não houve envio ao servidor ou o envio (com `awaitServer`) foi bem-sucedido; `false` se `awaitServer` e o servidor falhou. */
 export async function saveData(
   key: string,
   value: any,
   saveToLocalStorage = true,
   awaitServer = false
-): Promise<void> {
+): Promise<boolean> {
   /** Manuais: IndexedDB primeiro (PDFs grandes); localStorage é opcional; não falhar se quota estourar */
   if (key === MANUAIS_KEY && typeof window !== 'undefined') {
     /** IndexedDB é a fonte de verdade local; o servidor pode ser lento ou falhar (413, rede) — não bloquear a UI */
@@ -590,9 +591,10 @@ export async function saveData(
         }
       }
     }
+    let manuaisServerOk = true
     if (!shouldDeferImplicitServerPush()) {
-      const p = saveToServer(key, value).catch(() => {})
-      if (awaitServer) await p
+      const p = saveToServer(key, value).catch(() => false)
+      if (awaitServer) manuaisServerOk = (await p) === true
     }
     if (typeof window !== 'undefined') {
       try {
@@ -601,7 +603,7 @@ export async function saveData(
         /* ignorar */
       }
     }
-    return
+    return manuaisServerOk
   }
 
   // Salvar no localStorage (para acesso rápido) — quota: libertar backups automáticos e voltar a tentar; último recurso: IndexedDB
@@ -625,9 +627,14 @@ export async function saveData(
   }
 
   // Servidor — por defeito em segundo plano; `awaitServer` para alinhar revisão de sync (logos, etc.)
+  let serverOk = true
   if (!shouldDeferImplicitServerPush()) {
-    const p = saveToServer(key, value).catch(() => {})
-    if (awaitServer) await p
+    const p = saveToServer(key, value).catch(() => false)
+    if (awaitServer) {
+      serverOk = (await p) === true
+    } else {
+      void p
+    }
   }
 
   if (typeof window !== 'undefined' && saveToLocalStorage) {
@@ -637,6 +644,7 @@ export async function saveData(
       /* ignorar */
     }
   }
+  return serverOk
 }
 
 // Função híbrida: carrega do servidor primeiro, depois do localStorage como fallback

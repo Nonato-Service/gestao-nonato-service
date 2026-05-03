@@ -107,7 +107,7 @@ export function summarizeDataDiff(server: Record<string, unknown>, local: Record
   const lines: string[] = []
   const keys = new Set([...Object.keys(server), ...Object.keys(local)])
 
-  for (const key of keys) {
+  for (const key of Array.from(keys)) {
     if (!key.startsWith('nonato-')) continue
     if (SKIP_SNAPSHOT_KEYS.has(key)) continue
     if (key.endsWith('.json')) continue

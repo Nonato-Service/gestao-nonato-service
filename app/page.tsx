@@ -585,7 +585,7 @@ type MensagemComunicacao = {
   id: string
   remetenteId: string
   remetenteNome: string
-  remetenteTipo: 'gestor' | 'tecnico' | 'armazem'
+  remetenteTipo: 'gestor' | 'tecnico' | 'armazem' | 'sistema'
   remetenteClasse: 'gestor' | 'gestor-industrial' | 'tecnico-interno' | 'tecnico-externo' | 'armazem'
   remetenteArea?: 'assistencia-tecnica' | 'industrial' | 'armazem' // Área do gestor remetente
   destinatarioId: string
@@ -1969,7 +1969,7 @@ type GrupoChecklist = {
   dataCriacao: string
 }
 
-type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-cadastral' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'gestao-demos' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'orcamento-servico-tecnico' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa'
+type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-cadastral' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'gestao-demos' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'orcamento-servico-tecnico' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa' | 'informacoes-mecanicas-eletricas'
 
 type Tab = {
   id: string
@@ -2261,6 +2261,28 @@ export default function Dashboard() {
       cadastroServicos: false,
       extras: false
     }
+  })
+
+  const userToFormState = (user: User, passwordField?: string): UserFormState => ({
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    linkedProfileType: user.linkedProfileType || '',
+    linkedProfileId: user.linkedProfileId || '',
+    password: passwordField !== undefined ? passwordField : user.password || '',
+    isAdmin: user.isAdmin ?? false,
+    permissions: {
+      gestores: Boolean(user.permissions?.gestores),
+      equipamentos: Boolean(user.permissions?.equipamentos),
+      clientes: Boolean(user.permissions?.clientes),
+      fornecedores: Boolean(user.permissions?.fornecedores),
+      relatorioServico: Boolean(user.permissions?.relatorioServico),
+      bibliotecaPecas: Boolean(user.permissions?.bibliotecaPecas),
+      agenda: Boolean(user.permissions?.agenda),
+      desmontados: Boolean(user.permissions?.desmontados),
+      cadastroServicos: Boolean(user.permissions?.cadastroServicos),
+      extras: Boolean(user.permissions?.extras),
+    },
   })
 
   const [showModal, setShowModal] = useState(false)
@@ -2557,6 +2579,9 @@ export default function Dashboard() {
     historico: [] as HistoricoEquipamento[],
     modeloManuaisId: '' as string
   })
+  const [informacoesMecanicasAba, setInformacoesMecanicasAba] = useState<'cadastro' | 'lista'>('lista')
+  const [informacoesMecanicasFiltroFamilia, setInformacoesMecanicasFiltroFamilia] = useState('')
+  const [informacoesMecanicasFiltroGrupo, setInformacoesMecanicasFiltroGrupo] = useState('')
   const [newItem, setNewItem] = useState('')
   const [searchEquipamentoId, setSearchEquipamentoId] = useState('')
   const [searchedEquipamento, setSearchedEquipamento] = useState<Equipamento | null>(null)
@@ -2620,10 +2645,11 @@ export default function Dashboard() {
       return
     }
     const root = e.currentTarget
-    const path = typeof e.composedPath === 'function' ? e.composedPath() : []
+    const native = e.nativeEvent as Event & { composedPath?: () => EventTarget[] }
+    const path = typeof native.composedPath === 'function' ? native.composedPath() : []
     if (
       path.some(
-        (n) =>
+        (n: EventTarget) =>
           n instanceof HTMLElement &&
           (n.classList.contains('sidebar-tip-flyout') || n.closest('.sidebar-tip-flyout'))
       )
@@ -2845,7 +2871,8 @@ export default function Dashboard() {
     linguaDestinazione: '',
     manualistica: '',
     adesivi: '',
-    noteProduzione: ''
+    noteProduzione: '',
+    impressoes: ''
   })
   const [ordensPreparacaoSalvas, setOrdensPreparacaoSalvas] = useState<any[]>([])
   const [buscaOrdem, setBuscaOrdem] = useState('')
@@ -4183,7 +4210,9 @@ export default function Dashboard() {
       'tecnicos-externos': t?.tecnicosExternos || 'TÉCNICOS EXTERNOS',
       'alerta-mensagens': t?.alertaMensagens || 'ALERTA DE MENSAGENS',
       'protocolos-servico': (t as any)?.protocolosServicoTitle || 'Protocolos de Serviço',
-      'manual-programa': (t as any)?.manualProgramaTitle || 'Manual do Programa'
+      'manual-programa': (t as any)?.manualProgramaTitle || 'Manual do Programa',
+      'informacoes-mecanicas-eletricas':
+        (t as any)?.informacoesMecanicasEletricasTitle || 'Informações Mecânicas e Elétricas dos Equipamentos'
     }
     return titles[type] || type
   }
@@ -6744,9 +6773,26 @@ export default function Dashboard() {
         }
 
         if (serverLogoTypePref === 'image') {
-          const serverLogo = await loadFromServer('nonato-logo')
-          if (serverLogo && typeof serverLogo === 'string' && serverLogo.startsWith('data:image/')) {
-            savedLogo = serverLogo
+          let chosenLogo: string | null = (await loadFromServer('nonato-logo')) as string | null
+          if (typeof window !== 'undefined') {
+            try {
+              const localLogo = localStorage.getItem('nonato-logo')
+              if (localLogo && localLogo.startsWith('data:image/')) {
+                if (
+                  !chosenLogo ||
+                  typeof chosenLogo !== 'string' ||
+                  !chosenLogo.startsWith('data:image/') ||
+                  localLogo.length > chosenLogo.length
+                ) {
+                  chosenLogo = localLogo
+                }
+              }
+            } catch {
+              /* ignorar */
+            }
+          }
+          if (chosenLogo && typeof chosenLogo === 'string' && chosenLogo.startsWith('data:image/')) {
+            savedLogo = chosenLogo
             savedLogoType = 'image'
           }
         } else if (serverLogoTypePref === 'video') {
@@ -6795,6 +6841,19 @@ export default function Dashboard() {
           }
         } catch (e) {
           console.warn('Erro ao carregar logo do localStorage:', e)
+        }
+      }
+      // localStorage cheio: cópia em IndexedDB (saveData → saveKv)
+      if (!savedLogo && typeof window !== 'undefined') {
+        try {
+          const idbLogo = await getKv('nonato-logo')
+          const idbType = await getKv('nonato-logo-type')
+          if (idbLogo && typeof idbLogo === 'string' && idbLogo.startsWith('data:image/')) {
+            savedLogo = idbLogo
+            savedLogoType = idbType === 'video' || idbType === 'image' ? idbType : 'image'
+          }
+        } catch {
+          /* ignorar */
         }
       }
       
@@ -6849,17 +6908,27 @@ export default function Dashboard() {
         }
         // 2) Se o utilizador guardou uma IMAGEM, carregar a imagem (servidor ou localStorage)
         if (preferredType === 'image') {
-          const serverLogo = await loadFromServer('nonato-logo-dashboard')
-          if (serverLogo && typeof serverLogo === 'string' && serverLogo.startsWith('data:image/')) {
-            savedLogoDashboard = serverLogo
-            savedLogoDashboardType = 'image'
-          }
-          if (!savedLogoDashboard && typeof window !== 'undefined') {
-            const local = localStorage.getItem('nonato-logo-dashboard')
-            if (local && local.startsWith('data:image/')) {
-              savedLogoDashboard = local
-              savedLogoDashboardType = 'image'
+          let chosenDash: string | null = (await loadFromServer('nonato-logo-dashboard')) as string | null
+          if (typeof window !== 'undefined') {
+            try {
+              const local = localStorage.getItem('nonato-logo-dashboard')
+              if (local && local.startsWith('data:image/')) {
+                if (
+                  !chosenDash ||
+                  typeof chosenDash !== 'string' ||
+                  !chosenDash.startsWith('data:image/') ||
+                  local.length > chosenDash.length
+                ) {
+                  chosenDash = local
+                }
+              }
+            } catch {
+              /* ignorar */
             }
+          }
+          if (chosenDash && typeof chosenDash === 'string' && chosenDash.startsWith('data:image/')) {
+            savedLogoDashboard = chosenDash
+            savedLogoDashboardType = 'image'
           }
         }
         // 3) Se tipo é vídeo ou não definido, usar vídeo do servidor se existir; senão tentar imagem como fallback
@@ -6886,6 +6955,20 @@ export default function Dashboard() {
           if (local && local.startsWith('data:image/')) {
             savedLogoDashboard = local
             savedLogoDashboardType = (localType as 'image' | 'video' | null) || 'image'
+          }
+        }
+        // 5) localStorage cheio: cópia em IndexedDB (saveData → saveKv)
+        if (!savedLogoDashboard && typeof window !== 'undefined') {
+          try {
+            const idbDash = await getKv('nonato-logo-dashboard')
+            const idbDashType = await getKv('nonato-logo-dashboard-type')
+            if (idbDash && typeof idbDash === 'string' && idbDash.startsWith('data:image/')) {
+              savedLogoDashboard = idbDash
+              savedLogoDashboardType =
+                idbDashType === 'video' || idbDashType === 'image' ? idbDashType : 'image'
+            }
+          } catch {
+            /* ignorar */
           }
         }
       } catch (_) {}
@@ -7381,17 +7464,45 @@ export default function Dashboard() {
       if (savedIncluirLogo !== undefined && savedIncluirLogo !== null) {
         setIncluirLogoNosRelatorios(savedIncluirLogo === true || savedIncluirLogo === 'true')
       }
+      const parseLogosRelatoriosArr = (raw: unknown): LogoRelatorio[] | null => {
+        let v: unknown = raw
+        if (typeof v === 'string' && v.trim().startsWith('[')) {
+          try {
+            v = JSON.parse(v)
+          } catch {
+            return null
+          }
+        }
+        return Array.isArray(v) ? (v as LogoRelatorio[]) : null
+      }
       const savedLogosRelatoriosRaw = getData('nonato-logos-relatorios')
-      let savedLogosRelatorios: unknown = savedLogosRelatoriosRaw
-      if (typeof savedLogosRelatorios === 'string' && savedLogosRelatorios.trim().startsWith('[')) {
+      let mergedLogosRelatorios = parseLogosRelatoriosArr(savedLogosRelatoriosRaw)
+      if (typeof window !== 'undefined') {
         try {
-          savedLogosRelatorios = JSON.parse(savedLogosRelatorios)
+          const rawLs = localStorage.getItem('nonato-logos-relatorios')
+          const fromLs = rawLs ? parseLogosRelatoriosArr(JSON.parse(rawLs)) : null
+          if (fromLs && fromLs.length > 0) {
+            if (!mergedLogosRelatorios || fromLs.length > mergedLogosRelatorios.length) {
+              mergedLogosRelatorios = fromLs
+            }
+          }
         } catch {
           /* ignorar */
         }
       }
-      if (Array.isArray(savedLogosRelatorios)) {
-        setLogosRelatorios(savedLogosRelatorios as LogoRelatorio[])
+      if ((!mergedLogosRelatorios || mergedLogosRelatorios.length === 0) && typeof window !== 'undefined') {
+        try {
+          const fromIdb = await getKv('nonato-logos-relatorios')
+          const idbArr = parseLogosRelatoriosArr(fromIdb)
+          if (idbArr && idbArr.length > 0) {
+            mergedLogosRelatorios = idbArr
+          }
+        } catch {
+          /* ignorar */
+        }
+      }
+      if (mergedLogosRelatorios && mergedLogosRelatorios.length > 0) {
+        setLogosRelatorios(mergedLogosRelatorios)
       }
       const savedLogoRelatorioId = getData('nonato-relatorios-logo-id')
       if (typeof savedLogoRelatorioId === 'string') {
@@ -9477,8 +9588,14 @@ export default function Dashboard() {
             /* quota */
           }
         }
-        await saveData('nonato-logo', result, true, true)
-        await saveData('nonato-logo-type', 'image', true, true)
+        const okImg = await saveData('nonato-logo', result, true, true)
+        const okImgType = await saveData('nonato-logo-type', 'image', true, true)
+        if (!okImg || !okImgType) {
+          alert(
+            (t as { adminLogoServidorIndisponivel?: string }).adminLogoServidorIndisponivel ||
+              'Gravado neste aparelho, mas o servidor não confirmou. Após recarregar, este dispositivo mantém o logo; outros podem mostrar o antigo até sincronizar.'
+          )
+        }
         await fetch('/api/video/logo', { method: 'DELETE' }).catch(() => {})
       }
       try {
@@ -9588,8 +9705,14 @@ export default function Dashboard() {
             /* quota */
           }
         }
-        await saveData('nonato-logo-dashboard', result, true, true)
-        await saveData('nonato-logo-dashboard-type', 'image', true, true)
+        const okDash = await saveData('nonato-logo-dashboard', result, true, true)
+        const okDashType = await saveData('nonato-logo-dashboard-type', 'image', true, true)
+        if (!okDash || !okDashType) {
+          alert(
+            (t as { adminLogoServidorIndisponivel?: string }).adminLogoServidorIndisponivel ||
+              'Gravado neste aparelho, mas o servidor não confirmou. Após recarregar, este dispositivo mantém o logo; outros podem mostrar o antigo até sincronizar.'
+          )
+        }
       }
       try {
         const st = await fetchSyncStatus()
@@ -9674,28 +9797,7 @@ export default function Dashboard() {
 
   const handleEditUser = (user: User) => {
     setEditingUser(user)
-    
-    setUserForm({ 
-      name: user.name, 
-      email: user.email, 
-      role: user.role,
-      linkedProfileType: user.linkedProfileType || '',
-      linkedProfileId: user.linkedProfileId || '',
-      password: user.password || '',
-      isAdmin: user.isAdmin || false,
-      permissions: {
-        gestores: Boolean(user.permissions?.gestores),
-        equipamentos: Boolean(user.permissions?.equipamentos),
-        clientes: Boolean(user.permissions?.clientes),
-        fornecedores: Boolean(user.permissions?.fornecedores),
-        relatorioServico: Boolean(user.permissions?.relatorioServico),
-        bibliotecaPecas: Boolean(user.permissions?.bibliotecaPecas),
-        agenda: Boolean(user.permissions?.agenda),
-        desmontados: Boolean(user.permissions?.desmontados),
-        cadastroServicos: Boolean(user.permissions?.cadastroServicos),
-        extras: Boolean(user.permissions?.extras)
-      }
-    })
+    setUserForm(userToFormState(user))
     setShowUserForm(true)
   }
 
@@ -9753,16 +9855,7 @@ export default function Dashboard() {
       setUsers(updatedUsers)
       saveData('nonato-users', updatedUsers)
       setEditingUser(updatedUser)
-      setUserForm({
-        name: updatedUser.name,
-        email: updatedUser.email,
-        role: updatedUser.role,
-        linkedProfileType: updatedUser.linkedProfileType || '',
-        linkedProfileId: updatedUser.linkedProfileId || '',
-        password: '',
-        isAdmin: updatedUser.isAdmin,
-        permissions: updatedUser.permissions
-      })
+      setUserForm(userToFormState(updatedUser, ''))
     } else {
       const newUser: User = savedUser
       const updatedUsers = [...users, newUser]
@@ -9782,16 +9875,7 @@ export default function Dashboard() {
         saveData('nonato-managed-passwords', updatedPasswords)
       }
       setEditingUser(newUser)
-      setUserForm({
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role,
-        linkedProfileType: newUser.linkedProfileType || '',
-        linkedProfileId: newUser.linkedProfileId || '',
-        password: '',
-        isAdmin: newUser.isAdmin,
-        permissions: newUser.permissions
-      })
+      setUserForm(userToFormState(newUser, ''))
     }
   }
 
@@ -11075,6 +11159,39 @@ export default function Dashboard() {
     }
   }
 
+  const equipamentoToFormState = (equipamento: Equipamento) => {
+    const qtd = Math.max(1, equipamento.quantidadePartes ?? (equipamento.partes?.length ?? 1))
+    const partes =
+      equipamento.partes && equipamento.partes.length > 0
+        ? equipamento.partes
+        : Array.from({ length: qtd }, (_, i) => ({
+            ordem: i + 1,
+            tipoId: 'geral' as const,
+            numeroSerieFabricante: '',
+          }))
+    return {
+      id: equipamento.id,
+      tipoEquipamento: equipamento.tipoEquipamento,
+      modelo: equipamento.modelo,
+      marca: equipamento.marca,
+      numeroSerie: equipamento.numeroSerie,
+      familia: equipamento.familia,
+      grupo: equipamento.grupo,
+      peso: equipamento.peso ?? '',
+      umaParteSo: equipamento.umaParteSo ?? true,
+      quantidadePartes: qtd,
+      partes,
+      photo: equipamento.photo || '',
+      coverPhoto: equipamento.coverPhoto || '',
+      photoLibrary: equipamento.photoLibrary || [],
+      manualPdf: equipamento.manualPdf || '',
+      documentosPdf: equipamento.documentosPdf || [],
+      itemsIncluded: equipamento.itemsIncluded || [],
+      historico: equipamento.historico || [],
+      modeloManuaisId: equipamento.modeloManuaisId || '',
+    }
+  }
+
   const handleAddEquipamento = () => {
     setEditingEquipamento(null)
     setSearchedEquipamento(null)
@@ -11106,31 +11223,7 @@ export default function Dashboard() {
   const handleEditEquipamento = (equipamento: Equipamento) => {
     setEditingEquipamento(equipamento)
     setSearchedEquipamento(null)
-    const qtd = Math.max(1, equipamento.quantidadePartes ?? (equipamento.partes?.length ?? 1))
-    const partes = (equipamento.partes && equipamento.partes.length > 0)
-      ? equipamento.partes
-      : Array.from({ length: qtd }, (_, i) => ({ ordem: i + 1, tipoId: 'geral' as const, numeroSerieFabricante: '' }))
-    setEquipamentoForm({
-      id: equipamento.id,
-      tipoEquipamento: equipamento.tipoEquipamento,
-      modelo: equipamento.modelo,
-      marca: equipamento.marca,
-      numeroSerie: equipamento.numeroSerie,
-      familia: equipamento.familia,
-      grupo: equipamento.grupo,
-      peso: equipamento.peso ?? '',
-      umaParteSo: equipamento.umaParteSo ?? true,
-      quantidadePartes: qtd,
-      partes,
-      photo: equipamento.photo || '',
-      coverPhoto: equipamento.coverPhoto || '',
-      photoLibrary: equipamento.photoLibrary || [],
-      manualPdf: equipamento.manualPdf || '',
-      documentosPdf: equipamento.documentosPdf || [],
-      itemsIncluded: equipamento.itemsIncluded || [],
-      historico: equipamento.historico || [],
-      modeloManuaisId: equipamento.modeloManuaisId || ''
-    })
+    setEquipamentoForm(equipamentoToFormState(equipamento))
     setNewItem('')
     setShowEquipamentoForm(true)
   }
@@ -11316,9 +11409,9 @@ export default function Dashboard() {
       setEquipamentos(updatedEquipamentos)
       await saveData('nonato-equipamentos', updatedEquipamentos)
     }
-    setEquipamentoForm(savedEquipamento)
+    setEquipamentoForm(equipamentoToFormState(savedEquipamento))
     setEditingEquipamento(savedEquipamento)
-    
+
     // Mostrar mensagem de sucesso
     alert((t as any).equipamentoSaved || 'Equipamento salvo com sucesso!')
   }
@@ -11416,7 +11509,7 @@ export default function Dashboard() {
   /** Corpo de texto (e-mail, WhatsApp, etc.) com dados + pedido faturação + ficheiros. */
   const construirTextoPlanoClienteDadosContabilidade = (cliente: Cliente, opts?: ClienteContabEnvioModalOpts) => {
     const st = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
-    const t = st as Record<string, string> & {
+    const t = st as unknown as Record<string, string> & {
       contabilidadeBlocoPedidoFatura?: string
       contabilidadeFaturaValorLabel?: string
       contabilidadeFaturaNotaLabel?: string
@@ -11494,7 +11587,7 @@ export default function Dashboard() {
   /** Ficha resumida (NIF, morada, contactos) + pedido de faturação e lista de anexos — HTML para impressão e mailto. */
   const gerarJanelaClienteDadosContabilidade = (cliente: Cliente, opts?: ClienteContabEnvioModalOpts) => {
     const st = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
-    const t = st as Record<string, string> & {
+    const t = st as unknown as Record<string, string> & {
       contabilidadeBlocoPedidoFatura?: string
       contabilidadeFaturaValorLabel?: string
       contabilidadeFaturaNotaLabel?: string
@@ -11700,7 +11793,7 @@ export default function Dashboard() {
     const c = modalEnvioContabilidadeCliente
     if (!c) return
     const st = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
-    const t = st as Record<string, string> & { clienteDadosContabilidadeCopiado?: string }
+    const t = st as unknown as Record<string, string> & { clienteDadosContabilidadeCopiado?: string }
     const text = construirTextoPlanoClienteDadosContabilidade(c, {
       valorFatura: contabEnvioValor,
       notaFatura: contabEnvioNota,
@@ -11730,11 +11823,10 @@ export default function Dashboard() {
     itens: FechamentoItem[],
     clienteFiscal?: Cliente | null
   ) => {
-    const t =
-      (translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']) as Record<
-        string,
-        string
-      >
+    const t = (translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']) as unknown as Record<
+      string,
+      string
+    >
     const escAttr = (s: string) =>
       String(s ?? '')
         .replace(/&/g, '&amp;')
@@ -12774,26 +12866,27 @@ export default function Dashboard() {
       if (f.id === selectedFornecedorForFatura.id) {
         if (editingFaturaFornecedor) {
           // Editar fatura existente
-          const updatedFaturas = f.faturas.map(fat =>
-            fat.id === editingFaturaFornecedor.id
-              ? (savedFaturaFornecedor = {
-                  ...fat,
-                  numeroFatura: faturaFornecedorForm.numeroFatura,
-                  mes: faturaFornecedorForm.mes,
-                  valor: valor,
-                  clienteId: faturaFornecedorForm.clienteId,
-                  clienteNome: nomeEntidade,
-                  entidadeOrigem: origem,
-                  dataVencimento: faturaFornecedorForm.dataVencimento || undefined,
-                  status: faturaFornecedorForm.status,
-                  observacoes: faturaFornecedorForm.observacoes || undefined
-                })!
-              : fat
-          )
+          const updatedFaturas = f.faturas.map(fat => {
+            if (fat.id !== editingFaturaFornecedor.id) return fat
+            const upd: FaturaFornecedor = {
+              ...fat,
+              numeroFatura: faturaFornecedorForm.numeroFatura,
+              mes: faturaFornecedorForm.mes,
+              valor: valor,
+              clienteId: faturaFornecedorForm.clienteId,
+              clienteNome: nomeEntidade,
+              entidadeOrigem: origem,
+              dataVencimento: faturaFornecedorForm.dataVencimento || undefined,
+              status: faturaFornecedorForm.status,
+              observacoes: faturaFornecedorForm.observacoes || undefined,
+            }
+            savedFaturaFornecedor = upd
+            return upd
+          })
           return { ...f, faturas: updatedFaturas }
         } else {
           // Adicionar nova fatura
-          const newFatura: FaturaFornecedor = savedFaturaFornecedor = {
+          const newFatura: FaturaFornecedor = {
             id: Date.now().toString(),
             numeroFatura: faturaFornecedorForm.numeroFatura,
             mes: faturaFornecedorForm.mes,
@@ -12803,8 +12896,9 @@ export default function Dashboard() {
             entidadeOrigem: origem,
             dataVencimento: faturaFornecedorForm.dataVencimento || undefined,
             status: faturaFornecedorForm.status,
-            observacoes: faturaFornecedorForm.observacoes || undefined
+            observacoes: faturaFornecedorForm.observacoes || undefined,
           }
+          savedFaturaFornecedor = newFatura
           return { ...f, faturas: [...(f.faturas || []), newFatura] }
         }
       }
@@ -12813,22 +12907,23 @@ export default function Dashboard() {
 
     setFornecedores(updatedFornecedores)
     saveData('nonato-fornecedores', updatedFornecedores)
-    if (savedFaturaFornecedor) {
+    if (savedFaturaFornecedor !== null) {
+      const fat = savedFaturaFornecedor as FaturaFornecedor
       setFaturaFornecedorForm({
-        numeroFatura: savedFaturaFornecedor.numeroFatura,
-        mes: savedFaturaFornecedor.mes,
-        valorText: savedFaturaFornecedor.valor.toLocaleString('pt-PT', {
+        numeroFatura: fat.numeroFatura,
+        mes: fat.mes,
+        valorText: fat.valor.toLocaleString('pt-PT', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         }),
-        clienteId: savedFaturaFornecedor.clienteId,
-        clienteNome: savedFaturaFornecedor.clienteNome,
-        dataVencimento: savedFaturaFornecedor.dataVencimento || '',
-        status: savedFaturaFornecedor.status,
-        observacoes: savedFaturaFornecedor.observacoes || '',
-        entidadeOrigem: inferFaturaFornecedorEntidadeOrigem(savedFaturaFornecedor)
+        clienteId: fat.clienteId,
+        clienteNome: fat.clienteNome,
+        dataVencimento: fat.dataVencimento || '',
+        status: fat.status,
+        observacoes: fat.observacoes || '',
+        entidadeOrigem: inferFaturaFornecedorEntidadeOrigem(fat)
       })
-      setEditingFaturaFornecedor(savedFaturaFornecedor)
+      setEditingFaturaFornecedor(fat)
     }
     alert(t.invoiceSavedSuccess || 'Fatura salva com sucesso!')
   }
@@ -13224,8 +13319,8 @@ export default function Dashboard() {
       status: savedOS.status,
       valorServico: savedOS.valorServico,
       valorPecas: savedOS.valorPecas,
-      taxaIVA: savedOS.taxaIVA,
-      observacoes: savedOS.observacoes,
+      taxaIVA: savedOS.taxaIVA ?? 0,
+      observacoes: savedOS.observacoes ?? '',
       tecnicoResponsavel: savedOS.tecnicoResponsavel || '',
       equipamentoId: savedOS.equipamentoId || ''
     })
@@ -14613,7 +14708,13 @@ export default function Dashboard() {
     setLogosRelatorios(next)
     setAdminBibliotecaLogoSaving(true)
     try {
-      await saveData('nonato-logos-relatorios', next, true, true)
+      const serverOkBiblioteca = await saveData('nonato-logos-relatorios', next, true, true)
+      if (!serverOkBiblioteca) {
+        alert(
+          (t as { adminLogoServidorIndisponivel?: string }).adminLogoServidorIndisponivel ||
+            'Gravado neste aparelho, mas o servidor não confirmou. Após recarregar, este dispositivo mantém a biblioteca; outros podem mostrar dados antigos até sincronizar.'
+        )
+      }
       try {
         const st = await fetchSyncStatus()
         if (st && Number.isFinite(st.revision) && st.revision >= 0) setLastAcceptedRevision(st.revision)
@@ -14636,7 +14737,7 @@ export default function Dashboard() {
   /** PDF de fechamento de despesas a partir da Biblioteca */
   const imprimirPDFDespesasDaBiblioteca = (relatorio: RelatorioServico, itens: FechamentoItem[]) => {
     const st = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
-    const tAny = st as Record<string, string>
+    const tAny = st as unknown as Record<string, string>
     const logoHtml = getLogoHtmlForFechamento()
     const logoSrc = logoHtml && logoHtml.includes('src="') ? logoHtml.replace(/.*src="([^"]+)".*/, '$1') : ''
     const esc = (s: string) =>
@@ -23155,8 +23256,8 @@ export default function Dashboard() {
     }
 
     // Obter traduções
-    const t = translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']
-    
+    const t = (translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']) as any
+
     // Preparar dados para impressão
     const formatArray = (arr: string[]) => arr.length > 0 ? arr.join(', ') : '-'
     const formatCheckbox = (val: boolean) => val ? '✓' : '✗'
@@ -26083,7 +26184,7 @@ const nextF = familias.filter(x => x !== f)
                   </button>
                   <button
                     className="btn-primary"
-                    onClick={handleCopyDemoLink}
+                    onClick={() => void handleCopyDemoLink()}
                     style={{ padding: '8px 16px', backgroundColor: 'rgba(0, 150, 255, 0.2)', borderColor: '#66b3ff', color: '#66b3ff' }}
                   >
                     📋 Copiar link /demo
@@ -28248,7 +28349,7 @@ onKeyPress={(e) => {
                             }}
                             style={{ padding: '0 16px', height: '40px', fontSize: '14px', fontWeight: 600, borderRadius: '6px', minWidth: '100px', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.5)', color: '#00ff00', cursor: 'pointer' }}
                           >
-                            + {safeT?.addGrupo ?? safeT?.add || 'Adicionar grupo'}
+                            + {(safeT?.addGrupo ?? safeT?.add) || 'Adicionar grupo'}
                           </button>
                         </div>
                       </div>
@@ -35665,7 +35766,7 @@ onKeyPress={(e) => {
                         if (pecaBibliotecaTemImagemPropria(pecaBibliotecaForm.imagem)) {
                           showBibliotecaImgPreview(
                             ev,
-                            pecaBibliotecaForm.imagem,
+                            pecaBibliotecaForm.imagem as string,
                             pecaBibliotecaForm.nome || safeT?.imagemPecaBiblioteca || ''
                           )
                           ev.currentTarget.style.transform = 'scale(1.06)'
@@ -35736,7 +35837,7 @@ onKeyPress={(e) => {
                   <AssistTextarea
                     className="biblioteca-pecas-form__textarea"
                     placeholder={safeT?.descricaoPecaBiblioteca || 'Descrição'}
-                    value={pecaBibliotecaForm.descricao}
+                    value={pecaBibliotecaForm.descricao ?? ''}
                     onValueChange={(v) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, descricao: v })}
                     rows={4}
                     style={{ resize: 'vertical' as const }}
@@ -38949,7 +39050,7 @@ A1;Peça exemplo;10`}
                   : nu === 'critica'
                     ? tr.solicitacaoServicoTecnicoUrgenciaCritica ?? 'Crítica'
                     : ''
-          const trAny = tr as Record<string, string | undefined>
+          const trAny = tr as unknown as Record<string, string | undefined>
           const L: SolicitacaoServicoTecnicoPdfLabels = {
             docTitleLine1: trAny.solicitacaoServicoTecnicoPdfTitleLine1 || 'SOLICITAÇÃO DE',
             docTitleLine2: trAny.solicitacaoServicoTecnicoPdfTitleLine2 || 'SERVIÇO TÉCNICO',
@@ -43646,7 +43747,9 @@ A1;Peça exemplo;10`}
             activeTabId={activeTabId || ''}
             voltarPaginaInicial={voltarPaginaInicial}
             LogoComponent={LogoComponent}
-            saveData={saveData}
+            saveData={async (key, data) => {
+              await saveData(key, data)
+            }}
             loadData={loadData}
             onGerarOrcamento={() => {
               setOpenOrcamentosGeradosView(true)
@@ -43662,9 +43765,11 @@ A1;Peça exemplo;10`}
             servicos={servicos}
             safeT={safeT}
             openTab={(type, title) => openTab(type as TabType, title)}
-            getTabTitle={getTabTitle}
+            getTabTitle={(tab) => getTabTitle(tab as TabType)}
             onOpenCadastroServicosModal={() => setShowCadastroServicosModal(true)}
-            saveData={saveData}
+            saveData={async (key, value) => {
+              await saveData(key, value)
+            }}
             loadData={loadData}
           />
         )
@@ -43674,10 +43779,12 @@ A1;Peça exemplo;10`}
           clientes={clientes}
           relatoriosServico={relatoriosServico}
           servicos={servicos}
-          saveData={saveData}
+          saveData={async (key, data) => {
+            await saveData(key, data)
+          }}
           loadData={loadData}
           safeT={safeT}
-          openTab={openTab}
+          openTab={(tab, title) => openTab(tab as TabType, title)}
           closeTab={closeTab}
           activeTabId={activeTabId || undefined}
         />
@@ -44084,11 +44191,13 @@ A1;Peça exemplo;10`}
           const tituloDoc = esc(titFechamento) + ' — ' + esc(lblRelatorio) + ' ' + numVal
           const localeStr = localeForLongDatetime(selectedLanguage)
           const dataHoraGerado = new Date().toLocaleString(localeStr)
-          const footPdfFech =
-            fechTotIva.incluir && fechTotIva.iva > 0.0001
-              ? `<tr><td colspan="3" style="padding:12px 16px;text-align:right;background:rgba(0,0,0,0.04);font-size:12px;border-top:1px solid ${borderColor}">${esc(lblTotalSemIva)}</td><td colspan="2" style="padding:12px 16px;text-align:right;font-weight:600;border-top:1px solid ${borderColor}">${fechTotIva.liquido.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:12px 16px;text-align:right;background:rgba(0,0,0,0.04);font-size:12px">${esc(lblValorIva)} (${fechTotIva.taxa}%)</td><td colspan="2" style="padding:12px 16px;text-align:right;font-weight:600">${fechTotIva.iva.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:700;font-size:13px;border-top:3px solid ${borderColor}">${esc(lblTotalComIva)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:800;font-size:18px;border-top:3px solid ${borderColor}">${fechTotIva.comIva.toFixed(2)} €</td></tr>`
-              : `<tr><td colspan="3" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:700;font-size:13px;border-top:3px solid ${borderColor}">${esc(lblSomaTotal)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:800;font-size:18px;border-top:3px solid ${borderColor}">${fechTotIva.comIva.toFixed(2)} €</td></tr>`
-          const tableContent = (thBg: string, thColor: string, footBg: string, footColor: string, borderColor: string) => `<div style="margin:24px 0;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);border:1px solid ${borderColor}"><table class="fech-pdf-itens" style="width:100%;border-collapse:collapse;font-size:12px;min-width:0"><thead><tr><th style="padding:14px 18px;text-align:left;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblCOD)}</th><th style="padding:14px 18px;text-align:left;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblDescricao)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblQuantidade)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblValorUnit)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblTotal)}</th></tr></thead><tbody class="pdf-tbody">${rows}</tbody><tfoot>${footPdfFech}</tfoot></table></div>`
+          const tableContent = (thBg: string, thColor: string, footBg: string, footColor: string, borderColor: string) => {
+            const footPdfFech =
+              fechTotIva.incluir && fechTotIva.iva > 0.0001
+                ? `<tr><td colspan="3" style="padding:12px 16px;text-align:right;background:rgba(0,0,0,0.04);font-size:12px;border-top:1px solid ${borderColor}">${esc(lblTotalSemIva)}</td><td colspan="2" style="padding:12px 16px;text-align:right;font-weight:600;border-top:1px solid ${borderColor}">${fechTotIva.liquido.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:12px 16px;text-align:right;background:rgba(0,0,0,0.04);font-size:12px">${esc(lblValorIva)} (${fechTotIva.taxa}%)</td><td colspan="2" style="padding:12px 16px;text-align:right;font-weight:600">${fechTotIva.iva.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:700;font-size:13px;border-top:3px solid ${borderColor}">${esc(lblTotalComIva)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:800;font-size:18px;border-top:3px solid ${borderColor}">${fechTotIva.comIva.toFixed(2)} €</td></tr>`
+                : `<tr><td colspan="3" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:700;font-size:13px;border-top:3px solid ${borderColor}">${esc(lblSomaTotal)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:800;font-size:18px;border-top:3px solid ${borderColor}">${fechTotIva.comIva.toFixed(2)} €</td></tr>`
+            return `<div style="margin:24px 0;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);border:1px solid ${borderColor}"><table class="fech-pdf-itens" style="width:100%;border-collapse:collapse;font-size:12px;min-width:0"><thead><tr><th style="padding:14px 18px;text-align:left;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblCOD)}</th><th style="padding:14px 18px;text-align:left;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblDescricao)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblQuantidade)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblValorUnit)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblTotal)}</th></tr></thead><tbody class="pdf-tbody">${rows}</tbody><tfoot>${footPdfFech}</tfoot></table></div>`
+          }
           const rodape = `<div style="margin-top:32px;padding-top:20px;border-top:1px solid #e0e0e0;text-align:center"><div style="font-size:11px;color:#666;margin-bottom:4px">${esc(docGeradoEm)} ${dataHoraGerado}</div><div style="font-size:10px;color:#999">Nonato Service — Gestão Técnica</div></div>`
           const btnsNoPrint = `<div class="no-print" style="margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap"><button onclick="window.print()" style="padding:12px 24px;background:#00a650;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;box-shadow:0 2px 8px rgba(0,166,80,0.3)">${esc(lblImprimir)}</button><button onclick="window.close()" style="padding:12px 20px;background:#37474f;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px">${esc(lblFechar)}</button></div>`
           let headerHtml: string
@@ -53091,7 +53200,10 @@ A1;Peça exemplo;10`}
               remetenteNome,
               remetenteTipo,
               remetenteClasse: remetenteClasse as any,
-              remetenteArea: hubUsuarioEfetivo.tipo === 'gestor' ? (hubUsuarioEfetivo.area as any) : undefined,
+              remetenteArea:
+                hubUsuarioEfetivo.tipo === 'gestor' && 'area' in hubUsuarioEfetivo
+                  ? (hubUsuarioEfetivo as { area?: MensagemComunicacao['remetenteArea'] }).area
+                  : undefined,
               destinatarioId: destId,
               destinatarioNome,
               destinatarioTipo,
@@ -56706,9 +56818,9 @@ A1;Peça exemplo;10`}
                             <span
                               style={{
                                 ...faturaPecasToolbarChipBase,
-                                backgroundColor: sinalPag === 'paga' ? 'rgba(0, 255, 0, 0.2)' : sinalPag === 'atrasado' ? 'rgba(255, 0, 0, 0.22)' : sinalPag === 'cancelada' ? 'rgba(107, 114, 128, 0.25)' : 'rgba(255, 255, 0, 0.2)',
-                                border: `1px solid ${sinalPag === 'paga' ? 'rgba(0, 255, 0, 0.5)' : sinalPag === 'atrasado' ? 'rgba(255, 0, 0, 0.55)' : sinalPag === 'cancelada' ? 'rgba(156, 163, 175, 0.5)' : 'rgba(255, 255, 0, 0.5)'}`,
-                                color: sinalPag === 'paga' ? '#00ff00' : sinalPag === 'atrasado' ? '#ff6666' : sinalPag === 'cancelada' ? '#9ca3af' : '#ffff00',
+                                backgroundColor: sinalPag === 'pago' ? 'rgba(0, 255, 0, 0.2)' : sinalPag === 'atrasado' ? 'rgba(255, 0, 0, 0.22)' : sinalPag === 'cancelada' ? 'rgba(107, 114, 128, 0.25)' : 'rgba(255, 255, 0, 0.2)',
+                                border: `1px solid ${sinalPag === 'pago' ? 'rgba(0, 255, 0, 0.5)' : sinalPag === 'atrasado' ? 'rgba(255, 0, 0, 0.55)' : sinalPag === 'cancelada' ? 'rgba(156, 163, 175, 0.5)' : 'rgba(255, 255, 0, 0.5)'}`,
+                                color: sinalPag === 'pago' ? '#00ff00' : sinalPag === 'atrasado' ? '#ff6666' : sinalPag === 'cancelada' ? '#9ca3af' : '#ffff00',
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.04em',
                               }}
@@ -59099,11 +59211,13 @@ A1;Peça exemplo;10`}
       dataPedido: string
       status: 'aguardando-fornecedor' | 'separado-nao-embalado' | 'pronto-envio'
       itens: Array<{
+        id: string
         descricao: string
         quantidade: number
         codigo?: string
         pecaId?: string
         imagem?: string
+        status: 'aguardando-fornecedor' | 'separado-nao-embalado' | 'pronto-envio'
       }>
       dataCriacao: string
     }>
@@ -59116,11 +59230,13 @@ A1;Peça exemplo;10`}
       dataPedido: string
       status: 'aguardando-fornecedor' | 'separado-nao-embalado' | 'pronto-envio'
       itens: Array<{
+        id: string
         descricao: string
         quantidade: number
         codigo?: string
         pecaId?: string
         imagem?: string
+        status: 'aguardando-fornecedor' | 'separado-nao-embalado' | 'pronto-envio'
       }>
       dataCriacao: string
     }>>>
@@ -60564,9 +60680,9 @@ A1;Peça exemplo;10`}
                                   <div style={{ fontSize: '12px', color: '#ccc' }}>
                                     {safeT?.totalSemIva || 'Subtotal'}: € {subtotal.toFixed(2)}
                                   </div>
-                                  {item.iva > 0 && (
+                                  {(item.iva ?? 0) > 0 && (
                                     <div style={{ fontSize: '12px', color: '#ffd700' }}>
-                                      {safeT?.iva || 'IVA'} ({item.iva}%): € {valorIva.toFixed(2)}
+                                      {safeT?.iva || 'IVA'} ({item.iva ?? 0}%): € {valorIva.toFixed(2)}
                                     </div>
                                   )}
                                   <div style={{ color: '#66b3ff', fontWeight: 'bold', fontSize: '14px' }}>
@@ -63187,7 +63303,7 @@ A1;Peça exemplo;10`}
         aria-hidden={hideSidebarForEntryDashboard ? true : undefined}
         onPointerMoveCapture={hideSidebarForEntryDashboard ? undefined : handleSidebarTipPointerCapture}
         onPointerDownCapture={hideSidebarForEntryDashboard ? undefined : () => setSidebarTipFlyout(null)}
-        onPointerLeaveCapture={hideSidebarForEntryDashboard ? undefined : () => setSidebarTipFlyout(null)}
+        onPointerLeave={hideSidebarForEntryDashboard ? undefined : () => setSidebarTipFlyout(null)}
       >
         {/* Logo NONATO SERVICE — logo ocupa 100% do contorno verde, borda mantida */}
         <div className={`sidebar-brand${logoUrl ? ' sidebar-brand--has-media' : ''}`}>
@@ -63862,7 +63978,13 @@ A1;Peça exemplo;10`}
                 ]
                 return ids.map(({ id, action, translationKey }) => {
                   const saved = sidebarButtons.find(btn => btn.id === id)
-                  const button = saved || { id, name: (safeT && translationKey in safeT ? (safeT as Record<string, string>)[translationKey] : '') || id, action }
+                  const button: SidebarButton =
+                    saved || {
+                      id,
+                      name: (safeT && translationKey in safeT ? (safeT as Record<string, string>)[translationKey] : '') || id,
+                      action,
+                      order: 0,
+                    }
                   const isSelected = selectedSidebarButton === action
                   const shouldShowUnreadBadge =
                     comunicacaoUnreadCount > 0 &&
@@ -66388,7 +66510,7 @@ A1;Peça exemplo;10`}
                 </button>
                 <button
                   className="btn-primary"
-                  onClick={handleCopyDemoLink}
+                  onClick={() => void handleCopyDemoLink()}
                   style={{ padding: '8px 16px', backgroundColor: 'rgba(0, 150, 255, 0.2)', borderColor: '#66b3ff', color: '#66b3ff' }}
                 >
                   📋 Copiar link
@@ -69645,7 +69767,7 @@ A1;Peça exemplo;10`}
                   <AssistTextarea
                     className="biblioteca-pecas-form__textarea"
                     placeholder={safeT?.descricaoPecaBiblioteca || 'Descrição'}
-                    value={pecaBibliotecaForm.descricao}
+                    value={pecaBibliotecaForm.descricao ?? ''}
                     onValueChange={(v) => setPecaBibliotecaForm({ ...pecaBibliotecaForm, descricao: v })}
                     rows={3}
                     style={{ resize: 'vertical' as const }}

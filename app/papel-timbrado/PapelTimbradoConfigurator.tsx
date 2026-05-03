@@ -192,7 +192,7 @@ export function PapelTimbradoConfigurator({ variant }: Props) {
   }, [])
 
   const t = useMemo(() => translations[lang] || translations['pt-BR'], [lang])
-  const tx = t as Record<string, string>
+  const tx = t as unknown as Record<string, string>
 
   const salvar = useCallback(() => {
     savePapelTimbradoState(papel)
@@ -213,7 +213,7 @@ export function PapelTimbradoConfigurator({ variant }: Props) {
   }, [])
 
   const sincronizarComCadastro = useCallback(async () => {
-    const cur = (translations[getLang()] || translations['pt-BR']) as Record<string, string>
+    const cur = (translations[getLang()] || translations['pt-BR']) as unknown as Record<string, string>
     try {
       const fc = (await loadData(FICHA_KEY, true)) as FichaCadastralLite | null
       const partial = partialDesdeFichaCadastral(fc)
