@@ -39471,9 +39471,9 @@ A1;Peça exemplo;10`}
 
       case 'agenda':
         return (
-          <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
+          <div className="agenda-tecnica-page" style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
             {/* Cabeçalho Profissional */}
-            <div className="alerta-mensagens-hero" style={{
+            <div className="alerta-mensagens-hero agenda-tecnica-hero" style={{
               marginBottom: '40px',
               padding: '30px',
               background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
@@ -39481,12 +39481,12 @@ A1;Peça exemplo;10`}
               border: '2px solid rgba(0, 255, 0, 0.3)',
               boxShadow: '0 8px 32px rgba(0, 255, 0, 0.1)'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+              <div className="agenda-tecnica-hero__row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div className="agenda-tecnica-hero__brand" style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
                 </div>
-                <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 style={{
+                <div className="agenda-tecnica-hero__title" style={{ textAlign: 'center', flex: 1 }}>
+                  <h1 className="agenda-tecnica-hero__h1" style={{
                     margin: 0,
                     fontSize: '32px',
                     fontWeight: 'bold',
@@ -39497,7 +39497,7 @@ A1;Peça exemplo;10`}
                   }}>
                     {safeT?.agendaTitle || 'AGENDA TÉCNICA'}
                   </h1>
-                  <p style={{
+                  <p className="agenda-tecnica-hero__sub" style={{
                     margin: 0,
                     fontSize: '14px',
                     color: '#ccc',
@@ -39506,7 +39506,8 @@ A1;Peça exemplo;10`}
                     {agendamentos.length} {safeT?.agendamentosCadastrados || 'agendamento(s) cadastrado(s)'}
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div className="agenda-tecnica-hero__actions" style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <div className="agenda-tecnica-hero__actions-primary">
                   <button 
                     className="btn-primary" 
                     onClick={handleAddAgendamento} 
@@ -39540,7 +39541,8 @@ A1;Peça exemplo;10`}
                   >
                     💬 {safeT?.lembreteAgendaBotao || 'Lembretes do dia (WhatsApp)'}
                   </button>
-                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  </div>
+                  <div className="agenda-tecnica-hero__actions-nav" style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                     <button 
                       onClick={() => closeTab(activeTabId || '')}
                       style={{ 
@@ -39605,7 +39607,7 @@ A1;Peça exemplo;10`}
             </div>
 
             {/* Controles de Visualização */}
-            <div style={{
+            <div className="agenda-tecnica-view-toggle" style={{
               marginBottom: '30px',
               padding: '20px',
               backgroundColor: '#141414',
@@ -39688,8 +39690,8 @@ A1;Peça exemplo;10`}
             </div>
 
             {/* Filtros */}
-            <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
-              <div style={{ minWidth: '150px' }}>
+            <div className="agenda-tecnica-filtros" style={{ display: 'flex', gap: '15px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div className="agenda-tecnica-filtros__field" style={{ minWidth: '150px' }}>
                 <select
                   value={filtroAgenda}
                   onChange={(e) => setFiltroAgenda(e.target.value as typeof filtroAgenda)}
@@ -39700,7 +39702,7 @@ A1;Peça exemplo;10`}
                   <option value="agendamento-tecnico">{safeT?.agendamentoTecnico || 'Agendamento Técnico'}</option>
                 </select>
               </div>
-              <div style={{ minWidth: '150px' }}>
+              <div className="agenda-tecnica-filtros__field" style={{ minWidth: '150px' }}>
                 <select
                   value={filtroTecnicoAgenda}
                   onChange={(e) => setFiltroTecnicoAgenda(e.target.value)}
@@ -39712,7 +39714,7 @@ A1;Peça exemplo;10`}
                   ))}
                 </select>
               </div>
-              <div style={{ minWidth: '150px' }}>
+              <div className="agenda-tecnica-filtros__field" style={{ minWidth: '150px' }}>
                 <input
                   type="date"
                   value={filtroDataAgenda}
@@ -39737,6 +39739,7 @@ A1;Peça exemplo;10`}
 
             {/* Painel operacional: execução, agendados, pré-agendados, pendentes, cancelados, concluídos recentes */}
             <div
+              className="agenda-tecnica-painel-outer"
               style={{
                 marginBottom: '22px',
                 padding: '18px',
@@ -39750,7 +39753,7 @@ A1;Peça exemplo;10`}
                   <h2 style={{ margin: 0, fontSize: '17px', color: '#00ff00', letterSpacing: '0.5px' }}>
                     {(safeT as any)?.agendaPainelOperacionalTitulo || 'Situação operacional'}
                   </h2>
-                  <p style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#999', maxWidth: '900px' }}>
+                  <p className="agenda-tecnica-painel-hint" style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#999', maxWidth: '900px' }}>
                     {(safeT as any)?.agendaPainelOperacionalHint ||
                       'Resumo em tempo real: execução, confirmados, pré-agendados, pendentes (ag. técnico), cancelados e concluídos recentes. O filtro de técnico acima aplica-se aqui; tipo e data da lista não ocultam este painel.'}
                   </p>
@@ -40007,6 +40010,7 @@ A1;Peça exemplo;10`}
                 return (
                   <>
                     <div
+                      className="agenda-tecnica-painel-grid"
                       style={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -40892,7 +40896,7 @@ A1;Peça exemplo;10`}
 
                   if (agendamentosFiltrados.length === 0) {
                     return (
-                      <div style={{ padding: '40px', textAlign: 'center', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                      <div className="agenda-lista-empty" style={{ padding: '40px', textAlign: 'center', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                         <p style={{ fontSize: '16px', opacity: 0.7 }}>
                           {(filtroAgenda !== 'todos' || filtroTecnicoAgenda || filtroDataAgenda)
                             ? (safeT?.nenhumAgendamentoFiltro || 'Nenhum agendamento encontrado com os filtros selecionados.')
@@ -40941,7 +40945,7 @@ A1;Peça exemplo;10`}
                   const renderAgendaCard = (agendamento: Agendamento, accent: string, pulseClass?: string, opts?: { muted?: boolean }) => (
                     <div
                       key={agendamento.id}
-                      className={pulseClass || undefined}
+                      className={['agenda-lista-card', pulseClass || ''].filter(Boolean).join(' ') || undefined}
                       style={{
                         backgroundColor: '#141414',
                         padding: '20px',
@@ -40951,8 +40955,8 @@ A1;Peça exemplo;10`}
                         opacity: opts?.muted ? 0.92 : 1,
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
-                        <div style={{ flex: 1 }}>
+                      <div className="agenda-card-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           <h3
                             style={{
                               marginBottom: '8px',
@@ -40963,7 +40967,7 @@ A1;Peça exemplo;10`}
                           >
                             {agendamento.cliente}
                           </h3>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', fontSize: '14px', marginBottom: '10px' }}>
+                          <div className="agenda-card-meta-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', fontSize: '14px', marginBottom: '10px' }}>
                             <p style={{ margin: 0, opacity: 0.86 }}>
                               <strong>{safeT?.tecnico || 'Técnico'}:</strong> {agendamento.tecnico}
                             </p>
@@ -41009,7 +41013,7 @@ A1;Peça exemplo;10`}
                           {(agendamento.telefone || agendamento.endereco || agendamento.cidade) && (
                             <div style={{ padding: '10px', backgroundColor: '#222222', borderRadius: '8px', marginBottom: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
                               <h4 style={{ fontSize: '13px', marginBottom: '8px', color: '#e8ffe8' }}>{safeT?.informacoesContato || 'Informações de Contato'}</h4>
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px', fontSize: '13px' }}>
+                              <div className="agenda-card-meta-grid agenda-card-meta-grid--contato" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px', fontSize: '13px' }}>
                                 {agendamento.telefone && (
                                   <p style={{ margin: 0, opacity: 0.86 }}>
                                     <strong>{safeT?.telefone || 'Telefone'}:</strong> {agendamento.telefone}
@@ -41105,7 +41109,7 @@ A1;Peça exemplo;10`}
                             </div>
                           )}
                         </div>
-                        <div style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
+                        <div className="agenda-card-actions" style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
                           <button
                             className="btn-primary"
                             onClick={() => handleEditAgendamento(agendamento)}
@@ -41441,10 +41445,10 @@ A1;Peça exemplo;10`}
               }
 
               return (
-                <div>
+                <div className="agenda-calendario-root">
                   {/* Controles de navegação */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div className="agenda-calendario-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
+                    <div className="agenda-calendario-toolbar__mes" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <button
                         onClick={() => navegarMes('anterior')}
                         className="btn-primary"
@@ -41473,9 +41477,10 @@ A1;Peça exemplo;10`}
                   </div>
 
                   {/* Calendário */}
-                  <div style={{ backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', overflow: 'hidden' }}>
+                  <div className="agenda-calendario-mes" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: '4px' }}>
+                  <div style={{ backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', overflow: 'hidden', minWidth: '520px' }}>
                     {/* Cabeçalho dos dias da semana */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', backgroundColor: '#222222' }}>
+                    <div className="agenda-cal-grid agenda-cal-grid--head" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', backgroundColor: '#222222' }}>
                       {diasSemana.map((dia, index) => (
                         <div
                           key={index}
@@ -41494,7 +41499,7 @@ A1;Peça exemplo;10`}
                     </div>
 
                     {/* Dias do calendário */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+                    <div className="agenda-cal-grid agenda-cal-grid--body" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
                       {/* Espaços vazios antes do primeiro dia */}
                       {Array.from({ length: diaSemanaAjustado }).map((_, index) => (
                         <div
@@ -41611,6 +41616,7 @@ A1;Peça exemplo;10`}
                         )
                       })}
                     </div>
+                  </div>
                   </div>
 
                   {/* Legenda */}

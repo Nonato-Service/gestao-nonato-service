@@ -3819,6 +3819,182 @@ body {
   }
 }
 
+/* Agenda técnica — telemóvel: hierarquia clara, toques largos, grelha a uma coluna */
+@media (max-width: 768px) {
+  .agenda-tecnica-page {
+    padding: 10px 12px 20px !important;
+  }
+  .agenda-tecnica-hero {
+    margin-bottom: 16px !important;
+    padding: 14px 12px !important;
+    border-radius: 12px !important;
+  }
+  .agenda-tecnica-hero__row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 14px !important;
+  }
+  .agenda-tecnica-hero__title {
+    order: -1;
+    flex: none !important;
+    text-align: center !important;
+  }
+  .agenda-tecnica-hero__brand {
+    justify-content: center;
+  }
+  .agenda-tecnica-hero__h1 {
+    font-size: clamp(1.1rem, 5.2vw, 1.45rem) !important;
+    letter-spacing: 0.12em !important;
+  }
+  .agenda-tecnica-hero__sub {
+    font-size: 13px !important;
+  }
+  .agenda-tecnica-hero__actions {
+    width: 100%;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .agenda-tecnica-hero__actions-primary {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  .agenda-tecnica-hero__actions-primary > button {
+    width: 100% !important;
+    justify-content: center;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+  .agenda-tecnica-hero__actions-nav {
+    justify-content: center;
+    width: 100%;
+    gap: 12px !important;
+  }
+  .agenda-tecnica-hero__actions-nav button {
+    min-width: 48px !important;
+    min-height: 48px !important;
+  }
+  .agenda-tecnica-view-toggle {
+    margin-bottom: 16px !important;
+    padding: 12px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .agenda-tecnica-view-toggle > div:first-child {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100%;
+  }
+  .agenda-tecnica-view-toggle > div:first-child button {
+    width: 100%;
+    min-height: 44px;
+  }
+  .agenda-tecnica-view-toggle > label {
+    width: 100%;
+    justify-content: flex-start;
+    align-items: center;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+  .agenda-tecnica-filtros {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+  }
+  .agenda-tecnica-filtros__field {
+    min-width: 0 !important;
+    width: 100%;
+  }
+  .agenda-tecnica-filtros__field select,
+  .agenda-tecnica-filtros__field input[type='date'] {
+    min-height: 44px;
+    font-size: 16px;
+  }
+  .agenda-tecnica-filtros > button {
+    width: 100%;
+    min-height: 44px;
+  }
+  .agenda-tecnica-painel-hint {
+    display: none;
+  }
+  .agenda-tecnica-painel-outer {
+    padding: 12px !important;
+    margin-bottom: 16px !important;
+  }
+  .agenda-tecnica-painel-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .agenda-lista-empty {
+    padding: 22px 14px !important;
+  }
+  .agenda-card-header-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .agenda-card-actions {
+    width: 100%;
+    flex-direction: row !important;
+    justify-content: stretch !important;
+    gap: 10px !important;
+  }
+  .agenda-card-actions button {
+    flex: 1 !important;
+    min-height: 44px !important;
+    white-space: normal !important;
+  }
+  .agenda-card-meta-grid,
+  .agenda-card-meta-grid--contato {
+    grid-template-columns: 1fr !important;
+  }
+  .agenda-lista-card {
+    padding: 14px !important;
+  }
+  .agenda-calendario-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .agenda-calendario-toolbar__mes {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    width: 100%;
+  }
+  .agenda-calendario-toolbar__mes > button {
+    flex: 1 1 auto;
+    min-height: 44px;
+    min-width: 0;
+  }
+  .agenda-calendario-toolbar__mes h3 {
+    flex: 1 1 100%;
+    order: -1;
+    min-width: 0 !important;
+    font-size: 16px !important;
+    margin-bottom: 6px !important;
+  }
+  .agenda-calendario-toolbar > .btn-secondary {
+    width: 100%;
+    min-height: 44px;
+  }
+  .agenda-cal-grid--head > div {
+    padding: 8px 4px !important;
+    font-size: 10px !important;
+  }
+  .agenda-cal-grid--body > div {
+    min-height: 76px !important;
+    padding: 4px !important;
+  }
+  .agenda-calendario-mes {
+    margin-left: -2px;
+    margin-right: -2px;
+  }
+}
+
 /* Tabelas em conteúdo: limitar largura no telefone/tablet; use um wrapper com overflow-x: auto se a tabela for muito larga */
 @media (max-width: 1024px) {
   .tab-content-wrapper table,
