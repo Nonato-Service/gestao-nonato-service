@@ -1469,6 +1469,47 @@ function normalizeStatusAgendamento(ag: { status?: string }): Agendamento['statu
   return 'pendente'
 }
 
+/** Ao editar, preencher selects de cliente/equipamento quando o registo antigo só tinha texto livre. */
+function resolveClienteEEquipamentoParaFormularioAgenda(
+  ag: Agendamento,
+  clientes: Cliente[]
+): Pick<Agendamento, 'clienteId' | 'equipamentoId'> {
+  let clienteId = String(ag.clienteId ?? '').trim()
+  if (!clienteId || !clientes.some((c) => c.id === clienteId)) {
+    const nome = (ag.cliente || '').trim().toLowerCase()
+    if (nome) {
+      const exato = clientes.find((c) => (c.nomeEmpresa || '').trim().toLowerCase() === nome)
+      const parcial =
+        exato ||
+        clientes.find(
+          (c) =>
+            nome.includes((c.nomeEmpresa || '').trim().toLowerCase()) ||
+            (c.nomeEmpresa || '').trim().toLowerCase().includes(nome)
+        )
+      clienteId = parcial?.id || ''
+    }
+  }
+  let equipamentoId = String(ag.equipamentoId ?? '').trim()
+  const cli = clientes.find((c) => c.id === clienteId)
+  if (cli?.equipamentos?.length) {
+    const valid = equipamentoId && cli.equipamentos.some((e) => e.id === equipamentoId)
+    if (!valid && (ag.equipamento || '').trim()) {
+      const label = (ag.equipamento || '').trim().toLowerCase()
+      const m =
+        cli.equipamentos.find((e) => {
+          const blob = `${e.modelo || ''} ${e.numeroSerie || ''} ${e.tipoEquipamento || ''}`.toLowerCase()
+          return (
+            blob.includes(label) ||
+            label.includes((e.modelo || '').toLowerCase()) ||
+            (e.numeroSerie && label.includes(String(e.numeroSerie).toLowerCase()))
+          )
+        }) || null
+      equipamentoId = m?.id || equipamentoId
+    }
+  }
+  return { clienteId, equipamentoId }
+}
+
 /** Máx. de concluídos na vista em lista; painéis usam valores menores para não sobrecarregar o ecrã. */
 const AGENDA_CONCLUIDOS_LISTA_MAX = 60
 const AGENDA_PAINEL_CONCLUIDOS_MAX = 40
@@ -4453,6 +4494,7 @@ export default function Dashboard() {
   const [filtroAgenda, setFiltroAgenda] = useState<'todos' | 'pre-agendamento' | 'agendamento-tecnico' | 'nenhum' | 'folga' | 'doente' | 'ferias'>('todos')
   const [filtroTecnicoAgenda, setFiltroTecnicoAgenda] = useState('')
   const [filtroDataAgenda, setFiltroDataAgenda] = useState('')
+  const [buscaAgendaListaRapida, setBuscaAgendaListaRapida] = useState('')
   const [visualizacaoAgenda, setVisualizacaoAgenda] = useState<'lista' | 'calendario'>('lista')
   const [agendaCalendarioMostrarConcluidos, setAgendaCalendarioMostrarConcluidos] = useState(() => {
     if (typeof window === 'undefined') return false
@@ -12272,8 +12314,10 @@ export default function Dashboard() {
 
   const handleEditAgendamento = (agendamento: Agendamento) => {
     setEditingAgendamento(agendamento)
+    const resolved = resolveClienteEEquipamentoParaFormularioAgenda(agendamento, clientes)
     setAgendaForm({
       ...agendamento,
+      ...resolved,
       tipo: normalizeTipoAgendamento(agendamento),
       status: normalizeStatusAgendamento(agendamento),
     })
@@ -40317,13 +40361,35 @@ A1;Peça exemplo;10`}
                   style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '13px' }}
                 />
               </div>
-              {(filtroAgenda !== 'todos' || filtroTecnicoAgenda || filtroDataAgenda) && (
+              <div className="agenda-tecnica-filtros__field" style={{ flex: '1 1 220px', minWidth: '180px', maxWidth: '420px' }}>
+                <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>
+                  {(safeT as any)?.agendaBuscaRapidaLabel || 'Pesquisa na lista'}
+                </label>
+                <input
+                  type="search"
+                  value={buscaAgendaListaRapida}
+                  onChange={(e) => setBuscaAgendaListaRapida(e.target.value)}
+                  placeholder={(safeT as any)?.agendaBuscaRapidaPlaceholder || 'Cliente, técnico, serviço, equipamento…'}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    backgroundColor: '#222222',
+                    color: '#fff',
+                    border: '1px solid rgba(0, 255, 0, 0.3)',
+                    borderRadius: '4px',
+                    fontSize: '13px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+              {(filtroAgenda !== 'todos' || filtroTecnicoAgenda || filtroDataAgenda || buscaAgendaListaRapida.trim()) && (
                 <button
                   className="btn-secondary"
                   onClick={() => {
                     setFiltroAgenda('todos')
                     setFiltroTecnicoAgenda('')
                     setFiltroDataAgenda('')
+                    setBuscaAgendaListaRapida('')
                   }}
                   style={{ padding: '8px 15px', fontSize: '13px' }}
                 >
@@ -40565,6 +40631,7 @@ A1;Peça exemplo;10`}
                   <button
                     key={`painel-${a.id}`}
                     type="button"
+                    title={(safeT as any)?.agendaMiniCardEditarHint || 'Clique para editar este registo'}
                     onClick={() => handleEditAgendamento(a)}
                     style={{
                       width: '100%',
@@ -41482,10 +41549,32 @@ A1;Peça exemplo;10`}
             {visualizacaoAgenda === 'lista' && (
               <div>
                 {(() => {
-                  const agendamentosFiltrados = agendamentos.filter(ag => {
-                    if (filtroAgenda !== 'todos' && ag.tipo !== filtroAgenda) return false
+                  const agendamentosFiltrados = agendamentos.filter((ag) => {
+                    if (
+                      (filtroAgenda === 'pre-agendamento' || filtroAgenda === 'agendamento-tecnico') &&
+                      normalizeTipoAgendamento(ag) !== filtroAgenda
+                    ) {
+                      return false
+                    }
                     if (filtroTecnicoAgenda && ag.tecnico !== filtroTecnicoAgenda) return false
                     if (filtroDataAgenda && ag.data !== filtroDataAgenda) return false
+                    const q = buscaAgendaListaRapida.trim().toLowerCase()
+                    if (q.length >= 2) {
+                      const blob = [
+                        ag.cliente,
+                        ag.tecnico,
+                        ag.tipoServico,
+                        ag.equipamento,
+                        ag.observacoesTecnicas,
+                        ag.relatorioTrabalhoExecutado,
+                        ag.telefone,
+                        ag.endereco,
+                        ag.cidade,
+                      ]
+                        .join(' ')
+                        .toLowerCase()
+                      if (!blob.includes(q)) return false
+                    }
                     return true
                   })
 
@@ -41540,6 +41629,9 @@ A1;Peça exemplo;10`}
                   const renderAgendaCard = (agendamento: Agendamento, accent: string, pulseClass?: string, opts?: { muted?: boolean }) => (
                     <div
                       key={agendamento.id}
+                      role="button"
+                      tabIndex={0}
+                      title={(safeT as any)?.agendaCardClickToEditHint || 'Clique para editar (ou use o botão Editar)'}
                       className={['agenda-lista-card', pulseClass || ''].filter(Boolean).join(' ') || undefined}
                       style={{
                         backgroundColor: '#141414',
@@ -41548,6 +41640,18 @@ A1;Peça exemplo;10`}
                         border: `1px solid ${accent}`,
                         borderLeft: `6px solid ${accent}`,
                         opacity: opts?.muted ? 0.92 : 1,
+                        cursor: 'pointer',
+                        outline: 'none',
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          handleEditAgendamento(agendamento)
+                        }
+                      }}
+                      onClick={(e) => {
+                        if ((e.target as HTMLElement).closest('button')) return
+                        handleEditAgendamento(agendamento)
                       }}
                     >
                       <div className="agenda-card-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
@@ -41706,15 +41810,23 @@ A1;Peça exemplo;10`}
                         </div>
                         <div className="agenda-card-actions" style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
                           <button
+                            type="button"
                             className="btn-primary"
-                            onClick={() => handleEditAgendamento(agendamento)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEditAgendamento(agendamento)
+                            }}
                             style={{ padding: '8px 15px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '80px' }}
                           >
                             {safeT?.edit || 'Editar'}
                           </button>
                           <button
+                            type="button"
                             className="btn-danger"
-                            onClick={() => handleDeleteAgendamento(agendamento.id)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeleteAgendamento(agendamento.id)
+                            }}
                             style={{ padding: '8px 15px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '80px' }}
                           >
                             {safeT?.delete || 'Excluir'}
@@ -41878,8 +41990,13 @@ A1;Peça exemplo;10`}
             {/* Visualização Calendário */}
             {visualizacaoAgenda === 'calendario' && (() => {
               // Filtrar agendamentos
-              const agendamentosFiltrados = agendamentos.filter(ag => {
-                if (filtroAgenda !== 'todos' && ag.tipo !== filtroAgenda) return false
+              const agendamentosFiltrados = agendamentos.filter((ag) => {
+                if (
+                  (filtroAgenda === 'pre-agendamento' || filtroAgenda === 'agendamento-tecnico') &&
+                  normalizeTipoAgendamento(ag) !== filtroAgenda
+                ) {
+                  return false
+                }
                 if (filtroTecnicoAgenda && ag.tecnico !== filtroTecnicoAgenda) return false
                 if (filtroDataAgenda && ag.data !== filtroDataAgenda) return false
                 return true
@@ -42130,18 +42247,14 @@ A1;Peça exemplo;10`}
                               cursor: agendamentosDoDia.length > 0 ? 'pointer' : 'default'
                             }}
                             onClick={() => {
-                              if (agendamentosDoDia.length > 0) {
-                                // Scroll para o primeiro agendamento do dia na lista
-                                const primeiroAgendamento = agendamentosDoDia[0]
-                                const elemento = document.getElementById(`agendamento-${primeiroAgendamento.id}`)
-                                if (elemento) {
-                                  elemento.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                                  elemento.style.border = '2px solid #00ff00'
-                                  setTimeout(() => {
-                                    elemento.style.border = '1px solid rgba(0, 255, 0, 0.2)'
-                                  }, 2000)
-                                }
+                              if (agDiaUnicos.length === 0) return
+                              if (agDiaUnicos.length === 1) {
+                                handleEditAgendamento(agDiaUnicos[0])
+                                return
                               }
+                              setFiltroDataAgenda(dataKey)
+                              setVisualizacaoAgenda('lista')
+                              setBuscaAgendaListaRapida('')
                             }}
                           >
                             {/* Número do dia */}
@@ -64978,8 +65091,16 @@ A1;Peça exemplo;10`}
                     window.alert('Você não tem permissão para acessar esta função.')
                     return
                   }
-                  setExpandedGroups((prev) => new Set(prev).add('admin-main'))
-                  handleButtonClick(adminBtn.action)
+                  toggleOrOpenDashboardHub('admin-main', 'admin-main')
+                  requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                      const root = document.querySelector('.sidebar-scroll-inner')
+                      const el = root?.querySelector(
+                        `[data-sidebar-nav-action="${adminBtn.action}"]`
+                      ) as HTMLElement | null
+                      el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+                    })
+                  })
                 }}
               >
                 {isSelected && (
