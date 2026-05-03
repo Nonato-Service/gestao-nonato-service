@@ -9975,6 +9975,38 @@ button.dia-trabalho-acao-btn--del:hover {
   margin-bottom: 14px;
 }
 
+.ns-diario-list__search {
+  margin-bottom: 14px;
+  padding: 0 2px;
+}
+
+.ns-diario-list__search-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.95);
+  margin-bottom: 6px;
+}
+
+.ns-diario-list__search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(100, 116, 139, 0.35);
+  background: rgba(15, 23, 42, 0.55);
+  color: #e2e8f0;
+  font-size: 14px;
+  outline: none;
+}
+
+.ns-diario-list__search-input:focus {
+  border-color: rgba(34, 197, 94, 0.45);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.2);
+}
+
 .ns-diario-list__label {
   font-size: 10px;
   font-weight: 800;
@@ -10028,6 +10060,13 @@ button.dia-trabalho-acao-btn--del:hover {
   padding: 12px 14px 0;
 }
 
+.ns-diario-entry__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .ns-diario-badge {
   display: inline-flex;
   align-items: center;
@@ -10067,6 +10106,41 @@ button.dia-trabalho-acao-btn--del:hover {
   line-height: 1.55;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.ns-diario-entry__input {
+  display: block;
+  width: calc(100% - 32px);
+  box-sizing: border-box;
+  margin: 8px 16px 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  background: rgba(15, 23, 42, 0.65);
+  color: #f1f5f9;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+.ns-diario-entry__input:focus {
+  outline: none;
+  border-color: rgba(34, 197, 94, 0.55);
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.18);
+}
+
+.ns-diario-entry__edit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 16px 4px;
+}
+
+.ns-diario-entry__meta-sep {
+  color: rgba(148, 163, 184, 0.55);
+  margin: 0 2px;
 }
 
 .ns-diario-entry__meta {
