@@ -48,6 +48,15 @@ export async function POST(request: NextRequest) {
         const meta = bumpSyncMeta(dataDir)
         revision = meta.revision
         updatedAt = meta.updatedAt
+        // Logo em .json (pequeno ou vazio): remover .txt antigo para o bundle /load não preferir dados obsoletos.
+        if (key === 'nonato-logo' || key === 'nonato-logo-dashboard') {
+          try {
+            const txtPath = path.join(targetDir, `${key}.txt`)
+            if (fs.existsSync(txtPath)) fs.unlinkSync(txtPath)
+          } catch {
+            /* ignorar */
+          }
+        }
       }
     } catch (e) {
       console.error('bumpSyncMeta (save):', e)

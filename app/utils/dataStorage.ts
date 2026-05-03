@@ -232,17 +232,28 @@ async function _doSaveToServer(key: string, value: any): Promise<boolean> {
       typeof value === 'string' &&
       value.length > 100000 &&
       (value.startsWith('data:image/') || value.startsWith('data:video/') || value.startsWith('data:application/pdf'))
+    /** Logos da UI: sempre `.txt` + save-text — evita coexistir `nonato-logo.json` pequeno com `.txt` novo (o /load dava prioridade ao JSON). */
+    const isLogoBodyKey = key === 'nonato-logo' || key === 'nonato-logo-dashboard'
+    const useSaveTextForLogo =
+      isLogoBodyKey &&
+      typeof value === 'string' &&
+      (value === '' || value.startsWith('data:image/') || value.startsWith('data:video/'))
     /** Manuais com PDFs em base64: JSON grande — usar save-text para não estourar limites do /save */
     const isLargeManuaisJson = key === MANUAIS_KEY && payloadStr.length > 80000
     /** Biblioteca de logos PDF: várias imagens base64 — mesmo tratamento que manuais grandes */
     const isLargeLogosRelatoriosJson = key === 'nonato-logos-relatorios' && payloadStr.length > 80000
-    const useTextEndpoint = isLargeString || isLargeManuaisJson || isLargeLogosRelatoriosJson
+    const useTextEndpoint =
+      isLargeString || isLargeManuaisJson || isLargeLogosRelatoriosJson || useSaveTextForLogo
     const endpoint = useTextEndpoint ? `${API_BASE}/save-text` : `${API_BASE}/save`
     const body =
       (isLargeManuaisJson && typeof value === 'object') || isLargeLogosRelatoriosJson
         ? JSON.stringify({ key, value: payloadStr })
         : JSON.stringify({ key, value })
-    const payloadNeedsSlowUpload = isLargeManuaisJson || isLargeLogosRelatoriosJson || isLargeString
+    const payloadNeedsSlowUpload =
+      isLargeManuaisJson ||
+      isLargeLogosRelatoriosJson ||
+      isLargeString ||
+      (useSaveTextForLogo && typeof value === 'string' && value.length > 40000)
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

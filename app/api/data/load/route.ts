@@ -86,7 +86,21 @@ export async function GET(request: NextRequest) {
           }
         }
       }
-      
+
+      // Logos base64 grandes vão para `.txt` (save-text); um `.json` antigo ainda existir fazia o bundle ignorar o .txt.
+      for (const logoKey of ['nonato-logo', 'nonato-logo-dashboard'] as const) {
+        const txtPath = path.join(dataDir, `${logoKey}.txt`)
+        if (!fs.existsSync(txtPath)) continue
+        try {
+          const c = fs.readFileSync(txtPath, 'utf-8')
+          if (c && c.trim() !== '') {
+            allData[logoKey] = c
+          }
+        } catch (e) {
+          console.error(`Erro ao ler ${logoKey}.txt no bundle:`, e)
+        }
+      }
+
       return NextResponse.json({ success: true, data: allData }, { headers: NO_STORE_HEADERS })
     }
 

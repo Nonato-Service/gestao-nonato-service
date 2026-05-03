@@ -42,8 +42,8 @@ export async function POST(request: NextRequest) {
         const meta = bumpSyncMeta(dataDir)
         revision = meta.revision
         updatedAt = meta.updatedAt
-        // Evitar que um .json antigo (pequeno) prevaleça sobre o .txt grande no /load bundle
-        if (key === 'nonato-logos-relatorios') {
+        // Evitar que um .json antigo prevaleça sobre o .txt no bundle /load (JSON era lido primeiro).
+        if (key === 'nonato-logos-relatorios' || key === 'nonato-logo' || key === 'nonato-logo-dashboard') {
           try {
             const jsonPath = path.join(resolveDataDirForKey(key, dataDir), `${key}.json`)
             if (fs.existsSync(jsonPath)) fs.unlinkSync(jsonPath)
