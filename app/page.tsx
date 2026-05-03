@@ -1543,6 +1543,8 @@ type Cliente = {
   saldoPendente?: number // Saldo pendente do cliente
   /** Quantidade de relatórios de serviço com situação «não pago» no fluxo financeiro */
   relatoriosNaoPagoCount?: number
+  /** Relatório mais recente (por data) ainda «não pago»/devedor — destaque fino no cadastro até regularizar */
+  ultimoRelatorioDevedorId?: string
   /** Formulários de solicitação técnica devolvidos (PDF/imagem), associados ao registo do cliente */
   anexosSolicitacaoServico?: SolicitacaoDocDevolvidoCliente[]
 }
@@ -1810,6 +1812,8 @@ type ClienteDevedor = {
   isDevedor: boolean // Flag para indicar se é devedor
   /** Relatórios de serviço com fechamento marcado «não pago» / devedor (gestão financeira) */
   relatoriosNaoPagoCount?: number
+  /** Id do relatório de serviço mais recente (data) ainda «não pago»/devedor — para marcar no cadastro do cliente */
+  ultimoRelatorioNaoPagoId?: string
 }
 
 type IVAControle = {
@@ -13355,6 +13359,23 @@ export default function Dashboard() {
     })
 
     // Relatórios de serviço com fechamento «não pago» / devedor (sincroniza cartão vermelho no cadastro de clientes)
+    const relatorioTsParaOrdenar = (r: RelatorioServico) => {
+      const s = String(r.data || '').trim().slice(0, 10)
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+        const t = new Date(s + 'T12:00:00').getTime()
+        if (!Number.isNaN(t)) return t
+      }
+      const parsed = parseRelatorioServicoNumeroDataSeq(String(r.numero || ''))
+      if (parsed) {
+        const y = Number(parsed.yyyymmdd.slice(0, 4))
+        const mo = Number(parsed.yyyymmdd.slice(4, 6)) - 1
+        const da = Number(parsed.yyyymmdd.slice(6, 8))
+        const t = new Date(y, mo, da).getTime()
+        if (!Number.isNaN(t)) return t
+      }
+      return 0
+    }
+    const relatoriosNaoPagoPorCliente = new Map<string, RelatorioServico[]>()
     for (const rel of relatoriosServico) {
       const fr = fechamentoFluxoFinanceiroPorRelatorioId[rel.id]
       const frObj =
@@ -13365,12 +13386,16 @@ export default function Dashboard() {
       if (!naoPagoRel) continue
       const clienteId = String(rel.clienteId ?? '').trim()
       if (!clienteId) continue
-
+      if (!relatoriosNaoPagoPorCliente.has(clienteId)) relatoriosNaoPagoPorCliente.set(clienteId, [])
+      relatoriosNaoPagoPorCliente.get(clienteId)!.push(rel)
+    }
+    for (const [clienteId, rels] of relatoriosNaoPagoPorCliente.entries()) {
       if (!devedoresMap.has(clienteId)) {
+        const rel0 = rels[0]
         const cliente = clientes.find(c => c.id === clienteId)
         devedoresMap.set(clienteId, {
           clienteId,
-          clienteNome: cliente?.nomeEmpresa || rel.cliente,
+          clienteNome: cliente?.nomeEmpresa || rel0?.cliente || '',
           totalDevido: 0,
           totalPago: 0,
           saldoPendente: 0,
@@ -13383,7 +13408,14 @@ export default function Dashboard() {
         })
       }
       const devedorRel = devedoresMap.get(clienteId)!
-      devedorRel.relatoriosNaoPagoCount = (devedorRel.relatoriosNaoPagoCount ?? 0) + 1
+      devedorRel.relatoriosNaoPagoCount = rels.length
+      const maisRecente = [...rels].sort((a, b) => {
+        const ta = relatorioTsParaOrdenar(a)
+        const tb = relatorioTsParaOrdenar(b)
+        if (tb !== ta) return tb - ta
+        return cmpClienteRelatorioFinanceiro(String(b.numero ?? ''), String(a.numero ?? ''))
+      })[0]
+      devedorRel.ultimoRelatorioNaoPagoId = maisRecente?.id
     }
 
     // Marcar como devedor: faturas de peças em aberto ou relatório(s) de serviço «não pago»
@@ -13404,6 +13436,7 @@ export default function Dashboard() {
         isDevedor: devedor?.isDevedor || false,
         saldoPendente: devedor?.saldoPendente || 0,
         relatoriosNaoPagoCount: devedor?.relatoriosNaoPagoCount ?? 0,
+        ultimoRelatorioDevedorId: devedor?.ultimoRelatorioNaoPagoId,
       }
     })
     
@@ -13414,6 +13447,7 @@ export default function Dashboard() {
       isDevedor: c.isDevedor || false, 
       saldoPendente: c.saldoPendente || 0,
       relatoriosNaoPagoCount: c.relatoriosNaoPagoCount ?? 0,
+      ultimoRelatorioDevedorId: c.ultimoRelatorioDevedorId || '',
     })).sort((a, b) => a.id.localeCompare(b.id)))
     
     // Só atualizar se o hash mudou
@@ -70551,8 +70585,32 @@ A1;Peça exemplo;10`}
                                     return datasOrdenadas.map(dataKey => (
                                       <div key={dataKey} style={{ marginBottom: '10px' }}>
                                         <p style={{ fontSize: '10px', fontWeight: '600', color: 'rgba(0, 255, 0, 0.85)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>📅 {dataKey}</p>
-                                        {relatoriosPorData[dataKey].map((relatorio) => (
-                                          <div key={relatorio.id} style={{ padding: '10px 12px', marginBottom: '6px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(0, 255, 0, 0.08)' }}>
+                                        {relatoriosPorData[dataKey].map((relatorio) => {
+                                          const marcaRelatorioDivida =
+                                            Boolean(selectedClienteForEquipamento.ultimoRelatorioDevedorId) &&
+                                            selectedClienteForEquipamento.ultimoRelatorioDevedorId === relatorio.id
+                                          return (
+                                          <div
+                                            key={relatorio.id}
+                                            className={marcaRelatorioDivida ? 'cliente-relatorio-linha-divida' : undefined}
+                                            style={{
+                                              padding: '10px 12px',
+                                              marginBottom: '6px',
+                                              borderRadius: '8px',
+                                              background: marcaRelatorioDivida
+                                                ? 'rgba(60, 12, 12, 0.35)'
+                                                : 'rgba(0,0,0,0.2)',
+                                              border: marcaRelatorioDivida
+                                                ? '1px solid rgba(248, 113, 113, 0.35)'
+                                                : '1px solid rgba(0, 255, 0, 0.08)',
+                                            }}
+                                            title={
+                                              marcaRelatorioDivida
+                                                ? (safeT as any)?.clienteRelatorioDividaTooltip ||
+                                                  'Último relatório com situação «não pago» / devedor no fluxo financeiro. Quando regularizar, o destaque desaparece.'
+                                                : undefined
+                                            }
+                                          >
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
                                               <div>
                                                 <p style={{ margin: 0, fontSize: '12px', fontWeight: '600', color: '#00ff00' }}>{relatorio.numero}</p>
@@ -70562,7 +70620,8 @@ A1;Peça exemplo;10`}
                                               <button className="btn-primary" onClick={() => setViewingRelatorioServico(relatorio)} style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '8px', flexShrink: 0, backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.6)', color: '#fff' }}>👁️ {safeT?.ver || 'Ver'}</button>
                                             </div>
                                           </div>
-                                        ))}
+                                          )
+                                        })}
                                       </div>
                                     ))
                                   })()}

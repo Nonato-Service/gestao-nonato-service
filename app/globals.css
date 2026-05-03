@@ -10111,3 +10111,8 @@ button.dia-trabalho-acao-btn--del:hover {
   }
 }
 
+/* Último relatório de serviço ligado à dívida (não pago / devedor) — barra vermelha fina à esquerda */
+.cliente-relatorio-linha-divida {
+  box-shadow: inset 3px 0 0 rgba(248, 113, 113, 0.95);
+}
+

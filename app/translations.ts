@@ -2179,6 +2179,8 @@ export const translations = {
     clienteBadgeFaturaAReceber: 'Fatura a receber',
     clienteBadgeNaoPago: 'Não pago',
     clienteDevedorBadge: 'Devedor',
+    clienteRelatorioDividaTooltip:
+      'Relatório mais recente ainda «não pago» / devedor no fluxo financeiro (última situação). Ao marcar como pago ou regularizar, o destaque some.',
     clienteDevedorDividaLabel: 'Dívida',
     clienteDevedorFaturasLabel: 'Faturas em aberto',
     clienteDevedorRelatoriosNaoPagoLabel: 'Relatório(s) de serviço marcados como não pago',
@@ -5176,6 +5178,8 @@ export const translations = {
     clienteBadgeFaturaAReceber: 'Factura por cobrar',
     clienteBadgeNaoPago: 'No pagado',
     clienteDevedorBadge: 'Deudor',
+    clienteRelatorioDividaTooltip:
+      'Informe más reciente aún «no pagado» / moroso. Al regularizar, desaparece el marcador.',
     clienteDevedorDividaLabel: 'Deuda',
     clienteDevedorFaturasLabel: 'Facturas pendientes',
     clienteDevedorRelatoriosNaoPagoLabel: 'Informe(s) de servicio marcados como no pagados',
@@ -8083,6 +8087,8 @@ export const translations = {
     clienteBadgeFaturaAReceber: 'Facture à recevoir',
     clienteBadgeNaoPago: 'Impayé',
     clienteDevedorBadge: 'Débiteur',
+    clienteRelatorioDividaTooltip:
+      'Dernier rapport encore « non payé » / en retard. Le marqueur disparaît une fois réglé.',
     clienteDevedorDividaLabel: 'Dette',
     clienteDevedorFaturasLabel: 'Factures ouvertes',
     clienteDevedorRelatoriosNaoPagoLabel: 'Rapport(s) de service marqué(s) comme non payé(s)',
@@ -10996,6 +11002,8 @@ export const translations = {
     clienteBadgeFaturaAReceber: 'Fattura da incassare',
     clienteBadgeNaoPago: 'Non pagato',
     clienteDevedorBadge: 'Debitore',
+    clienteRelatorioDividaTooltip:
+      'Ultimo rapporto ancora «non pagato» / moroso. Quando regolarizzate, il segno scompare.',
     clienteDevedorDividaLabel: 'Debito',
     clienteDevedorFaturasLabel: 'Fatture aperte',
     clienteDevedorRelatoriosNaoPagoLabel: 'Rapporto/i di servizio segnato/i come non pagato/i',
@@ -13923,6 +13931,8 @@ export const translations = {
     clienteBadgeFaturaAReceber: 'Rechnung offen',
     clienteBadgeNaoPago: 'Unbezahlt',
     clienteDevedorBadge: 'Schuldner',
+    clienteRelatorioDividaTooltip:
+      'Neuester Bericht noch «unbezahlt» / schuldig. Nach Ausgleich verschwindet die Markierung.',
     clienteDevedorDividaLabel: 'Offener Betrag',
     clienteDevedorFaturasLabel: 'Offene Rechnungen',
     clienteDevedorRelatoriosNaoPagoLabel: 'Servicebericht(e) als nicht bezahlt markiert',
@@ -16848,6 +16858,8 @@ export const translations = {
     clienteBadgeFaturaAReceber: 'Invoice to receive',
     clienteBadgeNaoPago: 'Unpaid',
     clienteDevedorBadge: 'Debtor',
+    clienteRelatorioDividaTooltip:
+      'Latest report still «unpaid» / debtor in the payment flow. Clears once settled.',
     clienteDevedorDividaLabel: 'Amount due',
     clienteDevedorFaturasLabel: 'Open invoices',
     clienteDevedorRelatoriosNaoPagoLabel: 'Service report(s) marked as unpaid',
