@@ -20,6 +20,7 @@ import {
   setBlockImplicitServerPushDuringBootstrap,
 } from './utils/dataStorage'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData } from './utils/syncRevision'
+import { isNonatoDemoBuild } from './utils/nonatoDemoMode'
 import { collectLocalNonatoSnapshot, summarizeDataDiff } from './utils/syncDiff'
 import { assessPullServerRisk, type PullRiskSeverity } from './utils/syncRisk'
 import {
@@ -5923,6 +5924,7 @@ export default function Dashboard() {
   /** Antes de mostrar escolhas longas, avalia risco: caso seguro (`none`) → um só botão OK. */
   useEffect(() => {
     if (!syncPendingRemote) return
+    if (isNonatoDemoBuild()) return
     setSyncPullRiskReady(false)
     let cancelled = false
     void (async () => {
@@ -5966,6 +5968,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (appInitialLoading) return
+    if (isNonatoDemoBuild()) return
 
     let cancelled = false
     const POLL_MS = 45_000
@@ -6016,6 +6019,7 @@ export default function Dashboard() {
 
   const aceitarSincronizacaoServidor = useCallback(async () => {
     if (typeof window === 'undefined') return
+    if (isNonatoDemoBuild()) return
     setSyncPullChecking(true)
     setSyncOperationPercent(6)
     const bumpOp = async (p: number) => {
@@ -6114,6 +6118,13 @@ export default function Dashboard() {
 
   const enviarEsteAparelhoParaServidor = useCallback(async () => {
     if (typeof window === 'undefined') return
+    if (isNonatoDemoBuild()) {
+      window.alert(
+        (safeT as any)?.nonatoDemoSemEnvioServidor ||
+          'Esta cópia é DEMO: não existe envio ao servidor — os dados ficam só neste dispositivo.'
+      )
+      return
+    }
     const lastAcc = getLastAcceptedRevision()
     const stBeforePush = await fetchSyncStatus()
     if (stBeforePush && stBeforePush.revision > lastAcc) {
@@ -7611,11 +7622,15 @@ export default function Dashboard() {
       try {
         let dataPedidos = getData('nonato-pedidos-separacao')
         if (!dataPedidos || !Array.isArray(dataPedidos)) {
+          if (isNonatoDemoBuild()) {
+            dataPedidos = []
+          } else {
           const response = await fetch('/api/data/load?key=nonato-pedidos-separacao')
           if (response.ok) {
             const data = await response.json()
             dataPedidos =
               data && data.data && Array.isArray(data.data) ? data.data : data && Array.isArray(data) ? data : []
+          }
           }
         }
         if (dataPedidos && Array.isArray(dataPedidos)) {
@@ -7639,11 +7654,15 @@ export default function Dashboard() {
       try {
         let dataOrdens = getData('nonato-ordens-preparacao')
         if (!dataOrdens || !Array.isArray(dataOrdens)) {
+          if (isNonatoDemoBuild()) {
+            dataOrdens = []
+          } else {
           const response = await fetch('/api/data/load?key=nonato-ordens-preparacao')
           if (response.ok) {
             const data = await response.json()
             dataOrdens =
               data && data.data && Array.isArray(data.data) ? data.data : data && Array.isArray(data) ? data : []
+          }
           }
         }
         if (dataOrdens && Array.isArray(dataOrdens)) {
@@ -7656,11 +7675,15 @@ export default function Dashboard() {
       try {
         let dataForm = getData('nonato-formularios-checklist-tecnicos')
         if (!dataForm || !Array.isArray(dataForm)) {
+          if (isNonatoDemoBuild()) {
+            dataForm = []
+          } else {
           const response = await fetch('/api/data/load?key=nonato-formularios-checklist-tecnicos')
           if (response.ok) {
             const data = await response.json()
             dataForm =
               data && data.data && Array.isArray(data.data) ? data.data : data && Array.isArray(data) ? data : []
+          }
           }
         }
         if (dataForm && Array.isArray(dataForm)) {
@@ -14391,7 +14414,12 @@ export default function Dashboard() {
     const tAny = st as Record<string, string>
     const logoHtml = getLogoHtmlForFechamento()
     const logoSrc = logoHtml && logoHtml.includes('src="') ? logoHtml.replace(/.*src="([^"]+)".*/, '$1') : ''
-    const esc = (s: string) => (s || '').replace(/</g, '&lt;').replace(/"/g, '&quot;')
+    const esc = (s: string) =>
+      String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
     const rows = itens.map(item => {
       const sv = item.servicoId ? servicos.find(s => s.id === item.servicoId) : null
       const cod = ((item.cod ?? '').trim() || (sv ? servicoCodParaExibicao(sv) : '') || '—')
@@ -14421,9 +14449,10 @@ export default function Dashboard() {
     const logoPart = logoSrc ? '<img src="' + esc(logoSrc) + '" alt="Logo" style="max-height:80px;max-width:220px;object-fit:contain;display:block"/>' : ''
     const clienteVal = esc(relatorio.cliente)
     const numVal = esc(relatorio.numero)
-    const equipVal = esc(relatorio.maquinaModelo + (relatorio.numeroMaquina ? ' ' + relatorio.numeroMaquina : ''))
+    const equipTexto = [relatorio.maquinaModelo, relatorio.numeroMaquina].filter(Boolean).join(' · ') || '—'
+    const equipVal = esc(equipTexto)
     const dataVal = esc(relatorio.data)
-    const tituloDoc = esc(titFechamento) + ' — ' + lblRelatorio + ' ' + numVal
+    const tituloDoc = esc(titFechamento) + ' — ' + esc(lblRelatorio) + ' ' + numVal
     const localeStr = localeForLongDatetime(selectedLanguage)
     const docGeradoEm = tAny.pdfDocumentoGeradoEm || 'Documento gerado em'
     const dataHoraGerado = new Date().toLocaleString(localeStr)
@@ -14431,13 +14460,13 @@ export default function Dashboard() {
       ivPdf.incluir && ivPdf.iva > 0.0001
         ? `<tr><td colspan="3" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-size:12px;border-top:1px solid #c8e6c9">${esc(tAny.totalSemIva || 'Total s/ IVA')}</td><td colspan="2" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-weight:700;border-top:1px solid #c8e6c9">${ivPdf.liquido.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-size:12px">${esc(tAny.valorIva || 'IVA')} (${ivPdf.taxa}%)</td><td colspan="2" style="padding:12px 16px;text-align:right;background:#f5f5f5;font-weight:700">${ivPdf.iva.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:700;font-size:13px;border-top:3px solid #a5d6a7;color:#00a650">${esc(tAny.totalComIva || 'Total com IVA')}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:800;font-size:18px;border-top:3px solid #a5d6a7;color:#00a650">${totalCobranca.toFixed(2)} €</td></tr>`
         : `<tr><td colspan="3" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:700;font-size:13px;border-top:3px solid #a5d6a7;color:#00a650">${esc(lblSomaTotal)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:#e8f5e9;font-weight:800;font-size:18px;border-top:3px solid #a5d6a7;color:#00a650">${totalCobranca.toFixed(2)} €</td></tr>`
-    const tableContent = `<div style="margin:24px 0;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);border:1px solid #a5d6a7"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="padding:14px 18px;text-align:left;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblCOD)}</th><th style="padding:14px 18px;text-align:left;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblDescricao)}</th><th style="padding:14px 18px;text-align:right;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblQuantidade)}</th><th style="padding:14px 18px;text-align:right;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblValorUnit)}</th><th style="padding:14px 18px;text-align:right;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblTotal)}</th></tr></thead><tbody class="pdf-tbody">${rows}</tbody><tfoot>${footPdf}</tfoot></table></div>`
-    const infoGrid = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px"><div style="background:#f1f8e9;border:1px solid #c8e6c9;padding:14px 18px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;color:#2e7d32">${esc(lblCliente)}</div><div style="font-size:13px;font-weight:600;color:#1b5e20">${clienteVal}</div></div><div style="background:#f1f8e9;border:1px solid #c8e6c9;padding:14px 18px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;color:#2e7d32">${esc(lblNumRelatorio)}</div><div style="font-size:13px;font-weight:600;color:#1b5e20">${numVal}</div></div><div style="background:#f1f8e9;border:1px solid #c8e6c9;padding:14px 18px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;color:#2e7d32">${esc(lblEquipamento)}</div><div style="font-size:13px;font-weight:600;color:#1b5e20">${equipVal}</div></div><div style="background:#f1f8e9;border:1px solid #c8e6c9;padding:14px 18px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;color:#2e7d32">${esc(lblData)}</div><div style="font-size:13px;font-weight:600;color:#1b5e20">${dataVal}</div></div></div>`
-    const headerHtml = `<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:20px;border-bottom:3px solid #00a650;flex-wrap:wrap;gap:16px">${logoPart ? '<div style="flex-shrink:0">' + logoPart + '</div>' : ''}<div style="flex:1;min-width:200px"><div style="font-size:20px;font-weight:700;color:#00a650;margin-bottom:8px">${tituloDoc}</div>${infoGrid}</div></div>`
+    const tableContent = `<div style="margin:24px 0;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);border:1px solid #a5d6a7"><table class="fech-pdf-itens" style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="padding:14px 18px;text-align:left;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblCOD)}</th><th style="padding:14px 18px;text-align:left;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblDescricao)}</th><th style="padding:14px 18px;text-align:right;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblQuantidade)}</th><th style="padding:14px 18px;text-align:right;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblValorUnit)}</th><th style="padding:14px 18px;text-align:right;background:#00a650;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase">${esc(lblTotal)}</th></tr></thead><tbody class="pdf-tbody">${rows}</tbody><tfoot>${footPdf}</tfoot></table></div>`
+    const infoMetaBib = `<table role="presentation" class="fech-pdf-meta" style="width:100%;max-width:100%;border-collapse:collapse;margin:0 0 18px;border:1px solid #c8e6c9;border-radius:10px;overflow:hidden;box-sizing:border-box"><tbody><tr><th scope="row" style="width:30%;padding:12px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#2e7d32;vertical-align:top;border-bottom:1px solid #c8e6c9;background:#f1f8e9">${esc(lblCliente)}</th><td style="padding:12px 14px;font-size:14px;font-weight:600;color:#1b5e20;vertical-align:top;word-break:break-word;overflow-wrap:anywhere;line-height:1.45;border-bottom:1px solid #c8e6c9;background:#f1f8e9">${clienteVal}</td></tr><tr><th scope="row" style="padding:12px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#2e7d32;vertical-align:top;border-bottom:1px solid #c8e6c9;background:#f1f8e9">${esc(lblNumRelatorio)}</th><td style="padding:12px 14px;font-size:14px;font-weight:600;color:#1b5e20;vertical-align:top;word-break:break-word;overflow-wrap:anywhere;line-height:1.45;border-bottom:1px solid #c8e6c9;background:#f1f8e9">${numVal}</td></tr><tr><th scope="row" style="padding:12px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#2e7d32;vertical-align:top;border-bottom:1px solid #c8e6c9;background:#f1f8e9">${esc(lblEquipamento)}</th><td style="padding:12px 14px;font-size:14px;font-weight:600;color:#1b5e20;vertical-align:top;word-break:break-word;overflow-wrap:anywhere;line-height:1.45;border-bottom:1px solid #c8e6c9;background:#f1f8e9">${equipVal}</td></tr><tr><th scope="row" style="padding:12px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#2e7d32;vertical-align:top;background:#f1f8e9">${esc(lblData)}</th><td style="padding:12px 14px;font-size:14px;font-weight:600;color:#1b5e20;vertical-align:top;word-break:break-word;overflow-wrap:anywhere;line-height:1.45;background:#f1f8e9">${dataVal}</td></tr></tbody></table>`
+    const headerHtml = `<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:20px;border-bottom:3px solid #00a650;flex-wrap:wrap;gap:16px;max-width:100%;box-sizing:border-box">${logoPart ? '<div style="flex-shrink:0">' + logoPart + '</div>' : ''}<div style="flex:1;min-width:0;max-width:100%"><div style="font-size:20px;font-weight:700;color:#00a650;margin-bottom:12px;line-height:1.25;word-break:break-word">${tituloDoc}</div>${infoMetaBib}</div></div>`
     const rodape = `<div style="margin-top:32px;padding-top:20px;border-top:1px solid #e0e0e0;text-align:center"><div style="font-size:11px;color:#666">${esc(docGeradoEm)} ${dataHoraGerado}</div><div style="font-size:10px;color:#999">Nonato Service</div></div>`
     const btnsNoPrint = `<div class="no-print" style="margin-bottom:20px"><button onclick="window.print()" style="padding:12px 24px;background:#00a650;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">${esc(lblImprimir)}</button> <button onclick="window.close()" style="padding:12px 20px;background:#37474f;color:#fff;border:none;border-radius:8px;cursor:pointer">${esc(lblFechar)}</button></div>`
     const pdfRowStyles = `.pdf-tbody tr:nth-child(odd){background:#fff}.pdf-tbody tr:nth-child(even){background:#f1f8e9}`
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(titFechamento)} - ${esc(relatorio.numero)}</title><style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:24px;font-size:12px;background:#fff}${pdfRowStyles}.no-print{display:block}@media print{.no-print{display:none!important}}</style></head><body>${btnsNoPrint}${headerHtml}${tableContent}${rodape}</body></html>`
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(titFechamento)} - ${esc(relatorio.numero)}</title><style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:24px;font-size:12px;background:#fff;max-width:100%;box-sizing:border-box}${pdfRowStyles}.fech-pdf-itens{min-width:0}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none!important}.fech-pdf-itens{font-size:10px}.fech-pdf-itens th,.fech-pdf-itens td{padding:8px 10px!important}}.no-print{display:block}</style></head><body>${btnsNoPrint}${headerHtml}${tableContent}${rodape}</body></html>`
     const printWin = window.open('', '_blank')
     if (!printWin) { alert(tAny.permitaPopupsPDF || 'Permita pop-ups para gerar o PDF.'); return }
     printWin.document.write(html)
@@ -43597,7 +43626,12 @@ A1;Peça exemplo;10`}
             const totalLinha = item.id === 'diarias' && item.cobrarDiaria === false ? 0 : item.valorTotal
             return `<tr><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;font-weight:600;color:inherit">${cod}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px">${desc}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right">${qtd}</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right">${item.valorUnitario.toFixed(2)} €</td><td style="padding:12px 14px;border-bottom:1px solid #e8e8e8;font-size:12px;text-align:right;font-weight:700">${totalLinha.toFixed(2)} €</td></tr>`
           }).join('')
-          const esc = (s: string) => (s || '').replace(/</g, '&lt;').replace(/"/g, '&quot;')
+          const esc = (s: string) =>
+            String(s ?? '')
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
           const titFechamento = (safeT as any)?.fechamentoDespesasRelatorio || 'Fechamento de Despesas'
           const lblImprimir = (safeT as any)?.imprimirGuardarPDF || 'Imprimir / Guardar como PDF'
           const lblFechar = safeT?.close || 'Fechar'
@@ -43619,16 +43653,18 @@ A1;Peça exemplo;10`}
           const lblRelatorio = (safeT as any)?.relatorio || 'Relatório'
           const clienteVal = esc(relatorioSelecionado.cliente)
           const numVal = esc(relatorioSelecionado.numero)
-          const equipVal = esc(relatorioSelecionado.maquinaModelo + (relatorioSelecionado.numeroMaquina ? ' ' + relatorioSelecionado.numeroMaquina : ''))
+          const equipTexto =
+            [relatorioSelecionado.maquinaModelo, relatorioSelecionado.numeroMaquina].filter(Boolean).join(' · ') || '—'
+          const equipVal = esc(equipTexto)
           const dataVal = esc(relatorioSelecionado.data)
-          const tituloDoc = esc(titFechamento) + ' — ' + lblRelatorio + ' ' + numVal
+          const tituloDoc = esc(titFechamento) + ' — ' + esc(lblRelatorio) + ' ' + numVal
           const localeStr = localeForLongDatetime(selectedLanguage)
           const dataHoraGerado = new Date().toLocaleString(localeStr)
           const footPdfFech =
             fechTotIva.incluir && fechTotIva.iva > 0.0001
               ? `<tr><td colspan="3" style="padding:12px 16px;text-align:right;background:rgba(0,0,0,0.04);font-size:12px;border-top:1px solid ${borderColor}">${esc(lblTotalSemIva)}</td><td colspan="2" style="padding:12px 16px;text-align:right;font-weight:600;border-top:1px solid ${borderColor}">${fechTotIva.liquido.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:12px 16px;text-align:right;background:rgba(0,0,0,0.04);font-size:12px">${esc(lblValorIva)} (${fechTotIva.taxa}%)</td><td colspan="2" style="padding:12px 16px;text-align:right;font-weight:600">${fechTotIva.iva.toFixed(2)} €</td></tr><tr><td colspan="3" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:700;font-size:13px;border-top:3px solid ${borderColor}">${esc(lblTotalComIva)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:800;font-size:18px;border-top:3px solid ${borderColor}">${fechTotIva.comIva.toFixed(2)} €</td></tr>`
               : `<tr><td colspan="3" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:700;font-size:13px;border-top:3px solid ${borderColor}">${esc(lblSomaTotal)}</td><td colspan="2" style="padding:18px 20px;text-align:right;background:${footBg};color:${footColor};font-weight:800;font-size:18px;border-top:3px solid ${borderColor}">${fechTotIva.comIva.toFixed(2)} €</td></tr>`
-          const tableContent = (thBg: string, thColor: string, footBg: string, footColor: string, borderColor: string) => `<div style="margin:24px 0;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);border:1px solid ${borderColor}"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="padding:14px 18px;text-align:left;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblCOD)}</th><th style="padding:14px 18px;text-align:left;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblDescricao)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblQuantidade)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblValorUnit)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblTotal)}</th></tr></thead><tbody class="pdf-tbody">${rows}</tbody><tfoot>${footPdfFech}</tfoot></table></div>`
+          const tableContent = (thBg: string, thColor: string, footBg: string, footColor: string, borderColor: string) => `<div style="margin:24px 0;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);border:1px solid ${borderColor}"><table class="fech-pdf-itens" style="width:100%;border-collapse:collapse;font-size:12px;min-width:0"><thead><tr><th style="padding:14px 18px;text-align:left;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblCOD)}</th><th style="padding:14px 18px;text-align:left;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblDescricao)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblQuantidade)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblValorUnit)}</th><th style="padding:14px 18px;text-align:right;background:${thBg};color:${thColor};font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid ${borderColor}">${esc(lblTotal)}</th></tr></thead><tbody class="pdf-tbody">${rows}</tbody><tfoot>${footPdfFech}</tfoot></table></div>`
           const rodape = `<div style="margin-top:32px;padding-top:20px;border-top:1px solid #e0e0e0;text-align:center"><div style="font-size:11px;color:#666;margin-bottom:4px">${esc(docGeradoEm)} ${dataHoraGerado}</div><div style="font-size:10px;color:#999">Nonato Service — Gestão Técnica</div></div>`
           const btnsNoPrint = `<div class="no-print" style="margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap"><button onclick="window.print()" style="padding:12px 24px;background:#00a650;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;box-shadow:0 2px 8px rgba(0,166,80,0.3)">${esc(lblImprimir)}</button><button onclick="window.close()" style="padding:12px 20px;background:#37474f;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px">${esc(lblFechar)}</button></div>`
           let headerHtml: string
@@ -43641,34 +43677,40 @@ A1;Peça exemplo;10`}
           let borderColor: string
           let rowBgEven: string
           let rowBgOdd: string
-          const infoGrid = (boxBg: string, boxBorder: string, labelColor: string, valueColor: string) => `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px"><div style="background:${boxBg};border:${boxBorder};padding:14px 18px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:${labelColor};margin-bottom:4px">${esc(lblCliente)}</div><div style="font-size:13px;font-weight:600;color:${valueColor}">${clienteVal}</div></div><div style="background:${boxBg};border:${boxBorder};padding:14px 18px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:${labelColor};margin-bottom:4px">${esc(lblNumRelatorio)}</div><div style="font-size:13px;font-weight:600;color:${valueColor}">${numVal}</div></div><div style="background:${boxBg};border:${boxBorder};padding:14px 18px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:${labelColor};margin-bottom:4px">${esc(lblEquipamento)}</div><div style="font-size:13px;font-weight:600;color:${valueColor}">${equipVal}</div></div><div style="background:${boxBg};border:${boxBorder};padding:14px 18px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:${labelColor};margin-bottom:4px">${esc(lblData)}</div><div style="font-size:13px;font-weight:600;color:${valueColor}">${dataVal}</div></div></div>`
+          const infoMetaTable = (labelColor: string, valueColor: string, sepColor: string, cellBg: string) => {
+            const row = (lbl: string, valEsc: string, last: boolean) => {
+              const bb = last ? 'none' : `1px solid ${sepColor}`
+              return `<tr><th scope="row" style="width:30%;padding:12px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:${labelColor};vertical-align:top;border-bottom:${bb};background:${cellBg}">${esc(lbl)}</th><td style="padding:12px 14px;font-size:14px;font-weight:600;color:${valueColor};vertical-align:top;word-break:break-word;overflow-wrap:anywhere;line-height:1.45;border-bottom:${bb};background:${cellBg}">${valEsc}</td></tr>`
+            }
+            return `<table role="presentation" class="fech-pdf-meta" style="width:100%;max-width:100%;border-collapse:collapse;margin:0 0 18px;border:1px solid ${sepColor};border-radius:10px;overflow:hidden;box-sizing:border-box"><tbody>${row(lblCliente, clienteVal, false)}${row(lblNumRelatorio, numVal, false)}${row(lblEquipamento, equipVal, false)}${row(lblData, dataVal, true)}</tbody></table>`
+          }
           if (modelo === 1) {
             bodyBg = '#fff'; bodyColor = '#111'; thBg = '#00a650'; thColor = '#fff'; footBg = '#e8f5e9'; footColor = '#00a650'; borderColor = '#a5d6a7'; rowBgEven = '#ffffff'; rowBgOdd = '#f1f8e9'
-            headerHtml = `<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:20px;border-bottom:3px solid #00a650;flex-wrap:wrap;gap:16px">${logoPart ? '<div style="flex-shrink:0">' + logoPart + '</div>' : ''}<div style="flex:1;min-width:200px"><div style="font-size:20px;font-weight:700;color:#00a650;margin-bottom:8px">${tituloDoc}</div>${infoGrid('#f1f8e9', '1px solid #c8e6c9', '#2e7d32', '#1b5e20')}</div></div>`
+            headerHtml = `<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:20px;border-bottom:3px solid #00a650;flex-wrap:wrap;gap:16px;max-width:100%;box-sizing:border-box">${logoPart ? '<div style="flex-shrink:0">' + logoPart + '</div>' : ''}<div style="flex:1;min-width:0;max-width:100%"><div style="font-size:20px;font-weight:700;color:#00a650;margin-bottom:12px;line-height:1.25;word-break:break-word">${tituloDoc}</div>${infoMetaTable('#2e7d32', '#1b5e20', '#c8e6c9', '#f1f8e9')}</div></div>`
           } else if (modelo === 2) {
             bodyBg = '#fafafa'; bodyColor = '#1565c0'; thBg = '#1565c0'; thColor = '#fff'; footBg = '#e3f2fd'; footColor = '#0d47a1'; borderColor = '#90caf9'; rowBgEven = '#ffffff'; rowBgOdd = '#e3f2fd'
-            headerHtml = `<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding:24px;background:linear-gradient(135deg,#e3f2fd 0%,#bbdefb 100%);border-radius:12px;border-left:6px solid #1565c0;flex-wrap:wrap;gap:20px">${logoPart ? '<div style="flex-shrink:0">' + logoPart + '</div>' : ''}<div style="flex:1"><div style="font-size:20px;font-weight:700;color:#0d47a1;margin-bottom:12px">${tituloDoc}</div>${infoGrid('#fff', '1px solid #90caf9', '#1565c0', '#0d47a1')}</div></div>`
+            headerHtml = `<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding:24px;background:linear-gradient(135deg,#e3f2fd 0%,#bbdefb 100%);border-radius:12px;border-left:6px solid #1565c0;flex-wrap:wrap;gap:20px;max-width:100%;box-sizing:border-box">${logoPart ? '<div style="flex-shrink:0">' + logoPart + '</div>' : ''}<div style="flex:1;min-width:0;max-width:100%"><div style="font-size:20px;font-weight:700;color:#0d47a1;margin-bottom:12px;line-height:1.25;word-break:break-word">${tituloDoc}</div>${infoMetaTable('#1565c0', '#0d47a1', '#90caf9', '#fff')}</div></div>`
           } else if (modelo === 3) {
             bodyBg = '#fff'; bodyColor = '#212121'; thBg = '#37474f'; thColor = '#fff'; footBg = '#eceff1'; footColor = '#263238'; borderColor = '#cfd8dc'; rowBgEven = '#ffffff'; rowBgOdd = '#fafafa'
-            headerHtml = `<div style="margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid #e0e0e0">${logoPart ? '<div style="margin-bottom:16px">' + logoPart + '</div>' : ''}<div style="font-size:22px;font-weight:700;color:#212121;letter-spacing:-0.5px;margin-bottom:16px">${tituloDoc}</div>${infoGrid('#fafafa', '1px solid #e0e0e0', '#616161', '#212121')}</div>`
+            headerHtml = `<div style="margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid #e0e0e0;max-width:100%;box-sizing:border-box">${logoPart ? '<div style="margin-bottom:16px">' + logoPart + '</div>' : ''}<div style="font-size:22px;font-weight:700;color:#212121;letter-spacing:-0.5px;margin-bottom:16px;line-height:1.25;word-break:break-word">${tituloDoc}</div>${infoMetaTable('#616161', '#212121', '#e0e0e0', '#fafafa')}</div>`
           } else if (modelo === 4) {
             bodyBg = '#f5f5f5'; bodyColor = '#263238'; thBg = '#37474f'; thColor = '#fff'; footBg = '#546e7a'; footColor = '#fff'; borderColor = '#546e7a'; rowBgEven = '#ffffff'; rowBgOdd = '#eceff1'
-            headerHtml = `<div style="margin-bottom:24px;padding:24px;background:#37474f;color:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15)">${logoPart ? '<div style="margin-bottom:16px">' + logoPart + '</div>' : ''}<div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:16px">${tituloDoc}</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px"><div style="background:rgba(255,255,255,0.1);padding:12px 16px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;opacity:0.9">${esc(lblCliente)}</div><div style="font-size:13px;font-weight:600">${clienteVal}</div></div><div style="background:rgba(255,255,255,0.1);padding:12px 16px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;opacity:0.9">${esc(lblNumRelatorio)}</div><div style="font-size:13px;font-weight:600">${numVal}</div></div><div style="background:rgba(255,255,255,0.1);padding:12px 16px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;opacity:0.9">${esc(lblEquipamento)}</div><div style="font-size:13px;font-weight:600">${equipVal}</div></div><div style="background:rgba(255,255,255,0.1);padding:12px 16px;border-radius:8px"><div style="font-size:10px;text-transform:uppercase;opacity:0.9">${esc(lblData)}</div><div style="font-size:13px;font-weight:600">${dataVal}</div></div></div></div>`
+            headerHtml = `<div style="margin-bottom:24px;padding:24px;background:#37474f;color:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:100%;box-sizing:border-box">${logoPart ? '<div style="margin-bottom:16px">' + logoPart + '</div>' : ''}<div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:16px;line-height:1.25;word-break:break-word">${tituloDoc}</div>${infoMetaTable('rgba(255,255,255,0.88)', '#fff', 'rgba(255,255,255,0.22)', 'rgba(255,255,255,0.1)')}</div>`
           } else if (modelo === 5) {
             bodyBg = '#fff'; bodyColor = '#0d47a1'; thBg = '#0d47a1'; thColor = '#fff'; footBg = '#e3f2fd'; footColor = '#0d47a1'; borderColor = '#1565c0'; rowBgEven = '#ffffff'; rowBgOdd = '#e3f2fd'
-            headerHtml = `<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding:24px;background:linear-gradient(135deg,#1a237e 0%,#0d47a1 100%);color:#fff;border-radius:12px;flex-wrap:wrap;gap:20px">${logoPart ? '<div style="flex-shrink:0;filter:brightness(0) invert(1)">' + logoPart + '</div>' : ''}<div style="flex:1"><div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:12px">${tituloDoc}</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px"><div><div style="font-size:10px;text-transform:uppercase;opacity:0.85">${esc(lblCliente)}</div><div style="font-size:13px;font-weight:600">${clienteVal}</div></div><div><div style="font-size:10px;text-transform:uppercase;opacity:0.85">${esc(lblNumRelatorio)}</div><div style="font-size:13px;font-weight:600">${numVal}</div></div><div><div style="font-size:10px;text-transform:uppercase;opacity:0.85">${esc(lblEquipamento)}</div><div style="font-size:13px;font-weight:600">${equipVal}</div></div><div><div style="font-size:10px;text-transform:uppercase;opacity:0.85">${esc(lblData)}</div><div style="font-size:13px;font-weight:600">${dataVal}</div></div></div></div></div>`
+            headerHtml = `<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding:24px;background:linear-gradient(135deg,#1a237e 0%,#0d47a1 100%);color:#fff;border-radius:12px;flex-wrap:wrap;gap:20px;max-width:100%;box-sizing:border-box">${logoPart ? '<div style="flex-shrink:0;filter:brightness(0) invert(1)">' + logoPart + '</div>' : ''}<div style="flex:1;min-width:0;max-width:100%"><div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:12px;line-height:1.25;word-break:break-word">${tituloDoc}</div>${infoMetaTable('rgba(255,255,255,0.88)', '#fff', 'rgba(255,255,255,0.25)', 'rgba(255,255,255,0.12)')}</div></div>`
           } else if (modelo === 6) {
             bodyBg = '#fff8f0'; bodyColor = '#e65100'; thBg = '#ff6f00'; thColor = '#fff'; footBg = '#ffe0b2'; footColor = '#e65100'; borderColor = '#ffcc80'; rowBgEven = '#ffffff'; rowBgOdd = '#fff3e0'
-            headerHtml = `<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:20px;border-bottom:4px solid #ff6f00;flex-wrap:wrap;gap:16px">${logoPart ? '<div style="flex-shrink:0">' + logoPart + '</div>' : ''}<div style="flex:1"><div style="font-size:20px;font-weight:700;color:#e65100;margin-bottom:12px">${tituloDoc}</div>${infoGrid('#fff3e0', '2px solid #ffcc80', '#bf360c', '#e65100')}</div></div>`
+            headerHtml = `<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:20px;border-bottom:4px solid #ff6f00;flex-wrap:wrap;gap:16px;max-width:100%;box-sizing:border-box">${logoPart ? '<div style="flex-shrink:0">' + logoPart + '</div>' : ''}<div style="flex:1;min-width:0;max-width:100%"><div style="font-size:20px;font-weight:700;color:#e65100;margin-bottom:12px;line-height:1.25;word-break:break-word">${tituloDoc}</div>${infoMetaTable('#bf360c', '#e65100', '#ffcc80', '#fff3e0')}</div></div>`
           } else if (modelo === 7) {
             bodyBg = '#fafaf8'; bodyColor = '#3e2723'; thBg = '#5d4037'; thColor = '#fff'; footBg = '#d7ccc8'; footColor = '#3e2723'; borderColor = '#8d6e63'; rowBgEven = '#ffffff'; rowBgOdd = '#efebe9'
-            headerHtml = `<div style="margin-bottom:24px;padding:28px;background:linear-gradient(135deg,#5d4037 0%,#3e2723 100%);color:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.12)">${logoPart ? '<div style="margin-bottom:16px">' + logoPart + '</div>' : ''}<div style="font-size:20px;font-weight:700;color:#efebe9;margin-bottom:16px">${tituloDoc}</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px"><div style="background:rgba(255,255,255,0.12);padding:14px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.2)"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;opacity:0.9">${esc(lblCliente)}</div><div style="font-size:13px;font-weight:600">${clienteVal}</div></div><div style="background:rgba(255,255,255,0.12);padding:14px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.2)"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;opacity:0.9">${esc(lblNumRelatorio)}</div><div style="font-size:13px;font-weight:600">${numVal}</div></div><div style="background:rgba(255,255,255,0.12);padding:14px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.2)"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;opacity:0.9">${esc(lblEquipamento)}</div><div style="font-size:13px;font-weight:600">${equipVal}</div></div><div style="background:rgba(255,255,255,0.12);padding:14px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.2)"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;opacity:0.9">${esc(lblData)}</div><div style="font-size:13px;font-weight:600">${dataVal}</div></div></div></div>`
+            headerHtml = `<div style="margin-bottom:24px;padding:28px;background:linear-gradient(135deg,#5d4037 0%,#3e2723 100%);color:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-width:100%;box-sizing:border-box">${logoPart ? '<div style="margin-bottom:16px">' + logoPart + '</div>' : ''}<div style="font-size:20px;font-weight:700;color:#efebe9;margin-bottom:16px;line-height:1.25;word-break:break-word">${tituloDoc}</div>${infoMetaTable('rgba(255,255,255,0.9)', '#efebe9', 'rgba(255,255,255,0.22)', 'rgba(255,255,255,0.12)')}</div>`
           } else {
             bodyBg = '#fff'; bodyColor = '#000'; thBg = '#212121'; thColor = '#fff'; footBg = '#212121'; footColor = '#fff'; borderColor = '#424242'; rowBgEven = '#ffffff'; rowBgOdd = '#fafafa'
-            headerHtml = `<div style="margin-bottom:28px;border:2px solid #212121;padding:24px">${logoPart ? '<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #212121">' + logoPart + '</div>' : ''}<div style="font-size:18px;font-weight:700;color:#212121;margin-bottom:20px;font-family:Georgia,serif">${tituloDoc}</div><table style="width:100%;border-collapse:collapse"><tr><td style="padding:8px 0;border-bottom:1px solid #e0e0e0;font-size:10px;text-transform:uppercase;color:#616161;width:22%">${esc(lblCliente)}</td><td style="padding:8px 0;border-bottom:1px solid #e0e0e0;font-weight:600">${clienteVal}</td></tr><tr><td style="padding:8px 0;border-bottom:1px solid #e0e0e0;font-size:10px;text-transform:uppercase;color:#616161">${esc(lblNumRelatorio)}</td><td style="padding:8px 0;border-bottom:1px solid #e0e0e0;font-weight:600">${numVal}</td></tr><tr><td style="padding:8px 0;border-bottom:1px solid #e0e0e0;font-size:10px;text-transform:uppercase;color:#616161">${esc(lblEquipamento)}</td><td style="padding:8px 0;border-bottom:1px solid #e0e0e0;font-weight:600">${equipVal}</td></tr><tr><td style="padding:8px 0;font-size:10px;text-transform:uppercase;color:#616161">${esc(lblData)}</td><td style="padding:8px 0;font-weight:600">${dataVal}</td></tr></table></div>`
+            headerHtml = `<div style="margin-bottom:28px;border:2px solid #212121;padding:24px;max-width:100%;box-sizing:border-box">${logoPart ? '<div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #212121">' + logoPart + '</div>' : ''}<div style="font-size:18px;font-weight:700;color:#212121;margin-bottom:20px;font-family:Georgia,serif;line-height:1.25;word-break:break-word">${tituloDoc}</div><table role="presentation" style="width:100%;border-collapse:collapse"><tr><th scope="row" style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-size:10px;text-transform:uppercase;color:#616161;width:28%;text-align:left;vertical-align:top">${esc(lblCliente)}</th><td style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-weight:600;vertical-align:top;word-break:break-word;overflow-wrap:anywhere;line-height:1.45">${clienteVal}</td></tr><tr><th scope="row" style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-size:10px;text-transform:uppercase;color:#616161;text-align:left;vertical-align:top">${esc(lblNumRelatorio)}</th><td style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-weight:600;vertical-align:top;word-break:break-word;overflow-wrap:anywhere">${numVal}</td></tr><tr><th scope="row" style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-size:10px;text-transform:uppercase;color:#616161;text-align:left;vertical-align:top">${esc(lblEquipamento)}</th><td style="padding:10px 0;border-bottom:1px solid #e0e0e0;font-weight:600;vertical-align:top;word-break:break-word;overflow-wrap:anywhere">${equipVal}</td></tr><tr><th scope="row" style="padding:10px 0;font-size:10px;text-transform:uppercase;color:#616161;text-align:left;vertical-align:top">${esc(lblData)}</th><td style="padding:10px 0;font-weight:600;vertical-align:top;word-break:break-word;overflow-wrap:anywhere">${dataVal}</td></tr></table></div>`
           }
           const pdfRowStyles = `.pdf-tbody tr:nth-child(odd){background:${rowBgEven}}.pdf-tbody tr:nth-child(even){background:${rowBgOdd}}`
-          const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(titFechamento)} - ${esc(relatorioSelecionado.numero)}</title><style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:24px;color:${bodyColor};font-size:12px;background:${bodyBg};line-height:1.4}${pdfRowStyles}.no-print{display:block}@media print{.no-print{display:none!important}}</style></head><body>${btnsNoPrint}${headerHtml}${tableContent(thBg, thColor, footBg, footColor, borderColor)}${rodape}</body></html>`
+          const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(titFechamento)} - ${esc(relatorioSelecionado.numero)}</title><style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,Arial,sans-serif;margin:0;padding:24px;color:${bodyColor};font-size:12px;background:${bodyBg};line-height:1.4;max-width:100%;box-sizing:border-box}${pdfRowStyles}.fech-pdf-itens{min-width:0;width:100%}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.no-print{display:none!important}.fech-pdf-itens{font-size:10px}.fech-pdf-itens th,.fech-pdf-itens td{padding:8px 10px!important}}.no-print{display:block}</style></head><body>${btnsNoPrint}${headerHtml}${tableContent(thBg, thColor, footBg, footColor, borderColor)}${rodape}</body></html>`
           const printWin = window.open('', '_blank')
           if (!printWin) { alert((safeT as any)?.permitaPopupsPDF || 'Permita pop-ups para gerar o PDF.'); return }
           printWin.document.write(html)
@@ -54208,6 +54250,9 @@ A1;Peça exemplo;10`}
                         return
                       }
                       
+                      if (isNonatoDemoBuild()) {
+                        return
+                      }
                       const response = await fetch('/api/data/load?key=nonato-pedidos-separacao')
                       if (response.ok) {
                         const data = await response.json()
@@ -58754,6 +58799,9 @@ A1;Peça exemplo;10`}
         }
         
         // Fallback: tentar carregar via API direta
+        if (isNonatoDemoBuild()) {
+          return
+        }
         const response = await fetch('/api/data/load?key=nonato-orcamentos-avulso')
         if (response.ok) {
           const data = await response.json()

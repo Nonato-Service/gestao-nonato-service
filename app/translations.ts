@@ -494,6 +494,8 @@ export const translations = {
       'Substituir os dados no SERVIDOR pelos deste aparelho? Confirme se esta cópia é a que quer manter. Os outros equipamentos deverão depois carregar do servidor.',
     syncPushOk: 'Dados enviados ao servidor. Nos outros aparelhos, abra a app e use «Carregar do servidor» (ou o aviso laranja) para ficarem iguais.',
     syncPushFail: 'Não foi possível enviar. Verifique a ligação ao mesmo site/servidor em todos os aparelhos.',
+    nonatoDemoSemEnvioServidor:
+      'Esta cópia é DEMO: não existe envio ao servidor — os dados ficam só neste dispositivo (navegador).',
     syncAdminJump: 'Sincronização entre aparelhos',
     syncAdminSectionTitle: 'Sincronização entre aparelhos',
     syncAdminSectionHint:

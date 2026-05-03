@@ -1,6 +1,7 @@
 // Funções para salvar e carregar dados do servidor (com suporte offline)
 
 import { mergeManuaisFamiliasGrupos } from './manuaisMerge'
+import { isNonatoDemoBuild } from './nonatoDemoMode'
 import { applyRevisionFromSaveResponse, fetchSyncStatus } from './syncRevision'
 import {
   saveManuaisFamiliasGruposToIdb,
@@ -167,6 +168,10 @@ function createTimeoutSignal(timeoutMs: number): AbortSignal {
 
 // Verificar se o servidor está online
 async function checkServerOnline(): Promise<boolean> {
+  if (isNonatoDemoBuild()) {
+    serverOffline = true
+    return false
+  }
   if (!isOnline()) {
     serverOffline = true
     return false
@@ -191,6 +196,7 @@ async function checkServerOnline(): Promise<boolean> {
 
 // Processar fila de sincronização (quando voltar online)
 export async function processSyncQueue(): Promise<{ synced: number; failed: number }> {
+  if (isNonatoDemoBuild()) return { synced: 0, failed: 0 }
   if (!isOnline()) return { synced: 0, failed: 0 }
   const queue = getSyncQueue()
   if (queue.length === 0) return { synced: 0, failed: 0 }
@@ -219,6 +225,7 @@ export function getPendingSyncCount(): number {
 const MANUAIS_KEY = 'nonato-manuais-familias-grupos'
 
 async function _doSaveToServer(key: string, value: any): Promise<boolean> {
+  if (isNonatoDemoBuild()) return true
   try {
     const payloadStr = typeof value === 'string' ? value : JSON.stringify(value)
     const isLargeString =
@@ -258,6 +265,9 @@ async function _doSaveToServer(key: string, value: any): Promise<boolean> {
 
 // Salvar um item específico
 export async function saveToServer(key: string, value: any): Promise<boolean> {
+  if (isNonatoDemoBuild()) {
+    return true
+  }
   const requestKey = `save:${key}`
   if (pendingSaveByKey.has(requestKey)) {
     coalesceNextValueByKey.set(key, value)
@@ -362,6 +372,9 @@ export type LoadAllFromServerResult = { data: Record<string, any>; ok: boolean }
 const LOAD_ALL_TIMEOUT_MS = 25_000
 
 async function loadAllFromServerOnce(): Promise<LoadAllFromServerResult> {
+  if (isNonatoDemoBuild()) {
+    return { data: {}, ok: false }
+  }
   if (!isOnline()) {
     serverOffline = true
     return { data: {}, ok: false }
@@ -471,6 +484,9 @@ export async function collectAllLocalNonatoDataForSync(): Promise<Record<string,
 
 /** Envia toda a cópia local para o servidor (substitui ficheiros no servidor pelos deste aparelho). Uma revisão. */
 export async function pushAllLocalStorageToServer(): Promise<{ ok: boolean; error?: string }> {
+  if (isNonatoDemoBuild()) {
+    return { ok: true }
+  }
   try {
     const data = await collectAllLocalNonatoDataForSync()
     if (Object.keys(data).length === 0) {
@@ -493,6 +509,9 @@ export async function saveAllToServer(
   opts?: { timeoutMs?: number }
 ): Promise<boolean> {
   const timeoutMs = opts?.timeoutMs ?? 10000
+  if (isNonatoDemoBuild()) {
+    return true
+  }
   if (!isOnline()) {
     serverOffline = true
     for (const [key, value] of Object.entries(data)) {

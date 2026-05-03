@@ -4,6 +4,7 @@ import { AdicionarServicosStyle } from './AdicionarServicosStyle'
 import { RegisterSW } from './RegisterSW'
 import { OfflineIndicator } from './components/OfflineIndicator'
 import { InstallPrompt } from './components/InstallPrompt'
+import { NonatoDemoShell } from './components/NonatoDemoShell'
 
 // Evita pré-renderização pesada no build (reduz memória no Railway)
 export const dynamic = 'force-dynamic'
@@ -58,6 +59,7 @@ export default function RootLayout({
         <RegisterSW />
         <InstallPrompt />
         <OfflineIndicator />
+        <NonatoDemoShell />
       </body>
     </html>
   )

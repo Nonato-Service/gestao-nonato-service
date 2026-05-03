@@ -3,6 +3,8 @@
  * Evita substituir dados locais pelos do servidor sem confirmação quando ambos divergem.
  */
 
+import { isNonatoDemoBuild } from './nonatoDemoMode'
+
 const LS_LAST_ACCEPTED = 'nonato-sync-last-accepted-revision'
 
 const SKIP_LOCAL_SCAN_KEYS = new Set([
@@ -39,6 +41,7 @@ export function setLastAcceptedRevision(rev: number): void {
 
 export async function fetchSyncStatus(): Promise<{ revision: number; updatedAt: string } | null> {
   if (typeof window === 'undefined') return null
+  if (isNonatoDemoBuild()) return null
   try {
     const ctrl = new AbortController()
     const t = setTimeout(() => ctrl.abort(), 5000)
