@@ -26625,29 +26625,29 @@ const nextF = familias.filter(x => x !== f)
                           <div
                             key={l.id}
                             style={{
-                              padding: '10px',
+                              padding: '10px 12px',
                               backgroundColor: '#222',
                               borderRadius: '8px',
                               border: '1px solid rgba(0, 255, 0, 0.2)',
-                              display: 'flex',
-                              alignItems: 'center',
+                              display: 'grid',
+                              gridTemplateColumns: '56px minmax(0, 1fr) auto',
                               gap: '10px',
+                              alignItems: 'center',
                               minWidth: 0,
                               maxWidth: '100%',
-                              overflow: 'hidden',
                               boxSizing: 'border-box',
                             }}
                           >
-                            <div style={{ width: '56px', height: '40px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ width: '56px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '4px', overflow: 'hidden' }}>
                               {l.type === 'image' && l.data ? (
                                 <img src={l.data} alt={l.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                               ) : null}
                             </div>
-                            <span style={{ fontSize: '12px', flex: '1 1 0%', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={l.name || l.id}>{l.name || l.id}</span>
+                            <span style={{ fontSize: '12px', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={l.name || l.id}>{l.name || l.id}</span>
                             <button
                               type="button"
-                              className="btn-danger"
-                              style={{ padding: '4px 8px', fontSize: '11px', flexShrink: 0, whiteSpace: 'nowrap' }}
+                              className="btn-danger btn-danger--inline"
+                              style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap', justifySelf: 'end' }}
                               onClick={() => {
                                 const next = logosRelatorios.filter((x) => x.id !== l.id)
                                 setLogosRelatorios(next)
