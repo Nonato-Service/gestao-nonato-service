@@ -6771,6 +6771,19 @@ export default function Dashboard() {
         if (typeof window !== 'undefined' && (serverLogoTypePref === null || serverLogoTypePref === '')) {
           serverLogoTypePref = localStorage.getItem('nonato-logo-type')
         }
+        // Se este aparelho tem imagem gravada (tipo + data URL), preferir imagem mesmo quando o servidor
+        // ainda diz «video» e o MP4 antigo existe no disco — evita o F5 voltar ao vídeo após mudar para imagem.
+        if (typeof window !== 'undefined') {
+          try {
+            const lsType = localStorage.getItem('nonato-logo-type')
+            const lsLogo = localStorage.getItem('nonato-logo')
+            if (lsType === 'image' && lsLogo && lsLogo.startsWith('data:image/')) {
+              serverLogoTypePref = 'image'
+            }
+          } catch {
+            /* ignorar */
+          }
+        }
 
         if (serverLogoTypePref === 'image') {
           let chosenLogo: string | null = (await loadFromServer('nonato-logo')) as string | null
@@ -6885,15 +6898,15 @@ export default function Dashboard() {
             }
           } else {
             console.warn('Logo encontrado mas parece estar corrompido, ignorando...')
+            try {
+              localStorage.removeItem('nonato-logo')
+              localStorage.removeItem('nonato-logo-type')
+            } catch {
+              /* ignorar */
+            }
             savedLogo = null
           }
         }
-      }
-      
-      // Se não encontrou logo válido, limpar tudo
-      if (!savedLogo && typeof window !== 'undefined') {
-        localStorage.removeItem('nonato-logo')
-        localStorage.removeItem('nonato-logo-type')
       }
 
       // Carregar logo do dashboard (tela inicial) — priorizar o tipo guardado (image/video) para refletir a última escolha do utilizador
@@ -6905,6 +6918,17 @@ export default function Dashboard() {
         if (typeof window !== 'undefined' && (preferredType === null || preferredType === '')) {
           const localType = localStorage.getItem('nonato-logo-dashboard-type')
           if (localType) preferredType = localType
+        }
+        if (typeof window !== 'undefined') {
+          try {
+            const lsType = localStorage.getItem('nonato-logo-dashboard-type')
+            const lsLogo = localStorage.getItem('nonato-logo-dashboard')
+            if (lsType === 'image' && lsLogo && lsLogo.startsWith('data:image/')) {
+              preferredType = 'image'
+            }
+          } catch {
+            /* ignorar */
+          }
         }
         // 2) Se o utilizador guardou uma IMAGEM, carregar a imagem (servidor ou localStorage)
         if (preferredType === 'image') {
@@ -9574,6 +9598,14 @@ export default function Dashboard() {
         }
         setLogoUrl('/api/video/logo')
         setLogoType('video')
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.removeItem('nonato-logo')
+          } catch {
+            /* ignorar */
+          }
+        }
+        await saveData('nonato-logo', '', true, true).catch(() => {})
         await saveData('nonato-logo-type', 'video', true, true)
       } else {
         const result = draft.imageDataUrl || draft.previewUrl
@@ -9691,6 +9723,14 @@ export default function Dashboard() {
         }
         setLogoUrlDashboard('/api/video/logo-dashboard')
         setLogoTypeDashboard('video')
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.removeItem('nonato-logo-dashboard')
+          } catch {
+            /* ignorar */
+          }
+        }
+        await saveData('nonato-logo-dashboard', '', true, true).catch(() => {})
         await saveData('nonato-logo-dashboard-type', 'video', true, true)
       } else {
         const result = draft.imageDataUrl || draft.previewUrl
@@ -9713,6 +9753,7 @@ export default function Dashboard() {
               'Gravado neste aparelho, mas o servidor não confirmou. Após recarregar, este dispositivo mantém o logo; outros podem mostrar o antigo até sincronizar.'
           )
         }
+        await fetch('/api/video/logo-dashboard', { method: 'DELETE' }).catch(() => {})
       }
       try {
         const st = await fetchSyncStatus()
