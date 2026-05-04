@@ -1,14 +1,19 @@
 @echo off
 chcp 65001 >nul
-set "ORI=C:\Users\W10\biblia-nonato-service"
-set "DST=%~dp0"
-if not exist "%ORI%\css\style.css" (
-  echo ERRO: Nao encontrei a pasta original:
-  echo   %ORI%
-  echo Edite este .bat e defina ORI= para o caminho correto da biblia-nonato-service.
+call "%~dp0carregar-origem.bat"
+if errorlevel 1 (
   pause
   exit /b 1
 )
+set "DST=%~dp0"
+
+REM Opcional: sincronizar style.css via Node (usa config-origem-copia.json)
+pushd "%~dp0.."
+if exist "package.json" (
+  where npm >nul 2>nul && call npm run biblio:css-portavel 2>nul
+)
+popd
+
 echo A copiar de:
 echo   %ORI%
 echo Para:

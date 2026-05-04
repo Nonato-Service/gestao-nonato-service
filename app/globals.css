@@ -9730,11 +9730,42 @@ button.dia-trabalho-acao-btn--del:hover {
 .ns-diario-modal__topbar {
   flex-shrink: 0;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
+  gap: 12px;
   padding: 10px 16px 8px;
   border-bottom: 1px solid rgba(0, 255, 122, 0.14);
   background: rgba(0, 0, 0, 0.32);
+}
+
+.ns-diario-modal__toggle-topo {
+  font-size: 11px !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ns-diario-modal--topo-retraido .ns-diario-modal__collapse-region {
+  display: none !important;
+}
+
+.ns-diario-modal--topo-retraido .ns-diario-composer {
+  padding-top: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(148, 163, 148, 0.12);
+}
+
+.ns-diario-modal--topo-retraido .ns-diario-composer__input {
+  min-height: 72px !important;
+  max-height: 160px;
+}
+
+.ns-diario-modal--topo-retraido .ns-diario-composer__hint {
+  display: none;
+}
+
+.ns-diario-modal--topo-retraido .ns-diario-list-wrap {
+  flex: 1 1 0;
+  min-height: min(62vh, 560px);
 }
 
 .ns-diario-modal__sair {

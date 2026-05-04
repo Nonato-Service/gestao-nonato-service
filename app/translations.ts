@@ -1689,6 +1689,8 @@ export const translations = {
       'Com URL configurada: ao sair do campo de código ou ao premir «Buscar na URL», tenta-se obter a ficha na loja e gravar a peça na biblioteca.',
     pecaLookupAgendaDica:
       'Com URL configurada: se o código não existir na biblioteca, tenta-se importar da loja antes de mostrar «não encontrada».',
+    diarioPedidosBtnRetrairTopo: 'Retrair',
+    diarioPedidosBtnExpandirTopo: 'Expandir',
     importacaoPreviewColImagem: 'Img',
     importacaoPecasEmBreve: 'Aqui você poderá importar peças em lote (planilha Excel, CSV) para a Biblioteca de Peças. Em breve mais opções.',
     cadastroPecas: 'Cadastro de Peças',

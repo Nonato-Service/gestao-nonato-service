@@ -1,0 +1,4 @@
+{
+  "nota": "Copie este ficheiro para config-origem-copia.json (mesma pasta). raizProjetoOriginal = pasta onde existe css/style.css (pode ser nome totalmente diferente). Caminho relativo à raiz do repo gestao-tecnica-nonato-service (pasta pai de biblioteca-tecnica-site) ou caminho absoluto.",
+  "raizProjetoOriginal": "../COLOQUE_AQUI_O_NOME_DA_SUA_PASTA"
+}

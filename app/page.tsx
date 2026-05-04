@@ -354,6 +354,7 @@ type DiarioPedidoItem = {
 }
 
 const DIARIO_PEDIDOS_DIA_STORAGE_KEY = 'nonato-diario-pedidos-dia'
+const DIARIO_PEDIDOS_MODAL_TOPO_RETRAIDO_KEY = 'nonato-diario-modal-topo-retraido'
 const DIARIO_PEDIDO_ANEXOS_MAX = 4
 
 function normalizeDiarioAnexos(raw: unknown): DiarioPedidoAnexo[] | undefined {
@@ -2526,6 +2527,7 @@ export default function Dashboard() {
   const [diarioPedidoEditAnexos, setDiarioPedidoEditAnexos] = useState<DiarioPedidoAnexo[]>([])
   const [diarioPedidoImgBusy, setDiarioPedidoImgBusy] = useState(false)
   const [diarioPedidosBusca, setDiarioPedidosBusca] = useState('')
+  const [diarioPedidosModalTopoRetraido, setDiarioPedidosModalTopoRetraido] = useState(false)
   const diarioPedidosHydratedRef = useRef(false)
   const diarioPedidoImgInputRef = useRef<HTMLInputElement | null>(null)
   const diarioPedidoImgTargetRef = useRef<'composer' | 'edit' | null>(null)
@@ -3139,6 +3141,22 @@ export default function Dashboard() {
         if (!cancelled) {
           diarioPedidosHydratedRef.current = true
         }
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const raw = await loadData(DIARIO_PEDIDOS_MODAL_TOPO_RETRAIDO_KEY)
+        if (cancelled) return
+        if (raw === true || raw === 1 || raw === '1') setDiarioPedidosModalTopoRetraido(true)
+      } catch {
+        /* ignore */
       }
     })()
     return () => {
@@ -66650,7 +66668,10 @@ A1;Peça exemplo;10`}
           }}
           onClick={() => setShowDiarioPedidosModal(false)}
         >
-          <div className="modal diario-pedidos-modal-shell ns-diario-modal" onClick={(e) => e.stopPropagation()}>
+          <div
+            className={`modal diario-pedidos-modal-shell ns-diario-modal${diarioPedidosModalTopoRetraido ? ' ns-diario-modal--topo-retraido' : ''}`}
+            onClick={(e) => e.stopPropagation()}
+          >
             <input
               ref={diarioPedidoImgInputRef}
               type="file"
@@ -66662,6 +66683,28 @@ A1;Peça exemplo;10`}
             <div className="ns-diario-modal__topbar">
               <button
                 type="button"
+                className="ns-diario-btn ns-diario-btn--ghost ns-diario-modal__toggle-topo"
+                onClick={() => {
+                  setDiarioPedidosModalTopoRetraido((v) => {
+                    const next = !v
+                    void saveData(DIARIO_PEDIDOS_MODAL_TOPO_RETRAIDO_KEY, next)
+                    return next
+                  })
+                }}
+                title={
+                  diarioPedidosModalTopoRetraido
+                    ? (safeT as any)?.diarioPedidosBtnExpandirTopo || 'Mostrar cabeçalho e resumo'
+                    : (safeT as any)?.diarioPedidosBtnRetrairTopo || 'Retrair cabeçalho (mais espaço para o quadro)'
+                }
+                aria-expanded={!diarioPedidosModalTopoRetraido}
+                aria-controls="diario-pedidos-modal-collapse-region"
+              >
+                {diarioPedidosModalTopoRetraido
+                  ? (safeT as any)?.diarioPedidosBtnExpandirTopo || 'Expandir'
+                  : (safeT as any)?.diarioPedidosBtnRetrairTopo || 'Retrair'}
+              </button>
+              <button
+                type="button"
                 className="ns-diario-btn ns-diario-btn--ghost ns-diario-modal__sair"
                 onClick={() => setShowDiarioPedidosModal(false)}
                 title={(safeT as any)?.diarioPedidosBtnSair || 'Sair'}
@@ -66670,7 +66713,8 @@ A1;Peça exemplo;10`}
                 {(safeT as any)?.diarioPedidosBtnSair || 'Sair'}
               </button>
             </div>
-            <header className="ns-diario-modal__hero">
+            <div id="diario-pedidos-modal-collapse-region" className="ns-diario-modal__collapse-region">
+              <header className="ns-diario-modal__hero">
               <div className="ns-diario-modal__title-wrap">
                 <div className="ns-diario-modal__eyebrow">{(safeT as any)?.diarioPedidosTitle || 'DIÁRIO DE ANOTAÇÃO'}</div>
                 <h2 id="diario-pedidos-modal-title" className="ns-diario-modal__title">
@@ -66693,9 +66737,9 @@ A1;Peça exemplo;10`}
                   </div>
                 </div>
               </div>
-            </header>
+              </header>
 
-            <div className="ns-diario-resumo" role="group" aria-label={(safeT as any)?.diarioPedidosResumoAria || 'Resumo das anotações'}>
+              <div className="ns-diario-resumo" role="group" aria-label={(safeT as any)?.diarioPedidosResumoAria || 'Resumo das anotações'}>
               <div className="ns-diario-resumo__card ns-diario-resumo__card--total">
                 <span className="ns-diario-resumo__value" aria-hidden>
                   {diarioPedidosResumo.total}
@@ -66716,6 +66760,7 @@ A1;Peça exemplo;10`}
                 </span>
                 <span className="ns-diario-resumo__label">{(safeT as any)?.diarioPedidosResumoResolvidas || 'Resolvidas'}</span>
                 <span className="ns-diario-resumo__hint">{(safeT as any)?.diarioPedidosResumoResolvidasHint || 'concluídas'}</span>
+              </div>
               </div>
             </div>
 
