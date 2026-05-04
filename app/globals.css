@@ -10272,6 +10272,22 @@ button.dia-trabalho-acao-btn--del:hover {
   outline-offset: 2px;
 }
 
+.ns-diario-entry__titulo-btn--nome-so {
+  gap: 0;
+}
+
+.ns-diario-entry__titulo-btn--nome-so:hover .ns-diario-entry__titulo {
+  text-decoration: underline;
+}
+
+.ns-diario-entry__titulo--so {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #f1f5f9;
+  word-break: break-word;
+}
+
 .ns-diario-entry__titulo {
   font-size: 15px;
   font-weight: 700;

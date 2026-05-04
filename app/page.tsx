@@ -2551,7 +2551,8 @@ export default function Dashboard() {
   const [diarioComposeClienteSel, setDiarioComposeClienteSel] = useState<string>('')
   const [diarioComposeClienteNomeLivre, setDiarioComposeClienteNomeLivre] = useState('')
   const [diarioPedidosModalTopoRetraido, setDiarioPedidosModalTopoRetraido] = useState(false)
-  const [diarioPedidoDetalheAbertoPorId, setDiarioPedidoDetalheAbertoPorId] = useState<Record<string, boolean>>({})
+  /** Só uma linha do diário expandida de cada vez (clique noutro nome retrai o anterior). */
+  const [diarioPedidoExpandidoId, setDiarioPedidoExpandidoId] = useState<string | null>(null)
   const diarioPedidosHydratedRef = useRef(false)
   const diarioPedidoImgInputRef = useRef<HTMLInputElement | null>(null)
   const diarioPedidoImgTargetRef = useRef<'composer' | 'edit' | null>(null)
@@ -22793,7 +22794,7 @@ export default function Dashboard() {
     setDiarioPedidoImgBusy(false)
     setDiarioPedidoEditandoId(null)
     setDiarioPedidoEditDraft('')
-    setDiarioPedidoDetalheAbertoPorId({})
+    setDiarioPedidoExpandidoId(null)
     setDiarioComposeClienteSel('')
     setDiarioComposeClienteNomeLivre('')
   }, [showDiarioPedidosModal])
@@ -67057,15 +67058,21 @@ A1;Peça exemplo;10`}
                         ? (safeT as any)?.diarioPedidosTituloSoImagem || 'Anotação com imagens'
                         : '')
                     const diarioLinhasTarefa = diarioPedidoLinhasTarefas(diarioCorpoTexto)
+                    /** Na lista colapsada: só o nome do cliente (ou rótulo mínimo se só imagens; notas antigas: 1.ª tarefa). */
+                    const diarioNomeListaSobrio =
+                      diarioTituloLinha.trim() ||
+                      (diarioNAnexos > 0 ? (safeT as any)?.diarioPedidosTituloSoImagem || '…' : '') ||
+                      (diarioLinhasTarefa[0] ? diarioLinhasTarefa[0] : '')
                     const diarioClienteFicha =
                       item.clienteCadastroId != null && item.clienteCadastroId !== ''
                         ? clientes.find((c) => c.id === item.clienteCadastroId)
                         : undefined
                     const diarioPrecisaExpandir =
+                      diarioTituloLinha.trim().length > 0 ||
                       diarioCorpoTexto.length > 0 ||
                       diarioNAnexos > 0 ||
                       (item.clienteCadastroId != null && item.clienteCadastroId !== '')
-                    const diarioDetalheAberto = !diarioPrecisaExpandir || diarioPedidoDetalheAbertoPorId[item.id] === true
+                    const diarioDetalheAberto = diarioPedidoExpandidoId === item.id
                     return (
                       <li key={item.id} className={`ns-diario-entry ${cardTone}`}>
                         <div className="ns-diario-entry__head">
@@ -67081,18 +67088,15 @@ A1;Peça exemplo;10`}
                             >
                               {statusLabel}
                             </span>
-                            {diarioPrecisaExpandir && diarioTituloLista ? (
+                            {diarioPrecisaExpandir && diarioNomeListaSobrio ? (
                               <button
                                 type="button"
-                                className="ns-diario-entry__titulo-btn"
+                                className="ns-diario-entry__titulo-btn ns-diario-entry__titulo-btn--nome-so"
                                 onClick={() =>
-                                  setDiarioPedidoDetalheAbertoPorId((m) => ({
-                                    ...m,
-                                    [item.id]: !diarioDetalheAberto,
-                                  }))
+                                  setDiarioPedidoExpandidoId((cur) => (cur === item.id ? null : item.id))
                                 }
                                 aria-expanded={diarioDetalheAberto}
-                                aria-label={`${diarioTituloLista}. ${
+                                aria-label={`${diarioNomeListaSobrio}. ${
                                   diarioDetalheAberto
                                     ? (safeT as any)?.diarioPedidosOcultarDetalhe || 'Ocultar detalhe'
                                     : (safeT as any)?.diarioPedidosVerDetalhe || 'Ver informação completa'
@@ -67103,11 +67107,10 @@ A1;Peça exemplo;10`}
                                     : (safeT as any)?.diarioPedidosVerDetalhe || 'Ver informação completa'
                                 }
                               >
-                                <span className="ns-diario-entry__titulo">{diarioTituloLista}</span>
-                                <span className="ns-diario-entry__titulo-chevron" aria-hidden>
-                                  {diarioDetalheAberto ? '▲' : '▼'}
-                                </span>
+                                <span className="ns-diario-entry__titulo">{diarioNomeListaSobrio}</span>
                               </button>
+                            ) : diarioNomeListaSobrio ? (
+                              <span className="ns-diario-entry__titulo ns-diario-entry__titulo--so">{diarioNomeListaSobrio}</span>
                             ) : null}
                           </div>
                           <div className="ns-diario-entry__head-actions">
@@ -67116,7 +67119,7 @@ A1;Peça exemplo;10`}
                                 type="button"
                                 className="ns-diario-btn ns-diario-btn--ghost"
                                 onClick={() => {
-                                  setDiarioPedidoDetalheAbertoPorId((m) => ({ ...m, [item.id]: true }))
+                                  setDiarioPedidoExpandidoId(item.id)
                                   setDiarioPedidoEditandoId(item.id)
                                   setDiarioPedidoEditDraft(item.texto)
                                   setDiarioPedidoEditAnexos((item.anexos || []).map((a) => ({ ...a })))
@@ -67134,6 +67137,7 @@ A1;Peça exemplo;10`}
                                   setDiarioPedidoEditandoId(null)
                                   setDiarioPedidoEditDraft('')
                                 }
+                                setDiarioPedidoExpandidoId((cur) => (cur === item.id ? null : cur))
                                 setDiarioPedidosItems((p) => p.filter((x) => x.id !== item.id))
                               }}
                               title={safeT?.delete || 'Eliminar'}
