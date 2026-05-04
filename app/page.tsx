@@ -351,6 +351,8 @@ type DiarioPedidoItem = {
   criadoEm: string
   atualizadoEm?: string
   anexos?: DiarioPedidoAnexo[]
+  /** Quando a anotação foi criada a partir do cadastro — permite mostrar morada/contactos ao expandir */
+  clienteCadastroId?: string
 }
 
 const DIARIO_PEDIDOS_DIA_STORAGE_KEY = 'nonato-diario-pedidos-dia'
@@ -384,6 +386,14 @@ function diarioPedidoTituloECorpo(texto: string): { titulo: string; corpo: strin
   const titulo = lines[i].trim()
   const corpo = lines.slice(i + 1).join('\n').trim()
   return { titulo, corpo }
+}
+
+/** Linhas de tarefas (corpo do diário), uma bolinha por linha na lista. */
+function diarioPedidoLinhasTarefas(corpo: string): string[] {
+  return String(corpo ?? '')
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean)
 }
 
 async function compressImageFileToJpegDataUrl(file: File): Promise<string> {
@@ -2538,6 +2548,8 @@ export default function Dashboard() {
   const [diarioPedidoEditAnexos, setDiarioPedidoEditAnexos] = useState<DiarioPedidoAnexo[]>([])
   const [diarioPedidoImgBusy, setDiarioPedidoImgBusy] = useState(false)
   const [diarioPedidosBusca, setDiarioPedidosBusca] = useState('')
+  const [diarioComposeClienteSel, setDiarioComposeClienteSel] = useState<string>('')
+  const [diarioComposeClienteNomeLivre, setDiarioComposeClienteNomeLivre] = useState('')
   const [diarioPedidosModalTopoRetraido, setDiarioPedidosModalTopoRetraido] = useState(false)
   const [diarioPedidoDetalheAbertoPorId, setDiarioPedidoDetalheAbertoPorId] = useState<Record<string, boolean>>({})
   const diarioPedidosHydratedRef = useRef(false)
@@ -3143,7 +3155,11 @@ export default function Dashboard() {
           }).map((o) => {
             const item = o as DiarioPedidoItem
             const anexos = normalizeDiarioAnexos((item as { anexos?: unknown }).anexos)
-            return anexos?.length ? { ...item, anexos } : { ...item, anexos: undefined }
+            const rawCid = (item as { clienteCadastroId?: unknown }).clienteCadastroId
+            const clienteCadastroId =
+              typeof rawCid === 'string' && rawCid.trim() ? String(rawCid).trim() : undefined
+            const base = { ...item, clienteCadastroId, anexos: anexos?.length ? anexos : undefined }
+            return base
           }) as DiarioPedidoItem[]
           setDiarioPedidosItems(valid)
         }
@@ -22778,6 +22794,8 @@ export default function Dashboard() {
     setDiarioPedidoEditandoId(null)
     setDiarioPedidoEditDraft('')
     setDiarioPedidoDetalheAbertoPorId({})
+    setDiarioComposeClienteSel('')
+    setDiarioComposeClienteNomeLivre('')
   }, [showDiarioPedidosModal])
 
   // Marcar como lidas as mensagens destinadas ao usuário atual do Hub quando ele abre uma conversa
@@ -66781,7 +66799,52 @@ A1;Peça exemplo;10`}
               <div className="ns-diario-composer__label">{(safeT as any)?.diarioPedidosSecComposer || 'Nova anotação'}</div>
               <p className="ns-diario-composer__format-hint">
                 {(safeT as any)?.diarioPedidosDicaPrimeiraLinha ||
-                  'Na primeira linha o cliente ou título; nas seguintes o que fazer. No quadro use as cores e clique no título para ver tudo.'}
+                  'Escolha o cliente (cadastro ou outro nome). Depois uma linha por tarefa; no quadro aparecem com marca à frente.'}
+              </p>
+              <div className="ns-diario-composer__cliente-row">
+                <label className="ns-diario-composer__sublabel" htmlFor="ns-diario-composer-cliente">
+                  {(safeT as any)?.diarioPedidosLabelCliente || 'Cliente'}
+                </label>
+                <select
+                  id="ns-diario-composer-cliente"
+                  className="ns-diario-composer__select"
+                  value={diarioComposeClienteSel}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    setDiarioComposeClienteSel(v)
+                    if (v !== '__livre__') setDiarioComposeClienteNomeLivre('')
+                  }}
+                >
+                  <option value="">
+                    {(safeT as any)?.diarioPedidosClienteEscolher || '— Escolher cliente —'}
+                  </option>
+                  {[...clientes]
+                    .sort((a, b) =>
+                      (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', undefined, { sensitivity: 'base' })
+                    )
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.nomeEmpresa || c.id}
+                      </option>
+                    ))}
+                  <option value="__livre__">
+                    {(safeT as any)?.diarioPedidosClienteOutro || 'Outro (não está no cadastro)'}
+                  </option>
+                </select>
+                {diarioComposeClienteSel === '__livre__' ? (
+                  <input
+                    type="text"
+                    className="ns-diario-composer__cliente-livre"
+                    value={diarioComposeClienteNomeLivre}
+                    onChange={(e) => setDiarioComposeClienteNomeLivre(e.target.value)}
+                    placeholder={(safeT as any)?.diarioPedidosClienteNomeLivrePlaceholder || 'Nome do cliente ou empresa'}
+                    autoComplete="off"
+                  />
+                ) : null}
+              </div>
+              <p className="ns-diario-composer__format-hint ns-diario-composer__format-hint--secondary">
+                {(safeT as any)?.diarioPedidosDicaTarefasLinhas ||
+                  'Uma linha por tarefa; no quadro cada linha aparece com uma bolinha.'}
               </p>
               <textarea
                 className="ns-diario-composer__input"
@@ -66789,8 +66852,9 @@ A1;Peça exemplo;10`}
                 onChange={(e) => setDiarioPedidoDraft(e.target.value)}
                 rows={4}
                 placeholder={
+                  (safeT as any)?.diarioPedidosPlaceholderTarefas ||
                   (safeT as any)?.diarioPedidosPlaceholder ||
-                  'Contacto, peça, relatório, lembrete operacional…'
+                  'Ex.: confirmar visita\nenviar orçamento'
                 }
               />
               {diarioPedidoComposerAnexos.length > 0 ? (
@@ -66828,8 +66892,39 @@ A1;Peça exemplo;10`}
                   type="button"
                   className="btn-primary ns-diario-btn ns-diario-btn--primary"
                   onClick={() => {
-                    const texto = diarioPedidoDraft.trim()
-                    if (!texto && diarioPedidoComposerAnexos.length === 0) return
+                    const tarefasBloco = diarioPedidoDraft.trim()
+                    if (!tarefasBloco && diarioPedidoComposerAnexos.length === 0) return
+                    let nomeCliente = ''
+                    let clienteCadastroId: string | undefined
+                    if (diarioComposeClienteSel && diarioComposeClienteSel !== '__livre__') {
+                      const cli = clientes.find((c) => c.id === diarioComposeClienteSel)
+                      if (!cli) {
+                        window.alert(
+                          (safeT as any)?.diarioPedidosErroCliente ||
+                            'Escolha um cliente do cadastro ou indique o nome em «Outro».'
+                        )
+                        return
+                      }
+                      nomeCliente = (cli.nomeEmpresa || '').trim() || cli.id
+                      clienteCadastroId = cli.id
+                    } else if (diarioComposeClienteSel === '__livre__') {
+                      nomeCliente = diarioComposeClienteNomeLivre.trim()
+                      if (!nomeCliente) {
+                        window.alert(
+                          (safeT as any)?.diarioPedidosErroCliente ||
+                            'Escolha um cliente do cadastro ou indique o nome em «Outro».'
+                        )
+                        return
+                      }
+                    } else {
+                      window.alert(
+                        (safeT as any)?.diarioPedidosErroCliente ||
+                          'Escolha um cliente do cadastro ou indique o nome em «Outro».'
+                      )
+                      return
+                    }
+                    const texto =
+                      tarefasBloco.length > 0 ? `${nomeCliente}\n${tarefasBloco}` : `${nomeCliente}\n`
                     const id = `dp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
                     const criadoEm = new Date().toISOString()
                     const anexos =
@@ -66839,9 +66934,21 @@ A1;Peça exemplo;10`}
                     setDiarioPedidoEditandoId(null)
                     setDiarioPedidoEditDraft('')
                     setDiarioPedidoEditAnexos([])
-                    setDiarioPedidosItems((p) => [...p, { id, texto, status: 'planeado', criadoEm, anexos }])
+                    setDiarioPedidosItems((p) => [
+                      ...p,
+                      {
+                        id,
+                        texto,
+                        status: 'planeado',
+                        criadoEm,
+                        anexos,
+                        ...(clienteCadastroId ? { clienteCadastroId } : {}),
+                      },
+                    ])
                     setDiarioPedidoDraft('')
                     setDiarioPedidoComposerAnexos([])
+                    setDiarioComposeClienteSel('')
+                    setDiarioComposeClienteNomeLivre('')
                   }}
                 >
                   {(safeT as any)?.diarioPedidosAdicionar || 'Registar anotação'}
@@ -66949,7 +67056,15 @@ A1;Peça exemplo;10`}
                       (diarioNAnexos > 0
                         ? (safeT as any)?.diarioPedidosTituloSoImagem || 'Anotação com imagens'
                         : '')
-                    const diarioPrecisaExpandir = diarioCorpoTexto.length > 0 || diarioNAnexos > 0
+                    const diarioLinhasTarefa = diarioPedidoLinhasTarefas(diarioCorpoTexto)
+                    const diarioClienteFicha =
+                      item.clienteCadastroId != null && item.clienteCadastroId !== ''
+                        ? clientes.find((c) => c.id === item.clienteCadastroId)
+                        : undefined
+                    const diarioPrecisaExpandir =
+                      diarioCorpoTexto.length > 0 ||
+                      diarioNAnexos > 0 ||
+                      (item.clienteCadastroId != null && item.clienteCadastroId !== '')
                     const diarioDetalheAberto = !diarioPrecisaExpandir || diarioPedidoDetalheAbertoPorId[item.id] === true
                     return (
                       <li key={item.id} className={`ns-diario-entry ${cardTone}`}>
@@ -67081,6 +67196,13 @@ A1;Peça exemplo;10`}
                                     )
                                     return
                                   }
+                                  const { titulo: titEdit } = diarioPedidoTituloECorpo(texto)
+                                  const titNorm = titEdit.trim().toLowerCase()
+                                  const matchedCli =
+                                    titNorm.length > 0
+                                      ? clientes.find((c) => (c.nomeEmpresa || '').trim().toLowerCase() === titNorm)
+                                      : undefined
+                                  const clienteCadastroIdNext = matchedCli?.id
                                   const anexos =
                                     diarioPedidoEditAnexos.length > 0
                                       ? diarioPedidoEditAnexos.map((a) => ({ ...a }))
@@ -67088,7 +67210,15 @@ A1;Peça exemplo;10`}
                                   setDiarioPedidosItems((p) =>
                                     p.map((x) =>
                                       x.id === item.id
-                                        ? { ...x, texto, anexos, atualizadoEm: new Date().toISOString() }
+                                        ? {
+                                            ...x,
+                                            texto,
+                                            anexos,
+                                            atualizadoEm: new Date().toISOString(),
+                                            ...(clienteCadastroIdNext
+                                              ? { clienteCadastroId: clienteCadastroIdNext }
+                                              : { clienteCadastroId: undefined }),
+                                          }
                                         : x
                                     )
                                   )
@@ -67114,9 +67244,110 @@ A1;Peça exemplo;10`}
                           </>
                         ) : (
                           <>
-                            {diarioPrecisaExpandir && !diarioDetalheAberto ? null : item.texto.trim() ? (
-                              <p className="ns-diario-entry__text">{item.texto}</p>
-                            ) : null}
+                            {diarioPrecisaExpandir && !diarioDetalheAberto ? null : (
+                              <>
+                                {item.clienteCadastroId ? (
+                                  diarioClienteFicha ? (
+                                    <div className="ns-diario-entry__ficha">
+                                      <div className="ns-diario-entry__ficha-title">
+                                        {(safeT as any)?.diarioPedidosSecFichaCliente ||
+                                          'Dados para concluir o serviço'}
+                                      </div>
+                                      <dl className="ns-diario-entry__ficha-dl">
+                                        {(diarioClienteFicha.nomeEmpresa || '').trim() ? (
+                                          <>
+                                            <dt className="ns-diario-entry__ficha-dt">
+                                              {(safeT as any)?.diarioPedidosFichaEmpresa || 'Empresa'}
+                                            </dt>
+                                            <dd className="ns-diario-entry__ficha-dd">{diarioClienteFicha.nomeEmpresa}</dd>
+                                          </>
+                                        ) : null}
+                                        {(diarioClienteFicha.morada || '').trim() ||
+                                        (diarioClienteFicha.codigoPostal || '').trim() ||
+                                        (diarioClienteFicha.localidade || '').trim() ? (
+                                          <>
+                                            <dt className="ns-diario-entry__ficha-dt">
+                                              {(safeT as any)?.diarioPedidosFichaMorada || 'Morada'}
+                                            </dt>
+                                            <dd className="ns-diario-entry__ficha-dd">
+                                              {[
+                                                diarioClienteFicha.morada,
+                                                [diarioClienteFicha.codigoPostal, diarioClienteFicha.localidade]
+                                                  .filter(Boolean)
+                                                  .join(' ')
+                                                  .trim(),
+                                                diarioClienteFicha.conselho,
+                                                diarioClienteFicha.pais,
+                                              ]
+                                                .filter((x) => String(x || '').trim())
+                                                .join(' · ')}
+                                            </dd>
+                                          </>
+                                        ) : null}
+                                        {(diarioClienteFicha.telefones || '').trim() ? (
+                                          <>
+                                            <dt className="ns-diario-entry__ficha-dt">
+                                              {(safeT as any)?.diarioPedidosFichaTelefones || 'Telefones'}
+                                            </dt>
+                                            <dd className="ns-diario-entry__ficha-dd">{diarioClienteFicha.telefones}</dd>
+                                          </>
+                                        ) : null}
+                                        {(diarioClienteFicha.email || '').trim() ? (
+                                          <>
+                                            <dt className="ns-diario-entry__ficha-dt">
+                                              {(safeT as any)?.diarioPedidosFichaEmail || 'E-mail'}
+                                            </dt>
+                                            <dd className="ns-diario-entry__ficha-dd">{diarioClienteFicha.email}</dd>
+                                          </>
+                                        ) : null}
+                                        {(diarioClienteFicha.contato || '').trim() ? (
+                                          <>
+                                            <dt className="ns-diario-entry__ficha-dt">
+                                              {(safeT as any)?.diarioPedidosFichaContato || 'Contacto'}
+                                            </dt>
+                                            <dd className="ns-diario-entry__ficha-dd">{diarioClienteFicha.contato}</dd>
+                                          </>
+                                        ) : null}
+                                        {(diarioClienteFicha.numeroContribuicaoFiscal || '').trim() ? (
+                                          <>
+                                            <dt className="ns-diario-entry__ficha-dt">
+                                              {(safeT as any)?.diarioPedidosFichaNif || 'NIF'}
+                                            </dt>
+                                            <dd className="ns-diario-entry__ficha-dd">
+                                              {diarioClienteFicha.numeroContribuicaoFiscal}
+                                            </dd>
+                                          </>
+                                        ) : null}
+                                      </dl>
+                                    </div>
+                                  ) : (
+                                    <div className="ns-diario-entry__ficha ns-diario-entry__ficha--aviso">
+                                      {(safeT as any)?.diarioPedidosClienteCadastroRemovido ||
+                                        'Este cliente já não está no cadastro. Use as tarefas abaixo e o histórico local se precisar.'}
+                                    </div>
+                                  )
+                                ) : diarioTituloLinha.trim() ? (
+                                  <div className="ns-diario-entry__ficha ns-diario-entry__ficha--aviso">
+                                    {(safeT as any)?.diarioPedidosClienteNaoCadastro ||
+                                      'Cliente não cadastrado — use as tarefas em baixo; pode criar a ficha em Cadastro de clientes se precisar.'}
+                                  </div>
+                                ) : null}
+                                {diarioLinhasTarefa.length > 0 ? (
+                                  <>
+                                    <div className="ns-diario-entry__ficha-title ns-diario-entry__ficha-title--tasks">
+                                      {(safeT as any)?.diarioPedidosSecTarefas || 'O que fazer'}
+                                    </div>
+                                    <ul className="ns-diario-entry__tasks">
+                                      {diarioLinhasTarefa.map((ln, idx) => (
+                                        <li key={`${item.id}-t-${idx}`}>{ln}</li>
+                                      ))}
+                                    </ul>
+                                  </>
+                                ) : diarioCorpoTexto.trim() ? (
+                                  <p className="ns-diario-entry__text">{diarioCorpoTexto}</p>
+                                ) : null}
+                              </>
+                            )}
                             {diarioPrecisaExpandir && !diarioDetalheAberto
                               ? null
                               : item.anexos?.length

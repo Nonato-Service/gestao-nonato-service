@@ -9964,6 +9964,46 @@ button.dia-trabalho-acao-btn--del:hover {
   color: rgba(148, 163, 184, 0.95);
 }
 
+.ns-diario-composer__format-hint--secondary {
+  margin-top: 0;
+}
+
+.ns-diario-composer__cliente-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ns-diario-composer__sublabel {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(167, 243, 208, 0.75);
+}
+
+.ns-diario-composer__select,
+.ns-diario-composer__cliente-livre {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(100, 116, 139, 0.4);
+  background: rgba(15, 23, 42, 0.45);
+  color: #f8fafc;
+  font-size: 14px;
+  line-height: 1.4;
+  outline: none;
+  font-family: inherit;
+}
+
+.ns-diario-composer__select:focus,
+.ns-diario-composer__cliente-livre:focus {
+  border-color: rgba(0, 255, 122, 0.45);
+  box-shadow: 0 0 0 1px rgba(0, 255, 122, 0.18);
+}
+
 .ns-diario-composer__label {
   font-size: 10px;
   font-weight: 800;
@@ -10303,6 +10343,68 @@ button.dia-trabalho-acao-btn--del:hover {
   font-size: 14px;
   line-height: 1.55;
   white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ns-diario-entry__ficha {
+  margin: 0 16px 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.4);
+  font-size: 13px;
+  line-height: 1.45;
+  color: #e2e8f0;
+}
+
+.ns-diario-entry__ficha--aviso {
+  border-color: rgba(148, 163, 184, 0.28);
+  color: rgba(226, 232, 240, 0.92);
+}
+
+.ns-diario-entry__ficha-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  color: rgba(148, 163, 184, 0.9);
+  margin-bottom: 8px;
+}
+
+.ns-diario-entry__ficha-title--tasks {
+  margin: 10px 16px 6px;
+  padding: 0;
+}
+
+.ns-diario-entry__ficha-dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.ns-diario-entry__ficha-dt {
+  margin: 0;
+  color: rgba(148, 163, 184, 0.85);
+  font-weight: 600;
+}
+
+.ns-diario-entry__ficha-dd {
+  margin: 0;
+  word-break: break-word;
+}
+
+.ns-diario-entry__tasks {
+  margin: 0 16px 8px;
+  padding: 0 0 0 20px;
+  list-style: disc;
+  color: #e2e8f0;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.ns-diario-entry__tasks li {
+  margin-bottom: 6px;
   word-break: break-word;
 }
 
