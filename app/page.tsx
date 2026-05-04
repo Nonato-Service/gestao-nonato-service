@@ -339,15 +339,68 @@ type SidebarButton = {
 }
 
 type DiarioPedidoStatus = 'planeado' | 'em_curso' | 'concluido'
+type DiarioPedidoAnexo = {
+  id: string
+  nome: string
+  dataUrl: string
+}
 type DiarioPedidoItem = {
   id: string
   texto: string
   status: DiarioPedidoStatus
   criadoEm: string
   atualizadoEm?: string
+  anexos?: DiarioPedidoAnexo[]
 }
 
 const DIARIO_PEDIDOS_DIA_STORAGE_KEY = 'nonato-diario-pedidos-dia'
+const DIARIO_PEDIDO_ANEXOS_MAX = 4
+
+function normalizeDiarioAnexos(raw: unknown): DiarioPedidoAnexo[] | undefined {
+  if (!Array.isArray(raw)) return undefined
+  const out: DiarioPedidoAnexo[] = []
+  for (const a of raw) {
+    if (!a || typeof a !== 'object') continue
+    const o = a as Record<string, unknown>
+    if (typeof o.id !== 'string' || typeof o.nome !== 'string' || typeof o.dataUrl !== 'string') continue
+    if (!String(o.dataUrl).startsWith('data:image/')) continue
+    out.push({
+      id: o.id,
+      nome: String(o.nome).slice(0, 160),
+      dataUrl: String(o.dataUrl),
+    })
+    if (out.length >= DIARIO_PEDIDO_ANEXOS_MAX) break
+  }
+  return out.length ? out : undefined
+}
+
+async function compressImageFileToJpegDataUrl(file: File): Promise<string> {
+  const bmp = await createImageBitmap(file)
+  try {
+    const maxW = 1400
+    const maxH = 1400
+    let { width: w, height: h } = bmp
+    const scale = Math.min(1, maxW / Math.max(1, w), maxH / Math.max(1, h))
+    const tw = Math.max(1, Math.round(w * scale))
+    const th = Math.max(1, Math.round(h * scale))
+    if (typeof document === 'undefined') throw new Error('no document')
+    const canvas = document.createElement('canvas')
+    canvas.width = tw
+    canvas.height = th
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('no canvas')
+    ctx.drawImage(bmp, 0, 0, tw, th)
+    let quality = 0.82
+    let dataUrl = canvas.toDataURL('image/jpeg', quality)
+    while (dataUrl.length > 960_000 && quality > 0.48) {
+      quality -= 0.06
+      dataUrl = canvas.toDataURL('image/jpeg', quality)
+    }
+    return dataUrl
+  } finally {
+    bmp.close()
+  }
+}
 
 const SIDEBAR_GROUPS: SidebarGroup[] = [
   'gestao-tecnica',
@@ -1136,6 +1189,53 @@ function sanitizarPecaBibliotecaImportacaoFlag(peca: PecaBiblioteca): PecaBiblio
 }
 
 const BIBLIOTECA_PECAS_ULTIMA_SELECAO_KEY = 'nonato-biblioteca-pecas-ultima-selecao'
+const NONATO_PECA_LOOKUP_URL_TEMPLATE_KEY = 'nonato-peca-lookup-url-template'
+
+/** URL de entrada da loja HOMAG (sem código no path); convertida automaticamente para pesquisa global. */
+const HOMAG_SHOP_PECA_LOOKUP_ROOT = 'https://shop.homag.com/s/?language=en_US'
+
+function buildPecaCatalogoUrlFromTemplate(template: string, codigo: string): string | null {
+  const rawCode = String(codigo || '').trim()
+  const tpl = String(template || '').trim()
+  if (!rawCode || !tpl) return null
+
+  const hasExplicitPlaceholder =
+    /\{codigo\}/i.test(tpl) || /\{codigopath\}/i.test(tpl) || /\{CODIGOPATH\}/i.test(tpl) || tpl.includes('*')
+
+  // HOMAG eShop: só a página da loja (ex.: …/s/?language=en_US) — monta pesquisa global com o mesmo idioma.
+  if (!hasExplicitPlaceholder) {
+    try {
+      const u = new URL(tpl)
+      if (/shop\.homag\.com$/i.test(u.hostname)) {
+        const path = (u.pathname || '/').replace(/\/+$/, '') || '/'
+        if (path === '/s') {
+          const language = u.searchParams.get('language') || 'en_US'
+          const term = encodeURIComponent(rawCode)
+          const out = `https://shop.homag.com/s/global-search/${term}?language=${encodeURIComponent(language)}`
+          return new URL(out).href
+        }
+      }
+    } catch {
+      /* continuar com marcadores clássicos */
+    }
+  }
+
+  const enc = encodeURIComponent(rawCode)
+  const encPath = encodeURI(rawCode)
+  let out = tpl
+  if (out.includes('{codigo}')) out = out.split('{codigo}').join(enc)
+  else if (out.includes('{CODIGO}')) out = out.split('{CODIGO}').join(enc)
+  else if (out.includes('{codigoPath}')) out = out.split('{codigoPath}').join(encPath)
+  else if (out.includes('{CODIGOPATH}')) out = out.split('{CODIGOPATH}').join(encPath)
+  else if (out.includes('*')) out = out.replace(/\*/g, enc)
+  else return null
+  if (!out.startsWith('http://') && !out.startsWith('https://')) return null
+  try {
+    return new URL(out).href
+  } catch {
+    return null
+  }
+}
 /** Valor do `<select>` de grupo na biblioteca: só peças sem `categoriaId` (continuam a aparecer na vista normal quando o filtro é «todos»). */
 const BIBLIOTECA_FILTRO_SEM_CATEGORIA = '__sem_categoria__'
 /** Decisão «cobrar / não cobrar» no resumo do relatório (por id do relatório) */
@@ -2422,8 +2522,13 @@ export default function Dashboard() {
   const [diarioPedidoDraft, setDiarioPedidoDraft] = useState('')
   const [diarioPedidoEditandoId, setDiarioPedidoEditandoId] = useState<string | null>(null)
   const [diarioPedidoEditDraft, setDiarioPedidoEditDraft] = useState('')
+  const [diarioPedidoComposerAnexos, setDiarioPedidoComposerAnexos] = useState<DiarioPedidoAnexo[]>([])
+  const [diarioPedidoEditAnexos, setDiarioPedidoEditAnexos] = useState<DiarioPedidoAnexo[]>([])
+  const [diarioPedidoImgBusy, setDiarioPedidoImgBusy] = useState(false)
   const [diarioPedidosBusca, setDiarioPedidosBusca] = useState('')
   const diarioPedidosHydratedRef = useRef(false)
+  const diarioPedidoImgInputRef = useRef<HTMLInputElement | null>(null)
+  const diarioPedidoImgTargetRef = useRef<'composer' | 'edit' | null>(null)
   /** true só após «Sair do sistema» confirmado — evita aviso ao fechar de forma segura. */
   const allowUnsafeBrowserExitRef = useRef(false)
   const [checklistAccessStep, setChecklistAccessStep] = useState<'message' | 'password'>('message')
@@ -3021,6 +3126,10 @@ export default function Dashboard() {
               typeof o.texto === 'string' &&
               (o.status === 'planeado' || o.status === 'em_curso' || o.status === 'concluido')
             )
+          }).map((o) => {
+            const item = o as DiarioPedidoItem
+            const anexos = normalizeDiarioAnexos((item as { anexos?: unknown }).anexos)
+            return anexos?.length ? { ...item, anexos } : { ...item, anexos: undefined }
           }) as DiarioPedidoItem[]
           setDiarioPedidosItems(valid)
         }
@@ -4724,6 +4833,8 @@ export default function Dashboard() {
   const [importacaoTextoColado, setImportacaoTextoColado] = useState('')
   /** Origem da loja (ex. https://shop.homag.com) para completar src relativos tipo /s/sfsites/... (Salesforce B2B) */
   const [importacaoLojaBaseUrl, setImportacaoLojaBaseUrl] = useState('')
+  const [pecaLookupUrlTemplate, setPecaLookupUrlTemplate] = useState('')
+  const [pecaLookupLoading, setPecaLookupLoading] = useState(false)
   const [showImportacaoGuiaHomag, setShowImportacaoGuiaHomag] = useState(false)
   const [importacaoGuiaPlataforma, setImportacaoGuiaPlataforma] = useState<'windows' | 'android' | 'ipad'>('windows')
   const [filtroImportacaoPendente, setFiltroImportacaoPendente] = useState<'todos' | 'sem-grupo' | 'sem-subgrupo'>('todos')
@@ -7631,6 +7742,11 @@ export default function Dashboard() {
         setPecasBiblioteca(
           (savedPecasBiblioteca as PecaBiblioteca[]).map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
         )
+      }
+
+      const savedPecaLookupTpl = getData(NONATO_PECA_LOOKUP_URL_TEMPLATE_KEY)
+      if (typeof savedPecaLookupTpl === 'string') {
+        setPecaLookupUrlTemplate(savedPecaLookupTpl)
       }
 
       // Carregar categorias de peças
@@ -20861,6 +20977,139 @@ export default function Dashboard() {
     })
   }, [])
 
+  const importarPecaDoCatalogoUrl = useCallback(
+    async (codigoDigitado: string, opts?: { silent?: boolean }): Promise<PecaBiblioteca | null> => {
+      const cod = String(codigoDigitado || '').trim()
+      const silent = opts?.silent === true
+      const template = pecaLookupUrlTemplate.trim()
+      if (!cod) return null
+      if (!template) {
+        if (!silent) {
+          window.alert(
+            (t as any)?.pecaLookupSemTemplate ||
+              'Configure primeiro a «URL do catálogo por código» em Importação de peças (use {codigo} no endereço).'
+          )
+        }
+        return null
+      }
+      const url = buildPecaCatalogoUrlFromTemplate(template, cod)
+      if (!url) {
+        if (!silent) {
+          window.alert(
+            (t as any)?.pecaLookupPlaceholderInvalido ||
+              'A URL modelo deve ser https://… e incluir {codigo}, {codigoPath} ou * onde entra o código da peça.'
+          )
+        }
+        return null
+      }
+
+      const jaExiste = pecasBiblioteca.find((p) => normalizeImportKey(p.codigo) === normalizeImportKey(cod))
+      if (jaExiste) return jaExiste
+
+      setPecaLookupLoading(true)
+      try {
+        const res = await fetch('/api/import-from-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url }),
+        })
+        const text = await res.text()
+        let json: { ok?: boolean; error?: string; data?: string } = {}
+        try {
+          json = text.trim() ? JSON.parse(text) : {}
+        } catch {
+          if (!silent) {
+            window.alert((t as any)?.pecaLookupErro || 'Resposta inválida do servidor.')
+          }
+          return null
+        }
+        if (!res.ok || !json.ok || typeof json.data !== 'string') {
+          if (!silent) {
+            window.alert(json.error || (t as any)?.pecaLookupErro || 'Não foi possível obter a página do catálogo.')
+          }
+          return null
+        }
+        let parsed: PecaBiblioteca[]
+        try {
+          parsed = parseRawToPecas(json.data, importacaoLojaBaseUrl, url)
+        } catch {
+          if (!silent) {
+            window.alert(
+              (t as any)?.pecaLookupErroParse || 'Não foi possível extrair dados de peça nesta página (HTML/JSON).'
+            )
+          }
+          return null
+        }
+        if (!parsed.length) {
+          if (!silent) {
+            window.alert(
+              (t as any)?.pecaLookupNenhumResultado ||
+                'Nenhuma peça reconhecida na página devolvida. Verifique a URL ou copie o HTML para Importação.'
+            )
+          }
+          return null
+        }
+        const q = normalizeImportKey(cod)
+        const best =
+          parsed.find((p) => normalizeImportKey(p.codigo) === q) ||
+          parsed.find(
+            (p) =>
+              normalizeImportKey(p.codigo).includes(q) ||
+              (q.length >= 4 && q.includes(normalizeImportKey(p.codigo)))
+          ) ||
+          parsed[0]
+
+        const nova: PecaBiblioteca = {
+          ...best,
+          id: `pec-url-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          codigo: (best.codigo && String(best.codigo).trim()) || cod,
+          nome: (best.nome && String(best.nome).trim()) || (best.descricao && String(best.descricao).trim()) || cod,
+          dataCriacao: new Date().toISOString(),
+        }
+        const comCat = preencherPecaBibliotecaComUltimaCategoriaSeVazio(
+          nova,
+          ultimoGrupoSelecionado,
+          ultimoSubgrupoSelecionado,
+          categoriasPecas,
+          subcategoriasPecas
+        )
+        let inserida: PecaBiblioteca = comCat
+        setPecasBiblioteca((prev) => {
+          const dup = prev.find((p) => normalizeImportKey(p.codigo) === normalizeImportKey(comCat.codigo))
+          if (dup) {
+            inserida = dup
+            return prev
+          }
+          const next = [...prev, comCat]
+          void saveData('nonato-pecas-biblioteca', next)
+          return next
+        })
+        return inserida
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e)
+        if (!silent) window.alert(msg || (t as any)?.pecaLookupErro || 'Erro ao contactar o catálogo.')
+        return null
+      } finally {
+        setPecaLookupLoading(false)
+      }
+    },
+    [
+      pecaLookupUrlTemplate,
+      importacaoLojaBaseUrl,
+      parseRawToPecas,
+      pecasBiblioteca,
+      t,
+      ultimoGrupoSelecionado,
+      ultimoSubgrupoSelecionado,
+      categoriasPecas,
+      subcategoriasPecas,
+    ]
+  )
+
+  useEffect(() => {
+    void saveData(NONATO_PECA_LOOKUP_URL_TEMPLATE_KEY, pecaLookupUrlTemplate)
+  }, [pecaLookupUrlTemplate])
+
   const handleBuscarImportacaoUrl = useCallback(async () => {
     const url = urlImportacaoPecas.trim()
     const isHomagUrl = /shop\.homag\.com/i.test(url)
@@ -22375,7 +22624,10 @@ export default function Dashboard() {
   const diarioPedidosOrdenadosFiltrados = useMemo(() => {
     const q = diarioPedidosBusca.trim().toLowerCase()
     if (q.length < 2) return diarioPedidosOrdenados
-    return diarioPedidosOrdenados.filter((i) => (i.texto || '').toLowerCase().includes(q))
+    return diarioPedidosOrdenados.filter((i) => {
+      if ((i.texto || '').toLowerCase().includes(q)) return true
+      return (i.anexos || []).some((a) => (a.nome || '').toLowerCase().includes(q))
+    })
   }, [diarioPedidosOrdenados, diarioPedidosBusca])
 
   const diarioPedidosResumo = useMemo(() => {
@@ -22418,6 +22670,59 @@ export default function Dashboard() {
     }
   }, [diarioPedidosLocale, showDiarioPedidosModal])
 
+  const handleDiarioEscolherImagem = useCallback((target: 'composer' | 'edit') => {
+    if (target === 'edit' && !diarioPedidoEditandoId) return
+    diarioPedidoImgTargetRef.current = target
+    diarioPedidoImgInputRef.current?.click()
+  }, [diarioPedidoEditandoId])
+
+  const handleDiarioImagemSelecionada = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const input = e.target
+      const file = input.files?.[0]
+      input.value = ''
+      const target = diarioPedidoImgTargetRef.current
+      diarioPedidoImgTargetRef.current = null
+      if (!file || !target) return
+      const t = (translations[translationBundleKey(selectedLanguage)] || translations['pt-BR']) as unknown as Record<
+        string,
+        string
+      >
+      if (!file.type.startsWith('image/')) {
+        window.alert(t?.diarioPedidosAnexoTipoInvalido || 'Escolha um ficheiro de imagem.')
+        return
+      }
+      if (target === 'edit' && !diarioPedidoEditandoId) return
+
+      setDiarioPedidoImgBusy(true)
+      try {
+        const dataUrl = await compressImageFileToJpegDataUrl(file)
+        const nome = file.name.replace(/\s+/g, ' ').slice(0, 120)
+        const push = (prev: DiarioPedidoAnexo[]): DiarioPedidoAnexo[] => {
+          if (prev.length >= DIARIO_PEDIDO_ANEXOS_MAX) {
+            window.alert(
+              t?.diarioPedidosAnexoLimite ||
+                `É possível anexar no máximo ${DIARIO_PEDIDO_ANEXOS_MAX} imagens por anotação.`
+            )
+            return prev
+          }
+          const id = `imx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+          return [...prev, { id, nome, dataUrl }]
+        }
+        if (target === 'composer') {
+          setDiarioPedidoComposerAnexos((p) => push(p))
+        } else {
+          setDiarioPedidoEditAnexos((p) => push(p))
+        }
+      } catch {
+        window.alert(t?.diarioPedidosAnexoErro || 'Não foi possível processar a imagem.')
+      } finally {
+        setDiarioPedidoImgBusy(false)
+      }
+    },
+    [diarioPedidoEditandoId, selectedLanguage]
+  )
+
   useEffect(() => {
     if (!showDiarioPedidosModal) return
     const onKey = (e: KeyboardEvent) => {
@@ -22426,6 +22731,7 @@ export default function Dashboard() {
       if (diarioPedidoEditandoId) {
         setDiarioPedidoEditandoId(null)
         setDiarioPedidoEditDraft('')
+        setDiarioPedidoEditAnexos([])
         return
       }
       setShowDiarioPedidosModal(false)
@@ -22433,6 +22739,15 @@ export default function Dashboard() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [showDiarioPedidosModal, diarioPedidoEditandoId])
+
+  useEffect(() => {
+    if (showDiarioPedidosModal) return
+    setDiarioPedidoComposerAnexos([])
+    setDiarioPedidoEditAnexos([])
+    setDiarioPedidoImgBusy(false)
+    setDiarioPedidoEditandoId(null)
+    setDiarioPedidoEditDraft('')
+  }, [showDiarioPedidosModal])
 
   // Marcar como lidas as mensagens destinadas ao usuário atual do Hub quando ele abre uma conversa
   useEffect(() => {
@@ -32418,11 +32733,27 @@ onKeyPress={(e) => {
                         <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px' }}>
                           {safeT?.buscarCodigoPeca || 'Buscar Peça por Código'} ({safeT?.daBiblioteca || 'da Biblioteca'})
                         </label>
-                        <div style={{ display: 'flex', gap: '10px' }}>
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
                           <input
                             type="text"
                             placeholder={safeT?.digiteCodigoPeca || 'Digite o código da peça...'}
                             value={codigoBuscaPeca}
+                            onBlur={async () => {
+                              const cod = codigoBuscaPeca.trim()
+                              if (!cod || !pecaLookupUrlTemplate.trim()) return
+                              if (pecasBiblioteca.some((p) => normalizeImportKey(p.codigo) === normalizeImportKey(cod))) return
+                              if (pecaSelecionadaBiblioteca) return
+                              const fetched = await importarPecaDoCatalogoUrl(cod, { silent: true })
+                              if (fetched) {
+                                setPecaSelecionadaBiblioteca(fetched)
+                                setNovaPeca((prev) => ({
+                                  ...prev,
+                                  codigo: fetched.codigo,
+                                  descricao: fetched.nome,
+                                  quantidade: prev.quantidade || '1',
+                                }))
+                              }
+                            }}
                             onChange={(e) => {
                               const codigo = e.target.value
                               setCodigoBuscaPeca(codigo)
@@ -32459,8 +32790,32 @@ onKeyPress={(e) => {
                                 })
                               }
                             }}
-                            style={{ flex: 1, padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '12px' }}
+                            style={{ flex: 1, minWidth: '160px', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', fontSize: '12px' }}
                           />
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            disabled={pecaLookupLoading || !codigoBuscaPeca.trim() || !pecaLookupUrlTemplate.trim()}
+                            onClick={async () => {
+                              const cod = codigoBuscaPeca.trim()
+                              if (!cod) return
+                              const fetched = await importarPecaDoCatalogoUrl(cod, { silent: false })
+                              if (fetched) {
+                                setPecaSelecionadaBiblioteca(fetched)
+                                setNovaPeca((prev) => ({
+                                  ...prev,
+                                  codigo: fetched.codigo,
+                                  descricao: fetched.nome,
+                                  quantidade: prev.quantidade || '1',
+                                }))
+                              }
+                            }}
+                            style={{ padding: '8px 12px', fontSize: '12px', whiteSpace: 'nowrap' }}
+                          >
+                            {pecaLookupLoading
+                              ? (safeT as any)?.pecaLookupBuscando || 'A buscar…'
+                              : (safeT as any)?.pecaLookupBtnBuscar || 'Buscar na URL'}
+                          </button>
                           <button
                             className="btn-primary"
                             onClick={() => {
@@ -32472,6 +32827,12 @@ onKeyPress={(e) => {
                             {safeT?.abrirBiblioteca || '📚 Abrir Biblioteca'}
                           </button>
                         </div>
+                        {pecaLookupUrlTemplate.trim() ? (
+                          <p style={{ fontSize: '10px', color: '#8899aa', margin: '6px 0 0' }}>
+                            {(safeT as any)?.pecaLookupRelatorioDica ||
+                              'Se o código não estiver na biblioteca, ao sair do campo ou ao premir «Buscar na URL», o sistema tenta obter dados na página configurada em Importação de peças.'}
+                          </p>
+                        ) : null}
                       </div>
 
                       {/* Exibir peça encontrada */}
@@ -38370,6 +38731,32 @@ onKeyPress={(e) => {
                       'Se o HTML tiver src="/s/... (Salesforce/Homag), preencha com o site da loja para a foto abrir na biblioteca.'}
                   </p>
                 </div>
+                <div style={{ marginBottom: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#9ad8ff', marginBottom: '6px' }}>
+                    {(safeT as any)?.pecaLookupUrlTemplateLabel || 'URL do catálogo por código (relatório / agenda)'}
+                  </label>
+                  <input
+                    type="url"
+                    value={pecaLookupUrlTemplate}
+                    onChange={(e) => setPecaLookupUrlTemplate(e.target.value)}
+                    placeholder={(safeT as any)?.pecaLookupUrlTemplatePlaceholder || HOMAG_SHOP_PECA_LOOKUP_ROOT}
+                    style={{
+                      width: '100%',
+                      maxWidth: '640px',
+                      padding: '10px 14px',
+                      backgroundColor: '#141414',
+                      border: '1px solid rgba(0, 180, 255, 0.35)',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      fontSize: '13px',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <p style={{ fontSize: '11px', color: '#777', margin: '6px 0 0', maxWidth: '720px', lineHeight: 1.45 }}>
+                    {(safeT as any)?.pecaLookupUrlTemplateHint ||
+                      'HOMAG: pode usar só https://shop.homag.com/s/?language=en_US (o código é acrescentado na pesquisa). Outras lojas: {codigo} ou * no URL. A página tem de ser legível pelo importador; a loja HOMAG muitas vezes exige JavaScript ou o script homag:import no PC.'}
+                  </p>
+                </div>
                 <p style={{ fontSize: '13px', margin: '16px 0 8px 0', color: '#aaa' }}>
                   {safeT?.importacaoColarDesc || 'Ou cole aqui o conteúdo JSON ou CSV (ex.: copiado do site ou de um ficheiro):'}
                 </p>
@@ -38796,6 +39183,32 @@ A1;Peça exemplo;10'
                   <p style={{ fontSize: '11px', color: '#777', margin: '6px 0 0', maxWidth: '640px', lineHeight: 1.45 }}>
                     {(safeT as any)?.importacaoLojaBaseUrlHint ||
                       'Se o HTML tiver src="/s/... (Salesforce/Homag), preencha com o site da loja para a foto abrir na biblioteca.'}
+                  </p>
+                </div>
+                <div style={{ marginBottom: '14px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#9ad8ff', marginBottom: '6px' }}>
+                    {(safeT as any)?.pecaLookupUrlTemplateLabel || 'URL do catálogo por código (relatório / agenda)'}
+                  </label>
+                  <input
+                    type="url"
+                    value={pecaLookupUrlTemplate}
+                    onChange={(e) => setPecaLookupUrlTemplate(e.target.value)}
+                    placeholder={(safeT as any)?.pecaLookupUrlTemplatePlaceholder || HOMAG_SHOP_PECA_LOOKUP_ROOT}
+                    style={{
+                      width: '100%',
+                      maxWidth: '640px',
+                      padding: '10px 14px',
+                      backgroundColor: '#141414',
+                      border: '1px solid rgba(0, 180, 255, 0.35)',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      fontSize: '13px',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <p style={{ fontSize: '11px', color: '#777', margin: '6px 0 0', maxWidth: '720px', lineHeight: 1.45 }}>
+                    {(safeT as any)?.pecaLookupUrlTemplateHint ||
+                      'HOMAG: pode usar só https://shop.homag.com/s/?language=en_US (o código é acrescentado na pesquisa). Outras lojas: {codigo} ou * no URL. A página tem de ser legível pelo importador; a loja HOMAG muitas vezes exige JavaScript ou o script homag:import no PC.'}
                   </p>
                 </div>
 
@@ -41412,57 +41825,79 @@ A1;Peça exemplo;10`}
                         <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px' }}>
                           {safeT?.adicionarPecasPorCodigo || 'Adicionar Peças por Código'}
                         </label>
-                        <div style={{ display: 'flex', gap: '10px' }}>
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
                           <input
                             type="text"
                             placeholder={safeT?.digiteCodigoPeca || 'Digite o código da peça...'}
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter') {
-                                const codigo = (e.target as HTMLInputElement).value.trim()
-                                if (codigo) {
-                                  const peca = pecasBiblioteca.find(p => p.codigo.toLowerCase() === codigo.toLowerCase())
-                                  if (peca) {
-                                    const pecasAtuais = agendaForm.pecasAnexadas || []
-                                    if (!pecasAtuais.includes(peca.id)) {
-                                      setAgendaForm({ ...agendaForm, pecasAnexadas: [...pecasAtuais, peca.id] })
-                                      ;(e.target as HTMLInputElement).value = ''
-                                    } else {
-                                      alert(safeT?.pecaJaAdicionada || 'Esta peça já foi adicionada!')
-                                    }
-                                  } else {
-                                    alert(safeT?.pecaNaoEncontrada || 'Peça não encontrada com este código!')
-                                  }
+                            onKeyDown={(e) => {
+                              if (e.key !== 'Enter') return
+                              e.preventDefault()
+                              void (async () => {
+                                const input = e.target as HTMLInputElement
+                                const codigo = input.value.trim()
+                                if (!codigo) return
+                                let peca: PecaBiblioteca | undefined = pecasBiblioteca.find(
+                                  (p) => p.codigo.toLowerCase() === codigo.toLowerCase()
+                                )
+                                if (!peca && pecaLookupUrlTemplate.trim()) {
+                                  peca = (await importarPecaDoCatalogoUrl(codigo, { silent: true })) || undefined
                                 }
-                              }
+                                if (!peca) {
+                                  window.alert(safeT?.pecaNaoEncontrada || 'Peça não encontrada com este código!')
+                                  return
+                                }
+                                const pecasAtuais = agendaForm.pecasAnexadas || []
+                                if (!pecasAtuais.includes(peca.id)) {
+                                  setAgendaForm({ ...agendaForm, pecasAnexadas: [...pecasAtuais, peca.id] })
+                                  input.value = ''
+                                } else {
+                                  window.alert(safeT?.pecaJaAdicionada || 'Esta peça já foi adicionada!')
+                                }
+                              })()
                             }}
-                            style={{ flex: 1, padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                            style={{ flex: 1, minWidth: '160px', padding: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                           />
                           <button
                             type="button"
+                            disabled={pecaLookupLoading}
                             onClick={(e) => {
-                              const input = (e.target as HTMLElement).previousElementSibling as HTMLInputElement
-                              const codigo = input.value.trim()
-                              if (codigo) {
-                                const peca = pecasBiblioteca.find(p => p.codigo.toLowerCase() === codigo.toLowerCase())
-                                if (peca) {
-                                  const pecasAtuais = agendaForm.pecasAnexadas || []
-                                  if (!pecasAtuais.includes(peca.id)) {
-                                    setAgendaForm({ ...agendaForm, pecasAnexadas: [...pecasAtuais, peca.id] })
-                                    input.value = ''
-                                  } else {
-                                    alert(safeT?.pecaJaAdicionada || 'Esta peça já foi adicionada!')
-                                  }
-                                } else {
-                                  alert(safeT?.pecaNaoEncontrada || 'Peça não encontrada com este código!')
+                              void (async () => {
+                                const input = (e.target as HTMLElement).previousElementSibling as HTMLInputElement
+                                const codigo = input?.value?.trim() || ''
+                                if (!codigo) return
+                                let peca: PecaBiblioteca | undefined = pecasBiblioteca.find(
+                                  (p) => p.codigo.toLowerCase() === codigo.toLowerCase()
+                                )
+                                if (!peca && pecaLookupUrlTemplate.trim()) {
+                                  peca = (await importarPecaDoCatalogoUrl(codigo, { silent: false })) || undefined
                                 }
-                              }
+                                if (!peca) {
+                                  window.alert(safeT?.pecaNaoEncontrada || 'Peça não encontrada com este código!')
+                                  return
+                                }
+                                const pecasAtuais = agendaForm.pecasAnexadas || []
+                                if (!pecasAtuais.includes(peca.id)) {
+                                  setAgendaForm({ ...agendaForm, pecasAnexadas: [...pecasAtuais, peca.id] })
+                                  input.value = ''
+                                } else {
+                                  window.alert(safeT?.pecaJaAdicionada || 'Esta peça já foi adicionada!')
+                                }
+                              })()
                             }}
                             className="btn-primary"
-                            style={{ padding: '10px 15px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                            style={{ padding: '10px 15px', fontSize: '13px', whiteSpace: 'nowrap', opacity: pecaLookupLoading ? 0.6 : 1 }}
                           >
-                            {safeT?.adicionar || 'Adicionar'}
+                            {pecaLookupLoading
+                              ? (safeT as any)?.pecaLookupBuscando || 'A buscar…'
+                              : safeT?.adicionar || 'Adicionar'}
                           </button>
                         </div>
+                        {pecaLookupUrlTemplate.trim() ? (
+                          <p style={{ fontSize: '10px', color: '#8899aa', margin: '6px 0 0' }}>
+                            {(safeT as any)?.pecaLookupAgendaDica ||
+                              'Se o código não existir na biblioteca, o sistema tenta importar da URL configurada em Importação de peças antes de avisar.'}
+                          </p>
+                        ) : null}
                         {agendaForm.pecasAnexadas && agendaForm.pecasAnexadas.length > 0 && (
                           <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#141414', borderRadius: '4px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                             <p style={{ fontSize: '12px', marginBottom: '8px', color: '#00ff00' }}>
@@ -66213,22 +66648,22 @@ A1;Peça exemplo;10`}
             zIndex: 10000,
             padding: 'max(12px, env(safe-area-inset-top, 0px)) 12px 12px',
           }}
-          onClick={() => {
-            setDiarioPedidoEditandoId(null)
-            setDiarioPedidoEditDraft('')
-            setShowDiarioPedidosModal(false)
-          }}
+          onClick={() => setShowDiarioPedidosModal(false)}
         >
           <div className="modal diario-pedidos-modal-shell ns-diario-modal" onClick={(e) => e.stopPropagation()}>
+            <input
+              ref={diarioPedidoImgInputRef}
+              type="file"
+              accept="image/*"
+              className="ns-diario-file-input-hidden"
+              onChange={handleDiarioImagemSelecionada}
+              aria-hidden
+            />
             <div className="ns-diario-modal__topbar">
               <button
                 type="button"
                 className="ns-diario-btn ns-diario-btn--ghost ns-diario-modal__sair"
-                onClick={() => {
-                  setDiarioPedidoEditandoId(null)
-                  setDiarioPedidoEditDraft('')
-                  setShowDiarioPedidosModal(false)
-                }}
+                onClick={() => setShowDiarioPedidosModal(false)}
                 title={(safeT as any)?.diarioPedidosBtnSair || 'Sair'}
                 aria-label={(safeT as any)?.diarioPedidosBtnSair || 'Sair'}
               >
@@ -66296,19 +66731,55 @@ A1;Peça exemplo;10`}
                   'Contacto, peça, relatório, lembrete operacional…'
                 }
               />
+              {diarioPedidoComposerAnexos.length > 0 ? (
+                <ul
+                  className="ns-diario-anexos"
+                  aria-label={(safeT as any)?.diarioPedidosAnexosListaAria || 'Imagens anexadas'}
+                >
+                  {diarioPedidoComposerAnexos.map((imx) => (
+                    <li key={imx.id} className="ns-diario-anexo">
+                      <img src={imx.dataUrl} alt="" className="ns-diario-anexo__thumb" />
+                      <button
+                        type="button"
+                        className="ns-diario-anexo__remove"
+                        onClick={() => setDiarioPedidoComposerAnexos((p) => p.filter((x) => x.id !== imx.id))}
+                        aria-label={(safeT as any)?.diarioPedidosAnexoRemover || 'Remover imagem'}
+                      >
+                        ×
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
               <div className="ns-diario-composer__actions">
+                <button
+                  type="button"
+                  className="btn-primary ns-diario-btn ns-diario-btn--ghost"
+                  disabled={diarioPedidoImgBusy || diarioPedidoComposerAnexos.length >= DIARIO_PEDIDO_ANEXOS_MAX}
+                  onClick={() => handleDiarioEscolherImagem('composer')}
+                >
+                  {diarioPedidoImgBusy
+                    ? (safeT as any)?.diarioPedidosAnexoProcessando || 'A processar…'
+                    : (safeT as any)?.diarioPedidosAnexoAdicionar || 'Anexar imagem'}
+                </button>
                 <button
                   type="button"
                   className="btn-primary ns-diario-btn ns-diario-btn--primary"
                   onClick={() => {
                     const texto = diarioPedidoDraft.trim()
-                    if (!texto) return
+                    if (!texto && diarioPedidoComposerAnexos.length === 0) return
                     const id = `dp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
                     const criadoEm = new Date().toISOString()
+                    const anexos =
+                      diarioPedidoComposerAnexos.length > 0
+                        ? diarioPedidoComposerAnexos.map((a) => ({ ...a }))
+                        : undefined
                     setDiarioPedidoEditandoId(null)
                     setDiarioPedidoEditDraft('')
-                    setDiarioPedidosItems((p) => [...p, { id, texto, status: 'planeado', criadoEm }])
+                    setDiarioPedidoEditAnexos([])
+                    setDiarioPedidosItems((p) => [...p, { id, texto, status: 'planeado', criadoEm, anexos }])
                     setDiarioPedidoDraft('')
+                    setDiarioPedidoComposerAnexos([])
                   }}
                 >
                   {(safeT as any)?.diarioPedidosAdicionar || 'Registar anotação'}
@@ -66321,6 +66792,10 @@ A1;Peça exemplo;10`}
                   {(safeT as any)?.diarioPedidosLimparConcluidos || 'Arquivar concluídos'}
                 </button>
               </div>
+              <p className="ns-diario-composer__hint">
+                {(safeT as any)?.diarioPedidosAnexosHint ||
+                  `Até ${DIARIO_PEDIDO_ANEXOS_MAX} imagens por anotação (comprimidas automaticamente). Pode registar só texto, só imagens ou ambos.`}
+              </p>
             </section>
 
             <section className="ns-diario-list-wrap" aria-label={(safeT as any)?.diarioPedidosSecLista || 'Quadro do dia'}>
@@ -66427,6 +66902,7 @@ A1;Peça exemplo;10`}
                                 onClick={() => {
                                   setDiarioPedidoEditandoId(item.id)
                                   setDiarioPedidoEditDraft(item.texto)
+                                  setDiarioPedidoEditAnexos((item.anexos || []).map((a) => ({ ...a })))
                                 }}
                                 title={(safeT as any)?.diarioPedidosBtnEditarTexto || 'Editar texto'}
                               >
@@ -66458,28 +66934,65 @@ A1;Peça exemplo;10`}
                               rows={5}
                               aria-label={(safeT as any)?.diarioPedidosEditarAria || 'Editar anotação'}
                             />
+                            {diarioPedidoEditAnexos.length > 0 ? (
+                              <ul
+                                className="ns-diario-anexos ns-diario-anexos--edit"
+                                aria-label={(safeT as any)?.diarioPedidosAnexosListaAria || 'Imagens anexadas'}
+                              >
+                                {diarioPedidoEditAnexos.map((imx) => (
+                                  <li key={imx.id} className="ns-diario-anexo">
+                                    <img src={imx.dataUrl} alt="" className="ns-diario-anexo__thumb" />
+                                    <button
+                                      type="button"
+                                      className="ns-diario-anexo__remove"
+                                      onClick={() => setDiarioPedidoEditAnexos((p) => p.filter((x) => x.id !== imx.id))}
+                                      aria-label={(safeT as any)?.diarioPedidosAnexoRemover || 'Remover imagem'}
+                                    >
+                                      ×
+                                    </button>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : null}
                             <div className="ns-diario-entry__edit-actions">
+                              <button
+                                type="button"
+                                className="btn-primary ns-diario-btn ns-diario-btn--ghost"
+                                disabled={
+                                  diarioPedidoImgBusy || diarioPedidoEditAnexos.length >= DIARIO_PEDIDO_ANEXOS_MAX
+                                }
+                                onClick={() => handleDiarioEscolherImagem('edit')}
+                              >
+                                {diarioPedidoImgBusy
+                                  ? (safeT as any)?.diarioPedidosAnexoProcessando || 'A processar…'
+                                  : (safeT as any)?.diarioPedidosAnexoAdicionar || 'Anexar imagem'}
+                              </button>
                               <button
                                 type="button"
                                 className="btn-primary ns-diario-btn ns-diario-btn--primary"
                                 onClick={() => {
                                   const texto = diarioPedidoEditDraft.trim()
-                                  if (!texto) {
+                                  if (!texto && diarioPedidoEditAnexos.length === 0) {
                                     window.alert(
                                       (safeT as any)?.diarioPedidosTextoVazioEdit ||
-                                        'Escreva o texto da anotação antes de guardar.'
+                                        'Escreva texto ou anexe pelo menos uma imagem antes de guardar.'
                                     )
                                     return
                                   }
+                                  const anexos =
+                                    diarioPedidoEditAnexos.length > 0
+                                      ? diarioPedidoEditAnexos.map((a) => ({ ...a }))
+                                      : undefined
                                   setDiarioPedidosItems((p) =>
                                     p.map((x) =>
                                       x.id === item.id
-                                        ? { ...x, texto, atualizadoEm: new Date().toISOString() }
+                                        ? { ...x, texto, anexos, atualizadoEm: new Date().toISOString() }
                                         : x
                                     )
                                   )
                                   setDiarioPedidoEditandoId(null)
                                   setDiarioPedidoEditDraft('')
+                                  setDiarioPedidoEditAnexos([])
                                 }}
                               >
                                 {(safeT as any)?.diarioPedidosBtnGuardarTexto || 'Guardar texto'}
@@ -66490,6 +67003,7 @@ A1;Peça exemplo;10`}
                                 onClick={() => {
                                   setDiarioPedidoEditandoId(null)
                                   setDiarioPedidoEditDraft('')
+                                  setDiarioPedidoEditAnexos([])
                                 }}
                               >
                                 {(safeT as any)?.diarioPedidosBtnCancelarEdicao || 'Cancelar'}
@@ -66497,7 +67011,32 @@ A1;Peça exemplo;10`}
                             </div>
                           </>
                         ) : (
-                          <p className="ns-diario-entry__text">{item.texto}</p>
+                          <>
+                            {item.texto.trim() ? <p className="ns-diario-entry__text">{item.texto}</p> : null}
+                            {item.anexos?.length ? (
+                              <ul
+                                className="ns-diario-anexos ns-diario-anexos--readonly"
+                                aria-label={(safeT as any)?.diarioPedidosAnexosListaAria || 'Imagens anexadas'}
+                              >
+                                {item.anexos.map((imx) => (
+                                  <li key={imx.id} className="ns-diario-anexo">
+                                    <a
+                                      href={imx.dataUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="ns-diario-anexo__link"
+                                      title={(safeT as any)?.diarioPedidosAnexoAbrir || 'Abrir imagem'}
+                                    >
+                                      <img src={imx.dataUrl} alt={imx.nome} className="ns-diario-anexo__thumb" />
+                                    </a>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : null}
+                            {!item.texto.trim() && !item.anexos?.length ? (
+                              <p className="ns-diario-entry__text ns-diario-entry__text--muted">—</p>
+                            ) : null}
+                          </>
                         )}
                         <div className="ns-diario-entry__meta">
                           <span className="ns-diario-entry__meta-label">{(safeT as any)?.diarioPedidosMetaCriado || 'Registado'}</span>
@@ -66589,11 +67128,7 @@ A1;Peça exemplo;10`}
               <button
                 type="button"
                 className="btn-primary ns-diario-btn ns-diario-btn--primary"
-                onClick={() => {
-                  setDiarioPedidoEditandoId(null)
-                  setDiarioPedidoEditDraft('')
-                  setShowDiarioPedidosModal(false)
-                }}
+                onClick={() => setShowDiarioPedidosModal(false)}
               >
                 {(safeT as any)?.diarioPedidosBtnSair || safeT?.close || 'Sair'}
               </button>

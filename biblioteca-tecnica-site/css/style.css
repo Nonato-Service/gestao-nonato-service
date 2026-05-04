@@ -1,0 +1,5 @@
+/* Cópia gestão: reutiliza o CSS da Bíblia original (não duplica ~1500 linhas).
+   Exige que biblia-nonato-service esteja ao lado deste repositório (mesma pasta pai).
+   Para uma pasta 100% portável, copie manualmente biblia-nonato-service/css/style.css para aqui
+   ou execute instalar-copia.bat. */
+@import url("../../../biblia-nonato-service/css/style.css");

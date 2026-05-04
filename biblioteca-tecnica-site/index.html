@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#3d7a28">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Gestão técnica NSA">
+  <title>Gestão técnica — Nonato Service</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="theme-nonato-start">
+  <div class="app" id="app-main">
+    <header class="header">
+      <div class="header-logos" aria-label="Nonato Service e HOMAG">
+        <img src="assets/logo.png" alt="Nonato Service" class="logo logo-primary" decoding="async">
+        <span class="header-logos-divider" aria-hidden="true"></span>
+        <img src="assets/homag.png" alt="HOMAG" class="logo logo-homag" loading="lazy" decoding="async">
+      </div>
+      <h1>Gestão técnica — Nonato Service</h1>
+      <p class="subtitle">Cópia isolada · base de dados própria · não altera biblia-nonato-service</p>
+    </header>
+
+    <section class="start-info" id="startInfoRoot" aria-label="Informações complementares Nonato Service"></section>
+
+    <div class="search-strip" id="searchStrip">
+      <div class="search-strip-inner">
+        <label class="visually-hidden" for="globalSearch">Busca global na bíblia</label>
+        <div class="search-field-wrap">
+          <span class="search-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          </span>
+          <input type="search" id="globalSearch" class="search-input" placeholder="Buscar famílias, modelos, documentos…" autocomplete="off" enterkeyhint="search" aria-controls="searchPanel" aria-expanded="false">
+          <button type="button" class="search-clear" id="searchClear" hidden aria-label="Limpar busca">×</button>
+        </div>
+        <p class="search-hint"><kbd>/</kbd> para focar · mín. 2 caracteres</p>
+      </div>
+      <div class="search-panel" id="searchPanel" role="listbox" aria-label="Resultados da busca" hidden></div>
+    </div>
+
+    <section class="hero" id="heroWelcome" hidden>
+      <button type="button" class="hero-dismiss" id="heroDismiss" aria-label="Fechar introdução">
+        <span aria-hidden="true">×</span>
+      </button>
+      <p class="hero-kicker">Nonato Service × HOMAG</p>
+      <h2 class="hero-title">Toda a documentação técnica, num só lugar</h2>
+      <p class="hero-lead">Instância isolada no projeto de gestão (IndexedDB e hero separados da Bíblia original). Se quiser CSS e logos em pasta única, execute <code>instalar-copia.bat</code> uma vez.</p>
+      <ul class="hero-features">
+        <li class="hero-card">
+          <span class="hero-card-icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 6h16M4 12h10M4 18h14"/></svg>
+          </span>
+          <h3 class="hero-card-title">Hierarquia clara</h3>
+          <p class="hero-card-text">Famílias → modelos → documentos.</p>
+        </li>
+        <li class="hero-card">
+          <span class="hero-card-icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15h6"/></svg>
+          </span>
+          <h3 class="hero-card-title">Anexos no contexto</h3>
+          <p class="hero-card-text">PDF, Office, imagens e planilhas ligados ao modelo.</p>
+        </li>
+        <li class="hero-card">
+          <span class="hero-card-icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          </span>
+          <h3 class="hero-card-title">Busca global</h3>
+          <p class="hero-card-text">Um campo procura em tudo.</p>
+        </li>
+      </ul>
+      <div class="hero-actions">
+        <button type="button" class="btn btn-green btn-hero-cta" id="heroCta">Explorar catálogo</button>
+      </div>
+    </section>
+
+    <main class="main">
+      <nav class="breadcrumb" id="breadcrumb" aria-label="Navegação"></nav>
+
+      <section id="view-familias" class="view active" aria-labelledby="titulo-familias">
+        <div class="view-head">
+          <div>
+            <h2 class="view-title" id="titulo-familias">Famílias</h2>
+            <p class="view-hint">Equipamentos agrupados por linha ou categoria.</p>
+          </div>
+          <button type="button" class="btn btn-green" id="btnNovaFamilia">+ Nova família</button>
+        </div>
+        <ul class="list" id="listFamilias" role="list"></ul>
+      </section>
+
+      <section id="view-modelos" class="view" aria-labelledby="titulo-modelos">
+        <div class="view-head">
+          <div>
+            <h2 class="view-title" id="titulo-modelos">Modelos</h2>
+            <p class="view-hint">Modelos desta família. Toque na linha para ver documentos.</p>
+          </div>
+          <div class="view-actions">
+            <button type="button" class="btn btn-green" id="btnNovoModelo">+ Novo modelo</button>
+            <button type="button" class="btn btn-outline" id="btnVoltarFamilia">← Famílias</button>
+          </div>
+        </div>
+        <ul class="list" id="listModelos" role="list"></ul>
+      </section>
+
+      <section id="view-documentos" class="view" aria-labelledby="titulo-documentos">
+        <div class="view-head">
+          <div>
+            <h2 class="view-title" id="titulo-documentos">Documentos</h2>
+            <p class="view-hint">Manuais, PDFs e anexos deste modelo.</p>
+          </div>
+          <div class="view-actions">
+            <button type="button" class="btn btn-green" id="btnNovoDocumento">+ Novo documento</button>
+            <button type="button" class="btn btn-outline" id="btnVoltarModelo">← Modelos</button>
+          </div>
+        </div>
+        <ul class="list list-docs" id="listDocumentos" role="list"></ul>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p class="app-footer-line">
+        Equipamento <strong>HOMAG</strong>
+        <span class="footer-sep" aria-hidden="true">·</span>
+        Suporte <strong>Nonato Service</strong>
+      </p>
+      <p class="app-footer-meta">
+        <button type="button" class="btn-text" id="btnShowHero">Mostrar introdução</button>
+      </p>
+    </footer>
+  </div>
+
+  <div class="modal" id="modalFamilia" role="dialog" aria-modal="true" aria-labelledby="modalFamiliaTitle">
+    <div class="modal-content">
+      <h2 id="modalFamiliaTitle">Nova família</h2>
+      <form id="formFamilia">
+        <input type="hidden" id="familiaId">
+        <label for="familiaNome">Nome da família *</label>
+        <input type="text" id="familiaNome" required placeholder="Ex: Seccionadoras" autocomplete="off">
+        <label for="familiaDesc">Descrição (opcional)</label>
+        <textarea id="familiaDesc" placeholder="Breve descrição"></textarea>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" data-close="modalFamilia">Cancelar</button>
+          <button type="submit" class="btn btn-green">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="modalModelo" role="dialog" aria-modal="true" aria-labelledby="modalModeloTitle">
+    <div class="modal-content">
+      <h2 id="modalModeloTitle">Novo modelo</h2>
+      <form id="formModelo">
+        <input type="hidden" id="modeloId">
+        <label for="modeloNome">Nome do modelo *</label>
+        <input type="text" id="modeloNome" required placeholder="Ex: HPP 250" autocomplete="off">
+        <label for="modeloDesc">Descrição (opcional)</label>
+        <textarea id="modeloDesc" placeholder="Observações"></textarea>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" data-close="modalModelo">Cancelar</button>
+          <button type="submit" class="btn btn-green">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="modalDocumento" role="dialog" aria-modal="true" aria-labelledby="modalDocumentoTitle">
+    <div class="modal-content modal-wide">
+      <h2 id="modalDocumentoTitle">Novo documento</h2>
+      <p class="modal-dica">Ao editar, deixe o arquivo em branco para manter o anexo atual.</p>
+      <form id="formDocumento">
+        <input type="hidden" id="documentoId">
+        <label for="documentoTitulo">Título *</label>
+        <input type="text" id="documentoTitulo" required placeholder="Ex: Manual HPP 250" autocomplete="off">
+        <label for="documentoTipo">Tipo</label>
+        <select id="documentoTipo">
+          <option value="pdf">PDF</option>
+          <option value="doc">DOC / DOCX</option>
+          <option value="image">Imagem</option>
+          <option value="excel">Excel</option>
+          <option value="outro">Outro</option>
+        </select>
+        <label for="documentoArquivo">Arquivo</label>
+        <input type="file" id="documentoArquivo" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp">
+        <span class="input-hint">PDF, Office, imagens.</span>
+        <label for="documentoObs">Observações (opcional)</label>
+        <textarea id="documentoObs" placeholder="Ex: revisão 2024"></textarea>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" data-close="modalDocumento">Cancelar</button>
+          <button type="submit" class="btn btn-green">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/db.js"></script>
+  <script src="js/start-info.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./service-worker.js').catch(function () {});
+      });
+    }
+  </script>
+</body>
+</html>
