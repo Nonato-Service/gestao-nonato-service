@@ -1,10 +1,12 @@
-Esta pasta (gestao-tecnica-nonato-service) costuma ser criada por cópia a partir do projeto HTML original.
+Esta pasta deve ser criada por cópia a partir de:
+  C:\Users\W10\biblia-nonato-service
 
-1. Coloque o projeto original numa pasta com o NOME QUE QUISER (não precisa parecer-se com mais nada).
-2. Dentro de gestao-tecnica-nonato-service\biblioteca-tecnica-site:
-   - Copie config-origem-copia.example.json para config-origem-copia.json
-   - Abra config-origem-copia.json e defina "raizProjetoOriginal" para essa pasta (relativo ao repo gestão ou caminho absoluto).
-3. Opcional: execute biblioteca-tecnica-site\instalar-copia.bat para copiar css, js e assets a partir do original.
+Se esta pasta estiver vazia ou incompleta, no Explorador de ficheiros:
+1. Copie a pasta "biblia-nonato-service" inteira.
+2. Cole em C:\Users\W10\
+3. Renomeie a cópia para: gestao-tecnica-nonato-service
 
-O projeto na cópia usa IndexedDB separado (ver js\db.js).
+Ou execute na pasta biblia-nonato-service o ficheiro:
+  COPIAR-PARA-GESTAO.bat
 
+O projeto na cópia usa IndexedDB separado se alterar DB_NAME em js/db.js (opcional).

@@ -375,6 +375,17 @@ function normalizeDiarioAnexos(raw: unknown): DiarioPedidoAnexo[] | undefined {
   return out.length ? out : undefined
 }
 
+/** Primeira linha não vazia = título na lista (ex.: cliente na agenda); o resto abre ao expandir. */
+function diarioPedidoTituloECorpo(texto: string): { titulo: string; corpo: string } {
+  const lines = String(texto ?? '').split(/\r?\n/)
+  let i = 0
+  while (i < lines.length && !lines[i].trim()) i++
+  if (i >= lines.length) return { titulo: '', corpo: '' }
+  const titulo = lines[i].trim()
+  const corpo = lines.slice(i + 1).join('\n').trim()
+  return { titulo, corpo }
+}
+
 async function compressImageFileToJpegDataUrl(file: File): Promise<string> {
   const bmp = await createImageBitmap(file)
   try {
@@ -2528,6 +2539,7 @@ export default function Dashboard() {
   const [diarioPedidoImgBusy, setDiarioPedidoImgBusy] = useState(false)
   const [diarioPedidosBusca, setDiarioPedidosBusca] = useState('')
   const [diarioPedidosModalTopoRetraido, setDiarioPedidosModalTopoRetraido] = useState(false)
+  const [diarioPedidoDetalheAbertoPorId, setDiarioPedidoDetalheAbertoPorId] = useState<Record<string, boolean>>({})
   const diarioPedidosHydratedRef = useRef(false)
   const diarioPedidoImgInputRef = useRef<HTMLInputElement | null>(null)
   const diarioPedidoImgTargetRef = useRef<'composer' | 'edit' | null>(null)
@@ -22765,6 +22777,7 @@ export default function Dashboard() {
     setDiarioPedidoImgBusy(false)
     setDiarioPedidoEditandoId(null)
     setDiarioPedidoEditDraft('')
+    setDiarioPedidoDetalheAbertoPorId({})
   }, [showDiarioPedidosModal])
 
   // Marcar como lidas as mensagens destinadas ao usuário atual do Hub quando ele abre uma conversa
@@ -66766,6 +66779,10 @@ A1;Peça exemplo;10`}
 
             <section className="ns-diario-composer" aria-label={(safeT as any)?.diarioPedidosSecComposer || 'Nova anotação'}>
               <div className="ns-diario-composer__label">{(safeT as any)?.diarioPedidosSecComposer || 'Nova anotação'}</div>
+              <p className="ns-diario-composer__format-hint">
+                {(safeT as any)?.diarioPedidosDicaPrimeiraLinha ||
+                  'Na primeira linha o cliente ou título; nas seguintes o que fazer. No quadro use as cores e clique no título para ver tudo.'}
+              </p>
               <textarea
                 className="ns-diario-composer__input"
                 value={diarioPedidoDraft}
@@ -66925,26 +66942,66 @@ A1;Peça exemplo;10`}
                         atualizadoFmt = '—'
                       }
                     }
+                    const { titulo: diarioTituloLinha, corpo: diarioCorpoTexto } = diarioPedidoTituloECorpo(item.texto)
+                    const diarioNAnexos = item.anexos?.length ?? 0
+                    const diarioTituloLista =
+                      diarioTituloLinha ||
+                      (diarioNAnexos > 0
+                        ? (safeT as any)?.diarioPedidosTituloSoImagem || 'Anotação com imagens'
+                        : '')
+                    const diarioPrecisaExpandir = diarioCorpoTexto.length > 0 || diarioNAnexos > 0
+                    const diarioDetalheAberto = !diarioPrecisaExpandir || diarioPedidoDetalheAbertoPorId[item.id] === true
                     return (
                       <li key={item.id} className={`ns-diario-entry ${cardTone}`}>
                         <div className="ns-diario-entry__head">
-                          <span
-                            className={
-                              item.status === 'em_curso'
-                                ? 'ns-diario-badge ns-diario-badge--progress'
-                                : item.status === 'concluido'
-                                  ? 'ns-diario-badge ns-diario-badge--done'
-                                  : 'ns-diario-badge ns-diario-badge--todo'
-                            }
-                          >
-                            {statusLabel}
-                          </span>
+                          <div className="ns-diario-entry__head-main">
+                            <span
+                              className={
+                                item.status === 'em_curso'
+                                  ? 'ns-diario-badge ns-diario-badge--progress'
+                                  : item.status === 'concluido'
+                                    ? 'ns-diario-badge ns-diario-badge--done'
+                                    : 'ns-diario-badge ns-diario-badge--todo'
+                              }
+                            >
+                              {statusLabel}
+                            </span>
+                            {diarioPrecisaExpandir && diarioTituloLista ? (
+                              <button
+                                type="button"
+                                className="ns-diario-entry__titulo-btn"
+                                onClick={() =>
+                                  setDiarioPedidoDetalheAbertoPorId((m) => ({
+                                    ...m,
+                                    [item.id]: !diarioDetalheAberto,
+                                  }))
+                                }
+                                aria-expanded={diarioDetalheAberto}
+                                aria-label={`${diarioTituloLista}. ${
+                                  diarioDetalheAberto
+                                    ? (safeT as any)?.diarioPedidosOcultarDetalhe || 'Ocultar detalhe'
+                                    : (safeT as any)?.diarioPedidosVerDetalhe || 'Ver informação completa'
+                                }`}
+                                title={
+                                  diarioDetalheAberto
+                                    ? (safeT as any)?.diarioPedidosOcultarDetalhe || 'Ocultar detalhe'
+                                    : (safeT as any)?.diarioPedidosVerDetalhe || 'Ver informação completa'
+                                }
+                              >
+                                <span className="ns-diario-entry__titulo">{diarioTituloLista}</span>
+                                <span className="ns-diario-entry__titulo-chevron" aria-hidden>
+                                  {diarioDetalheAberto ? '▲' : '▼'}
+                                </span>
+                              </button>
+                            ) : null}
+                          </div>
                           <div className="ns-diario-entry__head-actions">
                             {!isEditing ? (
                               <button
                                 type="button"
                                 className="ns-diario-btn ns-diario-btn--ghost"
                                 onClick={() => {
+                                  setDiarioPedidoDetalheAbertoPorId((m) => ({ ...m, [item.id]: true }))
                                   setDiarioPedidoEditandoId(item.id)
                                   setDiarioPedidoEditDraft(item.texto)
                                   setDiarioPedidoEditAnexos((item.anexos || []).map((a) => ({ ...a })))
@@ -67057,29 +67114,40 @@ A1;Peça exemplo;10`}
                           </>
                         ) : (
                           <>
-                            {item.texto.trim() ? <p className="ns-diario-entry__text">{item.texto}</p> : null}
-                            {item.anexos?.length ? (
-                              <ul
-                                className="ns-diario-anexos ns-diario-anexos--readonly"
-                                aria-label={(safeT as any)?.diarioPedidosAnexosListaAria || 'Imagens anexadas'}
-                              >
-                                {item.anexos.map((imx) => (
-                                  <li key={imx.id} className="ns-diario-anexo">
-                                    <a
-                                      href={imx.dataUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="ns-diario-anexo__link"
-                                      title={(safeT as any)?.diarioPedidosAnexoAbrir || 'Abrir imagem'}
-                                    >
-                                      <img src={imx.dataUrl} alt={imx.nome} className="ns-diario-anexo__thumb" />
-                                    </a>
-                                  </li>
-                                ))}
-                              </ul>
+                            {diarioPrecisaExpandir && !diarioDetalheAberto ? null : item.texto.trim() ? (
+                              <p className="ns-diario-entry__text">{item.texto}</p>
                             ) : null}
+                            {diarioPrecisaExpandir && !diarioDetalheAberto
+                              ? null
+                              : item.anexos?.length
+                                ? (
+                                    <ul
+                                      className="ns-diario-anexos ns-diario-anexos--readonly"
+                                      aria-label={(safeT as any)?.diarioPedidosAnexosListaAria || 'Imagens anexadas'}
+                                    >
+                                      {item.anexos.map((imx) => (
+                                        <li key={imx.id} className="ns-diario-anexo">
+                                          <a
+                                            href={imx.dataUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="ns-diario-anexo__link"
+                                            title={(safeT as any)?.diarioPedidosAnexoAbrir || 'Abrir imagem'}
+                                          >
+                                            <img src={imx.dataUrl} alt={imx.nome} className="ns-diario-anexo__thumb" />
+                                          </a>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )
+                                : null}
                             {!item.texto.trim() && !item.anexos?.length ? (
                               <p className="ns-diario-entry__text ns-diario-entry__text--muted">—</p>
+                            ) : diarioPrecisaExpandir && !diarioDetalheAberto ? (
+                              <p className="ns-diario-entry__peek-hint">
+                                {(safeT as any)?.diarioPedidosDicaListaRecolhida ||
+                                  'Toque no título acima para ver o que falta fazer e as imagens.'}
+                              </p>
                             ) : null}
                           </>
                         )}

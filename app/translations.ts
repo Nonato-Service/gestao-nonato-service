@@ -2009,6 +2009,12 @@ export const translations = {
     diarioPedidosAnexosListaAria: 'Imagens anexadas',
     diarioPedidosAnexosHint:
       'Até 4 imagens por anotação, comprimidas automaticamente. Pode registar só texto, só imagens ou ambos.',
+    diarioPedidosDicaPrimeiraLinha:
+      'Na primeira linha use o nome do cliente ou o título; nas linhas seguintes o trabalho a fazer. No quadro vê o título e as cores do estado; clique no título para abrir o detalhe.',
+    diarioPedidosTituloSoImagem: 'Anotação com imagens',
+    diarioPedidosVerDetalhe: 'Ver informação completa',
+    diarioPedidosOcultarDetalhe: 'Ocultar detalhe',
+    diarioPedidosDicaListaRecolhida: 'Clique no nome acima para ver o serviço completo e as imagens.',
     agenda: 'Agenda técnica',
     novoAgendamento: 'Novo agendamento',
     editarAgendamento: 'Editar agendamento',
@@ -16852,6 +16858,12 @@ export const translations = {
     diarioPedidosAnexosListaAria: 'Attached images',
     diarioPedidosAnexosHint:
       'Up to 4 images per note, compressed automatically. Text only, images only, or both.',
+    diarioPedidosDicaPrimeiraLinha:
+      'Put the client name or title on the first line; following lines are the work to do. The board shows the title and status colours; click the title to open details.',
+    diarioPedidosTituloSoImagem: 'Note with images',
+    diarioPedidosVerDetalhe: 'Show full details',
+    diarioPedidosOcultarDetalhe: 'Hide details',
+    diarioPedidosDicaListaRecolhida: 'Click the name above to see the full task and images.',
     agenda: 'Technical agenda',
     novoAgendamento: 'New appointment',
     editarAgendamento: 'Edit appointment',

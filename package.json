@@ -10,8 +10,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "apply-layout": "node apply-layout-criacao-checklist.js",
-    "homag:import": "node scripts/homag-import/run.mjs",
-    "biblio:css-portavel": "node biblioteca-tecnica-site/copy-css.mjs"
+    "homag:import": "node scripts/homag-import/run.mjs"
   },
   "dependencies": {
     "adm-zip": "^0.5.16",

@@ -9759,6 +9759,10 @@ button.dia-trabalho-acao-btn--del:hover {
   max-height: 160px;
 }
 
+.ns-diario-modal--topo-retraido .ns-diario-composer__format-hint {
+  display: none;
+}
+
 .ns-diario-modal--topo-retraido .ns-diario-composer__hint {
   display: none;
 }
@@ -9951,6 +9955,13 @@ button.dia-trabalho-acao-btn--del:hover {
   padding: 18px 22px;
   background: rgba(15, 23, 42, 0.28);
   border-bottom: 1px solid rgba(148, 163, 148, 0.12);
+}
+
+.ns-diario-composer__format-hint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(148, 163, 184, 0.95);
 }
 
 .ns-diario-composer__label {
@@ -10180,10 +10191,71 @@ button.dia-trabalho-acao-btn--del:hover {
 
 .ns-diario-entry__head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
   padding: 12px 14px 0;
+}
+
+.ns-diario-entry__head-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.ns-diario-entry__titulo-btn {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 2px 0 0;
+  border: 0;
+  background: transparent;
+  color: #f1f5f9;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.ns-diario-entry__titulo-btn:hover {
+  color: #fff;
+}
+
+.ns-diario-entry__titulo-btn:focus-visible {
+  outline: 2px solid rgba(34, 197, 94, 0.55);
+  outline-offset: 2px;
+}
+
+.ns-diario-entry__titulo {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.ns-diario-entry__titulo-chevron {
+  flex-shrink: 0;
+  font-size: 10px;
+  opacity: 0.75;
+  padding-top: 3px;
+}
+
+.ns-diario-entry__peek-hint {
+  margin: 0;
+  padding: 4px 16px 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(148, 163, 184, 0.95);
 }
 
 .ns-diario-entry__head-actions {

@@ -32,9 +32,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# biblioteca técnica: caminho local do app de referência (qualquer nome de pasta)
-/biblioteca-tecnica-site/config-origem-copia.json
-
 # dados salvos (mas mantém a pasta)
 /data/*.json
 /data/*.txt
