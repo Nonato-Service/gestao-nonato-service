@@ -3193,6 +3193,14 @@ export default function Dashboard() {
     }
   }, [])
 
+  /** Telefone/tablet: cabeçalho do diário recolhido ao abrir — mais espaço para novo registo + quadro (área rolável). */
+  useEffect(() => {
+    if (!showDiarioPedidosModal || typeof window === 'undefined') return
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      setDiarioPedidosModalTopoRetraido(true)
+    }
+  }, [showDiarioPedidosModal])
+
   useEffect(() => {
     if (!diarioPedidosHydratedRef.current) return
     void saveData(DIARIO_PEDIDOS_DIA_STORAGE_KEY, diarioPedidosItems)
@@ -23084,7 +23092,7 @@ export default function Dashboard() {
         'open-gestao-industrial',
         'open-gestao-financeira',
         'open-extra',
-        'open-diario-pedidos-dia',
+        // Diário abre modal em cima da gaveta: fechar menu no telemóvel evita scroll preso e toques duplos.
       ])
       if (!keepDrawerOpen.has(action)) setMobileMenuOpen(false)
     }
@@ -66796,6 +66804,7 @@ A1;Peça exemplo;10`}
               </div>
             </div>
 
+            <div className="ns-diario-modal__main-scroll">
             <section className="ns-diario-composer" aria-label={(safeT as any)?.diarioPedidosSecComposer || 'Nova anotação'}>
               <div className="ns-diario-composer__label">{(safeT as any)?.diarioPedidosSecComposer || 'Nova anotação'}</div>
               <p className="ns-diario-composer__format-hint">
@@ -67471,6 +67480,7 @@ A1;Peça exemplo;10`}
                 </ul>
               )}
             </section>
+            </div>
 
             <footer className="ns-diario-modal__footer">
               <button

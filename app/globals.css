@@ -9727,6 +9727,67 @@ button.dia-trabalho-acao-btn--del:hover {
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
+.ns-diario-modal__main-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 768px) {
+  .ns-diario-modal.diario-pedidos-modal-shell {
+    max-width: calc(100vw - 20px);
+    width: calc(100vw - 20px);
+    max-height: calc(
+      100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px
+    );
+    border-radius: 12px;
+  }
+
+  .ns-diario-modal__title-wrap {
+    min-width: 0;
+  }
+
+  /* iOS: evita zoom automático ao focar inputs com fonte < 16px */
+  .ns-diario-composer__input,
+  .ns-diario-composer__select,
+  .ns-diario-composer__cliente-livre,
+  .ns-diario-list__search-input,
+  .ns-diario-entry__input {
+    font-size: 16px;
+  }
+
+  .ns-diario-entry__titulo-btn--nome-so {
+    touch-action: manipulation;
+  }
+
+  .ns-diario-modal__hero {
+    padding: 12px 14px 14px;
+    gap: 12px;
+  }
+
+  .ns-diario-modal__title {
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+  }
+
+  .ns-diario-modal__subtitle {
+    font-size: 11.5px;
+    line-height: 1.45;
+    max-width: none;
+  }
+
+  .ns-diario-composer {
+    padding: 12px 14px 14px;
+  }
+
+  .ns-diario-modal__footer {
+    padding: 10px 14px max(12px, env(safe-area-inset-bottom, 0px));
+  }
+}
+
 .ns-diario-modal__topbar {
   flex-shrink: 0;
   display: flex;
@@ -9765,11 +9826,6 @@ button.dia-trabalho-acao-btn--del:hover {
 
 .ns-diario-modal--topo-retraido .ns-diario-composer__hint {
   display: none;
-}
-
-.ns-diario-modal--topo-retraido .ns-diario-list-wrap {
-  flex: 1 1 0;
-  min-height: min(62vh, 560px);
 }
 
 .ns-diario-modal__sair {
@@ -10137,11 +10193,10 @@ button.dia-trabalho-acao-btn--del:hover {
 }
 
 .ns-diario-list-wrap {
-  flex: 1 1 0;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 16px 22px 18px;
-  -webkit-overflow-scrolling: touch;
+  flex-shrink: 0;
+  overflow-y: visible;
+  overflow-x: hidden;
+  padding: 16px 22px max(18px, env(safe-area-inset-bottom, 0px));
 }
 
 .ns-diario-list__head {
