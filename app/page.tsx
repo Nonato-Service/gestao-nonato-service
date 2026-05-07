@@ -31367,71 +31367,19 @@ onKeyPress={(e) => {
                           type="date"
                           value={novoDiaTrabalho.data || new Date().toISOString().split('T')[0]}
                           onChange={(e) => {
-                            // Aceitar qualquer data selecionada pelo usuário
                             const dataSelecionada = e.target.value
                             if (dataSelecionada) {
                               const key = normalizeDateKey(dataSelecionada)
-                              const idxExistente = relatorioServicoForm.diasTrabalho?.findIndex(d => normalizeDateKey(d.data) === key) ?? -1
-                              if (idxExistente >= 0) {
-                                const dia = relatorioServicoForm.diasTrabalho[idxExistente]
-                                setNovoDiaTrabalho({
-                                  id: dia.id,
-                                  data: normalizeDateKey(dia.data) || key,
-                                  idaHora: dia.idaHora || '',
-                                  idaChegada: dia.idaChegada || '',
-                                  idaDuracao: dia.idaDuracao || '',
-                                  horasInicio: dia.horasInicio || '',
-                                  horasFim: dia.horasFim || '',
-                                  horasDuracao: dia.horasDuracao || '',
-                                  retornoSaida: dia.retornoSaida || '',
-                                  retornoChegada: dia.retornoChegada || '',
-                                  retornoDuracao: dia.retornoDuracao || '',
-                                  kmIda: kmStringForNumberField(dia.kmIda),
-                                  kmRetorno: kmStringForNumberField(dia.kmRetorno),
-                                  kmTotal: dia.kmTotal || '',
-                                  pausa: dia.pausa || '',
-                                  tempoPausa: dia.tempoPausa || '',
-                                  descricaoTrabalho: dia.descricaoTrabalho || ''
-                                })
-                                setEditingDiaTrabalhoIndex(idxExistente)
-                              } else {
-                                // Se não existir dia com essa data, apenas trocar a data e manter o resto como está
-                                setNovoDiaTrabalho(prev => ({ ...prev, data: key }))
-                                setEditingDiaTrabalhoIndex(null)
-                              }
+                              // Não reutilizar a primeira linha com a mesma data: isso punha o editor em modo «edição»
+                              // e o próximo «Adicionar» substituía a linha em vez de criar outra (várias visitas no mesmo dia).
+                              setNovoDiaTrabalho((prev) => ({ ...prev, data: key }))
                             }
                           }}
                           onBlur={(e) => {
-                            // Garantir que sempre há uma data válida quando o campo perde o foco
                             const dataValida = e.target.value || novoDiaTrabalho.data || new Date().toISOString().split('T')[0]
-                            if (!novoDiaTrabalho.data || novoDiaTrabalho.data !== dataValida) {
-                              const key = normalizeDateKey(dataValida)
-                              const idxExistente = relatorioServicoForm.diasTrabalho?.findIndex(d => normalizeDateKey(d.data) === key) ?? -1
-                              if (idxExistente >= 0) {
-                                const dia = relatorioServicoForm.diasTrabalho[idxExistente]
-                                setNovoDiaTrabalho({
-                                  id: dia.id,
-                                  data: normalizeDateKey(dia.data) || key,
-                                  idaHora: dia.idaHora || '',
-                                  idaChegada: dia.idaChegada || '',
-                                  idaDuracao: dia.idaDuracao || '',
-                                  horasInicio: dia.horasInicio || '',
-                                  horasFim: dia.horasFim || '',
-                                  horasDuracao: dia.horasDuracao || '',
-                                  retornoSaida: dia.retornoSaida || '',
-                                  retornoChegada: dia.retornoChegada || '',
-                                  retornoDuracao: dia.retornoDuracao || '',
-                                  kmIda: kmStringForNumberField(dia.kmIda),
-                                  kmRetorno: kmStringForNumberField(dia.kmRetorno),
-                                  kmTotal: dia.kmTotal || '',
-                                  pausa: dia.pausa || '',
-                                  tempoPausa: dia.tempoPausa || '',
-                                  descricaoTrabalho: dia.descricaoTrabalho || ''
-                                })
-                                setEditingDiaTrabalhoIndex(idxExistente)
-                              } else {
-                                setNovoDiaTrabalho(prev => ({ ...prev, data: key }))
-                              }
+                            const key = normalizeDateKey(dataValida)
+                            if (normalizeDateKey(novoDiaTrabalho.data) !== key) {
+                              setNovoDiaTrabalho((prev) => ({ ...prev, data: key }))
                             }
                           }}
                           style={{ 
