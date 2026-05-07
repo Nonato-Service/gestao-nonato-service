@@ -14747,17 +14747,37 @@ export default function Dashboard() {
     scrollRelatorioServicoFormIntoView()
   }
 
+  /** Prioriza `relatoriosServico` (fonte de verdade); cópias em `cliente.relatorios` podem ficar desactualizadas (ex.: `diasTrabalho`). */
+  const resolverRelatorioServicoDono = (relatorio: RelatorioServico): RelatorioServico => {
+    if (!relatorio?.id) return relatorio
+    const rid = String(relatorio.id)
+    const globalHit = relatoriosServico.find((r) => r.id === rid)
+    if (globalHit) return globalHit
+    for (const c of clientes) {
+      const map = c.relatorios as Record<string, RelatorioServico[]> | undefined
+      if (!map || typeof map !== 'object') continue
+      for (const equipKey of Object.keys(map)) {
+        const arr = map[equipKey]
+        if (!Array.isArray(arr)) continue
+        const hit = arr.find((r) => r.id === rid)
+        if (hit) return hit
+      }
+    }
+    return relatorio
+  }
+
   const handleEditRelatorioServico = (relatorio: RelatorioServico) => {
-    setEditingRelatorioServico(relatorio)
+    const r = resolverRelatorioServicoDono(relatorio)
+    setEditingRelatorioServico(r)
     setEditingDiaTrabalhoIndex(null)
     // Garantir que todos os campos sejam preservados, especialmente arrays
     setRelatorioServicoForm({
-      ...relatorio,
-      equipamentoOrigem: relatorio.equipamentoOrigem === 'armazem' ? 'armazem' : 'cliente',
+      ...r,
+      equipamentoOrigem: r.equipamentoOrigem === 'armazem' ? 'armazem' : 'cliente',
       diasTrabalho: sortDiasTrabalhoCronologicamente(
-        normalizarDiasTrabalhoParaPersist(relatorio.diasTrabalho ? [...relatorio.diasTrabalho] : [])
+        normalizarDiasTrabalhoParaPersist(r.diasTrabalho ? [...r.diasTrabalho] : [])
       ),
-      pecasSubstituicao: relatorio.pecasSubstituicao ? [...relatorio.pecasSubstituicao] : [],
+      pecasSubstituicao: r.pecasSubstituicao ? [...r.pecasSubstituicao] : [],
     })
     setShowRelatorioServicoForm(true)
     scrollRelatorioServicoFormIntoView()
@@ -17659,7 +17679,8 @@ export default function Dashboard() {
 
   // Função wrapper que usa o modelo selecionado
   const handlePrintRelatorio = (relatorio: RelatorioServico) => {
-    const r = relatorioParaImprimirPDF(relatorio)
+    const dono = resolverRelatorioServicoDono(relatorio)
+    const r = relatorioParaImprimirPDF(dono)
     switch(selectedPDFModel) {
       case 'classico':
         handlePrintRelatorioClassico(r);
@@ -33145,7 +33166,7 @@ onKeyPress={(e) => {
                             <button 
                               className="btn-primary" 
                               type="button"
-                              onClick={() => setViewingRelatorioServico(relatorio)} 
+                              onClick={() => setViewingRelatorioServico(resolverRelatorioServicoDono(relatorio))} 
                               style={{ 
                                 height: '36px',
                                 padding: '6px', 
@@ -56277,7 +56298,7 @@ A1;Peça exemplo;10`}
                                 </button>
                               ) : (
                                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                                  <button type="button" className="btn-primary" onClick={() => { if (rel) setViewingRelatorioServico(rel) }} style={{ padding: '8px 12px', fontSize: '12px', borderRadius: '8px', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 150, 255, 0.12)', border: '1px solid rgba(0, 150, 255, 0.55)' }}>
+                                  <button type="button" className="btn-primary" onClick={() => { if (rel) setViewingRelatorioServico(resolverRelatorioServicoDono(rel)) }} style={{ padding: '8px 12px', fontSize: '12px', borderRadius: '8px', whiteSpace: 'nowrap', backgroundColor: 'rgba(0, 150, 255, 0.12)', border: '1px solid rgba(0, 150, 255, 0.55)' }}>
                                     👁️ {tx.verRelatorio || safeT?.view || 'Ver'}
                                   </button>
                                   <button
@@ -58190,7 +58211,7 @@ A1;Peça exemplo;10`}
                                         <button 
                                           type="button"
                                           className="btn-primary biblioteca-relatorios-servico-actions__btn biblioteca-relatorios-servico-actions__btn--ver" 
-                                          onClick={() => setViewingRelatorioServico(relatorio)}
+                                          onClick={() => setViewingRelatorioServico(resolverRelatorioServicoDono(relatorio))}
                                         >
                                           👁️ {safeT?.view || 'Ver'}
                                         </button>
@@ -58408,7 +58429,7 @@ A1;Peça exemplo;10`}
                                   <button
                                     type="button"
                                     className="btn-primary"
-                                    onClick={() => setViewingRelatorioServico(item.relatorio)}
+                                    onClick={() => setViewingRelatorioServico(resolverRelatorioServicoDono(item.relatorio))}
                                     style={{ padding: '8px 14px', fontSize: '12px', background: 'rgba(0,255,0,0.15)', border: '1px solid rgba(0,255,0,0.5)', color: '#fff' }}
                                   >
                                     👁️ {safeT?.view || 'Ver'}
@@ -72098,7 +72119,7 @@ A1;Peça exemplo;10`}
                                                 <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.8)' }}>👤 {relatorio.tecnico}</p>
                                                 {relatorio.tipoServico && <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.65)' }}>🔧 {relatorio.tipoServico}</p>}
                                               </div>
-                                              <button className="btn-primary" onClick={() => setViewingRelatorioServico(relatorio)} style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '8px', flexShrink: 0, backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.6)', color: '#fff' }}>👁️ {safeT?.ver || 'Ver'}</button>
+                                              <button className="btn-primary" onClick={() => setViewingRelatorioServico(resolverRelatorioServicoDono(relatorio))} style={{ padding: '6px 12px', fontSize: '11px', borderRadius: '8px', flexShrink: 0, backgroundColor: 'rgba(0, 255, 0, 0.2)', border: '1px solid rgba(0, 255, 0, 0.6)', color: '#fff' }}>👁️ {safeT?.ver || 'Ver'}</button>
                                             </div>
                                           </div>
                                           )
