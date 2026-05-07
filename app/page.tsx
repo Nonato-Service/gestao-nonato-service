@@ -1016,6 +1016,15 @@ function diasTrabalhoRelatorioOrdenados(relatorio: { diasTrabalho?: DiaTrabalho[
   return sortDiasTrabalhoCronologicamente(Array.isArray(relatorio.diasTrabalho) ? relatorio.diasTrabalho : [])
 }
 
+/** Ao gravar: uma única chave YYYY-MM-DD por dia (alinha com `diaTrabalhoDataChaveOrdenacao` / input type=date). */
+function normalizarDiasTrabalhoParaPersist(dias: DiaTrabalho[]): DiaTrabalho[] {
+  return dias.map((dia) => {
+    const key = diaTrabalhoDataChaveOrdenacao(dia.data)
+    if (key && /^\d{4}-\d{2}-\d{2}$/.test(key)) return { ...dia, data: key }
+    return dia
+  })
+}
+
 /** Data do dia em DD/MM/AA sem deslocar o dia por fuso (evita `Date('YYYY-MM-DD')` em UTC). */
 function formatDiaTrabalhoCurtoPt(dataRaw: string | undefined, localeTag: string = 'pt-BR'): string {
   const key = diaTrabalhoDataChaveOrdenacao(dataRaw)
@@ -14746,7 +14755,7 @@ export default function Dashboard() {
       ...relatorio,
       equipamentoOrigem: relatorio.equipamentoOrigem === 'armazem' ? 'armazem' : 'cliente',
       diasTrabalho: sortDiasTrabalhoCronologicamente(
-        relatorio.diasTrabalho ? [...relatorio.diasTrabalho] : []
+        normalizarDiasTrabalhoParaPersist(relatorio.diasTrabalho ? [...relatorio.diasTrabalho] : [])
       ),
       pecasSubstituicao: relatorio.pecasSubstituicao ? [...relatorio.pecasSubstituicao] : [],
     })
@@ -18871,7 +18880,7 @@ export default function Dashboard() {
 
     // Recalcular todos os dias antes de salvar e ordenar por data (ordem cronológica no PDF e na lista)
     const diasRecalculados = sortDiasTrabalhoCronologicamente(
-      relatorioServicoForm.diasTrabalho.map((dia) => atualizarCalculosDia(dia))
+      normalizarDiasTrabalhoParaPersist(relatorioServicoForm.diasTrabalho).map((dia) => atualizarCalculosDia(dia))
     )
 
     // Calcular totais automaticamente
@@ -19005,7 +19014,7 @@ export default function Dashboard() {
 
     // Recalcular todos os dias antes de salvar e ordenar por data crescente
     const diasRecalculados = sortDiasTrabalhoCronologicamente(
-      relatorioServicoForm.diasTrabalho.map((dia) => atualizarCalculosDia(dia))
+      normalizarDiasTrabalhoParaPersist(relatorioServicoForm.diasTrabalho).map((dia) => atualizarCalculosDia(dia))
     )
 
     // Calcular totais automaticamente
@@ -19173,7 +19182,7 @@ export default function Dashboard() {
       return
     }
     const diasRecalculados = sortDiasTrabalhoCronologicamente(
-      relatorioServicoForm.diasTrabalho.map((dia) => atualizarCalculosDia(dia))
+      normalizarDiasTrabalhoParaPersist(relatorioServicoForm.diasTrabalho).map((dia) => atualizarCalculosDia(dia))
     )
     const totais = calcularTotais(diasRecalculados)
     const relatorioToSave: RelatorioServico = {
@@ -19360,22 +19369,8 @@ export default function Dashboard() {
     updatePecasButton()
   }, [updatePecasButton])
 
-  const normalizeDateKey = (value?: string): string => {
-    if (!value) return ''
-    const s = String(value).trim()
-    if (!s) return ''
-    // ISO datetime -> yyyy-mm-dd
-    if (s.includes('T') && s.length >= 10) return s.slice(0, 10)
-    // yyyy-mm-dd (input type="date")
-    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
-    // dd/mm/yyyy (formato legado)
-    const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
-    if (m) return `${m[3]}-${m[2]}-${m[1]}`
-    // fallback: tentar parsear
-    const d = new Date(s)
-    if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10)
-    return s
-  }
+  /** Mesma regra que ordenação/PDF — inclui DD/MM/AA; evita o calendário não reconhecer dias já guardados noutro formato. */
+  const normalizeDateKey = (value?: string): string => diaTrabalhoDataChaveOrdenacao(value)
 
   const handleAddDiaTrabalho = () => {
     // Apenas a data é obrigatória. Se não houver data no estado, usar a data de hoje (que já aparece no campo)
