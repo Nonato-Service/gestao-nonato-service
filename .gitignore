@@ -30,7 +30,10 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+# next-env.d.ts — manter versionado (Next.js; evita falhas de `tsc` em clones limpos)
+
+# cópia local do histórico PowerShell (caminhos/comandos; não versionar)
+_command-history/ConsoleHost_history.txt
 
 # dados salvos (mas mantém a pasta)
 /data/*.json

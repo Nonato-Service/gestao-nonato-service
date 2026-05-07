@@ -1,11 +1,8 @@
-HISTÓRICO DE COMANDOS
-=====================
-Este diretório contém o histórico de comandos do terminal.
+Histórico de comandos (cópias locais)
+=====================================
 
-Arquivos incluídos:
-- Histórico do PowerShell: C:\Users\W10\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
+Esta pasta pode guardar cópias do histórico do PowerShell para referência
+local. O diretório está listado em `.gitignore` para não ir para o repositório
+(evita caminhos da máquina e comandos acidentais no Git).
 
-Total de arquivos de histórico: 1
-
-NOTA: Estes arquivos contêm o histórico de comandos executados no terminal.
-Para restaurar, copie os arquivos para seus locais originais.
+Não é necessário para executar a aplicação.
