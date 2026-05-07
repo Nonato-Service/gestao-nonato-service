@@ -28,6 +28,7 @@ import {
   parseDataReciboIso,
   extrairDescricaoRecibo,
 } from './lib/reciboComprovanteParser'
+import { RELATORIO_SERVICO_PDF_PRINT_CSS } from './lib/relatorioServicoPdfPrintCss'
 import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
 import {
   loadManuaisFamiliasGruposFromIdb,
@@ -15085,171 +15086,9 @@ export default function Dashboard() {
         <head>
           <meta charset="UTF-8">
           <title>Relatório de Serviço - ${relatorio.numero}</title>
-          <style>
-            @page {
-              size: A4 portrait;
-              margin: 10mm;
-            }
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            body {
-              font-family: Arial, sans-serif;
-              font-size: 10px;
-              color: #000;
-              background: #fff;
-              padding: 10px;
-            }
-            .header {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 15px;
-              border-bottom: 2px solid #000;
-              padding-bottom: 10px;
-            }
-            .header-logo {
-              font-size: 16px;
-              font-weight: bold;
-            }
-            .header-title {
-              font-size: 14px;
-              font-weight: bold;
-              text-align: center;
-              flex: 1;
-            }
-            .header-number {
-              font-size: 12px;
-              font-weight: bold;
-            }
-            .info-section {
-              margin-bottom: 15px;
-              padding: 10px;
-              border: 1px solid #000;
-            }
-            .info-section h3 {
-              font-size: 11px;
-              margin-bottom: 8px;
-              background: #f0f0f0;
-              padding: 5px;
-              font-weight: bold;
-            }
-            .info-grid {
-              display: grid;
-              grid-template-columns: repeat(2, 1fr);
-              gap: 8px;
-              font-size: 9px;
-            }
-            .info-item {
-              display: flex;
-              gap: 5px;
-            }
-            .info-label {
-              font-weight: bold;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 15px;
-              font-size: 7px;
-              page-break-inside: avoid;
-            }
-            th, td {
-              border: 1px solid #000;
-              padding: 3px 2px;
-              text-align: center;
-            }
-            th {
-              background: #e0e0e0;
-              font-weight: bold;
-              font-size: 7px;
-            }
-            .summary {
-              display: grid;
-              grid-template-columns: repeat(6, 1fr);
-              gap: 10px;
-              margin: 15px 0;
-            }
-            .summary-card {
-              border: 2px solid #000;
-              padding: 8px;
-              text-align: center;
-            }
-            .summary-card h4 {
-              font-size: 9px;
-              margin-bottom: 5px;
-              font-weight: bold;
-            }
-            .summary-card .value {
-              font-size: 16px;
-              font-weight: bold;
-              color: #00aa00;
-            }
-            .resultados-grid {
-              display: grid;
-              grid-template-columns: repeat(2, 1fr);
-              gap: 10px;
-              margin: 15px 0;
-            }
-            .resultado-item {
-              display: flex;
-              align-items: center;
-              gap: 5px;
-              font-size: 9px;
-            }
-            .checkbox {
-              width: 12px;
-              height: 12px;
-              border: 1px solid #000;
-              display: inline-block;
-            }
-            .checkbox.checked {
-              background: #000;
-            }
-            .observacoes {
-              margin-top: 15px;
-              padding: 10px;
-              border: 1px solid #000;
-            }
-            .observacoes h4 {
-              font-size: 10px;
-              margin-bottom: 5px;
-              font-weight: bold;
-            }
-            .observacoes p {
-              font-size: 9px;
-              white-space: pre-wrap;
-            }
-            .pecas-table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 15px;
-              font-size: 8px;
-            }
-            .pecas-table th, .pecas-table td {
-              border: 1px solid #000;
-              padding: 5px;
-              text-align: left;
-            }
-            .pecas-table th {
-              background: #e0e0e0;
-              font-weight: bold;
-            }
-            .pecas-table .imagem-col {
-              width: 50px;
-              text-align: center;
-            }
-            @media print {
-              body {
-                print-color-adjust: exact;
-                -webkit-print-color-adjust: exact;
-              }
-            }
-          </style>
+          <style>${RELATORIO_SERVICO_PDF_PRINT_CSS}</style>
         </head>
-        <body>
+        <body class="rs-pdf rs-pdf--classic">
           <div class="header">
             <div class="header-logo">${headerLogoContent}</div>
             <div class="header-title">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO ASSISTÊNCIA TÉCNICA'}</div>
@@ -15379,14 +15218,14 @@ export default function Dashboard() {
           ${relatorio.observacoes ? `
           <div class="observacoes">
             <h4>${t.observacoes || 'Observações'}</h4>
-            <p>${relatorio.observacoes}</p>
+            <p>${escapePdfHtml(relatorio.observacoes)}</p>
           </div>
           ` : ''}
 
           ${relatorio.pontosAberto ? `
           <div class="observacoes">
             <h4>${t.pontosAberto || 'Pontos em Aberto'}</h4>
-            <p>${relatorio.pontosAberto}</p>
+            <p>${escapePdfHtml(relatorio.pontosAberto)}</p>
           </div>
           ` : ''}
 
@@ -15451,158 +15290,13 @@ export default function Dashboard() {
         <head>
           <meta charset="UTF-8">
           <title>Relatório de Serviço - ${relatorio.numero}</title>
-          <style>
-            @page {
-              size: A4 portrait;
-              margin: 8mm;
-            }
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            body {
-              font-family: Arial, sans-serif;
-              font-size: 8px;
-              color: #000;
-              background: #fff;
-              padding: 8px;
-            }
-            .header {
-              text-align: center;
-              margin-bottom: 10px;
-              border-bottom: 1px solid #000;
-              padding-bottom: 5px;
-            }
-            .header .header-logo { font-size: 14px; font-weight: bold; margin-bottom: 3px; }
-            .header .header-logo img { max-height: 40px; max-width: 120px; object-fit: contain; display: inline-block; vertical-align: middle; }
-            .header h1 {
-              font-size: 14px;
-              margin-bottom: 3px;
-            }
-            .header h2 {
-              font-size: 11px;
-              color: #00aa00;
-            }
-            .info-section {
-              margin-bottom: 10px;
-              padding: 6px;
-              border: 1px solid #000;
-            }
-            .info-section h3 {
-              font-size: 9px;
-              margin-bottom: 5px;
-              background: #f0f0f0;
-              padding: 3px;
-            }
-            .info-grid {
-              display: grid;
-              grid-template-columns: repeat(2, 1fr);
-              gap: 4px;
-              font-size: 7px;
-            }
-            .info-item {
-              display: flex;
-              gap: 3px;
-            }
-            .info-label {
-              font-weight: bold;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 10px;
-              font-size: 6px;
-            }
-            th, td {
-              border: 1px solid #000;
-              padding: 2px 1px;
-              text-align: center;
-            }
-            th {
-              background: #e0e0e0;
-              font-weight: bold;
-              font-size: 6px;
-            }
-            .summary {
-              display: grid;
-              grid-template-columns: repeat(6, 1fr);
-              gap: 5px;
-              margin: 10px 0;
-            }
-            .summary-card {
-              border: 1px solid #000;
-              padding: 5px;
-              text-align: center;
-            }
-            .summary-card h4 {
-              font-size: 7px;
-              margin-bottom: 3px;
-            }
-            .summary-card .value {
-              font-size: 12px;
-              font-weight: bold;
-              color: #00aa00;
-            }
-            .resultados-grid {
-              display: grid;
-              grid-template-columns: repeat(3, 1fr);
-              gap: 5px;
-              margin: 10px 0;
-              font-size: 7px;
-            }
-            .resultado-item {
-              display: flex;
-              align-items: center;
-              gap: 3px;
-            }
-            .checkbox {
-              width: 8px;
-              height: 8px;
-              border: 1px solid #000;
-              display: inline-block;
-            }
-            .checkbox.checked {
-              background: #000;
-            }
-            .observacoes {
-              margin-top: 10px;
-              padding: 6px;
-              border: 1px solid #000;
-              font-size: 7px;
-            }
-            .observacoes h4 {
-              font-size: 8px;
-              margin-bottom: 3px;
-            }
-            .pecas-table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 10px;
-              font-size: 6px;
-            }
-            .pecas-table th, .pecas-table td {
-              border: 1px solid #000;
-              padding: 3px;
-              text-align: left;
-            }
-            .pecas-table th {
-              background: #e0e0e0;
-              font-weight: bold;
-            }
-            @media print {
-              body {
-                print-color-adjust: exact;
-                -webkit-print-color-adjust: exact;
-              }
-            }
-          </style>
+          <style>${RELATORIO_SERVICO_PDF_PRINT_CSS}</style>
         </head>
-        <body>
+        <body class="rs-pdf rs-pdf--compact">
           <div class="header">
             <div class="header-logo">${headerLogoContent}</div>
             <h2>${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO'}</h2>
-            <p style="font-size: 9px;">${t.numeroRelatorio || 'Nº'}: ${relatorio.numero}</p>
+            <p>${t.numeroRelatorio || 'Nº'}: ${relatorio.numero}</p>
           </div>
 
           <div class="info-section">
@@ -15710,7 +15404,7 @@ export default function Dashboard() {
           ${relatorio.observacoes ? `
           <div class="observacoes">
             <h4>${t.observacoes || 'Observações'}</h4>
-            <p>${relatorio.observacoes}</p>
+            <p>${escapePdfHtml(relatorio.observacoes)}</p>
           </div>
           ` : ''}
 
@@ -15773,180 +15467,9 @@ export default function Dashboard() {
         <head>
           <meta charset="UTF-8">
           <title>Relatório de Serviço - ${relatorio.numero}</title>
-          <style>
-            @page {
-              size: A4 portrait;
-              margin: 12mm;
-            }
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            body {
-              font-family: Arial, sans-serif;
-              font-size: 11px;
-              color: #000;
-              background: #fff;
-              padding: 12px;
-            }
-            .header {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 20px;
-              border-bottom: 3px solid #000;
-              padding-bottom: 15px;
-            }
-            .header-logo {
-              font-size: 18px;
-              font-weight: bold;
-            }
-            .header-title {
-              font-size: 16px;
-              font-weight: bold;
-              text-align: center;
-              flex: 1;
-            }
-            .header-number {
-              font-size: 14px;
-              font-weight: bold;
-            }
-            .info-section {
-              margin-bottom: 20px;
-              padding: 15px;
-              border: 2px solid #000;
-            }
-            .info-section h3 {
-              font-size: 13px;
-              margin-bottom: 12px;
-              background: #f0f0f0;
-              padding: 8px;
-              font-weight: bold;
-            }
-            .info-grid {
-              display: grid;
-              grid-template-columns: repeat(2, 1fr);
-              gap: 12px;
-              font-size: 10px;
-            }
-            .info-item {
-              display: flex;
-              gap: 8px;
-            }
-            .info-label {
-              font-weight: bold;
-              min-width: 120px;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 20px;
-              font-size: 9px;
-              page-break-inside: avoid;
-            }
-            th, td {
-              border: 1px solid #000;
-              padding: 6px 4px;
-              text-align: center;
-            }
-            th {
-              background: #e0e0e0;
-              font-weight: bold;
-              font-size: 9px;
-            }
-            .summary {
-              display: grid;
-              grid-template-columns: repeat(6, 1fr);
-              gap: 15px;
-              margin: 20px 0;
-            }
-            .summary-card {
-              border: 2px solid #000;
-              padding: 12px;
-              text-align: center;
-            }
-            .summary-card h4 {
-              font-size: 11px;
-              margin-bottom: 8px;
-              font-weight: bold;
-            }
-            .summary-card .value {
-              font-size: 20px;
-              font-weight: bold;
-              color: #00aa00;
-            }
-            .resultados-grid {
-              display: grid;
-              grid-template-columns: repeat(2, 1fr);
-              gap: 15px;
-              margin: 20px 0;
-            }
-            .resultado-item {
-              display: flex;
-              align-items: center;
-              gap: 8px;
-              font-size: 10px;
-            }
-            .checkbox {
-              width: 15px;
-              height: 15px;
-              border: 2px solid #000;
-              display: inline-block;
-            }
-            .checkbox.checked {
-              background: #000;
-            }
-            .observacoes {
-              margin-top: 20px;
-              padding: 15px;
-              border: 2px solid #000;
-            }
-            .observacoes h4 {
-              font-size: 12px;
-              margin-bottom: 8px;
-              font-weight: bold;
-            }
-            .observacoes p {
-              font-size: 10px;
-              white-space: pre-wrap;
-              line-height: 1.5;
-            }
-            .pecas-table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 20px;
-              font-size: 9px;
-            }
-            .pecas-table th, .pecas-table td {
-              border: 1px solid #000;
-              padding: 8px;
-              text-align: left;
-            }
-            .pecas-table th {
-              background: #e0e0e0;
-              font-weight: bold;
-            }
-            .pecas-table .imagem-col {
-              width: 80px;
-              text-align: center;
-            }
-            .descricao-trabalho {
-              margin-top: 10px;
-              padding: 8px;
-              background: #f9f9f9;
-              border-left: 3px solid #00aa00;
-              font-size: 9px;
-            }
-            @media print {
-              body {
-                print-color-adjust: exact;
-                -webkit-print-color-adjust: exact;
-              }
-            }
-          </style>
+          <style>${RELATORIO_SERVICO_PDF_PRINT_CSS}</style>
         </head>
-        <body>
+        <body class="rs-pdf rs-pdf--detailed">
           <div class="header">
             <div class="header-logo">${headerLogoContent}</div>
             <div class="header-title">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO ASSISTÊNCIA TÉCNICA'}</div>
@@ -16082,14 +15605,14 @@ export default function Dashboard() {
           ${relatorio.observacoes ? `
           <div class="observacoes">
             <h4>${t.observacoes || 'Observações'}</h4>
-            <p>${relatorio.observacoes}</p>
+            <p>${escapePdfHtml(relatorio.observacoes)}</p>
           </div>
           ` : ''}
 
           ${relatorio.pontosAberto ? `
           <div class="observacoes">
             <h4>${t.pontosAberto || 'Pontos em Aberto'}</h4>
-            <p>${relatorio.pontosAberto}</p>
+            <p>${escapePdfHtml(relatorio.pontosAberto)}</p>
           </div>
           ` : ''}
 
@@ -16478,14 +16001,14 @@ export default function Dashboard() {
           ${relatorio.observacoes ? `
           <div class="observacoes-modern">
             <h4>${t.observacoes || 'Observações'}</h4>
-            <p>${relatorio.observacoes}</p>
+            <p>${escapePdfHtml(relatorio.observacoes)}</p>
           </div>
           ` : ''}
 
           ${relatorio.pontosAberto ? `
           <div class="observacoes-modern">
             <h4>${t.pontosAberto || 'Pontos em Aberto'}</h4>
-            <p>${relatorio.pontosAberto}</p>
+            <p>${escapePdfHtml(relatorio.pontosAberto)}</p>
           </div>
           ` : ''}
 
@@ -16854,14 +16377,14 @@ export default function Dashboard() {
           ${relatorio.observacoes ? `
           <div class="observacoes-minimal">
             <h4>${t.observacoes || 'Observações'}</h4>
-            <p>${relatorio.observacoes}</p>
+            <p>${escapePdfHtml(relatorio.observacoes)}</p>
           </div>
           ` : ''}
 
           ${relatorio.pontosAberto ? `
           <div class="observacoes-minimal">
             <h4>${t.pontosAberto || 'Pontos em Aberto'}</h4>
-            <p>${relatorio.pontosAberto}</p>
+            <p>${escapePdfHtml(relatorio.pontosAberto)}</p>
           </div>
           ` : ''}
 
@@ -17247,14 +16770,14 @@ export default function Dashboard() {
           ${relatorio.observacoes ? `
           <div class="observacoes-tecnico">
             <h4>${t.observacoes || 'Observações'}</h4>
-            <p>${relatorio.observacoes}</p>
+            <p>${escapePdfHtml(relatorio.observacoes)}</p>
           </div>
           ` : ''}
 
           ${relatorio.pontosAberto ? `
           <div class="observacoes-tecnico">
             <h4>${t.pontosAberto || 'Pontos em Aberto'}</h4>
-            <p>${relatorio.pontosAberto}</p>
+            <p>${escapePdfHtml(relatorio.pontosAberto)}</p>
           </div>
           ` : ''}
 
@@ -17635,14 +17158,14 @@ export default function Dashboard() {
           ${relatorio.observacoes ? `
           <div class="observacoes-executivo">
             <h4>${t.observacoes || 'Observações'}</h4>
-            <p>${relatorio.observacoes}</p>
+            <p>${escapePdfHtml(relatorio.observacoes)}</p>
           </div>
           ` : ''}
 
           ${relatorio.pontosAberto ? `
           <div class="observacoes-executivo">
             <h4>${t.pontosAberto || 'Pontos em Aberto'}</h4>
-            <p>${relatorio.pontosAberto}</p>
+            <p>${escapePdfHtml(relatorio.pontosAberto)}</p>
           </div>
           ` : ''}
 
@@ -18049,14 +17572,14 @@ export default function Dashboard() {
           ${relatorio.observacoes ? `
           <div class="observacoes-negro">
             <h4>${t.observacoes || 'Observações'}</h4>
-            <p>${relatorio.observacoes}</p>
+            <p>${escapePdfHtml(relatorio.observacoes)}</p>
           </div>
           ` : ''}
 
           ${relatorio.pontosAberto ? `
           <div class="observacoes-negro">
             <h4>${t.pontosAberto || 'Pontos em Aberto'}</h4>
-            <p>${relatorio.pontosAberto}</p>
+            <p>${escapePdfHtml(relatorio.pontosAberto)}</p>
           </div>
           ` : ''}
 
@@ -18171,49 +17694,6 @@ export default function Dashboard() {
       case 'lista':
         handlePrintRelatorioLista(r);
         break;
-      case 'gestao-demos':
-        return (
-          <div className="admin-shell">
-            <div className="admin-hero">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                  <LogoComponent size="small" />
-                </div>
-                <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 className="admin-hero-title" style={{ letterSpacing: '0.02em' }}>
-                    {getTabTitle('gestao-demos').toUpperCase()}
-                  </h1>
-                  <p className="admin-hero-sub">Registo de destinatários, pacotes de módulos e links de teste</p>
-                </div>
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <button
-                    onClick={() => openTab('administrador', getTabTitle('administrador'))}
-                    style={{ padding: '6px 10px', fontSize: '12px', backgroundColor: 'transparent', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', color: '#00ff00', cursor: 'pointer' }}
-                  >
-                    Administrador
-                  </button>
-                  <button
-                    onClick={() => closeTab(activeTabId || '')}
-                    style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'transparent', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px', color: '#00ff00', cursor: 'pointer', width: '32px', height: '32px' }}
-                    title={safeT?.voltar || 'Voltar'}
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="admin-quick-nav">
-              <button
-                type="button"
-                onClick={() => openTab('administrador', getTabTitle('administrador'))}
-                style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0, textDecoration: 'underline', font: 'inherit' }}
-              >
-                Voltar ao Administrador
-              </button>
-            </div>
-            {renderGestaoDemosContent(false)}
-          </div>
-        )
 
       default:
         handlePrintRelatorioClassico(r);
@@ -33608,20 +33088,24 @@ onKeyPress={(e) => {
                               }}
                               title={safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF'}
                             >
-                              <option value="classico">{safeT?.modeloClassico || 'Clássico'}</option>
-                              <option value="detalhado">{safeT?.modeloDetalhado || 'Detalhado'}</option>
-                              <option value="moderno">{safeT?.modeloModerno || 'Moderno'}</option>
-                              <option value="minimalista">{safeT?.modeloMinimalista || 'Minimalista'}</option>
-                              <option value="tecnico">{safeT?.modeloTecnico || 'Técnico'}</option>
-                              <option value="executivo">{safeT?.modeloExecutivo || 'Executivo'}</option>
-                              <option value="negro">{safeT?.modeloNegro || 'Negro'}</option>
-                              <option value="compacto">{safeT?.modeloCompacto || 'Compacto'}</option>
-                              <option value="ferwood">{safeT?.modeloFerwood || 'Ferwood'}</option>
-                              <option value="profissional">{safeT?.modeloProfissional || 'Profissional'}</option>
-                              <option value="resumido">{safeT?.modeloResumido || 'Resumido'}</option>
-                              <option value="colorido">{safeT?.modeloColorido || 'Colorido'}</option>
-                              <option value="formal">{safeT?.modeloFormal || 'Formal'}</option>
-                              <option value="lista">{safeT?.modeloLista || 'Lista'}</option>
+                              <optgroup label={safeT?.relatorioPdfOptgroupRecomendados || 'Recomendados para cliente'}>
+                                <option value="classico">{safeT?.modeloClassico || 'Clássico'}</option>
+                                <option value="detalhado">{safeT?.modeloDetalhado || 'Detalhado'}</option>
+                                <option value="compacto">{safeT?.modeloCompacto || 'Compacto'}</option>
+                                <option value="moderno">{safeT?.modeloModerno || 'Moderno'}</option>
+                                <option value="profissional">{safeT?.modeloProfissional || 'Profissional'}</option>
+                              </optgroup>
+                              <optgroup label={safeT?.relatorioPdfOptgroupOutros || 'Outros estilos'}>
+                                <option value="minimalista">{safeT?.modeloMinimalista || 'Minimalista'}</option>
+                                <option value="tecnico">{safeT?.modeloTecnico || 'Técnico'}</option>
+                                <option value="executivo">{safeT?.modeloExecutivo || 'Executivo'}</option>
+                                <option value="negro">{safeT?.modeloNegro || 'Negro'}</option>
+                                <option value="ferwood">{safeT?.modeloFerwood || 'Ferwood'}</option>
+                                <option value="resumido">{safeT?.modeloResumido || 'Resumido'}</option>
+                                <option value="colorido">{safeT?.modeloColorido || 'Colorido'}</option>
+                                <option value="formal">{safeT?.modeloFormal || 'Formal'}</option>
+                                <option value="lista">{safeT?.modeloLista || 'Lista'}</option>
+                              </optgroup>
                             </select>
                             <button 
                               className="btn-primary" 
@@ -58688,20 +58172,24 @@ A1;Peça exemplo;10`}
                                         onChange={(e) => setSelectedPDFModel(e.target.value)}
                                         aria-label={safeT?.gerarPDF || 'Modelo PDF'}
                                       >
-                                        <option value="classico">{safeT?.modeloClassico || 'Clássico'}</option>
-                                        <option value="detalhado">{safeT?.modeloDetalhado || 'Detalhado'}</option>
-                                        <option value="moderno">{safeT?.modeloModerno || 'Moderno'}</option>
-                                        <option value="minimalista">{safeT?.modeloMinimalista || 'Minimalista'}</option>
-                                        <option value="tecnico">{safeT?.modeloTecnico || 'Técnico'}</option>
-                                        <option value="executivo">{safeT?.modeloExecutivo || 'Executivo'}</option>
-                                        <option value="negro">{safeT?.modeloNegro || 'Negro'}</option>
-                                        <option value="compacto">{safeT?.modeloCompacto || 'Compacto'}</option>
-                                        <option value="ferwood">{safeT?.modeloFerwood || 'Ferwood'}</option>
-                                        <option value="profissional">{safeT?.modeloProfissional || 'Profissional'}</option>
-                                        <option value="resumido">{safeT?.modeloResumido || 'Resumido'}</option>
-                                        <option value="colorido">{safeT?.modeloColorido || 'Colorido'}</option>
-                                        <option value="formal">{safeT?.modeloFormal || 'Formal'}</option>
-                                        <option value="lista">{safeT?.modeloLista || 'Lista'}</option>
+                                        <optgroup label={safeT?.relatorioPdfOptgroupRecomendados || 'Recomendados para cliente'}>
+                                          <option value="classico">{safeT?.modeloClassico || 'Clássico'}</option>
+                                          <option value="detalhado">{safeT?.modeloDetalhado || 'Detalhado'}</option>
+                                          <option value="compacto">{safeT?.modeloCompacto || 'Compacto'}</option>
+                                          <option value="moderno">{safeT?.modeloModerno || 'Moderno'}</option>
+                                          <option value="profissional">{safeT?.modeloProfissional || 'Profissional'}</option>
+                                        </optgroup>
+                                        <optgroup label={safeT?.relatorioPdfOptgroupOutros || 'Outros estilos'}>
+                                          <option value="minimalista">{safeT?.modeloMinimalista || 'Minimalista'}</option>
+                                          <option value="tecnico">{safeT?.modeloTecnico || 'Técnico'}</option>
+                                          <option value="executivo">{safeT?.modeloExecutivo || 'Executivo'}</option>
+                                          <option value="negro">{safeT?.modeloNegro || 'Negro'}</option>
+                                          <option value="ferwood">{safeT?.modeloFerwood || 'Ferwood'}</option>
+                                          <option value="resumido">{safeT?.modeloResumido || 'Resumido'}</option>
+                                          <option value="colorido">{safeT?.modeloColorido || 'Colorido'}</option>
+                                          <option value="formal">{safeT?.modeloFormal || 'Formal'}</option>
+                                          <option value="lista">{safeT?.modeloLista || 'Lista'}</option>
+                                        </optgroup>
                                       </select>
                                       <div className="biblioteca-relatorios-servico-actions__grid">
                                         <button 
@@ -74025,20 +73513,24 @@ A1;Peça exemplo;10`}
                   }}
                   title={safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF'}
                 >
-                  <option value="classico">{safeT?.modeloClassico || 'Clássico'}</option>
-                  <option value="detalhado">{safeT?.modeloDetalhado || 'Detalhado'}</option>
-                  <option value="moderno">{safeT?.modeloModerno || 'Moderno'}</option>
-                  <option value="minimalista">{safeT?.modeloMinimalista || 'Minimalista'}</option>
-                  <option value="tecnico">{safeT?.modeloTecnico || 'Técnico'}</option>
-                  <option value="executivo">{safeT?.modeloExecutivo || 'Executivo'}</option>
-                  <option value="negro">{safeT?.modeloNegro || 'Negro'}</option>
-                  <option value="compacto">{safeT?.modeloCompacto || 'Compacto'}</option>
-                  <option value="ferwood">{safeT?.modeloFerwood || 'Ferwood'}</option>
-                  <option value="profissional">{safeT?.modeloProfissional || 'Profissional'}</option>
-                  <option value="resumido">{safeT?.modeloResumido || 'Resumido'}</option>
-                  <option value="colorido">{safeT?.modeloColorido || 'Colorido'}</option>
-                  <option value="formal">{safeT?.modeloFormal || 'Formal'}</option>
-                  <option value="lista">{safeT?.modeloLista || 'Lista'}</option>
+                  <optgroup label={safeT?.relatorioPdfOptgroupRecomendados || 'Recomendados para cliente'}>
+                    <option value="classico">{safeT?.modeloClassico || 'Clássico'}</option>
+                    <option value="detalhado">{safeT?.modeloDetalhado || 'Detalhado'}</option>
+                    <option value="compacto">{safeT?.modeloCompacto || 'Compacto'}</option>
+                    <option value="moderno">{safeT?.modeloModerno || 'Moderno'}</option>
+                    <option value="profissional">{safeT?.modeloProfissional || 'Profissional'}</option>
+                  </optgroup>
+                  <optgroup label={safeT?.relatorioPdfOptgroupOutros || 'Outros estilos'}>
+                    <option value="minimalista">{safeT?.modeloMinimalista || 'Minimalista'}</option>
+                    <option value="tecnico">{safeT?.modeloTecnico || 'Técnico'}</option>
+                    <option value="executivo">{safeT?.modeloExecutivo || 'Executivo'}</option>
+                    <option value="negro">{safeT?.modeloNegro || 'Negro'}</option>
+                    <option value="ferwood">{safeT?.modeloFerwood || 'Ferwood'}</option>
+                    <option value="resumido">{safeT?.modeloResumido || 'Resumido'}</option>
+                    <option value="colorido">{safeT?.modeloColorido || 'Colorido'}</option>
+                    <option value="formal">{safeT?.modeloFormal || 'Formal'}</option>
+                    <option value="lista">{safeT?.modeloLista || 'Lista'}</option>
+                  </optgroup>
                 </select>
                 <button 
                   className="btn-primary" 
