@@ -264,6 +264,37 @@ function servicoCodParaExibicao(s: { cod?: string; nome: string }): string {
   return m ? m[1].toUpperCase() : ''
 }
 
+/** Descrição legível para gravar no fechamento (evita só o código curto do cadastro). */
+function servicoDescricaoLegivelFechamento(s: { cod?: string; nome: string; descricao?: string }): string {
+  const cod = servicoCodParaExibicao(s)
+  const codNorm = (cod || '').trim().toUpperCase()
+  const pareceSoCodigo = (texto: string) => {
+    const t = (texto || '').trim()
+    if (!t) return true
+    if (codNorm && t.toUpperCase() === codNorm) return true
+    if (t.length <= 8 && /^[A-Z0-9._\-]+$/i.test(t) && !/\s/.test(t)) return true
+    return false
+  }
+  const d = (typeof s.descricao === 'string' ? s.descricao : '').trim()
+  const n = (s.nome || '').trim()
+  if (d && !pareceSoCodigo(d)) return d
+  if (n && !pareceSoCodigo(n)) return n
+  if (d) return d
+  if (n) return n
+  return cod || ''
+}
+
+/** Rótulo para `<select>` no fechamento: código + descrição/nome legível. */
+function servicoRotuloParaSelectFechamento(s: { cod?: string; nome: string; descricao?: string }): string {
+  const cod = servicoCodParaExibicao(s)
+  const codNorm = (cod || '').trim().toUpperCase()
+  const legivel = servicoDescricaoLegivelFechamento(s)
+  const legNorm = legivel.trim().toUpperCase()
+  if (cod && legivel && legNorm !== codNorm) return `${cod} — ${legivel}`
+  if (legivel) return cod ? `${cod} — ${legivel}` : legivel
+  return cod || '—'
+}
+
 type Language = {
   code: string
   name: string
@@ -44715,13 +44746,6 @@ A1;Peça exemplo;10`}
           }
         }
         const relatorioSelecionado = fechamentoRelatorioSelecionadoId ? relatoriosServico.find(r => r.id === fechamentoRelatorioSelecionadoId) : null
-        const itensFechamento = (relatorioSelecionado && fechamentosRelatorios[relatorioSelecionado.id]) || []
-        const setItensFechamento = (itens: FechamentoItem[]) => {
-          if (!relatorioSelecionado) return
-          const next = { ...fechamentosRelatorios, [relatorioSelecionado.id]: itens }
-          setFechamentosRelatorios(next)
-          saveData('nonato-fechamentos-relatorios', next)
-        }
         /** Evita que Ida/Retorno herdem o mesmo serviço «hora» que Horas de trabalho (ex.: tudo com código HTT). */
         const { fechServHt, fechServHida, fechServHret } = (() => {
           const txt = (s: typeof servicos[0]) => ((s.nome || '') + ' ' + (s.descricao || '')).toLowerCase()
@@ -44815,62 +44839,69 @@ A1;Peça exemplo;10`}
         }
         // Sempre preencher a tabela a partir do resumo do relatório: itens com quantidades do resumo + código/descrição/valor do Cadastro de Serviços
         const itensIniciaisSempre = relatorioSelecionado ? getItensIniciaisDoRelatorio(relatorioSelecionado) : []
+        /** Linhas extra guardadas sem `origem` (dados antigos) continuam a contar como manuais. */
+        const isLinhaManualFechamento = (i: FechamentoItem) => {
+          if (i.origem === 'manual') return true
+          if (i.origem === 'relatorio') return false
+          return !(FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(i.id)
+        }
+        const buildItensParaExibirFromSalvos = (salvosBrutos: FechamentoItem[] | undefined): FechamentoItem[] => {
+          if (!relatorioSelecionado) return []
+          const salvos = salvosBrutos || []
+          const seisDoResumo = itensIniciaisSempre
+          const itensManuaisSalvos = salvos.filter(isLinhaManualFechamento)
+          if (salvos.length === 0) return [...seisDoResumo, ...itensManuaisSalvos]
+          const seisComQuantidadeDoResumo = seisDoResumo.map(item => {
+            const saved = salvos.find(s => s.id === item.id)
+            if (!saved) return item
+            const qty = item.quantidade ?? 0
+            const temCodOuServico = (saved.cod && saved.cod.trim()) || saved.servicoId
+            const temValorUnit = saved.valorUnitario != null && saved.valorUnitario > 0
+            const servicoCadastro = getServicoParaItemResumo(item.id)
+            const valorUnit = (temValorUnit ? saved.valorUnitario : servicoCadastro?.valor ?? item.valorUnitario) ?? 0
+            const svSaved = saved.servicoId ? servicos.find((s) => s.id === saved.servicoId) : undefined
+            const cod = temCodOuServico
+              ? (String(saved.cod ?? '').trim() || (svSaved ? servicoCodParaExibicao(svSaved) : ''))
+              : servicoCadastro
+                ? servicoCodParaExibicao(servicoCadastro)
+                : ''
+            /** `??` não substitui string vazia — evita célula “—” quando o cadastro tem só `nome` */
+            const pickDesc = (...vals: (string | undefined | null)[]) => {
+              for (const v of vals) {
+                const s = v != null ? String(v).trim() : ''
+                if (s) return s
+              }
+              return ''
+            }
+            const codNorm = (cod || '').trim().toUpperCase()
+            const looksLikeCodOnly = (s: string) => {
+              const t = (s || '').trim()
+              if (!t) return true
+              if (t.toUpperCase() === codNorm) return true
+              if (t.length <= 8 && /^[A-Z0-9._\-]+$/i.test(t) && !/\s/.test(t)) return true
+              return false
+            }
+            let descricao = pickDesc(
+              ...(temCodOuServico
+                ? [saved.descricao, svSaved?.descricao, svSaved?.nome, servicoCadastro?.descricao, servicoCadastro?.nome]
+                : [servicoCadastro?.descricao, servicoCadastro?.nome, saved.descricao, svSaved?.descricao, svSaved?.nome])
+            )
+            if (looksLikeCodOnly(descricao)) {
+              descricao = pickDesc(item.descricao, svSaved?.descricao, servicoCadastro?.descricao, svSaved?.nome, servicoCadastro?.nome, saved.descricao)
+            }
+            if (!descricao || looksLikeCodOnly(descricao)) descricao = item.descricao
+            const servicoId = saved.servicoId || servicoCadastro?.id
+            const total = (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias' || item.id === 'hida' || item.id === 'hret') ? Math.round(qty * valorUnit * 100) / 100 : valorUnit
+            const cobrarDiaria = item.id === 'diarias' && typeof saved.cobrarDiaria === 'boolean' ? saved.cobrarDiaria : (item as FechamentoItem).cobrarDiaria !== false
+            return { ...saved, servicoId, cod, descricao, quantidade: item.quantidade, valorUnitario: valorUnit, valorTotal: total, cobrarDiaria: item.id === 'diarias' ? cobrarDiaria : undefined }
+          })
+          const seisIds = ['ht', 'km', 'diarias', 'hida', 'hret']
+          const comTodosSeis = seisIds.map(id => seisComQuantidadeDoResumo.find(i => i.id === id) || itensIniciaisSempre.find(i => i.id === id)).filter(Boolean) as FechamentoItem[]
+          return [...comTodosSeis, ...itensManuaisSalvos].filter(i => !(i.id === 'hviagem' && i.origem === 'relatorio'))
+        }
         const salvosParaEsteRelatorio = (relatorioSelecionado && fechamentosRelatorios[relatorioSelecionado.id]) || []
-        const itensManuaisSalvos = salvosParaEsteRelatorio.filter(i => i.origem === 'manual')
-        const itensParaExibir = relatorioSelecionado
-          ? (() => {
-              const seisDoResumo = itensIniciaisSempre
-              const salvos = salvosParaEsteRelatorio
-              if (salvos.length === 0) return [...seisDoResumo, ...itensManuaisSalvos]
-              const seisComQuantidadeDoResumo = seisDoResumo.map(item => {
-                const saved = salvos.find(s => s.id === item.id)
-                if (!saved) return item
-                const qty = item.quantidade ?? 0
-                const temCodOuServico = (saved.cod && saved.cod.trim()) || saved.servicoId
-                const temValorUnit = saved.valorUnitario != null && saved.valorUnitario > 0
-                const servicoCadastro = getServicoParaItemResumo(item.id)
-                const valorUnit = (temValorUnit ? saved.valorUnitario : servicoCadastro?.valor ?? item.valorUnitario) ?? 0
-                const svSaved = saved.servicoId ? servicos.find((s) => s.id === saved.servicoId) : undefined
-                const cod = temCodOuServico
-                  ? (String(saved.cod ?? '').trim() || (svSaved ? servicoCodParaExibicao(svSaved) : ''))
-                  : servicoCadastro
-                    ? servicoCodParaExibicao(servicoCadastro)
-                    : ''
-                /** `??` não substitui string vazia — evita célula “—” quando o cadastro tem só `nome` */
-                const pickDesc = (...vals: (string | undefined | null)[]) => {
-                  for (const v of vals) {
-                    const s = v != null ? String(v).trim() : ''
-                    if (s) return s
-                  }
-                  return ''
-                }
-                const codNorm = (cod || '').trim().toUpperCase()
-                const looksLikeCodOnly = (s: string) => {
-                  const t = (s || '').trim()
-                  if (!t) return true
-                  if (t.toUpperCase() === codNorm) return true
-                  if (t.length <= 8 && /^[A-Z0-9._\-]+$/i.test(t) && !/\s/.test(t)) return true
-                  return false
-                }
-                let descricao = pickDesc(
-                  ...(temCodOuServico
-                    ? [saved.descricao, svSaved?.descricao, svSaved?.nome, servicoCadastro?.descricao, servicoCadastro?.nome]
-                    : [servicoCadastro?.descricao, servicoCadastro?.nome, saved.descricao, svSaved?.descricao, svSaved?.nome])
-                )
-                if (looksLikeCodOnly(descricao)) {
-                  descricao = pickDesc(item.descricao, svSaved?.descricao, servicoCadastro?.descricao, svSaved?.nome, servicoCadastro?.nome, saved.descricao)
-                }
-                if (!descricao || looksLikeCodOnly(descricao)) descricao = item.descricao
-                const servicoId = saved.servicoId || servicoCadastro?.id
-                const total = (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias' || item.id === 'hida' || item.id === 'hret') ? Math.round(qty * valorUnit * 100) / 100 : valorUnit
-                const cobrarDiaria = item.id === 'diarias' && typeof saved.cobrarDiaria === 'boolean' ? saved.cobrarDiaria : (item as FechamentoItem).cobrarDiaria !== false
-                return { ...saved, servicoId, cod, descricao, quantidade: item.quantidade, valorUnitario: valorUnit, valorTotal: total, cobrarDiaria: item.id === 'diarias' ? cobrarDiaria : undefined }
-              })
-              const seisIds = ['ht', 'km', 'diarias', 'hida', 'hret']
-              const comTodosSeis = seisIds.map(id => seisComQuantidadeDoResumo.find(i => i.id === id) || itensIniciaisSempre.find(i => i.id === id)).filter(Boolean) as FechamentoItem[]
-              return [...comTodosSeis, ...itensManuaisSalvos].filter(i => !(i.id === 'hviagem' && i.origem === 'relatorio'))
-            })()
-          : []
+        const itensParaExibir = relatorioSelecionado ? buildItensParaExibirFromSalvos(salvosParaEsteRelatorio) : []
+        const temLinhasManuaisFechamento = itensParaExibir.some(isLinhaManualFechamento)
         const omitidosRelatorio = relatorioSelecionado ? (fechamentoItensOmitidosPorRelatorio[relatorioSelecionado.id] ?? []) : []
         const omitSetFechamento = new Set(omitidosRelatorio)
         const itensVisiveisFechamento = itensParaExibir.filter(i => !omitSetFechamento.has(i.id))
@@ -44939,14 +44970,20 @@ A1;Peça exemplo;10`}
           })
         }
         const atualizarItem = (id: string, upd: Partial<FechamentoItem>) => {
-          const list = itensParaExibir
-          const idx = list.findIndex(i => i.id === id)
-          if (idx === -1) return
-          const item = { ...list[idx], ...upd }
-          if (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias' || item.id === 'hida' || item.id === 'hret') item.valorTotal = Math.round(item.quantidade * item.valorUnitario * 100) / 100
-          else if (item.tipoCobranca === 'valor-fixo' || item.tipoCobranca === 'unidade') item.valorTotal = item.valorUnitario * (item.quantidade || 1)
-          const nova = [...list.slice(0, idx), item, ...list.slice(idx + 1)]
-          setItensFechamento(nova)
+          if (!relatorioSelecionado) return
+          const rid = relatorioSelecionado.id
+          setFechamentosRelatorios(prev => {
+            const list = buildItensParaExibirFromSalvos(prev[rid])
+            const idx = list.findIndex(i => i.id === id)
+            if (idx === -1) return prev
+            const item = { ...list[idx], ...upd }
+            if (item.tipoCobranca === 'hora' || item.tipoCobranca === 'km' || item.tipoCobranca === 'diarias' || item.id === 'hida' || item.id === 'hret') item.valorTotal = Math.round(item.quantidade * item.valorUnitario * 100) / 100
+            else if (item.tipoCobranca === 'valor-fixo' || item.tipoCobranca === 'unidade') item.valorTotal = item.valorUnitario * (item.quantidade || 1)
+            const nova = [...list.slice(0, idx), item, ...list.slice(idx + 1)]
+            const next = { ...prev, [rid]: nova }
+            void saveData('nonato-fechamentos-relatorios', next)
+            return next
+          })
         }
         const aplicarServico = (itemId: string, servico: typeof servicos[0]) => {
           const list = itensParaExibir
@@ -44959,24 +44996,39 @@ A1;Peça exemplo;10`}
           if (tipo === 'valor-fixo' || (servico.tipoCobranca === 'unidade' && !isHidaOuHret)) total = valorUnit
           const codFechamento =
             (typeof servico.cod === 'string' && servico.cod.trim()) || servicoCodParaExibicao(servico) || undefined
+          const descLegivel = servicoDescricaoLegivelFechamento(servico)
           atualizarItem(itemId, {
             servicoId: servico.id,
             cod: codFechamento,
-            descricao: servico.descricao || servico.nome || item.descricao,
+            descricao: descLegivel || item.descricao,
             valorUnitario: valorUnit,
             valorTotal: total,
-            tipoCobranca: tipo as FechamentoItem['tipoCobranca']
+            tipoCobranca: tipo as FechamentoItem['tipoCobranca'],
+            ...(isLinhaManualFechamento(item) ? ({ origem: 'manual' } as const) : {}),
           })
         }
         const adicionarItemManual = () => {
           if (!relatorioSelecionado) return
+          const rid = relatorioSelecionado.id
           const novo: FechamentoItem = { id: 'm' + Date.now(), descricao: (safeT as any)?.outroItem || 'Outro item', tipoCobranca: 'valor-fixo', quantidade: 1, valorUnitario: 0, valorTotal: 0, origem: 'manual' }
-          setItensFechamento([...itensParaExibir, novo])
+          setFechamentosRelatorios(prev => {
+            const list = buildItensParaExibirFromSalvos(prev[rid])
+            const nova = [...list, novo]
+            const next = { ...prev, [rid]: nova }
+            void saveData('nonato-fechamentos-relatorios', next)
+            return next
+          })
         }
         const removerItem = (id: string) => {
           if (!relatorioSelecionado) return
-          const list = itensParaExibir.filter(i => i.id !== id)
-          setItensFechamento(list)
+          const rid = relatorioSelecionado.id
+          setFechamentosRelatorios(prev => {
+            const list = buildItensParaExibirFromSalvos(prev[rid])
+            const nova = list.filter(i => i.id !== id)
+            const next = { ...prev, [rid]: nova }
+            void saveData('nonato-fechamentos-relatorios', next)
+            return next
+          })
         }
         const handleSalvarFechamentoNaBiblioteca = () => {
           if (!relatorioSelecionado) return
@@ -44984,8 +45036,13 @@ A1;Peça exemplo;10`}
           const itensSnap = [...itensVisiveisFechamento]
           const totalSnap = fechTotIva.comIva
           const cliSnap = relSnap.clienteId ? clientes.find(c => c.id === relSnap.clienteId) : undefined
-          setItensFechamento(itensParaExibir)
           const rid = relatorioSelecionado.id
+          setFechamentosRelatorios(prev => {
+            const merged = buildItensParaExibirFromSalvos(prev[rid])
+            const next = { ...prev, [rid]: merged }
+            void saveData('nonato-fechamentos-relatorios', next)
+            return next
+          })
           setFechamentosGuardadosBibliotecaIds(prev => {
             const next = prev.includes(rid) ? prev : [...prev, rid]
             saveData('nonato-fechamentos-guardados-biblioteca', next)
@@ -45611,7 +45668,7 @@ A1;Peça exemplo;10`}
                         <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.valorUnitario || 'Valor unit.'}</th>
                         <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.valorTotal || 'Total'}</th>
                         <th style={{ width: '140px', padding: '10px 8px', color: '#00ff00', textAlign: 'center' }}>{(safeT as any)?.cobrarDiariaTecnico || 'Cobrar diária?'}</th>
-                        {itensParaExibir.some(i => i.origem === 'manual') && (
+                        {temLinhasManuaisFechamento && (
                           <th style={{ width: '200px', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.selecionarServicoAnexar || 'Anexar: selecionar do Cadastro'}</th>
                         )}
                         <th style={{ width: '96px', padding: '10px 6px', color: '#00ff00', textAlign: 'center', fontSize: '11px' }}>{(safeT as any)?.fechamentoColunaAcoes || 'Ações'}</th>
@@ -45642,7 +45699,7 @@ A1;Peça exemplo;10`}
                           return fallback || '—'
                         })()
                         const itemFixoDoRelatorio = item.origem === 'relatorio'
-                        const eManual = item.origem === 'manual'
+                        const eManual = isLinhaManualFechamento(item)
                         const eDiarias = item.id === 'diarias'
                         const cobrarDiaria = eDiarias ? (item.cobrarDiaria !== false) : true
                         const totalExibir = eDiarias && !cobrarDiaria ? 0 : item.valorTotal
@@ -45669,20 +45726,16 @@ A1;Peça exemplo;10`}
                               <span style={{ color: '#444' }}>—</span>
                             )}
                           </td>
-                          {itensParaExibir.some(i => i.origem === 'manual') && (
+                          {temLinhasManuaisFechamento && (
                             <td style={{ padding: '8px' }}>
                               {eManual ? (
                                 <select value={item.servicoId || ''} onChange={e => { const sid = e.target.value; const s = servicos.find(sv => sv.id === sid); if (s) aplicarServico(item.id, s) }} style={{ width: '100%', padding: '6px 8px', background: '#2a2a2a', border: '1px solid #444', borderRadius: '4px', color: '#fff', fontSize: '12px' }}>
-                                  <option value="">{(safeT as any)?.selecioneServicoAnexar || '— Selecionar serviço (COD, nome, valor) —'}</option>
-                                  {servicosParaItem(item).map((s) => {
-                                    const copt = servicoCodParaExibicao(s)
-                                    return (
+                                  <option value="">{(safeT as any)?.selecioneServicoAnexar || '— Selecionar serviço (código, descrição, valor) —'}</option>
+                                  {servicosParaItem(item).map((s) => (
                                     <option key={s.id} value={s.id}>
-                                      {copt ? `COD: ${copt} · ` : ''}
-                                      {s.nome} – {formatServicoValorExibicao(s.valor)} €
+                                      {servicoRotuloParaSelectFechamento(s)} · {formatServicoValorExibicao(s.valor)} €
                                     </option>
-                                    )
-                                  })}
+                                  ))}
                                 </select>
                               ) : (
                                 <span style={{ fontSize: '11px', color: '#666' }}>—</span>
@@ -45726,7 +45779,7 @@ A1;Peça exemplo;10`}
                         </td>
                         <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', fontSize: '16px', color: '#00ff00' }}>{fechTotIva.liquido.toFixed(2)} €</td>
                         <td style={{ padding: '12px 8px' }}></td>
-                        {itensParaExibir.some(i => i.origem === 'manual') && <td style={{ padding: '12px 8px' }}></td>}
+                        {temLinhasManuaisFechamento && <td style={{ padding: '12px 8px' }}></td>}
                         <td style={{ padding: '12px 8px' }}></td>
                       </tr>
                       {ivaOptsFech.incluirIva && (
@@ -45737,7 +45790,7 @@ A1;Peça exemplo;10`}
                             </td>
                             <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: 700, fontSize: '15px', color: '#7dd3fc' }}>{fechTotIva.iva.toFixed(2)} €</td>
                             <td style={{ padding: '10px 8px' }}></td>
-                            {itensParaExibir.some(i => i.origem === 'manual') && <td style={{ padding: '10px 8px' }}></td>}
+                            {temLinhasManuaisFechamento && <td style={{ padding: '10px 8px' }}></td>}
                             <td style={{ padding: '10px 8px' }}></td>
                           </tr>
                           <tr style={{ borderTop: '2px solid rgba(56, 189, 248, 0.45)', background: 'rgba(56, 189, 248, 0.12)' }}>
@@ -45746,7 +45799,7 @@ A1;Peça exemplo;10`}
                             </td>
                             <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: 'bold', fontSize: '17px', color: '#f0f9ff' }}>{fechTotIva.comIva.toFixed(2)} €</td>
                             <td style={{ padding: '12px 8px' }}></td>
-                            {itensParaExibir.some(i => i.origem === 'manual') && <td style={{ padding: '12px 8px' }}></td>}
+                            {temLinhasManuaisFechamento && <td style={{ padding: '12px 8px' }}></td>}
                             <td style={{ padding: '12px 8px' }}></td>
                           </tr>
                         </>
