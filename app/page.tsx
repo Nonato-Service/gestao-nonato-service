@@ -1659,7 +1659,9 @@ function resolveClienteEEquipamentoParaFormularioAgenda(
   let equipamentoId = String(ag.equipamentoId ?? '').trim()
   const cli = clientes.find((c) => c.id === clienteId)
   if (cli?.equipamentos?.length) {
-    const valid = equipamentoId && cli.equipamentos.some((e) => e.id === equipamentoId)
+    const equipDoCliente = (id: string) =>
+      cli.equipamentos!.find((e) => e.id === id || e.numeroSerie === id)
+    const valid = equipamentoId && equipDoCliente(equipamentoId)
     if (!valid && (ag.equipamento || '').trim()) {
       const label = (ag.equipamento || '').trim().toLowerCase()
       const m =
@@ -1671,7 +1673,15 @@ function resolveClienteEEquipamentoParaFormularioAgenda(
             (e.numeroSerie && label.includes(String(e.numeroSerie).toLowerCase()))
           )
         }) || null
-      equipamentoId = m?.id || equipamentoId
+      equipamentoId = (m?.numeroSerie || m?.id || equipamentoId) as string
+    }
+    // O formulário da agenda usa `value={eq.numeroSerie}` no select — alinhar id interno ao n.º série.
+    if (equipamentoId) {
+      const me = equipDoCliente(equipamentoId)
+      if (me) {
+        const serial = String(me.numeroSerie || '').trim()
+        equipamentoId = serial || String(me.id || '').trim() || equipamentoId
+      }
     }
   }
   return { clienteId, equipamentoId }
@@ -6334,6 +6344,18 @@ export default function Dashboard() {
   }, [isCompactLayout, activeTabId])
 
   const dataBootstrapCompleteRef = useRef(false)
+  /** Formulário inline da Agenda fica acima da vista em lista; ao editar, levar o ecrã até ao formulário. */
+  const agendaInlineFormRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!showAgendaForm) return
+    const tab = openTabs.find((t) => t.id === activeTabId)
+    if (!tab || tab.type !== 'agenda') return
+    const id = requestAnimationFrame(() => {
+      agendaInlineFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    })
+    return () => cancelAnimationFrame(id)
+  }, [showAgendaForm, activeTabId, openTabs, editingAgendamento?.id])
 
   useEffect(() => {
     if (!syncPendingRemote) {
@@ -12129,6 +12151,7 @@ export default function Dashboard() {
       contato: cliente.contato,
       photo: cliente.photo || ''
     })
+    setClientesActiveTab('cadastrar')
     setShowClienteForm(true)
   }
 
@@ -41707,7 +41730,7 @@ A1;Peça exemplo;10`}
 
             {/* Formulário de Agendamento */}
             {showAgendaForm && (
-              <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}>
+              <div ref={agendaInlineFormRef} style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}>
                 <h3 style={{ marginBottom: '15px', color: '#00ff00' }}>
                   {editingAgendamento ? (safeT?.editarAgendamento || 'Editar Agendamento') : (safeT?.novoAgendamento || 'Novo Agendamento')}
                 </h3>
