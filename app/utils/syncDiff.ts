@@ -35,7 +35,7 @@ export const SYNC_KEY_LABELS: Record<string, string> = {
   'nonato-servicos-grupos': 'Grupos de serviços',
   'nonato-logo': 'Logo',
   'nonato-logo-type': 'Tipo do logo',
-  'nonato-ficha-cadastral': 'Ficha cadastral',
+  'nonato-ficha-cadastral': 'Cadastro Nonato Service (dados da empresa)',
   'nonato-passwords': 'Gestor de senhas',
   'nonato-tipos-gestores': 'Tipos de gestores',
   'nonato-familias-grupos-equipamentos': 'Famílias e grupos (equipamentos)',

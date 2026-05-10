@@ -218,13 +218,13 @@ export function PapelTimbradoConfigurator({ variant }: Props) {
       const fc = (await loadData(FICHA_KEY, true)) as FichaCadastralLite | null
       const partial = partialDesdeFichaCadastral(fc)
       if (!partial) {
-        window.alert(cur.papelTimbradoSemFichaCadastro || 'Sem dados na ficha cadastral.')
+        window.alert(cur.papelTimbradoSemFichaCadastro || 'Sem dados no cadastro da Nonato Service.')
         return
       }
       setPapel((p) => ({ ...p, config: mergeCfg(p.config, partial) }))
       setLogoBroken(false)
     } catch {
-      window.alert(cur.papelTimbradoSemFichaCadastro || 'Sem dados na ficha cadastral.')
+      window.alert(cur.papelTimbradoSemFichaCadastro || 'Sem dados no cadastro da Nonato Service.')
     }
   }, [])
 

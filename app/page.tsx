@@ -453,13 +453,15 @@ const SIDEBAR_GROUP_LAUNCHER_IDS = new Set([
 
 const SIDEBAR_PINNED_IDS = new Set([
   'cadastro-nonato-service-default',
-  'ficha-cadastral-default',
+  'ficha-pagamento-transferencia-default',
+  'ficha-fatura-cliente-default',
 ])
 
 const SIDEBAR_TRANSLATION_KEY_BY_ID: Record<string, string> = {
   'extras-default': 'administrador',
   'cadastro-nonato-service-default': 'cadastroNonatoServiceTitle',
-  'ficha-cadastral-default': 'fichaCadastralTitle',
+  'ficha-pagamento-transferencia-default': 'fichaPagamentoTransferenciaTitle',
+  'ficha-fatura-cliente-default': 'fichaFaturaClienteTitle',
   'gestores-default': 'gestoresTitle',
   'familias-grupos-default': 'familiasGruposTitle',
   'familias-grupos-equipamentos-default': 'familiasGruposEquipamentosTitle',
@@ -564,7 +566,8 @@ function getDefaultSidebarGroup(buttonId: string): SidebarGroup {
   if (
     [
       'cadastro-nonato-service-default',
-      'ficha-cadastral-default',
+      'ficha-pagamento-transferencia-default',
+      'ficha-fatura-cliente-default',
       'solicitacao-servico-tecnico-default',
     ].includes(buttonId)
   ) {
@@ -575,6 +578,38 @@ function getDefaultSidebarGroup(buttonId: string): SidebarGroup {
 
 function isSidebarButtonLocked(button: SidebarButton): boolean {
   return SIDEBAR_GROUP_LAUNCHER_IDS.has(button.id)
+}
+
+/** Substitui o botão legado «ficha-cadastral-default» por dois: transferência e fatura (cliente). */
+function migrateLegacyFichaCadastralSidebarButtons(buttons: SidebarButton[]): SidebarButton[] {
+  if (!buttons.some((b) => b.id === 'ficha-cadastral-default')) return buttons
+  return buttons.flatMap((b) => {
+    if (b.id !== 'ficha-cadastral-default') return [b]
+    const ord = typeof b.order === 'number' ? b.order : 20
+    const grp = (b.group || 'empresa-institucional') as SidebarGroup
+    return [
+      {
+        ...b,
+        id: 'ficha-pagamento-transferencia-default',
+        name: 'FICHA PARA TRANSFERÊNCIA / PAGAMENTO',
+        action: 'open-ficha-pagamento-transferencia',
+        order: ord,
+        translationKey: 'fichaPagamentoTransferenciaTitle',
+        group: grp,
+        customName: false,
+      },
+      {
+        ...b,
+        id: 'ficha-fatura-cliente-default',
+        name: 'FICHA PARA O CLIENTE EMITIR FATURA',
+        action: 'open-ficha-fatura-cliente',
+        order: ord + 1,
+        translationKey: 'fichaFaturaClienteTitle',
+        group: grp,
+        customName: false,
+      },
+    ]
+  })
 }
 
 function normalizeSidebarButtons(buttons: SidebarButton[]): SidebarButton[] {
@@ -2142,7 +2177,7 @@ type GrupoChecklist = {
   dataCriacao: string
 }
 
-type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-cadastral' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'gestao-demos' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'orcamento-servico-tecnico' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa' | 'informacoes-mecanicas-eletricas'
+type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-pagamento-transferencia' | 'ficha-fatura-cliente' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'gestao-demos' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'orcamento-servico-tecnico' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa' | 'informacoes-mecanicas-eletricas'
 
 type Tab = {
   id: string
@@ -2216,6 +2251,8 @@ function getDemoModuleLabelForGrid(action: string): string {
     'open-relatorios-excluidos-clientes': 'Relatórios excluídos (clientes)',
     'open-manuais-informacoes-tecnicas': 'Manuais e informações técnicas',
     'open-almoxarifado-armazem': 'Almoxarifado / armazém',
+    'open-ficha-pagamento-transferencia': 'Ficha para transferência / pagamento',
+    'open-ficha-fatura-cliente': 'Ficha para o cliente emitir fatura',
   }
   if (labels[action]) return labels[action]
   return action
@@ -2262,6 +2299,9 @@ const HUB_CARD_DESC_BY_BUTTON_ID: Record<string, readonly string[]> = {
   'alerta-mensagens-default': ['alertaMensagensDesc'],
   'manuais-informacoes-tecnicas-default': ['manuaisInformacoesTecnicasDesc', 'quickAccessManuaisDesc'],
   'almoxarifado-armazem-default': ['quickAccessAlmoxarifadoDesc', 'almoxarifadoArmazemDesc'],
+  'cadastro-nonato-service-default': ['cadastroNonatoServiceInfo'],
+  'ficha-pagamento-transferencia-default': ['empresaInstHubCardPagamento'],
+  'ficha-fatura-cliente-default': ['empresaInstHubCardFaturaCliente'],
   'administrador-default': ['administradorGeralDesc'],
   'clientes-financeiro-default': ['clientesFinanceiroHubCardDesc'],
   'comprovantes-despesas-default': ['comprovantesDespesasDesc'],
@@ -3318,7 +3358,8 @@ export default function Dashboard() {
       'familias-grupos': 'open-familias-grupos',
       'familias-grupos-equipamentos': 'open-familias-grupos-equipamentos',
       'cadastro-nonato-service': 'open-cadastro-nonato-service',
-      'ficha-cadastral': 'open-ficha-cadastral',
+      'ficha-pagamento-transferencia': 'open-ficha-pagamento-transferencia',
+      'ficha-fatura-cliente': 'open-ficha-fatura-cliente',
       administrador: 'open-administrador',
       clientes: 'open-clientes',
       fornecedores: 'open-fornecedores',
@@ -4384,7 +4425,9 @@ export default function Dashboard() {
       'users': t?.userManagement || 'Gestão de Usuários',
       'extras': t?.extras || 'Extras',
       'cadastro-nonato-service': t?.cadastroNonatoServiceTitle || 'CADASTRO DA NONATO SERVICE',
-      'ficha-cadastral': t?.fichaCadastralTitle || 'FICHA CADASTRAL DA NONATO SERVICE',
+      'ficha-pagamento-transferencia':
+        (t as any)?.fichaPagamentoTransferenciaTitle || 'FICHA PARA TRANSFERÊNCIA / PAGAMENTO',
+      'ficha-fatura-cliente': (t as any)?.fichaFaturaClienteTitle || 'FICHA PARA O CLIENTE EMITIR FATURA',
       'clientes': t?.clientes || 'Clientes',
       'fornecedores': t?.fornecedores || 'Fornecedores',
       'relatorio-servico': t?.relatorioServico || 'Relatório de Serviço',
@@ -4552,7 +4595,8 @@ export default function Dashboard() {
       'protocolos-servico': ['protocolosServicoDesc'],
       'manual-programa': ['manualProgramaSubtitle'],
       'cadastro-nonato-service': ['cadastroNonatoServiceSubtitle', 'cadastroNonatoServiceInfo'],
-      'ficha-cadastral': ['fichaCadastralSubtitle'],
+      'ficha-pagamento-transferencia': ['fichaPagamentoTransferenciaSubtitle'],
+      'ficha-fatura-cliente': ['fichaFaturaClienteSubtitle'],
       translator: ['quickAccessTranslatorDesc'],
       'checklist-hub': ['quickAccessChecklistHubDesc'],
       agenda: ['quickAccessAgendaDesc'],
@@ -4809,6 +4853,87 @@ export default function Dashboard() {
     }
   }
 
+  /** Documento HTML mínimo para o cliente emitir fatura (sem dados bancários) */
+  const [faturaClienteDocGeradoEm, setFaturaClienteDocGeradoEm] = useState<string | null>(null)
+  const [faturaClienteDocBlobUrl, setFaturaClienteDocBlobUrl] = useState<string | null>(null)
+  const [faturaClienteDocGerando, setFaturaClienteDocGerando] = useState(false)
+  const faturaClienteDocBlobUrlRef = useRef<string | null>(null)
+
+  const aplicarDocumentoFaturaClienteGuardado = (html: string) => {
+    const em = new Date().toISOString()
+    try {
+      localStorage.setItem('nonato-fatura-cliente-doc-html', html)
+      localStorage.setItem('nonato-fatura-cliente-doc-em', em)
+    } catch {
+      /* quota */
+    }
+    if (faturaClienteDocBlobUrlRef.current) {
+      URL.revokeObjectURL(faturaClienteDocBlobUrlRef.current)
+      faturaClienteDocBlobUrlRef.current = null
+    }
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    faturaClienteDocBlobUrlRef.current = url
+    setFaturaClienteDocBlobUrl(url)
+    setFaturaClienteDocGeradoEm(em)
+  }
+
+  const limparDocumentoFaturaCliente = () => {
+    try {
+      localStorage.removeItem('nonato-fatura-cliente-doc-html')
+      localStorage.removeItem('nonato-fatura-cliente-doc-em')
+    } catch {
+      /* */
+    }
+    if (faturaClienteDocBlobUrlRef.current) {
+      URL.revokeObjectURL(faturaClienteDocBlobUrlRef.current)
+      faturaClienteDocBlobUrlRef.current = null
+    }
+    setFaturaClienteDocBlobUrl(null)
+    setFaturaClienteDocGeradoEm(null)
+  }
+
+  const gerarDocumentoFaturaClienteParaEnvio = async (abrirPreVisualizacao: boolean) => {
+    setFaturaClienteDocGerando(true)
+    try {
+      await saveData('nonato-ficha-cadastral', fichaCadastral)
+      const payload = {
+        nomeEmpresa: fichaCadastral.nomeEmpresa,
+        nif: fichaCadastral.nif,
+        morada: fichaCadastral.morada,
+        telefone: fichaCadastral.telefone,
+        email: fichaCadastral.email,
+        logo: fichaCadastral.logo,
+      }
+      const r = await fetch('/api/pdf/dados-fatura-nonato', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (!r.ok) {
+        window.alert(
+          (safeT as any)?.fichaFaturaClienteGeradoErro ||
+            safeT?.cadastroNonatoGeradoErro ||
+            'Não foi possível gerar o documento. Verifique a ligação e tente novamente.'
+        )
+        return
+      }
+      const html = await r.text()
+      aplicarDocumentoFaturaClienteGuardado(html)
+      if (abrirPreVisualizacao && faturaClienteDocBlobUrlRef.current) {
+        window.open(faturaClienteDocBlobUrlRef.current, '_blank', 'noopener,noreferrer,width=800,height=900')
+      }
+    } catch {
+      window.alert(
+        (safeT as any)?.fichaFaturaClienteGeradoErro ||
+          safeT?.cadastroNonatoGeradoErro ||
+          'Não foi possível gerar o documento. Verifique a ligação e tente novamente.'
+      )
+    } finally {
+      setFaturaClienteDocGerando(false)
+    }
+  }
+
   // Estados para Biblioteca de Peças
   const [pecasBiblioteca, setPecasBiblioteca] = useState<PecaBiblioteca[]>([])
   const [categoriasPecas, setCategoriasPecas] = useState<CategoriaPeca[]>([])
@@ -4935,6 +5060,8 @@ export default function Dashboard() {
       'open-administrador',
       'open-cadastro-nonato-service',
       'open-ficha-cadastral',
+      'open-ficha-pagamento-transferencia',
+      'open-ficha-fatura-cliente',
       'open-translator',
       'open-manual-gestor',
       'open-gestao-demos',
@@ -5994,6 +6121,27 @@ export default function Dashboard() {
     }
   }, [])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const html = localStorage.getItem('nonato-fatura-cliente-doc-html')
+    const em = localStorage.getItem('nonato-fatura-cliente-doc-em')
+    if (!html || html.length < 10) return
+    if (faturaClienteDocBlobUrlRef.current) {
+      URL.revokeObjectURL(faturaClienteDocBlobUrlRef.current)
+    }
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    faturaClienteDocBlobUrlRef.current = url
+    setFaturaClienteDocBlobUrl(url)
+    setFaturaClienteDocGeradoEm(em)
+    return () => {
+      if (faturaClienteDocBlobUrlRef.current) {
+        URL.revokeObjectURL(faturaClienteDocBlobUrlRef.current)
+        faturaClienteDocBlobUrlRef.current = null
+      }
+    }
+  }, [])
+
   // Sistema de tradução rápida (contextual)
   // Forçar atualização dos botões quando o idioma mudar para garantir tradução
   useEffect(() => {
@@ -6001,9 +6149,14 @@ export default function Dashboard() {
     let cancelled = false
     ;(async () => {
     try {
-    const savedButtons = await loadData('nonato-sidebar-buttons')
+    let savedButtons = await loadData('nonato-sidebar-buttons')
     if (cancelled) return
     if (!savedButtons || !Array.isArray(savedButtons)) return
+    const preLegacy = JSON.stringify(savedButtons)
+    savedButtons = migrateLegacyFichaCadastralSidebarButtons(savedButtons as SidebarButton[])
+    if (JSON.stringify(savedButtons) !== preLegacy) {
+      void saveData('nonato-sidebar-buttons', savedButtons)
+    }
     
     // IDs dos botões da gestão técnica que DEVEM ser traduzidos
     const gestaoTecnicaButtonIds = [
@@ -8127,6 +8280,12 @@ export default function Dashboard() {
         }
       }
 
+      const preLegacyMigrated = JSON.stringify(buttons)
+      buttons = migrateLegacyFichaCadastralSidebarButtons(Array.isArray(buttons) ? buttons : [])
+      if (JSON.stringify(buttons) !== preLegacyMigrated) {
+        void saveData('nonato-sidebar-buttons', buttons)
+      }
+
       // Normalizar botões padrão - FORÇA atualização de translationKey e group para garantir tradução
       // Remove customName se o nome corresponde à tradução padrão em pt-BR
       buttons = (Array.isArray(buttons) ? buttons : []).map((b: SidebarButton) => {
@@ -8134,7 +8293,8 @@ export default function Dashboard() {
         const buttonDefaults: { [key: string]: { translationKey: string, group?: SidebarGroup } } = {
           'extras-default': { translationKey: 'administrador' },
           'cadastro-nonato-service-default': { translationKey: 'cadastroNonatoServiceTitle', group: 'empresa-institucional' },
-          'ficha-cadastral-default': { translationKey: 'fichaCadastralTitle', group: 'empresa-institucional' },
+          'ficha-pagamento-transferencia-default': { translationKey: 'fichaPagamentoTransferenciaTitle', group: 'empresa-institucional' },
+          'ficha-fatura-cliente-default': { translationKey: 'fichaFaturaClienteTitle', group: 'empresa-institucional' },
           'gestores-default': { translationKey: 'gestoresTitle', group: 'gestao-tecnica' },
           'familias-grupos-default': { translationKey: 'familiasGruposTitle', group: 'checklist-group' },
           'familias-grupos-equipamentos-default': { translationKey: 'familiasGruposEquipamentosTitle', group: 'gestao-industrial' },
@@ -8206,7 +8366,8 @@ export default function Dashboard() {
                                         b.id === 'diario-pedidos-dia-default' ||
                                         b.id === 'solicitacao-servico-tecnico-default' ||
                                         b.id === 'cadastro-nonato-service-default' ||
-                                        b.id === 'ficha-cadastral-default'
+                                        b.id === 'ficha-pagamento-transferencia-default' ||
+                                        b.id === 'ficha-fatura-cliente-default'
           
           // Se é botão da gestão técnica E o nome corresponde ao padrão, FORÇAR customName = false
           const shouldRemoveCustomName = isGestaoTecnicaButton && isDefaultName
@@ -8251,7 +8412,8 @@ export default function Dashboard() {
                                b.id === 'mensagens-internas-tecnicos-default' ? 'open-mensagens-internas-tecnicos' :
                                b.id === 'alerta-mensagens-default' ? 'open-alerta-mensagens' :
                                b.id === 'cadastro-nonato-service-default' ? 'open-cadastro-nonato-service' :
-                               b.id === 'ficha-cadastral-default' ? 'open-ficha-cadastral' :
+                               b.id === 'ficha-pagamento-transferencia-default' ? 'open-ficha-pagamento-transferencia' :
+                               b.id === 'ficha-fatura-cliente-default' ? 'open-ficha-fatura-cliente' :
                                b.id === 'biblioteca-relatorios-default' ? 'open-biblioteca-relatorios' :
                                b.id === 'relatorios-excluidos-clientes-default' ? 'open-relatorios-excluidos-clientes' :
                                b.id === 'administrador-default' ? 'open-administrador' : ''),
@@ -8293,7 +8455,8 @@ export default function Dashboard() {
 
       const empresaInstitucionalButtonIds = [
         'cadastro-nonato-service-default',
-        'ficha-cadastral-default',
+        'ficha-pagamento-transferencia-default',
+        'ficha-fatura-cliente-default',
         'solicitacao-servico-tecnico-default',
       ]
       
@@ -8321,7 +8484,8 @@ export default function Dashboard() {
       
       const empresaInstitucionalTranslationKeys: { [key: string]: string } = {
         'cadastro-nonato-service-default': 'cadastroNonatoServiceTitle',
-        'ficha-cadastral-default': 'fichaCadastralTitle',
+        'ficha-pagamento-transferencia-default': 'fichaPagamentoTransferenciaTitle',
+        'ficha-fatura-cliente-default': 'fichaFaturaClienteTitle',
         'solicitacao-servico-tecnico-default': 'solicitacaoServicoTecnicoTitle',
       }
 
@@ -8455,7 +8619,8 @@ export default function Dashboard() {
       buttons = buttons.map((b: SidebarButton) => {
         if (
           b.id === 'cadastro-nonato-service-default' ||
-          b.id === 'ficha-cadastral-default' ||
+          b.id === 'ficha-pagamento-transferencia-default' ||
+          b.id === 'ficha-fatura-cliente-default' ||
           b.id === 'solicitacao-servico-tecnico-default'
         ) {
           if (b.group !== 'empresa-institucional') {
@@ -8463,11 +8628,13 @@ export default function Dashboard() {
             const ord =
               b.id === 'cadastro-nonato-service-default'
                 ? 10
-                : b.id === 'ficha-cadastral-default'
+                : b.id === 'ficha-pagamento-transferencia-default'
                   ? 20
-                  : b.id === 'solicitacao-servico-tecnico-default'
-                    ? 30
-                    : b.order
+                  : b.id === 'ficha-fatura-cliente-default'
+                    ? 21
+                    : b.id === 'solicitacao-servico-tecnico-default'
+                      ? 30
+                      : b.order
             return { ...b, group: 'empresa-institucional', order: ord }
           }
         }
@@ -8577,17 +8744,28 @@ export default function Dashboard() {
         })
       }
 
-      const hasFichaCadastral = buttons.some((b: SidebarButton) => b.id === 'ficha-cadastral-default')
-      if (!hasFichaCadastral) {
-        const fichaCadastralButton: SidebarButton = {
-          id: 'ficha-cadastral-default',
-          name: 'FICHA CADASTRAL DA NONATO SERVICE',
-          action: 'open-ficha-cadastral',
+      const hasFichaPagamento = buttons.some((b: SidebarButton) => b.id === 'ficha-pagamento-transferencia-default')
+      if (!hasFichaPagamento) {
+        buttons.push({
+          id: 'ficha-pagamento-transferencia-default',
+          name: 'FICHA PARA TRANSFERÊNCIA / PAGAMENTO',
+          action: 'open-ficha-pagamento-transferencia',
           order: 20,
-          translationKey: 'fichaCadastralTitle',
-          group: 'empresa-institucional'
-        }
-        buttons.push(fichaCadastralButton)
+          translationKey: 'fichaPagamentoTransferenciaTitle',
+          group: 'empresa-institucional',
+        })
+        saveData('nonato-sidebar-buttons', buttons)
+      }
+      const hasFichaFaturaCliente = buttons.some((b: SidebarButton) => b.id === 'ficha-fatura-cliente-default')
+      if (!hasFichaFaturaCliente) {
+        buttons.push({
+          id: 'ficha-fatura-cliente-default',
+          name: 'FICHA PARA O CLIENTE EMITIR FATURA',
+          action: 'open-ficha-fatura-cliente',
+          order: 21,
+          translationKey: 'fichaFaturaClienteTitle',
+          group: 'empresa-institucional',
+        })
         saveData('nonato-sidebar-buttons', buttons)
       }
       
@@ -9325,15 +9503,26 @@ export default function Dashboard() {
           group: 'empresa-institucional'
         })
       }
-      const hasFichaCadastralAfter = filteredButtons.some((b: SidebarButton) => b.id === 'ficha-cadastral-default')
-      if (!hasFichaCadastralAfter) {
+      const hasFichaPagamentoAfter = filteredButtons.some((b: SidebarButton) => b.id === 'ficha-pagamento-transferencia-default')
+      if (!hasFichaPagamentoAfter) {
         filteredButtons.push({
-          id: 'ficha-cadastral-default',
-          name: 'FICHA CADASTRAL DA NONATO SERVICE',
-          action: 'open-ficha-cadastral',
+          id: 'ficha-pagamento-transferencia-default',
+          name: 'FICHA PARA TRANSFERÊNCIA / PAGAMENTO',
+          action: 'open-ficha-pagamento-transferencia',
           order: 20,
-          translationKey: 'fichaCadastralTitle',
-          group: 'empresa-institucional'
+          translationKey: 'fichaPagamentoTransferenciaTitle',
+          group: 'empresa-institucional',
+        })
+      }
+      const hasFichaFaturaClienteAfter = filteredButtons.some((b: SidebarButton) => b.id === 'ficha-fatura-cliente-default')
+      if (!hasFichaFaturaClienteAfter) {
+        filteredButtons.push({
+          id: 'ficha-fatura-cliente-default',
+          name: 'FICHA PARA O CLIENTE EMITIR FATURA',
+          action: 'open-ficha-fatura-cliente',
+          order: 21,
+          translationKey: 'fichaFaturaClienteTitle',
+          group: 'empresa-institucional',
         })
       }
       if (!hasGestoresAfter) {
@@ -10214,7 +10403,7 @@ export default function Dashboard() {
     }
     
     // Não permitir deletar os botões padrão e principais
-    if (buttonId === 'administrador-default' || buttonId === 'extras-default' || buttonId === 'cadastro-nonato-service-default' || buttonId === 'ficha-cadastral-default' || 
+    if (buttonId === 'administrador-default' || buttonId === 'extras-default' || buttonId === 'cadastro-nonato-service-default' || buttonId === 'ficha-pagamento-transferencia-default' || buttonId === 'ficha-fatura-cliente-default' || 
         buttonId === 'gestao-tecnica-default' || buttonId === 'parceiros-comercial-default' || buttonId === 'documentacao-relatorios-default' || buttonId === 'gestao-industrial-default' ||
         buttonId === 'gestores-default' || buttonId === 'equipamentos-default' || 
         buttonId === 'clientes-default' || buttonId === 'fornecedores-default' || 
@@ -22211,6 +22400,8 @@ export default function Dashboard() {
     'open-administrador': 'extras',
     'open-cadastro-nonato-service': 'extras',
     'open-ficha-cadastral': 'extras',
+    'open-ficha-pagamento-transferencia': 'extras',
+    'open-ficha-fatura-cliente': 'extras',
     'open-translator': 'extras',
     'open-familias-grupos': 'equipamentos',
     'open-familias-grupos-equipamentos': 'equipamentos',
@@ -22627,7 +22818,11 @@ export default function Dashboard() {
     if (action === 'open-cadastro-nonato-service') {
       openTab('cadastro-nonato-service', getTabTitle('cadastro-nonato-service'))
     } else if (action === 'open-ficha-cadastral') {
-      openTab('ficha-cadastral', getTabTitle('ficha-cadastral'))
+      openTab('ficha-pagamento-transferencia', getTabTitle('ficha-pagamento-transferencia'))
+    } else if (action === 'open-ficha-pagamento-transferencia') {
+      openTab('ficha-pagamento-transferencia', getTabTitle('ficha-pagamento-transferencia'))
+    } else if (action === 'open-ficha-fatura-cliente') {
+      openTab('ficha-fatura-cliente', getTabTitle('ficha-fatura-cliente'))
     } else if (action === 'open-administrador') {
       openTab('administrador', getTabTitle('administrador'))
     } else if (action === 'open-gestores') {
@@ -25825,9 +26020,16 @@ const nextF = familias.filter(x => x !== f)
           </div>
         );
 
-      case 'ficha-cadastral':
+      case 'ficha-pagamento-transferencia': {
+        const trPag = safeT as Record<string, string | undefined>
+        const roPag = (lab: string, val: string | undefined) => (
+          <div key={lab} style={{ marginBottom: '12px' }}>
+            <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>{lab}</div>
+            <div style={{ fontSize: '15px', color: '#fff', fontWeight: 600, wordBreak: 'break-word' }}>{(val || '').trim() || '—'}</div>
+          </div>
+        )
         return (
-          <div style={{ padding: '30px', maxWidth: '900px', margin: '0 auto' }}>
+          <div style={{ padding: '30px', maxWidth: '920px', margin: '0 auto' }}>
             <div style={{
               marginBottom: '24px',
               padding: '24px',
@@ -25841,11 +26043,11 @@ const nextF = familias.filter(x => x !== f)
                   <LogoComponent size="small" />
                 </div>
                 <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 'bold', color: '#00ff00', letterSpacing: '2px', marginBottom: '6px' }}>
-                    {safeT?.fichaCadastralTitle || 'FICHA CADASTRAL DA NONATO SERVICE'}
+                  <h1 style={{ margin: 0, fontSize: '26px', fontWeight: 'bold', color: '#00ff00', letterSpacing: '2px', marginBottom: '6px' }}>
+                    {trPag.fichaPagamentoTransferenciaTitle || 'FICHA PARA TRANSFERÊNCIA / PAGAMENTO'}
                   </h1>
                   <p style={{ margin: 0, fontSize: '13px', color: '#ccc' }}>
-                    {safeT?.fichaCadastralSubtitle || 'Dados para os clientes transferirem o pagamento.'}
+                    {trPag.fichaPagamentoTransferenciaSubtitle || ''}
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -25854,48 +26056,300 @@ const nextF = familias.filter(x => x !== f)
                 </div>
               </div>
             </div>
-            <div style={{ padding: '24px', backgroundColor: '#2a2a2a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.fichaCadastralNomeEmpresa || 'Nome da empresa'}</label>
-                  <input type="text" value={fichaCadastral.nomeEmpresa} onChange={e => setFichaCadastral({ ...fichaCadastral, nomeEmpresa: e.target.value })} style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.fichaCadastralNif || 'NIF (Número de contribuinte)'}</label>
-                  <input type="text" value={fichaCadastral.nif} onChange={e => setFichaCadastral({ ...fichaCadastral, nif: e.target.value })} style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.fichaCadastralNib || 'NIB (Número da conta bancária)'}</label>
-                  <input type="text" value={fichaCadastral.nib} onChange={e => setFichaCadastral({ ...fichaCadastral, nib: e.target.value })} style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.fichaCadastralSwift || 'Código SWIFT'}</label>
-                  <input type="text" value={fichaCadastral.swift} onChange={e => setFichaCadastral({ ...fichaCadastral, swift: e.target.value })} style={{ width: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#aaa' }}>{safeT?.fichaCadastralLogo || 'Logo'}</label>
-                  {fichaCadastral.logo ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                      <img src={fichaCadastral.logo} alt="Logo" style={{ maxWidth: '180px', maxHeight: '80px', objectFit: 'contain', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', background: '#fff' }} />
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setFichaCadastral({ ...fichaCadastral, logo: r.result as string }); r.readAsDataURL(f); } }} style={{ fontSize: '12px' }} />
-                        <button type="button" onClick={() => setFichaCadastral({ ...fichaCadastral, logo: undefined })} style={{ padding: '6px 12px', border: '1px solid #666', color: '#ccc', background: '#333', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>{safeT?.removeLogo || 'Remover logo'}</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setFichaCadastral({ ...fichaCadastral, logo: r.result as string }); r.readAsDataURL(f); } }} style={{ fontSize: '12px' }} />
-                  )}
-                </div>
-              </div>
-              <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', marginBottom: '16px' }}>
-                {safeT?.fichaCadastralTransferencia || 'Os clientes devem efetuar a transferência do pagamento para a conta bancária indicada (NIB e SWIFT).'}
+            <div style={{ padding: '24px', backgroundColor: '#2a2a2a', borderRadius: '12px', border: '1px solid rgba(0, 255, 0, 0.2)', marginBottom: '18px' }}>
+              <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.85)', marginBottom: '16px', lineHeight: 1.55 }}>
+                {trPag.fichaPagamentoTransferenciaInfo || ''}
               </p>
-              <button className="btn-primary" onClick={() => saveData('nonato-ficha-cadastral', fichaCadastral)} style={{ padding: '10px 24px', backgroundColor: 'rgba(0, 255, 0, 0.2)', borderColor: 'rgba(0, 255, 0, 0.5)', color: '#00ff00', fontWeight: 'bold' }}>
-                {safeT?.fichaCadastralGuardar || safeT?.save || 'Guardar ficha cadastral'}
+              <button
+                type="button"
+                onClick={() => openTab('cadastro-nonato-service', getTabTitle('cadastro-nonato-service'))}
+                style={{ padding: '10px 18px', marginBottom: '18px', backgroundColor: 'rgba(0, 150, 255, 0.2)', border: '1px solid rgba(0, 150, 255, 0.5)', color: '#66b3ff', fontWeight: 600, borderRadius: '8px', cursor: 'pointer' }}
+              >
+                {trPag.fichaPagamentoAbrirCadastro || 'Abrir cadastro para editar'}
+              </button>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '14px 22px' }}>
+                {roPag(safeT?.fichaCadastralNomeEmpresa || 'Nome da empresa', fichaCadastral.nomeEmpresa)}
+                {roPag(safeT?.fichaCadastralNif || 'NIF', fichaCadastral.nif)}
+                {roPag(safeT?.cadastroNonatoServiceNomeBanco || 'Banco', fichaCadastral.nomeBanco)}
+                {roPag(safeT?.fichaCadastralNib || 'NIB', fichaCadastral.nib)}
+                {roPag(safeT?.cadastroNonatoServiceIban || 'IBAN', fichaCadastral.iban)}
+                {roPag(safeT?.fichaCadastralSwift || 'SWIFT/BIC', fichaCadastral.swift)}
+                {roPag(safeT?.cadastroNonatoServiceMorada || 'Morada', fichaCadastral.morada)}
+                {roPag(safeT?.cadastroNonatoServiceTelefone || 'Telefone', fichaCadastral.telefone)}
+                {roPag(safeT?.cadastroNonatoServiceEmail || 'E-mail', fichaCadastral.email)}
+              </div>
+              {fichaCadastral.logo ? (
+                <div style={{ marginTop: '16px' }}>
+                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px' }}>{safeT?.fichaCadastralLogo || 'Logo'}</div>
+                  <img src={fichaCadastral.logo} alt="" style={{ maxWidth: '200px', maxHeight: '90px', objectFit: 'contain', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '8px', background: '#fff', padding: '4px' }} />
+                </div>
+              ) : null}
+            </div>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '18px' }}>
+              <button
+                type="button"
+                disabled={cadastroNonatoDocGerando}
+                onClick={() => void gerarDocumentoCadastroNonatoParaEnvio(true)}
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: cadastroNonatoDocGerando ? 'rgba(80, 80, 80, 0.4)' : 'rgba(0, 150, 255, 0.25)',
+                  border: '1px solid rgba(0, 150, 255, 0.5)',
+                  color: cadastroNonatoDocGerando ? '#888' : '#66b3ff',
+                  fontWeight: 'bold',
+                  borderRadius: '8px',
+                  cursor: cadastroNonatoDocGerando ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {cadastroNonatoDocGerando
+                  ? safeT?.cadastroNonatoGeradoGerando || 'A gerar…'
+                  : safeT?.cadastroNonatoServiceGerarPdf || 'Gerar PDF para envio ao cliente'}
               </button>
             </div>
+            <div
+              style={{
+                padding: '18px 20px',
+                borderRadius: '12px',
+                border: '1px solid rgba(0, 255, 136, 0.35)',
+                background: 'linear-gradient(145deg, rgba(0, 40, 30, 0.5) 0%, rgba(20, 20, 20, 0.95) 100%)',
+              }}
+            >
+              <h3 style={{ margin: '0 0 6px', fontSize: '15px', color: '#00ff88', fontWeight: 700, letterSpacing: '0.04em' }}>
+                {safeT?.cadastroNonatoGeradoTitulo || 'Cadastro gerado (documento para envio)'}
+              </h3>
+              <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.78)', marginBottom: '12px', lineHeight: 1.55 }}>
+                {safeT?.cadastroNonatoGeradoDescricao || ''}
+              </p>
+              <p style={{ fontSize: '12px', color: '#aaa', marginBottom: '12px', lineHeight: 1.45 }}>
+                {cadastroNonatoDocGeradoEm
+                  ? `${safeT?.cadastroNonatoGeradoUltimo || 'Último documento gerado:'} ${new Date(cadastroNonatoDocGeradoEm).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}`
+                  : safeT?.cadastroNonatoGeradoNenhum || ''}
+              </p>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  disabled={!cadastroNonatoDocBlobUrl}
+                  onClick={() => {
+                    if (cadastroNonatoDocBlobUrl) window.open(cadastroNonatoDocBlobUrl, '_blank', 'noopener,noreferrer,width=800,height=900')
+                  }}
+                  style={{
+                    padding: '10px 16px',
+                    backgroundColor: !cadastroNonatoDocBlobUrl ? 'rgba(60,60,60,0.5)' : 'rgba(0, 255, 136, 0.12)',
+                    border: '1px solid rgba(0, 255, 136, 0.45)',
+                    color: !cadastroNonatoDocBlobUrl ? '#666' : '#00ff88',
+                    fontWeight: 600,
+                    borderRadius: '8px',
+                    cursor: !cadastroNonatoDocBlobUrl ? 'not-allowed' : 'pointer',
+                    fontSize: '13px',
+                  }}
+                >
+                  {safeT?.cadastroNonatoGeradoVer || 'Ver documento'}
+                </button>
+                {cadastroNonatoDocBlobUrl ? (
+                  <a
+                    href={cadastroNonatoDocBlobUrl}
+                    download="nonato-dados-deposito.html"
+                    style={{
+                      padding: '10px 16px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      color: '#e0e0e0',
+                      fontWeight: 600,
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      textDecoration: 'none',
+                      display: 'inline-block',
+                    }}
+                  >
+                    {safeT?.cadastroNonatoGeradoDescarregar || 'Descarregar HTML'}
+                  </a>
+                ) : null}
+                <button
+                  type="button"
+                  disabled={!cadastroNonatoDocBlobUrl}
+                  onClick={() => limparDocumentoCadastroNonato()}
+                  style={{
+                    padding: '10px 16px',
+                    backgroundColor: 'transparent',
+                    border: '1px solid rgba(255, 100, 100, 0.45)',
+                    color: !cadastroNonatoDocBlobUrl ? '#555' : '#ff8888',
+                    fontWeight: 600,
+                    borderRadius: '8px',
+                    cursor: !cadastroNonatoDocBlobUrl ? 'not-allowed' : 'pointer',
+                    fontSize: '13px',
+                  }}
+                >
+                  {safeT?.cadastroNonatoGeradoLimpar || 'Limpar documento guardado'}
+                </button>
+              </div>
+            </div>
+            <p style={{ fontSize: '12px', color: '#999', marginTop: '18px', lineHeight: 1.5 }}>
+              {trPag.fichaPagamentoEnvioNoCadastro || ''}
+            </p>
           </div>
-        );
+        )
+      }
+
+      case 'ficha-fatura-cliente': {
+        const trFat = safeT as Record<string, string | undefined>
+        const roFat = (lab: string, val: string | undefined) => (
+          <div key={lab} style={{ marginBottom: '12px' }}>
+            <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>{lab}</div>
+            <div style={{ fontSize: '15px', color: '#fff', fontWeight: 600, wordBreak: 'break-word' }}>{(val || '').trim() || '—'}</div>
+          </div>
+        )
+        return (
+          <div style={{ padding: '30px', maxWidth: '920px', margin: '0 auto' }}>
+            <div style={{
+              marginBottom: '24px',
+              padding: '24px',
+              background: 'linear-gradient(135deg, rgba(80, 160, 255, 0.08) 0%, rgba(0, 0, 0, 0.85) 100%)',
+              borderRadius: '20px',
+              border: '2px solid rgba(80, 160, 255, 0.35)',
+              boxShadow: '0 8px 32px rgba(80, 160, 255, 0.12)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                  <LogoComponent size="small" />
+                </div>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  <h1 style={{ margin: 0, fontSize: '26px', fontWeight: 'bold', color: '#66b3ff', letterSpacing: '1px', marginBottom: '6px' }}>
+                    {trFat.fichaFaturaClienteTitle || 'FICHA PARA O CLIENTE EMITIR FATURA'}
+                  </h1>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#ccc' }}>
+                    {trFat.fichaFaturaClienteSubtitle || ''}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button onClick={() => closeTab(activeTabId || '')} style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'transparent', border: '1px solid rgba(80, 160, 255, 0.4)', borderRadius: '4px', color: '#66b3ff', cursor: 'pointer' }} title={safeT?.voltar || 'Voltar'}>↶</button>
+                  <button onClick={voltarPaginaInicial} style={{ padding: '6px 8px', fontSize: '16px', backgroundColor: 'transparent', border: '1px solid rgba(0, 150, 255, 0.3)', borderRadius: '4px', color: '#66b3ff', cursor: 'pointer' }} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
+                </div>
+              </div>
+            </div>
+            <div style={{ padding: '24px', backgroundColor: '#2a2a2a', borderRadius: '12px', border: '1px solid rgba(80, 160, 255, 0.25)', marginBottom: '18px' }}>
+              <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.85)', marginBottom: '16px', lineHeight: 1.55 }}>
+                {trFat.fichaFaturaClienteInfo || ''}
+              </p>
+              <button
+                type="button"
+                onClick={() => openTab('cadastro-nonato-service', getTabTitle('cadastro-nonato-service'))}
+                style={{ padding: '10px 18px', marginBottom: '18px', backgroundColor: 'rgba(0, 150, 255, 0.2)', border: '1px solid rgba(0, 150, 255, 0.5)', color: '#66b3ff', fontWeight: 600, borderRadius: '8px', cursor: 'pointer' }}
+              >
+                {trFat.fichaPagamentoAbrirCadastro || 'Abrir cadastro para editar'}
+              </button>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '14px 22px' }}>
+                {roFat(safeT?.fichaCadastralNomeEmpresa || 'Nome da empresa', fichaCadastral.nomeEmpresa)}
+                {roFat(safeT?.fichaCadastralNif || 'NIF', fichaCadastral.nif)}
+                {roFat(safeT?.cadastroNonatoServiceMorada || 'Morada', fichaCadastral.morada)}
+                {roFat(safeT?.cadastroNonatoServiceTelefone || 'Telefone', fichaCadastral.telefone)}
+                {roFat(safeT?.cadastroNonatoServiceEmail || 'E-mail', fichaCadastral.email)}
+              </div>
+              {fichaCadastral.logo ? (
+                <div style={{ marginTop: '16px' }}>
+                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px' }}>{safeT?.fichaCadastralLogo || 'Logo'}</div>
+                  <img src={fichaCadastral.logo} alt="" style={{ maxWidth: '200px', maxHeight: '90px', objectFit: 'contain', border: '1px solid rgba(80,160,255,0.35)', borderRadius: '8px', background: '#fff', padding: '4px' }} />
+                </div>
+              ) : null}
+            </div>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '18px' }}>
+              <button
+                type="button"
+                disabled={faturaClienteDocGerando}
+                onClick={() => void gerarDocumentoFaturaClienteParaEnvio(true)}
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: faturaClienteDocGerando ? 'rgba(80, 80, 80, 0.4)' : 'rgba(80, 160, 255, 0.22)',
+                  border: '1px solid rgba(80, 160, 255, 0.55)',
+                  color: faturaClienteDocGerando ? '#888' : '#8ec5ff',
+                  fontWeight: 'bold',
+                  borderRadius: '8px',
+                  cursor: faturaClienteDocGerando ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {faturaClienteDocGerando
+                  ? trFat.fichaFaturaClienteGeradoGerando || safeT?.cadastroNonatoGeradoGerando || 'A gerar…'
+                  : trFat.fichaFaturaClienteGerarPdf || 'Gerar documento'}
+              </button>
+            </div>
+            <div
+              style={{
+                padding: '18px 20px',
+                borderRadius: '12px',
+                border: '1px solid rgba(80, 160, 255, 0.4)',
+                background: 'linear-gradient(145deg, rgba(20, 35, 55, 0.55) 0%, rgba(20, 20, 20, 0.95) 100%)',
+              }}
+            >
+              <h3 style={{ margin: '0 0 6px', fontSize: '15px', color: '#8ec5ff', fontWeight: 700 }}>
+                {trFat.fichaFaturaClienteGeradoTitulo || 'Documento para fatura'}
+              </h3>
+              <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.78)', marginBottom: '12px', lineHeight: 1.55 }}>
+                {trFat.fichaFaturaClienteGeradoDescricao || ''}
+              </p>
+              <p style={{ fontSize: '12px', color: '#aaa', marginBottom: '12px' }}>
+                {faturaClienteDocGeradoEm
+                  ? `${trFat.fichaFaturaClienteGeradoUltimo || ''} ${new Date(faturaClienteDocGeradoEm).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}`
+                  : trFat.fichaFaturaClienteGeradoNenhum || ''}
+              </p>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  disabled={!faturaClienteDocBlobUrl}
+                  onClick={() => {
+                    if (faturaClienteDocBlobUrl) window.open(faturaClienteDocBlobUrl, '_blank', 'noopener,noreferrer,width=800,height=900')
+                  }}
+                  style={{
+                    padding: '10px 16px',
+                    backgroundColor: !faturaClienteDocBlobUrl ? 'rgba(60,60,60,0.5)' : 'rgba(80, 160, 255, 0.12)',
+                    border: '1px solid rgba(80, 160, 255, 0.45)',
+                    color: !faturaClienteDocBlobUrl ? '#666' : '#8ec5ff',
+                    fontWeight: 600,
+                    borderRadius: '8px',
+                    cursor: !faturaClienteDocBlobUrl ? 'not-allowed' : 'pointer',
+                    fontSize: '13px',
+                  }}
+                >
+                  {trFat.fichaFaturaClienteGeradoVer || 'Ver documento'}
+                </button>
+                {faturaClienteDocBlobUrl ? (
+                  <a
+                    href={faturaClienteDocBlobUrl}
+                    download="nonato-dados-fatura-cliente.html"
+                    style={{
+                      padding: '10px 16px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      color: '#e0e0e0',
+                      fontWeight: 600,
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      textDecoration: 'none',
+                      display: 'inline-block',
+                    }}
+                  >
+                    {trFat.fichaFaturaClienteGeradoDescarregar || 'Descarregar HTML'}
+                  </a>
+                ) : null}
+                <button
+                  type="button"
+                  disabled={!faturaClienteDocBlobUrl}
+                  onClick={() => limparDocumentoFaturaCliente()}
+                  style={{
+                    padding: '10px 16px',
+                    backgroundColor: 'transparent',
+                    border: '1px solid rgba(255, 100, 100, 0.45)',
+                    color: !faturaClienteDocBlobUrl ? '#555' : '#ff8888',
+                    fontWeight: 600,
+                    borderRadius: '8px',
+                    cursor: !faturaClienteDocBlobUrl ? 'not-allowed' : 'pointer',
+                    fontSize: '13px',
+                  }}
+                >
+                  {trFat.fichaFaturaClienteGeradoLimpar || 'Limpar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
       
       case 'administrador':
         return (
@@ -59127,17 +59581,22 @@ A1;Peça exemplo;10`}
       const iconFor = (id: string) =>
         id === 'cadastro-nonato-service-default'
           ? '📋'
-          : id === 'ficha-cadastral-default'
-            ? '📄'
-            : id === 'solicitacao-servico-tecnico-default'
-              ? '📝'
-              : '🏢'
+          : id === 'ficha-pagamento-transferencia-default'
+            ? '💳'
+            : id === 'ficha-fatura-cliente-default'
+              ? '🧾'
+              : id === 'solicitacao-servico-tecnico-default'
+                ? '📝'
+                : '🏢'
       const descEmpresa = (id: string) => {
         if (id === 'cadastro-nonato-service-default') {
           return (tr as any).empresaInstHubCardCadastro || cardHint
         }
-        if (id === 'ficha-cadastral-default') {
-          return (tr as any).empresaInstHubCardFicha || cardHint
+        if (id === 'ficha-pagamento-transferencia-default') {
+          return (tr as any).empresaInstHubCardPagamento || cardHint
+        }
+        if (id === 'ficha-fatura-cliente-default') {
+          return (tr as any).empresaInstHubCardFaturaCliente || cardHint
         }
         if (id === 'solicitacao-servico-tecnico-default') {
           return (tr as any).empresaInstHubCardSolicitacao || cardHint
@@ -65048,6 +65507,8 @@ A1;Peça exemplo;10`}
                 type="button"
                 className={`btn-primary sidebar-group-header sidebar-group-header--empresa-institucional${
                   selectedSidebarButton === 'open-cadastro-nonato-service' ||
+                  selectedSidebarButton === 'open-ficha-pagamento-transferencia' ||
+                  selectedSidebarButton === 'open-ficha-fatura-cliente' ||
                   selectedSidebarButton === 'open-ficha-cadastral' ||
                   selectedSidebarButton === 'open-solicitacao-servico-tecnico'
                     ? ' sidebar-group-btn-selected'
@@ -65060,6 +65521,8 @@ A1;Peça exemplo;10`}
                 aria-controls="sidebar-empresa-institucional-actions"
               >
                 {(selectedSidebarButton === 'open-cadastro-nonato-service' ||
+                  selectedSidebarButton === 'open-ficha-pagamento-transferencia' ||
+                  selectedSidebarButton === 'open-ficha-fatura-cliente' ||
                   selectedSidebarButton === 'open-ficha-cadastral' ||
                   selectedSidebarButton === 'open-solicitacao-servico-tecnico') && (
                   <span className="sidebar-nav-check" aria-hidden>
@@ -65092,11 +65555,11 @@ A1;Peça exemplo;10`}
                 </span>
                 {String(
                   (safeT as any)?.empresaInstitucionalSubtitle ||
-                    'Cadastro, ficha oficial e solicitação de assistência'
+                    'Cadastro, fichas para pagamento e para fatura ao cliente, e solicitação de assistência'
                 ).trim() ? (
                   <span className="sidebar-tip-bubble" role="tooltip">
                     {(safeT as any)?.empresaInstitucionalSubtitle ||
-                      'Cadastro, ficha oficial e solicitação de assistência'}
+                      'Cadastro, fichas para pagamento e para fatura ao cliente, e solicitação de assistência'}
                   </span>
                 ) : null}
               </button>
@@ -65115,11 +65578,13 @@ A1;Peça exemplo;10`}
                       const subKey =
                         button.id === 'cadastro-nonato-service-default'
                           ? 'empresaInstSidebarItemCadastro'
-                          : button.id === 'ficha-cadastral-default'
-                            ? 'empresaInstSidebarItemFicha'
-                            : button.id === 'solicitacao-servico-tecnico-default'
-                              ? 'empresaInstSidebarItemSolicitacao'
-                              : null
+                          : button.id === 'ficha-pagamento-transferencia-default'
+                            ? 'empresaInstSidebarItemPagamento'
+                            : button.id === 'ficha-fatura-cliente-default'
+                              ? 'empresaInstSidebarItemFaturaCliente'
+                              : button.id === 'solicitacao-servico-tecnico-default'
+                                ? 'empresaInstSidebarItemSolicitacao'
+                                : null
                       const sub =
                         (subKey ? String((safeT as any)?.[subKey] || '').trim() : '') ||
                         resolveActionCardDescription(trCardDesc, button.id, button.action, '')
@@ -65146,7 +65611,8 @@ A1;Peça exemplo;10`}
                                   />
                                   <path d="M9 21v-6h6v6" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" />
                                 </svg>
-                              ) : button.id === 'ficha-cadastral-default' ? (
+                              ) : button.id === 'ficha-pagamento-transferencia-default' ||
+                                button.id === 'ficha-fatura-cliente-default' ? (
                                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                   <path
                                     d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"
