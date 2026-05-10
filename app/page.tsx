@@ -10790,7 +10790,32 @@ export default function Dashboard() {
       } catch {
         manuaisFamiliasGrupos = localStorage.getItem('nonato-manuais-familias-grupos')
       }
-      // Coletar dados do localStorage + manuais (IndexedDB — PDFs grandes)
+      const stripPhotoFieldFromJsonManual = (json: string | null) => {
+        if (!json) return null
+        try {
+          const parsed = JSON.parse(json)
+          if (Array.isArray(parsed)) {
+            return JSON.stringify(
+              parsed.map((item) => {
+                if (item && typeof item === 'object' && 'photo' in item) {
+                  const { photo, ...rest } = item as any
+                  return rest
+                }
+                return item
+              })
+            )
+          }
+          if (parsed && typeof parsed === 'object' && 'photo' in parsed) {
+            const { photo, ...rest } = parsed as any
+            return JSON.stringify(rest)
+          }
+          return json
+        } catch {
+          return json
+        }
+      }
+      // Coletar dados do localStorage + manuais (IndexedDB — PDFs grandes).
+      // Incluir relatórios, peças, agenda e fechamentos (alinhado às cópias automáticas), para o JSON servir de backup de dados completo.
       const backupData = {
         version: '1.0.0',
         date: new Date().toISOString(),
@@ -10799,13 +10824,20 @@ export default function Dashboard() {
           logoType: localStorage.getItem('nonato-logo-type'),
           language: localStorage.getItem('nonato-language'),
           users: localStorage.getItem('nonato-users'),
-          gestores: localStorage.getItem('nonato-gestores'),
-          tecnicos: localStorage.getItem('nonato-tecnicos'),
+          gestores: stripPhotoFieldFromJsonManual(localStorage.getItem('nonato-gestores')),
+          tecnicos: stripPhotoFieldFromJsonManual(localStorage.getItem('nonato-tecnicos')),
           conhecimentoTecnicos: localStorage.getItem('nonato-conhecimento-tecnicos'),
           equipamentos: localStorage.getItem('nonato-equipamentos'),
           clientes: localStorage.getItem('nonato-clientes'),
           clientePrioritario: localStorage.getItem('nonato-cliente-prioritario'),
           fornecedores: localStorage.getItem('nonato-fornecedores'),
+          relatoriosServico: localStorage.getItem('nonato-relatorios-servico'),
+          pecasBiblioteca: localStorage.getItem('nonato-pecas-biblioteca'),
+          categoriasPecas: localStorage.getItem('nonato-categorias-pecas'),
+          subcategoriasPecas: localStorage.getItem('nonato-subcategorias-pecas'),
+          agendamentos: localStorage.getItem('nonato-agendamentos'),
+          fechamentosRelatorios: localStorage.getItem('nonato-fechamentos-relatorios'),
+          fechamentosGuardadosBiblioteca: localStorage.getItem('nonato-fechamentos-guardados-biblioteca'),
           sidebarButtons: localStorage.getItem('nonato-sidebar-buttons'),
           manuaisFamiliasGrupos
         }
@@ -10906,7 +10938,7 @@ export default function Dashboard() {
   const createAutoBackup = useCallback(async () => {
     try {
       const AUTO_BACKUP_STORAGE_KEY = 'nonato-auto-backups'
-      const MAX_AUTO_BACKUPS = 3
+      const MAX_AUTO_BACKUPS = 6
       // Segurança: evita estourar quota com blobs gigantes (ex.: base64 de imagens)
       const MAX_VALUE_CHARS = 200_000
 
@@ -11005,6 +11037,8 @@ export default function Dashboard() {
           categoriasPecas: safeGet('nonato-categorias-pecas'),
           subcategoriasPecas: safeGet('nonato-subcategorias-pecas'),
           agendamentos: safeGet('nonato-agendamentos'),
+          fechamentosRelatorios: safeGet('nonato-fechamentos-relatorios'),
+          fechamentosGuardadosBiblioteca: safeGet('nonato-fechamentos-guardados-biblioteca'),
           sidebarButtons: safeGet('nonato-sidebar-buttons'),
           manuaisFamiliasGrupos: manuaisForBackup
         }
@@ -11050,8 +11084,18 @@ export default function Dashboard() {
     }
   }, [])
 
+  /** Cópias automáticas periódicas no navegador (além das que ocorrem ao guardar relatórios, etc.). */
+  useEffect(() => {
+    if (typeof window === 'undefined' || isDemoMode || !autoBackupEnabled) return
+    const minutes = Math.max(5, Number.isFinite(autoBackupInterval) ? autoBackupInterval : 30)
+    const id = window.setInterval(() => {
+      void createAutoBackup()
+    }, minutes * 60 * 1000)
+    return () => window.clearInterval(id)
+  }, [autoBackupEnabled, autoBackupInterval, isDemoMode, createAutoBackup])
+
   // Função para restaurar backup automático
-  const restoreAutoBackup = async (backup: { timestamp: number; data: any }) => {
+  const restoreAutoBackup = async (backup: { timestamp: number; data?: any }) => {
     try {
       if (!backup || !backup.data || !backup.data.data) {
         alert(t.invalidBackup || 'Backup inválido')
@@ -11060,7 +11104,62 @@ export default function Dashboard() {
 
       const backupData = backup.data.data
 
-      // Restaurar todos os dados
+      const parseBackupJson = (raw: unknown): any | null => {
+        if (raw === null || raw === undefined) return null
+        if (typeof raw === 'string') {
+          const s = raw.trim()
+          if (!s) return null
+          try {
+            return JSON.parse(s)
+          } catch {
+            return null
+          }
+        }
+        return raw
+      }
+
+      // Relatórios de serviço e clientes: gravar no servidor com confirmação — senão no próximo F5 o bundle do servidor voltava a apagar o que foi reposto só no localStorage.
+      const relParsed = parseBackupJson(backupData.relatoriosServico)
+      if (relParsed !== null) {
+        const okRel = await saveData('nonato-relatorios-servico', relParsed, true, true)
+        if (!okRel) {
+          alert(
+            'Não foi possível confirmar a gravação dos relatórios de serviço no servidor. Verifique a rede ou tente outra cópia. Nada foi alterado no servidor.'
+          )
+          return false
+        }
+      }
+      const cliParsed = parseBackupJson(backupData.clientes)
+      if (cliParsed !== null) {
+        const okCli = await saveData('nonato-clientes', cliParsed, true, true)
+        if (!okCli) {
+          alert(
+            'Os relatórios de serviço foram repostos no servidor, mas a gravação de clientes falhou. Nada mais foi alterado; tente restaurar outra cópia ou verifique a rede.'
+          )
+          return false
+        }
+      }
+
+      const autoRestoreServerPairs: Array<{ key: string; raw: unknown }> = [
+        { key: 'nonato-fornecedores', raw: backupData.fornecedores },
+        { key: 'nonato-pecas-biblioteca', raw: backupData.pecasBiblioteca },
+        { key: 'nonato-categorias-pecas', raw: backupData.categoriasPecas },
+        { key: 'nonato-subcategorias-pecas', raw: backupData.subcategoriasPecas },
+        { key: 'nonato-agendamentos', raw: backupData.agendamentos },
+        { key: 'nonato-fechamentos-relatorios', raw: backupData.fechamentosRelatorios },
+        { key: 'nonato-fechamentos-guardados-biblioteca', raw: backupData.fechamentosGuardadosBiblioteca },
+      ]
+      for (const { key, raw } of autoRestoreServerPairs) {
+        const parsed = parseBackupJson(raw)
+        if (parsed === null) continue
+        const ok = await saveData(key, parsed, true, true)
+        if (!ok) {
+          alert(`Não foi possível confirmar a gravação no servidor (${key}). Nada mais foi alterado.`)
+          return false
+        }
+      }
+
+      // Restaurar restantes no navegador (chaves que o backup automático inclui)
       if (backupData.logo !== null) localStorage.setItem('nonato-logo', backupData.logo)
       if (backupData.logoType !== null) localStorage.setItem('nonato-logo-type', backupData.logoType)
       if (backupData.language !== null) localStorage.setItem('nonato-language', backupData.language)
@@ -11069,14 +11168,16 @@ export default function Dashboard() {
       if (backupData.tecnicos !== null) localStorage.setItem('nonato-tecnicos', backupData.tecnicos)
       if (backupData.conhecimentoTecnicos !== null) localStorage.setItem('nonato-conhecimento-tecnicos', backupData.conhecimentoTecnicos)
       if (backupData.equipamentos !== null) localStorage.setItem('nonato-equipamentos', backupData.equipamentos)
-      if (backupData.clientes !== null) localStorage.setItem('nonato-clientes', backupData.clientes)
       if (backupData.clientePrioritario !== null) localStorage.setItem('nonato-cliente-prioritario', backupData.clientePrioritario)
       if (backupData.fornecedores !== null) localStorage.setItem('nonato-fornecedores', backupData.fornecedores)
-      if (backupData.relatoriosServico !== null) localStorage.setItem('nonato-relatorios-servico', backupData.relatoriosServico)
       if (backupData.pecasBiblioteca !== null) localStorage.setItem('nonato-pecas-biblioteca', backupData.pecasBiblioteca)
       if (backupData.categoriasPecas !== null) localStorage.setItem('nonato-categorias-pecas', backupData.categoriasPecas)
       if (backupData.subcategoriasPecas !== null) localStorage.setItem('nonato-subcategorias-pecas', backupData.subcategoriasPecas)
       if (backupData.agendamentos !== null) localStorage.setItem('nonato-agendamentos', backupData.agendamentos)
+      if (backupData.fechamentosRelatorios !== null) localStorage.setItem('nonato-fechamentos-relatorios', backupData.fechamentosRelatorios)
+      if (backupData.fechamentosGuardadosBiblioteca !== null) {
+        localStorage.setItem('nonato-fechamentos-guardados-biblioteca', backupData.fechamentosGuardadosBiblioteca)
+      }
       if (backupData.sidebarButtons !== null) localStorage.setItem('nonato-sidebar-buttons', backupData.sidebarButtons)
       if (backupData.manuaisFamiliasGrupos != null && String(backupData.manuaisFamiliasGrupos).length > 0) {
         await restoreManuaisFamiliasGruposFromBackupPayload(backupData.manuaisFamiliasGrupos)
@@ -11382,9 +11483,44 @@ export default function Dashboard() {
           setClientePrioritario(JSON.parse(backupData.data.clientePrioritario))
         }
 
+        if (backupData.data.fornecedores) {
+          localStorage.setItem('nonato-fornecedores', backupData.data.fornecedores)
+          setFornecedores(JSON.parse(backupData.data.fornecedores))
+        }
+
         if (backupData.data.relatoriosServico) {
           localStorage.setItem('nonato-relatorios-servico', backupData.data.relatoriosServico)
           setRelatoriosServico(JSON.parse(backupData.data.relatoriosServico))
+        }
+
+        if (backupData.data.pecasBiblioteca) {
+          localStorage.setItem('nonato-pecas-biblioteca', backupData.data.pecasBiblioteca)
+          setPecasBiblioteca(JSON.parse(backupData.data.pecasBiblioteca))
+        }
+
+        if (backupData.data.categoriasPecas) {
+          localStorage.setItem('nonato-categorias-pecas', backupData.data.categoriasPecas)
+          setCategoriasPecas(JSON.parse(backupData.data.categoriasPecas))
+        }
+
+        if (backupData.data.subcategoriasPecas) {
+          localStorage.setItem('nonato-subcategorias-pecas', backupData.data.subcategoriasPecas)
+          setSubcategoriasPecas(JSON.parse(backupData.data.subcategoriasPecas))
+        }
+
+        if (backupData.data.agendamentos) {
+          localStorage.setItem('nonato-agendamentos', backupData.data.agendamentos)
+          setAgendamentos(JSON.parse(backupData.data.agendamentos))
+        }
+
+        if (backupData.data.fechamentosRelatorios) {
+          localStorage.setItem('nonato-fechamentos-relatorios', backupData.data.fechamentosRelatorios)
+          setFechamentosRelatorios(JSON.parse(backupData.data.fechamentosRelatorios))
+        }
+
+        if (backupData.data.fechamentosGuardadosBiblioteca) {
+          localStorage.setItem('nonato-fechamentos-guardados-biblioteca', backupData.data.fechamentosGuardadosBiblioteca)
+          setFechamentosGuardadosBibliotecaIds(JSON.parse(backupData.data.fechamentosGuardadosBiblioteca))
         }
 
         if (backupData.data.sidebarButtons) {
@@ -11394,6 +11530,52 @@ export default function Dashboard() {
 
         if (backupData.data.manuaisFamiliasGrupos != null && String(backupData.data.manuaisFamiliasGrupos).length > 0) {
           await restoreManuaisFamiliasGruposFromBackupPayload(backupData.data.manuaisFamiliasGrupos)
+        }
+
+        const parseBackupJsonRestoreFile = (raw: unknown): any | null => {
+          if (raw === null || raw === undefined) return null
+          if (typeof raw === 'string') {
+            const s = raw.trim()
+            if (!s) return null
+            try {
+              return JSON.parse(s)
+            } catch {
+              return null
+            }
+          }
+          return raw
+        }
+
+        const relSrv = parseBackupJsonRestoreFile(backupData.data.relatoriosServico)
+        if (relSrv !== null) {
+          const okRel = await saveData('nonato-relatorios-servico', relSrv, true, true)
+          if (!okRel) {
+            throw new Error('Não foi possível confirmar a gravação dos relatórios de serviço no servidor.')
+          }
+        }
+        const cliSrv = parseBackupJsonRestoreFile(backupData.data.clientes)
+        if (cliSrv !== null) {
+          const okCli = await saveData('nonato-clientes', cliSrv, true, true)
+          if (!okCli) {
+            throw new Error('Não foi possível confirmar a gravação de clientes no servidor.')
+          }
+        }
+        const serverPairs: Array<{ key: string; raw: unknown }> = [
+          { key: 'nonato-fornecedores', raw: backupData.data.fornecedores },
+          { key: 'nonato-pecas-biblioteca', raw: backupData.data.pecasBiblioteca },
+          { key: 'nonato-categorias-pecas', raw: backupData.data.categoriasPecas },
+          { key: 'nonato-subcategorias-pecas', raw: backupData.data.subcategoriasPecas },
+          { key: 'nonato-agendamentos', raw: backupData.data.agendamentos },
+          { key: 'nonato-fechamentos-relatorios', raw: backupData.data.fechamentosRelatorios },
+          { key: 'nonato-fechamentos-guardados-biblioteca', raw: backupData.data.fechamentosGuardadosBiblioteca },
+        ]
+        for (const { key, raw } of serverPairs) {
+          const parsed = parseBackupJsonRestoreFile(raw)
+          if (parsed === null) continue
+          const ok = await saveData(key, parsed, true, true)
+          if (!ok) {
+            throw new Error(`Não foi possível confirmar a gravação no servidor (${key}).`)
+          }
         }
 
         alert(t.restoreSuccess)
@@ -18993,6 +19175,8 @@ export default function Dashboard() {
       }
     }
 
+    void createAutoBackup()
+
     setRelatorioServicoForm(savedRelatorio)
     setNovoDiaTrabalho({
       data: new Date().toISOString().split('T')[0], // Inicializar com a data de hoje
@@ -19127,6 +19311,8 @@ export default function Dashboard() {
         saveData('nonato-clientes', updatedClientes)
       }
     }
+
+    void createAutoBackup()
 
     setShowRelatorioServicoForm(false)
     setRelatorioServicoForm({
@@ -19263,6 +19449,7 @@ export default function Dashboard() {
         saveData('nonato-clientes', updatedClientes)
       }
     }
+    void createAutoBackup()
     setRelatorioServicoForm(savedRelatorio)
     setEditingRelatorioServico(savedRelatorio)
     handlePrintRelatorio(savedRelatorio)
@@ -27632,10 +27819,106 @@ const nextF = familias.filter(x => x !== f)
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', opacity: isDemoMode ? 0.7 : 1, pointerEvents: isDemoMode ? 'none' : 'auto' }}>
                 <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupTitle || 'Backup Completo do Sistema'}</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>{safeT?.backupDescription || 'Crie um backup completo de todos os dados do sistema'}</p>
+                  <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '10px', lineHeight: 1.45 }}>
+                    {safeT?.backupDescription || 'Crie um backup completo de todos os dados do sistema'} O ficheiro JSON inclui relatórios de serviço (dias de trabalho), clientes, equipamentos, fornecedores, peças, categorias, agenda e fechamentos — guarde cópias fora deste PC (pen ou nuvem).
+                  </p>
+                  <p style={{ fontSize: '11px', opacity: 0.62, marginBottom: '12px', lineHeight: 1.45, padding: '8px 10px', backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: '6px', border: '1px solid rgba(0,255,0,0.12)' }}>
+                    <strong style={{ color: '#9be7ff' }}>Dupla proteção recomendada:</strong> (1) dados em JSON com «Criar Backup» + cópias automáticas abaixo; (2) código da aplicação com «Descarregar backup (ZIP)» / backup no servidor — são coisas diferentes; use as duas.
+                  </p>
                   <button className="btn-primary" onClick={handleCreateBackup} style={{ padding: '8px 15px' }} disabled={isDemoMode}>
                     {safeT?.createBackup || 'Criar Backup'}
                   </button>
+                </div>
+
+                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.28)' }}>
+                  <strong style={{ display: 'block', marginBottom: '8px', color: '#8ecaff' }}>Cópias automáticas periódicas (navegador)</strong>
+                  <p style={{ fontSize: '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
+                    Além do instantâneo ao abrir a página e após guardar relatórios, pode gravar até seis instantâneos <strong>de X em X minutos</strong> neste computador. Não substitui o JSON descarregado para a pen, mas ajuda a recuperar erros recentes.
+                  </p>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', color: '#ccc', marginBottom: '10px', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={autoBackupEnabled}
+                      disabled={isDemoMode}
+                      onChange={(e) => {
+                        const v = e.target.checked
+                        setAutoBackupEnabled(v)
+                        void saveData('nonato-auto-backup-enabled', v ? 'true' : 'false')
+                      }}
+                    />
+                    Ativar cópias automáticas periódicas
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px', fontSize: '12px', color: '#ccc' }}>
+                    <span style={{ opacity: 0.85 }}>Intervalo:</span>
+                    <select
+                      value={autoBackupInterval}
+                      disabled={isDemoMode}
+                      onChange={(e) => {
+                        const n = parseInt(e.target.value, 10)
+                        setAutoBackupInterval(n)
+                        void saveData('nonato-auto-backup-interval', String(n))
+                      }}
+                      style={{ padding: '6px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }}
+                    >
+                      <option value={15}>15 minutos</option>
+                      <option value={30}>30 minutos</option>
+                      <option value={60}>60 minutos</option>
+                      <option value={120}>2 horas</option>
+                      <option value={360}>6 horas</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.35)' }}>
+                  <strong style={{ display: 'block', marginBottom: '8px', color: '#8ecaff' }}>Recuperar dados — cópias automáticas recentes</strong>
+                  <p style={{ fontSize: '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
+                    O sistema guarda até seis instantâneos no navegador (inclui relatórios de serviço e clientes). Se perdeu linhas de dias de trabalho, experimente uma data <strong>anterior</strong> ao problema. A restauração repõe também no <strong>servidor</strong> (precisa de ligação).
+                  </p>
+                  {getAutoBackups().length === 0 ? (
+                    <p style={{ fontSize: '12px', opacity: 0.55, margin: 0 }}>Ainda não há cópias automáticas neste navegador — voltará a haver após guardar relatórios ou ao reiniciar a página.</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '280px', overflowY: 'auto' }}>
+                      {getAutoBackups().map((b: { timestamp: number; data?: { date?: string } }) => (
+                        <div
+                          key={b.timestamp}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '10px',
+                            flexWrap: 'wrap',
+                            padding: '10px 12px',
+                            backgroundColor: '#141414',
+                            borderRadius: '6px',
+                            border: '1px solid rgba(100, 180, 255, 0.25)',
+                          }}
+                        >
+                          <span style={{ fontSize: '12px', color: '#ccc' }}>
+                            {new Date(b.timestamp).toLocaleString(localeDatetimeGeneral(selectedLanguage))}
+                            {b.data?.date ? <span style={{ opacity: 0.65 }}> · bundle {String(b.data.date).slice(0, 19)}</span> : null}
+                          </span>
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            disabled={isDemoMode}
+                            onClick={() => {
+                              if (
+                                !window.confirm(
+                                  'Restaurar esta cópia automática? Substitui dados no servidor e neste PC (inclui relatórios e clientes deste instantâneo). A página recarrega em seguida.'
+                                )
+                              ) {
+                                return
+                              }
+                              void restoreAutoBackup(b)
+                            }}
+                            style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap' }}
+                          >
+                            Restaurar esta cópia
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)', borderLeft: '4px solid #00ff00' }}>
@@ -68061,7 +68344,12 @@ A1;Peça exemplo;10`}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', opacity: isDemoMode ? 0.7 : 1, pointerEvents: isDemoMode ? 'none' : 'auto' }}>
                 <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupTitle || 'Backup Completo do Sistema'}</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>{safeT?.backupDescription || 'Crie um backup completo de todos os dados do sistema'}</p>
+                  <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '10px', lineHeight: 1.45 }}>
+                    {safeT?.backupDescription || 'Crie um backup completo de todos os dados do sistema'} O JSON inclui relatórios (dias de trabalho), clientes, peças, agenda e fechamentos — guarde fora deste PC.
+                  </p>
+                  <p style={{ fontSize: '11px', opacity: 0.65, marginBottom: '12px' }}>
+                    Cópias automáticas periódicas e restauro pormenorizado: abra a aba <strong>Administrador</strong> e expanda <strong>Backup e segurança</strong>.
+                  </p>
                   <button className="btn-primary" onClick={handleCreateBackup} style={{ padding: '8px 15px' }} disabled={isDemoMode}>
                     {safeT?.createBackup || 'Criar Backup'}
                   </button>
