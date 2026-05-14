@@ -1915,9 +1915,13 @@ function numeroFaturaCorrespondeConsulta(numeroGuardado: string, consulta: strin
 type ProtocoloBloco = {
   /** Identificador estável por bloco (evita FileReader async gravar no índice errado). */
   id?: string
-  tipo: 'texto' | 'imagens'
+  tipo: 'texto' | 'imagens' | 'acao'
+  /** Cabeçalho desta acção / secção (PDF e formulário). */
+  titulo?: string
   texto?: string
-  imagens?: string[] // máx. 2, uma ao lado da outra
+  imagens?: string[] // máx. 2, uma ao lado da outra (bloco imagens ou acção)
+  /** Apenas `acao`: ordem entre quadro de imagens e balão de texto. */
+  ordemConteudo?: 'texto_primeiro' | 'imagens_primeiro'
 }
 
 function newProtocoloBlocoId(): string {
@@ -1926,7 +1930,22 @@ function newProtocoloBlocoId(): string {
 }
 
 function ensureProtocoloBlocosIds(blocos: ProtocoloBloco[]): ProtocoloBloco[] {
-  return blocos.map((b) => (b.id ? b : { ...b, id: newProtocoloBlocoId() }))
+  return blocos.map((raw) => {
+    const b = raw as ProtocoloBloco
+    const tipo = b.tipo === 'imagens' || b.tipo === 'acao' || b.tipo === 'texto' ? b.tipo : 'texto'
+    const base: ProtocoloBloco = {
+      ...b,
+      tipo,
+      imagens: tipo === 'acao' || tipo === 'imagens' ? (Array.isArray(b.imagens) ? b.imagens : []) : b.imagens,
+      ordemConteudo:
+        tipo === 'acao' && (b.ordemConteudo === 'imagens_primeiro' || b.ordemConteudo === 'texto_primeiro')
+          ? b.ordemConteudo
+          : tipo === 'acao'
+            ? 'texto_primeiro'
+            : undefined,
+    }
+    return base.id ? base : { ...base, id: newProtocoloBlocoId() }
+  })
 }
 
 /** Primeiro número com 9–15 dígitos (WhatsApp wa.me) a partir do campo telefones do cliente */
@@ -1948,6 +1967,8 @@ type ProtocoloServico = {
   id: string
   clienteId: string
   equipamentoNumeroSerie: string
+  /** Quando não há equipamento: descrição da situação ou do serviço (obrigatório se série vazia). */
+  situacaoDescricao?: string
   textoInicial: string
   blocos: ProtocoloBloco[]
   pecasTrocadasCodigos: string[]
@@ -5949,7 +5970,15 @@ export default function Dashboard() {
   const [selectedPDFModel, setSelectedPDFModel] = useState<string>('classico') // Modelo de PDF selecionado
   const [protocolosServico, setProtocolosServico] = useState<ProtocoloServico[]>([])
   const [editingProtocoloServicoId, setEditingProtocoloServicoId] = useState<string | null>(null)
-  const [protocoloServicoForm, setProtocoloServicoForm] = useState<{ clienteId: string; equipamentoNumeroSerie: string; textoInicial: string; blocos: ProtocoloBloco[]; pecasTrocadasCodigos: string[]; pdfModelo: number }>({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
+  const [protocoloServicoForm, setProtocoloServicoForm] = useState<{
+    clienteId: string
+    equipamentoNumeroSerie: string
+    situacaoDescricao: string
+    textoInicial: string
+    blocos: ProtocoloBloco[]
+    pecasTrocadasCodigos: string[]
+    pdfModelo: number
+  }>({ clienteId: '', equipamentoNumeroSerie: '', situacaoDescricao: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
   /** Filtro da lista na área Protocolos de Serviço (sem alterar dados guardados) */
   const [protocoloServicoFiltroLista, setProtocoloServicoFiltroLista] = useState('')
   const [protocoloServicoClienteFiltroLista, setProtocoloServicoClienteFiltroLista] = useState('')
@@ -6682,12 +6711,20 @@ export default function Dashboard() {
       setProtocoloServicoForm({
         clienteId: typeof parsed.clienteId === 'string' ? parsed.clienteId : '',
         equipamentoNumeroSerie: typeof parsed.equipamentoNumeroSerie === 'string' ? parsed.equipamentoNumeroSerie : '',
+        situacaoDescricao: typeof parsed.situacaoDescricao === 'string' ? parsed.situacaoDescricao : '',
         textoInicial: typeof parsed.textoInicial === 'string' ? parsed.textoInicial : '',
         blocos: ensureProtocoloBlocosIds(Array.isArray(parsed.blocos) ? parsed.blocos : []),
         pecasTrocadasCodigos: Array.isArray(parsed.pecasTrocadasCodigos) ? parsed.pecasTrocadasCodigos : [],
         pdfModelo: clampProtocoloPdfModelo(Number(parsed.pdfModelo))
       })
-      const temConteudo = Boolean(parsed.clienteId || parsed.equipamentoNumeroSerie || parsed.textoInicial || (Array.isArray(parsed.blocos) && parsed.blocos.length) || (Array.isArray(parsed.pecasTrocadasCodigos) && parsed.pecasTrocadasCodigos.length))
+      const temConteudo = Boolean(
+        parsed.clienteId ||
+          parsed.equipamentoNumeroSerie ||
+          parsed.situacaoDescricao ||
+          parsed.textoInicial ||
+          (Array.isArray(parsed.blocos) && parsed.blocos.length) ||
+          (Array.isArray(parsed.pecasTrocadasCodigos) && parsed.pecasTrocadasCodigos.length)
+      )
       if (temConteudo) setEditingProtocoloServicoId('new')
     } catch {
       // Ignora rascunho inválido no localStorage
@@ -30777,11 +30814,15 @@ onKeyPress={(e) => {
         const clienteProto = clientes.find(c => c.id === protocoloServicoForm.clienteId)
         const equipamentoProto = clienteProto?.equipamentos?.find(e => e.numeroSerie === protocoloServicoForm.equipamentoNumeroSerie)
         const serieProtocoloResumo = (equipamentoProto?.numeroSerie || protocoloServicoForm.equipamentoNumeroSerie || '').trim()
-        const idEquipamentoCliente = (equipamentoProto?.id || '').trim()
+        const idEquipamentoClienteBruto = (equipamentoProto?.id || '').trim()
         const idEquipamentoArmazem = serieProtocoloResumo
           ? (equipamentos.find((e) => (e.numeroSerie || '').trim().toLowerCase() === serieProtocoloResumo.toLowerCase())?.id || '').trim()
           : ''
-        const idEquipamentoVisivel = idEquipamentoCliente || idEquipamentoArmazem
+        const idEquipamentoProprioCliente =
+          idEquipamentoClienteBruto && !equipamentoClienteIdETecnicoGerado(equipamentoProto?.id)
+            ? idEquipamentoClienteBruto
+            : ''
+        const idEquipamentoVisivel = idEquipamentoProprioCliente || idEquipamentoArmazem
         const gerarPDFProtocolo = (p: ProtocoloServico, modeloOverride?: number) => {
           const cl = clientes.find(c => c.id === p.clienteId)
           const eq = cl?.equipamentos?.find(e => e.numeroSerie === p.equipamentoNumeroSerie)
@@ -30792,13 +30833,45 @@ onKeyPress={(e) => {
           const idx = modelo - 1
           const bts = PROTOCOLO_PDF_BLOCO_STYLES[idx] || PROTOCOLO_PDF_BLOCO_STYLES[0]
           const imgR = PROTOCOLO_PDF_IMG_RADIUS[idx] ?? 8
+          const tituloBlocoHtml = (t?: string) =>
+            (t || '').trim()
+              ? `<div style="margin:0 0 10px;font-size:9pt;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#475569;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">${esc((t || '').trim())}</div>`
+              : ''
+          const imgsFlexHtml = (imgs: string[]) => {
+            if (!imgs.length) return ''
+            let h = `<div style="display:flex;gap:14px;margin:0;flex-wrap:wrap;justify-content:center;align-items:center;width:100%;box-sizing:border-box;">`
+            imgs.slice(0, 2).forEach((src) => {
+              h += `<img src="${(src || '').replace(/"/g, '&quot;')}" alt="" style="max-width:300px;max-height:220px;object-fit:contain;border-radius:${imgR}px;box-shadow:0 2px 12px rgba(15,23,42,0.12);border:1px solid rgba(0,0,0,0.06);" />`
+            })
+            h += '</div>'
+            return h
+          }
+          const quadroImagensHtml = (imgs: string[]) => {
+            const inner = imgsFlexHtml(imgs)
+            if (!inner) return ''
+            return `<div style="margin:8px 0;padding:14px 12px;border:2px dashed #94a3b8;border-radius:14px;background:#f8fafc;box-sizing:border-box;">${inner}</div>`
+          }
+          const balaoTextoHtml = (txt: string) =>
+            txt.trim()
+              ? `<div style="margin:8px 0;padding:15px 18px;border-radius:22px;background:linear-gradient(180deg,#ffffff 0%,#f1f5f9 100%);border:1px solid #e2e8f0;box-shadow:0 2px 14px rgba(15,23,42,0.07);color:#334155;font-size:11.5pt;line-height:1.55;">${esc(txt)}</div>`
+              : ''
           let blocosHtml = ''
-          p.blocos.forEach(b => {
-            if (b.tipo === 'texto' && b.texto) blocosHtml += `<div style="${bts}">${esc(b.texto)}</div>`
+          p.blocos.forEach((b) => {
+            if (b.tipo === 'texto' && b.texto?.trim()) {
+              blocosHtml += `<div style="${bts}">${tituloBlocoHtml(b.titulo)}${esc(b.texto)}</div>`
+            }
             if (b.tipo === 'imagens' && b.imagens?.length) {
-              blocosHtml += '<div style="display:flex;gap:14px;margin:14px 0;flex-wrap:wrap;justify-content:center;align-items:center;width:100%;box-sizing:border-box;">'
-              b.imagens.slice(0, 2).forEach(src => { blocosHtml += `<img src="${(src || '').replace(/"/g, '&quot;')}" alt="" style="max-width:300px;max-height:220px;object-fit:contain;border-radius:${imgR}px;box-shadow:0 2px 12px rgba(15,23,42,0.12);border:1px solid rgba(0,0,0,0.06);" />` })
-              blocosHtml += '</div>'
+              blocosHtml += `<div style="margin:14px 0;">${tituloBlocoHtml(b.titulo)}${quadroImagensHtml(b.imagens)}</div>`
+            }
+            if (b.tipo === 'acao') {
+              const imgs = b.imagens || []
+              const txt = b.texto || ''
+              const ordem = b.ordemConteudo === 'imagens_primeiro' ? 'imagens_primeiro' : 'texto_primeiro'
+              const q = quadroImagensHtml(imgs)
+              const bal = balaoTextoHtml(txt)
+              if (!b.titulo?.trim() && !q && !bal) return
+              const corpo = ordem === 'imagens_primeiro' ? `${q}${bal}` : `${bal}${q}`
+              blocosHtml += `<div style="margin:16px 0;padding:4px 0;">${tituloBlocoHtml(b.titulo)}${corpo}</div>`
             }
           })
           const pecasList = p.pecasTrocadasCodigos.filter(c => c.trim())
@@ -30810,6 +30883,9 @@ onKeyPress={(e) => {
           const clientRows: string[] = []
           if (cl) {
             if (cl.nomeEmpresa) clientRows.push(`<tr><td class="cl-label">${lab('nomeEmpresa', 'Nome da empresa')}</td><td class="cl-value">${esc(cl.nomeEmpresa)}</td></tr>`)
+            if (cl.morada) clientRows.push(`<tr><td class="cl-label">${lab('morada', 'Morada')}</td><td class="cl-value">${esc(cl.morada)}</td></tr>`)
+            const locLinha = [cl.codigoPostal, cl.localidade, cl.conselho].filter((x) => String(x || '').trim()).join(' · ')
+            if (locLinha) clientRows.push(`<tr><td class="cl-label">${lab('localidade', 'Localidade')}</td><td class="cl-value">${esc(locLinha)}</td></tr>`)
             if (cl.email) clientRows.push(`<tr><td class="cl-label">${lab('email', 'E-mail')}</td><td class="cl-value">${esc(cl.email)}</td></tr>`)
             if (cl.telefones) clientRows.push(`<tr><td class="cl-label">${lab('telefones', 'Telefone')}</td><td class="cl-value">${esc(cl.telefones)}</td></tr>`)
             if (cl.contato) clientRows.push(`<tr><td class="cl-label">${lab('contato', 'Contato')}</td><td class="cl-value">${esc(cl.contato)}</td></tr>`)
@@ -30820,11 +30896,12 @@ onKeyPress={(e) => {
           const idEqPdf = (() => {
             if (!eq) return ''
             const idC = (eq.id || '').trim()
+            const idProprio = idC && !equipamentoClienteIdETecnicoGerado(eq.id) ? idC : ''
             const s = (eq.numeroSerie || '').trim()
             const idA = s
               ? (equipamentos.find((e) => (e.numeroSerie || '').trim().toLowerCase() === s.toLowerCase())?.id || '').trim()
               : ''
-            return idC || idA
+            return idProprio || idA
           })()
           const rowIdPdf = idEqPdf
             ? `<tr><td class="cl-label">${esc(protoT?.protocolosServicoEquipamentoResumoId || 'ID')}</td><td class="cl-value">${esc(idEqPdf)}</td></tr>`
@@ -30832,8 +30909,13 @@ onKeyPress={(e) => {
           const equipSection = eq
             ? `<div class="sec"><h3 class="sec-title">${protoT?.protocolosServicoInformacaoEquipamento || 'Informação do equipamento'}</h3><table class="cl-table"><tr><td class="cl-label">${lab('tipoEquipamento', 'Tipo')}</td><td class="cl-value">${esc(eq.tipoEquipamento)}</td></tr><tr><td class="cl-label">${lab('modelo', 'Modelo')}</td><td class="cl-value">${esc(eq.modelo)}</td></tr><tr><td class="cl-label">${lab('marca', 'Marca')}</td><td class="cl-value">${esc(eq.marca)}</td></tr><tr><td class="cl-label">${protoT?.numeroSerie || 'Nº Série'}</td><td class="cl-value">${esc(eq.numeroSerie)}</td></tr>${rowIdPdf}</table></div>`
             : ''
+          const sitPdf = (p.situacaoDescricao || '').trim()
+          const situacaoSection =
+            sitPdf && !eq
+              ? `<div class="sec"><h3 class="sec-title">${protoT?.protocolosServicoInformacaoSituacao || 'Situação / contexto'}</h3><p style="margin:0;white-space:pre-wrap;" class="texto-inicial">${esc(sitPdf)}</p></div>`
+              : ''
           const textoSection = p.textoInicial ? `<div class="sec"><h3 class="sec-title">${protoT?.protocolosServicoTextoInicial || 'Texto inicial'}</h3><p style="margin:0;white-space:pre-wrap;" class="texto-inicial">${esc(p.textoInicial)}</p></div>` : ''
-          const bodyInner = `${clienteSection}${equipSection}${textoSection}${blocosHtml}${pecasStrong}<div class="footer-bar"><span class="footer-date">${dataDoc}</span><span class="doc-ref">${refDoc}</span></div>`
+          const bodyInner = `${clienteSection}${equipSection}${situacaoSection}${textoSection}${blocosHtml}${pecasStrong}<div class="footer-bar"><span class="footer-date">${dataDoc}</span><span class="doc-ref">${refDoc}</span></div>`
           const html = buildProtocoloServicoPrintHtml(idx, { tituloProto, dataDoc, logoHtml }, bodyInner)
           const w = window.open('', '_blank')
           if (w) { w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 450) }
@@ -30850,7 +30932,9 @@ onKeyPress={(e) => {
             nomeCli +
             (cl?.equipamentos?.find((e) => e.numeroSerie === p.equipamentoNumeroSerie)
               ? ' - ' + (cl.equipamentos.find((e) => e.numeroSerie === p.equipamentoNumeroSerie)?.tipoEquipamento || '')
-              : '')
+              : (p.situacaoDescricao || '').trim()
+                ? ' — ' + (p.situacaoDescricao || '').trim().replace(/\s+/g, ' ').slice(0, 200)
+                : '')
           const instrucao = protoEnvioClienteT?.protocolosServicoEnvioEmailInstrucaoAnexo || ''
           const corpo = instrucao ? `${corpoBase}\n\n${instrucao}` : corpoBase
           const to = (cl?.email || '').trim().replace(/\s/g, '')
@@ -30886,10 +30970,25 @@ onKeyPress={(e) => {
               const cl = clientes.find(c => c.id === p.clienteId)
               const eq = cl?.equipamentos?.find(e => e.numeroSerie === p.equipamentoNumeroSerie)
               const idEqFilt = eq
-                ? ((eq.id || '').trim() ||
-                    (equipamentos.find((e) => (e.numeroSerie || '').trim().toLowerCase() === (eq.numeroSerie || '').trim().toLowerCase())?.id || '').trim())
+                ? (() => {
+                    const idC = (eq.id || '').trim()
+                    const idProprio = idC && !equipamentoClienteIdETecnicoGerado(eq.id) ? idC : ''
+                    const s = (eq.numeroSerie || '').trim()
+                    const idA = s
+                      ? (equipamentos.find((e) => (e.numeroSerie || '').trim().toLowerCase() === s.toLowerCase())?.id || '').trim()
+                      : ''
+                    return idProprio || idA
+                  })()
                 : ''
-              const hay = [cl?.nomeEmpresa, eq?.tipoEquipamento, eq?.modelo, eq?.numeroSerie, eq?.marca, idEqFilt].filter(Boolean).join(' ').toLowerCase()
+              const sitF = (p.situacaoDescricao || '').trim().toLowerCase()
+              const blocosHay = (p.blocos || [])
+                .map((b) => [b.titulo, b.texto, b.tipo].filter(Boolean).join(' '))
+                .join(' ')
+                .toLowerCase()
+              const hay = [cl?.nomeEmpresa, eq?.tipoEquipamento, eq?.modelo, eq?.numeroSerie, eq?.marca, idEqFilt, sitF, blocosHay]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase()
               return hay.includes(filtroLista)
             })
           : protocolosOrdenados
@@ -30985,6 +31084,21 @@ onKeyPress={(e) => {
           protoT?.protocolosServicoStep3 || 'PEÇAS',
           protoT?.protocolosServicoStep4 || 'GUARDAR',
         ]
+        const removeProtocoloBloco = (bloco: ProtocoloBloco, idx: number) =>
+          setProtocoloServicoForm((prev) => ({
+            ...prev,
+            blocos: bloco.id ? prev.blocos.filter((b) => b.id !== bloco.id) : prev.blocos.filter((_, i) => i !== idx),
+          }))
+        const appendImagemProtocoloBloco = (bid: string, dataUrl: string) => {
+          setProtocoloServicoForm((prev) => ({
+            ...prev,
+            blocos: prev.blocos.map((b) =>
+              b.id === bid && (b.tipo === 'imagens' || b.tipo === 'acao')
+                ? { ...b, imagens: [...(b.imagens || []), dataUrl].slice(0, 2) }
+                : b
+            ),
+          }))
+        }
         const renderProtocoloListaCard = (p: ProtocoloServico) => {
           const cl = clientes.find((c) => c.id === p.clienteId)
           const eq = cl?.equipamentos?.find((e) => e.numeroSerie === p.equipamentoNumeroSerie)
@@ -31038,10 +31152,33 @@ onKeyPress={(e) => {
                     {eq.marca ? <span style={{ color: 'rgba(180,200,220,0.65)' }}> · {eq.marca}</span> : null}
                     {eq.modelo ? <span style={{ color: 'rgba(180,200,220,0.65)' }}> · {eq.modelo}</span> : null}
                   </p>
+                ) : (p.situacaoDescricao || '').trim() ? (
+                  <p
+                    style={{
+                      margin: 0,
+                      color: 'rgba(255,255,255,0.88)',
+                      fontSize: 13,
+                      lineHeight: 1.55,
+                      whiteSpace: 'pre-wrap',
+                      maxHeight: 72,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <span style={{ color: '#8dffe0', fontWeight: 700 }}>
+                      {protoT?.protocolosServicoInformacaoSituacao || 'Situação'}
+                    </span>
+                    <span style={{ color: 'rgba(180,200,220,0.75)' }}>
+                      {' '}
+                      — {(p.situacaoDescricao || '').trim().slice(0, 220)}
+                      {(p.situacaoDescricao || '').trim().length > 220 ? '…' : ''}
+                    </span>
+                  </p>
                 ) : null}
-                <p style={{ margin: '8px 0 0', fontSize: 12, color: 'rgba(140, 180, 210, 0.85)', fontFamily: 'ui-monospace, monospace' }}>
-                  {eq?.numeroSerie || p.equipamentoNumeroSerie || '—'}
-                </p>
+                {(eq || (p.equipamentoNumeroSerie || '').trim()) ? (
+                  <p style={{ margin: '8px 0 0', fontSize: 12, color: 'rgba(140, 180, 210, 0.85)', fontFamily: 'ui-monospace, monospace' }}>
+                    {eq?.numeroSerie || p.equipamentoNumeroSerie || '—'}
+                  </p>
+                ) : null}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
                   <span
                     style={{
@@ -31121,6 +31258,7 @@ onKeyPress={(e) => {
                         setProtocoloServicoForm({
                           clienteId: pr.clienteId,
                           equipamentoNumeroSerie: pr.equipamentoNumeroSerie,
+                          situacaoDescricao: typeof pr.situacaoDescricao === 'string' ? pr.situacaoDescricao : '',
                           textoInicial: pr.textoInicial,
                           blocos: ensureProtocoloBlocosIds(pr.blocos || []),
                           pecasTrocadasCodigos: pr.pecasTrocadasCodigos,
@@ -31200,6 +31338,7 @@ onKeyPress={(e) => {
                       setProtocoloServicoForm({
                         clienteId: '',
                         equipamentoNumeroSerie: '',
+                        situacaoDescricao: '',
                         textoInicial: '',
                         blocos: [],
                         pecasTrocadasCodigos: [],
@@ -31261,7 +31400,7 @@ onKeyPress={(e) => {
                       onClick={() => {
                         if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY)
                         setEditingProtocoloServicoId(null)
-                        setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
+                        setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', situacaoDescricao: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
                       }}
                     >
                       ← {protoT?.protocolosServicoVoltarLista || 'Voltar à lista'}
@@ -31296,16 +31435,31 @@ onKeyPress={(e) => {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '18px' }}>
                     <div>
                       <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>{protoT?.protocolosServicoCliente || 'Cliente'}</label>
-                      <select value={protocoloServicoForm.clienteId} onChange={(e) => { const v = e.target.value; setProtocoloServicoForm(prev => ({ ...prev, clienteId: v, equipamentoNumeroSerie: '' })) }} style={inputBase}>
+                      <select value={protocoloServicoForm.clienteId} onChange={(e) => { const v = e.target.value; setProtocoloServicoForm(prev => ({ ...prev, clienteId: v, equipamentoNumeroSerie: '', situacaoDescricao: '' })) }} style={inputBase}>
                         <option value="">— {protoT?.protocolosServicoSelecionarCliente || 'Selecionar cliente'}</option>
                         {clientes.map(c => <option key={c.id} value={c.id}>{c.nomeEmpresa}</option>)}
                       </select>
                     </div>
                     <div>
                       <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>{protoT?.protocolosServicoEquipamento || 'Equipamento'}</label>
-                      <select value={protocoloServicoForm.equipamentoNumeroSerie} onChange={(e) => setProtocoloServicoForm(prev => ({ ...prev, equipamentoNumeroSerie: e.target.value }))} style={{ ...inputBase, opacity: clienteProto?.equipamentos?.length ? 1 : 0.6 }} disabled={!clienteProto?.equipamentos?.length}>
-                        <option value="">— {protoT?.protocolosServicoSelecionarEquipamento || 'Selecionar equipamento'}</option>
-                        {(clienteProto?.equipamentos || []).map(eq => <option key={eq.numeroSerie} value={eq.numeroSerie}>{eq.tipoEquipamento} — {eq.modelo} ({eq.numeroSerie})</option>)}
+                      <select
+                        value={protocoloServicoForm.equipamentoNumeroSerie}
+                        onChange={(e) =>
+                          setProtocoloServicoForm((prev) => ({
+                            ...prev,
+                            equipamentoNumeroSerie: e.target.value,
+                            situacaoDescricao: e.target.value ? '' : prev.situacaoDescricao,
+                          }))
+                        }
+                        style={{ ...inputBase, opacity: protocoloServicoForm.clienteId ? 1 : 0.6 }}
+                        disabled={!protocoloServicoForm.clienteId}
+                      >
+                        <option value="">— {protoT?.protocolosServicoSelecionarEquipamentoOuSit || protoT?.protocolosServicoSelecionarEquipamento || 'Sem equipamento / situação'}</option>
+                        {(clienteProto?.equipamentos || []).map((eq) => (
+                          <option key={eq.numeroSerie} value={eq.numeroSerie}>
+                            {eq.tipoEquipamento} — {eq.modelo} ({eq.numeroSerie})
+                          </option>
+                        ))}
                       </select>
                     </div>
                     <div style={{ gridColumn: '1 / -1', maxWidth: '560px' }}>
@@ -31317,36 +31471,129 @@ onKeyPress={(e) => {
                       </select>
                     </div>
                   </div>
-                  {protocoloServicoForm.equipamentoNumeroSerie && equipamentoProto ? (
+                  {protocoloServicoForm.clienteId && !protocoloServicoForm.equipamentoNumeroSerie ? (
+                    <div style={{ marginTop: 16, maxWidth: '100%' }}>
+                      <label style={{ display: 'block', color: '#aaa', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>
+                        {protoT?.protocolosServicoSituacaoDescricao || 'Situação ou contexto (sem equipamento)'}
+                      </label>
+                      <AssistTextarea
+                        value={protocoloServicoForm.situacaoDescricao}
+                        onValueChange={(v) => setProtocoloServicoForm((prev) => ({ ...prev, situacaoDescricao: v }))}
+                        placeholder={protoT?.protocolosServicoSituacaoPlaceholder || 'Descreva o local, o tipo de intervenção ou o equipamento externo não cadastrado…'}
+                        rows={4}
+                        style={{ ...inputBase, resize: 'vertical' as const, maxWidth: '100%' }}
+                      />
+                      <p style={{ margin: '8px 0 0', fontSize: 11, color: '#64748b', lineHeight: 1.45 }}>
+                        {protoT?.protocolosServicoSituacaoHint ||
+                          'Se não associar um equipamento do cliente, este texto identifica o serviço no protocolo e no PDF.'}
+                      </p>
+                    </div>
+                  ) : null}
+                  {protocoloServicoForm.clienteId && clienteProto ? (
                     <div
                       style={{
-                        marginTop: 14,
-                        padding: '12px 14px',
-                        borderRadius: 10,
-                        background: 'rgba(15, 23, 42, 0.55)',
+                        marginTop: 18,
+                        padding: '18px 18px 16px',
+                        borderRadius: 12,
                         border: '1px solid rgba(148, 163, 184, 0.22)',
-                        maxWidth: 640,
+                        background: 'linear-gradient(165deg, rgba(15, 23, 42, 0.72) 0%, rgba(15, 23, 42, 0.42) 100%)',
+                        maxWidth: 900,
+                        boxSizing: 'border-box',
                       }}
                     >
-                      <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', letterSpacing: '0.06em', marginBottom: 8 }}>
-                        {protoT?.protocolosServicoEquipamentoResumoTitulo || 'Equipamento selecionado'}
+                      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: '#64748b', marginBottom: 14 }}>
+                        {protoT?.protocolosServicoCabecalhoDocumento || 'Cabeçalho do protocolo'}
                       </div>
-                      <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.5 }}>
-                        <span style={{ color: '#94a3b8' }}>{protoT?.protocolosServicoEquipamentoResumoSerie || 'N.º série'}: </span>
-                        <span style={{ fontFamily: 'ui-monospace, monospace', color: '#f1f5f9' }}>{serieProtocoloResumo || '—'}</span>
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                          gap: 18,
+                          alignItems: 'start',
+                        }}
+                      >
+                        <div
+                          style={{
+                            padding: '14px 14px 12px',
+                            borderRadius: 10,
+                            background: 'rgba(2, 6, 23, 0.35)',
+                            border: '1px solid rgba(45, 212, 191, 0.2)',
+                          }}
+                        >
+                          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', color: '#5eead4', marginBottom: 10 }}>
+                            {protoT?.protocolosServicoInformacaoCliente || 'Cliente'}
+                          </div>
+                          <div style={{ fontSize: 16, fontWeight: 800, color: '#f8fafc', lineHeight: 1.3 }}>{clienteProto.nomeEmpresa}</div>
+                          {clienteProto.morada ? (
+                            <p style={{ margin: '10px 0 0', fontSize: 12, color: '#cbd5e1', lineHeight: 1.5 }}>{clienteProto.morada}</p>
+                          ) : null}
+                          {[clienteProto.codigoPostal, clienteProto.localidade, clienteProto.conselho].filter((x) => String(x || '').trim()).length ? (
+                            <p style={{ margin: '6px 0 0', fontSize: 12, color: '#94a3b8' }}>
+                              {[clienteProto.codigoPostal, clienteProto.localidade, clienteProto.conselho].filter((x) => String(x || '').trim()).join(' · ')}
+                            </p>
+                          ) : null}
+                          {clienteProto.email ? (
+                            <p style={{ margin: '10px 0 0', fontSize: 12, color: '#cbd5e1' }}>
+                              <span style={{ color: '#64748b' }}>{protoT?.email || 'E-mail'}: </span>
+                              {clienteProto.email}
+                            </p>
+                          ) : null}
+                          {clienteProto.telefones ? (
+                            <p style={{ margin: '6px 0 0', fontSize: 12, color: '#cbd5e1' }}>
+                              <span style={{ color: '#64748b' }}>{protoT?.telefones || 'Telefone'}: </span>
+                              {clienteProto.telefones}
+                            </p>
+                          ) : null}
+                        </div>
+                        <div
+                          style={{
+                            padding: '14px 14px 12px',
+                            borderRadius: 10,
+                            background: 'rgba(2, 6, 23, 0.35)',
+                            border: '1px solid rgba(96, 165, 250, 0.22)',
+                          }}
+                        >
+                          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', color: '#93c5fd', marginBottom: 10 }}>
+                            {equipamentoProto
+                              ? protoT?.protocolosServicoInformacaoEquipamento || 'Equipamento'
+                              : protoT?.protocolosServicoInformacaoSituacao || 'Situação'}
+                          </div>
+                          {equipamentoProto ? (
+                            <>
+                              <div style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0', lineHeight: 1.45 }}>
+                                {equipamentoProto.tipoEquipamento}
+                                {equipamentoProto.marca ? <span style={{ color: '#94a3b8', fontWeight: 600 }}> · {equipamentoProto.marca}</span> : null}
+                                {equipamentoProto.modelo ? <span style={{ color: '#94a3b8', fontWeight: 600 }}> · {equipamentoProto.modelo}</span> : null}
+                              </div>
+                              <p style={{ margin: '10px 0 0', fontSize: 12, color: '#cbd5e1' }}>
+                                <span style={{ color: '#64748b' }}>{protoT?.protocolosServicoEquipamentoResumoSerie || 'N.º série'}: </span>
+                                <span style={{ fontFamily: 'ui-monospace, monospace', color: '#f1f5f9' }}>{serieProtocoloResumo || '—'}</span>
+                              </p>
+                              <p style={{ margin: '6px 0 0', fontSize: 12, color: '#cbd5e1' }}>
+                                <span style={{ color: '#64748b' }}>{protoT?.protocolosServicoEquipamentoResumoId || 'ID'}: </span>
+                                <span style={{ fontFamily: 'ui-monospace, monospace', color: '#f1f5f9' }}>
+                                  {idEquipamentoVisivel || (protoT?.protocolosServicoEquipamentoSemId || '—')}
+                                </span>
+                              </p>
+                              {!idEquipamentoVisivel ? (
+                                <p style={{ margin: '8px 0 0', fontSize: 11, color: '#64748b', lineHeight: 1.45 }}>
+                                  {protoT?.protocolosServicoEquipamentoSemIdHint ||
+                                    'O ID aparece quando existir código próprio no equipamento do cliente ou quando o n.º de série coincidir com o armazém.'}
+                                </p>
+                              ) : null}
+                            </>
+                          ) : (protocoloServicoForm.situacaoDescricao || '').trim() ? (
+                            <p style={{ margin: 0, fontSize: 13, color: '#e2e8f0', lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>
+                              {protocoloServicoForm.situacaoDescricao}
+                            </p>
+                          ) : (
+                            <p style={{ margin: 0, fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
+                              {protoT?.protocolosServicoCabecalhoAguardarIdent ||
+                                'Escolha um equipamento na lista ou descreva a situação acima para preencher esta coluna.'}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.5, marginTop: 6 }}>
-                        <span style={{ color: '#94a3b8' }}>{protoT?.protocolosServicoEquipamentoResumoId || 'ID'}: </span>
-                        <span style={{ fontFamily: 'ui-monospace, monospace', color: '#f1f5f9' }}>
-                          {idEquipamentoVisivel || (protoT?.protocolosServicoEquipamentoSemId || '—')}
-                        </span>
-                      </div>
-                      {!idEquipamentoVisivel ? (
-                        <p style={{ margin: '8px 0 0', fontSize: 11, color: '#64748b', lineHeight: 1.45 }}>
-                          {protoT?.protocolosServicoEquipamentoSemIdHint ||
-                            'O ID aparece quando existir no equipamento do cliente ou quando o n.º de série coincidir com um equipamento no armazém.'}
-                        </p>
-                      ) : null}
                     </div>
                   ) : null}
                   {protoT?.protocolosServicoSecPdfHint ? (
@@ -31378,139 +31625,551 @@ onKeyPress={(e) => {
                         }}
                       >
                         <span style={{ color: '#7dffb3', fontSize: '12px', fontWeight: 700, flex: '1 1 auto', minWidth: 0 }}>
-                          #{idx + 1} · {bloco.tipo === 'texto' ? (protoT?.protocolosServicoBlocoTexto || 'Bloco de texto') : (protoT?.protocolosServicoBlocoImagens || 'Bloco de imagens (máx. 2)')}
+                          #{idx + 1} ·{' '}
+                          {bloco.tipo === 'texto'
+                            ? protoT?.protocolosServicoBlocoTexto || 'Bloco de texto'
+                            : bloco.tipo === 'imagens'
+                              ? protoT?.protocolosServicoBlocoImagens || 'Bloco de imagens (máx. 2)'
+                              : protoT?.protocolosServicoBlocoAcao || 'Acção (texto + imagens)'}
                         </span>
-                        {bloco.tipo === 'texto' ? (
-                          <button
-                            type="button"
-                            title={protoT?.protocolosServicoRemoverBloco || 'Remover'}
-                            aria-label={protoT?.protocolosServicoRemoverBloco || 'Remover'}
-                            className="btn-danger btn-danger--inline"
-                            style={{
-                              padding: '6px 12px',
-                              flex: '0 0 auto',
-                              fontSize: 12,
-                              fontWeight: 600,
-                              borderRadius: 8,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              background: 'rgba(127, 29, 29, 0.35)',
-                              border: '1px solid rgba(248, 113, 113, 0.28)',
-                              color: '#fca5a5',
-                              boxShadow: 'none',
-                              whiteSpace: 'nowrap',
-                              width: 'auto',
-                              maxWidth: 'max-content',
-                            }}
-                            onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: bloco.id ? prev.blocos.filter((b) => b.id !== bloco.id) : prev.blocos.filter((_, i) => i !== idx) }))}
-                          >
-                            {protoT?.protocolosServicoRemoverBloco || 'Remover'}
-                          </button>
-                        ) : null}
+                        <button
+                          type="button"
+                          title={protoT?.protocolosServicoRemoverBloco || 'Remover'}
+                          aria-label={protoT?.protocolosServicoRemoverBloco || 'Remover'}
+                          className="btn-danger btn-danger--inline"
+                          style={{
+                            padding: '6px 12px',
+                            flex: '0 0 auto',
+                            fontSize: 12,
+                            fontWeight: 600,
+                            borderRadius: 8,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'rgba(127, 29, 29, 0.35)',
+                            border: '1px solid rgba(248, 113, 113, 0.28)',
+                            color: '#fca5a5',
+                            boxShadow: 'none',
+                            whiteSpace: 'nowrap',
+                            width: 'auto',
+                            maxWidth: 'max-content',
+                          }}
+                          onClick={() => removeProtocoloBloco(bloco, idx)}
+                        >
+                          {protoT?.protocolosServicoRemoverBloco || 'Remover'}
+                        </button>
                       </div>
-                      {bloco.tipo === 'imagens' && protoT?.protocolosServicoBlocoImagensHint ? (
+                      <label style={{ display: 'block', color: '#94a3b8', fontSize: '11px', fontWeight: 600, marginBottom: '6px' }}>
+                        {protoT?.protocolosServicoCabecalhoAcaoBloco || 'Cabeçalho desta acção (opcional)'}
+                      </label>
+                      <input
+                        type="text"
+                        value={bloco.titulo || ''}
+                        onChange={(e) =>
+                          setProtocoloServicoForm((prev) => ({
+                            ...prev,
+                            blocos: prev.blocos.map((b, i) =>
+                              bloco.id ? (b.id === bloco.id ? { ...b, titulo: e.target.value } : b) : i === idx ? { ...b, titulo: e.target.value } : b
+                            ),
+                          }))
+                        }
+                        placeholder={protoT?.protocolosServicoCabecalhoAcaoBlocoPlaceholder || 'Ex.: Antes da intervenção'}
+                        style={{ ...inputBase, marginBottom: '12px', maxWidth: '100%' }}
+                      />
+                      {(bloco.tipo === 'imagens' || bloco.tipo === 'acao') && protoT?.protocolosServicoBlocoImagensHint ? (
                         <p style={{ margin: '0 0 10px', fontSize: 11, color: '#64748b', lineHeight: 1.45 }}>{protoT.protocolosServicoBlocoImagensHint}</p>
                       ) : null}
                       {bloco.tipo === 'texto' ? (
-                        <AssistTextarea value={bloco.texto || ''} onValueChange={(v) => setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b, i) => (bloco.id ? b.id === bloco.id : i === idx) ? { ...b, texto: v } : b) }))} rows={3} style={{ ...inputBase, resize: 'vertical' as const }} />
-                      ) : (
+                        <AssistTextarea
+                          value={bloco.texto || ''}
+                          onValueChange={(v) =>
+                            setProtocoloServicoForm((prev) => ({
+                              ...prev,
+                              blocos: prev.blocos.map((b, i) => (bloco.id ? b.id === bloco.id : i === idx) ? { ...b, texto: v } : b),
+                            }))
+                          }
+                          rows={3}
+                          style={{
+                            ...inputBase,
+                            resize: 'vertical' as const,
+                            borderRadius: '18px',
+                            border: '1px solid rgba(148, 163, 184, 0.28)',
+                            boxShadow: '0 4px 18px rgba(0, 0, 0, 0.22)',
+                            background: 'rgba(15, 23, 42, 0.55)',
+                          }}
+                        />
+                      ) : bloco.tipo === 'imagens' ? (
                         <div style={{ width: '100%' }}>
-                          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                            {(bloco.imagens || []).slice(0, 2).map((src, i) => (
-                              <div key={i} style={{ position: 'relative' }}>
-                                <img src={src} alt="" style={{ maxWidth: '220px', maxHeight: '165px', objectFit: 'contain', borderRadius: '10px', border: '1px solid rgba(0,255,136,0.25)', background: '#111' }} />
-                                <button
-                                  type="button"
-                                  title={protoT?.protocolosServicoRemoverImagem || protoT?.protocolosServicoExcluir || 'Remover'}
-                                  aria-label={protoT?.protocolosServicoRemoverImagem || protoT?.protocolosServicoExcluir || 'Remover'}
-                                  style={{
-                                    position: 'absolute',
-                                    top: '6px',
-                                    right: '6px',
-                                    background: 'rgba(180,30,30,0.95)',
-                                    color: '#fff',
-                                    border: 'none',
-                                    borderRadius: '6px',
-                                    padding: '4px 8px',
-                                    cursor: 'pointer',
-                                    fontSize: '10px',
-                                    fontWeight: 700,
-                                    lineHeight: 1.2,
-                                    whiteSpace: 'nowrap',
-                                    boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
-                                  }}
-                                  onClick={() => {
-                                    const bid = bloco.id
-                                    setProtocoloServicoForm(prev => ({
-                                      ...prev,
-                                      blocos: prev.blocos.map((b, bi) => (bid ? b.id === bid : bi === idx) ? { ...b, imagens: (b.imagens || []).filter((_, j) => j !== i) } : b),
-                                    }))
-                                  }}
-                                >
-                                  {protoT?.protocolosServicoRemoverImagem || protoT?.protocolosServicoExcluir || 'Remover'}
-                                </button>
-                              </div>
-                            ))}
-                          </div>
                           <div
                             style={{
-                              display: 'flex',
-                              flexDirection: 'row',
-                              flexWrap: 'nowrap',
-                              gap: '8px',
-                              alignItems: 'center',
-                              marginTop: 12,
-                              width: '100%',
-                              minHeight: 40,
-                              overflowX: 'auto',
-                              overflowY: 'hidden',
-                              paddingBottom: 2,
+                              border: '2px dashed rgba(45, 212, 191, 0.35)',
+                              borderRadius: 14,
+                              padding: 12,
+                              background: 'rgba(15, 23, 42, 0.35)',
                               boxSizing: 'border-box',
                             }}
                           >
-                            {(bloco.imagens || []).length < 2 ? (
-                              <>
-                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 14px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                                  <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden>🔍</span>
-                                  {protoT?.protocolosServicoBuscarImagem || 'Buscar imagem'}
-                                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const bid = bloco.id; if (!bid) return; const input = ev.currentTarget; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b) => (b.id === bid && b.tipo === 'imagens' ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b)) })); input.value = '' }; r.readAsDataURL(f) }} />
-                                </label>
-                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 14px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                                  <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden>📷</span>
-                                  {protoT?.protocolosServicoTirarFoto || 'Tirar foto'}
-                                  <input type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(ev) => { const f = ev.target.files?.[0]; if (!f) return; const bid = bloco.id; if (!bid) return; const input = ev.currentTarget; const r = new FileReader(); r.onload = () => { const data = r.result as string; if (!data) return; setProtocoloServicoForm(prev => ({ ...prev, blocos: prev.blocos.map((b) => (b.id === bid && b.tipo === 'imagens' ? { ...b, imagens: [...(b.imagens || []), data].slice(0, 2) } : b)) })); input.value = '' }; r.readAsDataURL(f) }} />
-                                </label>
-                              </>
-                            ) : null}
-                            <button
-                              type="button"
-                              title={protoT?.protocolosServicoRemoverBloco || 'Remover'}
-                              aria-label={protoT?.protocolosServicoRemoverBloco || 'Remover'}
-                              className="btn-danger btn-danger--inline"
+                            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                              {(bloco.imagens || []).slice(0, 2).map((src, i) => (
+                                <div key={i} style={{ position: 'relative' }}>
+                                  <img src={src} alt="" style={{ maxWidth: '220px', maxHeight: '165px', objectFit: 'contain', borderRadius: '10px', border: '1px solid rgba(0,255,136,0.25)', background: '#111' }} />
+                                  <button
+                                    type="button"
+                                    title={protoT?.protocolosServicoRemoverImagem || protoT?.protocolosServicoExcluir || 'Remover'}
+                                    aria-label={protoT?.protocolosServicoRemoverImagem || protoT?.protocolosServicoExcluir || 'Remover'}
+                                    style={{
+                                      position: 'absolute',
+                                      top: '6px',
+                                      right: '6px',
+                                      background: 'rgba(180,30,30,0.95)',
+                                      color: '#fff',
+                                      border: 'none',
+                                      borderRadius: '6px',
+                                      padding: '4px 8px',
+                                      cursor: 'pointer',
+                                      fontSize: '10px',
+                                      fontWeight: 700,
+                                      lineHeight: 1.2,
+                                      whiteSpace: 'nowrap',
+                                      boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
+                                    }}
+                                    onClick={() => {
+                                      const bid = bloco.id
+                                      setProtocoloServicoForm((prev) => ({
+                                        ...prev,
+                                        blocos: prev.blocos.map((b, bi) =>
+                                          bid ? (b.id === bid ? { ...b, imagens: (b.imagens || []).filter((_, j) => j !== i) } : b) : bi === idx ? { ...b, imagens: (b.imagens || []).filter((_, j) => j !== i) } : b
+                                        ),
+                                      }))
+                                    }}
+                                  >
+                                    {protoT?.protocolosServicoRemoverImagem || protoT?.protocolosServicoExcluir || 'Remover'}
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                            <div
                               style={{
-                                padding: '8px 12px',
-                                minHeight: 40,
-                                flex: '0 0 auto',
-                                fontSize: 12,
-                                fontWeight: 600,
-                                borderRadius: 10,
-                                display: 'inline-flex',
+                                display: 'flex',
+                                flexDirection: 'row',
+                                flexWrap: 'nowrap',
+                                gap: '8px',
                                 alignItems: 'center',
-                                justifyContent: 'center',
-                                background: 'rgba(127, 29, 29, 0.35)',
-                                border: '1px solid rgba(248, 113, 113, 0.28)',
-                                color: '#fca5a5',
-                                boxShadow: 'none',
-                                whiteSpace: 'nowrap',
-                                width: 'auto',
-                                maxWidth: 'max-content',
+                                marginTop: 12,
+                                width: '100%',
+                                minHeight: 40,
+                                overflowX: 'auto',
+                                overflowY: 'hidden',
+                                paddingBottom: 2,
+                                boxSizing: 'border-box',
                               }}
-                              onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: bloco.id ? prev.blocos.filter((b) => b.id !== bloco.id) : prev.blocos.filter((_, i) => i !== idx) }))}
                             >
-                              {protoT?.protocolosServicoRemoverBloco || 'Remover'}
-                            </button>
+                              {(bloco.imagens || []).length < 2 ? (
+                                <>
+                                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 14px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                                    <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden>
+                                      🔍
+                                    </span>
+                                    {protoT?.protocolosServicoBuscarImagem || 'Buscar imagem'}
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      style={{ display: 'none' }}
+                                      onChange={(ev) => {
+                                        const f = ev.target.files?.[0]
+                                        if (!f) return
+                                        const bid = bloco.id
+                                        if (!bid) return
+                                        const input = ev.currentTarget
+                                        const r = new FileReader()
+                                        r.onload = () => {
+                                          const data = r.result as string
+                                          if (!data) return
+                                          appendImagemProtocoloBloco(bid, data)
+                                          input.value = ''
+                                        }
+                                        r.readAsDataURL(f)
+                                      }}
+                                    />
+                                  </label>
+                                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 14px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                                    <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden>
+                                      📷
+                                    </span>
+                                    {protoT?.protocolosServicoTirarFoto || 'Tirar foto'}
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      capture="environment"
+                                      style={{ display: 'none' }}
+                                      onChange={(ev) => {
+                                        const f = ev.target.files?.[0]
+                                        if (!f) return
+                                        const bid = bloco.id
+                                        if (!bid) return
+                                        const input = ev.currentTarget
+                                        const r = new FileReader()
+                                        r.onload = () => {
+                                          const data = r.result as string
+                                          if (!data) return
+                                          appendImagemProtocoloBloco(bid, data)
+                                          input.value = ''
+                                        }
+                                        r.readAsDataURL(f)
+                                      }}
+                                    />
+                                  </label>
+                                </>
+                              ) : null}
+                              <button
+                                type="button"
+                                title={protoT?.protocolosServicoRemoverBloco || 'Remover'}
+                                aria-label={protoT?.protocolosServicoRemoverBloco || 'Remover'}
+                                className="btn-danger btn-danger--inline"
+                                style={{
+                                  padding: '8px 12px',
+                                  minHeight: 40,
+                                  flex: '0 0 auto',
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  borderRadius: 10,
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  background: 'rgba(127, 29, 29, 0.35)',
+                                  border: '1px solid rgba(248, 113, 113, 0.28)',
+                                  color: '#fca5a5',
+                                  boxShadow: 'none',
+                                  whiteSpace: 'nowrap',
+                                  width: 'auto',
+                                  maxWidth: 'max-content',
+                                }}
+                                onClick={() => removeProtocoloBloco(bloco, idx)}
+                              >
+                                {protoT?.protocolosServicoRemoverBloco || 'Remover'}
+                              </button>
+                            </div>
                           </div>
+                        </div>
+                      ) : (
+                        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
+                            <label style={{ display: 'block', color: '#94a3b8', fontSize: '11px', fontWeight: 600, margin: 0 }}>
+                              {protoT?.protocolosServicoOrdemConteudo || 'Ordem na acção'}
+                            </label>
+                            <select
+                              value={bloco.ordemConteudo === 'imagens_primeiro' ? 'imagens_primeiro' : 'texto_primeiro'}
+                              onChange={(e) =>
+                                setProtocoloServicoForm((prev) => ({
+                                  ...prev,
+                                  blocos: prev.blocos.map((b, i) =>
+                                    bloco.id
+                                      ? b.id === bloco.id
+                                        ? { ...b, ordemConteudo: e.target.value as 'texto_primeiro' | 'imagens_primeiro' }
+                                        : b
+                                      : i === idx
+                                        ? { ...b, ordemConteudo: e.target.value as 'texto_primeiro' | 'imagens_primeiro' }
+                                        : b
+                                  ),
+                                }))
+                              }
+                              style={{ ...inputBase, maxWidth: 280, width: 'auto' }}
+                            >
+                              <option value="texto_primeiro">{protoT?.protocolosServicoOrdemTextoPrimeiro || 'Texto (balão) primeiro'}</option>
+                              <option value="imagens_primeiro">{protoT?.protocolosServicoOrdemImagensPrimeiro || 'Imagens (quadro) primeiro'}</option>
+                            </select>
+                          </div>
+                          {bloco.ordemConteudo === 'imagens_primeiro' ? (
+                            <>
+                              <div
+                                style={{
+                                  border: '2px dashed rgba(45, 212, 191, 0.35)',
+                                  borderRadius: 14,
+                                  padding: 12,
+                                  background: 'rgba(15, 23, 42, 0.35)',
+                                  boxSizing: 'border-box',
+                                }}
+                              >
+                                <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                                  {(bloco.imagens || []).slice(0, 2).map((src, i) => (
+                                    <div key={i} style={{ position: 'relative' }}>
+                                      <img src={src} alt="" style={{ maxWidth: '220px', maxHeight: '165px', objectFit: 'contain', borderRadius: '10px', border: '1px solid rgba(0,255,136,0.25)', background: '#111' }} />
+                                      <button
+                                        type="button"
+                                        title={protoT?.protocolosServicoRemoverImagem || protoT?.protocolosServicoExcluir || 'Remover'}
+                                        aria-label={protoT?.protocolosServicoRemoverImagem || protoT?.protocolosServicoExcluir || 'Remover'}
+                                        style={{
+                                          position: 'absolute',
+                                          top: '6px',
+                                          right: '6px',
+                                          background: 'rgba(180,30,30,0.95)',
+                                          color: '#fff',
+                                          border: 'none',
+                                          borderRadius: '6px',
+                                          padding: '4px 8px',
+                                          cursor: 'pointer',
+                                          fontSize: '10px',
+                                          fontWeight: 700,
+                                          lineHeight: 1.2,
+                                          whiteSpace: 'nowrap',
+                                          boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
+                                        }}
+                                        onClick={() => {
+                                          const bid = bloco.id
+                                          setProtocoloServicoForm((prev) => ({
+                                            ...prev,
+                                            blocos: prev.blocos.map((b, bi) =>
+                                              bid ? (b.id === bid ? { ...b, imagens: (b.imagens || []).filter((_, j) => j !== i) } : b) : bi === idx ? { ...b, imagens: (b.imagens || []).filter((_, j) => j !== i) } : b
+                                            ),
+                                          }))
+                                        }}
+                                      >
+                                        {protoT?.protocolosServicoRemoverImagem || protoT?.protocolosServicoExcluir || 'Remover'}
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    flexWrap: 'nowrap',
+                                    gap: '8px',
+                                    alignItems: 'center',
+                                    marginTop: 12,
+                                    width: '100%',
+                                    minHeight: 40,
+                                    overflowX: 'auto',
+                                    overflowY: 'hidden',
+                                    paddingBottom: 2,
+                                    boxSizing: 'border-box',
+                                  }}
+                                >
+                                  {(bloco.imagens || []).length < 2 ? (
+                                    <>
+                                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 14px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                                        <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden>
+                                          🔍
+                                        </span>
+                                        {protoT?.protocolosServicoBuscarImagem || 'Buscar imagem'}
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          style={{ display: 'none' }}
+                                          onChange={(ev) => {
+                                            const f = ev.target.files?.[0]
+                                            if (!f) return
+                                            const bid = bloco.id
+                                            if (!bid) return
+                                            const input = ev.currentTarget
+                                            const r = new FileReader()
+                                            r.onload = () => {
+                                              const data = r.result as string
+                                              if (!data) return
+                                              appendImagemProtocoloBloco(bid, data)
+                                              input.value = ''
+                                            }
+                                            r.readAsDataURL(f)
+                                          }}
+                                        />
+                                      </label>
+                                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 14px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                                        <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden>
+                                          📷
+                                        </span>
+                                        {protoT?.protocolosServicoTirarFoto || 'Tirar foto'}
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          capture="environment"
+                                          style={{ display: 'none' }}
+                                          onChange={(ev) => {
+                                            const f = ev.target.files?.[0]
+                                            if (!f) return
+                                            const bid = bloco.id
+                                            if (!bid) return
+                                            const input = ev.currentTarget
+                                            const r = new FileReader()
+                                            r.onload = () => {
+                                              const data = r.result as string
+                                              if (!data) return
+                                              appendImagemProtocoloBloco(bid, data)
+                                              input.value = ''
+                                            }
+                                            r.readAsDataURL(f)
+                                          }}
+                                        />
+                                      </label>
+                                    </>
+                                  ) : null}
+                                </div>
+                              </div>
+                              <AssistTextarea
+                                value={bloco.texto || ''}
+                                onValueChange={(v) =>
+                                  setProtocoloServicoForm((prev) => ({
+                                    ...prev,
+                                    blocos: prev.blocos.map((b, i) => (bloco.id ? b.id === bloco.id : i === idx) ? { ...b, texto: v } : b),
+                                  }))
+                                }
+                                rows={4}
+                                placeholder={protoT?.protocolosServicoBlocoAcaoTextoPlaceholder || 'Dizeres, observações ou passos da intervenção…'}
+                                style={{
+                                  ...inputBase,
+                                  resize: 'vertical' as const,
+                                  borderRadius: '22px',
+                                  border: '1px solid rgba(148, 163, 184, 0.28)',
+                                  boxShadow: '0 4px 22px rgba(0, 0, 0, 0.25)',
+                                  background: 'rgba(15, 23, 42, 0.55)',
+                                }}
+                              />
+                            </>
+                          ) : (
+                            <>
+                              <AssistTextarea
+                                value={bloco.texto || ''}
+                                onValueChange={(v) =>
+                                  setProtocoloServicoForm((prev) => ({
+                                    ...prev,
+                                    blocos: prev.blocos.map((b, i) => (bloco.id ? b.id === bloco.id : i === idx) ? { ...b, texto: v } : b),
+                                  }))
+                                }
+                                rows={4}
+                                placeholder={protoT?.protocolosServicoBlocoAcaoTextoPlaceholder || 'Dizeres, observações ou passos da intervenção…'}
+                                style={{
+                                  ...inputBase,
+                                  resize: 'vertical' as const,
+                                  borderRadius: '22px',
+                                  border: '1px solid rgba(148, 163, 184, 0.28)',
+                                  boxShadow: '0 4px 22px rgba(0, 0, 0, 0.25)',
+                                  background: 'rgba(15, 23, 42, 0.55)',
+                                }}
+                              />
+                              <div
+                                style={{
+                                  border: '2px dashed rgba(45, 212, 191, 0.35)',
+                                  borderRadius: 14,
+                                  padding: 12,
+                                  background: 'rgba(15, 23, 42, 0.35)',
+                                  boxSizing: 'border-box',
+                                }}
+                              >
+                                <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                                  {(bloco.imagens || []).slice(0, 2).map((src, i) => (
+                                    <div key={i} style={{ position: 'relative' }}>
+                                      <img src={src} alt="" style={{ maxWidth: '220px', maxHeight: '165px', objectFit: 'contain', borderRadius: '10px', border: '1px solid rgba(0,255,136,0.25)', background: '#111' }} />
+                                      <button
+                                        type="button"
+                                        title={protoT?.protocolosServicoRemoverImagem || protoT?.protocolosServicoExcluir || 'Remover'}
+                                        aria-label={protoT?.protocolosServicoRemoverImagem || protoT?.protocolosServicoExcluir || 'Remover'}
+                                        style={{
+                                          position: 'absolute',
+                                          top: '6px',
+                                          right: '6px',
+                                          background: 'rgba(180,30,30,0.95)',
+                                          color: '#fff',
+                                          border: 'none',
+                                          borderRadius: '6px',
+                                          padding: '4px 8px',
+                                          cursor: 'pointer',
+                                          fontSize: '10px',
+                                          fontWeight: 700,
+                                          lineHeight: 1.2,
+                                          whiteSpace: 'nowrap',
+                                          boxShadow: '0 1px 4px rgba(0,0,0,0.4)',
+                                        }}
+                                        onClick={() => {
+                                          const bid = bloco.id
+                                          setProtocoloServicoForm((prev) => ({
+                                            ...prev,
+                                            blocos: prev.blocos.map((b, bi) =>
+                                              bid ? (b.id === bid ? { ...b, imagens: (b.imagens || []).filter((_, j) => j !== i) } : b) : bi === idx ? { ...b, imagens: (b.imagens || []).filter((_, j) => j !== i) } : b
+                                            ),
+                                          }))
+                                        }}
+                                      >
+                                        {protoT?.protocolosServicoRemoverImagem || protoT?.protocolosServicoExcluir || 'Remover'}
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    flexWrap: 'nowrap',
+                                    gap: '8px',
+                                    alignItems: 'center',
+                                    marginTop: 12,
+                                    width: '100%',
+                                    minHeight: 40,
+                                    overflowX: 'auto',
+                                    overflowY: 'hidden',
+                                    paddingBottom: 2,
+                                    boxSizing: 'border-box',
+                                  }}
+                                >
+                                  {(bloco.imagens || []).length < 2 ? (
+                                    <>
+                                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 14px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                                        <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden>
+                                          🔍
+                                        </span>
+                                        {protoT?.protocolosServicoBuscarImagem || 'Buscar imagem'}
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          style={{ display: 'none' }}
+                                          onChange={(ev) => {
+                                            const f = ev.target.files?.[0]
+                                            if (!f) return
+                                            const bid = bloco.id
+                                            if (!bid) return
+                                            const input = ev.currentTarget
+                                            const r = new FileReader()
+                                            r.onload = () => {
+                                              const data = r.result as string
+                                              if (!data) return
+                                              appendImagemProtocoloBloco(bid, data)
+                                              input.value = ''
+                                            }
+                                            r.readAsDataURL(f)
+                                          }}
+                                        />
+                                      </label>
+                                      <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 14px', border: '1px solid rgba(0,255,136,0.45)', borderRadius: '10px', cursor: 'pointer', color: '#00ff88', fontSize: '13px', fontWeight: 600, background: 'rgba(0,255,136,0.06)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                                        <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden>
+                                          📷
+                                        </span>
+                                        {protoT?.protocolosServicoTirarFoto || 'Tirar foto'}
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          capture="environment"
+                                          style={{ display: 'none' }}
+                                          onChange={(ev) => {
+                                            const f = ev.target.files?.[0]
+                                            if (!f) return
+                                            const bid = bloco.id
+                                            if (!bid) return
+                                            const input = ev.currentTarget
+                                            const r = new FileReader()
+                                            r.onload = () => {
+                                              const data = r.result as string
+                                              if (!data) return
+                                              appendImagemProtocoloBloco(bid, data)
+                                              input.value = ''
+                                            }
+                                            r.readAsDataURL(f)
+                                          }}
+                                        />
+                                      </label>
+                                    </>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
@@ -31521,6 +32180,34 @@ onKeyPress={(e) => {
                     </button>
                     <button type="button" className="btn-primary" style={{ padding: '10px 16px', fontSize: '13px', borderRadius: '10px', backgroundColor: 'rgba(0, 180, 120, 0.15)', borderColor: 'rgba(0, 200, 140, 0.45)' }} onClick={() => setProtocoloServicoForm(prev => ({ ...prev, blocos: [...prev.blocos, { id: newProtocoloBlocoId(), tipo: 'imagens', imagens: [] }] }))}>
                       + {protoT?.protocolosServicoAdicionarImagens || 'Bloco de imagens'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      style={{
+                        padding: '10px 16px',
+                        fontSize: '13px',
+                        borderRadius: '10px',
+                        backgroundColor: 'rgba(59, 130, 246, 0.18)',
+                        borderColor: 'rgba(96, 165, 250, 0.45)',
+                      }}
+                      onClick={() =>
+                        setProtocoloServicoForm((prev) => ({
+                          ...prev,
+                          blocos: [
+                            ...prev.blocos,
+                            {
+                              id: newProtocoloBlocoId(),
+                              tipo: 'acao',
+                              texto: '',
+                              imagens: [],
+                              ordemConteudo: 'texto_primeiro',
+                            },
+                          ],
+                        }))
+                      }
+                    >
+                      + {protoT?.protocolosServicoAdicionarAcao || 'Acção (texto + imagens)'}
                     </button>
                   </div>
                 </div>
@@ -31577,15 +32264,45 @@ onKeyPress={(e) => {
                       type="button"
                       className="btn-primary"
                       onClick={() => {
-                        if (!protocoloServicoForm.clienteId || !protocoloServicoForm.equipamentoNumeroSerie) { alert(protoT?.protocolosServicoSelecionarClienteEquipamento || 'Selecione o cliente e o equipamento.'); return }
-                        const dataCriacao = editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? (protocolosServico.find(pr => pr.id === editingProtocoloServicoId)?.dataCriacao || new Date().toISOString()) : new Date().toISOString()
-                        const novo: ProtocoloServico = { id: editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? editingProtocoloServicoId : `proto-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, clienteId: protocoloServicoForm.clienteId, equipamentoNumeroSerie: protocoloServicoForm.equipamentoNumeroSerie, textoInicial: protocoloServicoForm.textoInicial, blocos: protocoloServicoForm.blocos, pecasTrocadasCodigos: protocoloServicoForm.pecasTrocadasCodigos.filter(c => c.trim()), dataCriacao, pdfModelo: clampProtocoloPdfModelo(protocoloServicoForm.pdfModelo) }
+                        const temEq = Boolean(protocoloServicoForm.equipamentoNumeroSerie?.trim())
+                        const sitTrim = (protocoloServicoForm.situacaoDescricao || '').trim()
+                        const temSit = Boolean(sitTrim)
+                        if (!protocoloServicoForm.clienteId) {
+                          alert(protoT?.protocolosServicoAlertClienteObrigatorio || 'Selecione um cliente.')
+                          return
+                        }
+                        if (!temEq && !temSit) {
+                          alert(
+                            protoT?.protocolosServicoSelecionarClienteESituacaoEquip ||
+                              protoT?.protocolosServicoSelecionarClienteEquipamento ||
+                              'Selecione um equipamento do cliente ou descreva a situação.'
+                          )
+                          return
+                        }
+                        const dataCriacao =
+                          editingProtocoloServicoId && editingProtocoloServicoId !== 'new'
+                            ? protocolosServico.find((pr) => pr.id === editingProtocoloServicoId)?.dataCriacao || new Date().toISOString()
+                            : new Date().toISOString()
+                        const novo: ProtocoloServico = {
+                          id:
+                            editingProtocoloServicoId && editingProtocoloServicoId !== 'new'
+                              ? editingProtocoloServicoId
+                              : `proto-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                          clienteId: protocoloServicoForm.clienteId,
+                          equipamentoNumeroSerie: temEq ? protocoloServicoForm.equipamentoNumeroSerie.trim() : '',
+                          situacaoDescricao: temEq ? undefined : sitTrim || undefined,
+                          textoInicial: protocoloServicoForm.textoInicial,
+                          blocos: protocoloServicoForm.blocos,
+                          pecasTrocadasCodigos: protocoloServicoForm.pecasTrocadasCodigos.filter((c) => c.trim()),
+                          dataCriacao,
+                          pdfModelo: clampProtocoloPdfModelo(protocoloServicoForm.pdfModelo),
+                        }
                         const next = editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? protocolosServico.map(p => p.id === novo.id ? novo : p) : [...protocolosServico, novo]
                         setProtocolosServico(next)
                         saveData('nonato-protocolos-servico', next)
                         if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY)
                         setEditingProtocoloServicoId(null)
-                        setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
+                        setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', situacaoDescricao: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
                       }}
                       style={{ padding: '12px 28px', fontWeight: 700, borderRadius: '10px' }}
                     >
@@ -31595,7 +32312,7 @@ onKeyPress={(e) => {
                       type="button"
                       className="btn-primary"
                       style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.35)', color: '#bbb', padding: '12px 22px', borderRadius: '10px' }}
-                      onClick={() => { if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY); setEditingProtocoloServicoId(null); setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 }) }}
+                      onClick={() => { if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY); setEditingProtocoloServicoId(null); setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', situacaoDescricao: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 }) }}
                     >
                       {protoT?.protocolosServicoCancelar || 'Cancelar'}
                     </button>
@@ -72710,7 +73427,8 @@ A1;Peça exemplo;10`}
                   onClick={() => handleAddEquipamentoCliente(selectedClienteForEquipamento)}
                   style={{ padding: '12px 22px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '10px', border: '1px solid #00ff00', background: 'rgba(0, 255, 0, 0.14)', color: '#00ff00', boxShadow: '0 2px 12px rgba(0,255,0,0.15)' }}
                 >
-                  <span style={{ fontSize: '18px', lineHeight: 1 }}>+</span> {safeT?.adicionarEquipamento || 'Adicionar Equipamento'}
+                  <span style={{ fontSize: '18px', lineHeight: 1 }}>+</span>{' '}
+                  {safeT?.addEquipamentoCliente || safeT?.addEquipamento || 'Adicionar Equipamento'}
                 </button>
               </div>
             </div>
@@ -72724,7 +73442,9 @@ A1;Peça exemplo;10`}
                   <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(0, 255, 0, 0.12)', background: 'rgba(0, 255, 0, 0.06)' }}>
                     <h4 style={{ margin: 0, fontSize: '17px', fontWeight: '600', color: '#00ff00', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <span style={{ fontSize: '20px' }}>{editingEquipamentoCliente ? '✏️' : '➕'}</span>
-                      {editingEquipamentoCliente ? (safeT?.editarEquipamento || 'Editar Equipamento') : (safeT?.adicionarEquipamento || 'Adicionar Equipamento')}
+                      {editingEquipamentoCliente
+                        ? safeT?.editEquipamentoCliente || safeT?.editEquipamento || 'Editar Equipamento'
+                        : safeT?.addEquipamentoCliente || safeT?.addEquipamento || 'Adicionar Equipamento'}
                     </h4>
                   </div>
                   {equipamentoClienteGuardadoMsg ? (
@@ -72748,7 +73468,8 @@ A1;Peça exemplo;10`}
                       {/* Coluna esquerda: Imagem */}
                       <div className="equipamento-cliente-form-image">
                         <p style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                          {(safeT as any)?.imagemEquipamento || 'Imagem do Equipamento'} <span style={{ fontWeight: '400', opacity: 0.8 }}>(opcional)</span>
+                          {safeT?.imagemEquipamento || 'Imagem do Equipamento'}{' '}
+                          <span style={{ fontWeight: '400', opacity: 0.8 }}>{safeT?.opcional || '(opcional)'}</span>
                         </p>
                         <div
                           onClick={() => document.getElementById('equipamento-cliente-photo-input')?.click()}
@@ -72781,20 +73502,22 @@ A1;Peça exemplo;10`}
                           ) : (
                             <div style={{ textAlign: 'center', padding: '20px' }}>
                               <div style={{ fontSize: '42px', marginBottom: '8px', opacity: 0.6 }}>📷</div>
-                              <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>Clique para anexar</span>
+                              <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>
+                                {safeT?.equipamentoClienteCliqueParaAnexar || 'Clique para anexar'}
+                              </span>
                             </div>
                           )}
                         </div>
                         {(equipamentoClienteForm.photo || equipamentoClienteForm.coverPhoto) && (
                           <button type="button" onClick={(e) => { e.stopPropagation(); setEquipamentoClienteForm({ ...equipamentoClienteForm, photo: '', coverPhoto: '' }); }} style={{ marginTop: '12px', width: '100%', maxWidth: '240px', padding: '10px 14px', fontSize: '12px', borderRadius: '10px', border: '1px solid rgba(255,100,100,0.35)', background: 'rgba(255,80,80,0.08)', color: 'rgba(255,140,140,0.95)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                            🗑️ Remover imagem
+                            🗑️ {safeT?.removerImagem || 'Remover imagem'}
                           </button>
                         )}
                       </div>
                       {/* Coluna direita: Dados do equipamento */}
                       <div>
                         <p style={{ margin: '0 0 16px', fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                          Dados do equipamento
+                          {safeT?.dadosEquipamento || 'Dados do equipamento'}
                         </p>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                           <div>
@@ -73053,7 +73776,9 @@ A1;Peça exemplo;10`}
                 <div style={{ textAlign: 'center', padding: '56px 28px', borderRadius: '16px', border: '1px dashed rgba(0, 255, 0, 0.18)', background: 'rgba(0, 255, 0, 0.02)' }}>
                   <div style={{ fontSize: '48px', marginBottom: '18px', opacity: 0.5 }}>⚙️</div>
                   <p style={{ margin: 0, fontSize: '16px', color: 'rgba(255,255,255,0.75)' }}>{safeT?.nenhumEquipamento || 'Nenhum equipamento cadastrado.'}</p>
-                  <p style={{ margin: '10px 0 0', fontSize: '14px', color: 'rgba(255,255,255,0.5)' }}>Clique em &quot;Adicionar Equipamento&quot; para começar.</p>
+                  <p style={{ margin: '10px 0 0', fontSize: '14px', color: 'rgba(255,255,255,0.5)' }}>
+                    {safeT?.equipamentoClienteListaVaziaDica || 'Use o botão verde acima para adicionar o primeiro equipamento.'}
+                  </p>
                 </div>
               )}
             </div>
