@@ -1820,6 +1820,14 @@ function equipamentoClienteDedupeKey(e: EquipamentoCliente): string {
   return `h:${JSON.stringify({ m: e?.modelo, t: e?.tipoEquipamento })}`
 }
 
+/** true = ID gerado pela app (UUID ou prefixo eqc-), não código próprio do utilizador. */
+function equipamentoClienteIdETecnicoGerado(id: string | undefined): boolean {
+  const t = String(id ?? '').trim()
+  if (!t) return true
+  if (/^eqc-/i.test(t)) return true
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89abAB][0-9a-f]{3}-[0-9a-f]{12}$/i.test(t)
+}
+
 function mergeEquipamentosClienteLists(
   serverEq: EquipamentoCliente[] | undefined,
   localEq: EquipamentoCliente[] | undefined
@@ -4448,6 +4456,7 @@ export default function Dashboard() {
     setEditingFatura(null)
     setEditingFaturaFornecedor(null)
     setShowEquipamentoClienteForm(false)
+    setEquipamentoClienteTemCodigoProprio(false)
     setShowRelatorioForm(false)
     setShowFaturaForm(false)
     setShowFaturaFornecedorForm(false)
@@ -5634,6 +5643,8 @@ export default function Dashboard() {
     manualPdf: '',
     itemsIncluded: []
   })
+  /** Se marcado, mostra o campo de código/ID próprio; se desmarcado, usa só ID técnico (novo) ou mantém o guardado (edição). */
+  const [equipamentoClienteTemCodigoProprio, setEquipamentoClienteTemCodigoProprio] = useState(false)
   const [selectedClienteForEquipamento, setSelectedClienteForEquipamento] = useState<Cliente | null>(null)
   const [newItemCliente, setNewItemCliente] = useState('')
   const [showRelatoriosModal, setShowRelatoriosModal] = useState(false)
@@ -14713,6 +14724,7 @@ export default function Dashboard() {
       itemsIncluded: []
     })
     setNewItemCliente('')
+    setEquipamentoClienteTemCodigoProprio(false)
     setShowEquipamentoClienteForm(true)
   }
 
@@ -14721,9 +14733,12 @@ export default function Dashboard() {
     setSelectedClienteForEquipamento(latest)
     setEditingEquipamentoCliente(equipamento)
     setEquipamentoClienteGuardadoMsg('')
+    const idBruto = String(equipamento.id ?? '').trim()
+    setEquipamentoClienteTemCodigoProprio(Boolean(idBruto && !equipamentoClienteIdETecnicoGerado(equipamento.id)))
     // Garantir que itemsIncluded e relatorios sejam arrays
     setEquipamentoClienteForm({ 
       ...equipamento,
+      id: equipamentoClienteIdETecnicoGerado(equipamento.id) ? '' : idBruto,
       itemsIncluded: equipamento.itemsIncluded ? [...equipamento.itemsIncluded] : [],
       relatorios: equipamento.relatorios ? [...equipamento.relatorios] : []
     })
@@ -14769,7 +14784,7 @@ export default function Dashboard() {
     }
 
     const serialNorm = String(equipamentoClienteForm.numeroSerie).trim()
-    const idUsuario = String(equipamentoClienteForm.id ?? '').trim()
+    const idUsuario = equipamentoClienteTemCodigoProprio ? String(equipamentoClienteForm.id ?? '').trim() : ''
     const gerarIdEquipamentoCliente = () =>
       typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
         ? crypto.randomUUID()
@@ -14810,10 +14825,14 @@ export default function Dashboard() {
     }
 
     const idFinal = editingEquipamentoCliente
-      ? idUsuario ||
-        String(editingEquipamentoCliente.id ?? '').trim() ||
-        gerarIdEquipamentoCliente()
-      : idUsuario || gerarIdEquipamentoCliente()
+      ? equipamentoClienteTemCodigoProprio
+        ? idUsuario ||
+          String(editingEquipamentoCliente.id ?? '').trim() ||
+          gerarIdEquipamentoCliente()
+        : String(editingEquipamentoCliente.id ?? '').trim() || gerarIdEquipamentoCliente()
+      : equipamentoClienteTemCodigoProprio && idUsuario
+        ? idUsuario
+        : gerarIdEquipamentoCliente()
 
     const wasEditing = Boolean(editingEquipamentoCliente)
     setIsSavingEquipamentoCliente(true)
@@ -14862,7 +14881,10 @@ export default function Dashboard() {
     const refreshed = updatedClientes.find((c) => c.id === selectedClienteForEquipamento.id)
     if (refreshed) setSelectedClienteForEquipamento(refreshed)
 
-    setEquipamentoClienteForm(savedEquipamentoCliente)
+    const idGravado = String(savedEquipamentoCliente.id ?? '').trim()
+    const idETecnico = equipamentoClienteIdETecnicoGerado(savedEquipamentoCliente.id)
+    setEquipamentoClienteTemCodigoProprio(Boolean(idGravado && !idETecnico))
+    setEquipamentoClienteForm({ ...savedEquipamentoCliente, id: idETecnico ? '' : idGravado })
     setEditingEquipamentoCliente(savedEquipamentoCliente)
     setNewItemCliente('')
     const msg = wasEditing
@@ -72671,7 +72693,7 @@ A1;Peça exemplo;10`}
 
       {/* Modal de Equipamentos do Cliente - Layout profissional com imagem */}
       {selectedClienteForEquipamento && (
-        <div className="modal-overlay" onClick={() => { setSelectedClienteForEquipamento(null); setShowEquipamentoClienteForm(false); }}>
+        <div className="modal-overlay" onClick={() => { setSelectedClienteForEquipamento(null); setShowEquipamentoClienteForm(false); setEquipamentoClienteTemCodigoProprio(false); }}>
           <div className="modal modal-equipamentos-cliente" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '920px', width: '96%', maxHeight: '94vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #151515 0%, #0a0a0a 100%)', borderRadius: '20px', border: '1px solid rgba(0, 255, 0, 0.2)', boxShadow: '0 32px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,255,0,0.06)' }}>
             {/* Cabeçalho */}
             <div style={{ flexShrink: 0, padding: '24px 28px', borderBottom: '1px solid rgba(0, 255, 0, 0.12)', background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.06) 0%, transparent 100%)' }}>
@@ -72776,22 +72798,59 @@ A1;Peça exemplo;10`}
                         </p>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                           <div>
-                            <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)', fontWeight: '500' }}>
-                              {(safeT as any)?.equipamentoClienteIdLabel || 'ID / Código do equipamento'}
+                            <label
+                              style={{
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                gap: '12px',
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                color: 'rgba(255,255,255,0.9)',
+                                fontWeight: 500,
+                                lineHeight: 1.45,
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={equipamentoClienteTemCodigoProprio}
+                                onChange={(e) => {
+                                  const marcado = e.target.checked
+                                  setEquipamentoClienteTemCodigoProprio(marcado)
+                                  if (!marcado) {
+                                    setEquipamentoClienteForm((prev) => ({ ...prev, id: '' }))
+                                  }
+                                }}
+                                style={{ width: '18px', height: '18px', marginTop: '2px', flexShrink: 0, cursor: 'pointer' }}
+                              />
+                              <span>
+                                {(safeT as any)?.equipamentoClienteTemCodigoCheckbox ||
+                                  'Este equipamento tem código / ID próprio (referência interna)'}
+                              </span>
                             </label>
-                            <input
-                              type="text"
-                              value={equipamentoClienteForm.id ?? ''}
-                              onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, id: e.target.value })}
-                              placeholder="Ex.: EQ-001, REF-2024-A"
-                              autoComplete="off"
-                              style={{ width: '100%', padding: '14px 16px', backgroundColor: '#0f0f0f', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
-                            />
-                            <p style={{ margin: '8px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.45 }}>
-                              {(safeT as any)?.equipamentoClienteIdHint ||
-                                'Opcional. Referência interna ou código seu. Se deixar em branco na primeira gravação, é gerado um ID técnico automaticamente.'}
+                            <p style={{ margin: '8px 0 0 30px', fontSize: '11px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.45 }}>
+                              {(safeT as any)?.equipamentoClienteTemCodigoCheckboxAjuda ||
+                                'Sem visto: não mostra o campo; na primeira gravação é gerado um ID técnico. Com visto: pode indicar o código (ex.: EQ-001).'}
                             </p>
                           </div>
+                          {equipamentoClienteTemCodigoProprio ? (
+                            <div>
+                              <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)', fontWeight: '500' }}>
+                                {(safeT as any)?.equipamentoClienteIdLabel || 'ID / Código do equipamento'}
+                              </label>
+                              <input
+                                type="text"
+                                value={equipamentoClienteForm.id ?? ''}
+                                onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, id: e.target.value })}
+                                placeholder="Ex.: EQ-001, REF-2024-A"
+                                autoComplete="off"
+                                style={{ width: '100%', padding: '14px 16px', backgroundColor: '#0f0f0f', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+                              />
+                              <p style={{ margin: '8px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.45 }}>
+                                {(safeT as any)?.equipamentoClienteIdHint ||
+                                  'Referência interna ou código seu. Se deixar em branco com a opção marcada, na primeira gravação é gerado um ID técnico.'}
+                              </p>
+                            </div>
+                          ) : null}
                           <div>
                             <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)', fontWeight: '500' }}>{safeT?.tipoEquipamento || 'Tipo de Equipamento'}</label>
                             <input type="text" value={equipamentoClienteForm.tipoEquipamento} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, tipoEquipamento: e.target.value })} placeholder="Ex.: Compressor, Gerador" style={{ width: '100%', padding: '14px 16px', backgroundColor: '#0f0f0f', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
@@ -72839,6 +72898,7 @@ A1;Peça exemplo;10`}
                           setShowEquipamentoClienteForm(false)
                           setEditingEquipamentoCliente(null)
                           setEquipamentoClienteGuardadoMsg('')
+                          setEquipamentoClienteTemCodigoProprio(false)
                         }}
                         style={{ flex: 1, padding: '14px 20px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.9)', cursor: 'pointer' }}
                       >
@@ -72891,7 +72951,7 @@ A1;Peça exemplo;10`}
                           {/* Conteúdo */}
                           <div className="equipamento-cliente-card-content" style={{ flex: 1, minWidth: 0, padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
                             <div>
-                              {equipamento.id ? (
+                              {equipamento.id && !equipamentoClienteIdETecnicoGerado(equipamento.id) ? (
                                 <p
                                   style={{
                                     margin: '0 0 8px',
@@ -73000,7 +73060,7 @@ A1;Peça exemplo;10`}
 
             {/* Rodapé */}
             <div style={{ flexShrink: 0, padding: '18px 28px', borderTop: '1px solid rgba(0, 255, 0, 0.1)', background: 'rgba(0,0,0,0.35)' }}>
-              <button className="btn-primary" onClick={() => { setSelectedClienteForEquipamento(null); setShowEquipamentoClienteForm(false); }} style={{ width: '100%', padding: '14px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', background: 'transparent', border: '1px solid rgba(0, 255, 0, 0.35)', color: '#00ff00' }}>{safeT?.close || 'Fechar'}</button>
+              <button className="btn-primary" onClick={() => { setSelectedClienteForEquipamento(null); setShowEquipamentoClienteForm(false); setEquipamentoClienteTemCodigoProprio(false); }} style={{ width: '100%', padding: '14px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', background: 'transparent', border: '1px solid rgba(0, 255, 0, 0.35)', color: '#00ff00' }}>{safeT?.close || 'Fechar'}</button>
             </div>
           </div>
         </div>

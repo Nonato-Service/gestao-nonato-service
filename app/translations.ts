@@ -1378,6 +1378,9 @@ export const translations = {
       'Opcional. Referência interna ou código (ex.: EQ-001). Se deixar em branco na primeira gravação, é gerado um ID técnico automaticamente.',
     equipamentoClienteDuplicadoId:
       'Já existe um equipamento com este ID neste cliente. Indique outro ID ou deixe em branco (na edição mantém-se o ID técnico actual).',
+    equipamentoClienteTemCodigoCheckbox: 'Este equipamento tem código / ID próprio (referência interna)',
+    equipamentoClienteTemCodigoCheckboxAjuda:
+      'Sem visto: o campo fica oculto; na primeira gravação gera-se um ID técnico. Com visto: abre o campo para indicar o código (ex.: EQ-001).',
     equipamentoClienteSaving: 'A guardar…',
     listaRelatoriosGerados: 'Lista de Relatórios Gerados',
     addRelatorio: 'Adicionar Relatório',
@@ -4583,6 +4586,9 @@ export const translations = {
       'Opcional. Referencia interna o código (p. ej.: EQ-001). Si lo deja en blanco en el primer guardado, se genera un ID técnico automáticamente.',
     equipamentoClienteDuplicadoId:
       'Ya existe un equipo con este ID en este cliente. Indique otro ID o déjelo en blanco (al editar se conserva el ID técnico actual).',
+    equipamentoClienteTemCodigoCheckbox: 'Este equipo tiene código / ID propio (referencia interna)',
+    equipamentoClienteTemCodigoCheckboxAjuda:
+      'Sin marca: el campo queda oculto; en el primer guardado se genera un ID técnico. Con marca: se abre el campo para el código (p. ej. EQ-001).',
     equipamentoClienteSaving: 'Guardando…',
     listaRelatoriosGerados: 'Lista de Informes Generados',
     addRelatorio: 'Agregar Informe',
@@ -7594,6 +7600,9 @@ export const translations = {
       'Optionnel. Référence interne ou code (ex. : EQ-001). Si vide au premier enregistrement, un ID technique est généré automatiquement.',
     equipamentoClienteDuplicadoId:
       'Un équipement avec cet ID existe déjà pour ce client. Indiquez un autre ID ou laissez vide (en édition, l’ID technique actuel est conservé).',
+    equipamentoClienteTemCodigoCheckbox: 'Cet équipement a un code / ID propre (référence interne)',
+    equipamentoClienteTemCodigoCheckboxAjuda:
+      'Sans coche : le champ reste masqué ; au premier enregistrement un ID technique est généré. Avec coche : le champ s’affiche pour le code (ex. EQ-001).',
     equipamentoClienteSaving: 'Enregistrement…',
     listaRelatoriosGerados: 'Liste des Rapports Générés',
     addRelatorio: 'Ajouter un Rapport',
@@ -10604,6 +10613,9 @@ export const translations = {
       'Opzionale. Riferimento interno o codice (es.: EQ-001). Se lasciato vuoto al primo salvataggio, viene generato un ID tecnico automaticamente.',
     equipamentoClienteDuplicadoId:
       'Esiste già un’attrezzatura con questo ID per questo cliente. Indichi un altro ID o lasci vuoto (in modifica si mantiene l’ID tecnico attuale).',
+    equipamentoClienteTemCodigoCheckbox: 'Questa attrezzatura ha un codice / ID proprio (riferimento interno)',
+    equipamentoClienteTemCodigoCheckboxAjuda:
+      'Senza spunta: il campo resta nascosto; al primo salvataggio viene generato un ID tecnico. Con spunta: si apre il campo per il codice (es. EQ-001).',
     equipamentoClienteSaving: 'Salvataggio…',
     listaRelatoriosGerados: 'Lista Rapporti Generati',
     addRelatorio: 'Aggiungi Rapporto',
@@ -13610,6 +13622,9 @@ export const translations = {
       'Optional. Interne Referenz oder Code (z. B. EQ-001). Wenn beim ersten Speichern leer, wird automatisch eine technische ID erzeugt.',
     equipamentoClienteDuplicadoId:
       'Für diesen Kunden existiert bereits ein Gerät mit dieser ID. Geben Sie eine andere ID ein oder lassen Sie das Feld leer (beim Bearbeiten bleibt die aktuelle technische ID).',
+    equipamentoClienteTemCodigoCheckbox: 'Dieses Gerät hat einen eigenen Code / ID (interne Referenz)',
+    equipamentoClienteTemCodigoCheckboxAjuda:
+      'Ohne Häkchen: Feld ausgeblendet; beim ersten Speichern wird eine technische ID erzeugt. Mit Häkchen: Feld für den Code (z. B. EQ-001).',
     equipamentoClienteSaving: 'Wird gespeichert…',
     listaRelatoriosGerados: 'Liste der Generierten Berichte',
     addRelatorio: 'Bericht Hinzufügen',
@@ -16631,6 +16646,9 @@ export const translations = {
       'Optional. Internal reference or code (e.g. EQ-001). If left blank on first save, a technical ID is generated automatically.',
     equipamentoClienteDuplicadoId:
       'This customer already has equipment with this ID. Enter another ID or leave blank (when editing, the current technical ID is kept).',
+    equipamentoClienteTemCodigoCheckbox: 'This equipment has its own code / ID (internal reference)',
+    equipamentoClienteTemCodigoCheckboxAjuda:
+      'Unchecked: field stays hidden; on first save a technical ID is generated. Checked: the field opens for your code (e.g. EQ-001).',
     equipamentoClienteSaving: 'Saving…',
     listaRelatoriosGerados: 'List of Generated Reports',
     addRelatorio: 'Add Report',
