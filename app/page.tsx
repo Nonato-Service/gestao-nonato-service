@@ -1765,7 +1765,7 @@ function getDatasPeriodoAgendamento(ag: Agendamento): string[] {
 }
 
 type EquipamentoCliente = {
-  /** Código ou ID interno opcional (distinto do n.º de série, quando existir no cadastro) */
+  /** ID ou código de referência (opcional). Se vazio na 1.ª gravação, gera-se um ID técnico (UUID). Distinto do n.º de série. */
   id?: string
   tipoEquipamento: string
   modelo: string
@@ -5621,6 +5621,7 @@ export default function Dashboard() {
   const [isSavingEquipamentoCliente, setIsSavingEquipamentoCliente] = useState(false)
   const [equipamentoClienteGuardadoMsg, setEquipamentoClienteGuardadoMsg] = useState('')
   const [equipamentoClienteForm, setEquipamentoClienteForm] = useState<EquipamentoCliente>({
+    id: '',
     tipoEquipamento: '',
     modelo: '',
     marca: '',
@@ -14698,6 +14699,7 @@ export default function Dashboard() {
     setEditingEquipamentoCliente(null)
     setEquipamentoClienteGuardadoMsg('')
     setEquipamentoClienteForm({
+      id: '',
       tipoEquipamento: '',
       modelo: '',
       marca: '',
@@ -14767,6 +14769,12 @@ export default function Dashboard() {
     }
 
     const serialNorm = String(equipamentoClienteForm.numeroSerie).trim()
+    const idUsuario = String(equipamentoClienteForm.id ?? '').trim()
+    const gerarIdEquipamentoCliente = () =>
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `eqc-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+
     const clienteAtual = clientes.find((c) => c.id === selectedClienteForEquipamento.id)
     if (clienteAtual && !editingEquipamentoCliente) {
       const dup = clienteAtual.equipamentos.some((eq) => String(eq.numeroSerie).trim() === serialNorm)
@@ -14779,19 +14787,43 @@ export default function Dashboard() {
       }
     }
 
+    if (clienteAtual && idUsuario) {
+      const editIndex = editingEquipamentoCliente
+        ? clienteAtual.equipamentos.findIndex((eq) =>
+            editingEquipamentoCliente.id
+              ? eq.id === editingEquipamentoCliente.id
+              : eq.numeroSerie === editingEquipamentoCliente.numeroSerie &&
+                eq.tipoEquipamento === editingEquipamentoCliente.tipoEquipamento
+          )
+        : -1
+      const dupId = clienteAtual.equipamentos.some((eq, i) => {
+        if (editIndex >= 0 && i === editIndex) return false
+        return String(eq.id || '').trim() === idUsuario
+      })
+      if (dupId) {
+        alert(
+          (safeT as any)?.equipamentoClienteDuplicadoId ||
+            'Já existe um equipamento com este ID neste cliente. Indique outro ID ou deixe em branco (na edição mantém-se o ID técnico actual).'
+        )
+        return
+      }
+    }
+
+    const idFinal = editingEquipamentoCliente
+      ? idUsuario ||
+        String(editingEquipamentoCliente.id ?? '').trim() ||
+        gerarIdEquipamentoCliente()
+      : idUsuario || gerarIdEquipamentoCliente()
+
     const wasEditing = Boolean(editingEquipamentoCliente)
     setIsSavingEquipamentoCliente(true)
 
     let savedEquipamentoCliente: EquipamentoCliente = editingEquipamentoCliente
-      ? { ...editingEquipamentoCliente, ...equipamentoClienteForm, numeroSerie: serialNorm }
+      ? { ...editingEquipamentoCliente, ...equipamentoClienteForm, id: idFinal, numeroSerie: serialNorm }
       : {
           ...equipamentoClienteForm,
           numeroSerie: serialNorm,
-          id:
-            equipamentoClienteForm.id ||
-            (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-              ? crypto.randomUUID()
-              : `eqc-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`)
+          id: idFinal
         }
 
     const updatedClientes = clientes.map((c) => {
@@ -72744,6 +72776,23 @@ A1;Peça exemplo;10`}
                         </p>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                           <div>
+                            <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)', fontWeight: '500' }}>
+                              {(safeT as any)?.equipamentoClienteIdLabel || 'ID / Código do equipamento'}
+                            </label>
+                            <input
+                              type="text"
+                              value={equipamentoClienteForm.id ?? ''}
+                              onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, id: e.target.value })}
+                              placeholder="Ex.: EQ-001, REF-2024-A"
+                              autoComplete="off"
+                              style={{ width: '100%', padding: '14px 16px', backgroundColor: '#0f0f0f', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+                            />
+                            <p style={{ margin: '8px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.45 }}>
+                              {(safeT as any)?.equipamentoClienteIdHint ||
+                                'Opcional. Referência interna ou código seu. Se deixar em branco na primeira gravação, é gerado um ID técnico automaticamente.'}
+                            </p>
+                          </div>
+                          <div>
                             <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)', fontWeight: '500' }}>{safeT?.tipoEquipamento || 'Tipo de Equipamento'}</label>
                             <input type="text" value={equipamentoClienteForm.tipoEquipamento} onChange={(e) => setEquipamentoClienteForm({ ...equipamentoClienteForm, tipoEquipamento: e.target.value })} placeholder="Ex.: Compressor, Gerador" style={{ width: '100%', padding: '14px 16px', backgroundColor: '#0f0f0f', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.2)', borderRadius: '12px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
                           </div>
@@ -72842,6 +72891,25 @@ A1;Peça exemplo;10`}
                           {/* Conteúdo */}
                           <div className="equipamento-cliente-card-content" style={{ flex: 1, minWidth: 0, padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
                             <div>
+                              {equipamento.id ? (
+                                <p
+                                  style={{
+                                    margin: '0 0 8px',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    color: 'rgba(120, 220, 180, 0.95)',
+                                    letterSpacing: '0.04em',
+                                    textTransform: 'uppercase',
+                                    fontVariantNumeric: 'tabular-nums',
+                                  }}
+                                  title={equipamento.id}
+                                >
+                                  {(safeT as any)?.equipamentoClienteIdLabel || 'ID'}:{' '}
+                                  <span style={{ textTransform: 'none', fontWeight: 700, color: 'rgba(200, 255, 220, 0.98)' }}>
+                                    {equipamento.id.length > 36 ? `${equipamento.id.slice(0, 14)}…${equipamento.id.slice(-8)}` : equipamento.id}
+                                  </span>
+                                </p>
+                              ) : null}
                               <p style={{ margin: 0, fontSize: '11px', fontWeight: '600', color: 'rgba(0, 255, 0, 0.95)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{equipamento.tipoEquipamento}</p>
                               <h3 style={{ margin: '10px 0 8px', fontSize: '19px', fontWeight: '700', color: '#fff', letterSpacing: '0.02em', lineHeight: '1.25' }}>{equipamento.modelo}</h3>
                               <p style={{ margin: 0, fontSize: '14px', color: 'rgba(255,255,255,0.78)' }}>{equipamento.marca}{equipamento.numeroSerie ? ` · ${equipamento.numeroSerie}` : ''}</p>

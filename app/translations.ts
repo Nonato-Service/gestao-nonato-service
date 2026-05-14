@@ -1373,6 +1373,11 @@ export const translations = {
     equipamentoClienteUpdated: 'Equipamento atualizado com sucesso!',
     equipamentoClienteDuplicadoSerie:
       'Já existe um equipamento com este número de série neste cliente. Use «Editar» no equipamento existente ou indique outro n.º de série.',
+    equipamentoClienteIdLabel: 'ID / Código do equipamento',
+    equipamentoClienteIdHint:
+      'Opcional. Referência interna ou código (ex.: EQ-001). Se deixar em branco na primeira gravação, é gerado um ID técnico automaticamente.',
+    equipamentoClienteDuplicadoId:
+      'Já existe um equipamento com este ID neste cliente. Indique outro ID ou deixe em branco (na edição mantém-se o ID técnico actual).',
     equipamentoClienteSaving: 'A guardar…',
     listaRelatoriosGerados: 'Lista de Relatórios Gerados',
     addRelatorio: 'Adicionar Relatório',
@@ -4573,6 +4578,11 @@ export const translations = {
     equipamentoClienteUpdated: '¡Equipo actualizado con éxito!',
     equipamentoClienteDuplicadoSerie:
       'Ya existe un equipo con este número de serie para este cliente. Use «Editar» en el equipo existente o indique otro número de serie.',
+    equipamentoClienteIdLabel: 'ID / Código del equipo',
+    equipamentoClienteIdHint:
+      'Opcional. Referencia interna o código (p. ej.: EQ-001). Si lo deja en blanco en el primer guardado, se genera un ID técnico automáticamente.',
+    equipamentoClienteDuplicadoId:
+      'Ya existe un equipo con este ID en este cliente. Indique otro ID o déjelo en blanco (al editar se conserva el ID técnico actual).',
     equipamentoClienteSaving: 'Guardando…',
     listaRelatoriosGerados: 'Lista de Informes Generados',
     addRelatorio: 'Agregar Informe',
@@ -7579,6 +7589,11 @@ export const translations = {
     equipamentoClienteUpdated: 'Équipement mis à jour avec succès !',
     equipamentoClienteDuplicadoSerie:
       'Un équipement avec ce numéro de série existe déjà pour ce client. Utilisez « Modifier » sur l’équipement existant ou un autre n° de série.',
+    equipamentoClienteIdLabel: 'ID / Code équipement',
+    equipamentoClienteIdHint:
+      'Optionnel. Référence interne ou code (ex. : EQ-001). Si vide au premier enregistrement, un ID technique est généré automatiquement.',
+    equipamentoClienteDuplicadoId:
+      'Un équipement avec cet ID existe déjà pour ce client. Indiquez un autre ID ou laissez vide (en édition, l’ID technique actuel est conservé).',
     equipamentoClienteSaving: 'Enregistrement…',
     listaRelatoriosGerados: 'Liste des Rapports Générés',
     addRelatorio: 'Ajouter un Rapport',
@@ -10584,6 +10599,11 @@ export const translations = {
     equipamentoClienteUpdated: 'Attrezzatura aggiornata con successo!',
     equipamentoClienteDuplicadoSerie:
       'Esiste già un’attrezzatura con questo numero di serie per questo cliente. Usi «Modifica» sull’attrezzatura esistente o un altro numero di serie.',
+    equipamentoClienteIdLabel: 'ID / Codice attrezzatura',
+    equipamentoClienteIdHint:
+      'Opzionale. Riferimento interno o codice (es.: EQ-001). Se lasciato vuoto al primo salvataggio, viene generato un ID tecnico automaticamente.',
+    equipamentoClienteDuplicadoId:
+      'Esiste già un’attrezzatura con questo ID per questo cliente. Indichi un altro ID o lasci vuoto (in modifica si mantiene l’ID tecnico attuale).',
     equipamentoClienteSaving: 'Salvataggio…',
     listaRelatoriosGerados: 'Lista Rapporti Generati',
     addRelatorio: 'Aggiungi Rapporto',
@@ -13585,6 +13605,11 @@ export const translations = {
     equipamentoClienteUpdated: 'Gerät erfolgreich aktualisiert!',
     equipamentoClienteDuplicadoSerie:
       'Für diesen Kunden existiert bereits ein Gerät mit dieser Seriennummer. Bearbeiten Sie das vorhandene Gerät oder geben Sie eine andere Seriennummer ein.',
+    equipamentoClienteIdLabel: 'ID / Gerätecode',
+    equipamentoClienteIdHint:
+      'Optional. Interne Referenz oder Code (z. B. EQ-001). Wenn beim ersten Speichern leer, wird automatisch eine technische ID erzeugt.',
+    equipamentoClienteDuplicadoId:
+      'Für diesen Kunden existiert bereits ein Gerät mit dieser ID. Geben Sie eine andere ID ein oder lassen Sie das Feld leer (beim Bearbeiten bleibt die aktuelle technische ID).',
     equipamentoClienteSaving: 'Wird gespeichert…',
     listaRelatoriosGerados: 'Liste der Generierten Berichte',
     addRelatorio: 'Bericht Hinzufügen',
@@ -16601,6 +16626,11 @@ export const translations = {
     equipamentoClienteUpdated: 'Equipment updated successfully!',
     equipamentoClienteDuplicadoSerie:
       'This customer already has equipment with this serial number. Edit the existing record or use a different serial number.',
+    equipamentoClienteIdLabel: 'Equipment ID / Code',
+    equipamentoClienteIdHint:
+      'Optional. Internal reference or code (e.g. EQ-001). If left blank on first save, a technical ID is generated automatically.',
+    equipamentoClienteDuplicadoId:
+      'This customer already has equipment with this ID. Enter another ID or leave blank (when editing, the current technical ID is kept).',
     equipamentoClienteSaving: 'Saving…',
     listaRelatoriosGerados: 'List of Generated Reports',
     addRelatorio: 'Add Report',
