@@ -1828,6 +1828,19 @@ function equipamentoClienteIdETecnicoGerado(id: string | undefined): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89abAB][0-9a-f]{3}-[0-9a-f]{12}$/i.test(t)
 }
 
+/** ID no cabeçalho do protocolo/PDF: código próprio do cliente; senão ID do armazém pela série; senão ID interno do equipamento no cliente (UUID/eqc-). */
+function idEquipamentoVisivelParaProtocolo(eq: EquipamentoCliente | undefined, equipamentosArmazem: Equipamento[]): string {
+  if (!eq) return ''
+  const idC = (eq.id || '').trim()
+  if (idC && !equipamentoClienteIdETecnicoGerado(eq.id)) return idC
+  const s = (eq.numeroSerie || '').trim()
+  const idA = s
+    ? (equipamentosArmazem.find((e) => (e.numeroSerie || '').trim().toLowerCase() === s.toLowerCase())?.id || '').trim()
+    : ''
+  if (idA) return idA
+  return idC
+}
+
 function mergeEquipamentosClienteLists(
   serverEq: EquipamentoCliente[] | undefined,
   localEq: EquipamentoCliente[] | undefined
@@ -30812,20 +30825,16 @@ onKeyPress={(e) => {
         const tituloProto = protoT?.protocolosServicoTitle || 'PROTOCOLOS DE SERVIÇO'
         const descProto = protoT?.protocolosServicoDesc || 'Consulte e gere os protocolos de serviço (antes/depois, imagens e peças trocadas).'
         const clienteProto = clientes.find(c => c.id === protocoloServicoForm.clienteId)
-        const equipamentoProto = clienteProto?.equipamentos?.find(e => e.numeroSerie === protocoloServicoForm.equipamentoNumeroSerie)
+        const serieProtoForm = (protocoloServicoForm.equipamentoNumeroSerie || '').trim()
+        const equipamentoProto = clienteProto?.equipamentos?.find(
+          (e) => (e.numeroSerie || '').trim() === serieProtoForm
+        )
         const serieProtocoloResumo = (equipamentoProto?.numeroSerie || protocoloServicoForm.equipamentoNumeroSerie || '').trim()
-        const idEquipamentoClienteBruto = (equipamentoProto?.id || '').trim()
-        const idEquipamentoArmazem = serieProtocoloResumo
-          ? (equipamentos.find((e) => (e.numeroSerie || '').trim().toLowerCase() === serieProtocoloResumo.toLowerCase())?.id || '').trim()
-          : ''
-        const idEquipamentoProprioCliente =
-          idEquipamentoClienteBruto && !equipamentoClienteIdETecnicoGerado(equipamentoProto?.id)
-            ? idEquipamentoClienteBruto
-            : ''
-        const idEquipamentoVisivel = idEquipamentoProprioCliente || idEquipamentoArmazem
+        const idEquipamentoVisivel = idEquipamentoVisivelParaProtocolo(equipamentoProto, equipamentos)
         const gerarPDFProtocolo = (p: ProtocoloServico, modeloOverride?: number) => {
           const cl = clientes.find(c => c.id === p.clienteId)
-          const eq = cl?.equipamentos?.find(e => e.numeroSerie === p.equipamentoNumeroSerie)
+          const snP = (p.equipamentoNumeroSerie || '').trim()
+          const eq = cl?.equipamentos?.find((e) => (e.numeroSerie || '').trim() === snP)
           const esc = (s: string) => (s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/\n/g, '<br/>')
           const logoHtml = getLogoHtmlForProtocoloServico()
           const lab = (key: string, fallback: string) => (protoT && protoT[key]) || fallback
@@ -30893,16 +30902,7 @@ onKeyPress={(e) => {
           const clienteSection = cl && clientRows.length > 0
             ? `<div class="sec"><h3 class="sec-title">${protoT?.protocolosServicoInformacaoCliente || 'Informação do cliente'}</h3><table class="cl-table">${clientRows.join('')}</table></div>`
             : ''
-          const idEqPdf = (() => {
-            if (!eq) return ''
-            const idC = (eq.id || '').trim()
-            const idProprio = idC && !equipamentoClienteIdETecnicoGerado(eq.id) ? idC : ''
-            const s = (eq.numeroSerie || '').trim()
-            const idA = s
-              ? (equipamentos.find((e) => (e.numeroSerie || '').trim().toLowerCase() === s.toLowerCase())?.id || '').trim()
-              : ''
-            return idProprio || idA
-          })()
+          const idEqPdf = idEquipamentoVisivelParaProtocolo(eq, equipamentos)
           const rowIdPdf = idEqPdf
             ? `<tr><td class="cl-label">${esc(protoT?.protocolosServicoEquipamentoResumoId || 'ID')}</td><td class="cl-value">${esc(idEqPdf)}</td></tr>`
             : ''
@@ -30968,18 +30968,8 @@ onKeyPress={(e) => {
         let protocolosFiltrados = filtroLista
           ? protocolosOrdenados.filter(p => {
               const cl = clientes.find(c => c.id === p.clienteId)
-              const eq = cl?.equipamentos?.find(e => e.numeroSerie === p.equipamentoNumeroSerie)
-              const idEqFilt = eq
-                ? (() => {
-                    const idC = (eq.id || '').trim()
-                    const idProprio = idC && !equipamentoClienteIdETecnicoGerado(eq.id) ? idC : ''
-                    const s = (eq.numeroSerie || '').trim()
-                    const idA = s
-                      ? (equipamentos.find((e) => (e.numeroSerie || '').trim().toLowerCase() === s.toLowerCase())?.id || '').trim()
-                      : ''
-                    return idProprio || idA
-                  })()
-                : ''
+              const eq = cl?.equipamentos?.find((e) => (e.numeroSerie || '').trim() === (p.equipamentoNumeroSerie || '').trim())
+              const idEqFilt = idEquipamentoVisivelParaProtocolo(eq, equipamentos)
               const sitF = (p.situacaoDescricao || '').trim().toLowerCase()
               const blocosHay = (p.blocos || [])
                 .map((b) => [b.titulo, b.texto, b.tipo].filter(Boolean).join(' '))
