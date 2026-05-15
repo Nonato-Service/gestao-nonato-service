@@ -14,15 +14,23 @@ export type BibliaAnexo = {
   dataUrl: string
 }
 
-export type BibliaMarcaLinha = {
+/** Um modelo/referência com texto próprio e anexos (ex.: HPP 250 + notas + PDFs). */
+export type BibliaModeloRow = {
   id: string
-  titulo: string
-  modelosTexto: string
+  nome: string
+  informacoes: string
   ordem: number
   anexos: BibliaAnexo[]
 }
 
-const BIBLIA_ANEXO_MAX_POR_LINHA = 24
+export type BibliaMarcaLinha = {
+  id: string
+  titulo: string
+  ordem: number
+  modelos: BibliaModeloRow[]
+}
+
+const BIBLIA_ANEXO_MAX_POR_MODELO = 24
 const BIBLIA_ANEXO_MAX_BYTES = 6 * 1024 * 1024 // ~6 MB por ficheiro
 
 const MIME_ANEXO_PERMITIDO = new Set([
@@ -67,6 +75,76 @@ function readFileAsDataUrl(file: File): Promise<string> {
   })
 }
 
+function emptyModelo(ordem: number): BibliaModeloRow {
+  return { id: newId(), nome: '', informacoes: '', ordem, anexos: [] }
+}
+
+function emptyLinha(ordem: number): BibliaMarcaLinha {
+  return { id: newId(), titulo: '', ordem, modelos: [emptyModelo(0)] }
+}
+
+/** Migra texto antigo (várias linhas ou "A, B, C") para cartões de modelo; anexos legacy ficam no 1.º modelo. */
+function tokensFromLegacyModelosTexto(text: string): string[] {
+  const lines = text
+    .split(/\r?\n/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+  if (lines.length === 0) return []
+  if (lines.length === 1 && lines[0].includes(',')) {
+    return lines[0]
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+  }
+  return lines
+}
+
+function migrateLegacyLinhaParaModelos(
+  legacyText: string,
+  legacyAnexos: BibliaAnexo[]
+): BibliaModeloRow[] {
+  const tokens = tokensFromLegacyModelosTexto(legacyText)
+  if (tokens.length === 0) {
+    if (legacyAnexos.length) {
+      return [{ id: newId(), nome: '', informacoes: '', ordem: 0, anexos: [...legacyAnexos] }]
+    }
+    return [emptyModelo(0)]
+  }
+  return tokens.map((nome, i) => ({
+    id: newId(),
+    nome,
+    informacoes: '',
+    ordem: i,
+    anexos: i === 0 ? [...legacyAnexos] : [],
+  }))
+}
+
+function normalizeModelo(raw: unknown, fallbackOrdem: number): BibliaModeloRow | null {
+  const o = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
+  const anexosRaw = o.anexos
+  const anexosArr = Array.isArray(anexosRaw) ? anexosRaw : []
+  const anexos = anexosArr.map(normalizeAnexo).filter(Boolean) as BibliaAnexo[]
+  const nome =
+    typeof o.nome === 'string'
+      ? o.nome
+      : typeof (o as { titulo?: unknown }).titulo === 'string'
+        ? String((o as { titulo: string }).titulo)
+        : ''
+  const informacoes =
+    typeof o.informacoes === 'string'
+      ? o.informacoes
+      : typeof (o as { notas?: unknown }).notas === 'string'
+        ? String((o as { notas: string }).notas)
+        : ''
+  return {
+    id: typeof o.id === 'string' && o.id ? o.id : newId(),
+    nome: nome.slice(0, 400),
+    informacoes,
+    ordem: typeof o.ordem === 'number' ? o.ordem : fallbackOrdem,
+    anexos,
+  }
+}
+
 function normalizeAnexo(raw: unknown): BibliaAnexo | null {
   const o = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
   const dataUrl = typeof o.dataUrl === 'string' ? o.dataUrl : ''
@@ -99,15 +177,26 @@ function newId(): string {
 
 function normalizeLinha(raw: unknown, fallbackOrdem: number): BibliaMarcaLinha {
   const o = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
-  const anexosRaw = o.anexos
-  const anexosArr = Array.isArray(anexosRaw) ? anexosRaw : []
-  const anexos = anexosArr.map(normalizeAnexo).filter(Boolean) as BibliaAnexo[]
+  const modelosRaw = o.modelos
+  let modelos: BibliaModeloRow[] = []
+  if (Array.isArray(modelosRaw) && modelosRaw.length > 0) {
+    modelos = modelosRaw
+      .map((r, i) => normalizeModelo(r, i))
+      .filter(Boolean) as BibliaModeloRow[]
+    modelos.sort((a, b) => a.ordem - b.ordem)
+  } else {
+    const legacyText = typeof o.modelosTexto === 'string' ? o.modelosTexto : ''
+    const anexosRaw = o.anexos
+    const anexosArr = Array.isArray(anexosRaw) ? anexosRaw : []
+    const legacyAnexos = anexosArr.map(normalizeAnexo).filter(Boolean) as BibliaAnexo[]
+    modelos = migrateLegacyLinhaParaModelos(legacyText, legacyAnexos)
+  }
+  if (!modelos.length) modelos = [emptyModelo(0)]
   return {
     id: typeof o.id === 'string' && o.id ? o.id : newId(),
     titulo: typeof o.titulo === 'string' ? o.titulo : '',
-    modelosTexto: typeof o.modelosTexto === 'string' ? o.modelosTexto : '',
     ordem: typeof o.ordem === 'number' ? o.ordem : fallbackOrdem,
-    anexos,
+    modelos,
   }
 }
 
@@ -122,7 +211,7 @@ function normalizeFamilia(raw: unknown, fallbackOrdem: number): BibliaFamiliaRow
     id: typeof o.id === 'string' && o.id ? o.id : newId(),
     nome,
     ordem: typeof o.ordem === 'number' ? o.ordem : fallbackOrdem,
-    linhas: linhas.length ? linhas : [{ id: newId(), titulo: '', modelosTexto: '', ordem: 0, anexos: [] }],
+    linhas: linhas.length ? linhas : [emptyLinha(0)],
   }
 }
 
@@ -156,7 +245,7 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [busca, setBusca] = useState('')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const attachTargetRef = useRef<{ familiaId: string; linhaId: string } | null>(null)
+  const attachTargetRef = useRef<{ familiaId: string; linhaId: string; modeloId: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -204,8 +293,11 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
       const nomeHit = (f.nome || '').toLowerCase().includes(q)
       const linhaHit = f.linhas.some((l) => {
         if ((l.titulo || '').toLowerCase().includes(q)) return true
-        if ((l.modelosTexto || '').toLowerCase().includes(q)) return true
-        return (l.anexos || []).some((a) => (a.nome || '').toLowerCase().includes(q))
+        return l.modelos.some((m) => {
+          if ((m.nome || '').toLowerCase().includes(q)) return true
+          if ((m.informacoes || '').toLowerCase().includes(q)) return true
+          return (m.anexos || []).some((a) => (a.nome || '').toLowerCase().includes(q))
+        })
       })
       return nomeHit || linhaHit
     })
@@ -229,7 +321,7 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
       id: newId(),
       nome: '',
       ordem: familias.length,
-      linhas: [{ id: newId(), titulo: '', modelosTexto: '', ordem: 0, anexos: [] }],
+      linhas: [emptyLinha(0)],
     }
     setFamiliasAndSave((prev) => [...prev, novo])
     setSelectedId(novo.id)
@@ -276,7 +368,7 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
         prev.map((f) => {
           if (f.id !== familiaId) return f
           const ordem = f.linhas.length
-          return { ...f, linhas: [...f.linhas, { id: newId(), titulo: '', modelosTexto: '', ordem, anexos: [] }] }
+          return { ...f, linhas: [...f.linhas, emptyLinha(ordem)] }
         })
       )
     },
@@ -292,7 +384,7 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
           return {
             ...f,
             linhas:
-              linhas.length > 0 ? linhas : [{ id: newId(), titulo: '', modelosTexto: '', ordem: 0, anexos: [] }],
+              linhas.length > 0 ? linhas : [emptyLinha(0)],
           }
         })
       )
@@ -301,11 +393,7 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
   )
 
   const updateLinha = useCallback(
-    (
-      familiaId: string,
-      linhaId: string,
-      patch: Partial<Pick<BibliaMarcaLinha, 'titulo' | 'modelosTexto' | 'anexos'>>
-    ) => {
+    (familiaId: string, linhaId: string, patch: Partial<Pick<BibliaMarcaLinha, 'titulo'>>) => {
       setFamiliasAndSave((prev) =>
         prev.map((f) => {
           if (f.id !== familiaId) return f
@@ -319,8 +407,75 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
     [setFamiliasAndSave]
   )
 
-  const clickAdicionarAnexos = useCallback((familiaId: string, linhaId: string) => {
-    attachTargetRef.current = { familiaId, linhaId }
+  const updateModelo = useCallback(
+    (
+      familiaId: string,
+      linhaId: string,
+      modeloId: string,
+      patch: Partial<Pick<BibliaModeloRow, 'nome' | 'informacoes' | 'anexos'>>
+    ) => {
+      setFamiliasAndSave((prev) =>
+        prev.map((f) => {
+          if (f.id !== familiaId) return f
+          return {
+            ...f,
+            linhas: f.linhas.map((l) => {
+              if (l.id !== linhaId) return l
+              return {
+                ...l,
+                modelos: l.modelos.map((m) => (m.id === modeloId ? { ...m, ...patch } : m)),
+              }
+            }),
+          }
+        })
+      )
+    },
+    [setFamiliasAndSave]
+  )
+
+  const addModelo = useCallback(
+    (familiaId: string, linhaId: string) => {
+      setFamiliasAndSave((prev) =>
+        prev.map((f) => {
+          if (f.id !== familiaId) return f
+          return {
+            ...f,
+            linhas: f.linhas.map((l) => {
+              if (l.id !== linhaId) return l
+              const ordem = l.modelos.length
+              return { ...l, modelos: [...l.modelos, emptyModelo(ordem)] }
+            }),
+          }
+        })
+      )
+    },
+    [setFamiliasAndSave]
+  )
+
+  const removeModelo = useCallback(
+    (familiaId: string, linhaId: string, modeloId: string) => {
+      setFamiliasAndSave((prev) =>
+        prev.map((f) => {
+          if (f.id !== familiaId) return f
+          return {
+            ...f,
+            linhas: f.linhas.map((l) => {
+              if (l.id !== linhaId) return l
+              if (l.modelos.length <= 1) {
+                return { ...l, modelos: [emptyModelo(0)] }
+              }
+              const rest = l.modelos.filter((m) => m.id !== modeloId).map((m, i) => ({ ...m, ordem: i }))
+              return { ...l, modelos: rest }
+            }),
+          }
+        })
+      )
+    },
+    [setFamiliasAndSave]
+  )
+
+  const clickAdicionarAnexos = useCallback((familiaId: string, linhaId: string, modeloId: string) => {
+    attachTargetRef.current = { familiaId, linhaId, modeloId }
     fileInputRef.current?.click()
   }, [])
 
@@ -364,12 +519,13 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
       setFamiliasAndSave((prev) => {
         const fam = prev.find((f) => f.id === alvo.familiaId)
         const lin = fam?.linhas.find((l) => l.id === alvo.linhaId)
-        if (!fam || !lin) return prev
-        const existentes = lin.anexos || []
-        const room = Math.max(0, BIBLIA_ANEXO_MAX_POR_LINHA - existentes.length)
+        const mod = lin?.modelos.find((m) => m.id === alvo.modeloId)
+        if (!fam || !lin || !mod) return prev
+        const existentes = mod.anexos || []
+        const room = Math.max(0, BIBLIA_ANEXO_MAX_POR_MODELO - existentes.length)
         if (room <= 0) {
           queueMicrotask(() =>
-            window.alert(tr('bibliaNonatoAnexoLimiteQuantidade', 'Limite de anexos por linha atingido.'))
+            window.alert(tr('bibliaNonatoAnexoLimiteQuantidade', 'Limite de anexos por modelo atingido.'))
           )
           return prev
         }
@@ -379,7 +535,7 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
             window.alert(
               tr(
                 'bibliaNonatoAnexoParcial',
-                'Só couberam alguns ficheiros: limite de anexos por linha.'
+                'Só couberam alguns ficheiros: limite de anexos por modelo.'
               )
             )
           )
@@ -388,9 +544,15 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
           if (f.id !== alvo.familiaId) return f
           return {
             ...f,
-            linhas: f.linhas.map((l) =>
-              l.id === alvo.linhaId ? { ...l, anexos: [...existentes, ...add] } : l
-            ),
+            linhas: f.linhas.map((l) => {
+              if (l.id !== alvo.linhaId) return l
+              return {
+                ...l,
+                modelos: l.modelos.map((m) =>
+                  m.id === alvo.modeloId ? { ...m, anexos: [...existentes, ...add] } : m
+                ),
+              }
+            }),
           }
         })
       })
@@ -399,17 +561,23 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
   )
 
   const removerAnexo = useCallback(
-    (familiaId: string, linhaId: string, anexoId: string) => {
+    (familiaId: string, linhaId: string, modeloId: string, anexoId: string) => {
       setFamiliasAndSave((prev) =>
         prev.map((f) => {
           if (f.id !== familiaId) return f
           return {
             ...f,
-            linhas: f.linhas.map((l) =>
-              l.id === linhaId
-                ? { ...l, anexos: (l.anexos || []).filter((a) => a.id !== anexoId) }
-                : l
-            ),
+            linhas: f.linhas.map((l) => {
+              if (l.id !== linhaId) return l
+              return {
+                ...l,
+                modelos: l.modelos.map((m) =>
+                  m.id === modeloId
+                    ? { ...m, anexos: (m.anexos || []).filter((a) => a.id !== anexoId) }
+                    : m
+                ),
+              }
+            }),
           }
         })
       )
@@ -696,127 +864,195 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
                           style={inputStyle}
                         />
                       </div>
-                      <div>
-                        <label style={{ fontSize: '10px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
-                          {tr('bibliaNonatoModelosLabel', 'Modelos ou referências')}
-                        </label>
-                        <textarea
-                          value={linha.modelosTexto}
-                          onChange={(e) => updateLinha(selected.id, linha.id, { modelosTexto: e.target.value })}
-                          placeholder={tr(
-                            'bibliaNonatoModelosPlaceholder',
-                            'Ex.: HPP 230, HPP 250 — ou uma referência por linha.'
-                          )}
-                          rows={4}
-                          style={{ ...inputStyle, resize: 'vertical', fontFamily: 'ui-monospace, monospace', lineHeight: 1.45 }}
-                        />
-                      </div>
                     </div>
+
                     <div
                       style={{
-                        marginTop: '12px',
-                        paddingTop: '12px',
-                        borderTop: '1px solid rgba(148, 163, 184, 0.2)',
+                        marginTop: '14px',
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        letterSpacing: '0.08em',
+                        color: '#7dd3fc',
                       }}
                     >
-                      <label style={{ fontSize: '10px', color: '#94a3b8', display: 'block', marginBottom: '6px' }}>
-                        {tr('bibliaNonatoAnexosTitulo', 'Documentos e imagens')}
-                      </label>
-                      <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 8px', lineHeight: 1.45 }}>
-                        {tr(
-                          'bibliaNonatoAnexosAjuda',
-                          'Anexe PDF, Word ou imagens; ficam guardados neste navegador (até ~6 MB por ficheiro).'
-                        )}
-                      </p>
-                      <button
-                        type="button"
-                        style={{ ...btnOutline, padding: '6px 10px', fontSize: '11px', marginBottom: '10px' }}
-                        onClick={() => clickAdicionarAnexos(selected.id, linha.id)}
-                      >
-                        + {tr('bibliaNonatoAnexosAdicionar', 'Adicionar ficheiros')}
-                      </button>
-                      {(linha.anexos || []).length > 0 ? (
-                        <ul
+                      {tr('bibliaNonatoModelosNaLinhaTitulo', 'MODELOS NESTA LINHA')}
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}>
+                      {linha.modelos.map((modelo) => (
+                        <div
+                          key={modelo.id}
                           style={{
-                            listStyle: 'none',
-                            padding: 0,
-                            margin: 0,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '8px',
+                            padding: '12px',
+                            borderRadius: '10px',
+                            border: '1px solid rgba(56, 189, 248, 0.22)',
+                            background: 'rgba(15, 23, 42, 0.72)',
                           }}
                         >
-                          {(linha.anexos || []).map((anexo) => (
-                            <li
-                              key={anexo.id}
-                              style={{
-                                display: 'flex',
-                                flexWrap: 'wrap',
-                                alignItems: 'center',
-                                gap: '8px',
-                                padding: '8px',
-                                borderRadius: '8px',
-                                background: 'rgba(15,23,42,0.6)',
-                                border: '1px solid rgba(148,163,184,0.15)',
-                              }}
-                            >
-                              {anexo.mime.startsWith('image/') ? (
-                                <img
-                                  src={anexo.dataUrl}
-                                  alt=""
-                                  style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }}
-                                />
-                              ) : (
-                                <span style={{ fontSize: '22px' }} aria-hidden>
-                                  📎
-                                </span>
-                              )}
-                              <span
-                                style={{
-                                  flex: '1 1 140px',
-                                  fontSize: '12px',
-                                  color: '#e2e8f0',
-                                  wordBreak: 'break-word',
-                                }}
-                              >
-                                {anexo.nome}
-                              </span>
-                              <button
-                                type="button"
-                                style={{ ...btnOutline, padding: '4px 8px', fontSize: '10px' }}
-                                onClick={() =>
-                                  window.open(anexo.dataUrl, '_blank', 'noopener,noreferrer')
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
+                            <div>
+                              <label style={{ fontSize: '10px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
+                                {tr('bibliaNonatoModeloNomeLabel', 'Modelo ou referência')}
+                              </label>
+                              <input
+                                value={modelo.nome}
+                                onChange={(e) =>
+                                  updateModelo(selected.id, linha.id, modelo.id, { nome: e.target.value })
                                 }
-                              >
-                                {tr('bibliaNonatoAnexoAbrir', 'Abrir')}
-                              </button>
-                              <a
-                                href={anexo.dataUrl}
-                                download={anexo.nome}
+                                placeholder={tr('bibliaNonatoModeloNomePlaceholder', 'Ex.: HPP 250')}
+                                style={{ ...inputStyle, fontFamily: 'inherit' }}
+                              />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: '10px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
+                                {tr('bibliaNonatoModeloInfoLabel', 'Informações / notas')}
+                              </label>
+                              <textarea
+                                value={modelo.informacoes}
+                                onChange={(e) =>
+                                  updateModelo(selected.id, linha.id, modelo.id, {
+                                    informacoes: e.target.value,
+                                  })
+                                }
+                                placeholder={tr(
+                                  'bibliaNonatoModeloInfoPlaceholder',
+                                  'Peças, calibrações, sintomas, links internos…'
+                                )}
+                                rows={4}
+                                style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.45 }}
+                              />
+                            </div>
+                          </div>
+                          <div
+                            style={{
+                              marginTop: '12px',
+                              paddingTop: '12px',
+                              borderTop: '1px solid rgba(148, 163, 184, 0.18)',
+                            }}
+                          >
+                            <label style={{ fontSize: '10px', color: '#94a3b8', display: 'block', marginBottom: '6px' }}>
+                              {tr('bibliaNonatoAnexosTitulo', 'Documentos e imagens')}
+                            </label>
+                            <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 8px', lineHeight: 1.45 }}>
+                              {tr(
+                                'bibliaNonatoAnexosAjudaModelo',
+                                'Anexos só deste modelo (PDF, Word ou imagens; até ~6 MB por ficheiro).'
+                              )}
+                            </p>
+                            <button
+                              type="button"
+                              style={{ ...btnOutline, padding: '6px 10px', fontSize: '11px', marginBottom: '10px' }}
+                              onClick={() =>
+                                clickAdicionarAnexos(selected.id, linha.id, modelo.id)
+                              }
+                            >
+                              + {tr('bibliaNonatoAnexosAdicionar', 'Adicionar ficheiros')}
+                            </button>
+                            {(modelo.anexos || []).length > 0 ? (
+                              <ul
                                 style={{
-                                  ...btnOutline,
-                                  padding: '4px 8px',
-                                  fontSize: '10px',
-                                  textDecoration: 'none',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  boxSizing: 'border-box',
+                                  listStyle: 'none',
+                                  padding: 0,
+                                  margin: 0,
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: '8px',
                                 }}
                               >
-                                {tr('bibliaNonatoAnexoTransferir', 'Transferir')}
-                              </a>
-                              <button
-                                type="button"
-                                style={{ ...btnDanger, padding: '4px 8px', fontSize: '10px' }}
-                                onClick={() => removerAnexo(selected.id, linha.id, anexo.id)}
-                              >
-                                {tr('bibliaNonatoAnexoRemover', 'Remover')}
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : null}
+                                {(modelo.anexos || []).map((anexo) => (
+                                  <li
+                                    key={anexo.id}
+                                    style={{
+                                      display: 'flex',
+                                      flexWrap: 'wrap',
+                                      alignItems: 'center',
+                                      gap: '8px',
+                                      padding: '8px',
+                                      borderRadius: '8px',
+                                      background: 'rgba(15,23,42,0.6)',
+                                      border: '1px solid rgba(148,163,184,0.15)',
+                                    }}
+                                  >
+                                    {anexo.mime.startsWith('image/') ? (
+                                      <img
+                                        src={anexo.dataUrl}
+                                        alt=""
+                                        style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }}
+                                      />
+                                    ) : (
+                                      <span style={{ fontSize: '22px' }} aria-hidden>
+                                        📎
+                                      </span>
+                                    )}
+                                    <span
+                                      style={{
+                                        flex: '1 1 140px',
+                                        fontSize: '12px',
+                                        color: '#e2e8f0',
+                                        wordBreak: 'break-word',
+                                      }}
+                                    >
+                                      {anexo.nome}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      style={{ ...btnOutline, padding: '4px 8px', fontSize: '10px' }}
+                                      onClick={() =>
+                                        window.open(anexo.dataUrl, '_blank', 'noopener,noreferrer')
+                                      }
+                                    >
+                                      {tr('bibliaNonatoAnexoAbrir', 'Abrir')}
+                                    </button>
+                                    <a
+                                      href={anexo.dataUrl}
+                                      download={anexo.nome}
+                                      style={{
+                                        ...btnOutline,
+                                        padding: '4px 8px',
+                                        fontSize: '10px',
+                                        textDecoration: 'none',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        boxSizing: 'border-box',
+                                      }}
+                                    >
+                                      {tr('bibliaNonatoAnexoTransferir', 'Transferir')}
+                                    </a>
+                                    <button
+                                      type="button"
+                                      style={{ ...btnDanger, padding: '4px 8px', fontSize: '10px' }}
+                                      onClick={() =>
+                                        removerAnexo(selected.id, linha.id, modelo.id, anexo.id)
+                                      }
+                                    >
+                                      {tr('bibliaNonatoAnexoRemover', 'Remover')}
+                                    </button>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : null}
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+                            <button
+                              type="button"
+                              style={{ ...btnDanger, padding: '6px 10px', fontSize: '11px' }}
+                              onClick={() => removeModelo(selected.id, linha.id, modelo.id)}
+                            >
+                              {tr('bibliaNonatoRemoverModelo', 'Remover modelo')}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
+
+                    <button
+                      type="button"
+                      style={{ ...btnOutline, marginTop: '12px', width: '100%', boxSizing: 'border-box' }}
+                      onClick={() => addModelo(selected.id, linha.id)}
+                    >
+                      + {tr('bibliaNonatoNovoModelo', 'Adicionar modelo')}
+                    </button>
+
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
                       <button type="button" style={{ ...btnDanger, padding: '6px 10px', fontSize: '11px' }} onClick={() => removeLinha(selected.id, linha.id)}>
                         {tr('bibliaNonatoRemoverLinha', 'Remover linha')}
