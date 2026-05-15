@@ -244,6 +244,8 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
   const [familias, setFamilias] = useState<BibliaFamiliaRow[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [busca, setBusca] = useState('')
+  /** `false` = corpo do modelo retraído (só cabeçalho com nome); ausente/`true` = expandido */
+  const [modeloCorpoAberto, setModeloCorpoAberto] = useState<Record<string, boolean>>({})
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const attachTargetRef = useRef<{ familiaId: string; linhaId: string; modeloId: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -435,6 +437,8 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
 
   const addModelo = useCallback(
     (familiaId: string, linhaId: string) => {
+      const novoId = newId()
+      setModeloCorpoAberto((p) => ({ ...p, [novoId]: true }))
       setFamiliasAndSave((prev) =>
         prev.map((f) => {
           if (f.id !== familiaId) return f
@@ -443,7 +447,8 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
             linhas: f.linhas.map((l) => {
               if (l.id !== linhaId) return l
               const ordem = l.modelos.length
-              return { ...l, modelos: [...l.modelos, emptyModelo(ordem)] }
+              const novo = { ...emptyModelo(ordem), id: novoId }
+              return { ...l, modelos: [...l.modelos, novo] }
             }),
           }
         })
@@ -454,6 +459,11 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
 
   const removeModelo = useCallback(
     (familiaId: string, linhaId: string, modeloId: string) => {
+      setModeloCorpoAberto((prev) => {
+        const next = { ...prev }
+        delete next[modeloId]
+        return next
+      })
       setFamiliasAndSave((prev) =>
         prev.map((f) => {
           if (f.id !== familiaId) return f
@@ -473,6 +483,38 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
     },
     [setFamiliasAndSave]
   )
+
+  const moveModelo = useCallback(
+    (familiaId: string, linhaId: string, modeloId: string, dir: -1 | 1) => {
+      setFamiliasAndSave((prev) =>
+        prev.map((f) => {
+          if (f.id !== familiaId) return f
+          return {
+            ...f,
+            linhas: f.linhas.map((l) => {
+              if (l.id !== linhaId) return l
+              const idx = l.modelos.findIndex((m) => m.id === modeloId)
+              const j = idx + dir
+              if (idx < 0 || j < 0 || j >= l.modelos.length) return l
+              const cp = [...l.modelos]
+              const tmp = cp[idx]!
+              cp[idx] = cp[j]!
+              cp[j] = tmp
+              return { ...l, modelos: cp.map((m, i) => ({ ...m, ordem: i })) }
+            }),
+          }
+        })
+      )
+    },
+    [setFamiliasAndSave]
+  )
+
+  const toggleModeloCorpo = useCallback((modeloId: string) => {
+    setModeloCorpoAberto((prev) => ({
+      ...prev,
+      [modeloId]: !(prev[modeloId] !== false),
+    }))
+  }, [])
 
   const clickAdicionarAnexos = useCallback((familiaId: string, linhaId: string, modeloId: string) => {
     attachTargetRef.current = { familiaId, linhaId, modeloId }
@@ -879,7 +921,10 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}>
-                      {linha.modelos.map((modelo) => (
+                      {linha.modelos.map((modelo, mi) => {
+                        const detalheAberto = modeloCorpoAberto[modelo.id] !== false
+                        const nAnexos = (modelo.anexos || []).length
+                        return (
                         <div
                           key={modelo.id}
                           style={{
@@ -889,8 +934,35 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
                             background: 'rgba(15, 23, 42, 0.72)',
                           }}
                         >
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
-                            <div>
+                          <div
+                            style={{
+                              display: 'flex',
+                              flexWrap: 'wrap',
+                              alignItems: 'flex-start',
+                              gap: '10px',
+                              marginBottom: detalheAberto ? '10px' : 0,
+                            }}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => toggleModeloCorpo(modelo.id)}
+                              title={
+                                detalheAberto
+                                  ? tr('bibliaNonatoModeloRetrair', 'Retrair')
+                                  : tr('bibliaNonatoModeloExpandir', 'Expandir')
+                              }
+                              aria-expanded={detalheAberto}
+                              style={{
+                                ...btnOutline,
+                                padding: '8px 10px',
+                                fontSize: '14px',
+                                lineHeight: 1,
+                                flexShrink: 0,
+                              }}
+                            >
+                              {detalheAberto ? '▼' : '▶'}
+                            </button>
+                            <div style={{ flex: '1 1 160px', minWidth: 0 }}>
                               <label style={{ fontSize: '10px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
                                 {tr('bibliaNonatoModeloNomeLabel', 'Modelo ou referência')}
                               </label>
@@ -902,7 +974,52 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
                                 placeholder={tr('bibliaNonatoModeloNomePlaceholder', 'Ex.: HPP 250')}
                                 style={{ ...inputStyle, fontFamily: 'inherit' }}
                               />
+                              {!detalheAberto && (
+                                <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#64748b', lineHeight: 1.4 }}>
+                                  {nAnexos > 0
+                                    ? tr('bibliaNonatoModeloResumoAnexos', '{n} anexo(s)').replace('{n}', String(nAnexos))
+                                    : tr(
+                                        'bibliaNonatoModeloResumoRetraido',
+                                        'Detalhes e anexos ocultos — expanda para editar.'
+                                      )}
+                                </p>
+                              )}
                             </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', flexShrink: 0 }}>
+                              <button
+                                type="button"
+                                style={{
+                                  ...btnOutline,
+                                  padding: '4px 8px',
+                                  fontSize: '10px',
+                                  opacity: mi <= 0 ? 0.45 : 1,
+                                }}
+                                disabled={mi <= 0}
+                                onClick={() => moveModelo(selected.id, linha.id, modelo.id, -1)}
+                                title={tr('bibliaNonatoModeloMoverCima', 'Subir modelo na lista')}
+                              >
+                                ↑ {tr('bibliaNonatoMoverCima', 'Subir')}
+                              </button>
+                              <button
+                                type="button"
+                                style={{
+                                  ...btnOutline,
+                                  padding: '4px 8px',
+                                  fontSize: '10px',
+                                  opacity: mi >= linha.modelos.length - 1 ? 0.45 : 1,
+                                }}
+                                disabled={mi >= linha.modelos.length - 1}
+                                onClick={() => moveModelo(selected.id, linha.id, modelo.id, 1)}
+                                title={tr('bibliaNonatoModeloMoverBaixo', 'Descer modelo na lista')}
+                              >
+                                ↓ {tr('bibliaNonatoMoverBaixo', 'Descer')}
+                              </button>
+                            </div>
+                          </div>
+
+                          {detalheAberto ? (
+                          <>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
                             <div>
                               <label style={{ fontSize: '10px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
                                 {tr('bibliaNonatoModeloInfoLabel', 'Informações / notas')}
@@ -1041,8 +1158,11 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
                               {tr('bibliaNonatoRemoverModelo', 'Remover modelo')}
                             </button>
                           </div>
+                          </>
+                          ) : null}
                         </div>
-                      ))}
+                        )
+                      })}
                     </div>
 
                     <button
