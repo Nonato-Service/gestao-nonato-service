@@ -136,12 +136,13 @@ body,
 .main-content-area {
   min-height: 0;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  /* pan-y sem pinch-zoom bloqueava zoom com dois dedos no Chrome/Android nos contentores de scroll */
+  touch-action: pan-y pinch-zoom;
 }
 .tab-inner-scroll {
   min-height: 0;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  touch-action: pan-y pinch-zoom;
 }
 
 /* Desktop com rato: touch-action: pan-y em contentores com overflow pode, em alguns Chromium/Windows,
