@@ -30889,33 +30889,49 @@ onKeyPress={(e) => {
             : ''
           const dataDoc = new Date(p.dataCriacao).toLocaleDateString(documentPdfDateLocale(selectedLanguage))
           const refDoc = `REF-${String(p.id).replace(/[^a-zA-Z0-9]/g, '').slice(-12).toUpperCase() || 'NS'}`
-          const clientRows: string[] = []
-          if (cl) {
-            if (cl.nomeEmpresa) clientRows.push(`<tr><td class="cl-label">${lab('nomeEmpresa', 'Nome da empresa')}</td><td class="cl-value">${esc(cl.nomeEmpresa)}</td></tr>`)
-            if (cl.morada) clientRows.push(`<tr><td class="cl-label">${lab('morada', 'Morada')}</td><td class="cl-value">${esc(cl.morada)}</td></tr>`)
-            const locLinha = [cl.codigoPostal, cl.localidade, cl.conselho].filter((x) => String(x || '').trim()).join(' · ')
-            if (locLinha) clientRows.push(`<tr><td class="cl-label">${lab('localidade', 'Localidade')}</td><td class="cl-value">${esc(locLinha)}</td></tr>`)
-            if (cl.email) clientRows.push(`<tr><td class="cl-label">${lab('email', 'E-mail')}</td><td class="cl-value">${esc(cl.email)}</td></tr>`)
-            if (cl.telefones) clientRows.push(`<tr><td class="cl-label">${lab('telefones', 'Telefone')}</td><td class="cl-value">${esc(cl.telefones)}</td></tr>`)
-            if (cl.contato) clientRows.push(`<tr><td class="cl-label">${lab('contato', 'Contato')}</td><td class="cl-value">${esc(cl.contato)}</td></tr>`)
-          }
-          const clienteSection = cl && clientRows.length > 0
-            ? `<div class="sec"><h3 class="sec-title">${protoT?.protocolosServicoInformacaoCliente || 'Informação do cliente'}</h3><table class="cl-table">${clientRows.join('')}</table></div>`
-            : ''
+          const nomeClientePdf = (cl?.nomeEmpresa || '').trim()
           const idEqPdf = idEquipamentoVisivelParaProtocolo(eq, equipamentos)
           const rowIdPdf = idEqPdf
             ? `<tr><td class="cl-label">${esc(protoT?.protocolosServicoEquipamentoResumoId || 'ID')}</td><td class="cl-value">${esc(idEqPdf)}</td></tr>`
             : ''
-          const equipSection = eq
-            ? `<div class="sec"><h3 class="sec-title">${protoT?.protocolosServicoInformacaoEquipamento || 'Informação do equipamento'}</h3><table class="cl-table"><tr><td class="cl-label">${lab('tipoEquipamento', 'Tipo')}</td><td class="cl-value">${esc(eq.tipoEquipamento)}</td></tr><tr><td class="cl-label">${lab('modelo', 'Modelo')}</td><td class="cl-value">${esc(eq.modelo)}</td></tr><tr><td class="cl-label">${lab('marca', 'Marca')}</td><td class="cl-value">${esc(eq.marca)}</td></tr><tr><td class="cl-label">${protoT?.numeroSerie || 'Nº Série'}</td><td class="cl-value">${esc(eq.numeroSerie)}</td></tr>${rowIdPdf}</table></div>`
+          const equipTableRows = eq
+            ? [
+                eq.tipoEquipamento ? `<tr><td class="cl-label">${lab('tipoEquipamento', 'Tipo')}</td><td class="cl-value">${esc(eq.tipoEquipamento)}</td></tr>` : '',
+                eq.modelo ? `<tr><td class="cl-label">${lab('modelo', 'Modelo')}</td><td class="cl-value">${esc(eq.modelo)}</td></tr>` : '',
+                eq.marca ? `<tr><td class="cl-label">${lab('marca', 'Marca')}</td><td class="cl-value">${esc(eq.marca)}</td></tr>` : '',
+                eq.numeroSerie ? `<tr><td class="cl-label">${protoT?.numeroSerie || 'Nº Série'}</td><td class="cl-value">${esc(eq.numeroSerie)}</td></tr>` : '',
+                rowIdPdf,
+              ]
+                .filter(Boolean)
+                .join('')
             : ''
           const sitPdf = (p.situacaoDescricao || '').trim()
-          const situacaoSection =
-            sitPdf && !eq
-              ? `<div class="sec"><h3 class="sec-title">${protoT?.protocolosServicoInformacaoSituacao || 'Situação / contexto'}</h3><p style="margin:0;white-space:pre-wrap;" class="texto-inicial">${esc(sitPdf)}</p></div>`
+          const identSectionParts: string[] = []
+          if (nomeClientePdf || equipTableRows || (sitPdf && !eq)) {
+            identSectionParts.push('<div class="sec sec-ident-compact">')
+            if (nomeClientePdf) {
+              identSectionParts.push(
+                `<p class="proto-cliente-linha"><span class="proto-cliente-etq">${esc(protoT?.protocolosServicoCliente || 'Cliente')}</span><span class="proto-cliente-nome">${esc(nomeClientePdf)}</span></p>`
+              )
+            }
+            if (equipTableRows) {
+              identSectionParts.push(
+                `<h3 class="sec-title sec-title-sub">${protoT?.protocolosServicoInformacaoEquipamento || 'Equipamento'}</h3><table class="cl-table cl-table-compact">${equipTableRows}</table>`
+              )
+            } else if (sitPdf) {
+              identSectionParts.push(
+                `<h3 class="sec-title sec-title-sub">${protoT?.protocolosServicoInformacaoSituacao || 'Situação / contexto'}</h3><p class="texto-inicial proto-situacao-compact">${esc(sitPdf)}</p>`
+              )
+            }
+            identSectionParts.push('</div>')
+          }
+          const identSection = identSectionParts.join('')
+          const situacaoSectionExtra =
+            sitPdf && eq
+              ? `<div class="sec sec-ident-compact"><h3 class="sec-title">${protoT?.protocolosServicoInformacaoSituacao || 'Situação / contexto'}</h3><p class="texto-inicial proto-situacao-compact">${esc(sitPdf)}</p></div>`
               : ''
-          const textoSection = p.textoInicial ? `<div class="sec"><h3 class="sec-title">${protoT?.protocolosServicoTextoInicial || 'Texto inicial'}</h3><p style="margin:0;white-space:pre-wrap;" class="texto-inicial">${esc(p.textoInicial)}</p></div>` : ''
-          const bodyInner = `${clienteSection}${equipSection}${situacaoSection}${textoSection}${blocosHtml}${pecasStrong}<div class="footer-bar"><span class="footer-date">${dataDoc}</span><span class="doc-ref">${refDoc}</span></div>`
+          const textoSection = p.textoInicial ? `<div class="sec"><h3 class="sec-title">${protoT?.protocolosServicoTextoInicial || 'Texto inicial'}</h3><p class="texto-inicial">${esc(p.textoInicial)}</p></div>` : ''
+          const bodyInner = `${identSection}${situacaoSectionExtra}${textoSection}${blocosHtml}${pecasStrong}<div class="footer-bar"><span class="footer-date">${dataDoc}</span><span class="doc-ref">${refDoc}</span></div>`
           const html = buildProtocoloServicoPrintHtml(idx, { tituloProto, dataDoc, logoHtml }, bodyInner)
           const w = window.open('', '_blank')
           if (w) { w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 450) }

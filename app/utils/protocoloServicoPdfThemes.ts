@@ -101,6 +101,10 @@ export const PROTOCOLO_PDF_BLOCO_STYLES: string[] = [
 
 export const PROTOCOLO_PDF_IMG_RADIUS: number[] = [8, 8, 8, 10, 4, 6, 8, 2, 10, 8, 8, 3, 10, 12]
 
+/** Identificação no PDF: só nome do cliente + tabela do equipamento, pouco espaço vertical */
+const COMPACT_IDENT_CSS =
+  '.sec-ident-compact{margin:6px 0 12px;padding:10px 14px 12px;box-shadow:none;}.sec-ident-compact .sec-title-sub{margin:8px 0 4px;padding-bottom:4px;font-size:7.5pt;border-bottom-width:1px;}.proto-cliente-linha{margin:0 0 6px;padding:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;line-height:1.3;}.proto-cliente-etq{font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;}.proto-cliente-nome{font-size:11.5pt;font-weight:700;color:#0f172a;}.cl-table-compact .cl-label{padding:3px 10px 3px 0;font-size:7.5pt;}.cl-table-compact .cl-value{padding:3px 0;font-size:10pt;}.cl-table-compact tr{border-bottom:1px solid #f1f5f9;}.proto-situacao-compact{margin:0;font-size:10.5pt;line-height:1.45;}'
+
 /** CSS do corpo + secções (sem cabeçalho) */
 const BODY_CSS: string[] = [
   `body{font-family:'Segoe UI',system-ui,sans-serif;margin:0;padding:0;color:#1e293b;font-size:11pt;line-height:1.45;background:#fff;}.body-wrap{padding:0 0 24px;}.sec{margin:16px 0;padding:16px 18px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;}.sec-title{margin:0 0 12px;font-size:8.5pt;font-weight:700;letter-spacing:0.1em;color:#15803d;text-transform:uppercase;border-bottom:1px solid #e2e8f0;padding-bottom:8px;}.cl-table{width:100%;border-collapse:collapse;}.cl-table tr:not(:last-child){border-bottom:1px solid #f1f5f9;}.cl-table .cl-label{width:32%;padding:8px 12px 8px 0;vertical-align:top;font-weight:600;color:#64748b;font-size:8.5pt;text-transform:uppercase;letter-spacing:0.04em;}.cl-table .cl-value{padding:8px 0;color:#0f172a;font-size:10.5pt;}.texto-inicial{white-space:pre-wrap;margin:0;color:#334155;line-height:1.55;}.footer-bar{margin-top:22px;padding-top:14px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;}.footer-date{font-size:9pt;color:#64748b;}.doc-ref{font-size:8pt;color:#94a3b8;font-family:Consolas,ui-monospace,monospace;}`,
@@ -122,7 +126,7 @@ const BODY_CSS: string[] = [
 ]
 
 function cssBlocks(): string[] {
-  return BODY_CSS.map((body, i) => PRINT_SAFE + HDR_LAYOUT_CSS + HDR_VARIANT_CSS[i] + body)
+  return BODY_CSS.map((body, i) => PRINT_SAFE + HDR_LAYOUT_CSS + HDR_VARIANT_CSS[i] + body + COMPACT_IDENT_CSS)
 }
 
 let _cssCache: string[] | null = null
