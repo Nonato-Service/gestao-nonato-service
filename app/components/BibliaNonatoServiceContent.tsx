@@ -6,11 +6,77 @@ import { loadData, saveData } from '../utils/dataStorage'
 
 export const BIBLIA_NONATO_STORAGE_KEY = 'nonato-biblia-nonato-service'
 
+/** Anexo guardado em base64 (data URL) junto aos dados da Bíblia — mesmo limite prático do armazenamento local. */
+export type BibliaAnexo = {
+  id: string
+  nome: string
+  mime: string
+  dataUrl: string
+}
+
 export type BibliaMarcaLinha = {
   id: string
   titulo: string
   modelosTexto: string
   ordem: number
+  anexos: BibliaAnexo[]
+}
+
+const BIBLIA_ANEXO_MAX_POR_LINHA = 24
+const BIBLIA_ANEXO_MAX_BYTES = 6 * 1024 * 1024 // ~6 MB por ficheiro
+
+const MIME_ANEXO_PERMITIDO = new Set([
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+])
+
+function mimePorNomeFicheiro(nome: string): string | null {
+  const n = nome.toLowerCase()
+  if (n.endsWith('.pdf')) return 'application/pdf'
+  if (n.endsWith('.doc')) return 'application/msword'
+  if (n.endsWith('.docx')) return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  if (n.endsWith('.jpg') || n.endsWith('.jpeg')) return 'image/jpeg'
+  if (n.endsWith('.png')) return 'image/png'
+  if (n.endsWith('.gif')) return 'image/gif'
+  if (n.endsWith('.webp')) return 'image/webp'
+  return null
+}
+
+function ficheiroAnexoPermitido(file: File): boolean {
+  if (file.type && MIME_ANEXO_PERMITIDO.has(file.type)) return true
+  const m = mimePorNomeFicheiro(file.name)
+  return m !== null && MIME_ANEXO_PERMITIDO.has(m)
+}
+
+function mimeParaGuardar(file: File): string {
+  if (file.type && MIME_ANEXO_PERMITIDO.has(file.type)) return file.type
+  return mimePorNomeFicheiro(file.name) || 'application/octet-stream'
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader()
+    r.onload = () => resolve(String(r.result ?? ''))
+    r.onerror = () => reject(r.error ?? new Error('FileReader'))
+    r.readAsDataURL(file)
+  })
+}
+
+function normalizeAnexo(raw: unknown): BibliaAnexo | null {
+  const o = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
+  const dataUrl = typeof o.dataUrl === 'string' ? o.dataUrl : ''
+  if (!dataUrl.startsWith('data:')) return null
+  return {
+    id: typeof o.id === 'string' && o.id ? o.id : newId(),
+    nome: typeof o.nome === 'string' ? o.nome.slice(0, 200) : 'ficheiro',
+    mime: typeof o.mime === 'string' ? o.mime : 'application/octet-stream',
+    dataUrl,
+  }
 }
 
 export type BibliaFamiliaRow = {
@@ -33,11 +99,15 @@ function newId(): string {
 
 function normalizeLinha(raw: unknown, fallbackOrdem: number): BibliaMarcaLinha {
   const o = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
+  const anexosRaw = o.anexos
+  const anexosArr = Array.isArray(anexosRaw) ? anexosRaw : []
+  const anexos = anexosArr.map(normalizeAnexo).filter(Boolean) as BibliaAnexo[]
   return {
     id: typeof o.id === 'string' && o.id ? o.id : newId(),
     titulo: typeof o.titulo === 'string' ? o.titulo : '',
     modelosTexto: typeof o.modelosTexto === 'string' ? o.modelosTexto : '',
     ordem: typeof o.ordem === 'number' ? o.ordem : fallbackOrdem,
+    anexos,
   }
 }
 
@@ -52,7 +122,7 @@ function normalizeFamilia(raw: unknown, fallbackOrdem: number): BibliaFamiliaRow
     id: typeof o.id === 'string' && o.id ? o.id : newId(),
     nome,
     ordem: typeof o.ordem === 'number' ? o.ordem : fallbackOrdem,
-    linhas: linhas.length ? linhas : [{ id: newId(), titulo: '', modelosTexto: '', ordem: 0 }],
+    linhas: linhas.length ? linhas : [{ id: newId(), titulo: '', modelosTexto: '', ordem: 0, anexos: [] }],
   }
 }
 
@@ -86,6 +156,8 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [busca, setBusca] = useState('')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const attachTargetRef = useRef<{ familiaId: string; linhaId: string } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     let ok = true
@@ -130,11 +202,11 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
     if (!q) return familias
     return familias.filter((f) => {
       const nomeHit = (f.nome || '').toLowerCase().includes(q)
-      const linhaHit = f.linhas.some(
-        (l) =>
-          (l.titulo || '').toLowerCase().includes(q) ||
-          (l.modelosTexto || '').toLowerCase().includes(q)
-      )
+      const linhaHit = f.linhas.some((l) => {
+        if ((l.titulo || '').toLowerCase().includes(q)) return true
+        if ((l.modelosTexto || '').toLowerCase().includes(q)) return true
+        return (l.anexos || []).some((a) => (a.nome || '').toLowerCase().includes(q))
+      })
       return nomeHit || linhaHit
     })
   }, [familias, q])
@@ -157,7 +229,7 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
       id: newId(),
       nome: '',
       ordem: familias.length,
-      linhas: [{ id: newId(), titulo: '', modelosTexto: '', ordem: 0 }],
+      linhas: [{ id: newId(), titulo: '', modelosTexto: '', ordem: 0, anexos: [] }],
     }
     setFamiliasAndSave((prev) => [...prev, novo])
     setSelectedId(novo.id)
@@ -204,7 +276,7 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
         prev.map((f) => {
           if (f.id !== familiaId) return f
           const ordem = f.linhas.length
-          return { ...f, linhas: [...f.linhas, { id: newId(), titulo: '', modelosTexto: '', ordem }] }
+          return { ...f, linhas: [...f.linhas, { id: newId(), titulo: '', modelosTexto: '', ordem, anexos: [] }] }
         })
       )
     },
@@ -220,7 +292,7 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
           return {
             ...f,
             linhas:
-              linhas.length > 0 ? linhas : [{ id: newId(), titulo: '', modelosTexto: '', ordem: 0 }],
+              linhas.length > 0 ? linhas : [{ id: newId(), titulo: '', modelosTexto: '', ordem: 0, anexos: [] }],
           }
         })
       )
@@ -229,13 +301,115 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
   )
 
   const updateLinha = useCallback(
-    (familiaId: string, linhaId: string, patch: Partial<Pick<BibliaMarcaLinha, 'titulo' | 'modelosTexto'>>) => {
+    (
+      familiaId: string,
+      linhaId: string,
+      patch: Partial<Pick<BibliaMarcaLinha, 'titulo' | 'modelosTexto' | 'anexos'>>
+    ) => {
       setFamiliasAndSave((prev) =>
         prev.map((f) => {
           if (f.id !== familiaId) return f
           return {
             ...f,
             linhas: f.linhas.map((l) => (l.id === linhaId ? { ...l, ...patch } : l)),
+          }
+        })
+      )
+    },
+    [setFamiliasAndSave]
+  )
+
+  const clickAdicionarAnexos = useCallback((familiaId: string, linhaId: string) => {
+    attachTargetRef.current = { familiaId, linhaId }
+    fileInputRef.current?.click()
+  }, [])
+
+  const onAnexosSelected = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const alvo = attachTargetRef.current
+      attachTargetRef.current = null
+      const input = e.target
+      const list = input.files
+      input.value = ''
+      if (!alvo || !list?.length) return
+
+      const collected: BibliaAnexo[] = []
+
+      for (let i = 0; i < list.length; i++) {
+        const file = list[i]!
+        if (!ficheiroAnexoPermitido(file)) {
+          window.alert(tr('bibliaNonatoAnexoTipoNaoPermitido', 'Tipo de ficheiro não permitido. Use PDF, Word ou imagem.'))
+          continue
+        }
+        if (file.size > BIBLIA_ANEXO_MAX_BYTES) {
+          window.alert(tr('bibliaNonatoAnexoLimiteFicheiro', 'Ficheiro demasiado grande (máx. ~6 MB por ficheiro).'))
+          continue
+        }
+        try {
+          const dataUrl = await readFileAsDataUrl(file)
+          if (!dataUrl.startsWith('data:')) continue
+          collected.push({
+            id: newId(),
+            nome: file.name.slice(0, 200) || 'ficheiro',
+            mime: mimeParaGuardar(file),
+            dataUrl,
+          })
+        } catch {
+          window.alert(tr('bibliaNonatoAnexoErroLeitura', 'Não foi possível ler o ficheiro.'))
+        }
+      }
+
+      if (!collected.length) return
+
+      setFamiliasAndSave((prev) => {
+        const fam = prev.find((f) => f.id === alvo.familiaId)
+        const lin = fam?.linhas.find((l) => l.id === alvo.linhaId)
+        if (!fam || !lin) return prev
+        const existentes = lin.anexos || []
+        const room = Math.max(0, BIBLIA_ANEXO_MAX_POR_LINHA - existentes.length)
+        if (room <= 0) {
+          queueMicrotask(() =>
+            window.alert(tr('bibliaNonatoAnexoLimiteQuantidade', 'Limite de anexos por linha atingido.'))
+          )
+          return prev
+        }
+        const add = collected.slice(0, room)
+        if (collected.length > room) {
+          queueMicrotask(() =>
+            window.alert(
+              tr(
+                'bibliaNonatoAnexoParcial',
+                'Só couberam alguns ficheiros: limite de anexos por linha.'
+              )
+            )
+          )
+        }
+        return prev.map((f) => {
+          if (f.id !== alvo.familiaId) return f
+          return {
+            ...f,
+            linhas: f.linhas.map((l) =>
+              l.id === alvo.linhaId ? { ...l, anexos: [...existentes, ...add] } : l
+            ),
+          }
+        })
+      })
+    },
+    [tr, setFamiliasAndSave]
+  )
+
+  const removerAnexo = useCallback(
+    (familiaId: string, linhaId: string, anexoId: string) => {
+      setFamiliasAndSave((prev) =>
+        prev.map((f) => {
+          if (f.id !== familiaId) return f
+          return {
+            ...f,
+            linhas: f.linhas.map((l) =>
+              l.id === linhaId
+                ? { ...l, anexos: (l.anexos || []).filter((a) => a.id !== anexoId) }
+                : l
+            ),
           }
         })
       )
@@ -282,6 +456,15 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
 
   return (
     <div className="tab-content-wrapper tab-glass-root" style={{ minHeight: '520px' }}>
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept=".pdf,.doc,.docx,image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp"
+        style={{ display: 'none' }}
+        aria-hidden
+        onChange={onAnexosSelected}
+      />
       <div className="tab-glass-hero tab-glass-hero--compact">
         <div className="tab-glass-hero-top" style={{ marginBottom: 0 }}>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexShrink: 0 }}>
@@ -528,6 +711,111 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
                           style={{ ...inputStyle, resize: 'vertical', fontFamily: 'ui-monospace, monospace', lineHeight: 1.45 }}
                         />
                       </div>
+                    </div>
+                    <div
+                      style={{
+                        marginTop: '12px',
+                        paddingTop: '12px',
+                        borderTop: '1px solid rgba(148, 163, 184, 0.2)',
+                      }}
+                    >
+                      <label style={{ fontSize: '10px', color: '#94a3b8', display: 'block', marginBottom: '6px' }}>
+                        {tr('bibliaNonatoAnexosTitulo', 'Documentos e imagens')}
+                      </label>
+                      <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 8px', lineHeight: 1.45 }}>
+                        {tr(
+                          'bibliaNonatoAnexosAjuda',
+                          'Anexe PDF, Word ou imagens; ficam guardados neste navegador (até ~6 MB por ficheiro).'
+                        )}
+                      </p>
+                      <button
+                        type="button"
+                        style={{ ...btnOutline, padding: '6px 10px', fontSize: '11px', marginBottom: '10px' }}
+                        onClick={() => clickAdicionarAnexos(selected.id, linha.id)}
+                      >
+                        + {tr('bibliaNonatoAnexosAdicionar', 'Adicionar ficheiros')}
+                      </button>
+                      {(linha.anexos || []).length > 0 ? (
+                        <ul
+                          style={{
+                            listStyle: 'none',
+                            padding: 0,
+                            margin: 0,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px',
+                          }}
+                        >
+                          {(linha.anexos || []).map((anexo) => (
+                            <li
+                              key={anexo.id}
+                              style={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '8px',
+                                borderRadius: '8px',
+                                background: 'rgba(15,23,42,0.6)',
+                                border: '1px solid rgba(148,163,184,0.15)',
+                              }}
+                            >
+                              {anexo.mime.startsWith('image/') ? (
+                                <img
+                                  src={anexo.dataUrl}
+                                  alt=""
+                                  style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }}
+                                />
+                              ) : (
+                                <span style={{ fontSize: '22px' }} aria-hidden>
+                                  📎
+                                </span>
+                              )}
+                              <span
+                                style={{
+                                  flex: '1 1 140px',
+                                  fontSize: '12px',
+                                  color: '#e2e8f0',
+                                  wordBreak: 'break-word',
+                                }}
+                              >
+                                {anexo.nome}
+                              </span>
+                              <button
+                                type="button"
+                                style={{ ...btnOutline, padding: '4px 8px', fontSize: '10px' }}
+                                onClick={() =>
+                                  window.open(anexo.dataUrl, '_blank', 'noopener,noreferrer')
+                                }
+                              >
+                                {tr('bibliaNonatoAnexoAbrir', 'Abrir')}
+                              </button>
+                              <a
+                                href={anexo.dataUrl}
+                                download={anexo.nome}
+                                style={{
+                                  ...btnOutline,
+                                  padding: '4px 8px',
+                                  fontSize: '10px',
+                                  textDecoration: 'none',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  boxSizing: 'border-box',
+                                }}
+                              >
+                                {tr('bibliaNonatoAnexoTransferir', 'Transferir')}
+                              </a>
+                              <button
+                                type="button"
+                                style={{ ...btnDanger, padding: '4px 8px', fontSize: '10px' }}
+                                onClick={() => removerAnexo(selected.id, linha.id, anexo.id)}
+                              >
+                                {tr('bibliaNonatoAnexoRemover', 'Remover')}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
                       <button type="button" style={{ ...btnDanger, padding: '6px 10px', fontSize: '11px' }} onClick={() => removeLinha(selected.id, linha.id)}>
