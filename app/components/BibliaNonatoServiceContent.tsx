@@ -244,6 +244,8 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
   const [familias, setFamilias] = useState<BibliaFamiliaRow[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [busca, setBusca] = useState('')
+  /** `false` = bloco da marca/linha retraído (só cabeçalho); ausente/`true` = expandido */
+  const [linhaCorpoAberto, setLinhaCorpoAberto] = useState<Record<string, boolean>>({})
   /** `false` = corpo do modelo retraído (só cabeçalho com nome); ausente/`true` = expandido */
   const [modeloCorpoAberto, setModeloCorpoAberto] = useState<Record<string, boolean>>({})
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -366,11 +368,13 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
 
   const addLinha = useCallback(
     (familiaId: string) => {
+      const lid = newId()
+      setLinhaCorpoAberto((p) => ({ ...p, [lid]: true }))
       setFamiliasAndSave((prev) =>
         prev.map((f) => {
           if (f.id !== familiaId) return f
           const ordem = f.linhas.length
-          return { ...f, linhas: [...f.linhas, emptyLinha(ordem)] }
+          return { ...f, linhas: [...f.linhas, { ...emptyLinha(ordem), id: lid }] }
         })
       )
     },
@@ -379,6 +383,11 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
 
   const removeLinha = useCallback(
     (familiaId: string, linhaId: string) => {
+      setLinhaCorpoAberto((prev) => {
+        const next = { ...prev }
+        delete next[linhaId]
+        return next
+      })
       setFamiliasAndSave((prev) =>
         prev.map((f) => {
           if (f.id !== familiaId) return f
@@ -508,6 +517,32 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
     },
     [setFamiliasAndSave]
   )
+
+  const moveLinha = useCallback(
+    (familiaId: string, linhaId: string, dir: -1 | 1) => {
+      setFamiliasAndSave((prev) =>
+        prev.map((f) => {
+          if (f.id !== familiaId) return f
+          const idx = f.linhas.findIndex((l) => l.id === linhaId)
+          const j = idx + dir
+          if (idx < 0 || j < 0 || j >= f.linhas.length) return f
+          const cp = [...f.linhas]
+          const tmp = cp[idx]!
+          cp[idx] = cp[j]!
+          cp[j] = tmp
+          return { ...f, linhas: cp.map((l, i) => ({ ...l, ordem: i })) }
+        })
+      )
+    },
+    [setFamiliasAndSave]
+  )
+
+  const toggleLinhaCorpo = useCallback((linhaId: string) => {
+    setLinhaCorpoAberto((prev) => ({
+      ...prev,
+      [linhaId]: !(prev[linhaId] !== false),
+    }))
+  }, [])
 
   const toggleModeloCorpo = useCallback((modeloId: string) => {
     setModeloCorpoAberto((prev) => ({
@@ -823,6 +858,14 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
                     >
                       {title}
                     </button>
+                    <p style={{ margin: 0, fontSize: '10px', color: '#64748b', lineHeight: 1.4 }}>
+                      {tr('bibliaNonatoFamiliaListaResumo', '{m} marcas · {n} modelos')
+                        .replace('{m}', String(f.linhas.length))
+                        .replace(
+                          '{n}',
+                          String(f.linhas.reduce((acc, l) => acc + l.modelos.length, 0))
+                        )}
+                    </p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                       <button
                         type="button"
@@ -869,58 +912,158 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
             <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>{tr('bibliaNonatoSemFamilias', 'Crie uma família para começar.')}</p>
           ) : (
             <>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#93c5fd', marginBottom: '8px', letterSpacing: '0.08em' }}>
-                {tr('bibliaNonatoNomeFamiliaLabel', 'Nome da família')}
-              </label>
-              <input
-                value={selected.nome}
-                onChange={(e) => updateFamiliaNome(selected.id, e.target.value)}
-                placeholder={tr('bibliaNonatoNomeFamiliaPlaceholder', 'Ex.: Família das seccionadoras')}
-                style={{ ...inputStyle, marginBottom: '18px' }}
-              />
-
-              <div style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.1em', color: '#93c5fd', marginBottom: '12px' }}>
-                {tr('bibliaNonatoLinhasTitulo', 'LINHAS (MARCA / MODELOS)')}
+              <div
+                style={{
+                  borderRadius: '14px',
+                  border: '2px solid rgba(45, 212, 191, 0.4)',
+                  background: 'linear-gradient(165deg, rgba(13, 148, 136, 0.16) 0%, rgba(2, 6, 23, 0.78) 50%)',
+                  padding: '16px',
+                  marginBottom: '20px',
+                }}
+              >
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '10px', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '0.14em', color: '#5eead4' }}>
+                    {tr('bibliaNonatoFamiliaConteudoTitulo', 'TUDO NESTA FAMÍLIA')}
+                  </span>
+                  <span style={{ fontSize: '15px', fontWeight: 800, color: '#ecfeff' }}>
+                    {(selected.nome || '').trim() || tr('bibliaNonatoSemNomeFamilia', '(Sem nome)')}
+                  </span>
+                </div>
+                <p style={{ margin: '0 0 14px', fontSize: '12px', color: '#94a3b8', lineHeight: 1.55 }}>
+                  {tr(
+                    'bibliaNonatoFamiliaConteudoAjuda',
+                    'A família é o «sítio» do equipamento (ex.: Seccionadoras). As marcas (Weeke, Homag…) ficam cada uma no seu bloco abaixo — nada se mistura com outras famílias.'
+                  )}
+                </p>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#a5f3fc', marginBottom: '8px', letterSpacing: '0.08em' }}>
+                  {tr('bibliaNonatoNomeFamiliaLabel', 'Nome da família')}
+                </label>
+                <input
+                  value={selected.nome}
+                  onChange={(e) => updateFamiliaNome(selected.id, e.target.value)}
+                  placeholder={tr('bibliaNonatoNomeFamiliaPlaceholder', 'Ex.: Seccionadoras')}
+                  style={{ ...inputStyle, marginBottom: 0 }}
+                />
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {selected.linhas.map((linha) => (
+              <div style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.1em', color: '#93c5fd', marginBottom: '12px' }}>
+                {tr('bibliaNonatoMarcasNaFamiliaTitulo', 'MARCAS — cada uma no seu bloco')}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {selected.linhas.map((linha, li) => {
+                  const marcaAberta = linhaCorpoAberto[linha.id] !== false
+                  const nMod = linha.modelos.length
+                  return (
                   <div
                     key={linha.id}
                     style={{
-                      padding: '14px',
-                      borderRadius: '10px',
-                      border: '1px solid rgba(148, 163, 184, 0.25)',
-                      background: 'rgba(2, 6, 23, 0.5)',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(59, 130, 246, 0.45)',
+                      background: 'rgba(15, 23, 42, 0.82)',
+                      overflow: 'hidden',
                     }}
                   >
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
-                      <div>
-                        <label style={{ fontSize: '10px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
-                          {tr('bibliaNonatoLinhaTituloLabel', 'Marca ou grupo (opcional)')}
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        alignItems: 'flex-start',
+                        gap: '10px',
+                        padding: '12px 14px',
+                        background: 'rgba(30, 58, 138, 0.32)',
+                        borderBottom: marcaAberta ? '1px solid rgba(148, 163, 184, 0.22)' : 'none',
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleLinhaCorpo(linha.id)}
+                        title={
+                          marcaAberta
+                            ? tr('bibliaNonatoModeloRetrair', 'Retrair')
+                            : tr('bibliaNonatoModeloExpandir', 'Expandir')
+                        }
+                        aria-expanded={marcaAberta}
+                        style={{
+                          ...btnOutline,
+                          padding: '8px 10px',
+                          fontSize: '14px',
+                          lineHeight: 1,
+                          flexShrink: 0,
+                          marginTop: '18px',
+                        }}
+                      >
+                        {marcaAberta ? '▼' : '▶'}
+                      </button>
+                      <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                        <label style={{ fontSize: '10px', color: '#bae6fd', display: 'block', marginBottom: '4px', fontWeight: 700 }}>
+                          {tr('bibliaNonatoMarcaBlocoLabel', 'Marca / fornecedor (fica só neste bloco)')}
                         </label>
                         <input
                           value={linha.titulo}
                           onChange={(e) => updateLinha(selected.id, linha.id, { titulo: e.target.value })}
-                          placeholder={tr('bibliaNonatoLinhaTituloPlaceholder', 'Homag · Brandt · Weeke…')}
-                          style={inputStyle}
+                          placeholder={tr('bibliaNonatoLinhaTituloPlaceholder', 'Ex.: Weeke')}
+                          style={{ ...inputStyle, fontWeight: 600 }}
                         />
+                        {!marcaAberta && (
+                          <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#64748b', lineHeight: 1.45 }}>
+                            {tr('bibliaNonatoLinhaResumoModelos', '{n} modelo(s)').replace('{n}', String(nMod))}{' '}
+                            · {tr('bibliaNonatoLinhaResumoDica', 'Expandir para ver ou editar')}
+                          </p>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', flexShrink: 0, marginTop: '18px' }}>
+                        <button
+                          type="button"
+                          style={{
+                            ...btnOutline,
+                            padding: '4px 8px',
+                            fontSize: '10px',
+                            opacity: li <= 0 ? 0.45 : 1,
+                          }}
+                          disabled={li <= 0}
+                          onClick={() => moveLinha(selected.id, linha.id, -1)}
+                          title={tr('bibliaNonatoLinhaMoverCima', 'Subir esta marca na lista')}
+                        >
+                          ↑ {tr('bibliaNonatoMoverCima', 'Subir')}
+                        </button>
+                        <button
+                          type="button"
+                          style={{
+                            ...btnOutline,
+                            padding: '4px 8px',
+                            fontSize: '10px',
+                            opacity: li >= selected.linhas.length - 1 ? 0.45 : 1,
+                          }}
+                          disabled={li >= selected.linhas.length - 1}
+                          onClick={() => moveLinha(selected.id, linha.id, 1)}
+                          title={tr('bibliaNonatoLinhaMoverBaixo', 'Descer esta marca na lista')}
+                        >
+                          ↓ {tr('bibliaNonatoMoverBaixo', 'Descer')}
+                        </button>
                       </div>
                     </div>
 
-                    <div
-                      style={{
-                        marginTop: '14px',
-                        fontSize: '10px',
-                        fontWeight: 700,
-                        letterSpacing: '0.08em',
-                        color: '#7dd3fc',
-                      }}
-                    >
-                      {tr('bibliaNonatoModelosNaLinhaTitulo', 'MODELOS NESTA LINHA')}
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}>
+                    {marcaAberta ? (
+                      <div
+                        style={{
+                          padding: '14px 14px 16px 16px',
+                          marginLeft: '6px',
+                          borderLeft: '3px solid rgba(56, 189, 248, 0.55)',
+                        }}
+                      >
+                        <div
+                          style={{
+                            marginBottom: '12px',
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            letterSpacing: '0.08em',
+                            color: '#7dd3fc',
+                          }}
+                        >
+                          {tr('bibliaNonatoModelosDentroMarca', 'MODELOS NESTA MARCA')}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       {linha.modelos.map((modelo, mi) => {
                         const detalheAberto = modeloCorpoAberto[modelo.id] !== false
                         const nAnexos = (modelo.anexos || []).length
@@ -1163,23 +1306,30 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
                         </div>
                         )
                       })}
-                    </div>
+                        </div>
 
-                    <button
-                      type="button"
-                      style={{ ...btnOutline, marginTop: '12px', width: '100%', boxSizing: 'border-box' }}
-                      onClick={() => addModelo(selected.id, linha.id)}
-                    >
-                      + {tr('bibliaNonatoNovoModelo', 'Adicionar modelo')}
-                    </button>
+                        <button
+                          type="button"
+                          style={{ ...btnOutline, marginTop: '12px', width: '100%', boxSizing: 'border-box' }}
+                          onClick={() => addModelo(selected.id, linha.id)}
+                        >
+                          + {tr('bibliaNonatoNovoModelo', 'Adicionar modelo')}
+                        </button>
 
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
-                      <button type="button" style={{ ...btnDanger, padding: '6px 10px', fontSize: '11px' }} onClick={() => removeLinha(selected.id, linha.id)}>
-                        {tr('bibliaNonatoRemoverLinha', 'Remover linha')}
-                      </button>
-                    </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                          <button
+                            type="button"
+                            style={{ ...btnDanger, padding: '6px 10px', fontSize: '11px' }}
+                            onClick={() => removeLinha(selected.id, linha.id)}
+                          >
+                            {tr('bibliaNonatoRemoverLinha', 'Remover linha')}
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
-                ))}
+                  )
+                })}
               </div>
 
               <button type="button" style={{ ...btnOutline, marginTop: '16px' }} onClick={() => addLinha(selected.id)}>
