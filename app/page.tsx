@@ -40,6 +40,7 @@ import { WritingAssistFab, WritingLanguageAssistModal } from './components/Writi
 import { WritingAssistFieldContext } from './context/WritingAssistFieldContext'
 import { AssistTextarea, AssistInput } from './components/AssistTextFields'
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
+import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 import { OrcamentoServicoTecnicoContent } from './components/OrcamentoServicoTecnicoContent'
 import { NonatoBrandLogo } from './components/NonatoBrandLogo'
@@ -356,6 +357,7 @@ type SidebarGroup =
   | 'checklist-group'
   | 'comunicacao-interna'
   | 'manuais-informacoes-tecnicas'
+  | 'biblia-nonato-service'
   | 'almoxarifado-armazem'
   | 'empresa-institucional'
   | 'outros'
@@ -465,6 +467,7 @@ const SIDEBAR_GROUPS: SidebarGroup[] = [
   'gestao-industrial',
   'comunicacao-interna',
   'manuais-informacoes-tecnicas',
+  'biblia-nonato-service',
   'almoxarifado-armazem',
   'gestao-financeira',
   'empresa-institucional',
@@ -521,6 +524,7 @@ const SIDEBAR_TRANSLATION_KEY_BY_ID: Record<string, string> = {
   'mapa-visual-separacao-pecas-default': 'mapaVisualSeparacaoPecasTitle',
   'desmontados-default': 'desmontadosTitle',
   'manuais-informacoes-tecnicas-default': 'manuaisInformacoesTecnicasTitle',
+  'biblia-nonato-service-default': 'bibliaNonatoServiceTitle',
   'almoxarifado-armazem-default': 'almoxarifadoArmazemTitle',
   'gestao-tecnica-default': 'gestaoTecnicaTitle',
   'parceiros-comercial-default': 'parceirosComercialTitle',
@@ -593,6 +597,7 @@ function getDefaultSidebarGroup(buttonId: string): SidebarGroup {
   if (['clientes-financeiro-default'].includes(buttonId)) return 'gestao-financeira'
   if (['hub-comunicacao-default', 'mensagens-internas-default', 'mensagens-internas-tecnicos-default', 'alerta-mensagens-default'].includes(buttonId)) return 'comunicacao-interna'
   if (['manuais-informacoes-tecnicas-default'].includes(buttonId)) return 'manuais-informacoes-tecnicas'
+  if (['biblia-nonato-service-default'].includes(buttonId)) return 'biblia-nonato-service'
   if (['almoxarifado-armazem-default'].includes(buttonId)) return 'almoxarifado-armazem'
   if (
     [
@@ -2260,7 +2265,7 @@ type GrupoChecklist = {
   dataCriacao: string
 }
 
-type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-pagamento-transferencia' | 'ficha-fatura-cliente' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'gestao-demos' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'orcamento-servico-tecnico' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa' | 'informacoes-mecanicas-eletricas'
+type TabType = 'gestores' | 'equipamentos' | 'familias-grupos' | 'familias-grupos-equipamentos' | 'users' | 'extras' | 'cadastro-nonato-service' | 'ficha-pagamento-transferencia' | 'ficha-fatura-cliente' | 'clientes' | 'fornecedores' | 'relatorio-servico' | 'pecas-substituicao' | 'biblioteca-pecas' | 'importacao-pecas' | 'solicitacao-servico-tecnico' | 'agenda' | 'desmontados' | 'cadastro-servicos' | 'fechamento-relatorios-servicos' | 'translator' | 'administrador' | 'gestao-demos' | 'estado-visual-tecnico' | 'informacoes-conhecimento-tecnicos' | 'gestao-custos' | 'biblioteca-relatorios' | 'relatorios-excluidos-clientes' | 'gestao-financeira' | 'clientes-financeiro' | 'comprovantes-despesas' | 'orcamentos-avulso' | 'pedido-orcamentos-avulso' | 'orcamento-servico-tecnico' | 'registro-despesas' | 'manuais-informacoes-tecnicas' | 'biblia-nonato-service' | 'almoxarifado-armazem' | 'pre-checklist' | 'checklist' | 'checklist-hub' | 'comunicacao-interna' | 'hub-comunicacao' | 'mensagens-internas' | 'mensagens-internas-tecnicos' | 'tecnicos-internos' | 'tecnicos-externos' | 'alerta-mensagens' | 'gestao-grupos-checklist' | 'mapa-visual-separacao-pecas' | 'ordem-preparacao' | 'formularios-checklist-tecnicos' | 'verificacao-final-entrega' | 'protocolos-servico' | 'manual-programa' | 'informacoes-mecanicas-eletricas'
 
 type Tab = {
   id: string
@@ -2333,6 +2338,7 @@ function getDemoModuleLabelForGrid(action: string): string {
     'open-quick-biblioteca-pecas': 'Atalho: Biblioteca de peças',
     'open-relatorios-excluidos-clientes': 'Relatórios excluídos (clientes)',
     'open-manuais-informacoes-tecnicas': 'Manuais e informações técnicas',
+    'open-biblia-nonato-service': 'Bíblia da Nonato Service',
     'open-almoxarifado-armazem': 'Almoxarifado / armazém',
     'open-ficha-pagamento-transferencia': 'Ficha para transferência / pagamento',
     'open-ficha-fatura-cliente': 'Ficha para o cliente emitir fatura',
@@ -2381,6 +2387,7 @@ const HUB_CARD_DESC_BY_BUTTON_ID: Record<string, readonly string[]> = {
   'mensagens-internas-tecnicos-default': ['mensagensInternasTecnicosHubCardDesc'],
   'alerta-mensagens-default': ['alertaMensagensDesc'],
   'manuais-informacoes-tecnicas-default': ['manuaisInformacoesTecnicasDesc', 'quickAccessManuaisDesc'],
+  'biblia-nonato-service-default': ['bibliaNonatoHubCardDesc', 'bibliaNonatoQuickDesc'],
   'almoxarifado-armazem-default': ['quickAccessAlmoxarifadoDesc', 'almoxarifadoArmazemDesc'],
   'cadastro-nonato-service-default': ['cadastroNonatoServiceInfo'],
   'ficha-pagamento-transferencia-default': ['empresaInstHubCardPagamento'],
@@ -3467,6 +3474,7 @@ export default function Dashboard() {
       'registro-despesas': 'open-registro-despesas',
       'mapa-visual-separacao-pecas': 'open-mapa-visual-separacao-pecas',
       'manuais-informacoes-tecnicas': 'open-manuais-informacoes-tecnicas',
+      'biblia-nonato-service': 'open-biblia-nonato-service',
       'almoxarifado-armazem': 'open-almoxarifado-armazem',
       'pre-checklist': 'open-pre-checklist',
       checklist: 'open-checklist',
@@ -4540,6 +4548,7 @@ export default function Dashboard() {
       'comprovantes-despesas': t?.comprovantesDespesasTitle || 'REGISTRO DE DESPESAS PAGAS COM O CARTÃO PARA DECLARAÇÃO DE IRS',
       'mapa-visual-separacao-pecas': t?.mapaVisualSeparacaoPecasTitle || 'Mapa Visual de Separação de Peças / Cliente',
       'manuais-informacoes-tecnicas': t?.manuaisInformacoesTecnicasTitle || 'Manuais e Informações Técnica dos Equipamentos',
+      'biblia-nonato-service': (t as any)?.bibliaNonatoServiceTitle || 'Bíblia da Nonato Service',
       'almoxarifado-armazem': t?.almoxarifadoArmazemTitle || 'Almoxarifado / Armazém',
       'checklist': t?.checklistTitle || 'CHECKLIST',
       'checklist-hub': t?.checklistGroupTitle || 'GESTÃO DOS CHECKLIST',
@@ -4674,6 +4683,7 @@ export default function Dashboard() {
       'biblioteca-relatorios': ['quickAccessBibliotecaRelatoriosDesc'],
       'gestao-financeira': ['gestaoFinanceiraDesc'],
       'manuais-informacoes-tecnicas': ['manuaisInformacoesTecnicasDesc', 'manuaisInformacoesTecnicasConteudo'],
+      'biblia-nonato-service': ['bibliaNonatoServiceDesc', 'bibliaNonatoQuickDesc'],
       'almoxarifado-armazem': ['almoxarifadoArmazemDesc'],
       'hub-comunicacao': ['hubComunicacaoDesc'],
       'protocolos-servico': ['protocolosServicoDesc'],
@@ -5149,6 +5159,7 @@ export default function Dashboard() {
       'open-translator',
       'open-manual-gestor',
       'open-gestao-demos',
+      'open-biblia-nonato-service',
     ]),
     []
   )
@@ -5212,6 +5223,7 @@ export default function Dashboard() {
       'open-quick-biblioteca-pecas',
       'open-relatorios-excluidos-clientes',
       'open-manuais-informacoes-tecnicas',
+      'open-biblia-nonato-service',
       'open-almoxarifado-armazem',
       'open-parceiros-comercial',
       'open-documentacao-relatorios',
@@ -8438,6 +8450,7 @@ export default function Dashboard() {
           'mapa-visual-separacao-pecas-default': { translationKey: 'mapaVisualSeparacaoPecasTitle', group: 'almoxarifado-armazem' },
           'desmontados-default': { translationKey: 'desmontadosTitle', group: 'gestao-industrial' },
           'manuais-informacoes-tecnicas-default': { translationKey: 'manuaisInformacoesTecnicasTitle', group: 'manuais-informacoes-tecnicas' },
+          'biblia-nonato-service-default': { translationKey: 'bibliaNonatoServiceTitle', group: 'biblia-nonato-service' },
           'almoxarifado-armazem-default': { translationKey: 'almoxarifadoArmazemTitle', group: 'almoxarifado-armazem' },
           'gestao-tecnica-default': { translationKey: 'gestaoTecnicaTitle' },
           'parceiros-comercial-default': { translationKey: 'parceirosComercialTitle' },
@@ -8516,6 +8529,7 @@ export default function Dashboard() {
                                b.id === 'orcamento-servico-tecnico-default' ? 'open-orcamento-servico-tecnico' :
                                b.id === 'mapa-visual-separacao-pecas-default' ? 'open-mapa-visual-separacao-pecas' :
                                b.id === 'manuais-informacoes-tecnicas-default' ? 'open-manuais-informacoes-tecnicas' :
+                               b.id === 'biblia-nonato-service-default' ? 'open-biblia-nonato-service' :
                                b.id === 'almoxarifado-armazem-default' ? 'open-almoxarifado-armazem' :
                                b.id === 'desmontados-default' ? 'open-desmontados' :
                                b.id === 'gestao-tecnica-default' ? 'open-gestao-tecnica' :
@@ -9452,12 +9466,36 @@ export default function Dashboard() {
         }
       }
 
-      // Adicionar botão Almoxarifado / Armazém como botão principal logo após Gestão Industrial (ou após Manuais)
+      const hasBibliaNonatoService = buttons.some((b: SidebarButton) => b.id === 'biblia-nonato-service-default')
+      if (!hasBibliaNonatoService) {
+        const gestaoIndustrialIndexForBiblia = buttons.findIndex(b => b.id === 'gestao-industrial-default')
+        const manuaisIndexForBiblia = buttons.findIndex(b => b.id === 'manuais-informacoes-tecnicas-default')
+        const bibliaNonatoButton: SidebarButton = {
+          id: 'biblia-nonato-service-default',
+          name: 'BÍBLIA DA NONATO SERVICE',
+          action: 'open-biblia-nonato-service',
+          order: manuaisIndexForBiblia >= 0 ? manuaisIndexForBiblia + 0.55 : buttons.length,
+          translationKey: 'bibliaNonatoServiceTitle',
+          group: 'biblia-nonato-service',
+          customName: false,
+        }
+        if (manuaisIndexForBiblia >= 0) {
+          buttons.splice(manuaisIndexForBiblia + 1, 0, bibliaNonatoButton)
+        } else if (gestaoIndustrialIndexForBiblia >= 0) {
+          buttons.splice(gestaoIndustrialIndexForBiblia + 1, 0, bibliaNonatoButton)
+        } else {
+          buttons.push(bibliaNonatoButton)
+        }
+      }
+
+      // Adicionar botão Almoxarifado / Armazém como botão principal logo após Gestão Industrial (ou após Manuais / Bíblia)
       if (!hasAlmoxarifadoArmazem) {
         const gestaoIndustrialIndex = buttons.findIndex(b => b.id === 'gestao-industrial-default')
         const manuaisIndex = buttons.findIndex(b => b.id === 'manuais-informacoes-tecnicas-default')
+        const bibliaIndex = buttons.findIndex(b => b.id === 'biblia-nonato-service-default')
+        const anchorAfter = bibliaIndex >= 0 ? bibliaIndex : manuaisIndex
         const insertPos = gestaoIndustrialIndex >= 0
-          ? (manuaisIndex >= 0 ? manuaisIndex + 1 : gestaoIndustrialIndex + 1)
+          ? (anchorAfter >= 0 ? anchorAfter + 1 : gestaoIndustrialIndex + 1)
           : buttons.length
         const almoxarifadoArmazemButton: SidebarButton = {
           id: 'almoxarifado-armazem-default',
@@ -9466,7 +9504,7 @@ export default function Dashboard() {
           order: insertPos,
           translationKey: 'almoxarifadoArmazemTitle'
         }
-        if (gestaoIndustrialIndex >= 0 || manuaisIndex >= 0) {
+        if (gestaoIndustrialIndex >= 0 || manuaisIndex >= 0 || bibliaIndex >= 0) {
           buttons.splice(insertPos, 0, almoxarifadoArmazemButton)
         } else {
           buttons.push(almoxarifadoArmazemButton)
@@ -22587,6 +22625,7 @@ export default function Dashboard() {
     'open-relatorios-excluidos-clientes': 'clientes',
     'open-protocolos-servico': 'relatorioServico',
     'open-manuais-informacoes-tecnicas': 'equipamentos',
+    'open-biblia-nonato-service': 'equipamentos',
     'open-almoxarifado-armazem': 'extras',
     'open-quick-gestao-custos': 'cadastroServicos',
     'open-quick-gestao-financeira': 'extras',
@@ -23075,6 +23114,8 @@ export default function Dashboard() {
       openTab('mapa-visual-separacao-pecas', getTabTitle('mapa-visual-separacao-pecas'))
     } else if (action === 'open-manuais-informacoes-tecnicas') {
       openTab('manuais-informacoes-tecnicas', getTabTitle('manuais-informacoes-tecnicas'))
+    } else if (action === 'open-biblia-nonato-service') {
+      openTab('biblia-nonato-service', getTabTitle('biblia-nonato-service'))
     } else if (action === 'open-almoxarifado-armazem') {
       openTab('almoxarifado-armazem', getTabTitle('almoxarifado-armazem'))
     } else if (action === 'open-quick-gestao-custos') {
@@ -56069,6 +56110,15 @@ A1;Peça exemplo;10`}
       case 'manuais-informacoes-tecnicas':
         return ManuaisInformacoesTabContent()
 
+      case 'biblia-nonato-service':
+        return (
+          <BibliaNonatoServiceContent
+            t={safeT as Record<string, string | undefined>}
+            onClose={() => closeTab(activeTabId || '')}
+            onHome={voltarPaginaInicial}
+          />
+        )
+
       case 'informacoes-conhecimento-tecnicos':
         {
           const nivelOpcoes = [
@@ -60106,6 +60156,8 @@ A1;Peça exemplo;10`}
         return (safeT as any)?.comunicacaoInternaTitle || 'COMUNICAÇÃO INTERNA'
       case 'manuais-informacoes-tecnicas':
         return (safeT as any)?.manuaisInformacoesTecnicasTitle || 'MANUAIS E INFORMAÇÕES TÉCNICAS'
+      case 'biblia-nonato-service':
+        return (safeT as any)?.bibliaNonatoServiceTitle || 'BÍBLIA DA NONATO SERVICE'
       case 'almoxarifado-armazem':
         return (safeT as any)?.almoxarifadoArmazemTitle || 'ALMOXARIFADO / ARMAZÉM'
       case 'empresa-institucional':
@@ -60124,6 +60176,8 @@ A1;Peça exemplo;10`}
         return (t as any).manualProgramaTitle || 'Manual do programa'
       case 'manuais-informacoes-main':
         return (t as any).manuaisInformacoesTecnicasTitle || 'Manuais e informações técnicas'
+      case 'biblia-nonato-main':
+        return (t as any).bibliaNonatoServiceTitle || 'Bíblia da Nonato Service'
       case 'almoxarifado-main':
         return (t as any).almoxarifadoArmazemTitle || 'Almoxarifado / Armazém'
       case 'empresa-institucional-main':
@@ -60405,6 +60459,18 @@ A1;Peça exemplo;10`}
           title: getButtonName(bb),
           desc: descForHubRow(bb.id, bb.action),
           icon: '📖',
+          action: bb.action,
+          buttonId: bb.id
+        })
+      }
+    } else if (hubId === 'biblia-nonato-main') {
+      const bb = sidebarButtons.find((b) => b.id === 'biblia-nonato-service-default')
+      if (bb && canAccessAction(bb.action)) {
+        rows.push({
+          key: bb.id,
+          title: getButtonName(bb),
+          desc: descForHubRow(bb.id, bb.action),
+          icon: '📚',
           action: bb.action,
           buttonId: bb.id
         })
@@ -66096,6 +66162,84 @@ A1;Peça exemplo;10`}
           })}
         </div>
 
+        {/* Bíblia Nonato Service — espaço dedicado (separado dos manuais oficiais) */}
+        <div className="sidebar-nav-cluster">
+        {sidebarButtons
+          .filter(b => b.id === 'biblia-nonato-service-default')
+          .map((button) => {
+            const isSelected = selectedSidebarButton === button.action
+            return (
+              <div key={button.id} className="sidebar-nav-subcluster">
+                <button
+                  type="button"
+                  className={`btn-primary sidebar-group-header${isSelected ? ' sidebar-group-btn-selected' : ''}`}
+                  onClick={() => toggleOrOpenDashboardHub('biblia-nonato-main', 'biblia-nonato-main')}
+                >
+                  {isSelected && (
+                    <span className="sidebar-nav-check" aria-hidden>✓</span>
+                  )}
+                  <span className="sidebar-nav-label sidebar-nav-label--stacked">
+                    <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} aria-hidden>
+                      📚
+                    </span>
+                    <span className="sidebar-nav-label-stack">
+                      <span className="sidebar-nav-label-text">{getButtonName(button)}</span>
+                    </span>
+                  </span>
+                  <span className="sidebar-nav-chevron" aria-hidden>{expandedGroups.has('biblia-nonato-main') ? '▼' : '▶'}</span>
+                  {String(
+                    pickTrChain(trCardDesc, ['bibliaNonatoQuickDesc', 'bibliaNonatoHubCardDesc']) || ''
+                  ).trim() ? (
+                    <span className="sidebar-tip-bubble" role="tooltip">
+                      {pickTrChain(trCardDesc, ['bibliaNonatoQuickDesc', 'bibliaNonatoHubCardDesc']) || ''}
+                    </span>
+                  ) : null}
+                </button>
+                {expandedGroups.has('biblia-nonato-main') && canAccessAction(button.action) && (
+                  <div className="sidebar-action-buttons">
+                    <button
+                      type="button"
+                      className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
+                        isSelected ? ' sidebar-action-btn-active' : ''
+                      }`}
+                      data-sidebar-nav-action={button.action}
+                      onClick={() => handleButtonClick(button.action)}
+                    >
+                      {isSelected && (
+                        <span className="sidebar-nav-check" aria-hidden>✓</span>
+                      )}
+                      <span className="sidebar-empresa-entry-row">
+                        <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                          📚
+                        </span>
+                        <span className="sidebar-empresa-entry-text">
+                          <span className="sidebar-empresa-entry-title">{getButtonName(button)}</span>
+                        </span>
+                      </span>
+                      <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                        ›
+                      </span>
+                      {(() => {
+                        const mh = resolveActionCardDescription(
+                          trCardDesc,
+                          button.id,
+                          button.action,
+                          pickTrChain(trCardDesc, ['mainHubCardHint'])
+                        )
+                        return mh?.trim() ? (
+                          <span className="sidebar-tip-bubble" role="tooltip">
+                            {mh}
+                          </span>
+                        ) : null
+                      })()}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
         {/* Armazém / almoxarifado e mapa de separação (mesmo cluster lógico) */}
         {getButtonsByGroup('almoxarifado-armazem').some((b) => canAccessAction(b.action)) && (
           <div className="sidebar-nav-cluster">
@@ -67152,6 +67296,7 @@ A1;Peça exemplo;10`}
                   { action: 'open-quick-gestao-custos', titleKey: 'gestaoCustosTitle', descKey: 'quickAccessGestaoCustosDesc', icon: '💰', titleFallback: 'GESTÃO DE CUSTOS', descFallback: 'Orçamentos, despesas e mapas.' },
                   { action: 'open-quick-biblioteca-pecas', titleKey: 'bibliotecaPecasTitle', descKey: 'quickAccessBibliotecaPecasDesc', icon: '🔩', titleFallback: 'BIBLIOTECA DE PEÇAS', descFallback: 'Cadastro e biblioteca de peças.' },
                   { action: 'open-manuais-informacoes-tecnicas', titleKey: 'manuaisInformacoesTecnicasTitle', descKey: 'quickAccessManuaisDesc', icon: '📖', titleFallback: 'MANUAIS E INFORMAÇÕES TÉCNICAS', descFallback: 'Manuais por família, grupo e modelo.' },
+                  { action: 'open-biblia-nonato-service', titleKey: 'bibliaNonatoServiceTitle', descKey: 'bibliaNonatoQuickDesc', icon: '📚', titleFallback: 'BÍBLIA DA NONATO SERVICE', descFallback: 'Referências por família, marca e modelo (uso interno).' },
                   { action: 'open-almoxarifado-armazem', titleKey: 'almoxarifadoArmazemTitle', descKey: 'quickAccessAlmoxarifadoDesc', icon: '🏪', titleFallback: 'ALMOXARIFADO / ARMAZÉM', descFallback: 'Stock, pedidos e armazém.' },
                   { action: 'open-quick-gestao-financeira', titleKey: 'gestaoFinanceiraTitle', descKey: 'gestaoFinanceiraDesc', icon: '📊', titleFallback: 'GESTÃO FINANCEIRA', descFallback: 'Finanças e controlo.' },
                   {
@@ -69156,6 +69301,7 @@ A1;Peça exemplo;10`}
                                   button.group === 'checklist-group' ? (safeT?.checklistGroupTitle || 'CHECKLIST') :
                                   button.group === 'comunicacao-interna' ? ((safeT as any)?.comunicacaoInternaTitle || 'COMUNICAÇÃO INTERNA') :
                                   button.group === 'manuais-informacoes-tecnicas' ? ((safeT as any)?.manuaisInformacoesTecnicasTitle || 'MANUAIS') :
+                                  button.group === 'biblia-nonato-service' ? ((safeT as any)?.bibliaNonatoServiceTitle || 'BÍBLIA') :
                                   button.group === 'almoxarifado-armazem' ? ((safeT as any)?.almoxarifadoArmazemTitle || 'ALMOXARIFADO') :
                                   (safeT?.outrosBotoes || 'OUTROS')})
                               </span>
@@ -69187,6 +69333,7 @@ A1;Peça exemplo;10`}
                                 <option value="checklist-group">{safeT?.checklistGroupTitle || 'GESTÃO DOS CHECKLIST'}</option>
                                 <option value="gestao-industrial">{safeT?.gestaoIndustrialTitle || 'GESTÃO INDUSTRIAL'}</option>
                                 <option value="manuais-informacoes-tecnicas">{(safeT as any)?.manuaisInformacoesTecnicasTitle || 'MANUAIS E INFORMAÇÕES TÉCNICAS'}</option>
+                                <option value="biblia-nonato-service">{(safeT as any)?.bibliaNonatoServiceTitle || 'BÍBLIA DA NONATO SERVICE'}</option>
                                 <option value="almoxarifado-armazem">{(safeT as any)?.almoxarifadoArmazemTitle || 'ALMOXARIFADO / ARMAZÉM'}</option>
                                 <option value="gestao-financeira">{safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}</option>
                                 <option value="outros">{safeT?.outrosBotoes || 'OUTROS'}</option>
@@ -69483,6 +69630,39 @@ A1;Peça exemplo;10`}
                         return (
                           <div key={button.id} draggable onDragStart={() => handleDragStart(button.id)} onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)} onDragLeave={handleDragLeave}
                             onDrop={(e) => { e.preventDefault(); handleDropWithGroup(e, globalIndex >= 0 ? globalIndex : index, 'manuais-informacoes-tecnicas') }} onDragEnd={handleDragEnd}
+                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+                              <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
+                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '5px 12px', fontSize: '11px', whiteSpace: 'nowrap', minWidth: '60px' }}>{safeT?.edit || 'Editar'}</button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                  </div>
+                )}
+              </div>
+
+              {/* Grupo: BÍBLIA DA NONATO SERVICE */}
+              <div className="admin-group-panel">
+                <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
+                  {(safeT as any)?.bibliaNonatoServiceTitle || 'BÍBLIA DA NONATO SERVICE'}
+                </h4>
+                {getButtonsByGroup('biblia-nonato-service').length === 0 ? (
+                  <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center' }}>
+                    {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
+                  </p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {getButtonsByGroup('biblia-nonato-service')
+                      .sort((a, b) => a.order - b.order)
+                      .map((button, index) => {
+                        const globalIndex = sidebarButtons.findIndex(b => b.id === button.id)
+                        return (
+                          <div key={button.id} draggable onDragStart={() => handleDragStart(button.id)} onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)} onDragLeave={handleDragLeave}
+                            onDrop={(e) => { e.preventDefault(); handleDropWithGroup(e, globalIndex >= 0 ? globalIndex : index, 'biblia-nonato-service') }} onDragEnd={handleDragEnd}
                             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
                               <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>

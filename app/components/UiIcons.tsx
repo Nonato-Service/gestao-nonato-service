@@ -435,6 +435,7 @@ const TAB_ICONS: Record<string, IconComp> = {
   users: IconUsers,
   extras: IconPlusCircle,
   'manuais-informacoes-tecnicas': IconBookOpen,
+  'biblia-nonato-service': IconLayers,
 }
 
 /** Ícone SVG por tipo de módulo (separador): traço único, escala com `size`, cor = `currentColor`. */
