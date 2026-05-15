@@ -244,9 +244,9 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
   const [familias, setFamilias] = useState<BibliaFamiliaRow[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [busca, setBusca] = useState('')
-  /** `false` = bloco da marca/linha retraído (só cabeçalho); ausente/`true` = expandido */
+  /** Só expandido quando `true` explícito (por defeito marcas contraídas) */
   const [linhaCorpoAberto, setLinhaCorpoAberto] = useState<Record<string, boolean>>({})
-  /** `false` = corpo do modelo retraído (só cabeçalho com nome); ausente/`true` = expandido */
+  /** Só expandido quando `true` explícito (por defeito modelos contraídos) */
   const [modeloCorpoAberto, setModeloCorpoAberto] = useState<Record<string, boolean>>({})
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const attachTargetRef = useRef<{ familiaId: string; linhaId: string; modeloId: string } | null>(null)
@@ -309,6 +309,25 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
 
   const selected = familias.find((f) => f.id === selectedId) ?? familiasFiltradas[0]
 
+  const modelosResumoNaFamilia = useMemo(() => {
+    if (!selected?.id) return [] as { linhaId: string; modeloId: string; marca: string; nome: string }[]
+    const fbMarca = tr('bibliaNonatoSemMarcaLista', '(Sem marca)')
+    const fbMod = tr('bibliaNonatoSemNomeModeloLista', '(Sem nome do modelo)')
+    const out: { linhaId: string; modeloId: string; marca: string; nome: string }[] = []
+    for (const l of selected.linhas) {
+      const marca = (l.titulo || '').trim() || fbMarca
+      for (const m of l.modelos) {
+        out.push({
+          linhaId: l.id,
+          modeloId: m.id,
+          marca,
+          nome: (m.nome || '').trim() || fbMod,
+        })
+      }
+    }
+    return out
+  }, [selected, tr])
+
   const setFamiliasAndSave = useCallback(
     (updater: (prev: BibliaFamiliaRow[]) => BibliaFamiliaRow[]) => {
       setFamilias((prev) => {
@@ -369,7 +388,6 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
   const addLinha = useCallback(
     (familiaId: string) => {
       const lid = newId()
-      setLinhaCorpoAberto((p) => ({ ...p, [lid]: true }))
       setFamiliasAndSave((prev) =>
         prev.map((f) => {
           if (f.id !== familiaId) return f
@@ -447,7 +465,6 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
   const addModelo = useCallback(
     (familiaId: string, linhaId: string) => {
       const novoId = newId()
-      setModeloCorpoAberto((p) => ({ ...p, [novoId]: true }))
       setFamiliasAndSave((prev) =>
         prev.map((f) => {
           if (f.id !== familiaId) return f
@@ -540,18 +557,20 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
   const toggleLinhaCorpo = useCallback((linhaId: string) => {
     setLinhaCorpoAberto((prev) => ({
       ...prev,
-      [linhaId]: !(prev[linhaId] !== false),
+      [linhaId]: !(prev[linhaId] === true),
     }))
   }, [])
 
   const toggleModeloCorpo = useCallback((modeloId: string) => {
     setModeloCorpoAberto((prev) => ({
       ...prev,
-      [modeloId]: !(prev[modeloId] !== false),
+      [modeloId]: !(prev[modeloId] === true),
     }))
   }, [])
 
   const clickAdicionarAnexos = useCallback((familiaId: string, linhaId: string, modeloId: string) => {
+    setLinhaCorpoAberto((p) => ({ ...p, [linhaId]: true }))
+    setModeloCorpoAberto((p) => ({ ...p, [modeloId]: true }))
     attachTargetRef.current = { familiaId, linhaId, modeloId }
     fileInputRef.current?.click()
   }, [])
@@ -946,13 +965,96 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
                 />
               </div>
 
+              <div
+                style={{
+                  marginBottom: '20px',
+                  padding: '14px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(34, 197, 94, 0.32)',
+                  background: 'rgba(2, 23, 12, 0.58)',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: 800,
+                    letterSpacing: '0.12em',
+                    color: '#86efac',
+                    marginBottom: '8px',
+                  }}
+                >
+                  {tr('bibliaNonatoModelosFamiliaListaTitulo', 'MODELOS NESTA FAMÍLIA')}
+                </div>
+                <p style={{ margin: '0 0 10px', fontSize: '11px', color: '#64748b', lineHeight: 1.45 }}>
+                  {tr(
+                    'bibliaNonatoModelosFamiliaListaAjuda',
+                    'Ao escolher a família, vê aqui todos os modelos. Toque numa linha para abrir a marca e o modelo nos blocos abaixo.'
+                  )}
+                </p>
+                {modelosResumoNaFamilia.length === 0 ? (
+                  <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>
+                    {tr('bibliaNonatoModelosFamiliaListaVazia', 'Ainda não há modelos registados nesta família.')}
+                  </p>
+                ) : (
+                  <ul
+                    style={{
+                      listStyle: 'none',
+                      padding: 0,
+                      margin: 0,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '6px',
+                      maxHeight: 'min(38vh, 320px)',
+                      overflowY: 'auto',
+                    }}
+                  >
+                    {modelosResumoNaFamilia.map((row) => (
+                      <li key={`${row.linhaId}-${row.modeloId}`}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLinhaCorpoAberto((p) => ({ ...p, [row.linhaId]: true }))
+                            setModeloCorpoAberto((p) => ({ ...p, [row.modeloId]: true }))
+                          }}
+                          style={{
+                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '10px',
+                            textAlign: 'left',
+                            padding: '10px 12px',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(148,163,184,0.22)',
+                            background: 'rgba(15,23,42,0.65)',
+                            color: '#e2e8f0',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            boxSizing: 'border-box',
+                          }}
+                        >
+                          <span style={{ minWidth: 0, wordBreak: 'break-word' }}>
+                            <span style={{ color: '#6ee7b7', fontWeight: 700 }}>{row.marca}</span>
+                            <span style={{ color: '#64748b', margin: '0 6px' }}>·</span>
+                            <span>{row.nome}</span>
+                          </span>
+                          <span style={{ fontSize: '10px', color: '#64748b', flexShrink: 0 }}>
+                            {tr('bibliaNonatoModelosFamiliaListaIr', 'Abrir')}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
               <div style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.1em', color: '#93c5fd', marginBottom: '12px' }}>
                 {tr('bibliaNonatoMarcasNaFamiliaTitulo', 'MARCAS — cada uma no seu bloco')}
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {selected.linhas.map((linha, li) => {
-                  const marcaAberta = linhaCorpoAberto[linha.id] !== false
+                  const marcaAberta = linhaCorpoAberto[linha.id] === true
                   const nMod = linha.modelos.length
                   return (
                   <div
@@ -1065,7 +1167,7 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       {linha.modelos.map((modelo, mi) => {
-                        const detalheAberto = modeloCorpoAberto[modelo.id] !== false
+                        const detalheAberto = modeloCorpoAberto[modelo.id] === true
                         const nAnexos = (modelo.anexos || []).length
                         return (
                         <div
