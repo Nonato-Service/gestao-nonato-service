@@ -61956,41 +61956,22 @@ A1;Peça exemplo;10`}
     }
 
     return (
-      <div style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
+      <div className="orcamentos-avulso-page">
         {/* Cabeçalho - padrão Visualizar Equipamento (verde, 1px, fundo suave) */}
-        <div style={{
-          marginBottom: '40px',
-          padding: '30px',
-          background: 'linear-gradient(135deg, rgba(0, 255, 0, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%)',
-          borderRadius: '12px',
-          border: '1px solid rgba(0, 255, 0, 0.3)',
-          boxShadow: '0 4px 20px rgba(0, 255, 0, 0.08)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+        <div className="orcamentos-avulso-header-card">
+          <div className="orcamentos-avulso-header-inner">
+            <div className="orcamentos-avulso-header-logo">
               <LogoComponent size="small" />
             </div>
-            <div style={{ textAlign: 'center', flex: 1 }}>
-              <h1 style={{
-                margin: 0,
-                fontSize: '32px',
-                fontWeight: 'bold',
-                color: '#66b3ff',
-                letterSpacing: '2px',
-                marginBottom: '8px'
-              }}>
+            <div className="orcamentos-avulso-header-title">
+              <h1>
                 {safeT?.orcamentosAvulsoTitle || 'ORÇAMENTOS AVULSO'}
               </h1>
-              <p style={{
-                margin: 0,
-                fontSize: '14px',
-                color: '#ccc',
-                opacity: 0.8
-              }}>
+              <p>
                 {safeT?.orcamentosAvulso || 'Orçamentos Avulso'}
               </p>
             </div>
-            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <div className="orcamentos-avulso-header-actions">
               <button 
                 className="btn-primary"
                 onClick={() => closeTab(activeTabId || '')}
@@ -62020,17 +62001,11 @@ A1;Peça exemplo;10`}
         </div>
 
         {/* Seleção do Tipo de Orçamento - padrão Visualizar Equipamento (1px, tabs verde) */}
-        <div style={{ 
-          marginBottom: '30px', 
-          padding: '20px', 
-          backgroundColor: '#141414', 
-          borderRadius: '12px', 
-          border: '1px solid rgba(0, 255, 0, 0.2)'
-        }}>
-          <h3 style={{ color: '#66b3ff', marginBottom: '20px', fontSize: '18px' }}>
+        <div className="orcamentos-avulso-tipo-section">
+          <h3>
             {safeT?.tipoOrcamento || 'Tipo de Orçamento'}
           </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginBottom: '15px' }}>
+          <div className="orcamentos-avulso-tipo-grid">
             {[
               { key: 'dados-fixos' as const, label: `📋 ${safeT?.dadosFixosNonato || 'Dados Fixos - NONATO SERVICE'}`, activeBg: 'rgba(0, 100, 255, 0.35)', activeBorder: 'rgba(0, 100, 255, 0.85)', inactiveBg: 'rgba(0, 100, 255, 0.12)', inactiveBorder: 'rgba(0, 100, 255, 0.5)', color: '#66b3ff' },
               { key: 'cliente-cadastrado' as const, label: `👤 ${safeT?.selecionarCliente || 'Selecionar Cliente Cadastrado'}`, activeBg: 'rgba(0, 100, 255, 0.35)', activeBorder: 'rgba(0, 100, 255, 0.85)', inactiveBg: 'rgba(0, 100, 255, 0.12)', inactiveBorder: 'rgba(0, 100, 255, 0.5)', color: '#66b3ff' },
@@ -62038,6 +62013,8 @@ A1;Peça exemplo;10`}
             ].map(({ key, label, activeBg, activeBorder, inactiveBg, inactiveBorder, color }) => (
               <button
                 key={key}
+                type="button"
+                className="orcamentos-avulso-tipo-btn"
                 onClick={() => {
                   if (key === 'dados-fixos') { setTipoOrcamento('dados-fixos'); setClienteSelecionado(null); setRelatorioSelecionado(null); setClienteCadastroPrioritarioFixo(null) }
                   else if (key === 'cliente-cadastrado') { setTipoOrcamento('cliente-cadastrado'); setRelatorioSelecionado(null); setClienteCadastroPrioritarioFixo(null) }
@@ -62071,7 +62048,7 @@ A1;Peça exemplo;10`}
               </button>
             ))}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
+          <div className="orcamentos-avulso-tipo-grid">
             {[
               { key: 'cliente-prioritario-fixo' as const, label: `⭐ ${safeT?.orcamentoClientePrioritarioFixo || 'Cliente Prioritário (Fixo)'}`, activeBg: 'rgba(255, 165, 0, 0.35)', activeBorder: 'rgba(255, 165, 0, 0.85)', inactiveBg: 'rgba(255, 165, 0, 0.12)', inactiveBorder: 'rgba(255, 165, 0, 0.5)', color: '#ffa500', glow: 'rgba(255, 165, 0, 0.5)' },
               { key: 'cliente-prioritario-valores' as const, label: `⭐💰 ${safeT?.orcamentoClientePrioritarioValores || 'Cliente Prioritário (com Valores)'}`, activeBg: 'rgba(255, 165, 0, 0.35)', activeBorder: 'rgba(255, 165, 0, 0.85)', inactiveBg: 'rgba(255, 165, 0, 0.12)', inactiveBorder: 'rgba(255, 165, 0, 0.5)', color: '#ffa500', glow: 'rgba(255, 165, 0, 0.5)' },
@@ -62079,6 +62056,8 @@ A1;Peça exemplo;10`}
             ].map(({ key, label, activeBg, activeBorder, inactiveBg, inactiveBorder, color, glow }) => (
               <button
                 key={key}
+                type="button"
+                className="orcamentos-avulso-tipo-btn"
                 onClick={() => {
                   if (key === 'orcamentos-gerados') { setTipoOrcamento('orcamentos-gerados'); setClienteCadastroPrioritarioFixo(null) }
                   else if (key === 'cliente-prioritario-fixo') { setTipoOrcamento('cliente-prioritario-fixo'); setClienteSelecionado(null); setRelatorioSelecionado(null) }

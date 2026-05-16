@@ -279,11 +279,6 @@ export function PedidoOrcamentosAvulsoContent({
     onGerarOrcamento?.()
   }
 
-  const containerStyle = {
-    padding: '30px',
-    maxWidth: '1600px',
-    margin: '0 auto' as const
-  }
   const headerStyle = {
     marginBottom: '40px',
     padding: '30px',
@@ -312,22 +307,22 @@ export function PedidoOrcamentosAvulsoContent({
   const labelStyle = { color: '#66b3ff', marginBottom: '10px', fontSize: '16px', display: 'block' as const, textTransform: 'uppercase' as const }
 
   return (
-    <div style={containerStyle}>
+    <div className="orcamentos-avulso-page">
       {/* Cabeçalho */}
-      <div style={headerStyle}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+      <div className="orcamentos-avulso-header-card" style={headerStyle}>
+        <div className="orcamentos-avulso-header-inner">
+          <div className="orcamentos-avulso-header-logo">
             <LogoComponent size="small" />
           </div>
-          <div style={{ textAlign: 'center', flex: 1 }}>
-            <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#66b3ff', letterSpacing: '2px', marginBottom: '8px', textTransform: 'uppercase' }}>
+          <div className="orcamentos-avulso-header-title">
+            <h1>
               {safeT?.pedidoOrcamentosAvulsoTitle || 'PEDIDO DE ORÇAMENTOS AVULSO'}
             </h1>
-            <p style={{ margin: 0, fontSize: '14px', color: '#ccc', opacity: 0.8, textTransform: 'uppercase' }}>
+            <p>
               {safeT?.pedidoOrcamentoAvulsoDesc || 'Cliente, equipamento e peças para orçamento'}
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          <div className="orcamentos-avulso-header-actions">
             <button
               className="btn-primary"
               onClick={() => closeTab(activeTabId)}
