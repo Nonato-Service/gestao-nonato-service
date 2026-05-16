@@ -83,6 +83,15 @@ function emptyLinha(ordem: number): BibliaMarcaLinha {
   return { id: newId(), titulo: '', ordem, modelos: [emptyModelo(0)] }
 }
 
+/** Nomes dos modelos numa linha (marca fechada) — maxMostrar + (+N) se houver mais. */
+function resumoNomesModelos(modelos: BibliaModeloRow[], maxMostrar: number, semNome: string): string {
+  const nomes = modelos.map((m) => (m.nome || '').trim() || semNome)
+  if (nomes.length === 0) return ''
+  const slice = nomes.slice(0, maxMostrar)
+  const mais = nomes.length > maxMostrar ? ` (+${nomes.length - maxMostrar})` : ''
+  return slice.join(', ') + mais
+}
+
 /** Migra texto antigo (várias linhas ou "A, B, C") para cartões de modelo; anexos legacy ficam no 1.º modelo. */
 function tokensFromLegacyModelosTexto(text: string): string[] {
   const lines = text
@@ -308,25 +317,6 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
   }, [familias, q])
 
   const selected = familias.find((f) => f.id === selectedId) ?? familiasFiltradas[0]
-
-  const modelosResumoNaFamilia = useMemo(() => {
-    if (!selected?.id) return [] as { linhaId: string; modeloId: string; marca: string; nome: string }[]
-    const fbMarca = tr('bibliaNonatoSemMarcaLista', '(Sem marca)')
-    const fbMod = tr('bibliaNonatoSemNomeModeloLista', '(Sem nome do modelo)')
-    const out: { linhaId: string; modeloId: string; marca: string; nome: string }[] = []
-    for (const l of selected.linhas) {
-      const marca = (l.titulo || '').trim() || fbMarca
-      for (const m of l.modelos) {
-        out.push({
-          linhaId: l.id,
-          modeloId: m.id,
-          marca,
-          nome: (m.nome || '').trim() || fbMod,
-        })
-      }
-    }
-    return out
-  }, [selected, tr])
 
   const setFamiliasAndSave = useCallback(
     (updater: (prev: BibliaFamiliaRow[]) => BibliaFamiliaRow[]) => {
@@ -951,7 +941,7 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
                 <p style={{ margin: '0 0 14px', fontSize: '12px', color: '#94a3b8', lineHeight: 1.55 }}>
                   {tr(
                     'bibliaNonatoFamiliaConteudoAjuda',
-                    'A família é o «sítio» do equipamento (ex.: Seccionadoras). As marcas (Weeke, Homag…) ficam cada uma no seu bloco abaixo — nada se mistura com outras famílias.'
+                    'Cada família é um grupo (ex.: Seccionadoras). Ao escolher a família, em cada marca fechada vê já os nomes dos modelos; expanda a marca para editar. Os detalhes de cada modelo (notas e ficheiros) ficam fechados até expandir o modelo.'
                   )}
                 </p>
                 <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#a5f3fc', marginBottom: '8px', letterSpacing: '0.08em' }}>
@@ -965,89 +955,6 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
                 />
               </div>
 
-              <div
-                style={{
-                  marginBottom: '20px',
-                  padding: '14px',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(34, 197, 94, 0.32)',
-                  background: 'rgba(2, 23, 12, 0.58)',
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: '10px',
-                    fontWeight: 800,
-                    letterSpacing: '0.12em',
-                    color: '#86efac',
-                    marginBottom: '8px',
-                  }}
-                >
-                  {tr('bibliaNonatoModelosFamiliaListaTitulo', 'MODELOS NESTA FAMÍLIA')}
-                </div>
-                <p style={{ margin: '0 0 10px', fontSize: '11px', color: '#64748b', lineHeight: 1.45 }}>
-                  {tr(
-                    'bibliaNonatoModelosFamiliaListaAjuda',
-                    'Ao escolher a família, vê aqui todos os modelos. Toque numa linha para abrir a marca e o modelo nos blocos abaixo.'
-                  )}
-                </p>
-                {modelosResumoNaFamilia.length === 0 ? (
-                  <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>
-                    {tr('bibliaNonatoModelosFamiliaListaVazia', 'Ainda não há modelos registados nesta família.')}
-                  </p>
-                ) : (
-                  <ul
-                    style={{
-                      listStyle: 'none',
-                      padding: 0,
-                      margin: 0,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '6px',
-                      maxHeight: 'min(38vh, 320px)',
-                      overflowY: 'auto',
-                    }}
-                  >
-                    {modelosResumoNaFamilia.map((row) => (
-                      <li key={`${row.linhaId}-${row.modeloId}`}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setLinhaCorpoAberto((p) => ({ ...p, [row.linhaId]: true }))
-                            setModeloCorpoAberto((p) => ({ ...p, [row.modeloId]: true }))
-                          }}
-                          style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: '10px',
-                            textAlign: 'left',
-                            padding: '10px 12px',
-                            borderRadius: '8px',
-                            border: '1px solid rgba(148,163,184,0.22)',
-                            background: 'rgba(15,23,42,0.65)',
-                            color: '#e2e8f0',
-                            cursor: 'pointer',
-                            fontSize: '13px',
-                            boxSizing: 'border-box',
-                          }}
-                        >
-                          <span style={{ minWidth: 0, wordBreak: 'break-word' }}>
-                            <span style={{ color: '#6ee7b7', fontWeight: 700 }}>{row.marca}</span>
-                            <span style={{ color: '#64748b', margin: '0 6px' }}>·</span>
-                            <span>{row.nome}</span>
-                          </span>
-                          <span style={{ fontSize: '10px', color: '#64748b', flexShrink: 0 }}>
-                            {tr('bibliaNonatoModelosFamiliaListaIr', 'Abrir')}
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
               <div style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.1em', color: '#93c5fd', marginBottom: '12px' }}>
                 {tr('bibliaNonatoMarcasNaFamiliaTitulo', 'MARCAS — cada uma no seu bloco')}
               </div>
@@ -1056,6 +963,11 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
                 {selected.linhas.map((linha, li) => {
                   const marcaAberta = linhaCorpoAberto[linha.id] === true
                   const nMod = linha.modelos.length
+                  const previewModelos = resumoNomesModelos(
+                    linha.modelos,
+                    8,
+                    tr('bibliaNonatoSemNomeModeloLista', '(Sem nome do modelo)')
+                  )
                   return (
                   <div
                     key={linha.id}
@@ -1108,9 +1020,20 @@ export function BibliaNonatoServiceContent({ t, onClose, onHome }: BibliaNonatoS
                           style={{ ...inputStyle, fontWeight: 600 }}
                         />
                         {!marcaAberta && (
-                          <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#64748b', lineHeight: 1.45 }}>
-                            {tr('bibliaNonatoLinhaResumoModelos', '{n} modelo(s)').replace('{n}', String(nMod))}{' '}
-                            · {tr('bibliaNonatoLinhaResumoDica', 'Expandir para ver ou editar')}
+                          <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#94a3b8', lineHeight: 1.5, wordBreak: 'break-word' }}>
+                            <span style={{ color: '#64748b' }}>
+                              {tr('bibliaNonatoLinhaResumoModelos', '{n} modelo(s)').replace('{n}', String(nMod))}
+                            </span>
+                            {previewModelos ? (
+                              <>
+                                {' '}
+                                <span style={{ color: '#cbd5e1' }}>· {previewModelos}</span>
+                              </>
+                            ) : null}
+                            <br />
+                            <span style={{ fontSize: '10px', color: '#64748b' }}>
+                              {tr('bibliaNonatoLinhaResumoDica', 'Expandir a marca para editar modelos.')}
+                            </span>
                           </p>
                         )}
                       </div>
