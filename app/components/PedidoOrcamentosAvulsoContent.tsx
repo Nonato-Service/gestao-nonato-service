@@ -150,7 +150,7 @@ export function PedidoOrcamentosAvulsoContent({
 
   const adicionarPecaManual = () => {
     const codigo = (codigoManualPeca || '').trim()
-    const nome = (nomeManualPeca || '').trim() || codigo || 'Peça manual'
+    const nome = (nomeManualPeca || '').trim() || codigo || (safeT?.pecaManual || 'Peça manual')
     if (!codigo && !nome) return
     const existente = pecasPedido.find((p) => p.codigo === codigo && codigo)
     if (existente && codigo) {
@@ -508,7 +508,7 @@ export function PedidoOrcamentosAvulsoContent({
                 textTransform: 'uppercase'
               }}
             >
-              📚 {safeT?.buscarBibliotecaPecas || 'Buscar na Biblioteca de Peças'}
+              📚 {safeT?.orcamentoBuscarBibliotecaPecas || 'Buscar na Biblioteca de Peças'}
             </button>
             <button
               type="button"
@@ -531,7 +531,7 @@ export function PedidoOrcamentosAvulsoContent({
           <div style={{ padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.3)', marginBottom: '15px' }}>
             {modoPeca === 'biblioteca' && (
               <>
-                <label style={{ color: '#ccc', display: 'block', marginBottom: '8px' }}>{safeT?.buscarPorCodigo || 'Buscar por código ou nome'}</label>
+                <label style={{ color: '#ccc', display: 'block', marginBottom: '8px' }}>{safeT?.buscarPorCodigoOuNome || safeT?.buscarPorCodigo || 'Buscar por código ou nome'}</label>
                 <input
                   type="text"
                   value={buscaPeca}
@@ -779,7 +779,7 @@ export function PedidoOrcamentosAvulsoContent({
                       <button
                         type="button"
                         onClick={async () => {
-                          if (!confirm(safeT?.confirmarExcluirOrcamento || 'Deseja realmente excluir este pedido?')) return
+                          if (!confirm(safeT?.confirmarExcluirPedidoOrcamento || safeT?.confirmarExcluirOrcamento || 'Deseja realmente excluir este pedido?')) return
                           const atualizados = pedidosGerados.filter((x) => x.codigo !== p.codigo)
                           setPedidosGerados(atualizados)
                           if (saveData) await saveData(PEDIDOS_AVULSO_KEY, atualizados)

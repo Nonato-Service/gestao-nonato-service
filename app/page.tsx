@@ -62731,7 +62731,7 @@ A1;Peça exemplo;10`}
                     border: '2px solid rgba(0, 255, 0, 0.5)'
                   }}>
                     <h4 style={{ color: '#00ff00', marginBottom: '14px', fontSize: '15px', marginTop: 0 }}>
-                      Campos do item
+                      {safeT?.orcamentoCamposDoItem || 'Campos do item'}
                     </h4>
                     <div style={{ marginBottom: '14px' }}>
                       <label style={{ display: 'block', marginBottom: '6px', color: '#00ff00', fontWeight: 700, fontSize: '14px' }}>
@@ -62754,7 +62754,7 @@ A1;Peça exemplo;10`}
                             }
                           }
                         }}
-                        placeholder="Ex: REF-001, SKU-123..."
+                        placeholder={safeT?.codigoProdutoPlaceholder || 'Ex: REF-001, SKU-123...'}
                         style={{
                           width: '100%',
                           padding: '12px',
@@ -62775,7 +62775,7 @@ A1;Peça exemplo;10`}
                         type="text"
                         value={itemForm.descricao}
                         onChange={(e) => setItemForm(prev => ({ ...prev, descricao: e.target.value }))}
-                        placeholder="Descrição do item"
+                        placeholder={safeT?.descricaoItemPlaceholder || 'Descrição do item'}
                         style={{
                           width: '100%',
                           padding: '12px',
@@ -62989,7 +62989,7 @@ A1;Peça exemplo;10`}
                       }}
                     />
                     <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#888' }}>
-                      URL https://... + Enter, ou ficheiro de imagem.
+                      {safeT?.orcamentoItemManualUrlAjuda || 'URL https://... + Enter, ou ficheiro de imagem.'}
                     </p>
                   </div>
                   )}
