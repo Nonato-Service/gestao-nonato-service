@@ -171,6 +171,40 @@ function pecaBibliotecaSrcImagemDisplay(imagem: string | undefined | null): stri
   return pecaBibliotecaTemImagemPropria(imagem) ? String(imagem).trim() : PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC
 }
 
+/** Imagem gravada no item do orçamento (só foto real da peça / upload manual — não o logo padrão). */
+function resolveImagemItemOrcamentoParaGravar(
+  item: { imagem?: string; pecaId?: string },
+  pecasBiblioteca: PecaBiblioteca[]
+): string {
+  const imgSalva = typeof item.imagem === 'string' ? item.imagem.trim() : ''
+  if (pecaBibliotecaTemImagemPropria(imgSalva) && imgSalva !== PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC) return imgSalva
+  if (item.pecaId) {
+    const peca = pecasBiblioteca.find((p) => p.id === item.pecaId)
+    const imgPeca = typeof peca?.imagem === 'string' ? peca.imagem.trim() : ''
+    if (pecaBibliotecaTemImagemPropria(imgPeca) && imgPeca !== PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC) return imgPeca
+  }
+  return imgSalva
+}
+
+/** Src para <img> na UI/PDF do orçamento (inclui logo padrão quando a peça da biblioteca não tem foto). */
+function resolveImagemItemOrcamentoDisplay(
+  item: { imagem?: string; pecaId?: string },
+  pecasBiblioteca: PecaBiblioteca[]
+): string {
+  const gravada = resolveImagemItemOrcamentoParaGravar(item, pecasBiblioteca)
+  if (pecaBibliotecaTemImagemPropria(gravada)) return gravada
+  if (item.pecaId) return PECA_BIBLIOTECA_IMAGEM_PADRAO_SRC
+  return ''
+}
+
+function itemOrcamentoDeveMostrarImagem(item: { imagem?: string; pecaId?: string }): boolean {
+  return Boolean(
+    pecaBibliotecaTemImagemPropria(item.imagem) ||
+    item.pecaId ||
+    (typeof item.imagem === 'string' && item.imagem.trim() !== '')
+  )
+}
+
 /** Restaura manuais no localStorage e no IndexedDB a partir de um backup JSON (string JSON ou objeto). */
 async function restoreManuaisFamiliasGruposFromBackupPayload(raw: unknown): Promise<void> {
   if (raw == null || raw === '') return
@@ -21514,8 +21548,28 @@ export default function Dashboard() {
 
   const persistPecasBiblioteca = useCallback((next: PecaBiblioteca[]) => {
     const normalizado = next.map((peca) => sanitizarPecaBibliotecaImportacaoFlag(peca))
-    setPecasBiblioteca(normalizado)
-    void saveData('nonato-pecas-biblioteca', normalizado).catch((err) => {
+    const codigosVistos = new Set<string>()
+    const semCodigoRepetido: PecaBiblioteca[] = []
+    let rejeitadosPorCodigo = 0
+    for (const peca of normalizado) {
+      const c = (peca.codigo || '').trim().toLowerCase()
+      if (c) {
+        if (codigosVistos.has(c)) {
+          rejeitadosPorCodigo++
+          continue
+        }
+        codigosVistos.add(c)
+      }
+      semCodigoRepetido.push(peca)
+    }
+    if (rejeitadosPorCodigo > 0) {
+      alert(
+        (t as any).codigoPecaBibliotecaDuplicado ||
+          'Já existe uma peça com este código. Não são permitidas peças repetidas na biblioteca.'
+      )
+    }
+    setPecasBiblioteca(semCodigoRepetido)
+    void saveData('nonato-pecas-biblioteca', semCodigoRepetido).catch((err) => {
       console.error('[pecas biblioteca]', err)
       alert(
         (t as any)?.importacaoErroGravarFila ??
@@ -61216,7 +61270,14 @@ A1;Peça exemplo;10`}
       setPecasFiltradas(filtradas)
     }
 
+    const normalizarItensOrcamentoGravados = (itens: typeof dadosOrcamento.itens) =>
+      itens.map((item) => {
+        const imagem = resolveImagemItemOrcamentoParaGravar(item, pecasBiblioteca)
+        return { ...item, ...(imagem ? { imagem } : { imagem: undefined }) }
+      })
+
     const selecionarPeca = (peca: PecaBiblioteca) => {
+      const imgPeca = typeof peca.imagem === 'string' ? peca.imagem.trim() : ''
       setItemForm({
         codigo: peca.codigo,
         descricao: peca.nome,
@@ -61225,37 +61286,64 @@ A1;Peça exemplo;10`}
         tipoItem: 'sem-valor',
         iva: 0,
         pecaId: peca.id,
-        imagem: peca.imagem || ''
+        imagem: pecaBibliotecaTemImagemPropria(imgPeca) ? imgPeca : '',
       })
       setPecasFiltradas([])
       setBuscaCodigoPeca(peca.codigo)
     }
 
-    const salvarItem = () => {
-      if (!itemForm.descricao.trim()) {
+    const codigoJaExisteNaBiblioteca = (codigo: string, excluirPecaId?: string) => {
+      const c = (codigo || '').trim().toLowerCase()
+      if (!c) return false
+      return pecasBiblioteca.some(
+        (p) => p.id !== excluirPecaId && (p.codigo || '').trim().toLowerCase() === c
+      )
+    }
+
+    const tentarGravarPecaManualNaBiblioteca = (dados: {
+      codigo: string
+      descricao: string
+      imagem?: string
+    }): string | null => {
+      const codigo = dados.codigo.trim()
+      const nome = dados.descricao.trim()
+      if (!codigo) {
+        alert(
+          safeT?.orcamentoBibliotecaSemCodigo ||
+            'Para gravar na Biblioteca de Peças, o código do produto é obrigatório.'
+        )
+        return null
+      }
+      if (!nome) {
         alert(safeT?.descricaoItem || 'Descrição é obrigatória')
-        return
+        return null
       }
-
-      const novoItem: any = {
-        descricao: itemForm.descricao,
-        quantidade: itemForm.quantidade,
-        precoUnitario: itemForm.tipoItem === 'com-valor' ? itemForm.precoUnitario : 0,
-        total: itemForm.tipoItem === 'com-valor' 
-          ? itemForm.quantidade * itemForm.precoUnitario 
-          : 0,
-        codigo: itemForm.codigo,
-        tipoItem: itemForm.tipoItem,
-        iva: itemForm.iva || 0,
-        pecaId: itemForm.pecaId,
-        imagem: itemForm.imagem
+      if (codigoJaExisteNaBiblioteca(codigo)) {
+        alert(
+          safeT?.codigoPecaBibliotecaDuplicado ||
+            'Já existe uma peça com este código na biblioteca. Não são permitidas peças repetidas.'
+        )
+        return null
       }
+      const img = (dados.imagem || '').trim()
+      const novaPeca: PecaBiblioteca = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+        nome,
+        codigo,
+        descricao: nome,
+        imagem: pecaBibliotecaTemImagemPropria(img) ? img : '',
+        dataCriacao: new Date().toISOString(),
+        importacaoPendente: false,
+      }
+      persistPecasBiblioteca([...pecasBiblioteca, novaPeca])
+      alert(
+        safeT?.orcamentoBibliotecaAdicionada ||
+          'Peça adicionada à Biblioteca de Peças com sucesso.'
+      )
+      return novaPeca.id
+    }
 
-      setDadosOrcamento(prev => ({
-        ...prev,
-        itens: [...prev.itens, novoItem]
-      }))
-
+    const fecharFormularioItem = () => {
       setShowItemForm(false)
       setItemFormMode(null)
       setItemForm({
@@ -61266,8 +61354,95 @@ A1;Peça exemplo;10`}
         tipoItem: 'sem-valor',
         iva: 0,
         pecaId: '',
-        imagem: ''
+        imagem: '',
       })
+      setBuscaCodigoPeca('')
+      setPecasFiltradas([])
+    }
+
+    const salvarItem = () => {
+      if (!itemForm.descricao.trim()) {
+        alert(safeT?.descricaoItem || 'Descrição é obrigatória')
+        return
+      }
+
+      const imagemGravada = resolveImagemItemOrcamentoParaGravar(
+        { imagem: itemForm.imagem, pecaId: itemForm.pecaId || undefined },
+        pecasBiblioteca
+      )
+
+      const codigoItem = itemForm.codigo.trim()
+      const descricaoItem = itemForm.descricao.trim()
+      const modoManual = itemFormMode === 'manual'
+
+      let pecaIdFinal = itemForm.pecaId || undefined
+
+      if (modoManual && codigoItem && codigoJaExisteNaBiblioteca(codigoItem)) {
+        alert(
+          safeT?.orcamentoCodigoJaNaBiblioteca ||
+            'Já existe uma peça com este código na biblioteca. Use «Adicionar da Biblioteca» ou indique outro código.'
+        )
+        return
+      }
+
+      const novoItem: any = {
+        descricao: descricaoItem,
+        quantidade: itemForm.quantidade,
+        precoUnitario: itemForm.tipoItem === 'com-valor' ? itemForm.precoUnitario : 0,
+        total:
+          itemForm.tipoItem === 'com-valor'
+            ? itemForm.quantidade * itemForm.precoUnitario
+            : 0,
+        codigo: codigoItem,
+        tipoItem: itemForm.tipoItem,
+        iva: itemForm.iva || 0,
+        pecaId: pecaIdFinal,
+        imagem: imagemGravada || undefined,
+      }
+
+      setDadosOrcamento((prev) => ({
+        ...prev,
+        itens: [...prev.itens, novoItem],
+      }))
+
+      if (modoManual) {
+        if (!codigoItem) {
+          const avisoSemCodigo =
+            safeT?.orcamentoBibliotecaSemCodigoAviso ||
+            'Item adicionado ao orçamento. Sem código, não é possível gravar na Biblioteca de Peças.'
+          alert(avisoSemCodigo)
+        } else {
+          const msgPergunta = (
+            safeT?.orcamentoAdicionarPecaBibliotecaPergunta ||
+            'Deseja adicionar «{nome}» (código {codigo}) à Biblioteca de Peças?\n\nA biblioteca não aceita códigos repetidos.'
+          )
+            .replace('{nome}', descricaoItem)
+            .replace('{codigo}', codigoItem)
+          if (window.confirm(msgPergunta)) {
+            const novoPecaId = tentarGravarPecaManualNaBiblioteca({
+              codigo: codigoItem,
+              descricao: descricaoItem,
+              imagem: imagemGravada,
+            })
+            if (novoPecaId) {
+              pecaIdFinal = novoPecaId
+              setDadosOrcamento((prev) => {
+                const itens = [...prev.itens]
+                if (itens.length === 0) return prev
+                const idx = itens.length - 1
+                itens[idx] = {
+                  ...itens[idx],
+                  pecaId: novoPecaId,
+                  imagem: imagemGravada || itens[idx].imagem,
+                }
+                return { ...prev, itens }
+              })
+            }
+          }
+        }
+      }
+
+      fecharFormularioItem()
     }
 
     const removerItem = (index: number) => {
@@ -61605,12 +61780,13 @@ A1;Peça exemplo;10`}
                 const valorIva = item.iva ? (subtotal * item.iva / 100) : 0
                 const precoUnitario = item.precoUnitario || 0
                 const temValor = item.tipoItem === 'com-valor' && precoUnitario > 0
+                const srcImagem = resolveImagemItemOrcamentoDisplay(item, pecasBiblioteca)
                 
                 return `
                   <tr>
                     <td>
-                      ${item.imagem 
-                        ? `<img src="${item.imagem}" alt="${item.descricao}" class="item-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                      ${srcImagem 
+                        ? `<img src="${srcImagem.replace(/"/g, '&quot;')}" alt="${String(item.descricao || '').replace(/"/g, '&quot;')}" class="item-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                          <span style="display:none;">N/A</span>`
                         : '<span>N/A</span>'}
                     </td>
@@ -61742,7 +61918,7 @@ A1;Peça exemplo;10`}
         relatorioId: relatorioSelecionado?.id,
         relatorioNumero: relatorioSelecionado?.numero,
         dadosCliente: dadosClienteFinal,
-        itens: tipoOrcamento === 'orcamento-relatorio' || tipoOrcamento === 'cliente-prioritario-fixo' ? [] : dadosOrcamento.itens,
+        itens: tipoOrcamento === 'orcamento-relatorio' || tipoOrcamento === 'cliente-prioritario-fixo' ? [] : normalizarItensOrcamentoGravados(dadosOrcamento.itens),
         total: tipoOrcamento === 'orcamento-relatorio' || tipoOrcamento === 'cliente-prioritario-fixo' ? 0 : calcularTotal(),
         totalSemIva: tipoOrcamento === 'orcamento-relatorio' || tipoOrcamento === 'cliente-prioritario-fixo' ? 0 : calcularTotalSemIva(),
         totalIva: tipoOrcamento === 'orcamento-relatorio' || tipoOrcamento === 'cliente-prioritario-fixo' ? 0 : calcularTotalIva(),
@@ -62403,19 +62579,25 @@ A1;Peça exemplo;10`}
                         border: '1px solid rgba(0, 255, 0, 0.2)'
                       }}>
                         <div style={{ display: 'flex', gap: '15px', marginBottom: '10px' }}>
-                          {item.imagem && (
+                          {(() => {
+                            const srcImg = resolveImagemItemOrcamentoDisplay(item, pecasBiblioteca)
+                            if (!itemOrcamentoDeveMostrarImagem(item) || !srcImg) return null
+                            return (
                             <img 
-                              src={item.imagem} 
+                              src={srcImg} 
                               alt={item.descricao}
                               style={{
                                 width: '80px',
                                 height: '80px',
-                                objectFit: 'cover',
+                                objectFit: pecaBibliotecaTemImagemPropria(item.imagem) ? 'cover' : 'contain',
                                 borderRadius: '4px',
-                                border: '1px solid rgba(0, 255, 0, 0.2)'
+                                border: '1px solid rgba(0, 255, 0, 0.2)',
+                                backgroundColor: pecaBibliotecaTemImagemPropria(item.imagem) ? undefined : '#0f0f0f',
+                                flexShrink: 0,
                               }}
                             />
-                          )}
+                            )
+                          })()}
                           <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' }}>
                               <strong style={{ color: '#66b3ff' }}>{item.descricao}</strong>
@@ -62553,12 +62735,25 @@ A1;Peça exemplo;10`}
                     </h4>
                     <div style={{ marginBottom: '14px' }}>
                       <label style={{ display: 'block', marginBottom: '6px', color: '#00ff00', fontWeight: 700, fontSize: '14px' }}>
-                        Código do produto
+                        {safeT?.codigoProduto || 'Código do produto'}
+                        {itemFormMode === 'manual' ? ' *' : ''}
                       </label>
                       <input
                         type="text"
                         value={itemForm.codigo}
-                        onChange={(e) => setItemForm(prev => ({ ...prev, codigo: e.target.value }))}
+                        onChange={(e) => {
+                          const v = e.target.value
+                          setItemForm((prev) => ({ ...prev, codigo: v }))
+                          if (itemFormMode === 'biblioteca') {
+                            setBuscaCodigoPeca(v)
+                            buscarPecaPorCodigo(v)
+                            const cod = v.trim().toLowerCase()
+                            if (cod) {
+                              const exact = pecasBiblioteca.find((p) => p.codigo.trim().toLowerCase() === cod)
+                              if (exact) selecionarPeca(exact)
+                            }
+                          }
+                        }}
                         placeholder="Ex: REF-001, SKU-123..."
                         style={{
                           width: '100%',
@@ -62690,14 +62885,113 @@ A1;Peça exemplo;10`}
                     </div>
                   )}
 
-                  {itemForm.imagem && (
+                  {(() => {
+                    const srcPreview = resolveImagemItemOrcamentoDisplay(
+                      { imagem: itemForm.imagem, pecaId: itemForm.pecaId || undefined },
+                      pecasBiblioteca
+                    )
+                    if (!srcPreview && !itemOrcamentoDeveMostrarImagem({ imagem: itemForm.imagem, pecaId: itemForm.pecaId })) return null
+                    return (
                     <div style={{ marginBottom: '20px', textAlign: 'center' }}>
                       <img 
-                        src={itemForm.imagem} 
+                        src={srcPreview} 
                         alt={safeT?.imagemPeca || 'Imagem da Peça'}
-                        style={{ maxWidth: '150px', maxHeight: '150px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.3)' }}
+                        style={{ maxWidth: '150px', maxHeight: '150px', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.3)', objectFit: pecaBibliotecaTemImagemPropria(itemForm.imagem) ? 'cover' : 'contain' }}
                       />
                     </div>
+                    )
+                  })()}
+
+                  {itemFormMode === 'manual' && (
+                  <div style={{ marginBottom: '20px', padding: '14px', backgroundColor: '#222222', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', color: '#ccc', fontWeight: 600 }}>
+                      {safeT?.imagemPecaBiblioteca || 'Imagem do produto'}
+                    </label>
+                    <p style={{ margin: '0 0 10px', fontSize: '11px', color: '#888', lineHeight: 1.45 }}>
+                      {safeT?.orcamentoItemManualImagemAjuda ||
+                        'Opcional: foto ou URL. Depois de guardar o item, pode incluir a peça na biblioteca (código único).'}
+                    </p>
+                    <input
+                      id="orcamento-item-image-upload"
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file && file.type.startsWith('image/')) {
+                          const reader = new FileReader()
+                          reader.onload = (event) => {
+                            const result = event.target?.result as string
+                            setItemForm((prev) => ({
+                              ...prev,
+                              imagem: result,
+                              ...(itemFormMode === 'manual' ? { pecaId: '' } : {}),
+                            }))
+                          }
+                          reader.readAsDataURL(file)
+                        }
+                        e.target.value = ''
+                      }}
+                    />
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById('orcamento-item-image-upload')?.click()}
+                        style={{
+                          padding: '8px 14px',
+                          backgroundColor: 'rgba(0, 100, 255, 0.25)',
+                          border: '1px solid rgba(0, 100, 255, 0.5)',
+                          borderRadius: '6px',
+                          color: '#66b3ff',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                        }}
+                      >
+                        {safeT?.selectPhoto || 'Selecionar foto'}
+                      </button>
+                      {(itemForm.imagem || itemForm.pecaId) && (
+                        <button
+                          type="button"
+                          onClick={() => setItemForm((prev) => ({ ...prev, imagem: '', pecaId: itemFormMode === 'manual' ? '' : prev.pecaId }))}
+                          style={{
+                            padding: '8px 14px',
+                            backgroundColor: 'rgba(255, 0, 0, 0.15)',
+                            border: '1px solid rgba(255, 0, 0, 0.4)',
+                            borderRadius: '6px',
+                            color: '#ff8888',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                          }}
+                        >
+                          {safeT?.removerImagem || 'Remover imagem'}
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type="url"
+                      placeholder={(safeT as any)?.pecaBibliotecaUrlPlaceholder || 'https://... (URL da imagem)'}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          const url = (e.currentTarget as HTMLInputElement).value.trim()
+                          if (url) setItemForm((prev) => ({ ...prev, imagem: url }))
+                        }
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        backgroundColor: '#141414',
+                        border: '1px solid rgba(0, 255, 0, 0.3)',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '13px',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                    <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#888' }}>
+                      URL https://... + Enter, ou ficheiro de imagem.
+                    </p>
+                  </div>
                   )}
 
                   <div style={{ marginBottom: '15px' }}>
@@ -63060,7 +63354,7 @@ A1;Peça exemplo;10`}
                     relatorioId: relatorioSelecionado?.id,
                     relatorioNumero: relatorioSelecionado?.numero,
                     dadosCliente: dadosClienteFinal,
-                    itens: tipoOrcamento === 'orcamento-relatorio' || tipoOrcamento === 'cliente-prioritario-fixo' ? [] : dadosOrcamento.itens,
+                    itens: tipoOrcamento === 'orcamento-relatorio' || tipoOrcamento === 'cliente-prioritario-fixo' ? [] : normalizarItensOrcamentoGravados(dadosOrcamento.itens),
                     total: tipoOrcamento === 'orcamento-relatorio' || tipoOrcamento === 'cliente-prioritario-fixo' ? 0 : calcularTotal(),
                     totalSemIva: tipoOrcamento === 'orcamento-relatorio' || tipoOrcamento === 'cliente-prioritario-fixo' ? 0 : calcularTotalSemIva(),
                     totalIva: tipoOrcamento === 'orcamento-relatorio' || tipoOrcamento === 'cliente-prioritario-fixo' ? 0 : calcularTotalIva(),
@@ -63329,7 +63623,7 @@ A1;Peça exemplo;10`}
                         quantidade: item.quantidade,
                         codigo: item.codigo,
                         pecaId: item.pecaId,
-                        imagem: item.imagem,
+                        imagem: resolveImagemItemOrcamentoParaGravar(item, pecasBiblioteca) || item.imagem,
                         status: 'aguardando-fornecedor' as const
                       })),
                       dataCriacao: new Date().toISOString()
@@ -63793,7 +64087,7 @@ A1;Peça exemplo;10`}
                                   quantidade: item.quantidade,
                                   codigo: item.codigo,
                                   pecaId: item.pecaId,
-                                  imagem: item.imagem,
+                                  imagem: resolveImagemItemOrcamentoParaGravar(item, pecasBiblioteca) || item.imagem,
                                   status: 'aguardando-fornecedor' as const
                                 })),
                                 dataCriacao: new Date().toISOString()
@@ -63857,22 +64151,28 @@ A1;Peça exemplo;10`}
                                   border: '1px solid rgba(0, 255, 0, 0.3)'
                                 }}>
                                   <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
-                                    {item.imagem && (
+                                    {(() => {
+                                      const srcImg = resolveImagemItemOrcamentoDisplay(item, pecasBiblioteca)
+                                      if (!itemOrcamentoDeveMostrarImagem(item) || !srcImg) return null
+                                      return (
                                       <img 
-                                        src={item.imagem} 
+                                        src={srcImg} 
                                         alt={item.descricao}
                                         style={{
                                           width: '80px',
                                           height: '80px',
-                                          objectFit: 'cover',
+                                          objectFit: pecaBibliotecaTemImagemPropria(item.imagem) ? 'cover' : 'contain',
                                           borderRadius: '4px',
-                                          border: '1px solid rgba(0, 255, 0, 0.3)'
+                                          border: '1px solid rgba(0, 255, 0, 0.3)',
+                                          backgroundColor: pecaBibliotecaTemImagemPropria(item.imagem) ? undefined : '#0f0f0f',
+                                          flexShrink: 0,
                                         }}
                                         onError={(e) => {
                                           e.currentTarget.style.display = 'none'
                                         }}
                                       />
-                                    )}
+                                      )
+                                    })()}
                                     <div style={{ flex: 1 }}>
                                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                                         <strong style={{ color: '#66b3ff', fontSize: '14px' }}>{item.descricao}</strong>
@@ -75531,19 +75831,25 @@ A1;Peça exemplo;10`}
                                 }}
                               >
                                 <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                                  {item.imagem && (
+                                  {(() => {
+                                    const srcImg = resolveImagemItemOrcamentoDisplay(item, pecasBiblioteca)
+                                    if (!srcImg) return null
+                                    return (
                                     <img
-                                      src={item.imagem}
+                                      src={srcImg}
                                       alt={item.descricao}
                                       style={{
                                         width: '60px',
                                         height: '60px',
-                                        objectFit: 'cover',
+                                        objectFit: pecaBibliotecaTemImagemPropria(item.imagem) ? 'cover' : 'contain',
                                         borderRadius: '4px',
-                                        border: '1px solid rgba(0, 255, 0, 0.3)'
+                                        border: '1px solid rgba(0, 255, 0, 0.3)',
+                                        backgroundColor: pecaBibliotecaTemImagemPropria(item.imagem) ? undefined : '#0f0f0f',
+                                        flexShrink: 0,
                                       }}
                                     />
-                                  )}
+                                    )
+                                  })()}
                                   <div style={{ flex: 1 }}>
                                     <p style={{ fontSize: '13px', fontWeight: 'bold', marginBottom: '4px', color: '#fff' }}>
                                       {item.descricao}

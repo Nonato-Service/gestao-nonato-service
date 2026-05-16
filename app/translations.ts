@@ -3403,6 +3403,17 @@ export const translations = {
     total: 'Total',
     adicionarItemBiblioteca: 'Adicionar Item da Biblioteca',
     adicionarItemManual: 'Adicionar Item Manual',
+    orcamentoAdicionarPecaBibliotecaPergunta:
+      'Deseja adicionar «{nome}» (código {codigo}) à Biblioteca de Peças?\n\nA biblioteca não aceita códigos repetidos.',
+    orcamentoBibliotecaAdicionada: 'Peça adicionada à Biblioteca de Peças com sucesso.',
+    orcamentoBibliotecaSemCodigo:
+      'Para gravar na Biblioteca de Peças, o código do produto é obrigatório.',
+    orcamentoBibliotecaSemCodigoAviso:
+      'Item adicionado ao orçamento. Sem código, não é possível gravar na Biblioteca de Peças.',
+    orcamentoCodigoJaNaBiblioteca:
+      'Já existe uma peça com este código na biblioteca. Use «Adicionar da Biblioteca» ou indique outro código.',
+    orcamentoItemManualImagemAjuda:
+      'Opcional: foto ou URL. Depois de guardar, o sistema pergunta se deseja incluir na biblioteca (código único).',
     buscarPorCodigo: 'Buscar por Código',
     selecionarDaBiblioteca: 'Selecionar da Biblioteca',
     codigoPeca: 'Código da Peça',
@@ -6520,6 +6531,16 @@ export const translations = {
     total: 'Total',
     adicionarItemBiblioteca: 'Agregar Item de la Biblioteca',
     adicionarItemManual: 'Agregar Item Manual',
+    orcamentoAdicionarPecaBibliotecaPergunta:
+      '¿Desea añadir «{nome}» (código {codigo}) a la Biblioteca de Piezas?\n\nLa biblioteca no acepta códigos repetidos.',
+    orcamentoBibliotecaAdicionada: 'Pieza añadida a la Biblioteca de Piezas correctamente.',
+    orcamentoBibliotecaSemCodigo: 'Para guardar en la biblioteca, el código del producto es obligatorio.',
+    orcamentoBibliotecaSemCodigoAviso:
+      'Artículo añadido al presupuesto. Sin código no se puede guardar en la biblioteca.',
+    orcamentoCodigoJaNaBiblioteca:
+      'Ya existe una pieza con este código. Use «Añadir de la biblioteca» u otro código.',
+    orcamentoItemManualImagemAjuda:
+      'Opcional: foto o URL. Al guardar, el sistema preguntará si desea incluirla en la biblioteca (código único).',
     buscarPorCodigo: 'Buscar por Código',
     selecionarDaBiblioteca: 'Seleccionar de la Biblioteca',
     codigoPeca: 'Código de la Pieza',
@@ -9621,6 +9642,16 @@ export const translations = {
     total: 'Total',
     adicionarItemBiblioteca: 'Ajouter un Article de la Bibliothèque',
     adicionarItemManual: 'Ajouter un Article Manuel',
+    orcamentoAdicionarPecaBibliotecaPergunta:
+      'Voulez-vous ajouter « {nome} » (code {codigo}) à la Bibliothèque de Pièces ?\n\nLes codes en double ne sont pas acceptés.',
+    orcamentoBibliotecaAdicionada: 'Pièce ajoutée à la bibliothèque avec succès.',
+    orcamentoBibliotecaSemCodigo: 'Le code produit est obligatoire pour enregistrer dans la bibliothèque.',
+    orcamentoBibliotecaSemCodigoAviso:
+      'Article ajouté au devis. Sans code, impossible d’enregistrer dans la bibliothèque.',
+    orcamentoCodigoJaNaBiblioteca:
+      'Une pièce avec ce code existe déjà. Utilisez la bibliothèque ou un autre code.',
+    orcamentoItemManualImagemAjuda:
+      'Optionnel : photo ou URL. Après enregistrement, le système demandera si vous voulez l’ajouter à la bibliothèque (code unique).',
     buscarPorCodigo: 'Rechercher par Code',
     selecionarDaBiblioteca: 'Sélectionner de la Bibliothèque',
     codigoPeca: 'Code de la Pièce',
@@ -12700,6 +12731,16 @@ export const translations = {
     total: 'Totale',
     adicionarItemBiblioteca: 'Aggiungi Articolo dalla Biblioteca',
     adicionarItemManual: 'Aggiungi Articolo Manuale',
+    orcamentoAdicionarPecaBibliotecaPergunta:
+      'Vuoi aggiungere «{nome}» (codice {codigo}) alla Biblioteca Pezzi?\n\nNon sono ammessi codici duplicati.',
+    orcamentoBibliotecaAdicionada: 'Pezzo aggiunto alla biblioteca con successo.',
+    orcamentoBibliotecaSemCodigo: 'Il codice prodotto è obbligatorio per salvare in biblioteca.',
+    orcamentoBibliotecaSemCodigoAviso:
+      'Articolo aggiunto al preventivo. Senza codice non è possibile salvare in biblioteca.',
+    orcamentoCodigoJaNaBiblioteca:
+      'Esiste già un pezzo con questo codice. Usa la biblioteca o un altro codice.',
+    orcamentoItemManualImagemAjuda:
+      'Opzionale: foto o URL. Dopo il salvataggio, il sistema chiederà se aggiungerlo alla biblioteca (codice univoco).',
     buscarPorCodigo: 'Cerca per Codice',
     selecionarDaBiblioteca: 'Seleziona dalla Biblioteca',
     codigoPeca: 'Codice del Pezzo',
@@ -15779,6 +15820,16 @@ export const translations = {
     total: 'Gesamt',
     adicionarItemBiblioteca: 'Position aus Bibliothek Hinzufügen',
     adicionarItemManual: 'Position Manuell Hinzufügen',
+    orcamentoAdicionarPecaBibliotecaPergunta:
+      'Möchten Sie «{nome}» (Code {codigo}) zur Teilebibliothek hinzufügen?\n\nDoppelte Codes sind nicht erlaubt.',
+    orcamentoBibliotecaAdicionada: 'Teil erfolgreich zur Bibliothek hinzugefügt.',
+    orcamentoBibliotecaSemCodigo: 'Produktcode ist erforderlich, um in der Bibliothek zu speichern.',
+    orcamentoBibliotecaSemCodigoAviso:
+      'Position zum Angebot hinzugefügt. Ohne Code kann sie nicht in der Bibliothek gespeichert werden.',
+    orcamentoCodigoJaNaBiblioteca:
+      'Ein Teil mit diesem Code existiert bereits. Bibliothek verwenden oder anderen Code angeben.',
+    orcamentoItemManualImagemAjuda:
+      'Optional: Foto oder URL. Nach dem Speichern fragt das System, ob es in die Bibliothek aufgenommen werden soll (eindeutiger Code).',
     buscarPorCodigo: 'Nach Code Suchen',
     selecionarDaBiblioteca: 'Aus Bibliothek Auswählen',
     codigoPeca: 'Teilcode',
@@ -18909,6 +18960,16 @@ export const translations = {
     total: 'Total',
     adicionarItemBiblioteca: 'Add Item from Library',
     adicionarItemManual: 'Add Manual Item',
+    orcamentoAdicionarPecaBibliotecaPergunta:
+      'Add «{nome}» (code {codigo}) to the Parts Library?\n\nDuplicate codes are not allowed.',
+    orcamentoBibliotecaAdicionada: 'Part added to the library successfully.',
+    orcamentoBibliotecaSemCodigo: 'Product code is required to save to the library.',
+    orcamentoBibliotecaSemCodigoAviso:
+      'Item added to the quote. Without a code it cannot be saved to the library.',
+    orcamentoCodigoJaNaBiblioteca:
+      'A part with this code already exists. Use the library or enter another code.',
+    orcamentoItemManualImagemAjuda:
+      'Optional: photo or URL. After saving, the system will ask if you want to add it to the library (unique code).',
     buscarPorCodigo: 'Search by Code',
     selecionarDaBiblioteca: 'Select from Library',
     codigoPeca: 'Part Code',
