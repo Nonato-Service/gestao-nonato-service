@@ -75473,7 +75473,7 @@ A1;Peça exemplo;10`}
                       title={(safeT as any)?.resumoCobrancaDicaClique || 'Toque para indicar se deve cobrar ao cliente.'}
                     >
                       <h3 className="relatorio-resumo-cobranca-titulo">{safeT?.resumoHorasDeslocamentos?.toUpperCase() || 'RESUMO DE HORAS, DESLOCAMENTOS E DIÁRIAS'}</h3>
-                      <div className="relatorio-servico-resumo-view-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
+                      <div className="relatorio-servico-resumo-totais-grid">
                         <div style={{ padding: '10px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.4)', textAlign: 'center' }}>
                           <p className="relatorio-resumo-cobranca-label" style={{ fontSize: '10px', marginBottom: '5px', opacity: 0.8, textTransform: 'uppercase' }}>{safeT?.horasTrabalho || 'Horas de Trabalho'}</p>
                           <p className="relatorio-resumo-cobranca-valor" style={{ fontSize: '18px' }}>{totais.horasTrabalho}h</p>

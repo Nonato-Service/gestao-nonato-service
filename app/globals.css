@@ -6703,15 +6703,35 @@ button.dia-trabalho-acao-btn--del:hover {
   gap: 8px;
 }
 
-/* Resumo numérico (6 caixas) — empilha no telemóvel */
-.relatorio-servico-resumo-totais-grid {
+/* Resumo numérico (6 caixas) — no telemóvel empilha (2 colunas) para ver tudo sem arrastar */
+.relatorio-servico-resumo-totais-grid,
+.relatorio-servico-resumo-view-grid:not(.relatorio-servico-resumo-view-grid--card) {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
-@media (max-width: 640px) {
-  .relatorio-servico-resumo-totais-grid {
-    grid-template-columns: repeat(2, 1fr);
+.relatorio-servico-resumo-totais-grid > div,
+.relatorio-servico-resumo-view-grid:not(.relatorio-servico-resumo-view-grid--card) > div {
+  min-width: 0;
+}
+.relatorio-servico-resumo-totais-grid .relatorio-resumo-cobranca-label,
+.relatorio-servico-resumo-view-grid:not(.relatorio-servico-resumo-view-grid--card) .relatorio-resumo-cobranca-label {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+@media (max-width: 900px) {
+  .relatorio-servico-resumo-totais-grid,
+  .relatorio-servico-resumo-view-grid:not(.relatorio-servico-resumo-view-grid--card) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 520px) {
+  .relatorio-servico-resumo-totais-grid,
+  .relatorio-servico-resumo-view-grid:not(.relatorio-servico-resumo-view-grid--card) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -6746,6 +6766,10 @@ button.dia-trabalho-acao-btn--del:hover {
   border-radius: 10px;
   padding: 10px 8px 12px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  min-width: 0;
+  max-width: 100%;
+  overflow: visible;
+  box-sizing: border-box;
 }
 .relatorio-resumo-cobranca-wrap--laranja {
   border: 2px solid rgba(255, 180, 60, 0.55);
