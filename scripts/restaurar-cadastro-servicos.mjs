@@ -124,7 +124,7 @@ async function main() {
   } else {
     console.log('   2. Com o servidor a correr, execute outra vez: npm run restaurar:cadastro')
   }
-  console.log('   3. Abra «Cadastro de Serviços / Valores» — deve listar HTT, HTV, KRC, etc.')
+  console.log('   3. Abra «Cadastro de Serviços / Valores» — deve listar HTT, HVI, HVR, DFC, DDT, KRC, etc.')
   console.log('')
 }
 
