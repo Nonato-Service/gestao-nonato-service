@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recuperar Cadastro de Serviços</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #111; color: #eee; padding: 24px; max-width: 520px; margin: 0 auto; }
+    h1 { color: #0f0; font-size: 1.25rem; }
+    button { background: #0a0; color: #fff; border: none; padding: 14px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; width: 100%; margin: 12px 0; }
+    button:disabled { opacity: 0.5; }
+    pre { background: #222; padding: 12px; border-radius: 8px; font-size: 12px; overflow: auto; }
+    .ok { color: #7f7; }
+    .err { color: #f88; }
+    a { color: #7df; }
+  </style>
+</head>
+<body>
+  <h1>Recuperar cadastro de serviços</h1>
+  <p>Use isto se o programa abre mas o cadastro (HTT, KRC, etc.) está vazio.</p>
+  <button type="button" id="btn">Recuperar agora do servidor</button>
+  <p id="msg"></p>
+  <pre id="log"></pre>
+  <p><a href="/">← Voltar ao programa</a></p>
+  <script>
+    const btn = document.getElementById('btn');
+    const msg = document.getElementById('msg');
+    const log = document.getElementById('log');
+    btn.onclick = async () => {
+      btn.disabled = true;
+      msg.textContent = 'A recuperar…';
+      msg.className = '';
+      try {
+        const res = await fetch('/api/data/restore-cadastro-servicos', { method: 'POST', cache: 'no-store' });
+        const j = await res.json();
+        log.textContent = JSON.stringify(j, null, 2);
+        if (!res.ok || !j.success) throw new Error(j.message || res.status);
+        localStorage.setItem('nonato-servicos', JSON.stringify(j.servicos));
+        localStorage.setItem('nonato-servicos-grupos', JSON.stringify(j.grupos));
+        msg.className = 'ok';
+        msg.textContent = 'OK: ' + j.count + ' serviços gravados. Feche esta página e abra o programa (F5 na página principal).';
+      } catch (e) {
+        msg.className = 'err';
+        msg.textContent = 'Erro: ' + e.message;
+      }
+      btn.disabled = false;
+    };
+  </script>
+</body>
+</html>
