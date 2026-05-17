@@ -224,8 +224,56 @@ export function getPendingSyncCount(): number {
 // Salvar diretamente no servidor (sem fila) - uso interno
 const MANUAIS_KEY = 'nonato-manuais-familias-grupos'
 
+/**
+ * Chaves em que gravar `[]` no servidor apagaria cadastros críticos (ex.: serviços/valores).
+ * Bloqueia overwrite vazio e ignora essas chaves no «Enviar tudo» se estiverem vazias neste aparelho.
+ */
+export const NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE = new Set([
+  'nonato-servicos',
+  'nonato-servicos-grupos',
+  'nonato-clientes',
+  'nonato-fornecedores',
+  'nonato-gestores',
+  'nonato-tecnicos',
+  'nonato-equipamentos',
+  'nonato-relatorios-servico',
+  'nonato-pecas-biblioteca',
+  'nonato-biblioteca-pecas',
+])
+
+function isEmptyDataArray(value: unknown): boolean {
+  return Array.isArray(value) && value.length === 0
+}
+
+/** Evita que uma lista vazia (sync/atualização) apague dados já guardados no servidor. */
+async function shouldBlockEmptyServerOverwrite(key: string, value: unknown): Promise<boolean> {
+  if (!NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE.has(key)) return false
+  if (!isEmptyDataArray(value)) return false
+  try {
+    const existing = await loadFromServer(key)
+    return Array.isArray(existing) && existing.length > 0
+  } catch {
+    return false
+  }
+}
+
+/** Remove listas vazias protegidas do payload de «Enviar tudo» para não apagar o servidor. */
+export function omitEmptyProtectedKeysForServerPush(data: Record<string, any>): Record<string, any> {
+  const out: Record<string, any> = { ...data }
+  for (const key of NONATO_ARRAY_KEYS_BLOCK_EMPTY_SERVER_OVERWRITE) {
+    if (isEmptyDataArray(out[key])) delete out[key]
+  }
+  return out
+}
+
 async function _doSaveToServer(key: string, value: any): Promise<boolean> {
   if (isNonatoDemoBuild()) return true
+  if (await shouldBlockEmptyServerOverwrite(key, value)) {
+    console.warn(
+      `[Nonato] Gravação ignorada: «${key}» vazio não pode substituir o cadastro já guardado no servidor.`
+    )
+    return true
+  }
   try {
     const payloadStr = typeof value === 'string' ? value : JSON.stringify(value)
     const isLargeString =
@@ -501,7 +549,7 @@ export async function pushAllLocalStorageToServer(): Promise<{ ok: boolean; erro
     return { ok: true }
   }
   try {
-    const data = await collectAllLocalNonatoDataForSync()
+    const data = omitEmptyProtectedKeysForServerPush(await collectAllLocalNonatoDataForSync())
     if (Object.keys(data).length === 0) {
       return { ok: false, error: 'empty' }
     }
@@ -540,12 +588,25 @@ export async function saveAllToServer(
   }
 
   try {
+    const safeData: Record<string, any> = {}
+    for (const [key, value] of Object.entries(data)) {
+      if (await shouldBlockEmptyServerOverwrite(key, value)) {
+        console.warn(
+          `[Nonato] save-all: «${key}» vazio ignorado — mantém-se o cadastro no servidor.`
+        )
+        continue
+      }
+      safeData[key] = value
+    }
+    if (Object.keys(safeData).length === 0) {
+      return false
+    }
     const response = await fetch(`${API_BASE}/save-all`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(safeData),
       signal: createTimeoutSignal(timeoutMs)
     })
 

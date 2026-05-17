@@ -10,7 +10,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "apply-layout": "node apply-layout-criacao-checklist.js",
-    "homag:import": "node scripts/homag-import/run.mjs"
+    "homag:import": "node scripts/homag-import/run.mjs",
+    "restaurar:cadastro": "node scripts/restaurar-cadastro-servicos.mjs"
   },
   "dependencies": {
     "adm-zip": "^0.5.16",
