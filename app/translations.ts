@@ -1524,7 +1524,7 @@ export const translations = {
     fechamentoConfirmarOs: 'Confirmar',
     fechamentoOsNaoEncontrado: 'Nenhum relatório pendente encontrado com esse número de OS.',
     fechamentoOsJaNaBiblioteca:
-      'Este fechamento já foi guardado na Biblioteca de Relatórios. Abra «Biblioteca de Relatórios» no menu lateral, localize o cliente e na secção «Relatórios de Despesas» encontra o documento (consultar ou «Editar despesas»). O ecrã «Fechamento dos Relatórios de Serviços» só lista relatórios ainda por guardar na Biblioteca.',
+      'Este fechamento já está na Biblioteca de Relatórios. Pode editá-lo a partir da Biblioteca («Editar despesas») ou confirmar abaixo para abrir o fechamento.',
     fechamentoOsInformeNumero: 'Indique o número da OS (relatório de serviço).',
     fechamentoVoltarConsultaOs: 'Consultar outra OS',
     resultadosTrabalho: 'Resultados do Trabalho',
@@ -2356,6 +2356,18 @@ export const translations = {
       'Guardar este fechamento e enviar para a Biblioteca de Relatórios?\n\nNa Biblioteca pode visualizar ou editar as despesas quando necessário.\n\nOK = Sim, enviar e sair\nCancelar = Continuar no fechamento',
     fechamentoSalvoNaBiblioteca:
       'Guardado na Biblioteca de Relatórios. Abra «Biblioteca de Relatórios» para visualizar ou «Editar despesas» para alterar valores.',
+    fechamentoAtualizadoNaBiblioteca:
+      'Alterações guardadas na Biblioteca de Relatórios.',
+    confirmAtualizarFechamentoBiblioteca:
+      'Guardar as alterações deste fechamento na Biblioteca de Relatórios?\n\nOK = Sim, guardar e ir à Biblioteca\nCancelar = Continuar a editar',
+    salvarAlteracoesBiblioteca: 'Guardar alterações na Biblioteca',
+    fechamentoOsJaNaBibliotecaEditar:
+      'Este fechamento já está na Biblioteca de Relatórios.\n\nDeseja editar as despesas agora?\n\nOK = Abrir fechamento para editar\nCancelar = Fechar',
+    badgeNaBiblioteca: 'Na Biblioteca',
+    badgeNaBibliotecaTooltip:
+      'Fechamento de despesas guardado na Biblioteca. O cartão verde no resumo indica concluído; use a Biblioteca para consultar ou editar.',
+    fechamentoEditandoBibliotecaAviso:
+      'A editar despesas já guardadas na Biblioteca. Quando terminar, use «Guardar alterações na Biblioteca» — o relatório continua na Biblioteca e o cartão na lista fica verde (concluído).',
     fechamentoRetirarLinha: 'Retirar',
     fechamentoRetirarLinhaHint: 'Retira esta linha fixa do total, PDF e partilha (pode restaurar abaixo).',
     fechamentoRestaurarLinha: 'Restaurar',
