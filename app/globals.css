@@ -5695,6 +5695,235 @@ a:focus-visible {
   border-top: 1px solid rgba(52, 211, 153, 0.22);
 }
 
+.biblioteca-relatorios-toolbar__modelo {
+  padding: 9px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #f4fff7;
+  background: rgba(12, 18, 16, 0.85);
+  border: 1px solid rgba(52, 211, 153, 0.38);
+  border-radius: 12px;
+  max-width: 160px;
+}
+.biblioteca-relatorios-empty-busca,
+.biblioteca-relatorios-muted {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: rgba(226, 232, 240, 0.75);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px dashed rgba(148, 163, 184, 0.35);
+}
+.biblioteca-relatorios-muted--indent {
+  margin: 0 0 10px 28px;
+  padding: 8px 12px;
+}
+.biblioteca-relatorios-cliente__summary-kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-left: auto;
+  align-items: center;
+}
+.bib-kpi {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-variant-numeric: tabular-nums;
+}
+.bib-kpi--equip {
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(167, 139, 250, 0.45);
+}
+.bib-kpi--serv {
+  color: #a7f3d0;
+  background: rgba(52, 211, 153, 0.12);
+  border-color: rgba(52, 211, 153, 0.45);
+}
+.bib-kpi--desp {
+  color: #fde68a;
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.45);
+}
+.biblioteca-relatorios-cliente__body-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.biblioteca-relatorios-cliente__body-toolbar-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(209, 250, 229, 0.88);
+}
+.biblioteca-relatorios-equip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.biblioteca-relatorios-equip {
+  border-radius: 10px;
+  border: 1px solid rgba(52, 211, 153, 0.22);
+  background: rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+.biblioteca-relatorios-equip--vazio {
+  border-color: rgba(148, 163, 184, 0.25);
+  opacity: 0.92;
+}
+.biblioteca-relatorios-equip__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  list-style: none;
+  background: rgba(52, 211, 153, 0.06);
+  user-select: none;
+}
+.biblioteca-relatorios-equip__summary::-webkit-details-marker {
+  display: none;
+}
+.biblioteca-relatorios-equip[open] .biblioteca-relatorios-equip__chev {
+  transform: rotate(90deg);
+}
+.biblioteca-relatorios-equip__chev {
+  font-size: 10px;
+  opacity: 0.85;
+  transition: transform 0.15s ease;
+}
+.biblioteca-relatorios-equip__nome {
+  font-weight: 700;
+  font-size: 13px;
+  color: #f4fff7;
+}
+.biblioteca-relatorios-equip__ns {
+  font-size: 11px;
+  color: rgba(226, 232, 240, 0.72);
+  font-family: ui-monospace, monospace;
+}
+.biblioteca-relatorios-equip__badge {
+  margin-left: auto;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  color: #ecfdf5;
+  background: rgba(52, 211, 153, 0.15);
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  font-variant-numeric: tabular-nums;
+}
+.biblioteca-relatorios-tabela-wrap {
+  overflow-x: auto;
+  padding: 0 8px 10px;
+}
+.biblioteca-relatorios-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.biblioteca-relatorios-tabela th {
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(209, 250, 229, 0.75);
+  border-bottom: 1px solid rgba(52, 211, 153, 0.25);
+  white-space: nowrap;
+}
+.biblioteca-relatorios-tabela td {
+  padding: 8px 10px;
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: middle;
+}
+.biblioteca-relatorios-tabela tbody tr:hover td {
+  background: rgba(52, 211, 153, 0.06);
+}
+.biblioteca-relatorios-tabela--desp th {
+  color: rgba(253, 230, 138, 0.85);
+  border-bottom-color: rgba(251, 191, 36, 0.35);
+}
+.bib-col-num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.bib-col-acoes {
+  width: 1%;
+  white-space: nowrap;
+}
+.bib-rel-num {
+  font-weight: 700;
+}
+.bib-tag-ok {
+  margin-left: 6px;
+  padding: 1px 5px;
+  font-size: 9px;
+  font-weight: 800;
+  border-radius: 4px;
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(74, 222, 128, 0.45);
+}
+.bib-acoes-icones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.bib-acao {
+  margin: 0;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(30, 41, 59, 0.8);
+  color: #e2e8f0;
+}
+.bib-acao:hover {
+  filter: brightness(1.1);
+}
+.bib-acao--ver {
+  border-color: rgba(74, 222, 128, 0.45);
+  color: #bbf7d0;
+}
+.bib-acao--pdf {
+  border-color: rgba(96, 165, 250, 0.45);
+  color: #bfdbfe;
+}
+.bib-acao--edit {
+  border-color: rgba(251, 191, 36, 0.5);
+  color: #fde68a;
+}
+.bib-acao--del {
+  border-color: rgba(248, 113, 113, 0.5);
+  color: #fecaca;
+}
+@media (max-width: 720px) {
+  .biblioteca-relatorios-cliente__summary-kpis {
+    margin-left: 0;
+    width: 100%;
+  }
+  .biblioteca-relatorios-equip__badge {
+    margin-left: 0;
+  }
+}
+
 /* Gestão financeira — mapa visual NF × dinheiro s/ NF */
 .gestao-financeira-mapa-valores {
   box-sizing: border-box;
@@ -6654,6 +6883,76 @@ button.dia-trabalho-acao-btn--del:hover {
   border-color: rgba(248, 113, 113, 0.8);
   box-shadow: 0 0 16px rgba(239, 68, 68, 0.22);
 }
+.financeiro-despesas-bib-grupo--misto {
+  border-color: rgba(148, 163, 184, 0.55);
+  box-shadow: 0 0 10px rgba(100, 116, 139, 0.15);
+}
+.financeiro-despesas-bib-grupo--alerta-devedor.financeiro-despesas-bib-grupo--misto {
+  border-color: rgba(248, 113, 113, 0.55);
+}
+.financeiro-despesas-bib-grupo--misto .financeiro-despesas-bib-grupo__header {
+  background: rgba(71, 85, 105, 0.2);
+}
+.financeiro-despesas-bib-grupo--misto .financeiro-despesas-bib-grupo__header:hover {
+  background: rgba(71, 85, 105, 0.32);
+}
+.financeiro-despesas-bib-grupo--misto .financeiro-despesas-bib-grupo__body {
+  border-top-color: rgba(148, 163, 184, 0.35);
+}
+.financeiro-despesas-bib-grupo--alerta-devedor .financeiro-despesas-bib-grupo__nome {
+  color: #fecaca;
+}
+.financeiro-despesas-bib-subgrupo {
+  border-radius: 10px;
+  padding: 10px 10px 4px;
+  border: 2px solid transparent;
+  background: rgba(0, 0, 0, 0.2);
+}
+.financeiro-despesas-bib-subgrupo + .financeiro-despesas-bib-subgrupo {
+  margin-top: 12px;
+}
+.financeiro-despesas-bib-subgrupo__titulo {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 10px 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: inline-block;
+}
+.financeiro-despesas-bib-subgrupo--vermelho {
+  border-color: rgba(248, 113, 113, 0.55);
+  background: rgba(70, 10, 10, 0.2);
+}
+.financeiro-despesas-bib-subgrupo--vermelho .financeiro-despesas-bib-subgrupo__titulo {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.2);
+}
+.financeiro-despesas-bib-subgrupo--amarelo {
+  border-color: rgba(250, 204, 21, 0.5);
+  background: rgba(60, 45, 0, 0.15);
+}
+.financeiro-despesas-bib-subgrupo--amarelo .financeiro-despesas-bib-subgrupo__titulo {
+  color: #fde047;
+  background: rgba(234, 179, 8, 0.18);
+}
+.financeiro-despesas-bib-subgrupo--azul {
+  border-color: rgba(96, 165, 250, 0.5);
+  background: rgba(15, 30, 55, 0.25);
+}
+.financeiro-despesas-bib-subgrupo--azul .financeiro-despesas-bib-subgrupo__titulo {
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.18);
+}
+.financeiro-despesas-bib-subgrupo--verde {
+  border-color: rgba(74, 222, 128, 0.5);
+  background: rgba(10, 40, 22, 0.2);
+}
+.financeiro-despesas-bib-subgrupo--verde .financeiro-despesas-bib-subgrupo__titulo {
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.18);
+}
 .financeiro-despesas-bib-grupo__header {
   display: flex;
   flex-wrap: wrap;
@@ -6694,7 +6993,8 @@ button.dia-trabalho-acao-btn--del:hover {
 .financeiro-despesas-bib-grupo--vermelho .financeiro-despesas-bib-grupo__header:hover {
   background: rgba(153, 27, 27, 0.55);
 }
-.financeiro-despesas-bib-grupo__header:hover {
+.financeiro-despesas-bib-grupo:not([class*='--amarelo']):not([class*='--azul']):not([class*='--verde']):not([class*='--vermelho']):not([class*='--misto'])
+  .financeiro-despesas-bib-grupo__header:hover {
   background: rgba(255, 200, 0, 0.16);
 }
 .financeiro-despesas-bib-grupo__chev {
@@ -6877,6 +7177,27 @@ button.dia-trabalho-acao-btn--del:hover {
   font-size: 12px;
   color: #ccc;
   margin-top: 4px;
+}
+.financeiro-despesas-bib-card__sub-nome {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+.financeiro-despesas-bib-card__sub-total {
+  color: #fbbf24;
+}
+.financeiro-despesas-bib-card--verde .financeiro-despesas-bib-card__sub-total {
+  color: #86efac;
+}
+.financeiro-despesas-bib-card--vermelho .financeiro-despesas-bib-card__sub-total {
+  color: #fca5a5;
+}
+.financeiro-despesas-bib-card--azul .financeiro-despesas-bib-card__sub-total {
+  color: #93c5fd;
+}
+.financeiro-despesas-bib-card .btn-primary.financeiro-despesas-bib-btn--ver {
+  border-color: rgba(148, 163, 184, 0.45) !important;
+  color: #e2e8f0 !important;
+  background: rgba(30, 41, 59, 0.65) !important;
 }
 .financeiro-despesas-bib-card__actions {
   display: flex;
