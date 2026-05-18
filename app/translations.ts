@@ -2370,6 +2370,11 @@ export const translations = {
       'A editar despesas já guardadas na Biblioteca. Quando terminar, use «Guardar alterações na Biblioteca» — o relatório continua na Biblioteca e o cartão na lista fica verde (concluído).',
     relatoriosAtivosLista: 'em aberto',
     relatoriosNaBibliotecaContagem: 'na Biblioteca',
+    resumoNaBibliotecaTooltip:
+      'Fechamento guardado na Biblioteca de Relatórios. Isto é arquivo do fechamento — não confundir com «cobrar» ou «não cobrar» no resumo.',
+    relatorioBibliotecaAguardaConclusao:
+      'Na Biblioteca, mas continua na lista até marcar «Serviço concluído» no relatório.',
+    badgeBibliotecaAguardaConclusao: 'Bib. — aguarda conclusão',
     todosRelatoriosNaBibliotecaLista:
       'Todos os relatórios com fechamento estão na Biblioteca. Esta lista mostra só trabalhos em aberto.',
     abrirBibliotecaParaVerRelatorios:
