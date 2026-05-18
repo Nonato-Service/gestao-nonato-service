@@ -2352,6 +2352,8 @@ export const translations = {
     itensCobrancaFechamento: 'Itens a cobrar (ajuste com o Cadastro de Serviços / Valores)',
     editarItensFechamento: 'Editar itens',
     salvarEnviarBiblioteca: 'Salvar e enviar para a Biblioteca',
+    confirmSalvarEnviarBibliotecaRelatorio:
+      'O relatório foi guardado.\n\nDeseja enviar o fechamento de despesas para a Biblioteca de Relatórios?\n\nOK = Sim (enviar e sair do relatório)\nCancelar = Não (ficar no relatório)',
     fechamentoSalvoNaBiblioteca: 'Guardado na Biblioteca de Relatórios. Pode editar as despesas a partir da pasta do cliente, em «Editar despesas».',
     fechamentoRetirarLinha: 'Retirar',
     fechamentoRetirarLinhaHint: 'Retira esta linha fixa do total, PDF e partilha (pode restaurar abaixo).',
