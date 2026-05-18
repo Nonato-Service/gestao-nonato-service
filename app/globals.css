@@ -6633,9 +6633,26 @@ button.dia-trabalho-acao-btn--del:hover {
 }
 .financeiro-despesas-bib-grupo {
   border-radius: 12px;
-  border: 1px solid rgba(255, 170, 0, 0.35);
+  border: 2px solid rgba(255, 200, 0, 0.45);
   background: rgba(15, 15, 18, 0.92);
   overflow: hidden;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
+}
+.financeiro-despesas-bib-grupo--amarelo {
+  border-color: rgba(250, 204, 21, 0.7);
+  box-shadow: 0 0 14px rgba(234, 179, 8, 0.12);
+}
+.financeiro-despesas-bib-grupo--azul {
+  border-color: rgba(96, 165, 250, 0.7);
+  box-shadow: 0 0 14px rgba(59, 130, 246, 0.15);
+}
+.financeiro-despesas-bib-grupo--verde {
+  border-color: rgba(74, 222, 128, 0.7);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.12);
+}
+.financeiro-despesas-bib-grupo--vermelho {
+  border-color: rgba(248, 113, 113, 0.8);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.22);
 }
 .financeiro-despesas-bib-grupo__header {
   display: flex;
@@ -6648,13 +6665,37 @@ button.dia-trabalho-acao-btn--del:hover {
   margin: 0;
   border: none;
   cursor: pointer;
-  background: rgba(255, 170, 0, 0.08);
+  background: rgba(255, 200, 0, 0.1);
   color: #fff;
   font: inherit;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.financeiro-despesas-bib-grupo--amarelo .financeiro-despesas-bib-grupo__header {
+  background: rgba(234, 179, 8, 0.14);
+}
+.financeiro-despesas-bib-grupo--amarelo .financeiro-despesas-bib-grupo__header:hover {
+  background: rgba(234, 179, 8, 0.22);
+}
+.financeiro-despesas-bib-grupo--azul .financeiro-despesas-bib-grupo__header {
+  background: rgba(59, 130, 246, 0.14);
+}
+.financeiro-despesas-bib-grupo--azul .financeiro-despesas-bib-grupo__header:hover {
+  background: rgba(59, 130, 246, 0.22);
+}
+.financeiro-despesas-bib-grupo--verde .financeiro-despesas-bib-grupo__header {
+  background: rgba(34, 197, 94, 0.12);
+}
+.financeiro-despesas-bib-grupo--verde .financeiro-despesas-bib-grupo__header:hover {
+  background: rgba(34, 197, 94, 0.2);
+}
+.financeiro-despesas-bib-grupo--vermelho .financeiro-despesas-bib-grupo__header {
+  background: rgba(127, 29, 29, 0.45);
+}
+.financeiro-despesas-bib-grupo--vermelho .financeiro-despesas-bib-grupo__header:hover {
+  background: rgba(153, 27, 27, 0.55);
 }
 .financeiro-despesas-bib-grupo__header:hover {
-  background: rgba(255, 170, 0, 0.14);
+  background: rgba(255, 200, 0, 0.16);
 }
 .financeiro-despesas-bib-grupo__chev {
   font-size: 11px;
@@ -6665,18 +6706,33 @@ button.dia-trabalho-acao-btn--del:hover {
   font-weight: 800;
   font-size: 14px;
   flex: 1 1 140px;
+  order: 1;
 }
 .financeiro-despesas-bib-grupo__meta {
   font-size: 12px;
   color: rgba(226, 232, 240, 0.88);
+  margin-left: auto;
+  order: 3;
 }
 .financeiro-despesas-bib-grupo__body {
   padding: 12px 12px 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  border-top: 1px solid rgba(255, 170, 0, 0.2);
+  border-top: 1px solid rgba(255, 200, 0, 0.25);
   background: rgba(0, 0, 0, 0.25);
+}
+.financeiro-despesas-bib-grupo--amarelo .financeiro-despesas-bib-grupo__body {
+  border-top-color: rgba(250, 204, 21, 0.35);
+}
+.financeiro-despesas-bib-grupo--azul .financeiro-despesas-bib-grupo__body {
+  border-top-color: rgba(96, 165, 250, 0.35);
+}
+.financeiro-despesas-bib-grupo--verde .financeiro-despesas-bib-grupo__body {
+  border-top-color: rgba(74, 222, 128, 0.35);
+}
+.financeiro-despesas-bib-grupo--vermelho .financeiro-despesas-bib-grupo__body {
+  border-top-color: rgba(248, 113, 113, 0.4);
 }
 .financeiro-despesas-bib-legenda {
   display: flex;
@@ -6721,9 +6777,33 @@ button.dia-trabalho-acao-btn--del:hover {
   background: rgba(239, 68, 68, 0.15);
   border-color: rgba(248, 113, 113, 0.5);
 }
-.financeiro-despesas-bib-grupo--devedor .financeiro-despesas-bib-grupo__header {
-  border-color: rgba(248, 113, 113, 0.55);
-  background: rgba(80, 10, 10, 0.35);
+.financeiro-despesas-bib-grupo__estado {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  order: 2;
+}
+.financeiro-despesas-bib-grupo__estado--amarelo {
+  color: #fde047;
+  background: rgba(234, 179, 8, 0.2);
+  border: 1px solid rgba(250, 204, 21, 0.5);
+}
+.financeiro-despesas-bib-grupo__estado--azul {
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(96, 165, 250, 0.5);
+}
+.financeiro-despesas-bib-grupo__estado--verde {
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(74, 222, 128, 0.5);
+}
+.financeiro-despesas-bib-grupo__estado--vermelho {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.25);
+  border: 1px solid rgba(248, 113, 113, 0.55);
 }
 .financeiro-despesas-bib-card {
   padding: 14px 16px;
