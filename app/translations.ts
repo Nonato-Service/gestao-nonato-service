@@ -2368,6 +2368,12 @@ export const translations = {
       'Fechamento de despesas guardado na Biblioteca. O cartão verde no resumo indica concluído; use a Biblioteca para consultar ou editar.',
     fechamentoEditandoBibliotecaAviso:
       'A editar despesas já guardadas na Biblioteca. Quando terminar, use «Guardar alterações na Biblioteca» — o relatório continua na Biblioteca e o cartão na lista fica verde (concluído).',
+    relatoriosAtivosLista: 'em aberto',
+    relatoriosNaBibliotecaContagem: 'na Biblioteca',
+    todosRelatoriosNaBibliotecaLista:
+      'Todos os relatórios com fechamento estão na Biblioteca. Esta lista mostra só trabalhos em aberto.',
+    abrirBibliotecaParaVerRelatorios:
+      'Consulte ou edite despesas em «Biblioteca de Relatórios».',
     fechamentoRetirarLinha: 'Retirar',
     fechamentoRetirarLinhaHint: 'Retira esta linha fixa do total, PDF e partilha (pode restaurar abaixo).',
     fechamentoRestaurarLinha: 'Restaurar',
