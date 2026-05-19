@@ -82,6 +82,54 @@ const ENTIDADES_PADRAO: Omit<EntidadeContador, 'id' | 'criadoEm'>[] = [
   { nome: 'Contabilista / TOC', categoria: 'contabilista', ativo: true },
 ]
 
+type ResumoEntidadePdf = {
+  nome: string
+  categoriaLabel: string
+  totalPago: number
+  totalPendente: number
+  quantidade: number
+}
+
+function formatMesPt(yyyyMm: string): string {
+  if (!yyyyMm || yyyyMm.length < 7) return yyyyMm
+  try {
+    const [y, m] = yyyyMm.split('-').map(Number)
+    const d = new Date(y, (m || 1) - 1, 1)
+    return d.toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' })
+  } catch {
+    return yyyyMm
+  }
+}
+
+function formatDataPt(iso: string): string {
+  if (!iso) return ''
+  try {
+    return new Date(iso + 'T12:00:00').toLocaleDateString('pt-PT')
+  } catch {
+    return iso
+  }
+}
+
+function descricaoPeriodoFiltro(
+  safeT: Props['safeT'],
+  modo: 'todos' | 'mes' | 'intervalo',
+  mes: string,
+  inicio: string,
+  fim: string
+): string | undefined {
+  if (modo === 'mes' && mes) {
+    return `${tx(safeT, 'pagamentosContadorFiltroMes', 'Mês')}: ${formatMesPt(mes)}`
+  }
+  if (modo === 'intervalo') {
+    if (inicio && fim) {
+      return `${tx(safeT, 'pagamentosContadorFiltroIntervalo', 'Intervalo')}: ${formatDataPt(inicio)} — ${formatDataPt(fim)}`
+    }
+    if (inicio) return `${tx(safeT, 'pagamentosContadorFiltroDesde', 'Desde')}: ${formatDataPt(inicio)}`
+    if (fim) return `${tx(safeT, 'pagamentosContadorFiltroAte', 'Até')}: ${formatDataPt(fim)}`
+  }
+  return undefined
+}
+
 function tx(safeT: Props['safeT'], key: string, fallback: string): string {
   const v = safeT[key]
   return typeof v === 'string' && v.trim() ? v : fallback
@@ -130,7 +178,10 @@ export function PagamentosContadorContent({
   const [loading, setLoading] = useState(true)
 
   const [filtroEntidade, setFiltroEntidade] = useState('')
-  const [filtroAno, setFiltroAno] = useState('')
+  const [filtroPeriodoModo, setFiltroPeriodoModo] = useState<'todos' | 'mes' | 'intervalo'>('todos')
+  const [filtroMes, setFiltroMes] = useState('')
+  const [filtroDataInicio, setFiltroDataInicio] = useState('')
+  const [filtroDataFim, setFiltroDataFim] = useState('')
   const [filtroStatus, setFiltroStatus] = useState<'todos' | 'pago' | 'pendente'>('todos')
   const [busca, setBusca] = useState('')
 
@@ -195,20 +246,16 @@ export function PagamentosContadorContent({
 
   const entidadesAtivas = useMemo(() => entidades.filter(e => e.ativo), [entidades])
 
-  const anosDisponiveis = useMemo(() => {
-    const set = new Set<string>()
-    for (const p of pagamentos) {
-      if (p.dataPagamento) set.add(p.dataPagamento.slice(0, 4))
-    }
-    return [...set].sort((a, b) => b.localeCompare(a))
-  }, [pagamentos])
-
   const pagamentosFiltrados = useMemo(() => {
     const q = busca.trim().toLowerCase()
     return [...pagamentos]
       .filter(p => {
         if (filtroEntidade && p.entidadeId !== filtroEntidade) return false
-        if (filtroAno && !p.dataPagamento.startsWith(filtroAno)) return false
+        if (filtroPeriodoModo === 'mes' && filtroMes && !p.dataPagamento.startsWith(filtroMes)) return false
+        if (filtroPeriodoModo === 'intervalo') {
+          if (filtroDataInicio && p.dataPagamento < filtroDataInicio) return false
+          if (filtroDataFim && p.dataPagamento > filtroDataFim) return false
+        }
         if (filtroStatus !== 'todos' && p.status !== filtroStatus) return false
         if (!q) return true
         const blob = [
@@ -222,7 +269,16 @@ export function PagamentosContadorContent({
         return blob.includes(q)
       })
       .sort((a, b) => b.dataPagamento.localeCompare(a.dataPagamento))
-  }, [pagamentos, filtroEntidade, filtroAno, filtroStatus, busca])
+  }, [
+    pagamentos,
+    filtroEntidade,
+    filtroPeriodoModo,
+    filtroMes,
+    filtroDataInicio,
+    filtroDataFim,
+    filtroStatus,
+    busca,
+  ])
 
   const totais = useMemo(() => {
     let pago = 0
@@ -390,6 +446,109 @@ export function PagamentosContadorContent({
       )
     } else {
       w.document.write(`<img src="${a.base64}" alt="${a.nome}" style="max-width:100%;height:auto" />`)
+    }
+  }
+
+  const gerarPdfContador = async () => {
+    if (filtroPeriodoModo === 'mes' && !filtroMes) {
+      alert(tx(safeT, 'pagamentosContadorPdfEscolhaMes', 'Escolha o mês no filtro «Por mês» antes de exportar.'))
+      return
+    }
+    if (pagamentosFiltrados.length === 0) {
+      alert(tx(safeT, 'pagamentosContadorPdfSemDados', 'Não há pagamentos no filtro atual para exportar.'))
+      return
+    }
+    const resumoMap = new Map<string, ResumoEntidadePdf>()
+    for (const p of pagamentosFiltrados) {
+      const ent = entidades.find(e => e.id === p.entidadeId)
+      const cat = ent ? labelCategoria(ent.categoria, safeT) : '—'
+      const key = p.entidadeId || p.entidadeNome
+      const cur = resumoMap.get(key) ?? {
+        nome: p.entidadeNome,
+        categoriaLabel: cat,
+        totalPago: 0,
+        totalPendente: 0,
+        quantidade: 0,
+      }
+      cur.quantidade += 1
+      if (p.status === 'pago') cur.totalPago += p.valor
+      else cur.totalPendente += p.valor
+      resumoMap.set(key, cur)
+    }
+    const resumoPorEntidade = [...resumoMap.values()].sort(
+      (a, b) => b.totalPago + b.totalPendente - (a.totalPago + a.totalPendente)
+    )
+    const filtros: string[] = []
+    if (filtroEntidade) {
+      const nome = entidades.find(e => e.id === filtroEntidade)?.nome
+      if (nome) filtros.push(`${tx(safeT, 'pagamentosContadorCampoEntidade', 'Entidade')}: ${nome}`)
+    }
+    const periodoDesc = descricaoPeriodoFiltro(
+      safeT,
+      filtroPeriodoModo,
+      filtroMes,
+      filtroDataInicio,
+      filtroDataFim
+    )
+    if (periodoDesc) filtros.push(periodoDesc)
+    if (filtroStatus !== 'todos') {
+      filtros.push(
+        `${tx(safeT, 'pagamentosContadorCampoEstado', 'Estado')}: ${
+          filtroStatus === 'pago'
+            ? tx(safeT, 'pagamentosContadorEstadoPago', 'Pago')
+            : tx(safeT, 'pagamentosContadorEstadoPendente', 'Pendente')
+        }`
+      )
+    }
+    if (busca.trim()) filtros.push(`${tx(safeT, 'pagamentosContadorBusca', 'Pesquisa')}: ${busca.trim()}`)
+    const payload = {
+      pagamentos: pagamentosFiltrados.map(p => {
+        const ent = entidades.find(e => e.id === p.entidadeId)
+        return {
+          id: p.id,
+          entidadeId: p.entidadeId,
+          entidadeNome: p.entidadeNome,
+          categoriaLabel: ent ? labelCategoria(ent.categoria, safeT) : '—',
+          dataPagamento: p.dataPagamento,
+          valor: p.valor,
+          periodoReferencia: p.periodoReferencia,
+          numeroDocumento: p.numeroDocumento,
+          descricao: p.descricao,
+          status: p.status,
+          anexosNomes: p.anexos.map(a => a.nome),
+        }
+      }),
+      totalPago: totais.pago,
+      totalPendente: totais.pendente,
+      totalGeral: totais.total,
+      resumoPorEntidade,
+      periodo: periodoDesc,
+      filtrosDescricao: filtros.join(' · ') || undefined,
+      tituloRelatorio: tx(safeT, 'pagamentosContadorTitle', 'PAGAMENTOS AO CONTADOR'),
+      notaRodape: tx(
+        safeT,
+        'pagamentosContadorPdfNotaRodape',
+        'Relatório para entrega ao contabilista. Os documentos originais (PDF/fotos) estão anexados no sistema por cada linha indicada.'
+      ),
+    }
+    try {
+      const res = await fetch('/api/pdf/pagamentos-contador', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) throw new Error(await res.text())
+      const html = await res.text()
+      const w = window.open('', '_blank')
+      if (w) {
+        w.document.write(html)
+        w.document.close()
+      } else {
+        alert(tx(safeT, 'pagamentosContadorPdfPopup', 'Permita pop-ups para abrir o PDF.'))
+      }
+    } catch (e) {
+      console.error(e)
+      alert(tx(safeT, 'pagamentosContadorPdfErro', 'Erro ao gerar PDF. Tente novamente.'))
     }
   }
 
@@ -582,14 +741,42 @@ export function PagamentosContadorContent({
                 </option>
               ))}
             </select>
-            <select value={filtroAno} onChange={e => setFiltroAno(e.target.value)}>
-              <option value="">{tx(safeT, 'pagamentosContadorTodosAnos', 'Todos os anos')}</option>
-              {anosDisponiveis.map(y => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
+            <select
+              value={filtroPeriodoModo}
+              onChange={e => setFiltroPeriodoModo(e.target.value as 'todos' | 'mes' | 'intervalo')}
+              title={tx(safeT, 'pagamentosContadorFiltroPeriodoTitulo', 'Filtrar por período')}
+            >
+              <option value="todos">{tx(safeT, 'pagamentosContadorPeriodoTodos', 'Todos os períodos')}</option>
+              <option value="mes">{tx(safeT, 'pagamentosContadorPeriodoMes', 'Por mês')}</option>
+              <option value="intervalo">{tx(safeT, 'pagamentosContadorPeriodoIntervalo', 'Por datas')}</option>
             </select>
+            {filtroPeriodoModo === 'mes' ? (
+              <input
+                type="month"
+                value={filtroMes}
+                onChange={e => setFiltroMes(e.target.value)}
+                title={tx(safeT, 'pagamentosContadorFiltroMes', 'Mês')}
+                aria-label={tx(safeT, 'pagamentosContadorFiltroMes', 'Mês')}
+              />
+            ) : null}
+            {filtroPeriodoModo === 'intervalo' ? (
+              <>
+                <input
+                  type="date"
+                  value={filtroDataInicio}
+                  onChange={e => setFiltroDataInicio(e.target.value)}
+                  title={tx(safeT, 'pagamentosContadorFiltroDesde', 'Desde')}
+                  aria-label={tx(safeT, 'pagamentosContadorFiltroDesde', 'Desde')}
+                />
+                <input
+                  type="date"
+                  value={filtroDataFim}
+                  onChange={e => setFiltroDataFim(e.target.value)}
+                  title={tx(safeT, 'pagamentosContadorFiltroAte', 'Até')}
+                  aria-label={tx(safeT, 'pagamentosContadorFiltroAte', 'Até')}
+                />
+              </>
+            ) : null}
             <select
               value={filtroStatus}
               onChange={e => setFiltroStatus(e.target.value as 'todos' | 'pago' | 'pendente')}
@@ -601,7 +788,26 @@ export function PagamentosContadorContent({
             <button type="button" className="btn-primary pagamentos-contador-btn-add" onClick={abrirNovoPagamento}>
               + {tx(safeT, 'pagamentosContadorNovoPagamento', 'Novo pagamento')}
             </button>
+            <button
+              type="button"
+              className="btn-primary pagamentos-contador-btn-pdf"
+              onClick={() => void gerarPdfContador()}
+              title={tx(
+                safeT,
+                'pagamentosContadorPdfHint',
+                'Gera PDF com os pagamentos visíveis conforme os filtros (mês, datas, entidade, estado).'
+              )}
+            >
+              📄 {tx(safeT, 'pagamentosContadorExportarPdf', 'Exportar PDF p/ contador')}
+            </button>
           </div>
+          <p className="pagamentos-contador-toolbar-hint">
+            {tx(
+              safeT,
+              'pagamentosContadorPdfHint',
+              'O PDF inclui só os pagamentos do filtro atual. Use «Por mês» para relatório mensal ou «Por datas» para um intervalo (ex.: trimestre).'
+            )}
+          </p>
 
           {pagamentosFiltrados.length === 0 ? (
             <div className="pagamentos-contador-empty">

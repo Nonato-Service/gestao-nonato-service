@@ -3362,6 +3362,23 @@ export const translations = {
     pagamentosContadorAnexos: 'Faturas / documentos contabilísticos',
     pagamentosContadorAnexar: 'Anexar PDF ou imagem',
     pagamentosContadorSemAnexos: 'Nenhum anexo. PDF ou foto da fatura do contabilista.',
+    pagamentosContadorExportarPdf: 'Exportar PDF p/ contador',
+    pagamentosContadorPdfSemDados: 'Não há pagamentos no filtro atual para exportar.',
+    pagamentosContadorPdfErro: 'Erro ao gerar PDF. Tente novamente.',
+    pagamentosContadorPdfPopup: 'Permita pop-ups para abrir o PDF.',
+    pagamentosContadorPdfNotaRodape:
+      'Relatório para entrega ao contabilista. Os documentos originais (PDF/fotos) estão anexados no sistema por cada linha indicada.',
+    pagamentosContadorPeriodoTodos: 'Todos os períodos',
+    pagamentosContadorPeriodoMes: 'Por mês',
+    pagamentosContadorPeriodoIntervalo: 'Por datas',
+    pagamentosContadorFiltroPeriodoTitulo: 'Filtrar por período',
+    pagamentosContadorFiltroMes: 'Mês',
+    pagamentosContadorFiltroIntervalo: 'Intervalo',
+    pagamentosContadorFiltroDesde: 'Desde',
+    pagamentosContadorFiltroAte: 'Até',
+    pagamentosContadorPdfHint:
+      'O PDF inclui só os pagamentos do filtro atual. Use «Por mês» para relatório mensal ou «Por datas» para um intervalo (ex.: trimestre).',
+    pagamentosContadorPdfEscolhaMes: 'Escolha o mês no filtro «Por mês» antes de exportar.',
     comprovantesFiltroMes: 'Filtrar por mês',
     comprovantesFiltroMesArquivoHint:
       'Este mês é o de arquivo (IRS): pode ser diferente da data do recibo. Na foto rápida ou no formulário, defina «Mês de arquivo» e a «Data do recibo» para o PDF.',
@@ -6307,6 +6324,7 @@ export const translations = {
     comprovantesDespesasDesc: 'Registre comprobantes de gastos pagados con tarjeta para la declaración del IRPF. Añada imágenes, filtre por mes y cliente, valores unitarios y totales por operación.',
     pagamentosContadorTitle: 'PAGOS AL CONTADOR',
     pagamentosContadorDesc: 'Registre pagos a entidades fiscales y profesionales (IRPF, Seguridad Social, abogado, contable) y adjunte facturas contables.',
+    pagamentosContadorExportarPdf: 'Exportar PDF al contador',
     comprovantesFiltroMes: 'Filtrar por mes',
     comprovantesFiltroMesArquivoHint:
       'Este mes es el de archivo (IRPF): puede diferir de la fecha del ticket. En la foto rápida o el formulario, ajuste «Mes de archivo» y la «Fecha del ticket» para el PDF.',
@@ -9441,6 +9459,7 @@ export const translations = {
     comprovantesDespesasDesc: 'Enregistrez des justificatifs de dépenses payées par carte pour la déclaration d’impôt. Ajoutez des images, filtrez par mois et client, valeurs unitaires et totaux par opération.',
     pagamentosContadorTitle: 'PAIEMENTS AU COMPTABLE',
     pagamentosContadorDesc: 'Enregistrez les paiements aux entités fiscales et professionnelles (impôt, sécurité sociale, avocat, expert-comptable) et joignez les factures comptables.',
+    pagamentosContadorExportarPdf: 'Exporter PDF pour le comptable',
     comprovantesFiltroMes: 'Filtrer par mois',
     comprovantesFiltroMesArquivoHint:
       'Ce mois est le mois d’archivage (IR) : il peut différer de la date du ticket. Réglez « Mois d’archivage » et la « Date du ticket » pour le PDF.',
@@ -12555,6 +12574,7 @@ export const translations = {
     comprovantesDespesasDesc: 'Registra giustificativi di spese pagate con carta per la dichiarazione dei redditi. Aggiungi immagini, filtra per mese e cliente, valori unitari e totali per operazione.',
     pagamentosContadorTitle: 'PAGAMENTI AL COMMERCIALISTA',
     pagamentosContadorDesc: 'Registra pagamenti a enti fiscali e professionisti (IRPEF, INPS, avvocato, commercialista) e allega fatture contabili.',
+    pagamentosContadorExportarPdf: 'Esporta PDF per commercialista',
     comprovantesFiltroMes: 'Filtra per mese',
     comprovantesFiltroMesArquivoHint:
       'Questo mese è quello di archivio (IRPEF): può differire dalla data dello scontrino. Imposta «Mese di archivio» e «Data scontrino» per il PDF.',
@@ -15678,6 +15698,7 @@ export const translations = {
     comprovantesDespesasDesc: 'Erfassen Sie Belege für kartengezahlte Ausgaben zur Steuererklärung. Bilder hinzufügen, nach Monat und Kunde filtern, Einzelwerte und Summen pro Vorgang.',
     pagamentosContadorTitle: 'ZAHLUNGEN AN STEUERBERATER',
     pagamentosContadorDesc: 'Erfassen Sie Zahlungen an Finanzbehörden und Dienstleister (Steuer, Sozialversicherung, Anwalt, Buchhalter) und hängen Sie Rechnungen an.',
+    pagamentosContadorExportarPdf: 'PDF für Steuerberater exportieren',
     comprovantesFiltroMes: 'Nach Monat filtern',
     comprovantesFiltroMesArquivoHint:
       'Dieser Monat ist der Archiv-/Steuermonat und kann von der Belegdatumszeile abweichen. «Archivmonat» und «Belegdatum» für das PDF setzen.',
@@ -18841,6 +18862,7 @@ export const translations = {
     comprovantesDespesasDesc: 'Log receipts for card-paid expenses to support your tax return. Add images, filter by month and client, unit values and totals per operation.',
     pagamentosContadorTitle: 'ACCOUNTANT PAYMENTS',
     pagamentosContadorDesc: 'Record payments to tax and professional entities (IRS, social security, lawyer, accountant) and attach accounting invoices.',
+    pagamentosContadorExportarPdf: 'Export PDF for accountant',
     comprovantesFiltroMes: 'Filter by month',
     comprovantesFiltroMesArquivoHint:
       'This month is the filing month (tax): it may differ from the receipt date. Set «Filing month» and «Receipt date» for the PDF.',

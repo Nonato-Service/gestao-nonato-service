@@ -7380,6 +7380,19 @@ button.dia-trabalho-acao-btn--del:hover {
 .pagamentos-contador-btn-add {
   margin-bottom: 16px;
 }
+.pagamentos-contador-btn-pdf {
+  margin-bottom: 16px;
+  border-color: rgba(0, 150, 255, 0.55) !important;
+  color: #93c5fd !important;
+  background: rgba(0, 150, 255, 0.12) !important;
+}
+.pagamentos-contador-toolbar-hint {
+  margin: -8px 0 16px;
+  font-size: 12px;
+  color: #999;
+  line-height: 1.45;
+  max-width: 820px;
+}
 .pagamentos-contador-entidades-list {
   display: grid;
   gap: 12px;
