@@ -7274,6 +7274,367 @@ button.dia-trabalho-acao-btn--del:hover {
   gap: 8px;
 }
 
+/* Gestão Financeira › Pagamentos ao contador (IRS, SS, advogado, TOC) */
+.pagamentos-contador-panel {
+  color: #e8e8e8;
+  box-sizing: border-box;
+}
+.pagamentos-contador-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 18px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 0, 0.25);
+  background: linear-gradient(135deg, rgba(0, 255, 0, 0.06) 0%, rgba(0, 0, 0, 0.85) 100%);
+}
+.pagamentos-contador-hero__title {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #00ff00;
+  letter-spacing: 0.04em;
+}
+.pagamentos-contador-hero__sub {
+  margin: 0;
+  font-size: 13px;
+  color: #aaa;
+  line-height: 1.45;
+  max-width: 720px;
+}
+.pagamentos-contador-hero__close {
+  flex-shrink: 0;
+  padding: 6px 10px !important;
+}
+.pagamentos-contador-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.pagamentos-contador-tabs__btn {
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid rgba(0, 255, 0, 0.25);
+  background: transparent;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.pagamentos-contador-tabs__btn--active {
+  background: rgba(0, 255, 0, 0.15);
+  border-color: rgba(0, 255, 0, 0.55);
+  color: #00ff00;
+}
+.pagamentos-contador-card {
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 0, 0.2);
+  background: #141414;
+}
+.pagamentos-contador-card__title {
+  margin: 0 0 8px;
+  font-size: 17px;
+  color: #00ff00;
+}
+.pagamentos-contador-card__hint {
+  margin: 0 0 16px;
+  font-size: 12px;
+  color: #999;
+  line-height: 1.45;
+}
+.pagamentos-contador-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.pagamentos-contador-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ccc;
+}
+.pagamentos-contador-form-grid__full {
+  grid-column: 1 / -1;
+}
+.pagamentos-contador-form-grid input,
+.pagamentos-contador-form-grid select,
+.pagamentos-contador-form-grid textarea,
+.pagamentos-contador-toolbar select,
+.pagamentos-contador-toolbar__search {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 0, 0.3);
+  background: #1e1e1e;
+  color: #fff;
+  font-size: 14px;
+}
+.pagamentos-contador-btn-add {
+  margin-bottom: 16px;
+}
+.pagamentos-contador-entidades-list {
+  display: grid;
+  gap: 12px;
+}
+.pagamentos-contador-entidade {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left-width: 5px;
+}
+.pagamentos-contador-entidade--inativa {
+  opacity: 0.55;
+}
+.pagamentos-contador-entidade__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+}
+.pagamentos-contador-entidade__cat {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.pagamentos-contador-entidade__meta,
+.pagamentos-contador-entidade__notas {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #aaa;
+}
+.pagamentos-contador-entidade__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.pagamentos-contador-resumo {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.pagamentos-contador-resumo__item {
+  padding: 14px;
+  border-radius: 10px;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #aaa;
+}
+.pagamentos-contador-resumo__item strong {
+  font-size: 20px;
+  color: #fff;
+}
+.pagamentos-contador-resumo__item--pago {
+  border-color: rgba(74, 222, 128, 0.45);
+}
+.pagamentos-contador-resumo__item--pago strong {
+  color: #4ade80;
+}
+.pagamentos-contador-resumo__item--pend {
+  border-color: rgba(250, 204, 21, 0.45);
+}
+.pagamentos-contador-resumo__item--pend strong {
+  color: #fde047;
+}
+.pagamentos-contador-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.pagamentos-contador-toolbar__search {
+  flex: 1 1 180px;
+  min-width: 140px;
+}
+.pagamentos-contador-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pagamentos-contador-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left-width: 5px;
+}
+.pagamentos-contador-item__main {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.pagamentos-contador-item__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.pagamentos-contador-item__status {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.pagamentos-contador-item__status--pago {
+  background: rgba(74, 222, 128, 0.2);
+  color: #86efac;
+  border: 1px solid rgba(74, 222, 128, 0.5);
+}
+.pagamentos-contador-item__status--pendente {
+  background: rgba(250, 204, 21, 0.2);
+  color: #fde047;
+  border: 1px solid rgba(250, 204, 21, 0.5);
+}
+.pagamentos-contador-item__meta {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #aaa;
+}
+.pagamentos-contador-item__desc {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #ccc;
+}
+.pagamentos-contador-item__anexos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.pagamentos-contador-item__side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.pagamentos-contador-item__valor {
+  font-size: 22px;
+  font-weight: 800;
+  color: #00ff00;
+}
+.pagamentos-contador-anexo-chip {
+  padding: 4px 10px;
+  font-size: 11px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 150, 255, 0.45);
+  background: rgba(0, 150, 255, 0.1);
+  color: #93c5fd;
+  cursor: pointer;
+}
+.pagamentos-contador-btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(30, 41, 59, 0.65);
+  color: #e2e8f0;
+}
+.pagamentos-contador-btn-sm--danger {
+  border-color: rgba(248, 113, 113, 0.5);
+  color: #fecaca;
+}
+.pagamentos-contador-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #888;
+  border: 1px dashed rgba(0, 255, 0, 0.25);
+  border-radius: 10px;
+}
+.pagamentos-contador-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.pagamentos-contador-modal {
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 22px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 0, 0.35);
+  background: #1a1a1a;
+}
+.pagamentos-contador-modal h3 {
+  margin: 0 0 16px;
+  color: #00ff00;
+  font-size: 18px;
+}
+.pagamentos-contador-anexos-block {
+  margin: 16px 0;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #141414;
+}
+.pagamentos-contador-anexos-block__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.pagamentos-contador-anexos-block__empty {
+  margin: 0;
+  font-size: 12px;
+  color: #888;
+}
+.pagamentos-contador-anexos-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pagamentos-contador-anexos-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pagamentos-contador-modal__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+@media (max-width: 640px) {
+  .pagamentos-contador-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .pagamentos-contador-resumo {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Resumo numérico (6 caixas) — no telemóvel empilha (2 colunas) para ver tudo sem arrastar */
 .relatorio-servico-resumo-totais-grid,
 .relatorio-servico-resumo-view-grid:not(.relatorio-servico-resumo-view-grid--card) {

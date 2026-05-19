@@ -394,6 +394,7 @@ const TAB_ICONS: Record<string, IconComp> = {
   'pedido-orcamentos-avulso': IconInbox,
   'orcamento-servico-tecnico': IconWrench,
   'registro-despesas': IconTrendingUp,
+  'pagamentos-contador': IconScrollText,
   equipamentos: IconWrench,
   'biblioteca-pecas': IconPackage,
   agenda: IconCalendar,
