@@ -24,6 +24,38 @@ type ResumoEntidade = {
   quantidade: number
 }
 
+type PdfLabels = {
+  subtitulo: string
+  periodoAno: string
+  filtros: string
+  registos: string
+  geradoEm: string
+  totalPago: string
+  totalPendente: string
+  totalGeral: string
+  resumoEntidade: string
+  detalhe: string
+  colEntidade: string
+  colTipo: string
+  colQtd: string
+  colPagoEur: string
+  colPendenteEur: string
+  colTotal: string
+  colData: string
+  colPeriodo: string
+  colDoc: string
+  colEstado: string
+  colValor: string
+  colDescricao: string
+  nenhumResumo: string
+  nenhumDetalhe: string
+  totalFiltro: string
+  docGerado: string
+  instrucoesPrint: string
+  estadoPago: string
+  estadoPendente: string
+}
+
 type Body = {
   pagamentos: PagamentoPayload[]
   totalPago: number
@@ -34,6 +66,41 @@ type Body = {
   filtrosDescricao?: string
   tituloRelatorio?: string
   notaRodape?: string
+  locale?: string
+  htmlLang?: string
+  labels?: Partial<PdfLabels>
+}
+
+const DEFAULT_LABELS: PdfLabels = {
+  subtitulo: 'NONATO SERVICE — Relatório para o contabilista',
+  periodoAno: 'Período / ano:',
+  filtros: 'Filtros',
+  registos: 'Registos incluídos',
+  geradoEm: 'Gerado em',
+  totalPago: 'Total pago',
+  totalPendente: 'Total pendente',
+  totalGeral: 'Total geral',
+  resumoEntidade: 'Resumo por entidade',
+  detalhe: 'Detalhe dos pagamentos',
+  colEntidade: 'Entidade',
+  colTipo: 'Tipo',
+  colQtd: 'Qtd.',
+  colPagoEur: 'Pago (€)',
+  colPendenteEur: 'Pendente (€)',
+  colTotal: 'Total (€)',
+  colData: 'Data',
+  colPeriodo: 'Período / ref.',
+  colDoc: 'N.º doc.',
+  colEstado: 'Estado',
+  colValor: 'Valor',
+  colDescricao: 'Descrição / anexos',
+  nenhumResumo: 'Nenhum pagamento no filtro selecionado.',
+  nenhumDetalhe: 'Nenhum pagamento.',
+  totalFiltro: 'Total (filtro atual)',
+  docGerado: 'Documento gerado em',
+  instrucoesPrint: 'Use Ctrl+P (ou Cmd+P) para imprimir ou guardar como PDF.',
+  estadoPago: 'Pago',
+  estadoPendente: 'Pendente',
 }
 
 function esc(s: string): string {
@@ -44,10 +111,10 @@ function esc(s: string): string {
     .replace(/"/g, '&quot;')
 }
 
-function fmtData(iso: string): string {
+function fmtData(iso: string, locale: string): string {
   if (!iso) return '—'
   try {
-    return new Date(iso + 'T12:00:00').toLocaleDateString('pt-PT')
+    return new Date(iso + 'T12:00:00').toLocaleDateString(locale)
   } catch {
     return iso
   }
@@ -64,9 +131,14 @@ function buildHtml(body: Body): string {
     filtrosDescricao = '',
     tituloRelatorio = 'PAGAMENTOS AO CONTADOR',
     notaRodape = 'Relatório para entrega ao contabilista. Os documentos originais (PDF/fotos) estão anexados no sistema por cada linha indicada.',
+    locale = 'pt-PT',
+    htmlLang = 'pt-PT',
+    labels: labelsPartial = {},
   } = body
 
-  const dataGeracao = new Date().toLocaleDateString('pt-PT', {
+  const L: PdfLabels = { ...DEFAULT_LABELS, ...labelsPartial }
+
+  const dataGeracao = new Date().toLocaleDateString(locale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -125,12 +197,13 @@ function buildHtml(body: Body): string {
         p.anexosNomes.length > 0
           ? `<div class="anexos">📎 ${p.anexosNomes.map(n => esc(n)).join(' · ')}</div>`
           : ''
+      const statusLabel = p.status === 'pago' ? L.estadoPago : L.estadoPendente
       return `<tr>
-        <td>${fmtData(p.dataPagamento)}</td>
+        <td>${fmtData(p.dataPagamento, locale)}</td>
         <td>${esc(p.entidadeNome)}<br/><span style="font-size:8.5pt;color:#666">${esc(p.categoriaLabel)}</span></td>
         <td>${esc(p.periodoReferencia || '—')}</td>
         <td>${esc(p.numeroDocumento || '—')}</td>
-        <td class="${p.status === 'pago' ? 'status-pago' : 'status-pend'}">${p.status === 'pago' ? 'Pago' : 'Pendente'}</td>
+        <td class="${p.status === 'pago' ? 'status-pago' : 'status-pend'}">${esc(statusLabel)}</td>
         <td>${p.valor.toFixed(2)} €</td>
         <td>${esc(p.descricao || '—')}${anexos}</td>
       </tr>`
@@ -138,7 +211,7 @@ function buildHtml(body: Body): string {
     .join('')
 
   const html = `<!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="${esc(htmlLang)}">
 <head>
   <meta charset="UTF-8">
   <title>${esc(tituloRelatorio)} — PDF</title>
@@ -147,56 +220,56 @@ function buildHtml(body: Body): string {
 <body>
   <header class="header">
     <h1>${esc(tituloRelatorio)}</h1>
-    <p class="subtitle">NONATO SERVICE — Relatório para o contabilista</p>
+    <p class="subtitle">${esc(L.subtitulo)}</p>
   </header>
 
   <div class="info-block">
-    ${periodo ? `<p><strong>Período / ano:</strong> ${esc(periodo)}</p>` : ''}
-    ${filtrosDescricao ? `<p><strong>Filtros:</strong> ${esc(filtrosDescricao)}</p>` : ''}
-    <p><strong>Registos incluídos:</strong> ${pagamentos.length}</p>
-    <p><strong>Gerado em:</strong> ${esc(dataGeracao)}</p>
+    ${periodo ? `<p><strong>${esc(L.periodoAno)}</strong> ${esc(periodo)}</p>` : ''}
+    ${filtrosDescricao ? `<p><strong>${esc(L.filtros)}:</strong> ${esc(filtrosDescricao)}</p>` : ''}
+    <p><strong>${esc(L.registos)}:</strong> ${pagamentos.length}</p>
+    <p><strong>${esc(L.geradoEm)}:</strong> ${esc(dataGeracao)}</p>
   </div>
 
   <div class="totais-grid">
-    <div class="totais-card totais-card--pago"><span>Total pago</span><strong>${totalPago.toFixed(2)} €</strong></div>
-    <div class="totais-card totais-card--pend"><span>Total pendente</span><strong>${totalPendente.toFixed(2)} €</strong></div>
-    <div class="totais-card"><span>Total geral</span><strong>${totalGeral.toFixed(2)} €</strong></div>
+    <div class="totais-card totais-card--pago"><span>${esc(L.totalPago)}</span><strong>${totalPago.toFixed(2)} €</strong></div>
+    <div class="totais-card totais-card--pend"><span>${esc(L.totalPendente)}</span><strong>${totalPendente.toFixed(2)} €</strong></div>
+    <div class="totais-card"><span>${esc(L.totalGeral)}</span><strong>${totalGeral.toFixed(2)} €</strong></div>
   </div>
 
-  <h2>Resumo por entidade</h2>
+  <h2>${esc(L.resumoEntidade)}</h2>
   <table>
     <thead>
       <tr>
-        <th>Entidade</th>
-        <th>Tipo</th>
-        <th>Qtd.</th>
-        <th>Pago (€)</th>
-        <th>Pendente (€)</th>
-        <th>Total (€)</th>
+        <th>${esc(L.colEntidade)}</th>
+        <th>${esc(L.colTipo)}</th>
+        <th>${esc(L.colQtd)}</th>
+        <th>${esc(L.colPagoEur)}</th>
+        <th>${esc(L.colPendenteEur)}</th>
+        <th>${esc(L.colTotal)}</th>
       </tr>
     </thead>
     <tbody>
-      ${resumoRows || '<tr><td colspan="6">Nenhum pagamento no filtro selecionado.</td></tr>'}
+      ${resumoRows || `<tr><td colspan="6">${esc(L.nenhumResumo)}</td></tr>`}
     </tbody>
   </table>
 
-  <h2>Detalhe dos pagamentos</h2>
+  <h2>${esc(L.detalhe)}</h2>
   <table>
     <thead>
       <tr>
-        <th>Data</th>
-        <th>Entidade</th>
-        <th>Período / ref.</th>
-        <th>N.º doc.</th>
-        <th>Estado</th>
-        <th>Valor</th>
-        <th>Descrição / anexos</th>
+        <th>${esc(L.colData)}</th>
+        <th>${esc(L.colEntidade)}</th>
+        <th>${esc(L.colPeriodo)}</th>
+        <th>${esc(L.colDoc)}</th>
+        <th>${esc(L.colEstado)}</th>
+        <th>${esc(L.colValor)}</th>
+        <th>${esc(L.colDescricao)}</th>
       </tr>
     </thead>
     <tbody>
-      ${detalheRows || '<tr><td colspan="7">Nenhum pagamento.</td></tr>'}
+      ${detalheRows || `<tr><td colspan="7">${esc(L.nenhumDetalhe)}</td></tr>`}
       <tr class="total-row">
-        <td colspan="5">Total (filtro atual)</td>
+        <td colspan="5">${esc(L.totalFiltro)}</td>
         <td>${totalGeral.toFixed(2)} €</td>
         <td></td>
       </tr>
@@ -206,8 +279,8 @@ function buildHtml(body: Body): string {
   <div class="nota">${esc(notaRodape)}</div>
 
   <div class="footer">
-    <p>Documento gerado em ${esc(dataGeracao)} — NONATO SERVICE</p>
-    <p style="font-size: 8pt; margin-top: 6px;">Use Ctrl+P (ou Cmd+P) para imprimir ou guardar como PDF.</p>
+    <p>${esc(L.docGerado)} ${esc(dataGeracao)} — NONATO SERVICE</p>
+    <p style="font-size: 8pt; margin-top: 6px;">${esc(L.instrucoesPrint)}</p>
   </div>
 </body>
 </html>`

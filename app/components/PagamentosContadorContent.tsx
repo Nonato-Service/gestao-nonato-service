@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { documentPdfDateLocale, localeDateShort, localeForLongDatetime } from '../translations'
 
 const STORAGE_ENTIDADES = 'nonato-contador-entidades'
 const STORAGE_PAGAMENTOS = 'nonato-contador-pagamentos'
@@ -52,6 +53,7 @@ type Props = {
   saveData: (key: string, data: unknown) => Promise<void>
   loadData: (key: string) => Promise<unknown>
   safeT: Record<string, string | undefined>
+  localeLang: string
   closeTab: (tabId: string) => void
   activeTabId?: string
   isCompactLayout?: boolean
@@ -82,6 +84,28 @@ const ENTIDADES_PADRAO: Omit<EntidadeContador, 'id' | 'criadoEm'>[] = [
   { nome: 'Contabilista / TOC', categoria: 'contabilista', ativo: true },
 ]
 
+function tx(safeT: Props['safeT'], key: string, fallback: string): string {
+  const v = safeT[key]
+  return typeof v === 'string' && v.trim() ? v : fallback
+}
+
+function getEntidadesPadrao(safeT: Props['safeT']): Omit<EntidadeContador, 'id' | 'criadoEm'>[] {
+  return [
+    { nome: tx(safeT, 'pagamentosContadorDefaultIrs', ENTIDADES_PADRAO[0].nome), categoria: 'irs', ativo: true },
+    {
+      nome: tx(safeT, 'pagamentosContadorDefaultSS', ENTIDADES_PADRAO[1].nome),
+      categoria: 'seguranca_social',
+      ativo: true,
+    },
+    { nome: tx(safeT, 'pagamentosContadorDefaultAdvogado', ENTIDADES_PADRAO[2].nome), categoria: 'advogado', ativo: true },
+    {
+      nome: tx(safeT, 'pagamentosContadorDefaultContabilista', ENTIDADES_PADRAO[3].nome),
+      categoria: 'contabilista',
+      ativo: true,
+    },
+  ]
+}
+
 type ResumoEntidadePdf = {
   nome: string
   categoriaLabel: string
@@ -90,21 +114,21 @@ type ResumoEntidadePdf = {
   quantidade: number
 }
 
-function formatMesPt(yyyyMm: string): string {
+function formatMesLocale(yyyyMm: string, locale: string): string {
   if (!yyyyMm || yyyyMm.length < 7) return yyyyMm
   try {
     const [y, m] = yyyyMm.split('-').map(Number)
     const d = new Date(y, (m || 1) - 1, 1)
-    return d.toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' })
+    return d.toLocaleDateString(locale, { month: 'long', year: 'numeric' })
   } catch {
     return yyyyMm
   }
 }
 
-function formatDataPt(iso: string): string {
+function formatDataLocale(iso: string, locale: string): string {
   if (!iso) return ''
   try {
-    return new Date(iso + 'T12:00:00').toLocaleDateString('pt-PT')
+    return new Date(iso + 'T12:00:00').toLocaleDateString(locale)
   } catch {
     return iso
   }
@@ -112,27 +136,62 @@ function formatDataPt(iso: string): string {
 
 function descricaoPeriodoFiltro(
   safeT: Props['safeT'],
+  monthLocale: string,
+  dateLocale: string,
   modo: 'todos' | 'mes' | 'intervalo',
   mes: string,
   inicio: string,
   fim: string
 ): string | undefined {
   if (modo === 'mes' && mes) {
-    return `${tx(safeT, 'pagamentosContadorFiltroMes', 'Mês')}: ${formatMesPt(mes)}`
+    return `${tx(safeT, 'pagamentosContadorFiltroMes', 'Mês')}: ${formatMesLocale(mes, monthLocale)}`
   }
   if (modo === 'intervalo') {
     if (inicio && fim) {
-      return `${tx(safeT, 'pagamentosContadorFiltroIntervalo', 'Intervalo')}: ${formatDataPt(inicio)} — ${formatDataPt(fim)}`
+      return `${tx(safeT, 'pagamentosContadorFiltroIntervalo', 'Intervalo')}: ${formatDataLocale(inicio, dateLocale)} — ${formatDataLocale(fim, dateLocale)}`
     }
-    if (inicio) return `${tx(safeT, 'pagamentosContadorFiltroDesde', 'Desde')}: ${formatDataPt(inicio)}`
-    if (fim) return `${tx(safeT, 'pagamentosContadorFiltroAte', 'Até')}: ${formatDataPt(fim)}`
+    if (inicio) return `${tx(safeT, 'pagamentosContadorFiltroDesde', 'Desde')}: ${formatDataLocale(inicio, dateLocale)}`
+    if (fim) return `${tx(safeT, 'pagamentosContadorFiltroAte', 'Até')}: ${formatDataLocale(fim, dateLocale)}`
   }
   return undefined
 }
 
-function tx(safeT: Props['safeT'], key: string, fallback: string): string {
-  const v = safeT[key]
-  return typeof v === 'string' && v.trim() ? v : fallback
+function buildPdfLabels(safeT: Props['safeT']) {
+  return {
+    subtitulo: tx(safeT, 'pagamentosContadorPdfSubtitulo', 'NONATO SERVICE — Relatório para o contabilista'),
+    periodoAno: tx(safeT, 'pagamentosContadorPdfPeriodoAno', 'Período / ano:'),
+    filtros: tx(safeT, 'pagamentosContadorPdfFiltros', 'Filtros'),
+    registos: tx(safeT, 'pagamentosContadorPdfRegistos', 'Registos incluídos'),
+    geradoEm: tx(safeT, 'pagamentosContadorPdfGeradoEm', 'Gerado em'),
+    totalPago: tx(safeT, 'pagamentosContadorPdfTotalPago', 'Total pago'),
+    totalPendente: tx(safeT, 'pagamentosContadorPdfTotalPendente', 'Total pendente'),
+    totalGeral: tx(safeT, 'pagamentosContadorPdfTotalGeral', 'Total geral'),
+    resumoEntidade: tx(safeT, 'pagamentosContadorPdfResumoEntidade', 'Resumo por entidade'),
+    detalhe: tx(safeT, 'pagamentosContadorPdfDetalhe', 'Detalhe dos pagamentos'),
+    colEntidade: tx(safeT, 'pagamentosContadorPdfColEntidade', 'Entidade'),
+    colTipo: tx(safeT, 'pagamentosContadorPdfColTipo', 'Tipo'),
+    colQtd: tx(safeT, 'pagamentosContadorPdfColQtd', 'Qtd.'),
+    colPagoEur: tx(safeT, 'pagamentosContadorPdfColPagoEur', 'Pago (€)'),
+    colPendenteEur: tx(safeT, 'pagamentosContadorPdfColPendenteEur', 'Pendente (€)'),
+    colTotal: tx(safeT, 'pagamentosContadorPdfColTotal', 'Total (€)'),
+    colData: tx(safeT, 'pagamentosContadorPdfColData', 'Data'),
+    colPeriodo: tx(safeT, 'pagamentosContadorPdfColPeriodo', 'Período / ref.'),
+    colDoc: tx(safeT, 'pagamentosContadorPdfColDoc', 'N.º doc.'),
+    colEstado: tx(safeT, 'pagamentosContadorPdfColEstado', 'Estado'),
+    colValor: tx(safeT, 'pagamentosContadorPdfColValor', 'Valor'),
+    colDescricao: tx(safeT, 'pagamentosContadorPdfColDescricao', 'Descrição / anexos'),
+    nenhumResumo: tx(safeT, 'pagamentosContadorPdfNenhum', 'Nenhum pagamento no filtro selecionado.'),
+    nenhumDetalhe: tx(safeT, 'pagamentosContadorPdfNenhumDetalhe', 'Nenhum pagamento.'),
+    totalFiltro: tx(safeT, 'pagamentosContadorPdfTotalFiltro', 'Total (filtro atual)'),
+    docGerado: tx(safeT, 'pagamentosContadorPdfDocGerado', 'Documento gerado em'),
+    instrucoesPrint: tx(
+      safeT,
+      'pagamentosContadorPdfInstrucoesPrint',
+      'Use Ctrl+P (ou Cmd+P) para imprimir ou guardar como PDF.'
+    ),
+    estadoPago: tx(safeT, 'pagamentosContadorEstadoPago', 'Pago'),
+    estadoPendente: tx(safeT, 'pagamentosContadorEstadoPendente', 'Pendente'),
+  }
 }
 
 function labelCategoria(cat: CategoriaEntidadeContador, safeT: Props['safeT']): string {
@@ -168,10 +227,14 @@ export function PagamentosContadorContent({
   saveData,
   loadData,
   safeT,
+  localeLang,
   closeTab,
   activeTabId,
   isCompactLayout = false,
 }: Props) {
+  const dateLocale = localeDateShort(localeLang)
+  const pdfDateLocale = documentPdfDateLocale(localeLang)
+  const monthLocale = localeForLongDatetime(localeLang)
   const [view, setView] = useState<'pagamentos' | 'entidades'>('pagamentos')
   const [entidades, setEntidades] = useState<EntidadeContador[]>([])
   const [pagamentos, setPagamentos] = useState<PagamentoContador[]>([])
@@ -221,7 +284,7 @@ export function PagamentosContadorContent({
       let ents = (await loadData(STORAGE_ENTIDADES)) as EntidadeContador[] | null
       if (!Array.isArray(ents) || ents.length === 0) {
         const now = new Date().toISOString()
-        ents = ENTIDADES_PADRAO.map((e, i) => ({
+        ents = getEntidadesPadrao(safeT).map((e, i) => ({
           ...e,
           id: `ent-pad-${i}-${Date.now()}`,
           criadoEm: now,
@@ -238,7 +301,7 @@ export function PagamentosContadorContent({
     } finally {
       setLoading(false)
     }
-  }, [loadData, saveData])
+  }, [loadData, saveData, safeT])
 
   useEffect(() => {
     void carregar()
@@ -485,6 +548,8 @@ export function PagamentosContadorContent({
     }
     const periodoDesc = descricaoPeriodoFiltro(
       safeT,
+      monthLocale,
+      dateLocale,
       filtroPeriodoModo,
       filtroMes,
       filtroDataInicio,
@@ -530,6 +595,9 @@ export function PagamentosContadorContent({
         'pagamentosContadorPdfNotaRodape',
         'Relatório para entrega ao contabilista. Os documentos originais (PDF/fotos) estão anexados no sistema por cada linha indicada.'
       ),
+      locale: pdfDateLocale,
+      htmlLang: pdfDateLocale,
+      labels: buildPdfLabels(safeT),
     }
     try {
       const res = await fetch('/api/pdf/pagamentos-contador', {
@@ -836,7 +904,7 @@ export function PagamentosContadorContent({
                         </span>
                       </div>
                       <div className="pagamentos-contador-item__meta">
-                        {new Date(p.dataPagamento + 'T12:00:00').toLocaleDateString('pt-PT')}
+                        {new Date(p.dataPagamento + 'T12:00:00').toLocaleDateString(dateLocale)}
                         {p.periodoReferencia ? ` · ${p.periodoReferencia}` : ''}
                         {p.numeroDocumento ? ` · Doc. ${p.numeroDocumento}` : ''}
                       </div>
