@@ -6516,7 +6516,7 @@ export const translations = {
     pagamentosContadorPdfColPendenteEur: 'Pendiente (€)',
     pagamentosContadorPdfTotalFiltro: 'Total (filtro actual)',
     pagamentosContadorPdfDocGerado: 'Documento generado el',
-    pagamentosContadorPdfNenhumDetalhe: 'Ningún pago.'
+    pagamentosContadorPdfNenhumDetalhe: 'Ningún pago.',
     comprovantesFiltroMes: 'Filtrar por mes',
     comprovantesFiltroMesArquivoHint:
       'Este mes es el de archivo (IRPF): puede diferir de la fecha del ticket. En la foto rápida o el formulario, ajuste «Mes de archivo» y la «Fecha del ticket» para el PDF.',
@@ -9776,7 +9776,7 @@ export const translations = {
     pagamentosContadorPdfColPendenteEur: 'En attente (€)',
     pagamentosContadorPdfTotalFiltro: 'Total (filtre actuel)',
     pagamentosContadorPdfDocGerado: 'Document généré le',
-    pagamentosContadorPdfNenhumDetalhe: 'Aucun paiement.'
+    pagamentosContadorPdfNenhumDetalhe: 'Aucun paiement.',
     comprovantesFiltroMes: 'Filtrer par mois',
     comprovantesFiltroMesArquivoHint:
       'Ce mois est le mois d’archivage (IR) : il peut différer de la date du ticket. Réglez « Mois d’archivage » et la « Date du ticket » pour le PDF.',
@@ -13016,7 +13016,7 @@ export const translations = {
     pagamentosContadorPdfColPendenteEur: 'In sospeso (€)',
     pagamentosContadorPdfTotalFiltro: 'Totale (filtro attuale)',
     pagamentosContadorPdfDocGerado: 'Documento generato il',
-    pagamentosContadorPdfNenhumDetalhe: 'Nessun pagamento.'
+    pagamentosContadorPdfNenhumDetalhe: 'Nessun pagamento.',
     comprovantesFiltroMes: 'Filtra per mese',
     comprovantesFiltroMesArquivoHint:
       'Questo mese è quello di archivio (IRPEF): può differire dalla data dello scontrino. Imposta «Mese di archivio» e «Data scontrino» per il PDF.',
@@ -16265,7 +16265,7 @@ export const translations = {
     pagamentosContadorPdfColPendenteEur: 'Ausstehend (€)',
     pagamentosContadorPdfTotalFiltro: 'Summe (aktueller Filter)',
     pagamentosContadorPdfDocGerado: 'Dokument erstellt am',
-    pagamentosContadorPdfNenhumDetalhe: 'Keine Zahlung.'
+    pagamentosContadorPdfNenhumDetalhe: 'Keine Zahlung.',
     comprovantesFiltroMes: 'Nach Monat filtern',
     comprovantesFiltroMesArquivoHint:
       'Dieser Monat ist der Archiv-/Steuermonat und kann von der Belegdatumszeile abweichen. «Archivmonat» und «Belegdatum» für das PDF setzen.',
@@ -19554,7 +19554,7 @@ export const translations = {
     pagamentosContadorPdfColPendenteEur: 'Pending (€)',
     pagamentosContadorPdfTotalFiltro: 'Total (current filter)',
     pagamentosContadorPdfDocGerado: 'Document generated on',
-    pagamentosContadorPdfNenhumDetalhe: 'No payments.'
+    pagamentosContadorPdfNenhumDetalhe: 'No payments.',
     comprovantesFiltroMes: 'Filter by month',
     comprovantesFiltroMesArquivoHint:
       'This month is the filing month (tax): it may differ from the receipt date. Set «Filing month» and «Receipt date» for the PDF.',
