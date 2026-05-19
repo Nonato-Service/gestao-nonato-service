@@ -710,11 +710,11 @@ export function PagamentosContadorContent({
               </select>
             </label>
             <label>
-              NIF
+              {tx(safeT, 'pagamentosContadorCampoNif', 'NIF')}
               <input
                 value={entidadeForm.nif}
                 onChange={e => setEntidadeForm(f => ({ ...f, nif: e.target.value }))}
-                placeholder="Opcional"
+                placeholder={tx(safeT, 'pagamentosContadorCampoNifPh', 'Opcional')}
               />
             </label>
             <label>
@@ -722,7 +722,7 @@ export function PagamentosContadorContent({
               <input
                 value={entidadeForm.contacto}
                 onChange={e => setEntidadeForm(f => ({ ...f, contacto: e.target.value }))}
-                placeholder="Email / telefone"
+                placeholder={tx(safeT, 'pagamentosContadorContactoPh', 'Email / telefone')}
               />
             </label>
             <label className="pagamentos-contador-form-grid__full">
@@ -756,7 +756,7 @@ export function PagamentosContadorContent({
                 </div>
                 {(ent.nif || ent.contacto) && (
                   <div className="pagamentos-contador-entidade__meta">
-                    {ent.nif ? `NIF: ${ent.nif}` : ''}
+                    {ent.nif ? `${tx(safeT, 'pagamentosContadorNifPrefix', 'NIF:')} ${ent.nif}` : ''}
                     {ent.nif && ent.contacto ? ' · ' : ''}
                     {ent.contacto ?? ''}
                   </div>
@@ -906,7 +906,9 @@ export function PagamentosContadorContent({
                       <div className="pagamentos-contador-item__meta">
                         {new Date(p.dataPagamento + 'T12:00:00').toLocaleDateString(dateLocale)}
                         {p.periodoReferencia ? ` · ${p.periodoReferencia}` : ''}
-                        {p.numeroDocumento ? ` · Doc. ${p.numeroDocumento}` : ''}
+                        {p.numeroDocumento
+                          ? ` · ${tx(safeT, 'pagamentosContadorDocAbrev', 'Doc.')} ${p.numeroDocumento}`
+                          : ''}
                       </div>
                       {p.descricao ? <p className="pagamentos-contador-item__desc">{p.descricao}</p> : null}
                       {p.anexos.length > 0 && (
