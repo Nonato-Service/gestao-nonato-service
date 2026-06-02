@@ -26822,7 +26822,7 @@ const nextF = familias.filter(x => x !== f)
                       borderRadius: '8px'
                     }}
                   >
-                    âž• Gerenciar Tipos de Gestores
+                    ➕ Gerenciar Tipos de Gestores
                   </button>
                 </div>
 
@@ -28388,7 +28388,7 @@ const nextF = familias.filter(x => x !== f)
 
             <details id="admin-detail-geral" className="admin-disclosure admin-disclosure--violet">
               <summary>
-                <span className="admin-disclosure__icon" aria-hidden>âš™</span>
+                <span className="admin-disclosure__icon" aria-hidden>⚙️</span>
                 <span className="admin-disclosure__meta">
                   <span className="admin-disclosure__title">{safeT?.configuracoesGerais || 'Configurações gerais'}</span>
                   <span className="admin-disclosure__sub">
@@ -31023,7 +31023,7 @@ onKeyPress={(e) => {
                   color: '#00ff00'
                 }}
               >
-                âž• {safeT?.addEquipamento || 'Adicionar Equipamento'}
+                ➕ {safeT?.addEquipamento || 'Adicionar Equipamento'}
               </button>
               <div style={{ flex: 1, minWidth: '300px', position: 'relative' }}>
                 <input
@@ -36132,7 +36132,7 @@ onKeyPress={(e) => {
                 className={`mobile-toolbar-btn ${clientesActiveTab === 'cadastrar' ? 'active' : ''}`}
                 onClick={() => setClientesActiveTab('cadastrar')}
               >
-                âž• {safeT?.cadastrarCliente || 'Cadastrar'}
+                ➕ {safeT?.cadastrarCliente || 'Cadastrar'}
               </button>
               <button 
                 className={`mobile-toolbar-btn ${clientesActiveTab === 'listar' ? 'active' : ''}`}
@@ -36142,7 +36142,7 @@ onKeyPress={(e) => {
               </button>
               {clientesActiveTab === 'cadastrar' && (
                 <button type="button" className="mobile-toolbar-btn" onClick={handleAddCliente} title={safeT?.addCliente || 'Adicionar Cliente'}>
-                  âž• {safeT?.addCliente || 'Adicionar'}
+                  ➕ {safeT?.addCliente || 'Adicionar'}
                 </button>
               )}
               <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>
@@ -36246,7 +36246,7 @@ onKeyPress={(e) => {
                   cursor: 'pointer'
                 }}
               >
-                âž• {safeT?.cadastrarCliente || 'Cadastrar Cliente'}
+                ➕ {safeT?.cadastrarCliente || 'Cadastrar Cliente'}
               </button>
               <button 
                 className="btn-primary"
@@ -36283,7 +36283,7 @@ onKeyPress={(e) => {
                     cursor: 'pointer',
                   }}
                 >
-                  âž• {safeT?.addCliente || 'Adicionar Cliente'}
+                  ➕ {safeT?.addCliente || 'Adicionar Cliente'}
                 </button>
               )}
             </div>
@@ -37179,7 +37179,7 @@ onKeyPress={(e) => {
             {/* Barra fixa mobile */}
             <div className="mobile-sticky-toolbar">
               <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>↶ {safeT?.voltar || 'Voltar'}</button>
-              <button className="mobile-toolbar-btn active" onClick={handleAddFornecedor}>âž• {safeT?.addFornecedor || 'Novo Fornecedor'}</button>
+              <button className="mobile-toolbar-btn active" onClick={handleAddFornecedor}>➕ {safeT?.addFornecedor || 'Novo Fornecedor'}</button>
               <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
             </div>
             {/* Cabeçalho - oculto em mobile */}
@@ -37209,7 +37209,7 @@ onKeyPress={(e) => {
                       fontSize: '13px'
                     }}
                   >
-                    âž• {safeT?.addFornecedor || 'Novo Fornecedor'}
+                    ➕ {safeT?.addFornecedor || 'Novo Fornecedor'}
                   </button>
                   <div className="tab-glass-hero-actions-row">
                     <button 
@@ -42992,7 +42992,7 @@ A1;Peça exemplo;10`}
                       fontSize: '13px'
                     }}
                   >
-                    âž• {safeT?.novoAgendamento || 'Novo Agendamento'}
+                    ➕ {safeT?.novoAgendamento || 'Novo Agendamento'}
                   </button>
                   <button
                     type="button"
@@ -55816,7 +55816,7 @@ A1;Peça exemplo;10`}
               </div>
             </div>
             <div style={{ marginBottom: '16px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <button type="button" onClick={() => { setInformacoesMecanicasAba('cadastro'); handleAddEquipamento(); }} style={{ padding: '12px 20px', fontSize: '14px', fontWeight: '600', backgroundColor: informacoesMecanicasAba === 'cadastro' ? 'rgba(0, 255, 0, 0.25)' : 'rgba(0, 255, 0, 0.08)', border: informacoesMecanicasAba === 'cadastro' ? '2px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '8px', color: informacoesMecanicasAba === 'cadastro' ? '#00ff00' : '#ccc', cursor: 'pointer' }}>âž• {(safeT as any)?.cadastrarEquipamento || 'Cadastrar equipamento'}</button>
+              <button type="button" onClick={() => { setInformacoesMecanicasAba('cadastro'); handleAddEquipamento(); }} style={{ padding: '12px 20px', fontSize: '14px', fontWeight: '600', backgroundColor: informacoesMecanicasAba === 'cadastro' ? 'rgba(0, 255, 0, 0.25)' : 'rgba(0, 255, 0, 0.08)', border: informacoesMecanicasAba === 'cadastro' ? '2px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '8px', color: informacoesMecanicasAba === 'cadastro' ? '#00ff00' : '#ccc', cursor: 'pointer' }}>➕ {(safeT as any)?.cadastrarEquipamento || 'Cadastrar equipamento'}</button>
               <button type="button" onClick={() => { setInformacoesMecanicasAba('lista'); setShowEquipamentoForm(false); setEditingEquipamento(null); }} style={{ padding: '12px 20px', fontSize: '14px', fontWeight: '600', backgroundColor: informacoesMecanicasAba === 'lista' ? 'rgba(0, 255, 0, 0.25)' : 'rgba(0, 255, 0, 0.08)', border: informacoesMecanicasAba === 'lista' ? '2px solid rgba(0, 255, 0, 0.6)' : '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '8px', color: informacoesMecanicasAba === 'lista' ? '#00ff00' : '#ccc', cursor: 'pointer' }}>📋 {(safeT as any)?.verEquipamentosArmazem || 'Ver equipamentos do armazém'}</button>
             </div>
             {informacoesMecanicasAba === 'cadastro' && showEquipamentoForm && (
@@ -61159,7 +61159,7 @@ A1;Peça exemplo;10`}
                     >
                       <summary className="biblioteca-relatorios-cliente__summary">
                         <span className="biblioteca-relatorios-cliente__chevron" aria-hidden>
-                          ▸
+                          ▶
                         </span>
                         <h3 className="biblioteca-relatorios-cliente__title">{cliente.nomeEmpresa}</h3>
                         <div className="biblioteca-relatorios-cliente__summary-kpis">
@@ -61231,7 +61231,7 @@ A1;Peça exemplo;10`}
                                 >
                                   <summary className="biblioteca-relatorios-equip__summary">
                                     <span className="biblioteca-relatorios-equip__chev" aria-hidden>
-                                      ▸
+                                      ▶
                                     </span>
                                     <span className="biblioteca-relatorios-equip__nome">
                                       {eqLabel || equipamentoKey}
@@ -61783,7 +61783,7 @@ A1;Peça exemplo;10`}
           key: button.id,
           title: getButtonName(button),
           desc: descForHubRow(button.id, button.action),
-          icon: gestaoTecnicaHubIcon[button.id || ''] || '▸',
+          icon: gestaoTecnicaHubIcon[button.id || ''] || '📌',
           action: button.action,
           buttonId: button.id
         })
@@ -61800,7 +61800,7 @@ A1;Peça exemplo;10`}
           key: button.id,
           title: getButtonName(button),
           desc: descForHubRow(button.id, button.action),
-          icon: iconFor[button.id || ''] || '▸',
+          icon: iconFor[button.id || ''] || '📌',
           action: button.action,
           buttonId: button.id
         })
@@ -61822,7 +61822,7 @@ A1;Peça exemplo;10`}
           key: button.id,
           title: getButtonName(button),
           desc: descForHubRow(button.id, button.action),
-          icon: docHubIcon[button.id || ''] || '▸',
+          icon: docHubIcon[button.id || ''] || '📌',
           action,
           buttonId: button.id
         })
@@ -61890,6 +61890,14 @@ A1;Peça exemplo;10`}
         firstO = false
       }
     } else if (hubId === 'gestao-custos') {
+      const gestaoCustosHubIcon: Record<string, string> = {
+        'gestao-custos-default': '💼',
+        'fechamento-relatorios-servicos-default': '📋',
+        'orcamentos-avulso-default': '💰',
+        'pedido-orcamentos-avulso-default': '📝',
+        'orcamento-servico-tecnico-default': '🔧',
+        'mapa-visual-separacao-pecas-default': '🗺️',
+      }
       const sorted = [...getButtonsByGroup('gestao-custos')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       for (const button of sorted) {
         if (!canAccessAction(button.action)) continue
@@ -61897,7 +61905,7 @@ A1;Peça exemplo;10`}
           key: button.id,
           title: getButtonName(button),
           desc: descForHubRow(button.id, button.action),
-          icon: '▸',
+          icon: gestaoCustosHubIcon[button.id || ''] || '💼',
           action: button.action,
           buttonId: button.id
         })
@@ -64018,7 +64026,7 @@ A1;Peça exemplo;10`}
                         e.currentTarget.style.backgroundColor = 'rgba(0, 100, 255, 0.2)'
                       }}
                     >
-                      âž• {safeT?.adicionarItemManual || 'Adicionar Item Manual'}
+                      ➕ {safeT?.adicionarItemManual || 'Adicionar Item Manual'}
                     </button>
                   </div>
                 </div>
@@ -71875,7 +71883,7 @@ A1;Peça exemplo;10`}
                       borderRadius: '8px'
                     }}
                   >
-                    âž• Gerenciar Tipos de Gestores
+                    ➕ Gerenciar Tipos de Gestores
                   </button>
                 </div>
 
@@ -72211,7 +72219,7 @@ A1;Peça exemplo;10`}
 
             <div style={{ marginBottom: '20px' }}>
               <button className="btn-primary" onClick={handleAddTipoGestor} style={{ marginBottom: '15px' }}>
-                âž• Adicionar Novo Tipo
+                ➕ Adicionar Novo Tipo
               </button>
 
               {(editingTipoGestor !== null || tipoGestorForm.nome !== '') && (
