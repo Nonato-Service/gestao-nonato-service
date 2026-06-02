@@ -81,6 +81,17 @@ const NONATO_PENDING_FULL_SERVER_REPLACE_LS = 'nonato-pending-full-server-replac
 /** Cadastro de serviços — cópia de segurança antes de «substituir tudo pelo servidor» (servidor vazio apagava o cadastro). */
 const NONATO_CADASTRO_KEYS_BACKUP_ON_FULL_PULL = ['nonato-servicos', 'nonato-servicos-grupos'] as const
 
+/** Icones dos cards hub (code points — evita simbolos corrompidos no deploy) */
+const HUB_ICON = {
+  briefcase: String.fromCodePoint(0x1f4bc),
+  clipboard: String.fromCodePoint(0x1f4cb),
+  money: String.fromCodePoint(0x1f4b0),
+  memo: String.fromCodePoint(0x1f4dd),
+  wrench: String.fromCodePoint(0x1f527),
+  map: String.fromCodePoint(0x1f5fa, 0xfe0f),
+  pin: String.fromCodePoint(0x1f4cc),
+} as const
+
 /** CSS das janelas de impressão/PDF (contabilidade) — `viewport` + tabelas com scroll + botões em coluna no telemóvel */
 const CONTAB_PRINT_WINDOW_STYLES = `
 @page{size:A4;margin:10mm}
@@ -61757,11 +61768,15 @@ A1;Peça exemplo;10`}
       title: string
       desc: string
       icon: string
+      /** Seta desenhada em CSS (sem caracteres Unicode no HTML) */
+      iconCss?: 'chevron'
       action: string
       buttonId?: string
       /** Título de subsecção (ex.: Gestão financeira) — largura total na grelha do hub */
       subsection?: string
     }
+    const hubRowIcon = (emoji?: string): Pick<HubRow, 'icon' | 'iconCss'> =>
+      emoji ? { icon: emoji } : { icon: '', iconCss: 'chevron' }
     const rows: HubRow[] = []
 
     const descForHubRow = (buttonId: string | undefined, action?: string) =>
@@ -61783,7 +61798,7 @@ A1;Peça exemplo;10`}
           key: button.id,
           title: getButtonName(button),
           desc: descForHubRow(button.id, button.action),
-          icon: gestaoTecnicaHubIcon[button.id || ''] || '📌',
+          ...hubRowIcon(gestaoTecnicaHubIcon[button.id || '']),
           action: button.action,
           buttonId: button.id
         })
@@ -61800,7 +61815,7 @@ A1;Peça exemplo;10`}
           key: button.id,
           title: getButtonName(button),
           desc: descForHubRow(button.id, button.action),
-          icon: iconFor[button.id || ''] || '📌',
+          ...hubRowIcon(iconFor[button.id || '']),
           action: button.action,
           buttonId: button.id
         })
@@ -61822,7 +61837,7 @@ A1;Peça exemplo;10`}
           key: button.id,
           title: getButtonName(button),
           desc: descForHubRow(button.id, button.action),
-          icon: docHubIcon[button.id || ''] || '📌',
+          ...hubRowIcon(docHubIcon[button.id || '']),
           action,
           buttonId: button.id
         })
@@ -61891,12 +61906,12 @@ A1;Peça exemplo;10`}
       }
     } else if (hubId === 'gestao-custos') {
       const gestaoCustosHubIcon: Record<string, string> = {
-        'gestao-custos-default': '💼',
-        'fechamento-relatorios-servicos-default': '📋',
-        'orcamentos-avulso-default': '💰',
-        'pedido-orcamentos-avulso-default': '📝',
-        'orcamento-servico-tecnico-default': '🔧',
-        'mapa-visual-separacao-pecas-default': '🗺️',
+        'gestao-custos-default': HUB_ICON.briefcase,
+        'fechamento-relatorios-servicos-default': HUB_ICON.clipboard,
+        'orcamentos-avulso-default': HUB_ICON.money,
+        'pedido-orcamentos-avulso-default': HUB_ICON.memo,
+        'orcamento-servico-tecnico-default': HUB_ICON.wrench,
+        'mapa-visual-separacao-pecas-default': HUB_ICON.map,
       }
       const sorted = [...getButtonsByGroup('gestao-custos')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       for (const button of sorted) {
@@ -61905,7 +61920,7 @@ A1;Peça exemplo;10`}
           key: button.id,
           title: getButtonName(button),
           desc: descForHubRow(button.id, button.action),
-          icon: gestaoCustosHubIcon[button.id || ''] || '💼',
+          icon: gestaoCustosHubIcon[button.id || ''] || HUB_ICON.briefcase,
           action: button.action,
           buttonId: button.id
         })
@@ -62181,8 +62196,11 @@ A1;Peça exemplo;10`}
                     }}
                     onClick={() => handleButtonClick(row.action, row.buttonId)}
                   >
-                    <div className="ns-hub-card-icon" aria-hidden>
-                      {row.icon}
+                    <div
+                      className={`ns-hub-card-icon${row.iconCss ? ` ns-hub-card-icon--${row.iconCss}` : ''}`}
+                      aria-hidden
+                    >
+                      {row.icon || null}
                     </div>
                     <h3 className="ns-hub-card-title">{row.title}</h3>
                     <p className="ns-hub-card-desc">{row.desc}</p>

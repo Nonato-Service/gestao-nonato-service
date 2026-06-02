@@ -9300,6 +9300,25 @@ button.dia-trabalho-acao-btn--del:hover {
   transition: transform 0.28s cubic-bezier(0.34, 1.45, 0.64, 1);
 }
 
+/* Seta padrao dos cards (sem Unicode no HTML — evita simbolos estranhos no deploy) */
+.ns-hub-card-icon--chevron {
+  width: 1.1em;
+  height: 1.1em;
+  color: var(--hub-title, #e2e8f0);
+}
+
+.ns-hub-card-icon--chevron::before {
+  content: '';
+  display: block;
+  width: 0.55em;
+  height: 0.55em;
+  margin: 0.15em auto 0;
+  border-right: 0.2em solid currentColor;
+  border-bottom: 0.2em solid currentColor;
+  transform: rotate(-45deg);
+  opacity: 0.95;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .ns-hub-card:hover .ns-hub-card-icon,
   .ns-hub-card:focus-visible .ns-hub-card-icon {
