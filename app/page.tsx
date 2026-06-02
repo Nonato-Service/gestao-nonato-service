@@ -23050,7 +23050,7 @@ export default function Dashboard() {
               onClick={() => setDemoModuleFineGridExpanded((v) => !v)}
               style={btnToolbar}
             >
-              {demoModuleFineGridExpanded ? 'â–¼ Ocultar lista completa' : 'â–¶ Mostrar lista completa'}
+              {demoModuleFineGridExpanded ? '▼ Ocultar lista completa' : '▶ Mostrar lista completa'}
             </button>
           </div>
 
@@ -23143,7 +23143,7 @@ export default function Dashboard() {
                           gap: '8px',
                         }}
                       >
-                        <span style={{ opacity: 0.9 }}>{open ? 'â–¼' : 'â–¶'}</span>
+                        <span style={{ opacity: 0.9 }}>{open ? '▼' : '▶'}</span>
                         <span>{DEMO_MODULE_GROUP_LABELS[groupId]}</span>
                         <span style={{ opacity: 0.55, fontWeight: 500 }}>({items.length})</span>
                       </button>
@@ -28027,7 +28027,7 @@ const nextF = familias.filter(x => x !== f)
                       'Aviso automático com resumo quando o servidor foi atualizado noutro aparelho.'}
                   </span>
                 </span>
-                <span className="admin-disclosure__chev" aria-hidden>â–¼</span>
+                <span className="admin-disclosure__chev" aria-hidden>▼</span>
               </summary>
               <div className="admin-disclosure__body">
                 <div id="admin-sync-multi" className="admin-sync-card" style={{ marginBottom: 0 }}>
@@ -28145,7 +28145,7 @@ const nextF = familias.filter(x => x !== f)
                     {safeT?.adminDemosSummarySub || 'Destinatários, pacotes de módulos e cópia de links com identificação.'}
                   </span>
                 </span>
-                <span className="admin-disclosure__chev" aria-hidden>â–¼</span>
+                <span className="admin-disclosure__chev" aria-hidden>▼</span>
               </summary>
               <div className="admin-disclosure__body">
             <div id="admin-demo-envio" className="admin-section admin-section--cyan">
@@ -28395,7 +28395,7 @@ const nextF = familias.filter(x => x !== f)
                     {safeT?.adminGeralSummarySub || 'Contador de relatórios, logos na interface, identidade da marca e logos nos PDFs.'}
                   </span>
                 </span>
-                <span className="admin-disclosure__chev" aria-hidden>â–¼</span>
+                <span className="admin-disclosure__chev" aria-hidden>▼</span>
               </summary>
               <div className="admin-disclosure__body">
             <div className="admin-section admin-section--violet">
@@ -29040,7 +29040,7 @@ const nextF = familias.filter(x => x !== f)
                     {safeT?.adminUsersSummarySub || 'Contas, permissões e vínculo com gestores ou técnicos.'}
                   </span>
                 </span>
-                <span className="admin-disclosure__chev" aria-hidden>â–¼</span>
+                <span className="admin-disclosure__chev" aria-hidden>▼</span>
               </summary>
               <div className="admin-disclosure__body">
             {/* SEÇÃO 2: GESTÃO DE USUÁRIOS */}
@@ -29223,7 +29223,7 @@ const nextF = familias.filter(x => x !== f)
                     {safeT?.adminClientePriorSummarySub || 'Empresa em destaque e dados para formulários e fluxos internos.'}
                   </span>
                 </span>
-                <span className="admin-disclosure__chev" aria-hidden>â–¼</span>
+                <span className="admin-disclosure__chev" aria-hidden>▼</span>
               </summary>
               <div className="admin-disclosure__body">
             <div className="admin-section admin-section--amber">
@@ -29473,7 +29473,7 @@ const nextF = familias.filter(x => x !== f)
                     {safeT?.adminJumpSidebarDesc || 'Ordem dos botões, grupos e nomes apresentados na barra.'}
                   </span>
                 </span>
-                <span className="admin-disclosure__chev" aria-hidden>â–¼</span>
+                <span className="admin-disclosure__chev" aria-hidden>▼</span>
               </summary>
               <div className="admin-disclosure__body">
             {renderSidebarButtonOrganizer()}
@@ -29489,7 +29489,7 @@ const nextF = familias.filter(x => x !== f)
                     {safeT?.adminPasswordsSummarySub || 'Senhas para checklist e acesso de técnicos.'}
                   </span>
                 </span>
-                <span className="admin-disclosure__chev" aria-hidden>â–¼</span>
+                <span className="admin-disclosure__chev" aria-hidden>▼</span>
               </summary>
               <div className="admin-disclosure__body">
             <div className="admin-section admin-section--violet">
@@ -29700,7 +29700,7 @@ const nextF = familias.filter(x => x !== f)
                     {safeT?.adminBackupSummarySub || 'Cópias de dados, exportação do código em ZIP e restauração controlada.'}
                   </span>
                 </span>
-                <span className="admin-disclosure__chev" aria-hidden>â–¼</span>
+                <span className="admin-disclosure__chev" aria-hidden>▼</span>
               </summary>
               <div className="admin-disclosure__body">
             <div className="admin-section admin-section--emerald">
@@ -30110,7 +30110,7 @@ const nextF = familias.filter(x => x !== f)
                           }}
                         >
                           {isChecklist && (
-                            <span style={{ width: '20px', flexShrink: 0, cursor: 'pointer', fontSize: '10px', color: '#00ff00' }} onClick={e => { e.stopPropagation(); setFamiliaExpandidaChecklist(prev => prev === f ? null : f); }} title={isExpanded ? (safeT?.close || 'Fechar') : (safeT?.adicionarParente || 'Adicionar Parente')}>{isExpanded ? 'â–¼' : 'â–¶'}</span>
+                            <span style={{ width: '20px', flexShrink: 0, cursor: 'pointer', fontSize: '10px', color: '#00ff00' }} onClick={e => { e.stopPropagation(); setFamiliaExpandidaChecklist(prev => prev === f ? null : f); }} title={isExpanded ? (safeT?.close || 'Fechar') : (safeT?.adicionarParente || 'Adicionar Parente')}>{isExpanded ? '▼' : '▶'}</span>
                           )}
                           <span style={{ color: '#00ff00', fontSize: '13px', fontWeight: 600, width: '22px', flexShrink: 0 }}>{index + 1}</span>
                           {editingFamiliaNome === f ? (
@@ -38789,7 +38789,7 @@ onKeyPress={(e) => {
                       )}
                     </span>
                     <span style={{ flexShrink: 0, opacity: 0.85, fontSize: '12px' }} aria-hidden>
-                      {pecaBibliotecaPickerCategoriaAberto ? 'â–²' : 'â–¼'}
+                      {pecaBibliotecaPickerCategoriaAberto ? '▲' : '▼'}
                     </span>
                   </button>
                   {pecaBibliotecaPickerCategoriaAberto && (() => {
@@ -38970,7 +38970,7 @@ onKeyPress={(e) => {
                         )}
                       </span>
                       <span style={{ flexShrink: 0, opacity: 0.85, fontSize: '12px' }} aria-hidden>
-                        {pecaBibliotecaPickerSubcategoriaAberto ? 'â–²' : 'â–¼'}
+                        {pecaBibliotecaPickerSubcategoriaAberto ? '▲' : '▼'}
                       </span>
                     </button>
                     {pecaBibliotecaPickerSubcategoriaAberto && (() => {
@@ -39961,7 +39961,7 @@ onKeyPress={(e) => {
                             </p>
                           </div>
                           <span style={{ color: '#00ff00', fontSize: '14px', fontWeight: 700, minWidth: '18px', textAlign: 'center' }}>
-                            {classificacaoLoteExpanded ? 'â–²' : 'â–¼'}
+                            {classificacaoLoteExpanded ? '▲' : '▼'}
                           </span>
                         </button>
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -40279,7 +40279,7 @@ onKeyPress={(e) => {
 
                   const headerFilter = (
                     <span className="biblioteca-pecas-hub__catalog-th-chevron" aria-hidden>
-                      â–¼
+                      ▼
                     </span>
                   )
                   return (
@@ -40604,7 +40604,7 @@ onKeyPress={(e) => {
                                               flexShrink: 0,
                                             }}
                                           >
-                                            {subcategoriasVisiveis ? 'â–¼' : 'â–¶'}
+                                            {subcategoriasVisiveis ? '▼' : '▶'}
                                           </button>
                                           <span style={{ fontSize: '15px', letterSpacing: '0.02em' }} title={categoria.nome}>
                                             {categoria.nome}
@@ -40717,7 +40717,7 @@ onKeyPress={(e) => {
                                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                                       {safeT?.subcategorias || 'Subcategoria'}
                                       <span style={{ opacity: 0.65, fontSize: '10px', lineHeight: 1 }} aria-hidden>
-                                        â–¼
+                                        ▼
                                       </span>
                                     </span>
                                   </th>
@@ -40734,7 +40734,7 @@ onKeyPress={(e) => {
                                     <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', width: '100%' }}>
                                       {safeT?.edit || 'Ações'}
                                       <span style={{ opacity: 0.65, fontSize: '10px', lineHeight: 1 }} aria-hidden>
-                                        â–¼
+                                        ▼
                                       </span>
                                     </span>
                                   </th>
@@ -43309,7 +43309,7 @@ A1;Peça exemplo;10`}
                   switch (variant) {
                     case 'exec':
                       cfg = {
-                        icon: 'â–¶',
+                        icon: '▶',
                         tag: trAny.agendaPainelHeadTagExecucao || 'AO VIVO',
                         bar: '#ff6b2d',
                         grad: 'linear-gradient(105deg, rgba(255,95,40,0.42) 0%, rgba(18,10,8,0.97) 48%, rgba(12,12,12,0.98) 100%)',
@@ -43685,7 +43685,7 @@ A1;Peça exemplo;10`}
                 }}
               >
                 <span>{(safeT as any)?.agendaHistoricoConcluidosTitulo || 'Histórico — trabalhos concluídos (pesquisa)'}</span>
-                <span aria-hidden>{agendaHistoricoConcluidosAberto ? 'â–²' : 'â–¼'}</span>
+                <span aria-hidden>{agendaHistoricoConcluidosAberto ? '▲' : '▼'}</span>
               </button>
               {agendaHistoricoConcluidosAberto && (
                 <div style={{ marginTop: '14px' }}>
@@ -51940,7 +51940,7 @@ A1;Peça exemplo;10`}
                           {['opAbsent', 'opGlossy', 'opMatte', 'opEmbossed', 'opCorian'].map(opt => (
                             <label key={opt} style={{ display: 'flex', alignItems: 'center', cursor: 'default', opacity: 0.8, pointerEvents: 'none' }}>
                               <span style={{ marginRight: '5px', fontSize: '16px' }}>
-                                {formularioVisualizar.tipologiaImpiallaggiatura === opt ? 'â—‰' : 'â—‹'}
+                                {formularioVisualizar.tipologiaImpiallaggiatura === opt ? '◉' : '○'}
                               </span>
                               <span style={{ color: '#ccc' }}>{safeT?.[opt] || opt}</span>
                             </label>
@@ -51958,7 +51958,7 @@ A1;Peça exemplo;10`}
                           {['opBlackMatte', 'opBlackGlossy', 'opWhiteMatte', 'opWhiteGlossy'].map(opt => (
                             <label key={opt} style={{ display: 'flex', alignItems: 'center', cursor: 'default', opacity: 0.8, pointerEvents: 'none' }}>
                               <span style={{ marginRight: '5px', fontSize: '16px' }}>
-                                {formularioVisualizar.colore === opt ? 'â—‰' : 'â—‹'}
+                                {formularioVisualizar.colore === opt ? '◉' : '○'}
                               </span>
                               <span style={{ color: '#ccc' }}>{safeT?.[opt] || opt}</span>
                             </label>
@@ -61512,7 +61512,7 @@ A1;Peça exemplo;10`}
                         }}
                       >
                         <span>📁 {pasta.clienteNome}</span>
-                        <span style={{ fontSize: '13px', opacity: 0.85 }}>{pasta.itens.length} · {pastasExcluidasExpandidas.has(pastaKey) ? 'â–¼' : 'â–¶'}</span>
+                        <span style={{ fontSize: '13px', opacity: 0.85 }}>{pasta.itens.length} · {pastasExcluidasExpandidas.has(pastaKey) ? '▼' : '▶'}</span>
                       </button>
                       {pastasExcluidasExpandidas.has(pastaKey) && (
                         <div style={{ padding: '12px 14px 18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -61783,7 +61783,7 @@ A1;Peça exemplo;10`}
           key: button.id,
           title: getButtonName(button),
           desc: descForHubRow(button.id, button.action),
-          icon: gestaoTecnicaHubIcon[button.id || ''] || 'â–¸',
+          icon: gestaoTecnicaHubIcon[button.id || ''] || '▸',
           action: button.action,
           buttonId: button.id
         })
@@ -61800,7 +61800,7 @@ A1;Peça exemplo;10`}
           key: button.id,
           title: getButtonName(button),
           desc: descForHubRow(button.id, button.action),
-          icon: iconFor[button.id || ''] || 'â–¸',
+          icon: iconFor[button.id || ''] || '▸',
           action: button.action,
           buttonId: button.id
         })
@@ -61822,7 +61822,7 @@ A1;Peça exemplo;10`}
           key: button.id,
           title: getButtonName(button),
           desc: descForHubRow(button.id, button.action),
-          icon: docHubIcon[button.id || ''] || 'â–¸',
+          icon: docHubIcon[button.id || ''] || '▸',
           action,
           buttonId: button.id
         })
@@ -61897,7 +61897,7 @@ A1;Peça exemplo;10`}
           key: button.id,
           title: getButtonName(button),
           desc: descForHubRow(button.id, button.action),
-          icon: 'â–¸',
+          icon: '▸',
           action: button.action,
           buttonId: button.id
         })
@@ -68754,7 +68754,7 @@ A1;Peça exemplo;10`}
                           </span>
                         </span>
                         <span style={{ fontSize: 14, lineHeight: 1, color: '#7dff9a', flexShrink: 0 }} aria-hidden>
-                          {mainModuleIntroExpanded ? 'â–¼' : 'â–¶'}
+                          {mainModuleIntroExpanded ? '▼' : '▶'}
                         </span>
                       </button>
                       <div className="main-module-context-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', flexShrink: 0 }}>
