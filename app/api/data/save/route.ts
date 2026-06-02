@@ -9,6 +9,20 @@ import { jsonFileContentUnchanged, serializeJsonForDisk } from '../writeIfChange
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+const API_CORS_HEADERS: HeadersInit = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Accept',
+}
+
+function jsonHeaders(): HeadersInit {
+  return { ...API_CORS_HEADERS }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: jsonHeaders() })
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { isDemo, expired, dataDir } = getDemoContext(request)
@@ -66,7 +80,7 @@ export async function POST(request: NextRequest) {
       success: true, 
       message: `Dados salvos com sucesso: ${key}`,
       ...(revision !== undefined ? { revision, updatedAt } : {})
-    })
+    }, { headers: jsonHeaders() })
   } catch (error: any) {
     console.error('Erro ao salvar dados:', error)
     const msg = process.env.NODE_ENV === 'development' ? error.message : 'Erro ao salvar dados'

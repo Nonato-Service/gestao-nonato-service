@@ -1,0 +1,25 @@
+{
+  "name": "Bíblia da Nonato Service",
+  "short_name": "Nonato Bíblia",
+  "description": "Bíblia técnica Nonato Service — equipamentos, fabricantes e modelos",
+  "start_url": "/biblia-app/index.html",
+  "display": "standalone",
+  "background_color": "#1a1a1c",
+  "theme_color": "#2a2a2e",
+  "orientation": "any",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

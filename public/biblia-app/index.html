@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a1a1c" />
+  <meta name="description" content="Bíblia da Nonato Service — base técnica por equipamento, fabricante e modelo" />
+  <title>Bíblia da Nonato Service</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="watermark" id="watermark" aria-hidden="true"></div>
+
+  <section class="landing" id="landing" aria-label="Página inicial">
+    <div class="landing__inner">
+      <img
+        class="landing__logo"
+        src="assets/nonato-logo.svg"
+        width="280"
+        height="auto"
+        alt="Nonato Service"
+        decoding="async"
+      />
+      <p class="landing__tagline">Entrar para atualizar seu conhecimento</p>
+      <button type="button" class="btn btn--enter" id="btnEnter">
+        Entrar
+      </button>
+    </div>
+  </section>
+
+  <div class="app" id="appMain" hidden>
+    <header class="header">
+      <div class="header__brand">
+        <img
+          class="header__logo"
+          src="assets/nonato-logo.svg"
+          width="56"
+          height="56"
+          alt="Nonato Service"
+          decoding="async"
+        />
+        <div class="header__text">
+          <h1 class="header__title">Bíblia da Nonato Service</h1>
+          <p class="header__subtitle">Base técnica — software, mecânica e eletricidade</p>
+        </div>
+      </div>
+      <div class="header__actions">
+        <button type="button" class="btn btn--ghost" id="btnSearch" aria-label="Buscar">Buscar</button>
+        <button type="button" class="btn btn--secondary" id="btnExport">Exportar backup</button>
+        <label class="btn btn--secondary btn--file" title="Aceita backup deste app ou do programa Gestão Nonato Service">
+          Importar backup
+          <input type="file" id="importFile" accept="application/json,.json" hidden />
+        </label>
+      </div>
+    </header>
+
+    <p class="sync-bar" id="syncBar" hidden>
+      <span class="sync-bar__status" id="syncStatus"></span>
+    </p>
+
+    <div class="search-panel" id="searchPanel" hidden>
+      <input type="search" id="searchInput" class="input search-panel__input" placeholder="Filtrar por categoria, fabricante ou modelo…" autocomplete="off" />
+    </div>
+
+    <nav class="breadcrumbs" id="breadcrumbs" aria-label="Navegação"></nav>
+
+    <main class="main">
+      <section class="home-hero" id="homeHero">
+        <img
+          class="home-hero__logo"
+          src="assets/nonato-logo.svg"
+          width="220"
+          height="auto"
+          alt=""
+          decoding="async"
+        />
+        <h2 class="home-hero__heading">Bíblia da <span class="home-hero__accent">Nonato Service</span></h2>
+        <p class="home-hero__lead">
+          Consulta e registo organizado de informações técnicas — por tipo de equipamento, fabricante e
+          <strong>modelo</strong> (software, mecânica e eletricidade).
+        </p>
+      </section>
+
+      <section class="panel" id="viewCategories">
+        <div class="panel__head">
+          <h2 class="panel__title">Categorias de equipamento</h2>
+          <button type="button" class="btn btn--primary" id="btnAddCategory">+ Categoria</button>
+        </div>
+        <p class="hint">Ex.: Seccionadoras, Esquadrejadoras, CNC… Depois escolha o fabricante e os modelos.</p>
+        <ul class="list" id="listCategories"></ul>
+      </section>
+
+      <section class="panel" id="viewBrands" hidden>
+        <div class="panel__head">
+          <h2 class="panel__title" id="brandsTitle">Fabricantes</h2>
+          <button type="button" class="btn btn--primary" id="btnAddBrand">+ Fabricante</button>
+        </div>
+        <p class="hint" id="brandsHint">Cada fabricante tem a sua lista de <strong>modelos</strong> (ex.: HPP 380).</p>
+        <ul class="list" id="listBrands"></ul>
+      </section>
+
+      <section class="panel" id="viewModels" hidden>
+        <div class="panel__head">
+          <h2 class="panel__title" id="modelsTitle">Modelos</h2>
+          <button type="button" class="btn btn--primary" id="btnAddModel">+ Modelo</button>
+        </div>
+        <ul class="list" id="listModels"></ul>
+      </section>
+
+      <section class="panel panel--detail" id="viewDetail" hidden>
+        <div class="panel__head panel__head--wrap">
+          <h2 class="panel__title" id="detailTitle">Detalhe</h2>
+          <div class="detail-actions">
+            <button type="button" class="btn btn--danger" id="btnDeleteModel">Excluir modelo</button>
+          </div>
+        </div>
+        <div class="tabs" role="tablist">
+          <button type="button" class="tabs__tab is-active" role="tab" aria-selected="true" data-tab="software">Software</button>
+          <button type="button" class="tabs__tab" role="tab" aria-selected="false" data-tab="mechanical">Mecânica</button>
+          <button type="button" class="tabs__tab" role="tab" aria-selected="false" data-tab="electrical">Elétrica</button>
+          <button type="button" class="tabs__tab" role="tab" aria-selected="false" data-tab="notes">Outras notas</button>
+        </div>
+        <div class="tab-panels">
+          <div class="tab-panel is-active" id="tab-software" role="tabpanel">
+            <label class="field-label" for="fieldSoftware">Informações de software</label>
+            <textarea id="fieldSoftware" class="textarea" rows="12" placeholder="Versões, parâmetros, backups, redes…"></textarea>
+          </div>
+          <div class="tab-panel" id="tab-mechanical" role="tabpanel" hidden>
+            <label class="field-label" for="fieldMechanical">Informações mecânicas</label>
+            <textarea id="fieldMechanical" class="textarea" rows="12" placeholder="Calibração, peças, manutenção…"></textarea>
+          </div>
+          <div class="tab-panel" id="tab-electrical" role="tabpanel" hidden>
+            <label class="field-label" for="fieldElectrical">Informações elétricas</label>
+            <textarea id="fieldElectrical" class="textarea" rows="12" placeholder="Esquemas, fusíveis, motores, IO…"></textarea>
+          </div>
+          <div class="tab-panel" id="tab-notes" role="tabpanel" hidden>
+            <label class="field-label" for="fieldNotes">Outras notas</label>
+            <textarea id="fieldNotes" class="textarea" rows="12" placeholder="Contatos, fornecedores, observações gerais…"></textarea>
+          </div>
+        </div>
+        <div class="attachments" id="attachmentsBlock" hidden>
+          <h3 class="attachments__title">Anexos</h3>
+          <ul class="attachments__list" id="attachmentsList"></ul>
+          <label class="btn btn--secondary btn--file attachments__add">
+            + Adicionar ficheiro
+            <input type="file" id="attachmentInput" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx" hidden />
+          </label>
+        </div>
+        <p class="save-hint" id="saveHint">Alterações guardadas automaticamente neste dispositivo.</p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Dados guardados neste aparelho. No programa online sincroniza automaticamente com o servidor.</span>
+    </footer>
+  </div>
+
+  <dialog class="modal" id="modal">
+    <form method="dialog" class="modal__form" id="modalForm">
+      <h3 class="modal__title" id="modalTitle">Título</h3>
+      <label class="field-label" for="modalInput">Nome</label>
+      <input type="text" id="modalInput" class="input" autocomplete="off" />
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" id="modalCancel">Cancelar</button>
+        <button type="submit" class="btn btn--primary" id="modalOk">OK</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator && location.protocol !== "file:") {
+      navigator.serviceWorker.register("./sw.js").catch(function () {});
+    }
+  </script>
+</body>
+</html>

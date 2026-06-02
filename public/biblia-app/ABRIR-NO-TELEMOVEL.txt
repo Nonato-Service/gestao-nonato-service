@@ -1,0 +1,26 @@
+BÍBLIA NO TELEMÓVEL (Android)
+=============================
+
+Use o endereço COMPLETO do Railway + /biblia-app/
+
+  https://SEU-APP.up.railway.app/biblia-app/
+
+(Substitua SEU-APP pelo domínio real do Railway.)
+
+Se não abrir, tente exactamente:
+
+  https://SEU-APP.up.railway.app/biblia-app/index.html
+
+Passos:
+1. Chrome no telemóvel (Wi-Fi ou dados móveis)
+2. Cole o endereço acima
+3. Toque «Entrar»
+4. Menu ⋮ → «Adicionar ao ecrã inicial» ou «Instalar app»
+
+IMPORTANTE:
+• Depois de corrigir o servidor, faça deploy (git push / redeploy no Railway)
+• Se já tinha um atalho antigo, apague-o e crie outro com o link acima
+• No Chrome: Definições → Privacidade → «Limpar dados de navegação» só para o site,
+  se a página ficar em branco ou mostrar o programa errado
+
+NÃO use só o link da página inicial do Gestão (/) — use /biblia-app/

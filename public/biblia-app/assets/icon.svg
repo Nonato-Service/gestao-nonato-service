@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Nonato Bíblia">
+  <rect width="512" height="512" rx="96" fill="#1a1a1c"/>
+  <rect x="64" y="64" width="384" height="384" rx="72" fill="#111114" stroke="#22c55e" stroke-width="12"/>
+  <circle cx="220" cy="256" r="56" fill="#86efac" opacity="0.95"/>
+  <circle cx="292" cy="256" r="72" fill="#22c55e" opacity="0.88"/>
+  <text x="256" y="430" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="52" font-weight="800" fill="#ffffff">BÍBLIA</text>
+</svg>

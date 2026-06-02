@@ -1,6 +1,6 @@
 // Service Worker - Gestão Técnica Nonato Service (PWA offline)
 // Bumpar CACHE_NAME em cada deploy que altere precache / lógica offline
-const CACHE_NAME = 'nonato-pwa-v13'
+const CACHE_NAME = 'nonato-pwa-v14'
 
 const PRECACHE_ASSETS = ['/', '/icon.svg', '/manifest.json']
 
@@ -69,6 +69,8 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return
   if (event.request.method !== 'GET') return
   if (url.pathname.startsWith('/api/')) return
+  // Bíblia tem app e service worker próprios em /biblia-app/ — não interceptar
+  if (url.pathname.startsWith('/biblia-app')) return
 
   const isNavigate = event.request.mode === 'navigate'
 

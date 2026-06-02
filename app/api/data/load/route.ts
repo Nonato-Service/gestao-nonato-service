@@ -13,13 +13,27 @@ const NO_STORE_HEADERS: HeadersInit = {
   Pragma: 'no-cache',
 }
 
+const API_CORS_HEADERS: HeadersInit = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Accept',
+}
+
+function jsonHeaders(): HeadersInit {
+  return { ...NO_STORE_HEADERS, ...API_CORS_HEADERS }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: jsonHeaders() })
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { isDemo, expired, dataDir } = getDemoContext(request)
     if (isDemo && expired) {
       return NextResponse.json(
         { error: 'demo_expired', message: 'Período de demonstração expirado (15 dias).' },
-        { status: 403, headers: NO_STORE_HEADERS }
+        { status: 403, headers: jsonHeaders() }
       )
     }
     ensureDataDir()
@@ -101,7 +115,7 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      return NextResponse.json({ success: true, data: allData }, { headers: NO_STORE_HEADERS })
+      return NextResponse.json({ success: true, data: allData }, { headers: jsonHeaders() })
     }
 
     // Carregar um arquivo específico
@@ -115,7 +129,7 @@ export async function GET(request: NextRequest) {
           data: null,
           message: `Arquivo ${key} não encontrado`,
         },
-        { headers: NO_STORE_HEADERS }
+        { headers: jsonHeaders() }
       )
     }
 
@@ -128,13 +142,13 @@ export async function GET(request: NextRequest) {
           data: null,
           message: `Arquivo ${key} está vazio`,
         },
-        { headers: NO_STORE_HEADERS }
+        { headers: jsonHeaders() }
       )
     }
 
     try {
       const data = JSON.parse(content)
-      return NextResponse.json({ success: true, data }, { headers: NO_STORE_HEADERS })
+      return NextResponse.json({ success: true, data }, { headers: jsonHeaders() })
     } catch (parseError: any) {
       console.error(`Erro ao fazer parse do arquivo ${key}:`, parseError)
       return NextResponse.json(
@@ -143,7 +157,7 @@ export async function GET(request: NextRequest) {
           data: null,
           message: `Arquivo ${key} contém JSON inválido`,
         },
-        { headers: NO_STORE_HEADERS }
+        { headers: jsonHeaders() }
       )
     }
   } catch (error: any) {
@@ -151,7 +165,7 @@ export async function GET(request: NextRequest) {
     const msg = process.env.NODE_ENV === 'development' ? error.message : 'Erro ao carregar dados'
     return NextResponse.json(
       { error: 'Erro ao carregar dados', details: msg },
-      { status: 500, headers: NO_STORE_HEADERS }
+      { status: 500, headers: jsonHeaders() }
     )
   }
 }

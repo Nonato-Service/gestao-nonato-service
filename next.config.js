@@ -3,10 +3,17 @@ const nextConfig = {
   reactStrictMode: true,
   // Reduz uso de memória no build (importante para Railway plano gratuito)
   productionBrowserSourceMaps: false,
+  async redirects() {
+    return [
+      { source: '/biblia-app/', destination: '/biblia-app/index.html', permanent: false },
+    ]
+  },
   async rewrites() {
     return [
       // Evitar 404 quando o browser pede /favicon.ico (usa o ícone da app)
       { source: '/favicon.ico', destination: '/icon.svg' },
+      // Bíblia no telemóvel: /biblia-app abre o index (evita timeout no telefone)
+      { source: '/biblia-app', destination: '/biblia-app/index.html' },
     ]
   },
   async headers() {
