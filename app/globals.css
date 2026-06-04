@@ -9300,6 +9300,11 @@ button.dia-trabalho-acao-btn--del:hover {
   transition: transform 0.28s cubic-bezier(0.34, 1.45, 0.64, 1);
 }
 
+.ns-hub-card-svg {
+  display: block;
+  color: var(--hub-title, #e2e8f0);
+}
+
 /* Seta padrao dos cards (sem Unicode no HTML — evita simbolos estranhos no deploy) */
 .ns-hub-card-icon--chevron {
   width: 1.1em;

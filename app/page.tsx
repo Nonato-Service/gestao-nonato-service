@@ -45,7 +45,18 @@ import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceCont
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 import { OrcamentoServicoTecnicoContent } from './components/OrcamentoServicoTecnicoContent'
 import { NonatoBrandLogo } from './components/NonatoBrandLogo'
-import { IconCalendar, IconHelpCircle, IconHome, ModuleTabIcon } from './components/UiIcons'
+import {
+  IconCalendar,
+  IconClipboardList,
+  IconCoins,
+  IconFileText,
+  IconHelpCircle,
+  IconHome,
+  IconMap,
+  IconTrendingUp,
+  IconWrench,
+  ModuleTabIcon,
+} from './components/UiIcons'
 import { HelpModalBody } from './components/HelpModalBody'
 import {
   PROTOCOLO_SERVICO_PDF_MODELOS_MAX,
@@ -81,16 +92,8 @@ const NONATO_PENDING_FULL_SERVER_REPLACE_LS = 'nonato-pending-full-server-replac
 /** Cadastro de serviços — cópia de segurança antes de «substituir tudo pelo servidor» (servidor vazio apagava o cadastro). */
 const NONATO_CADASTRO_KEYS_BACKUP_ON_FULL_PULL = ['nonato-servicos', 'nonato-servicos-grupos'] as const
 
-/** Icones dos cards hub (code points — evita simbolos corrompidos no deploy) */
-const HUB_ICON = {
-  briefcase: String.fromCodePoint(0x1f4bc),
-  clipboard: String.fromCodePoint(0x1f4cb),
-  money: String.fromCodePoint(0x1f4b0),
-  memo: String.fromCodePoint(0x1f4dd),
-  wrench: String.fromCodePoint(0x1f527),
-  map: String.fromCodePoint(0x1f5fa, 0xfe0f),
-  pin: String.fromCodePoint(0x1f4cc),
-} as const
+/** Tamanho dos SVG nos cards do hub (sem Unicode — evita mojibake no deploy) */
+const HUB_CARD_SVG_SIZE = 44
 
 /** CSS das janelas de impressão/PDF (contabilidade) — `viewport` + tabelas com scroll + botões em coluna no telemóvel */
 const CONTAB_PRINT_WINDOW_STYLES = `
@@ -61767,7 +61770,9 @@ A1;Peça exemplo;10`}
       key: string
       title: string
       desc: string
-      icon: string
+      icon?: string
+      /** Ícone SVG (preferir em hubs — não depende de UTF-8/emoji no bundle) */
+      iconNode?: React.ReactNode
       /** Seta desenhada em CSS (sem caracteres Unicode no HTML) */
       iconCss?: 'chevron'
       action: string
@@ -61905,13 +61910,13 @@ A1;Peça exemplo;10`}
         firstO = false
       }
     } else if (hubId === 'gestao-custos') {
-      const gestaoCustosHubIcon: Record<string, string> = {
-        'gestao-custos-default': HUB_ICON.briefcase,
-        'fechamento-relatorios-servicos-default': HUB_ICON.clipboard,
-        'orcamentos-avulso-default': HUB_ICON.money,
-        'pedido-orcamentos-avulso-default': HUB_ICON.memo,
-        'orcamento-servico-tecnico-default': HUB_ICON.wrench,
-        'mapa-visual-separacao-pecas-default': HUB_ICON.map,
+      const gestaoCustosHubIconNode: Record<string, React.ReactNode> = {
+        'gestao-custos-default': <IconTrendingUp size={HUB_CARD_SVG_SIZE} className="ns-hub-card-svg" />,
+        'fechamento-relatorios-servicos-default': <IconClipboardList size={HUB_CARD_SVG_SIZE} className="ns-hub-card-svg" />,
+        'orcamentos-avulso-default': <IconCoins size={HUB_CARD_SVG_SIZE} className="ns-hub-card-svg" />,
+        'pedido-orcamentos-avulso-default': <IconFileText size={HUB_CARD_SVG_SIZE} className="ns-hub-card-svg" />,
+        'orcamento-servico-tecnico-default': <IconWrench size={HUB_CARD_SVG_SIZE} className="ns-hub-card-svg" />,
+        'mapa-visual-separacao-pecas-default': <IconMap size={HUB_CARD_SVG_SIZE} className="ns-hub-card-svg" />,
       }
       const sorted = [...getButtonsByGroup('gestao-custos')].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       for (const button of sorted) {
@@ -61920,7 +61925,9 @@ A1;Peça exemplo;10`}
           key: button.id,
           title: getButtonName(button),
           desc: descForHubRow(button.id, button.action),
-          icon: gestaoCustosHubIcon[button.id || ''] || HUB_ICON.briefcase,
+          iconNode: gestaoCustosHubIconNode[button.id || ''] ?? (
+            <IconTrendingUp size={HUB_CARD_SVG_SIZE} className="ns-hub-card-svg" />
+          ),
           action: button.action,
           buttonId: button.id
         })
@@ -62200,7 +62207,7 @@ A1;Peça exemplo;10`}
                       className={`ns-hub-card-icon${row.iconCss ? ` ns-hub-card-icon--${row.iconCss}` : ''}`}
                       aria-hidden
                     >
-                      {row.icon || null}
+                      {row.iconNode ?? row.icon ?? null}
                     </div>
                     <h3 className="ns-hub-card-title">{row.title}</h3>
                     <p className="ns-hub-card-desc">{row.desc}</p>
