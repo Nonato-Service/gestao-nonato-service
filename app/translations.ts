@@ -2711,6 +2711,19 @@ export const translations = {
     fechamentoGrupoTitulo: 'Grupo de tarifas (Cadastro de Serviços)',
     fechamentoGrupoAjuda:
       'Escolha o grupo (ex.: HTT 70 €, 95 €, 50 € ou 60 €). HT, viagem, km e diárias usam os valores desse grupo na ordem de cobrança.',
+    clientesPorGruposTab: 'Grupos / Tarifas',
+    clientesGruposTitulo: 'Grupos de clientes',
+    clientesGruposAjuda:
+      'Crie grupos (ex.: NONATO SERVICE, REVENDEDORES PT, HOMAG ALEMANHA, HOMAG USA). Cada grupo tem a sua tabela de valores no Cadastro de Serviços.',
+    clienteGrupoTarifa: 'Grupo / tabela de valores',
+    clienteSemGrupoTarifa: '— Sem grupo (tarifa padrão) —',
+    clienteGrupoTarifaHint:
+      'Ex.: NONATO SERVICE, REVENDEDORES PT, HOMAG ALEMANHA, HOMAG USA — cada grupo tem a sua tabela no Cadastro de Serviços.',
+    clientesEditarTabelaGrupo: 'Editar tabela de valores',
+    clienteAddNoGrupo: 'Adicionar cliente neste grupo',
+    clientesNenhumNoGrupo: 'Nenhum cliente neste grupo.',
+    clientesSelecioneGrupo: 'Selecione ou crie um grupo.',
+    fechamentoGrupoClienteSugerido: 'Tarifa definida no cadastro do cliente',
     servicosGrupoNomePlaceholder: 'Nome do novo grupo',
     servicosNovoGrupo: 'Criar grupo',
     servicosServicoGrupo: 'Grupo',

@@ -2129,6 +2129,24 @@ type Cliente = {
   ultimoRelatorioDevedorId?: string
   /** Formulários de solicitação técnica devolvidos (PDF/imagem), associados ao registo do cliente */
   anexosSolicitacaoServico?: SolicitacaoDocDevolvidoCliente[]
+  /** Grupo do Cadastro de Serviços (tabela HTT/KRC/…) aplicada a este cliente */
+  grupoTarifaId?: string
+}
+
+function findClienteByRelatorio(clientes: Cliente[], rel: RelatorioServico): Cliente | undefined {
+  const cid = (rel.clienteId || '').trim()
+  if (cid) {
+    const byId = clientes.find((c) => c.id === cid)
+    if (byId) return byId
+  }
+  const nome = (rel.cliente || '').trim().toLowerCase()
+  if (!nome) return undefined
+  return clientes.find((c) => (c.nomeEmpresa || '').trim().toLowerCase() === nome)
+}
+
+function nomeGrupoTarifaServico(servicoGrupos: ServicoCadastroGrupo[], grupoId?: string): string {
+  if (!grupoId) return ''
+  return servicoGrupos.find((g) => g.id === grupoId)?.nome || ''
 }
 
 /**
@@ -6239,7 +6257,8 @@ export default function Dashboard() {
   const [showClienteForm, setShowClienteForm] = useState(false)
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null)
   const [buscaCliente, setBuscaCliente] = useState('')
-  const [clientesActiveTab, setClientesActiveTab] = useState<'cadastrar' | 'listar'>('cadastrar')
+  const [clientesActiveTab, setClientesActiveTab] = useState<'cadastrar' | 'listar' | 'grupos'>('cadastrar')
+  const [clienteGrupoTarifaSelecionadoId, setClienteGrupoTarifaSelecionadoId] = useState<string | null>(null)
   const [clienteForm, setClienteForm] = useState({
     nomeEmpresa: '',
     morada: '',
@@ -6252,7 +6271,8 @@ export default function Dashboard() {
     telefones: '',
     email: '',
     contato: '',
-    photo: ''
+    photo: '',
+    grupoTarifaId: '',
   })
 
   /** Antes de gerar PDF/mail: valor, nota e anexos opcionais para a contabilidade. */
@@ -13289,7 +13309,8 @@ export default function Dashboard() {
       telefones: '',
       email: '',
       contato: '',
-      photo: ''
+      photo: '',
+      grupoTarifaId: clienteGrupoTarifaSelecionadoId || ordenarServicoGrupos(servicoGrupos)[0]?.id || '',
     })
     setShowClienteForm(true)
   }
@@ -13308,7 +13329,8 @@ export default function Dashboard() {
       telefones: cliente.telefones,
       email: cliente.email,
       contato: cliente.contato,
-      photo: cliente.photo || ''
+      photo: cliente.photo || '',
+      grupoTarifaId: cliente.grupoTarifaId || '',
     })
     setClientesActiveTab('cadastrar')
     setShowClienteForm(true)
@@ -14338,6 +14360,7 @@ export default function Dashboard() {
     setNovoServicoGrupoNome('')
     setServicoGrupoSelecionadoId(id)
     setServicoGrupoNomeEdicao(nome)
+    setClienteGrupoTarifaSelecionadoId(id)
     void saveData('nonato-servicos-grupos', next)
     alert((safeT as any)?.servicosGrupoSalvo || 'Grupo criado.')
   }
@@ -14381,6 +14404,16 @@ export default function Dashboard() {
     setServicos(nextServicos)
     setServicoGrupoSelecionadoId(destino)
     setServicoGrupoNomeEdicao(outros.find((g) => g.id === destino)?.nome ?? '')
+
+    const clientesComGrupo = clientes.filter((c) => c.grupoTarifaId === grupoId)
+    if (clientesComGrupo.length > 0) {
+      const updatedClientes = clientes.map((c) =>
+        c.grupoTarifaId === grupoId ? { ...c, grupoTarifaId: destino } : c
+      )
+      setClientes(updatedClientes)
+      void saveData('nonato-clientes', updatedClientes)
+    }
+
     void persistServicosEGrupos(nextServicos, outros)
     if (nItens > 0) {
       alert((safeT as any)?.servicosItensMovidosGrupo || 'Itens movidos para outro grupo.')
@@ -15035,8 +15068,9 @@ export default function Dashboard() {
 
     let updatedClientes: Cliente[]
     let savedCliente: Cliente
+    const grupoTarifaId = (clienteForm.grupoTarifaId || '').trim() || undefined
     if (editingCliente) {
-      savedCliente = { ...editingCliente, ...clienteForm }
+      savedCliente = { ...editingCliente, ...clienteForm, grupoTarifaId }
       updatedClientes = clientes.map(c =>
         c.id === editingCliente.id
           ? savedCliente
@@ -15046,6 +15080,7 @@ export default function Dashboard() {
       const newCliente: Cliente = savedCliente = {
         id: Date.now().toString(),
         ...clienteForm,
+        grupoTarifaId,
         equipamentos: [],
         relatorios: {} // Pasta na Biblioteca de Relatórios (Relatórios de Serviço + Despesas)
       }
@@ -15074,7 +15109,8 @@ export default function Dashboard() {
       telefones: savedCliente.telefones,
       email: savedCliente.email,
       contato: savedCliente.contato,
-      photo: savedCliente.photo || ''
+      photo: savedCliente.photo || '',
+      grupoTarifaId: savedCliente.grupoTarifaId || '',
     })
     setEditingCliente(savedCliente)
     alert((t as any).clienteSaved || 'Cliente salvo com sucesso!')
@@ -36257,6 +36293,17 @@ onKeyPress={(e) => {
               >
                 📋 {safeT?.clientesCadastrados || 'Listar'}
               </button>
+              <button
+                className={`mobile-toolbar-btn ${clientesActiveTab === 'grupos' ? 'active' : ''}`}
+                onClick={() => {
+                  setClientesActiveTab('grupos')
+                  if (!clienteGrupoTarifaSelecionadoId) {
+                    setClienteGrupoTarifaSelecionadoId(ordenarServicoGrupos(servicoGrupos)[0]?.id ?? null)
+                  }
+                }}
+              >
+                📁 {(safeT as any)?.clientesPorGruposTab || 'Grupos'}
+              </button>
               {clientesActiveTab === 'cadastrar' && (
                 <button type="button" className="mobile-toolbar-btn" onClick={handleAddCliente} title={safeT?.addCliente || 'Adicionar Cliente'}>
                   ➕ {safeT?.addCliente || 'Adicionar'}
@@ -36382,6 +36429,31 @@ onKeyPress={(e) => {
                 }}
               >
                 📋 {safeT?.clientesCadastrados || 'Clientes Cadastrados'} ({clientes.length})
+              </button>
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  setClientesActiveTab('grupos')
+                  if (!clienteGrupoTarifaSelecionadoId) {
+                    setClienteGrupoTarifaSelecionadoId(ordenarServicoGrupos(servicoGrupos)[0]?.id ?? null)
+                    setServicoGrupoSelecionadoId(ordenarServicoGrupos(servicoGrupos)[0]?.id ?? null)
+                    setServicoGrupoNomeEdicao(ordenarServicoGrupos(servicoGrupos)[0]?.nome ?? '')
+                  }
+                }}
+                style={{
+                  padding: '12px 24px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  border: '1px solid',
+                  borderColor: clientesActiveTab === 'grupos' ? 'rgba(0, 200, 80, 0.55)' : 'rgba(0, 255, 0, 0.22)',
+                  backgroundColor: clientesActiveTab === 'grupos' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
+                  color: '#ffffff',
+                  transition: 'border-color 0.2s ease, background-color 0.2s ease',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                }}
+              >
+                📁 {(safeT as any)?.clientesPorGruposTab || 'Grupos / Tarifas'}
               </button>
               {clientesActiveTab === 'cadastrar' && (
                 <button
@@ -36529,6 +36601,40 @@ onKeyPress={(e) => {
                       onChange={(e) => setClienteForm({ ...clienteForm, nomeEmpresa: e.target.value })}
                       style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
+                  </div>
+
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>
+                      {(safeT as any)?.clienteGrupoTarifa || 'Grupo / tabela de valores'}
+                    </label>
+                    <select
+                      value={
+                        clienteForm.grupoTarifaId ||
+                        clienteGrupoTarifaSelecionadoId ||
+                        ordenarServicoGrupos(servicoGrupos)[0]?.id ||
+                        ''
+                      }
+                      onChange={(e) => setClienteForm({ ...clienteForm, grupoTarifaId: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        backgroundColor: '#222222',
+                        color: '#fff',
+                        border: '1px solid rgba(0, 255, 0, 0.3)',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      <option value="">{(safeT as any)?.clienteSemGrupoTarifa || '— Sem grupo (tarifa padrão) —'}</option>
+                      {ordenarServicoGrupos(servicoGrupos).map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.nome}
+                        </option>
+                      ))}
+                    </select>
+                    <p style={{ margin: '6px 0 0', fontSize: '11px', opacity: 0.65, lineHeight: 1.4 }}>
+                      {(safeT as any)?.clienteGrupoTarifaHint ||
+                        'Ex.: NONATO SERVICE, REVENDEDORES PT, HOMAG ALEMANHA, HOMAG USA — cada grupo tem a sua tabela no Cadastro de Serviços.'}
+                    </p>
                   </div>
                   
                   <div>
@@ -36814,7 +36920,8 @@ onKeyPress={(e) => {
                       telefones: '', 
                       email: '', 
                       contato: '',
-                      photo: ''
+                      photo: '',
+                      grupoTarifaId: '',
                     }); 
                   }} style={{ flex: 1, padding: '8px 16px' }}>
                     {safeT?.cancel || 'Cancelar'}
@@ -36858,6 +36965,179 @@ onKeyPress={(e) => {
                 ) : null}
               </div>
             )}
+              </div>
+            ) : clientesActiveTab === 'grupos' ? (
+              <div style={{ display: 'flex', gap: '18px', alignItems: 'stretch', flexWrap: 'wrap', marginTop: '12px' }}>
+                <aside
+                  style={{
+                    ...glassCardStyle(ACCENT_GREEN, { padding: '16px', radius: '12px', borderAlpha: 0.2 }),
+                    flex: '0 1 280px',
+                    minWidth: '220px',
+                    maxHeight: '70vh',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  <h3 style={{ margin: '0 0 8px', color: '#ffffff', fontSize: '16px' }}>
+                    {(safeT as any)?.clientesGruposTitulo || 'Grupos de clientes'}
+                  </h3>
+                  <p style={{ margin: '0 0 12px', fontSize: '12px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.45 }}>
+                    {(safeT as any)?.clientesGruposAjuda ||
+                      'Crie grupos (ex.: NONATO SERVICE, HOMAG USA). Cada grupo tem a sua tabela de valores no Cadastro de Serviços.'}
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto', flex: 1, marginBottom: '12px' }}>
+                    {ordenarServicoGrupos(servicoGrupos).map((g) => {
+                      const nCli = clientes.filter((c) => c.grupoTarifaId === g.id).length
+                      const sel = clienteGrupoTarifaSelecionadoId === g.id
+                      return (
+                        <button
+                          key={g.id}
+                          type="button"
+                          onClick={() => {
+                            setClienteGrupoTarifaSelecionadoId(g.id)
+                            setServicoGrupoSelecionadoId(g.id)
+                            setServicoGrupoNomeEdicao(g.nome)
+                          }}
+                          style={{
+                            textAlign: 'left',
+                            padding: '10px 12px',
+                            borderRadius: '8px',
+                            border: sel ? '1px solid rgba(0, 200, 80, 0.65)' : '1px solid rgba(0, 255, 0, 0.18)',
+                            background: sel ? 'rgba(18, 52, 24, 0.95)' : 'rgba(22, 28, 28, 0.75)',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                          }}
+                        >
+                          <span style={{ fontWeight: 700 }}>{g.nome}</span>
+                          <span style={{ opacity: 0.65, fontSize: '12px' }}> ({nCli})</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div style={{ borderTop: '1px solid rgba(0,255,0,0.15)', paddingTop: '12px' }}>
+                    <input
+                      type="text"
+                      value={novoServicoGrupoNome}
+                      onChange={(e) => setNovoServicoGrupoNome(e.target.value)}
+                      placeholder={(safeT as any)?.servicosGrupoNomePlaceholder || 'Nome do novo grupo'}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        marginBottom: '8px',
+                        backgroundColor: '#222',
+                        color: '#fff',
+                        border: '1px solid rgba(0, 255, 0, 0.3)',
+                        borderRadius: '6px',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                    <button
+                      className="btn-primary"
+                      type="button"
+                      onClick={handleAddServicoGrupo}
+                      style={{ width: '100%', marginBottom: '8px' }}
+                    >
+                      + {(safeT as any)?.servicosNovoGrupo || 'Criar grupo'}
+                    </button>
+                  </div>
+                </aside>
+                <section style={{ flex: '1 1 360px', minWidth: 0 }}>
+                  {clienteGrupoTarifaSelecionadoId ? (
+                    <>
+                      <div style={{ marginBottom: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          value={servicoGrupoNomeEdicao}
+                          onChange={(e) => setServicoGrupoNomeEdicao(e.target.value)}
+                          style={{
+                            flex: '1 1 180px',
+                            padding: '8px',
+                            backgroundColor: '#222',
+                            color: '#fff',
+                            border: '1px solid rgba(0, 255, 0, 0.3)',
+                            borderRadius: '6px',
+                          }}
+                        />
+                        <button className="btn-primary" type="button" onClick={handleSalvarNomeServicoGrupo}>
+                          {safeT?.save || 'Salvar'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-primary"
+                          onClick={() => {
+                            setServicoGrupoSelecionadoId(clienteGrupoTarifaSelecionadoId)
+                            openTab('cadastro-servicos', getTabTitle('cadastro-servicos'))
+                          }}
+                          style={{ background: 'rgba(0, 120, 200, 0.35)', border: '1px solid rgba(100, 180, 255, 0.55)' }}
+                        >
+                          {(safeT as any)?.clientesEditarTabelaGrupo || 'Editar tabela de valores'}
+                        </button>
+                        <button
+                          className="btn-danger"
+                          type="button"
+                          onClick={() => handleDeleteServicoGrupo(clienteGrupoTarifaSelecionadoId)}
+                        >
+                          {(safeT as any)?.servicosExcluirGrupo || 'Excluir grupo'}
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() => {
+                          handleAddCliente()
+                          setClientesActiveTab('cadastrar')
+                        }}
+                        style={{ marginBottom: '14px' }}
+                      >
+                        + {(safeT as any)?.clienteAddNoGrupo || 'Adicionar cliente neste grupo'}
+                      </button>
+                      {(() => {
+                        const noGrupo = clientes.filter((c) => c.grupoTarifaId === clienteGrupoTarifaSelecionadoId)
+                        if (noGrupo.length === 0) {
+                          return (
+                            <p style={{ opacity: 0.65, fontSize: '13px' }}>
+                              {(safeT as any)?.clientesNenhumNoGrupo || 'Nenhum cliente neste grupo.'}
+                            </p>
+                          )
+                        }
+                        return (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {noGrupo
+                              .slice()
+                              .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
+                              .map((c) => (
+                                <div
+                                  key={c.id}
+                                  style={{
+                                    padding: '12px 14px',
+                                    borderRadius: '8px',
+                                    border: '1px solid rgba(0, 255, 0, 0.2)',
+                                    background: 'rgba(22, 28, 28, 0.75)',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    flexWrap: 'wrap',
+                                  }}
+                                >
+                                  <div>
+                                    <strong style={{ color: '#fff' }}>{c.nomeEmpresa}</strong>
+                                    <div style={{ fontSize: '12px', opacity: 0.65, marginTop: '4px' }}>{c.email}</div>
+                                  </div>
+                                  <button type="button" className="btn-primary" onClick={() => handleEditCliente(c)} style={{ fontSize: '12px', padding: '6px 12px' }}>
+                                    {safeT?.edit || 'Editar'}
+                                  </button>
+                                </div>
+                              ))}
+                          </div>
+                        )
+                      })()}
+                    </>
+                  ) : (
+                    <p style={{ opacity: 0.65 }}>{(safeT as any)?.clientesSelecioneGrupo || 'Selecione ou crie um grupo.'}</p>
+                  )}
+                </section>
               </div>
             ) : (
               <div>
@@ -37024,6 +37304,11 @@ onKeyPress={(e) => {
                                 }}>
                                   {cliente.nomeEmpresa}
                                 </h3>
+                                {cliente.grupoTarifaId && (
+                                  <p style={{ margin: '4px 0 0', color: '#7dff9e', fontSize: '10px', fontWeight: 600 }}>
+                                    📁 {nomeGrupoTarifaServico(servicoGrupos, cliente.grupoTarifaId)}
+                                  </p>
+                                )}
                                 <p style={{ 
                                   margin: 0, 
                                   color: highlightDevedor ? (ehDevedor ? '#fecaca' : '#ff8888') : '#888', 
@@ -45985,7 +46270,7 @@ A1;Peça exemplo;10`}
                   </h3>
                   <p style={{ margin: '0 0 12px', fontSize: '12px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.45 }}>
                     {(safeT as any)?.servicosGruposAjuda ||
-                      'Crie grupos (ex.: Horas trabalhadas). Em cada grupo, cadastre trabalhos e valores.'}
+                      'Crie grupos (ex.: NONATO SERVICE, HOMAG USA). Em cada grupo, cadastre HTT e demais valores — os clientes do mesmo grupo usam esta tabela.'}
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto', flex: 1, marginBottom: '12px' }}>
                     {ordenarServicoGrupos(servicoGrupos).map((g) => {
@@ -47037,9 +47322,13 @@ A1;Peça exemplo;10`}
           }
         }
         const relatorioSelecionado = fechamentoRelatorioSelecionadoId ? relatoriosServico.find(r => r.id === fechamentoRelatorioSelecionadoId) : null
+        const clienteRelatorioFechamento = relatorioSelecionado
+          ? findClienteByRelatorio(clientes, relatorioSelecionado)
+          : undefined
         const fechamentoGrupoIdAtual =
           relatorioSelecionado != null
             ? fechamentoGrupoPorRelatorioId[relatorioSelecionado.id] ||
+              clienteRelatorioFechamento?.grupoTarifaId ||
               ordenarServicoGrupos(servicoGrupos)[0]?.id ||
               ''
             : ''
@@ -47909,6 +48198,16 @@ A1;Peça exemplo;10`}
                         {(safeT as any)?.fechamentoGrupoAjuda ||
                           'Escolha o grupo (ex.: HTT 70 €, 95 €, 50 € ou 60 €). HT, viagem, km e diárias usam os valores desse grupo na ordem de cobrança.'}
                       </p>
+                      {clienteRelatorioFechamento?.grupoTarifaId && (
+                        <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#9be7ff', lineHeight: 1.45 }}>
+                          {(safeT as any)?.fechamentoGrupoClienteSugerido ||
+                            'Tarifa definida no cadastro do cliente'}
+                          :{' '}
+                          <strong>
+                            {nomeGrupoTarifaServico(servicoGrupos, clienteRelatorioFechamento.grupoTarifaId)}
+                          </strong>
+                        </p>
+                      )}
                       <select
                         value={fechamentoGrupoIdAtual}
                         onChange={(e) => patchFechamentoGrupoLocal(e.target.value)}
@@ -73246,6 +73545,23 @@ A1;Peça exemplo;10`}
                   onChange={(e) => setClienteForm({ ...clienteForm, nomeEmpresa: e.target.value })}
                   style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
+                <select
+                  value={
+                    clienteForm.grupoTarifaId ||
+                    clienteGrupoTarifaSelecionadoId ||
+                    ordenarServicoGrupos(servicoGrupos)[0]?.id ||
+                    ''
+                  }
+                  onChange={(e) => setClienteForm({ ...clienteForm, grupoTarifaId: e.target.value })}
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                >
+                  <option value="">{(safeT as any)?.clienteSemGrupoTarifa || '— Sem grupo (tarifa padrão) —'}</option>
+                  {ordenarServicoGrupos(servicoGrupos).map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.nome}
+                    </option>
+                  ))}
+                </select>
                 <input
                   type="text"
                   placeholder={safeT?.morada || 'Morada'}
