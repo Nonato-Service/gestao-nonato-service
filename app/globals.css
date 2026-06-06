@@ -12052,7 +12052,7 @@ html body button,
 html body input[type="button"],
 html body input[type="submit"],
 html body input[type="reset"],
-html body [role="button"],
+html body [role="button"]:not(.ns-hub-card):not(.ns-dashboard-qa-card):not(.ns-dashboard-stat):not(.mobile-sidebar-backdrop),
 html body label[class*="btn-"],
 html body a[class*="btn-"] {
   color: #ffffff !important;
@@ -12067,7 +12067,7 @@ html body button:disabled,
 html body input[type="button"]:hover,
 html body input[type="submit"]:hover,
 html body input[type="reset"]:hover,
-html body [role="button"]:hover,
+html body [role="button"]:not(.ns-hub-card):not(.ns-dashboard-qa-card):not(.ns-dashboard-stat):not(.mobile-sidebar-backdrop):hover,
 html body label[class*="btn-"]:hover,
 html body a[class*="btn-"]:hover {
   color: #ffffff !important;
@@ -12137,7 +12137,7 @@ html body label.btn-info {
 /* Palavras internas dos botões (spans, sub-labels da sidebar, etc.) */
 html body button *,
 html body label[class*="btn-"] *,
-html body [role="button"] *,
+html body [role="button"]:not(.ns-hub-card):not(.ns-dashboard-qa-card):not(.ns-dashboard-stat):not(.mobile-sidebar-backdrop) *,
 html body a[class*="btn-"] * {
   color: inherit !important;
   -webkit-text-fill-color: inherit !important;
@@ -12166,4 +12166,42 @@ html body .sidebar .sidebar-action-buttons > button.sidebar-action-btn.sidebar-a
 html body .sidebar .sidebar-action-buttons > button.sidebar-action-btn:not(.sidebar-action-btn-active):hover {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Exceção: cartões principais do painel — ícones/títulos com cor temática (não botões comuns) */
+html body .ns-hub-card[role="button"] .ns-hub-card-icon,
+html body .ns-hub-card[role="button"] .ns-hub-card-title,
+html body .ns-hub-card[role="button"] .ns-hub-card-svg,
+html body .ns-hub-card[role="button"] .ns-hub-card-icon svg,
+html body .ns-hub-card[role="button"] svg.ns-hub-card-svg {
+  color: var(--hub-title, #e2e8f0) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+html body .ns-hub-card[role="button"] .ns-hub-card-desc {
+  color: rgba(203, 213, 225, 0.88) !important;
+  -webkit-text-fill-color: rgba(203, 213, 225, 0.88) !important;
+}
+
+html body .ns-dashboard-qa-card[role="button"] .ns-dashboard-qa-card-icon,
+html body .ns-dashboard-qa-card[role="button"] .ns-dashboard-qa-card-title,
+html body .ns-dashboard-qa-card[role="button"] .ns-dashboard-qa-card-svg-msg,
+html body .ns-dashboard-qa-card[role="button"] svg {
+  color: var(--qa-title, #e2e8f0) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+html body .ns-dashboard-qa-card[role="button"] .ns-dashboard-qa-card-desc {
+  color: rgba(203, 213, 225, 0.88) !important;
+  -webkit-text-fill-color: rgba(203, 213, 225, 0.88) !important;
+}
+
+html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-label {
+  color: rgba(110, 231, 183, 0.95) !important;
+  -webkit-text-fill-color: rgba(110, 231, 183, 0.95) !important;
+}
+
+html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
+  color: #f1f5f9 !important;
+  -webkit-text-fill-color: #f1f5f9 !important;
 }
