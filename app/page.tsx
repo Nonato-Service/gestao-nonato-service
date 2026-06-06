@@ -63133,6 +63133,7 @@ A1;Peça exemplo;10`}
       descricao: '',
       observacoes: '',
       itens: [] as Array<{ 
+        id?: string
         descricao: string, 
         quantidade: number, 
         precoUnitario: number, 
@@ -63433,12 +63434,13 @@ A1;Peça exemplo;10`}
       }
 
       const novoItem: any = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
         descricao: descricaoItem,
-        quantidade: itemForm.quantidade,
+        quantidade: Math.max(1, itemForm.quantidade || 1),
         precoUnitario: itemForm.tipoItem === 'com-valor' ? itemForm.precoUnitario : 0,
         total:
           itemForm.tipoItem === 'com-valor'
-            ? itemForm.quantidade * itemForm.precoUnitario
+            ? Math.max(1, itemForm.quantidade || 1) * itemForm.precoUnitario
             : 0,
         codigo: codigoItem,
         tipoItem: itemForm.tipoItem,
@@ -63449,7 +63451,7 @@ A1;Peça exemplo;10`}
 
       setDadosOrcamento((prev) => ({
         ...prev,
-        itens: [...prev.itens, novoItem],
+        itens: [novoItem, ...prev.itens],
       }))
 
       if (modoManual) {
@@ -63476,7 +63478,7 @@ A1;Peça exemplo;10`}
               setDadosOrcamento((prev) => {
                 const itens = [...prev.itens]
                 if (itens.length === 0) return prev
-                const idx = itens.length - 1
+                const idx = 0
                 itens[idx] = {
                   ...itens[idx],
                   pecaId: novoPecaId,
@@ -63504,10 +63506,18 @@ A1;Peça exemplo;10`}
         const novosItens = [...prev.itens]
         novosItens[index] = { ...novosItens[index], [campo]: valor }
         if (campo === 'quantidade' || campo === 'precoUnitario') {
-          novosItens[index].total = novosItens[index].quantidade * novosItens[index].precoUnitario
+          const qtd = Math.max(1, Number(novosItens[index].quantidade) || 1)
+          novosItens[index].quantidade = qtd
+          novosItens[index].total = qtd * (Number(novosItens[index].precoUnitario) || 0)
         }
         return { ...prev, itens: novosItens }
       })
+    }
+
+    const alterarQuantidadeItemOrcamento = (index: number, delta: number) => {
+      const item = dadosOrcamento.itens[index]
+      if (!item) return
+      atualizarItem(index, 'quantidade', Math.max(1, (item.quantidade || 1) + delta))
     }
 
     const calcularTotal = () => {
@@ -64598,7 +64608,7 @@ A1;Peça exemplo;10`}
                     const valorIva = item.iva ? (subtotal * item.iva / 100) : 0
                     const totalComIva = subtotal + valorIva
                     return (
-                      <div key={index} style={{ 
+                      <div key={item.id || `${item.codigo || 'item'}-${index}`} style={{ 
                         padding: '15px', 
                         backgroundColor: '#222222', 
                         borderRadius: '8px',
@@ -64650,9 +64660,72 @@ A1;Peça exemplo;10`}
                                 </span>
                               )}
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto', gap: '10px', alignItems: 'center' }}>
-                              <div style={{ fontSize: '12px', color: '#ccc' }}>
-                                {safeT?.quantidade || 'Qtd'}: {item.quantidade}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr 1fr 1fr auto', gap: '10px', alignItems: 'center' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontSize: '11px', color: '#999', marginRight: '2px' }}>
+                                  {safeT?.quantidade || 'Qtd'}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => alterarQuantidadeItemOrcamento(index, -1)}
+                                  style={{
+                                    width: 28,
+                                    height: 28,
+                                    padding: 0,
+                                    fontSize: '16px',
+                                    backgroundColor: '#333',
+                                    border: '1px solid #555',
+                                    borderRadius: 4,
+                                    color: '#fff',
+                                    cursor: 'pointer',
+                                  }}
+                                  title={safeT?.diminuirQuantidade || 'Diminuir quantidade'}
+                                >
+                                  −
+                                </button>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  step={1}
+                                  value={item.quantidade}
+                                  onChange={(e) => {
+                                    const n = parseInt(e.target.value, 10)
+                                    if (!Number.isNaN(n) && n >= 1) atualizarItem(index, 'quantidade', n)
+                                  }}
+                                  onBlur={(e) => {
+                                    const n = parseInt(e.target.value, 10)
+                                    if (Number.isNaN(n) || n < 1) atualizarItem(index, 'quantidade', 1)
+                                  }}
+                                  style={{
+                                    width: 52,
+                                    padding: '4px 6px',
+                                    textAlign: 'center',
+                                    backgroundColor: '#141414',
+                                    border: '1px solid rgba(0, 255, 0, 0.35)',
+                                    borderRadius: 4,
+                                    color: '#00ff00',
+                                    fontWeight: 700,
+                                    fontSize: '13px',
+                                  }}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => alterarQuantidadeItemOrcamento(index, 1)}
+                                  style={{
+                                    width: 28,
+                                    height: 28,
+                                    padding: 0,
+                                    fontSize: '16px',
+                                    backgroundColor: '#333',
+                                    border: '1px solid #555',
+                                    borderRadius: 4,
+                                    color: '#fff',
+                                    cursor: 'pointer',
+                                  }}
+                                  title={safeT?.aumentarQuantidade || 'Aumentar quantidade'}
+                                >
+                                  +
+                                </button>
                               </div>
                               {item.tipoItem === 'com-valor' && (
                                 <>
