@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect } from 'react'
+import { openPedidoOrcamentoAvulsoPdf } from '../lib/pedidoOrcamentoAvulsoPdf'
 
 export type ClientePedido = {
   id: string
@@ -55,6 +56,7 @@ type Props = {
   saveData?: (key: string, data: any) => Promise<void>
   loadData?: (key: string) => Promise<any>
   onGerarOrcamento?: () => void
+  logoHtml?: string
 }
 
 const PEDIDOS_AVULSO_KEY = 'nonato-pedidos-orcamento-avulso'
@@ -71,7 +73,8 @@ export function PedidoOrcamentosAvulsoContent({
   LogoComponent,
   saveData,
   loadData,
-  onGerarOrcamento
+  onGerarOrcamento,
+  logoHtml = ''
 }: Props) {
   const [clienteSelecionado, setClienteSelecionado] = useState<ClientePedido | null>(null)
   const [clienteNomeManual, setClienteNomeManual] = useState('')
@@ -202,19 +205,88 @@ export function PedidoOrcamentosAvulsoContent({
     return `${prefix}${String(next).padStart(4, '0')}`
   }
 
-  const handleGerarPedido = async () => {
+  const pdfLabels = {
+    titulo: safeT?.pedidoOrcamentoPdfTitulo || 'PEDIDO DE ORÇAMENTO',
+    previewBanner: safeT?.pedidoOrcamentoPreviewBanner || 'Pré-visualização — o número definitivo é atribuído ao gerar o pedido',
+    codigo: safeT?.codigoOrcamento || 'Código',
+    data: safeT?.data || 'Data',
+    cliente: safeT?.cliente || 'Cliente',
+    equipamento: safeT?.equipamento || 'Equipamento',
+    colImagem: safeT?.imagem || 'Imagem',
+    colDescricao: safeT?.descricao || 'Descrição',
+    colCodigo: safeT?.codigo || 'Código',
+    colQtd: safeT?.quantidade || 'Qtd',
+    imprimir: safeT?.imprimirOrcamento || 'Imprimir / Guardar PDF',
+    fechar: safeT?.fechar || 'Fechar',
+  }
+
+  function resolverDadosPedidoPdf() {
     const nomeReal = nomeClienteExibido
     if (!nomeReal || nomeReal === '—') {
       alert(safeT?.selecioneOuDigiteCliente || 'Selecione ou digite o nome do cliente.')
-      return
+      return null
     }
     if (pecasPedido.length === 0) {
       alert(safeT?.adicionePeloMenosUmaPeca || 'Adicione pelo menos uma peça ao pedido.')
-      return
+      return null
     }
     const equipamentoTexto = equipamentoSelecionado
       ? `${equipamentoSelecionado.tipoEquipamento} ${equipamentoSelecionado.modelo || ''} - ${equipamentoSelecionado.marca}`
       : equipamentoManual || '—'
+    const nomeNoDoc =
+      emitirComoCliente === 'nonato-service'
+        ? safeT?.nomeNonatoService || 'NONATO SERVICE'
+        : nomeReal
+    return { nomeReal, equipamentoTexto, nomeNoDoc }
+  }
+
+  const handleVisualizarPdf = () => {
+    const dados = resolverDadosPedidoPdf()
+    if (!dados) return
+    const codigoProv = gerarProximoCodigo()
+    openPedidoOrcamentoAvulsoPdf({
+      codigo: `${codigoProv} (${safeT?.provvisorio || 'prov.'})`,
+      preview: true,
+      dataIso: new Date().toISOString(),
+      clienteNomeDoc: dados.nomeNoDoc,
+      equipamentoTexto: dados.equipamentoTexto,
+      pecas: pecasPedido.map((p) => ({
+        codigo: p.codigo,
+        nome: p.nome,
+        quantidade: p.quantidade,
+        imagem: p.imagem,
+      })),
+      logoHtml,
+      labels: pdfLabels,
+    })
+  }
+
+  const handleVisualizarPdfGuardado = (pedido: PedidoAvulsoGuardado) => {
+    const nomeNoDoc =
+      pedido.emitirComoCliente === 'nonato-service'
+        ? safeT?.nomeNonatoService || 'NONATO SERVICE'
+        : pedido.clienteNomeReal
+    openPedidoOrcamentoAvulsoPdf({
+      codigo: pedido.codigo,
+      preview: false,
+      dataIso: pedido.dataGeracao,
+      clienteNomeDoc: nomeNoDoc,
+      equipamentoTexto: pedido.equipamentoTexto,
+      pecas: pedido.pecas.map((p) => ({
+        codigo: p.codigo,
+        nome: p.nome,
+        quantidade: p.quantidade,
+        imagem: p.imagem,
+      })),
+      logoHtml,
+      labels: pdfLabels,
+    })
+  }
+
+  const handleGerarPedido = async () => {
+    const dados = resolverDadosPedidoPdf()
+    if (!dados) return
+    const { nomeReal, equipamentoTexto, nomeNoDoc } = dados
     const codigo = gerarProximoCodigo()
     const novo: PedidoAvulsoGuardado = {
       codigo,
@@ -234,9 +306,10 @@ export function PedidoOrcamentosAvulsoContent({
     }
 
     // Gravar também em Orçamentos Gerados (barra lateral > Orçamentos > Orçamentos Gerados)
-    const nomeNoDoc = emitirComoCliente === 'nonato-service'
-      ? (safeT?.nomeNonatoService || 'NONATO SERVICE')
-      : nomeReal
+    const nomeNoDocPdf =
+      emitirComoCliente === 'nonato-service'
+        ? safeT?.nomeNonatoService || 'NONATO SERVICE'
+        : nomeReal
     if (saveData && loadData) {
       try {
         const existentes: any[] = (await loadData(ORCAMENTOS_AVULSO_KEY)) || []
@@ -249,7 +322,7 @@ export function PedidoOrcamentosAvulsoContent({
           descricao: equipamentoTexto,
           observacoes: '',
           tipo: 'pedido-avulso' as const,
-          clienteNome: nomeNoDoc,
+          clienteNome: nomeNoDocPdf,
           itens: pecasPedido.map((p) => ({
             descricao: p.nome,
             quantidade: p.quantidade,
@@ -697,23 +770,45 @@ export function PedidoOrcamentosAvulsoContent({
               <span style={{ textTransform: 'uppercase' }}>{safeT?.gerarComNomeNonatoService || 'Com nome da NONATO SERVICE'}</span>
             </label>
           </div>
-          <button
-            type="button"
-            onClick={handleGerarPedido}
-            style={{
-              padding: '14px 24px',
-              backgroundColor: 'rgba(0, 255, 0, 0.2)',
-              border: '1px solid rgba(0, 255, 0, 0.6)',
-              borderRadius: '8px',
-              color: '#00ff00',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              fontSize: '15px',
-              textTransform: 'uppercase'
-            }}
-          >
-            {safeT?.gerarPedido || 'Gerar pedido'}
-          </button>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '8px' }}>
+            <button
+              type="button"
+              onClick={handleVisualizarPdf}
+              style={{
+                padding: '14px 24px',
+                backgroundColor: 'rgba(0, 100, 255, 0.15)',
+                border: '1px solid rgba(0, 100, 255, 0.6)',
+                borderRadius: '8px',
+                color: '#66b3ff',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '15px',
+                textTransform: 'uppercase',
+              }}
+            >
+              👁️ {safeT?.visualizarPdfPedido || safeT?.visualizar || 'Visualizar PDF'}
+            </button>
+            <button
+              type="button"
+              onClick={handleGerarPedido}
+              style={{
+                padding: '14px 24px',
+                backgroundColor: 'rgba(0, 255, 0, 0.2)',
+                border: '1px solid rgba(0, 255, 0, 0.6)',
+                borderRadius: '8px',
+                color: '#00ff00',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '15px',
+                textTransform: 'uppercase',
+              }}
+            >
+              {safeT?.gerarPedido || 'Gerar pedido'}
+            </button>
+          </div>
+          <p style={{ color: '#888', fontSize: '12px', margin: '0 0 16px', lineHeight: 1.5 }}>
+            {safeT?.pedidoOrcamentoPreviewHint || 'Use «Visualizar PDF» para ver o documento antes de gerar. Depois imprima ou guarde como PDF no browser.'}
+          </p>
           {codigoUltimoGerado && (
             <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#1a2a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
               <div style={{ color: '#00ff00', fontWeight: 'bold', marginBottom: '4px', textTransform: 'uppercase' }}>
@@ -761,6 +856,13 @@ export function PedidoOrcamentosAvulsoContent({
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleVisualizarPdfGuardado(p)}
+                        style={{ padding: '6px 12px', backgroundColor: 'rgba(0, 100, 255, 0.2)', border: '1px solid rgba(0, 100, 255, 0.6)', borderRadius: '6px', color: '#66b3ff', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}
+                      >
+                        👁️ PDF
+                      </button>
                       <button
                         type="button"
                         onClick={async () => {

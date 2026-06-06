@@ -46971,6 +46971,7 @@ A1;Peça exemplo;10`}
               setOpenOrcamentosGeradosView(true)
               openTab('orcamentos-avulso', getTabTitle('orcamentos-avulso'))
             }}
+            logoHtml={getLogoHtmlForOrcamento()}
           />
         )
 
