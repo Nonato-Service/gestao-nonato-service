@@ -2707,6 +2707,10 @@ export const translations = {
     servicosGruposTitulo: 'Grupos',
     servicosGruposAjuda:
       'Crie grupos (ex.: Horas trabalhadas). Em cada grupo, cadastre trabalhos e valores.',
+    servicosQuickAddHtt: 'HTT (hora técnica) neste grupo',
+    fechamentoGrupoTitulo: 'Grupo de tarifas (Cadastro de Serviços)',
+    fechamentoGrupoAjuda:
+      'Escolha o grupo (ex.: HTT 70 €, 95 €, 50 € ou 60 €). HT, viagem, km e diárias usam os valores desse grupo na ordem de cobrança.',
     servicosGrupoNomePlaceholder: 'Nome do novo grupo',
     servicosNovoGrupo: 'Criar grupo',
     servicosServicoGrupo: 'Grupo',

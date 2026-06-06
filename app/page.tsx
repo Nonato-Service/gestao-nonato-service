@@ -355,6 +355,17 @@ type ServicoCadastroFechamentoMin = {
   valor: number
   tipoCobranca: string
   categoria?: string
+  grupoId?: string
+}
+
+/** Restringe o cadastro ao grupo escolhido no fechamento (ex.: HTT 70 € vs 95 € por grupo). */
+function filtrarServicosCadastroPorGrupo(
+  servicos: ServicoCadastroFechamentoMin[],
+  grupoId?: string | null
+): ServicoCadastroFechamentoMin[] {
+  if (!grupoId) return servicos
+  const filtered = servicos.filter((s) => s.grupoId === grupoId)
+  return filtered.length > 0 ? filtered : servicos
 }
 
 function txtServicoFechamento(s: ServicoCadastroFechamentoMin): string {
@@ -362,10 +373,14 @@ function txtServicoFechamento(s: ServicoCadastroFechamentoMin): string {
 }
 
 /** Associa cada linha do fechamento (ht, km, diárias, ida, retorno) ao serviço certo do cadastro. */
-function resolverServicosFechamentoTemplate(servicos: ServicoCadastroFechamentoMin[]) {
-  const horaServs = servicos.filter((s) => s.tipoCobranca === 'hora')
+function resolverServicosFechamentoTemplate(
+  servicos: ServicoCadastroFechamentoMin[],
+  grupoId?: string | null
+) {
+  const pool = filtrarServicosCadastroPorGrupo(servicos, grupoId)
+  const horaServs = pool.filter((s) => s.tipoCobranca === 'hora')
   const txt = txtServicoFechamento
-  const porCod = (re: RegExp) => servicos.find((s) => re.test(String(s.cod || '').trim()))
+  const porCod = (re: RegExp) => pool.find((s) => re.test(String(s.cod || '').trim()))
 
   const fechServHt =
     porCod(/^(ht|htt)$/i) ||
@@ -379,20 +394,20 @@ function resolverServicosFechamentoTemplate(servicos: ServicoCadastroFechamentoM
 
   const fechServHida =
     porCod(/^(hvi|hida|hvida)$/i) ||
-    servicos.find((s) => /viaj/i.test(txt(s)) && /\bida\b/i.test(txt(s)) && !/retorno/i.test(txt(s))) ||
+    pool.find((s) => /viaj/i.test(txt(s)) && /\bida\b/i.test(txt(s)) && !/retorno/i.test(txt(s))) ||
     horaServs.find((s) => /\bida\b/i.test(txt(s)) && !/retorno/i.test(txt(s))) ||
     horaServs.find((s) => s.id && s.id !== fechServHt?.id)
 
   const fechServHret =
     porCod(/^(hvr|hret|hvret)$/i) ||
-    servicos.find((s) => /viaj/i.test(txt(s)) && /(retorno|volta)/i.test(txt(s))) ||
+    pool.find((s) => /viaj/i.test(txt(s)) && /(retorno|volta)/i.test(txt(s))) ||
     horaServs.find((s) => /retorno|volta/i.test(txt(s))) ||
     horaServs.find((s) => s.id && s.id !== fechServHt?.id && s.id !== fechServHida?.id) ||
     fechServHida
 
-  const fechServKm = porCod(/^krc$/i) || servicos.find((s) => s.tipoCobranca === 'km')
+  const fechServKm = porCod(/^krc$/i) || pool.find((s) => s.tipoCobranca === 'km')
 
-  const diariasLista = servicos
+  const diariasLista = pool
     .filter((s) => s.tipoCobranca === 'diarias')
     .slice()
     .sort((a, b) => {
@@ -450,13 +465,14 @@ function servicoCombinaLinhaFechamento(s: ServicoCadastroFechamentoMin, linhaId:
 function getServicoParaLinhaFechamento(
   servicos: ServicoCadastroFechamentoMin[],
   linhaId: string,
-  savedServicoId?: string
+  savedServicoId?: string,
+  grupoId?: string | null
 ): ServicoCadastroFechamentoMin | undefined {
   if (savedServicoId) {
     const byId = servicos.find((s) => s.id === savedServicoId)
     if (byId && servicoCombinaLinhaFechamento(byId, linhaId)) return byId
   }
-  const r = resolverServicosFechamentoTemplate(servicos)
+  const r = resolverServicosFechamentoTemplate(servicos, grupoId)
   if (linhaId === 'ht') return r.fechServHt
   if (linhaId === 'hida') return r.fechServHida
   if (linhaId === 'hret') return r.fechServHret
@@ -469,12 +485,13 @@ function getServicoParaLinhaFechamento(
 function enriquecerLinhaFechamentoComCadastro(
   item: FechamentoItem,
   servicos: ServicoCadastroFechamentoMin[],
-  savedServicoId?: string
+  savedServicoId?: string,
+  grupoId?: string | null
 ): FechamentoItem {
-  const tpl = getServicoParaLinhaFechamento(servicos, item.id)
+  const tpl = getServicoParaLinhaFechamento(servicos, item.id, undefined, grupoId)
   let svc = tpl
   if (savedServicoId) {
-    const bySaved = getServicoParaLinhaFechamento(servicos, item.id, savedServicoId)
+    const bySaved = getServicoParaLinhaFechamento(servicos, item.id, savedServicoId, grupoId)
     const vSaved = bySaved ? normalizeServicoValorStored(bySaved.valor) : 0
     if (item.id === 'diarias') {
       const cod = String(bySaved?.cod || '').trim().toUpperCase()
@@ -1585,6 +1602,8 @@ const FECHAMENTO_ITENS_OMITIDOS_KEY = 'nonato-fechamentos-itens-omitidos-por-rel
 const FECHAMENTO_FLUXO_FINANCEIRO_KEY = 'nonato-fechamentos-fluxo-financeiro'
 /** Por relatório: fecho com IVA opcional e taxa (ex.: PT/ES/IT) */
 const FECHAMENTO_IVA_POR_RELATORIO_KEY = 'nonato-fechamentos-iva-por-relatorio'
+/** Grupo do Cadastro de Serviços aplicado à ordem de cobrança de cada relatório (HTT/KRC/… por tarifa). */
+const FECHAMENTO_GRUPO_POR_RELATORIO_KEY = 'nonato-fechamentos-grupo-por-relatorio'
 const FECHAMENTO_IDS_FIXOS_TEMPLATE = ['ht', 'km', 'diarias', 'hida', 'hret'] as const
 /** E-mail da contabilidade e opção de abrir envio após guardar fechamento na Biblioteca */
 const CONTABILIDADE_CONFIG_KEY = 'nonato-contabilidade-config'
@@ -6488,6 +6507,7 @@ export default function Dashboard() {
   const [fechamentoIvaPorRelatorioId, setFechamentoIvaPorRelatorioId] = useState<
     Record<string, FechamentoIvaOpcoesRelatorio>
   >({})
+  const [fechamentoGrupoPorRelatorioId, setFechamentoGrupoPorRelatorioId] = useState<Record<string, string>>({})
   const relatoriosFechamentoBibliotecaOrdenados = useMemo(
     () =>
       relatoriosComFechamentoNaBibliotecaOrdenados(
@@ -6970,12 +6990,18 @@ export default function Dashboard() {
         if (!Array.isArray(list) || list.length === 0) continue
         const repaired = list.map((it) => {
           if (it.id !== 'diarias') return it
-          const tpl = getServicoParaLinhaFechamento(servicos as ServicoCadastroFechamentoMin[], 'diarias')
+          const tpl = getServicoParaLinhaFechamento(
+            servicos as ServicoCadastroFechamentoMin[],
+            'diarias',
+            it.servicoId,
+            fechamentoGrupoPorRelatorioId[rid]
+          )
           if (!tpl || normalizeServicoValorStored(tpl.valor) <= 0) return it
           const enriched = enriquecerLinhaFechamentoComCadastro(
             { ...it, tipoCobranca: 'diarias' },
             servicos as ServicoCadastroFechamentoMin[],
-            it.servicoId
+            it.servicoId,
+            fechamentoGrupoPorRelatorioId[rid]
           )
           if (
             normalizeServicoValorStored(enriched.valorUnitario) <= 0 &&
@@ -7000,7 +7026,7 @@ export default function Dashboard() {
       void saveData('nonato-fechamentos-relatorios', next)
       return next
     })
-  }, [servicos])
+  }, [servicos, fechamentoGrupoPorRelatorioId])
 
   // ===== Biblioteca de Grupos e Peças (Equipamentos Desmontados) =====
   const [showDesmontadosModal, setShowDesmontadosModal] = useState(false)
@@ -8943,6 +8969,27 @@ export default function Dashboard() {
         }
       }
       setFechamentoIvaPorRelatorioId(fechamentoIvaMap)
+
+      const savedFechamentoGrupo = getData(FECHAMENTO_GRUPO_POR_RELATORIO_KEY)
+      let fechamentoGrupoMap: Record<string, string> = {}
+      if (savedFechamentoGrupo && typeof savedFechamentoGrupo === 'object' && !Array.isArray(savedFechamentoGrupo)) {
+        const rawG = savedFechamentoGrupo as Record<string, unknown>
+        for (const k of Object.keys(rawG)) {
+          const v = rawG[k]
+          if (typeof v === 'string' && v.trim()) fechamentoGrupoMap[k] = v.trim()
+        }
+        if (removedRelatorioIds.size > 0) {
+          let grupoDirty = false
+          for (const id of removedRelatorioIds) {
+            if (id in fechamentoGrupoMap) {
+              delete fechamentoGrupoMap[id]
+              grupoDirty = true
+            }
+          }
+          if (grupoDirty) void saveData(FECHAMENTO_GRUPO_POR_RELATORIO_KEY, fechamentoGrupoMap)
+        }
+      }
+      setFechamentoGrupoPorRelatorioId(fechamentoGrupoMap)
 
       const savedRelExcl = getData('nonato-relatorios-excluidos-clientes') as RelatoriosExcluidosClientesStorage | null
       if (savedRelExcl && savedRelExcl.pastas && typeof savedRelExcl.pastas === 'object') {
@@ -13948,6 +13995,33 @@ export default function Dashboard() {
       grupoId: servicoGrupoIdPadrao(),
       tipoCobranca: 'unidade',
       categoria: 'servico'
+    })
+    setShowServicoForm(true)
+  }
+
+  /** Abre o formulário com HTT pré-preenchido no grupo selecionado (tarifas diferentes por grupo). */
+  const handleQuickAddHttNoGrupo = (grupoIdOverride?: string) => {
+    const gid = grupoIdOverride || servicoGrupoIdPadrao()
+    const existente = servicos.find(
+      (s) =>
+        s.grupoId === gid &&
+        (/^(HT|HTT)$/i.test(String(s.cod || '').trim()) ||
+          /trabalh/i.test(`${s.nome || ''} ${s.descricao || ''}`.toLowerCase()))
+    )
+    if (existente) {
+      handleEditServico(existente)
+      return
+    }
+    setEditingServico(null)
+    setServicoValorInput('')
+    setServicoForm({
+      cod: 'HTT',
+      nome: 'Hora técnica trabalhada',
+      descricao: 'HORA TECNICA TRABALHADA',
+      valor: 0,
+      grupoId: gid,
+      tipoCobranca: 'hora',
+      categoria: 'servico',
     })
     setShowServicoForm(true)
   }
@@ -46025,6 +46099,14 @@ A1;Peça exemplo;10`}
                       <button className="btn-primary" onClick={handleAddServico} style={{ marginBottom: '16px' }}>
                         {safeT?.adicionarServico || 'Adicionar Serviço ou Despesa'}
                       </button>
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        onClick={() => handleQuickAddHttNoGrupo(servicoGrupoSelecionadoId || undefined)}
+                        style={{ marginBottom: '16px', marginLeft: '8px', background: 'rgba(0, 120, 200, 0.35)', border: '1px solid rgba(100, 180, 255, 0.55)' }}
+                      >
+                        + {(safeT as any)?.servicosQuickAddHtt || 'HTT (hora técnica) neste grupo'}
+                      </button>
                       {showServicoForm && (
                         <div
                           style={{
@@ -46955,7 +47037,16 @@ A1;Peça exemplo;10`}
           }
         }
         const relatorioSelecionado = fechamentoRelatorioSelecionadoId ? relatoriosServico.find(r => r.id === fechamentoRelatorioSelecionadoId) : null
-        const fechamentoServicosTpl = resolverServicosFechamentoTemplate(servicos)
+        const fechamentoGrupoIdAtual =
+          relatorioSelecionado != null
+            ? fechamentoGrupoPorRelatorioId[relatorioSelecionado.id] ||
+              ordenarServicoGrupos(servicoGrupos)[0]?.id ||
+              ''
+            : ''
+        const fechamentoServicosTpl = resolverServicosFechamentoTemplate(
+          servicos as ServicoCadastroFechamentoMin[],
+          fechamentoGrupoIdAtual
+        )
         const { fechServHt, fechServHida, fechServHret } = fechamentoServicosTpl
 
         const getItensIniciaisDoRelatorio = (r: RelatorioServico): FechamentoItem[] => {
@@ -46973,7 +47064,9 @@ A1;Peça exemplo;10`}
           return base.map((item) => {
             const enriched = enriquecerLinhaFechamentoComCadastro(
               item,
-              servicos as ServicoCadastroFechamentoMin[]
+              servicos as ServicoCadastroFechamentoMin[],
+              undefined,
+              fechamentoGrupoIdAtual
             )
             if (item.id === 'diarias') return { ...enriched, cobrarDiaria: true }
             return enriched
@@ -46981,7 +47074,7 @@ A1;Peça exemplo;10`}
         }
         // Helper: obter serviço do Cadastro para um item do resumo (para preencher cod e valor unit. quando saved está vazio/desatualizado)
         const getServicoParaItemResumo = (itemId: string, savedServicoId?: string) =>
-          getServicoParaLinhaFechamento(servicos, itemId, savedServicoId)
+          getServicoParaLinhaFechamento(servicos, itemId, savedServicoId, fechamentoGrupoIdAtual)
         // Sempre preencher a tabela a partir do resumo do relatório: itens com quantidades do resumo + código/descrição/valor do Cadastro de Serviços
         const itensIniciaisSempre = relatorioSelecionado ? getItensIniciaisDoRelatorio(relatorioSelecionado) : []
         /** Linhas extra guardadas sem `origem` (dados antigos) continuam a contar como manuais. */
@@ -47013,7 +47106,8 @@ A1;Peça exemplo;10`}
                 origem: saved.origem ?? item.origem,
               },
               servicos as ServicoCadastroFechamentoMin[],
-              saved.servicoId
+              saved.servicoId,
+              fechamentoGrupoIdAtual
             )
             return {
               ...enriched,
@@ -47064,13 +47158,57 @@ A1;Peça exemplo;10`}
           })
         }
         const servicosParaItem = (item: FechamentoItem) => {
+          const pool = filtrarServicosCadastroPorGrupo(
+            servicos as ServicoCadastroFechamentoMin[],
+            fechamentoGrupoIdAtual
+          )
           const txt = (s: typeof servicos[0]) => ((s.nome || '') + ' ' + (s.descricao || '')).toLowerCase()
-          if (item.id === 'hida') return servicos.filter(s => s.tipoCobranca === 'hora' || (/viagem/.test(txt(s)) && /ida/.test(txt(s))))
-          if (item.id === 'hret') return servicos.filter(s => s.tipoCobranca === 'hora' || (/viagem/.test(txt(s)) && /retorno/.test(txt(s))))
-          if (item.tipoCobranca === 'hora') return servicos.filter(s => s.tipoCobranca === 'hora')
-          if (item.tipoCobranca === 'km') return servicos.filter(s => s.tipoCobranca === 'km')
-          if (item.tipoCobranca === 'diarias') return servicos.filter(s => s.tipoCobranca === 'diarias')
-          return servicos
+          if (item.id === 'hida') return pool.filter(s => s.tipoCobranca === 'hora' || (/viagem/.test(txt(s)) && /ida/.test(txt(s))))
+          if (item.id === 'hret') return pool.filter(s => s.tipoCobranca === 'hora' || (/viagem/.test(txt(s)) && /retorno/.test(txt(s))))
+          if (item.tipoCobranca === 'hora') return pool.filter(s => s.tipoCobranca === 'hora')
+          if (item.tipoCobranca === 'km') return pool.filter(s => s.tipoCobranca === 'km')
+          if (item.tipoCobranca === 'diarias') return pool.filter(s => s.tipoCobranca === 'diarias')
+          return pool
+        }
+        const patchFechamentoGrupoLocal = (grupoId: string) => {
+          if (!relatorioSelecionado || !grupoId) return
+          const rid = relatorioSelecionado.id
+          setFechamentoGrupoPorRelatorioId((prev) => {
+            const next = { ...prev, [rid]: grupoId }
+            void saveData(FECHAMENTO_GRUPO_POR_RELATORIO_KEY, next)
+            return next
+          })
+          setFechamentosRelatorios((prev) => {
+            const list = buildItensParaExibirFromSalvos(prev[rid])
+            const t = totaisFromRelatorio(relatorioSelecionado)
+            const qtyById: Record<string, number> = {
+              ht: t.horasTrabalhoDecimal,
+              km: t.kmsPercorridos,
+              diarias: t.numDiarias,
+              hida: t.horasViagemIdaDecimal,
+              hret: t.horasViagemRetornoDecimal,
+            }
+            const nova = list.map((item) => {
+              if (!(FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(item.id)) return item
+              const enriched = enriquecerLinhaFechamentoComCadastro(
+                {
+                  ...item,
+                  quantidade: qtyById[item.id] ?? item.quantidade,
+                  servicoId: undefined,
+                },
+                servicos as ServicoCadastroFechamentoMin[],
+                undefined,
+                grupoId
+              )
+              if (item.id === 'diarias') {
+                return { ...enriched, cobrarDiaria: item.cobrarDiaria !== false }
+              }
+              return enriched
+            })
+            const next = { ...prev, [rid]: nova }
+            void saveData('nonato-fechamentos-relatorios', next)
+            return next
+          })
         }
         const totalCobranca = itensVisiveisFechamento.reduce((s, i) => s + (i.id === 'diarias' && i.cobrarDiaria === false ? 0 : i.valorTotal), 0)
         const ridFechIva = relatorioSelecionado?.id
@@ -47754,6 +47892,55 @@ A1;Peça exemplo;10`}
                     <h3 style={{ margin: 0, color: '#00ff00', fontSize: '16px' }}>{(safeT as any)?.itensCobrancaFechamento || 'Itens a cobrar (ajuste com o Cadastro de Serviços)'}</h3>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.8)' }}>✏️ {(safeT as any)?.editarItensFechamento || 'Editar itens'}</span>
                   </div>
+                  {servicoGrupos.length > 0 && (
+                    <div
+                      style={{
+                        marginBottom: '16px',
+                        padding: '14px 16px',
+                        borderRadius: '10px',
+                        border: '1px solid rgba(0, 200, 80, 0.45)',
+                        background: 'rgba(18, 52, 24, 0.35)',
+                      }}
+                    >
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#7dff9e', marginBottom: '6px' }}>
+                        {(safeT as any)?.fechamentoGrupoTitulo || 'Grupo de tarifas (Cadastro de Serviços)'}
+                      </div>
+                      <p style={{ margin: '0 0 10px', fontSize: '12px', color: 'rgba(255,255,255,0.72)', lineHeight: 1.45 }}>
+                        {(safeT as any)?.fechamentoGrupoAjuda ||
+                          'Escolha o grupo (ex.: HTT 70 €, 95 €, 50 € ou 60 €). HT, viagem, km e diárias usam os valores desse grupo na ordem de cobrança.'}
+                      </p>
+                      <select
+                        value={fechamentoGrupoIdAtual}
+                        onChange={(e) => patchFechamentoGrupoLocal(e.target.value)}
+                        style={{
+                          width: '100%',
+                          maxWidth: '420px',
+                          padding: '10px 12px',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(0, 255, 0, 0.35)',
+                          background: '#141414',
+                          color: '#fff',
+                          fontSize: '14px',
+                        }}
+                      >
+                        {ordenarServicoGrupos(servicoGrupos).map((g) => {
+                          const htt = servicos.find(
+                            (s) =>
+                              s.grupoId === g.id &&
+                              (/^(HT|HTT)$/i.test(String(s.cod || '').trim()) ||
+                                /trabalh/i.test(`${s.nome || ''} ${s.descricao || ''}`.toLowerCase()))
+                          )
+                          const httVal = htt ? formatServicoValorExibicao(htt.valor) : null
+                          return (
+                            <option key={g.id} value={g.id}>
+                              {g.nome}
+                              {httVal != null ? ` — HTT ${httVal} €` : ''}
+                            </option>
+                          )
+                        })}
+                      </select>
+                    </div>
+                  )}
                   {omitidosRelatorio.length > 0 && (
                     <div
                       style={{
@@ -47842,7 +48029,8 @@ A1;Peça exemplo;10`}
                           const tpl = getServicoParaLinhaFechamento(
                             servicos as ServicoCadastroFechamentoMin[],
                             item.id,
-                            item.servicoId
+                            item.servicoId,
+                            fechamentoGrupoIdAtual
                           )
                           if (tpl) v = normalizeServicoValorStored(tpl.valor)
                           return v
@@ -47893,15 +48081,30 @@ A1;Peça exemplo;10`}
                                   title={(safeT as any)?.selecionarServicoDiarias || 'Serviço de diárias (DFC, DDT…)'}
                                 >
                                   <option value="">{(safeT as any)?.servicoDiarias || '— Serviço diárias —'}</option>
-                                  {servicos
-                                    .filter((s) => s.tipoCobranca === 'diarias')
-                                    .map((s) => (
-                                      <option key={s.id} value={s.id}>
-                                        {servicoRotuloParaSelectFechamento(s)} · {formatServicoValorExibicao(s.valor)} €
-                                      </option>
-                                    ))}
+                                  {servicosParaItem(item).map((s) => (
+                                    <option key={s.id} value={s.id}>
+                                      {servicoRotuloParaSelectFechamento(s)} · {formatServicoValorExibicao(s.valor)} €
+                                    </option>
+                                  ))}
                                 </select>
                               </div>
+                            ) : itemFixoDoRelatorio && (FECHAMENTO_IDS_FIXOS_TEMPLATE as readonly string[]).includes(item.id) && item.id !== 'diarias' ? (
+                              <select
+                                value={item.servicoId || ''}
+                                onChange={(e) => {
+                                  const s = servicos.find((sv) => sv.id === e.target.value)
+                                  if (s) aplicarServico(item.id, s)
+                                }}
+                                style={{ width: '100%', maxWidth: '220px', padding: '6px 8px', background: '#2a2a2a', border: '1px solid #444', borderRadius: '4px', color: '#fff', fontSize: '11px', margin: '0 auto', display: 'block' }}
+                                title={(safeT as any)?.selecionarServicoCadastro || 'Serviço do grupo selecionado'}
+                              >
+                                <option value="">{(safeT as any)?.selecioneServicoAnexar || '— Serviço do cadastro —'}</option>
+                                {servicosParaItem(item).map((s) => (
+                                  <option key={s.id} value={s.id}>
+                                    {servicoRotuloParaSelectFechamento(s)} · {formatServicoValorExibicao(s.valor)} €
+                                  </option>
+                                ))}
+                              </select>
                             ) : (
                               <span style={{ color: '#444' }}>—</span>
                             )}
@@ -75298,6 +75501,14 @@ A1;Peça exemplo;10`}
                     </div>
                     <button className="btn-primary" onClick={handleAddServico} style={{ marginBottom: '12px', width: '100%' }}>
                       {safeT?.adicionarServico || 'Adicionar Serviço ou Despesa'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={() => handleQuickAddHttNoGrupo(servicoGrupoSelecionadoId || undefined)}
+                      style={{ marginBottom: '12px', width: '100%', background: 'rgba(0, 120, 200, 0.35)', border: '1px solid rgba(100, 180, 255, 0.55)' }}
+                    >
+                      + {(safeT as any)?.servicosQuickAddHtt || 'HTT (hora técnica) neste grupo'}
                     </button>
             {showServicoForm && (
               <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
