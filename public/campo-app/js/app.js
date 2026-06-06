@@ -51,6 +51,22 @@
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
   }
 
+  function isInAppBrowser() {
+    const ua = navigator.userAgent || "";
+    return /WhatsApp|FBAN|FBAV|Instagram|Line\//i.test(ua);
+  }
+
+  function openInChromeHint() {
+    const url = location.href;
+    alert(
+      "Abrir no Chrome (importante):\n\n" +
+        "1. Toque nos 3 pontos ⋮ (canto superior)\n" +
+        "2. Escolha «Abrir no Chrome» ou «Abrir no navegador»\n" +
+        "3. Depois toque «Instalar app»\n\n" +
+        "Se não aparecer, copie o link e cole no Chrome:\n" + url
+    );
+  }
+
   async function persist() {
     await Db.saveLogo(state.logo);
     await Db.saveServicoGrupos(state.servicoGrupos);
@@ -137,16 +153,22 @@
       </div>
       <div class="panel">
         <h2 class="panel__title">Nonato Campo — app de terreno</h2>
-        <p class="hint">Depois de <strong>instalar no telemóvel</strong>, funciona <strong>100% offline</strong> — sem Wi‑Fi, sem PC, sem internet. Os dados ficam só neste aparelho.</p>
+        <p class="hint">Depois de <strong>instalar no telemóvel</strong>, funciona <strong>100% offline</strong>. Dados só neste aparelho.</p>
+        ${isInAppBrowser() && !isStandalone() ? `
+        <div class="panel panel--warn">
+          <strong>Abriu pelo WhatsApp?</strong>
+          <p>O instalador não funciona dentro do WhatsApp. Toque ⋮ → <strong>Abrir no Chrome</strong>, depois instale.</p>
+          <button type="button" class="btn btn--primary btn--sm" id="btnOpenChromeHelp">Como abrir no Chrome</button>
+        </div>` : ""}
         <div class="panel panel--install">
-          <h3 class="panel__title">Instalar (só uma vez)</h3>
+          <h3 class="panel__title">Instalar (só uma vez, com internet)</h3>
           <ol class="install-steps">
-            <li>Abra no <strong>Chrome</strong> (Android) — link enviado por WhatsApp ou Wi‑Fi do PC (ver abaixo).</li>
-            <li>Toque em <strong>Instalar app</strong> (botão abaixo ou menu ⋮).</li>
-            <li>Abra pelo <strong>ícone</strong> no ecrã — daí em diante, tudo offline.</li>
+            <li>Use o <strong>Google Chrome</strong> (não o browser do WhatsApp).</li>
+            <li>Toque <strong>Instalar app</strong> (botão abaixo) ou menu ⋮ → Adicionar ao ecrã.</li>
+            <li>Abra pelo <strong>ícone Campo</strong> — daí em diante, offline.</li>
           </ol>
-          <button type="button" class="btn btn--primary btn--install" id="btnInstallApp" hidden>📲 Instalar no telemóvel</button>
-          ${isStandalone() ? "<p class='install-ok'>✓ App instalada — a usar em modo offline</p>" : ""}
+          <button type="button" class="btn btn--primary btn--install" id="btnInstallApp">📲 Instalar no telemóvel</button>
+          ${isStandalone() ? "<p class='install-ok'>✓ App instalada — modo offline activo</p>" : ""}
         </div>
         <div class="list__actions" style="margin-top:12px">
           <button type="button" class="btn btn--primary" data-go="relatorios">+ Novo relatório</button>
@@ -157,7 +179,7 @@
     main.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => setView(b.getAttribute("data-go"))));
     const installBtn = document.getElementById("btnInstallApp");
     if (installBtn) installBtn.onclick = tryInstallApp;
-    if (deferredInstall && installBtn) installBtn.hidden = false;
+    document.getElementById("btnOpenChromeHelp")?.addEventListener("click", openInChromeHint);
   }
 
   function renderLogo() {

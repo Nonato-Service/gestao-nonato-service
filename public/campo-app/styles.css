@@ -189,6 +189,9 @@ body {
 .empty { text-align: center; padding: 28px 16px; color: var(--muted); font-size: 14px; }
 
 .panel--install { margin-top: 14px; background: rgba(34, 197, 94, 0.08); border-color: rgba(34, 197, 94, 0.35); }
+.panel--warn { margin-bottom: 14px; background: rgba(234, 179, 8, 0.12); border-color: rgba(234, 179, 8, 0.5); }
+.panel--warn p { margin: 8px 0 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
+.panel--warn strong { color: #fde047; }
 .install-steps { margin: 0; padding-left: 1.25rem; color: var(--muted); font-size: 14px; line-height: 1.65; }
 .install-steps li { margin-bottom: 8px; }
 .install-steps strong { color: var(--text); }
