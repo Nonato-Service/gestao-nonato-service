@@ -13,6 +13,8 @@
     view: "home",
     logo: null,
     nomeEmpresa: "Nonato Service",
+    enderecoEmpresa: "",
+    telefoneEmpresa: "",
     servicoGrupos: [],
     servicos: [],
     relatorios: [],
@@ -69,12 +71,154 @@
   }
 
   function getBrand() {
-    return { logo: state.logo, nomeEmpresa: state.nomeEmpresa || "Nonato Service" };
+    return {
+      logo: state.logo,
+      nomeEmpresa: state.nomeEmpresa || "Nonato Service",
+      enderecoEmpresa: state.enderecoEmpresa || "",
+      telefoneEmpresa: state.telefoneEmpresa || "",
+    };
+  }
+
+  function bindSignaturePad(canvas) {
+    if (!canvas) return null;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    let drawing = false;
+    let last = null;
+
+    function pointFromEvent(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const t = e.touches && e.touches.length ? e.touches[0] : e;
+      return { x: (t.clientX - rect.left) * scaleX, y: (t.clientY - rect.top) * scaleY };
+    }
+
+    function start(e) {
+      e.preventDefault();
+      drawing = true;
+      last = pointFromEvent(e);
+      ctx.beginPath();
+      ctx.moveTo(last.x, last.y);
+    }
+
+    function move(e) {
+      if (!drawing || !last) return;
+      e.preventDefault();
+      const p = pointFromEvent(e);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      last = p;
+    }
+
+    function end() {
+      drawing = false;
+      last = null;
+    }
+
+    canvas.addEventListener("mousedown", start);
+    canvas.addEventListener("mousemove", move);
+    canvas.addEventListener("mouseup", end);
+    canvas.addEventListener("mouseleave", end);
+    canvas.addEventListener("touchstart", start, { passive: false });
+    canvas.addEventListener("touchmove", move, { passive: false });
+    canvas.addEventListener("touchend", end);
+
+    return {
+      clear() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      },
+      toDataUrl() {
+        return canvas.toDataURL("image/png");
+      },
+      load(dataUrl) {
+        if (!dataUrl) return;
+        const img = new Image();
+        img.onload = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        };
+        img.src = dataUrl;
+      },
+    };
+  }
+
+  function signatureSectionHtml(label, field, existing, nomeCampo) {
+    const hasSig = existing && String(existing).startsWith("data:");
+    return `
+      <div class="sig-panel" data-sig-field="${field}">
+        <h4 class="sig-panel__title">${label}</h4>
+        <p class="hint">Desenhe com o dedo ou caneta no ecrã táctil.</p>
+        ${hasSig ? `<img class="sig-preview" id="preview_${field}" src="${existing}" alt="Assinatura" />` : ""}
+        <canvas class="sig-canvas" id="canvas_${field}" width="320" height="120" ${hasSig ? 'hidden' : ""}></canvas>
+        <div class="sig-actions">
+          ${hasSig ? `<button type="button" class="btn btn--sm" id="btnEdit_${field}">Substituir</button>` : ""}
+          <button type="button" class="btn btn--sm btn--ghost" id="btnClear_${field}">Limpar</button>
+          <button type="button" class="btn btn--sm btn--primary" id="btnSave_${field}">Guardar assinatura</button>
+        </div>
+        <input type="hidden" id="val_${field}" value="" />
+        ${nomeCampo ? `<p class="sig-nome">${U.esc(nomeCampo)}</p>` : ""}
+      </div>`;
+  }
+
+  function wireSignatureSection(field, relatorio) {
+    const dataKey = field === "assinaturaCliente" ? "dataAssinaturaCliente" : "dataAssinaturaTecnico";
+    const canvas = $(`canvas_${field}`);
+    const pad = bindSignaturePad(canvas);
+    if (!pad) return;
+
+    let hasDrawn = !!(relatorio[field] && String(relatorio[field]).startsWith("data:"));
+    const markDrawn = () => { hasDrawn = true; };
+
+    if (relatorio[field] && canvas && !canvas.hidden) pad.load(relatorio[field]);
+
+    canvas?.addEventListener("mousedown", markDrawn);
+    canvas?.addEventListener("touchstart", markDrawn, { passive: true });
+
+    $(`btnClear_${field}`)?.addEventListener("click", () => {
+      pad.clear();
+      relatorio[field] = "";
+      relatorio[dataKey] = "";
+      hasDrawn = false;
+      const preview = $(`preview_${field}`);
+      if (preview) preview.remove();
+      if (canvas) canvas.hidden = false;
+    });
+
+    $(`btnEdit_${field}`)?.addEventListener("click", () => {
+      relatorio[field] = "";
+      relatorio[dataKey] = "";
+      hasDrawn = false;
+      const preview = $(`preview_${field}`);
+      if (preview) preview.remove();
+      if (canvas) {
+        canvas.hidden = false;
+        pad.clear();
+      }
+      $(`btnEdit_${field}`)?.remove();
+    });
+
+    $(`btnSave_${field}`)?.addEventListener("click", async () => {
+      if (!hasDrawn) {
+        alert("Desenhe a assinatura antes de guardar.");
+        return;
+      }
+      relatorio[field] = pad.toDataUrl();
+      relatorio[dataKey] = new Date().toISOString();
+      await persist();
+      alert("Assinatura guardada.");
+      render();
+    });
   }
 
   async function persist() {
     await Db.saveLogo(state.logo);
     await Db.saveNomeEmpresa(state.nomeEmpresa);
+    await Db.saveEnderecoEmpresa(state.enderecoEmpresa);
+    await Db.saveTelefoneEmpresa(state.telefoneEmpresa);
     await Db.saveServicoGrupos(state.servicoGrupos);
     await Db.saveServicos(state.servicos);
     await Db.saveRelatorios(state.relatorios);
@@ -87,9 +231,17 @@
     const all = await Db.loadAll();
     state.logo = all.logo;
     state.nomeEmpresa = all.nomeEmpresa || "Nonato Service";
+    state.enderecoEmpresa = all.enderecoEmpresa || "";
+    state.telefoneEmpresa = all.telefoneEmpresa || "";
     state.servicoGrupos = all.servicoGrupos.length ? all.servicoGrupos : [{ id: "grupo-geral", nome: "Geral", ordem: 0 }];
     state.servicos = all.servicos;
-    state.relatorios = all.relatorios;
+    state.relatorios = all.relatorios.map((r) => ({
+      assinaturaCliente: "",
+      dataAssinaturaCliente: "",
+      assinaturaTecnico: "",
+      dataAssinaturaTecnico: "",
+      ...r,
+    }));
     state.despesasDocs = all.despesasDocs;
     state.cartoes = all.cartoes;
     if (!state.servicos.length) {
@@ -194,11 +346,15 @@
   function renderLogo() {
     main.innerHTML = `
       <div class="panel">
-        <div class="panel__head"><h2 class="panel__title">Nome da empresa</h2></div>
-        <p class="hint">Aparece no topo da app e nos PDFs quando não há logo carregado.</p>
+        <div class="panel__head"><h2 class="panel__title">Dados da empresa (PDF)</h2></div>
+        <p class="hint">Nome, morada e telefone aparecem no cabeçalho dos relatórios e despesas.</p>
         <label class="label">Nome</label>
         <input class="input" id="nomeEmpresaInput" value="${U.esc(state.nomeEmpresa || "Nonato Service")}" maxlength="80" autocomplete="organization" />
-        <button type="button" class="btn btn--primary btn--sm" id="btnSaveNome" style="margin-top:8px">Guardar nome</button>
+        <label class="label">Endereço / Morada</label>
+        <textarea class="textarea" id="enderecoEmpresaInput" rows="2" maxlength="200">${U.esc(state.enderecoEmpresa || "")}</textarea>
+        <label class="label">Telefone</label>
+        <input class="input" id="telefoneEmpresaInput" value="${U.esc(state.telefoneEmpresa || "")}" maxlength="40" inputmode="tel" autocomplete="tel" />
+        <button type="button" class="btn btn--primary btn--sm" id="btnSaveEmpresa" style="margin-top:8px">Guardar dados</button>
       </div>
       <div class="panel">
         <div class="panel__head"><h2 class="panel__title">Logo nos PDFs</h2></div>
@@ -207,15 +363,13 @@
         <label class="btn btn--primary btn--file">Carregar logo<input type="file" id="logoFile" accept="image/*" hidden /></label>
         ${state.logo ? `<button type="button" class="btn btn--danger btn--sm" id="btnRemoveLogo" style="margin-left:8px">Remover</button>` : ""}
       </div>`;
-    $("btnSaveNome")?.addEventListener("click", async () => {
-      const v = $("nomeEmpresaInput").value.trim();
-      state.nomeEmpresa = v || "Nonato Service";
+    $("btnSaveEmpresa")?.addEventListener("click", async () => {
+      state.nomeEmpresa = $("nomeEmpresaInput").value.trim() || "Nonato Service";
+      state.enderecoEmpresa = $("enderecoEmpresaInput").value.trim();
+      state.telefoneEmpresa = $("telefoneEmpresaInput").value.trim();
       await persist();
-      alert("Nome guardado.");
+      alert("Dados guardados.");
       render();
-    });
-    $("nomeEmpresaInput")?.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") { e.preventDefault(); $("btnSaveNome")?.click(); }
     });
     $("logoFile")?.addEventListener("change", (e) => {
       const f = e.target.files && e.target.files[0];
@@ -308,6 +462,7 @@
             <div class="list__actions">
               <button type="button" class="btn btn--sm" data-edit-rel="${r.id}">Editar</button>
               <button type="button" class="btn btn--sm btn--primary" data-pdf-rel="${r.id}">PDF</button>
+              <button type="button" class="btn btn--sm btn--wa" data-wa-rel="${r.id}">WhatsApp</button>
               <button type="button" class="btn btn--sm btn--danger" data-del-rel="${r.id}">✕</button>
             </div>
           </li>`).join("") : "<li class='empty'>Nenhum relatório. Toque em + Relatório.</li>"}</ul>
@@ -327,6 +482,12 @@
       b.onclick = () => {
         const r = state.relatorios.find((x) => x.id === b.getAttribute("data-pdf-rel"));
         if (r) Pdf.printRelatorio(r, getBrand());
+      };
+    });
+    main.querySelectorAll("[data-wa-rel]").forEach((b) => {
+      b.onclick = () => {
+        const r = state.relatorios.find((x) => x.id === b.getAttribute("data-wa-rel"));
+        if (r) Pdf.shareRelatorioWhatsApp(r, getBrand());
       };
     });
     main.querySelectorAll("[data-del-rel]").forEach((b) => {
@@ -368,6 +529,7 @@
           <h2 class="panel__title">Relatório ${U.esc(r.numero)}</h2>
           <div class="list__actions">
             <button type="button" class="btn btn--sm" id="btnBackRel">← Lista</button>
+            <button type="button" class="btn btn--sm btn--wa" id="btnWaRel">WhatsApp</button>
             <button type="button" class="btn btn--sm btn--primary" id="btnPdfRel">PDF</button>
           </div>
         </div>
@@ -385,6 +547,11 @@
         <label class="label">Observações</label><textarea class="textarea" id="f_obs" rows="3">${U.esc(r.observacoes || "")}</textarea>
         <div class="panel__head" style="margin-top:16px"><h3 class="panel__title">Dias de trabalho</h3><button type="button" class="btn btn--sm btn--primary" id="btnAddDia">+ Dia</button></div>
         <div id="diasWrap">${diasHtml}</div>
+        <div class="panel__head" style="margin-top:20px"><h3 class="panel__title">Assinaturas</h3></div>
+        <div class="sig-row">
+          ${signatureSectionHtml("Assinatura do Técnico", "assinaturaTecnico", r.assinaturaTecnico, r.tecnico)}
+          ${signatureSectionHtml("Assinatura do Cliente", "assinaturaCliente", r.assinaturaCliente, r.cliente)}
+        </div>
         <button type="button" class="btn btn--primary" id="btnSaveRel" style="margin-top:12px;width:100%">Guardar relatório</button>
       </div>`;
 
@@ -411,6 +578,9 @@
 
     $("btnBackRel").onclick = () => { collectForm(); persist(); state.editRelatorioId = null; render(); };
     $("btnPdfRel").onclick = () => { collectForm(); Pdf.printRelatorio(r, getBrand()); };
+    $("btnWaRel").onclick = () => { collectForm(); persist().then(() => Pdf.shareRelatorioWhatsApp(r, getBrand())); };
+    wireSignatureSection("assinaturaTecnico", r);
+    wireSignatureSection("assinaturaCliente", r);
     $("btnSaveRel").onclick = async () => {
       collectForm();
       if (!r.tecnico || !r.cliente || !r.numero) { alert("Preencha técnico, cliente e número."); return; }

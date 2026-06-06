@@ -5,9 +5,12 @@
   const RS_PDF_CSS = `@page { size: A4 portrait; margin: 10mm; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; background: #fff; font-size: 10px; line-height: 1.45; padding: 10px 12px 16px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.rs-pdf .header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 3px solid #166534; }
+.rs-pdf .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 3px solid #166534; }
+.rs-pdf .header-left { display: flex; flex-direction: column; gap: 6px; max-width: 45%; }
 .rs-pdf .header-logo img { max-height: 52px; max-width: 200px; object-fit: contain; display: block; }
-.rs-pdf .header-title { font-size: 13px; font-weight: 800; text-align: center; flex: 1; text-transform: uppercase; letter-spacing: 0.06em; }
+.rs-pdf .header-logo strong { font-size: 14px; color: #14532d; }
+.rs-pdf .header-contacts { font-size: 9px; color: #475569; line-height: 1.4; }
+.rs-pdf .header-title { font-size: 13px; font-weight: 800; text-align: center; flex: 1; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 4px; }
 .rs-pdf .header-number { font-size: 11px; font-weight: 800; color: #14532d; white-space: nowrap; padding: 6px 10px; border: 1px solid #bbf7d0; border-radius: 8px; background: #f0fdf4; }
 .rs-pdf .info-section { margin-bottom: 14px; padding: 14px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fafafa; page-break-inside: avoid; }
 .rs-pdf .info-section h3 { font-size: 9px; margin: -14px -14px 12px; padding: 10px 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #14532d; background: #ecfdf5; border-left: 4px solid #166534; border-radius: 10px 10px 0 0; }
@@ -22,6 +25,13 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
 .rs-pdf .summary-card h4 { font-size: 0.85em; margin-bottom: 6px; font-weight: 700; color: #334155; }
 .rs-pdf .summary-card .value { font-size: 1.15em; font-weight: 800; color: #14532d; }
 .rs-pdf .obs { margin-top: 12px; padding: 10px; background: #f8fafc; border-left: 3px solid #166534; border-radius: 0 6px 6px 0; white-space: pre-wrap; }
+.rs-pdf .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; page-break-inside: avoid; }
+.rs-pdf .sig-block { text-align: center; padding-top: 8px; border-top: 1px solid #cbd5e1; }
+.rs-pdf .sig-block h4 { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #14532d; margin-bottom: 8px; letter-spacing: 0.06em; }
+.rs-pdf .sig-block img { max-width: 240px; max-height: 90px; object-fit: contain; display: block; margin: 0 auto 6px; border-bottom: 1px solid #000; padding-bottom: 4px; background: #fff; }
+.rs-pdf .sig-line { width: 240px; height: 70px; border-bottom: 2px solid #000; margin: 0 auto 6px; }
+.rs-pdf .sig-name { font-size: 9px; font-weight: 700; color: #334155; }
+.rs-pdf .sig-date { font-size: 8px; color: #64748b; margin-top: 4px; }
 @media print { body.rs-pdf { padding-bottom: 8mm; } }`;
 
   function logoHtml(logo, nomeEmpresa) {
@@ -31,25 +41,67 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
 
   function brandOpts(brand) {
     if (brand && typeof brand === "object" && !brand.dataUrl) {
-      return { logo: brand.logo, nomeEmpresa: brand.nomeEmpresa || "Nonato Service" };
+      return {
+        logo: brand.logo,
+        nomeEmpresa: brand.nomeEmpresa || "Nonato Service",
+        enderecoEmpresa: brand.enderecoEmpresa || "",
+        telefoneEmpresa: brand.telefoneEmpresa || "",
+      };
     }
-    return { logo: brand, nomeEmpresa: "Nonato Service" };
+    return { logo: brand, nomeEmpresa: "Nonato Service", enderecoEmpresa: "", telefoneEmpresa: "" };
+  }
+
+  function headerContactsHtml(endereco, telefone, cls) {
+    const parts = [];
+    if (endereco) parts.push(`<div>${U.esc(endereco)}</div>`);
+    if (telefone) parts.push(`<div>Tel: ${U.esc(telefone)}</div>`);
+    return parts.length ? `<div class="${cls || "header-contacts"}">${parts.join("")}</div>` : "";
+  }
+
+  function fmtAssinaturaData(iso) {
+    if (!iso) return "";
+    try {
+      return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+    } catch {
+      return "";
+    }
+  }
+
+  function assinaturaBlockHtml(titulo, imgData, nome, dataIso) {
+    const img = imgData
+      ? `<img src="${String(imgData).replace(/"/g, "&quot;")}" alt="Assinatura" />`
+      : `<div class="sig-line"></div>`;
+    const data = fmtAssinaturaData(dataIso);
+    return `<div class="sig-block">
+      <h4>${U.esc(titulo)}</h4>
+      ${img}
+      ${nome ? `<div class="sig-name">${U.esc(nome)}</div>` : ""}
+      ${data ? `<div class="sig-date">Data: ${U.esc(data)}</div>` : `<div class="sig-date">Data: ___________________</div>`}
+    </div>`;
+  }
+
+  function signaturesHtml(relatorio) {
+    return `<div class="signatures">
+      ${assinaturaBlockHtml("Assinatura do Técnico", relatorio.assinaturaTecnico, relatorio.tecnico, relatorio.dataAssinaturaTecnico)}
+      ${assinaturaBlockHtml("Assinatura do Cliente", relatorio.assinaturaCliente, relatorio.cliente, relatorio.dataAssinaturaCliente)}
+    </div>`;
   }
 
   function openPrint(html, title) {
     const w = window.open("", "_blank");
     if (!w) {
       alert("Permita pop-ups para gerar o PDF.");
-      return;
+      return false;
     }
     w.document.write(html);
     w.document.close();
     w.document.title = title;
     setTimeout(() => w.print(), 400);
+    return true;
   }
 
-  function printRelatorio(relatorio, brand) {
-    const { logo, nomeEmpresa } = brandOpts(brand);
+  function buildRelatorioHtml(relatorio, brand) {
+    const { logo, nomeEmpresa, enderecoEmpresa, telefoneEmpresa } = brandOpts(brand);
     const totais = U.calcularTotais(relatorio.diasTrabalho);
     const dias = (relatorio.diasTrabalho || []).map((d) => U.atualizarCalculosDia(d));
     const diasRows = dias
@@ -69,10 +121,13 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
       })
       .join("");
 
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatório ${U.esc(relatorio.numero)}</title><style>${RS_PDF_CSS}</style></head>
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatório ${U.esc(relatorio.numero)}</title><style>${RS_PDF_CSS}</style></head>
     <body class="rs-pdf">
       <div class="header">
-        <div class="header-logo">${logoHtml(logo, nomeEmpresa)}</div>
+        <div class="header-left">
+          <div class="header-logo">${logoHtml(logo, nomeEmpresa)}</div>
+          ${headerContactsHtml(enderecoEmpresa, telefoneEmpresa)}
+        </div>
         <div class="header-title">RELATÓRIO DE SERVIÇO — ASSISTÊNCIA TÉCNICA</div>
         <div class="header-number">N°: ${U.esc(relatorio.numero)}</div>
       </div>
@@ -99,13 +154,54 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
           <div class="summary-card"><h4>Viagem retorno</h4><div class="value">${totais.horasViagemRetorno}h</div></div>
         </div></div>` : ""}
       ${relatorio.observacoes ? `<div class="info-section"><h3>OBSERVAÇÕES</h3><div class="obs">${U.esc(relatorio.observacoes)}</div></div>` : ""}
+      ${signaturesHtml(relatorio)}
       <p style="margin-top:16px;font-size:8px;color:#64748b;text-align:center;">Documento gerado em ${new Date().toLocaleString("pt-BR")} — ${U.esc(nomeEmpresa)}</p>
     </body></html>`;
-    openPrint(html, "Relatório " + relatorio.numero);
+  }
+
+  function buildWhatsAppText(relatorio, brand) {
+    const { nomeEmpresa, telefoneEmpresa } = brandOpts(brand);
+    const lines = [
+      `Olá${relatorio.cliente ? `, ${relatorio.cliente}` : ""}!`,
+      "",
+      `Segue o relatório de serviço nº ${relatorio.numero || "—"}.`,
+      `Técnico: ${relatorio.tecnico || "—"}`,
+      `Data: ${U.fmtDatePt(relatorio.data)}`,
+      `Equipamento: ${relatorio.maquinaModelo || "—"}`,
+      relatorio.tipoServico ? `Serviço: ${relatorio.tipoServico}` : "",
+      "",
+      "Anexe o PDF do relatório (use «Guardar como PDF» na impressão).",
+      "",
+      nomeEmpresa,
+    ];
+    if (telefoneEmpresa) lines.push(`Tel: ${telefoneEmpresa}`);
+    lines.push("", "Obrigado.");
+    return lines.filter(Boolean).join("\n");
+  }
+
+  function printRelatorio(relatorio, brand) {
+    openPrint(buildRelatorioHtml(relatorio, brand), "Relatório " + relatorio.numero);
+  }
+
+  function shareRelatorioWhatsApp(relatorio, brand) {
+    const tel = U.telefoneDigitsParaWa(relatorio.telefone);
+    const texto = buildWhatsAppText(relatorio, brand);
+    const url = tel.length >= 11
+      ? `https://wa.me/${tel}?text=${encodeURIComponent(texto)}`
+      : `https://wa.me/?text=${encodeURIComponent(texto)}`;
+    printRelatorio(relatorio, brand);
+    setTimeout(() => {
+      window.open(url, "_blank", "noopener,noreferrer");
+      if (!tel) {
+        alert("Telefone do cliente não definido — escolha o contacto no WhatsApp e anexe o PDF.");
+      } else {
+        alert("PDF aberto para guardar/imprimir. O WhatsApp abrirá a seguir — anexe o PDF à mensagem.");
+      }
+    }, 700);
   }
 
   function printDespesas(doc, brand) {
-    const { logo, nomeEmpresa } = brandOpts(brand);
+    const { logo, nomeEmpresa, enderecoEmpresa, telefoneEmpresa } = brandOpts(brand);
     const total = (doc.despesas || []).reduce((s, d) => s + (Number(d.valor) || 0), 0);
     const linhas = (doc.despesas || [])
       .map((d, i) => {
@@ -119,12 +215,13 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
 
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Despesas ${U.esc(doc.clienteNome)}</title>
     <style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,sans-serif;font-size:11px;color:#111;padding:12px}
-    .hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #166534;padding-bottom:12px;margin-bottom:16px}
-    .hdr img{max-height:48px;max-width:180px}h1{font-size:16px;text-transform:uppercase;color:#14532d}
+    .hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #166534;padding-bottom:12px;margin-bottom:16px;gap:12px}
+    .hdr img{max-height:48px;max-width:180px}.hdr-contacts{font-size:9px;color:#555;margin-top:6px;line-height:1.4}
+    h1{font-size:16px;text-transform:uppercase;color:#14532d}
     table{width:100%;border-collapse:collapse;margin:12px 0}th,td{border:1px solid #ddd;padding:8px;text-align:left}
     th{background:#166534;color:#fff}.total{font-size:14px;font-weight:800;text-align:right;margin-top:12px;color:#14532d}</style></head>
     <body>
-      <div class="hdr"><div>${logoHtml(logo, nomeEmpresa)}</div><h1>REGISTRO DE DESPESAS</h1></div>
+      <div class="hdr"><div><div>${logoHtml(logo, nomeEmpresa)}</div>${headerContactsHtml(enderecoEmpresa, telefoneEmpresa, "hdr-contacts")}</div><h1>REGISTRO DE DESPESAS</h1></div>
       <p><strong>Cliente:</strong> ${U.esc(doc.clienteNome)} &nbsp;|&nbsp; <strong>Relatório:</strong> ${U.esc(doc.relatorioNumero || "—")} &nbsp;|&nbsp; <strong>Data:</strong> ${U.fmtDatePt(doc.data)}</p>
       <table><thead><tr><th>#</th><th>Tipo</th><th>Valor</th><th>Descrição</th><th>Cartão</th></tr></thead><tbody>${linhas || "<tr><td colspan='5'>Sem linhas</td></tr>"}</tbody></table>
       <p class="total">Total: € ${total.toFixed(2)}</p>
@@ -133,5 +230,5 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
     openPrint(html, "Despesas");
   }
 
-  global.NCampoPdf = { printRelatorio, printDespesas };
+  global.NCampoPdf = { printRelatorio, printDespesas, shareRelatorioWhatsApp, buildRelatorioHtml };
 })(typeof window !== "undefined" ? window : globalThis);

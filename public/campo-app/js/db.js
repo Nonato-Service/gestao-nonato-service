@@ -56,16 +56,18 @@
   }
 
   async function loadAll() {
-    const [logo, nomeEmpresa, servicoGrupos, servicos, relatorios, despesasDocs, cartoes] = await Promise.all([
+    const [logo, nomeEmpresa, enderecoEmpresa, telefoneEmpresa, servicoGrupos, servicos, relatorios, despesasDocs, cartoes] = await Promise.all([
       getJson("settings", "logo", null),
       getJson("settings", "nomeEmpresa", "Nonato Service"),
+      getJson("settings", "enderecoEmpresa", ""),
+      getJson("settings", "telefoneEmpresa", ""),
       getJson("servicoGrupos", "list", []),
       getJson("servicos", "list", []),
       getJson("relatorios", "list", []),
       getJson("despesasDocs", "list", []),
       getJson("cartoes", "list", []),
     ]);
-    return { logo, nomeEmpresa, servicoGrupos, servicos, relatorios, despesasDocs, cartoes };
+    return { logo, nomeEmpresa, enderecoEmpresa, telefoneEmpresa, servicoGrupos, servicos, relatorios, despesasDocs, cartoes };
   }
 
   async function saveLogo(logo) {
@@ -74,6 +76,14 @@
 
   async function saveNomeEmpresa(nome) {
     await setJson("settings", "nomeEmpresa", String(nome || "Nonato Service").trim() || "Nonato Service");
+  }
+
+  async function saveEnderecoEmpresa(endereco) {
+    await setJson("settings", "enderecoEmpresa", String(endereco || "").trim());
+  }
+
+  async function saveTelefoneEmpresa(telefone) {
+    await setJson("settings", "telefoneEmpresa", String(telefone || "").trim());
   }
 
   async function saveServicoGrupos(list) {
@@ -100,6 +110,8 @@
     if (!data || typeof data !== "object") throw new Error("invalid");
     if (data.logo != null) await saveLogo(data.logo);
     if (data.nomeEmpresa != null) await saveNomeEmpresa(data.nomeEmpresa);
+    if (data.enderecoEmpresa != null) await saveEnderecoEmpresa(data.enderecoEmpresa);
+    if (data.telefoneEmpresa != null) await saveTelefoneEmpresa(data.telefoneEmpresa);
     if (Array.isArray(data.servicoGrupos)) await saveServicoGrupos(data.servicoGrupos);
     if (Array.isArray(data.servicos)) await saveServicos(data.servicos);
     if (Array.isArray(data.relatorios)) await saveRelatorios(data.relatorios);
@@ -121,6 +133,8 @@
     loadAll,
     saveLogo,
     saveNomeEmpresa,
+    saveEnderecoEmpresa,
+    saveTelefoneEmpresa,
     saveServicoGrupos,
     saveServicos,
     saveRelatorios,

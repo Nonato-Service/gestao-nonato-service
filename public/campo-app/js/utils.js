@@ -157,6 +157,10 @@
       servicoConcluido: false,
       retornoNecessario: false,
       observacoes: "",
+      assinaturaCliente: "",
+      dataAssinaturaCliente: "",
+      assinaturaTecnico: "",
+      dataAssinaturaTecnico: "",
       pecasSubstituicao: [],
     };
   }
@@ -206,6 +210,13 @@
     return out;
   }
 
+  function telefoneDigitsParaWa(telefone) {
+    const d = String(telefone || "").replace(/\D/g, "");
+    if (d.length >= 10 && d.length <= 15) return d;
+    if (d.length === 9) return "351" + d;
+    return d.length >= 9 ? d : "";
+  }
+
   global.NCampoUtils = {
     uid,
     esc,
@@ -218,5 +229,6 @@
     relatorioVazio,
     gerarNumeroRelatorio,
     normalizeGestaoImport,
+    telefoneDigitsParaWa,
   };
 })(typeof window !== "undefined" ? window : globalThis);
