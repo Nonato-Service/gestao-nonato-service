@@ -5,6 +5,7 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   async redirects() {
     return [
+      // Evitar 308 que quebra caminhos relativos (styles.css → /styles.css)
       { source: '/biblia-app/', destination: '/biblia-app/index.html', permanent: false },
     ]
   },

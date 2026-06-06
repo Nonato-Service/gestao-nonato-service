@@ -25,7 +25,7 @@ export function BibliaNonatoServiceContent({ safeT }: Props) {
     <div className="biblia-embed-root">
       <iframe
         className="biblia-embed-frame"
-        src="/biblia-app/?embedded=1"
+        src="/biblia-app/index.html?embedded=1"
         title={title}
         allow="clipboard-read; clipboard-write"
       />
