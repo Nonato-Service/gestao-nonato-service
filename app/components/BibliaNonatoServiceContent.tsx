@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { NonatoBrandLogo } from './NonatoBrandLogo'
 import {
   BIBLIA_ANEXO_MAX_BYTES,
   BIBLIA_ANEXO_MAX_PER_MODEL,
@@ -15,7 +16,6 @@ import {
   countBibliaStats,
   moveItem,
   normalizeBibliaImport,
-  seedBibliaExample,
   serializeBibliaForServer,
 } from './bibliaNonatoTypes'
 
@@ -32,6 +32,7 @@ type Props = {
 }
 
 type ModelTab = 'software' | 'mecanica' | 'eletrica' | 'notas'
+type Selection = { familiaId: string; linhaId?: string; modeloId?: string } | null
 
 export function BibliaNonatoServiceContent({
   saveData,
@@ -45,11 +46,7 @@ export function BibliaNonatoServiceContent({
   const tr = useCallback(
     (key: string, fallback: string, vars?: Record<string, string | number>) => {
       let s = String(safeT[key] ?? fallback)
-      if (vars) {
-        Object.entries(vars).forEach(([k, v]) => {
-          s = s.replace(`{${k}}`, String(v))
-        })
-      }
+      if (vars) Object.entries(vars).forEach(([k, v]) => { s = s.replace(`{${k}}`, String(v)) })
       return s
     },
     [safeT]
@@ -57,14 +54,17 @@ export function BibliaNonatoServiceContent({
 
   const [store, setStore] = useState<BibliaStore>({ familias: [] })
   const [loading, setLoading] = useState(true)
-  const [syncMsg, setSyncMsg] = useState('')
+  const [syncState, setSyncState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [search, setSearch] = useState('')
-  const [selectedFamiliaId, setSelectedFamiliaId] = useState<string | null>(null)
-  const [expandedLinhas, setExpandedLinhas] = useState<Record<string, boolean>>({})
-  const [expandedModelos, setExpandedModelos] = useState<Record<string, boolean>>({})
-  const [modelTabs, setModelTabs] = useState<Record<string, ModelTab>>({})
+  const [selection, setSelection] = useState<Selection>(null)
+  const [marcaFilter, setMarcaFilter] = useState<string | 'all'>('all')
+  const [activeTab, setActiveTab] = useState<ModelTab>('software')
+  const [novaFamilia, setNovaFamilia] = useState('')
+  const [novaMarca, setNovaMarca] = useState('')
+  const [novoModelo, setNovoModelo] = useState('')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hydrated = useRef(false)
+  const importRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -73,23 +73,19 @@ export function BibliaNonatoServiceContent({
       try {
         let data = await loadData(BIBLIA_NONATO_STORAGE_KEY)
         if (!data) data = await loadData(BIBLIA_LEGACY_CATEGORIES_KEY)
-        let parsed = normalizeBibliaImport(data)
-        if (parsed.familias.length === 0) {
-          parsed = seedBibliaExample()
-          await saveData(BIBLIA_NONATO_STORAGE_KEY, serializeBibliaForServer(parsed))
-        }
+        const parsed = normalizeBibliaImport(data)
         if (!cancelled) {
           setStore(parsed)
           if (parsed.familias.length > 0) {
-            setSelectedFamiliaId(parsed.familias[0].id)
+            const f = parsed.familias[0]
+            const lin = f.linhas[0]
+            const mod = lin?.modelos[0]
+            if (mod && lin) setSelection({ familiaId: f.id, linhaId: lin.id, modeloId: mod.id })
+            else setSelection({ familiaId: f.id })
           }
-          setSyncMsg(tr('bibliaNonatoCarregado', 'Dados carregados.'))
         }
       } catch {
-        if (!cancelled) {
-          setStore(seedBibliaExample())
-          setSyncMsg(tr('bibliaNonatoErroCarregar', 'Erro ao carregar — exemplo local criado.'))
-        }
+        if (!cancelled) setStore({ familias: [] })
       } finally {
         if (!cancelled) {
           setLoading(false)
@@ -97,24 +93,23 @@ export function BibliaNonatoServiceContent({
         }
       }
     })()
-    return () => {
-      cancelled = true
-    }
-  }, [loadData, saveData, tr])
+    return () => { cancelled = true }
+  }, [loadData])
 
   const persist = useCallback(
     (next: BibliaStore) => {
       if (saveTimer.current) clearTimeout(saveTimer.current)
+      setSyncState('saving')
       saveTimer.current = setTimeout(async () => {
         try {
           await saveData(BIBLIA_NONATO_STORAGE_KEY, serializeBibliaForServer(next))
-          setSyncMsg(`${tr('bibliaNonatoGuardado', 'Guardado')} · ${new Date().toLocaleTimeString('pt-PT')}`)
+          setSyncState('saved')
         } catch {
-          setSyncMsg(tr('bibliaNonatoErroGuardar', 'Erro ao guardar no servidor.'))
+          setSyncState('error')
         }
-      }, 700)
+      }, 550)
     },
-    [saveData, tr]
+    [saveData]
   )
 
   const updateStore = useCallback(
@@ -128,37 +123,122 @@ export function BibliaNonatoServiceContent({
     [persist]
   )
 
-  const filteredStore = useMemo(() => bibliaMatchesSearch(store, search), [store, search])
-
-  const selectedFamilia = useMemo(
-    () => filteredStore.familias.find((f) => f.id === selectedFamiliaId) ?? null,
-    [filteredStore, selectedFamiliaId]
-  )
-
+  const filtered = useMemo(() => bibliaMatchesSearch(store, search), [store, search])
   const stats = useMemo(() => countBibliaStats(store), [store])
 
-  const patchFamilia = (familiaId: string, patch: Partial<BibliaFamilia>) => {
-    updateStore((prev) => ({
-      ...prev,
-      familias: prev.familias.map((f) => (f.id === familiaId ? { ...f, ...patch } : f)),
-    }))
+  const selectedFamilia = useMemo(
+    () => (selection ? store.familias.find((f) => f.id === selection.familiaId) : null),
+    [store, selection]
+  )
+
+  const selectedLinha = useMemo(
+    () => selectedFamilia?.linhas.find((l) => l.id === selection?.linhaId) ?? null,
+    [selectedFamilia, selection]
+  )
+
+  const selectedModelo = useMemo(
+    () => selectedLinha?.modelos.find((m) => m.id === selection?.modeloId) ?? null,
+    [selectedLinha, selection]
+  )
+
+  const catalogRows = useMemo(() => {
+    if (!selectedFamilia) return []
+    const fam = filtered.familias.find((f) => f.id === selectedFamilia.id) ?? selectedFamilia
+    const rows: { linha: BibliaLinha; modelo: BibliaModelo }[] = []
+    fam.linhas.forEach((lin) => {
+      if (marcaFilter !== 'all' && lin.id !== marcaFilter) return
+      lin.modelos.forEach((mod) => rows.push({ linha: lin, modelo: mod }))
+    })
+    return rows
+  }, [selectedFamilia, filtered, marcaFilter])
+
+  const patchModelo = useCallback(
+    (familiaId: string, linhaId: string, modeloId: string, patch: Partial<BibliaModelo>) => {
+      updateStore((prev) => ({
+        ...prev,
+        familias: prev.familias.map((f) =>
+          f.id !== familiaId
+            ? f
+            : {
+                ...f,
+                linhas: f.linhas.map((l) =>
+                  l.id !== linhaId
+                    ? l
+                    : { ...l, modelos: l.modelos.map((m) => (m.id === modeloId ? { ...m, ...patch } : m)) }
+                ),
+              }
+        ),
+      }))
+    },
+    [updateStore]
+  )
+
+  const createFamilia = () => {
+    const nome = novaFamilia.trim()
+    if (!nome) return
+    const fam: BibliaFamilia = { id: bibliaUid(), nome, ordem: store.familias.length, linhas: [] }
+    updateStore((prev) => ({ ...prev, familias: [...prev.familias, fam] }))
+    setSelection({ familiaId: fam.id })
+    setNovaFamilia('')
+    setMarcaFilter('all')
   }
 
-  const patchLinha = (familiaId: string, linhaId: string, patch: Partial<BibliaLinha>) => {
+  const createMarca = () => {
+    if (!selectedFamilia) return
+    const titulo = novaMarca.trim()
+    if (!titulo) return
+    const lin: BibliaLinha = { id: bibliaUid(), titulo, ordem: selectedFamilia.linhas.length, modelos: [] }
     updateStore((prev) => ({
       ...prev,
       familias: prev.familias.map((f) =>
-        f.id !== familiaId
-          ? f
-          : {
-              ...f,
-              linhas: f.linhas.map((l) => (l.id === linhaId ? { ...l, ...patch } : l)),
-            }
+        f.id === selectedFamilia.id ? { ...f, linhas: [...f.linhas, lin] } : f
       ),
     }))
+    setMarcaFilter(lin.id)
+    setNovaMarca('')
   }
 
-  const patchModelo = (familiaId: string, linhaId: string, modeloId: string, patch: Partial<BibliaModelo>) => {
+  const createModelo = () => {
+    if (!selectedFamilia || !selectedLinha && marcaFilter === 'all') return
+    const linhaId = marcaFilter !== 'all' ? marcaFilter : selectedFamilia.linhas[0]?.id
+    if (!linhaId) return
+    const nome = novoModelo.trim()
+    if (!nome) return
+    const mod: BibliaModelo = {
+      id: bibliaUid(),
+      nome,
+      ordem: 0,
+      software: '',
+      mecanica: '',
+      eletrica: '',
+      notas: '',
+      anexos: [],
+    }
+    updateStore((prev) => ({
+      ...prev,
+      familias: prev.familias.map((f) => {
+        if (f.id !== selectedFamilia.id) return f
+        return {
+          ...f,
+          linhas: f.linhas.map((l) => {
+            if (l.id !== linhaId) return l
+            return { ...l, modelos: [...l.modelos, { ...mod, ordem: l.modelos.length }] }
+          }),
+        }
+      }),
+    }))
+    setSelection({ familiaId: selectedFamilia.id, linhaId, modeloId: mod.id })
+    setNovoModelo('')
+  }
+
+  const deleteFamilia = (id: string) => {
+    if (!window.confirm(tr('bibliaNonatoConfirmApagarFamilia', 'Eliminar esta família e todo o conteúdo?'))) return
+    updateStore((prev) => ({ ...prev, familias: prev.familias.filter((f) => f.id !== id) }))
+    if (selection?.familiaId === id) setSelection(null)
+  }
+
+  const deleteModelo = (familiaId: string, linhaId: string, modeloId: string) => {
+    if (!window.confirm(tr('bibliaNonatoConfirmApagarModelo', 'Eliminar este modelo?'))) return
     updateStore((prev) => ({
       ...prev,
       familias: prev.familias.map((f) =>
@@ -167,463 +247,389 @@ export function BibliaNonatoServiceContent({
           : {
               ...f,
               linhas: f.linhas.map((l) =>
-                l.id !== linhaId
-                  ? l
-                  : {
-                      ...l,
-                      modelos: l.modelos.map((m) => (m.id === modeloId ? { ...m, ...patch } : m)),
-                    }
+                l.id !== linhaId ? l : { ...l, modelos: l.modelos.filter((m) => m.id !== modeloId) }
               ),
             }
       ),
     }))
+    if (selection?.modeloId === modeloId) setSelection({ familiaId, linhaId })
   }
 
-  const addFamilia = () => {
-    const nome = window.prompt(tr('bibliaNonatoNomeFamiliaLabel', 'Nome da família'))?.trim()
-    if (!nome) return
-    const nova: BibliaFamilia = { id: bibliaUid(), nome, ordem: store.familias.length, linhas: [] }
-    updateStore((prev) => ({ ...prev, familias: [...prev.familias, nova] }))
-    setSelectedFamiliaId(nova.id)
-  }
-
-  const deleteFamilia = (id: string) => {
-    if (!window.confirm(tr('bibliaNonatoConfirmApagarFamilia', 'Eliminar esta família e todo o conteúdo?'))) return
-    updateStore((prev) => {
-      const familias = prev.familias.filter((f) => f.id !== id)
-      return { ...prev, familias }
-    })
-    if (selectedFamiliaId === id) {
-      setSelectedFamiliaId(store.familias.find((f) => f.id !== id)?.id ?? null)
-    }
-  }
-
-  const addLinha = (familiaId: string) => {
-    const titulo = window.prompt(tr('bibliaNonatoLinhaTituloLabel', 'Marca ou grupo'))?.trim()
-    if (!titulo) return
-    const fam = store.familias.find((f) => f.id === familiaId)
-    if (!fam) return
-    const linha: BibliaLinha = { id: bibliaUid(), titulo, ordem: fam.linhas.length, modelos: [] }
-    patchFamilia(familiaId, { linhas: [...fam.linhas, linha] })
-    setExpandedLinhas((p) => ({ ...p, [linha.id]: true }))
-  }
-
-  const deleteLinha = (familiaId: string, linhaId: string) => {
-    if (!window.confirm(tr('bibliaNonatoConfirmApagarLinha', 'Eliminar esta marca e todos os modelos?'))) return
-    const fam = store.familias.find((f) => f.id === familiaId)
-    if (!fam) return
-    patchFamilia(familiaId, { linhas: fam.linhas.filter((l) => l.id !== linhaId) })
-  }
-
-  const addModelo = (familiaId: string, linhaId: string) => {
-    const nome = window.prompt(tr('bibliaNonatoModeloNomeLabel', 'Modelo ou referência'))?.trim()
-    if (!nome) return
-    const fam = store.familias.find((f) => f.id === familiaId)
-    const lin = fam?.linhas.find((l) => l.id === linhaId)
-    if (!lin) return
-    const modelo: BibliaModelo = {
-      id: bibliaUid(),
-      nome,
-      ordem: lin.modelos.length,
-      software: '',
-      mecanica: '',
-      eletrica: '',
-      notas: '',
-      anexos: [],
-    }
-    patchLinha(familiaId, linhaId, { modelos: [...lin.modelos, modelo] })
-    setExpandedModelos((p) => ({ ...p, [modelo.id]: true }))
-  }
-
-  const deleteModelo = (familiaId: string, linhaId: string, modeloId: string) => {
-    if (!window.confirm(tr('bibliaNonatoConfirmApagarModelo', 'Eliminar este modelo?'))) return
-    const fam = store.familias.find((f) => f.id === familiaId)
-    const lin = fam?.linhas.find((l) => l.id === linhaId)
-    if (!lin) return
-    patchLinha(familiaId, linhaId, { modelos: lin.modelos.filter((m) => m.id !== modeloId) })
-  }
-
-  const moveFamilia = (id: string, dir: -1 | 1) => {
-    const idx = store.familias.findIndex((f) => f.id === id)
-    if (idx < 0) return
-    updateStore((prev) => ({ ...prev, familias: moveItem(prev.familias, idx, idx + dir) }))
-  }
-
-  const moveLinha = (familiaId: string, linhaId: string, dir: -1 | 1) => {
-    const fam = store.familias.find((f) => f.id === familiaId)
-    if (!fam) return
-    const idx = fam.linhas.findIndex((l) => l.id === linhaId)
-    if (idx < 0) return
-    patchFamilia(familiaId, { linhas: moveItem(fam.linhas, idx, idx + dir) })
-  }
-
-  const moveModelo = (familiaId: string, linhaId: string, modeloId: string, dir: -1 | 1) => {
-    const fam = store.familias.find((f) => f.id === familiaId)
-    const lin = fam?.linhas.find((l) => l.id === linhaId)
-    if (!lin) return
-    const idx = lin.modelos.findIndex((m) => m.id === modeloId)
-    if (idx < 0) return
-    patchLinha(familiaId, linhaId, { modelos: moveItem(lin.modelos, idx, idx + dir) })
-  }
-
-  const handleAnexos = async (familiaId: string, linhaId: string, modeloId: string, files: FileList | null) => {
-    if (!files?.length) return
-    const fam = store.familias.find((f) => f.id === familiaId)
-    const lin = fam?.linhas.find((l) => l.id === linhaId)
-    const mod = lin?.modelos.find((m) => m.id === modeloId)
-    if (!mod) return
-
+  const handleAnexos = async (files: FileList | null) => {
+    if (!files?.length || !selection?.linhaId || !selection.modeloId || !selectedModelo) return
     const allowed = /\.(pdf|png|jpe?g|gif|webp|doc|docx)$/i
-    const nextAnexos = [...mod.anexos]
-    let partial = false
-
+    const next = [...selectedModelo.anexos]
     for (const file of Array.from(files)) {
-      if (nextAnexos.length >= BIBLIA_ANEXO_MAX_PER_MODEL) {
-        partial = true
-        break
-      }
-      if (!allowed.test(file.name) && !file.type.match(/^(image\/|application\/pdf|application\/msword|application\/vnd\.openxmlformats)/)) {
-        alert(tr('bibliaNonatoAnexoTipoNaoPermitido', 'Tipo de arquivo não permitido.'))
-        continue
-      }
+      if (next.length >= BIBLIA_ANEXO_MAX_PER_MODEL) break
       if (file.size > BIBLIA_ANEXO_MAX_BYTES) {
         alert(tr('bibliaNonatoAnexoLimiteFicheiro', 'Arquivo grande demais (máx. ~6 MB).'))
         continue
       }
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(String(reader.result || ''))
-        reader.onerror = () => reject(new Error('read'))
-        reader.readAsDataURL(file)
-      }).catch(() => {
-        alert(tr('bibliaNonatoAnexoErroLeitura', 'Não foi possível ler o arquivo.'))
-        return null
+      if (!allowed.test(file.name) && !file.type.match(/^(image\/|application\/pdf|application\/msword|application\/vnd\.openxmlformats)/)) {
+        alert(tr('bibliaNonatoAnexoTipoNaoPermitido', 'Tipo não permitido.'))
+        continue
+      }
+      const dataUrl = await new Promise<string | null>((resolve) => {
+        const r = new FileReader()
+        r.onload = () => resolve(String(r.result || ''))
+        r.onerror = () => resolve(null)
+        r.readAsDataURL(file)
       })
       if (!dataUrl) continue
-      nextAnexos.push({
-        id: bibliaUid(),
-        nome: file.name.slice(0, 200),
-        mime: file.type || 'application/octet-stream',
-        dataUrl,
-      })
+      next.push({ id: bibliaUid(), nome: file.name.slice(0, 200), mime: file.type || 'application/octet-stream', dataUrl })
     }
-
-    if (partial) alert(tr('bibliaNonatoAnexoParcial', 'Só couberam alguns arquivos.'))
-    patchModelo(familiaId, linhaId, modeloId, { anexos: nextAnexos })
+    patchModelo(selection.familiaId, selection.linhaId, selection.modeloId, { anexos: next })
   }
 
-  const getModelTab = (modeloId: string): ModelTab => modelTabs[modeloId] || 'software'
-
-  const tabLabel: Record<ModelTab, string> = {
-    software: tr('conhecimentoSoftware', 'Software'),
-    mecanica: tr('conhecimentoMecanico', 'Mecânica'),
-    eletrica: tr('conhecimentoEletrico', 'Elétrica'),
-    notas: tr('bibliaNonatoModeloInfoLabel', 'Notas'),
+  const exportJson = () => {
+    const blob = new Blob([JSON.stringify(serializeBibliaForServer(store), null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `biblia-nonato-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(a.href)
   }
 
-  const tabField: Record<ModelTab, keyof Pick<BibliaModelo, 'software' | 'mecanica' | 'eletrica' | 'notas'>> = {
-    software: 'software',
-    mecanica: 'mecanica',
-    eletrica: 'eletrica',
-    notas: 'notas',
+  const importJson = (file: File) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const parsed = normalizeBibliaImport(JSON.parse(String(reader.result)))
+        if (!window.confirm(tr('bibliaNonatoConfirmImport', 'Importar substitui todos os dados actuais. Continuar?'))) return
+        updateStore(() => parsed)
+        setSelection(null)
+      } catch {
+        alert(tr('bibliaNonatoErroImport', 'Ficheiro inválido.'))
+      }
+    }
+    reader.readAsText(file)
   }
+
+  const modelPreview = (m: BibliaModelo) => {
+    const t = [m.software, m.mecanica, m.eletrica, m.notas].find((x) => x.trim())
+    return t ? t.trim().slice(0, 72) + (t.length > 72 ? '…' : '') : '—'
+  }
+
+  const tabDefs: { id: ModelTab; label: string; field: keyof Pick<BibliaModelo, 'software' | 'mecanica' | 'eletrica' | 'notas'>; ph: string }[] = [
+    { id: 'software', label: tr('conhecimentoSoftware', 'Software'), field: 'software', ph: 'Versões, parâmetros, backups, redes…' },
+    { id: 'mecanica', label: tr('conhecimentoMecanico', 'Mecânica'), field: 'mecanica', ph: 'Calibração, peças, manutenção…' },
+    { id: 'eletrica', label: tr('conhecimentoEletrico', 'Elétrica'), field: 'eletrica', ph: 'Esquemas, fusíveis, motores, I/O…' },
+    { id: 'notas', label: tr('bibliaNonatoModeloInfoLabel', 'Notas'), field: 'notas', ph: 'Observações gerais, contactos, fornecedores…' },
+  ]
+
+  const syncLabel =
+    syncState === 'saving'
+      ? tr('bibliaNonatoGuardando', 'A guardar…')
+      : syncState === 'saved'
+        ? tr('bibliaNonatoGuardado', 'Sincronizado')
+        : syncState === 'error'
+          ? tr('bibliaNonatoErroGuardar', 'Erro ao guardar')
+          : ''
 
   return (
-    <div className="biblia-nonato-root tab-content-wrapper">
-      <div className="biblia-nonato-header">
-        <div>
-          <h1 className="biblia-nonato-title">{tr('bibliaNonatoServiceTitle', 'BÍBLIA DA NONATO SERVICE')}</h1>
-          <p className="biblia-nonato-subtitle">
-            {tr('bibliaNonatoServiceSubtitle', 'Famílias, marcas e modelos — base técnica dos equipamentos.')}
-          </p>
-          <p className="biblia-nonato-stats">
-            {stats.familias} {tr('bibliaNonatoFamiliasLista', 'famílias').toLowerCase()} · {stats.marcas}{' '}
-            {tr('bibliaNonatoMarcasNaFamiliaTitulo', 'marcas').split(' ')[0].toLowerCase()} · {stats.modelos}{' '}
-            {tr('bibliaNonatoModelosNaLinhaTitulo', 'modelos').split(' ')[0].toLowerCase()}
-            {stats.anexos > 0 ? ` · ${stats.anexos} ${tr('bibliaNonatoModeloResumoAnexos', '{n} anexo(s)').replace('{n}', String(stats.anexos))}` : ''}
-          </p>
-        </div>
-        <div className="biblia-nonato-header-actions">
-          <button type="button" className="btn-primary btn--compact" onClick={onHome}>
-            🏠 {tr('paginaInicial', 'Início')}
-          </button>
-          <button type="button" className="btn-primary btn--compact" onClick={() => closeTab(activeTabId || '')}>
-            ↶ {tr('voltar', 'Voltar')}
-          </button>
+    <div className="tab-content-wrapper tab-glass-root biblia-hub">
+      <div className="biblia-hub__hero-ring">
+        <div className="tab-glass-hero tab-glass-hero--compact">
+          <div className="tab-glass-hero-top">
+            <NonatoBrandLogo variant="informacao" className="biblia-hub__logo" alt="" width={48} height={48} />
+            <div className="tab-glass-hero-heading">
+              <h1 className="tab-glass-hero-title">{tr('bibliaNonatoServiceTitle', 'BÍBLIA DA NONATO SERVICE')}</h1>
+              <p className="tab-glass-hero-meta">
+                {tr('bibliaNonatoServiceSubtitle', 'Base técnica interna — famílias, marcas e modelos de equipamentos.')}
+              </p>
+            </div>
+            <div className="tab-glass-hero-actions biblia-hub__hero-actions">
+              <span className={`biblia-hub__sync biblia-hub__sync--${syncState}`} aria-live="polite">{syncLabel}</span>
+              <button type="button" className="biblioteca-pecas-hub__icon-btn biblioteca-pecas-hub__icon-btn--back" onClick={() => closeTab(activeTabId || '')} title={tr('voltar', 'Voltar')}>↶</button>
+              <button type="button" className="biblioteca-pecas-hub__icon-btn biblioteca-pecas-hub__icon-btn--home" onClick={onHome} title={tr('paginaInicial', 'Início')}>🏠</button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <p className="biblia-nonato-desc">{tr('bibliaNonatoServiceDesc', '')}</p>
+      <div className="biblia-hub__stats-panel">
+        <p className="biblioteca-pecas-hub__eyebrow">{tr('bibliaNonatoPainelResumo', 'Resumo da base técnica')}</p>
+        <p className="biblioteca-pecas-hub__lead">{tr('bibliaNonatoServiceDesc', '')}</p>
+        <div className="biblioteca-pecas-hub__kpi-grid">
+          {[
+            { label: tr('bibliaNonatoFamiliasLista', 'Famílias'), value: stats.familias },
+            { label: tr('bibliaNonatoMarcasNaFamiliaTitulo', 'Marcas').split(' ')[0], value: stats.marcas },
+            { label: tr('bibliaNonatoModelosNaLinhaTitulo', 'Modelos').split(' ')[0], value: stats.modelos },
+            { label: tr('bibliaNonatoAnexosTitulo', 'Anexos'), value: stats.anexos },
+          ].map((k) => (
+            <div key={k.label} className="biblia-hub__kpi biblioteca-pecas-hub__kpi">
+              <div className="biblioteca-pecas-hub__kpi-label">{k.label}</div>
+              <div className="biblioteca-pecas-hub__kpi-value">{k.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-      <div className="biblia-nonato-toolbar">
+      <div className="biblia-hub__toolbar">
         <input
           type="search"
-          className="biblia-nonato-search input-ns"
-          placeholder={tr('bibliaNonatoPesquisaPlaceholder', 'Pesquisar em todas as famílias…')}
+          className="input-ns biblia-hub__search"
+          placeholder={tr('bibliaNonatoPesquisaPlaceholder', 'Pesquisar família, marca ou modelo…')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        {syncMsg ? <span className="biblia-nonato-sync">{syncMsg}</span> : null}
+        <button type="button" className="btn-primary btn--compact" onClick={exportJson}>{tr('bibliaNonatoExportar', 'Exportar')}</button>
+        <button type="button" className="btn-primary btn--compact" onClick={() => importRef.current?.click()}>{tr('bibliaNonatoImportar', 'Importar')}</button>
+        <input ref={importRef} type="file" accept="application/json,.json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) importJson(f); e.target.value = '' }} />
       </div>
 
       {loading ? (
-        <p className="biblia-nonato-loading">{tr('bibliaNonatoCarregando', 'A carregar…')}</p>
+        <p className="biblia-hub__loading">{tr('bibliaNonatoCarregando', 'A carregar…')}</p>
       ) : (
-        <div className={`biblia-nonato-layout${isCompactLayout ? ' biblia-nonato-layout--compact' : ''}`}>
-          <aside className="biblia-nonato-sidebar">
-            <div className="biblia-nonato-panel-head">
+        <div className={`biblia-hub__workspace${isCompactLayout ? ' biblia-hub__workspace--stack' : ''}`}>
+          {/* Coluna 1 — Famílias */}
+          <aside className="biblia-hub__pane biblia-hub__pane--nav">
+            <div className="biblia-hub__pane-head">
               <h2>{tr('bibliaNonatoFamiliasLista', 'FAMÍLIAS')}</h2>
-              <button type="button" className="btn-primary btn--compact" onClick={addFamilia}>
-                + {tr('bibliaNonatoNovaFamilia', 'Nova')}
-              </button>
             </div>
-            {filteredStore.familias.length === 0 ? (
-              <p className="biblia-nonato-empty">{tr('bibliaNonatoSemFamilias', 'Ainda não há famílias.')}</p>
-            ) : (
-              <ul className="biblia-nonato-familia-list">
-                {filteredStore.familias.map((fam, idx) => {
-                  const nModelos = fam.linhas.reduce((a, l) => a + l.modelos.length, 0)
-                  const active = fam.id === selectedFamiliaId
+            <div className="biblia-hub__add-row">
+              <input
+                className="input-ns"
+                placeholder={tr('bibliaNonatoNomeFamiliaPlaceholder', 'Nova família…')}
+                value={novaFamilia}
+                onChange={(e) => setNovaFamilia(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && createFamilia()}
+              />
+              <button type="button" className="btn-primary btn--compact" onClick={createFamilia}>+</button>
+            </div>
+            <ul className="biblia-hub__nav-list">
+              {filtered.familias.length === 0 ? (
+                <li className="biblia-hub__empty">{tr('bibliaNonatoSemFamilias', 'Sem famílias.')}</li>
+              ) : (
+                filtered.familias.map((fam, idx) => {
+                  const active = selection?.familiaId === fam.id
+                  const nMod = fam.linhas.reduce((a, l) => a + l.modelos.length, 0)
                   return (
-                    <li key={fam.id} className={`biblia-nonato-familia-item${active ? ' is-active' : ''}`}>
-                      <button type="button" className="biblia-nonato-familia-btn" onClick={() => setSelectedFamiliaId(fam.id)}>
-                        <strong>{fam.nome || tr('bibliaNonatoSemNomeFamilia', '(Sem nome)')}</strong>
-                        <span>
-                          {tr('bibliaNonatoFamiliaListaResumo', '{m} marcas · {n} modelos', {
-                            m: fam.linhas.length,
-                            n: nModelos,
-                          })}
-                        </span>
+                    <li key={fam.id}>
+                      <button
+                        type="button"
+                        className={`biblia-hub__nav-item${active ? ' is-active' : ''}`}
+                        onClick={() => {
+                          setSelection({
+                            familiaId: fam.id,
+                            linhaId: fam.linhas[0]?.id,
+                            modeloId: fam.linhas[0]?.modelos[0]?.id,
+                          })
+                          setMarcaFilter('all')
+                        }}
+                      >
+                        <span className="biblia-hub__nav-title">{fam.nome || tr('bibliaNonatoSemNomeFamilia', '(Sem nome)')}</span>
+                        <span className="biblia-hub__nav-meta">{fam.linhas.length} · {nMod}</span>
                       </button>
-                      <div className="biblia-nonato-mini-actions">
-                        <button type="button" title={tr('bibliaNonatoMoverCima', 'Subir')} disabled={idx === 0} onClick={() => moveFamilia(fam.id, -1)}>
-                          ▲
-                        </button>
-                        <button
-                          type="button"
-                          title={tr('bibliaNonatoMoverBaixo', 'Descer')}
-                          disabled={idx === filteredStore.familias.length - 1}
-                          onClick={() => moveFamilia(fam.id, 1)}
-                        >
-                          ▼
-                        </button>
-                        <button type="button" className="is-danger" title={tr('bibliaNonatoApagarFamilia', 'Eliminar')} onClick={() => deleteFamilia(fam.id)}>
-                          ✕
-                        </button>
+                      <div className="biblia-hub__nav-actions">
+                        <button type="button" disabled={idx === 0} onClick={() => updateStore((p) => ({ ...p, familias: moveItem(p.familias, idx, idx - 1) }))}>▲</button>
+                        <button type="button" disabled={idx === filtered.familias.length - 1} onClick={() => updateStore((p) => ({ ...p, familias: moveItem(p.familias, idx, idx + 1) }))}>▼</button>
+                        <button type="button" className="is-del" onClick={() => deleteFamilia(fam.id)}>✕</button>
                       </div>
                     </li>
                   )
-                })}
-              </ul>
-            )}
+                })
+              )}
+            </ul>
           </aside>
 
-          <main className="biblia-nonato-main">
+          {/* Coluna 2 — Catálogo */}
+          <section className="biblia-hub__pane biblia-hub__pane--catalog">
             {!selectedFamilia ? (
-              <p className="biblia-nonato-empty">{tr('bibliaNonatoSemFamilias', 'Selecione ou crie uma família.')}</p>
+              <div className="biblia-hub__placeholder">
+                <p>{tr('bibliaNonatoSelecioneFamilia', 'Selecione ou crie uma família à esquerda.')}</p>
+              </div>
             ) : (
               <>
-                <div className="biblia-nonato-panel-head">
-                  <div>
-                    <h2>{selectedFamilia.nome}</h2>
-                    <p className="biblia-nonato-help">{tr('bibliaNonatoFamiliaConteudoAjuda', '')}</p>
-                  </div>
-                  <button type="button" className="btn-primary btn--compact" onClick={() => addLinha(selectedFamilia.id)}>
-                    + {tr('bibliaNonatoNovaLinha', 'Adicionar marca')}
-                  </button>
+                <div className="biblia-hub__pane-head">
+                  <input
+                    className="input-ns biblia-hub__familia-name"
+                    value={selectedFamilia.nome}
+                    onChange={(e) =>
+                      updateStore((prev) => ({
+                        ...prev,
+                        familias: prev.familias.map((f) => (f.id === selectedFamilia.id ? { ...f, nome: e.target.value } : f)),
+                      }))
+                    }
+                    aria-label={tr('bibliaNonatoNomeFamiliaLabel', 'Nome da família')}
+                  />
                 </div>
 
-                <input
-                  className="input-ns biblia-nonato-familia-name"
-                  value={selectedFamilia.nome}
-                  onChange={(e) => patchFamilia(selectedFamilia.id, { nome: e.target.value })}
-                  placeholder={tr('bibliaNonatoNomeFamiliaPlaceholder', 'Ex.: Família das seccionadoras')}
-                  aria-label={tr('bibliaNonatoNomeFamiliaLabel', 'Nome da família')}
-                />
+                <div className="biblia-hub__marca-bar">
+                  <button type="button" className={`biblia-hub__marca-chip${marcaFilter === 'all' ? ' is-active' : ''}`} onClick={() => setMarcaFilter('all')}>
+                    {tr('bibliaNonatoTodasMarcas', 'Todas')}
+                  </button>
+                  {selectedFamilia.linhas.map((lin) => (
+                    <button
+                      key={lin.id}
+                      type="button"
+                      className={`biblia-hub__marca-chip${marcaFilter === lin.id ? ' is-active' : ''}`}
+                      onClick={() => setMarcaFilter(lin.id)}
+                    >
+                      {lin.titulo || tr('bibliaNonatoSemMarcaLista', '(Sem marca)')}
+                      <em>{lin.modelos.length}</em>
+                    </button>
+                  ))}
+                </div>
 
-                {selectedFamilia.linhas.length === 0 ? (
-                  <p className="biblia-nonato-empty">{tr('bibliaNonatoLinhaResumoDica', 'Adicione marcas nesta família.')}</p>
-                ) : (
-                  <div className="biblia-nonato-marcas">
-                    {selectedFamilia.linhas.map((lin, liIdx) => {
-                      const linOpen = expandedLinhas[lin.id] !== false
-                      return (
-                        <section key={lin.id} className="biblia-nonato-marca-card">
-                          <header className="biblia-nonato-marca-head">
-                            <button
-                              type="button"
-                              className="biblia-nonato-marca-toggle"
-                              onClick={() => setExpandedLinhas((p) => ({ ...p, [lin.id]: !linOpen }))}
-                            >
-                              <span>{linOpen ? '▼' : '▶'}</span>
-                              <input
-                                className="input-ns biblia-nonato-marca-title"
-                                value={lin.titulo}
-                                onClick={(e) => e.stopPropagation()}
-                                onChange={(e) => patchLinha(selectedFamilia.id, lin.id, { titulo: e.target.value })}
-                                placeholder={tr('bibliaNonatoLinhaTituloPlaceholder', 'Homag · Brandt · Weeke…')}
-                                aria-label={tr('bibliaNonatoMarcaBlocoLabel', 'Marca')}
-                              />
-                              <em>
-                                {tr('bibliaNonatoLinhaResumoModelos', '{n} modelo(s)', { n: lin.modelos.length })}
-                              </em>
-                            </button>
-                            <div className="biblia-nonato-mini-actions">
-                              <button type="button" disabled={liIdx === 0} onClick={() => moveLinha(selectedFamilia.id, lin.id, -1)} title={tr('bibliaNonatoLinhaMoverCima', 'Subir')}>
-                                ▲
-                              </button>
-                              <button
-                                type="button"
-                                disabled={liIdx === selectedFamilia.linhas.length - 1}
-                                onClick={() => moveLinha(selectedFamilia.id, lin.id, 1)}
-                                title={tr('bibliaNonatoLinhaMoverBaixo', 'Descer')}
-                              >
-                                ▼
-                              </button>
-                              <button type="button" className="is-danger" onClick={() => deleteLinha(selectedFamilia.id, lin.id)} title={tr('bibliaNonatoRemoverLinha', 'Remover')}>
-                                ✕
-                              </button>
-                            </div>
-                          </header>
+                <div className="biblia-hub__add-row">
+                  <input
+                    className="input-ns"
+                    placeholder={tr('bibliaNonatoLinhaTituloPlaceholder', 'Nova marca…')}
+                    value={novaMarca}
+                    onChange={(e) => setNovaMarca(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && createMarca()}
+                  />
+                  <button type="button" className="btn-primary btn--compact" onClick={createMarca}>+ {tr('bibliaNonatoNovaLinha', 'Marca')}</button>
+                </div>
 
-                          {linOpen ? (
-                            <div className="biblia-nonato-marca-body">
-                              <div className="biblia-nonato-panel-head biblia-nonato-panel-head--inner">
-                                <h3>{tr('bibliaNonatoModelosDentroMarca', 'MODELOS NESTA MARCA')}</h3>
-                                <button type="button" className="btn-primary btn--compact" onClick={() => addModelo(selectedFamilia.id, lin.id)}>
-                                  + {tr('bibliaNonatoNovoModelo', 'Adicionar modelo')}
+                <div className="biblia-hub__table-wrap">
+                  <table className="biblia-hub__table">
+                    <thead>
+                      <tr>
+                        <th>{tr('bibliaNonatoMarcaBlocoLabel', 'Marca')}</th>
+                        <th>{tr('bibliaNonatoModeloNomeLabel', 'Modelo')}</th>
+                        <th>{tr('bibliaNonatoColunaResumo', 'Resumo')}</th>
+                        <th>{tr('bibliaNonatoAnexosTitulo', 'Anexos')}</th>
+                        <th />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {catalogRows.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="biblia-hub__empty-cell">{tr('bibliaNonatoSemModelosTabela', 'Nenhum modelo nesta família.')}</td>
+                        </tr>
+                      ) : (
+                        catalogRows.map(({ linha, modelo }) => {
+                          const active = selection?.modeloId === modelo.id
+                          return (
+                            <tr key={modelo.id} className={active ? 'is-active' : ''}>
+                              <td>{linha.titulo || '—'}</td>
+                              <td><strong>{modelo.nome || '—'}</strong></td>
+                              <td className="biblia-hub__cell-muted">{modelPreview(modelo)}</td>
+                              <td>{modelo.anexos.length || '—'}</td>
+                              <td className="biblia-hub__cell-actions">
+                                <button
+                                  type="button"
+                                  className="btn-primary btn--compact"
+                                  onClick={() => {
+                                    setSelection({ familiaId: selectedFamilia.id, linhaId: linha.id, modeloId: modelo.id })
+                                    setActiveTab('software')
+                                  }}
+                                >
+                                  {tr('bibliaNonatoAbrirFicha', 'Abrir')}
                                 </button>
-                              </div>
+                                <button type="button" className="btn-danger btn-danger--inline" onClick={() => deleteModelo(selectedFamilia.id, linha.id, modelo.id)}>✕</button>
+                              </td>
+                            </tr>
+                          )
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
 
-                              {lin.modelos.length === 0 ? (
-                                <p className="biblia-nonato-empty">{tr('bibliaNonatoSemNomeModeloLista', 'Sem modelos.')}</p>
-                              ) : (
-                                <ul className="biblia-nonato-modelo-list">
-                                  {lin.modelos.map((mod, miIdx) => {
-                                    const modOpen = !!expandedModelos[mod.id]
-                                    const tab = getModelTab(mod.id)
-                                    const field = tabField[tab]
-                                    return (
-                                      <li key={mod.id} className="biblia-nonato-modelo-item">
-                                        <div className="biblia-nonato-modelo-head">
-                                          <button
-                                            type="button"
-                                            className="biblia-nonato-modelo-toggle"
-                                            onClick={() => setExpandedModelos((p) => ({ ...p, [mod.id]: !modOpen }))}
-                                          >
-                                            {modOpen ? tr('bibliaNonatoModeloRetrair', 'Retrair') : tr('bibliaNonatoModeloExpandir', 'Expandir')}
-                                          </button>
-                                          <input
-                                            className="input-ns biblia-nonato-modelo-name"
-                                            value={mod.nome}
-                                            onChange={(e) => patchModelo(selectedFamilia.id, lin.id, mod.id, { nome: e.target.value })}
-                                            placeholder={tr('bibliaNonatoModeloNomePlaceholder', 'Ex.: HPP 250')}
-                                          />
-                                          <span className="biblia-nonato-modelo-meta">
-                                            {mod.anexos.length > 0
-                                              ? tr('bibliaNonatoModeloResumoAnexos', '{n} anexo(s)', { n: mod.anexos.length })
-                                              : tr('bibliaNonatoModeloResumoRetraido', 'Detalhes fechados')}
-                                          </span>
-                                          <div className="biblia-nonato-mini-actions">
-                                            <button type="button" disabled={miIdx === 0} onClick={() => moveModelo(selectedFamilia.id, lin.id, mod.id, -1)}>
-                                              ▲
-                                            </button>
-                                            <button type="button" disabled={miIdx === lin.modelos.length - 1} onClick={() => moveModelo(selectedFamilia.id, lin.id, mod.id, 1)}>
-                                              ▼
-                                            </button>
-                                            <button type="button" className="is-danger" onClick={() => deleteModelo(selectedFamilia.id, lin.id, mod.id)}>
-                                              ✕
-                                            </button>
-                                          </div>
-                                        </div>
-
-                                        {modOpen ? (
-                                          <div className="biblia-nonato-modelo-body">
-                                            <div className="biblia-nonato-tabs" role="tablist">
-                                              {(Object.keys(tabLabel) as ModelTab[]).map((key) => (
-                                                <button
-                                                  key={key}
-                                                  type="button"
-                                                  role="tab"
-                                                  className={`biblia-nonato-tab${tab === key ? ' is-active' : ''}`}
-                                                  onClick={() => setModelTabs((p) => ({ ...p, [mod.id]: key }))}
-                                                >
-                                                  {tabLabel[key]}
-                                                </button>
-                                              ))}
-                                            </div>
-                                            <textarea
-                                              className="biblia-nonato-textarea input-ns"
-                                              rows={10}
-                                              value={mod[field]}
-                                              onChange={(e) => patchModelo(selectedFamilia.id, lin.id, mod.id, { [field]: e.target.value })}
-                                              placeholder={tr('bibliaNonatoModeloInfoPlaceholder', 'Informações técnicas…')}
-                                            />
-
-                                            <div className="biblia-nonato-anexos">
-                                              <h4>{tr('bibliaNonatoAnexosTitulo', 'Documentos e imagens')}</h4>
-                                              <p className="biblia-nonato-help">{tr('bibliaNonatoAnexosAjudaModelo', '')}</p>
-                                              <label className="btn-primary btn--compact biblia-nonato-file-label">
-                                                + {tr('bibliaNonatoAnexosAdicionar', 'Adicionar arquivos')}
-                                                <input
-                                                  type="file"
-                                                  hidden
-                                                  multiple
-                                                  accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,image/*,application/pdf"
-                                                  onChange={(e) => {
-                                                    void handleAnexos(selectedFamilia.id, lin.id, mod.id, e.target.files)
-                                                    e.target.value = ''
-                                                  }}
-                                                />
-                                              </label>
-                                              {mod.anexos.length > 0 ? (
-                                                <ul className="biblia-nonato-anexo-list">
-                                                  {mod.anexos.map((a) => (
-                                                    <li key={a.id}>
-                                                      <a href={a.dataUrl} target="_blank" rel="noreferrer">
-                                                        {a.nome}
-                                                      </a>
-                                                      <a href={a.dataUrl} download={a.nome} className="btn-primary btn--compact">
-                                                        {tr('bibliaNonatoAnexoTransferir', 'Baixar')}
-                                                      </a>
-                                                      <button
-                                                        type="button"
-                                                        className="btn-danger btn-danger--inline"
-                                                        onClick={() =>
-                                                          patchModelo(selectedFamilia.id, lin.id, mod.id, {
-                                                            anexos: mod.anexos.filter((x) => x.id !== a.id),
-                                                          })
-                                                        }
-                                                      >
-                                                        {tr('bibliaNonatoAnexoRemover', 'Remover')}
-                                                      </button>
-                                                    </li>
-                                                  ))}
-                                                </ul>
-                                              ) : null}
-                                            </div>
-                                          </div>
-                                        ) : null}
-                                      </li>
-                                    )
-                                  })}
-                                </ul>
-                              )}
-                            </div>
-                          ) : (
-                            <p className="biblia-nonato-collapsed-hint">
-                              {lin.modelos.map((m) => m.nome || tr('bibliaNonatoSemNomeModeloLista', '(Sem nome)')).join(' · ') ||
-                                tr('bibliaNonatoLinhaResumoDica', 'Expandir a marca para editar modelos.')}
-                            </p>
-                          )}
-                        </section>
-                      )
-                    })}
-                  </div>
-                )}
+                <div className="biblia-hub__add-row biblia-hub__add-row--model">
+                  <input
+                    className="input-ns"
+                    placeholder={tr('bibliaNonatoModeloNomePlaceholder', 'Novo modelo…')}
+                    value={novoModelo}
+                    onChange={(e) => setNovoModelo(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && createModelo()}
+                    disabled={selectedFamilia.linhas.length === 0}
+                  />
+                  <button type="button" className="btn-primary btn--compact" onClick={createModelo} disabled={selectedFamilia.linhas.length === 0}>
+                    + {tr('bibliaNonatoNovoModelo', 'Modelo')}
+                  </button>
+                </div>
               </>
             )}
-          </main>
+          </section>
+
+          {/* Coluna 3 — Ficha técnica */}
+          <section className="biblia-hub__pane biblia-hub__pane--ficha">
+            {!selectedModelo || !selection?.modeloId || !selection.linhaId ? (
+              <div className="biblia-hub__placeholder">
+                <p>{tr('bibliaNonatoSelecioneModelo', 'Selecione um modelo na tabela para editar a ficha técnica.')}</p>
+              </div>
+            ) : (
+              <>
+                <div className="biblia-hub__breadcrumb">
+                  {selectedFamilia?.nome} › {selectedLinha?.titulo} ›
+                </div>
+                <input
+                  className="input-ns biblia-hub__model-title"
+                  value={selectedModelo.nome}
+                  onChange={(e) => patchModelo(selection.familiaId, selection.linhaId, selection.modeloId, { nome: e.target.value })}
+                  aria-label={tr('bibliaNonatoModeloNomeLabel', 'Modelo')}
+                />
+
+                <div className="biblia-hub__tabs" role="tablist">
+                  {tabDefs.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      role="tab"
+                      className={`biblia-hub__tab${activeTab === t.id ? ' is-active' : ''}`}
+                      onClick={() => setActiveTab(t.id)}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+
+                {tabDefs.map((t) =>
+                  activeTab === t.id ? (
+                    <textarea
+                      key={t.id}
+                      className="input-ns biblia-hub__editor"
+                      rows={14}
+                      value={selectedModelo[t.field]}
+                      placeholder={t.ph}
+                      onChange={(e) => patchModelo(selection.familiaId, selection.linhaId, selection.modeloId, { [t.field]: e.target.value })}
+                    />
+                  ) : null
+                )}
+
+                <div className="biblia-hub__anexos">
+                  <div className="biblia-hub__pane-head">
+                    <h3>{tr('bibliaNonatoAnexosTitulo', 'Documentos e imagens')}</h3>
+                    <label className="btn-primary btn--compact biblia-hub__file-btn">
+                      + {tr('bibliaNonatoAnexosAdicionar', 'Anexar')}
+                      <input type="file" hidden multiple accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,image/*,application/pdf" onChange={(e) => { void handleAnexos(e.target.files); e.target.value = '' }} />
+                    </label>
+                  </div>
+                  <p className="biblia-hub__anexos-hint">{tr('bibliaNonatoAnexosAjudaModelo', '')}</p>
+                  {selectedModelo.anexos.length === 0 ? (
+                    <p className="biblia-hub__empty">{tr('bibliaNonatoSemAnexos', 'Sem anexos.')}</p>
+                  ) : (
+                    <ul className="biblia-hub__anexo-grid">
+                      {selectedModelo.anexos.map((a) => (
+                        <li key={a.id} className="biblia-hub__anexo-card">
+                          <span className="biblia-hub__anexo-name" title={a.nome}>{a.nome}</span>
+                          <div className="biblia-hub__anexo-actions">
+                            <a href={a.dataUrl} target="_blank" rel="noreferrer" className="btn-primary btn--compact">{tr('bibliaNonatoAnexoAbrir', 'Abrir')}</a>
+                            <a href={a.dataUrl} download={a.nome} className="btn-primary btn--compact">{tr('bibliaNonatoAnexoTransferir', 'Baixar')}</a>
+                            <button
+                              type="button"
+                              className="btn-danger btn-danger--inline"
+                              onClick={() =>
+                                patchModelo(selection.familiaId, selection.linhaId, selection.modeloId, {
+                                  anexos: selectedModelo.anexos.filter((x) => x.id !== a.id),
+                                })
+                              }
+                            >
+                              {tr('bibliaNonatoAnexoRemover', 'Remover')}
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </>
+            )}
+          </section>
         </div>
       )}
     </div>

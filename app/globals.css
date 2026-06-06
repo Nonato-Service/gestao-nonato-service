@@ -12206,113 +12206,403 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   -webkit-text-fill-color: #f1f5f9 !important;
 }
 
-/* ── Bíblia da Nonato Service ── */
-.biblia-nonato-root {
-  padding: clamp(12px, 2vw, 20px);
-  max-width: 1400px;
+/* ── Bíblia da Nonato Service (hub profissional) ── */
+.biblia-hub {
+  --biblia-accent: rgba(56, 189, 248, 0.92);
+  --biblia-accent-soft: rgba(56, 189, 248, 0.28);
+  --biblia-border: rgba(56, 189, 248, 0.22);
+  max-width: 1280px;
   margin: 0 auto;
+  padding-bottom: 28px;
 }
 
-.biblia-nonato-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
+.biblia-hub__hero-ring {
+  position: relative;
+  margin-bottom: 18px;
+  padding: 2px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(56, 189, 248, 0.35) 0%, rgba(15, 23, 42, 0.5) 50%, rgba(30, 64, 175, 0.4) 100%);
+  box-shadow: 0 20px 50px rgba(0, 12, 32, 0.45);
 }
 
-.biblia-nonato-title {
-  margin: 0;
-  font-size: clamp(1.1rem, 3vw, 1.5rem);
-  font-weight: 800;
-  color: #6ee7b7;
-  letter-spacing: 0.04em;
+.biblia-hub .tab-glass-hero.tab-glass-hero--compact {
+  margin-bottom: 0;
+  border-radius: 18px;
+  border-color: var(--biblia-border);
+  background: linear-gradient(168deg, rgba(12, 22, 38, 0.98), rgba(6, 10, 18, 0.96));
 }
 
-.biblia-nonato-subtitle,
-.biblia-nonato-stats,
-.biblia-nonato-desc,
-.biblia-nonato-help,
-.biblia-nonato-sync {
-  margin: 4px 0 0;
-  font-size: 12px;
-  color: rgba(203, 213, 225, 0.88);
-  line-height: 1.5;
+.biblia-hub__logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 10px;
 }
 
-.biblia-nonato-header-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.biblia-nonato-toolbar {
-  display: flex;
+.biblia-hub__hero-actions {
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+}
+
+.biblia-hub__sync {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(203, 213, 225, 0.75);
+  min-width: 88px;
+  text-align: right;
+}
+
+.biblia-hub__sync--saving { color: #fbbf24; }
+.biblia-hub__sync--saved { color: #4ade80; }
+.biblia-hub__sync--error { color: #f87171; }
+
+.biblia-hub__stats-panel {
+  margin-bottom: 16px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: linear-gradient(155deg, rgba(15, 30, 50, 0.55), rgba(5, 8, 14, 0.9));
+  border: 1px solid var(--biblia-border);
+}
+
+.biblia-hub__kpi {
+  border: 1px solid rgba(56, 189, 248, 0.2) !important;
+  background: rgba(0, 0, 0, 0.25) !important;
+  border-radius: 12px !important;
+  padding: 12px 14px !important;
+}
+
+.biblia-hub__toolbar {
+  display: flex;
   flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
   margin-bottom: 16px;
 }
 
-.biblia-nonato-search {
-  flex: 1 1 240px;
+.biblia-hub__search {
+  flex: 1 1 260px;
   min-width: 0;
 }
 
-.biblia-nonato-loading,
-.biblia-nonato-empty {
-  color: rgba(203, 213, 225, 0.75);
+.biblia-hub__loading,
+.biblia-hub__empty,
+.biblia-hub__placeholder p {
+  color: rgba(203, 213, 225, 0.78);
   font-size: 14px;
-  padding: 16px 0;
+  line-height: 1.5;
 }
 
-.biblia-nonato-layout {
+.biblia-hub__placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: 24px;
+  text-align: center;
+}
+
+.biblia-hub__workspace {
   display: grid;
-  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
-  gap: 16px;
-  align-items: start;
+  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr) minmax(320px, 400px);
+  gap: 14px;
+  align-items: stretch;
+  min-height: 520px;
 }
 
-.biblia-nonato-layout--compact {
+.biblia-hub__workspace--stack {
   grid-template-columns: 1fr;
 }
 
-.biblia-nonato-sidebar,
-.biblia-nonato-main {
-  border: 1px solid rgba(0, 230, 107, 0.22);
+.biblia-hub__pane {
+  border: 1px solid var(--biblia-border);
   border-radius: 14px;
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(8, 14, 24, 0.72);
   padding: 14px;
-  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
 }
 
-.biblia-nonato-panel-head {
+.biblia-hub__pane-head {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
+}
+
+.biblia-hub__pane-head h2,
+.biblia-hub__pane-head h3 {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--biblia-accent);
+}
+
+.biblia-hub__add-row {
+  display: flex;
+  gap: 8px;
   margin-bottom: 12px;
 }
 
-.biblia-nonato-panel-head h2,
-.biblia-nonato-panel-head h3 {
+.biblia-hub__add-row .input-ns {
+  flex: 1;
+  min-width: 0;
+}
+
+.biblia-hub__add-row--model {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.biblia-hub__nav-list {
+  list-style: none;
   margin: 0;
+  padding: 0;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.biblia-hub__nav-list > li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px;
+  align-items: start;
+}
+
+.biblia-hub__nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.5);
+  cursor: pointer;
+  text-align: left;
+  color: #f1f5f9;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.biblia-hub__nav-item.is-active {
+  border-color: rgba(56, 189, 248, 0.55);
+  background: rgba(56, 189, 248, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.12);
+}
+
+.biblia-hub__nav-title {
   font-size: 13px;
+  font-weight: 700;
+}
+
+.biblia-hub__nav-meta {
+  font-size: 10px;
+  color: rgba(148, 163, 184, 0.95);
+  font-variant-numeric: tabular-nums;
+}
+
+.biblia-hub__nav-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.biblia-hub__nav-actions button {
+  width: 26px;
+  height: 22px;
+  padding: 0;
+  font-size: 10px;
+  border-radius: 5px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(30, 41, 59, 0.8);
+  color: #fff;
+  cursor: pointer;
+}
+
+.biblia-hub__nav-actions button:disabled { opacity: 0.35; cursor: not-allowed; }
+.biblia-hub__nav-actions button.is-del { border-color: rgba(248, 113, 113, 0.5); }
+
+.biblia-hub__familia-name,
+.biblia-hub__model-title {
+  width: 100%;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.biblia-hub__marca-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.biblia-hub__marca-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.6);
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.biblia-hub__marca-chip em {
+  font-style: normal;
+  font-size: 10px;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+
+.biblia-hub__marca-chip.is-active {
+  border-color: rgba(56, 189, 248, 0.6);
+  background: rgba(56, 189, 248, 0.14);
+  color: #fff;
+}
+
+.biblia-hub__pane--catalog {
+  overflow: hidden;
+}
+
+.biblia-hub__table-wrap {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.biblia-hub__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.biblia-hub__table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.06em;
-  color: #7dd3fc;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: rgba(186, 230, 253, 0.9);
+  background: rgba(10, 18, 30, 0.98);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.2);
 }
 
-.biblia-nonato-panel-head--inner {
-  margin-top: 4px;
+.biblia-hub__table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  color: #e2e8f0;
+  vertical-align: middle;
 }
 
-.biblia-nonato-familia-list,
-.biblia-nonato-modelo-list,
-.biblia-nonato-anexo-list {
+.biblia-hub__table tbody tr:hover td {
+  background: rgba(56, 189, 248, 0.06);
+}
+
+.biblia-hub__table tbody tr.is-active td {
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.biblia-hub__cell-muted {
+  color: rgba(148, 163, 184, 0.92);
+  font-size: 12px;
+  max-width: 200px;
+}
+
+.biblia-hub__cell-actions {
+  white-space: nowrap;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.biblia-hub__empty-cell {
+  text-align: center;
+  padding: 28px !important;
+  color: rgba(148, 163, 184, 0.85) !important;
+}
+
+.biblia-hub__pane--ficha {
+  overflow-y: auto;
+}
+
+.biblia-hub__breadcrumb {
+  font-size: 11px;
+  color: rgba(148, 163, 184, 0.9);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.biblia-hub__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0;
+}
+
+.biblia-hub__tab {
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.7);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.biblia-hub__tab.is-active {
+  border-color: rgba(56, 189, 248, 0.55);
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.biblia-hub__editor {
+  width: 100%;
+  min-height: 220px;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.55;
+  margin-bottom: 16px;
+}
+
+.biblia-hub__anexos {
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.biblia-hub__anexos-hint {
+  font-size: 11px;
+  color: rgba(148, 163, 184, 0.85);
+  margin: 0 0 10px;
+  line-height: 1.45;
+}
+
+.biblia-hub__file-btn {
+  cursor: pointer;
+}
+
+.biblia-hub__anexo-grid {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -12321,244 +12611,39 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   gap: 8px;
 }
 
-.biblia-nonato-familia-item {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 6px;
-  align-items: start;
-  border: 1px solid rgba(148, 163, 184, 0.18);
+.biblia-hub__anexo-card {
+  padding: 10px 12px;
   border-radius: 10px;
-  padding: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
   background: rgba(0, 0, 0, 0.22);
 }
 
-.biblia-nonato-familia-item.is-active {
-  border-color: rgba(0, 230, 107, 0.45);
-  box-shadow: 0 0 0 1px rgba(0, 230, 107, 0.15);
-}
-
-.biblia-nonato-familia-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  width: 100%;
-  padding: 8px 10px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-  color: #f1f5f9;
-}
-
-.biblia-nonato-familia-btn strong {
-  font-size: 14px;
-}
-
-.biblia-nonato-familia-btn span {
-  font-size: 11px;
-  color: rgba(148, 163, 184, 0.95);
-}
-
-.biblia-nonato-mini-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.biblia-nonato-mini-actions button {
-  width: 28px;
-  height: 24px;
-  padding: 0;
-  font-size: 11px;
-  border-radius: 6px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(30, 41, 59, 0.8);
-  color: #fff;
-  cursor: pointer;
-}
-
-.biblia-nonato-mini-actions button:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.biblia-nonato-mini-actions button.is-danger {
-  border-color: rgba(248, 113, 113, 0.55);
-  background: rgba(127, 29, 29, 0.35);
-}
-
-.biblia-nonato-familia-name,
-.biblia-nonato-marca-title,
-.biblia-nonato-modelo-name {
-  width: 100%;
-  margin-bottom: 12px;
-}
-
-.biblia-nonato-marcas {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.biblia-nonato-marca-card {
-  border: 1px solid rgba(102, 179, 255, 0.25);
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-}
-
-.biblia-nonato-marca-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 10px 12px;
-  background: rgba(0, 100, 255, 0.08);
-}
-
-.biblia-nonato-marca-toggle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: #e2e8f0;
-  text-align: left;
-}
-
-.biblia-nonato-marca-toggle .input-ns {
-  flex: 1;
-  min-width: 120px;
-  margin: 0;
-}
-
-.biblia-nonato-marca-toggle em {
-  font-size: 11px;
-  color: rgba(148, 163, 184, 0.9);
-  font-style: normal;
-  white-space: nowrap;
-}
-
-.biblia-nonato-marca-body {
-  padding: 12px;
-}
-
-.biblia-nonato-collapsed-hint {
-  margin: 0;
-  padding: 8px 12px 12px;
+.biblia-hub__anexo-name {
+  display: block;
   font-size: 12px;
-  color: rgba(148, 163, 184, 0.9);
-}
-
-.biblia-nonato-modelo-item {
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 10px;
-  background: rgba(15, 23, 42, 0.45);
-  overflow: hidden;
-}
-
-.biblia-nonato-modelo-head {
-  display: grid;
-  grid-template-columns: auto 1fr auto auto;
-  gap: 8px;
-  align-items: center;
-  padding: 8px 10px;
-}
-
-.biblia-nonato-modelo-toggle {
-  border: 1px solid rgba(0, 230, 107, 0.35);
-  background: rgba(0, 230, 107, 0.1);
-  border-radius: 8px;
-  padding: 6px 10px;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  color: #fff;
-  white-space: nowrap;
-}
-
-.biblia-nonato-modelo-meta {
-  font-size: 11px;
-  color: rgba(148, 163, 184, 0.9);
-  white-space: nowrap;
-}
-
-.biblia-nonato-modelo-body {
-  padding: 0 10px 12px;
-  border-top: 1px solid rgba(148, 163, 184, 0.12);
-}
-
-.biblia-nonato-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 10px 0;
-}
-
-.biblia-nonato-tab {
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(30, 41, 59, 0.7);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.biblia-nonato-tab.is-active {
-  border-color: rgba(0, 230, 107, 0.55);
-  background: rgba(0, 230, 107, 0.15);
-}
-
-.biblia-nonato-textarea {
-  width: 100%;
-  min-height: 180px;
-  resize: vertical;
-  font-family: inherit;
-  line-height: 1.5;
-}
-
-.biblia-nonato-anexos {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(148, 163, 184, 0.15);
-}
-
-.biblia-nonato-anexos h4 {
-  margin: 0 0 6px;
-  font-size: 13px;
-  color: #7dd3fc;
-}
-
-.biblia-nonato-anexo-list li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-}
-
-.biblia-nonato-anexo-list a:first-child {
-  flex: 1;
-  min-width: 120px;
-  color: #a5f3fc;
+  font-weight: 600;
+  color: #bae6fd;
+  margin-bottom: 8px;
   word-break: break-all;
 }
 
-.biblia-nonato-file-label {
-  display: inline-flex;
-  cursor: pointer;
-  margin-top: 8px;
+.biblia-hub__anexo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-@media (max-width: 900px) {
-  .biblia-nonato-modelo-head {
-    grid-template-columns: 1fr;
+@media (max-width: 1100px) {
+  .biblia-hub__workspace:not(.biblia-hub__workspace--stack) {
+    grid-template-columns: 1fr 1fr;
+  }
+  .biblia-hub__pane--ficha {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .biblia-hub__workspace {
+    grid-template-columns: 1fr !important;
   }
 }
