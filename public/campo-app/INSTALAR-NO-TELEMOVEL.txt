@@ -1,0 +1,38 @@
+COMO INSTALAR NO TELEMOVEL (OFFLINE DEPOIS)
+============================================
+
+Precisa abrir o link UMA VEZ (com internet ou Wi-Fi).
+Depois de instalar, NAO precisa de internet nem de PC.
+
+
+OPCAO A — Enviar link (mais facil)
+-----------------------------------
+  1. Faca deploy do Gestao no Railway (ou use o link que ja tem)
+  2. Envie por WhatsApp ao telemovel:
+
+     https://SEU-APP.up.railway.app/campo-app/
+
+  3. No telemovel: abrir no Chrome → Instalar app
+  4. Pronto — use pelo icone, offline para sempre
+
+
+OPCAO B — Wi-Fi do PC (sem internet no mundo)
+---------------------------------------------
+  1. PC e telemovel na MESMA Wi-Fi
+  2. PC: duplo clique ABRIR-CAMPO-REDE.bat
+  3. No telemovel Chrome: http://IP-DO-PC:8767
+     (o IP aparece na janela preta)
+  4. Instalar app → Adicionar ao ecra inicial
+  5. Pode fechar o PC — o telemovel fica offline
+
+
+DEPOIS DE INSTALADO
+-------------------
+  • Abrir pelo icone "Campo" / "Nonato Campo"
+  • Relatorios, despesas, PDF — tudo offline
+  • Cada telemovel e independente (nao sincroniza)
+
+
+PASTA NO PC (opcional)
+----------------------
+  C:\Users\W10\nonato-campo-app

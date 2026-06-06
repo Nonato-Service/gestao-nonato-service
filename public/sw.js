@@ -69,8 +69,9 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return
   if (event.request.method !== 'GET') return
   if (url.pathname.startsWith('/api/')) return
-  // Bíblia tem app e service worker próprios em /biblia-app/ — não interceptar
+  // Bíblia e Campo têm apps e service workers próprios — não interceptar
   if (url.pathname.startsWith('/biblia-app')) return
+  if (url.pathname.startsWith('/campo-app')) return
 
   const isNavigate = event.request.mode === 'navigate'
 

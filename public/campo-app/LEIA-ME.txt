@@ -1,0 +1,24 @@
+NONATO CAMPO — OFFLINE NO TELEMOVEL
+====================================
+
+Instalar UMA VEZ → usar OFFLINE para sempre.
+
+ENVIAR PARA O TELEMOVEL
+-----------------------
+  WhatsApp (com internet no telemovel, so na instalacao):
+
+    https://SEU-APP.up.railway.app/campo-app/
+
+  OU Wi-Fi local: ABRIR-CAMPO-REDE.bat (ver INSTALAR-NO-TELEMOVEL.txt)
+
+INSTALAR
+--------
+  Chrome → abrir link → «Instalar app» → icone no ecra
+
+USAR
+----
+  Abrir pelo icone. Sem internet. Sem PC. Sem sync entre telemoveis.
+
+Guia completo: INSTALAR-NO-TELEMOVEL.txt
+
+PASTA: C:\Users\W10\nonato-campo-app

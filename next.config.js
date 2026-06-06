@@ -7,6 +7,7 @@ const nextConfig = {
     return [
       // Evitar 308 que quebra caminhos relativos (styles.css → /styles.css)
       { source: '/biblia-app/', destination: '/biblia-app/index.html', permanent: false },
+      { source: '/campo-app/', destination: '/campo-app/index.html', permanent: false },
     ]
   },
   async rewrites() {
@@ -15,6 +16,7 @@ const nextConfig = {
       { source: '/favicon.ico', destination: '/icon.svg' },
       // Bíblia no telemóvel: /biblia-app abre o index (evita timeout no telefone)
       { source: '/biblia-app', destination: '/biblia-app/index.html' },
+      { source: '/campo-app', destination: '/campo-app/index.html' },
     ]
   },
   async headers() {

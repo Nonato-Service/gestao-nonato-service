@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <base href="./" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#14532d" />
+  <meta name="description" content="Nonato Campo — relatórios, cadastro de serviços e despesas offline" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Nonato Campo" />
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="assets/icon.svg" />
+  <title>Nonato Campo</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="topbar__brand">
+        <img id="topLogo" class="topbar__logo" src="" alt="" hidden />
+        <div>
+          <h1 class="topbar__title">Nonato Campo</h1>
+          <p class="topbar__sub" id="topStatus">Relatórios · Serviços · Despesas — offline</p>
+        </div>
+      </div>
+    </header>
+
+    <nav class="tabs" id="navTabs">
+      <button type="button" class="tabs__btn is-active" data-view="home">Início</button>
+      <button type="button" class="tabs__btn" data-view="logo">Logo</button>
+      <button type="button" class="tabs__btn" data-view="servicos">Serviços</button>
+      <button type="button" class="tabs__btn" data-view="relatorios">Relatórios</button>
+      <button type="button" class="tabs__btn" data-view="despesas">Despesas</button>
+    </nav>
+
+    <main class="main" id="main"></main>
+  </div>
+
+  <dialog class="modal" id="modal">
+    <form method="dialog" class="modal__inner" id="modalForm">
+      <h3 class="modal__title" id="modalTitle">Título</h3>
+      <div id="modalBody"></div>
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" id="modalCancel">Cancelar</button>
+        <button type="submit" class="btn btn--primary" id="modalOk">OK</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="js/db.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/pdf.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("/campo-app/sw.js", { scope: "/campo-app/" }).then(function (reg) {
+          reg.update();
+          var el = document.getElementById("topStatus");
+          if (el && !navigator.onLine) el.textContent = "✓ Modo offline — app instalada";
+        }).catch(function () {});
+      });
+    }
+  </script>
+</body>
+</html>
