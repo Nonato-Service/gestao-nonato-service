@@ -29742,6 +29742,35 @@ const nextF = familias.filter(x => x !== f)
                   </button>
                 </div>
 
+                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.35)' }}>
+                  <strong style={{ display: 'block', marginBottom: '8px', color: '#8ecaff' }}>{safeT?.restoreTitle || 'Restaurar Backup'}</strong>
+                  <p style={{ fontSize: '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
+                    {safeT?.restoreDescription || 'Restaure todos os dados a partir de um arquivo de backup'} Se fez «Criar Backup» e guardou o ficheiro <strong>.json</strong> no PC (ex.: ontem), use o botão abaixo para o escolher. Repõe relatórios, clientes, peças, agenda e fechamentos no servidor e neste aparelho.
+                  </p>
+                  <label
+                    style={{
+                      display: 'inline-block',
+                      padding: '8px 15px',
+                      backgroundColor: '#0066cc',
+                      color: '#fff',
+                      borderRadius: '6px',
+                      cursor: isDemoMode ? 'not-allowed' : 'pointer',
+                      fontWeight: 600,
+                      fontSize: '13px',
+                      opacity: isDemoMode ? 0.5 : 1,
+                    }}
+                  >
+                    {safeT?.restoreBackup || 'Restaurar Backup'} (.json)
+                    <input
+                      type="file"
+                      accept=".json,application/json"
+                      onChange={handleRestoreBackup}
+                      disabled={isDemoMode}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                </div>
+
                 <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.28)' }}>
                   <strong style={{ display: 'block', marginBottom: '8px', color: '#8ecaff' }}>Cópias automáticas periódicas (navegador)</strong>
                   <p style={{ fontSize: '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
@@ -71644,6 +71673,35 @@ A1;Peça exemplo;10`}
                   <button className="btn-primary" onClick={handleCreateBackup} style={{ padding: '8px 15px' }} disabled={isDemoMode}>
                     {safeT?.createBackup || 'Criar Backup'}
                   </button>
+                </div>
+
+                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.35)' }}>
+                  <strong style={{ display: 'block', marginBottom: '8px', color: '#8ecaff' }}>{safeT?.restoreTitle || 'Restaurar Backup'}</strong>
+                  <p style={{ fontSize: '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
+                    Escolha o ficheiro <strong>.json</strong> que descarregou com «Criar Backup» (ex.: backup-nonato-service-2026-06-05.json).
+                  </p>
+                  <label
+                    style={{
+                      display: 'inline-block',
+                      padding: '8px 15px',
+                      backgroundColor: '#0066cc',
+                      color: '#fff',
+                      borderRadius: '6px',
+                      cursor: isDemoMode ? 'not-allowed' : 'pointer',
+                      fontWeight: 600,
+                      fontSize: '13px',
+                      opacity: isDemoMode ? 0.5 : 1,
+                    }}
+                  >
+                    {safeT?.restoreBackup || 'Restaurar Backup'} (.json)
+                    <input
+                      type="file"
+                      accept=".json,application/json"
+                      onChange={handleRestoreBackup}
+                      disabled={isDemoMode}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
                 </div>
 
                 <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
