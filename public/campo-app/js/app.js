@@ -12,6 +12,7 @@
   let state = {
     view: "home",
     logo: null,
+    nomeEmpresa: "Nonato Service",
     servicoGrupos: [],
     servicos: [],
     relatorios: [],
@@ -67,19 +68,25 @@
     );
   }
 
+  function getBrand() {
+    return { logo: state.logo, nomeEmpresa: state.nomeEmpresa || "Nonato Service" };
+  }
+
   async function persist() {
     await Db.saveLogo(state.logo);
+    await Db.saveNomeEmpresa(state.nomeEmpresa);
     await Db.saveServicoGrupos(state.servicoGrupos);
     await Db.saveServicos(state.servicos);
     await Db.saveRelatorios(state.relatorios);
     await Db.saveDespesasDocs(state.despesasDocs);
     await Db.saveCartoes(state.cartoes);
-    updateTopLogo();
+    updateTopBrand();
   }
 
   async function load() {
     const all = await Db.loadAll();
     state.logo = all.logo;
+    state.nomeEmpresa = all.nomeEmpresa || "Nonato Service";
     state.servicoGrupos = all.servicoGrupos.length ? all.servicoGrupos : [{ id: "grupo-geral", nome: "Geral", ordem: 0 }];
     state.servicos = all.servicos;
     state.relatorios = all.relatorios;
@@ -94,10 +101,12 @@
       ];
       await persist();
     }
-    updateTopLogo();
+    updateTopBrand();
   }
 
-  function updateTopLogo() {
+  function updateTopBrand() {
+    const title = $("topCompanyName");
+    if (title) title.textContent = state.nomeEmpresa || "Nonato Service";
     const img = $("topLogo");
     if (state.logo && state.logo.dataUrl) {
       img.src = state.logo.dataUrl;
@@ -173,7 +182,7 @@
         <div class="list__actions" style="margin-top:12px">
           <button type="button" class="btn btn--primary" data-go="relatorios">+ Novo relatório</button>
           <button type="button" class="btn" data-go="despesas">Registar despesas</button>
-          <button type="button" class="btn" data-go="logo">Configurar logo</button>
+          <button type="button" class="btn" data-go="logo">Logo e nome da empresa</button>
         </div>
       </div>`;
     main.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => setView(b.getAttribute("data-go"))));
@@ -185,12 +194,29 @@
   function renderLogo() {
     main.innerHTML = `
       <div class="panel">
+        <div class="panel__head"><h2 class="panel__title">Nome da empresa</h2></div>
+        <p class="hint">Aparece no topo da app e nos PDFs quando não há logo carregado.</p>
+        <label class="label">Nome</label>
+        <input class="input" id="nomeEmpresaInput" value="${U.esc(state.nomeEmpresa || "Nonato Service")}" maxlength="80" autocomplete="organization" />
+        <button type="button" class="btn btn--primary btn--sm" id="btnSaveNome" style="margin-top:8px">Guardar nome</button>
+      </div>
+      <div class="panel">
         <div class="panel__head"><h2 class="panel__title">Logo nos PDFs</h2></div>
         <p class="hint">Escolha a imagem que aparece nos relatórios de serviço e despesas (PNG ou JPG recomendado).</p>
-        ${state.logo && state.logo.dataUrl ? `<img class="logo-preview" src="${state.logo.dataUrl}" alt="Logo" />` : "<p class='hint'>Nenhum logo — usa texto NONATO SERVICE.</p>"}
+        ${state.logo && state.logo.dataUrl ? `<img class="logo-preview" src="${state.logo.dataUrl}" alt="Logo" />` : `<p class='hint'>Nenhum logo — usa o nome «${U.esc(state.nomeEmpresa || "Nonato Service")}».</p>`}
         <label class="btn btn--primary btn--file">Carregar logo<input type="file" id="logoFile" accept="image/*" hidden /></label>
         ${state.logo ? `<button type="button" class="btn btn--danger btn--sm" id="btnRemoveLogo" style="margin-left:8px">Remover</button>` : ""}
       </div>`;
+    $("btnSaveNome")?.addEventListener("click", async () => {
+      const v = $("nomeEmpresaInput").value.trim();
+      state.nomeEmpresa = v || "Nonato Service";
+      await persist();
+      alert("Nome guardado.");
+      render();
+    });
+    $("nomeEmpresaInput")?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); $("btnSaveNome")?.click(); }
+    });
     $("logoFile")?.addEventListener("change", (e) => {
       const f = e.target.files && e.target.files[0];
       e.target.value = "";
@@ -300,7 +326,7 @@
     main.querySelectorAll("[data-pdf-rel]").forEach((b) => {
       b.onclick = () => {
         const r = state.relatorios.find((x) => x.id === b.getAttribute("data-pdf-rel"));
-        if (r) Pdf.printRelatorio(r, state.logo);
+        if (r) Pdf.printRelatorio(r, getBrand());
       };
     });
     main.querySelectorAll("[data-del-rel]").forEach((b) => {
@@ -384,7 +410,7 @@
     }
 
     $("btnBackRel").onclick = () => { collectForm(); persist(); state.editRelatorioId = null; render(); };
-    $("btnPdfRel").onclick = () => { collectForm(); Pdf.printRelatorio(r, state.logo); };
+    $("btnPdfRel").onclick = () => { collectForm(); Pdf.printRelatorio(r, getBrand()); };
     $("btnSaveRel").onclick = async () => {
       collectForm();
       if (!r.tecnico || !r.cliente || !r.numero) { alert("Preencha técnico, cliente e número."); return; }
@@ -455,7 +481,7 @@
     main.querySelectorAll("[data-pdf-desp]").forEach((b) => {
       b.onclick = () => {
         const d = state.despesasDocs.find((x) => x.id === b.getAttribute("data-pdf-desp"));
-        if (d) Pdf.printDespesas(d, state.logo);
+        if (d) Pdf.printDespesas(d, getBrand());
       };
     });
     main.querySelectorAll("[data-del-desp]").forEach((b) => {
@@ -542,7 +568,7 @@
     };
 
     $("btnBackDesp").onclick = () => { state.editDespesaId = null; render(); };
-    $("btnPdfDesp").onclick = () => Pdf.printDespesas(doc, state.logo);
+    $("btnPdfDesp").onclick = () => Pdf.printDespesas(doc, getBrand());
     $("btnSaveDesp").onclick = async () => {
       doc.clienteNome = $("d_cliente").value.trim();
       doc.data = $("d_data").value;

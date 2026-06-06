@@ -24,9 +24,16 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
 .rs-pdf .obs { margin-top: 12px; padding: 10px; background: #f8fafc; border-left: 3px solid #166534; border-radius: 0 6px 6px 0; white-space: pre-wrap; }
 @media print { body.rs-pdf { padding-bottom: 8mm; } }`;
 
-  function logoHtml(logo) {
+  function logoHtml(logo, nomeEmpresa) {
     if (logo && logo.dataUrl) return `<img src="${logo.dataUrl}" alt="Logo" />`;
-    return "<strong>NONATO SERVICE</strong>";
+    return `<strong>${U.esc(nomeEmpresa || "Nonato Service")}</strong>`;
+  }
+
+  function brandOpts(brand) {
+    if (brand && typeof brand === "object" && !brand.dataUrl) {
+      return { logo: brand.logo, nomeEmpresa: brand.nomeEmpresa || "Nonato Service" };
+    }
+    return { logo: brand, nomeEmpresa: "Nonato Service" };
   }
 
   function openPrint(html, title) {
@@ -41,7 +48,8 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
     setTimeout(() => w.print(), 400);
   }
 
-  function printRelatorio(relatorio, logo) {
+  function printRelatorio(relatorio, brand) {
+    const { logo, nomeEmpresa } = brandOpts(brand);
     const totais = U.calcularTotais(relatorio.diasTrabalho);
     const dias = (relatorio.diasTrabalho || []).map((d) => U.atualizarCalculosDia(d));
     const diasRows = dias
@@ -64,7 +72,7 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatório ${U.esc(relatorio.numero)}</title><style>${RS_PDF_CSS}</style></head>
     <body class="rs-pdf">
       <div class="header">
-        <div class="header-logo">${logoHtml(logo)}</div>
+        <div class="header-logo">${logoHtml(logo, nomeEmpresa)}</div>
         <div class="header-title">RELATÓRIO DE SERVIÇO — ASSISTÊNCIA TÉCNICA</div>
         <div class="header-number">N°: ${U.esc(relatorio.numero)}</div>
       </div>
@@ -91,12 +99,13 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
           <div class="summary-card"><h4>Viagem retorno</h4><div class="value">${totais.horasViagemRetorno}h</div></div>
         </div></div>` : ""}
       ${relatorio.observacoes ? `<div class="info-section"><h3>OBSERVAÇÕES</h3><div class="obs">${U.esc(relatorio.observacoes)}</div></div>` : ""}
-      <p style="margin-top:16px;font-size:8px;color:#64748b;text-align:center;">Documento gerado em ${new Date().toLocaleString("pt-BR")} — Nonato Campo App</p>
+      <p style="margin-top:16px;font-size:8px;color:#64748b;text-align:center;">Documento gerado em ${new Date().toLocaleString("pt-BR")} — ${U.esc(nomeEmpresa)}</p>
     </body></html>`;
     openPrint(html, "Relatório " + relatorio.numero);
   }
 
-  function printDespesas(doc, logo) {
+  function printDespesas(doc, brand) {
+    const { logo, nomeEmpresa } = brandOpts(brand);
     const total = (doc.despesas || []).reduce((s, d) => s + (Number(d.valor) || 0), 0);
     const linhas = (doc.despesas || [])
       .map((d, i) => {
@@ -115,11 +124,11 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
     table{width:100%;border-collapse:collapse;margin:12px 0}th,td{border:1px solid #ddd;padding:8px;text-align:left}
     th{background:#166534;color:#fff}.total{font-size:14px;font-weight:800;text-align:right;margin-top:12px;color:#14532d}</style></head>
     <body>
-      <div class="hdr"><div>${logoHtml(logo)}</div><h1>REGISTRO DE DESPESAS</h1></div>
+      <div class="hdr"><div>${logoHtml(logo, nomeEmpresa)}</div><h1>REGISTRO DE DESPESAS</h1></div>
       <p><strong>Cliente:</strong> ${U.esc(doc.clienteNome)} &nbsp;|&nbsp; <strong>Relatório:</strong> ${U.esc(doc.relatorioNumero || "—")} &nbsp;|&nbsp; <strong>Data:</strong> ${U.fmtDatePt(doc.data)}</p>
       <table><thead><tr><th>#</th><th>Tipo</th><th>Valor</th><th>Descrição</th><th>Cartão</th></tr></thead><tbody>${linhas || "<tr><td colspan='5'>Sem linhas</td></tr>"}</tbody></table>
       <p class="total">Total: € ${total.toFixed(2)}</p>
-      <p style="font-size:9px;color:#666;margin-top:20px;text-align:center;">Gerado em ${new Date().toLocaleString("pt-BR")}</p>
+      <p style="font-size:9px;color:#666;margin-top:20px;text-align:center;">Gerado em ${new Date().toLocaleString("pt-BR")} — ${U.esc(nomeEmpresa)}</p>
     </body></html>`;
     openPrint(html, "Despesas");
   }

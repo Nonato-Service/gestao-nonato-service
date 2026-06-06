@@ -1,4 +1,4 @@
-const CACHE = "nonato-campo-v3";
+const CACHE = "nonato-campo-v4";
 const BASE = "/campo-app/";
 const ASSETS = [
   BASE,

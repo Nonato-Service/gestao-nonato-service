@@ -56,19 +56,24 @@
   }
 
   async function loadAll() {
-    const [logo, servicoGrupos, servicos, relatorios, despesasDocs, cartoes] = await Promise.all([
+    const [logo, nomeEmpresa, servicoGrupos, servicos, relatorios, despesasDocs, cartoes] = await Promise.all([
       getJson("settings", "logo", null),
+      getJson("settings", "nomeEmpresa", "Nonato Service"),
       getJson("servicoGrupos", "list", []),
       getJson("servicos", "list", []),
       getJson("relatorios", "list", []),
       getJson("despesasDocs", "list", []),
       getJson("cartoes", "list", []),
     ]);
-    return { logo, servicoGrupos, servicos, relatorios, despesasDocs, cartoes };
+    return { logo, nomeEmpresa, servicoGrupos, servicos, relatorios, despesasDocs, cartoes };
   }
 
   async function saveLogo(logo) {
     await setJson("settings", "logo", logo);
+  }
+
+  async function saveNomeEmpresa(nome) {
+    await setJson("settings", "nomeEmpresa", String(nome || "Nonato Service").trim() || "Nonato Service");
   }
 
   async function saveServicoGrupos(list) {
@@ -94,6 +99,7 @@
   async function importBackup(data) {
     if (!data || typeof data !== "object") throw new Error("invalid");
     if (data.logo != null) await saveLogo(data.logo);
+    if (data.nomeEmpresa != null) await saveNomeEmpresa(data.nomeEmpresa);
     if (Array.isArray(data.servicoGrupos)) await saveServicoGrupos(data.servicoGrupos);
     if (Array.isArray(data.servicos)) await saveServicos(data.servicos);
     if (Array.isArray(data.relatorios)) await saveRelatorios(data.relatorios);
@@ -114,6 +120,7 @@
   global.NCampoDb = {
     loadAll,
     saveLogo,
+    saveNomeEmpresa,
     saveServicoGrupos,
     saveServicos,
     saveRelatorios,
