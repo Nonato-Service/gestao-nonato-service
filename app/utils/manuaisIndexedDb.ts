@@ -102,6 +102,34 @@ export async function deleteAllNonatoKvFromIdb(): Promise<void> {
   }
 }
 
+/** Lista todas as entradas nonato-* no IndexedDB (manuais + spillover). */
+export async function collectAllNonatoKvFromIdb(): Promise<Record<string, any>> {
+  const out: Record<string, any> = {}
+  if (typeof indexedDB === 'undefined') return out
+  try {
+    const db = await openDb()
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readonly')
+      const req = tx.objectStore(STORE).openCursor()
+      req.onerror = () => reject(req.error ?? new Error('cursor'))
+      req.onsuccess = () => {
+        const c = req.result as IDBCursorWithValue | null
+        if (!c) return
+        const key = c.key
+        if (typeof key === 'string' && key.startsWith('nonato-')) {
+          out[key] = c.value
+        }
+        c.continue()
+      }
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error ?? new Error('tx'))
+    })
+  } catch {
+    /* ignorar */
+  }
+  return out
+}
+
 export async function saveManuaisFamiliasGruposToIdb(data: any): Promise<void> {
   /** Garante valor clonável pelo motor do IndexedDB (evita falhas silenciosas) */
   let safe: any

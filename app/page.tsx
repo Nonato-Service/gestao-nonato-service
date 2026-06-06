@@ -19,6 +19,14 @@ import {
   pushAllLocalStorageToServer,
   setBlockImplicitServerPushDuringBootstrap,
 } from './utils/dataStorage'
+import {
+  collectFullBackupData,
+  buildBackupEnvelope,
+  normalizeBackupFile,
+  restoreFullBackup,
+  createAutoBackupEntry,
+  downloadBackupJson,
+} from './utils/backupRestore'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData } from './utils/syncRevision'
 import { isNonatoDemoBuild } from './utils/nonatoDemoMode'
 import { collectLocalNonatoSnapshot, summarizeDataDiff } from './utils/syncDiff'
@@ -12381,154 +12389,45 @@ export default function Dashboard() {
     setEditingTecnico(savedTecnico)
   }
 
-  // Função para criar backup completo
+  // Função para criar backup completo (v2 — todas as chaves nonato-* + IndexedDB)
   const handleCreateBackup = async () => {
     try {
-      let manuaisFamiliasGrupos: string | null = null
-      try {
-        const idb = await loadManuaisFamiliasGruposFromIdb()
-        manuaisFamiliasGrupos = idb != null ? JSON.stringify(idb) : localStorage.getItem('nonato-manuais-familias-grupos')
-      } catch {
-        manuaisFamiliasGrupos = localStorage.getItem('nonato-manuais-familias-grupos')
-      }
-      const stripPhotoFieldFromJsonManual = (json: string | null) => {
-        if (!json) return null
-        try {
-          const parsed = JSON.parse(json)
-          if (Array.isArray(parsed)) {
-            return JSON.stringify(
-              parsed.map((item) => {
-                if (item && typeof item === 'object' && 'photo' in item) {
-                  const { photo, ...rest } = item as any
-                  return rest
-                }
-                return item
-              })
-            )
-          }
-          if (parsed && typeof parsed === 'object' && 'photo' in parsed) {
-            const { photo, ...rest } = parsed as any
-            return JSON.stringify(rest)
-          }
-          return json
-        } catch {
-          return json
-        }
-      }
-      // Coletar dados do localStorage + manuais (IndexedDB — PDFs grandes).
-      // Incluir relatórios, peças, agenda e fechamentos (alinhado às cópias automáticas), para o JSON servir de backup de dados completo.
-      const backupData = {
-        version: '1.0.0',
-        date: new Date().toISOString(),
-        data: {
-          logo: localStorage.getItem('nonato-logo'),
-          logoType: localStorage.getItem('nonato-logo-type'),
-          language: localStorage.getItem('nonato-language'),
-          users: localStorage.getItem('nonato-users'),
-          gestores: stripPhotoFieldFromJsonManual(localStorage.getItem('nonato-gestores')),
-          tecnicos: stripPhotoFieldFromJsonManual(localStorage.getItem('nonato-tecnicos')),
-          conhecimentoTecnicos: localStorage.getItem('nonato-conhecimento-tecnicos'),
-          equipamentos: localStorage.getItem('nonato-equipamentos'),
-          clientes: localStorage.getItem('nonato-clientes'),
-          clientePrioritario: localStorage.getItem('nonato-cliente-prioritario'),
-          fornecedores: localStorage.getItem('nonato-fornecedores'),
-          relatoriosServico: localStorage.getItem('nonato-relatorios-servico'),
-          pecasBiblioteca: localStorage.getItem('nonato-pecas-biblioteca'),
-          categoriasPecas: localStorage.getItem('nonato-categorias-pecas'),
-          subcategoriasPecas: localStorage.getItem('nonato-subcategorias-pecas'),
-          agendamentos: localStorage.getItem('nonato-agendamentos'),
-          fechamentosRelatorios: localStorage.getItem('nonato-fechamentos-relatorios'),
-          fechamentosGuardadosBiblioteca: localStorage.getItem('nonato-fechamentos-guardados-biblioteca'),
-          sidebarButtons: localStorage.getItem('nonato-sidebar-buttons'),
-          manuaisFamiliasGrupos
-        }
-      }
-
-      const jsonStr = JSON.stringify(backupData, null, 2)
+      const data = await collectFullBackupData()
+      const envelope = buildBackupEnvelope(data)
+      const jsonStr = JSON.stringify(envelope, null, 2)
       const dateStr = new Date().toISOString().split('T')[0]
       const fileName = `${(t as any).backupFileName || 'backup'}-${dateStr}.json`
 
       if (backupMethod === 'server' && backupServerUrl.trim()) {
         const url = backupServerUrl.trim()
-        
-        // Verificar se é uma URL HTTP/HTTPS ou um caminho de arquivo
         if (url.startsWith('http://') || url.startsWith('https://')) {
-          // Enviar para servidor via HTTP
           try {
             const response = await fetch(url, {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: jsonStr
+              headers: { 'Content-Type': 'application/json' },
+              body: jsonStr,
             })
-
             if (response.ok) {
               alert(t.backupSendSuccess)
             } else {
-              const errorText = await response.text()
-              throw new Error(`Erro HTTP ${response.status}: ${errorText}`)
+              throw new Error(`Erro HTTP ${response.status}`)
             }
           } catch (error) {
             alert(((t as any).backupSendError || 'Erro ao enviar backup') + ': ' + (error as Error).message)
             return
           }
         } else {
-          // Tentar usar File System Access API para salvar em diretório específico
-          try {
-            // @ts-ignore - File System Access API pode não estar disponível em todos os navegadores
-            if ('showSaveFilePicker' in window) {
-              // @ts-ignore
-              const fileHandle = await window.showSaveFilePicker({
-                suggestedName: fileName,
-                types: [{
-                  description: 'Arquivo JSON',
-                  accept: { 'application/json': ['.json'] }
-                }]
-              })
-              
-              // @ts-ignore
-              const writable = await fileHandle.createWritable()
-              await writable.write(jsonStr)
-              await writable.close()
-              
-              alert(((t as any).backupSuccess || 'Backup realizado com sucesso!') + '\n' + 'Backup salvo em: ' + fileHandle.name)
-            } else {
-              // Fallback: download normal
-              const blob = new Blob([jsonStr], { type: 'application/json' })
-              const blobUrl = URL.createObjectURL(blob)
-              const link = document.createElement('a')
-              link.href = blobUrl
-              link.download = fileName
-              document.body.appendChild(link)
-              link.click()
-              document.body.removeChild(link)
-              URL.revokeObjectURL(blobUrl)
-              alert(((t as any).backupSuccess || 'Backup realizado com sucesso!') + '\n' + ((t as any).backupDownloaded || 'Backup baixado'))
-            }
-          } catch (error: any) {
-            // Se o usuário cancelar, não mostrar erro
-            if (error.name !== 'AbortError') {
-              alert(t.errorSavingBackup + ': ' + error.message)
-            }
-            return
-          }
+          downloadBackupJson(envelope, fileName)
+          alert(((t as any).backupSuccess || 'Backup realizado com sucesso!') + '\n' + ((t as any).backupDownloaded || 'Backup baixado'))
         }
       } else {
-        // Download local padrão
-        const blob = new Blob([jsonStr], { type: 'application/json' })
-        const url = URL.createObjectURL(blob)
-        
-        // Criar link de download
-        const link = document.createElement('a')
-        link.href = url
-        link.download = fileName
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        URL.revokeObjectURL(url)
-
-        alert(((t as any).backupSuccess || 'Backup realizado com sucesso!') + '\n' + ((t as any).backupDownloaded || 'Backup baixado'))
+        downloadBackupJson(envelope, fileName)
+        alert(
+          ((t as any).backupSuccess || 'Backup realizado com sucesso!') +
+            '\n' +
+            ((t as any).backupDownloaded || 'Backup baixado') +
+            `\n\nChaves incluídas: ${Object.keys(data).length} (cadastro, serviços, relatórios, peças, etc.)`
+        )
       }
     } catch (error) {
       alert(t.errorCreatingBackup + ': ' + (error as Error).message)
@@ -12538,147 +12437,7 @@ export default function Dashboard() {
   // Função para criar backup automático (salva no localStorage)
   const createAutoBackup = useCallback(async () => {
     try {
-      const AUTO_BACKUP_STORAGE_KEY = 'nonato-auto-backups'
-      const MAX_AUTO_BACKUPS = 6
-      // Segurança: evita estourar quota com blobs gigantes (ex.: base64 de imagens)
-      const MAX_VALUE_CHARS = 200_000
-
-      const isProbablyBase64Image = (value: string) =>
-        value.startsWith('data:image/') || value.startsWith('data:video/')
-
-      const safeGet = (key: string) => {
-        const v = localStorage.getItem(key)
-        if (v === null) return null
-        if (v.length > MAX_VALUE_CHARS) return null
-        if (isProbablyBase64Image(v)) return null
-        return v
-      }
-
-      const stripPhotoFieldFromJson = (json: string | null) => {
-        if (!json) return null
-        // Se vier como base64 gigante, já foi bloqueado pelo safeGet — aqui é só "higiene"
-        try {
-          const parsed = JSON.parse(json)
-          if (Array.isArray(parsed)) {
-            return JSON.stringify(
-              parsed.map((item) => {
-                if (item && typeof item === 'object' && 'photo' in item) {
-                  const { photo, ...rest } = item as any
-                  return rest
-                }
-                return item
-              })
-            )
-          }
-          if (parsed && typeof parsed === 'object' && 'photo' in parsed) {
-            const { photo, ...rest } = parsed as any
-            return JSON.stringify(rest)
-          }
-          return json
-        } catch {
-          return json
-        }
-      }
-
-      const tryPersistAutoBackups = (backups: Array<{ timestamp: number; data: any }>) => {
-        // Tenta salvar; se estourar quota, remove os mais antigos até caber.
-        let working = backups.slice()
-        while (working.length > 0) {
-          try {
-            localStorage.setItem(AUTO_BACKUP_STORAGE_KEY, JSON.stringify(working))
-            return { ok: true, kept: working.length }
-          } catch (e: any) {
-            // Apenas para quota: remove 1 backup antigo e tenta de novo
-            const msg = String(e?.message || e)
-            if (e?.name === 'QuotaExceededError' || msg.toLowerCase().includes('quota')) {
-              working = working.slice(0, Math.max(0, working.length - 1))
-              continue
-            }
-            throw e
-          }
-        }
-        // Se nem 1 backup couber, remove o storage de backups automáticos
-        try {
-          localStorage.removeItem(AUTO_BACKUP_STORAGE_KEY)
-        } catch {}
-        return { ok: false, kept: 0 }
-      }
-
-      const manuaisForBackup = await (async () => {
-        try {
-          const idb = await loadManuaisFamiliasGruposFromIdb()
-          if (idb != null) return JSON.stringify(idb)
-        } catch {
-          /* ignorar */
-        }
-        return safeGet('nonato-manuais-familias-grupos')
-      })()
-
-      // Coletar dados do localStorage (com proteção contra itens gigantes) + manuais (IndexedDB)
-      const backupData = {
-        version: '1.0.0',
-        date: new Date().toISOString(),
-        timestamp: Date.now(),
-        data: {
-          // Logo pode ser base64 e explodir a quota. Guardar apenas se couber.
-          logo: safeGet('nonato-logo'),
-          logoType: localStorage.getItem('nonato-logo-type'),
-          language: localStorage.getItem('nonato-language'),
-          users: safeGet('nonato-users'),
-          // Gestores/Técnicos podem conter "photo" base64 — remove antes de salvar
-          gestores: stripPhotoFieldFromJson(safeGet('nonato-gestores')),
-          tecnicos: stripPhotoFieldFromJson(safeGet('nonato-tecnicos')),
-          conhecimentoTecnicos: safeGet('nonato-conhecimento-tecnicos'),
-          equipamentos: safeGet('nonato-equipamentos'),
-          clientes: safeGet('nonato-clientes'),
-          clientePrioritario: safeGet('nonato-cliente-prioritario'),
-          fornecedores: safeGet('nonato-fornecedores'),
-          relatoriosServico: safeGet('nonato-relatorios-servico'),
-          pecasBiblioteca: safeGet('nonato-pecas-biblioteca'),
-          categoriasPecas: safeGet('nonato-categorias-pecas'),
-          subcategoriasPecas: safeGet('nonato-subcategorias-pecas'),
-          agendamentos: safeGet('nonato-agendamentos'),
-          fechamentosRelatorios: safeGet('nonato-fechamentos-relatorios'),
-          fechamentosGuardadosBiblioteca: safeGet('nonato-fechamentos-guardados-biblioteca'),
-          sidebarButtons: safeGet('nonato-sidebar-buttons'),
-          manuaisFamiliasGrupos: manuaisForBackup
-        }
-      }
-
-      // Obter backups existentes
-      const existingBackupsStr = localStorage.getItem(AUTO_BACKUP_STORAGE_KEY)
-      let backups: Array<{ timestamp: number; data: any }> = []
-      
-      if (existingBackupsStr) {
-        try {
-          backups = JSON.parse(existingBackupsStr)
-        } catch (e) {
-          backups = []
-        }
-      }
-
-      // Adicionar novo backup
-      backups.push({
-        timestamp: backupData.timestamp,
-        data: backupData
-      })
-
-      // Ordenar por timestamp (mais recente primeiro)
-      backups.sort((a, b) => b.timestamp - a.timestamp)
-
-      // Manter apenas os mais recentes (reduz pressão de quota)
-      if (backups.length > MAX_AUTO_BACKUPS) {
-        backups = backups.slice(0, MAX_AUTO_BACKUPS)
-      }
-
-      // Salvar backups no localStorage com fallback de quota
-      const persisted = tryPersistAutoBackups(backups)
-
-      if (!persisted.ok) {
-        console.warn('⚠️ Backup automático não pôde ser salvo por falta de espaço (quota).')
-      }
-      
-      return persisted.ok
+      return await createAutoBackupEntry()
     } catch (error) {
       console.error('Erro ao criar backup automático:', error)
       return false
@@ -12695,96 +12454,25 @@ export default function Dashboard() {
     return () => window.clearInterval(id)
   }, [autoBackupEnabled, autoBackupInterval, isDemoMode, createAutoBackup])
 
-  // Função para restaurar backup automático
+  // Função para restaurar backup automático (v1 ou v2 — restauro completo)
   const restoreAutoBackup = async (backup: { timestamp: number; data?: any }) => {
     try {
-      if (!backup || !backup.data || !backup.data.data) {
+      if (!backup?.data) {
         alert(t.invalidBackup || 'Backup inválido')
         return false
       }
-
-      const backupData = backup.data.data
-
-      const parseBackupJson = (raw: unknown): any | null => {
-        if (raw === null || raw === undefined) return null
-        if (typeof raw === 'string') {
-          const s = raw.trim()
-          if (!s) return null
-          try {
-            return JSON.parse(s)
-          } catch {
-            return null
-          }
-        }
-        return raw
+      const envelope = backup.data.data ? backup.data : { data: backup.data }
+      const keyMap = normalizeBackupFile(envelope)
+      const result = await restoreFullBackup(keyMap)
+      if (!result.ok) {
+        alert(result.error || t.errorRestoringBackup)
+        return false
       }
-
-      // Relatórios de serviço e clientes: gravar no servidor com confirmação — senão no próximo F5 o bundle do servidor voltava a apagar o que foi reposto só no localStorage.
-      const relParsed = parseBackupJson(backupData.relatoriosServico)
-      if (relParsed !== null) {
-        const okRel = await saveData('nonato-relatorios-servico', relParsed, true, true)
-        if (!okRel) {
-          alert(
-            'Não foi possível confirmar a gravação dos relatórios de serviço no servidor. Verifique a rede ou tente outra cópia. Nada foi alterado no servidor.'
-          )
-          return false
-        }
-      }
-      const cliParsed = parseBackupJson(backupData.clientes)
-      if (cliParsed !== null) {
-        const okCli = await saveData('nonato-clientes', cliParsed, true, true)
-        if (!okCli) {
-          alert(
-            'Os relatórios de serviço foram repostos no servidor, mas a gravação de clientes falhou. Nada mais foi alterado; tente restaurar outra cópia ou verifique a rede.'
-          )
-          return false
-        }
-      }
-
-      const autoRestoreServerPairs: Array<{ key: string; raw: unknown }> = [
-        { key: 'nonato-fornecedores', raw: backupData.fornecedores },
-        { key: 'nonato-pecas-biblioteca', raw: backupData.pecasBiblioteca },
-        { key: 'nonato-categorias-pecas', raw: backupData.categoriasPecas },
-        { key: 'nonato-subcategorias-pecas', raw: backupData.subcategoriasPecas },
-        { key: 'nonato-agendamentos', raw: backupData.agendamentos },
-        { key: 'nonato-fechamentos-relatorios', raw: backupData.fechamentosRelatorios },
-        { key: 'nonato-fechamentos-guardados-biblioteca', raw: backupData.fechamentosGuardadosBiblioteca },
-      ]
-      for (const { key, raw } of autoRestoreServerPairs) {
-        const parsed = parseBackupJson(raw)
-        if (parsed === null) continue
-        const ok = await saveData(key, parsed, true, true)
-        if (!ok) {
-          alert(`Não foi possível confirmar a gravação no servidor (${key}). Nada mais foi alterado.`)
-          return false
-        }
-      }
-
-      // Restaurar restantes no navegador (chaves que o backup automático inclui)
-      if (backupData.logo !== null) localStorage.setItem('nonato-logo', backupData.logo)
-      if (backupData.logoType !== null) localStorage.setItem('nonato-logo-type', backupData.logoType)
-      if (backupData.language !== null) localStorage.setItem('nonato-language', backupData.language)
-      if (backupData.users !== null) localStorage.setItem('nonato-users', backupData.users)
-      if (backupData.gestores !== null) localStorage.setItem('nonato-gestores', backupData.gestores)
-      if (backupData.tecnicos !== null) localStorage.setItem('nonato-tecnicos', backupData.tecnicos)
-      if (backupData.conhecimentoTecnicos !== null) localStorage.setItem('nonato-conhecimento-tecnicos', backupData.conhecimentoTecnicos)
-      if (backupData.equipamentos !== null) localStorage.setItem('nonato-equipamentos', backupData.equipamentos)
-      if (backupData.clientePrioritario !== null) localStorage.setItem('nonato-cliente-prioritario', backupData.clientePrioritario)
-      if (backupData.fornecedores !== null) localStorage.setItem('nonato-fornecedores', backupData.fornecedores)
-      if (backupData.pecasBiblioteca !== null) localStorage.setItem('nonato-pecas-biblioteca', backupData.pecasBiblioteca)
-      if (backupData.categoriasPecas !== null) localStorage.setItem('nonato-categorias-pecas', backupData.categoriasPecas)
-      if (backupData.subcategoriasPecas !== null) localStorage.setItem('nonato-subcategorias-pecas', backupData.subcategoriasPecas)
-      if (backupData.agendamentos !== null) localStorage.setItem('nonato-agendamentos', backupData.agendamentos)
-      if (backupData.fechamentosRelatorios !== null) localStorage.setItem('nonato-fechamentos-relatorios', backupData.fechamentosRelatorios)
-      if (backupData.fechamentosGuardadosBiblioteca !== null) {
-        localStorage.setItem('nonato-fechamentos-guardados-biblioteca', backupData.fechamentosGuardadosBiblioteca)
-      }
-      if (backupData.sidebarButtons !== null) localStorage.setItem('nonato-sidebar-buttons', backupData.sidebarButtons)
-      if (backupData.manuaisFamiliasGrupos != null && String(backupData.manuaisFamiliasGrupos).length > 0) {
-        await restoreManuaisFamiliasGruposFromBackupPayload(backupData.manuaisFamiliasGrupos)
-      }
-
-      alert(t.backupRestoredSuccess || 'Backup restaurado com sucesso! A página será recarregada.')
+      alert(
+        (t.backupRestoredSuccess || 'Backup restaurado com sucesso! A página será recarregada.') +
+          `\n\nChaves repostas: ${result.keysRestored}` +
+          (result.serverOk ? '' : '\n(Aviso: confirme ligação ao servidor.)')
+      )
       window.location.reload()
       return true
     } catch (error) {
@@ -13009,7 +12697,7 @@ export default function Dashboard() {
     }
   }
 
-  // Função para restaurar backup
+  // Função para restaurar backup (ficheiro JSON — v1 ou v2)
   const handleRestoreBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) {
@@ -13018,7 +12706,7 @@ export default function Dashboard() {
     }
 
     if (!window.confirm(t.restoreConfirm + '\n\n' + t.restoreWarning)) {
-      e.target.value = '' // Limpar o input
+      e.target.value = ''
       return
     }
 
@@ -13026,172 +12714,26 @@ export default function Dashboard() {
     reader.onload = async (event) => {
       try {
         const content = event.target?.result as string
-        const backupData = JSON.parse(content)
-
-        // Validar estrutura do backup
-        if (!backupData.data || typeof backupData.data !== 'object') {
-          throw new Error('Estrutura de backup inválida')
+        const parsed = JSON.parse(content)
+        const keyMap = normalizeBackupFile(parsed)
+        const result = await restoreFullBackup(keyMap)
+        if (!result.ok) {
+          throw new Error(result.error || 'Restauro falhou')
         }
-
-        // Restaurar TODOS os dados
-        if (backupData.data.logo !== null && backupData.data.logo !== undefined) {
-          localStorage.setItem('nonato-logo', backupData.data.logo)
-          setLogoUrl(backupData.data.logo)
-        }
-
-        if (backupData.data.logoType !== null && backupData.data.logoType !== undefined) {
-          localStorage.setItem('nonato-logo-type', backupData.data.logoType)
-          setLogoType(backupData.data.logoType as 'image' | 'video')
-        }
-
-        if (backupData.data.language) {
-          localStorage.setItem('nonato-language', backupData.data.language)
-          setSelectedLanguage(backupData.data.language)
-        }
-
-        if (backupData.data.users) {
-          localStorage.setItem('nonato-users', backupData.data.users)
-          setUsers(JSON.parse(backupData.data.users))
-        }
-
-        if (backupData.data.gestores) {
-          localStorage.setItem('nonato-gestores', backupData.data.gestores)
-          setGestores(JSON.parse(backupData.data.gestores))
-        }
-
-        if (backupData.data.tecnicos) {
-          localStorage.setItem('nonato-tecnicos', backupData.data.tecnicos)
-          setTecnicos(JSON.parse(backupData.data.tecnicos))
-        }
-
-        if (backupData.data.conhecimentoTecnicos) {
-          localStorage.setItem('nonato-conhecimento-tecnicos', backupData.data.conhecimentoTecnicos)
-          setConhecimentoTecnicos(JSON.parse(backupData.data.conhecimentoTecnicos))
-        }
-
-        if (backupData.data.equipamentos) {
-          localStorage.setItem('nonato-equipamentos', backupData.data.equipamentos)
-          setEquipamentos(JSON.parse(backupData.data.equipamentos))
-        }
-
-        if (backupData.data.clientes) {
-          localStorage.setItem('nonato-clientes', backupData.data.clientes)
-          setClientes(JSON.parse(backupData.data.clientes))
-        }
-
-        if (backupData.data.clientePrioritario) {
-          localStorage.setItem('nonato-cliente-prioritario', backupData.data.clientePrioritario)
-          setClientePrioritario(JSON.parse(backupData.data.clientePrioritario))
-        }
-
-        if (backupData.data.fornecedores) {
-          localStorage.setItem('nonato-fornecedores', backupData.data.fornecedores)
-          setFornecedores(JSON.parse(backupData.data.fornecedores))
-        }
-
-        if (backupData.data.relatoriosServico) {
-          localStorage.setItem('nonato-relatorios-servico', backupData.data.relatoriosServico)
-          setRelatoriosServico(JSON.parse(backupData.data.relatoriosServico))
-        }
-
-        if (backupData.data.pecasBiblioteca) {
-          localStorage.setItem('nonato-pecas-biblioteca', backupData.data.pecasBiblioteca)
-          setPecasBiblioteca(JSON.parse(backupData.data.pecasBiblioteca))
-        }
-
-        if (backupData.data.categoriasPecas) {
-          localStorage.setItem('nonato-categorias-pecas', backupData.data.categoriasPecas)
-          setCategoriasPecas(JSON.parse(backupData.data.categoriasPecas))
-        }
-
-        if (backupData.data.subcategoriasPecas) {
-          localStorage.setItem('nonato-subcategorias-pecas', backupData.data.subcategoriasPecas)
-          setSubcategoriasPecas(JSON.parse(backupData.data.subcategoriasPecas))
-        }
-
-        if (backupData.data.agendamentos) {
-          localStorage.setItem('nonato-agendamentos', backupData.data.agendamentos)
-          setAgendamentos(JSON.parse(backupData.data.agendamentos))
-        }
-
-        if (backupData.data.fechamentosRelatorios) {
-          localStorage.setItem('nonato-fechamentos-relatorios', backupData.data.fechamentosRelatorios)
-          setFechamentosRelatorios(JSON.parse(backupData.data.fechamentosRelatorios))
-        }
-
-        if (backupData.data.fechamentosGuardadosBiblioteca) {
-          localStorage.setItem('nonato-fechamentos-guardados-biblioteca', backupData.data.fechamentosGuardadosBiblioteca)
-          setFechamentosGuardadosBibliotecaIds(JSON.parse(backupData.data.fechamentosGuardadosBiblioteca))
-        }
-
-        if (backupData.data.sidebarButtons) {
-          localStorage.setItem('nonato-sidebar-buttons', backupData.data.sidebarButtons)
-          setSidebarButtons(JSON.parse(backupData.data.sidebarButtons))
-        }
-
-        if (backupData.data.manuaisFamiliasGrupos != null && String(backupData.data.manuaisFamiliasGrupos).length > 0) {
-          await restoreManuaisFamiliasGruposFromBackupPayload(backupData.data.manuaisFamiliasGrupos)
-        }
-
-        const parseBackupJsonRestoreFile = (raw: unknown): any | null => {
-          if (raw === null || raw === undefined) return null
-          if (typeof raw === 'string') {
-            const s = raw.trim()
-            if (!s) return null
-            try {
-              return JSON.parse(s)
-            } catch {
-              return null
-            }
-          }
-          return raw
-        }
-
-        const relSrv = parseBackupJsonRestoreFile(backupData.data.relatoriosServico)
-        if (relSrv !== null) {
-          const okRel = await saveData('nonato-relatorios-servico', relSrv, true, true)
-          if (!okRel) {
-            throw new Error('Não foi possível confirmar a gravação dos relatórios de serviço no servidor.')
-          }
-        }
-        const cliSrv = parseBackupJsonRestoreFile(backupData.data.clientes)
-        if (cliSrv !== null) {
-          const okCli = await saveData('nonato-clientes', cliSrv, true, true)
-          if (!okCli) {
-            throw new Error('Não foi possível confirmar a gravação de clientes no servidor.')
-          }
-        }
-        const serverPairs: Array<{ key: string; raw: unknown }> = [
-          { key: 'nonato-fornecedores', raw: backupData.data.fornecedores },
-          { key: 'nonato-pecas-biblioteca', raw: backupData.data.pecasBiblioteca },
-          { key: 'nonato-categorias-pecas', raw: backupData.data.categoriasPecas },
-          { key: 'nonato-subcategorias-pecas', raw: backupData.data.subcategoriasPecas },
-          { key: 'nonato-agendamentos', raw: backupData.data.agendamentos },
-          { key: 'nonato-fechamentos-relatorios', raw: backupData.data.fechamentosRelatorios },
-          { key: 'nonato-fechamentos-guardados-biblioteca', raw: backupData.data.fechamentosGuardadosBiblioteca },
-        ]
-        for (const { key, raw } of serverPairs) {
-          const parsed = parseBackupJsonRestoreFile(raw)
-          if (parsed === null) continue
-          const ok = await saveData(key, parsed, true, true)
-          if (!ok) {
-            throw new Error(`Não foi possível confirmar a gravação no servidor (${key}).`)
-          }
-        }
-
-        alert(t.restoreSuccess)
-        
-        // Recarregar a página para aplicar todas as mudanças
+        alert(
+          (t.restoreSuccess || 'Backup restaurado!') +
+            `\n\nChaves repostas: ${result.keysRestored} (inclui cadastro, serviços, relatórios, etc.)`
+        )
         window.location.reload()
       } catch (error) {
         alert(t.invalidBackupFile + ': ' + (error as Error).message)
-        e.target.value = '' // Limpar o input
+        e.target.value = ''
       }
     }
 
     reader.onerror = () => {
       alert(t.invalidBackupFile)
-      e.target.value = '' // Limpar o input
+      e.target.value = ''
     }
 
     reader.readAsText(file)

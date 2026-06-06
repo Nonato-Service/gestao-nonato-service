@@ -68,7 +68,24 @@ Onde encontrar na aplicação:
   - Restaurar (na lista)       = repor código a partir de um backup do servidor.
   - Restaurar a partir de ZIP  = repor código a partir de um .zip do seu PC.
 
-  Em modo demonstração, o backup e a restauração estão desativados.
+  Em modo demonstração, o backup e a restauração estão desactivados.
+
+--------------------------------------------------------------------------------
+6. BACKUP DOS DADOS (CADASTROS, RELATÓRIOS, SERVIÇOS, ETC.)
+--------------------------------------------------------------------------------
+
+  Botão: "Criar Backup" (secção Backup e Restore no Administrador)
+
+  - Versão 2.0: inclui TODAS as chaves do programa (clientes, serviços, peças,
+    relatórios, bíblia, contabilidade, checklists, mensagens, etc.).
+  - Guarde o ficheiro .json no PC ou disco externo (não só no browser).
+  - Cópias automáticas: até 8 recentes no navegador (Recuperar dados).
+  - Restaurar: escolha o .json — repõe browser E servidor (confirme rede).
+
+  Segurança em produção (Railway): defina NONATO_API_SECRET no servidor para
+  bloquear gravações externas não autorizadas. Ver .env.example
+
+  Script Windows (pasta data/ do servidor): scripts\backup-data-dir-windows.ps1
 
 ================================================================================
   Ficheiro criado automaticamente. Pode abrir sempre que precisar.

@@ -137,6 +137,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Histórico de comandos — desactivado por defeito (pode conter dados sensíveis)
+    const includeCommandHistory = process.env.NONATO_BACKUP_INCLUDE_COMMAND_HISTORY === '1'
+
+    if (includeCommandHistory) {
     // Fazer backup do histórico de comandos
     const historyDir = path.join(backupDir, '_command-history')
     if (!fs.existsSync(historyDir)) {
@@ -242,6 +246,7 @@ NOTA: Estes arquivos contêm o histórico de comandos executados no terminal.
 Para restaurar, copie os arquivos para seus locais originais.
 `
       fs.writeFileSync(path.join(historyDir, 'README-HISTORY.txt'), historyReadme, 'utf-8')
+    }
     }
 
     // Criar arquivo de informações

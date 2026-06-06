@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
+import { assertApiAuthorized } from '../../apiSecurity'
 import { ensureDataDir, resolveDataDirForKey } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
 import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
@@ -8,6 +9,8 @@ import { jsonFileContentUnchanged, serializeJsonForDisk } from '../writeIfChange
 
 export async function POST(request: NextRequest) {
   try {
+    const denied = assertApiAuthorized(request)
+    if (denied) return denied
     const { isDemo, expired, dataDir } = getDemoContext(request)
     if (isDemo && expired) {
       return NextResponse.json(
