@@ -12206,8 +12206,37 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   -webkit-text-fill-color: #f1f5f9 !important;
 }
 
-/* ── Bíblia da Nonato Service (hub profissional) ── */
-.biblia-hub {
+/* ── Bíblia da Nonato Service 2026 (embed) ── */
+.biblia-embed-root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: calc(100dvh - 72px);
+  height: calc(100dvh - 72px);
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #1a1a1c;
+}
+
+.biblia-embed-frame {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  border: none;
+  display: block;
+  background: #1a1a1c;
+}
+
+@media (max-width: 900px) {
+  .biblia-embed-root {
+    min-height: calc(100dvh - 56px);
+    height: calc(100dvh - 56px);
+  }
+}
+
+/* legacy hub styles (unused) — biblia-hub */
+.biblia-hub-legacy {
   --biblia-accent: rgba(56, 189, 248, 0.92);
   --biblia-accent-soft: rgba(56, 189, 248, 0.28);
   --biblia-border: rgba(56, 189, 248, 0.22);

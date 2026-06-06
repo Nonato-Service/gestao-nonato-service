@@ -90,6 +90,10 @@
               id: mod.id || uid(),
               nome: mod.name || "",
               ordem: mi,
+              software: mod.software || "",
+              mecanica: mod.mechanical || "",
+              eletrica: mod.electrical || "",
+              notas: mod.notes || "",
               informacoes,
               anexos,
             };
@@ -230,20 +234,45 @@
               .filter((a) => a && typeof a.dataUrl === "string" && a.dataUrl.startsWith("data:"))
               .map((a) => ({
                 id: a.id || uid(),
-                name: (a.nome || "ficheiro").slice(0, 200),
+                name: (a.nome || a.name || "ficheiro").slice(0, 200),
                 mime: a.mime || "application/octet-stream",
                 dataUrl: a.dataUrl,
               }));
-            let notes = typeof mod.informacoes === "string" ? mod.informacoes : "";
-            if (typeof mod.notas === "string" && mod.notas.trim()) {
-              notes = notes ? notes + "\n\n" + mod.notas : mod.notas;
+            function parseSectionedNotes(text) {
+              const raw = String(text || "");
+              const pick = (tag) => {
+                const re = new RegExp("\\[" + tag + "\\]\\s*([\\s\\S]*?)(?=\\n\\n\\[|$)", "i");
+                const m = raw.match(re);
+                return m ? m[1].trim() : "";
+              };
+              const software = pick("Software");
+              const mechanical = pick("Mecânica") || pick("Mecanica");
+              const electrical = pick("Elétrica") || pick("Eletrica");
+              const notes = pick("Notas");
+              if (software || mechanical || electrical || notes) {
+                return { software, mechanical, electrical, notes: notes || "" };
+              }
+              return { software: "", mechanical: "", electrical: "", notes: raw.trim() };
+            }
+            let software = String(mod.software || "");
+            let mechanical = String(mod.mechanical || mod.mecanica || "");
+            let electrical = String(mod.electrical || mod.eletrica || "");
+            let notes = String(mod.notes || mod.notas || "");
+            if (!software && !mechanical && !electrical && !notes && typeof mod.informacoes === "string") {
+              const parsed = parseSectionedNotes(mod.informacoes);
+              software = parsed.software;
+              mechanical = parsed.mechanical;
+              electrical = parsed.electrical;
+              notes = parsed.notes;
+            } else if (typeof mod.informacoes === "string" && mod.informacoes.trim() && !notes) {
+              notes = mod.informacoes.trim();
             }
             return {
               id: mod.id || uid(),
-              name: (mod.nome || mod.titulo || "Sem modelo").trim() || "Sem modelo",
-              software: "",
-              mechanical: "",
-              electrical: "",
+              name: (mod.nome || mod.titulo || mod.name || "Sem modelo").trim() || "Sem modelo",
+              software,
+              mechanical,
+              electrical,
               notes,
               attachments,
             };

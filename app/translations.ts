@@ -2465,7 +2465,7 @@ export const translations = {
     manuaisInformacoesTecnicasTitle: 'MANUAIS E INFORMAÇÕES TÉCNICA DOS EQUIPAMENTOS',
     manuaisInformacoesTecnicasDesc: 'Acesso a manuais e informações técnicas dos equipamentos',
     manuaisInformacoesTecnicasConteudo: 'Conteúdo de manuais e informações técnicas dos equipamentos. Utilize o cadastro de equipamentos para associar manuais e documentação.',
-    bibliaNonatoServiceTitle: 'BÍBLIA DA NONATO SERVICE',
+    bibliaNonatoServiceTitle: 'BÍBLIA DA NONATO SERVICE 2026',
     bibliaNonatoServiceSubtitle: 'Base técnica interna — famílias, marcas e modelos de equipamentos.',
     bibliaNonatoServiceDesc: 'Organize referências técnicas por família de equipamento. Consulte modelos numa tabela, edite fichas (software, mecânica, elétrica, notas) e anexe documentos — tudo sincronizado no servidor.',
     bibliaNonatoHubCardDesc: 'Referências internas por família, marca e modelo (dados só neste módulo).',
