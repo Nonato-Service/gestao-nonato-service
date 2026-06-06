@@ -38,7 +38,7 @@ if %errorlevel% neq 0 (
 )
 
 echo 3. A enviar para o GitHub...
-git push
+git push -u origin main
 if %errorlevel%==0 (
   echo.
   echo ============================================
