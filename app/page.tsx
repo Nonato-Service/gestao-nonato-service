@@ -58193,9 +58193,15 @@ A1;Peça exemplo;10`}
       case 'biblia-nonato-service':
         return (
           <BibliaNonatoServiceContent
-            t={safeT as Record<string, string | undefined>}
-            onClose={() => closeTab(activeTabId || '')}
+            saveData={async (key, data) => {
+              await saveData(key, data)
+            }}
+            loadData={loadData}
+            safeT={safeT as Record<string, string | undefined>}
+            closeTab={closeTab}
+            activeTabId={activeTabId || undefined}
             onHome={voltarPaginaInicial}
+            isCompactLayout={isCompactLayout}
           />
         )
 
