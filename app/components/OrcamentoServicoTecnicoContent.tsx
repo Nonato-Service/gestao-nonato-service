@@ -14,8 +14,13 @@ import {
   loadOstPropostas,
   saveOstPropostas,
   OST_PROPOSTAS_STORAGE_KEY,
+  loadOstRascunhoAtual,
+  loadOstRascunhoAtualSession,
+  saveOstRascunhoAtual,
+  clearOstRascunhoAtual,
   type OstPropostaSalva,
   type OstPropostaPayload,
+  type OstRascunhoAtual,
 } from './orcamentoOstPropostas'
 import { IconClipboardList, IconCoins, IconLayers } from './UiIcons'
 
@@ -132,6 +137,64 @@ type Props = {
   loadData?: (key: string, fromServer?: boolean) => Promise<unknown>
 }
 
+function bootOstFormFromRascunho(
+  r: OstRascunhoAtual | null,
+  t: Record<string, string | undefined>
+): {
+  clienteId: string
+  clienteManual: string
+  refDoc: string
+  localServico: string
+  dataDoc: string
+  validade: string
+  intro: string
+  clausulas: string
+  linhas: LinhaOrcamento[]
+  propostaEditandoId: string | null
+  propostaNome: string
+  hadRascunho: boolean
+} {
+  const defaults = {
+    clienteId: '',
+    clienteManual: '',
+    refDoc: '',
+    localServico: '',
+    dataDoc: new Date().toISOString().slice(0, 10),
+    validade: '',
+    intro:
+      t.orcamentoServicoTecnicoIntroDefault ||
+      'Documento sem valor fiscal. Os valores apresentados constituem proposta comercial para serviço técnico.',
+    clausulas: t.orcamentoServicoTecnicoClausulasDefault || TEXTO_CLAUSULAS_PADRAO_PT,
+    linhas: [{ rowId: newRowId(), servicoId: '', quantidadeStr: '1' }] as LinhaOrcamento[],
+    propostaEditandoId: null as string | null,
+    propostaNome: '',
+    hadRascunho: false,
+  }
+  if (!r) return defaults
+  const linhas =
+    r.linhas && r.linhas.length > 0
+      ? r.linhas.map((L) => ({
+          rowId: L.rowId && String(L.rowId).trim() ? L.rowId : newRowId(),
+          servicoId: L.servicoId || '',
+          quantidadeStr: L.quantidadeStr != null && String(L.quantidadeStr).trim() !== '' ? String(L.quantidadeStr) : '1',
+        }))
+      : defaults.linhas
+  return {
+    clienteId: r.clienteId || '',
+    clienteManual: r.clienteManual || '',
+    refDoc: r.refDoc || '',
+    localServico: r.localServico || '',
+    dataDoc: r.dataDoc || defaults.dataDoc,
+    validade: r.validade || '',
+    intro: r.intro || defaults.intro,
+    clausulas: r.clausulas || defaults.clausulas,
+    linhas,
+    propostaEditandoId: r.propostaEditandoId || null,
+    propostaNome: r.propostaNome || '',
+    hadRascunho: true,
+  }
+}
+
 export function OrcamentoServicoTecnicoContent({
   clientes,
   servicos,
@@ -148,23 +211,22 @@ export function OrcamentoServicoTecnicoContent({
   const cfg = papel.config
   const mostrar = papel.mostrar
 
-  const [clienteId, setClienteId] = useState('')
-  const [clienteManual, setClienteManual] = useState('')
-  const [refDoc, setRefDoc] = useState('')
-  const [localServico, setLocalServico] = useState('')
-  const [dataDoc, setDataDoc] = useState(() => new Date().toISOString().slice(0, 10))
-  const [validade, setValidade] = useState('')
-  const [intro, setIntro] = useState(
-    () =>
-      t.orcamentoServicoTecnicoIntroDefault ||
-      'Documento sem valor fiscal. Os valores apresentados constituem proposta comercial para serviço técnico.'
-  )
-  const [clausulas, setClausulas] = useState(() => t.orcamentoServicoTecnicoClausulasDefault || TEXTO_CLAUSULAS_PADRAO_PT)
-  const [linhas, setLinhas] = useState<LinhaOrcamento[]>(() => [{ rowId: newRowId(), servicoId: '', quantidadeStr: '1' }])
+  const [formBoot] = useState(() => bootOstFormFromRascunho(loadOstRascunhoAtualSession(), t))
+  const [rascunhoRestaurado, setRascunhoRestaurado] = useState(formBoot.hadRascunho)
+
+  const [clienteId, setClienteId] = useState(formBoot.clienteId)
+  const [clienteManual, setClienteManual] = useState(formBoot.clienteManual)
+  const [refDoc, setRefDoc] = useState(formBoot.refDoc)
+  const [localServico, setLocalServico] = useState(formBoot.localServico)
+  const [dataDoc, setDataDoc] = useState(formBoot.dataDoc)
+  const [validade, setValidade] = useState(formBoot.validade)
+  const [intro, setIntro] = useState(formBoot.intro)
+  const [clausulas, setClausulas] = useState(formBoot.clausulas)
+  const [linhas, setLinhas] = useState<LinhaOrcamento[]>(formBoot.linhas)
   const [section, setSection] = useState<OstSection>('orcamento')
   const [propostas, setPropostas] = useState<OstPropostaSalva[]>([])
-  const [propostaEditandoId, setPropostaEditandoId] = useState<string | null>(null)
-  const [propostaNome, setPropostaNome] = useState('')
+  const [propostaEditandoId, setPropostaEditandoId] = useState<string | null>(formBoot.propostaEditandoId)
+  const [propostaNome, setPropostaNome] = useState(formBoot.propostaNome)
 
   useEffect(() => {
     let cancel = false
@@ -176,6 +238,66 @@ export function OrcamentoServicoTecnicoContent({
       cancel = true
     }
   }, [loadData])
+
+  useEffect(() => {
+    if (formBoot.hadRascunho) return
+    let cancel = false
+    void (async () => {
+      const r = await loadOstRascunhoAtual(loadData)
+      if (cancel || !r) return
+      const boot = bootOstFormFromRascunho(r, t)
+      setClienteId(boot.clienteId)
+      setClienteManual(boot.clienteManual)
+      setRefDoc(boot.refDoc)
+      setLocalServico(boot.localServico)
+      setDataDoc(boot.dataDoc)
+      setValidade(boot.validade)
+      setIntro(boot.intro)
+      setClausulas(boot.clausulas)
+      setLinhas(boot.linhas)
+      setPropostaEditandoId(boot.propostaEditandoId)
+      setPropostaNome(boot.propostaNome)
+      setRascunhoRestaurado(true)
+    })()
+    return () => {
+      cancel = true
+    }
+  }, [loadData, formBoot.hadRascunho, t])
+
+  useEffect(() => {
+    const rascunho: OstRascunhoAtual = {
+      v: 1,
+      clienteId,
+      clienteManual,
+      refDoc,
+      localServico,
+      dataDoc,
+      validade,
+      intro,
+      clausulas,
+      linhas: linhas.map(({ rowId, servicoId, quantidadeStr }) => ({ rowId, servicoId, quantidadeStr })),
+      propostaEditandoId,
+      propostaNome,
+      guardadoEm: new Date().toISOString(),
+    }
+    const tmr = window.setTimeout(() => {
+      void saveOstRascunhoAtual(rascunho, saveData)
+    }, 350)
+    return () => window.clearTimeout(tmr)
+  }, [
+    clienteId,
+    clienteManual,
+    refDoc,
+    localServico,
+    dataDoc,
+    validade,
+    intro,
+    clausulas,
+    linhas,
+    propostaEditandoId,
+    propostaNome,
+    saveData,
+  ])
 
   useEffect(() => {
     const reload = () => {
@@ -315,7 +437,9 @@ export function OrcamentoServicoTecnicoContent({
     setIntro(t.orcamentoServicoTecnicoIntroDefault || 'Documento sem valor fiscal. Os valores apresentados constituem proposta comercial para serviço técnico.')
     setClausulas(t.orcamentoServicoTecnicoClausulasDefault || TEXTO_CLAUSULAS_PADRAO_PT)
     setLinhas([{ rowId: newRowId(), servicoId: '', quantidadeStr: '1' }])
-  }, [t])
+    setRascunhoRestaurado(false)
+    void clearOstRascunhoAtual(saveData)
+  }, [t, saveData])
 
   const excluirProposta = useCallback(
     async (id: string) => {
@@ -384,6 +508,28 @@ export function OrcamentoServicoTecnicoContent({
             {t.orcamentoServicoTecnicoFormAvisoCliente ||
               'O PDF inclui condições claras sobre despesas de viagem, hotel, alimentação e transporte aéreo (normalmente à cargo da empresa contratante), equipagem extra e ciência do cliente. Edite o quadro «Condições» se o contrato for diferente.'}
           </div>
+          {rascunhoRestaurado ? (
+            <div
+              role="status"
+              style={{
+                marginBottom: 14,
+                padding: '12px 14px',
+                borderRadius: 10,
+                background: 'rgba(34, 197, 94, 0.12)',
+                border: '1px solid rgba(34, 197, 94, 0.45)',
+                color: '#bbf7d0',
+                fontSize: 13,
+                lineHeight: 1.45,
+              }}
+            >
+              {t.orcamentoServicoTecnicoRascunhoRestaurado ||
+                'Rascunho recuperado automaticamente. O formulário é guardado à medida que preenche — use «Guardar proposta» para manter na lista de propostas.'}
+            </div>
+          ) : null}
+          <p className="papel-timbrado-hint" style={{ marginTop: 0, marginBottom: 14 }}>
+            {t.orcamentoServicoTecnicoRascunhoAuto ||
+              'O preenchimento é guardado automaticamente (cliente, linhas e quantidades). Se mudar de separador ou fechar o módulo, ao voltar o rascunho é restaurado.'}
+          </p>
 
           <div
             className="papel-timbrado-field"

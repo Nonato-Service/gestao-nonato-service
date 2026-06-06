@@ -3260,6 +3260,10 @@ export const translations = {
     orcamentoServicoTecnicoPropostaConfirmExcluir: 'Eliminar esta proposta guardada?',
     orcamentoServicoTecnicoPropostasVazio: 'Ainda não há propostas guardadas.',
     orcamentoServicoTecnicoPropostaEditando: 'A editar uma proposta guardada — «Guardar» atualiza a mesma entrada.',
+    orcamentoServicoTecnicoRascunhoAuto:
+      'O preenchimento é guardado automaticamente (cliente, linhas e quantidades). Se mudar de separador ou fechar o módulo, ao voltar o rascunho é restaurado.',
+    orcamentoServicoTecnicoRascunhoRestaurado:
+      'Rascunho recuperado automaticamente. O formulário é guardado à medida que preenche — use «Guardar proposta» para manter na lista de propostas.',
     orcamentoServicoTecnicoCliente: 'Cliente',
     orcamentoServicoTecnicoClientePlaceholder: 'Selecione um cliente cadastrado (opcional)…',
     orcamentoServicoTecnicoClienteManual: 'Nome do cliente (se não estiver na lista)',
@@ -3640,6 +3644,11 @@ export const translations = {
     orcamentosGerados: 'Orçamentos Gerados',
     nenhumOrcamentoGerado: 'Nenhum orçamento gerado ainda.',
     numeroOrcamentoObrigatorio: 'Número do orçamento é obrigatório!',
+    numeroOrcamentoExemplo: 'Ex: 06/2026 ou 06-1/2026',
+    numeroOrcamentoAuto: 'Auto',
+    numeroOrcamentoGerarAuto: 'Gerar número automático',
+    numeroOrcamentoSequenciaAjuda: 'Sequência automática: 1.º do dia → DD/AAAA (ex.: 06/2026). No mesmo dia → DD-1/AAAA, DD-2/AAAA…',
+    dadosClienteGuardados: 'Dados do cliente guardados',
     adicionarItensObrigatorio: 'Adicione pelo menos um item ao orçamento!',
     erroSalvarOrcamento: 'Erro ao salvar orçamento!',
     editarValoresOrcamento: 'Editar Valores',

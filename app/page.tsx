@@ -222,6 +222,210 @@ function itemOrcamentoDeveMostrarImagem(item: { imagem?: string; pecaId?: string
   )
 }
 
+type OrcamentoAvulsoNumeroRef = { numeroOrcamento: string; data?: string; dataCriacao?: string; id?: string }
+
+/** Formato: DD/AAAA (1.º do dia) ou DD-N/AAAA (2.º, 3.º… no mesmo dia). */
+function parseNumeroOrcamentoAvulsoSequencial(num: string): { day: string; year: string; seq: number | null } | null {
+  const t = (num || '').trim()
+  const comSeq = /^(\d{1,2})-(\d+)\/(\d{4})$/.exec(t)
+  if (comSeq) {
+    return { day: comSeq[1].padStart(2, '0'), year: comSeq[3], seq: parseInt(comSeq[2], 10) }
+  }
+  const base = /^(\d{1,2})\/(\d{4})$/.exec(t)
+  if (base) return { day: base[1].padStart(2, '0'), year: base[2], seq: null }
+  return null
+}
+
+function dataIsoParaDiaAnoOrcamento(dataIso: string): { day: string; year: string } | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((dataIso || '').trim())
+  if (!m) return null
+  return { day: m[3], year: m[1] }
+}
+
+function gerarProximoNumeroOrcamentoAvulso(
+  dataIso: string,
+  orcamentosExistentes: OrcamentoAvulsoNumeroRef[],
+  excluirId?: string
+): string {
+  const da = dataIsoParaDiaAnoOrcamento(dataIso)
+  const now = new Date()
+  const day = da?.day ?? String(now.getDate()).padStart(2, '0')
+  const year = da?.year ?? String(now.getFullYear())
+
+  let hasBase = false
+  const seqs = new Set<number>()
+
+  for (const o of orcamentosExistentes) {
+    if (excluirId && o.id === excluirId) continue
+    const parsed = parseNumeroOrcamentoAvulsoSequencial(o.numeroOrcamento)
+    const diaData = o.data ? dataIsoParaDiaAnoOrcamento(o.data) : null
+    const diaCriacao = o.dataCriacao ? dataIsoParaDiaAnoOrcamento(o.dataCriacao.slice(0, 10)) : null
+    const mesmoDia =
+      (parsed && parsed.day === day && parsed.year === year) ||
+      (diaData && diaData.day === day && diaData.year === year) ||
+      (diaCriacao && diaCriacao.day === day && diaCriacao.year === year)
+
+    if (!mesmoDia) continue
+
+    if (parsed && parsed.day === day && parsed.year === year) {
+      if (parsed.seq === null) hasBase = true
+      else seqs.add(parsed.seq)
+    } else {
+      hasBase = true
+    }
+  }
+
+  if (!hasBase) return `${day}/${year}`
+
+  let nextSeq = 1
+  while (seqs.has(nextSeq)) nextSeq++
+  return `${day}-${nextSeq}/${year}`
+}
+
+function resolverNumeroOrcamentoAvulsoAoSalvar(
+  dataIso: string,
+  numeroAtual: string,
+  orcamentosExistentes: OrcamentoAvulsoNumeroRef[],
+  excluirId?: string
+): string {
+  let num =
+    (numeroAtual || '').trim() ||
+    gerarProximoNumeroOrcamentoAvulso(dataIso, orcamentosExistentes, excluirId)
+
+  const outros = orcamentosExistentes.filter((o) => o.id !== excluirId)
+  while (outros.some((o) => (o.numeroOrcamento || '').trim() === num)) {
+    num = gerarProximoNumeroOrcamentoAvulso(
+      dataIso,
+      [...outros, { numeroOrcamento: num, data: dataIso }],
+      excluirId
+    )
+  }
+  return num
+}
+
+function snapshotDadosClienteOrcamentoAvulso(origem: unknown): Record<string, string> {
+  const c = (origem || {}) as Record<string, unknown>
+  return {
+    nomeEmpresa: String(c.nomeEmpresa || c.cliente || '').trim(),
+    morada: String(c.morada || '').trim(),
+    localidade: String(c.localidade || '').trim(),
+    conselho: String(c.conselho || c.cidade || '').trim(),
+    pais: String(c.pais || '').trim(),
+    codigoPostal: String(c.codigoPostal || '').trim(),
+    freguesia: String(c.freguesia || '').trim(),
+    numeroContribuicaoFiscal: String(c.numeroContribuicaoFiscal || '').trim(),
+    telefones: String(c.telefones || c.telefone || '').trim(),
+    email: String(c.email || '').trim(),
+    contato: String(c.contato || '').trim(),
+    numeroRelatorio: String(c.numeroRelatorio || c.numero || '').trim(),
+  }
+}
+
+const ORCAMENTO_AVULSO_RASCUNHO_LS = 'nonato-orcamento-avulso-rascunho'
+
+type OrcamentoAvulsoTipoRascunho =
+  | 'dados-fixos'
+  | 'cliente-cadastrado'
+  | 'orcamento-relatorio'
+  | 'cliente-prioritario-fixo'
+  | 'cliente-prioritario-valores'
+  | 'orcamentos-gerados'
+
+type OrcamentoAvulsoItemRascunho = {
+  id?: string
+  descricao: string
+  quantidade: number
+  precoUnitario: number
+  total: number
+  codigo?: string
+  tipoItem?: 'sem-valor' | 'com-valor'
+  iva?: number
+  pecaId?: string
+  imagem?: string
+}
+
+export type OrcamentoAvulsoRascunhoPersist = {
+  v: 1
+  dadosOrcamento: {
+    numeroOrcamento: string
+    data: string
+    validade: string
+    descricao: string
+    observacoes: string
+    itens: OrcamentoAvulsoItemRascunho[]
+  }
+  tipoOrcamento: OrcamentoAvulsoTipoRascunho
+  clienteSelecionadoId: string | null
+  relatorioSelecionadoId: string | null
+  clienteCadastroPrioritarioFixoId: string | null
+  numeroOrcamentoManual: boolean
+  buscaCliente: string
+  buscaRelatorio: string
+  buscaClientePrioritarioFixo: string
+}
+
+function criarOrcamentoAvulsoRascunhoVazio(): OrcamentoAvulsoRascunhoPersist {
+  return {
+    v: 1,
+    dadosOrcamento: {
+      numeroOrcamento: '',
+      data: new Date().toISOString().split('T')[0],
+      validade: '',
+      descricao: '',
+      observacoes: '',
+      itens: [],
+    },
+    tipoOrcamento: 'dados-fixos',
+    clienteSelecionadoId: null,
+    relatorioSelecionadoId: null,
+    clienteCadastroPrioritarioFixoId: null,
+    numeroOrcamentoManual: false,
+    buscaCliente: '',
+    buscaRelatorio: '',
+    buscaClientePrioritarioFixo: '',
+  }
+}
+
+function lerOrcamentoAvulsoRascunhoSession(): OrcamentoAvulsoRascunhoPersist | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = sessionStorage.getItem(ORCAMENTO_AVULSO_RASCUNHO_LS)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as Partial<OrcamentoAvulsoRascunhoPersist>
+    if (!parsed || parsed.v !== 1 || !parsed.dadosOrcamento) return null
+    const base = criarOrcamentoAvulsoRascunhoVazio()
+    return {
+      ...base,
+      ...parsed,
+      dadosOrcamento: {
+        ...base.dadosOrcamento,
+        ...parsed.dadosOrcamento,
+        itens: Array.isArray(parsed.dadosOrcamento.itens) ? parsed.dadosOrcamento.itens : [],
+      },
+    }
+  } catch {
+    return null
+  }
+}
+
+function gravarOrcamentoAvulsoRascunhoSession(rascunho: OrcamentoAvulsoRascunhoPersist) {
+  if (typeof window === 'undefined') return
+  try {
+    sessionStorage.setItem(ORCAMENTO_AVULSO_RASCUNHO_LS, JSON.stringify(rascunho))
+  } catch (err) {
+    console.warn('Não foi possível guardar rascunho do orçamento avulso:', err)
+  }
+}
+
+function limparOrcamentoAvulsoRascunhoSession() {
+  if (typeof window === 'undefined') return
+  try {
+    sessionStorage.removeItem(ORCAMENTO_AVULSO_RASCUNHO_LS)
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Restaura manuais no localStorage e no IndexedDB a partir de um backup JSON (string JSON ou objeto). */
 async function restoreManuaisFamiliasGruposFromBackupPayload(raw: unknown): Promise<void> {
   if (raw == null || raw === '') return
@@ -3543,6 +3747,13 @@ export default function Dashboard() {
   const [familiasGruposModalVariant, setFamiliasGruposModalVariant] = useState<'checklist' | 'equipamentos'>('checklist') // Título do modal Famílias e Grupos
   const [showSplashInicial, setShowSplashInicial] = useState(true) // Tela inicial preta com logo (verde transparente)
   const [openOrcamentosGeradosView, setOpenOrcamentosGeradosView] = useState(false) // Ao gerar pedido avulso, abrir Orçamentos > Orçamentos Gerados
+  /** Rascunho do orçamento avulso no pai — evita perder itens quando o painel re-renderiza */
+  const [orcamentoAvulsoRascunho, setOrcamentoAvulsoRascunho] = useState<OrcamentoAvulsoRascunhoPersist>(
+    () => lerOrcamentoAvulsoRascunhoSession() || criarOrcamentoAvulsoRascunhoVazio()
+  )
+  useEffect(() => {
+    gravarOrcamentoAvulsoRascunhoSession(orcamentoAvulsoRascunho)
+  }, [orcamentoAvulsoRascunho])
   const [showPasswordScreen, setShowPasswordScreen] = useState(false) // Tela de login (usuário + senha) ao clicar Acessar Sistema
   const [loginUsuarioInput, setLoginUsuarioInput] = useState('') // Usuário (e-mail ou nome) no login
   const [senhaInicialInput, setSenhaInicialInput] = useState('') // Senha no login
@@ -47194,6 +47405,8 @@ A1;Peça exemplo;10`}
           safeT={safeT}
           pedidosSeparacao={pedidosSeparacao}
           setPedidosSeparacao={setPedidosSeparacao}
+          rascunho={orcamentoAvulsoRascunho}
+          setRascunho={setOrcamentoAvulsoRascunho}
           initialTipoOrcamento={openOrcamentosGeradosView ? 'orcamentos-gerados' : undefined}
           onOrcamentosGeradosViewShown={() => setOpenOrcamentosGeradosView(false)}
         />
@@ -47228,9 +47441,7 @@ A1;Peça exemplo;10`}
             openTab={(type, title) => openTab(type as TabType, title)}
             getTabTitle={(tab) => getTabTitle(tab as TabType)}
             onOpenCadastroServicosModal={() => setShowCadastroServicosModal(true)}
-            saveData={async (key, value) => {
-              await saveData(key, value)
-            }}
+            saveData={saveData}
             loadData={loadData}
           />
         )
@@ -63160,6 +63371,7 @@ A1;Peça exemplo;10`}
     const [buscaCodigoPeca, setBuscaCodigoPeca] = useState('')
     const [pecasFiltradas, setPecasFiltradas] = useState<PecaBiblioteca[]>([])
     const [orcamentoEditando, setOrcamentoEditando] = useState<string | null>(null)
+    const [numeroOrcamentoManual, setNumeroOrcamentoManual] = useState(false)
     const [itemEditando, setItemEditando] = useState<{orcamentoId: string, itemIndex: number} | null>(null)
     const [itemEditForm, setItemEditForm] = useState({
       precoUnitario: 0,
@@ -63251,6 +63463,20 @@ A1;Peça exemplo;10`}
       }
     }, [initialTipoOrcamento])
 
+    const aplicarProximoNumeroOrcamento = (dataIso?: string, forcar = false) => {
+      if (numeroOrcamentoManual && !forcar) return
+      const data = dataIso || dadosOrcamento.data || new Date().toISOString().split('T')[0]
+      const prox = gerarProximoNumeroOrcamentoAvulso(data, orcamentosGerados, orcamentoEditando || undefined)
+      setDadosOrcamento((prev) => ({ ...prev, numeroOrcamento: prox, data }))
+    }
+
+    useEffect(() => {
+      if (tipoOrcamento === 'orcamentos-gerados') return
+      if (!numeroOrcamentoManual && !(dadosOrcamento.numeroOrcamento || '').trim()) {
+        aplicarProximoNumeroOrcamento(dadosOrcamento.data)
+      }
+    }, [orcamentosGerados.length, tipoOrcamento])
+
     // Dados fixos da NONATO SERVICE - usa cliente prioritário se existir
     const dadosNonatoService = clientePrioritario ? {
       nomeEmpresa: clientePrioritario.nomeEmpresa || 'NONATO SERVICE',
@@ -63288,6 +63514,38 @@ A1;Peça exemplo;10`}
             contato: clienteCadastroPrioritarioFixo.contato || ''
           }
         : dadosNonatoService
+
+    const resolverDadosClienteOrcamentoAvulso = (): Record<string, string> | null => {
+      if (tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo) {
+        return snapshotDadosClienteOrcamentoAvulso(clienteCadastroPrioritarioFixo)
+      }
+      if (
+        tipoOrcamento === 'dados-fixos' ||
+        tipoOrcamento === 'cliente-prioritario-fixo' ||
+        tipoOrcamento === 'cliente-prioritario-valores'
+      ) {
+        return snapshotDadosClienteOrcamentoAvulso(dadosNonatoParaExibicao)
+      }
+      if (tipoOrcamento === 'cliente-cadastrado' && clienteSelecionado) {
+        return snapshotDadosClienteOrcamentoAvulso(clienteSelecionado)
+      }
+      if (tipoOrcamento === 'orcamento-relatorio' && relatorioSelecionado) {
+        const clienteDoRelatorio = clientes.find((c) => c.id === relatorioSelecionado.clienteId)
+        if (clienteDoRelatorio) {
+          return {
+            ...snapshotDadosClienteOrcamentoAvulso(clienteDoRelatorio),
+            numeroRelatorio: relatorioSelecionado.numero || '',
+          }
+        }
+        return snapshotDadosClienteOrcamentoAvulso({
+          nomeEmpresa: relatorioSelecionado.cliente,
+          conselho: relatorioSelecionado.cidade,
+          telefones: relatorioSelecionado.telefone,
+          numeroRelatorio: relatorioSelecionado.numero,
+        })
+      }
+      return null
+    }
 
     const adicionarItem = (modo: 'biblioteca' | 'manual') => {
       setItemFormMode(modo)
@@ -63939,39 +64197,26 @@ A1;Peça exemplo;10`}
       alert(safeT?.whatsappEnviado || 'WhatsApp aberto com sucesso!')
     }
 
-    // Função para preparar orçamento atual (antes de salvar) para impressão/envio
     const prepararOrcamentoAtual = () => {
-      // Determinar dados do cliente baseado no tipo
-      let dadosClienteFinal: any = null
-      if (tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo) {
-        dadosClienteFinal = clienteCadastroPrioritarioFixo
-      } else if (tipoOrcamento === 'dados-fixos' || tipoOrcamento === 'cliente-prioritario-fixo' || tipoOrcamento === 'cliente-prioritario-valores') {
-        dadosClienteFinal = dadosNonatoService
-      } else if (tipoOrcamento === 'cliente-cadastrado' && clienteSelecionado) {
-        dadosClienteFinal = clienteSelecionado
-      } else if (tipoOrcamento === 'orcamento-relatorio' && relatorioSelecionado) {
-        // Buscar cliente do relatório
-        const clienteDoRelatorio = clientes.find(c => c.id === relatorioSelecionado.clienteId)
-        dadosClienteFinal = clienteDoRelatorio || {
-          nomeEmpresa: relatorioSelecionado.cliente,
-          morada: '',
-          conselho: relatorioSelecionado.cidade,
-          telefones: relatorioSelecionado.telefone,
-          email: '',
-          numeroRelatorio: relatorioSelecionado.numero
-        }
-      }
+      const dadosClienteFinal = resolverDadosClienteOrcamentoAvulso()
+      const dataOrc = dadosOrcamento.data || new Date().toISOString().split('T')[0]
+      const numeroFinal = resolverNumeroOrcamentoAvulsoAoSalvar(
+        dataOrc,
+        dadosOrcamento.numeroOrcamento,
+        orcamentosGerados,
+        orcamentoEditando || undefined
+      )
 
       return {
         id: 'temp-' + Date.now(),
-        numeroOrcamento: dadosOrcamento.numeroOrcamento || 'TEMP',
-        data: dadosOrcamento.data || new Date().toISOString().split('T')[0],
+        numeroOrcamento: numeroFinal,
+        data: dataOrc,
         validade: dadosOrcamento.validade || '',
         descricao: dadosOrcamento.descricao || '',
         observacoes: dadosOrcamento.observacoes || '',
         tipo: tipoOrcamento,
         clienteId: clienteSelecionado?.id || relatorioSelecionado?.clienteId || (tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo ? clienteCadastroPrioritarioFixo.id : undefined),
-        clienteNome: clienteSelecionado?.nomeEmpresa || relatorioSelecionado?.cliente || (tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo ? clienteCadastroPrioritarioFixo.nomeEmpresa : dadosNonatoService.nomeEmpresa),
+        clienteNome: dadosClienteFinal?.nomeEmpresa || clienteSelecionado?.nomeEmpresa || relatorioSelecionado?.cliente || (tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo ? clienteCadastroPrioritarioFixo.nomeEmpresa : dadosNonatoService.nomeEmpresa),
         relatorioId: relatorioSelecionado?.id,
         relatorioNumero: relatorioSelecionado?.numero,
         dadosCliente: dadosClienteFinal,
@@ -63984,30 +64229,30 @@ A1;Peça exemplo;10`}
     }
 
     const handleImprimirOrcamentoAtual = () => {
-      if (!dadosOrcamento.numeroOrcamento) {
+      const orcamentoAtual = prepararOrcamentoAtual()
+      if (!orcamentoAtual.numeroOrcamento) {
         alert(safeT?.numeroOrcamentoObrigatorio || 'Número do orçamento é obrigatório!')
         return
       }
-      const orcamentoAtual = prepararOrcamentoAtual()
       handleImprimirOrcamento(orcamentoAtual)
     }
 
     const handleEnviarEmailAtual = () => {
-      if (!dadosOrcamento.numeroOrcamento) {
+      const orcamentoAtual = prepararOrcamentoAtual()
+      if (!orcamentoAtual.numeroOrcamento) {
         alert(safeT?.numeroOrcamentoObrigatorio || 'Número do orçamento é obrigatório!')
         return
       }
-      const orcamentoAtual = prepararOrcamentoAtual()
       prepararEnvioOrcamentoComCliente(orcamentoAtual)
       setShowEmailModal(true)
     }
 
     const handleEnviarWhatsAppAtual = () => {
-      if (!dadosOrcamento.numeroOrcamento) {
+      const orcamentoAtual = prepararOrcamentoAtual()
+      if (!orcamentoAtual.numeroOrcamento) {
         alert(safeT?.numeroOrcamentoObrigatorio || 'Número do orçamento é obrigatório!')
         return
       }
-      const orcamentoAtual = prepararOrcamentoAtual()
       prepararEnvioOrcamentoComCliente(orcamentoAtual)
       setShowWhatsAppModal(true)
     }
@@ -64457,20 +64702,50 @@ A1;Peça exemplo;10`}
                 <label style={{ display: 'block', marginBottom: '5px', color: '#ccc', fontSize: '14px' }}>
                   {safeT?.numeroOrcamento || 'Número do Orçamento'}
                 </label>
-                <input
-                  type="text"
-                  value={dadosOrcamento.numeroOrcamento}
-                  onChange={(e) => setDadosOrcamento(prev => ({ ...prev, numeroOrcamento: e.target.value }))}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    backgroundColor: '#222222',
-                    border: '1px solid rgba(0, 255, 0, 0.3)',
-                    borderRadius: '6px',
-                    color: '#fff',
-                    fontSize: '14px'
-                  }}
-                />
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch' }}>
+                  <input
+                    type="text"
+                    value={dadosOrcamento.numeroOrcamento}
+                    onChange={(e) => {
+                      setNumeroOrcamentoManual(true)
+                      setDadosOrcamento(prev => ({ ...prev, numeroOrcamento: e.target.value }))
+                    }}
+                    placeholder={(safeT as any)?.numeroOrcamentoExemplo || 'Ex: 06/2026 ou 06-1/2026'}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      backgroundColor: '#222222',
+                      border: '1px solid rgba(0, 255, 0, 0.3)',
+                      borderRadius: '6px',
+                      color: '#fff',
+                      fontSize: '14px'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNumeroOrcamentoManual(false)
+                      aplicarProximoNumeroOrcamento(dadosOrcamento.data, true)
+                    }}
+                    title={(safeT as any)?.numeroOrcamentoGerarAuto || 'Gerar número automático'}
+                    style={{
+                      padding: '8px 12px',
+                      backgroundColor: 'rgba(0, 100, 255, 0.2)',
+                      border: '1px solid rgba(0, 100, 255, 0.55)',
+                      borderRadius: '6px',
+                      color: '#66b3ff',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    ↻ {(safeT as any)?.numeroOrcamentoAuto || 'Auto'}
+                  </button>
+                </div>
+                <p style={{ margin: '6px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.4 }}>
+                  {(safeT as any)?.numeroOrcamentoSequenciaAjuda ||
+                    'Sequência automática: 1.º do dia → DD/AAAA (ex.: 06/2026). No mesmo dia → DD-1/AAAA, DD-2/AAAA…'}
+                </p>
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', color: '#ccc', fontSize: '14px' }}>
@@ -64479,7 +64754,19 @@ A1;Peça exemplo;10`}
                 <input
                   type="date"
                   value={dadosOrcamento.data}
-                  onChange={(e) => setDadosOrcamento(prev => ({ ...prev, data: e.target.value }))}
+                  onChange={(e) => {
+                    const novaData = e.target.value
+                    if (!numeroOrcamentoManual) {
+                      const prox = gerarProximoNumeroOrcamentoAvulso(
+                        novaData,
+                        orcamentosGerados,
+                        orcamentoEditando || undefined
+                      )
+                      setDadosOrcamento((prev) => ({ ...prev, data: novaData, numeroOrcamento: prox }))
+                    } else {
+                      setDadosOrcamento((prev) => ({ ...prev, data: novaData }))
+                    }
+                  }}
                   style={{
                     width: '100%',
                     padding: '10px',
@@ -65362,9 +65649,12 @@ A1;Peça exemplo;10`}
               </button>
               <button
                 onClick={() => {
+                  setNumeroOrcamentoManual(false)
+                  const dataHoje = new Date().toISOString().split('T')[0]
+                  const proxNum = gerarProximoNumeroOrcamentoAvulso(dataHoje, orcamentosGerados)
                   setDadosOrcamento({
-                    numeroOrcamento: '',
-                    data: new Date().toISOString().split('T')[0],
+                    numeroOrcamento: proxNum,
+                    data: dataHoje,
                     validade: '',
                     descricao: '',
                     observacoes: '',
@@ -65399,10 +65689,6 @@ A1;Peça exemplo;10`}
               <button
                 className="btn-primary"
                 onClick={async () => {
-                  if (!dadosOrcamento.numeroOrcamento) {
-                    alert(safeT?.numeroOrcamentoObrigatorio || 'Número do orçamento é obrigatório!')
-                    return
-                  }
                   // Validação de itens só para tipos que permitem itens
                   if ((tipoOrcamento === 'dados-fixos' || tipoOrcamento === 'cliente-cadastrado' || tipoOrcamento === 'cliente-prioritario-valores') && dadosOrcamento.itens.length === 0) {
                     alert(safeT?.adicionarItensObrigatorio || 'Adicione pelo menos um item ao orçamento!')
@@ -65418,38 +65704,26 @@ A1;Peça exemplo;10`}
                     alert(safeT?.clientePrioritarioLimitado || 'Cliente prioritário não cadastrado!')
                     return
                   }
-                  
-                  // Determinar dados do cliente baseado no tipo
-                  let dadosClienteFinal: any = null
-                  if (tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo) {
-                    dadosClienteFinal = clienteCadastroPrioritarioFixo
-                  } else if (tipoOrcamento === 'dados-fixos' || tipoOrcamento === 'cliente-prioritario-fixo' || tipoOrcamento === 'cliente-prioritario-valores') {
-                    dadosClienteFinal = dadosNonatoService
-                  } else if (tipoOrcamento === 'cliente-cadastrado' && clienteSelecionado) {
-                    dadosClienteFinal = clienteSelecionado
-                  } else if (tipoOrcamento === 'orcamento-relatorio' && relatorioSelecionado) {
-                    // Buscar cliente do relatório
-                    const clienteDoRelatorio = clientes.find(c => c.id === relatorioSelecionado.clienteId)
-                    dadosClienteFinal = clienteDoRelatorio || {
-                      nomeEmpresa: relatorioSelecionado.cliente,
-                      morada: '',
-                      conselho: relatorioSelecionado.cidade,
-                      telefones: relatorioSelecionado.telefone,
-                      email: '',
-                      numeroRelatorio: relatorioSelecionado.numero
-                    }
-                  }
+
+                  const dadosClienteFinal = resolverDadosClienteOrcamentoAvulso()
+                  const dataOrc = dadosOrcamento.data || new Date().toISOString().split('T')[0]
+                  const numeroFinal = resolverNumeroOrcamentoAvulsoAoSalvar(
+                    dataOrc,
+                    dadosOrcamento.numeroOrcamento,
+                    orcamentosGerados,
+                    orcamentoEditando || undefined
+                  )
 
                   const novoOrcamento = {
                     id: Date.now().toString(),
-                    numeroOrcamento: dadosOrcamento.numeroOrcamento,
-                    data: dadosOrcamento.data,
+                    numeroOrcamento: numeroFinal,
+                    data: dataOrc,
                     validade: dadosOrcamento.validade,
                     descricao: dadosOrcamento.descricao,
                     observacoes: dadosOrcamento.observacoes,
                     tipo: tipoOrcamento,
                     clienteId: clienteSelecionado?.id || relatorioSelecionado?.clienteId || (tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo ? clienteCadastroPrioritarioFixo.id : undefined),
-                    clienteNome: clienteSelecionado?.nomeEmpresa || relatorioSelecionado?.cliente || (tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo ? clienteCadastroPrioritarioFixo.nomeEmpresa : dadosNonatoService.nomeEmpresa),
+                    clienteNome: dadosClienteFinal?.nomeEmpresa || clienteSelecionado?.nomeEmpresa || relatorioSelecionado?.cliente || (tipoOrcamento === 'cliente-prioritario-fixo' && clienteCadastroPrioritarioFixo ? clienteCadastroPrioritarioFixo.nomeEmpresa : dadosNonatoService.nomeEmpresa),
                     relatorioId: relatorioSelecionado?.id,
                     relatorioNumero: relatorioSelecionado?.numero,
                     dadosCliente: dadosClienteFinal,
@@ -65466,9 +65740,12 @@ A1;Peça exemplo;10`}
                   try {
                     await saveData('nonato-orcamentos-avulso', novosOrcamentos)
                     alert(safeT?.orcamentoSalvo || 'Orçamento salvo com sucesso!')
+                    setNumeroOrcamentoManual(false)
+                    const dataHoje = new Date().toISOString().split('T')[0]
+                    const proxNum = gerarProximoNumeroOrcamentoAvulso(dataHoje, novosOrcamentos)
                     setDadosOrcamento({
-                      numeroOrcamento: '',
-                      data: new Date().toISOString().split('T')[0],
+                      numeroOrcamento: proxNum,
+                      data: dataHoje,
                       validade: '',
                       descricao: '',
                       observacoes: '',
@@ -65894,6 +66171,53 @@ A1;Peça exemplo;10`}
                           {orcamento.clienteNome && (
                             <div style={{ color: '#ccc', fontSize: '14px', marginBottom: '5px' }}>
                               <strong>{safeT?.cliente || 'Cliente'}:</strong> {orcamento.clienteNome}
+                            </div>
+                          )}
+                          {orcamento.dadosCliente && (
+                            <div
+                              style={{
+                                marginTop: '10px',
+                                marginBottom: '10px',
+                                padding: '12px 14px',
+                                backgroundColor: 'rgba(0, 100, 255, 0.1)',
+                                borderRadius: '8px',
+                                border: '1px solid rgba(0, 150, 255, 0.25)',
+                                fontSize: '13px',
+                                color: '#ccc',
+                              }}
+                            >
+                              <div style={{ fontSize: '11px', color: '#66b3ff', fontWeight: 700, marginBottom: '8px', textTransform: 'uppercase' }}>
+                                {(safeT as any)?.dadosClienteGuardados || 'Dados do cliente guardados'}
+                              </div>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '6px 16px' }}>
+                                {orcamento.dadosCliente.nomeEmpresa && (
+                                  <div><strong>{safeT?.empresa || 'Empresa'}:</strong> {orcamento.dadosCliente.nomeEmpresa}</div>
+                                )}
+                                {orcamento.dadosCliente.contato && (
+                                  <div><strong>{safeT?.contato || 'Contato'}:</strong> {orcamento.dadosCliente.contato}</div>
+                                )}
+                                {orcamento.dadosCliente.email && (
+                                  <div><strong>{safeT?.email || 'E-mail'}:</strong> {orcamento.dadosCliente.email}</div>
+                                )}
+                                {orcamento.dadosCliente.telefones && (
+                                  <div><strong>{safeT?.telefone || 'Telefone'}:</strong> {orcamento.dadosCliente.telefones}</div>
+                                )}
+                                {orcamento.dadosCliente.morada && (
+                                  <div><strong>{safeT?.morada || 'Morada'}:</strong> {orcamento.dadosCliente.morada}</div>
+                                )}
+                                {orcamento.dadosCliente.codigoPostal && (
+                                  <div><strong>{safeT?.codigoPostal || 'C.P.'}:</strong> {orcamento.dadosCliente.codigoPostal}</div>
+                                )}
+                                {orcamento.dadosCliente.conselho && (
+                                  <div><strong>{safeT?.conselho || 'Conselho'}:</strong> {orcamento.dadosCliente.conselho}</div>
+                                )}
+                                {orcamento.dadosCliente.pais && (
+                                  <div><strong>{safeT?.pais || 'País'}:</strong> {orcamento.dadosCliente.pais}</div>
+                                )}
+                                {orcamento.dadosCliente.numeroContribuicaoFiscal && (
+                                  <div><strong>{safeT?.contribuicaoFiscal || 'NIF'}:</strong> {orcamento.dadosCliente.numeroContribuicaoFiscal}</div>
+                                )}
+                              </div>
                             </div>
                           )}
                           {orcamento.descricao && (
