@@ -297,7 +297,7 @@ body,
   background-color: var(--ns-info-bg-medium);
   border: 2px solid rgba(102, 179, 255, 0.9);
   border-radius: var(--ns-radius-sm);
-  color: var(--ns-info-muted);
+  color: #fff !important;
   font-weight: 700;
   font-size: 16px;
   cursor: pointer;
@@ -313,6 +313,7 @@ body,
 .btn-info:hover {
   background-color: rgba(0, 100, 255, 0.42);
   border-color: #9fd4ff;
+  color: #fff !important;
   box-shadow: 0 0 16px var(--ns-info-glow);
   filter: brightness(1.04);
   transform: translateY(-1px);
@@ -342,7 +343,7 @@ body,
   background-color: rgba(255, 68, 68, 0.18);
   border: 1px solid rgba(255, 68, 68, 0.85);
   border-radius: 4px;
-  color: #ff8a8a;
+  color: #fff !important;
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
@@ -354,6 +355,7 @@ body,
 }
 
 .btn-chip-danger:hover {
+  color: #fff !important;
   background-color: rgba(255, 68, 68, 0.28);
   box-shadow: 0 0 12px rgba(255, 68, 68, 0.3);
 }
@@ -645,7 +647,7 @@ body,
   border-radius: 999px !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
   background: rgba(255, 255, 255, 0.05) !important;
-  color: #eaf7ea !important;
+  color: #ffffff !important;
 }
 
 .hub-comunicacao-group-chip:hover {
@@ -4110,11 +4112,11 @@ body {
   .mobile-toolbar-btn.active {
     background: rgba(0, 255, 0, 0.25);
     border-color: #00ff00;
-    color: #00ff00;
+    color: #fff !important;
   }
   .mobile-toolbar-voltar {
     background: rgba(0, 255, 0, 0.15);
-    color: #00ff00;
+    color: #fff !important;
   }
   .mobile-toolbar-home {
     min-width: 44px !important;
@@ -4903,7 +4905,7 @@ a:focus-visible {
 .cliente-lista-card-devedor .btn-primary,
 .cliente-lista-card-devedor .btn-danger,
 .cliente-lista-card-devedor button {
-  color: #ffeeee !important;
+  color: #ffffff !important;
   border: 2px solid #ff5555 !important;
   background: rgba(70, 0, 0, 0.55) !important;
 }
@@ -4951,7 +4953,7 @@ a:focus-visible {
 .cliente-form-alerta-devedor .btn-primary,
 .cliente-form-alerta-devedor .btn-danger,
 .cliente-form-alerta-devedor button {
-  color: #ffdddd !important;
+  color: #ffffff !important;
   border: 2px solid #ff5555 !important;
   background: rgba(90, 0, 0, 0.55) !important;
   box-shadow: 0 0 0 1px rgba(255, 60, 60, 0.35);
@@ -4972,7 +4974,7 @@ a:focus-visible {
 .cliente-card-alerta-devedor .btn-primary,
 .cliente-card-alerta-devedor .btn-danger,
 .cliente-card-alerta-devedor button {
-  color: #ffeeee !important;
+  color: #ffffff !important;
   border: 2px solid #ff5555 !important;
   background: rgba(70, 0, 0, 0.5) !important;
 }
@@ -7204,7 +7206,7 @@ button.dia-trabalho-acao-btn--del:hover {
   cursor: pointer;
   border: 1px solid rgba(148, 163, 184, 0.4);
   background: rgba(30, 41, 59, 0.65);
-  color: #e2e8f0;
+  color: #ffffff !important;
   transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .financeiro-despesas-bib-btn:hover {
@@ -7214,7 +7216,7 @@ button.dia-trabalho-acao-btn--del:hover {
 .financeiro-despesas-bib-card--amarelo .financeiro-despesas-bib-btn {
   border-color: var(--fin-cor-amarelo-borda);
   background: var(--fin-cor-amarelo-fundo);
-  color: var(--fin-cor-amarelo-texto);
+  color: #ffffff !important;
 }
 .financeiro-despesas-bib-card--amarelo .financeiro-despesas-bib-btn:hover {
   background: rgba(250, 204, 21, 0.34);
@@ -7223,7 +7225,7 @@ button.dia-trabalho-acao-btn--del:hover {
 .financeiro-despesas-bib-card--azul .financeiro-despesas-bib-btn {
   border-color: var(--fin-cor-azul-borda);
   background: var(--fin-cor-azul-fundo);
-  color: var(--fin-cor-azul-texto);
+  color: #ffffff !important;
 }
 .financeiro-despesas-bib-card--azul .financeiro-despesas-bib-btn:hover {
   background: rgba(56, 189, 248, 0.34);
@@ -7232,7 +7234,7 @@ button.dia-trabalho-acao-btn--del:hover {
 .financeiro-despesas-bib-card--verde .financeiro-despesas-bib-btn {
   border-color: var(--fin-cor-verde-borda);
   background: var(--fin-cor-verde-fundo);
-  color: var(--fin-cor-verde-texto);
+  color: #ffffff !important;
 }
 .financeiro-despesas-bib-card--verde .financeiro-despesas-bib-btn:hover {
   background: rgba(74, 222, 128, 0.32);
@@ -7241,7 +7243,7 @@ button.dia-trabalho-acao-btn--del:hover {
 .financeiro-despesas-bib-card--vermelho .financeiro-despesas-bib-btn {
   border-color: var(--fin-cor-vermelho-borda);
   background: var(--fin-cor-vermelho-fundo);
-  color: var(--fin-cor-vermelho-texto);
+  color: #ffffff !important;
 }
 .financeiro-despesas-bib-card--vermelho .financeiro-despesas-bib-btn:hover {
   background: rgba(248, 113, 113, 0.36);
@@ -7329,7 +7331,7 @@ button.dia-trabalho-acao-btn--del:hover {
 .pagamentos-contador-tabs__btn--active {
   background: rgba(0, 255, 0, 0.15);
   border-color: rgba(0, 255, 0, 0.55);
-  color: #00ff00;
+  color: #fff !important;
 }
 .pagamentos-contador-card {
   padding: 20px;
@@ -7383,7 +7385,7 @@ button.dia-trabalho-acao-btn--del:hover {
 .pagamentos-contador-btn-pdf {
   margin-bottom: 16px;
   border-color: rgba(0, 150, 255, 0.55) !important;
-  color: #93c5fd !important;
+  color: #ffffff !important;
   background: rgba(0, 150, 255, 0.12) !important;
 }
 .pagamentos-contador-toolbar-hint {
@@ -8781,20 +8783,20 @@ button.dia-trabalho-acao-btn--del:hover {
 .tab-content-wrapper .protocolo-servico-card__btn--pdf {
   background: linear-gradient(165deg, rgba(61, 255, 224, 0.16), rgba(0, 160, 128, 0.2)) !important;
   border: 1px solid rgba(45, 212, 191, 0.82) !important;
-  color: #c9fff4 !important;
+  color: #ffffff !important;
   box-shadow: none !important;
   letter-spacing: 0.03em;
 }
 
 .tab-content-wrapper .protocolo-servico-card__btn--pdf:hover {
   filter: brightness(1.12);
-  color: #ecfff9 !important;
+  color: #ffffff !important;
 }
 
 .tab-content-wrapper .protocolo-servico-card__btn--email {
   background-color: rgba(0, 140, 255, 0.12) !important;
   border: 1px solid rgba(56, 189, 248, 0.78) !important;
-  color: #e8f6ff !important;
+  color: #ffffff !important;
 }
 
 .tab-content-wrapper .protocolo-servico-card__btn--email:hover {
@@ -8804,7 +8806,7 @@ button.dia-trabalho-acao-btn--del:hover {
 .tab-content-wrapper .protocolo-servico-card__btn--wa {
   background-color: rgba(37, 211, 102, 0.1) !important;
   border: 1px solid rgba(52, 211, 153, 0.8) !important;
-  color: #ecfdf5 !important;
+  color: #ffffff !important;
 }
 
 .tab-content-wrapper .protocolo-servico-card__btn--wa:hover {
@@ -8814,7 +8816,7 @@ button.dia-trabalho-acao-btn--del:hover {
 .tab-content-wrapper .protocolo-servico-card__btn--edit {
   background: rgba(255, 255, 255, 0.04) !important;
   border: 1px solid rgba(226, 232, 240, 0.48) !important;
-  color: #ddeeff !important;
+  color: #ffffff !important;
 }
 
 .tab-content-wrapper .protocolo-servico-card__btn--edit:hover {
@@ -8824,7 +8826,7 @@ button.dia-trabalho-acao-btn--del:hover {
 .tab-content-wrapper .protocolo-servico-card__actions .btn-danger.btn-danger--inline.protocolo-servico-card__btn--del {
   background: rgba(127, 29, 29, 0.18) !important;
   border: 1px solid rgba(248, 113, 113, 0.72) !important;
-  color: #fecaca !important;
+  color: #ffffff !important;
   box-shadow: none !important;
 }
 
@@ -9473,7 +9475,7 @@ button.dia-trabalho-acao-btn--del:hover {
   font-weight: 800 !important;
   letter-spacing: 0.03em !important;
   border-radius: 14px !important;
-  color: #052e1f !important;
+  color: #ffffff !important;
   background: linear-gradient(165deg, #5eead4, #059669) !important;
   border: none !important;
   box-shadow: 0 10px 32px rgba(16, 185, 129, 0.35) !important;
@@ -10683,7 +10685,7 @@ button.dia-trabalho-acao-btn--del:hover {
 .sidebar-action-btn.sidebar-action-btn--diario-pulse {
   animation: ns-diario-sidebar-pulse 1.35s ease-in-out infinite;
   border-color: rgba(234, 179, 8, 0.92) !important;
-  color: #fef9c3 !important;
+  color: #ffffff !important;
   background: rgba(66, 50, 8, 0.58) !important;
   box-shadow:
     0 0 0 1px rgba(250, 204, 21, 0.38),
@@ -10692,7 +10694,7 @@ button.dia-trabalho-acao-btn--del:hover {
 
 .sidebar-action-btn.sidebar-action-btn--diario-done {
   border-color: rgba(34, 197, 94, 0.88) !important;
-  color: #d1fae5 !important;
+  color: #ffffff !important;
   background: rgba(6, 40, 22, 0.52) !important;
   box-shadow:
     0 0 0 1px rgba(34, 197, 94, 0.28),
@@ -11613,7 +11615,7 @@ button.dia-trabalho-acao-btn--del:hover {
   padding: 10px 16px;
   background: transparent !important;
   border-color: rgba(148, 163, 184, 0.45) !important;
-  color: #cbd5e1 !important;
+  color: #ffffff !important;
 }
 
 .ns-diario-btn--accent {
@@ -11627,7 +11629,7 @@ button.dia-trabalho-acao-btn--del:hover {
   border-radius: 8px;
   border: 1px solid rgba(248, 113, 113, 0.45);
   background: rgba(127, 29, 29, 0.22);
-  color: #fecaca;
+  color: #ffffff !important;
   cursor: pointer;
 }
 
@@ -12041,3 +12043,127 @@ button.dia-trabalho-acao-btn--del:hover {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   TEXTO BRANCO EM TODOS OS BOTÕES — PROGRAMA INTEIRO
+   Mantém fundo/borda coloridos; só as palavras internas ficam #ffffff.
+   ═══════════════════════════════════════════════════════════════════ */
+
+html body button,
+html body input[type="button"],
+html body input[type="submit"],
+html body input[type="reset"],
+html body [role="button"],
+html body label[class*="btn-"],
+html body a[class*="btn-"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body button:hover,
+html body button:focus,
+html body button:focus-visible,
+html body button:active,
+html body button:disabled,
+html body input[type="button"]:hover,
+html body input[type="submit"]:hover,
+html body input[type="reset"]:hover,
+html body [role="button"]:hover,
+html body label[class*="btn-"]:hover,
+html body a[class*="btn-"]:hover {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Contextos com regras antigas de cor (sidebar, protocolos, financeiro, etc.) */
+html body .app-layout button,
+html body .sidebar button,
+html body .tab-content-wrapper button,
+html body .modal button,
+html body .main-content-area button,
+html body .main-app-column button,
+html body .orcamentos-avulso-page button,
+html body .papel-timbrado-root button,
+html body .hub-comunicacao-shell button,
+html body .alerta-mensagens-shell button,
+html body .clientes-financeiro-panel button,
+html body .financeiro-despesas-bib-card button,
+html body .pagamentos-contador-card button,
+html body .biblioteca-pecas-hub button,
+html body .ns-diario-modal button,
+html body .pwa-update-banner button,
+html body .cliente-lista-card-devedor button,
+html body .cliente-form-alerta-devedor button,
+html body .cliente-card-alerta-devedor button,
+html body .familias-grupos-panel button,
+html body .importacao-pecas-paste-head button,
+html body .agenda-calendario-toolbar button,
+html body .demo-page button,
+html body .pagina-empresa-root button {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Classes de botão (inclui label/a com aparência de botão) */
+html body [class*="btn-primary"],
+html body [class*="btn-secondary"],
+html body [class*="btn-danger"],
+html body [class*="btn-info"],
+html body [class*="btn-administrador"],
+html body [class*="btn-chip"],
+html body .mobile-toolbar-btn,
+html body .mobile-toolbar-voltar,
+html body .mobile-toolbar-home,
+html body .pagamentos-contador-tabs__btn,
+html body .pagamentos-contador-btn-sm,
+html body .orcamentos-avulso-tipo-btn,
+html body .hub-comunicacao-send-btn,
+html body .hub-comunicacao-person-btn,
+html body .hub-comunicacao-group-chip,
+html body .alerta-mensagens-action-btn,
+html body .sidebar-action-btn,
+html body .sidebar-group-header,
+html body .language-button,
+html body .financeiro-despesas-bib-btn,
+html body .financeiro-despesas-bib-toolbar__btn,
+html body .ns-diario-btn,
+html body label.btn-primary,
+html body label.btn-secondary,
+html body label.btn-danger,
+html body label.btn-info {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Palavras internas dos botões (spans, sub-labels da sidebar, etc.) */
+html body button *,
+html body label[class*="btn-"] *,
+html body [role="button"] *,
+html body a[class*="btn-"] * {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+}
+
+html body .sidebar button .sidebar-nav-label,
+html body .sidebar button .sidebar-nav-label-sub,
+html body .sidebar button .sidebar-nav-label-sub--empresa,
+html body .sidebar button .sidebar-nav-check,
+html body .sidebar button span,
+html body .sidebar button strong,
+html body .sidebar button em {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+}
+
+html body .sidebar button.sidebar-group-header,
+html body .sidebar button.sidebar-group-header:not(.sidebar-group-btn-selected),
+html body .sidebar button.sidebar-group-header:hover,
+html body .sidebar button.sidebar-group-btn-selected,
+html body .sidebar button.btn-primary.sidebar-group-header,
+html body .sidebar button.btn-administrador.sidebar-group-header,
+html body .sidebar .sidebar-action-buttons > button.sidebar-action-btn,
+html body .sidebar .sidebar-action-buttons > button.sidebar-action-btn:not(.sidebar-action-btn-active),
+html body .sidebar .sidebar-action-buttons > button.sidebar-action-btn.sidebar-action-btn-active,
+html body .sidebar .sidebar-action-buttons > button.sidebar-action-btn:not(.sidebar-action-btn-active):hover {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}

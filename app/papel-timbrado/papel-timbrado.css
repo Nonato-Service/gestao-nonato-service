@@ -37,15 +37,27 @@
   font-size: 14px;
 }
 
-.papel-timbrado-toolbar button.primary {
+.papel-timbrado-toolbar button.primary,
+.papel-timbrado-root button.primary {
   background: linear-gradient(165deg, #34d399, #059669);
   border-color: rgba(16, 185, 129, 0.6);
-  color: #052e1f;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
-.papel-timbrado-toolbar button.secondary {
+.papel-timbrado-toolbar button.secondary,
+.papel-timbrado-root button.secondary {
   background: rgba(30, 41, 59, 0.9);
-  color: #cbd5e1;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.papel-timbrado-root button.primary *,
+.papel-timbrado-root button.secondary *,
+.papel-timbrado-toolbar button.primary *,
+.papel-timbrado-toolbar button.secondary * {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
 }
 
 .papel-timbrado-layout {
