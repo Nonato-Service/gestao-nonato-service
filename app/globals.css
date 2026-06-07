@@ -5180,7 +5180,7 @@ a:focus-visible {
 
 /* Cartão individual na lista de relatórios: conteúdo não “passa” por cima das bordas */
 .relatorio-servico-report-card {
-  overflow: hidden;
+  overflow: visible;
   min-width: 0;
 }
 .relatorio-servico-report-card__badges {
@@ -7826,6 +7826,9 @@ button.dia-trabalho-acao-btn--del:hover {
   flex: 1 1 140px;
   min-width: 0;
   max-width: 100%;
+  position: relative;
+  z-index: 4;
+  cursor: pointer;
 }
 .relatorio-servico-card-acoes-linha > .btn-primary {
   flex: 1 1 100px;

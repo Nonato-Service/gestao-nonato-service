@@ -295,6 +295,40 @@ export function AdminConfigGeralSection({
                     {(safeT as any)?.adminLogosPdfDescCompact ||
                       'Anexe a imagem do logo, clique em «Guardar na biblioteca» e confirme a pré-visualização abaixo. Marque «Incluir nos PDF».'}
                   </p>
+                  <div style={{ marginBottom: '14px', padding: '12px', backgroundColor: '#222', borderRadius: '8px', border: '1px solid rgba(255, 180, 0, 0.35)' }}>
+                    <strong style={{ fontSize: '12px', color: '#fff', display: 'block', marginBottom: '8px' }}>
+                      {(safeT as any)?.pdfLogosModoTitulo || 'Modo dos logos nos PDFs'}
+                    </strong>
+                    <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'rgba(255,255,255,0.95)', marginBottom: '8px' }}>
+                      <input
+                        type="radio"
+                        name="pdf-logos-modo-compact"
+                        checked={pdfLogosModoUnificado}
+                        onChange={() => {
+                          if (pdfLogosModoUnificado) return
+                          setPdfLogosModoUnificado(true)
+                          saveData('nonato-pdf-logos-unificado', true)
+                          aplicarLogoUnificadoTodosPdfs(logoRelatorioSelecionadoId || '')
+                        }}
+                        style={{ width: '16px', height: '16px', accentColor: '#00ff00', marginTop: '2px', flexShrink: 0 }}
+                      />
+                      <span>{(safeT as any)?.pdfLogosModoUnificadoLabel || 'Um único logo para todos os documentos PDF'}</span>
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'rgba(255,255,255,0.95)' }}>
+                      <input
+                        type="radio"
+                        name="pdf-logos-modo-compact"
+                        checked={!pdfLogosModoUnificado}
+                        onChange={() => {
+                          if (!pdfLogosModoUnificado) return
+                          setPdfLogosModoUnificado(false)
+                          saveData('nonato-pdf-logos-unificado', false)
+                        }}
+                        style={{ width: '16px', height: '16px', accentColor: '#00ff00', marginTop: '2px', flexShrink: 0 }}
+                      />
+                      <span>{(safeT as any)?.pdfLogosModoPorTipoLabel || 'Logo diferente em cada tipo de documento'}</span>
+                    </label>
+                  </div>
                   <label
                     className="btn-primary"
                     style={{
