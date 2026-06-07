@@ -39,6 +39,7 @@ import {
 import {
   resolverClientesAtivosComprovanteHoje,
   estadoClienteReciboRapido,
+  labelOrigemClienteComprovante,
   type ClienteAtivoComprovante,
 } from './lib/comprovanteClientesAtivosHoje'
 import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buildRelatorioServicoPdfHeaderHtml, type RelatorioServicoPdfHeaderVariant } from './lib/relatorioServicoPdfPrintCss'
@@ -45790,6 +45791,16 @@ A1;Peça exemplo;10`}
                           data: r.data,
                           numero: r.numero,
                         })),
+                        relatoriosFechados: relatoriosServico
+                          .filter((r) => r.servicoConcluido)
+                          .map((r) => ({
+                            id: r.id,
+                            cliente: r.cliente,
+                            clienteId: r.clienteId,
+                            data: r.data,
+                            numero: r.numero,
+                            servicoConcluido: r.servicoConcluido,
+                          })),
                         agendamentos: agendamentos.map((a) => ({
                           id: a.id,
                           cliente: a.cliente,
@@ -46293,7 +46304,7 @@ A1;Peça exemplo;10`}
                         {comprovanteReciboRapido.clientesSugeridos.length === 0 ? (
                           <p style={{ margin: 0, fontSize: '12px', color: '#888', lineHeight: 1.45 }}>
                             {(safeT as any)?.comprovantesClientesAtivosNenhum ||
-                              'Nenhum cliente ativo hoje (relatório aberto ou agenda). Será despesa pessoal.'}
+                              'Nenhum cliente ativo (relatório aberto, fechado ou agenda). Será despesa pessoal.'}
                           </p>
                         ) : comprovanteReciboRapido.clientesSugeridos.length === 1 ? (
                           <p style={{ margin: 0, fontSize: '12px', color: '#bbf7d0', lineHeight: 1.45 }}>
@@ -46304,9 +46315,10 @@ A1;Peça exemplo;10`}
                               .replace('{cliente}', comprovanteReciboRapido.clientesSugeridos[0].clienteNome)
                               .replace(
                                 '{origem}',
-                                comprovanteReciboRapido.clientesSugeridos[0].origem === 'relatorio'
-                                  ? (safeT as any)?.comprovantesClientesAtivosRelatorio || 'Relatório aberto'
-                                  : (safeT as any)?.comprovantesClientesAtivosAgenda || 'Agenda'
+                                labelOrigemClienteComprovante(
+                                  comprovanteReciboRapido.clientesSugeridos[0].origem,
+                                  safeT as Record<string, string | undefined>
+                                )
                               )}
                           </p>
                         ) : (
@@ -46348,9 +46360,7 @@ A1;Peça exemplo;10`}
                                   >
                                     <strong>{cl.clienteNome}</strong>
                                     <span style={{ display: 'block', fontSize: '11px', color: '#888', marginTop: '2px' }}>
-                                      {cl.origem === 'relatorio'
-                                        ? (safeT as any)?.comprovantesClientesAtivosRelatorio || 'Relatório aberto'
-                                        : (safeT as any)?.comprovantesClientesAtivosAgenda || 'Agenda'}
+                                      {labelOrigemClienteComprovante(cl.origem, safeT as Record<string, string | undefined>)}
                                       {' · '}
                                       {cl.detalhe}
                                     </span>
