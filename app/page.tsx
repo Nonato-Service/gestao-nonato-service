@@ -195,6 +195,20 @@ const RELATORIO_SERVICO_PDF_MODELOS = new Set([
   'tecnico', 'executivo', 'negro', 'ferwood', 'resumido', 'colorido', 'formal', 'lista',
 ])
 
+const PDF_MODEL_PADRAO_STORAGE_KEY = 'nonato-relatorios-pdf-modelo'
+const PDF_MODEL_POR_RELATORIO_STORAGE_KEY = 'nonato-relatorios-pdf-modelo-por-id'
+
+function normalizePdfModeloPorRelatorioMap(raw: unknown): Record<string, string> {
+  if (!raw || typeof raw !== 'object') return {}
+  const out: Record<string, string> = {}
+  for (const [id, model] of Object.entries(raw as Record<string, unknown>)) {
+    if (typeof id === 'string' && id && typeof model === 'string' && RELATORIO_SERVICO_PDF_MODELOS.has(model)) {
+      out[id] = model
+    }
+  }
+  return out
+}
+
 function pecaBibliotecaTemImagemPropria(imagem: string | undefined | null): boolean {
   return Boolean(imagem && String(imagem).trim() !== '')
 }
@@ -9005,18 +9019,30 @@ export default function Dashboard() {
         saveData('nonato-orcamento-logo-id', master)
         saveData('nonato-protocolo-servico-logo-id', master)
       }
-      const savedPdfModeloRel = getData('nonato-relatorios-pdf-modelo')
+      const savedPdfModeloRel = getData(PDF_MODEL_PADRAO_STORAGE_KEY)
       if (typeof savedPdfModeloRel === 'string' && RELATORIO_SERVICO_PDF_MODELOS.has(savedPdfModeloRel)) {
         selectedPDFModelRef.current = savedPdfModeloRel
         setSelectedPDFModel(savedPdfModeloRel)
       } else if (typeof window !== 'undefined') {
         try {
-          const lsModel = localStorage.getItem('nonato-relatorios-pdf-modelo')
+          const lsModel = localStorage.getItem(PDF_MODEL_PADRAO_STORAGE_KEY)
           if (lsModel && RELATORIO_SERVICO_PDF_MODELOS.has(lsModel)) {
             selectedPDFModelRef.current = lsModel
             setSelectedPDFModel(lsModel)
           }
         } catch { /* ignorar */ }
+      }
+      const savedPdfModeloPorRel = getData(PDF_MODEL_POR_RELATORIO_STORAGE_KEY)
+      let mapPorRel = normalizePdfModeloPorRelatorioMap(savedPdfModeloPorRel)
+      if (!Object.keys(mapPorRel).length && typeof window !== 'undefined') {
+        try {
+          const lsMap = localStorage.getItem(PDF_MODEL_POR_RELATORIO_STORAGE_KEY)
+          if (lsMap) mapPorRel = normalizePdfModeloPorRelatorioMap(JSON.parse(lsMap))
+        } catch { /* ignorar */ }
+      }
+      if (Object.keys(mapPorRel).length) {
+        pdfModelPorRelatorioIdRef.current = mapPorRel
+        setPdfModelPorRelatorioId(mapPorRel)
       }
       
       // Carregar pedidos de orçamento
@@ -16260,7 +16286,9 @@ export default function Dashboard() {
       logoContent,
       title: t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO',
       reportNumber: String(relatorio.numero || ''),
-      subtitle: `Assistência Técnica · ${empresaNomePdf}`,
+      subtitle: `${(t as Record<string, string>).relatorioPdfHeaderSubtitle || 'Assistência Técnica'} · ${empresaNomePdf}`,
+      badgeLabel: (t as Record<string, string>).relatorioPdfBadgeLabel || 'Relatório n.º',
+      badgeLabelCompact: (t as Record<string, string>).relatorioPdfBadgeLabelCompact || 'N.º',
       variant,
     })
   };
@@ -18998,29 +19026,43 @@ export default function Dashboard() {
     }
   }
 
-  // Função wrapper que usa o modelo selecionado
+  const persistPdfModeloPorRelatorioMap = (map: Record<string, string>) => {
+    try {
+      localStorage.setItem(PDF_MODEL_POR_RELATORIO_STORAGE_KEY, JSON.stringify(map))
+    } catch { /* ignorar */ }
+    void saveData(PDF_MODEL_POR_RELATORIO_STORAGE_KEY, map)
+  }
+
+  const persistPdfModeloPadrao = (model: string) => {
+    selectedPDFModelRef.current = model
+    setSelectedPDFModel(model)
+    try {
+      localStorage.setItem(PDF_MODEL_PADRAO_STORAGE_KEY, model)
+    } catch { /* ignorar */ }
+    void saveData(PDF_MODEL_PADRAO_STORAGE_KEY, model)
+  }
+
+  // Modelo PDF: cada relatório tem o seu; só relatórios sem escolha usam o padrão global
   const getPdfModelForRelatorio = (relatorioId: string): string => {
     const perRef = pdfModelPorRelatorioIdRef.current[relatorioId]
     if (perRef && RELATORIO_SERVICO_PDF_MODELOS.has(perRef)) return perRef
     const per = pdfModelPorRelatorioId[relatorioId]
     if (per && RELATORIO_SERVICO_PDF_MODELOS.has(per)) return per
-    const global = selectedPDFModelRef.current || selectedPDFModel
-    if (RELATORIO_SERVICO_PDF_MODELOS.has(global)) return global
+    const padrao = selectedPDFModelRef.current || selectedPDFModel
+    if (RELATORIO_SERVICO_PDF_MODELOS.has(padrao)) return padrao
     return 'classico'
   }
 
   const escolherModeloPdfRelatorio = (relatorioId: string | null, model: string) => {
     if (!RELATORIO_SERVICO_PDF_MODELOS.has(model)) return
-    selectedPDFModelRef.current = model
     if (relatorioId) {
-      pdfModelPorRelatorioIdRef.current = { ...pdfModelPorRelatorioIdRef.current, [relatorioId]: model }
-      setPdfModelPorRelatorioId(prev => ({ ...prev, [relatorioId]: model }))
+      const next = { ...pdfModelPorRelatorioIdRef.current, [relatorioId]: model }
+      pdfModelPorRelatorioIdRef.current = next
+      setPdfModelPorRelatorioId(next)
+      persistPdfModeloPorRelatorioMap(next)
+      return
     }
-    setSelectedPDFModel(model)
-    try {
-      localStorage.setItem('nonato-relatorios-pdf-modelo', model)
-    } catch { /* ignorar */ }
-    void saveData('nonato-relatorios-pdf-modelo', model)
+    persistPdfModeloPadrao(model)
   }
 
   const handlePrintRelatorio = (relatorio: RelatorioServico, pdfModel?: string) => {
@@ -32394,7 +32436,7 @@ onKeyPress={(e) => {
                       cursor: 'pointer',
                       minWidth: '140px',
                     }}
-                    title={safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF'}
+                    title={(safeT as Record<string, string>).relatorioPdfModeloFormularioTitle || safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF'}
                   >
                     <optgroup label={safeT?.relatorioPdfOptgroupRecomendados || 'Recomendados para cliente'}>
                       <option value="classico">{safeT?.modeloClassico || 'Clássico'}</option>
@@ -32937,7 +32979,7 @@ onKeyPress={(e) => {
                                 borderRadius: '4px',
                                 cursor: 'pointer'
                               }}
-                              title={safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF'}
+                              title={(safeT as Record<string, string>).relatorioPdfModeloCartaoTitle || safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF'}
                             >
                               <optgroup label={safeT?.relatorioPdfOptgroupRecomendados || 'Recomendados para cliente'}>
                                 <option value="classico">{safeT?.modeloClassico || 'Clássico'}</option>
@@ -58388,8 +58430,8 @@ A1;Peça exemplo;10`}
                       className="biblioteca-relatorios-toolbar__modelo"
                       value={selectedPDFModel}
                       onChange={e => escolherModeloPdfRelatorio(null, e.target.value)}
-                      aria-label={(safeT as any)?.bibliotecaRelatoriosModeloPdf || 'Modelo PDF'}
-                      title={(safeT as any)?.bibliotecaRelatoriosModeloPdf || 'Modelo PDF (relatórios de serviço)'}
+                      aria-label={(safeT as Record<string, string>).bibliotecaRelatoriosModeloPdf || 'Modelo PDF'}
+                      title={(safeT as Record<string, string>).bibliotecaRelatoriosModeloPdfPadrao || (safeT as Record<string, string>).bibliotecaRelatoriosModeloPdf || 'Modelo PDF'}
                     >
                       <optgroup label={safeT?.relatorioPdfOptgroupRecomendados || 'Recomendados'}>
                         <option value="classico">{safeT?.modeloClassico || 'Clássico'}</option>
@@ -73662,7 +73704,7 @@ A1;Peça exemplo;10`}
                     borderRadius: '4px',
                     cursor: 'pointer'
                   }}
-                  title={safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF'}
+                  title={viewingRelatorioServico ? ((safeT as Record<string, string>).relatorioPdfModeloCartaoTitle || safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF') : ((safeT as Record<string, string>).bibliotecaRelatoriosModeloPdfPadrao || safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF')}
                 >
                   <optgroup label={safeT?.relatorioPdfOptgroupRecomendados || 'Recomendados para cliente'}>
                     <option value="classico">{safeT?.modeloClassico || 'Clássico'}</option>
