@@ -16126,7 +16126,7 @@ export default function Dashboard() {
       const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
       if (fromState && fromState.type === 'image' && fromState.data) {
         const src = String(fromState.data).replace(/"/g, '&quot;');
-        return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+        return `<img src="${src}" alt="Logo" width="140" height="48" style="max-height:48px;max-width:140px;width:auto;height:auto;object-fit:contain;display:block;" />`;
       }
     }
     // 2) Logo da lista (localStorage)
@@ -16138,7 +16138,7 @@ export default function Dashboard() {
           const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === selectedId);
           if (logoItem && logoItem.type === 'image' && logoItem.data) {
             const src = String(logoItem.data).replace(/"/g, '&quot;');
-            return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+            return `<img src="${src}" alt="Logo" width="140" height="48" style="max-height:48px;max-width:140px;width:auto;height:auto;object-fit:contain;display:block;" />`;
           }
         }
       } catch (_) { /* lista inválida ou muito grande */ }
@@ -16168,7 +16168,7 @@ export default function Dashboard() {
       const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
       if (fromState && fromState.type === 'image' && fromState.data) {
         const src = String(fromState.data).replace(/"/g, '&quot;');
-        return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+        return `<img src="${src}" alt="Logo" width="140" height="48" style="max-height:48px;max-width:140px;width:auto;height:auto;object-fit:contain;display:block;" />`;
       }
     }
     if (selectedId) {
@@ -16179,7 +16179,7 @@ export default function Dashboard() {
           const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === selectedId);
           if (logoItem && logoItem.type === 'image' && logoItem.data) {
             const src = String(logoItem.data).replace(/"/g, '&quot;');
-            return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+            return `<img src="${src}" alt="Logo" width="140" height="48" style="max-height:48px;max-width:140px;width:auto;height:auto;object-fit:contain;display:block;" />`;
           }
         }
       } catch (_) { /* ignore */ }
@@ -16203,7 +16203,7 @@ export default function Dashboard() {
       const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
       if (fromState && fromState.type === 'image' && fromState.data) {
         const src = String(fromState.data).replace(/"/g, '&quot;');
-        return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+        return `<img src="${src}" alt="Logo" width="140" height="48" style="max-height:48px;max-width:140px;width:auto;height:auto;object-fit:contain;display:block;" />`;
       }
     }
     if (selectedId) {
@@ -16214,7 +16214,7 @@ export default function Dashboard() {
           const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === selectedId);
           if (logoItem && logoItem.type === 'image' && logoItem.data) {
             const src = String(logoItem.data).replace(/"/g, '&quot;');
-            return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+            return `<img src="${src}" alt="Logo" width="140" height="48" style="max-height:48px;max-width:140px;width:auto;height:auto;object-fit:contain;display:block;" />`;
           }
         }
       } catch (_) { /* ignore */ }
@@ -16238,7 +16238,7 @@ export default function Dashboard() {
       const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
       if (fromState && fromState.type === 'image' && fromState.data) {
         const src = String(fromState.data).replace(/"/g, '&quot;');
-        return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+        return `<img src="${src}" alt="Logo" width="140" height="48" style="max-height:48px;max-width:140px;width:auto;height:auto;object-fit:contain;display:block;" />`;
       }
     }
     if (selectedId) {
@@ -16249,7 +16249,7 @@ export default function Dashboard() {
           const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === selectedId);
           if (logoItem && logoItem.type === 'image' && logoItem.data) {
             const src = String(logoItem.data).replace(/"/g, '&quot;');
-            return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+            return `<img src="${src}" alt="Logo" width="140" height="48" style="max-height:48px;max-width:140px;width:auto;height:auto;object-fit:contain;display:block;" />`;
           }
         }
       } catch (_) { /* ignore */ }
@@ -19167,11 +19167,12 @@ export default function Dashboard() {
               padding: 5px;
             }
             .page {
-              page-break-after: always;
+              position: relative;
               margin-bottom: 20px;
             }
-            .page:last-child {
-              page-break-after: auto;
+            .page:not(:last-child) {
+              break-after: page;
+              page-break-after: always;
             }
             .header {
               margin-bottom: 15px;
@@ -19249,9 +19250,8 @@ export default function Dashboard() {
               min-height: 60px;
             }
             .footer {
-              position: absolute;
-              bottom: 10mm;
-              right: 10mm;
+              margin-top: 16px;
+              text-align: right;
               font-size: 8px;
               color: #666;
             }

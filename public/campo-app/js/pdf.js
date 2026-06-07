@@ -12,7 +12,9 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
 .rs-pdf .header-contacts { font-size: 9px; color: #475569; line-height: 1.4; }
 .rs-pdf .header-title { font-size: 13px; font-weight: 800; text-align: center; flex: 1; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 4px; }
 .rs-pdf .header-number { font-size: 11px; font-weight: 800; color: #14532d; white-space: nowrap; padding: 6px 10px; border: 1px solid #bbf7d0; border-radius: 8px; background: #f0fdf4; }
-.rs-pdf .info-section { margin-bottom: 14px; padding: 14px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fafafa; page-break-inside: avoid; }
+.rs-pdf .info-section { margin-bottom: 14px; padding: 14px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fafafa; break-inside: auto; page-break-inside: auto; }
+.rs-pdf .info-section:not(:has(table)) { break-inside: avoid; page-break-inside: avoid; }
+.rs-pdf .header { break-inside: avoid; page-break-inside: avoid; break-after: avoid; page-break-after: avoid; }
 .rs-pdf .info-section h3 { font-size: 9px; margin: -14px -14px 12px; padding: 10px 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #14532d; background: #ecfdf5; border-left: 4px solid #166534; border-radius: 10px 10px 0 0; }
 .rs-pdf .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 14px; }
 .rs-pdf .info-label { font-weight: 700; color: #334155; }
@@ -32,7 +34,7 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
 .rs-pdf .sig-line { width: 240px; height: 70px; border-bottom: 2px solid #000; margin: 0 auto 6px; }
 .rs-pdf .sig-name { font-size: 9px; font-weight: 700; color: #334155; }
 .rs-pdf .sig-date { font-size: 8px; color: #64748b; margin-top: 4px; }
-@media print { body.rs-pdf { padding-bottom: 8mm; } }`;
+@media print { body.rs-pdf { padding-bottom: 8mm; } .rs-pdf .info-section:has(table) { break-inside: auto; page-break-inside: auto; } .rs-pdf .info-section tbody tr { break-inside: avoid; page-break-inside: avoid; } }`;
 
   function logoHtml(logo, nomeEmpresa) {
     if (logo && logo.dataUrl) return `<img src="${logo.dataUrl}" alt="Logo" />`;

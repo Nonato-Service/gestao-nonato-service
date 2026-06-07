@@ -24,6 +24,10 @@ body.rs-pdf--compact { font-size: 8px; line-height: 1.35; padding: 8px 8px 12px;
   margin-bottom: 16px;
   padding-bottom: 14px;
   border-bottom: 3px solid #166534;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  break-after: avoid;
+  page-break-after: avoid;
 }
 .rs-pdf .header-logo { font-size: 15px; font-weight: 800; letter-spacing: 0.04em; color: #14532d; }
 .rs-pdf .header-logo img { max-height: 52px; max-width: 200px; object-fit: contain; display: block; }
@@ -55,6 +59,11 @@ body.rs-pdf--compact { font-size: 8px; line-height: 1.35; padding: 8px 8px 12px;
   border-radius: 10px;
   background: #fafafa;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  break-inside: auto;
+  page-break-inside: auto;
+}
+.rs-pdf .info-section:not(:has(table)) {
+  break-inside: avoid;
   page-break-inside: avoid;
 }
 .rs-pdf .info-section h3 {
@@ -266,5 +275,22 @@ body.rs-pdf--compact .header p {
 
 @media print {
   body.rs-pdf { padding-bottom: 8mm; }
+  .rs-pdf .info-section:has(table) {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+  .rs-pdf .info-section table,
+  .rs-pdf .info-section tbody {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+  .rs-pdf .info-section tbody tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .rs-pdf .summary {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 }
 `.trim()
