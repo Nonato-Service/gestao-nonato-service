@@ -8119,6 +8119,53 @@ export default function Dashboard() {
       let preferServerOnlyAfterFullPullWipe = false
       /** Bundle já obtido antes do wipe — evita segundo fetch e evita wipe se a rede falhar. */
       let serverDataFromFullPullPrefetch: Record<string, any> | null = null
+      /** Modo demo: não misturar localStorage do utilizador real com pasta data/demo no servidor. */
+      const wipeLocalNonatoForBootstrap = async (resetSyncRevision: boolean) => {
+        await deleteAllNonatoKvFromIdb()
+        const keepLocal = new Set([
+          'nonato-language',
+          'nonato-sync-last-accepted-revision',
+          'nonato-protocolo-servico-draft',
+        ])
+        const toRemove: string[] = []
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i)
+          if (k && k.startsWith('nonato-') && !keepLocal.has(k)) toRemove.push(k)
+        }
+        for (const k of toRemove) {
+          try {
+            localStorage.removeItem(k)
+          } catch {
+            /* ignorar */
+          }
+        }
+        if (resetSyncRevision) {
+          try {
+            localStorage.setItem('nonato-sync-last-accepted-revision', '0')
+          } catch {
+            /* ignorar */
+          }
+        }
+      }
+      if (typeof window !== 'undefined') {
+        try {
+          const demoRes = await fetch('/api/demo/status', { credentials: 'include', cache: 'no-store' })
+          if (demoRes.ok) {
+            const demoSt = (await demoRes.json()) as { isDemo?: boolean; expired?: boolean }
+            const postDemoWipe = document.cookie.split(';').some((c) => c.trim().startsWith('nonato_post_demo_wipe=1'))
+            if (demoSt.isDemo && !demoSt.expired) {
+              await wipeLocalNonatoForBootstrap(true)
+              preferServerOnlyAfterFullPullWipe = true
+            } else if (postDemoWipe && !demoSt.isDemo) {
+              await wipeLocalNonatoForBootstrap(true)
+              preferServerOnlyAfterFullPullWipe = true
+              document.cookie = 'nonato_post_demo_wipe=; path=/; max-age=0'
+            }
+          }
+        } catch {
+          /* ignorar — continua carga normal */
+        }
+      }
       if (typeof window !== 'undefined') {
         try {
           const sessionWantsFullPull = sessionStorage.getItem('nonato-sync-full-server-apply')

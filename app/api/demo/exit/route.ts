@@ -13,5 +13,7 @@ export async function GET(request: NextRequest) {
   response.cookies.set('nonato_demo_start', '', { path: '/', maxAge: 0 })
   response.cookies.set('nonato_demo_recipient', '', { path: '/', maxAge: 0 })
   response.cookies.set('nonato_demo_modules', '', { path: '/', maxAge: 0 })
+  // Pedir ao browser que limpe dados locais da demo ao voltar ao modo normal
+  response.cookies.set('nonato_post_demo_wipe', '1', { path: '/', maxAge: 120, sameSite: 'lax' })
   return response
 }
