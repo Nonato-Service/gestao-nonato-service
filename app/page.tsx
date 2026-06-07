@@ -45508,6 +45508,9 @@ A1;Peça exemplo;10`}
 
       case 'comprovantes-despesas': {
         const labelPessoal = (safeT as any)?.despesasPessoais || 'Despesas Pessoais'
+        const labelGrupoNonato = (safeT as any)?.comprovantesGrupoNonatoService || 'NONATO SERVICE'
+        const chaveGrupoComprovante = (c: ComprovanteDespesa) =>
+          c.tipo === 'pessoal' ? labelGrupoNonato : String(c.cliente || '—').trim() || '—'
         const getWeekKey = (dateStr: string) => {
           const d = new Date(dateStr + 'T12:00:00')
           const start = new Date(d.getFullYear(), 0, 1)
@@ -45541,19 +45544,23 @@ A1;Peça exemplo;10`}
         }
         const mesesAnos = Array.from(new Set([...mesesDosRegistos, ...mesesRolling])).sort().reverse()
         const semanasDisponiveis = Array.from(new Set(comprovantesDespesas.map(c => getWeekKey(c.data)))).sort().reverse()
-        const getClienteOuPessoal = (c: ComprovanteDespesa) => (c.tipo === 'pessoal' ? labelPessoal : c.cliente) || '—'
-        const nomesDosComprovantes = Array.from(new Set(comprovantesDespesas.map(c => (c.tipo === 'pessoal' ? labelPessoal : c.cliente)).filter(Boolean)))
-        const nomesCadastroClientes = clientes.map(c => c.nomeEmpresa).filter(Boolean)
-        const clientesOuPessoalUnicos = Array.from(new Set([...nomesCadastroClientes, ...nomesDosComprovantes])).sort((a, b) =>
-          (a === labelPessoal ? 1 : b === labelPessoal ? -1 : a.localeCompare(b, 'pt-BR'))
+        const getClienteOuPessoal = (c: ComprovanteDespesa) =>
+          c.tipo === 'pessoal' ? labelGrupoNonato : c.cliente || '—'
+        const nomesDosComprovantes = Array.from(
+          new Set(comprovantesDespesas.map((c) => chaveGrupoComprovante(c)).filter(Boolean))
         )
-        const filtrados = comprovantesDespesas.filter(c => {
+        const nomesCadastroClientes = clientes.map((c) => c.nomeEmpresa).filter(Boolean)
+        const clientesOuPessoalUnicos = Array.from(new Set([...nomesCadastroClientes, ...nomesDosComprovantes])).sort(
+          (a, b) =>
+            a === labelGrupoNonato ? 1 : b === labelGrupoNonato ? -1 : a.localeCompare(b, 'pt-BR')
+        )
+        const filtrados = comprovantesDespesas.filter((c) => {
           const mesAno = mesCompetenciaKey(c)
           const semanaKey = getWeekKey(c.data)
           if (filtroPeriodoView === 'mensal' && filtroMes && mesAno !== filtroMes) return false
           if (filtroPeriodoView === 'semanal' && filtroSemana && semanaKey !== filtroSemana) return false
-          const clienteOuPessoal = c.tipo === 'pessoal' ? labelPessoal : c.cliente
-          if (filtroCliente && clienteOuPessoal !== filtroCliente) return false
+          const grupo = chaveGrupoComprovante(c)
+          if (filtroCliente && grupo !== filtroCliente) return false
           return true
         })
         const comprovantesListLocale =
@@ -45602,6 +45609,194 @@ A1;Peça exemplo;10`}
               subtotal: items.reduce((s, x) => s + (Number(x.valorTotal) || 0), 0),
             }))
         })()
+        const clientesAtivosPainel = resolverClientesAtivosComprovanteHoje({
+          relatoriosAbertos: relatoriosServicoListaPrincipal.map((r) => ({
+            id: r.id,
+            cliente: r.cliente,
+            clienteId: r.clienteId,
+            data: r.data,
+            numero: r.numero,
+          })),
+          relatoriosFechados: relatoriosServico
+            .filter((r) => r.servicoConcluido)
+            .map((r) => ({
+              id: r.id,
+              cliente: r.cliente,
+              clienteId: r.clienteId,
+              data: r.data,
+              numero: r.numero,
+              servicoConcluido: r.servicoConcluido,
+            })),
+          agendamentos: agendamentos.map((a) => ({
+            id: a.id,
+            cliente: a.cliente,
+            clienteId: a.clienteId,
+            data: a.data,
+            hora: a.hora,
+            status: a.status,
+          })),
+        })
+        const mapGrupoComprovantes = (() => {
+          const m = new Map<string, ComprovanteDespesa[]>()
+          for (const c of filtrados) {
+            const k = chaveGrupoComprovante(c)
+            if (!m.has(k)) m.set(k, [])
+            m.get(k)!.push(c)
+          }
+          for (const [, items] of m) {
+            items.sort((a, b) => {
+              const da = String(a.data || '').slice(0, 10)
+              const db = String(b.data || '').slice(0, 10)
+              if (da !== db) return db.localeCompare(da)
+              return String(b.id).localeCompare(String(a.id))
+            })
+          }
+          return m
+        })()
+        type SecaoComprovantesPainel = {
+          nome: string
+          ativo: boolean
+          origem?: ClienteAtivoComprovante['origem']
+          origemDetalhe?: string
+          items: ComprovanteDespesa[]
+          subtotal: number
+          tipo: 'ativo' | 'outro' | 'nonato'
+        }
+        const secoesComprovantesPainel = (() => {
+          const restantes = new Map(mapGrupoComprovantes)
+          const secoes: SecaoComprovantesPainel[] = []
+          for (const ca of clientesAtivosPainel) {
+            if (filtroCliente && filtroCliente !== ca.clienteNome) continue
+            const items = restantes.get(ca.clienteNome) || []
+            restantes.delete(ca.clienteNome)
+            secoes.push({
+              nome: ca.clienteNome,
+              ativo: true,
+              origem: ca.origem,
+              origemDetalhe: ca.detalhe,
+              items,
+              subtotal: items.reduce((s, x) => s + (Number(x.valorTotal) || 0), 0),
+              tipo: 'ativo',
+            })
+          }
+          const outrosNomes = [...restantes.keys()]
+            .filter((n) => n !== labelGrupoNonato)
+            .sort((a, b) => a.localeCompare(b, 'pt-BR'))
+          for (const nome of outrosNomes) {
+            if (filtroCliente && filtroCliente !== nome) continue
+            const items = restantes.get(nome) || []
+            restantes.delete(nome)
+            secoes.push({
+              nome,
+              ativo: false,
+              items,
+              subtotal: items.reduce((s, x) => s + (Number(x.valorTotal) || 0), 0),
+              tipo: 'outro',
+            })
+          }
+          if (!filtroCliente || filtroCliente === labelGrupoNonato) {
+            const items = restantes.get(labelGrupoNonato) || []
+            secoes.push({
+              nome: labelGrupoNonato,
+              ativo: false,
+              items,
+              subtotal: items.reduce((s, x) => s + (Number(x.valorTotal) || 0), 0),
+              tipo: 'nonato',
+            })
+          }
+          return secoes
+        })()
+        const handleRemoverComp = (id: string) => {
+          if (!window.confirm((safeT as any)?.confirmarExcluir || 'Remover este comprovante?')) return
+          const atualizados = comprovantesDespesas.filter(c => c.id !== id)
+          setComprovantesDespesas(atualizados)
+          saveData('nonato-comprovantes-despesas', atualizados)
+        }
+        const renderLinhaComprovante = (c: ComprovanteDespesa) => (
+          <div
+            key={c.id}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+              padding: '12px 14px',
+              backgroundColor: '#222',
+              borderRadius: '10px',
+              border: '1px solid rgba(0,255,0,0.12)',
+            }}
+          >
+            {c.imagemBase64 ? (
+              <button
+                type="button"
+                onClick={() => setComprovanteImagemAmpliada(c)}
+                title={(safeT as any)?.comprovantesVerRecibo || 'Ver recibo'}
+                style={{ padding: 0, border: 'none', background: 'transparent', cursor: 'zoom-in', flexShrink: 0 }}
+              >
+                <img
+                  src={c.imagemBase64}
+                  alt="Recibo"
+                  style={{
+                    width: 56,
+                    height: 56,
+                    objectFit: 'cover',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(0,255,0,0.2)',
+                    display: 'block',
+                  }}
+                />
+              </button>
+            ) : (
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: '6px',
+                  background: '#333',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#666',
+                  fontSize: '11px',
+                  flexShrink: 0,
+                }}
+              >
+                📄
+              </div>
+            )}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ color: '#d1d5db', fontSize: '13px', fontWeight: 600 }}>
+                {formatarDataListaComprovante(String(c.data || '').slice(0, 10))}
+                {mesCompetenciaKey(c) !== String(c.data || '').trim().slice(0, 7) ? (
+                  <span style={{ marginLeft: '8px', color: '#fde68a', fontSize: '11px', fontWeight: 500 }}>
+                    {(safeT as any)?.comprovantesMesArquivoAbrev || 'Arquivo'}: {mesCompetenciaKey(c)}
+                  </span>
+                ) : null}
+              </div>
+              <div style={{ color: '#aaa', fontSize: '13px', marginTop: '2px' }}>
+                {(safeT as any)?.comprovantesValorUnitario || 'Valor unit.'}: {c.valorUnitario.toFixed(2)} × {c.quantidade} ={' '}
+                <strong style={{ color: '#00ff00' }}>{c.valorTotal.toFixed(2)} €</strong>
+              </div>
+              {c.descricao ? (
+                <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>{c.descricao}</div>
+              ) : null}
+            </div>
+            <button
+              onClick={() => handleRemoverComp(c.id)}
+              style={{
+                padding: '6px 10px',
+                background: 'rgba(255,68,68,0.2)',
+                border: '1px solid rgba(255,68,68,0.5)',
+                borderRadius: '6px',
+                color: '#ff4444',
+                cursor: 'pointer',
+                fontSize: '12px',
+                flexShrink: 0,
+              }}
+            >
+              {(safeT as any)?.remover || (safeT as any)?.remove || 'Remover'}
+            </button>
+          </div>
+        )
         const totalGeral = filtrados.reduce((s, c) => s + c.valorTotal, 0)
         const totalPorMes = filtrados.reduce((acc, c) => {
           const key = mesCompetenciaKey(c)
@@ -45615,7 +45810,7 @@ A1;Peça exemplo;10`}
           return acc
         }, {} as Record<string, number>)
         const totalPorCliente = filtrados.reduce((acc, c) => {
-          const key = c.tipo === 'pessoal' ? labelPessoal : (c.cliente || '—')
+          const key = chaveGrupoComprovante(c)
           acc[key] = (acc[key] || 0) + c.valorTotal
           return acc
         }, {} as Record<string, number>)
@@ -45671,12 +45866,6 @@ A1;Peça exemplo;10`}
             imagemBase64: '',
           })
           setShowFormComp(false)
-        }
-        const handleRemoverComp = (id: string) => {
-          if (!window.confirm((safeT as any)?.confirmarExcluir || 'Remover este comprovante?')) return
-          const atualizados = comprovantesDespesas.filter(c => c.id !== id)
-          setComprovantesDespesas(atualizados)
-          saveData('nonato-comprovantes-despesas', atualizados)
         }
         const tituloRelatorio = (safeT as any)?.comprovantesDespesasTitle || 'COMPROVANTES DE DESPESAS'
         const getMensagemEnvio = (templateId: 1|2|3|4|5): string => {
@@ -45735,7 +45924,7 @@ A1;Peça exemplo;10`}
             modelo: envioForm.templateId,
             tecnicoNome: tecnicoSelecionado?.name || undefined,
             periodo,
-            labelPessoal,
+            labelPessoal: labelGrupoNonato,
             tituloRelatorio
           }
           try {
@@ -45855,9 +46044,25 @@ A1;Peça exemplo;10`}
                 </button>
               </div>
             </div>
-            <p style={{ color: '#aaa', marginBottom: '20px', fontSize: '14px' }}>{(safeT as any)?.comprovantesDespesasDesc || 'Adicione imagens de comprovantes, filtre por mês e cliente, valores unitários e totais por operação.'}</p>
+            <p style={{ color: '#aaa', marginBottom: '20px', fontSize: '14px' }}>
+              {(safeT as any)?.comprovantesDespesasDescPainel ||
+                (safeT as any)?.comprovantesDespesasDesc ||
+                'Clientes ativos e comprovantes visíveis por cliente. Despesas pessoais ficam em NONATO SERVICE. Use os filtros só se tiver dúvidas.'}
+            </p>
+            <details
+              style={{
+                marginBottom: '20px',
+                padding: '14px 16px',
+                backgroundColor: '#1a1a1a',
+                borderRadius: '10px',
+                border: '1px solid rgba(0,255,0,0.15)',
+              }}
+            >
+              <summary style={{ color: '#86efac', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                {(safeT as any)?.comprovantesFiltrosOpcionais || 'Filtros (só se tiver dúvidas)'}
+              </summary>
             {/* Filtros: Ver por Semanal / Mensal */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '24px', padding: '16px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0,255,0,0.2)' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '14px' }}>
               <span style={{ color: '#00ff00', fontSize: '13px', marginRight: '8px' }}>{(safeT as any)?.comprovantesVerPor || 'Ver por'}:</span>
               <button type="button" onClick={() => { setFiltroPeriodoView('semanal'); setFiltroMes(''); }} style={{ padding: '8px 14px', background: filtroPeriodoView === 'semanal' ? 'rgba(0,255,0,0.25)' : '#222', border: '1px solid rgba(0,255,0,0.4)', borderRadius: '6px', color: '#00ff00', cursor: 'pointer', fontWeight: filtroPeriodoView === 'semanal' ? 700 : 400 }}>{(safeT as any)?.comprovantesSemanal || 'Semanal'}</button>
               <button type="button" onClick={() => { setFiltroPeriodoView('mensal'); setFiltroSemana(''); }} style={{ padding: '8px 14px', background: filtroPeriodoView === 'mensal' ? 'rgba(0,255,0,0.25)' : '#222', border: '1px solid rgba(0,255,0,0.4)', borderRadius: '6px', color: '#00ff00', cursor: 'pointer', fontWeight: filtroPeriodoView === 'mensal' ? 700 : 400 }}>{(safeT as any)?.comprovantesMensal || 'Mensal'}</button>
@@ -45891,56 +46096,144 @@ A1;Peça exemplo;10`}
                 </p>
               ) : null}
             </div>
-            {/* Resumo: Total geral + por período + por cliente */}
-            <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#141414', borderRadius: '10px', border: '1px solid rgba(0,255,0,0.25)' }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'center', marginBottom: '16px' }}>
-                {filtroPeriodoView === 'mensal' && filtroMes ? (
-                  <span style={{ color: '#fde68a', fontWeight: 700, fontSize: '18px' }}>
-                    {(safeT as any)?.comprovantesTotalMesDestaque || 'Total do mês selecionado'} ({filtroMes}):{' '}
-                    <strong style={{ color: '#00ff00' }}>{totalGeral.toFixed(2)} €</strong>
-                  </span>
-                ) : (
-                  <span style={{ color: '#00ff00', fontWeight: 700, fontSize: '18px' }}>{(safeT as any)?.comprovantesTotalGeral || 'Total geral'}: {totalGeral.toFixed(2)} €</span>
-                )}
-                {filtroPeriodoView === 'mensal' && Object.entries(totalPorMes).sort((a, b) => b[0].localeCompare(a[0])).map(([mes, tot]) => (
-                  <span key={mes} style={{ color: '#ccc', fontSize: '14px' }}>{(safeT as any)?.comprovantesTotalMes || 'Total do mês'} {mes}: <strong style={{ color: '#00ff00' }}>{tot.toFixed(2)} €</strong></span>
-                ))}
-                {filtroPeriodoView === 'semanal' && Object.entries(totalPorSemana).sort((a, b) => b[0].localeCompare(a[0])).map(([sem, tot]) => (
-                  <span key={sem} style={{ color: '#ccc', fontSize: '14px' }}>{(safeT as any)?.comprovantesSemana || 'Semana'} {sem}: <strong style={{ color: '#00ff00' }}>{tot.toFixed(2)} €</strong></span>
-                ))}
-              </div>
-              <div style={{ borderTop: '1px solid rgba(0,255,0,0.2)', paddingTop: '12px' }}>
-                <div style={{ color: '#00ff00', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>{(safeT as any)?.comprovantesTotalPorCliente || 'Total por cliente'}</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                  {Object.entries(totalPorCliente).sort((a, b) => b[1] - a[1]).map(([nome, tot]) => (
-                    <button
-                      key={nome}
-                      type="button"
-                      onClick={() => setFiltroCliente(filtroCliente === nome ? '' : nome)}
-                      style={{
-                        padding: '8px 12px',
-                        background: filtroCliente === nome ? 'rgba(0,255,0,0.2)' : '#1a1a1a',
-                        border: filtroCliente === nome ? '1px solid #00ff00' : '1px solid rgba(0,255,0,0.25)',
-                        borderRadius: '8px',
-                        color: '#ccc',
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                      }}
-                    >
-                      <div style={{ fontWeight: 600, color: '#fff', marginBottom: '2px' }}>{nome}</div>
-                      <div style={{ color: '#00ff00', fontWeight: 700 }}>{tot.toFixed(2)} €</div>
-                    </button>
-                  ))}
-                </div>
+            </details>
+            {/* Total do período */}
+            <div style={{ marginBottom: '20px', padding: '14px 16px', backgroundColor: '#141414', borderRadius: '10px', border: '1px solid rgba(0,255,0,0.25)' }}>
+              {filtroPeriodoView === 'mensal' && filtroMes ? (
+                <span style={{ color: '#fde68a', fontWeight: 700, fontSize: '18px' }}>
+                  {(safeT as any)?.comprovantesTotalMesDestaque || 'Total do mês selecionado'} ({filtroMes}):{' '}
+                  <strong style={{ color: '#00ff00' }}>{totalGeral.toFixed(2)} €</strong>
+                </span>
+              ) : (
+                <span style={{ color: '#00ff00', fontWeight: 700, fontSize: '18px' }}>
+                  {(safeT as any)?.comprovantesTotalGeral || 'Total geral'}: {totalGeral.toFixed(2)} €
+                </span>
+              )}
+            </div>
+            {/* Painel principal — clientes ativos + comprovantes por cliente / NONATO SERVICE */}
+            <div style={{ marginBottom: '10px' }}>
+              <span style={{ color: '#86efac', fontSize: '15px', fontWeight: 700 }}>
+                {(safeT as any)?.comprovantesListaPorCliente || 'Comprovantes por cliente'}
+              </span>
+              <div style={{ color: '#6b7280', fontSize: '11px', marginTop: '4px', lineHeight: 1.45 }}>
+                {(safeT as any)?.comprovantesListaPorClienteSub ||
+                  'Clientes ativos aparecem primeiro. Despesas pessoais (IRS) ficam em NONATO SERVICE.'}
               </div>
             </div>
-            {/* Lista — agrupada por data (mais recente primeiro) */}
-            <div style={{ marginBottom: '10px' }}>
-              <span style={{ color: '#86efac', fontSize: '13px', fontWeight: 600 }}>
-                {(safeT as any)?.comprovantesListaPorData || 'Lista agrupada por data'}
-              </span>
-              <div style={{ color: '#6b7280', fontSize: '11px', marginTop: '4px', lineHeight: 1.4 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {secoesComprovantesPainel.length === 0 && (
+                <p style={{ color: '#888', textAlign: 'center', padding: '24px' }}>
+                  {(safeT as any)?.comprovantesNenhumComprovante || 'Nenhum comprovante. Clique em "Adicionar comprovante".'}
+                </p>
+              )}
+              {secoesComprovantesPainel.map((secao) => (
+                <div
+                  key={secao.nome}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    padding: '14px',
+                    borderRadius: '12px',
+                    border:
+                      secao.tipo === 'nonato'
+                        ? '1px solid rgba(251, 191, 36, 0.45)'
+                        : secao.ativo
+                          ? '1px solid rgba(34, 197, 94, 0.55)'
+                          : '1px solid rgba(0,255,0,0.2)',
+                    background:
+                      secao.tipo === 'nonato'
+                        ? 'rgba(55, 45, 0, 0.35)'
+                        : secao.ativo
+                          ? 'rgba(0, 55, 28, 0.4)'
+                          : '#161616',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      gap: '10px',
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
+                        <span
+                          style={{
+                            color: secao.tipo === 'nonato' ? '#fde68a' : '#bbf7d0',
+                            fontWeight: 700,
+                            fontSize: '17px',
+                          }}
+                        >
+                          {secao.nome}
+                        </span>
+                        {secao.ativo && secao.origem ? (
+                          <span
+                            style={{
+                              fontSize: '11px',
+                              padding: '2px 8px',
+                              borderRadius: '999px',
+                              background: 'rgba(34,197,94,0.2)',
+                              color: '#86efac',
+                              border: '1px solid rgba(34,197,94,0.45)',
+                            }}
+                          >
+                            {labelOrigemClienteComprovante(secao.origem, safeT as Record<string, string | undefined>)}
+                          </span>
+                        ) : null}
+                        {secao.tipo === 'nonato' ? (
+                          <span
+                            style={{
+                              fontSize: '11px',
+                              padding: '2px 8px',
+                              borderRadius: '999px',
+                              background: 'rgba(251,191,36,0.15)',
+                              color: '#fde68a',
+                              border: '1px solid rgba(251,191,36,0.35)',
+                            }}
+                          >
+                            {(safeT as any)?.comprovantesDespesasPessoaisSub || 'Despesas pessoais / IRS'}
+                          </span>
+                        ) : null}
+                        {secao.tipo === 'outro' ? (
+                          <span style={{ fontSize: '11px', color: '#888' }}>
+                            {(safeT as any)?.comprovantesOutrosClientes || 'Outros clientes'}
+                          </span>
+                        ) : null}
+                      </div>
+                      {secao.ativo && secao.origemDetalhe ? (
+                        <div style={{ color: '#9ca3af', fontSize: '12px', marginTop: '4px' }}>{secao.origemDetalhe}</div>
+                      ) : null}
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ color: '#4ade80', fontWeight: 700, fontSize: '16px' }}>{secao.subtotal.toFixed(2)} €</div>
+                      <div style={{ color: '#9ca3af', fontSize: '12px' }}>
+                        {secao.items.length}{' '}
+                        {secao.items.length === 1
+                          ? (safeT as any)?.comprovantesUmRegisto || 'comprovante'
+                          : (safeT as any)?.comprovantesVariosRegistos || 'comprovantes'}
+                      </div>
+                    </div>
+                  </div>
+                  {secao.items.length === 0 ? (
+                    <p style={{ margin: 0, color: '#888', fontSize: '13px', fontStyle: 'italic', padding: '8px 4px' }}>
+                      {(safeT as any)?.comprovantesNenhumComprovanteCliente || 'Nenhum comprovante registado ainda.'}
+                    </p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>{secao.items.map(renderLinhaComprovante)}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+            {/* Lista por data — consulta opcional */}
+            <details style={{ marginTop: '28px' }}>
+              <summary style={{ color: '#6b7280', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}>
+                {(safeT as any)?.comprovantesListaPorDataOpcional || 'Ver também agrupado por data'}
+              </summary>
+            <div style={{ marginBottom: '10px', marginTop: '12px' }}>
+              <div style={{ color: '#6b7280', fontSize: '11px', lineHeight: 1.4 }}>
                 {(safeT as any)?.comprovantesListaPorDataSub ||
                   'Agrupa pela data do recibo (documento). O filtro «por mês» acima usa o mês de arquivo, que pode ser outro.'}
               </div>
@@ -45957,9 +46250,9 @@ A1;Peça exemplo;10`}
                       alignItems: 'center',
                       gap: '10px',
                       padding: '10px 14px',
-                      background: 'rgba(0, 55, 28, 0.55)',
+                      background: 'rgba(0, 55, 28, 0.35)',
                       borderRadius: '8px',
-                      border: '1px solid rgba(34, 197, 94, 0.45)',
+                      border: '1px solid rgba(34, 197, 94, 0.3)',
                     }}
                   >
                     <span style={{ color: '#bbf7d0', fontWeight: 700, fontSize: '15px' }}>
@@ -45975,43 +46268,21 @@ A1;Peça exemplo;10`}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingLeft: '4px' }}>
                     {grupo.items.map(c => (
-                      <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '14px', backgroundColor: '#222', borderRadius: '10px', border: '1px solid rgba(0,255,0,0.15)' }}>
-                        {c.imagemBase64 ? (
-                          <button
-                            type="button"
-                            onClick={() => setComprovanteImagemAmpliada(c)}
-                            title={(safeT as any)?.comprovantesVerRecibo || 'Ver recibo'}
-                            style={{ padding: 0, border: 'none', background: 'transparent', cursor: 'zoom-in', flexShrink: 0 }}
-                          >
-                            <img src={c.imagemBase64} alt="Recibo" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: '6px', border: '1px solid rgba(0,255,0,0.2)', display: 'block' }} />
-                          </button>
-                        ) : (
-                          <div style={{ width: 60, height: 60, borderRadius: '6px', background: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: '11px' }}>📄</div>
-                        )}
+                      <div key={`data-${c.id}`} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '14px', backgroundColor: '#222', borderRadius: '10px', border: '1px solid rgba(0,255,0,0.15)' }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ color: '#fff', fontWeight: 600 }}>{getClienteOuPessoal(c)}</div>
                           <div style={{ color: '#aaa', fontSize: '13px' }}>
-                            <span style={{ color: '#d1d5db' }}>
-                              {(safeT as any)?.comprovantesDataRecibo || 'Data recibo'}: {c.data}
-                            </span>
-                            {mesCompetenciaKey(c) !== String(c.data || '').trim().slice(0, 7) ? (
-                              <span style={{ marginLeft: '8px', color: '#fde68a', fontSize: '12px' }}>
-                                {(safeT as any)?.comprovantesMesArquivoAbrev || 'Arquivo'}: {mesCompetenciaKey(c)}
-                              </span>
-                            ) : null}
-                            {' · '}
-                            {(safeT as any)?.comprovantesValorUnitario || 'Valor unit.'}: {c.valorUnitario.toFixed(2)} × {c.quantidade} ={' '}
                             <strong style={{ color: '#00ff00' }}>{c.valorTotal.toFixed(2)} €</strong>
+                            {c.descricao ? ` · ${c.descricao}` : ''}
                           </div>
-                          {c.descricao && <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>{c.descricao}</div>}
                         </div>
-                        <button onClick={() => handleRemoverComp(c.id)} style={{ padding: '6px 10px', background: 'rgba(255,68,68,0.2)', border: '1px solid rgba(255,68,68,0.5)', borderRadius: '6px', color: '#ff4444', cursor: 'pointer', fontSize: '12px' }}>{(safeT as any)?.remover || (safeT as any)?.remove || 'Remover'}</button>
                       </div>
                     ))}
                   </div>
                 </div>
               ))}
             </div>
+            </details>
             {/* Modal adicionar */}
             {showFormComp && (
               <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }} onClick={() => setShowFormComp(false)}>
