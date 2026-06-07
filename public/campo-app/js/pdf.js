@@ -5,37 +5,38 @@
   const RS_PDF_CSS = `@page { size: A4 portrait; margin: 10mm; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; background: #fff; font-size: 10px; line-height: 1.45; padding: 10px 12px 16px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.rs-pdf .pdf-header { margin-bottom: 16px; break-inside: avoid; page-break-inside: avoid; break-after: avoid; page-break-after: avoid; }
-.rs-pdf .pdf-header__row { display: flex; align-items: center; gap: 14px; padding: 14px 16px 12px; background: linear-gradient(135deg, #14532d 0%, #166534 42%, #15803d 100%); border-radius: 12px 12px 0 0; color: #fff; }
-.rs-pdf .pdf-header__brand { flex-shrink: 0; min-width: 88px; max-width: 130px; padding: 8px 10px; background: rgba(255,255,255,0.97); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
-.rs-pdf .pdf-header__brand img { max-height: 58px; max-width: 118px; object-fit: contain; display: block; }
-.rs-pdf .pdf-header__logo-text { font-size: 11px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #14532d; text-align: center; line-height: 1.2; }
-.rs-pdf .pdf-header__main { flex: 1; min-width: 0; text-align: center; }
-.rs-pdf .pdf-header__title { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; line-height: 1.25; color: #fff; }
-.rs-pdf .pdf-header__subtitle { margin-top: 4px; font-size: 9px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.88); }
-.rs-pdf .pdf-header__contacts { margin-top: 6px; font-size: 8px; color: rgba(255,255,255,0.82); line-height: 1.35; }
-.rs-pdf .pdf-header__meta { flex-shrink: 0; text-align: center; padding: 8px 12px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.35); border-radius: 10px; min-width: 92px; }
-.rs-pdf .pdf-header__badge-label { display: block; font-size: 7px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.82); margin-bottom: 2px; }
-.rs-pdf .pdf-header__badge-value { display: block; font-size: 13px; font-weight: 800; letter-spacing: 0.04em; color: #fff; }
-.rs-pdf .pdf-header__accent { height: 4px; background: linear-gradient(90deg, #166534 0%, #22c55e 50%, #166534 100%); border-radius: 0 0 10px 10px; }
-.rs-pdf .info-section { margin-bottom: 14px; padding: 14px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fafafa; break-inside: auto; page-break-inside: auto; }
+.rs-pdf .pdf-header { margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid; break-after: avoid; page-break-after: avoid; }
+.rs-pdf .pdf-header__inner { display: flex; align-items: center; gap: 18px; padding: 4px 2px 14px; background: transparent; color: #0f172a; }
+.rs-pdf .pdf-header__brand { flex-shrink: 0; min-width: 96px; max-width: 148px; padding: 4px 6px; display: flex; align-items: center; justify-content: center; }
+.rs-pdf .pdf-header__brand img { max-height: 62px; max-width: 136px; object-fit: contain; display: block; }
+.rs-pdf .pdf-header__logo-text { font-family: Georgia, "Times New Roman", serif; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #1e293b; text-align: center; line-height: 1.3; }
+.rs-pdf .pdf-header__divider-v { width: 1px; align-self: stretch; min-height: 52px; background: linear-gradient(180deg, transparent 0%, #cbd5e1 18%, #94a3b8 50%, #cbd5e1 82%, transparent 100%); flex-shrink: 0; }
+.rs-pdf .pdf-header__main { flex: 1; min-width: 0; text-align: left; padding-left: 2px; }
+.rs-pdf .pdf-header__title { font-family: Georgia, "Times New Roman", serif; font-size: 17px; font-weight: 700; letter-spacing: 0.04em; line-height: 1.22; color: #0f172a; }
+.rs-pdf .pdf-header__subtitle { margin-top: 5px; font-size: 9px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #64748b; }
+.rs-pdf .pdf-header__contacts { margin-top: 6px; font-size: 8px; color: #64748b; line-height: 1.35; }
+.rs-pdf .pdf-header__meta { flex-shrink: 0; text-align: right; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-top: 2px solid #1e3a5f; border-radius: 2px; min-width: 108px; }
+.rs-pdf .pdf-header__badge-label { display: block; font-size: 7px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
+.rs-pdf .pdf-header__badge-value { display: block; font-family: Georgia, "Times New Roman", serif; font-size: 15px; font-weight: 700; letter-spacing: 0.03em; color: #1e3a5f; line-height: 1.15; }
+.rs-pdf .pdf-header__rule { height: 2px; background: linear-gradient(90deg, #1e3a5f 0%, #475569 42%, #a67c52 50%, #475569 58%, #1e3a5f 100%); opacity: 0.85; }
+.rs-pdf .info-section { margin-bottom: 16px; padding: 16px; border: 1px solid #e2e8f0; border-radius: 2px; background: #fff; break-inside: auto; page-break-inside: auto; }
 .rs-pdf .info-section:not(:has(table)) { break-inside: avoid; page-break-inside: avoid; }
 .rs-pdf .header { break-inside: avoid; page-break-inside: avoid; break-after: avoid; page-break-after: avoid; }
-.rs-pdf .info-section h3 { font-size: 9px; margin: -14px -14px 12px; padding: 10px 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #14532d; background: #ecfdf5; border-left: 4px solid #166534; border-radius: 10px 10px 0 0; }
-.rs-pdf .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 14px; }
-.rs-pdf .info-label { font-weight: 700; color: #334155; }
+.rs-pdf .info-section h3 { font-family: Georgia, "Times New Roman", serif; font-size: 10px; margin: 0 0 14px; padding: 0 0 8px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #1e293b; border-bottom: 1px solid #cbd5e1; background: transparent; }
+.rs-pdf .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 18px; }
+.rs-pdf .info-label { font-weight: 600; color: #64748b; }
 .rs-pdf table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 0.92em; }
-.rs-pdf th, .rs-pdf td { border: 1px solid #e2e8f0; padding: 5px 4px; text-align: center; vertical-align: middle; }
-.rs-pdf th { background: #166534; color: #fff; font-weight: 700; font-size: 0.85em; }
+.rs-pdf th, .rs-pdf td { border: 1px solid #e2e8f0; padding: 6px 5px; text-align: center; vertical-align: middle; }
+.rs-pdf th { background: #1e293b; color: #f8fafc; font-weight: 600; font-size: 0.82em; letter-spacing: 0.04em; text-transform: uppercase; }
 .rs-pdf tbody tr:nth-child(even) td { background: #f8fafc; }
-.rs-pdf .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0; }
-.rs-pdf .summary-card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 8px; text-align: center; background: #fff; }
-.rs-pdf .summary-card h4 { font-size: 0.85em; margin-bottom: 6px; font-weight: 700; color: #334155; }
-.rs-pdf .summary-card .value { font-size: 1.15em; font-weight: 800; color: #14532d; }
-.rs-pdf .obs { margin-top: 12px; padding: 10px; background: #f8fafc; border-left: 3px solid #166534; border-radius: 0 6px 6px 0; white-space: pre-wrap; }
+.rs-pdf .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0; }
+.rs-pdf .summary-card { border: 1px solid #e2e8f0; border-top: 2px solid #1e3a5f; border-radius: 2px; padding: 12px 8px; text-align: center; background: #fff; }
+.rs-pdf .summary-card h4 { font-size: 0.78em; margin-bottom: 8px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; }
+.rs-pdf .summary-card .value { font-family: Georgia, "Times New Roman", serif; font-size: 1.15em; font-weight: 700; color: #1e3a5f; }
+.rs-pdf .obs { margin-top: 12px; padding: 12px 14px; background: #fafafa; border-left: 3px solid #1e3a5f; border-radius: 0 2px 2px 0; white-space: pre-wrap; color: #334155; }
 .rs-pdf .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; page-break-inside: avoid; }
 .rs-pdf .sig-block { text-align: center; padding-top: 8px; border-top: 1px solid #cbd5e1; }
-.rs-pdf .sig-block h4 { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #14532d; margin-bottom: 8px; letter-spacing: 0.06em; }
+.rs-pdf .sig-block h4 { font-family: Georgia, "Times New Roman", serif; font-size: 9px; font-weight: 700; text-transform: uppercase; color: #1e293b; margin-bottom: 8px; letter-spacing: 0.08em; }
 .rs-pdf .sig-block img { max-width: 240px; max-height: 90px; object-fit: contain; display: block; margin: 0 auto 6px; border-bottom: 1px solid #000; padding-bottom: 4px; background: #fff; }
 .rs-pdf .sig-line { width: 240px; height: 70px; border-bottom: 2px solid #000; margin: 0 auto 6px; }
 .rs-pdf .sig-name { font-size: 9px; font-weight: 700; color: #334155; }
@@ -132,19 +133,20 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatório ${U.esc(relatorio.numero)}</title><style>${RS_PDF_CSS}</style></head>
     <body class="rs-pdf">
       <div class="pdf-header">
-        <div class="pdf-header__row">
+        <div class="pdf-header__inner">
           <div class="pdf-header__brand">${logoHtml(logo, nomeEmpresa)}</div>
+          <div class="pdf-header__divider-v"></div>
           <div class="pdf-header__main">
-            <div class="pdf-header__title">RELATÓRIO DE SERVIÇO — ASSISTÊNCIA TÉCNICA</div>
-            <div class="pdf-header__subtitle">${U.esc(nomeEmpresa || "Nonato Service")}</div>
+            <div class="pdf-header__title">Relatório de Serviço</div>
+            <div class="pdf-header__subtitle">${U.esc(nomeEmpresa || "Nonato Service")} · Assistência Técnica</div>
             ${headerContactsHtml(enderecoEmpresa, telefoneEmpresa, "pdf-header__contacts")}
           </div>
           <div class="pdf-header__meta">
-            <span class="pdf-header__badge-label">Nº Relatório</span>
+            <span class="pdf-header__badge-label">Relatório n.º</span>
             <span class="pdf-header__badge-value">${U.esc(relatorio.numero)}</span>
           </div>
         </div>
-        <div class="pdf-header__accent"></div>
+        <div class="pdf-header__rule"></div>
       </div>
       <div class="info-section"><h3>DADOS DO CLIENTE E EQUIPAMENTO</h3><div class="info-grid">
         <div><span class="info-label">Técnico:</span> ${U.esc(relatorio.tecnico)}</div>

@@ -17085,20 +17085,23 @@ export default function Dashboard() {
               border-radius: 5px;
             }
             .info-card {
-              background: #f8f9fa;
-              border-left: 4px solid #808080;
+              background: #f8fafc;
+              border-left: 3px solid #1e3a5f;
               padding: 15px;
               margin-bottom: 15px;
-              border-radius: 5px;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+              border-radius: 2px;
+              box-shadow: none;
             }
             .info-card h3 {
+              font-family: Georgia, "Times New Roman", serif;
               font-size: 12px;
               margin-bottom: 12px;
-              color: #666666;
-              font-weight: 600;
+              color: #1e293b;
+              font-weight: 700;
               text-transform: uppercase;
-              letter-spacing: 1px;
+              letter-spacing: 0.1em;
+              border-bottom: 1px solid #e2e8f0;
+              padding-bottom: 8px;
             }
             .info-grid-modern {
               display: grid;
@@ -17115,7 +17118,7 @@ export default function Dashboard() {
             }
             .info-label-modern {
               font-weight: 600;
-              color: #666666;
+              color: #64748b;
               min-width: 100px;
             }
             .table-modern {
@@ -17124,15 +17127,16 @@ export default function Dashboard() {
               margin-bottom: 20px;
               font-size: 9px;
               background: #fff;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             }
             .table-modern th {
-              background: linear-gradient(135deg, #808080 0%, #666666 100%);
-              color: #fff;
+              background: #1e293b;
+              color: #f8fafc;
               padding: 10px 5px;
               text-align: center;
               font-weight: 600;
-              border: 1px solid #666666;
+              border: 1px solid #334155;
+              letter-spacing: 0.04em;
+              text-transform: uppercase;
             }
             .table-modern td {
               border: 1px solid #e0e0e0;
@@ -17149,34 +17153,40 @@ export default function Dashboard() {
               margin: 20px 0;
             }
             .summary-card-modern {
-              background: linear-gradient(135deg, #808080 0%, #666666 100%);
-              color: #fff;
+              background: #fff;
+              color: #1e293b;
               padding: 15px;
               text-align: center;
-              border-radius: 8px;
-              box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+              border-radius: 2px;
+              border: 1px solid #e2e8f0;
+              border-top: 2px solid #1e3a5f;
             }
             .summary-card-modern h4 {
               font-size: 10px;
               margin-bottom: 8px;
               font-weight: 600;
               text-transform: uppercase;
+              color: #64748b;
+              letter-spacing: 0.06em;
             }
             .summary-card-modern .value {
+              font-family: Georgia, "Times New Roman", serif;
               font-size: 24px;
-              font-weight: bold;
+              font-weight: 700;
+              color: #1e3a5f;
             }
             .checkbox-modern {
               width: 14px;
               height: 14px;
-              border: 2px solid #666666;
+              border: 2px solid #94a3b8;
               display: inline-block;
-              border-radius: 3px;
+              border-radius: 2px;
               margin-right: 8px;
               vertical-align: middle;
             }
             .checkbox-modern.checked {
-              background: #808080;
+              background: #1e293b;
+              border-color: #1e293b;
               position: relative;
             }
             .checkbox-modern.checked::after {
@@ -17206,16 +17216,18 @@ export default function Dashboard() {
             .observacoes-modern {
               margin-top: 20px;
               padding: 15px;
-              background: #f8f9fa;
-              border-left: 4px solid #808080;
-              border-radius: 5px;
+              background: #fafafa;
+              border-left: 3px solid #1e3a5f;
+              border-radius: 0 2px 2px 0;
             }
             .observacoes-modern h4 {
+              font-family: Georgia, "Times New Roman", serif;
               font-size: 11px;
               margin-bottom: 10px;
-              font-weight: 600;
-              color: #666666;
+              font-weight: 700;
+              color: #1e293b;
               text-transform: uppercase;
+              letter-spacing: 0.08em;
             }
             .observacoes-modern p {
               font-size: 10px;
@@ -17231,7 +17243,7 @@ export default function Dashboard() {
           </style>
         </head>
         <body>
-          ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
+          ${buildPdfHeaderForRelatorio(relatorio, 'detailed')}
 
           <div class="info-card">
             <h3>${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</h3>
@@ -17457,7 +17469,7 @@ export default function Dashboard() {
               font-weight: 300;
               letter-spacing: 8px;
               margin-bottom: 10px;
-              color: #00ff00;
+              color: #1e293b;
             }
             .header-minimal .logo img { max-height: 48px; max-width: 140px; object-fit: contain; display: block; margin: 0 auto 10px; }
             .header-minimal .title {
@@ -17603,7 +17615,7 @@ export default function Dashboard() {
           </style>
         </head>
         <body>
-          ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
+          ${buildPdfHeaderForRelatorio(relatorio, 'compact')}
 
           <div class="section-minimal">
             <div class="section-title">${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</div>
@@ -18239,14 +18251,15 @@ export default function Dashboard() {
               margin-bottom: 25px;
             }
             .section-title-executivo {
+              font-family: Georgia, "Times New Roman", serif;
               font-size: 12px;
               font-weight: 600;
-              color: #00ff00;
+              color: #1e293b;
               margin-bottom: 15px;
               text-transform: uppercase;
-              letter-spacing: 2px;
+              letter-spacing: 0.12em;
               padding-bottom: 8px;
-              border-bottom: 2px solid #ecf0f1;
+              border-bottom: 1px solid #cbd5e1;
             }
             .info-table-executivo {
               width: 100%;
@@ -18374,7 +18387,7 @@ export default function Dashboard() {
           </style>
         </head>
         <body>
-          ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
+          ${buildPdfHeaderForRelatorio(relatorio, 'detailed')}
 
           <div class="section-executivo">
             <div class="section-title-executivo">${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</div>
@@ -19647,18 +19660,18 @@ export default function Dashboard() {
         ${RELATORIO_SERVICO_PDF_HEADER_CSS}
         @page{size:A4;margin:15mm}*{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#1a1a1a;background:#fff;padding:20px;line-height:1.5}
-        .report-section{margin-bottom:18px;padding:14px;background:#f8fafc;border-left:4px solid #0066aa;border-radius:4px}
-        .report-section h3{font-size:11px;margin-bottom:10px;color:#0066aa;text-transform:uppercase}
+        .report-section{margin-bottom:18px;padding:14px;background:#f8fafc;border-left:3px solid #1e3a5f;border-radius:2px}
+        .report-section h3{font-family:Georgia,serif;font-size:11px;margin-bottom:10px;color:#1e293b;text-transform:uppercase;letter-spacing:0.1em;border-bottom:1px solid #e2e8f0;padding-bottom:8px}
         table{width:100%;border-collapse:collapse;font-size:10px}
-        th,td{border:1px solid #ddd;padding:8px;text-align:left}
-        th{background:#0066aa;color:#fff;font-weight:600}
-        .report-summary{display:flex;gap:20px;margin-top:12px;font-size:11px;font-weight:500}
+        th,td{border:1px solid #e2e8f0;padding:8px;text-align:left}
+        th{background:#1e293b;color:#f8fafc;font-weight:600}
+        .report-summary{display:flex;gap:20px;margin-top:12px;font-size:11px;font-weight:500;color:#1e3a5f}
         .report-resultados{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;font-size:10px}
-        .chk{width:14px;height:14px;border:2px solid #0066aa;display:inline-block;margin-right:8px;vertical-align:middle}
-        .chk.checked{background:#0066aa}
+        .chk{width:14px;height:14px;border:2px solid #94a3b8;display:inline-block;margin-right:8px;vertical-align:middle;border-radius:2px}
+        .chk.checked{background:#1e293b;border-color:#1e293b}
         @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
       </style></head><body>
-        ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
+        ${buildPdfHeaderForRelatorio(relatorio, 'detailed')}
         <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS'}</h3>
           <p><strong>${t.tecnico || 'Técnico'}:</strong> ${relatorio.tecnico || '-'} &nbsp;|&nbsp; <strong>${t.data || 'Data'}:</strong> ${dataFormatada} &nbsp;|&nbsp; <strong>${t.cliente || 'Cliente'}:</strong> ${relatorio.cliente || '-'}</p>
           <p><strong>${t.maquinaModelo || 'Máquina'}:</strong> ${relatorio.maquinaModelo || '-'} &nbsp;|&nbsp; <strong>${t.numeroMaquina || 'Nº'}:</strong> ${relatorio.numeroMaquina || '-'} &nbsp;|&nbsp; <strong>${t.tipoServico || 'Tipo'}:</strong> ${relatorio.tipoServico || '-'}</p>
@@ -19696,7 +19709,7 @@ export default function Dashboard() {
         .chk{width:12px;height:12px;border:1px solid #333;display:inline-block;margin-right:6px;vertical-align:middle}.chk.checked{background:#000}
         @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
       </style></head><body>
-        ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
+        ${buildPdfHeaderForRelatorio(relatorio, 'compact')}
         <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS'}</h3>
           <div class="row-res"><span>${t.tecnico}: ${relatorio.tecnico || '-'}</span><span>${t.cliente}: ${relatorio.cliente || '-'}</span><span>${t.maquinaModelo}: ${relatorio.maquinaModelo || '-'}</span><span>${t.tipoServico}: ${relatorio.tipoServico || '-'}</span><span>${t.telefone}: ${relatorio.telefone || '-'}</span></div>
         </div>
@@ -19722,12 +19735,12 @@ export default function Dashboard() {
         ${RELATORIO_SERVICO_PDF_HEADER_CSS}
         @page{size:A4;margin:15mm}*{margin:0;padding:0;box-sizing:border-box}
         body{font-family:Arial,sans-serif;font-size:11px;color:#222;background:#fff;padding:18px}
-        .report-section{margin-bottom:16px;padding:12px;background:#f0fff4;border:1px solid #00aa55;border-radius:6px}
-        .report-section h3{font-size:11px;margin-bottom:10px;color:#006633;font-weight:700}
-        table{width:100%;border-collapse:collapse;font-size:10px}th,td{border:1px solid #00aa55;padding:8px}
-        th{background:#00aa55;color:#fff}.report-summary{display:flex;gap:18px;margin-top:10px;color:#006633;font-weight:600}
+        .report-section{margin-bottom:16px;padding:14px;background:#f8fafc;border:1px solid #e2e8f0;border-top:2px solid #1e3a5f;border-radius:2px}
+        .report-section h3{font-family:Georgia,serif;font-size:11px;margin-bottom:10px;color:#1e293b;font-weight:700;letter-spacing:0.08em;text-transform:uppercase}
+        table{width:100%;border-collapse:collapse;font-size:10px}th,td{border:1px solid #e2e8f0;padding:8px}
+        th{background:#1e293b;color:#f8fafc}.report-summary{display:flex;gap:18px;margin-top:10px;color:#1e3a5f;font-weight:600}
         .report-resultados{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:10px}
-        .chk{width:14px;height:14px;border:2px solid #00aa55;display:inline-block;margin-right:6px;vertical-align:middle;border-radius:2px}.chk.checked{background:#00aa55}
+        .chk{width:14px;height:14px;border:2px solid #94a3b8;display:inline-block;margin-right:6px;vertical-align:middle;border-radius:2px}.chk.checked{background:#1e293b;border-color:#1e293b}
         @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
       </style></head><body>
         ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
@@ -19764,7 +19777,7 @@ export default function Dashboard() {
         .chk{width:14px;height:14px;border:2px solid #000;display:inline-block;margin-right:8px;vertical-align:middle}.chk.checked{background:#000}
         @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
       </style></head><body>
-        ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
+        ${buildPdfHeaderForRelatorio(relatorio, 'detailed')}
         <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</h3>
           <p><strong>${t.tecnico}:</strong> ${relatorio.tecnico || '-'}. <strong>${t.cliente}:</strong> ${relatorio.cliente || '-'}. <strong>${t.maquinaModelo}:</strong> ${relatorio.maquinaModelo || '-'}. <strong>${t.numeroMaquina}:</strong> ${relatorio.numeroMaquina || '-'}.</p>
           <p><strong>${t.tipoServico}:</strong> ${relatorio.tipoServico || '-'}. <strong>${t.cidade}:</strong> ${relatorio.cidade || '-'}. <strong>${t.telefone}:</strong> ${relatorio.telefone || '-'}.</p>
@@ -19800,7 +19813,7 @@ export default function Dashboard() {
         .report-resultados ul.lis .chk{width:12px;height:12px;border:1px solid #333;display:inline-block;margin-right:8px;vertical-align:middle}.chk.checked{background:#333}
         @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
       </style></head><body>
-        ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
+        ${buildPdfHeaderForRelatorio(relatorio, 'compact')}
         <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS'}</h3>
           <ul class="lis"><li><span class="l">${t.tecnico}</span><span class="v">${relatorio.tecnico || '-'}</span></li><li><span class="l">${t.data}</span><span class="v">${dataFormatada}</span></li><li><span class="l">${t.cliente}</span><span class="v">${relatorio.cliente || '-'}</span></li><li><span class="l">${t.maquinaModelo}</span><span class="v">${relatorio.maquinaModelo || '-'}</span></li><li><span class="l">${t.numeroMaquina}</span><span class="v">${relatorio.numeroMaquina || '-'}</span></li><li><span class="l">${t.tipoServico}</span><span class="v">${relatorio.tipoServico || '-'}</span></li><li><span class="l">${t.telefone}</span><span class="v">${relatorio.telefone || '-'}</span></li></ul>
         </div>
