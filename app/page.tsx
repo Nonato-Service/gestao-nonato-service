@@ -52,6 +52,7 @@ import { PagamentosContadorContent } from './components/PagamentosContadorConten
 import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 import { GestaoDemosContent } from './components/GestaoDemosContent'
+import { AdministradorContent } from './components/admin/AdministradorContent'
 import { OrcamentoServicoTecnicoContent } from './components/OrcamentoServicoTecnicoContent'
 import { NonatoBrandLogo } from './components/NonatoBrandLogo'
 import {
@@ -26675,1934 +26676,187 @@ const nextF = familias.filter(x => x !== f)
       
       case 'administrador':
         return (
-          <div className="admin-shell">
-            {/* Cabeçalho */}
-            <div className="admin-hero">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                  <LogoComponent size="small" />
-                </div>
-                <div style={{ textAlign: 'center', flex: 1 }}>
-                  <h1 className="admin-hero-title">
-                    {safeT?.administrador || 'ADMINISTRADOR'}
-                  </h1>
-                  <p className="admin-hero-sub">
-                    {safeT?.configuracoesSistema || 'Configurações do Sistema'}
-                  </p>
-                </div>
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <button 
-                    onClick={() => closeTab(activeTabId || '')}
-                    style={{ 
-                      padding: '6px 8px', 
-                      fontSize: '16px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 255, 0, 0.3)',
-                      borderRadius: '4px',
-                      color: '#00ff00',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '32px',
-                      height: '32px'
-                    }}
-                    title={safeT?.voltar || 'Voltar'}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.1)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.5)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.3)'
-                    }}
-                  >
-                    ↶
-                  </button>
-                  <button 
-                    onClick={voltarPaginaInicial}
-                    style={{ 
-                      padding: '6px 8px', 
-                      fontSize: '16px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid rgba(0, 150, 255, 0.3)',
-                      borderRadius: '4px',
-                      color: '#66b3ff',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '32px',
-                      height: '32px'
-                    }}
-                    title={safeT?.paginaInicial || 'Página Inicial'}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.1)'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.5)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.3)'
-                    }}
-                  >
-                    🏠
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="admin-panels-overview">
-              <p className="admin-panels-overview__title">{safeT?.adminPanelIndexTitle || 'Áreas do administrador'}</p>
-              <p className="admin-panels-overview__lead">
-                {safeT?.adminPanelIndexLead ||
-                  'Todas as secções estão fechadas por defeito. Use os atalhos abaixo ou o título de cada bloco para expandir só o que precisa.'}
-              </p>
-              <div className="admin-panels-grid">
-                <button
-                  type="button"
-                  className="admin-panel-jump"
-                  onClick={() => {
-                    const el = document.getElementById('admin-detail-sync') as HTMLDetailsElement | null
-                    if (el) {
-                      el.open = true
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                >
-                  <span className="admin-panel-jump__k">01</span>
-                  <span className="admin-panel-jump__t">{(safeT as any)?.syncAdminSectionTitle || 'Sincronização'}</span>
-                  <span className="admin-panel-jump__d">{safeT?.syncAdminJumpHint || 'Servidor e outros aparelhos'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="admin-panel-jump"
-                  onClick={() => {
-                    const el = document.getElementById('admin-detail-demos') as HTMLDetailsElement | null
-                    if (el) {
-                      el.open = true
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                >
-                  <span className="admin-panel-jump__k">02</span>
-                  <span className="admin-panel-jump__t">{safeT?.adminJumpDemosTitle || 'Demonstrações'}</span>
-                  <span className="admin-panel-jump__d">{safeT?.adminJumpDemosDesc || 'Links, destinatários e prazos'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="admin-panel-jump"
-                  onClick={() => {
-                    const el = document.getElementById('admin-detail-geral') as HTMLDetailsElement | null
-                    if (el) {
-                      el.open = true
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                >
-                  <span className="admin-panel-jump__k">03</span>
-                  <span className="admin-panel-jump__t">{safeT?.configuracoesGerais || 'Configurações gerais'}</span>
-                  <span className="admin-panel-jump__d">{safeT?.adminJumpGeralDesc || 'Relatórios, logos e PDFs'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="admin-panel-jump"
-                  onClick={() => {
-                    const el = document.getElementById('admin-detail-users') as HTMLDetailsElement | null
-                    if (el) {
-                      el.open = true
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                >
-                  <span className="admin-panel-jump__k">04</span>
-                  <span className="admin-panel-jump__t">{safeT?.userManagement || 'Utilizadores'}</span>
-                  <span className="admin-panel-jump__d">{safeT?.adminJumpUsersDesc || 'Contas e permissões'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="admin-panel-jump"
-                  onClick={() => {
-                    const el = document.getElementById('admin-detail-prioritario') as HTMLDetailsElement | null
-                    if (el) {
-                      el.open = true
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                >
-                  <span className="admin-panel-jump__k">05</span>
-                  <span className="admin-panel-jump__t">{safeT?.clientePrioritarioTitle || 'Cliente prioritário'}</span>
-                  <span className="admin-panel-jump__d">{safeT?.adminJumpClienteDesc || 'Dados em destaque no sistema'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="admin-panel-jump"
-                  onClick={() => {
-                    const el = document.getElementById('admin-detail-sidebar') as HTMLDetailsElement | null
-                    if (el) {
-                      el.open = true
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                >
-                  <span className="admin-panel-jump__k">06</span>
-                  <span className="admin-panel-jump__t">{safeT?.adminJumpSidebarTitle || 'Menu lateral'}</span>
-                  <span className="admin-panel-jump__d">{safeT?.adminJumpSidebarDesc || 'Ordem e botões da barra'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="admin-panel-jump"
-                  onClick={() => {
-                    window.open('/papel-timbrado', '_blank', 'noopener,noreferrer')
-                  }}
-                >
-                  <span className="admin-panel-jump__k">07</span>
-                  <span className="admin-panel-jump__t">{(safeT as any)?.adminJumpPapelTimbradoTitle || 'Papel timbrado'}</span>
-                  <span className="admin-panel-jump__d">{(safeT as any)?.adminJumpPapelTimbradoDesc || 'Modelo A4 com logo e contactos'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="admin-panel-jump"
-                  onClick={() => {
-                    const el = document.getElementById('admin-detail-passwords') as HTMLDetailsElement | null
-                    if (el) {
-                      el.open = true
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                >
-                  <span className="admin-panel-jump__k">08</span>
-                  <span className="admin-panel-jump__t">{safeT?.passwordManagerTitle || 'Gestor de senhas'}</span>
-                  <span className="admin-panel-jump__d">{safeT?.adminJumpPasswordsDesc || 'Senhas de técnicos / checklist'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="admin-panel-jump"
-                  onClick={() => {
-                    const el = document.getElementById('admin-backup-seguranca') as HTMLDetailsElement | null
-                    if (el) {
-                      el.open = true
-                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }
-                  }}
-                >
-                  <span className="admin-panel-jump__k">09</span>
-                  <span className="admin-panel-jump__t">{safeT?.backupRestore || 'Backup e segurança'}</span>
-                  <span className="admin-panel-jump__d">{safeT?.adminJumpBackupDesc || 'Código, ZIP e restauração'}</span>
-                </button>
-              </div>
-            </div>
-
-            <details id="admin-detail-sync" className="admin-disclosure admin-disclosure--sync">
-              <summary>
-                <span className="admin-disclosure__icon" aria-hidden>⟳</span>
-                <span className="admin-disclosure__meta">
-                  <span className="admin-disclosure__title">{(safeT as any)?.syncAdminSectionTitle || 'Sincronização entre aparelhos'}</span>
-                  <span className="admin-disclosure__sub">
-                    {(safeT as any)?.syncAdminSectionHintNew ||
-                      (safeT as any)?.syncAdminSectionHint ||
-                      'Aviso automático com resumo quando o servidor foi atualizado noutro aparelho.'}
-                  </span>
-                </span>
-                <span className="admin-disclosure__chev" aria-hidden>▼</span>
-              </summary>
-              <div className="admin-disclosure__body">
-                <div id="admin-sync-multi" className="admin-sync-card" style={{ marginBottom: 0 }}>
-                  {syncPendingRemote ? (
-                    <>
-                      <p style={{ fontSize: '12px', color: '#ddaa66', margin: '0 0 8px', padding: '8px 10px', background: 'rgba(255,170,0,0.08)', borderRadius: '6px', border: '1px solid rgba(255,170,0,0.25)' }}>
-                        {(safeT as any)?.syncAdminPendingNote || 'Há dados no servidor mais recentes do que os que este aparelho aceitou.'}{' '}
-                        <span style={{ opacity: 0.9 }}>
-                          ({(safeT as any)?.syncRevisionLabel || 'revisão'} {syncPendingRemote.revision})
-                        </span>
-                      </p>
-                      <ul style={{ fontSize: '11px', color: '#bbb', margin: '0 0 12px', paddingLeft: '18px', lineHeight: 1.45, maxHeight: '160px', overflowY: 'auto' }}>
-                        {syncPendingRemote.summaryLines.map((line, i) => (
-                          <li key={i} style={{ marginBottom: '4px' }}>{line.startsWith('•') ? line.slice(1).trim() : line}</li>
-                        ))}
-                      </ul>
-                      <button
-                        type="button"
-                        className="btn-primary"
-                        onClick={() => {
-                          setSyncDecisionModalOpen(true)
-                        }}
-                        style={{ padding: '8px 14px', fontSize: '12px', fontWeight: 600 }}
-                      >
-                        {(safeT as any)?.syncReopenModal || 'Abrir aviso de sincronização'}
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <p style={{ fontSize: '12px', color: '#666', margin: '0 0 10px' }}>
-                        {(safeT as any)?.syncAdminNoPending || 'Neste momento não há diferença de revisão pendente de decisão.'}
-                      </p>
-                      <p style={{ fontSize: '11px', color: '#999', margin: '0 0 10px', lineHeight: 1.45 }}>
-                        {(safeT as any)?.syncAdminManualPullHint ||
-                          'Se o PC tem os dados certos mas aqui parece desatualizado (revisão local «à frente» do servidor), use primeiro o botão abaixo — não use «Enviar tudo» a partir de um aparelho vazio ou velho.'}
-                      </p>
-                      <button
-                        type="button"
-                        className="btn-primary"
-                        style={{
-                          padding: '8px 14px',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          marginBottom: '12px',
-                          borderColor: 'rgba(255, 170, 80, 0.55)',
-                          backgroundColor: 'rgba(255, 140, 40, 0.18)',
-                          color: '#ffddaa',
-                        }}
-                        onClick={() => {
-                          const msg =
-                            (safeT as any)?.syncAdminManualPullConfirm ||
-                            'Recarregar a partir do servidor como no aviso laranja? A revisão local é reposta e a página recarrega (rascunhos seguros mantêm-se conforme o sistema já fazia).'
-                          if (!window.confirm(msg)) return
-                          setLastAcceptedRevision(0)
-                          try {
-                            localStorage.setItem('nonato-sync-last-accepted-revision', '0')
-                          } catch {
-                            /* ignorar */
-                          }
-                          try {
-                            sessionStorage.setItem('nonato-sync-full-server-apply', '1')
-                            localStorage.setItem(NONATO_PENDING_FULL_SERVER_REPLACE_LS, '1')
-                          } catch {
-                            /* ignorar */
-                          }
-                          window.location.reload()
-                        }}
-                      >
-                        {(safeT as any)?.syncLoadFromServer || 'Carregar do servidor'}
-                        {' — '}
-                        {(safeT as any)?.syncAdminManualPullShort || 'forçar alinhamento'}
-                      </button>
-                    </>
-                  )}
-                  <div
-                    className="admin-sync-force-block"
-                    style={{
-                      marginTop: 14,
-                      paddingTop: 12,
-                      borderTop: '1px solid rgba(100, 180, 100, 0.25)',
-                    }}
-                  >
-                    <p style={{ fontSize: '12px', color: '#7cb87c', margin: '0 0 6px' }}>
-                      {(safeT as any)?.syncAdminForcePushIntro ||
-                        'Só use isto se o dado certo está NESTE aparelho e o servidor não recebeu (rede). Se o dado certo está no PC, não envie a partir do telemóvel vazio — use «Carregar do servidor» acima.'}
-                    </p>
-                    <button
-                      type="button"
-                      className="btn-primary"
-                      disabled={syncPushLoading}
-                      onClick={() => {
-                        void enviarEsteAparelhoParaServidor()
-                      }}
-                      style={{ padding: '8px 14px', fontSize: '12px', fontWeight: 600 }}
-                    >
-                      {syncPushLoading
-                        ? (safeT as any)?.syncPushSending || 'A enviar…'
-                        : (safeT as any)?.syncAdminForcePush || 'Enviar tudo o que está neste aparelho para o servidor'}
-                    </button>
-                    <p style={{ fontSize: '10px', color: '#666', margin: '8px 0 0', lineHeight: 1.45 }}>
-                      {(safeT as any)?.syncAdminForcePushHint ||
-                        'Confirmação pedida. Se o outro aparelho tem o que o servidor ainda não tem, faça o envio a partir desse aparelho, não a partir de um vazio (senão piora a divergência).'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </details>
-
-            <details id="admin-detail-demos" className="admin-disclosure admin-disclosure--cyan">
-              <summary>
-                <span className="admin-disclosure__icon" aria-hidden>📤</span>
-                <span className="admin-disclosure__meta">
-                  <span className="admin-disclosure__title">{safeT?.adminDemosSummaryTitle || 'Gestão de envio de demonstrações'}</span>
-                  <span className="admin-disclosure__sub">
-                    {safeT?.adminDemosSummarySub || 'Destinatários, pacotes de módulos e cópia de links com identificação.'}
-                  </span>
-                </span>
-                <span className="admin-disclosure__chev" aria-hidden>▼</span>
-              </summary>
-              <div className="admin-disclosure__body">
-            <GestaoDemosContent
-              variant="embedded"
-              saveData={saveData}
-              loadData={loadData}
-              onOpenFullTab={() => openTab('gestao-demos', getTabTitle('gestao-demos'))}
-            />
-              </div>
-            </details>
-
-            <details id="admin-detail-geral" className="admin-disclosure admin-disclosure--violet">
-              <summary>
-                <span className="admin-disclosure__icon" aria-hidden>⚙️</span>
-                <span className="admin-disclosure__meta">
-                  <span className="admin-disclosure__title">{safeT?.configuracoesGerais || 'Configurações gerais'}</span>
-                  <span className="admin-disclosure__sub">
-                    {safeT?.adminGeralSummarySub || 'Contador de relatórios, logos na interface, identidade da marca e logos nos PDFs.'}
-                  </span>
-                </span>
-                <span className="admin-disclosure__chev" aria-hidden>▼</span>
-              </summary>
-              <div className="admin-disclosure__body">
-            <div className="admin-section admin-section--violet">
-              
-              {/* Numeração automática dos relatórios de serviço (AAAAMMDD-NNN) */}
-              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.3)' }}>
-                <h4 style={{ color: '#00ff00', marginBottom: '15px', fontSize: '16px' }}>
-                  {safeT?.configuracaoRelatorios || 'CONFIGURAÇÃO DE RELATÓRIOS'}
-                </h4>
-                <div style={{ padding: '12px 14px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                  <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.88)', margin: '0 0 10px', lineHeight: 1.45 }}>
-                    {(safeT as any)?.numeracaoRelatoriosAutoTitle || 'Numeração automática dos relatórios de serviço'}
-                  </p>
-                  <p style={{ fontSize: '12px', opacity: 0.72, margin: '0 0 12px', lineHeight: 1.45 }}>
-                    {safeT?.contadorRelatoriosDesc ||
-                      'Formato: AAAAMMDD-NNN (ano, mês, dia, hífen, ordem do dia). O mesmo dia com vários clientes fica 001, 002, 003… sem confundir com o mês.'}
-                  </p>
-                  <p style={{ fontSize: '12px', marginBottom: '6px', opacity: 0.8 }}>
-                    {(safeT as any)?.preverNumeroRelatorioHojeLabel || 'Próximo número sugerido para a data de hoje'}
-                  </p>
-                  <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#00ff00', margin: 0, letterSpacing: '0.02em' }}>
-                    {preverProximoNumeroRelatorio(new Date().toISOString().split('T')[0])}
-                  </p>
-                </div>
-              </div>
-
-                {/* Logos na interface (barra lateral + painel) — grelha padronizada */}
-                <div style={{ marginTop: '22px', padding: '18px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.25)' }}>
-                  <h4 style={{ color: '#00ff00', margin: '0 0 6px 0', fontSize: '15px', letterSpacing: '0.04em' }}>
-                    {(safeT as any)?.adminLogosInterfaceTitle || 'Logos na interface'}
-                  </h4>
-                  <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '12px', margin: '0 0 16px 0', lineHeight: 1.5 }}>
-                    {(safeT as any)?.adminLogosInterfaceDesc || 'Imagem ou vídeo MP4 para o menu lateral e para o ecrã inicial. A pré-visualização mostra o que está ativo em cada fase.'}
-                  </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
-                    <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
-                        <div>
-                          <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>UI · 01</span>
-                          <strong style={{ display: 'block', marginTop: '4px', fontSize: '14px', color: '#fff' }}>{(safeT as any)?.logoBarraLateral || 'Logo da barra lateral'}</strong>
-                          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)' }}>{safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece no menu lateral.'}</span>
-                        </div>
-                        <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '6px 12px', fontSize: '12px', flexShrink: 0 }}>
-                          {safeT?.changeLogo || 'Alterar'}
-                          <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeSidebarLogo} style={{ display: 'none' }} />
-                        </label>
-                      </div>
-                      <div
-                        style={{
-                          minHeight: '100px',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '8px',
-                          backgroundColor: adminSidebarLogoDraft ? 'rgba(255,160,0,0.08)' : '#0d0d0d',
-                          borderRadius: '8px',
-                          border: adminSidebarLogoDraft ? '1px solid rgba(255,180,0,0.45)' : '1px dashed rgba(0,255,0,0.25)',
-                          padding: '10px',
-                        }}
-                      >
-                        {adminSidebarLogoDraft ? (
-                          <span style={{ fontSize: '10px', fontWeight: 700, color: '#ffb74d', letterSpacing: '0.08em' }}>
-                            {(safeT as any)?.adminLogoRascunhoBadge || 'Rascunho'}
-                          </span>
-                        ) : null}
-                        {adminSidebarLogoDraft || logoUrl ? (
-                          (adminSidebarLogoDraft ? adminSidebarLogoDraft.isVideo : logoType === 'video') ? (
-                            <video
-                              src={adminSidebarLogoDraft ? adminSidebarLogoDraft.previewUrl : logoUrl || ''}
-                              autoPlay
-                              loop
-                              muted
-                              playsInline
-                              style={{ maxWidth: '100%', maxHeight: '96px', borderRadius: '6px', objectFit: 'contain' }}
-                            />
-                          ) : (
-                            <img
-                              src={adminSidebarLogoDraft ? adminSidebarLogoDraft.previewUrl : logoUrl || ''}
-                              alt=""
-                              style={{ maxWidth: '100%', maxHeight: '96px', objectFit: 'contain', borderRadius: '6px' }}
-                            />
-                          )
-                        ) : (
-                          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>{(safeT as any)?.adminSemLogoPreview || 'Sem logo'}</span>
-                        )}
-                      </div>
-                      {adminSidebarLogoDraft ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <p style={{ fontSize: '11px', color: 'rgba(255,200,140,0.95)', margin: 0, lineHeight: 1.45 }}>
-                            {(safeT as any)?.adminLogoSalvarParaAplicar ||
-                              'Ainda não gravado — use «Guardar» para aplicar ou «Descartar rascunho» para cancelar.'}
-                          </p>
-                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            <button
-                              type="button"
-                              className="btn-primary"
-                              disabled={adminLogoSavingSidebar}
-                              onClick={() => void commitAdminSidebarLogoDraft()}
-                              style={{ padding: '6px 14px', fontSize: '12px' }}
-                            >
-                              {(safeT as any)?.guardar || safeT?.save || 'Guardar'}
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-primary"
-                              disabled={adminLogoSavingSidebar}
-                              onClick={discardAdminSidebarLogoDraft}
-                              style={{
-                                padding: '6px 14px',
-                                fontSize: '12px',
-                                backgroundColor: 'rgba(255,255,255,0.06)',
-                                borderColor: 'rgba(255,255,255,0.25)',
-                                color: 'rgba(255,255,255,0.88)',
-                              }}
-                            >
-                              {(safeT as any)?.adminLogoDescartarRascunho || safeT?.cancel || 'Descartar rascunho'}
-                            </button>
-                          </div>
-                        </div>
-                      ) : null}
-                      {logoUrl && !adminSidebarLogoDraft ? (
-                        <button type="button" className="btn-danger" onClick={handleRemoveSidebarLogo} style={{ padding: '6px 12px', fontSize: '12px', alignSelf: 'flex-start' }}>{safeT?.removeLogo || 'Remover logo'}</button>
-                      ) : null}
-                    </div>
-                    <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
-                        <div>
-                          <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>UI · 02</span>
-                          <strong style={{ display: 'block', marginTop: '4px', fontSize: '14px', color: '#fff' }}>{(safeT as any)?.logoDashboard || 'Logo do Dashboard'}</strong>
-                          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)' }}>{safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece na tela inicial (painel de controlo).'}</span>
-                        </div>
-                        <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '6px 12px', fontSize: '12px', flexShrink: 0 }}>
-                          {safeT?.changeLogo || 'Alterar'}
-                          <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeDashboardLogo} style={{ display: 'none' }} />
-                        </label>
-                      </div>
-                      <div
-                        style={{
-                          minHeight: '100px',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '8px',
-                          backgroundColor: adminDashboardLogoDraft ? 'rgba(255,160,0,0.08)' : '#0d0d0d',
-                          borderRadius: '8px',
-                          border: adminDashboardLogoDraft ? '1px solid rgba(255,180,0,0.45)' : '1px dashed rgba(0,255,0,0.25)',
-                          padding: '10px',
-                        }}
-                      >
-                        {adminDashboardLogoDraft ? (
-                          <span style={{ fontSize: '10px', fontWeight: 700, color: '#ffb74d', letterSpacing: '0.08em' }}>
-                            {(safeT as any)?.adminLogoRascunhoBadge || 'Rascunho'}
-                          </span>
-                        ) : null}
-                        {adminDashboardLogoDraft || logoUrlDashboard ? (
-                          (adminDashboardLogoDraft ? adminDashboardLogoDraft.isVideo : logoTypeDashboard === 'video') ? (
-                            <video
-                              src={adminDashboardLogoDraft ? adminDashboardLogoDraft.previewUrl : logoUrlDashboard || ''}
-                              autoPlay
-                              loop
-                              muted
-                              playsInline
-                              style={{ maxWidth: '100%', maxHeight: '96px', borderRadius: '6px', objectFit: 'contain' }}
-                            />
-                          ) : (
-                            <img
-                              src={adminDashboardLogoDraft ? adminDashboardLogoDraft.previewUrl : logoUrlDashboard || ''}
-                              alt=""
-                              style={{ maxWidth: '100%', maxHeight: '96px', objectFit: 'contain', borderRadius: '6px' }}
-                            />
-                          )
-                        ) : (
-                          <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>{(safeT as any)?.adminSemLogoPreview || 'Sem logo'}</span>
-                        )}
-                      </div>
-                      {adminDashboardLogoDraft ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <p style={{ fontSize: '11px', color: 'rgba(255,200,140,0.95)', margin: 0, lineHeight: 1.45 }}>
-                            {(safeT as any)?.adminLogoSalvarParaAplicar ||
-                              'Ainda não gravado — use «Guardar» para aplicar ou «Descartar rascunho» para cancelar.'}
-                          </p>
-                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            <button
-                              type="button"
-                              className="btn-primary"
-                              disabled={adminLogoSavingDashboard}
-                              onClick={() => void commitAdminDashboardLogoDraft()}
-                              style={{ padding: '6px 14px', fontSize: '12px' }}
-                            >
-                              {(safeT as any)?.guardar || safeT?.save || 'Guardar'}
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-primary"
-                              disabled={adminLogoSavingDashboard}
-                              onClick={discardAdminDashboardLogoDraft}
-                              style={{
-                                padding: '6px 14px',
-                                fontSize: '12px',
-                                backgroundColor: 'rgba(255,255,255,0.06)',
-                                borderColor: 'rgba(255,255,255,0.25)',
-                                color: 'rgba(255,255,255,0.88)',
-                              }}
-                            >
-                              {(safeT as any)?.adminLogoDescartarRascunho || safeT?.cancel || 'Descartar rascunho'}
-                            </button>
-                          </div>
-                        </div>
-                      ) : null}
-                      {logoUrlDashboard && !adminDashboardLogoDraft ? (
-                        <button type="button" className="btn-danger" onClick={handleRemoveDashboardLogo} style={{ padding: '6px 12px', fontSize: '12px', alignSelf: 'flex-start' }}>{safeT?.removeLogo || 'Remover logo'}</button>
-                      ) : null}
-                    </div>
-                  </div>
-                  <div style={{ marginTop: '18px', paddingTop: '16px', borderTop: '1px solid rgba(0,255,122,0.18)' }}>
-                    <h5 style={{ color: '#00ff88', margin: '0 0 8px', fontSize: '13px', letterSpacing: '0.03em' }}>
-                      {(safeT as any)?.brandSituationsTitle || 'Marca NONATO — variações por situação'}
-                    </h5>
-                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', margin: '0 0 12px', lineHeight: 1.45 }}>
-                      {(safeT as any)?.brandSituationsDesc || 'Ficheiro base em /brand/nonato-logo-original.png; tons por contexto (CSS). Útil para alertas, financeiro, ecrãs de estado.'}
-                    </p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', alignItems: 'flex-end' }}>
-                      {([
-                        ['original', (safeT as any)?.brandVariantOriginal || 'Original'],
-                        ['sucesso', (safeT as any)?.brandVariantSucesso || 'Sucesso'],
-                        ['alerta', (safeT as any)?.brandVariantAlerta || 'Alerta'],
-                        ['devedor', (safeT as any)?.brandVariantDevedor || 'Dívida / urgência'],
-                        ['financeiro', (safeT as any)?.brandVariantFinanceiro || 'Financeiro'],
-                        ['informacao', (safeT as any)?.brandVariantInformacao || 'Informação'],
-                      ] as const).map(([variant, label]) => (
-                        <div key={variant} style={{ textAlign: 'center', width: '92px' }}>
-                          <NonatoBrandLogo variant={variant} style={{ height: 42, width: 'auto', margin: '0 auto 6px', display: 'block' }} alt="" />
-                          <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.25, display: 'block' }}>{label}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* PDFs: biblioteca única + cartões por fase com pré-visualização */}
-                <div style={{ marginTop: '22px', padding: '18px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.25)' }}>
-                  <h4 style={{ color: '#00ff00', margin: '0 0 6px 0', fontSize: '15px', letterSpacing: '0.04em' }}>
-                    {(safeT as any)?.adminLogosPdfTitle || 'Logos nos documentos PDF'}
-                  </h4>
-                  <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '12px', margin: '0 0 16px 0', lineHeight: 1.5 }}>
-                    {(safeT as any)?.adminLogosPdfDesc || 'Adicione imagens à biblioteca uma vez; em cada fase escolha o logo e veja a pré-visualização. «Logo principal» = imagem da barra lateral (vídeo não entra em PDF).'}
-                  </p>
-                  <div style={{ marginBottom: '16px', padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(255, 180, 0, 0.35)' }}>
-                    <strong style={{ fontSize: '13px', color: '#fff', display: 'block', marginBottom: '10px' }}>
-                      {(safeT as any)?.pdfLogosModoTitulo || 'Modo dos logos nos PDFs'}
-                    </strong>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '13px', color: 'rgba(255,255,255,0.95)' }}>
-                        <input
-                          type="radio"
-                          name="pdf-logos-modo-ns"
-                          checked={pdfLogosModoUnificado}
-                          onChange={() => {
-                            if (pdfLogosModoUnificado) return
-                            setPdfLogosModoUnificado(true)
-                            saveData('nonato-pdf-logos-unificado', true)
-                            aplicarLogoUnificadoTodosPdfs(logoRelatorioSelecionadoId || '')
-                          }}
-                          style={{ width: '18px', height: '18px', accentColor: '#00ff00', marginTop: '2px', flexShrink: 0 }}
-                        />
-                        <span>{(safeT as any)?.pdfLogosModoUnificadoLabel || 'Um único logo para todos os documentos PDF (relatórios, fechamentos, orçamentos, protocolos)'}</span>
-                      </label>
-                      <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '13px', color: 'rgba(255,255,255,0.95)' }}>
-                        <input
-                          type="radio"
-                          name="pdf-logos-modo-ns"
-                          checked={!pdfLogosModoUnificado}
-                          onChange={() => {
-                            if (!pdfLogosModoUnificado) return
-                            setPdfLogosModoUnificado(false)
-                            saveData('nonato-pdf-logos-unificado', false)
-                          }}
-                          style={{ width: '18px', height: '18px', accentColor: '#00ff00', marginTop: '2px', flexShrink: 0 }}
-                        />
-                        <span>{(safeT as any)?.pdfLogosModoPorTipoLabel || 'Logo diferente em cada tipo de documento'}</span>
-                      </label>
-                    </div>
-                    <p style={{ margin: '12px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.45 }}>
-                      {(safeT as any)?.pdfLogosModoAjuda || 'Use um logo comum para manter a identidade igual em tudo; ou defina imagens distintas quando precisar (por exemplo marca em relatórios e outra em orçamentos). A biblioteca de imagens é partilhada nos dois modos.'}
-                    </p>
-                  </div>
-                  <div style={{ marginBottom: '18px', padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                      <strong style={{ fontSize: '13px', color: '#fff' }}>{safeT?.logosDisponiveisRelatorios || 'Biblioteca de imagens para PDFs'}</strong>
-                      <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 14px', fontSize: '14px' }}>
-                        {safeT?.adicionarLogoRelatorios || 'Adicionar imagem à biblioteca'}
-                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => administradorAddBibliotecaLogo(e)} />
-                      </label>
-                    </div>
-                    {adminBibliotecaLogoDraft ? (
-                      <div
-                        style={{
-                          marginBottom: '12px',
-                          padding: '12px',
-                          borderRadius: '8px',
-                          border: '1px solid rgba(255,180,0,0.45)',
-                          backgroundColor: 'rgba(255,160,0,0.08)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '10px',
-                        }}
-                      >
-                        <span style={{ fontSize: '10px', fontWeight: 700, color: '#ffb74d', letterSpacing: '0.08em' }}>
-                          {(safeT as any)?.adminLogoRascunhoBadge || 'Rascunho'}
-                        </span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                          <div
-                            style={{
-                              width: '72px',
-                              height: '52px',
-                              flexShrink: 0,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              backgroundColor: '#0d0d0d',
-                              borderRadius: '6px',
-                            }}
-                          >
-                            <img
-                              src={adminBibliotecaLogoDraft.previewUrl}
-                              alt=""
-                              style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                            />
-                          </div>
-                          <div style={{ minWidth: 0, flex: '1 1 160px' }}>
-                            <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff', wordBreak: 'break-word' }}>
-                              {adminBibliotecaLogoDraft.fileName}
-                            </div>
-                            <p style={{ fontSize: '11px', color: 'rgba(255,200,140,0.95)', margin: '6px 0 0', lineHeight: 1.45 }}>
-                              {(safeT as any)?.adminLogoSalvarParaAplicar ||
-                                'Ainda não gravado — use «Guardar na biblioteca» ou «Descartar rascunho».'}
-                            </p>
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                          <button
-                            type="button"
-                            className="btn-primary"
-                            disabled={adminBibliotecaLogoSaving}
-                            onClick={() => void commitAdminBibliotecaLogoDraft()}
-                            style={{ padding: '8px 14px', fontSize: '13px' }}
-                          >
-                            {(safeT as any)?.adminBibliotecaSalvarNaBiblioteca || 'Guardar na biblioteca'}
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-primary"
-                            disabled={adminBibliotecaLogoSaving}
-                            onClick={discardAdminBibliotecaLogoDraft}
-                            style={{
-                              padding: '8px 14px',
-                              fontSize: '13px',
-                              backgroundColor: 'rgba(255,255,255,0.06)',
-                              borderColor: 'rgba(255,255,255,0.25)',
-                              color: 'rgba(255,255,255,0.88)',
-                            }}
-                          >
-                            {(safeT as any)?.adminLogoDescartarRascunho || safeT?.cancel || 'Descartar rascunho'}
-                          </button>
-                        </div>
-                      </div>
-                    ) : null}
-                    {logosRelatorios.length === 0 && !adminBibliotecaLogoDraft ? (
-                      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', margin: 0 }}>{safeT?.nenhumLogoRelatorio || 'Nenhum logo adicional. Adicione imagens para além do logo principal.'}</p>
-                    ) : logosRelatorios.length > 0 ? (
-                      <div
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))',
-                          gap: '10px',
-                        }}
-                      >
-                        {logosRelatorios.map((l) => (
-                          <div
-                            key={l.id}
-                            style={{
-                              padding: '10px 12px',
-                              backgroundColor: '#222',
-                              borderRadius: '8px',
-                              border: '1px solid rgba(0, 255, 0, 0.2)',
-                              display: 'grid',
-                              gridTemplateColumns: '56px minmax(0, 1fr) auto',
-                              gap: '10px',
-                              alignItems: 'center',
-                              minWidth: 0,
-                              maxWidth: '100%',
-                              boxSizing: 'border-box',
-                            }}
-                          >
-                            <div style={{ width: '56px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '4px', overflow: 'hidden' }}>
-                              {l.type === 'image' && l.data ? (
-                                <img src={l.data} alt={l.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-                              ) : null}
-                            </div>
-                            <span style={{ fontSize: '12px', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={l.name || l.id}>{l.name || l.id}</span>
-                            <button
-                              type="button"
-                              className="btn-danger btn-danger--inline"
-                              style={{ padding: '6px 12px', fontSize: '12px', whiteSpace: 'nowrap', justifySelf: 'end' }}
-                              onClick={() => {
-                                const next = logosRelatorios.filter((x) => x.id !== l.id)
-                                setLogosRelatorios(next)
-                                saveData('nonato-logos-relatorios', next)
-                                if (logoRelatorioSelecionadoId === l.id) {
-                                  setLogoRelatorioSelecionadoId('')
-                                  saveData('nonato-relatorios-logo-id', '')
-                                }
-                                if (logoFechamentoSelecionadoId === l.id) {
-                                  setLogoFechamentoSelecionadoId('')
-                                  saveData('nonato-fechamentos-logo-id', '')
-                                }
-                                if (logoOrcamentoSelecionadoId === l.id) {
-                                  setLogoOrcamentoSelecionadoId('')
-                                  saveData('nonato-orcamento-logo-id', '')
-                                }
-                                if (logoProtocoloServicoSelecionadoId === l.id) {
-                                  setLogoProtocoloServicoSelecionadoId('')
-                                  saveData('nonato-protocolo-servico-logo-id', '')
-                                }
-                              }}
-                            >
-                              {safeT?.removeLogo || 'Remover'}
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                  {pdfLogosModoUnificado ? (
-                  <div style={{ padding: '16px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '2px solid rgba(0, 180, 90, 0.45)', marginBottom: '4px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>PDF · ÚNICO</span>
-                    <strong style={{ fontSize: '15px', color: '#fff' }}>{(safeT as any)?.pdfLogosUnificadoCabecalho || 'Logo único para todos os PDFs'}</strong>
-                    <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>{(safeT as any)?.pdfLogosUnificadoSub || 'Relatórios de serviço, fechamentos de despesas, orçamentos e protocolos usam o mesmo cabeçalho de imagem.'}</p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'rgba(255,255,255,0.9)' }}>
-                        <input
-                          type="checkbox"
-                          checked={incluirLogoNosRelatorios}
-                          onChange={(e) => {
-                            const v = e.target.checked
-                            setIncluirLogoNosRelatorios(v)
-                            saveData('nonato-relatorios-incluir-logo', v)
-                          }}
-                          style={{ width: '16px', height: '16px', accentColor: '#00ff00' }}
-                        />
-                        {safeT?.incluirLogoNosRelatorios || 'Incluir nos PDF'}
-                        <span style={{ color: '#888', fontSize: '11px' }}>· {safeT?.escolherLogoRelatorios || 'Relatórios'}</span>
-                      </label>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'rgba(255,255,255,0.9)' }}>
-                        <input
-                          type="checkbox"
-                          checked={incluirLogoFechamentosDespesas}
-                          onChange={(e) => {
-                            const v = e.target.checked
-                            setIncluirLogoFechamentosDespesas(v)
-                            saveData('nonato-fechamentos-incluir-logo', v)
-                          }}
-                          style={{ width: '16px', height: '16px', accentColor: '#00ff00' }}
-                        />
-                        {(safeT as any)?.incluirLogoFechamentosDespesasShort || 'Incluir nos PDF'}
-                        <span style={{ color: '#888', fontSize: '11px' }}>· {(safeT as any)?.escolherLogoFechamentos || 'Fechamentos'}</span>
-                      </label>
-                    </div>
-                    <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
-                      {administradorPreviewPdfLogo(logoRelatorioSelecionadoId) ? (
-                        <img src={administradorPreviewPdfLogo(logoRelatorioSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
-                      ) : (
-                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
-                      )}
-                    </div>
-                    <select
-                      value={logoRelatorioSelecionadoId}
-                      onChange={(e) => aplicarLogoUnificadoTodosPdfs(e.target.value)}
-                      style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
-                    >
-                      <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
-                      {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
-                        <option key={l.id} value={l.id}>{l.name || l.id}</option>
-                      ))}
-                    </select>
-                  </div>
-                  ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
-                    {/* Fase PDF 1 — Relatórios */}
-                    <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>PDF · 01</span>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'rgba(255,255,255,0.9)' }}>
-                          <input
-                            type="checkbox"
-                            checked={incluirLogoNosRelatorios}
-                            onChange={(e) => {
-                              const v = e.target.checked
-                              setIncluirLogoNosRelatorios(v)
-                              saveData('nonato-relatorios-incluir-logo', v)
-                            }}
-                            style={{ width: '16px', height: '16px', accentColor: '#00ff00' }}
-                          />
-                          {safeT?.incluirLogoNosRelatorios || 'Incluir nos PDF'}
-                        </label>
-                      </div>
-                      <strong style={{ fontSize: '14px', color: '#fff' }}>{safeT?.escolherLogoRelatorios || 'Relatórios de serviço'}</strong>
-                      <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.55)' }}>{safeT?.escolherLogoRelatoriosDesc || 'Cabeçalho dos relatórios de serviço exportados em PDF.'}</p>
-                      <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
-                        {administradorPreviewPdfLogo(logoRelatorioSelecionadoId) ? (
-                          <img src={administradorPreviewPdfLogo(logoRelatorioSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
-                        ) : (
-                          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
-                        )}
-                      </div>
-                      <select
-                        value={logoRelatorioSelecionadoId}
-                        onChange={(e) => {
-                          const v = e.target.value
-                          setLogoRelatorioSelecionadoId(v)
-                          saveData('nonato-relatorios-logo-id', v)
-                        }}
-                        style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
-                      >
-                        <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
-                        {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
-                          <option key={l.id} value={l.id}>{l.name || l.id}</option>
-                        ))}
-                      </select>
-                    </div>
-                    {/* Fase PDF 2 — Fechamentos */}
-                    <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>PDF · 02</span>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px', color: 'rgba(255,255,255,0.9)' }}>
-                          <input
-                            type="checkbox"
-                            checked={incluirLogoFechamentosDespesas}
-                            onChange={(e) => {
-                              const v = e.target.checked
-                              setIncluirLogoFechamentosDespesas(v)
-                              saveData('nonato-fechamentos-incluir-logo', v)
-                            }}
-                            style={{ width: '16px', height: '16px', accentColor: '#00ff00' }}
-                          />
-                          {(safeT as any)?.incluirLogoFechamentosDespesasShort || 'Incluir nos PDF'}
-                        </label>
-                      </div>
-                      <strong style={{ fontSize: '14px', color: '#fff' }}>{(safeT as any)?.escolherLogoFechamentos || 'Fechamentos de despesas'}</strong>
-                      <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.55)' }}>{(safeT as any)?.escolherLogoFechamentosDesc || 'PDF de fechamento de despesas dos relatórios.'}</p>
-                      <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
-                        {administradorPreviewPdfLogo(logoFechamentoSelecionadoId) ? (
-                          <img src={administradorPreviewPdfLogo(logoFechamentoSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
-                        ) : (
-                          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
-                        )}
-                      </div>
-                      <select
-                        value={logoFechamentoSelecionadoId}
-                        onChange={(e) => {
-                          const v = e.target.value
-                          setLogoFechamentoSelecionadoId(v)
-                          saveData('nonato-fechamentos-logo-id', v)
-                        }}
-                        style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
-                      >
-                        <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
-                        {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
-                          <option key={l.id} value={l.id}>{l.name || l.id}</option>
-                        ))}
-                      </select>
-                    </div>
-                    {/* Fase PDF 3 — Orçamento */}
-                    <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>PDF · 03</span>
-                      <strong style={{ fontSize: '14px', color: '#fff' }}>{(safeT as any)?.escolherLogoOrcamento || 'Orçamentos'}</strong>
-                      <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.55)' }}>{(safeT as any)?.escolherLogoOrcamentoDesc || 'Cabeçalho do PDF de orçamentos.'}</p>
-                      <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
-                        {administradorPreviewPdfLogo(logoOrcamentoSelecionadoId) ? (
-                          <img src={administradorPreviewPdfLogo(logoOrcamentoSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
-                        ) : (
-                          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
-                        )}
-                      </div>
-                      <select
-                        value={logoOrcamentoSelecionadoId}
-                        onChange={(e) => {
-                          const v = e.target.value
-                          setLogoOrcamentoSelecionadoId(v)
-                          saveData('nonato-orcamento-logo-id', v)
-                        }}
-                        style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
-                      >
-                        <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
-                        {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
-                          <option key={l.id} value={l.id}>{l.name || l.id}</option>
-                        ))}
-                      </select>
-                    </div>
-                    {/* Fase PDF 4 — Protocolos */}
-                    <div style={{ padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '10px', border: '1px solid rgba(0, 255, 0, 0.2)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#00ff00', letterSpacing: '0.12em' }}>PDF · 04</span>
-                      <strong style={{ fontSize: '14px', color: '#fff' }}>{(safeT as any)?.escolherLogoProtocoloServico || 'Protocolos de serviço'}</strong>
-                      <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.55)' }}>{(safeT as any)?.escolherLogoProtocoloServicoDesc || 'Cabeçalho do PDF dos protocolos.'}</p>
-                      <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
-                        {administradorPreviewPdfLogo(logoProtocoloServicoSelecionadoId) ? (
-                          <img src={administradorPreviewPdfLogo(logoProtocoloServicoSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
-                        ) : (
-                          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
-                        )}
-                      </div>
-                      <select
-                        value={logoProtocoloServicoSelecionadoId}
-                        onChange={(e) => {
-                          const v = e.target.value
-                          setLogoProtocoloServicoSelecionadoId(v)
-                          saveData('nonato-protocolo-servico-logo-id', v)
-                        }}
-                        style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
-                      >
-                        <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
-                        {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
-                          <option key={l.id} value={l.id}>{l.name || l.id}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  )}
-                </div>
-            </div>
-              </div>
-            </details>
-
-            <details id="admin-detail-users" className="admin-disclosure admin-disclosure--violet">
-              <summary>
-                <span className="admin-disclosure__icon" aria-hidden>👤</span>
-                <span className="admin-disclosure__meta">
-                  <span className="admin-disclosure__title">{safeT?.userManagement || 'Gestão de utilizadores'}</span>
-                  <span className="admin-disclosure__sub">
-                    {safeT?.adminUsersSummarySub || 'Contas, permissões e vínculo com gestores ou técnicos.'}
-                  </span>
-                </span>
-                <span className="admin-disclosure__chev" aria-hidden>▼</span>
-              </summary>
-              <div className="admin-disclosure__body">
-            {/* SEÇÃO 2: GESTÃO DE USUÁRIOS */}
-            <div className="admin-section">
-              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '16px' }}>
-                <button className="btn-primary" onClick={handleAddUser} style={{ padding: '8px 15px' }}>
-                  {safeT?.addUser || 'Adicionar Usuário'}
-                </button>
-              </div>
-              
-              {showUserForm && (
-                <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#222222' }}>
-                  <h3 style={{ marginBottom: '15px' }}>{editingUser ? safeT?.editUser : safeT?.addUser}</h3>
-                  
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.name || 'Nome'}</label>
-                    <input
-                      type="text"
-                      value={userForm.name}
-                      onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'}</label>
-                    <input
-                      type="email"
-                      value={userForm.email}
-                      onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.role || 'Função'}</label>
-                    <input
-                      type="text"
-                      value={userForm.role}
-                      onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>
-                      {safeT?.password || 'Senha'} {!editingUser && <span style={{ color: '#ff0000' }}>*</span>}
-                    </label>
-                    <input
-                      type="password"
-                      value={userForm.password}
-                      onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
-                      placeholder={editingUser ? (safeT?.leaveEmptyToKeepPassword || 'Deixe vazio para manter a senha atual') : ''}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>Vincular com</label>
-                    <select
-                      value={userForm.linkedProfileType}
-                      onChange={(e) => setUserForm({ ...userForm, linkedProfileType: e.target.value as 'gestor' | 'tecnico' | '', linkedProfileId: '' })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    >
-                      <option value="">Sem vínculo direto</option>
-                      <option value="gestor">{safeT?.gestores || 'Gestores'}</option>
-                      <option value="tecnico">{safeT?.tecnicos || 'Técnicos'}</option>
-                    </select>
-                  </div>
-
-                  {userForm.linkedProfileType && (
-                    <div style={{ marginBottom: '15px' }}>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>
-                        {userForm.linkedProfileType === 'gestor' ? (safeT?.selecionarGestor || 'Selecionar Gestor') : (safeT?.selecionarTecnico || 'Selecionar Técnico')}
-                      </label>
-                      <select
-                        value={userForm.linkedProfileId}
-                        onChange={(e) => setUserForm({ ...userForm, linkedProfileId: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                      >
-                        <option value="">{userForm.linkedProfileType === 'gestor' ? (safeT?.selecionarGestor || 'Selecionar Gestor') : (safeT?.selecionarTecnico || 'Selecionar Técnico')}</option>
-                        {(userForm.linkedProfileType === 'gestor' ? gestores : tecnicos).map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {'area' in item
-                              ? `${item.name} (${item.area || '-'})`
-                              : `${item.name} (${item.type === 'internal' ? (safeT?.tecnicoInterno || 'Interno') : item.type === 'external' ? (safeT?.tecnicoExterno || 'Externo') : (safeT?.armazem || 'Armazém')})`}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                  
-                  <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                      <input
-                        type="checkbox"
-                        checked={userForm.isAdmin}
-                        onChange={(e) => setUserForm({ ...userForm, isAdmin: e.target.checked })}
-                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                      />
-                      <strong style={{ color: '#00ff00' }}>{safeT?.administradorGeral || 'Administrador Geral'}</strong>
-                    </label>
-                    <p style={{ fontSize: '12px', opacity: 0.7, marginTop: '5px', marginLeft: '28px' }}>
-                      {safeT?.administradorGeralDesc || 'O administrador geral tem acesso a todas as funcionalidades do sistema'}
-                    </p>
-                  </div>
-                  
-                  {!userForm.isAdmin && (
-                    <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                      <strong style={{ display: 'block', marginBottom: '15px' }}>{safeT?.permissions || 'Permissões'}</strong>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-                        {userForm.permissions && Object.entries(userForm.permissions).map(([key, value]) => (
-                          <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px' }}>
-                            <input
-                              type="checkbox"
-                              checked={value as boolean}
-                              onChange={(e) => setUserForm({ 
-                                ...userForm, 
-                                permissions: { 
-                                  ...(userForm.permissions || {}), 
-                                  [key]: e.target.checked 
-                                } 
-                              })}
-                              style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-                            />
-                            <span>{safeT?.[`permission${key.charAt(0).toUpperCase() + key.slice(1)}` as keyof typeof safeT] || key}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button className="btn-primary" onClick={handleSaveUser} style={{ flex: 1 }}>
-                      {safeT?.save || 'Salvar'}
-                    </button>
-                    <button className="btn-primary" onClick={() => { 
-                      setShowUserForm(false); 
-                      setEditingUser(null); 
-                      setUserForm(createEmptyUserForm()); 
-                    }} style={{ flex: 1 }}>
-                      {safeT?.cancel || 'Cancelar'}
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              {users.length === 0 ? (
-                <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>{safeT?.noUsers || 'Nenhum usuário cadastrado'}</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {users.map(user => (
-                    <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
-                      <div>
-                        <strong style={{ display: 'block', marginBottom: '5px' }}>{user.name}</strong>
-                        <span style={{ fontSize: '12px', opacity: 0.7 }}>{user.email} • {user.role}</span>
-                      </div>
-                      <div style={{ display: 'flex', gap: '5px' }}>
-                        <button className="btn-primary" onClick={() => handleEditUser(user)} style={{ padding: '8px 16px', fontSize: '13px', whiteSpace: 'nowrap', minWidth: '80px' }}>
-                          {safeT?.edit || 'Editar'}
-                        </button>
-                        <button className="btn-danger" onClick={() => handleDeleteUser(user.id)} style={{ padding: '8px 16px', fontSize: '13px', whiteSpace: 'nowrap', minWidth: '80px' }}>
-                          {safeT?.delete || 'Excluir'}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-              </div>
-            </details>
-
-            <details id="admin-detail-prioritario" className="admin-disclosure admin-disclosure--amber">
-              <summary>
-                <span className="admin-disclosure__icon" aria-hidden>★</span>
-                <span className="admin-disclosure__meta">
-                  <span className="admin-disclosure__title">{safeT?.clientePrioritarioTitle || 'Cliente prioritário'}</span>
-                  <span className="admin-disclosure__sub">
-                    {safeT?.adminClientePriorSummarySub || 'Empresa em destaque e dados para formulários e fluxos internos.'}
-                  </span>
-                </span>
-                <span className="admin-disclosure__chev" aria-hidden>▼</span>
-              </summary>
-              <div className="admin-disclosure__body">
-            <div className="admin-section admin-section--amber">
-              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  {clientePrioritario ? (
-                    <>
-                      <button className="btn-primary" onClick={handleEditClientePrioritario} style={{ padding: '8px 15px', backgroundColor: 'rgba(255, 215, 0, 0.2)', borderColor: 'rgba(255, 215, 0, 0.5)' }}>
-                        {safeT?.editClientePrioritario || 'Editar Cliente Prioritário'}
-                      </button>
-                      <button className="btn-danger" onClick={handleDeleteClientePrioritario} style={{ padding: '8px 15px' }}>
-                        {safeT?.deleteClientePrioritario || 'Excluir Cliente Prioritário'}
-                      </button>
-                    </>
-                  ) : (
-                    <button className="btn-primary" onClick={handleAddClientePrioritario} style={{ padding: '8px 15px', backgroundColor: 'rgba(255, 215, 0, 0.2)', borderColor: 'rgba(255, 215, 0, 0.5)' }}>
-                      {safeT?.addClientePrioritario || 'Adicionar Cliente Prioritário'}
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {clientePrioritario && !showClientePrioritarioForm ? (
-                <div style={{ padding: '20px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(255, 215, 0, 0.3)' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px', marginBottom: '20px' }}>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.nomeEmpresa || 'Nome da Empresa'}</strong>
-                      <span>{clientePrioritario.nomeEmpresa}</span>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.morada || 'Morada'}</strong>
-                      <span>{clientePrioritario.morada}</span>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.conselho || 'Conselho'}</strong>
-                      <span>{clientePrioritario.conselho}</span>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.pais || 'País'}</strong>
-                      <span>{clientePrioritario.pais}</span>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.codigoPostal || 'Código Postal'}</strong>
-                      <span>{clientePrioritario.codigoPostal}</span>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.freguesia || 'Freguesia'}</strong>
-                      <span>{clientePrioritario.freguesia}</span>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.identificacaoFiscal || 'Identificação Fiscal'}</strong>
-                      <span>{clientePrioritario.numeroContribuicaoFiscal}</span>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.telefones || 'Telefones'}</strong>
-                      <span>{clientePrioritario.telefones}</span>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'}</strong>
-                      <span>{clientePrioritario.email}</span>
-                    </div>
-                    <div>
-                      <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>{safeT?.contato || 'Contato'}</strong>
-                      <span>{clientePrioritario.contato}</span>
-                    </div>
-                    {clientePrioritario.photo && (
-                      <div>
-                        <strong style={{ color: '#ffd700', display: 'block', marginBottom: '5px' }}>Foto</strong>
-                        <img src={clientePrioritario.photo} alt="Cliente Prioritário" style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '4px' }} />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : showClientePrioritarioForm ? (
-                <div style={{ border: '1px solid rgba(255, 215, 0, 0.2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', backgroundColor: '#222222' }}>
-                  <h3 style={{ marginBottom: '15px', color: '#ffd700' }}>{editingClientePrioritario ? (safeT?.editClientePrioritario || 'Editar Cliente Prioritário') : (safeT?.addClientePrioritario || 'Adicionar Cliente Prioritário')}</h3>
-                  
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.nomeEmpresa || 'Nome da Empresa'} *</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.nomeEmpresa || 'Nome da Empresa'}
-                        value={clientePrioritarioForm.nomeEmpresa}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, nomeEmpresa: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.morada || 'Morada'} *</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.morada || 'Morada'}
-                        value={clientePrioritarioForm.morada}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, morada: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.conselho || 'Conselho'}</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.conselho || 'Conselho'}
-                        value={clientePrioritarioForm.conselho}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, conselho: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.pais || 'País'}</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.pais || 'País'}
-                        value={clientePrioritarioForm.pais}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, pais: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.codigoPostal || 'Código Postal'}</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.codigoPostal || 'Código Postal'}
-                        value={clientePrioritarioForm.codigoPostal}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, codigoPostal: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.freguesia || 'Freguesia'}</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.freguesia || 'Freguesia'}
-                        value={clientePrioritarioForm.freguesia}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, freguesia: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.identificacaoFiscal || 'Identificação Fiscal'}</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.identificacaoFiscal || 'Identificação Fiscal'}
-                        value={clientePrioritarioForm.numeroContribuicaoFiscal}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, numeroContribuicaoFiscal: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.telefones || 'Telefones'}</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.telefones || 'Telefones'}
-                        value={clientePrioritarioForm.telefones}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, telefones: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'} *</label>
-                      <input
-                        type="email"
-                        placeholder={safeT?.email || 'E-mail'}
-                        value={clientePrioritarioForm.email}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, email: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.contato || 'Contato'}</label>
-                      <input
-                        type="text"
-                        placeholder={safeT?.contato || 'Contato'}
-                        value={clientePrioritarioForm.contato}
-                        onChange={(e) => setClientePrioritarioForm({ ...clientePrioritarioForm, contato: e.target.value })}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px' }}>Foto</label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleClientePrioritarioPhotoChange}
-                        style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(255, 215, 0, 0.3)', borderRadius: '4px' }}
-                      />
-                      {clientePrioritarioForm.photo && (
-                        <div style={{ marginTop: '10px' }}>
-                          <img src={clientePrioritarioForm.photo} alt="Preview" style={{ maxWidth: '200px', maxHeight: '200px', borderRadius: '4px', marginBottom: '10px' }} />
-                          <button className="btn-danger" onClick={handleRemoveClientePrioritarioPhoto} style={{ padding: '6px 12px', fontSize: '12px' }}>
-                            Remover Foto
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                    <button className="btn-primary" onClick={handleSaveClientePrioritario} style={{ flex: 1, backgroundColor: 'rgba(255, 215, 0, 0.2)', borderColor: 'rgba(255, 215, 0, 0.5)' }}>
-                      {safeT?.save || 'Salvar'}
-                    </button>
-                    <button className="btn-primary" onClick={() => { 
-                      setShowClientePrioritarioForm(false); 
-                      setEditingClientePrioritario(null); 
-                      setClientePrioritarioForm({
-                        nomeEmpresa: '',
-                        morada: '',
-                        localidade: '',
-                        conselho: '',
-                        pais: '',
-                        codigoPostal: '',
-                        freguesia: '',
-                        numeroContribuicaoFiscal: '',
-                        telefones: '',
-                        email: '',
-                        contato: '',
-                        photo: ''
-                      }); 
-                    }} style={{ flex: 1 }}>
-                      {safeT?.cancel || 'Cancelar'}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>{safeT?.noClientePrioritario || 'Nenhum cliente prioritário cadastrado'}</p>
-              )}
-            </div>
-              </div>
-            </details>
-
-            <details id="admin-detail-sidebar" className="admin-disclosure admin-disclosure--emerald">
-              <summary>
-                <span className="admin-disclosure__icon" aria-hidden>☰</span>
-                <span className="admin-disclosure__meta">
-                  <span className="admin-disclosure__title">{safeT?.adminJumpSidebarTitle || 'Menu lateral'}</span>
-                  <span className="admin-disclosure__sub">
-                    {safeT?.adminJumpSidebarDesc || 'Ordem dos botões, grupos e nomes apresentados na barra.'}
-                  </span>
-                </span>
-                <span className="admin-disclosure__chev" aria-hidden>▼</span>
-              </summary>
-              <div className="admin-disclosure__body">
-            {renderSidebarButtonOrganizer()}
-              </div>
-            </details>
-
-            <details id="admin-detail-passwords" className="admin-disclosure admin-disclosure--violet">
-              <summary>
-                <span className="admin-disclosure__icon" aria-hidden>🔒</span>
-                <span className="admin-disclosure__meta">
-                  <span className="admin-disclosure__title">{safeT?.passwordManagerTitle || 'Gestor de senhas'}</span>
-                  <span className="admin-disclosure__sub">
-                    {safeT?.adminPasswordsSummarySub || 'Senhas para checklist e acesso de técnicos.'}
-                  </span>
-                </span>
-                <span className="admin-disclosure__chev" aria-hidden>▼</span>
-              </summary>
-              <div className="admin-disclosure__body">
-            <div className="admin-section admin-section--violet">
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '12px' }}>
-                  <p style={{ fontSize: '13px', opacity: 0.7, margin: 0, flex: '1 1 200px' }}>
-                    {safeT?.passwordManagerDescription || 'As senhas dos técnicos são automaticamente salvas aqui quando um novo usuário é criado.'}
-                  </p>
-                  <button
-                    className="btn-primary"
-                    onClick={() => setShowPasswordForm(!showPasswordForm)}
-                    style={{ padding: '8px 16px', fontSize: '13px', whiteSpace: 'nowrap' }}
-                  >
-                    {showPasswordForm ? (safeT?.cancel || 'Cancelar') : (safeT?.addPassword || '+ Adicionar Senha')}
-                  </button>
-                </div>
-
-                {/* Formulário de criação de senha */}
-                {showPasswordForm && (
-                  <div style={{ 
-                    padding: '20px', 
-                    backgroundColor: '#222222', 
-                    borderRadius: '6px', 
-                    border: '1px solid rgba(0, 255, 0, 0.3)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '15px'
-                  }}>
-                    <h4 style={{ color: '#00ff00', margin: 0, fontSize: '16px' }}>
-                      {safeT?.createPassword || 'Criar Nova Senha'}
-                    </h4>
-                    
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
-                        {safeT?.tecnicoName || 'Nome do Técnico'} <span style={{ color: '#ff0000' }}>*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={passwordForm.tecnicoName}
-                        onChange={(e) => setPasswordForm({ ...passwordForm, tecnicoName: e.target.value })}
-                        placeholder={safeT?.tecnicoNamePlaceholder || 'Digite o nome do técnico'}
-                        style={{ 
-                          width: '100%', 
-                          padding: '10px', 
-                          backgroundColor: '#141414', 
-                          color: '#fff', 
-                          border: '1px solid rgba(0, 255, 0, 0.3)', 
-                          borderRadius: '4px',
-                          fontSize: '14px'
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
-                        {safeT?.password || 'Senha'} <span style={{ color: '#ff0000' }}>*</span>
-                      </label>
-                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                        <input
-                          type="text"
-                          value={passwordForm.password}
-                          onChange={(e) => setPasswordForm({ ...passwordForm, password: e.target.value })}
-                          placeholder={safeT?.passwordPlaceholder || 'Digite a senha ou gere automaticamente'}
-                          style={{ 
-                            flex: 1,
-                            padding: '10px', 
-                            backgroundColor: '#141414', 
-                            color: '#fff', 
-                            border: '1px solid rgba(0, 255, 0, 0.3)', 
-                            borderRadius: '4px',
-                            fontSize: '14px',
-                            fontFamily: 'monospace'
-                          }}
-                        />
-                        <button
-                          className="btn-primary"
-                          onClick={() => setPasswordForm({ ...passwordForm, password: generatePassword(16) })}
-                          style={{ padding: '10px 20px', fontSize: '13px', whiteSpace: 'nowrap' }}
-                        >
-                          {safeT?.generatePassword || 'Gerar senha'}
-                        </button>
-                      </div>
-                      <p style={{ fontSize: '11px', opacity: 0.6, marginTop: '5px', marginBottom: 0 }}>
-                        {safeT?.generatePasswordHint || 'Clique em "Gerar" para criar uma senha segura automaticamente'}
-                      </p>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                      <button
-                        className="btn-secondary"
-                        onClick={() => {
-                          setShowPasswordForm(false)
-                          setPasswordForm({ tecnicoName: '', password: '' })
-                        }}
-                        style={{ padding: '10px 20px', fontSize: '13px' }}
-                      >
-                        {safeT?.cancel || 'Cancelar'}
-                      </button>
-                      <button
-                        className="btn-primary"
-                        onClick={handleSavePassword}
-                        style={{ padding: '10px 20px', fontSize: '13px' }}
-                      >
-                        {safeT?.save || 'Salvar'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-                
-                {managedPasswords.length === 0 && !showPasswordForm ? (
-                  <div style={{ padding: '20px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)', textAlign: 'center' }}>
-                    <p style={{ fontSize: '14px', opacity: 0.6 }}>{safeT?.noPasswordsManaged || 'Nenhuma senha gerenciada ainda.'}</p>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '400px', overflowY: 'auto' }}>
-                    {managedPasswords.map((entry) => (
-                      <div 
-                        key={entry.id} 
-                        style={{ 
-                          padding: '15px', 
-                          backgroundColor: '#222222', 
-                          borderRadius: '6px', 
-                          border: '1px solid rgba(0, 255, 0, 0.2)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '10px'
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div>
-                            <strong style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
-                              {entry.tecnicoName}
-                            </strong>
-                            <span style={{ fontSize: '11px', opacity: 0.6 }}>
-                              {safeT?.createdAt || 'Criado em:'} {new Date(entry.createdAt).toLocaleString(localeDatetimeGeneral(selectedLanguage))}
-                            </span>
-                          </div>
-                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            <button
-                              className="btn-primary"
-                              onClick={() => {
-                                const newVisible = new Set(visiblePasswords)
-                                if (newVisible.has(entry.id)) {
-                                  newVisible.delete(entry.id)
-                                } else {
-                                  newVisible.add(entry.id)
-                                }
-                                setVisiblePasswords(newVisible)
-                              }}
-                              style={{ padding: '8px 16px', fontSize: '13px', whiteSpace: 'nowrap', minWidth: '100px' }}
-                            >
-                              {visiblePasswords.has(entry.id) ? (safeT?.hidePassword || '👁️ Ocultar') : (safeT?.showPassword || '👁️‍🗨️ Mostrar')}
-                            </button>
-                            <button
-                              className="btn-primary"
-                              onClick={() => {
-                                navigator.clipboard.writeText(entry.password)
-                                alert(t.passwordCopied || 'Senha copiada para a área de transferência!')
-                              }}
-                              style={{ padding: '8px 16px', fontSize: '13px', whiteSpace: 'nowrap', minWidth: '100px' }}
-                            >
-                              {safeT?.copyPassword || '📋 Copiar'}
-                            </button>
-                            <button
-                              className="btn-danger"
-                              onClick={() => {
-                                if (window.confirm(t.confirmDeletePassword)) {
-                                  const updated = managedPasswords.filter(p => p.id !== entry.id)
-                                  setManagedPasswords(updated)
-                                  saveData('nonato-managed-passwords', updated)
-                                }
-                              }}
-                              style={{ padding: '8px 16px', fontSize: '13px', whiteSpace: 'nowrap', minWidth: '100px' }}
-                            >
-                              {safeT?.deletePassword || '🗑️ Excluir'}
-                            </button>
-                          </div>
-                        </div>
-                        {visiblePasswords.has(entry.id) && (
-                          <div style={{ 
-                            padding: '10px', 
-                            backgroundColor: '#141414', 
-                            borderRadius: '4px', 
-                            border: '1px solid rgba(0, 255, 0, 0.3)',
-                            fontFamily: 'monospace',
-                            fontSize: '14px',
-                            wordBreak: 'break-all'
-                          }}>
-                            {entry.password}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-              </div>
-            </details>
-
-            <details id="admin-backup-seguranca" className="admin-disclosure admin-disclosure--emerald">
-              <summary>
-                <span className="admin-disclosure__icon" aria-hidden>🛡</span>
-                <span className="admin-disclosure__meta">
-                  <span className="admin-disclosure__title">{safeT?.backupRestore || 'Backup e segurança'}</span>
-                  <span className="admin-disclosure__sub">
-                    {safeT?.adminBackupSummarySub || 'Cópias de dados, exportação do código em ZIP e restauração controlada.'}
-                  </span>
-                </span>
-                <span className="admin-disclosure__chev" aria-hidden>▼</span>
-              </summary>
-              <div className="admin-disclosure__body">
-            <div className="admin-section admin-section--emerald">
-              {!isDemoMode && (
-                <p style={{ padding: '10px 12px', marginBottom: '15px', backgroundColor: 'rgba(0, 150, 0, 0.12)', border: '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '6px', color: '#90ee90', fontSize: '12px' }}>
-                  <strong>Para não perder o código:</strong> use «Descarregar backup (ZIP)» e guarde o ficheiro no seu PC. Assim o código fica seguro mesmo que o servidor seja reinstalado.
-                </p>
-              )}
-              {isDemoMode && (
-                <p style={{ padding: '12px', marginBottom: '15px', backgroundColor: 'rgba(255, 165, 0, 0.15)', border: '1px solid rgba(255, 165, 0, 0.4)', borderRadius: '6px', color: '#ffa500', fontSize: '13px' }}>
-                  Em modo demonstração o backup e restauração do código estão desativados. Para usar backup, abra a aplicação fora do link de demonstração.
-                </p>
-              )}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', opacity: isDemoMode ? 0.7 : 1, pointerEvents: isDemoMode ? 'none' : 'auto' }}>
-                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
-                  <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupTitle || 'Backup Completo do Sistema'}</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '10px', lineHeight: 1.45 }}>
-                    {safeT?.backupDescription || 'Crie um backup completo de todos os dados do sistema'} O ficheiro JSON inclui relatórios de serviço (dias de trabalho), clientes, equipamentos, fornecedores, peças, categorias, agenda e fechamentos — guarde cópias fora deste PC (pen ou nuvem).
-                  </p>
-                  <p style={{ fontSize: '11px', opacity: 0.62, marginBottom: '12px', lineHeight: 1.45, padding: '8px 10px', backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: '6px', border: '1px solid rgba(0,255,0,0.12)' }}>
-                    <strong style={{ color: '#9be7ff' }}>Dupla proteção recomendada:</strong> (1) dados em JSON com «Criar Backup» + cópias automáticas abaixo; (2) código da aplicação com «Descarregar backup (ZIP)» / backup no servidor — são coisas diferentes; use as duas.
-                  </p>
-                  <button className="btn-primary" onClick={handleCreateBackup} style={{ padding: '8px 15px' }} disabled={isDemoMode}>
-                    {safeT?.createBackup || 'Criar Backup'}
-                  </button>
-                </div>
-
-                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.35)' }}>
-                  <strong style={{ display: 'block', marginBottom: '8px', color: '#8ecaff' }}>{safeT?.restoreTitle || 'Restaurar Backup'}</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
-                    {safeT?.restoreDescription || 'Restaure todos os dados a partir de um arquivo de backup'} Se fez «Criar Backup» e guardou o ficheiro <strong>.json</strong> no PC (ex.: ontem), use o botão abaixo para o escolher. Repõe relatórios, clientes, peças, agenda e fechamentos no servidor e neste aparelho.
-                  </p>
-                  <label
-                    style={{
-                      display: 'inline-block',
-                      padding: '8px 15px',
-                      backgroundColor: '#0066cc',
-                      color: '#fff',
-                      borderRadius: '6px',
-                      cursor: isDemoMode ? 'not-allowed' : 'pointer',
-                      fontWeight: 600,
-                      fontSize: '13px',
-                      opacity: isDemoMode ? 0.5 : 1,
-                    }}
-                  >
-                    {safeT?.restoreBackup || 'Restaurar Backup'} (.json)
-                    <input
-                      type="file"
-                      accept=".json,application/json"
-                      onChange={handleRestoreBackup}
-                      disabled={isDemoMode}
-                      style={{ display: 'none' }}
-                    />
-                  </label>
-                </div>
-
-                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.28)' }}>
-                  <strong style={{ display: 'block', marginBottom: '8px', color: '#8ecaff' }}>Cópias automáticas periódicas (navegador)</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
-                    Além do instantâneo ao abrir a página e após guardar relatórios, pode gravar até seis instantâneos <strong>de X em X minutos</strong> neste computador. Não substitui o JSON descarregado para a pen, mas ajuda a recuperar erros recentes.
-                  </p>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', color: '#ccc', marginBottom: '10px', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={autoBackupEnabled}
-                      disabled={isDemoMode}
-                      onChange={(e) => {
-                        const v = e.target.checked
-                        setAutoBackupEnabled(v)
-                        void saveData('nonato-auto-backup-enabled', v ? 'true' : 'false')
-                      }}
-                    />
-                    Ativar cópias automáticas periódicas
-                  </label>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px', fontSize: '12px', color: '#ccc' }}>
-                    <span style={{ opacity: 0.85 }}>Intervalo:</span>
-                    <select
-                      value={autoBackupInterval}
-                      disabled={isDemoMode}
-                      onChange={(e) => {
-                        const n = parseInt(e.target.value, 10)
-                        setAutoBackupInterval(n)
-                        void saveData('nonato-auto-backup-interval', String(n))
-                      }}
-                      style={{ padding: '6px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }}
-                    >
-                      <option value={15}>15 minutos</option>
-                      <option value={30}>30 minutos</option>
-                      <option value={60}>60 minutos</option>
-                      <option value={120}>2 horas</option>
-                      <option value={360}>6 horas</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.35)' }}>
-                  <strong style={{ display: 'block', marginBottom: '8px', color: '#8ecaff' }}>Recuperar dados — cópias automáticas recentes</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
-                    O sistema guarda até seis instantâneos no navegador (inclui relatórios de serviço e clientes). Se perdeu linhas de dias de trabalho, experimente uma data <strong>anterior</strong> ao problema. A restauração repõe também no <strong>servidor</strong> (precisa de ligação).
-                  </p>
-                  {getAutoBackups().length === 0 ? (
-                    <p style={{ fontSize: '12px', opacity: 0.55, margin: 0 }}>Ainda não há cópias automáticas neste navegador — voltará a haver após guardar relatórios ou ao reiniciar a página.</p>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '280px', overflowY: 'auto' }}>
-                      {getAutoBackups().map((b: { timestamp: number; data?: { date?: string } }) => (
-                        <div
-                          key={b.timestamp}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: '10px',
-                            flexWrap: 'wrap',
-                            padding: '10px 12px',
-                            backgroundColor: '#141414',
-                            borderRadius: '6px',
-                            border: '1px solid rgba(100, 180, 255, 0.25)',
-                          }}
-                        >
-                          <span style={{ fontSize: '12px', color: '#ccc' }}>
-                            {new Date(b.timestamp).toLocaleString(localeDatetimeGeneral(selectedLanguage))}
-                            {b.data?.date ? <span style={{ opacity: 0.65 }}> · bundle {String(b.data.date).slice(0, 19)}</span> : null}
-                          </span>
-                          <button
-                            type="button"
-                            className="btn-primary"
-                            disabled={isDemoMode}
-                            onClick={() => {
-                              if (
-                                !window.confirm(
-                                  'Restaurar esta cópia automática? Substitui dados no servidor e neste PC (inclui relatórios e clientes deste instantâneo). A página recarrega em seguida.'
-                                )
-                              ) {
-                                return
-                              }
-                              void restoreAutoBackup(b)
-                            }}
-                            style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap' }}
-                          >
-                            Restaurar esta cópia
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)', borderLeft: '4px solid #00ff00' }}>
-                  <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupCodigoTitle || 'Backup do Código do Programa'}</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>{safeT?.backupCodigoDescription || 'Faça backup de TODOS os arquivos do código fonte do programa'}</p>
-                  <button className="btn-primary" onClick={handleBackupCodigo} style={{ padding: '8px 15px', marginRight: '8px', marginBottom: '8px' }} disabled={isDemoMode}>
-                    {safeT?.backupCodigoButton || 'Fazer Backup do Código'}
-                  </button>
-                  <button type="button" onClick={handleDownloadBackupZip} disabled={isDemoMode} style={{ padding: '8px 15px', marginBottom: '8px', background: 'rgba(0, 150, 255, 0.25)', border: '1px solid rgba(0, 150, 255, 0.6)', color: '#66b3ff', borderRadius: '6px', cursor: isDemoMode ? 'not-allowed' : 'pointer', fontWeight: '600' }}>
-                    📥 Descarregar backup (ZIP) para o PC
-                  </button>
-                </div>
-
-                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(255, 165, 0, 0.3)' }}>
-                  <strong style={{ display: 'block', marginBottom: '8px', color: '#ffa500' }}>{safeT?.restoreCodeTitle || '⚠️ RESTAURAR CÓDIGO DO PROGRAMA'}</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>
-                    {safeT?.restoreCodeDescription || 'Restaure o código do programa a partir de um backup anterior. Esta operação substituirá TODOS os arquivos atuais pelos arquivos do backup selecionado.'}
-                  </p>
-                  <p style={{ fontSize: '12px', marginBottom: '12px', padding: '8px 10px', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: '4px', border: '1px solid rgba(255,165,0,0.2)' }}>
-                    <strong style={{ color: '#ffa500' }}>Pasta onde os backups estão guardados:</strong>
-                    <br />
-                    <span style={{ wordBreak: 'break-all', opacity: 0.95 }}>{codeBackupsFolder || (isDemoMode ? 'Em modo demonstração o backup está desativado.' : (loadingBackups ? 'A carregar…' : 'Clique em «Atualizar Lista» para ver o caminho.'))}</span>
-                  </p>
-                  {loadingBackups ? (
-                    <p style={{ fontSize: '12px', opacity: 0.7, padding: '10px', textAlign: 'center' }}>{safeT?.loadingBackups || 'Carregando backups...'}</p>
-                  ) : codeBackups.length === 0 ? (
-                    <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', textAlign: 'center' }}>{safeT?.noCodeBackups || 'Nenhum backup de código encontrado.'}</p>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto', marginBottom: '10px' }}>
-                      {codeBackups.map((backup, index) => (
-                        <div 
-                          key={index}
-                          style={{ 
-                            padding: '12px', 
-                            backgroundColor: '#141414', 
-                            borderRadius: '4px', 
-                            border: '1px solid rgba(255, 165, 0, 0.2)',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
-                          }}
-                        >
-                          <div style={{ flex: 1 }}>
-                            <strong style={{ display: 'block', fontSize: '13px', marginBottom: '4px' }}>
-                              {(safeT?.backupNumber || 'Backup {number}').replace('{number}', String(index + 1))}
-                            </strong>
-                            <span style={{ fontSize: '11px', opacity: 0.7, display: 'block' }}>
-                              {new Date(backup.timestamp).toLocaleString(localeDatetimeGeneral(selectedLanguage))}
-                            </span>
-                            <span style={{ fontSize: '11px', opacity: 0.6, display: 'block', marginTop: '2px' }}>
-                              {(safeT?.filesCount || '{count} arquivos').replace('{count}', String(backup.filesCount || 'N/A'))} • {backup.path || (safeT?.locationNotSpecified || 'Local não especificado')}
-                            </span>
-                          </div>
-                          <button
-                            className="btn-primary"
-                            onClick={() => handleRestoreCodigo(backup.path)}
-                            disabled={isDemoMode}
-                            style={{ 
-                              padding: '8px 16px', 
-                              fontSize: '12px', 
-                              whiteSpace: 'nowrap',
-                              backgroundColor: '#ffa500',
-                              borderColor: '#ffa500',
-                              color: '#000'
-                            }}
-                          >
-                            {safeT?.restoreButton || '🔄 Restaurar'}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
-                  <button 
-                    className="btn-primary" 
-                    onClick={loadCodeBackups} 
-                    style={{ padding: '6px 12px', fontSize: '11px', opacity: 0.8 }}
-                    disabled={isDemoMode}
-                  >
-                    {safeT?.updateListButton || '🔄 Atualizar Lista'}
-                  </button>
-
-                  <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid rgba(255,165,0,0.2)' }}>
-                    <p style={{ fontSize: '12px', opacity: 0.8, marginBottom: '8px' }}>Restaurar a partir de um ficheiro ZIP (backup que descarregou para o PC):</p>
-                    <input
-                      ref={restoreFromZipInputRef}
-                      type="file"
-                      accept=".zip"
-                      onChange={handleRestoreFromZip}
-                      style={{ display: 'none' }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => restoreFromZipInputRef.current?.click()}
-                      disabled={isDemoMode || restoringFromZip}
-                      style={{ padding: '8px 14px', fontSize: '12px', background: 'rgba(255, 165, 0, 0.2)', border: '1px solid rgba(255, 165, 0, 0.5)', color: '#ffa500', borderRadius: '6px', cursor: isDemoMode || restoringFromZip ? 'not-allowed' : 'pointer', fontWeight: '600' }}
-                    >
-                      {restoringFromZip ? 'A restaurar…' : '📂 Restaurar a partir de ficheiro ZIP'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-              </div>
-            </details>
-          </div>
+          <AdministradorContent
+            variant="full"
+            safeT={safeT}
+            LogoComponent={LogoComponent}
+            closeTab={closeTab}
+            activeTabId={activeTabId}
+            voltarPaginaInicial={voltarPaginaInicial}
+            saveData={saveData}
+            loadData={loadData}
+            onOpenDemosFullTab={() => openTab('gestao-demos', getTabTitle('gestao-demos'))}
+            sync={{
+              safeT,
+              syncPendingRemote,
+              syncPushLoading,
+              setSyncDecisionModalOpen,
+              setLastAcceptedRevision,
+              pendingFullServerReplaceKey: NONATO_PENDING_FULL_SERVER_REPLACE_LS,
+              enviarEsteAparelhoParaServidor,
+            }}
+            geral={{
+              preverProximoNumeroRelatorio,
+              logoUrl,
+              logoType,
+              logoUrlDashboard,
+              logoTypeDashboard,
+              adminSidebarLogoDraft,
+              adminDashboardLogoDraft,
+              adminLogoSavingSidebar,
+              adminLogoSavingDashboard,
+              handleFileChangeSidebarLogo,
+              handleFileChangeDashboardLogo,
+              commitAdminSidebarLogoDraft,
+              discardAdminSidebarLogoDraft,
+              commitAdminDashboardLogoDraft,
+              discardAdminDashboardLogoDraft,
+              handleRemoveSidebarLogo,
+              handleRemoveDashboardLogo,
+              pdfLogosModoUnificado,
+              setPdfLogosModoUnificado,
+              logosRelatorios,
+              adminBibliotecaLogoDraft,
+              adminBibliotecaLogoSaving,
+              logoRelatorioSelecionadoId,
+              logoFechamentoSelecionadoId,
+              logoOrcamentoSelecionadoId,
+              logoProtocoloServicoSelecionadoId,
+              incluirLogoNosRelatorios,
+              incluirLogoFechamentosDespesas,
+              setIncluirLogoNosRelatorios,
+              setIncluirLogoFechamentosDespesas,
+              setLogosRelatorios,
+              setLogoRelatorioSelecionadoId,
+              setLogoFechamentoSelecionadoId,
+              setLogoOrcamentoSelecionadoId,
+              setLogoProtocoloServicoSelecionadoId,
+              saveData,
+              administradorPreviewPdfLogo,
+              aplicarLogoUnificadoTodosPdfs,
+              administradorAddBibliotecaLogo,
+              commitAdminBibliotecaLogoDraft,
+              discardAdminBibliotecaLogoDraft,
+            }}
+            users={{
+              users,
+              showUserForm,
+              editingUser,
+              userForm,
+              setUserForm,
+              gestores,
+              tecnicos,
+              handleAddUser,
+              handleEditUser,
+              handleDeleteUser,
+              handleSaveUser,
+              setShowUserForm,
+              setEditingUser,
+              createEmptyUserForm,
+            }}
+            clientePrioritario={{
+              safeT,
+              clientePrioritario,
+              showClientePrioritarioForm,
+              editingClientePrioritario,
+              clientePrioritarioForm,
+              setClientePrioritarioForm,
+              handleAddClientePrioritario,
+              handleEditClientePrioritario,
+              handleDeleteClientePrioritario,
+              handleSaveClientePrioritario,
+              handleClientePrioritarioPhotoChange,
+              handleRemoveClientePrioritarioPhoto,
+              setShowClientePrioritarioForm,
+              setEditingClientePrioritario,
+              emptyClientePrioritarioForm: () => ({
+                nomeEmpresa: '',
+                morada: '',
+                localidade: '',
+                conselho: '',
+                pais: '',
+                codigoPostal: '',
+                freguesia: '',
+                numeroContribuicaoFiscal: '',
+                telefones: '',
+                email: '',
+                contato: '',
+                photo: '',
+              }),
+            }}
+            sidebar={{
+              sidebarButtons,
+              sidebarGroups: SIDEBAR_GROUPS,
+              sidebarPinnedIds: SIDEBAR_PINNED_IDS,
+              sidebarOrganizerSearch,
+              setSidebarOrganizerSearch,
+              showSidebarButtonOrganizer,
+              setShowSidebarButtonOrganizer,
+              draggedButton,
+              dragOverIndex,
+              setDragOverIndex,
+              normalizeSidebarButtons,
+              isSidebarButtonLocked,
+              getDefaultSidebarGroup,
+              getButtonName,
+              getSidebarGroupLabel,
+              getButtonsByGroup,
+              handleRestoreSidebarOrganizerDefaults,
+              handleDragStart,
+              handleDragOver,
+              handleDragLeave,
+              handleDropWithGroup,
+              handleDragEnd,
+              handleMoveButtonToGroup,
+              handleMoveButton,
+              handleMoveButtonAcrossGroups,
+              handleDeleteButton,
+              setEditingButton,
+              setButtonForm,
+              setShowButtonForm,
+            }}
+            passwords={{
+              t,
+              selectedLanguage,
+              localeDatetimeGeneral,
+              managedPasswords,
+              showPasswordForm,
+              passwordForm,
+              visiblePasswords,
+              setShowPasswordForm,
+              setPasswordForm,
+              setVisiblePasswords,
+              setManagedPasswords,
+              generatePassword,
+              handleSavePassword,
+              saveData,
+            }}
+            backup={{
+              isDemoMode,
+              selectedLanguage,
+              localeDatetimeGeneral,
+              autoBackupEnabled,
+              autoBackupInterval,
+              setAutoBackupEnabled,
+              setAutoBackupInterval,
+              codeBackups,
+              codeBackupsFolder,
+              loadingBackups,
+              restoringFromZip,
+              restoreFromZipInputRef,
+              saveData,
+              handleCreateBackup,
+              handleRestoreBackup,
+              handleBackupCodigo,
+              handleDownloadBackupZip,
+              handleRestoreCodigo,
+              handleRestoreFromZip,
+              loadCodeBackups,
+              getAutoBackups,
+              restoreAutoBackup,
+            }}
+          />
         )
-      
       case 'familias-grupos':
       case 'familias-grupos-equipamentos': {
         const isChecklist = tab.type === 'familias-grupos'
@@ -61297,242 +59551,6 @@ A1;Peça exemplo;10`}
     )
   }
 
-  const renderSidebarButtonOrganizer = () => {
-    const normalizedButtons = normalizeSidebarButtons(sidebarButtons)
-    const coreButtons = normalizedButtons.filter((button) => isSidebarButtonLocked(button))
-    const searchTerm = sidebarOrganizerSearch.trim().toLowerCase()
-
-    return (
-      <div className="admin-section admin-section--ui sidebar-organizer-shell">
-        <div className="sidebar-organizer-hero">
-          <div>
-            <h3 className="admin-section-title sidebar-organizer-title">
-              {safeT?.buttonOrganizer || 'ORGANIZAÇÃO DA INTERFACE'}
-            </h3>
-            <p className="sidebar-organizer-subtitle">
-              {(safeT as any)?.organizeButtonsFreeGroupDesc ||
-                'Pode mover qualquer botão para qualquer grupo. Ex.: um botão da Gestão Técnica pode passar para Gestão Industrial. Use o menu ao lado de cada botão para escolher o grupo.'}
-            </p>
-          </div>
-          <div className="sidebar-organizer-actions">
-            <button
-              className="btn-primary"
-              onClick={handleRestoreSidebarOrganizerDefaults}
-              style={{ padding: '10px 16px', fontSize: '12px' }}
-            >
-              {(safeT as any)?.sidebarOrganizerRestore || 'Restaurar padrão'}
-            </button>
-            <button
-              className="btn-primary"
-              onClick={() => setShowSidebarButtonOrganizer(!showSidebarButtonOrganizer)}
-              style={{ padding: '10px 16px', fontSize: '12px' }}
-            >
-              {showSidebarButtonOrganizer
-                ? ((safeT as any)?.hideSidebarOrganizer || 'Ocultar Organizador')
-                : ((safeT as any)?.organizeSidebarButtons || 'Abrir Organizador Moderno')}
-            </button>
-            <button
-              className="btn-primary"
-              onClick={() => setShowButtonForm(true)}
-              style={{ padding: '10px 16px', fontSize: '12px' }}
-            >
-              {safeT?.addButton || 'Adicionar Botão'}
-            </button>
-          </div>
-        </div>
-
-        <div className="sidebar-organizer-summary">
-          <div className="sidebar-organizer-stat">
-            <span className="sidebar-organizer-stat-value">{normalizedButtons.filter((button) => !isSidebarButtonLocked(button)).length}</span>
-            <span className="sidebar-organizer-stat-label">Botões organizáveis</span>
-          </div>
-          <div className="sidebar-organizer-stat">
-            <span className="sidebar-organizer-stat-value">{SIDEBAR_GROUPS.length}</span>
-            <span className="sidebar-organizer-stat-label">Áreas da barra lateral</span>
-          </div>
-          <div className="sidebar-organizer-stat">
-            <span className="sidebar-organizer-stat-value">{coreButtons.length}</span>
-            <span className="sidebar-organizer-stat-label">Botões principais protegidos</span>
-          </div>
-        </div>
-
-        {coreButtons.length > 0 && (
-          <div className="sidebar-organizer-core-strip">
-            <span className="sidebar-organizer-core-label">{safeT?.mainButton || 'Botão Principal'}:</span>
-            {coreButtons.map((button) => (
-              <span key={button.id} className="sidebar-organizer-core-chip">
-                {getButtonName(button)}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {showSidebarButtonOrganizer && (
-          <>
-            <p className="sidebar-organizer-hint">
-              {safeT?.dragToReorder ||
-                'Arraste os botões para reorganizá-los'}
-              {' '}
-              Use também os controlos do card para mover dentro da coluna ou enviar para outra área.
-            </p>
-
-            <div className="sidebar-organizer-toolbar">
-              <input
-                type="text"
-                value={sidebarOrganizerSearch}
-                onChange={(e) => setSidebarOrganizerSearch(e.target.value)}
-                className="sidebar-organizer-search"
-                placeholder={(safeT as any)?.sidebarOrganizerSearchPlaceholder || 'Buscar botão por nome...'}
-              />
-            </div>
-
-            <div className="sidebar-organizer-board">
-              {SIDEBAR_GROUPS.map((group) => {
-                const groupButtons = getButtonsByGroup(group).filter((button) => {
-                  if (!searchTerm) return true
-                  const name = getButtonName(button).toLowerCase()
-                  return name.includes(searchTerm)
-                })
-                return (
-                  <div
-                    key={group}
-                    className="sidebar-organizer-column"
-                    onDragOver={(e) => {
-                      e.preventDefault()
-                      setDragOverIndex(groupButtons.length)
-                    }}
-                    onDrop={(e) => handleDropWithGroup(e, groupButtons.length, group)}
-                  >
-                    <div className="sidebar-organizer-column-head">
-                      <div>
-                        <h4>{getSidebarGroupLabel(group)}</h4>
-                        <p>{groupButtons.length} botão{groupButtons.length === 1 ? '' : 'ões'}</p>
-                      </div>
-                      <span className="sidebar-organizer-column-badge">{groupButtons.length}</span>
-                    </div>
-
-                    <div className="sidebar-organizer-column-body">
-                      {groupButtons.length === 0 ? (
-                        <div className="sidebar-organizer-empty">
-                          {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                        </div>
-                      ) : (
-                        groupButtons.map((button, index) => {
-                          const currentGroup = button.group || getDefaultSidebarGroup(button.id)
-                          const currentGroupIndex = SIDEBAR_GROUPS.indexOf(currentGroup)
-                          return (
-                            <div
-                              key={button.id}
-                              className={`sidebar-organizer-card${draggedButton === button.id ? ' is-dragging' : ''}${dragOverIndex === index ? ' is-drop-target' : ''}`}
-                              draggable
-                              onDragStart={() => handleDragStart(button.id)}
-                              onDragOver={(e) => handleDragOver(e, index)}
-                              onDragLeave={handleDragLeave}
-                              onDrop={(e) => handleDropWithGroup(e, index, group)}
-                              onDragEnd={handleDragEnd}
-                            >
-                              <div className="sidebar-organizer-card-main">
-                                <div className="sidebar-organizer-card-topline">
-                                  <span className="sidebar-organizer-card-grip">::</span>
-                                  <span className="sidebar-organizer-card-name" title={getButtonName(button)}>
-                                    {getButtonName(button)}
-                                  </span>
-                                </div>
-                                <div className="sidebar-organizer-card-meta">
-                                  <span>{getSidebarGroupLabel(currentGroup)}</span>
-                                  {SIDEBAR_PINNED_IDS.has(button.id) && (
-                                    <span>Fixo recomendado</span>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="sidebar-organizer-card-controls">
-                                <select
-                                  value={currentGroup}
-                                  onChange={(e) => handleMoveButtonToGroup(button.id, e.target.value as SidebarGroup)}
-                                  className="sidebar-organizer-select"
-                                >
-                                  {SIDEBAR_GROUPS.map((groupOption) => (
-                                    <option key={groupOption} value={groupOption}>
-                                      {getSidebarGroupLabel(groupOption)}
-                                    </option>
-                                  ))}
-                                </select>
-
-                                <div className="sidebar-organizer-card-actions-row">
-                                  <button
-                                    type="button"
-                                    className="sidebar-organizer-mini-btn"
-                                    onClick={() => handleMoveButton(button.id, 'up')}
-                                    disabled={index === 0}
-                                    title={safeT?.moveUp || 'Mover para Cima'}
-                                  >
-                                    ↑
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="sidebar-organizer-mini-btn"
-                                    onClick={() => handleMoveButton(button.id, 'down')}
-                                    disabled={index === groupButtons.length - 1}
-                                    title={safeT?.moveDown || 'Mover para Baixo'}
-                                  >
-                                    ↓
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="sidebar-organizer-mini-btn"
-                                    onClick={() => handleMoveButtonAcrossGroups(button.id, 'left')}
-                                    disabled={currentGroupIndex <= 0}
-                                    title="Mover para a área anterior"
-                                  >
-                                    ←
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="sidebar-organizer-mini-btn"
-                                    onClick={() => handleMoveButtonAcrossGroups(button.id, 'right')}
-                                    disabled={currentGroupIndex >= SIDEBAR_GROUPS.length - 1}
-                                    title="Mover para a próxima área"
-                                  >
-                                    →
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn-primary"
-                                    onClick={() => {
-                                      setEditingButton(button)
-                                      setButtonForm({ name: button.name, action: button.action })
-                                      setShowButtonForm(true)
-                                    }}
-                                    style={{ padding: '8px 12px', fontSize: '11px', whiteSpace: 'nowrap' }}
-                                  >
-                                    {safeT?.edit || 'Editar'}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn-danger"
-                                    onClick={() => handleDeleteButton(button.id)}
-                                    style={{ padding: '8px 12px', fontSize: '11px', whiteSpace: 'nowrap' }}
-                                  >
-                                    {safeT?.delete || 'Excluir'}
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        })
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </>
-        )}
-      </div>
-    )
-  }
-
   // Função para mover botão entre grupos
   const persistSidebarButtons = (updatedButtons: SidebarButton[]) => {
     const normalized = normalizeSidebarButtons(updatedButtons)
@@ -69905,965 +67923,186 @@ A1;Peça exemplo;10`}
       {showModal && !openTabs.some(tab => tab.type === 'administrador') && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal admin-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '900px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 className="admin-modal-title">
-              {safeT?.administrador || 'ADMINISTRADOR'}
-            </h2>
-
-            {/* Gestão de envio de demonstrações */}
-            <GestaoDemosContent
+            <AdministradorContent
               variant="compact"
+              safeT={safeT}
+              onClose={() => setShowModal(false)}
               saveData={saveData}
               loadData={loadData}
-              onOpenFullTab={() => {
+              onOpenDemosFullTab={() => {
                 setShowModal(false)
                 openTab('gestao-demos', getTabTitle('gestao-demos'))
               }}
+              sync={{
+                safeT,
+                syncPendingRemote,
+                syncPushLoading,
+                setSyncDecisionModalOpen,
+                setLastAcceptedRevision,
+                pendingFullServerReplaceKey: NONATO_PENDING_FULL_SERVER_REPLACE_LS,
+                enviarEsteAparelhoParaServidor,
+              }}
+              geral={{
+                preverProximoNumeroRelatorio,
+                logoUrl,
+                logoType,
+                logoUrlDashboard,
+                logoTypeDashboard,
+                adminSidebarLogoDraft,
+                adminDashboardLogoDraft,
+                adminLogoSavingSidebar,
+                adminLogoSavingDashboard,
+                handleFileChangeSidebarLogo,
+                handleFileChangeDashboardLogo,
+                commitAdminSidebarLogoDraft,
+                discardAdminSidebarLogoDraft,
+                commitAdminDashboardLogoDraft,
+                discardAdminDashboardLogoDraft,
+                handleRemoveSidebarLogo,
+                handleRemoveDashboardLogo,
+                pdfLogosModoUnificado,
+                setPdfLogosModoUnificado,
+                logosRelatorios,
+                adminBibliotecaLogoDraft,
+                adminBibliotecaLogoSaving,
+                logoRelatorioSelecionadoId,
+                logoFechamentoSelecionadoId,
+                logoOrcamentoSelecionadoId,
+                logoProtocoloServicoSelecionadoId,
+                incluirLogoNosRelatorios,
+                incluirLogoFechamentosDespesas,
+                setIncluirLogoNosRelatorios,
+                setIncluirLogoFechamentosDespesas,
+                setLogosRelatorios,
+                setLogoRelatorioSelecionadoId,
+                setLogoFechamentoSelecionadoId,
+                setLogoOrcamentoSelecionadoId,
+                setLogoProtocoloServicoSelecionadoId,
+                saveData,
+                administradorPreviewPdfLogo,
+                aplicarLogoUnificadoTodosPdfs,
+                administradorAddBibliotecaLogo,
+                commitAdminBibliotecaLogoDraft,
+                discardAdminBibliotecaLogoDraft,
+              }}
+              users={{
+                users,
+                showUserForm,
+                editingUser,
+                userForm,
+                setUserForm,
+                gestores,
+                tecnicos,
+                handleAddUser,
+                handleEditUser,
+                handleDeleteUser,
+                handleSaveUser,
+                setShowUserForm,
+                setEditingUser,
+                createEmptyUserForm,
+              }}
+              clientePrioritario={{
+                safeT,
+                clientePrioritario,
+                showClientePrioritarioForm,
+                editingClientePrioritario,
+                clientePrioritarioForm,
+                setClientePrioritarioForm,
+                handleAddClientePrioritario,
+                handleEditClientePrioritario,
+                handleDeleteClientePrioritario,
+                handleSaveClientePrioritario,
+                handleClientePrioritarioPhotoChange,
+                handleRemoveClientePrioritarioPhoto,
+                setShowClientePrioritarioForm,
+                setEditingClientePrioritario,
+                emptyClientePrioritarioForm: () => ({
+                  nomeEmpresa: '',
+                  morada: '',
+                  localidade: '',
+                  conselho: '',
+                  pais: '',
+                  codigoPostal: '',
+                  freguesia: '',
+                  numeroContribuicaoFiscal: '',
+                  telefones: '',
+                  email: '',
+                  contato: '',
+                  photo: '',
+                }),
+              }}
+              sidebar={{
+                sidebarButtons,
+                sidebarGroups: SIDEBAR_GROUPS,
+                sidebarPinnedIds: SIDEBAR_PINNED_IDS,
+                sidebarOrganizerSearch,
+                setSidebarOrganizerSearch,
+                showSidebarButtonOrganizer,
+                setShowSidebarButtonOrganizer,
+                draggedButton,
+                dragOverIndex,
+                setDragOverIndex,
+                normalizeSidebarButtons,
+                isSidebarButtonLocked,
+                getDefaultSidebarGroup,
+                getButtonName,
+                getSidebarGroupLabel,
+                getButtonsByGroup,
+                handleRestoreSidebarOrganizerDefaults,
+                handleDragStart,
+                handleDragOver,
+                handleDragLeave,
+                handleDropWithGroup,
+                handleDragEnd,
+                handleMoveButtonToGroup,
+                handleMoveButton,
+                handleMoveButtonAcrossGroups,
+                handleDeleteButton,
+                setEditingButton,
+                setButtonForm,
+                setShowButtonForm,
+              }}
+              passwords={{
+                t,
+                selectedLanguage,
+                localeDatetimeGeneral,
+                managedPasswords,
+                showPasswordForm,
+                passwordForm,
+                visiblePasswords,
+                setShowPasswordForm,
+                setPasswordForm,
+                setVisiblePasswords,
+                setManagedPasswords,
+                generatePassword,
+                handleSavePassword,
+                saveData,
+              }}
+              backup={{
+                isDemoMode,
+                selectedLanguage,
+                localeDatetimeGeneral,
+                autoBackupEnabled,
+                autoBackupInterval,
+                setAutoBackupEnabled,
+                setAutoBackupInterval,
+                codeBackups,
+                codeBackupsFolder,
+                loadingBackups,
+                restoringFromZip,
+                restoreFromZipInputRef,
+                saveData,
+                handleCreateBackup,
+                handleRestoreBackup,
+                handleBackupCodigo,
+                handleDownloadBackupZip,
+                handleRestoreCodigo,
+                handleRestoreFromZip,
+                loadCodeBackups,
+                getAutoBackups,
+                restoreAutoBackup,
+              }}
             />
-
-            {/* SEÇÃO 1: CONFIGURAÇÕES GERAIS */}
-            <div className="admin-section admin-section--violet">
-              <h3 className="admin-section-title admin-section-title--violet">
-                {safeT?.configuracoesGerais || 'CONFIGURAÇÕES GERAIS'}
-              </h3>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
-                  <div>
-                    <strong style={{ display: 'block', marginBottom: '5px' }}>{(safeT as any)?.logoBarraLateral || 'Logo da Barra Lateral'}</strong>
-                    <span style={{ fontSize: '12px', opacity: 0.7 }}>{safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece no menu lateral.'}</span>
-                  </div>
-                  <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 15px', margin: 0 }}>
-                    {safeT?.changeLogo || 'Alterar Logo'}
-                    <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeSidebarLogo} style={{ display: 'none' }} />
-                  </label>
-                </div>
-                {(adminSidebarLogoDraft || logoUrl) && (
-                  <div
-                    style={{
-                      padding: '12px',
-                      backgroundColor: '#222222',
-                      borderRadius: '6px',
-                      border: adminSidebarLogoDraft ? '1px solid rgba(255,180,0,0.45)' : undefined,
-                    }}
-                  >
-                    <div style={{ marginBottom: '10px' }}>
-                      {adminSidebarLogoDraft ? (
-                        adminSidebarLogoDraft.isVideo ? (
-                          <video
-                            src={adminSidebarLogoDraft.previewUrl}
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }}
-                          />
-                        ) : (
-                          <img
-                            src={adminSidebarLogoDraft.previewUrl}
-                            alt=""
-                            style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }}
-                          />
-                        )
-                      ) : logoType === 'video' ? (
-                        <video
-                          src={logoUrl || ''}
-                          autoPlay
-                          loop
-                          muted
-                          playsInline
-                          style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }}
-                        />
-                      ) : (
-                        <img src={logoUrl || ''} alt="Logo barra lateral" style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
-                      )}
-                    </div>
-                    {adminSidebarLogoDraft ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <p style={{ fontSize: '11px', color: 'rgba(255,200,140,0.95)', margin: 0, lineHeight: 1.45 }}>
-                          {(safeT as any)?.adminLogoSalvarParaAplicar ||
-                            'Ainda não gravado — clique em «Guardar» para aplicar ou «Descartar rascunho» para cancelar.'}
-                        </p>
-                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                          <button
-                            type="button"
-                            className="btn-primary"
-                            disabled={adminLogoSavingSidebar}
-                            onClick={() => void commitAdminSidebarLogoDraft()}
-                            style={{ padding: '6px 12px', fontSize: '12px' }}
-                          >
-                            {(safeT as any)?.guardar || safeT?.save || 'Guardar'}
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-primary"
-                            disabled={adminLogoSavingSidebar}
-                            onClick={discardAdminSidebarLogoDraft}
-                            style={{
-                              padding: '6px 12px',
-                              fontSize: '12px',
-                              backgroundColor: 'rgba(255,255,255,0.06)',
-                              borderColor: 'rgba(255,255,255,0.25)',
-                              color: 'rgba(255,255,255,0.88)',
-                            }}
-                          >
-                            {(safeT as any)?.adminLogoDescartarRascunho || safeT?.cancel || 'Descartar rascunho'}
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <button className="btn-danger" onClick={handleRemoveSidebarLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>
-                        {safeT?.removeLogo || 'Remover Logo'}
-                      </button>
-                    )}
-                  </div>
-                )}
-                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#222222', borderRadius: '6px' }}>
-                    <div>
-                      <strong style={{ display: 'block', marginBottom: '5px' }}>{(safeT as any)?.logoDashboard || 'Logo do Dashboard'}</strong>
-                      <span style={{ fontSize: '12px', opacity: 0.7 }}>{safeT?.selectImageOrVideo || 'Imagem ou Vídeo MP4. Aparece na tela inicial (painel de controlo).'}</span>
-                    </div>
-                    <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 15px', margin: 0 }}>
-                      {safeT?.changeLogo || 'Alterar Logo'}
-                      <input type="file" accept="image/*,video/mp4" onChange={handleFileChangeDashboardLogo} style={{ display: 'none' }} />
-                    </label>
-                  </div>
-                  {(adminDashboardLogoDraft || logoUrlDashboard) && (
-                    <div
-                      style={{
-                        padding: '12px',
-                        backgroundColor: '#222222',
-                        borderRadius: '6px',
-                        marginTop: '10px',
-                        border: adminDashboardLogoDraft ? '1px solid rgba(255,180,0,0.45)' : undefined,
-                      }}
-                    >
-                      <div style={{ marginBottom: '10px' }}>
-                        {adminDashboardLogoDraft ? (
-                          adminDashboardLogoDraft.isVideo ? (
-                            <video
-                              src={adminDashboardLogoDraft.previewUrl}
-                              autoPlay
-                              loop
-                              muted
-                              playsInline
-                              style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }}
-                            />
-                          ) : (
-                            <img
-                              src={adminDashboardLogoDraft.previewUrl}
-                              alt=""
-                              style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }}
-                            />
-                          )
-                        ) : logoTypeDashboard === 'video' ? (
-                          <video
-                            src={logoUrlDashboard || ''}
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }}
-                          />
-                        ) : (
-                          <img src={logoUrlDashboard || ''} alt="Logo dashboard" style={{ maxWidth: '200px', maxHeight: '100px', borderRadius: '4px' }} />
-                        )}
-                      </div>
-                      {adminDashboardLogoDraft ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <p style={{ fontSize: '11px', color: 'rgba(255,200,140,0.95)', margin: 0, lineHeight: 1.45 }}>
-                            {(safeT as any)?.adminLogoSalvarParaAplicar ||
-                              'Ainda não gravado — clique em «Guardar» para aplicar ou «Descartar rascunho» para cancelar.'}
-                          </p>
-                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                            <button
-                              type="button"
-                              className="btn-primary"
-                              disabled={adminLogoSavingDashboard}
-                              onClick={() => void commitAdminDashboardLogoDraft()}
-                              style={{ padding: '6px 12px', fontSize: '12px' }}
-                            >
-                              {(safeT as any)?.guardar || safeT?.save || 'Guardar'}
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-primary"
-                              disabled={adminLogoSavingDashboard}
-                              onClick={discardAdminDashboardLogoDraft}
-                              style={{
-                                padding: '6px 12px',
-                                fontSize: '12px',
-                                backgroundColor: 'rgba(255,255,255,0.06)',
-                                borderColor: 'rgba(255,255,255,0.25)',
-                                color: 'rgba(255,255,255,0.88)',
-                              }}
-                            >
-                              {(safeT as any)?.adminLogoDescartarRascunho || safeT?.cancel || 'Descartar rascunho'}
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <button className="btn-danger" onClick={handleRemoveDashboardLogo} style={{ padding: '6px 12px', fontSize: '12px' }}>
-                          {safeT?.removeLogo || 'Remover Logo'}
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* SEÇÃO 2: GESTÃO DE USUÁRIOS */}
-            <div className="admin-section">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid rgba(0, 255, 136, 0.2)', paddingBottom: '10px' }}>
-                <h3 className="admin-section-title" style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>
-                  {safeT?.userManagement || 'GESTÃO DE USUÁRIOS'}
-                </h3>
-                <button className="btn-primary" onClick={handleAddUser} style={{ padding: '8px 15px' }}>
-                  {safeT?.addUser || 'Adicionar Usuário'}
-                </button>
-              </div>
-              
-              {users.length === 0 ? (
-                <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>{safeT?.noUsers || 'Nenhum usuário cadastrado'}</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {users.map(user => (
-                    <div key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
-                      <div>
-                        <strong style={{ display: 'block', marginBottom: '5px' }}>{user.name}</strong>
-                        <span style={{ fontSize: '12px', opacity: 0.7 }}>{user.email} • {user.role}</span>
-                      </div>
-                      <div style={{ display: 'flex', gap: '5px' }}>
-                        <button className="btn-primary" onClick={() => handleEditUser(user)} style={{ padding: '8px 16px', fontSize: '13px', whiteSpace: 'nowrap', minWidth: '80px' }}>
-                          {safeT?.edit || 'Editar'}
-                        </button>
-                        <button className="btn-danger" onClick={() => handleDeleteUser(user.id)} style={{ padding: '8px 16px', fontSize: '13px', whiteSpace: 'nowrap', minWidth: '80px' }}>
-                          {safeT?.delete || 'Excluir'}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* SEÇÃO 3: ORGANIZAÇÃO DA INTERFACE */}
-            {renderSidebarButtonOrganizer()}
-            {/* BLOCO ANTIGO DO ORGANIZADOR REMOVIDO */}
-            <div style={{ display: 'none' }}>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '18px',
-                  borderBottom: '1px solid rgba(0, 255, 136, 0.22)',
-                  paddingBottom: '10px',
-                  gap: '12px',
-                  flexWrap: 'wrap',
-                }}
-              >
-                <h3 className="admin-section-title" style={{ marginBottom: 0, borderBottom: 'none', paddingBottom: 0 }}>
-                  {safeT?.buttonOrganizer || 'ORGANIZAÇÃO DA INTERFACE'}
-                </h3>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  <button
-                    className="btn-primary"
-                    onClick={() => setShowButtonForm(true)}
-                    style={{ padding: '8px 14px', fontSize: '12px' }}
-                  >
-                  {safeT?.addButton || 'Adicionar Botão'}
-                  </button>
-                </div>
-              </div>
-              
-              <p style={{ marginBottom: '16px', fontSize: '12px', opacity: 0.78, fontStyle: 'italic' }}>
-                {safeT?.dragToReorder ||
-                  'Arraste para ordenar. Use o menu à direita para mudar o grupo, renomear ou ocultar um botão da barra lateral.'}
-              </p>
-
-              {/* Seção: TODOS OS BOTÕES - Organização livre por grupo */}
-              <div className="admin-group-panel" style={{ marginBottom: '24px' }}>
-                <h4 style={{ color: '#00ff7a', marginBottom: '6px', fontSize: '14px', fontWeight: 700 }}>
-                  {safeT?.manageButtonGroups || 'ORGANIZAR BOTÕES POR GRUPO'}
-                </h4>
-                <p style={{ fontSize: '12px', opacity: 0.85, marginBottom: '12px', lineHeight: 1.5 }}>
-                  {(safeT as any)?.organizeButtonsFreeGroupDesc ||
-                    'Pode mover qualquer botão para qualquer grupo. Ex.: um botão da Gestão Técnica pode passar para Gestão Industrial. Use o menu ao lado de cada botão para escolher o grupo.'}
-                </p>
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                    maxHeight: '540px',
-                    overflowY: 'auto',
-                  }}
-                >
-                  {sidebarButtons
-                    .sort((a, b) => a.order - b.order)
-                    .map((button) => {
-                      const isMainButton =
-                        button.id === 'gestao-tecnica-default' ||
-                        button.id === 'parceiros-comercial-default' ||
-                        button.id === 'documentacao-relatorios-default' ||
-                        button.id === 'gestao-industrial-default' ||
-                        button.id === 'administrador-default' ||
-                        button.id === 'extras-default'
-                      return (
-                        <div
-                          key={button.id}
-                          style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: '10px 12px',
-                            background: 'linear-gradient(135deg, #141914 0%, #111311 100%)',
-                            borderRadius: '10px',
-                            border: '1px solid rgba(0, 255, 0, 0.22)',
-                            boxShadow: '0 6px 18px rgba(0,0,0,0.55)',
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '10px',
-                              flex: 1,
-                              minWidth: 0,
-                            }}
-                          >
-                            <span
-                              style={{
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                fontSize: '13px',
-                                fontWeight: isMainButton ? 600 : 500,
-                                color: isMainButton ? '#e0ffe8' : '#f4fff7',
-                              }}
-                            >
-                              {getButtonName(button)}
-                            </span>
-                            {!isMainButton && (
-                              <span
-                                style={{
-                                  fontSize: '10px',
-                                  opacity: 0.7,
-                                  fontStyle: 'italic',
-                                  padding: '2px 8px',
-                                  borderRadius: '999px',
-                                  border: '1px solid rgba(0,255,122,0.35)',
-                                  background: 'rgba(0,40,24,0.9)',
-                                }}
-                              >
-                                ({button.group === 'gestao-tecnica' ? (safeT?.gestaoTecnicaTitle || 'GESTÃO TÉCNICA') : 
-                                  button.group === 'gestao-custos' ? (safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS') :
-                                  button.group === 'gestao-industrial' ? (safeT?.gestaoIndustrialTitle || 'GESTÃO INDUSTRIAL') : 
-                                  button.group === 'gestao-financeira' ? (safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA') :
-                                  button.group === 'checklist-group' ? (safeT?.checklistGroupTitle || 'CHECKLIST') :
-                                  button.group === 'comunicacao-interna' ? ((safeT as any)?.comunicacaoInternaTitle || 'COMUNICAÇÃO INTERNA') :
-                                  button.group === 'manuais-informacoes-tecnicas' ? ((safeT as any)?.manuaisInformacoesTecnicasTitle || 'MANUAIS') :
-                                  button.group === 'biblia-nonato-service' ? ((safeT as any)?.bibliaNonatoServiceTitle || 'BÍBLIA') :
-                                  button.group === 'almoxarifado-armazem' ? ((safeT as any)?.almoxarifadoArmazemTitle || 'ALMOXARIFADO') :
-                                  (safeT?.outrosBotoes || 'OUTROS')})
-                              </span>
-                            )}
-                            {isMainButton && (
-                              <span style={{ fontSize: '11px', opacity: 0.6, fontStyle: 'italic', color: '#00ff00' }}>
-                                ({safeT?.mainButton || 'Botão Principal'})
-                              </span>
-                            )}
-                          </div>
-                          <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                            {!isMainButton && (
-                              <select
-                                value={button.group || 'outros'}
-                                onChange={(e) => handleMoveButtonToGroup(button.id, e.target.value as SidebarGroup)}
-                                style={{ 
-                                  padding: '6px 10px', 
-                                  backgroundColor: '#222222', 
-                                  color: '#fff', 
-                                  border: '1px solid rgba(0, 255, 0, 0.3)', 
-                                  borderRadius: '4px',
-                                  fontSize: '12px',
-                                  cursor: 'pointer'
-                                }}
-                              >
-                                <option value="gestao-tecnica">{safeT?.gestaoTecnicaTitle || 'GESTÃO TÉCNICA'}</option>
-                                <option value="gestao-custos">{safeT?.gestaoCustosTitle || 'GESTÃO DE CUSTOS'}</option>
-                                <option value="comunicacao-interna">{(safeT as any)?.comunicacaoInternaTitle || 'COMUNICAÇÃO INTERNA'}</option>
-                                <option value="checklist-group">{safeT?.checklistGroupTitle || 'GESTÃO DOS CHECKLIST'}</option>
-                                <option value="gestao-industrial">{safeT?.gestaoIndustrialTitle || 'GESTÃO INDUSTRIAL'}</option>
-                                <option value="manuais-informacoes-tecnicas">{(safeT as any)?.manuaisInformacoesTecnicasTitle || 'MANUAIS E INFORMAÇÕES TÉCNICAS'}</option>
-                                <option value="biblia-nonato-service">{(safeT as any)?.bibliaNonatoServiceTitle || 'BÍBLIA DA NONATO SERVICE'}</option>
-                                <option value="almoxarifado-armazem">{(safeT as any)?.almoxarifadoArmazemTitle || 'ALMOXARIFADO / ARMAZÉM'}</option>
-                                <option value="gestao-financeira">{safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}</option>
-                                <option value="outros">{safeT?.outrosBotoes || 'OUTROS'}</option>
-                              </select>
-                            )}
-                            <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '6px 12px', fontSize: '11px', whiteSpace: 'nowrap' }}>
-                              {safeT?.edit || 'Editar'}
-                            </button>
-                          </div>
-                        </div>
-                      )
-                    })}
-                </div>
-              </div>
-              
-              {/* Grupo: GESTÃO TÉCNICA */}
-              <div className="admin-group-panel">
-                <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                  {safeT?.gestaoTecnicaTitle || 'GESTÃO TÉCNICA'}
-                </h4>
-                {getButtonsByGroup('gestao-tecnica').length === 0 ? (
-                  <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center' }}>
-                    {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {getButtonsByGroup('gestao-tecnica')
-                      .sort((a, b) => a.order - b.order)
-                      .map((button, index) => {
-                        const allButtons = getButtonsByGroup('gestao-tecnica').sort((a, b) => a.order - b.order)
-                        const globalIndex = sidebarButtons.findIndex(b => b.id === button.id)
-                        return (
-                          <div 
-                            key={button.id}
-                            draggable
-                            onDragStart={() => handleDragStart(button.id)}
-                            onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => {
-                              e.preventDefault()
-                              const targetIndex = globalIndex >= 0 ? globalIndex : index
-                              handleDropWithGroup(e, targetIndex, 'gestao-tecnica')
-                            }}
-                            onDragEnd={handleDragEnd}
-                            style={{ 
-                              display: 'flex', 
-                              justifyContent: 'space-between', 
-                              alignItems: 'center', 
-                              padding: '10px', 
-                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', 
-                              borderRadius: '4px',
-                              cursor: 'move',
-                              border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
-                              transition: 'all 0.2s ease',
-                              marginLeft: '10px'
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                              <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '5px 12px', fontSize: '11px', whiteSpace: 'nowrap', minWidth: '60px' }}>
-                                {safeT?.edit || 'Editar'}
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                )}
-              </div>
-
-              {/* Grupo: GESTÃO INDUSTRIAL */}
-              <div className="admin-group-panel">
-                <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                  {safeT?.gestaoIndustrialTitle || 'GESTÃO INDUSTRIAL'}
-                </h4>
-                {getButtonsByGroup('gestao-industrial').length === 0 ? (
-                  <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center' }}>
-                    {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {getButtonsByGroup('gestao-industrial')
-                      .sort((a, b) => a.order - b.order)
-                      .map((button, index) => {
-                        const allButtons = getButtonsByGroup('gestao-industrial').sort((a, b) => a.order - b.order)
-                        const globalIndex = sidebarButtons.findIndex(b => b.id === button.id)
-                        return (
-                          <div 
-                            key={button.id}
-                            draggable
-                            onDragStart={() => handleDragStart(button.id)}
-                            onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => {
-                              e.preventDefault()
-                              const targetIndex = globalIndex >= 0 ? globalIndex : index
-                              handleDropWithGroup(e, targetIndex, 'gestao-industrial')
-                            }}
-                            onDragEnd={handleDragEnd}
-                            style={{ 
-                              display: 'flex', 
-                              justifyContent: 'space-between', 
-                              alignItems: 'center', 
-                              padding: '10px', 
-                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', 
-                              borderRadius: '4px',
-                              cursor: 'move',
-                              border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
-                              transition: 'all 0.2s ease',
-                              marginLeft: '10px'
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                              <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '5px 12px', fontSize: '11px', whiteSpace: 'nowrap', minWidth: '60px' }}>
-                                {safeT?.edit || 'Editar'}
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                )}
-              </div>
-
-              {/* Grupo: fechamento OS / custos / orçamentos */}
-              <div className="admin-group-panel">
-                <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                  {safeT?.gestaoCustosTitle || 'FECHAMENTO DE OS/CUSTOS/ORÇAMENTOS'}
-                </h4>
-                {getButtonsByGroup('gestao-custos').length === 0 ? (
-                  <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center' }}>
-                    {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {getButtonsByGroup('gestao-custos')
-                      .sort((a, b) => a.order - b.order)
-                      .map((button, index) => {
-                        const globalIndex = sidebarButtons.findIndex(b => b.id === button.id)
-                        return (
-                          <div 
-                            key={button.id}
-                            draggable
-                            onDragStart={() => handleDragStart(button.id)}
-                            onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => {
-                              e.preventDefault()
-                              const targetIndex = globalIndex >= 0 ? globalIndex : index
-                              handleDropWithGroup(e, targetIndex, 'gestao-custos')
-                            }}
-                            onDragEnd={handleDragEnd}
-                            style={{ 
-                              display: 'flex', 
-                              justifyContent: 'space-between', 
-                              alignItems: 'center', 
-                              padding: '10px', 
-                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', 
-                              borderRadius: '4px',
-                              cursor: 'move',
-                              border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
-                              transition: 'all 0.2s ease',
-                              marginLeft: '10px'
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                              <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '5px 12px', fontSize: '11px', whiteSpace: 'nowrap', minWidth: '60px' }}>
-                                {safeT?.edit || 'Editar'}
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                )}
-              </div>
-
-              {/* Grupo: GESTÃO DOS CHECKLIST */}
-              <div className="admin-group-panel">
-                <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                  {safeT?.checklistGroupTitle || 'GESTÃO DOS CHECKLIST'}
-                </h4>
-                {getButtonsByGroup('checklist-group').length === 0 ? (
-                  <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center' }}>
-                    {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {getButtonsByGroup('checklist-group')
-                      .sort((a, b) => a.order - b.order)
-                      .map((button, index) => {
-                        const globalIndex = sidebarButtons.findIndex(b => b.id === button.id)
-                        return (
-                          <div 
-                            key={button.id}
-                            draggable
-                            onDragStart={() => handleDragStart(button.id)}
-                            onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => {
-                              e.preventDefault()
-                              const targetIndex = globalIndex >= 0 ? globalIndex : index
-                              handleDropWithGroup(e, targetIndex, 'checklist-group')
-                            }}
-                            onDragEnd={handleDragEnd}
-                            style={{ 
-                              display: 'flex', 
-                              justifyContent: 'space-between', 
-                              alignItems: 'center', 
-                              padding: '10px', 
-                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', 
-                              borderRadius: '4px',
-                              cursor: 'move',
-                              border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
-                              transition: 'all 0.2s ease',
-                              marginLeft: '10px'
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                              <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '5px 12px', fontSize: '11px', whiteSpace: 'nowrap', minWidth: '60px' }}>
-                                {safeT?.edit || 'Editar'}
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                )}
-              </div>
-
-              {/* Grupo: COMUNICAÇÃO INTERNA */}
-              <div className="admin-group-panel">
-                <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                  {(safeT as any)?.comunicacaoInternaTitle || 'COMUNICAÇÃO INTERNA'}
-                </h4>
-                {getButtonsByGroup('comunicacao-interna').length === 0 ? (
-                  <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center' }}>
-                    {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {getButtonsByGroup('comunicacao-interna')
-                      .sort((a, b) => a.order - b.order)
-                      .map((button, index) => {
-                        const globalIndex = sidebarButtons.findIndex(b => b.id === button.id)
-                        return (
-                          <div key={button.id} draggable onDragStart={() => handleDragStart(button.id)} onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)} onDragLeave={handleDragLeave}
-                            onDrop={(e) => { e.preventDefault(); handleDropWithGroup(e, globalIndex >= 0 ? globalIndex : index, 'comunicacao-interna') }} onDragEnd={handleDragEnd}
-                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                              <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '5px 12px', fontSize: '11px', whiteSpace: 'nowrap', minWidth: '60px' }}>{safeT?.edit || 'Editar'}</button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                )}
-              </div>
-
-              {/* Grupo: MANUAIS E INFORMAÇÕES TÉCNICAS */}
-              <div className="admin-group-panel">
-                <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                  {(safeT as any)?.manuaisInformacoesTecnicasTitle || 'MANUAIS E INFORMAÇÕES TÉCNICAS'}
-                </h4>
-                {getButtonsByGroup('manuais-informacoes-tecnicas').length === 0 ? (
-                  <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center' }}>
-                    {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {getButtonsByGroup('manuais-informacoes-tecnicas')
-                      .sort((a, b) => a.order - b.order)
-                      .map((button, index) => {
-                        const globalIndex = sidebarButtons.findIndex(b => b.id === button.id)
-                        return (
-                          <div key={button.id} draggable onDragStart={() => handleDragStart(button.id)} onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)} onDragLeave={handleDragLeave}
-                            onDrop={(e) => { e.preventDefault(); handleDropWithGroup(e, globalIndex >= 0 ? globalIndex : index, 'manuais-informacoes-tecnicas') }} onDragEnd={handleDragEnd}
-                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                              <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '5px 12px', fontSize: '11px', whiteSpace: 'nowrap', minWidth: '60px' }}>{safeT?.edit || 'Editar'}</button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                )}
-              </div>
-
-              {/* Grupo: BÍBLIA DA NONATO SERVICE */}
-              <div className="admin-group-panel">
-                <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                  {(safeT as any)?.bibliaNonatoServiceTitle || 'BÍBLIA DA NONATO SERVICE'}
-                </h4>
-                {getButtonsByGroup('biblia-nonato-service').length === 0 ? (
-                  <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center' }}>
-                    {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {getButtonsByGroup('biblia-nonato-service')
-                      .sort((a, b) => a.order - b.order)
-                      .map((button, index) => {
-                        const globalIndex = sidebarButtons.findIndex(b => b.id === button.id)
-                        return (
-                          <div key={button.id} draggable onDragStart={() => handleDragStart(button.id)} onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)} onDragLeave={handleDragLeave}
-                            onDrop={(e) => { e.preventDefault(); handleDropWithGroup(e, globalIndex >= 0 ? globalIndex : index, 'biblia-nonato-service') }} onDragEnd={handleDragEnd}
-                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                              <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '5px 12px', fontSize: '11px', whiteSpace: 'nowrap', minWidth: '60px' }}>{safeT?.edit || 'Editar'}</button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                )}
-              </div>
-
-              {/* Grupo: ALMOXARIFADO / ARMAZÉM */}
-              <div className="admin-group-panel">
-                <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                  {(safeT as any)?.almoxarifadoArmazemTitle || 'ALMOXARIFADO / ARMAZÉM'}
-                </h4>
-                {getButtonsByGroup('almoxarifado-armazem').length === 0 ? (
-                  <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center' }}>
-                    {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {getButtonsByGroup('almoxarifado-armazem')
-                      .sort((a, b) => a.order - b.order)
-                      .map((button, index) => {
-                        const globalIndex = sidebarButtons.findIndex(b => b.id === button.id)
-                        return (
-                          <div key={button.id} draggable onDragStart={() => handleDragStart(button.id)} onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)} onDragLeave={handleDragLeave}
-                            onDrop={(e) => { e.preventDefault(); handleDropWithGroup(e, globalIndex >= 0 ? globalIndex : index, 'almoxarifado-armazem') }} onDragEnd={handleDragEnd}
-                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', borderRadius: '4px', cursor: 'move', border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)', transition: 'all 0.2s ease', marginLeft: '10px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                              <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '5px 12px', fontSize: '11px', whiteSpace: 'nowrap', minWidth: '60px' }}>{safeT?.edit || 'Editar'}</button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                )}
-              </div>
-
-              {/* Grupo: GESTÃO FINANCEIRA */}
-              <div className="admin-group-panel admin-group-panel--blue">
-                <h4 style={{ color: '#66b3ff', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                  {safeT?.gestaoFinanceiraTitle || 'GESTÃO FINANCEIRA'}
-                </h4>
-                {getButtonsByGroup('gestao-financeira').length === 0 ? (
-                  <p style={{ fontSize: '12px', opacity: 0.6, padding: '10px', fontStyle: 'italic', textAlign: 'center' }}>
-                    {safeT?.noButtonsInGroup || 'Nenhum botão neste grupo'}
-                  </p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {getButtonsByGroup('gestao-financeira')
-                      .sort((a, b) => a.order - b.order)
-                      .map((button, index) => {
-                        const allButtons = getButtonsByGroup('gestao-financeira').sort((a, b) => a.order - b.order)
-                        const globalIndex = sidebarButtons.findIndex(b => b.id === button.id)
-                        return (
-                          <div 
-                            key={button.id}
-                            draggable
-                            onDragStart={() => handleDragStart(button.id)}
-                            onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => {
-                              e.preventDefault()
-                              const targetIndex = globalIndex >= 0 ? globalIndex : index
-                              handleDropWithGroup(e, targetIndex, 'gestao-financeira')
-                            }}
-                            onDragEnd={handleDragEnd}
-                            style={{ 
-                              display: 'flex', 
-                              justifyContent: 'space-between', 
-                              alignItems: 'center', 
-                              padding: '10px', 
-                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', 
-                              borderRadius: '4px',
-                              cursor: 'move',
-                              border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
-                              transition: 'all 0.2s ease',
-                              marginLeft: '10px'
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                              <span style={{ opacity: 0.5, fontSize: '11px', flexShrink: 0 }}>☰</span>
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '12px' }}>{getButtonName(button)}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '5px 12px', fontSize: '11px', whiteSpace: 'nowrap', minWidth: '60px' }}>
-                                {safeT?.edit || 'Editar'}
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                )}
-              </div>
-
-              {/* Outros Botões */}
-              {getButtonsByGroup('outros').length > 0 && (
-                <div className="admin-group-panel admin-group-panel--soft">
-                  <h4 style={{ color: '#00ff00', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>
-                    {safeT?.outrosBotoes || 'OUTROS BOTÕES'}
-                  </h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '450px', overflowY: 'auto' }}>
-                    {getButtonsByGroup('outros')
-                      .sort((a, b) => a.order - b.order)
-                      .map((button, index) => {
-                        const globalIndex = sidebarButtons.findIndex(b => b.id === button.id)
-                        return (
-                          <div 
-                            key={button.id}
-                            draggable
-                            onDragStart={() => handleDragStart(button.id)}
-                            onDragOver={(e) => handleDragOver(e, globalIndex >= 0 ? globalIndex : index)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => {
-                              e.preventDefault()
-                              const targetIndex = globalIndex >= 0 ? globalIndex : index
-                              handleDropWithGroup(e, targetIndex, 'outros')
-                            }}
-                            onDragEnd={handleDragEnd}
-                            style={{ 
-                              display: 'flex', 
-                              justifyContent: 'space-between', 
-                              alignItems: 'center', 
-                              padding: '12px', 
-                              backgroundColor: dragOverIndex === globalIndex ? '#2a4a2a' : '#141414', 
-                              borderRadius: '6px',
-                              cursor: 'move',
-                              border: draggedButton === button.id ? '2px solid #00ff00' : '1px solid rgba(0, 255, 0, 0.2)',
-                              transition: 'all 0.2s ease'
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
-                              <span style={{ opacity: 0.5, fontSize: '12px', flexShrink: 0 }}>☰</span>
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getButtonName(button)}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                              <button className="btn-primary" onClick={() => { setEditingButton(button); setButtonForm({ name: button.name, action: button.action }); setShowButtonForm(true); }} style={{ padding: '6px 15px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '70px' }}>
-                                {safeT?.edit || 'Editar'}
-                              </button>
-                              <button className="btn-danger" onClick={() => handleDeleteButton(button.id)} style={{ padding: '6px 15px', fontSize: '12px', whiteSpace: 'nowrap', minWidth: '70px' }}>
-                                {safeT?.delete || 'Excluir'}
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* SEÇÃO 5: BACKUP E SEGURANÇA */}
-            <div className="admin-section admin-section--emerald" style={{ marginBottom: '24px' }}>
-              <h3 className="admin-section-title">
-                {safeT?.backupRestore || 'BACKUP E SEGURANÇA'}
-              </h3>
-              {!isDemoMode && (
-                <p style={{ padding: '10px 12px', marginBottom: '15px', backgroundColor: 'rgba(0, 150, 0, 0.12)', border: '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '6px', color: '#90ee90', fontSize: '12px' }}>
-                  <strong>Para não perder o código:</strong> use «Descarregar backup (ZIP)» e guarde no seu PC.
-                </p>
-              )}
-              {isDemoMode && (
-                <p style={{ padding: '12px', marginBottom: '15px', backgroundColor: 'rgba(255, 165, 0, 0.15)', border: '1px solid rgba(255, 165, 0, 0.4)', borderRadius: '6px', color: '#ffa500', fontSize: '13px' }}>
-                  Em modo demonstração o backup está desativado.
-                </p>
-              )}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', opacity: isDemoMode ? 0.7 : 1, pointerEvents: isDemoMode ? 'none' : 'auto' }}>
-                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
-                  <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupTitle || 'Backup Completo do Sistema'}</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '10px', lineHeight: 1.45 }}>
-                    {safeT?.backupDescription || 'Crie um backup completo de todos os dados do sistema'} O JSON inclui relatórios (dias de trabalho), clientes, peças, agenda e fechamentos — guarde fora deste PC.
-                  </p>
-                  <p style={{ fontSize: '11px', opacity: 0.65, marginBottom: '12px' }}>
-                    Cópias automáticas periódicas e restauro pormenorizado: abra a aba <strong>Administrador</strong> e expanda <strong>Backup e segurança</strong>.
-                  </p>
-                  <button className="btn-primary" onClick={handleCreateBackup} style={{ padding: '8px 15px' }} disabled={isDemoMode}>
-                    {safeT?.createBackup || 'Criar Backup'}
-                  </button>
-                </div>
-
-                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(100, 180, 255, 0.35)' }}>
-                  <strong style={{ display: 'block', marginBottom: '8px', color: '#8ecaff' }}>{safeT?.restoreTitle || 'Restaurar Backup'}</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.78, marginBottom: '12px', lineHeight: 1.45 }}>
-                    Escolha o ficheiro <strong>.json</strong> que descarregou com «Criar Backup» (ex.: backup-nonato-service-2026-06-05.json).
-                  </p>
-                  <label
-                    style={{
-                      display: 'inline-block',
-                      padding: '8px 15px',
-                      backgroundColor: '#0066cc',
-                      color: '#fff',
-                      borderRadius: '6px',
-                      cursor: isDemoMode ? 'not-allowed' : 'pointer',
-                      fontWeight: 600,
-                      fontSize: '13px',
-                      opacity: isDemoMode ? 0.5 : 1,
-                    }}
-                  >
-                    {safeT?.restoreBackup || 'Restaurar Backup'} (.json)
-                    <input
-                      type="file"
-                      accept=".json,application/json"
-                      onChange={handleRestoreBackup}
-                      disabled={isDemoMode}
-                      style={{ display: 'none' }}
-                    />
-                  </label>
-                </div>
-
-                <div style={{ padding: '15px', backgroundColor: '#222222', borderRadius: '6px', border: '1px solid rgba(0, 255, 0, 0.1)' }}>
-                  <strong style={{ display: 'block', marginBottom: '8px' }}>{safeT?.backupCodigoTitle || 'Backup do Código do Programa'}</strong>
-                  <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '12px' }}>{safeT?.backupCodigoDescription || 'Faça backup de TODOS os arquivos do código fonte do programa'}</p>
-                  <p style={{ fontSize: '12px', marginBottom: '8px', opacity: 0.8 }}><strong>Pasta dos backups:</strong> {codeBackupsFolder || (isDemoMode ? '—' : 'Atualize a lista.')}</p>
-                  <button className="btn-primary" onClick={handleBackupCodigo} style={{ padding: '8px 15px', marginRight: '8px', marginBottom: '8px' }} disabled={isDemoMode}>
-                    {safeT?.backupCodigoButton || 'Fazer Backup do Código'}
-                  </button>
-                  <button type="button" onClick={handleDownloadBackupZip} disabled={isDemoMode} style={{ padding: '8px 15px', marginBottom: '8px', background: 'rgba(0, 150, 255, 0.25)', border: '1px solid rgba(0, 150, 255, 0.6)', color: '#66b3ff', borderRadius: '6px', cursor: isDemoMode ? 'not-allowed' : 'pointer', fontWeight: '600' }}>
-                    📥 Descarregar backup (ZIP) para o PC
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <button className="btn-primary" onClick={() => setShowModal(false)} style={{ width: '100%', padding: '12px', marginTop: '20px' }}>
-              {safeT?.close || 'Fechar'}
-            </button>
           </div>
         </div>
       )}
