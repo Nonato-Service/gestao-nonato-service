@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getPublicOrigin } from '../../getPublicOrigin'
 
 export const dynamic = 'force-dynamic'
 
@@ -7,8 +8,8 @@ export const dynamic = 'force-dynamic'
  * Use no tablet ou telemóvel se abriu /demo por engano e quer usar o programa em modo normal.
  */
 export async function GET(request: NextRequest) {
-  const origin = request.nextUrl.origin
-  const response = NextResponse.redirect(origin + '/', 302)
+  const origin = getPublicOrigin(request)
+  const response = NextResponse.redirect(`${origin}/`, 302)
   response.cookies.set('nonato_demo', '', { path: '/', maxAge: 0 })
   response.cookies.set('nonato_demo_start', '', { path: '/', maxAge: 0 })
   response.cookies.set('nonato_demo_recipient', '', { path: '/', maxAge: 0 })

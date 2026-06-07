@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
+import { getPublicOrigin } from '../../getPublicOrigin'
 import { DATA_DIR, ensureDataDir } from '../../data/shared'
 
 const DEMO_DAYS = 15
@@ -60,9 +61,9 @@ function markDemoRecipientAccess(recipientId: string, accessDateIso: string) {
 
 export async function GET(request: NextRequest) {
   const startDate = new Date().toISOString()
-  const origin = request.nextUrl.origin
+  const origin = getPublicOrigin(request)
   const recipientId = request.nextUrl.searchParams.get('rid')?.trim()
-  const response = NextResponse.redirect(origin + '/', 302)
+  const response = NextResponse.redirect(`${origin}/`, 302)
   response.cookies.set('nonato_demo', '1', {
     path: '/',
     maxAge: COOKIE_MAX_AGE,

@@ -1,12 +1,26 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
 export default function DemoWelcomePage() {
   const searchParams = useSearchParams()
   const rid = searchParams.get('rid')?.trim()
   const activateHref = rid ? `/api/demo/activate?rid=${encodeURIComponent(rid)}` : '/api/demo/activate'
+  const [loading, setLoading] = useState(false)
+
+  const handleActivate = async () => {
+    if (loading) return
+    setLoading(true)
+    try {
+      // Não seguir redirect do servidor (Railway pode devolver 0.0.0.0:PORT internamente).
+      // Os cookies vêm na resposta; entrada fica no mesmo domínio público de /demo.
+      await fetch(activateHref, { credentials: 'include', redirect: 'manual' })
+      window.location.assign('/')
+    } catch {
+      window.location.assign(activateHref)
+    }
+  }
 
   return (
     <div
@@ -110,32 +124,26 @@ export default function DemoWelcomePage() {
             originar medidas legais.
           </p>
         </div>
-        {/* Link direto para forçar pedido completo e gravação dos cookies no browser */}
-        <a
-          href={activateHref}
+        <button
+          type="button"
+          onClick={handleActivate}
+          disabled={loading}
           style={{
             display: 'inline-block',
             padding: '14px 32px',
-            background: '#00ff00',
+            background: loading ? '#00aa00' : '#00ff00',
             color: '#000',
             fontWeight: 700,
             fontSize: '1rem',
             borderRadius: '8px',
-            textDecoration: 'none',
+            border: 'none',
+            cursor: loading ? 'wait' : 'pointer',
             transition: 'all 0.2s ease',
             boxShadow: '0 4px 12px rgba(0, 255, 0, 0.3)',
           }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.background = '#00cc00'
-            e.currentTarget.style.transform = 'scale(1.02)'
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.background = '#00ff00'
-            e.currentTarget.style.transform = 'scale(1)'
-          }}
         >
-          Aceitar e entrar
-        </a>
+          {loading ? 'A entrar…' : 'Aceitar e entrar'}
+        </button>
       </div>
     </div>
   )
