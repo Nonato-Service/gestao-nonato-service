@@ -42,6 +42,11 @@ import {
   labelOrigemClienteComprovante,
   type ClienteAtivoComprovante,
 } from './lib/comprovanteClientesAtivosHoje'
+import {
+  encontrarComprovanteDuplicado,
+  hashImagemComprovante,
+  mensagemDuplicadoComprovante,
+} from './lib/comprovanteDuplicado'
 import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buildRelatorioServicoPdfHeaderHtml, type RelatorioServicoPdfHeaderVariant } from './lib/relatorioServicoPdfPrintCss'
 import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
 import {
@@ -3409,6 +3414,8 @@ type ComprovanteDespesa = {
   valorTotal: number
   descricao?: string
   imagemBase64?: string
+  /** Hash da imagem para evitar registar a mesma foto duas vezes */
+  imagemHash?: string
 }
 
 // Biblioteca do tradutor: entradas separadas por par de idiomas (origem → destino)
@@ -45511,6 +45518,23 @@ A1;Peça exemplo;10`}
         const labelGrupoNonato = (safeT as any)?.comprovantesGrupoNonatoService || 'NONATO SERVICE'
         const chaveGrupoComprovante = (c: ComprovanteDespesa) =>
           c.tipo === 'pessoal' ? labelGrupoNonato : String(c.cliente || '—').trim() || '—'
+        const confirmarSeNaoDuplicadoComprovante = (candidato: {
+          imagemBase64?: string
+          data: string
+          valorTotal: number
+          tipo: 'cliente' | 'pessoal'
+          cliente: string
+        }): boolean => {
+          const dup = encontrarComprovanteDuplicado(candidato, comprovantesDespesas, {
+            labelNonato: labelGrupoNonato,
+          })
+          if (!dup) return true
+          return window.confirm(
+            mensagemDuplicadoComprovante(dup, safeT as Record<string, string | undefined>, (c) =>
+              chaveGrupoComprovante(c as ComprovanteDespesa)
+            )
+          )
+        }
         const getWeekKey = (dateStr: string) => {
           const d = new Date(dateStr + 'T12:00:00')
           const start = new Date(d.getFullYear(), 0, 1)
@@ -45833,6 +45857,18 @@ A1;Peça exemplo;10`}
             typeof formComp.mesCompetencia === 'string' && /^\d{4}-\d{2}$/.test(formComp.mesCompetencia)
               ? formComp.mesCompetencia
               : mesFromData
+          const nomeClienteForm = formComp.tipo === 'cliente' ? formComp.cliente.trim() : ''
+          if (
+            !confirmarSeNaoDuplicadoComprovante({
+              imagemBase64: formComp.imagemBase64 || undefined,
+              data: dataNorm,
+              valorTotal,
+              tipo: formComp.tipo,
+              cliente: nomeClienteForm,
+            })
+          ) {
+            return
+          }
           const novo: ComprovanteDespesa = {
             id: Date.now().toString(),
             tipo: formComp.tipo,
@@ -45848,7 +45884,8 @@ A1;Peça exemplo;10`}
             quantidade: formComp.quantidade,
             valorTotal,
             descricao: formComp.descricao.trim() || undefined,
-            imagemBase64: formComp.imagemBase64 || undefined
+            imagemBase64: formComp.imagemBase64 || undefined,
+            imagemHash: formComp.imagemBase64 ? hashImagemComprovante(formComp.imagemBase64) : undefined,
           }
           const atualizados = [...comprovantesDespesas, novo]
           setComprovantesDespesas(atualizados)
@@ -46740,6 +46777,17 @@ A1;Peça exemplo;10`}
                                 : mesFromData
                             const isCliente = p.tipoSelecionado === 'cliente'
                             const nomeCliente = isCliente ? p.clienteSelecionado.trim() : ''
+                            if (
+                              !confirmarSeNaoDuplicadoComprovante({
+                                imagemBase64: p.imagemBase64,
+                                data: dataNorm,
+                                valorTotal: p.valorUnitario,
+                                tipo: isCliente ? 'cliente' : 'pessoal',
+                                cliente: nomeCliente,
+                              })
+                            ) {
+                              return
+                            }
                             const novo: ComprovanteDespesa = {
                               id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
                               tipo: isCliente ? 'cliente' : 'pessoal',
@@ -46752,6 +46800,7 @@ A1;Peça exemplo;10`}
                               valorTotal: p.valorUnitario,
                               descricao: p.descricao || undefined,
                               imagemBase64: p.imagemBase64,
+                              imagemHash: p.imagemBase64 ? hashImagemComprovante(p.imagemBase64) : undefined,
                             }
                             const atualizados = [...comprovantesDespesas, novo]
                             setComprovantesDespesas(atualizados)

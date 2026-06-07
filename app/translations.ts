@@ -3403,6 +3403,10 @@ export const translations = {
     comprovantesUmRegisto: 'comprovante',
     comprovantesVariosRegistos: 'comprovantes',
     comprovantesListaPorDataOpcional: 'Ver também agrupado por data',
+    comprovantesDuplicadoImagem:
+      'Esta foto já foi registada ({cliente}, {data}, {valor} €). Deseja registar mesmo assim?',
+    comprovantesDuplicadoDados:
+      'Já existe um comprovante com a mesma data, valor e cliente ({cliente}, {data}, {valor} €). Registar mesmo assim?',
     pagamentosContadorTitle: 'PAGAMENTOS AO CONTADOR',
     pagamentosContadorDesc:
       'Registe pagamentos a entidades fiscais e profissionais (IRS, Segurança Social, advogado, contabilista) e anexe faturas ou recibos contabilísticos para o contador.',
@@ -6517,6 +6521,10 @@ export const translations = {
     comprovantesUmRegisto: 'comprobante',
     comprovantesVariosRegistos: 'comprobantes',
     comprovantesListaPorDataOpcional: 'Ver también agrupado por fecha',
+    comprovantesDuplicadoImagem:
+      'Esta foto ya está registrada ({cliente}, {data}, {valor} €). ¿Registrar igualmente?',
+    comprovantesDuplicadoDados:
+      'Ya existe un comprobante con la misma fecha, importe y cliente ({cliente}, {data}, {valor} €). ¿Registrar igualmente?',
     pagamentosContadorTitle: 'PAGOS AL CONTADOR',
     pagamentosContadorDesc:
       'Registre pagos a entidades fiscales y profesionales (IRPF, Seguridad Social, abogado, contable) y adjunte facturas contables.',
@@ -9815,6 +9823,10 @@ export const translations = {
     comprovantesUmRegisto: 'justificatif',
     comprovantesVariosRegistos: 'justificatifs',
     comprovantesListaPorDataOpcional: 'Voir aussi groupé par date',
+    comprovantesDuplicadoImagem:
+      'Cette photo est déjà enregistrée ({cliente}, {data}, {valor} €). Enregistrer quand même ?',
+    comprovantesDuplicadoDados:
+      'Un justificatif identique existe déjà ({cliente}, {data}, {valor} €). Enregistrer quand même ?',
     pagamentosContadorTitle: 'PAIEMENTS AU COMPTABLE',
     pagamentosContadorDesc:
       'Enregistrez les paiements aux entités fiscales et professionnelles (impôt, sécurité sociale, avocat, expert-comptable) et joignez les factures comptables.',
@@ -13093,6 +13105,10 @@ export const translations = {
     comprovantesUmRegisto: 'giustificativo',
     comprovantesVariosRegistos: 'giustificativi',
     comprovantesListaPorDataOpcional: 'Vedi anche raggruppato per data',
+    comprovantesDuplicadoImagem:
+      'Questa foto è già registrata ({cliente}, {data}, {valor} €). Registrare comunque?',
+    comprovantesDuplicadoDados:
+      'Esiste già un giustificativo con stessa data, importo e cliente ({cliente}, {data}, {valor} €). Registrare comunque?',
     pagamentosContadorTitle: 'PAGAMENTI AL COMMERCIALISTA',
     pagamentosContadorDesc:
       'Registra pagamenti a enti fiscali e professionisti (IRPEF, INPS, avvocato, commercialista) e allega fatture contabili.',
@@ -16380,6 +16396,10 @@ export const translations = {
     comprovantesUmRegisto: 'Beleg',
     comprovantesVariosRegistos: 'Belege',
     comprovantesListaPorDataOpcional: 'Auch nach Datum gruppiert anzeigen',
+    comprovantesDuplicadoImagem:
+      'Dieses Foto ist bereits erfasst ({cliente}, {data}, {valor} €). Trotzdem speichern?',
+    comprovantesDuplicadoDados:
+      'Ein Beleg mit gleichem Datum, Betrag und Kunde existiert bereits ({cliente}, {data}, {valor} €). Trotzdem speichern?',
     pagamentosContadorTitle: 'ZAHLUNGEN AN STEUERBERATER',
     pagamentosContadorDesc:
       'Erfassen Sie Zahlungen an Finanzbehörden und Dienstleister (Steuer, Sozialversicherung, Anwalt, Buchhalter) und hängen Sie Rechnungen an.',
@@ -19707,6 +19727,10 @@ export const translations = {
     comprovantesUmRegisto: 'receipt',
     comprovantesVariosRegistos: 'receipts',
     comprovantesListaPorDataOpcional: 'Also view grouped by date',
+    comprovantesDuplicadoImagem:
+      'This photo is already saved ({cliente}, {data}, {valor} €). Save anyway?',
+    comprovantesDuplicadoDados:
+      'A receipt with the same date, amount and client already exists ({cliente}, {data}, {valor} €). Save anyway?',
     pagamentosContadorTitle: 'ACCOUNTANT PAYMENTS',
     pagamentosContadorDesc:
       'Record payments to tax and professional entities (IRS, social security, lawyer, accountant) and attach accounting invoices.',
