@@ -16109,166 +16109,132 @@ export default function Dashboard() {
     scrollRelatorioServicoFormIntoView()
   }
 
-  // Helper: HTML do logo para cabeçalho dos PDFs (respeita opção do Administrador e logo escolhido)
-  // Usa state primeiro (incluirLogoNosRelatorios, logosRelatorios, logoRelatorioSelecionadoId); fallback para localStorage
-  const getLogoHtmlForReport = (): string => {
-    if (typeof window === 'undefined') return '';
+  // —— Logos PDF: resolução unificada (state + localStorage), como no preview do Administrador ——
+  const logoImgHtmlFromDataUrl = (dataUrl: string): string => {
+    const src = String(dataUrl).replace(/"/g, '&quot;')
+    return `<img src="${src}" alt="Logo" width="118" height="58" style="max-height:58px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;" />`
+  }
+
+  const resolveLogoPrincipalDataUrl = (): string | null => {
+    if (logoUrl && logoType !== 'video') return logoUrl
+    if (typeof window === 'undefined') return null
     try {
-      const incluirFromState = incluirLogoNosRelatorios === true;
-      const incluirFromStorage = localStorage.getItem('nonato-relatorios-incluir-logo') === 'true';
-      if (!incluirFromState && !incluirFromStorage) return '';
-    } catch { return ''; }
-    const selectedId = (typeof logoRelatorioSelecionadoId !== 'undefined' && logoRelatorioSelecionadoId !== null)
-      ? String(logoRelatorioSelecionadoId)
-      : (() => { try { const r = localStorage.getItem('nonato-relatorios-logo-id'); return r != null ? r : ''; } catch { return ''; } })();
-    // 1) Logo da lista (state)
-    if (selectedId && Array.isArray(logosRelatorios) && logosRelatorios.length > 0) {
-      const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
-      if (fromState && fromState.type === 'image' && fromState.data) {
-        const src = String(fromState.data).replace(/"/g, '&quot;');
-        return `<img src="${src}" alt="Logo" width="118" height="58" style="max-height:58px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;" />`;
+      const logo = localStorage.getItem('nonato-logo')
+      const type = localStorage.getItem('nonato-logo-type')
+      if (logo && type !== 'video') return logo
+    } catch { /* ignorar */ }
+    return null
+  }
+
+  const resolveBibliotecaLogoDataUrl = (selectedId: string): string | null => {
+    const id = String(selectedId ?? '').trim()
+    if (!id) return null
+    if (Array.isArray(logosRelatorios) && logosRelatorios.length > 0) {
+      const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === id)
+      if (fromState?.type === 'image' && fromState.data) return fromState.data
+    }
+    if (typeof window === 'undefined') return null
+    try {
+      const raw = localStorage.getItem('nonato-logos-relatorios')
+      if (!raw) return null
+      const listRaw = JSON.parse(raw)
+      if (!Array.isArray(listRaw)) return null
+      const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === id)
+      if (logoItem?.type === 'image' && logoItem.data) return String(logoItem.data)
+    } catch { /* lista inválida ou muito grande */ }
+    return null
+  }
+
+  const resolvePdfLogoHtmlBySelectedId = (selectedId: string): string => {
+    const bib = resolveBibliotecaLogoDataUrl(selectedId)
+    if (bib) return logoImgHtmlFromDataUrl(bib)
+    const principal = resolveLogoPrincipalDataUrl()
+    if (principal) return logoImgHtmlFromDataUrl(principal)
+    return ''
+  }
+
+  const isIncluirLogoRelatoriosAtivo = (): boolean => {
+    if (incluirLogoNosRelatorios === true) return true
+    if (incluirLogoNosRelatorios === false) {
+      try {
+        return localStorage.getItem('nonato-relatorios-incluir-logo') === 'true'
+      } catch {
+        return false
       }
     }
-    // 2) Logo da lista (localStorage)
-    if (selectedId) {
+    try {
+      const stored = localStorage.getItem('nonato-relatorios-incluir-logo')
+      if (stored === 'false') return false
+      if (stored === 'true') return true
+    } catch { /* ignorar */ }
+    return true
+  }
+
+  const isIncluirLogoFechamentosAtivo = (): boolean => {
+    if (incluirLogoFechamentosDespesas === true) return true
+    if (incluirLogoFechamentosDespesas === false) {
       try {
-        const raw = localStorage.getItem('nonato-logos-relatorios');
-        const listRaw = raw ? JSON.parse(raw) : [];
-        if (Array.isArray(listRaw)) {
-          const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === selectedId);
-          if (logoItem && logoItem.type === 'image' && logoItem.data) {
-            const src = String(logoItem.data).replace(/"/g, '&quot;');
-            return `<img src="${src}" alt="Logo" width="118" height="58" style="max-height:58px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;" />`;
-          }
-        }
-      } catch (_) { /* lista inválida ou muito grande */ }
+        return localStorage.getItem('nonato-fechamentos-incluir-logo') === 'true'
+      } catch {
+        return false
+      }
     }
-    // 3) Logo principal (localStorage)
-    const logo = localStorage.getItem('nonato-logo');
-    const type = localStorage.getItem('nonato-logo-type');
-    if (logo && type !== 'video') {
-      const src = String(logo).replace(/"/g, '&quot;');
-      return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
+    try {
+      const stored = localStorage.getItem('nonato-fechamentos-incluir-logo')
+      if (stored === 'false') return false
+      if (stored === 'true') return true
+    } catch { /* ignorar */ }
+    return true
+  }
+
+  const readStoredLogoSelectionId = (storageKey: string, stateId: string | null | undefined): string => {
+    if (stateId !== undefined && stateId !== null) return String(stateId)
+    if (typeof window === 'undefined') return ''
+    try {
+      const r = localStorage.getItem(storageKey)
+      return r != null ? r : ''
+    } catch {
+      return ''
     }
-    return '';
-  };
+  }
+
+  // Helper: HTML do logo para cabeçalho dos PDFs (respeita opção do Administrador e logo escolhido)
+  const getLogoHtmlForReport = (): string => {
+    if (typeof window === 'undefined') return ''
+    if (!isIncluirLogoRelatoriosAtivo()) return ''
+    const selectedId = readStoredLogoSelectionId('nonato-relatorios-logo-id', logoRelatorioSelecionadoId)
+    return resolvePdfLogoHtmlBySelectedId(selectedId)
+  }
 
   // Helper: HTML do logo para PDF de Fechamentos de Despesas dos Relatórios (opção separada no Administrador)
   const getLogoHtmlForFechamento = (): string => {
-    if (typeof window === 'undefined') return '';
-    try {
-      const incluirFromState = incluirLogoFechamentosDespesas === true;
-      const incluirFromStorage = localStorage.getItem('nonato-fechamentos-incluir-logo') === 'true';
-      if (!incluirFromState && !incluirFromStorage) return '';
-    } catch { return ''; }
-    const selectedId = (typeof logoFechamentoSelecionadoId !== 'undefined' && logoFechamentoSelecionadoId !== null)
-      ? String(logoFechamentoSelecionadoId)
-      : (() => { try { const r = localStorage.getItem('nonato-fechamentos-logo-id'); return r != null ? r : ''; } catch { return ''; } })();
-    if (selectedId && Array.isArray(logosRelatorios) && logosRelatorios.length > 0) {
-      const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
-      if (fromState && fromState.type === 'image' && fromState.data) {
-        const src = String(fromState.data).replace(/"/g, '&quot;');
-        return `<img src="${src}" alt="Logo" width="118" height="58" style="max-height:58px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;" />`;
-      }
-    }
-    if (selectedId) {
-      try {
-        const raw = localStorage.getItem('nonato-logos-relatorios');
-        const listRaw = raw ? JSON.parse(raw) : [];
-        if (Array.isArray(listRaw)) {
-          const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === selectedId);
-          if (logoItem && logoItem.type === 'image' && logoItem.data) {
-            const src = String(logoItem.data).replace(/"/g, '&quot;');
-            return `<img src="${src}" alt="Logo" width="118" height="58" style="max-height:58px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;" />`;
-          }
-        }
-      } catch (_) { /* ignore */ }
-    }
-    const logo = localStorage.getItem('nonato-logo');
-    const type = localStorage.getItem('nonato-logo-type');
-    if (logo && type !== 'video') {
-      const src = String(logo).replace(/"/g, '&quot;');
-      return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
-    }
-    return '';
-  };
+    if (typeof window === 'undefined') return ''
+    if (!isIncluirLogoFechamentosAtivo()) return ''
+    const selectedId = readStoredLogoSelectionId('nonato-fechamentos-logo-id', logoFechamentoSelecionadoId)
+    return resolvePdfLogoHtmlBySelectedId(selectedId)
+  }
 
   // Helper: HTML do logo para PDF de Orçamento (opção separada no Administrador)
   const getLogoHtmlForOrcamento = (): string => {
-    if (typeof window === 'undefined') return '';
-    const selectedId = (typeof logoOrcamentoSelecionadoId !== 'undefined' && logoOrcamentoSelecionadoId !== null)
-      ? String(logoOrcamentoSelecionadoId)
-      : (() => { try { const r = localStorage.getItem('nonato-orcamento-logo-id'); return r != null ? r : ''; } catch { return ''; } })();
-    if (selectedId && Array.isArray(logosRelatorios) && logosRelatorios.length > 0) {
-      const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
-      if (fromState && fromState.type === 'image' && fromState.data) {
-        const src = String(fromState.data).replace(/"/g, '&quot;');
-        return `<img src="${src}" alt="Logo" width="118" height="58" style="max-height:58px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;" />`;
-      }
-    }
-    if (selectedId) {
-      try {
-        const raw = localStorage.getItem('nonato-logos-relatorios');
-        const listRaw = raw ? JSON.parse(raw) : [];
-        if (Array.isArray(listRaw)) {
-          const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === selectedId);
-          if (logoItem && logoItem.type === 'image' && logoItem.data) {
-            const src = String(logoItem.data).replace(/"/g, '&quot;');
-            return `<img src="${src}" alt="Logo" width="118" height="58" style="max-height:58px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;" />`;
-          }
-        }
-      } catch (_) { /* ignore */ }
-    }
-    const logo = localStorage.getItem('nonato-logo');
-    const type = localStorage.getItem('nonato-logo-type');
-    if (logo && type !== 'video') {
-      const src = String(logo).replace(/"/g, '&quot;');
-      return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
-    }
-    return '';
-  };
+    if (typeof window === 'undefined') return ''
+    const selectedId = readStoredLogoSelectionId('nonato-orcamento-logo-id', logoOrcamentoSelecionadoId)
+    return resolvePdfLogoHtmlBySelectedId(selectedId)
+  }
 
   // Helper: HTML do logo para PDF de Protocolos de Serviço (opção separada no Administrador)
   const getLogoHtmlForProtocoloServico = (): string => {
-    if (typeof window === 'undefined') return '';
-    const selectedId = (typeof logoProtocoloServicoSelecionadoId !== 'undefined' && logoProtocoloServicoSelecionadoId !== null)
-      ? String(logoProtocoloServicoSelecionadoId)
-      : (() => { try { const r = localStorage.getItem('nonato-protocolo-servico-logo-id'); return r != null ? r : ''; } catch { return ''; } })();
-    if (selectedId && Array.isArray(logosRelatorios) && logosRelatorios.length > 0) {
-      const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
-      if (fromState && fromState.type === 'image' && fromState.data) {
-        const src = String(fromState.data).replace(/"/g, '&quot;');
-        return `<img src="${src}" alt="Logo" width="118" height="58" style="max-height:58px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;" />`;
-      }
-    }
-    if (selectedId) {
-      try {
-        const raw = localStorage.getItem('nonato-logos-relatorios');
-        const listRaw = raw ? JSON.parse(raw) : [];
-        if (Array.isArray(listRaw)) {
-          const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === selectedId);
-          if (logoItem && logoItem.type === 'image' && logoItem.data) {
-            const src = String(logoItem.data).replace(/"/g, '&quot;');
-            return `<img src="${src}" alt="Logo" width="118" height="58" style="max-height:58px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;" />`;
-          }
-        }
-      } catch (_) { /* ignore */ }
-    }
-    const logo = localStorage.getItem('nonato-logo');
-    const type = localStorage.getItem('nonato-logo-type');
-    if (logo && type !== 'video') {
-      const src = String(logo).replace(/"/g, '&quot;');
-      return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
-    }
-    return '';
-  };
+    if (typeof window === 'undefined') return ''
+    const selectedId = readStoredLogoSelectionId('nonato-protocolo-servico-logo-id', logoProtocoloServicoSelecionadoId)
+    return resolvePdfLogoHtmlBySelectedId(selectedId)
+  }
 
   const buildPdfHeaderForRelatorio = (
     relatorio: RelatorioServico,
     variant: RelatorioServicoPdfHeaderVariant = 'classic'
   ) => {
     const empresaNomePdf = (fichaCadastral.nomeEmpresa || 'Nonato Service').trim()
-    const logoContent = getLogoHtmlForReport() || empresaNomePdf
+    const logoHtml = getLogoHtmlForReport()
+    const logoContent = logoHtml || empresaNomePdf
     return buildRelatorioServicoPdfHeaderHtml({
       logoContent,
       title: t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO',
@@ -16280,11 +16246,9 @@ export default function Dashboard() {
 
   /** Pré-visualização no painel Administrador: logo da lista ou logo principal (barra), para PDFs */
   const administradorPreviewPdfLogo = (selectedId: string): string | null => {
-    if (selectedId && logosRelatorios.length > 0) {
-      const entry = logosRelatorios.find((x) => x.id === selectedId)
-      if (entry?.type === 'image' && entry.data) return entry.data
-    }
-    return logoUrl && logoType !== 'video' ? logoUrl : null
+    const bib = resolveBibliotecaLogoDataUrl(selectedId)
+    if (bib) return bib
+    return resolveLogoPrincipalDataUrl()
   }
 
   /** Modo Administrador: um logo para relatórios, fechamentos, orçamentos e protocolos */
@@ -16297,6 +16261,14 @@ export default function Dashboard() {
     saveData('nonato-fechamentos-logo-id', logoId)
     saveData('nonato-orcamento-logo-id', logoId)
     saveData('nonato-protocolo-servico-logo-id', logoId)
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('nonato-relatorios-logo-id', logoId)
+        localStorage.setItem('nonato-fechamentos-logo-id', logoId)
+        localStorage.setItem('nonato-orcamento-logo-id', logoId)
+        localStorage.setItem('nonato-protocolo-servico-logo-id', logoId)
+      } catch { /* ignorar */ }
+    }
   }
 
   const discardAdminBibliotecaLogoDraft = () => {
@@ -16352,13 +16324,16 @@ export default function Dashboard() {
         /* ignorar */
       }
       setAdminBibliotecaLogoDraft(null)
-      setIncluirLogoNosRelatorios(true)
-      saveData('nonato-relatorios-incluir-logo', true)
       if (pdfLogosModoUnificado) {
         aplicarLogoUnificadoTodosPdfs(id)
       } else {
         setLogoRelatorioSelecionadoId(id)
         saveData('nonato-relatorios-logo-id', id)
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('nonato-relatorios-logo-id', id)
+          } catch { /* ignorar */ }
+        }
       }
     } catch (err) {
       console.error('[nonato-logos-relatorios]', err)

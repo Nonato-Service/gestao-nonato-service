@@ -401,7 +401,15 @@ export function AdminConfigGeralSection({
                   </div>
                   <select
                     value={logoRelatorioSelecionadoId}
-                    onChange={(e) => aplicarLogoUnificadoTodosPdfs(e.target.value)}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      if (pdfLogosModoUnificado) {
+                        aplicarLogoUnificadoTodosPdfs(v)
+                      } else {
+                        setLogoRelatorioSelecionadoId(v)
+                        saveData('nonato-relatorios-logo-id', v)
+                      }
+                    }}
                     style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
                   >
                     <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
@@ -939,6 +947,9 @@ export function AdminConfigGeralSection({
                           const v = e.target.value
                           setLogoRelatorioSelecionadoId(v)
                           saveData('nonato-relatorios-logo-id', v)
+                          try {
+                            localStorage.setItem('nonato-relatorios-logo-id', v)
+                          } catch { /* ignorar */ }
                         }}
                         style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
                       >
@@ -981,6 +992,7 @@ export function AdminConfigGeralSection({
                           const v = e.target.value
                           setLogoFechamentoSelecionadoId(v)
                           saveData('nonato-fechamentos-logo-id', v)
+                          try { localStorage.setItem('nonato-fechamentos-logo-id', v) } catch { /* ignorar */ }
                         }}
                         style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
                       >
@@ -1008,6 +1020,7 @@ export function AdminConfigGeralSection({
                           const v = e.target.value
                           setLogoOrcamentoSelecionadoId(v)
                           saveData('nonato-orcamento-logo-id', v)
+                          try { localStorage.setItem('nonato-orcamento-logo-id', v) } catch { /* ignorar */ }
                         }}
                         style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
                       >
@@ -1035,6 +1048,7 @@ export function AdminConfigGeralSection({
                           const v = e.target.value
                           setLogoProtocoloServicoSelecionadoId(v)
                           saveData('nonato-protocolo-servico-logo-id', v)
+                          try { localStorage.setItem('nonato-protocolo-servico-logo-id', v) } catch { /* ignorar */ }
                         }}
                         style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
                       >
