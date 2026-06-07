@@ -36,7 +36,7 @@ import {
   parseDataReciboIso,
   extrairDescricaoRecibo,
 } from './lib/reciboComprovanteParser'
-import { RELATORIO_SERVICO_PDF_PRINT_CSS } from './lib/relatorioServicoPdfPrintCss'
+import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buildRelatorioServicoPdfHeaderHtml, type RelatorioServicoPdfHeaderVariant } from './lib/relatorioServicoPdfPrintCss'
 import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
 import {
   loadManuaisFamiliasGruposFromIdb,
@@ -16126,7 +16126,7 @@ export default function Dashboard() {
       const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
       if (fromState && fromState.type === 'image' && fromState.data) {
         const src = String(fromState.data).replace(/"/g, '&quot;');
-        return `<img src="${src}" alt="Logo" width="140" height="48" style="max-height:48px;max-width:140px;width:auto;height:auto;object-fit:contain;display:block;" />`;
+        return `<img src="${src}" alt="Logo" width="118" height="58" style="max-height:58px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;" />`;
       }
     }
     // 2) Logo da lista (localStorage)
@@ -16138,7 +16138,7 @@ export default function Dashboard() {
           const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === selectedId);
           if (logoItem && logoItem.type === 'image' && logoItem.data) {
             const src = String(logoItem.data).replace(/"/g, '&quot;');
-            return `<img src="${src}" alt="Logo" width="140" height="48" style="max-height:48px;max-width:140px;width:auto;height:auto;object-fit:contain;display:block;" />`;
+            return `<img src="${src}" alt="Logo" width="118" height="58" style="max-height:58px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;" />`;
           }
         }
       } catch (_) { /* lista inválida ou muito grande */ }
@@ -16168,7 +16168,7 @@ export default function Dashboard() {
       const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
       if (fromState && fromState.type === 'image' && fromState.data) {
         const src = String(fromState.data).replace(/"/g, '&quot;');
-        return `<img src="${src}" alt="Logo" width="140" height="48" style="max-height:48px;max-width:140px;width:auto;height:auto;object-fit:contain;display:block;" />`;
+        return `<img src="${src}" alt="Logo" width="118" height="58" style="max-height:58px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;" />`;
       }
     }
     if (selectedId) {
@@ -16179,7 +16179,7 @@ export default function Dashboard() {
           const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === selectedId);
           if (logoItem && logoItem.type === 'image' && logoItem.data) {
             const src = String(logoItem.data).replace(/"/g, '&quot;');
-            return `<img src="${src}" alt="Logo" width="140" height="48" style="max-height:48px;max-width:140px;width:auto;height:auto;object-fit:contain;display:block;" />`;
+            return `<img src="${src}" alt="Logo" width="118" height="58" style="max-height:58px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;" />`;
           }
         }
       } catch (_) { /* ignore */ }
@@ -16203,7 +16203,7 @@ export default function Dashboard() {
       const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
       if (fromState && fromState.type === 'image' && fromState.data) {
         const src = String(fromState.data).replace(/"/g, '&quot;');
-        return `<img src="${src}" alt="Logo" width="140" height="48" style="max-height:48px;max-width:140px;width:auto;height:auto;object-fit:contain;display:block;" />`;
+        return `<img src="${src}" alt="Logo" width="118" height="58" style="max-height:58px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;" />`;
       }
     }
     if (selectedId) {
@@ -16214,7 +16214,7 @@ export default function Dashboard() {
           const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === selectedId);
           if (logoItem && logoItem.type === 'image' && logoItem.data) {
             const src = String(logoItem.data).replace(/"/g, '&quot;');
-            return `<img src="${src}" alt="Logo" width="140" height="48" style="max-height:48px;max-width:140px;width:auto;height:auto;object-fit:contain;display:block;" />`;
+            return `<img src="${src}" alt="Logo" width="118" height="58" style="max-height:58px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;" />`;
           }
         }
       } catch (_) { /* ignore */ }
@@ -16238,7 +16238,7 @@ export default function Dashboard() {
       const fromState = logosRelatorios.find((l: LogoRelatorio) => l.id === selectedId);
       if (fromState && fromState.type === 'image' && fromState.data) {
         const src = String(fromState.data).replace(/"/g, '&quot;');
-        return `<img src="${src}" alt="Logo" width="140" height="48" style="max-height:48px;max-width:140px;width:auto;height:auto;object-fit:contain;display:block;" />`;
+        return `<img src="${src}" alt="Logo" width="118" height="58" style="max-height:58px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;" />`;
       }
     }
     if (selectedId) {
@@ -16249,7 +16249,7 @@ export default function Dashboard() {
           const logoItem = listRaw.find((l: { id: string; type: string; data?: string }) => l.id === selectedId);
           if (logoItem && logoItem.type === 'image' && logoItem.data) {
             const src = String(logoItem.data).replace(/"/g, '&quot;');
-            return `<img src="${src}" alt="Logo" width="140" height="48" style="max-height:48px;max-width:140px;width:auto;height:auto;object-fit:contain;display:block;" />`;
+            return `<img src="${src}" alt="Logo" width="118" height="58" style="max-height:58px;max-width:118px;width:auto;height:auto;object-fit:contain;display:block;" />`;
           }
         }
       } catch (_) { /* ignore */ }
@@ -16261,6 +16261,21 @@ export default function Dashboard() {
       return `<img src="${src}" alt="Logo" style="max-height:48px;max-width:140px;object-fit:contain;display:block;" />`;
     }
     return '';
+  };
+
+  const buildPdfHeaderForRelatorio = (
+    relatorio: RelatorioServico,
+    variant: RelatorioServicoPdfHeaderVariant = 'classic'
+  ) => {
+    const empresaNomePdf = (fichaCadastral.nomeEmpresa || 'Nonato Service').trim()
+    const logoContent = getLogoHtmlForReport() || empresaNomePdf
+    return buildRelatorioServicoPdfHeaderHtml({
+      logoContent,
+      title: t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO',
+      reportNumber: String(relatorio.numero || ''),
+      subtitle: `Assistência Técnica · ${empresaNomePdf}`,
+      variant,
+    })
   };
 
   /** Pré-visualização no painel Administrador: logo da lista ou logo principal (barra), para PDFs */
@@ -16337,6 +16352,14 @@ export default function Dashboard() {
         /* ignorar */
       }
       setAdminBibliotecaLogoDraft(null)
+      setIncluirLogoNosRelatorios(true)
+      saveData('nonato-relatorios-incluir-logo', true)
+      if (pdfLogosModoUnificado) {
+        aplicarLogoUnificadoTodosPdfs(id)
+      } else {
+        setLogoRelatorioSelecionadoId(id)
+        saveData('nonato-relatorios-logo-id', id)
+      }
     } catch (err) {
       console.error('[nonato-logos-relatorios]', err)
       setLogosRelatorios(prevList)
@@ -16431,7 +16454,6 @@ export default function Dashboard() {
         alert('Por favor, permita pop-ups para gerar o PDF.')
         return;
       }
-      const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
       
@@ -16444,11 +16466,7 @@ export default function Dashboard() {
           <style>${RELATORIO_SERVICO_PDF_PRINT_CSS}</style>
         </head>
         <body class="rs-pdf rs-pdf--classic">
-          <div class="header">
-            <div class="header-logo">${headerLogoContent}</div>
-            <div class="header-title">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO ASSISTÊNCIA TÉCNICA'}</div>
-            <div class="header-number">N°: ${relatorio.numero}</div>
-          </div>
+          ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
 
           <div class="info-section">
             <h3>${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</h3>
@@ -16635,7 +16653,6 @@ export default function Dashboard() {
         alert('Por favor, permita pop-ups para gerar o PDF.')
         return;
       }
-      const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
     const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
     
@@ -16648,11 +16665,7 @@ export default function Dashboard() {
           <style>${RELATORIO_SERVICO_PDF_PRINT_CSS}</style>
         </head>
         <body class="rs-pdf rs-pdf--compact">
-          <div class="header">
-            <div class="header-logo">${headerLogoContent}</div>
-            <h2>${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO'}</h2>
-            <p>${t.numeroRelatorio || 'Nº'}: ${relatorio.numero}</p>
-          </div>
+          ${buildPdfHeaderForRelatorio(relatorio, 'compact')}
 
           <div class="info-section">
             <h3>${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</h3>
@@ -16812,7 +16825,6 @@ export default function Dashboard() {
         alert('Por favor, permita pop-ups para gerar o PDF.')
         return;
       }
-      const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
     const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
     
@@ -16825,11 +16837,7 @@ export default function Dashboard() {
           <style>${RELATORIO_SERVICO_PDF_PRINT_CSS}</style>
         </head>
         <body class="rs-pdf rs-pdf--detailed">
-          <div class="header">
-            <div class="header-logo">${headerLogoContent}</div>
-            <div class="header-title">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO ASSISTÊNCIA TÉCNICA'}</div>
-            <div class="header-number">N°: ${relatorio.numero}</div>
-          </div>
+          ${buildPdfHeaderForRelatorio(relatorio, 'detailed')}
 
           <div class="info-section">
             <h3>${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</h3>
@@ -17022,7 +17030,6 @@ export default function Dashboard() {
         alert('Por favor, permita pop-ups para gerar o PDF.')
         return;
       }
-      const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
       
@@ -17033,6 +17040,7 @@ export default function Dashboard() {
           <meta charset="UTF-8">
           <title>Relatório de Serviço - ${relatorio.numero}</title>
           <style>
+            ${RELATORIO_SERVICO_PDF_HEADER_CSS}
             @page {
               size: A4 portrait;
               margin: 15mm;
@@ -17227,11 +17235,7 @@ export default function Dashboard() {
           </style>
         </head>
         <body>
-          <div class="header-modern">
-            <div class="logo">${headerLogoContent}</div>
-            <div class="title">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO ASSISTÊNCIA TÉCNICA'}</div>
-            <div class="number">N°: ${relatorio.numero}</div>
-          </div>
+          ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
 
           <div class="info-card">
             <h3>${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</h3>
@@ -17418,7 +17422,6 @@ export default function Dashboard() {
         alert('Por favor, permita pop-ups para gerar o PDF.')
         return;
       }
-      const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
       
@@ -17429,6 +17432,7 @@ export default function Dashboard() {
           <meta charset="UTF-8">
           <title>Relatório de Serviço - ${relatorio.numero}</title>
           <style>
+            ${RELATORIO_SERVICO_PDF_HEADER_CSS}
             @page {
               size: A4 portrait;
               margin: 20mm;
@@ -17603,11 +17607,7 @@ export default function Dashboard() {
           </style>
         </head>
         <body>
-          <div class="header-minimal">
-            <div class="logo">${headerLogoContent}</div>
-            <div class="title">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO ASSISTÊNCIA TÉCNICA'}</div>
-            <div class="number">N°: ${relatorio.numero}</div>
-          </div>
+          ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
 
           <div class="section-minimal">
             <div class="section-title">${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</div>
@@ -17794,7 +17794,6 @@ export default function Dashboard() {
         alert('Por favor, permita pop-ups para gerar o PDF.')
         return;
       }
-      const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
       
@@ -17805,6 +17804,7 @@ export default function Dashboard() {
           <meta charset="UTF-8">
           <title>Relatório de Serviço - ${relatorio.numero}</title>
           <style>
+            ${RELATORIO_SERVICO_PDF_HEADER_CSS}
             @page {
               size: A4 portrait;
               margin: 12mm;
@@ -17988,13 +17988,7 @@ export default function Dashboard() {
           </style>
         </head>
         <body>
-          <div class="header-tecnico">
-            <div class="top">
-              <div class="logo">${headerLogoContent}</div>
-              <div class="number">N°: ${relatorio.numero}</div>
-            </div>
-            <div class="title">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO ASSISTÊNCIA TÉCNICA'}</div>
-          </div>
+          ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
 
           <div class="section-tecnico">
             <h3>${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</h3>
@@ -18189,7 +18183,6 @@ export default function Dashboard() {
         alert('Por favor, permita pop-ups para gerar o PDF.')
         return;
       }
-      const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
       
@@ -18200,6 +18193,7 @@ export default function Dashboard() {
           <meta charset="UTF-8">
           <title>Relatório de Serviço - ${relatorio.numero}</title>
           <style>
+            ${RELATORIO_SERVICO_PDF_HEADER_CSS}
             @page {
               size: A4 portrait;
               margin: 18mm;
@@ -18384,11 +18378,7 @@ export default function Dashboard() {
           </style>
         </head>
         <body>
-          <div class="header-executivo">
-            <div class="logo">${headerLogoContent}</div>
-            <div class="title">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO ASSISTÊNCIA TÉCNICA'}</div>
-            <div class="number">N°: ${relatorio.numero}</div>
-          </div>
+          ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
 
           <div class="section-executivo">
             <div class="section-title-executivo">${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</div>
@@ -18575,7 +18565,6 @@ export default function Dashboard() {
         alert('Por favor, permita pop-ups para gerar o PDF.')
         return;
       }
-      const headerLogoContent = getLogoHtmlForReport() || 'NONATO SERVICE';
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeDateShort(selectedLanguage)) : '-';
       
@@ -18586,6 +18575,7 @@ export default function Dashboard() {
           <meta charset="UTF-8">
           <title>Relatório de Serviço - ${relatorio.numero}</title>
           <style>
+            ${RELATORIO_SERVICO_PDF_HEADER_CSS}
             @page {
               size: A4 portrait;
               margin: 15mm;
@@ -18792,11 +18782,7 @@ export default function Dashboard() {
           </style>
         </head>
         <body>
-          <div class="header-negro">
-            <div class="logo">${headerLogoContent}</div>
-            <div class="title">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO ASSISTÊNCIA TÉCNICA'}</div>
-            <div class="number">N°: ${relatorio.numero}</div>
-          </div>
+          ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
 
           <div class="section-negro">
             <h3>${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</h3>
@@ -19631,16 +19617,12 @@ export default function Dashboard() {
     try {
       const printWindow = window.open('', '_blank');
       if (!printWindow) { alert('Por favor, permita pop-ups para gerar o PDF.'); return; }
-      const headerLogoContent = getLogoHtmlForReport() || '';
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeReport) : '-';
       const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${relatorio.numero}</title><style>
+        ${RELATORIO_SERVICO_PDF_HEADER_CSS}
         @page{size:A4;margin:15mm}*{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#1a1a1a;background:#fff;padding:20px;line-height:1.5}
-        .header-pro{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #0066aa}
-        .header-pro .logo img{max-height:48px;max-width:140px;object-fit:contain}
-        .header-pro .tit{font-size:16px;font-weight:600;color:#0066aa;flex:1;text-align:center}
-        .header-pro .num{font-size:12px;font-weight:600;color:#333}
         .report-section{margin-bottom:18px;padding:14px;background:#f8fafc;border-left:4px solid #0066aa;border-radius:4px}
         .report-section h3{font-size:11px;margin-bottom:10px;color:#0066aa;text-transform:uppercase}
         table{width:100%;border-collapse:collapse;font-size:10px}
@@ -19652,7 +19634,7 @@ export default function Dashboard() {
         .chk.checked{background:#0066aa}
         @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
       </style></head><body>
-        <div class="header-pro"><div class="logo">${headerLogoContent || '&nbsp;'}</div><div class="tit">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO'}</div><div class="num">Nº ${relatorio.numero}</div></div>
+        ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
         <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS'}</h3>
           <p><strong>${t.tecnico || 'Técnico'}:</strong> ${relatorio.tecnico || '-'} &nbsp;|&nbsp; <strong>${t.data || 'Data'}:</strong> ${dataFormatada} &nbsp;|&nbsp; <strong>${t.cliente || 'Cliente'}:</strong> ${relatorio.cliente || '-'}</p>
           <p><strong>${t.maquinaModelo || 'Máquina'}:</strong> ${relatorio.maquinaModelo || '-'} &nbsp;|&nbsp; <strong>${t.numeroMaquina || 'Nº'}:</strong> ${relatorio.numeroMaquina || '-'} &nbsp;|&nbsp; <strong>${t.tipoServico || 'Tipo'}:</strong> ${relatorio.tipoServico || '-'}</p>
@@ -19675,15 +19657,12 @@ export default function Dashboard() {
     try {
       const printWindow = window.open('', '_blank');
       if (!printWindow) { alert('Por favor, permita pop-ups para gerar o PDF.'); return; }
-      const headerLogoContent = getLogoHtmlForReport() || '';
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeReport) : '-';
       const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${relatorio.numero}</title><style>
+        ${RELATORIO_SERVICO_PDF_HEADER_CSS}
         @page{size:A4;margin:12mm}*{margin:0;padding:0;box-sizing:border-box}
         body{font-family:Georgia,serif;font-size:11px;color:#222;background:#fff;padding:16px;line-height:1.6}
-        .header-res{text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #333}
-        .header-res .logo{display:flex;justify-content:center;margin-bottom:6px}.header-res .logo img{max-height:40px;max-width:120px;object-fit:contain}
-        .header-res .tit{font-size:14px;font-weight:700}.header-res .num{font-size:11px;color:#555;margin-top:4px}
         .report-section{margin-bottom:14px;padding:10px 0;border-bottom:1px dashed #ccc}
         .report-section h3{font-size:10px;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;color:#555}
         .row-res{display:flex;flex-wrap:wrap;gap:8px 24px;font-size:10px}.row-res span{white-space:nowrap}
@@ -19693,7 +19672,7 @@ export default function Dashboard() {
         .chk{width:12px;height:12px;border:1px solid #333;display:inline-block;margin-right:6px;vertical-align:middle}.chk.checked{background:#000}
         @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
       </style></head><body>
-        <div class="header-res"><div class="logo">${headerLogoContent || '&nbsp;'}</div><div class="tit">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO'}</div><div class="num">Nº ${relatorio.numero} &nbsp;|&nbsp; ${dataFormatada}</div></div>
+        ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
         <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS'}</h3>
           <div class="row-res"><span>${t.tecnico}: ${relatorio.tecnico || '-'}</span><span>${t.cliente}: ${relatorio.cliente || '-'}</span><span>${t.maquinaModelo}: ${relatorio.maquinaModelo || '-'}</span><span>${t.tipoServico}: ${relatorio.tipoServico || '-'}</span><span>${t.telefone}: ${relatorio.telefone || '-'}</span></div>
         </div>
@@ -19713,15 +19692,12 @@ export default function Dashboard() {
     try {
       const printWindow = window.open('', '_blank');
       if (!printWindow) { alert('Por favor, permita pop-ups para gerar o PDF.'); return; }
-      const headerLogoContent = getLogoHtmlForReport() || '';
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeReport) : '-';
       const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${relatorio.numero}</title><style>
+        ${RELATORIO_SERVICO_PDF_HEADER_CSS}
         @page{size:A4;margin:15mm}*{margin:0;padding:0;box-sizing:border-box}
         body{font-family:Arial,sans-serif;font-size:11px;color:#222;background:#fff;padding:18px}
-        .header-col{display:flex;align-items:center;gap:20px;margin-bottom:18px;padding:14px;background:linear-gradient(135deg,#00aa55 0%,#008844 100%);color:#fff;border-radius:8px}
-        .header-col .logo img{max-height:48px;max-width:130px;object-fit:contain;filter:brightness(0) invert(1)}
-        .header-col .tit{flex:1;font-size:15px;font-weight:700}.header-col .num{font-size:12px;opacity:0.95}
         .report-section{margin-bottom:16px;padding:12px;background:#f0fff4;border:1px solid #00aa55;border-radius:6px}
         .report-section h3{font-size:11px;margin-bottom:10px;color:#006633;font-weight:700}
         table{width:100%;border-collapse:collapse;font-size:10px}th,td{border:1px solid #00aa55;padding:8px}
@@ -19730,7 +19706,7 @@ export default function Dashboard() {
         .chk{width:14px;height:14px;border:2px solid #00aa55;display:inline-block;margin-right:6px;vertical-align:middle;border-radius:2px}.chk.checked{background:#00aa55}
         @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
       </style></head><body>
-        <div class="header-col"><div class="logo">${headerLogoContent || '&nbsp;'}</div><div class="tit">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO'}</div><div class="num">Nº ${relatorio.numero}</div></div>
+        ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
         <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS'}</h3>
           <p><strong>${t.tecnico}:</strong> ${relatorio.tecnico || '-'} &nbsp; <strong>${t.data}:</strong> ${dataFormatada} &nbsp; <strong>${t.cliente}:</strong> ${relatorio.cliente || '-'}</p>
           <p><strong>${t.maquinaModelo}:</strong> ${relatorio.maquinaModelo || '-'} &nbsp; <strong>${t.tipoServico}:</strong> ${relatorio.tipoServico || '-'} &nbsp; <strong>${t.telefone}:</strong> ${relatorio.telefone || '-'}</p>
@@ -19751,16 +19727,12 @@ export default function Dashboard() {
     try {
       const printWindow = window.open('', '_blank');
       if (!printWindow) { alert('Por favor, permita pop-ups para gerar o PDF.'); return; }
-      const headerLogoContent = getLogoHtmlForReport() || '';
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeReport) : '-';
       const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${relatorio.numero}</title><style>
+        ${RELATORIO_SERVICO_PDF_HEADER_CSS}
         @page{size:A4;margin:20mm}*{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Times New Roman',Times,serif;font-size:12px;color:#000;background:#fff;padding:24px;line-height:1.7}
-        .header-for{text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:3px double #000}
-        .header-for .logo{display:flex;justify-content:center;margin-bottom:8px}.header-for .logo img{max-height:52px;max-width:150px;object-fit:contain}
-        .header-for .tit{font-size:16px;font-weight:700;text-transform:uppercase;letter-spacing:2px}
-        .header-for .num{font-size:12px;margin-top:8px}
         .report-section{margin-bottom:20px}.report-section h3{font-size:12px;margin-bottom:12px;text-decoration:underline;font-weight:700}
         table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #000;padding:10px}
         th{background:#f5f5f5;font-weight:700}.report-summary{margin-top:12px;font-size:11px}
@@ -19768,7 +19740,7 @@ export default function Dashboard() {
         .chk{width:14px;height:14px;border:2px solid #000;display:inline-block;margin-right:8px;vertical-align:middle}.chk.checked{background:#000}
         @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
       </style></head><body>
-        <div class="header-for"><div class="logo">${headerLogoContent || '&nbsp;'}</div><div class="tit">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO'}</div><div class="num">Nº ${relatorio.numero} &nbsp;&nbsp; Data: ${dataFormatada}</div></div>
+        ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
         <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS DO CLIENTE E EQUIPAMENTO'}</h3>
           <p><strong>${t.tecnico}:</strong> ${relatorio.tecnico || '-'}. <strong>${t.cliente}:</strong> ${relatorio.cliente || '-'}. <strong>${t.maquinaModelo}:</strong> ${relatorio.maquinaModelo || '-'}. <strong>${t.numeroMaquina}:</strong> ${relatorio.numeroMaquina || '-'}.</p>
           <p><strong>${t.tipoServico}:</strong> ${relatorio.tipoServico || '-'}. <strong>${t.cidade}:</strong> ${relatorio.cidade || '-'}. <strong>${t.telefone}:</strong> ${relatorio.telefone || '-'}.</p>
@@ -19790,15 +19762,12 @@ export default function Dashboard() {
     try {
       const printWindow = window.open('', '_blank');
       if (!printWindow) { alert('Por favor, permita pop-ups para gerar o PDF.'); return; }
-      const headerLogoContent = getLogoHtmlForReport() || '';
       const totais = calcularTotais(relatorio.diasTrabalho);
       const dataFormatada = relatorio.data ? new Date(relatorio.data).toLocaleDateString(localeReport) : '-';
       const htmlContent = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${relatorio.numero}</title><style>
+        ${RELATORIO_SERVICO_PDF_HEADER_CSS}
         @page{size:A4;margin:15mm}*{margin:0;padding:0;box-sizing:border-box}
         body{font-family:Verdana,Geneva,sans-serif;font-size:11px;color:#333;background:#fff;padding:20px}
-        .header-lis{display:flex;align-items:center;gap:16px;margin-bottom:18px;padding-bottom:12px;border-bottom:2px solid #333}
-        .header-lis .logo img{max-height:44px;max-width:120px;object-fit:contain}
-        .header-lis .tit{flex:1;font-size:14px;font-weight:700}.header-lis .num{font-size:11px}
         .report-section{margin-bottom:16px}.report-section h3{font-size:11px;margin-bottom:10px;color:#333;border-left:4px solid #333;padding-left:8px}
         ul.lis{list-style:none;padding:0;margin:0}.lis li{padding:6px 0;border-bottom:1px solid #eee;display:flex;gap:12px}
         .lis .l{font-weight:600;min-width:140px}.lis .v{color:#555}
@@ -19807,7 +19776,7 @@ export default function Dashboard() {
         .report-resultados ul.lis .chk{width:12px;height:12px;border:1px solid #333;display:inline-block;margin-right:8px;vertical-align:middle}.chk.checked{background:#333}
         @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
       </style></head><body>
-        <div class="header-lis"><div class="logo">${headerLogoContent || '&nbsp;'}</div><div class="tit">${t.relatorioServicoTitle || 'RELATÓRIO DE SERVIÇO'}</div><div class="num">Nº ${relatorio.numero}</div></div>
+        ${buildPdfHeaderForRelatorio(relatorio, 'classic')}
         <div class="report-section"><h3>${t.dadosClienteEquipamento || 'DADOS'}</h3>
           <ul class="lis"><li><span class="l">${t.tecnico}</span><span class="v">${relatorio.tecnico || '-'}</span></li><li><span class="l">${t.data}</span><span class="v">${dataFormatada}</span></li><li><span class="l">${t.cliente}</span><span class="v">${relatorio.cliente || '-'}</span></li><li><span class="l">${t.maquinaModelo}</span><span class="v">${relatorio.maquinaModelo || '-'}</span></li><li><span class="l">${t.numeroMaquina}</span><span class="v">${relatorio.numeroMaquina || '-'}</span></li><li><span class="l">${t.tipoServico}</span><span class="v">${relatorio.tipoServico || '-'}</span></li><li><span class="l">${t.telefone}</span><span class="v">${relatorio.telefone || '-'}</span></li></ul>
         </div>

@@ -2,6 +2,194 @@
  * Estilos de impressão / PDF para relatórios de serviço (A4).
  * Usado pelos modelos Clássico, Detalhado e Compacto — variante via classe no <body>.
  */
+
+export type RelatorioServicoPdfHeaderVariant = 'classic' | 'detailed' | 'compact'
+
+export function buildRelatorioServicoPdfHeaderHtml(options: {
+  logoContent: string
+  title: string
+  reportNumber: string
+  subtitle?: string
+  variant?: RelatorioServicoPdfHeaderVariant
+}): string {
+  const {
+    logoContent,
+    title,
+    reportNumber,
+    subtitle = 'Assistência Técnica',
+    variant = 'classic',
+  } = options
+  const logoBlock = logoContent.includes('<img')
+    ? logoContent
+    : `<span class="pdf-header__logo-text">${logoContent}</span>`
+
+  if (variant === 'compact') {
+    return `<div class="pdf-header pdf-header--compact">
+      <div class="pdf-header__row">
+        <div class="pdf-header__brand">${logoBlock}</div>
+        <div class="pdf-header__main">
+          <div class="pdf-header__title">${title}</div>
+          <div class="pdf-header__subtitle">${subtitle}</div>
+        </div>
+      </div>
+      <div class="pdf-header__meta-row">
+        <span class="pdf-header__badge-label">Nº</span>
+        <span class="pdf-header__badge-value">${reportNumber}</span>
+      </div>
+      <div class="pdf-header__accent"></div>
+    </div>`
+  }
+
+  return `<div class="pdf-header pdf-header--${variant}">
+    <div class="pdf-header__row">
+      <div class="pdf-header__brand">${logoBlock}</div>
+      <div class="pdf-header__main">
+        <div class="pdf-header__title">${title}</div>
+        <div class="pdf-header__subtitle">${subtitle}</div>
+      </div>
+      <div class="pdf-header__meta">
+        <span class="pdf-header__badge-label">Nº Relatório</span>
+        <span class="pdf-header__badge-value">${reportNumber}</span>
+      </div>
+    </div>
+    <div class="pdf-header__accent"></div>
+  </div>`
+}
+
+/** CSS do cabeçalho PDF — reutilizado em todos os modelos (exceto Ferwood). */
+export const RELATORIO_SERVICO_PDF_HEADER_CSS = `
+.pdf-header {
+  margin-bottom: 16px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  break-after: avoid;
+  page-break-after: avoid;
+}
+.pdf-header__row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px 12px;
+  background: linear-gradient(135deg, #14532d 0%, #166534 42%, #15803d 100%);
+  border-radius: 12px 12px 0 0;
+  color: #ffffff;
+}
+.pdf-header__brand {
+  flex-shrink: 0;
+  min-width: 88px;
+  max-width: 130px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pdf-header__brand img {
+  max-height: 58px;
+  max-width: 118px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+.pdf-header__logo-text {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #14532d;
+  text-align: center;
+  line-height: 1.2;
+}
+.pdf-header__main {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+.pdf-header__title {
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 1.25;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+}
+.pdf-header__subtitle {
+  margin-top: 4px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.88);
+}
+.pdf-header__meta {
+  flex-shrink: 0;
+  text-align: center;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 10px;
+  min-width: 92px;
+}
+.pdf-header__meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f0fdf4;
+  border-left: 1px solid #bbf7d0;
+  border-right: 1px solid #bbf7d0;
+}
+.pdf-header__badge-label {
+  display: block;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.82);
+  margin-bottom: 2px;
+}
+.pdf-header__meta-row .pdf-header__badge-label {
+  color: #166534;
+  margin-bottom: 0;
+}
+.pdf-header__badge-value {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+}
+.pdf-header__meta-row .pdf-header__badge-value {
+  color: #14532d;
+}
+.pdf-header__accent {
+  height: 4px;
+  background: linear-gradient(90deg, #166534 0%, #22c55e 50%, #166534 100%);
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 2px 6px rgba(22, 101, 52, 0.18);
+}
+.pdf-header--detailed .pdf-header__title { font-size: 15px; }
+.pdf-header--detailed .pdf-header__subtitle { font-size: 10px; }
+.pdf-header--detailed .pdf-header__badge-value { font-size: 14px; }
+.pdf-header--compact .pdf-header__row {
+  flex-direction: column;
+  text-align: center;
+  padding: 10px 12px 8px;
+  gap: 8px;
+}
+.pdf-header--compact .pdf-header__brand { max-width: 110px; }
+.pdf-header--compact .pdf-header__brand img { max-height: 44px; max-width: 96px; }
+.pdf-header--compact .pdf-header__title { font-size: 11px; }
+.pdf-header--compact .pdf-header__subtitle { font-size: 7px; }
+.pdf-header--compact .pdf-header__meta-row { padding: 6px 10px; }
+.pdf-header--compact .pdf-header__badge-value { font-size: 11px; }
+`.trim()
+
 export const RELATORIO_SERVICO_PDF_PRINT_CSS = `
 @page { size: A4 portrait; margin: 10mm; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -16,41 +204,7 @@ body.rs-pdf--classic { font-size: 10px; line-height: 1.45; padding: 10px 12px 16
 body.rs-pdf--detailed { font-size: 11px; line-height: 1.5; padding: 12px 14px 18px; }
 body.rs-pdf--compact { font-size: 8px; line-height: 1.35; padding: 8px 8px 12px; }
 
-.rs-pdf .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-  padding-bottom: 14px;
-  border-bottom: 3px solid #166534;
-  break-inside: avoid;
-  page-break-inside: avoid;
-  break-after: avoid;
-  page-break-after: avoid;
-}
-.rs-pdf .header-logo { font-size: 15px; font-weight: 800; letter-spacing: 0.04em; color: #14532d; }
-.rs-pdf .header-logo img { max-height: 52px; max-width: 200px; object-fit: contain; display: block; }
-.rs-pdf .header-title {
-  font-size: 13px;
-  font-weight: 800;
-  text-align: center;
-  flex: 1;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #0f172a;
-  line-height: 1.25;
-}
-.rs-pdf .header-number {
-  font-size: 11px;
-  font-weight: 800;
-  color: #14532d;
-  white-space: nowrap;
-  padding: 6px 10px;
-  border: 1px solid #bbf7d0;
-  border-radius: 8px;
-  background: #f0fdf4;
-}
+${RELATORIO_SERVICO_PDF_HEADER_CSS}
 
 .rs-pdf .info-section {
   margin-bottom: 14px;
@@ -229,29 +383,6 @@ body.rs-pdf--compact .resultados-grid {
 }
 body.rs-pdf--compact .pecas-table .imagem-col { width: 56px; }
 body.rs-pdf--compact .pecas-table .imagem-col img { max-width: 48px; max-height: 48px; }
-
-/* Compacto: cabeçalho em coluna (h2 / p) em vez de .header-title / .header-number */
-body.rs-pdf--compact .header {
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 6px;
-}
-body.rs-pdf--compact .header h2 {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #15803d;
-  line-height: 1.25;
-}
-body.rs-pdf--compact .header p {
-  margin: 0;
-  font-size: 9px;
-  font-weight: 700;
-  color: #334155;
-}
 
 .rs-pdf .descricao-trabalho {
   margin-top: 8px;

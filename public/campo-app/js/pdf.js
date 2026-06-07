@@ -5,13 +5,19 @@
   const RS_PDF_CSS = `@page { size: A4 portrait; margin: 10mm; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; background: #fff; font-size: 10px; line-height: 1.45; padding: 10px 12px 16px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.rs-pdf .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 3px solid #166534; }
-.rs-pdf .header-left { display: flex; flex-direction: column; gap: 6px; max-width: 45%; }
-.rs-pdf .header-logo img { max-height: 52px; max-width: 200px; object-fit: contain; display: block; }
-.rs-pdf .header-logo strong { font-size: 14px; color: #14532d; }
-.rs-pdf .header-contacts { font-size: 9px; color: #475569; line-height: 1.4; }
-.rs-pdf .header-title { font-size: 13px; font-weight: 800; text-align: center; flex: 1; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 4px; }
-.rs-pdf .header-number { font-size: 11px; font-weight: 800; color: #14532d; white-space: nowrap; padding: 6px 10px; border: 1px solid #bbf7d0; border-radius: 8px; background: #f0fdf4; }
+.rs-pdf .pdf-header { margin-bottom: 16px; break-inside: avoid; page-break-inside: avoid; break-after: avoid; page-break-after: avoid; }
+.rs-pdf .pdf-header__row { display: flex; align-items: center; gap: 14px; padding: 14px 16px 12px; background: linear-gradient(135deg, #14532d 0%, #166534 42%, #15803d 100%); border-radius: 12px 12px 0 0; color: #fff; }
+.rs-pdf .pdf-header__brand { flex-shrink: 0; min-width: 88px; max-width: 130px; padding: 8px 10px; background: rgba(255,255,255,0.97); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.rs-pdf .pdf-header__brand img { max-height: 58px; max-width: 118px; object-fit: contain; display: block; }
+.rs-pdf .pdf-header__logo-text { font-size: 11px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #14532d; text-align: center; line-height: 1.2; }
+.rs-pdf .pdf-header__main { flex: 1; min-width: 0; text-align: center; }
+.rs-pdf .pdf-header__title { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; line-height: 1.25; color: #fff; }
+.rs-pdf .pdf-header__subtitle { margin-top: 4px; font-size: 9px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.88); }
+.rs-pdf .pdf-header__contacts { margin-top: 6px; font-size: 8px; color: rgba(255,255,255,0.82); line-height: 1.35; }
+.rs-pdf .pdf-header__meta { flex-shrink: 0; text-align: center; padding: 8px 12px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.35); border-radius: 10px; min-width: 92px; }
+.rs-pdf .pdf-header__badge-label { display: block; font-size: 7px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.82); margin-bottom: 2px; }
+.rs-pdf .pdf-header__badge-value { display: block; font-size: 13px; font-weight: 800; letter-spacing: 0.04em; color: #fff; }
+.rs-pdf .pdf-header__accent { height: 4px; background: linear-gradient(90deg, #166534 0%, #22c55e 50%, #166534 100%); border-radius: 0 0 10px 10px; }
 .rs-pdf .info-section { margin-bottom: 14px; padding: 14px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fafafa; break-inside: auto; page-break-inside: auto; }
 .rs-pdf .info-section:not(:has(table)) { break-inside: avoid; page-break-inside: avoid; }
 .rs-pdf .header { break-inside: avoid; page-break-inside: avoid; break-after: avoid; page-break-after: avoid; }
@@ -37,8 +43,8 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
 @media print { body.rs-pdf { padding-bottom: 8mm; } .rs-pdf .info-section:has(table) { break-inside: auto; page-break-inside: auto; } .rs-pdf .info-section tbody tr { break-inside: avoid; page-break-inside: avoid; } }`;
 
   function logoHtml(logo, nomeEmpresa) {
-    if (logo && logo.dataUrl) return `<img src="${logo.dataUrl}" alt="Logo" />`;
-    return `<strong>${U.esc(nomeEmpresa || "Nonato Service")}</strong>`;
+    if (logo && logo.dataUrl) return `<img src="${logo.dataUrl}" alt="Logo" width="118" height="58" />`;
+    return `<span class="pdf-header__logo-text">${U.esc(nomeEmpresa || "Nonato Service")}</span>`;
   }
 
   function brandOpts(brand) {
@@ -125,13 +131,20 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
 
     return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatório ${U.esc(relatorio.numero)}</title><style>${RS_PDF_CSS}</style></head>
     <body class="rs-pdf">
-      <div class="header">
-        <div class="header-left">
-          <div class="header-logo">${logoHtml(logo, nomeEmpresa)}</div>
-          ${headerContactsHtml(enderecoEmpresa, telefoneEmpresa)}
+      <div class="pdf-header">
+        <div class="pdf-header__row">
+          <div class="pdf-header__brand">${logoHtml(logo, nomeEmpresa)}</div>
+          <div class="pdf-header__main">
+            <div class="pdf-header__title">RELATÓRIO DE SERVIÇO — ASSISTÊNCIA TÉCNICA</div>
+            <div class="pdf-header__subtitle">${U.esc(nomeEmpresa || "Nonato Service")}</div>
+            ${headerContactsHtml(enderecoEmpresa, telefoneEmpresa, "pdf-header__contacts")}
+          </div>
+          <div class="pdf-header__meta">
+            <span class="pdf-header__badge-label">Nº Relatório</span>
+            <span class="pdf-header__badge-value">${U.esc(relatorio.numero)}</span>
+          </div>
         </div>
-        <div class="header-title">RELATÓRIO DE SERVIÇO — ASSISTÊNCIA TÉCNICA</div>
-        <div class="header-number">N°: ${U.esc(relatorio.numero)}</div>
+        <div class="pdf-header__accent"></div>
       </div>
       <div class="info-section"><h3>DADOS DO CLIENTE E EQUIPAMENTO</h3><div class="info-grid">
         <div><span class="info-label">Técnico:</span> ${U.esc(relatorio.tecnico)}</div>

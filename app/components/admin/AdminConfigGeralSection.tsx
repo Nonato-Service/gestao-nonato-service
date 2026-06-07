@@ -286,6 +286,130 @@ export function AdminConfigGeralSection({
                     </div>
                   )}
                 </div>
+
+                <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                  <strong style={{ display: 'block', marginBottom: '6px', color: '#00ff00' }}>
+                    {(safeT as any)?.adminLogosPdfTitle || 'Logos nos documentos PDF'}
+                  </strong>
+                  <p style={{ fontSize: '12px', opacity: 0.72, margin: '0 0 12px', lineHeight: 1.45 }}>
+                    {(safeT as any)?.adminLogosPdfDescCompact ||
+                      'Anexe a imagem do logo, clique em «Guardar na biblioteca» e confirme a pré-visualização abaixo. Marque «Incluir nos PDF».'}
+                  </p>
+                  <label
+                    className="btn-primary"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: 'pointer',
+                      padding: '10px 16px',
+                      margin: '0 0 12px',
+                      fontSize: '14px',
+                      fontWeight: 700,
+                    }}
+                  >
+                    <span aria-hidden="true">📎</span>
+                    {(safeT as any)?.adicionarLogoRelatorios || 'Anexar logo (PNG/JPG)'}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/webp,image/*"
+                      style={{ display: 'none' }}
+                      onChange={(e) => administradorAddBibliotecaLogo(e)}
+                    />
+                  </label>
+                  {adminBibliotecaLogoDraft ? (
+                    <div
+                      style={{
+                        marginBottom: '12px',
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255,180,0,0.45)',
+                        backgroundColor: 'rgba(255,160,0,0.08)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                        <img
+                          src={adminBibliotecaLogoDraft.previewUrl}
+                          alt=""
+                          style={{ maxWidth: '120px', maxHeight: '72px', objectFit: 'contain', background: '#fff', padding: '6px', borderRadius: '6px' }}
+                        />
+                        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.85)' }}>
+                          <strong>{adminBibliotecaLogoDraft.fileName}</strong>
+                          <p style={{ margin: '6px 0 0', fontSize: '11px', color: 'rgba(255,200,140,0.95)' }}>
+                            {(safeT as any)?.adminLogoSalvarParaAplicar ||
+                              'Clique em «Guardar na biblioteca» para ver o logo nos relatórios PDF.'}
+                          </p>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          className="btn-primary"
+                          disabled={adminBibliotecaLogoSaving}
+                          onClick={() => void commitAdminBibliotecaLogoDraft()}
+                          style={{ padding: '8px 14px', fontSize: '13px' }}
+                        >
+                          {(safeT as any)?.adminBibliotecaSalvarNaBiblioteca || 'Guardar na biblioteca'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-primary"
+                          disabled={adminBibliotecaLogoSaving}
+                          onClick={discardAdminBibliotecaLogoDraft}
+                          style={{ padding: '8px 14px', fontSize: '13px', backgroundColor: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.25)', color: 'rgba(255,255,255,0.88)' }}
+                        >
+                          {(safeT as any)?.adminLogoDescartarRascunho || safeT?.cancel || 'Descartar rascunho'}
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                  {logosRelatorios.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                      {logosRelatorios.map((l) => (
+                        <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', backgroundColor: '#222', borderRadius: '6px' }}>
+                          {l.type === 'image' && l.data ? (
+                            <img src={l.data} alt={l.name} style={{ width: '56px', height: '40px', objectFit: 'contain', background: '#fff', borderRadius: '4px', padding: '2px' }} />
+                          ) : null}
+                          <span style={{ fontSize: '12px', flex: 1 }}>{l.name || l.id}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', marginBottom: '10px' }}>
+                    <input
+                      type="checkbox"
+                      checked={incluirLogoNosRelatorios}
+                      onChange={(e) => {
+                        const v = e.target.checked
+                        setIncluirLogoNosRelatorios(v)
+                        saveData('nonato-relatorios-incluir-logo', v)
+                      }}
+                      style={{ width: '16px', height: '16px', accentColor: '#00ff00' }}
+                    />
+                    {safeT?.incluirLogoNosRelatorios || 'Incluir logo nos relatórios gerados (PDF)'}
+                  </label>
+                  <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px dashed rgba(0,255,0,0.35)', padding: '10px', marginBottom: '10px' }}>
+                    {adminBibliotecaLogoDraft?.previewUrl ? (
+                      <img src={adminBibliotecaLogoDraft.previewUrl} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
+                    ) : administradorPreviewPdfLogo(logoRelatorioSelecionadoId) ? (
+                      <img src={administradorPreviewPdfLogo(logoRelatorioSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
+                    ) : (
+                      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)', textAlign: 'center' }}>
+                        {(safeT as any)?.adminSemLogoPdf || 'Nenhum logo visível — anexe uma imagem PNG ou JPG acima.'}
+                      </span>
+                    )}
+                  </div>
+                  <select
+                    value={logoRelatorioSelecionadoId}
+                    onChange={(e) => aplicarLogoUnificadoTodosPdfs(e.target.value)}
+                    style={{ width: '100%', padding: '8px 10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px', fontSize: '13px' }}
+                  >
+                    <option value="">{safeT?.logoPrincipal || 'Logo principal (barra lateral)'}</option>
+                    {logosRelatorios.filter((l) => l.type === 'image').map((l) => (
+                      <option key={l.id} value={l.id}>{l.name || l.id}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
     )
@@ -580,9 +704,10 @@ export function AdminConfigGeralSection({
                   <div style={{ marginBottom: '18px', padding: '14px', backgroundColor: '#1a1a1a', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                       <strong style={{ fontSize: '13px', color: '#fff' }}>{safeT?.logosDisponiveisRelatorios || 'Biblioteca de imagens para PDFs'}</strong>
-                      <label className="btn-primary" style={{ display: 'inline-block', cursor: 'pointer', padding: '8px 14px', fontSize: '14px' }}>
-                        {safeT?.adicionarLogoRelatorios || 'Adicionar imagem à biblioteca'}
-                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => administradorAddBibliotecaLogo(e)} />
+                      <label className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '10px 16px', fontSize: '14px', fontWeight: 700 }}>
+                        <span aria-hidden="true">📎</span>
+                        {(safeT as any)?.adicionarLogoRelatorios || 'Anexar logo (PNG/JPG)'}
+                        <input type="file" accept="image/png,image/jpeg,image/jpg,image/webp,image/*" style={{ display: 'none' }} onChange={(e) => administradorAddBibliotecaLogo(e)} />
                       </label>
                     </div>
                     {adminBibliotecaLogoDraft ? (
@@ -759,11 +884,13 @@ export function AdminConfigGeralSection({
                         <span style={{ color: '#888', fontSize: '11px' }}>· {(safeT as any)?.escolherLogoFechamentos || 'Fechamentos'}</span>
                       </label>
                     </div>
-                    <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.2)', padding: '8px' }}>
-                      {administradorPreviewPdfLogo(logoRelatorioSelecionadoId) ? (
+                    <div style={{ minHeight: '88px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0d0d0d', borderRadius: '8px', border: '1px dashed rgba(0,255,0,0.35)', padding: '8px' }}>
+                      {adminBibliotecaLogoDraft?.previewUrl ? (
+                        <img src={adminBibliotecaLogoDraft.previewUrl} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
+                      ) : administradorPreviewPdfLogo(logoRelatorioSelecionadoId) ? (
                         <img src={administradorPreviewPdfLogo(logoRelatorioSelecionadoId) || ''} alt="" style={{ maxWidth: '100%', maxHeight: '80px', objectFit: 'contain' }} />
                       ) : (
-                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Sem imagem (logo principal em vídeo ou inexistente)'}</span>
+                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{(safeT as any)?.adminSemLogoPdf || 'Nenhum logo visível — anexe uma imagem PNG ou JPG na biblioteca acima.'}</span>
                       )}
                     </div>
                     <select

@@ -277,7 +277,7 @@ export const translations = {
     logosDisponiveisRelatorios: 'Logos disponíveis para relatórios',
     nenhumLogoRelatorio: 'Nenhum logo adicional. Use "Adicionar logo" para incluir mais opções (apenas imagens).',
     usarNosRelatorios: 'Usar nos relatórios',
-    adicionarLogoRelatorios: 'Adicionar logo',
+    adicionarLogoRelatorios: 'Anexar logo (PNG/JPG)',
     adminLogosInterfaceTitle: 'Logos na interface',
     adminLogosInterfaceDesc:
       'Imagem ou vídeo MP4 para o menu lateral e para o ecrã inicial. Escolha o ficheiro, veja a pré-visualização e clique em «Guardar» para gravar; «Descartar rascunho» cancela sem alterar o que já estava guardado.',
@@ -290,7 +290,10 @@ export const translations = {
     adminSemLogoPreview: 'Sem logo',
     adminLogosPdfTitle: 'Logos nos documentos PDF',
     adminLogosPdfDesc:
-      'Escolha a imagem, confirme a pré-visualização e clique em «Guardar na biblioteca» para gravar; «Descartar rascunho» cancela. Depois, em cada fase, escolha o logo para o PDF. «Logo principal» = imagem da barra lateral (vídeo não entra em PDF).',
+      'Clique em «Anexar logo», escolha PNG ou JPG, confirme a pré-visualização e clique em «Guardar na biblioteca». Marque «Incluir nos PDF» e escolha o logo na lista abaixo.',
+    adminLogosPdfDescCompact:
+      'Anexe a imagem do logo, clique em «Guardar na biblioteca» e confirme a pré-visualização. Marque «Incluir nos PDF».',
+    adminSemLogoPdf: 'Nenhum logo visível — anexe uma imagem PNG ou JPG acima.',
     pdfLogosModoTitulo: 'Modo dos logos nos PDFs',
     pdfLogosModoUnificadoLabel: 'Um único logo para todos os documentos (relatórios, fechamentos, orçamentos, protocolos)',
     pdfLogosModoPorTipoLabel: 'Logo diferente em cada tipo de documento',
