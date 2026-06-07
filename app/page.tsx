@@ -36,6 +36,11 @@ import {
   parseDataReciboIso,
   extrairDescricaoRecibo,
 } from './lib/reciboComprovanteParser'
+import {
+  resolverClientesAtivosComprovanteHoje,
+  estadoClienteReciboRapido,
+  type ClienteAtivoComprovante,
+} from './lib/comprovanteClientesAtivosHoje'
 import { RELATORIO_SERVICO_PDF_PRINT_CSS, RELATORIO_SERVICO_PDF_HEADER_CSS, buildRelatorioServicoPdfHeaderHtml, type RelatorioServicoPdfHeaderVariant } from './lib/relatorioServicoPdfPrintCss'
 import { mergeManuaisFamiliasGrupos } from './utils/manuaisMerge'
 import {
@@ -3393,6 +3398,7 @@ type ComprovanteDespesa = {
   id: string
   tipo: 'cliente' | 'pessoal'  // cliente = despesa por cliente; pessoal = despesas pessoais
   cliente: string
+  clienteId?: string
   /** Data da transação / no recibo (YYYY-MM-DD) — aparece no PDF e na lista por dia */
   data: string
   /** Mês de arquivo / IRS (YYYY-MM). Se omitido, usa-se o mês derivado de `data`. Pode diferir da data (ex.: foto hoje, recibo de março). */
@@ -6200,7 +6206,7 @@ export default function Dashboard() {
     imagemBase64: '',
   })
   const [showFormComp, setShowFormComp] = useState(false)
-  /** Foto de recibo → OCR → pré-visualização antes de gravar comprovante (despesa pessoal por defeito) */
+  /** Foto de recibo → OCR → pré-visualização antes de gravar comprovante */
   const [comprovanteReciboRapido, setComprovanteReciboRapido] = useState<
     | null
     | { step: 'ocr'; imagemBase64: string }
@@ -6212,8 +6218,13 @@ export default function Dashboard() {
         mesCompetencia: string
         descricao: string
         ocrSnippet: string
+        clientesSugeridos: ClienteAtivoComprovante[]
+        tipoSelecionado: 'cliente' | 'pessoal'
+        clienteSelecionado: string
+        clienteIdSelecionado: string
       }
   >(null)
+  const [comprovanteImagemAmpliada, setComprovanteImagemAmpliada] = useState<ComprovanteDespesa | null>(null)
   const reciboRapidoFileRef = useRef<HTMLInputElement>(null)
   const [showEnvioModal, setShowEnvioModal] = useState(false)
   const [envioForm, setEnvioForm] = useState<{ templateId: 1|2|3|4|5; whatsapp: boolean; email: boolean; telefone: string; emailDestino: string; tecnicoId: string }>({ templateId: 1, whatsapp: true, email: false, telefone: '', emailDestino: '', tecnicoId: '' })
@@ -45630,6 +45641,11 @@ A1;Peça exemplo;10`}
             id: Date.now().toString(),
             tipo: formComp.tipo,
             cliente: formComp.tipo === 'cliente' ? formComp.cliente.trim() : '',
+            clienteId:
+              formComp.tipo === 'cliente'
+                ? clientes.find((c) => c.nomeEmpresa === formComp.cliente.trim())?.id ||
+                  undefined
+                : undefined,
             data: dataNorm || new Date().toISOString().slice(0, 10),
             mesCompetencia: mesPick !== mesFromData ? mesPick : undefined,
             valorUnitario: formComp.valorUnitario,
@@ -45766,6 +45782,24 @@ A1;Peça exemplo;10`}
                       const data = dataParsed || new Date().toISOString().slice(0, 10)
                       const mesCompetencia = (dataParsed || data).slice(0, 7)
                       const descricao = extrairDescricaoRecibo(text)
+                      const sugeridos = resolverClientesAtivosComprovanteHoje({
+                        relatoriosAbertos: relatoriosServicoListaPrincipal.map((r) => ({
+                          id: r.id,
+                          cliente: r.cliente,
+                          clienteId: r.clienteId,
+                          data: r.data,
+                          numero: r.numero,
+                        })),
+                        agendamentos: agendamentos.map((a) => ({
+                          id: a.id,
+                          cliente: a.cliente,
+                          clienteId: a.clienteId,
+                          data: a.data,
+                          hora: a.hora,
+                          status: a.status,
+                        })),
+                      })
+                      const estadoCliente = estadoClienteReciboRapido(sugeridos)
                       setComprovanteReciboRapido({
                         step: 'preview',
                         imagemBase64,
@@ -45774,6 +45808,7 @@ A1;Peça exemplo;10`}
                         mesCompetencia,
                         descricao,
                         ocrSnippet: text.slice(0, 500),
+                        ...estadoCliente,
                       })
                     } catch (err) {
                       console.error(err)
@@ -45848,7 +45883,14 @@ A1;Peça exemplo;10`}
             {/* Resumo: Total geral + por período + por cliente */}
             <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#141414', borderRadius: '10px', border: '1px solid rgba(0,255,0,0.25)' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'center', marginBottom: '16px' }}>
-                <span style={{ color: '#00ff00', fontWeight: 700, fontSize: '18px' }}>{(safeT as any)?.comprovantesTotalGeral || 'Total geral'}: {totalGeral.toFixed(2)} €</span>
+                {filtroPeriodoView === 'mensal' && filtroMes ? (
+                  <span style={{ color: '#fde68a', fontWeight: 700, fontSize: '18px' }}>
+                    {(safeT as any)?.comprovantesTotalMesDestaque || 'Total do mês selecionado'} ({filtroMes}):{' '}
+                    <strong style={{ color: '#00ff00' }}>{totalGeral.toFixed(2)} €</strong>
+                  </span>
+                ) : (
+                  <span style={{ color: '#00ff00', fontWeight: 700, fontSize: '18px' }}>{(safeT as any)?.comprovantesTotalGeral || 'Total geral'}: {totalGeral.toFixed(2)} €</span>
+                )}
                 {filtroPeriodoView === 'mensal' && Object.entries(totalPorMes).sort((a, b) => b[0].localeCompare(a[0])).map(([mes, tot]) => (
                   <span key={mes} style={{ color: '#ccc', fontSize: '14px' }}>{(safeT as any)?.comprovantesTotalMes || 'Total do mês'} {mes}: <strong style={{ color: '#00ff00' }}>{tot.toFixed(2)} €</strong></span>
                 ))}
@@ -45858,9 +45900,26 @@ A1;Peça exemplo;10`}
               </div>
               <div style={{ borderTop: '1px solid rgba(0,255,0,0.2)', paddingTop: '12px' }}>
                 <div style={{ color: '#00ff00', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>{(safeT as any)?.comprovantesTotalPorCliente || 'Total por cliente'}</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px 20px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                   {Object.entries(totalPorCliente).sort((a, b) => b[1] - a[1]).map(([nome, tot]) => (
-                    <span key={nome} style={{ color: '#ccc', fontSize: '13px' }}>{nome}: <strong style={{ color: '#00ff00' }}>{tot.toFixed(2)} €</strong></span>
+                    <button
+                      key={nome}
+                      type="button"
+                      onClick={() => setFiltroCliente(filtroCliente === nome ? '' : nome)}
+                      style={{
+                        padding: '8px 12px',
+                        background: filtroCliente === nome ? 'rgba(0,255,0,0.2)' : '#1a1a1a',
+                        border: filtroCliente === nome ? '1px solid #00ff00' : '1px solid rgba(0,255,0,0.25)',
+                        borderRadius: '8px',
+                        color: '#ccc',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                      }}
+                    >
+                      <div style={{ fontWeight: 600, color: '#fff', marginBottom: '2px' }}>{nome}</div>
+                      <div style={{ color: '#00ff00', fontWeight: 700 }}>{tot.toFixed(2)} €</div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -45906,7 +45965,18 @@ A1;Peça exemplo;10`}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingLeft: '4px' }}>
                     {grupo.items.map(c => (
                       <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '14px', backgroundColor: '#222', borderRadius: '10px', border: '1px solid rgba(0,255,0,0.15)' }}>
-                        {c.imagemBase64 ? <img src={c.imagemBase64} alt="Recibo" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: '6px', border: '1px solid rgba(0,255,0,0.2)' }} /> : <div style={{ width: 60, height: 60, borderRadius: '6px', background: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: '11px' }}>📄</div>}
+                        {c.imagemBase64 ? (
+                          <button
+                            type="button"
+                            onClick={() => setComprovanteImagemAmpliada(c)}
+                            title={(safeT as any)?.comprovantesVerRecibo || 'Ver recibo'}
+                            style={{ padding: 0, border: 'none', background: 'transparent', cursor: 'zoom-in', flexShrink: 0 }}
+                          >
+                            <img src={c.imagemBase64} alt="Recibo" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: '6px', border: '1px solid rgba(0,255,0,0.2)', display: 'block' }} />
+                          </button>
+                        ) : (
+                          <div style={{ width: 60, height: 60, borderRadius: '6px', background: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: '11px' }}>📄</div>
+                        )}
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ color: '#fff', fontWeight: 600 }}>{getClienteOuPessoal(c)}</div>
                           <div style={{ color: '#aaa', fontSize: '13px' }}>
@@ -46216,10 +46286,106 @@ A1;Peça exemplo;10`}
                           {comprovanteReciboRapido.ocrSnippet}
                         </pre>
                       </details>
-                      <p style={{ fontSize: '11px', color: '#777', marginBottom: '14px' }}>
-                        {(safeT as any)?.comprovantesReciboRapidoTipoPessoal ||
-                          'Será guardado como despesa pessoal (IRS). Para cliente, use «Abrir formulário» e escolha o cliente.'}
-                      </p>
+                      <div style={{ marginBottom: '14px', padding: '12px', background: '#141414', borderRadius: '8px', border: '1px solid rgba(147,197,253,0.25)' }}>
+                        <div style={{ color: '#93c5fd', fontSize: '12px', fontWeight: 600, marginBottom: '8px' }}>
+                          {(safeT as any)?.comprovantesClientesAtivosTitulo || 'Associar a'}
+                        </div>
+                        {comprovanteReciboRapido.clientesSugeridos.length === 0 ? (
+                          <p style={{ margin: 0, fontSize: '12px', color: '#888', lineHeight: 1.45 }}>
+                            {(safeT as any)?.comprovantesClientesAtivosNenhum ||
+                              'Nenhum cliente ativo hoje (relatório aberto ou agenda). Será despesa pessoal.'}
+                          </p>
+                        ) : comprovanteReciboRapido.clientesSugeridos.length === 1 ? (
+                          <p style={{ margin: 0, fontSize: '12px', color: '#bbf7d0', lineHeight: 1.45 }}>
+                            {(
+                              (safeT as any)?.comprovantesClientesAtivosAuto ||
+                              'Detectado automaticamente: {cliente} ({origem})'
+                            )
+                              .replace('{cliente}', comprovanteReciboRapido.clientesSugeridos[0].clienteNome)
+                              .replace(
+                                '{origem}',
+                                comprovanteReciboRapido.clientesSugeridos[0].origem === 'relatorio'
+                                  ? (safeT as any)?.comprovantesClientesAtivosRelatorio || 'Relatório aberto'
+                                  : (safeT as any)?.comprovantesClientesAtivosAgenda || 'Agenda'
+                              )}
+                          </p>
+                        ) : (
+                          <>
+                            <p style={{ margin: '0 0 8px', fontSize: '12px', color: '#aaa' }}>
+                              {(safeT as any)?.comprovantesClientesAtivosEscolha || 'Em qual cliente?'}
+                            </p>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              {comprovanteReciboRapido.clientesSugeridos.map((cl) => {
+                                const sel =
+                                  comprovanteReciboRapido.tipoSelecionado === 'cliente' &&
+                                  comprovanteReciboRapido.clienteSelecionado === cl.clienteNome
+                                return (
+                                  <button
+                                    key={`${cl.clienteId}-${cl.origem}`}
+                                    type="button"
+                                    onClick={() =>
+                                      setComprovanteReciboRapido((prev) =>
+                                        prev && prev.step === 'preview'
+                                          ? {
+                                              ...prev,
+                                              tipoSelecionado: 'cliente',
+                                              clienteSelecionado: cl.clienteNome,
+                                              clienteIdSelecionado: cl.clienteId,
+                                            }
+                                          : prev
+                                      )
+                                    }
+                                    style={{
+                                      textAlign: 'left',
+                                      padding: '8px 10px',
+                                      background: sel ? 'rgba(34,197,94,0.2)' : '#111',
+                                      border: sel ? '1px solid #22c55e' : '1px solid #444',
+                                      borderRadius: '6px',
+                                      color: '#fff',
+                                      cursor: 'pointer',
+                                      fontSize: '13px',
+                                    }}
+                                  >
+                                    <strong>{cl.clienteNome}</strong>
+                                    <span style={{ display: 'block', fontSize: '11px', color: '#888', marginTop: '2px' }}>
+                                      {cl.origem === 'relatorio'
+                                        ? (safeT as any)?.comprovantesClientesAtivosRelatorio || 'Relatório aberto'
+                                        : (safeT as any)?.comprovantesClientesAtivosAgenda || 'Agenda'}
+                                      {' · '}
+                                      {cl.detalhe}
+                                    </span>
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </>
+                        )}
+                        <label
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            marginTop: '10px',
+                            cursor: 'pointer',
+                            color: '#ccc',
+                            fontSize: '13px',
+                          }}
+                        >
+                          <input
+                            type="radio"
+                            name="tipoReciboRapido"
+                            checked={comprovanteReciboRapido.tipoSelecionado === 'pessoal'}
+                            onChange={() =>
+                              setComprovanteReciboRapido((prev) =>
+                                prev && prev.step === 'preview'
+                                  ? { ...prev, tipoSelecionado: 'pessoal', clienteSelecionado: '', clienteIdSelecionado: '' }
+                                  : prev
+                              )
+                            }
+                          />
+                          {(safeT as any)?.comprovantesDespesaPessoalOpcao || 'Despesa pessoal (IRS)'}
+                        </label>
+                      </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'flex-end' }}>
                         <button
                           type="button"
@@ -46241,8 +46407,14 @@ A1;Peça exemplo;10`}
                             const p = comprovanteReciboRapido
                             if (p.step !== 'preview') return
                             setFormComp({
-                              tipo: 'pessoal',
-                              cliente: '',
+                              tipo:
+                                p.tipoSelecionado === 'cliente' && p.clienteSelecionado.trim()
+                                  ? 'cliente'
+                                  : 'pessoal',
+                              cliente:
+                                p.tipoSelecionado === 'cliente' && p.clienteSelecionado.trim()
+                                  ? p.clienteSelecionado.trim()
+                                  : '',
                               data: String(p.data || '').slice(0, 10),
                               mesCompetencia:
                                 typeof p.mesCompetencia === 'string' && /^\d{4}-\d{2}$/.test(p.mesCompetencia)
@@ -46272,16 +46444,26 @@ A1;Peça exemplo;10`}
                           onClick={() => {
                             const p = comprovanteReciboRapido
                             if (p.step !== 'preview') return
+                            if (p.tipoSelecionado === 'cliente' && !p.clienteSelecionado.trim()) {
+                              alert(
+                                (safeT as any)?.comprovantesSelecioneClienteRecibo ||
+                                  'Selecione o cliente antes de guardar.'
+                              )
+                              return
+                            }
                             const dataNorm = String(p.data || '').slice(0, 10)
                             const mesFromData = dataNorm.length >= 7 ? dataNorm.slice(0, 7) : new Date().toISOString().slice(0, 7)
                             const mesPick =
                               typeof p.mesCompetencia === 'string' && /^\d{4}-\d{2}$/.test(p.mesCompetencia)
                                 ? p.mesCompetencia
                                 : mesFromData
+                            const isCliente = p.tipoSelecionado === 'cliente'
+                            const nomeCliente = isCliente ? p.clienteSelecionado.trim() : ''
                             const novo: ComprovanteDespesa = {
                               id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-                              tipo: 'pessoal',
-                              cliente: '',
+                              tipo: isCliente ? 'cliente' : 'pessoal',
+                              cliente: nomeCliente,
+                              clienteId: isCliente && p.clienteIdSelecionado ? p.clienteIdSelecionado : undefined,
                               data: dataNorm || new Date().toISOString().slice(0, 10),
                               mesCompetencia: mesPick !== mesFromData ? mesPick : undefined,
                               valorUnitario: p.valorUnitario,
@@ -46294,10 +46476,19 @@ A1;Peça exemplo;10`}
                             setComprovantesDespesas(atualizados)
                             saveData('nonato-comprovantes-despesas', atualizados)
                             setComprovanteReciboRapido(null)
-                            alert(
-                              (safeT as any)?.comprovantesReciboRapidoOk ||
-                                'Comprovante guardado como despesa pessoal. Confira o valor na lista.'
-                            )
+                            if (isCliente) {
+                              alert(
+                                (
+                                  (safeT as any)?.comprovantesReciboRapidoOkCliente ||
+                                  'Comprovante guardado em {cliente}. Confira o valor na lista.'
+                                ).replace('{cliente}', nomeCliente)
+                              )
+                            } else {
+                              alert(
+                                (safeT as any)?.comprovantesReciboRapidoOk ||
+                                  'Comprovante guardado como despesa pessoal. Confira o valor na lista.'
+                              )
+                            }
                           }}
                           style={{
                             padding: '10px 16px',
@@ -46309,11 +46500,69 @@ A1;Peça exemplo;10`}
                             cursor: 'pointer',
                           }}
                         >
-                          {(safeT as any)?.comprovantesReciboRapidoGuardarPessoal || 'Guardar (pessoal)'}
+                          {comprovanteReciboRapido.tipoSelecionado === 'cliente' && comprovanteReciboRapido.clienteSelecionado
+                            ? (
+                                (safeT as any)?.comprovantesReciboRapidoGuardarCliente ||
+                                'Guardar ({cliente})'
+                              ).replace('{cliente}', comprovanteReciboRapido.clienteSelecionado)
+                            : comprovanteReciboRapido.tipoSelecionado === 'pessoal'
+                              ? (safeT as any)?.comprovantesReciboRapidoGuardarPessoal || 'Guardar (pessoal)'
+                              : (safeT as any)?.comprovantesReciboRapidoGuardar || 'Guardar'}
                         </button>
                       </div>
                     </>
                   )}
+                </div>
+              </div>
+            )}
+            {comprovanteImagemAmpliada?.imagemBase64 && (
+              <div
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  background: 'rgba(0,0,0,0.92)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 10003,
+                  padding: '20px',
+                }}
+                onClick={() => setComprovanteImagemAmpliada(null)}
+              >
+                <div
+                  style={{ maxWidth: 'min(920px, 96vw)', maxHeight: '92vh', display: 'flex', flexDirection: 'column', gap: '12px' }}
+                  onClick={(ev) => ev.stopPropagation()}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ color: '#fff', fontWeight: 600 }}>
+                      {getClienteOuPessoal(comprovanteImagemAmpliada)} · {comprovanteImagemAmpliada.valorTotal.toFixed(2)} €
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setComprovanteImagemAmpliada(null)}
+                      style={{
+                        padding: '8px 14px',
+                        background: 'transparent',
+                        border: '1px solid #666',
+                        borderRadius: '8px',
+                        color: '#ccc',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {(safeT as any)?.comprovantesFecharRecibo || 'Fechar'}
+                    </button>
+                  </div>
+                  <img
+                    src={comprovanteImagemAmpliada.imagemBase64}
+                    alt=""
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: 'calc(92vh - 60px)',
+                      objectFit: 'contain',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(0,255,0,0.3)',
+                    }}
+                  />
                 </div>
               </div>
             )}
