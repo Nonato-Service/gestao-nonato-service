@@ -3,7 +3,9 @@
  * Cabeçalho único, alinhado como documento profissional; modelos diferem só em cor/accento e corpo.
  */
 
-export const PROTOCOLO_SERVICO_PDF_MODELOS_MAX = 14
+export const PROTOCOLO_SERVICO_PDF_MODELOS_MAX = 15
+/** Modelo recomendado para novos protocolos — visual forte (navy + verde). */
+export const PROTOCOLO_PDF_MODELO_PADRAO = 15
 
 export function clampProtocoloPdfModelo(n: number | undefined): number {
   return Math.min(PROTOCOLO_SERVICO_PDF_MODELOS_MAX, Math.max(1, Number(n) || 1))
@@ -65,6 +67,8 @@ const HDR_VARIANT_CSS: string[] = [
   '.hdr-v13.pdf-header.hdr-doc{border-color:#1e293b;border-radius:14px;box-shadow:0 10px 40px rgba(15,23,42,0.18);border-top:none;}.hdr-v13 .hdr-td-logo{background:linear-gradient(165deg,#0f172a 0%,#1e293b 55%,#334155 100%);border-right:1px solid #475569;}.hdr-v13 .hdr-td-main{background:linear-gradient(180deg,#1e293b 0%,#0f172a 100%);}.hdr-v13 .hdr-logo-box img{filter:brightness(1.08) contrast(1.05);}.hdr-v13 .logo-fallback{color:#fbbf24;}.hdr-v13 .hdr-empresa{color:#94a3b8;}.hdr-v13 .hdr-etiq{color:#cbd5e1;}.hdr-v13 .hdr-titulo{color:#f8fafc;font-size:17pt;font-weight:750;letter-spacing:-0.03em;}.hdr-v13 .hdr-data{color:#94a3b8;}.hdr-v13 .hdr-data .hdr-data-lbl{color:#cbd5e1;}.hdr-v13 .hdr-linha{background:linear-gradient(90deg,#92400e 0%,#fbbf24 35%,#f59e0b 65%,#92400e 100%);height:4px;}',
   /* 14 — Moderno: clínico / SaaS, muito branco, acento teal */
   '.hdr-v14.pdf-header.hdr-doc{border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 2px 8px rgba(15,23,42,0.05);border-top:none;}.hdr-v14 .hdr-td-logo{background:linear-gradient(180deg,#fafbfc 0%,#f1f5f9 100%);border-right:1px solid #e2e8f0;}.hdr-v14 .hdr-td-main{background:#fff;}.hdr-v14 .hdr-etiq{color:#0d9488;letter-spacing:0.2em;}.hdr-v14 .hdr-titulo{color:#0f172a;font-size:16.5pt;font-weight:750;letter-spacing:-0.035em;}.hdr-v14 .hdr-data{color:#64748b;}.hdr-v14 .hdr-linha{background:linear-gradient(90deg,#0f766e 0%,#14b8a6 50%,#0d9488 100%);height:4px;border-radius:0 0 3px 3px;}',
+  /* 15 — Impacto Nonato: navy + verde elétrico, presença forte */
+  '.hdr-v15.pdf-header.hdr-doc{border:none;border-radius:2px;box-shadow:0 10px 36px rgba(0,0,0,0.38);overflow:hidden;}.hdr-v15 .hdr-table{background:#0a0f0a;}.hdr-v15 .hdr-td-logo{background:linear-gradient(145deg,#052e16 0%,#0f172a 55%,#14532d 100%);border-right:4px solid #22c55e;padding:22px 20px 22px 22px;}.hdr-v15 .hdr-td-main{background:linear-gradient(180deg,#0f172a 0%,#020617 100%);padding:22px 26px 22px 24px;}.hdr-v15 .hdr-logo-box img{filter:brightness(1.12) contrast(1.08);max-height:58px;}.hdr-v15 .logo-fallback{color:#4ade80;font-size:13px;font-weight:900;letter-spacing:0.14em;}.hdr-v15 .hdr-empresa{color:#86efac;font-weight:800;letter-spacing:0.22em;}.hdr-v15 .hdr-etiq{color:#4ade80;font-size:8pt;font-weight:900;letter-spacing:0.26em;}.hdr-v15 .hdr-titulo{color:#fff;font-size:19pt;font-weight:900;letter-spacing:0.02em;text-transform:uppercase;line-height:1.12;}.hdr-v15 .hdr-data{color:#bbf7d0;font-size:10pt;font-weight:700;}.hdr-v15 .hdr-data .hdr-data-lbl{color:#86efac;}.hdr-v15 .hdr-linha{background:linear-gradient(90deg,#14532d 0%,#22c55e 35%,#4ade80 50%,#22c55e 65%,#14532d 100%);height:6px;}',
 ]
 
 function buildHeaderHtml(variantIndex: number, o: HeaderOpts): string {
@@ -72,7 +76,8 @@ function buildHeaderHtml(variantIndex: number, o: HeaderOpts): string {
   const d = escAttr(o.dataDoc)
   const L = logoOrName(o.logoHtml)
   const v = variantIndex + 1
-  return `<header class="pdf-header hdr-doc hdr-v${v}" role="banner"><table class="hdr-table" role="presentation"><tr><td class="hdr-td-logo"><div class="hdr-logo-box">${L}</div><p class="hdr-empresa">Nonato Service</p></td><td class="hdr-td-main"><p class="hdr-etiq">Protocolo de serviço</p><h1 class="hdr-titulo">${t}</h1><p class="hdr-data"><span class="hdr-data-lbl">Emitido em</span>${d}</p></td></tr></table><div class="hdr-linha" aria-hidden="true"></div></header>`
+  const etiq = v === 15 ? 'Documento técnico oficial' : 'Protocolo de serviço'
+  return `<header class="pdf-header hdr-doc hdr-v${v}" role="banner"><table class="hdr-table" role="presentation"><tr><td class="hdr-td-logo"><div class="hdr-logo-box">${L}</div><p class="hdr-empresa">Nonato Service</p></td><td class="hdr-td-main"><p class="hdr-etiq">${etiq}</p><h1 class="hdr-titulo">${t}</h1><p class="hdr-data"><span class="hdr-data-lbl">Emitido em</span>${d}</p></td></tr></table><div class="hdr-linha" aria-hidden="true"></div></header>`
 }
 
 function buildHeaderFragments(o: HeaderOpts): string[] {
@@ -97,9 +102,11 @@ export const PROTOCOLO_PDF_BLOCO_STYLES: string[] = [
   'margin:16px 0;padding:17px 20px;background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(15,23,42,0.05);color:#1e293b;font-size:11.5pt;line-height:1.55;border-left:4px solid #1e293b;',
   /* 14 — blocos clean com acento */
   'margin:16px 0;padding:18px 20px;background:#fff;border-radius:14px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(15,23,42,0.04);color:#334155;font-size:11.5pt;line-height:1.58;border-top:3px solid #14b8a6;',
+  /* 15 — blocos impacto: borda forte + sombra verde */
+  'margin:18px 0;padding:18px 22px;background:linear-gradient(180deg,#f0fdf4 0%,#ecfdf5 100%);border-radius:4px;border:2px solid #15803d;border-left:8px solid #22c55e;color:#0f172a;font-size:11.5pt;line-height:1.6;font-weight:500;box-shadow:0 3px 14px rgba(21,128,61,0.14);',
 ]
 
-export const PROTOCOLO_PDF_IMG_RADIUS: number[] = [8, 8, 8, 10, 4, 6, 8, 2, 10, 8, 8, 3, 10, 12]
+export const PROTOCOLO_PDF_IMG_RADIUS: number[] = [8, 8, 8, 10, 4, 6, 8, 2, 10, 8, 8, 3, 10, 12, 4]
 
 /** Identificação no PDF: só nome do cliente + tabela do equipamento, pouco espaço vertical */
 const COMPACT_IDENT_CSS =
@@ -123,6 +130,8 @@ const BODY_CSS: string[] = [
   `body{font-family:'Segoe UI',system-ui,sans-serif;margin:0;padding:0;color:#1e293b;font-size:11pt;line-height:1.5;background:#f8fafc;}.body-wrap{padding:0 0 28px;}.sec{margin:18px 0;padding:18px 20px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 2px 12px rgba(15,23,42,0.06);}.sec-title{margin:0 0 14px;font-size:8pt;font-weight:800;letter-spacing:0.14em;color:#0f172a;text-transform:uppercase;border-bottom:2px solid #1e293b;padding-bottom:10px;}.cl-table{width:100%;border-collapse:collapse;}.cl-table tr{border-bottom:1px solid #f1f5f9;}.cl-table .cl-label{width:32%;padding:10px 14px 10px 0;font-weight:700;color:#475569;font-size:8pt;text-transform:uppercase;letter-spacing:0.05em;}.cl-table .cl-value{padding:10px 0;color:#0f172a;font-size:10.5pt;}.texto-inicial{white-space:pre-wrap;margin:0;color:#334155;line-height:1.62;}.footer-bar{margin-top:26px;padding-top:16px;border-top:1px solid #cbd5e1;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;}.footer-date{font-size:9pt;color:#475569;font-weight:500;}.doc-ref{font-size:8pt;color:#94a3b8;font-family:ui-monospace,Consolas,monospace;}`,
   /* 14 — corpo: espaçamento generoso, títulos teal */
   `body{font-family:'Segoe UI',system-ui,sans-serif;margin:0;padding:0;color:#334155;font-size:11pt;line-height:1.55;background:#fff;}.body-wrap{padding:0 0 28px;}.sec{margin:18px 0;padding:20px 22px;background:#fafbfc;border:1px solid #e2e8f0;border-radius:16px;}.sec-title{margin:0 0 14px;font-size:8pt;font-weight:800;letter-spacing:0.16em;color:#0f766e;text-transform:uppercase;padding-bottom:10px;border-bottom:1px solid #ccfbf1;}.cl-table{width:100%;border-collapse:separate;border-spacing:0;}.cl-table tr td{padding:11px 0;border-bottom:1px solid #f1f5f9;}.cl-table tr:last-child td{border-bottom:none;}.cl-table .cl-label{width:30%;font-weight:700;color:#0d9488;font-size:8pt;text-transform:uppercase;letter-spacing:0.06em;}.cl-table .cl-value{color:#1e293b;font-size:10.5pt;padding-left:8px;}.texto-inicial{white-space:pre-wrap;margin:0;color:#475569;line-height:1.65;}.footer-bar{margin-top:26px;padding-top:14px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}.footer-date{font-size:9pt;color:#64748b;}.doc-ref{font-size:8pt;color:#94a3b8;font-family:Consolas,monospace;}`,
+  /* 15 — corpo impacto: secções com moldura forte */
+  `body{font-family:'Segoe UI',system-ui,sans-serif;margin:0;padding:0;color:#0f172a;font-size:11.5pt;line-height:1.55;background:#fff;}.body-wrap{padding:0 0 32px;}.sec{margin:20px 0;padding:20px 22px;background:#fff;border:2px solid #0f172a;border-radius:4px;box-shadow:0 4px 0 #22c55e,0 8px 24px rgba(15,23,42,0.08);}.sec-title{margin:0 0 14px;font-size:9pt;font-weight:900;letter-spacing:0.18em;color:#14532d;text-transform:uppercase;border-bottom:3px solid #22c55e;padding-bottom:10px;}.cl-table{width:100%;border-collapse:collapse;}.cl-table tr{border-bottom:1px solid #e2e8f0;}.cl-table .cl-label{width:32%;padding:10px 14px 10px 0;font-weight:800;color:#14532d;font-size:8pt;text-transform:uppercase;letter-spacing:0.07em;}.cl-table .cl-value{padding:10px 0;color:#0f172a;font-size:11pt;font-weight:600;}.texto-inicial{white-space:pre-wrap;margin:0;color:#1e293b;line-height:1.68;font-size:11.5pt;}.footer-bar{margin-top:28px;padding-top:16px;border-top:3px solid #0f172a;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;}.footer-date{font-size:9.5pt;font-weight:800;color:#14532d;letter-spacing:0.04em;}.doc-ref{font-size:8pt;font-weight:700;color:#64748b;font-family:Consolas,ui-monospace,monospace;letter-spacing:0.06em;}`,
 ]
 
 function cssBlocks(): string[] {
@@ -133,6 +142,57 @@ let _cssCache: string[] | null = null
 function getCssBlocks(): string[] {
   if (!_cssCache) _cssCache = cssBlocks()
   return _cssCache
+}
+
+/** Estilos inline dinâmicos (blocos, imagens, peças) conforme o modelo PDF. */
+export function getProtocoloPdfDynamicStyles(idx0: number): {
+  tituloBloco: string
+  imgStyle: string
+  quadroImagens: string
+  balaoTexto: string
+  pecasBox: string
+} {
+  const idx = Math.max(0, Math.min(PROTOCOLO_SERVICO_PDF_MODELOS_MAX - 1, idx0))
+  const imgR = PROTOCOLO_PDF_IMG_RADIUS[idx] ?? 8
+  const impacto = idx >= 12
+  const maxImpacto = idx === 14
+  if (maxImpacto) {
+    return {
+      tituloBloco:
+        'margin:0 0 12px;font-size:10pt;font-weight:900;letter-spacing:0.16em;text-transform:uppercase;color:#14532d;border-bottom:3px solid #22c55e;padding-bottom:8px;',
+      imgStyle: `max-width:320px;max-height:240px;object-fit:contain;border-radius:${imgR}px;border:3px solid #0f172a;box-shadow:0 6px 20px rgba(21,128,61,0.28);`,
+      quadroImagens:
+        'margin:10px 0;padding:16px 14px;border:3px solid #15803d;border-radius:4px;background:linear-gradient(180deg,#f0fdf4 0%,#ecfdf5 100%);box-sizing:border-box;',
+      balaoTexto:
+        'margin:10px 0;padding:16px 20px;border-radius:4px;background:#fff;border:2px solid #0f172a;border-left:8px solid #22c55e;box-shadow:0 4px 12px rgba(15,23,42,0.1);color:#0f172a;font-size:11.5pt;line-height:1.6;font-weight:500;',
+      pecasBox:
+        'margin-top:20px;padding:16px 18px;border-radius:4px;font-size:11px;line-height:1.55;background:#0f172a;border:2px solid #22c55e;color:#ecfdf5;',
+    }
+  }
+  if (impacto) {
+    return {
+      tituloBloco:
+        'margin:0 0 10px;font-size:9.5pt;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#0f172a;border-bottom:2px solid #1e293b;padding-bottom:7px;',
+      imgStyle: `max-width:300px;max-height:220px;object-fit:contain;border-radius:${imgR}px;box-shadow:0 4px 16px rgba(15,23,42,0.18);border:2px solid #334155;`,
+      quadroImagens:
+        'margin:8px 0;padding:14px 12px;border:2px solid #475569;border-radius:10px;background:#f8fafc;box-sizing:border-box;',
+      balaoTexto:
+        'margin:8px 0;padding:15px 18px;border-radius:12px;background:#fff;border:1px solid #cbd5e1;box-shadow:0 3px 16px rgba(15,23,42,0.08);color:#1e293b;font-size:11.5pt;line-height:1.58;',
+      pecasBox:
+        'margin-top:18px;padding:14px 16px;border-radius:10px;font-size:11px;line-height:1.5;background:#f1f5f9;border:2px solid #334155;',
+    }
+  }
+  return {
+    tituloBloco:
+      'margin:0 0 10px;font-size:9pt;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#475569;border-bottom:1px solid #e2e8f0;padding-bottom:6px;',
+    imgStyle: `max-width:300px;max-height:220px;object-fit:contain;border-radius:${imgR}px;box-shadow:0 2px 12px rgba(15,23,42,0.12);border:1px solid rgba(0,0,0,0.06);`,
+    quadroImagens:
+      'margin:8px 0;padding:14px 12px;border:2px dashed #94a3b8;border-radius:14px;background:#f8fafc;box-sizing:border-box;',
+    balaoTexto:
+      'margin:8px 0;padding:15px 18px;border-radius:22px;background:linear-gradient(180deg,#ffffff 0%,#f1f5f9 100%);border:1px solid #e2e8f0;box-shadow:0 2px 14px rgba(15,23,42,0.07);color:#334155;font-size:11.5pt;line-height:1.55;',
+    pecasBox:
+      'margin-top:18px;padding:14px 16px;border-radius:10px;font-size:11px;line-height:1.5;background:rgba(241,245,249,0.9);border:1px solid #e2e8f0;',
+  }
 }
 
 export function buildProtocoloServicoPrintHtml(

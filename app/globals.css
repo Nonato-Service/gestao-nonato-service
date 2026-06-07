@@ -8659,9 +8659,21 @@ button.dia-trabalho-acao-btn--del:hover {
   align-items: start;
   padding: 20px 22px;
   border-radius: 16px;
-  border: 1px solid rgba(0, 200, 255, 0.18);
-  background: linear-gradient(118deg, rgba(16, 28, 36, 0.98), rgba(6, 10, 16, 0.99));
-  box-shadow: 0 12px 40px rgba(0, 20, 35, 0.45), inset 0 1px 0 rgba(0, 255, 220, 0.04);
+  border: 1px solid rgba(34, 197, 94, 0.28);
+  background: linear-gradient(118deg, rgba(10, 32, 22, 0.98), rgba(6, 10, 16, 0.99));
+  box-shadow: 0 12px 40px rgba(0, 20, 35, 0.45), inset 0 1px 0 rgba(74, 222, 128, 0.08);
+}
+
+.tab-content-wrapper .protocolo-servico-lista-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #22c55e, #15803d);
+  border-radius: 16px 0 0 16px;
+  pointer-events: none;
 }
 
 @media (max-width: 768px) {

@@ -3,8 +3,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { processSyncQueue } from './utils/dataStorage'
 
-// Bumpar este número em cada deploy para forçar atualização no telemóvel
-const SW_VERSION = 15
+// Bumpar este número em cada deploy para forçar atualização no telemóvel/tablet
+const SW_VERSION = 17
 
 export function RegisterSW() {
   const [updateReady, setUpdateReady] = useState(false)
@@ -17,7 +17,10 @@ export function RegisterSW() {
 
     const register = () => {
       navigator.serviceWorker
-        .register(`/sw.js?v=${SW_VERSION}`)
+        .register(`/sw.js?v=${SW_VERSION}`, {
+          // iPad/tablet Safari tende a cachear o sw.js — isto força ir buscar versão nova
+          updateViaCache: 'none',
+        })
         .then((reg) => {
           setRegistration(reg)
           const activateWaitingWorker = () => {
@@ -58,11 +61,20 @@ export function RegisterSW() {
     }
     document.addEventListener('visibilitychange', onVisibilityChange)
 
+    // iPad / tablet: voltar ao app ou repor da memória — verificar atualização
+    const onPageShow = () => {
+      if (navigator.onLine) {
+        navigator.serviceWorker.ready.then((reg) => reg.update()).catch(() => {})
+      }
+    }
+    window.addEventListener('pageshow', onPageShow)
+    window.addEventListener('focus', onPageShow)
+
     const interval = window.setInterval(() => {
       if (navigator.onLine) {
         navigator.serviceWorker.ready.then((reg) => reg.update()).catch(() => {})
       }
-    }, 60_000)
+    }, 30_000)
 
     if (navigator.onLine) {
       processSyncQueue().then(() => {})
@@ -70,6 +82,8 @@ export function RegisterSW() {
 
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange)
+      window.removeEventListener('pageshow', onPageShow)
+      window.removeEventListener('focus', onPageShow)
       window.clearInterval(interval)
     }
   }, [])

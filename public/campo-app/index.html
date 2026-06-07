@@ -59,8 +59,12 @@
       var BASE = "/campo-app/";
       if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
         window.addEventListener("load", function () {
-          navigator.serviceWorker.register(BASE + "sw.js", { scope: BASE }).then(function (reg) {
+          navigator.serviceWorker.register(BASE + "sw.js?v=6", { scope: BASE, updateViaCache: "none" }).then(function (reg) {
             reg.update();
+            document.addEventListener("visibilitychange", function () {
+              if (document.visibilityState === "visible") reg.update();
+            });
+            window.addEventListener("pageshow", function () { reg.update(); });
             var el = document.getElementById("topStatus");
             if (el && !navigator.onLine) el.textContent = "✓ Modo offline";
           }).catch(function () {});

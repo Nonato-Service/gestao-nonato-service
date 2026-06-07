@@ -81,9 +81,11 @@ import {
 import { HelpModalBody } from './components/HelpModalBody'
 import {
   PROTOCOLO_SERVICO_PDF_MODELOS_MAX,
+  PROTOCOLO_PDF_MODELO_PADRAO,
   clampProtocoloPdfModelo,
   PROTOCOLO_PDF_BLOCO_STYLES,
   PROTOCOLO_PDF_IMG_RADIUS,
+  getProtocoloPdfDynamicStyles,
   buildProtocoloServicoPrintHtml,
 } from './utils/protocoloServicoPdfThemes'
 import {
@@ -6779,7 +6781,7 @@ export default function Dashboard() {
     blocos: ProtocoloBloco[]
     pecasTrocadasCodigos: string[]
     pdfModelo: number
-  }>({ clienteId: '', equipamentoNumeroSerie: '', situacaoDescricao: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
+  }>({ clienteId: '', equipamentoNumeroSerie: '', situacaoDescricao: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: PROTOCOLO_PDF_MODELO_PADRAO })
   /** Filtro da lista na área Protocolos de Serviço (sem alterar dados guardados) */
   const [protocoloServicoFiltroLista, setProtocoloServicoFiltroLista] = useState('')
   const [protocoloServicoClienteFiltroLista, setProtocoloServicoClienteFiltroLista] = useState('')
@@ -9074,7 +9076,7 @@ export default function Dashboard() {
       if (Array.isArray(savedProtocolosServico)) {
         setProtocolosServico(savedProtocolosServico.map((pr: ProtocoloServico) => {
           const m = Number(pr.pdfModelo)
-          return { ...pr, pdfModelo: m >= 1 && m <= PROTOCOLO_SERVICO_PDF_MODELOS_MAX ? m : 1 }
+          return { ...pr, pdfModelo: m >= 1 && m <= PROTOCOLO_SERVICO_PDF_MODELOS_MAX ? m : PROTOCOLO_PDF_MODELO_PADRAO }
         }))
       }
 
@@ -29126,16 +29128,16 @@ onKeyPress={(e) => {
           const modelo = clampProtocoloPdfModelo(modeloOverride !== undefined && modeloOverride !== null ? modeloOverride : p.pdfModelo)
           const idx = modelo - 1
           const bts = PROTOCOLO_PDF_BLOCO_STYLES[idx] || PROTOCOLO_PDF_BLOCO_STYLES[0]
-          const imgR = PROTOCOLO_PDF_IMG_RADIUS[idx] ?? 8
+          const dyn = getProtocoloPdfDynamicStyles(idx)
           const tituloBlocoHtml = (t?: string) =>
             (t || '').trim()
-              ? `<div style="margin:0 0 10px;font-size:9pt;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#475569;border-bottom:1px solid #e2e8f0;padding-bottom:6px;">${esc((t || '').trim())}</div>`
+              ? `<div style="${dyn.tituloBloco}">${esc((t || '').trim())}</div>`
               : ''
           const imgsFlexHtml = (imgs: string[]) => {
             if (!imgs.length) return ''
             let h = `<div style="display:flex;gap:14px;margin:0;flex-wrap:wrap;justify-content:center;align-items:center;width:100%;box-sizing:border-box;">`
             imgs.slice(0, 2).forEach((src) => {
-              h += `<img src="${(src || '').replace(/"/g, '&quot;')}" alt="" style="max-width:300px;max-height:220px;object-fit:contain;border-radius:${imgR}px;box-shadow:0 2px 12px rgba(15,23,42,0.12);border:1px solid rgba(0,0,0,0.06);" />`
+              h += `<img src="${(src || '').replace(/"/g, '&quot;')}" alt="" style="${dyn.imgStyle}" />`
             })
             h += '</div>'
             return h
@@ -29143,12 +29145,10 @@ onKeyPress={(e) => {
           const quadroImagensHtml = (imgs: string[]) => {
             const inner = imgsFlexHtml(imgs)
             if (!inner) return ''
-            return `<div style="margin:8px 0;padding:14px 12px;border:2px dashed #94a3b8;border-radius:14px;background:#f8fafc;box-sizing:border-box;">${inner}</div>`
+            return `<div style="${dyn.quadroImagens}">${inner}</div>`
           }
           const balaoTextoHtml = (txt: string) =>
-            txt.trim()
-              ? `<div style="margin:8px 0;padding:15px 18px;border-radius:22px;background:linear-gradient(180deg,#ffffff 0%,#f1f5f9 100%);border:1px solid #e2e8f0;box-shadow:0 2px 14px rgba(15,23,42,0.07);color:#334155;font-size:11.5pt;line-height:1.55;">${esc(txt)}</div>`
-              : ''
+            txt.trim() ? `<div style="${dyn.balaoTexto}">${esc(txt)}</div>` : ''
           let blocosHtml = ''
           p.blocos.forEach((b) => {
             if (b.tipo === 'texto' && b.texto?.trim()) {
@@ -29169,8 +29169,15 @@ onKeyPress={(e) => {
             }
           })
           const pecasList = p.pecasTrocadasCodigos.filter(c => c.trim())
+          const pecasLabelStyle =
+            idx >= 14
+              ? 'display:block;margin-bottom:8px;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#4ade80;font-weight:800;'
+              : idx >= 12
+                ? 'display:block;margin-bottom:6px;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:#334155;font-weight:800;'
+                : 'display:block;margin-bottom:6px;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:#475569;font-weight:700;'
+          const pecasValStyle = idx >= 14 ? 'color:#ecfdf5;font-weight:600;' : 'color:#0f172a;'
           const pecasStrong = pecasList.length
-            ? `<div class="pecas-line" style="margin-top:18px;padding:14px 16px;border-radius:10px;font-size:11px;line-height:1.5;background:rgba(241,245,249,0.9);border:1px solid #e2e8f0;"><strong style="display:block;margin-bottom:6px;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:#475569;">${protoT?.protocolosServicoPecasTrocadas || 'Peças trocadas'}</strong><span style="color:#0f172a;">${esc(pecasList.join(', '))}</span></div>`
+            ? `<div class="pecas-line" style="${dyn.pecasBox}"><strong style="${pecasLabelStyle}">${protoT?.protocolosServicoPecasTrocadas || 'Peças trocadas'}</strong><span style="${pecasValStyle}">${esc(pecasList.join(', '))}</span></div>`
             : ''
           const dataDoc = new Date(p.dataCriacao).toLocaleDateString(documentPdfDateLocale(selectedLanguage))
           const refDoc = `REF-${String(p.id).replace(/[^a-zA-Z0-9]/g, '').slice(-12).toUpperCase() || 'NS'}`
@@ -29592,24 +29599,25 @@ onKeyPress={(e) => {
               <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
             </div>
             <div
+              className="protocolo-servico-hero"
               style={{
                 marginBottom: 24,
-                padding: '20px 24px',
-                borderRadius: 10,
-                background: '#121922',
-                border: '1px solid rgba(148, 163, 184, 0.16)',
-                borderLeft: '4px solid #0d9488',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.35)',
+                padding: '22px 26px',
+                borderRadius: 12,
+                background: 'linear-gradient(135deg, rgba(6, 40, 22, 0.95) 0%, rgba(8, 18, 28, 0.98) 45%, rgba(4, 12, 20, 1) 100%)',
+                border: '1px solid rgba(34, 197, 94, 0.35)',
+                borderLeft: '5px solid #22c55e',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(34, 197, 94, 0.08), inset 0 1px 0 rgba(74, 222, 128, 0.12)',
               }}
             >
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 20 }}>
                 <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flex: '1 1 280px', minWidth: 0 }}>
                   <LogoComponent size="small" />
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 6, letterSpacing: '0.04em' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#4ade80', marginBottom: 6, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
                       {protoT?.protocolosServicoHeroBadge || 'Documentação técnica'}
                     </div>
-                    <h1 style={{ margin: 0, fontSize: 'clamp(1.25rem, 3vw, 1.65rem)', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2, color: '#f8fafc' }}>
+                    <h1 style={{ margin: 0, fontSize: 'clamp(1.35rem, 3.2vw, 1.85rem)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.15, color: '#f0fdf4' }}>
                       {tituloProto}
                     </h1>
                     <p style={{ margin: '10px 0 0', fontSize: 14, color: '#94a3b8', lineHeight: 1.6, maxWidth: 560 }}>
@@ -29633,7 +29641,7 @@ onKeyPress={(e) => {
                         textoInicial: '',
                         blocos: [],
                         pecasTrocadasCodigos: [],
-                        pdfModelo: 1,
+                        pdfModelo: PROTOCOLO_PDF_MODELO_PADRAO,
                       })
                     }}
                     style={{
@@ -29691,7 +29699,7 @@ onKeyPress={(e) => {
                       onClick={() => {
                         if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY)
                         setEditingProtocoloServicoId(null)
-                        setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', situacaoDescricao: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
+                        setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', situacaoDescricao: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: PROTOCOLO_PDF_MODELO_PADRAO })
                       }}
                     >
                       ← {protoT?.protocolosServicoVoltarLista || 'Voltar à lista'}
@@ -30593,7 +30601,7 @@ onKeyPress={(e) => {
                         saveData('nonato-protocolos-servico', next)
                         if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY)
                         setEditingProtocoloServicoId(null)
-                        setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', situacaoDescricao: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 })
+                        setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', situacaoDescricao: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: PROTOCOLO_PDF_MODELO_PADRAO })
                       }}
                       style={{ padding: '12px 28px', fontWeight: 700, borderRadius: '10px' }}
                     >
@@ -30603,7 +30611,7 @@ onKeyPress={(e) => {
                       type="button"
                       className="btn-primary"
                       style={{ background: 'transparent', borderColor: 'rgba(255,255,255,0.35)', color: '#bbb', padding: '12px 22px', borderRadius: '10px' }}
-                      onClick={() => { if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY); setEditingProtocoloServicoId(null); setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', situacaoDescricao: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: 1 }) }}
+                      onClick={() => { if (typeof window !== 'undefined') localStorage.removeItem(PROTOCOLO_SERVICO_DRAFT_KEY); setEditingProtocoloServicoId(null); setProtocoloServicoForm({ clienteId: '', equipamentoNumeroSerie: '', situacaoDescricao: '', textoInicial: '', blocos: [], pecasTrocadasCodigos: [], pdfModelo: PROTOCOLO_PDF_MODELO_PADRAO }) }}
                     >
                       {protoT?.protocolosServicoCancelar || 'Cancelar'}
                     </button>
@@ -30622,26 +30630,26 @@ onKeyPress={(e) => {
                 }}
               >
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 22 }}>
-                    <div style={{ padding: '14px 16px', borderRadius: 8, background: '#0f1419', border: '1px solid rgba(148, 163, 184, 0.14)' }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>{protoT?.protocolosServicoHubKpiArquivo || 'Arquivo'}</div>
-                      <div style={{ fontSize: 26, fontWeight: 700, color: '#f1f5f9', marginTop: 6, lineHeight: 1 }}>{totalProto}</div>
-                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{protoT?.protocolosServicoHubKpiArquivoSub || 'protocolos guardados'}</div>
+                    <div className="protocolo-kpi-card" style={{ padding: '14px 16px', borderRadius: 10, background: 'linear-gradient(145deg, rgba(6, 40, 22, 0.85), rgba(8, 18, 28, 0.95))', border: '1px solid rgba(34, 197, 94, 0.35)' }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#86efac', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{protoT?.protocolosServicoHubKpiArquivo || 'Arquivo'}</div>
+                      <div style={{ fontSize: 28, fontWeight: 800, color: '#f0fdf4', marginTop: 6, lineHeight: 1 }}>{totalProto}</div>
+                      <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{protoT?.protocolosServicoHubKpiArquivoSub || 'protocolos guardados'}</div>
                     </div>
-                    <div style={{ padding: '14px 16px', borderRadius: 8, background: '#0f1419', border: '1px solid rgba(148, 163, 184, 0.14)' }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>{protoT?.protocolosServicoHubKpiVisiveis || 'Visíveis'}</div>
-                      <div style={{ fontSize: 26, fontWeight: 700, color: '#f1f5f9', marginTop: 6, lineHeight: 1 }}>{visivelProto}</div>
-                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                    <div className="protocolo-kpi-card" style={{ padding: '14px 16px', borderRadius: 10, background: 'linear-gradient(145deg, rgba(15, 30, 55, 0.9), rgba(8, 14, 24, 0.98))', border: '1px solid rgba(56, 189, 248, 0.28)' }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#7dd3fc', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{protoT?.protocolosServicoHubKpiVisiveis || 'Visíveis'}</div>
+                      <div style={{ fontSize: 28, fontWeight: 800, color: '#f0f9ff', marginTop: 6, lineHeight: 1 }}>{visivelProto}</div>
+                      <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
                         {filtroLista || filtroClienteRaw
                           ? (protoT?.protocolosServicoHubKpiFiltroOn || 'filtro inteligente ativo')
                           : (protoT?.protocolosServicoHubKpiFiltroOff || 'sem filtro de texto')}
                       </div>
                     </div>
-                    <div style={{ padding: '14px 16px', borderRadius: 8, background: '#0f1419', border: '1px solid rgba(148, 163, 184, 0.14)' }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>{protoT?.protocolosServicoHubKpiCobertura || 'Cobertura'}</div>
-                      <div style={{ fontSize: 26, fontWeight: 700, color: '#f1f5f9', marginTop: 6, lineHeight: 1 }}>
+                    <div className="protocolo-kpi-card" style={{ padding: '14px 16px', borderRadius: 10, background: 'linear-gradient(145deg, rgba(40, 30, 8, 0.88), rgba(12, 10, 6, 0.98))', border: '1px solid rgba(251, 191, 36, 0.32)' }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#fcd34d', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{protoT?.protocolosServicoHubKpiCobertura || 'Cobertura'}</div>
+                      <div style={{ fontSize: 28, fontWeight: 800, color: '#fffbeb', marginTop: 6, lineHeight: 1 }}>
                         {totalProto > 0 ? `${Math.round((visivelProto / totalProto) * 100)}%` : '—'}
                       </div>
-                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{protoT?.protocolosServicoHubKpiCoberturaSub || 'da lista face ao arquivo'}</div>
+                      <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{protoT?.protocolosServicoHubKpiCoberturaSub || 'da lista face ao arquivo'}</div>
                     </div>
                   </div>
                   {protoT?.protocolosServicoPainelIntro ? (

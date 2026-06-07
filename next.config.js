@@ -25,6 +25,10 @@ const nextConfig = {
         source: '/sw.js',
         headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }],
       },
+      {
+        source: '/campo-app/sw.js',
+        headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }],
+      },
     ]
   },
   // Permite o build concluir mesmo com erros de tipo (corrija os tipos gradualmente)

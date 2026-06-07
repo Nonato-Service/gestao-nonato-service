@@ -651,6 +651,7 @@ export const translations = {
     protocolosServicoPdfModelo12: '12 — Relatório técnico (monospace)',
     protocolosServicoPdfModelo13: '13 — Executive (azul-marinho & ouro)',
     protocolosServicoPdfModelo14: '14 — Clínico clean (branco & teal)',
+    protocolosServicoPdfModelo15: '15 — Impacto Nonato (navy & verde forte) ★',
     protocolosServicoFormTituloNovo: 'Novo protocolo de serviço',
     protocolosServicoFormTituloEditar: 'Editar protocolo',
     protocolosServicoFormSub:
@@ -4256,6 +4257,7 @@ export const translations = {
     protocolosServicoPdfModelo12: '12 — Informe técnico (monoespacio)',
     protocolosServicoPdfModelo13: '13 — Executive (azul marino y oro)',
     protocolosServicoPdfModelo14: '14 — Clínico limpio (blanco y teal)',
+    protocolosServicoPdfModelo15: '15 — Impacto Nonato (navy y verde fuerte) ★',
     protocolosServicoFormTituloNovo: 'Nuevo protocolo de servicio',
     protocolosServicoFormTituloEditar: 'Editar protocolo',
     protocolosServicoFormSub:
@@ -7564,6 +7566,7 @@ export const translations = {
     protocolosServicoPdfModelo12: '12 — Rapport technique (monospace)',
     protocolosServicoPdfModelo13: '13 — Executive (marine & or)',
     protocolosServicoPdfModelo14: '14 — Clinique épuré (blanc & teal)',
+    protocolosServicoPdfModelo15: '15 — Impact Nonato (marine & vert fort) ★',
     protocolosServicoFormTituloNovo: 'Nouveau protocole de service',
     protocolosServicoFormTituloEditar: 'Modifier le protocole',
     protocolosServicoFormSub:
@@ -10861,6 +10864,7 @@ export const translations = {
     protocolosServicoPdfModelo12: '12 — Rapporto tecnico (monospazio)',
     protocolosServicoPdfModelo13: '13 — Executive (blu navy e oro)',
     protocolosServicoPdfModelo14: '14 — Clinico pulito (bianco e teal)',
+    protocolosServicoPdfModelo15: '15 — Impatto Nonato (navy e verde forte) ★',
     protocolosServicoFormTituloNovo: 'Nuovo protocollo di servizio',
     protocolosServicoFormTituloEditar: 'Modifica protocollo',
     protocolosServicoFormSub:
@@ -14149,6 +14153,7 @@ export const translations = {
     protocolosServicoPdfModelo12: '12 — Technischer Bericht (Monospace)',
     protocolosServicoPdfModelo13: '13 — Executive (Marineblau & Gold)',
     protocolosServicoPdfModelo14: '14 — Klinisch clean (Weiß & Teal)',
+    protocolosServicoPdfModelo15: '15 — Nonato Impact (Navy & kräftiges Grün) ★',
     protocolosServicoFormTituloNovo: 'Neues Serviceprotokoll',
     protocolosServicoFormTituloEditar: 'Protokoll bearbeiten',
     protocolosServicoFormSub:
@@ -17458,6 +17463,7 @@ export const translations = {
     protocolosServicoPdfModelo12: '12 — Technical report (monospace)',
     protocolosServicoPdfModelo13: '13 — Executive (navy & gold)',
     protocolosServicoPdfModelo14: '14 — Clinical clean (white & teal)',
+    protocolosServicoPdfModelo15: '15 — Nonato Impact (navy & bold green) ★',
     protocolosServicoFormTituloNovo: 'New service protocol',
     protocolosServicoFormTituloEditar: 'Edit protocol',
     protocolosServicoFormSub:
