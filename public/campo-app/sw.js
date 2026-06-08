@@ -1,4 +1,4 @@
-const CACHE = "nonato-campo-v6";
+const CACHE = "nonato-campo-v8";
 const BASE = "/campo-app/";
 const ASSETS = [
   BASE,
@@ -14,6 +14,17 @@ const ASSETS = [
   BASE + "js/pdf.js",
   BASE + "js/app.js",
 ];
+
+function isAppShell(url) {
+  const p = url.pathname;
+  return (
+    p.endsWith(".html") ||
+    p.endsWith(".js") ||
+    p.endsWith(".css") ||
+    p === BASE.slice(0, -1) ||
+    p === BASE + "index.html"
+  );
+}
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
@@ -39,17 +50,17 @@ self.addEventListener("fetch", (e) => {
   if (url.origin !== self.location.origin) return;
   if (!url.pathname.startsWith(BASE)) return;
 
-  if (e.request.mode === "navigate") {
+  if (e.request.mode === "navigate" || isAppShell(url)) {
     e.respondWith(
       fetch(e.request)
         .then((r) => {
           if (r && r.ok) {
             const clone = r.clone();
-            caches.open(CACHE).then((c) => c.put(BASE + "index.html", clone));
+            caches.open(CACHE).then((c) => c.put(e.request, clone));
           }
           return r;
         })
-        .catch(() => caches.match(BASE + "index.html"))
+        .catch(() => caches.match(e.request).then((m) => m || caches.match(BASE + "index.html")))
     );
     return;
   }

@@ -14,7 +14,7 @@
   <link rel="apple-touch-icon" href="/campo-app/assets/icon-192.png" />
   <title>Nonato Campo</title>
   <link rel="manifest" href="/campo-app/manifest.json" />
-  <link rel="stylesheet" href="/campo-app/styles.css" />
+  <link rel="stylesheet" href="/campo-app/styles.css?v=8" />
 </head>
 <body>
   <div id="app">
@@ -60,22 +60,33 @@
     </form>
   </dialog>
 
-  <script src="/campo-app/js/db.js"></script>
-  <script src="/campo-app/js/i18n.js"></script>
-  <script src="/campo-app/js/utils.js"></script>
-  <script src="/campo-app/js/pdf.js"></script>
-  <script src="/campo-app/js/app.js"></script>
+  <script src="/campo-app/js/db.js?v=8"></script>
+  <script src="/campo-app/js/i18n.js?v=8"></script>
+  <script src="/campo-app/js/utils.js?v=8"></script>
+  <script src="/campo-app/js/pdf.js?v=8"></script>
+  <script src="/campo-app/js/app.js?v=8"></script>
   <script>
     (function () {
       var BASE = "/campo-app/";
+      var VER = "8";
       if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
         window.addEventListener("load", function () {
-          navigator.serviceWorker.register(BASE + "sw.js?v=7", { scope: BASE, updateViaCache: "none" }).then(function (reg) {
+          navigator.serviceWorker.register(BASE + "sw.js?v=" + VER, { scope: BASE, updateViaCache: "none" }).then(function (reg) {
             reg.update();
             document.addEventListener("visibilitychange", function () {
               if (document.visibilityState === "visible") reg.update();
             });
             window.addEventListener("pageshow", function () { reg.update(); });
+            reg.addEventListener("updatefound", function () {
+              var nw = reg.installing;
+              if (!nw) return;
+              nw.addEventListener("statechange", function () {
+                if (nw.state === "installed" && navigator.serviceWorker.controller) {
+                  var ok = confirm("Nova versão da app Campo disponível. Atualizar agora?");
+                  if (ok) window.location.reload();
+                }
+              });
+            });
             var el = document.getElementById("topStatus");
             if (el && !navigator.onLine && window.NCampoI18n) el.textContent = NCampoI18n.t("statusOffline");
           }).catch(function () {});
