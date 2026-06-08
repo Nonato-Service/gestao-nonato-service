@@ -1,51 +1,44 @@
 (function (global) {
   "use strict";
   const U = global.NCampoUtils;
+  const I18n = global.NCampoI18n;
+  const t = (k, p) => I18n.t(k, p);
 
   const RS_PDF_CSS = `@page { size: A4 portrait; margin: 10mm; }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; background: #fff; font-size: 10px; line-height: 1.45; padding: 10px 12px 16px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.rs-pdf .pdf-header { margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid; break-after: avoid; page-break-after: avoid; }
-.rs-pdf .pdf-header__inner { display: flex; align-items: center; gap: 18px; padding: 4px 2px 14px; background: transparent; color: #0f172a; }
-.rs-pdf .pdf-header__brand { flex-shrink: 0; min-width: 96px; max-width: 148px; padding: 4px 6px; display: flex; align-items: center; justify-content: center; }
-.rs-pdf .pdf-header__brand img { max-height: 62px; max-width: 136px; object-fit: contain; display: block; }
-.rs-pdf .pdf-header__logo-text { font-family: Georgia, "Times New Roman", serif; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #1e293b; text-align: center; line-height: 1.3; }
-.rs-pdf .pdf-header__divider-v { width: 1px; align-self: stretch; min-height: 52px; background: linear-gradient(180deg, transparent 0%, #cbd5e1 18%, #94a3b8 50%, #cbd5e1 82%, transparent 100%); flex-shrink: 0; }
-.rs-pdf .pdf-header__main { flex: 1; min-width: 0; text-align: left; padding-left: 2px; }
-.rs-pdf .pdf-header__title { font-family: Georgia, "Times New Roman", serif; font-size: 17px; font-weight: 700; letter-spacing: 0.04em; line-height: 1.22; color: #0f172a; }
-.rs-pdf .pdf-header__subtitle { margin-top: 5px; font-size: 9px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #64748b; }
-.rs-pdf .pdf-header__contacts { margin-top: 6px; font-size: 8px; color: #64748b; line-height: 1.35; }
-.rs-pdf .pdf-header__meta { flex-shrink: 0; text-align: right; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-top: 2px solid #1e3a5f; border-radius: 2px; min-width: 108px; }
-.rs-pdf .pdf-header__badge-label { display: block; font-size: 7px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
-.rs-pdf .pdf-header__badge-value { display: block; font-family: Georgia, "Times New Roman", serif; font-size: 15px; font-weight: 700; letter-spacing: 0.03em; color: #1e3a5f; line-height: 1.15; }
-.rs-pdf .pdf-header__rule { height: 2px; background: linear-gradient(90deg, #1e3a5f 0%, #475569 42%, #a67c52 50%, #475569 58%, #1e3a5f 100%); opacity: 0.85; }
-.rs-pdf .info-section { margin-bottom: 16px; padding: 16px; border: 1px solid #e2e8f0; border-radius: 2px; background: #fff; break-inside: auto; page-break-inside: auto; }
-.rs-pdf .info-section:not(:has(table)) { break-inside: avoid; page-break-inside: avoid; }
-.rs-pdf .header { break-inside: avoid; page-break-inside: avoid; break-after: avoid; page-break-after: avoid; }
-.rs-pdf .info-section h3 { font-family: Georgia, "Times New Roman", serif; font-size: 10px; margin: 0 0 14px; padding: 0 0 8px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #1e293b; border-bottom: 1px solid #cbd5e1; background: transparent; }
-.rs-pdf .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 18px; }
-.rs-pdf .info-label { font-weight: 600; color: #64748b; }
+.rs-pdf .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 3px solid #166534; }
+.rs-pdf .header-left { display: flex; flex-direction: column; gap: 6px; max-width: 45%; }
+.rs-pdf .header-logo img { max-height: 52px; max-width: 200px; object-fit: contain; display: block; }
+.rs-pdf .header-logo strong { font-size: 14px; color: #14532d; }
+.rs-pdf .header-contacts { font-size: 9px; color: #475569; line-height: 1.4; }
+.rs-pdf .header-title { font-size: 13px; font-weight: 800; text-align: center; flex: 1; text-transform: uppercase; letter-spacing: 0.06em; padding-top: 4px; }
+.rs-pdf .header-number { font-size: 11px; font-weight: 800; color: #14532d; white-space: nowrap; padding: 6px 10px; border: 1px solid #bbf7d0; border-radius: 8px; background: #f0fdf4; }
+.rs-pdf .info-section { margin-bottom: 14px; padding: 14px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fafafa; page-break-inside: avoid; }
+.rs-pdf .info-section h3 { font-size: 9px; margin: -14px -14px 12px; padding: 10px 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #14532d; background: #ecfdf5; border-left: 4px solid #166534; border-radius: 10px 10px 0 0; }
+.rs-pdf .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 14px; }
+.rs-pdf .info-label { font-weight: 700; color: #334155; }
 .rs-pdf table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 0.92em; }
-.rs-pdf th, .rs-pdf td { border: 1px solid #e2e8f0; padding: 6px 5px; text-align: center; vertical-align: middle; }
-.rs-pdf th { background: #1e293b; color: #f8fafc; font-weight: 600; font-size: 0.82em; letter-spacing: 0.04em; text-transform: uppercase; }
+.rs-pdf th, .rs-pdf td { border: 1px solid #e2e8f0; padding: 5px 4px; text-align: center; vertical-align: middle; }
+.rs-pdf th { background: #166534; color: #fff; font-weight: 700; font-size: 0.85em; }
 .rs-pdf tbody tr:nth-child(even) td { background: #f8fafc; }
-.rs-pdf .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0; }
-.rs-pdf .summary-card { border: 1px solid #e2e8f0; border-top: 2px solid #1e3a5f; border-radius: 2px; padding: 12px 8px; text-align: center; background: #fff; }
-.rs-pdf .summary-card h4 { font-size: 0.78em; margin-bottom: 8px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; }
-.rs-pdf .summary-card .value { font-family: Georgia, "Times New Roman", serif; font-size: 1.15em; font-weight: 700; color: #1e3a5f; }
-.rs-pdf .obs { margin-top: 12px; padding: 12px 14px; background: #fafafa; border-left: 3px solid #1e3a5f; border-radius: 0 2px 2px 0; white-space: pre-wrap; color: #334155; }
+.rs-pdf .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0; }
+.rs-pdf .summary-card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 8px; text-align: center; background: #fff; }
+.rs-pdf .summary-card h4 { font-size: 0.85em; margin-bottom: 6px; font-weight: 700; color: #334155; }
+.rs-pdf .summary-card .value { font-size: 1.15em; font-weight: 800; color: #14532d; }
+.rs-pdf .obs { margin-top: 12px; padding: 10px; background: #f8fafc; border-left: 3px solid #166534; border-radius: 0 6px 6px 0; white-space: pre-wrap; }
 .rs-pdf .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; page-break-inside: avoid; }
 .rs-pdf .sig-block { text-align: center; padding-top: 8px; border-top: 1px solid #cbd5e1; }
-.rs-pdf .sig-block h4 { font-family: Georgia, "Times New Roman", serif; font-size: 9px; font-weight: 700; text-transform: uppercase; color: #1e293b; margin-bottom: 8px; letter-spacing: 0.08em; }
+.rs-pdf .sig-block h4 { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #14532d; margin-bottom: 8px; letter-spacing: 0.06em; }
 .rs-pdf .sig-block img { max-width: 240px; max-height: 90px; object-fit: contain; display: block; margin: 0 auto 6px; border-bottom: 1px solid #000; padding-bottom: 4px; background: #fff; }
 .rs-pdf .sig-line { width: 240px; height: 70px; border-bottom: 2px solid #000; margin: 0 auto 6px; }
 .rs-pdf .sig-name { font-size: 9px; font-weight: 700; color: #334155; }
 .rs-pdf .sig-date { font-size: 8px; color: #64748b; margin-top: 4px; }
-@media print { body.rs-pdf { padding-bottom: 8mm; } .rs-pdf .info-section:has(table) { break-inside: auto; page-break-inside: auto; } .rs-pdf .info-section tbody tr { break-inside: avoid; page-break-inside: avoid; } }`;
+@media print { body.rs-pdf { padding-bottom: 8mm; } }`;
 
   function logoHtml(logo, nomeEmpresa) {
-    if (logo && logo.dataUrl) return `<img src="${logo.dataUrl}" alt="Logo" width="118" height="58" />`;
-    return `<span class="pdf-header__logo-text">${U.esc(nomeEmpresa || "Nonato Service")}</span>`;
+    if (logo && logo.dataUrl) return `<img src="${logo.dataUrl}" alt="Logo" />`;
+    return `<strong>${U.esc(nomeEmpresa || "Nonato Service")}</strong>`;
   }
 
   function brandOpts(brand) {
@@ -63,14 +56,15 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
   function headerContactsHtml(endereco, telefone, cls) {
     const parts = [];
     if (endereco) parts.push(`<div>${U.esc(endereco)}</div>`);
-    if (telefone) parts.push(`<div>Tel: ${U.esc(telefone)}</div>`);
+    if (telefone) parts.push(`<div>${t("pdfTel")}: ${U.esc(telefone)}</div>`);
     return parts.length ? `<div class="${cls || "header-contacts"}">${parts.join("")}</div>` : "";
   }
 
   function fmtAssinaturaData(iso) {
     if (!iso) return "";
     try {
-      return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+      const loc = I18n.localeTag();
+      return new Date(iso).toLocaleString(loc, { dateStyle: "short", timeStyle: "short" });
     } catch {
       return "";
     }
@@ -78,28 +72,28 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
 
   function assinaturaBlockHtml(titulo, imgData, nome, dataIso) {
     const img = imgData
-      ? `<img src="${String(imgData).replace(/"/g, "&quot;")}" alt="Assinatura" />`
+      ? `<img src="${String(imgData).replace(/"/g, "&quot;")}" alt="${U.esc(t("sigAlt"))}" />`
       : `<div class="sig-line"></div>`;
     const data = fmtAssinaturaData(dataIso);
     return `<div class="sig-block">
       <h4>${U.esc(titulo)}</h4>
       ${img}
       ${nome ? `<div class="sig-name">${U.esc(nome)}</div>` : ""}
-      ${data ? `<div class="sig-date">Data: ${U.esc(data)}</div>` : `<div class="sig-date">Data: ___________________</div>`}
+      ${data ? `<div class="sig-date">${t("pdfDateLabel")}: ${U.esc(data)}</div>` : `<div class="sig-date">${t("pdfDateLabel")}: ___________________</div>`}
     </div>`;
   }
 
   function signaturesHtml(relatorio) {
     return `<div class="signatures">
-      ${assinaturaBlockHtml("Assinatura do Técnico", relatorio.assinaturaTecnico, relatorio.tecnico, relatorio.dataAssinaturaTecnico)}
-      ${assinaturaBlockHtml("Assinatura do Cliente", relatorio.assinaturaCliente, relatorio.cliente, relatorio.dataAssinaturaCliente)}
+      ${assinaturaBlockHtml(t("sigTechnician"), relatorio.assinaturaTecnico, relatorio.tecnico, relatorio.dataAssinaturaTecnico)}
+      ${assinaturaBlockHtml(t("sigClient"), relatorio.assinaturaCliente, relatorio.cliente, relatorio.dataAssinaturaCliente)}
     </div>`;
   }
 
   function openPrint(html, title) {
     const w = window.open("", "_blank");
     if (!w) {
-      alert("Permita pop-ups para gerar o PDF.");
+      alert(t("pdfPopupBlocked"));
       return false;
     }
     w.document.write(html);
@@ -117,7 +111,7 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
       .map((dia) => {
         const desc =
           (dia.descricaoTrabalho || "").trim() !== ""
-            ? `<tr><td colspan="14" style="text-align:left;padding:6px;background:#f9f9f9;font-size:9px;"><strong>Descrição:</strong> ${U.esc(dia.descricaoTrabalho)}</td></tr>`
+            ? `<tr><td colspan="14" style="text-align:left;padding:6px;background:#f9f9f9;font-size:9px;"><strong>${t("pdfDescLabel")}</strong> ${U.esc(dia.descricaoTrabalho)}</td></tr>`
             : "";
         return `<tr>
           <td>${U.fmtDatePt(dia.data)}</td>
@@ -130,74 +124,71 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
       })
       .join("");
 
-    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatório ${U.esc(relatorio.numero)}</title><style>${RS_PDF_CSS}</style></head>
+    const genDate = new Date().toLocaleString(I18n.localeTag());
+
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${U.esc(t("pdfReportTitle"))} ${U.esc(relatorio.numero)}</title><style>${RS_PDF_CSS}</style></head>
     <body class="rs-pdf">
-      <div class="pdf-header">
-        <div class="pdf-header__inner">
-          <div class="pdf-header__brand">${logoHtml(logo, nomeEmpresa)}</div>
-          <div class="pdf-header__divider-v"></div>
-          <div class="pdf-header__main">
-            <div class="pdf-header__title">Relatório de Serviço</div>
-            <div class="pdf-header__subtitle">${U.esc(nomeEmpresa || "Nonato Service")} · Assistência Técnica</div>
-            ${headerContactsHtml(enderecoEmpresa, telefoneEmpresa, "pdf-header__contacts")}
-          </div>
-          <div class="pdf-header__meta">
-            <span class="pdf-header__badge-label">Relatório n.º</span>
-            <span class="pdf-header__badge-value">${U.esc(relatorio.numero)}</span>
-          </div>
+      <div class="header">
+        <div class="header-left">
+          <div class="header-logo">${logoHtml(logo, nomeEmpresa)}</div>
+          ${headerContactsHtml(enderecoEmpresa, telefoneEmpresa)}
         </div>
-        <div class="pdf-header__rule"></div>
+        <div class="header-title">${U.esc(t("pdfReportHeader"))}</div>
+        <div class="header-number">${t("pdfNo")}: ${U.esc(relatorio.numero)}</div>
       </div>
-      <div class="info-section"><h3>DADOS DO CLIENTE E EQUIPAMENTO</h3><div class="info-grid">
-        <div><span class="info-label">Técnico:</span> ${U.esc(relatorio.tecnico)}</div>
-        <div><span class="info-label">Data:</span> ${U.fmtDatePt(relatorio.data)}</div>
-        <div><span class="info-label">Cliente:</span> ${U.esc(relatorio.cliente)}</div>
-        <div><span class="info-label">Máquina/Modelo:</span> ${U.esc(relatorio.maquinaModelo)}</div>
-        <div><span class="info-label">Cidade:</span> ${U.esc(relatorio.cidade)}</div>
-        <div><span class="info-label">Nº Máquina:</span> ${U.esc(relatorio.numeroMaquina)}</div>
-        <div><span class="info-label">Telefone:</span> ${U.esc(relatorio.telefone)}</div>
-        <div><span class="info-label">Tipo serviço:</span> ${U.esc(relatorio.tipoServico)}</div>
+      <div class="info-section"><h3>${U.esc(t("pdfClientEquipment"))}</h3><div class="info-grid">
+        <div><span class="info-label">${t("labelTechnician")}:</span> ${U.esc(relatorio.tecnico)}</div>
+        <div><span class="info-label">${t("labelDate")}:</span> ${U.fmtDatePt(relatorio.data)}</div>
+        <div><span class="info-label">${t("labelClient")}:</span> ${U.esc(relatorio.cliente)}</div>
+        <div><span class="info-label">${t("labelMachine")}:</span> ${U.esc(relatorio.maquinaModelo)}</div>
+        <div><span class="info-label">${t("labelCity")}:</span> ${U.esc(relatorio.cidade)}</div>
+        <div><span class="info-label">${t("labelMachineNum")}:</span> ${U.esc(relatorio.numeroMaquina)}</div>
+        <div><span class="info-label">${t("labelPhone")}:</span> ${U.esc(relatorio.telefone)}</div>
+        <div><span class="info-label">${t("labelServiceType")}:</span> ${U.esc(relatorio.tipoServico)}</div>
       </div></div>
-      ${dias.length ? `<div class="info-section"><h3>CONTROLE DE HORAS E DESLOCAMENTOS</h3>
-        <table><thead><tr><th rowspan="2">DATA</th><th colspan="3">IDA</th><th colspan="3">HORAS</th><th colspan="3">RETORNO</th><th colspan="3">KM</th><th rowspan="2">PAUSA</th></tr>
-        <tr><th>Saída</th><th>Chegada</th><th>Dur.</th><th>Início</th><th>Fim</th><th>Dur.</th><th>Saída</th><th>Chegada</th><th>Dur.</th><th>Ida</th><th>Ret.</th><th>Total</th></tr></thead>
+      ${dias.length ? `<div class="info-section"><h3>${U.esc(t("pdfHoursTravel"))}</h3>
+        <table><thead><tr><th rowspan="2">${t("pdfThDate")}</th><th colspan="3">${t("pdfThOut")}</th><th colspan="3">${t("pdfThHours")}</th><th colspan="3">${t("pdfThReturn")}</th><th colspan="3">${t("pdfThKm")}</th><th rowspan="2">${t("pdfThBreak")}</th></tr>
+        <tr><th>${t("pdfThDeparture")}</th><th>${t("pdfThArrival")}</th><th>${t("pdfThDur")}</th><th>${t("pdfThStart")}</th><th>${t("pdfThEnd")}</th><th>${t("pdfThDur")}</th><th>${t("pdfThDeparture")}</th><th>${t("pdfThArrival")}</th><th>${t("pdfThDur")}</th><th>${t("pdfThOutKm")}</th><th>${t("pdfThRetKm")}</th><th>${t("pdfThTotal")}</th></tr></thead>
         <tbody>${diasRows}</tbody></table>
         <div class="summary">
-          <div class="summary-card"><h4>Horas trabalho</h4><div class="value">${totais.horasTrabalho}h</div></div>
-          <div class="summary-card"><h4>Km percorridos</h4><div class="value">${totais.kmsPercorridos} km</div></div>
-          <div class="summary-card"><h4>Horas viagem</h4><div class="value">${totais.horasViagem}h</div></div>
-          <div class="summary-card"><h4>Diárias</h4><div class="value">${dias.length}</div></div>
-          <div class="summary-card"><h4>Viagem ida</h4><div class="value">${totais.horasViagemIda}h</div></div>
-          <div class="summary-card"><h4>Viagem retorno</h4><div class="value">${totais.horasViagemRetorno}h</div></div>
+          <div class="summary-card"><h4>${t("pdfWorkHours")}</h4><div class="value">${totais.horasTrabalho}h</div></div>
+          <div class="summary-card"><h4>${t("pdfKmTraveled")}</h4><div class="value">${totais.kmsPercorridos} km</div></div>
+          <div class="summary-card"><h4>${t("pdfTravelHours")}</h4><div class="value">${totais.horasViagem}h</div></div>
+          <div class="summary-card"><h4>${t("pdfDailyRates")}</h4><div class="value">${dias.length}</div></div>
+          <div class="summary-card"><h4>${t("pdfTravelOut")}</h4><div class="value">${totais.horasViagemIda}h</div></div>
+          <div class="summary-card"><h4>${t("pdfTravelReturn")}</h4><div class="value">${totais.horasViagemRetorno}h</div></div>
         </div></div>` : ""}
-      ${relatorio.observacoes ? `<div class="info-section"><h3>OBSERVAÇÕES</h3><div class="obs">${U.esc(relatorio.observacoes)}</div></div>` : ""}
+      ${relatorio.observacoes ? `<div class="info-section"><h3>${U.esc(t("pdfObservations"))}</h3><div class="obs">${U.esc(relatorio.observacoes)}</div></div>` : ""}
       ${signaturesHtml(relatorio)}
-      <p style="margin-top:16px;font-size:8px;color:#64748b;text-align:center;">Documento gerado em ${new Date().toLocaleString("pt-BR")} — ${U.esc(nomeEmpresa)}</p>
+      <p style="margin-top:16px;font-size:8px;color:#64748b;text-align:center;">${U.esc(t("pdfGenerated", { date: genDate, company: nomeEmpresa }))}</p>
     </body></html>`;
   }
 
   function buildWhatsAppText(relatorio, brand) {
     const { nomeEmpresa, telefoneEmpresa } = brandOpts(brand);
+    const hello = relatorio.cliente
+      ? t("waHello", { client: ", " + relatorio.cliente })
+      : t("waHelloNoClient");
     const lines = [
-      `Olá${relatorio.cliente ? `, ${relatorio.cliente}` : ""}!`,
+      hello,
       "",
-      `Segue o relatório de serviço nº ${relatorio.numero || "—"}.`,
-      `Técnico: ${relatorio.tecnico || "—"}`,
-      `Data: ${U.fmtDatePt(relatorio.data)}`,
-      `Equipamento: ${relatorio.maquinaModelo || "—"}`,
-      relatorio.tipoServico ? `Serviço: ${relatorio.tipoServico}` : "",
+      t("waFollowReport", { num: relatorio.numero || "—" }),
+      `${t("waTechnician")}: ${relatorio.tecnico || "—"}`,
+      `${t("labelDate")}: ${U.fmtDatePt(relatorio.data)}`,
+      `${t("waEquipment")}: ${relatorio.maquinaModelo || "—"}`,
+      relatorio.tipoServico ? `${t("waService")}: ${relatorio.tipoServico}` : "",
       "",
-      "Anexe o PDF do relatório (use «Guardar como PDF» na impressão).",
+      t("waAttachPdf"),
       "",
       nomeEmpresa,
     ];
-    if (telefoneEmpresa) lines.push(`Tel: ${telefoneEmpresa}`);
-    lines.push("", "Obrigado.");
+    if (telefoneEmpresa) lines.push(`${t("pdfTel")}: ${telefoneEmpresa}`);
+    lines.push("", t("waThanks"));
     return lines.filter(Boolean).join("\n");
   }
 
   function printRelatorio(relatorio, brand) {
-    openPrint(buildRelatorioHtml(relatorio, brand), "Relatório " + relatorio.numero);
+    openPrint(buildRelatorioHtml(relatorio, brand), t("pdfReportTitle") + " " + relatorio.numero);
   }
 
   function shareRelatorioWhatsApp(relatorio, brand) {
@@ -209,11 +200,7 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
     printRelatorio(relatorio, brand);
     setTimeout(() => {
       window.open(url, "_blank", "noopener,noreferrer");
-      if (!tel) {
-        alert("Telefone do cliente não definido — escolha o contacto no WhatsApp e anexe o PDF.");
-      } else {
-        alert("PDF aberto para guardar/imprimir. O WhatsApp abrirá a seguir — anexe o PDF à mensagem.");
-      }
+      alert(tel ? t("waOpenPdf") : t("waNoPhone"));
     }, 700);
   }
 
@@ -226,11 +213,13 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
           .map((f) => `<img src="${f}" alt="" style="max-width:100%;max-height:180px;margin:4px;border:1px solid #ddd;border-radius:4px;" />`)
           .join("");
         return `<tr><td>${i + 1}</td><td>${U.esc(d.tipoNome)}</td><td>€ ${(Number(d.valor) || 0).toFixed(2)}</td><td>${U.esc(d.descricao)}</td><td>${U.esc(d.cartaoRotulo || "—")}</td></tr>
-        ${fotos ? `<tr><td colspan="5" style="padding:10px;background:#f9f9f9;"><strong>Comprovantes:</strong><br/>${fotos}</td></tr>` : ""}`;
+        ${fotos ? `<tr><td colspan="5" style="padding:10px;background:#f9f9f9;"><strong>${t("pdfReceipts")}:</strong><br/>${fotos}</td></tr>` : ""}`;
       })
       .join("");
 
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Despesas ${U.esc(doc.clienteNome)}</title>
+    const genDate = new Date().toLocaleString(I18n.localeTag());
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${U.esc(t("pdfExpensesTitle"))} ${U.esc(doc.clienteNome)}</title>
     <style>@page{size:A4;margin:12mm}body{font-family:Segoe UI,sans-serif;font-size:11px;color:#111;padding:12px}
     .hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #166534;padding-bottom:12px;margin-bottom:16px;gap:12px}
     .hdr img{max-height:48px;max-width:180px}.hdr-contacts{font-size:9px;color:#555;margin-top:6px;line-height:1.4}
@@ -238,13 +227,13 @@ body.rs-pdf { font-family: "Segoe UI", system-ui, sans-serif; color: #0f172a; ba
     table{width:100%;border-collapse:collapse;margin:12px 0}th,td{border:1px solid #ddd;padding:8px;text-align:left}
     th{background:#166534;color:#fff}.total{font-size:14px;font-weight:800;text-align:right;margin-top:12px;color:#14532d}</style></head>
     <body>
-      <div class="hdr"><div><div>${logoHtml(logo, nomeEmpresa)}</div>${headerContactsHtml(enderecoEmpresa, telefoneEmpresa, "hdr-contacts")}</div><h1>REGISTRO DE DESPESAS</h1></div>
-      <p><strong>Cliente:</strong> ${U.esc(doc.clienteNome)} &nbsp;|&nbsp; <strong>Relatório:</strong> ${U.esc(doc.relatorioNumero || "—")} &nbsp;|&nbsp; <strong>Data:</strong> ${U.fmtDatePt(doc.data)}</p>
-      <table><thead><tr><th>#</th><th>Tipo</th><th>Valor</th><th>Descrição</th><th>Cartão</th></tr></thead><tbody>${linhas || "<tr><td colspan='5'>Sem linhas</td></tr>"}</tbody></table>
-      <p class="total">Total: € ${total.toFixed(2)}</p>
-      <p style="font-size:9px;color:#666;margin-top:20px;text-align:center;">Gerado em ${new Date().toLocaleString("pt-BR")} — ${U.esc(nomeEmpresa)}</p>
+      <div class="hdr"><div><div>${logoHtml(logo, nomeEmpresa)}</div>${headerContactsHtml(enderecoEmpresa, telefoneEmpresa, "hdr-contacts")}</div><h1>${U.esc(t("pdfExpenseRegister"))}</h1></div>
+      <p><strong>${t("labelClient")}:</strong> ${U.esc(doc.clienteNome)} &nbsp;|&nbsp; <strong>${t("tabReports")}:</strong> ${U.esc(doc.relatorioNumero || "—")} &nbsp;|&nbsp; <strong>${t("labelDate")}:</strong> ${U.fmtDatePt(doc.data)}</p>
+      <table><thead><tr><th>#</th><th>${t("labelType")}</th><th>${t("labelValue")}</th><th>${t("pdfDescription")}</th><th>${t("pdfCard")}</th></tr></thead><tbody>${linhas || `<tr><td colspan='5'>${t("pdfNoLines")}</td></tr>`}</tbody></table>
+      <p class="total">${t("pdfTotal")}: € ${total.toFixed(2)}</p>
+      <p style="font-size:9px;color:#666;margin-top:20px;text-align:center;">${U.esc(t("pdfGeneratedShort", { date: genDate, company: nomeEmpresa }))}</p>
     </body></html>`;
-    openPrint(html, "Despesas");
+    openPrint(html, t("pdfExpensesTitle"));
   }
 
   global.NCampoPdf = { printRelatorio, printDespesas, shareRelatorioWhatsApp, buildRelatorioHtml };

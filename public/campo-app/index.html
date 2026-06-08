@@ -26,6 +26,16 @@
           <p class="topbar__sub" id="topStatus">Nonato Campo · offline</p>
         </div>
       </div>
+      <div class="topbar__actions">
+        <label class="lang-picker">
+          <span class="lang-picker__lbl" id="langLabel">Idioma</span>
+          <select id="langSelect" class="lang-select" aria-label="Idioma">
+            <option value="pt">PT</option>
+            <option value="es">ES</option>
+            <option value="it">IT</option>
+          </select>
+        </label>
+      </div>
     </header>
 
     <nav class="tabs" id="navTabs">
@@ -51,6 +61,7 @@
   </dialog>
 
   <script src="/campo-app/js/db.js"></script>
+  <script src="/campo-app/js/i18n.js"></script>
   <script src="/campo-app/js/utils.js"></script>
   <script src="/campo-app/js/pdf.js"></script>
   <script src="/campo-app/js/app.js"></script>
@@ -59,14 +70,14 @@
       var BASE = "/campo-app/";
       if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
         window.addEventListener("load", function () {
-          navigator.serviceWorker.register(BASE + "sw.js?v=6", { scope: BASE, updateViaCache: "none" }).then(function (reg) {
+          navigator.serviceWorker.register(BASE + "sw.js?v=7", { scope: BASE, updateViaCache: "none" }).then(function (reg) {
             reg.update();
             document.addEventListener("visibilitychange", function () {
               if (document.visibilityState === "visible") reg.update();
             });
             window.addEventListener("pageshow", function () { reg.update(); });
             var el = document.getElementById("topStatus");
-            if (el && !navigator.onLine) el.textContent = "✓ Modo offline";
+            if (el && !navigator.onLine && window.NCampoI18n) el.textContent = NCampoI18n.t("statusOffline");
           }).catch(function () {});
         });
       }

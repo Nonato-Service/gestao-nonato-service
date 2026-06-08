@@ -9,6 +9,7 @@ const ASSETS = [
   BASE + "assets/icon-192.png",
   BASE + "assets/icon-512.png",
   BASE + "js/db.js",
+  BASE + "js/i18n.js",
   BASE + "js/utils.js",
   BASE + "js/pdf.js",
   BASE + "js/app.js",

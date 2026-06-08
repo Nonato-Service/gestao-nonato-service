@@ -56,18 +56,23 @@
   }
 
   async function loadAll() {
-    const [logo, nomeEmpresa, enderecoEmpresa, telefoneEmpresa, servicoGrupos, servicos, relatorios, despesasDocs, cartoes] = await Promise.all([
+    const [logo, nomeEmpresa, enderecoEmpresa, telefoneEmpresa, locale, servicoGrupos, servicos, relatorios, despesasDocs, cartoes] = await Promise.all([
       getJson("settings", "logo", null),
       getJson("settings", "nomeEmpresa", "Nonato Service"),
       getJson("settings", "enderecoEmpresa", ""),
       getJson("settings", "telefoneEmpresa", ""),
+      getJson("settings", "locale", null),
       getJson("servicoGrupos", "list", []),
       getJson("servicos", "list", []),
       getJson("relatorios", "list", []),
       getJson("despesasDocs", "list", []),
       getJson("cartoes", "list", []),
     ]);
-    return { logo, nomeEmpresa, enderecoEmpresa, telefoneEmpresa, servicoGrupos, servicos, relatorios, despesasDocs, cartoes };
+    return { logo, nomeEmpresa, enderecoEmpresa, telefoneEmpresa, locale, servicoGrupos, servicos, relatorios, despesasDocs, cartoes };
+  }
+
+  async function saveLocale(locale) {
+    await setJson("settings", "locale", String(locale || "pt"));
   }
 
   async function saveLogo(logo) {
@@ -112,6 +117,7 @@
     if (data.nomeEmpresa != null) await saveNomeEmpresa(data.nomeEmpresa);
     if (data.enderecoEmpresa != null) await saveEnderecoEmpresa(data.enderecoEmpresa);
     if (data.telefoneEmpresa != null) await saveTelefoneEmpresa(data.telefoneEmpresa);
+    if (data.locale) await saveLocale(data.locale);
     if (Array.isArray(data.servicoGrupos)) await saveServicoGrupos(data.servicoGrupos);
     if (Array.isArray(data.servicos)) await saveServicos(data.servicos);
     if (Array.isArray(data.relatorios)) await saveRelatorios(data.relatorios);
@@ -131,6 +137,7 @@
 
   global.NCampoDb = {
     loadAll,
+    saveLocale,
     saveLogo,
     saveNomeEmpresa,
     saveEnderecoEmpresa,

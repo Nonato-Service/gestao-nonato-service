@@ -18,7 +18,9 @@
     try {
       const d = new Date(iso.includes("T") ? iso : iso + "T12:00:00");
       if (Number.isNaN(d.getTime())) return iso;
-      return d.toLocaleDateString("pt-BR");
+      const loc =
+        (global.NCampoI18n && global.NCampoI18n.localeTag && global.NCampoI18n.localeTag()) || "pt-BR";
+      return d.toLocaleDateString(loc);
     } catch {
       return iso;
     }
