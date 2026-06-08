@@ -64545,8 +64545,12 @@ A1;Peça exemplo;10`}
           <h2 style={{ color: '#fff', marginBottom: '8px', fontSize: '18px', fontWeight: '600', textAlign: 'center' }}>
             {safeT?.acessoAoSistema || 'Acesso ao sistema'}
           </h2>
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', marginBottom: '20px', textAlign: 'center' }}>
+          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', marginBottom: '12px', textAlign: 'center' }}>
             {safeT?.permissoesDefinidasAdministrador || 'As permissões são definidas no Administrador.'}
+          </p>
+          <p style={{ color: '#8cd8ff', fontSize: '12px', marginBottom: '14px', padding: '8px', backgroundColor: 'rgba(0,150,255,0.08)', borderRadius: '6px', textAlign: 'center', lineHeight: 1.5 }}>
+            Pode deixar o utilizador <strong>em branco</strong> e introduzir <strong>só a senha</strong>.
+            Também aceita e-mail ou nome parecido (ex.: nonato.service@gmail.com).
           </p>
           {users.length === 0 && managedPasswords.length > 0 && (
             <p style={{ color: '#ffaa00', fontSize: '12px', marginBottom: '12px', padding: '8px', backgroundColor: 'rgba(255,170,0,0.1)', borderRadius: '6px', textAlign: 'center' }}>
@@ -64562,7 +64566,7 @@ A1;Peça exemplo;10`}
             type="text"
             value={loginUsuarioInput}
             onChange={(e) => setLoginUsuarioInput(e.target.value)}
-            placeholder={users.length > 0 ? (safeT?.loginPlaceholderUsuario || 'E-mail ou nome de usuário') : (safeT?.loginPlaceholderSenhaVazia || 'Deixe em branco (apenas senha)')}
+            placeholder="E-mail ou nome (opcional — pode deixar em branco)"
             autoComplete="username"
             style={{
               width: '100%',

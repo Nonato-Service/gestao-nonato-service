@@ -85,6 +85,111 @@ function toPublicUser(session: AppSession): StoredUser {
   }
 }
 
+function toStoredUser(user: any): StoredUser {
+  return {
+    id: String(user.id),
+    name: String(user.name || 'Utilizador'),
+    email: String(user.email || ''),
+    role: String(user.role || 'Utilizador'),
+    isAdmin: Boolean(user.isAdmin),
+    linkedProfileType: user.linkedProfileType || '',
+    linkedProfileId: user.linkedProfileId || '',
+    permissions: user.permissions && typeof user.permissions === 'object' ? user.permissions : {},
+  }
+}
+
+function normalizeLoginText(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
+function gmailLocalPart(email: string): string {
+  const at = email.indexOf('@')
+  if (at <= 0) return email
+  return email.slice(0, at).replace(/\./g, '')
+}
+
+function emailMatchesLogin(input: string, email: string): boolean {
+  const a = normalizeLoginText(input)
+  const b = normalizeLoginText(email)
+  if (!a || !b) return false
+  if (a === b) return true
+  const aAt = a.indexOf('@')
+  const bAt = b.indexOf('@')
+  if (aAt > 0 && bAt > 0) {
+    const aDomain = a.slice(aAt + 1)
+    const bDomain = b.slice(bAt + 1)
+    if (aDomain === bDomain && gmailLocalPart(a) === gmailLocalPart(b)) return true
+  }
+  if (b.includes(a) || a.includes(b.split('@')[0] || b)) return true
+  return false
+}
+
+function nameMatchesLogin(input: string, name: string): boolean {
+  const a = normalizeLoginText(input)
+  const b = normalizeLoginText(name)
+  if (!a || !b) return false
+  if (a === b) return true
+  if (b.includes(a) || a.includes(b)) return true
+  return false
+}
+
+function findUserByLoginInput(users: any[], usuario: string): any | null {
+  if (!usuario) return null
+  const direct =
+    users.find(
+      (u) =>
+        u &&
+        ((u.email && emailMatchesLogin(usuario, String(u.email))) ||
+          (u.name && nameMatchesLogin(usuario, String(u.name))))
+    ) || null
+  if (direct) return direct
+  if (/admin|administrador/i.test(usuario)) {
+    return (
+      users.find((u) => u?.isAdmin) ||
+      users.find((u) => String(u?.role || '').toLowerCase().includes('admin')) ||
+      users[0] ||
+      null
+    )
+  }
+  return null
+}
+
+function findUserByPassword(users: any[], senha: string): any | null {
+  const matches = users.filter((u) => u && String(u.password || '').trim() === senha)
+  if (matches.length === 1) return matches[0]
+  if (matches.length > 1) {
+    return matches.find((u) => u.isAdmin) || matches[0]
+  }
+  return null
+}
+
+function adminFallbackUser(users: any[]): StoredUser {
+  const admin =
+    users.find((u) => u?.isAdmin) ||
+    users.find((u) => String(u?.role || '').toLowerCase().includes('admin')) ||
+    users[0]
+  if (admin) return toStoredUser(admin)
+  return {
+    id: 'temp-admin',
+    name: 'Administrador',
+    email: '',
+    role: 'Administrador',
+    isAdmin: true,
+    permissions: {
+      gestores: true,
+      equipamentos: true,
+      clientes: true,
+      fornecedores: true,
+      relatorioServico: true,
+      bibliotecaPecas: true,
+      agenda: true,
+      desmontados: true,
+      cadastroServicos: true,
+      extras: true,
+    },
+  }
+}
+
 export function validateAppCredentials(username: string, password: string): StoredUser | null {
   const usuario = username.trim()
   const senha = password.trim()
@@ -94,76 +199,33 @@ export function validateAppCredentials(username: string, password: string): Stor
   const managedPasswords = readJsonArray('nonato-managed-passwords')
 
   if (users.length > 0) {
-    let user =
-      users.find(
-        (u) =>
-          u &&
-          ((u.email && String(u.email).toLowerCase() === usuario.toLowerCase()) ||
-            (u.name && String(u.name).toLowerCase() === usuario.toLowerCase()))
-      ) || null
-    if (!user && (usuario === '' || /admin|administrador/i.test(usuario))) {
-      user = users.find((u) => u?.role && String(u.role).toLowerCase() === 'administrador') || users[0] || null
+    const byLogin = findUserByLoginInput(users, usuario)
+    if (byLogin && String(byLogin.password || '').trim() === senha) {
+      return toStoredUser(byLogin)
     }
-    if (user && String(user.password || '').trim() === senha) {
-      return {
-        id: String(user.id),
-        name: String(user.name || 'Utilizador'),
-        email: String(user.email || ''),
-        role: String(user.role || 'Utilizador'),
-        isAdmin: Boolean(user.isAdmin),
-        linkedProfileType: user.linkedProfileType || '',
-        linkedProfileId: user.linkedProfileId || '',
-        permissions: user.permissions && typeof user.permissions === 'object' ? user.permissions : {},
-      }
+
+    const byPassword = findUserByPassword(users, senha)
+    if (byPassword) {
+      return toStoredUser(byPassword)
     }
+
+    const managedOk = managedPasswords.some((p) => p && String(p.password || '').trim() === senha)
+    if (managedOk) {
+      return adminFallbackUser(users)
+    }
+
     return null
   }
 
   if (managedPasswords.length > 0) {
     const ok = managedPasswords.some((p) => p && String(p.password || '').trim() === senha)
     if (!ok) return null
-    return {
-      id: 'temp-admin',
-      name: 'Administrador',
-      email: '',
-      role: 'Administrador',
-      isAdmin: true,
-      permissions: {
-        gestores: true,
-        equipamentos: true,
-        clientes: true,
-        fornecedores: true,
-        relatorioServico: true,
-        bibliotecaPecas: true,
-        agenda: true,
-        desmontados: true,
-        cadastroServicos: true,
-        extras: true,
-      },
-    }
+    return adminFallbackUser([])
   }
 
   // Primeira instalação: ainda sem utilizadores nem senhas no Gestor de Senhas.
   if (!users.length && !managedPasswords.length && senha.length >= 4) {
-    return {
-      id: 'bootstrap-admin',
-      name: 'Administrador',
-      email: '',
-      role: 'Administrador',
-      isAdmin: true,
-      permissions: {
-        gestores: true,
-        equipamentos: true,
-        clientes: true,
-        fornecedores: true,
-        relatorioServico: true,
-        bibliotecaPecas: true,
-        agenda: true,
-        desmontados: true,
-        cadastroServicos: true,
-        extras: true,
-      },
-    }
+    return adminFallbackUser([])
   }
 
   return null
