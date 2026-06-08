@@ -4,6 +4,7 @@ import {
   createAppSession,
   validateAppCredentials,
 } from '../appAuth'
+import { clearDemoSessionCookiesOnResponse } from '../../data/demo-context'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
       bootstrap: user.id === 'bootstrap-admin',
     })
     applyAppSessionCookie(response, session.token, session.maxAge)
-    response.cookies.set('nonato_demo_guest', '', { path: '/', maxAge: 0 })
+    clearDemoSessionCookiesOnResponse(response)
     return response
   } catch (error: any) {
     console.error('auth/login:', error)

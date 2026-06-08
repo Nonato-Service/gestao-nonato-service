@@ -3611,6 +3611,7 @@ export default function Dashboard() {
   const [demoExpired, setDemoExpired] = useState(false)
   const [demoDaysLeft, setDemoDaysLeft] = useState<number | null>(null)
   const [demoModuleConfig, setDemoModuleConfig] = useState<Record<string, DemoModuleMode>>({})
+  const [ownerAuthenticated, setOwnerAuthenticated] = useState(false)
   const [userForm, setUserForm] = useState<UserFormState>(createEmptyUserForm())
   const [sidebarButtons, setSidebarButtons] = useState<SidebarButton[]>([])
   const buttonsInitialized = useRef(false) // Flag para garantir que os botões sejam criados apenas uma vez
@@ -7726,41 +7727,69 @@ export default function Dashboard() {
   // Verificar modo DEMO (dados isolados, 15 dias, sem export/backup) e sessão autenticada
   useEffect(() => {
     if (typeof window === 'undefined') return
-    fetch('/api/demo/status', { credentials: 'include' })
-      .then(r => r.json())
-      .then((d: { isDemo: boolean; expired: boolean; daysLeft: number | null; demoModules?: Record<string, DemoModuleMode>; guestLock?: boolean }) => {
-        if (d.guestLock && !d.isDemo) {
-          window.location.replace('/demo/encerrado')
-          return
+
+    const clearDemoCookiesClient = () => {
+      document.cookie = 'nonato_demo=; path=/; max-age=0'
+      document.cookie = 'nonato_demo_start=; path=/; max-age=0'
+      document.cookie = 'nonato_demo_recipient=; path=/; max-age=0'
+      document.cookie = 'nonato_demo_modules=; path=/; max-age=0'
+      document.cookie = 'nonato_demo_guest=; path=/; max-age=0'
+    }
+
+    Promise.all([
+      fetch('/api/demo/status', { credentials: 'include' }).then((r) => r.json()),
+      fetch('/api/auth/status', { credentials: 'include' }).then((r) => r.json()),
+    ])
+      .then(
+        ([d, auth]: [
+          {
+            isDemo: boolean
+            expired: boolean
+            daysLeft: number | null
+            demoModules?: Record<string, DemoModuleMode>
+            guestLock?: boolean
+          },
+          { authenticated?: boolean; user?: User },
+        ]) => {
+          if (d.guestLock && !d.isDemo && !auth.authenticated) {
+            window.location.replace('/demo/encerrado')
+            return
+          }
+
+          const isRealAuth =
+            Boolean(auth.authenticated && auth.user && auth.user.id !== 'demo-visitor')
+          setOwnerAuthenticated(isRealAuth)
+
+          if (isRealAuth && auth.user) {
+            clearDemoCookiesClient()
+            setIsDemoMode(false)
+            setDemoExpired(false)
+            setDemoDaysLeft(null)
+            setDemoModuleConfig({})
+            setLoginUser(auth.user)
+            setShowSplashInicial(false)
+            setShowPasswordScreen(false)
+            return
+          }
+
+          setIsDemoMode(Boolean(d.isDemo && !d.expired))
+          setDemoExpired(d.expired)
+          setDemoDaysLeft(d.daysLeft)
+          setDemoModuleConfig(d.demoModules || {})
+
+          if (d.isDemo && !d.expired) {
+            setLoginUser({ ...DEMO_VISITOR_USER } as User)
+            setShowSplashInicial(false)
+            setShowPasswordScreen(false)
+          } else if (d.expired) {
+            clearDemoCookiesClient()
+          } else if (auth.authenticated && auth.user) {
+            setLoginUser(auth.user)
+            setShowSplashInicial(false)
+            setShowPasswordScreen(false)
+          }
         }
-        setIsDemoMode(d.isDemo)
-        setDemoExpired(d.expired)
-        setDemoDaysLeft(d.daysLeft)
-        setDemoModuleConfig(d.demoModules || {})
-        if (d.isDemo && !d.expired) {
-          setLoginUser({ ...DEMO_VISITOR_USER } as User)
-          setShowSplashInicial(false)
-          setShowPasswordScreen(false)
-        }
-        if (d.expired) {
-          document.cookie = 'nonato_demo=; path=/; max-age=0'
-          document.cookie = 'nonato_demo_start=; path=/; max-age=0'
-          document.cookie = 'nonato_demo_recipient=; path=/; max-age=0'
-          document.cookie = 'nonato_demo_modules=; path=/; max-age=0'
-        }
-        if (!d.isDemo || d.expired) {
-          fetch('/api/auth/status', { credentials: 'include' })
-            .then((authRes) => authRes.json())
-            .then((auth: { authenticated?: boolean; user?: User }) => {
-              if (auth.authenticated && auth.user) {
-                setLoginUser(auth.user)
-                setShowSplashInicial(false)
-                setShowPasswordScreen(false)
-              }
-            })
-            .catch(() => {})
-        }
-      })
+      )
       .catch(() => {})
   }, [])
 
@@ -64514,6 +64543,10 @@ A1;Peça exemplo;10`}
       setShowSplashInicial(false)
       setLoginUsuarioInput('')
       setSenhaInicialInput('')
+      document.cookie = 'nonato_demo=; path=/; max-age=0'
+      document.cookie = 'nonato_demo_start=; path=/; max-age=0'
+      document.cookie = 'nonato_demo_recipient=; path=/; max-age=0'
+      document.cookie = 'nonato_demo_modules=; path=/; max-age=0'
       document.cookie = 'nonato_demo_guest=; path=/; max-age=0'
       if (data.bootstrap) {
         window.alert(
@@ -64794,6 +64827,15 @@ A1;Peça exemplo;10`}
       {isDemoMode && (
         <div className="app-top-bar" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '8px 16px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '1px solid rgba(0, 255, 0, 0.4)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <span>🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Dados isolados • Sem exportação nem backup</span>
+          {ownerAuthenticated ? (
+            <a href="/api/demo/exit" style={{ color: '#fff', textDecoration: 'underline', fontWeight: '600' }}>
+              Sair da demonstração (voltar ao modo normal)
+            </a>
+          ) : (
+            <a href="/api/demo/exit" style={{ color: '#fff', textDecoration: 'underline', fontWeight: '600' }}>
+              Sair da demo e fazer login
+            </a>
+          )}
         </div>
       )}
       {isCompactLayout && mobileMenuOpen && (

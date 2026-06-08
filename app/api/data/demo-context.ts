@@ -12,6 +12,7 @@ const COOKIE_DEMO_START = 'nonato_demo_start'
 const COOKIE_DEMO_RECIPIENT = 'nonato_demo_recipient'
 /** Marca visitantes que entraram por link personalizado — não podem aceder à app real. */
 const COOKIE_DEMO_GUEST = 'nonato_demo_guest'
+const COOKIE_DEMO_MODULES = 'nonato_demo_modules'
 
 function sanitizeDemoRecipient(recipientId?: string): string {
   const safe = String(recipientId || '')
@@ -82,6 +83,20 @@ export function ensureDemoDataDir(dataDir: string): void {
 
 export function isDemoGuestLock(request: NextRequest): boolean {
   return request.cookies.get(COOKIE_DEMO_GUEST)?.value === '1'
+}
+
+/** Apaga cookies de sessão demo na resposta HTTP. */
+export function clearDemoSessionCookiesOnResponse(
+  response: NextResponse,
+  opts?: { keepGuestLock?: boolean }
+): void {
+  response.cookies.set(COOKIE_DEMO, '', { path: '/', maxAge: 0 })
+  response.cookies.set(COOKIE_DEMO_START, '', { path: '/', maxAge: 0 })
+  response.cookies.set(COOKIE_DEMO_RECIPIENT, '', { path: '/', maxAge: 0 })
+  response.cookies.set(COOKIE_DEMO_MODULES, '', { path: '/', maxAge: 0 })
+  if (!opts?.keepGuestLock) {
+    response.cookies.set(COOKIE_DEMO_GUEST, '', { path: '/', maxAge: 0 })
+  }
 }
 
 /** Bloqueia APIs de dados de produção para quem entrou por link personalizado e saiu da demo. */

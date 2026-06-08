@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import { getPublicOrigin } from '../../getPublicOrigin'
 import { DATA_DIR, ensureDataDir } from '../../data/shared'
+import { getAppSessionFromRequest } from '../../auth/appAuth'
 
 const DEMO_DAYS = 15
 const COOKIE_MAX_AGE = DEMO_DAYS * 24 * 60 * 60
@@ -62,7 +63,8 @@ function markDemoRecipientAccess(recipientId: string, accessDateIso: string) {
 function applyDemoSessionCookies(
   response: NextResponse,
   startDate: string,
-  recipientId?: string | null
+  recipientId?: string | null,
+  opts?: { markGuest?: boolean }
 ) {
   response.cookies.set('nonato_demo', '1', {
     path: '/',
@@ -90,11 +92,13 @@ function applyDemoSessionCookies(
       })
     }
     markDemoRecipientAccess(recipientId, startDate)
-    response.cookies.set('nonato_demo_guest', '1', {
-      path: '/',
-      maxAge: COOKIE_MAX_AGE,
-      sameSite: 'lax',
-    })
+    if (opts?.markGuest !== false) {
+      response.cookies.set('nonato_demo_guest', '1', {
+        path: '/',
+        maxAge: COOKIE_MAX_AGE,
+        sameSite: 'lax',
+      })
+    }
   }
 }
 
@@ -103,6 +107,8 @@ export async function GET(request: NextRequest) {
   const origin = getPublicOrigin(request)
   const recipientId = request.nextUrl.searchParams.get('rid')?.trim()
   const wantsJson = request.headers.get('accept')?.includes('application/json')
+  const isOwnerSession = Boolean(getAppSessionFromRequest(request))
+  const cookieOpts = { markGuest: Boolean(recipientId) && !isOwnerSession }
 
   if (wantsJson) {
     const response = NextResponse.json({
@@ -110,11 +116,11 @@ export async function GET(request: NextRequest) {
       recipientId: recipientId || null,
       recipientFound: recipientId ? Boolean(getDemoModulesByRecipient(recipientId)) : false,
     })
-    applyDemoSessionCookies(response, startDate, recipientId)
+    applyDemoSessionCookies(response, startDate, recipientId, cookieOpts)
     return response
   }
 
   const response = NextResponse.redirect(`${origin}/`, 302)
-  applyDemoSessionCookies(response, startDate, recipientId)
+  applyDemoSessionCookies(response, startDate, recipientId, cookieOpts)
   return response
 }
