@@ -64494,9 +64494,19 @@ A1;Peça exemplo;10`}
         user?: User
         bootstrap?: boolean
         message?: string
+        error?: string
       }
       if (!res.ok || !data.user) {
-        window.alert(data.message || 'Utilizador ou senha incorretos. Tente novamente.')
+        if (data.error === 'unauthorized') {
+          window.alert('Acesso bloqueado pelo servidor. Verifique o domínio ou contacte o suporte.')
+        } else {
+          window.alert(
+            data.message ||
+              'Senha incorreta no servidor online.\n\n' +
+                'No Railway, adicione a variável NONATO_MASTER_PASSWORD=23093110, faça redeploy e entre só com a senha.\n' +
+                'Depois remova essa variável.'
+          )
+        }
         return
       }
       setLoginUser(data.user)

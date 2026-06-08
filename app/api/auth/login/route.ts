@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { assertApiAuthorized } from '../../apiSecurity'
 import {
   applyAppSessionCookie,
   createAppSession,
@@ -11,9 +10,6 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const denied = assertApiAuthorized(request)
-    if (denied) return denied
-
     const body = await request.json()
     const username = String(body?.username ?? body?.usuario ?? '')
     const password = String(body?.password ?? body?.senha ?? '')

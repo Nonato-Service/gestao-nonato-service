@@ -168,7 +168,7 @@ function adminFallbackUser(users: any[]): StoredUser {
     users.find((u) => u?.isAdmin) ||
     users.find((u) => String(u?.role || '').toLowerCase().includes('admin')) ||
     users[0]
-  if (admin) return toStoredUser(admin)
+  if (admin) return toStoredUser({ ...admin, isAdmin: true })
   return {
     id: 'temp-admin',
     name: 'Administrador',
@@ -190,10 +190,89 @@ function adminFallbackUser(users: any[]): StoredUser {
   }
 }
 
+function writeJsonArray(key: string, value: any[]): void {
+  ensureDataDir()
+  const filePath = path.join(DATA_DIR, `${key}.json`)
+  fs.writeFileSync(filePath, JSON.stringify(value, null, 2), 'utf-8')
+}
+
+/** Redefine senha do administrador no volume de dados (produção). */
+export function resetAdminPasswordOnDisk(newPassword: string, email?: string): StoredUser | null {
+  const senha = newPassword.trim()
+  if (senha.length < 4) return null
+
+  const users = readJsonArray('nonato-users')
+  if (!users.length) {
+    const novo = {
+      id: String(Date.now()),
+      name: 'NONATO SERVICE',
+      email: email?.trim() || 'nonato.service@gmail.com',
+      role: 'ADMIN',
+      password: senha,
+      isAdmin: true,
+      permissions: {
+        gestores: true,
+        equipamentos: true,
+        clientes: true,
+        fornecedores: true,
+        relatorioServico: true,
+        bibliotecaPecas: true,
+        agenda: true,
+        desmontados: true,
+        cadastroServicos: true,
+        extras: true,
+      },
+    }
+    writeJsonArray('nonato-users', [novo])
+    return toStoredUser(novo)
+  }
+
+  const admin =
+    users.find((u) => u?.isAdmin) ||
+    users.find((u) => String(u?.role || '').toLowerCase().includes('admin')) ||
+    users[0]
+  const updated = users.map((u) =>
+    u?.id === admin.id
+      ? {
+          ...u,
+          password: senha,
+          isAdmin: true,
+          ...(email?.trim() ? { email: email.trim() } : {}),
+        }
+      : u
+  )
+  writeJsonArray('nonato-users', updated)
+
+  const managed = readJsonArray('nonato-managed-passwords')
+  if (managed.length) {
+    writeJsonArray(
+      'nonato-managed-passwords',
+      managed.map((entry) =>
+        entry?.tecnicoName === admin.name ? { ...entry, password: senha } : entry
+      )
+    )
+  }
+
+  try {
+    const sessionsPath = path.join(DATA_DIR, SESSIONS_FILE)
+    if (fs.existsSync(sessionsPath)) fs.unlinkSync(sessionsPath)
+  } catch {
+    /* ignorar */
+  }
+
+  return toStoredUser({ ...admin, password: senha, isAdmin: true, email: email?.trim() || admin.email })
+}
+
 export function validateAppCredentials(username: string, password: string): StoredUser | null {
   const usuario = username.trim()
   const senha = password.trim()
   if (!senha) return null
+
+  const masterPassword = process.env.NONATO_MASTER_PASSWORD?.trim()
+  if (masterPassword && senha === masterPassword) {
+    const users = readJsonArray('nonato-users')
+    return adminFallbackUser(users)
+  }
 
   const users = readJsonArray('nonato-users')
   const managedPasswords = readJsonArray('nonato-managed-passwords')
@@ -223,9 +302,26 @@ export function validateAppCredentials(username: string, password: string): Stor
     return adminFallbackUser([])
   }
 
-  // Primeira instalação: ainda sem utilizadores nem senhas no Gestor de Senhas.
   if (!users.length && !managedPasswords.length && senha.length >= 4) {
-    return adminFallbackUser([])
+    return {
+      id: 'bootstrap-admin',
+      name: 'Administrador',
+      email: '',
+      role: 'Administrador',
+      isAdmin: true,
+      permissions: {
+        gestores: true,
+        equipamentos: true,
+        clientes: true,
+        fornecedores: true,
+        relatorioServico: true,
+        bibliotecaPecas: true,
+        agenda: true,
+        desmontados: true,
+        cadastroServicos: true,
+        extras: true,
+      },
+    }
   }
 
   return null
@@ -264,11 +360,16 @@ export function getAppSessionFromRequest(request: NextRequest): StoredUser | nul
 }
 
 export function applyAppSessionCookie(response: NextResponse, token: string, maxAge: number): void {
+  const secure =
+    process.env.NODE_ENV === 'production' ||
+    process.env.VERCEL === '1' ||
+    Boolean(process.env.RAILWAY_PUBLIC_DOMAIN)
   response.cookies.set(APP_SESSION_COOKIE, token, {
     path: '/',
     maxAge,
     sameSite: 'lax',
     httpOnly: true,
+    secure,
   })
 }
 
