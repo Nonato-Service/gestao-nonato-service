@@ -774,12 +774,16 @@
     });
   });
 
+  function wireLangButtons() {
+    document.querySelectorAll(".lang-btn[data-lang]").forEach((btn) => {
+      if (btn.dataset.langWired) return;
+      btn.dataset.langWired = "1";
+      btn.addEventListener("click", () => setLanguage(btn.getAttribute("data-lang")));
+    });
+  }
+
   load().then(() => {
-    const langSel = document.getElementById("langSelect");
-    if (langSel) {
-      langSel.value = I18n.getLocale();
-      langSel.addEventListener("change", () => setLanguage(langSel.value));
-    }
+    wireLangButtons();
     render();
   });
 })();

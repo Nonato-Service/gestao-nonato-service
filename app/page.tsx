@@ -63,6 +63,7 @@ import { PagamentosContadorContent } from './components/PagamentosContadorConten
 import { BibliaNonatoServiceContent } from './components/BibliaNonatoServiceContent'
 import { PedidoOrcamentosAvulsoContent } from './components/PedidoOrcamentosAvulsoContent'
 import { GestaoDemosContent } from './components/GestaoDemosContent'
+import { DEMO_VISITOR_USER } from './lib/demoManagement'
 import { AdministradorContent } from './components/admin/AdministradorContent'
 import { OrcamentoServicoTecnicoContent } from './components/OrcamentoServicoTecnicoContent'
 import { NonatoBrandLogo } from './components/NonatoBrandLogo'
@@ -3637,25 +3638,7 @@ export default function Dashboard() {
   const [loginUsuarioInput, setLoginUsuarioInput] = useState('') // Usuário (e-mail ou nome) no login
   const [senhaInicialInput, setSenhaInicialInput] = useState('') // Senha no login
   // Acesso direto sem login: utilizador inicial = Administrador (para não pedir senha)
-  const [loginUser, setLoginUser] = useState<User | null>({
-    id: 'default-admin',
-    name: 'Administrador',
-    email: '',
-    role: 'Administrador',
-    isAdmin: true,
-    permissions: {
-      gestores: true,
-      equipamentos: true,
-      clientes: true,
-      fornecedores: true,
-      relatorioServico: true,
-      bibliotecaPecas: true,
-      agenda: true,
-      desmontados: true,
-      cadastroServicos: true,
-      extras: true
-    }
-  }) // Usuário logado — define o acesso conforme Administrador
+  const [loginUser, setLoginUser] = useState<User | null>(null)
   const [incluirLogoNosRelatorios, setIncluirLogoNosRelatorios] = useState<boolean>(true) // Incluir logo nos PDFs (Administrador)
   const [logosRelatorios, setLogosRelatorios] = useState<LogoRelatorio[]>([]) // Logos disponíveis para escolha nos relatórios
   const [logoRelatorioSelecionadoId, setLogoRelatorioSelecionadoId] = useState<string>('') // '' = logo principal
@@ -7740,21 +7723,42 @@ export default function Dashboard() {
     }
   }, [activeTabId, openTabs])
 
-  // Verificar modo DEMO (dados isolados, 15 dias, sem export/backup)
+  // Verificar modo DEMO (dados isolados, 15 dias, sem export/backup) e sessão autenticada
   useEffect(() => {
     if (typeof window === 'undefined') return
     fetch('/api/demo/status', { credentials: 'include' })
       .then(r => r.json())
-      .then((d: { isDemo: boolean; expired: boolean; daysLeft: number | null; demoModules?: Record<string, DemoModuleMode> }) => {
+      .then((d: { isDemo: boolean; expired: boolean; daysLeft: number | null; demoModules?: Record<string, DemoModuleMode>; guestLock?: boolean }) => {
+        if (d.guestLock && !d.isDemo) {
+          window.location.replace('/demo/encerrado')
+          return
+        }
         setIsDemoMode(d.isDemo)
         setDemoExpired(d.expired)
         setDemoDaysLeft(d.daysLeft)
         setDemoModuleConfig(d.demoModules || {})
+        if (d.isDemo && !d.expired) {
+          setLoginUser({ ...DEMO_VISITOR_USER } as User)
+          setShowSplashInicial(false)
+          setShowPasswordScreen(false)
+        }
         if (d.expired) {
           document.cookie = 'nonato_demo=; path=/; max-age=0'
           document.cookie = 'nonato_demo_start=; path=/; max-age=0'
           document.cookie = 'nonato_demo_recipient=; path=/; max-age=0'
           document.cookie = 'nonato_demo_modules=; path=/; max-age=0'
+        }
+        if (!d.isDemo || d.expired) {
+          fetch('/api/auth/status', { credentials: 'include' })
+            .then((authRes) => authRes.json())
+            .then((auth: { authenticated?: boolean; user?: User }) => {
+              if (auth.authenticated && auth.user) {
+                setLoginUser(auth.user)
+                setShowSplashInicial(false)
+                setShowPasswordScreen(false)
+              }
+            })
+            .catch(() => {})
         }
       })
       .catch(() => {})
@@ -7828,12 +7832,16 @@ export default function Dashboard() {
         try {
           const demoRes = await fetch('/api/demo/status', { credentials: 'include', cache: 'no-store' })
           if (demoRes.ok) {
-            const demoSt = (await demoRes.json()) as { isDemo?: boolean; expired?: boolean }
+            const demoSt = (await demoRes.json()) as { isDemo?: boolean; expired?: boolean; guestLock?: boolean }
+            if (demoSt.guestLock && !demoSt.isDemo) {
+              window.location.replace('/demo/encerrado')
+              return
+            }
             const postDemoWipe = document.cookie.split(';').some((c) => c.trim().startsWith('nonato_post_demo_wipe=1'))
             if (demoSt.isDemo && !demoSt.expired) {
               await wipeLocalNonatoForBootstrap(true)
               preferServerOnlyAfterFullPullWipe = true
-            } else if (postDemoWipe && !demoSt.isDemo) {
+            } else if (postDemoWipe && !demoSt.isDemo && !demoSt.guestLock) {
               await wipeLocalNonatoForBootstrap(true)
               preferServerOnlyAfterFullPullWipe = true
               document.cookie = 'nonato_post_demo_wipe=; path=/; max-age=0'
@@ -23079,6 +23087,12 @@ export default function Dashboard() {
     const msg = (t as { confirmarSair?: string }).confirmarSair || 'Deseja realmente sair do sistema?'
     if (typeof window !== 'undefined' && window.confirm(msg)) {
       allowUnsafeBrowserExitRef.current = true
+      if (!isDemoMode) {
+        void fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {})
+        setLoginUser(null)
+        setShowSplashInicial(true)
+        setShowPasswordScreen(false)
+      }
       window.close()
       // Fallback: em alguns navegadores window.close() não fecha a aba; redireciona para página em branco
       setTimeout(() => {
@@ -23089,7 +23103,7 @@ export default function Dashboard() {
         allowUnsafeBrowserExitRef.current = false
       }, 8000)
     }
-  }, [selectedLanguage])
+  }, [selectedLanguage, isDemoMode])
 
   // Bloquear fecho/recarregar inadequado do separador; saída segura = botão «Sair do sistema» (confirmação)
   useEffect(() => {
@@ -64374,26 +64388,7 @@ A1;Peça exemplo;10`}
               aria-label={safeT?.acessarSistema || 'Acessar sistema'}
               onClick={() => {
                 setShowSplashInicial(false)
-                setShowPasswordScreen(false)
-                setLoginUser((current) => current || {
-                  id: 'default-admin',
-                  name: 'Administrador',
-                  email: '',
-                  role: 'Administrador',
-                  isAdmin: true,
-                  permissions: {
-                    gestores: true,
-                    equipamentos: true,
-                    clientes: true,
-                    fornecedores: true,
-                    relatorioServico: true,
-                    bibliotecaPecas: true,
-                    agenda: true,
-                    desmontados: true,
-                    cadastroServicos: true,
-                    extras: true
-                  }
-                })
+                setShowPasswordScreen(true)
               }}
             >
               <span style={{ fontSize: 'clamp(16px, 4vw, 20px)' }} aria-hidden>⚡</span>
@@ -64478,65 +64473,47 @@ A1;Peça exemplo;10`}
   }
 
   // Tela de login: usuário + senha. Acesso conforme permissões do Administrador.
-  const handleLoginSubmit = () => {
+  const handleLoginSubmit = async () => {
     const usuario = loginUsuarioInput.trim()
     const senha = senhaInicialInput.trim()
 
-    if (users.length > 0) {
-      let user = users.find(
-        (u) =>
-          (u.email && u.email.toLowerCase() === usuario.toLowerCase()) ||
-          (u.name && u.name.toLowerCase() === usuario.toLowerCase())
-      )
-      if (!user && (usuario === '' || /admin|administrador/i.test(usuario))) {
-        user = users.find((u) => (u.role && u.role.toLowerCase() === 'administrador')) || users[0]
-      }
-      if (!user) {
-        window.alert('Usuário não encontrado. Verifique o e-mail ou nome.')
-        return
-      }
-      const userPass = (user.password || '').trim()
-      if (userPass !== senha) {
-        window.alert('Senha incorreta. Tente novamente.')
-        return
-      }
-      setLoginUser(user)
-      setShowPasswordScreen(false)
-      setLoginUsuarioInput('')
-      setSenhaInicialInput('')
+    if (!senha) {
+      window.alert('Introduza a senha.')
       return
     }
 
-    if (managedPasswords.length === 0) {
-      window.alert('Nenhum usuário cadastrado. Acesse com uma senha do Gestor de Senhas (Administrador) para cadastrar usuários.')
-      return
-    }
-    if (!managedPasswords.some((p) => (p.password || '').trim() === senha)) {
-      window.alert('Senha incorreta. Use uma senha do Gestor de Senhas.')
-      return
-    }
-    setLoginUser({
-      id: 'temp-admin',
-      name: 'Administrador',
-      email: '',
-      role: 'Administrador',
-      isAdmin: true,
-      permissions: {
-        gestores: true,
-        equipamentos: true,
-        clientes: true,
-        fornecedores: true,
-        relatorioServico: true,
-        bibliotecaPecas: true,
-        agenda: true,
-        desmontados: true,
-        cadastroServicos: true,
-        extras: true
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: usuario, password: senha }),
+      })
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean
+        user?: User
+        bootstrap?: boolean
+        message?: string
       }
-    })
-    setShowPasswordScreen(false)
-    setLoginUsuarioInput('')
-    setSenhaInicialInput('')
+      if (!res.ok || !data.user) {
+        window.alert(data.message || 'Utilizador ou senha incorretos. Tente novamente.')
+        return
+      }
+      setLoginUser(data.user)
+      setShowPasswordScreen(false)
+      setShowSplashInicial(false)
+      setLoginUsuarioInput('')
+      setSenhaInicialInput('')
+      document.cookie = 'nonato_demo_guest=; path=/; max-age=0'
+      if (data.bootstrap) {
+        window.alert(
+          'Primeiro acesso detectado. Configure utilizadores e senhas no Administrador o quanto antes.'
+        )
+      }
+      window.location.reload()
+    } catch {
+      window.alert('Erro de ligação ao servidor. Tente novamente.')
+    }
   }
 
   if (showPasswordScreen) {
@@ -64574,6 +64551,11 @@ A1;Peça exemplo;10`}
           {users.length === 0 && managedPasswords.length > 0 && (
             <p style={{ color: '#ffaa00', fontSize: '12px', marginBottom: '12px', padding: '8px', backgroundColor: 'rgba(255,170,0,0.1)', borderRadius: '6px', textAlign: 'center' }}>
               {safeT?.aindaNaoHaUsuarios || 'Ainda não há usuários. Use uma senha do Gestor de Senhas para entrar e cadastrar usuários no Administrador.'}
+            </p>
+          )}
+          {users.length === 0 && managedPasswords.length === 0 && (
+            <p style={{ color: '#8cd8ff', fontSize: '12px', marginBottom: '12px', padding: '8px', backgroundColor: 'rgba(0,150,255,0.08)', borderRadius: '6px', textAlign: 'center' }}>
+              Primeiro acesso: use uma senha com pelo menos 4 caracteres. Depois configure utilizadores no Administrador.
             </p>
           )}
           <input
@@ -64797,8 +64779,7 @@ A1;Peça exemplo;10`}
       {/* Barra superior: apenas em modo demo mostra aviso (botão Administrador / Backup está na barra lateral) */}
       {isDemoMode && (
         <div className="app-top-bar" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '8px 16px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '1px solid rgba(0, 255, 0, 0.4)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <span>🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Sem exportação nem backup</span>
-          <a href="/api/demo/exit" style={{ color: '#fff', textDecoration: 'underline', fontWeight: '600' }}>{safeT?.exitDemoLink || 'Sair da demonstração (usar app normal)'}</a>
+          <span>🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Dados isolados • Sem exportação nem backup</span>
         </div>
       )}
       {isCompactLayout && mobileMenuOpen && (

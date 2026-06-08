@@ -13,10 +13,17 @@ export default function DemoWelcomePage() {
     if (loading) return
     setLoading(true)
     try {
-      // Não seguir redirect do servidor (Railway pode devolver 0.0.0.0:PORT internamente).
-      // Os cookies vêm na resposta; entrada fica no mesmo domínio público de /demo.
-      await fetch(activateHref, { credentials: 'include', redirect: 'manual' })
-      window.location.assign('/')
+      // Resposta JSON evita redirect interno (Railway 0.0.0.0) e garante cookies no browser.
+      const res = await fetch(activateHref, {
+        credentials: 'include',
+        redirect: 'manual',
+        headers: { Accept: 'application/json' },
+      })
+      if (res.ok) {
+        window.location.assign('/')
+        return
+      }
+      window.location.assign(activateHref)
     } catch {
       window.location.assign(activateHref)
     }

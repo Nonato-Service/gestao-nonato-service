@@ -80,6 +80,7 @@ export function GestaoDemosContent({
     clientes: false, tecnica: false, gestao: false, outros: false,
   })
   const [lastCreated, setLastCreated] = useState<DemoRecipientWithState | null>(null)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (!loadData) return
@@ -89,9 +90,33 @@ export function GestaoDemosContent({
   }, [loadData])
 
   const persist = useCallback(
-    async (list: DemoRecipientRecord[]) => {
-      setRecipients(list)
-      if (saveData) await saveData(DEMO_RECIPIENTS_KEY, list).catch(() => {})
+    async (list: DemoRecipientRecord[], opts?: { awaitServer?: boolean }): Promise<boolean> => {
+      if (!saveData) {
+        setRecipients(list)
+        return true
+      }
+      try {
+        if (opts?.awaitServer) {
+          const ok = await saveData(DEMO_RECIPIENTS_KEY, list, true, true)
+          if (!ok) {
+            alert(
+              'Não foi possível gravar a demonstração no servidor. Verifique a ligação à internet e tente novamente antes de enviar o link.'
+            )
+            return false
+          }
+        } else {
+          void saveData(DEMO_RECIPIENTS_KEY, list, true, false).catch(() => {})
+        }
+        setRecipients(list)
+        return true
+      } catch {
+        if (opts?.awaitServer) {
+          alert(
+            'Erro ao gravar a demonstração no servidor. Verifique a ligação e tente novamente antes de enviar o link.'
+          )
+        }
+        return false
+      }
     },
     [saveData]
   )
@@ -137,6 +162,8 @@ export function GestaoDemosContent({
       alert('Indique o nome da pessoa.')
       return
     }
+    if (saving) return
+    setSaving(true)
     const novo: DemoRecipientRecord = {
       id: 'demo-' + Date.now(),
       nome: form.nome.trim(),
@@ -147,7 +174,9 @@ export function GestaoDemosContent({
       demoPreset: form.demoPreset || 'custom',
     }
     const updated = [...recipients, novo]
-    await persist(updated)
+    const saved = await persist(updated, { awaitServer: true })
+    setSaving(false)
+    if (!saved) return
     const created = enrichDemoRecipients([novo], demoLinkBaseUrl)[0]!
     setLastCreated(created)
     setForm((prev) => ({ ...createDefaultDemoLinkForm(), demoModules: prev.demoModules, demoPreset: prev.demoPreset }))
@@ -370,8 +399,22 @@ export function GestaoDemosContent({
         Pacote: <strong>{getDemoPresetLabel(form.demoPreset)}</strong> · Validade: <strong>{DEMO_DAYS} dias</strong> após «Aceitar e entrar»
       </div>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-        <button type="button" onClick={handleAdd} style={{ padding: '10px 20px', background: '#00aa55', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}>
-          ✓ Gerar link personalizado
+        <button
+          type="button"
+          onClick={handleAdd}
+          disabled={saving}
+          style={{
+            padding: '10px 20px',
+            background: saving ? '#006633' : '#00aa55',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '8px',
+            fontWeight: 700,
+            cursor: saving ? 'wait' : 'pointer',
+            opacity: saving ? 0.85 : 1,
+          }}
+        >
+          {saving ? 'A gravar no servidor…' : '✓ Gerar link personalizado'}
         </button>
         {!compact && (
           <button type="button" onClick={() => setStep('pacote')} style={{ padding: '10px 16px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#ccc', borderRadius: '8px', cursor: 'pointer' }}>

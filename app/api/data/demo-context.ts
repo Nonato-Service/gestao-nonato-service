@@ -3,13 +3,15 @@
  * Usado pelas APIs para decidir qual pasta de dados usar.
  */
 import path from 'path'
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { DATA_DIR } from './shared'
 
 const DEMO_DAYS = 15
 const COOKIE_DEMO = 'nonato_demo'
 const COOKIE_DEMO_START = 'nonato_demo_start'
 const COOKIE_DEMO_RECIPIENT = 'nonato_demo_recipient'
+/** Marca visitantes que entraram por link personalizado — não podem aceder à app real. */
+const COOKIE_DEMO_GUEST = 'nonato_demo_guest'
 
 function sanitizeDemoRecipient(recipientId?: string): string {
   const safe = String(recipientId || '')
@@ -78,4 +80,23 @@ export function ensureDemoDataDir(dataDir: string): void {
   }
 }
 
-export { COOKIE_DEMO, COOKIE_DEMO_START, COOKIE_DEMO_RECIPIENT, DEMO_DAYS }
+export function isDemoGuestLock(request: NextRequest): boolean {
+  return request.cookies.get(COOKIE_DEMO_GUEST)?.value === '1'
+}
+
+/** Bloqueia APIs de dados de produção para quem entrou por link personalizado e saiu da demo. */
+export function rejectDemoGuestProductionAccess(request: NextRequest): NextResponse | null {
+  const { isDemo } = getDemoContext(request)
+  if (!isDemo && isDemoGuestLock(request)) {
+    return NextResponse.json(
+      {
+        error: 'demo_guest_locked',
+        message: 'Acesso à aplicação real não permitido nesta demonstração.',
+      },
+      { status: 403 }
+    )
+  }
+  return null
+}
+
+export { COOKIE_DEMO, COOKIE_DEMO_START, COOKIE_DEMO_RECIPIENT, COOKIE_DEMO_GUEST, DEMO_DAYS }

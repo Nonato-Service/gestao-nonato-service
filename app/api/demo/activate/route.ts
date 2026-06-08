@@ -59,11 +59,11 @@ function markDemoRecipientAccess(recipientId: string, accessDateIso: string) {
   }
 }
 
-export async function GET(request: NextRequest) {
-  const startDate = new Date().toISOString()
-  const origin = getPublicOrigin(request)
-  const recipientId = request.nextUrl.searchParams.get('rid')?.trim()
-  const response = NextResponse.redirect(`${origin}/`, 302)
+function applyDemoSessionCookies(
+  response: NextResponse,
+  startDate: string,
+  recipientId?: string | null
+) {
   response.cookies.set('nonato_demo', '1', {
     path: '/',
     maxAge: COOKIE_MAX_AGE,
@@ -90,6 +90,31 @@ export async function GET(request: NextRequest) {
       })
     }
     markDemoRecipientAccess(recipientId, startDate)
+    response.cookies.set('nonato_demo_guest', '1', {
+      path: '/',
+      maxAge: COOKIE_MAX_AGE,
+      sameSite: 'lax',
+    })
   }
+}
+
+export async function GET(request: NextRequest) {
+  const startDate = new Date().toISOString()
+  const origin = getPublicOrigin(request)
+  const recipientId = request.nextUrl.searchParams.get('rid')?.trim()
+  const wantsJson = request.headers.get('accept')?.includes('application/json')
+
+  if (wantsJson) {
+    const response = NextResponse.json({
+      ok: true,
+      recipientId: recipientId || null,
+      recipientFound: recipientId ? Boolean(getDemoModulesByRecipient(recipientId)) : false,
+    })
+    applyDemoSessionCookies(response, startDate, recipientId)
+    return response
+  }
+
+  const response = NextResponse.redirect(`${origin}/`, 302)
+  applyDemoSessionCookies(response, startDate, recipientId)
   return response
 }

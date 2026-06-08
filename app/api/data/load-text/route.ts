@@ -3,12 +3,16 @@ import fs from 'fs'
 import path from 'path'
 import { ensureDataDir } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
+import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
+    const authDenied = rejectUnauthenticatedProductionAccess(request)
+    if (authDenied) return authDenied
+
     const { isDemo, expired, dataDir } = getDemoContext(request)
     if (isDemo && expired) {
       return NextResponse.json(

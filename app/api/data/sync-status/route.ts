@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ensureDataDir } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
+import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
 import { readSyncMeta } from '../syncMeta'
 
 export const runtime = 'nodejs'
@@ -13,6 +14,8 @@ const NO_STORE_HEADERS: HeadersInit = {
 
 export async function GET(request: NextRequest) {
   try {
+    const authDenied = rejectUnauthenticatedProductionAccess(request)
+    if (authDenied) return authDenied
     const { isDemo, expired, dataDir } = getDemoContext(request)
     if (isDemo && expired) {
       return NextResponse.json(

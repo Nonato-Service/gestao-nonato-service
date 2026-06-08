@@ -3,11 +3,14 @@ import fs from 'fs'
 import path from 'path'
 import { ensureDataDir, resolveDataDirForKey } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
+import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
 import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
 import { textFileContentUnchanged } from '../writeIfChanged'
 
 export async function POST(request: NextRequest) {
   try {
+    const authDenied = rejectUnauthenticatedProductionAccess(request)
+    if (authDenied) return authDenied
     const { isDemo, expired, dataDir } = getDemoContext(request)
     if (isDemo && expired) {
       return NextResponse.json(

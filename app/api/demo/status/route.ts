@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDemoContext } from '../../data/demo-context'
+import { getDemoContext, isDemoGuestLock } from '../../data/demo-context'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -20,12 +20,14 @@ export async function GET(request: NextRequest) {
     const { isDemo, expired, daysLeft } = getDemoContext(request)
     const recipientId = request.cookies.get('nonato_demo_recipient')?.value ?? null
     const demoModules = decodeDemoModules(request.cookies.get('nonato_demo_modules')?.value)
+    const guestLock = isDemoGuestLock(request)
     return NextResponse.json({
       isDemo,
       expired,
       daysLeft: daysLeft ?? null,
       recipientId,
       demoModules,
+      guestLock,
     })
   } catch (error: any) {
     console.error('Erro demo/status:', error)

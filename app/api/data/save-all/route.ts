@@ -4,6 +4,7 @@ import path from 'path'
 import { assertApiAuthorized } from '../../apiSecurity'
 import { ensureDataDir, resolveDataDirForKey } from '../shared'
 import { getDemoContext, ensureDemoDataDir } from '../demo-context'
+import { rejectUnauthenticatedProductionAccess } from '../../auth/appAuth'
 import { bumpSyncMeta, readSyncMeta } from '../syncMeta'
 import { jsonFileContentUnchanged, serializeJsonForDisk } from '../writeIfChanged'
 
@@ -11,6 +12,8 @@ export async function POST(request: NextRequest) {
   try {
     const denied = assertApiAuthorized(request)
     if (denied) return denied
+    const authDenied = rejectUnauthenticatedProductionAccess(request)
+    if (authDenied) return authDenied
     const { isDemo, expired, dataDir } = getDemoContext(request)
     if (isDemo && expired) {
       return NextResponse.json(

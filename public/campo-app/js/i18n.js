@@ -650,8 +650,11 @@
     if (mo) mo.textContent = t("ok");
     const ll = document.getElementById("langLabel");
     if (ll) ll.textContent = t("langLabel");
-    const ls = document.getElementById("langSelect");
-    if (ls) ls.value = current;
+    document.querySelectorAll(".lang-btn[data-lang]").forEach((btn) => {
+      const on = btn.getAttribute("data-lang") === current;
+      btn.classList.toggle("is-active", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
   }
 
   global.NCampoI18n = {

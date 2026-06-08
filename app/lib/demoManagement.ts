@@ -35,6 +35,27 @@ export type DemoRecipientWithState = DemoRecipientRecord & {
 export const DEMO_DAYS = 15
 export const DEMO_RECIPIENTS_KEY = 'nonato-demo-link-recipients'
 
+/** Utilizador limitado — apenas modo demonstração (sem acesso de administrador real). */
+export const DEMO_VISITOR_USER = {
+  id: 'demo-visitor',
+  name: 'Visitante (demonstração)',
+  email: '',
+  role: 'Demonstração',
+  isAdmin: false,
+  permissions: {
+    gestores: true,
+    equipamentos: true,
+    clientes: true,
+    fornecedores: true,
+    relatorioServico: true,
+    bibliotecaPecas: true,
+    agenda: true,
+    desmontados: true,
+    cadastroServicos: true,
+    extras: false,
+  },
+} as const
+
 export const DEMO_HIDDEN_ACTIONS = new Set([
   'open-extra',
   'open-administrador',
