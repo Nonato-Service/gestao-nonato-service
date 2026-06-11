@@ -54,24 +54,6 @@ body {
   font-weight: 700;
   cursor: pointer;
 }
-.lang-btns { display: flex; gap: 4px; }
-.lang-btn {
-  min-width: 36px;
-  min-height: 32px;
-  padding: 0 8px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--surface2);
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 800;
-  cursor: pointer;
-}
-.lang-btn[aria-pressed="true"] {
-  background: rgba(34, 197, 94, 0.2);
-  border-color: rgba(34, 197, 94, 0.5);
-  color: var(--text);
-}
 
 .tabs {
   display: flex;
