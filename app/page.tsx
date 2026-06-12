@@ -2348,6 +2348,34 @@ function getDatasPeriodoAgendamento(ag: Agendamento): string[] {
   return keys
 }
 
+function agendamentoStatusAtivoParaEstadoVisual(ag: Agendamento): boolean {
+  const st = normalizeStatusAgendamento(ag)
+  return st === 'pendente' || st === 'confirmado' || st === 'em-andamento'
+}
+
+/** Verifica se a data (YYYY-MM-DD local) está dentro do período do agendamento. */
+function agendamentoIncluiData(ag: Agendamento, dataKey: string): boolean {
+  const alvo = normalizeDataKeyAgenda(dataKey)
+  return getDatasPeriodoAgendamento(ag).some((d) => normalizeDataKeyAgenda(d) === alvo)
+}
+
+/** Algum dia do período cai no intervalo [inicio, fim] (inclusive), datas YYYY-MM-DD. */
+function agendamentoPeriodoIntersectaIntervalo(ag: Agendamento, inicio: string, fim: string): boolean {
+  const a = normalizeDataKeyAgenda(inicio)
+  const b = normalizeDataKeyAgenda(fim)
+  return getDatasPeriodoAgendamento(ag).some((d) => {
+    const k = normalizeDataKeyAgenda(d)
+    return k >= a && k <= b
+  })
+}
+
+function rotuloPeriodoAgendamento(ag: Agendamento): string {
+  const keys = getDatasPeriodoAgendamento(ag)
+  if (keys.length <= 1) return keys[0] || ag.data
+  const fmt = (k: string) => parseDataAgendaLocal(k).toLocaleDateString('pt-PT')
+  return `${fmt(keys[0])} — ${fmt(keys[keys.length - 1])}`
+}
+
 type EquipamentoCliente = {
   /** ID ou código de referência (opcional). Se vazio na 1.ª gravação, gera-se um ID técnico (UUID). Distinto do n.º de série. */
   id?: string
@@ -43197,54 +43225,68 @@ A1;Peça exemplo;10`}
 
             <div className="tab-glass-cards-grid" style={{ gap: '20px' }}>
               {tecnicos.map(tecnico => {
-                // Buscar agendamentos do técnico para hoje e futuros
-                const hoje = new Date().toISOString().split('T')[0]
-                const hojeDate = new Date(hoje)
-                
-                // Agendamentos de hoje
-                const agendamentosHoje = agendamentos.filter(ag => 
-                  ag.tecnico === tecnico.name && ag.data === hoje
-                ).sort((a, b) => {
-                  // Ordenar por hora
-                  if (a.hora < b.hora) return -1
-                  if (a.hora > b.hora) return 1
-                  return 0
-                })
-
-                // Agendamentos futuros (próximos 30 dias)
-                const agendamentosFuturos = agendamentos.filter(ag => {
-                  if (ag.tecnico !== tecnico.name) return false
-                  const agDate = new Date(ag.data)
-                  return agDate >= hojeDate && agDate <= new Date(hojeDate.getTime() + 30 * 24 * 60 * 60 * 1000)
-                }).sort((a, b) => {
-                  // Ordenar por data primeiro, depois por hora
-                  const dateA = new Date(a.data)
-                  const dateB = new Date(b.data)
-                  if (dateA.getTime() !== dateB.getTime()) {
-                    return dateA.getTime() - dateB.getTime()
-                  }
-                  // Se mesma data, ordenar por hora
-                  if (a.hora < b.hora) return -1
-                  if (a.hora > b.hora) return 1
-                  return 0
-                })
-
-                // Verificar se tem agendamento técnico hoje (verde)
-                const temAgendamentoTecnicoHoje = agendamentosHoje.some(ag => 
-                  ag.tipo === 'agendamento-tecnico' && 
-                  (ag.status === 'em-andamento' || ag.status === 'confirmado' || ag.status === 'pendente')
+                const hoje = formatDataYYYYMMDDLocal(new Date())
+                const hojeDate = parseDataAgendaLocal(hoje)
+                const fimJanela = formatDataYYYYMMDDLocal(
+                  new Date(hojeDate.getFullYear(), hojeDate.getMonth(), hojeDate.getDate() + 30)
                 )
 
-                // Verificar se tem pré-agendamento hoje ou futuro (amarelo)
-                const temPreAgendamento = agendamentosFuturos.some(ag => 
-                  ag.tipo === 'pre-agendamento' && 
-                  (ag.status === 'pendente' || ag.status === 'confirmado')
+                const agendamentosAtivos = agendamentos.filter(
+                  (ag) => ag.tecnico === tecnico.name && agendamentoStatusAtivoParaEstadoVisual(ag)
                 )
 
-                // Verificar se tem agendamento técnico futuro (verde)
-                const temAgendamentoTecnicoFuturo = agendamentosFuturos.some(ag => 
-                  ag.tipo === 'agendamento-tecnico' && 
-                  (ag.status === 'confirmado' || ag.status === 'pendente')
+                const agendamentosHoje = agendamentosAtivos
+                  .filter((ag) => agendamentoIncluiData(ag, hoje))
+                  .sort((a, b) => {
+                    if (a.hora < b.hora) return -1
+                    if (a.hora > b.hora) return 1
+                    return 0
+                  })
+
+                const agendamentosFuturos = agendamentosAtivos
+                  .filter((ag) => {
+                    const keys = getDatasPeriodoAgendamento(ag)
+                    return keys.some((k) => {
+                      const nk = normalizeDataKeyAgenda(k)
+                      return nk > hoje && nk <= fimJanela
+                    })
+                  })
+                  .sort((a, b) => {
+                    const keysA = getDatasPeriodoAgendamento(a)
+                    const keysB = getDatasPeriodoAgendamento(b)
+                    const minA = keysA.find((k) => normalizeDataKeyAgenda(k) > hoje) || keysA[keysA.length - 1]
+                    const minB = keysB.find((k) => normalizeDataKeyAgenda(k) > hoje) || keysB[keysB.length - 1]
+                    const cmp = normalizeDataKeyAgenda(minA).localeCompare(normalizeDataKeyAgenda(minB))
+                    if (cmp !== 0) return cmp
+                    if (a.hora < b.hora) return -1
+                    if (a.hora > b.hora) return 1
+                    return 0
+                  })
+
+                const temAgendamentoTecnicoHoje = agendamentosAtivos.some(
+                  (ag) =>
+                    normalizeTipoAgendamento(ag) === 'agendamento-tecnico' && agendamentoIncluiData(ag, hoje)
+                )
+
+                const temPreAgendamento = agendamentosAtivos.some(
+                  (ag) =>
+                    normalizeTipoAgendamento(ag) === 'pre-agendamento' &&
+                    agendamentoPeriodoIntersectaIntervalo(ag, hoje, fimJanela)
+                )
+
+                const temAgendamentoTecnicoFuturo = agendamentosAtivos.some((ag) => {
+                  if (normalizeTipoAgendamento(ag) !== 'agendamento-tecnico') return false
+                  const keys = getDatasPeriodoAgendamento(ag)
+                  return keys.some((k) => {
+                    const nk = normalizeDataKeyAgenda(k)
+                    return nk > hoje && nk <= fimJanela
+                  })
+                })
+
+                const temAgendamentoTecnicoEmCurso = agendamentosAtivos.some(
+                  (ag) =>
+                    normalizeTipoAgendamento(ag) === 'agendamento-tecnico' &&
+                    agendamentoPeriodoIntersectaIntervalo(ag, hoje, fimJanela)
                 )
 
                 // Determinar cor do boneco
@@ -43257,8 +43299,8 @@ A1;Peça exemplo;10`}
                   corBoneco = 'linear-gradient(135deg, #00ff00 50%, #ffd700 50%)'
                   statusTexto = safeT?.emAtendimentoComPreAgendamento || 'EM ATENDIMENTO + PRÉ-AGENDAMENTO'
                   corIndicador = '#00ff00'
-                } else if (temAgendamentoTecnicoHoje) {
-                  // Verde - atendimento hoje
+                } else if (temAgendamentoTecnicoHoje || temAgendamentoTecnicoEmCurso) {
+                  // Verde - serviço em curso (inclui multi-dia até 20/06, etc.)
                   corBoneco = '#00ff00'
                   statusTexto = safeT?.emAtendimento || 'EM ATENDIMENTO'
                   corIndicador = '#00ff00'
@@ -43382,7 +43424,7 @@ A1;Peça exemplo;10`}
                           {(safeT?.agendaTecnica || safeT?.agendaTitle || 'Agenda Técnica').toUpperCase()}
                         </h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          {agendamentosHoje.map(ag => (
+                          {Array.from(new Map(agendamentosHoje.map((a) => [a.id, a])).values()).map(ag => (
                             <div 
                               key={ag.id}
                               style={estiloCardAgendaEstadoVisual(ag)}
@@ -43391,7 +43433,7 @@ A1;Peça exemplo;10`}
                                 {ag.cliente.toUpperCase()}
                               </p>
                               <p style={{ margin: '5px 0 0 0', fontSize: '12px', opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                {ag.hora} - {(ag.tipo === 'pre-agendamento' ? (safeT?.preAgendamento || 'Pré-Agendamento') : (safeT?.agendamentoTecnico || 'Agendamento Técnico')).toUpperCase()}
+                                {rotuloPeriodoAgendamento(ag)} · {ag.hora} - {(normalizeTipoAgendamento(ag) === 'pre-agendamento' ? (safeT?.preAgendamento || 'Pré-Agendamento') : (safeT?.agendamentoTecnico || 'Agendamento Técnico')).toUpperCase()}
                               </p>
                               {ag.equipamento && (
                                 <p style={{ margin: '5px 0 0 0', fontSize: '11px', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -43400,8 +43442,15 @@ A1;Peça exemplo;10`}
                               )}
                             </div>
                           ))}
-                          {/* Agendamentos futuros (próximos 7 dias) - já ordenados por data */}
-                          {agendamentosFuturos.filter(ag => ag.data !== hoje).slice(0, 5).map(ag => (
+                          {Array.from(
+                            new Map(
+                              agendamentosFuturos
+                                .filter((ag) => !agendamentoIncluiData(ag, hoje))
+                                .map((a) => [a.id, a])
+                            ).values()
+                          )
+                            .slice(0, 5)
+                            .map(ag => (
                             <div 
                               key={ag.id}
                               style={{ ...estiloCardAgendaEstadoVisual(ag), opacity: 0.88 }}
@@ -43410,7 +43459,7 @@ A1;Peça exemplo;10`}
                                 {ag.cliente.toUpperCase()}
                               </p>
                               <p style={{ margin: '5px 0 0 0', fontSize: '12px', opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                {new Date(ag.data).toLocaleDateString('pt-BR')} - {ag.hora} - {(ag.tipo === 'pre-agendamento' ? (safeT?.preAgendamento || 'Pré-Agendamento') : (safeT?.agendamentoTecnico || 'Agendamento Técnico')).toUpperCase()}
+                                {rotuloPeriodoAgendamento(ag)} · {ag.hora} - {(normalizeTipoAgendamento(ag) === 'pre-agendamento' ? (safeT?.preAgendamento || 'Pré-Agendamento') : (safeT?.agendamentoTecnico || 'Agendamento Técnico')).toUpperCase()}
                               </p>
                               {ag.equipamento && (
                                 <p style={{ margin: '5px 0 0 0', fontSize: '11px', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -43423,7 +43472,7 @@ A1;Peça exemplo;10`}
                       </div>
                     )}
 
-                    {agendamentosHoje.length === 0 && agendamentosFuturos.length === 0 && (
+                    {agendamentosAtivos.length === 0 && (
                       <div style={{ 
                         ...glassNestedStyle(ACCENT_GREEN),
                         marginTop: '15px',
