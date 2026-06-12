@@ -98,6 +98,9 @@ import {
   PROTOCOLO_TEMPLATE_IDS,
   relatoriosServicoParaProtocolo,
   sugerirRelatorioServicoId,
+  protocoloEstaEmExecucao,
+  protocoloEstaExecutadoEnviado,
+  agruparProtocolosExecutadosPorClienteEData,
   type ProtocoloIntelFiltroChip,
   type ProtocoloTemplateId,
 } from './lib/protocoloInteligente'
@@ -2826,6 +2829,10 @@ type ProtocoloServico = {
   pdfModelo?: number
   /** Relatório de Serviço associado (abrir / rastrear no mesmo atendimento). */
   relatorioServicoId?: string
+  /** em_execucao = aberto; executado_enviado = concluído / enviado ao cliente */
+  status?: 'em_execucao' | 'executado_enviado'
+  dataConclusao?: string
+  enviadoVia?: 'email' | 'whatsapp' | 'manual'
 }
 
 type ClientePrioritario = {
@@ -6814,6 +6821,7 @@ export default function Dashboard() {
   const [protocoloServicoFiltroLista, setProtocoloServicoFiltroLista] = useState('')
   const [protocoloServicoClienteFiltroLista, setProtocoloServicoClienteFiltroLista] = useState('')
   const [protocoloServicoAgruparPorCliente, setProtocoloServicoAgruparPorCliente] = useState(true)
+  const [protocoloSecaoArquivoAberta, setProtocoloSecaoArquivoAberta] = useState(true)
   const [protocoloModeloImpressaoLista, setProtocoloModeloImpressaoLista] = useState<Record<string, number>>({})
   const [protocoloServicoFiltroChip, setProtocoloServicoFiltroChip] = useState<ProtocoloIntelFiltroChip>('todos')
   const [protocoloFormPassoAtivo, setProtocoloFormPassoAtivo] = useState(1)
@@ -9161,7 +9169,11 @@ export default function Dashboard() {
       if (Array.isArray(savedProtocolosServico)) {
         setProtocolosServico(savedProtocolosServico.map((pr: ProtocoloServico) => {
           const m = Number(pr.pdfModelo)
-          return { ...pr, pdfModelo: m >= 1 && m <= PROTOCOLO_SERVICO_PDF_MODELOS_MAX ? m : PROTOCOLO_PDF_MODELO_PADRAO }
+          return {
+            ...pr,
+            pdfModelo: m >= 1 && m <= PROTOCOLO_SERVICO_PDF_MODELOS_MAX ? m : PROTOCOLO_PDF_MODELO_PADRAO,
+            status: pr.status === 'executado_enviado' ? 'executado_enviado' : 'em_execucao',
+          }
         }))
       }
 
@@ -29343,6 +29355,36 @@ onKeyPress={(e) => {
           openTab('relatorio-servico', getTabTitle('relatorio-servico'))
           handleEditRelatorioServico(rel)
         }
+        const persistProtocolosServico = (next: ProtocoloServico[]) => {
+          setProtocolosServico(next)
+          saveData('nonato-protocolos-servico', next)
+        }
+        const marcarProtocoloExecutado = (id: string, via: 'email' | 'whatsapp' | 'manual') => {
+          const now = new Date().toISOString()
+          const next = protocolosServico.map((p) =>
+            p.id === id
+              ? {
+                  ...p,
+                  status: 'executado_enviado' as const,
+                  dataConclusao: p.dataConclusao || now,
+                  enviadoVia: via,
+                }
+              : p
+          )
+          persistProtocolosServico(next)
+        }
+        const reabrirProtocoloExecucao = (id: string) => {
+          const msg =
+            protoT?.protocolosServicoReabrirConfirm ||
+            'Reabrir este protocolo para execução? Ele voltará à lista de protocolos em execução.'
+          if (!window.confirm(msg)) return
+          const next = protocolosServico.map((p) =>
+            p.id === id
+              ? { ...p, status: 'em_execucao' as const, dataConclusao: undefined, enviadoVia: undefined }
+              : p
+          )
+          persistProtocolosServico(next)
+        }
         const enviarEmailProtocolo = (p: ProtocoloServico) => {
           const cl = clientes.find(c => c.id === p.clienteId)
           const nomeCli = (cl?.nomeEmpresa || '').replace(/\s+/g, ' ').trim()
@@ -29364,6 +29406,7 @@ onKeyPress={(e) => {
           const q = `subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`
           const href = to ? `mailto:${to}?${q}` : `mailto:?${q}`
           window.open(href, '_blank')
+          if (protocoloEstaEmExecucao(p)) marcarProtocoloExecutado(p.id, 'email')
         }
         const enviarWhatsAppProtocolo = (p: ProtocoloServico) => {
           const cl = clientes.find(c => c.id === p.clienteId)
@@ -29381,6 +29424,7 @@ onKeyPress={(e) => {
             ? `https://wa.me/${num}?text=${encodeURIComponent(texto)}`
             : `https://wa.me/?text=${encodeURIComponent(texto)}`
           window.open(href, '_blank')
+          if (protocoloEstaEmExecucao(p)) marcarProtocoloExecutado(p.id, 'whatsapp')
         }
         const mostrarFormulario = editingProtocoloServicoId !== null
         const filtroLista = protocoloServicoFiltroLista.trim().toLowerCase()
@@ -29411,8 +29455,13 @@ onKeyPress={(e) => {
           protocolosFiltrados = protocolosFiltrados.filter((p) => p.clienteId === filtroClienteLista)
         }
         if (protocoloServicoFiltroChip !== 'todos') {
-          protocolosFiltrados = aplicarFiltroInteligenteChip(protocolosFiltrados, protocoloServicoFiltroChip)
+          protocolosFiltrados = aplicarFiltroInteligenteChip(
+            protocolosFiltrados as Parameters<typeof aplicarFiltroInteligenteChip>[0],
+            protocoloServicoFiltroChip
+          ) as ProtocoloServico[]
         }
+        const protocolosEmExecucao = protocolosFiltrados.filter((p) => protocoloEstaEmExecucao(p))
+        const protocolosExecutadosFiltrados = protocolosFiltrados.filter((p) => protocoloEstaExecutadoEnviado(p))
         const protocoloIdsComArquivo = new Set(protocolosServico.map((p) => p.clienteId).filter(Boolean))
         const clientesComProtocolo = clientes
           .filter((c) => protocoloIdsComArquivo.has(c.id))
@@ -29422,7 +29471,7 @@ onKeyPress={(e) => {
         const gruposProtocolosLista: GrupoProtocolosLista[] = (() => {
           if (!protocoloServicoAgruparPorCliente) return []
           const map = new Map<string, ProtocoloServico[]>()
-          for (const pr of protocolosFiltrados) {
+          for (const pr of protocolosEmExecucao) {
             const id = pr.clienteId || '__sem_cliente__'
             if (!map.has(id)) map.set(id, [])
             map.get(id)!.push(pr)
@@ -29447,6 +29496,10 @@ onKeyPress={(e) => {
             itens: map.get(id) || [],
           }))
         })()
+        const gruposProtocolosArquivo = agruparProtocolosExecutadosPorClienteEData(
+          protocolosExecutadosFiltrados,
+          (clienteId) => clientes.find((c) => c.id === clienteId)?.nomeEmpresa || clienteId
+        )
         const inputBase = {
           width: '100%',
           padding: '11px 14px',
@@ -29479,7 +29532,10 @@ onKeyPress={(e) => {
           gap: '10px',
         } as React.CSSProperties
         const totalProto = protocolosServico.length
-        const visivelProto = protocolosFiltrados.length
+        const totalEmExecucao = protocolosServico.filter((p) => protocoloEstaEmExecucao(p)).length
+        const totalExecutados = protocolosServico.filter((p) => protocoloEstaExecutadoEnviado(p)).length
+        const visivelProto = protocolosEmExecucao.length
+        const visivelExecutados = protocolosExecutadosFiltrados.length
         const stepNumStyle = () => ({
           display: 'inline-flex' as const,
           alignItems: 'center' as const,
@@ -29777,6 +29833,20 @@ onKeyPress={(e) => {
                     📋 {protoT?.protocolosServicoRelatorioAbrir || 'Abrir Relatório de Serviço'}
                   </button>
                 ) : null}
+                <button
+                  type="button"
+                  className="btn-primary protocolo-servico-card__btn--concluir"
+                  style={{ marginTop: 8, width: '100%', background: 'linear-gradient(90deg, #059669, #047857)', borderColor: 'rgba(34, 197, 94, 0.45)' }}
+                  onClick={() => {
+                    const msg =
+                      protoT?.protocolosServicoConcluirConfirm ||
+                      'Concluir e mover para «Protocolos Executados e Enviados»?'
+                    if (!window.confirm(msg)) return
+                    marcarProtocoloExecutado(p.id, 'manual')
+                  }}
+                >
+                  ✓ {protoT?.protocolosServicoConcluirArquivar || 'Concluir e arquivar'}
+                </button>
                 <div className="protocolo-servico-card__actions-row protocolo-servico-card__actions-row--manage">
                   <button
                     type="button"
@@ -29821,6 +29891,70 @@ onKeyPress={(e) => {
                     {protoT?.protocolosServicoExcluir || 'Excluir'}
                   </button>
                 </div>
+              </div>
+            </div>
+          )
+        }
+        const renderProtocoloArquivoCard = (p: ProtocoloServico) => {
+          const cl = clientes.find((c) => c.id === p.clienteId)
+          const eq = cl?.equipamentos?.find((e) => e.numeroSerie === p.equipamentoNumeroSerie)
+          const dataArquivo = p.dataConclusao || p.dataCriacao
+          const dataStr = new Date(dataArquivo).toLocaleDateString(documentPdfDateLocale(selectedLanguage))
+          const viaLabel =
+            p.enviadoVia === 'email'
+              ? protoT?.protocolosServicoEnviadoViaEmail || 'E-mail'
+              : p.enviadoVia === 'whatsapp'
+                ? protoT?.protocolosServicoEnviadoViaWhatsApp || 'WhatsApp'
+                : p.enviadoVia === 'manual'
+                  ? protoT?.protocolosServicoEnviadoViaManual || 'Manual'
+                  : ''
+          const modeloGuardado = clampProtocoloPdfModelo(p.pdfModelo)
+          const modeloImpressao =
+            protocoloModeloImpressaoLista[p.id] !== undefined && protocoloModeloImpressaoLista[p.id] !== null
+              ? clampProtocoloPdfModelo(protocoloModeloImpressaoLista[p.id])
+              : modeloGuardado
+          return (
+            <div
+              key={p.id}
+              className="protocolo-servico-lista-card protocolo-servico-lista-card--arquivo"
+              style={{ borderColor: 'rgba(148, 163, 184, 0.22)' }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 5,
+                  background: 'linear-gradient(180deg, #94a3b8, #64748b)',
+                  opacity: 0.85,
+                }}
+              />
+              <div style={{ minWidth: 0, paddingLeft: 12, flex: 1 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 10px', marginBottom: 6 }}>
+                  <strong style={{ color: '#e2e8f0', fontSize: 15, fontWeight: 700 }}>{eq?.tipoEquipamento || (p.situacaoDescricao || '').trim().slice(0, 60) || '—'}</strong>
+                  {viaLabel ? (
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: 'rgba(51, 65, 85, 0.6)', color: '#cbd5e1' }}>
+                      {viaLabel}
+                    </span>
+                  ) : null}
+                </div>
+                <p style={{ margin: 0, fontSize: 12, color: '#94a3b8', fontFamily: 'ui-monospace, monospace' }}>
+                  {eq?.numeroSerie || p.equipamentoNumeroSerie || '—'} · {dataStr}
+                </p>
+              </div>
+              <div className="protocolo-servico-card__actions" style={{ minWidth: 180 }}>
+                <button type="button" className="btn-primary protocolo-servico-card__btn--pdf" onClick={() => gerarPDFProtocolo(p, modeloImpressao)}>
+                  {protoT?.protocolosServicoGerarPDF || 'PDF'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-primary protocolo-servico-card__btn--edit"
+                  style={{ marginTop: 8, width: '100%' }}
+                  onClick={() => reabrirProtocoloExecucao(p.id)}
+                >
+                  ↩ {protoT?.protocolosServicoReabrirExecucao || 'Reabrir execução'}
+                </button>
               </div>
             </div>
           )
@@ -31065,6 +31199,10 @@ onKeyPress={(e) => {
                           editingProtocoloServicoId && editingProtocoloServicoId !== 'new'
                             ? protocolosServico.find((pr) => pr.id === editingProtocoloServicoId)?.dataCriacao || new Date().toISOString()
                             : new Date().toISOString()
+                        const prevProto =
+                          editingProtocoloServicoId && editingProtocoloServicoId !== 'new'
+                            ? protocolosServico.find((pr) => pr.id === editingProtocoloServicoId)
+                            : undefined
                         const novo: ProtocoloServico = {
                           id:
                             editingProtocoloServicoId && editingProtocoloServicoId !== 'new'
@@ -31079,6 +31217,9 @@ onKeyPress={(e) => {
                           dataCriacao,
                           pdfModelo: clampProtocoloPdfModelo(protocoloServicoForm.pdfModelo),
                           relatorioServicoId: (protocoloServicoForm.relatorioServicoId || relatorioAutoSugeridoId || '').trim() || undefined,
+                          status: prevProto?.status === 'executado_enviado' ? 'executado_enviado' : 'em_execucao',
+                          dataConclusao: prevProto?.status === 'executado_enviado' ? prevProto.dataConclusao : undefined,
+                          enviadoVia: prevProto?.status === 'executado_enviado' ? prevProto.enviadoVia : undefined,
                         }
                         const next = editingProtocoloServicoId && editingProtocoloServicoId !== 'new' ? protocolosServico.map(p => p.id === novo.id ? novo : p) : [...protocolosServico, novo]
                         setProtocolosServico(next)
@@ -31144,20 +31285,18 @@ onKeyPress={(e) => {
                       <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{protoT?.protocolosServicoHubKpiArquivoSub || 'protocolos guardados'}</div>
                     </div>
                     <div className="protocolo-kpi-card" style={{ padding: '14px 16px', borderRadius: 10, background: 'linear-gradient(145deg, rgba(15, 30, 55, 0.9), rgba(8, 14, 24, 0.98))', border: '1px solid rgba(56, 189, 248, 0.28)' }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: '#7dd3fc', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{protoT?.protocolosServicoHubKpiVisiveis || 'Visíveis'}</div>
-                      <div style={{ fontSize: 28, fontWeight: 800, color: '#f0f9ff', marginTop: 6, lineHeight: 1 }}>{visivelProto}</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#7dd3fc', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{protoT?.protocolosServicoHubKpiEmExecucao || 'Em execução'}</div>
+                      <div style={{ fontSize: 28, fontWeight: 800, color: '#f0f9ff', marginTop: 6, lineHeight: 1 }}>{totalEmExecucao}</div>
                       <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
-                        {filtroLista || filtroClienteRaw
-                          ? (protoT?.protocolosServicoHubKpiFiltroOn || 'filtro inteligente ativo')
-                          : (protoT?.protocolosServicoHubKpiFiltroOff || 'sem filtro de texto')}
+                        {visivelProto !== totalEmExecucao
+                          ? (protoT?.protocolosServicoHubKpiEmExecucaoFiltro || '{n} visíveis com filtro').replace('{n}', String(visivelProto))
+                          : (protoT?.protocolosServicoHubKpiEmExecucaoSub || 'protocolos abertos agora')}
                       </div>
                     </div>
                     <div className="protocolo-kpi-card" style={{ padding: '14px 16px', borderRadius: 10, background: 'linear-gradient(145deg, rgba(40, 30, 8, 0.88), rgba(12, 10, 6, 0.98))', border: '1px solid rgba(251, 191, 36, 0.32)' }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: '#fcd34d', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{protoT?.protocolosServicoHubKpiCobertura || 'Cobertura'}</div>
-                      <div style={{ fontSize: 28, fontWeight: 800, color: '#fffbeb', marginTop: 6, lineHeight: 1 }}>
-                        {totalProto > 0 ? `${Math.round((visivelProto / totalProto) * 100)}%` : '—'}
-                      </div>
-                      <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{protoT?.protocolosServicoHubKpiCoberturaSub || 'da lista face ao arquivo'}</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#fcd34d', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{protoT?.protocolosServicoHubKpiExecutados || 'Executados e enviados'}</div>
+                      <div style={{ fontSize: 28, fontWeight: 800, color: '#fffbeb', marginTop: 6, lineHeight: 1 }}>{totalExecutados}</div>
+                      <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{protoT?.protocolosServicoHubKpiExecutadosSub || 'concluídos ou enviados ao cliente'}</div>
                     </div>
                   </div>
                   {protoT?.protocolosServicoPainelIntro ? (
@@ -31179,11 +31318,11 @@ onKeyPress={(e) => {
 
                   <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 14, marginBottom: 18 }}>
                     <div>
-                      <h2 style={{ margin: 0, fontSize: 'clamp(1rem, 2.4vw, 1.15rem)', color: '#f1f5f9', fontWeight: 700, letterSpacing: '-0.02em' }}>{protoT?.protocolosServicoListaTitulo || 'Protocolos registados'}</h2>
+                      <h2 style={{ margin: 0, fontSize: 'clamp(1rem, 2.4vw, 1.15rem)', color: '#f1f5f9', fontWeight: 700, letterSpacing: '-0.02em' }}>{protoT?.protocolosServicoListaTituloEmExecucao || 'Protocolos em execução'}</h2>
                       <p style={{ margin: '8px 0 0', fontSize: 13, color: '#94a3b8' }}>
-                        {(protoT?.protocolosServicoListaContagem || '{n} na lista').replace('{n}', String(protocolosFiltrados.length))}
+                        {(protoT?.protocolosServicoListaContagemEmExecucao || '{n} em execução').replace('{n}', String(protocolosEmExecucao.length))}
                         {filtroLista || filtroClienteRaw
-                          ? ` · ${protocolosOrdenados.length} ${protoT?.protocolosServicoListaTotal || 'no total'}`
+                          ? ` · ${protocolosServico.filter((p) => protocoloEstaEmExecucao(p)).length} ${protoT?.protocolosServicoListaTotal || 'no total'}`
                           : ''}
                       </p>
                     </div>
@@ -31247,14 +31386,20 @@ onKeyPress={(e) => {
                     <div style={{ padding: '36px 22px', textAlign: 'center', borderRadius: 16, border: '1px dashed rgba(0, 220, 255, 0.25)', background: 'rgba(0, 30, 40, 0.35)' }}>
                       <p style={{ color: 'rgba(230, 245, 255, 0.82)', lineHeight: 1.65, margin: 0, maxWidth: 520, marginLeft: 'auto', marginRight: 'auto', fontSize: 14 }}>{protoT?.protocolosServicoSemProtocolos || 'Ainda não há protocolos.'}</p>
                     </div>
-                  ) : protocolosFiltrados.length === 0 ? (
+                  ) : protocolosEmExecucao.length === 0 ? (
                     filtroClienteNenhum ? (
-                      <div style={{ minHeight: 160 }} aria-hidden />
-                    ) : (
+                      <div style={{ minHeight: 120 }} aria-hidden />
+                    ) : filtroLista || filtroClienteRaw || protocoloServicoFiltroChip !== 'todos' ? (
                       <p style={{ color: 'rgba(200, 210, 230, 0.75)', padding: '24px 8px', fontSize: 14 }}>{protoT?.protocolosServicoListaVaziaFiltro || 'Nenhum protocolo corresponde à pesquisa.'}</p>
+                    ) : (
+                      <div style={{ padding: '32px 22px', textAlign: 'center', borderRadius: 14, border: '1px dashed rgba(34, 197, 94, 0.28)', background: 'rgba(6, 40, 22, 0.35)', marginBottom: 24 }}>
+                        <p style={{ color: '#86efac', lineHeight: 1.65, margin: 0, fontSize: 15, fontWeight: 600 }}>
+                          {protoT?.protocolosServicoSemEmExecucao || 'Não há protocolos em execução'}
+                        </p>
+                      </div>
                     )
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 28 }}>
                       {protocoloServicoAgruparPorCliente
                         ? gruposProtocolosLista.map((grupo) => (
                             <div
@@ -31281,15 +31426,109 @@ onKeyPress={(e) => {
                               >
                                 <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#ecfdf5', letterSpacing: '-0.02em' }}>{grupo.nomeGrupo}</h3>
                                 <span style={{ fontSize: 12, fontWeight: 600, color: '#5eead4' }}>
-                                  {(protoT?.protocolosServicoListaContagem || '{n} na lista').replace('{n}', String(grupo.itens.length))}
+                                  {(protoT?.protocolosServicoListaContagemEmExecucao || '{n} em execução').replace('{n}', String(grupo.itens.length))}
                                 </span>
                               </div>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>{grupo.itens.map((p) => renderProtocoloListaCard(p))}</div>
                             </div>
                           ))
-                        : protocolosFiltrados.map((p) => renderProtocoloListaCard(p))}
+                        : protocolosEmExecucao.map((p) => renderProtocoloListaCard(p))}
                     </div>
                   )}
+
+                  {protocolosServico.length > 0 && totalExecutados > 0 ? (
+                    <div
+                      style={{
+                        marginTop: 8,
+                        paddingTop: 22,
+                        borderTop: '1px solid rgba(148, 163, 184, 0.18)',
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setProtocoloSecaoArquivoAberta((v) => !v)}
+                        style={{
+                          display: 'flex',
+                          width: '100%',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 12,
+                          padding: '14px 16px',
+                          borderRadius: 10,
+                          border: '1px solid rgba(148, 163, 184, 0.22)',
+                          background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95))',
+                          color: '#e2e8f0',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                        }}
+                      >
+                        <span>
+                          <span style={{ display: 'block', fontSize: 'clamp(1rem, 2.2vw, 1.12rem)', fontWeight: 800, letterSpacing: '-0.02em' }}>
+                            {protoT?.protocolosServicoExecutadosTitulo || 'Protocolos Executados e Enviados'}
+                          </span>
+                          <span style={{ display: 'block', marginTop: 6, fontSize: 13, color: '#94a3b8' }}>
+                            {(protoT?.protocolosServicoExecutadosContagem || '{n} concluídos').replace('{n}', String(visivelExecutados))}
+                            {filtroLista || filtroClienteRaw ? ` · ${totalExecutados} ${protoT?.protocolosServicoListaTotal || 'no total'}` : ''}
+                          </span>
+                        </span>
+                        <span style={{ fontSize: 18, color: '#94a3b8', flexShrink: 0 }}>{protocoloSecaoArquivoAberta ? '▾' : '▸'}</span>
+                      </button>
+
+                      {protocoloSecaoArquivoAberta ? (
+                        protocolosExecutadosFiltrados.length === 0 ? (
+                          <p style={{ color: '#94a3b8', padding: '20px 8px', fontSize: 14, margin: 0 }}>
+                            {protoT?.protocolosServicoExecutadosVazioFiltro || 'Nenhum protocolo concluído corresponde aos filtros actuais.'}
+                          </p>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 22, marginTop: 18 }}>
+                            {gruposProtocolosArquivo.map((grupoCliente) => (
+                              <div
+                                key={grupoCliente.clienteId}
+                                style={{
+                                  borderRadius: 12,
+                                  border: '1px solid rgba(148, 163, 184, 0.2)',
+                                  background: 'rgba(15, 23, 42, 0.55)',
+                                  padding: '14px 14px 16px',
+                                }}
+                              >
+                                <h3 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em', paddingBottom: 10, borderBottom: '1px solid rgba(148, 163, 184, 0.14)' }}>
+                                  {grupoCliente.nomeCliente}
+                                </h3>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                  {grupoCliente.porData.map((grupoData) => {
+                                    const dataLabel =
+                                      grupoData.dataKey === '—'
+                                        ? '—'
+                                        : new Date(grupoData.dataKey + 'T12:00:00').toLocaleDateString(documentPdfDateLocale(selectedLanguage), {
+                                            weekday: 'short',
+                                            day: '2-digit',
+                                            month: 'long',
+                                            year: 'numeric',
+                                          })
+                                    return (
+                                      <div key={`${grupoCliente.clienteId}-${grupoData.dataKey}`}>
+                                        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+                                          <span style={{ fontSize: 12, fontWeight: 800, color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                                            {protoT?.protocolosServicoExecutadosDataLabel || 'Data'} · {dataLabel}
+                                          </span>
+                                          <span style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>
+                                            {(protoT?.protocolosServicoExecutadosDataContagem || '{n} protocolo(s)').replace('{n}', String(grupoData.itens.length))}
+                                          </span>
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                          {grupoData.itens.map((p) => renderProtocoloArquivoCard(p))}
+                                        </div>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
             )}
           </div>
