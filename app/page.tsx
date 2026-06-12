@@ -45102,7 +45102,7 @@ A1;Peça exemplo;10`}
                         <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.quantidade || 'Quantidade'}</th>
                         <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.valorUnitario || 'Valor unit.'}</th>
                         <th style={{ textAlign: 'right', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.valorTotal || 'Total'}</th>
-                        <th style={{ width: '140px', padding: '10px 8px', color: '#00ff00', textAlign: 'center' }}>{(safeT as any)?.cobrarDiariaTecnico || 'Cobrar diária?'}</th>
+                        <th style={{ width: '180px', padding: '10px 8px', color: '#00ff00', textAlign: 'center' }}>{(safeT as any)?.fechamentoColunaServicoDiaria || (safeT as any)?.cobrarDiariaTecnico || 'Serviço / diária'}</th>
                         {temLinhasManuaisFechamento && (
                           <th style={{ width: '200px', padding: '10px 8px', color: '#00ff00' }}>{(safeT as any)?.selecionarServicoAnexar || 'Anexar: selecionar do Cadastro'}</th>
                         )}
