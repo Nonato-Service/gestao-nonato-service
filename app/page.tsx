@@ -6800,6 +6800,8 @@ export default function Dashboard() {
   const [showRelatorioServicoForm, setShowRelatorioServicoForm] = useState(false)
   const [editingRelatorioServico, setEditingRelatorioServico] = useState<RelatorioServico | null>(null)
   const [viewingRelatorioServico, setViewingRelatorioServico] = useState<RelatorioServico | null>(null)
+  const [relatorioServicoListaDetalheId, setRelatorioServicoListaDetalheId] = useState<string | null>(null)
+  const [buscaRelatorioServicoLista, setBuscaRelatorioServicoLista] = useState('')
   const [showPecasSubstituicaoModal, setShowPecasSubstituicaoModal] = useState(false)
   const [showPDFFormatMenu, setShowPDFFormatMenu] = useState<string | null>(null) // ID do relatório para mostrar menu
   const [pdfMenuPosition, setPdfMenuPosition] = useState<{ top: number; left: number; width: number } | null>(null)
@@ -16270,6 +16272,7 @@ export default function Dashboard() {
   }, [])
 
   const handleAddRelatorioServico = () => {
+    setRelatorioServicoListaDetalheId(null)
     const dataInicial = new Date().toISOString().split('T')[0]
     const numeroAuto = gerarNumeroRelatorio(dataInicial)
 
@@ -31571,7 +31574,41 @@ onKeyPress={(e) => {
         )
       }
 
-      case 'relatorio-servico':
+      case 'relatorio-servico': {
+        const qRelLista = buscaRelatorioServicoLista.toLowerCase()
+        const relatoriosListaFiltrados = relatoriosServicoListaPrincipal
+          .filter(r =>
+            (r.cliente || '').toLowerCase().includes(qRelLista) ||
+            (r.numero || '').toLowerCase().includes(qRelLista) ||
+            (r.tecnico || '').toLowerCase().includes(qRelLista)
+          )
+          .sort((a, b) => {
+            const cmpCliente = (a.cliente || '').localeCompare(b.cliente || '', 'pt-BR')
+            if (cmpCliente !== 0) return cmpCliente
+            return (b.numero || '').localeCompare(a.numero || '', 'pt-BR')
+          })
+        const getRelatorioLetraAlfabeto = (nome: string): string => {
+          const n = (nome || '').trim()
+          if (!n) return '#'
+          const ch = n[0].toUpperCase()
+          const base = ch.normalize('NFD').replace(/\p{M}/gu, '')
+          if (/[A-Z]/.test(base)) return base
+          return '#'
+        }
+        const relatoriosPorLetra = new Map<string, typeof relatoriosListaFiltrados>()
+        for (const r of relatoriosListaFiltrados) {
+          const letra = getRelatorioLetraAlfabeto(r.cliente)
+          if (!relatoriosPorLetra.has(letra)) relatoriosPorLetra.set(letra, [])
+          relatoriosPorLetra.get(letra)!.push(r)
+        }
+        const relatoriosLetrasOrdem = [...relatoriosPorLetra.keys()].sort((a, b) => {
+          if (a === '#') return 1
+          if (b === '#') return -1
+          return a.localeCompare(b, 'pt-BR')
+        })
+        const relatoriosParaDetalhe = relatorioServicoListaDetalheId
+          ? relatoriosListaFiltrados.filter(r => r.id === relatorioServicoListaDetalheId)
+          : []
         return (
           <div className="tab-content-wrapper relatorio-servico-root" style={{ maxWidth: '1600px', margin: '0 auto' }}>
             {/* Cabeçalho — responsivo (CSS: globals.css .relatorio-servico-hero*) */}
@@ -33393,6 +33430,30 @@ onKeyPress={(e) => {
               </div>
             )}
 
+            {relatoriosServicoListaPrincipal.length > 0 && (
+              <div style={{ marginBottom: '16px' }}>
+                <input
+                  type="text"
+                  placeholder={`🔍 ${(safeT as any)?.relatorioServicoBuscaLista || 'Buscar por cliente, n.º OS ou técnico...'}`}
+                  value={buscaRelatorioServicoLista}
+                  onChange={(e) => {
+                    setBuscaRelatorioServicoLista(e.target.value)
+                    setRelatorioServicoListaDetalheId(null)
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    backgroundColor: '#222222',
+                    color: '#fff',
+                    border: '1px solid rgba(0, 255, 0, 0.28)',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            )}
+
             {relatoriosServicoListaPrincipal.length === 0 ? (
               <div style={{
                 ...glassCardStyle(ACCENT_GREEN, { padding: '60px 40px', radius: '12px', borderAlpha: 0.2, borderWidth: '1px' }),
@@ -33429,14 +33490,94 @@ onKeyPress={(e) => {
                   </>
                 )}
               </div>
+            ) : relatoriosListaFiltrados.length === 0 ? (
+              <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>
+                {safeT?.nenhumEncontrado || 'Nenhum encontrado com'} &quot;{buscaRelatorioServicoLista}&quot;
+              </p>
+            ) : !relatorioServicoListaDetalheId ? (
+              <>
+                <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#222222', borderRadius: '6px', fontSize: '14px' }}>
+                  {safeT?.mostrando || 'Mostrando'} {relatoriosListaFiltrados.length} {safeT?.de || 'de'}{' '}
+                  {relatoriosServicoListaPrincipal.length} {safeT?.relatoriosServico || 'relatório(s)'}
+                </div>
+                <div className="clientes-alfa-wrap rs-relatorios-alfa-wrap">
+                  {relatoriosLetrasOrdem.length > 1 && (
+                    <nav
+                      className="clientes-alfa-jump"
+                      aria-label={(safeT as any)?.clientesAlfabetoIndice || 'Índice A–Z'}
+                    >
+                      {relatoriosLetrasOrdem.map(letra => (
+                        <a
+                          key={letra}
+                          href={`#relatorios-servico-letra-${letra}`}
+                          className="clientes-alfa-jump-link"
+                        >
+                          {letra === '#' ? '#' : letra}
+                        </a>
+                      ))}
+                    </nav>
+                  )}
+                  {relatoriosLetrasOrdem.map(letra => (
+                    <section
+                      key={letra}
+                      id={`relatorios-servico-letra-${letra}`}
+                      className="clientes-alfa-secao"
+                    >
+                      <h3 className="clientes-alfa-letra">
+                        {letra === '#'
+                          ? (safeT as any)?.clientesAlfabetoOutros || 'Outros'
+                          : letra}
+                      </h3>
+                      <ul className="clientes-alfa-nomes">
+                        {(relatoriosPorLetra.get(letra) ?? []).map(r => {
+                          const nomeCliente = (r.cliente && String(r.cliente).trim()) || '—'
+                          const pendenteCobranca = getResumoCobrancaVisualClass(r.id) === 'laranja'
+                          return (
+                            <li key={r.id}>
+                              <button
+                                type="button"
+                                className={[
+                                  'clientes-alfa-nome-btn',
+                                  'rs-relatorio-alfa-nome-btn',
+                                  pendenteCobranca && 'rs-relatorio-alfa-nome-btn--pulse',
+                                ]
+                                  .filter(Boolean)
+                                  .join(' ')}
+                                onClick={() => setRelatorioServicoListaDetalheId(r.id)}
+                                title={r.numero ? `OS ${r.numero}` : undefined}
+                                aria-label={
+                                  r.numero
+                                    ? `${nomeCliente} — ${safeT?.numeroRelatorio || 'N.º'} ${r.numero}`
+                                    : nomeCliente
+                                }
+                              >
+                                {nomeCliente}
+                              </button>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    </section>
+                  ))}
+                </div>
+              </>
             ) : (
-              <div className="relatorio-servico-cards-grid">
-                {relatoriosServicoListaPrincipal
-                  .sort((a, b) => {
-                    const dataA = new Date(a.data).getTime()
-                    const dataB = new Date(b.data).getTime()
-                    return dataB - dataA // Mais recente primeiro
-                  })
+              <div>
+                <button
+                  type="button"
+                  className="btn-secondary clientes-alfa-voltar"
+                  onClick={() => setRelatorioServicoListaDetalheId(null)}
+                  style={{ marginBottom: '14px' }}
+                >
+                  ← {(safeT as any)?.clientesAlfabetoVoltarLista || 'Voltar à lista por letra'}
+                </button>
+                {relatoriosParaDetalhe.length === 0 ? (
+                  <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>
+                    {(safeT as any)?.relatorioServicoNaoEncontrado || 'Relatório não encontrado'}
+                  </p>
+                ) : (
+              <div className="relatorio-servico-cards-grid relatorio-servico-cards-grid--detalhe">
+                {relatoriosParaDetalhe
                   .map(relatorio => {
                     const totais = calcularTotais(relatorio.diasTrabalho)
                     const dataFormatada = formatDiaTrabalhoCurtoPt(relatorio.data)
@@ -33749,9 +33890,12 @@ onKeyPress={(e) => {
                     )
                   })}
               </div>
+                )}
+              </div>
             )}
           </div>
         )
+      }
       
       case 'clientes':
         const qCli = buscaCliente.toLowerCase()

@@ -5067,6 +5067,31 @@ a:focus-visible {
   font-size: 13px;
 }
 
+/* Relatórios de Serviço — lista alfabética (só nome do cliente) */
+.rs-relatorios-alfa-wrap {
+  margin-top: 4px;
+}
+.rs-relatorio-alfa-nome-btn {
+  font-size: 13px;
+  padding: 9px 12px;
+}
+.rs-relatorio-alfa-nome-btn--pulse {
+  animation: rs-pulse-amarelo-text 1.55s ease-in-out infinite;
+  border-color: rgba(255, 190, 70, 0.45) !important;
+  background: rgba(40, 28, 8, 0.55) !important;
+}
+.relatorio-servico-cards-grid--detalhe {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rs-relatorio-alfa-nome-btn--pulse {
+    animation: none !important;
+  }
+}
+
 /* Clientes > Listar — telemóvel: cartão não corta nome / estado à direita */
 @media (max-width: 480px) {
   .cliente-lista-card {
