@@ -2957,6 +2957,52 @@ button.btn-danger.btn-danger--inline {
   color: #ffffff;
 }
 
+/* Linha de ações por família — texto dentro do botão (Ver Grupos, Editar, Excluir) */
+.familias-grupos-panel .fg-familia-row-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: flex-end;
+  max-width: 100%;
+  margin-left: auto;
+}
+.familias-grupos-panel .fg-btn,
+.familias-grupos-panel .fg-familia-row-acoes .btn-primary,
+.familias-grupos-panel .fg-familia-row-acoes .btn-danger {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  padding: 4px 12px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0 !important;
+  white-space: nowrap !important;
+  flex-shrink: 0;
+  width: auto !important;
+  min-width: max-content !important;
+  max-width: none !important;
+  overflow: hidden;
+  text-overflow: clip;
+}
+.familias-grupos-panel .fg-btn--ver-grupos {
+  padding-inline: 12px !important;
+}
+@media (max-width: 720px) {
+  .familias-grupos-panel .fg-familia-row-acoes {
+    width: 100%;
+    justify-content: flex-start;
+    margin-top: 6px;
+    margin-left: 0;
+  }
+}
+
 /* Gestão Financeira > Clientes / Financeiro > Conteúdo: botões = padrão Visualizar Equipamentos */
 .clientes-financeiro-panel .clientes-financeiro-conteudo button:not([class*='financeiro-despesas-bib']) {
   background: transparent !important;
@@ -4869,6 +4915,19 @@ body {
 .btn-info:not(.btn--sm) {
   font-size: 16px !important;
   padding: 12px 24px !important;
+}
+
+/* Famílias e Grupos — botões compactos da lista (sobrepor min-height 40px global) */
+html body .familias-grupos-panel .fg-btn {
+  min-height: 28px !important;
+  height: 28px !important;
+  max-height: 28px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  padding: 4px 12px !important;
+  min-width: max-content !important;
+  width: auto !important;
 }
 
 .tab-content-wrapper h1,

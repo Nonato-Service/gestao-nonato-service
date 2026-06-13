@@ -27286,8 +27286,8 @@ const nextF = familias.filter(x => x !== f)
                       const isSelected = selectedFamiliaForGrupos === f
                       const isExpanded = isChecklist && familiaExpandidaChecklist === f
                       const parentesDestaFamilia = isChecklist ? parentesChecklist.filter(p => p.familia === f) : []
-                      const btnStyle = { padding: '4px 10px', height: '28px', fontSize: '11px', borderRadius: '4px', minWidth: '90px', whiteSpace: 'nowrap' as const, border: '1px solid rgba(0, 255, 0, 0.7)' }
-                      const btnDangerStyle = { padding: '4px 10px', height: '28px', fontSize: '11px', borderRadius: '4px', minWidth: '70px', whiteSpace: 'nowrap' as const, border: '1px solid rgba(255, 68, 68, 0.8)' }
+                      const btnStyle = { padding: '4px 12px', height: '28px', fontSize: '11px', borderRadius: '4px', whiteSpace: 'nowrap' as const, flexShrink: 0, boxSizing: 'border-box' as const }
+                      const btnDangerStyle = { ...btnStyle, border: '1px solid rgba(255, 68, 68, 0.8)' }
                       return (
                         <React.Fragment key={f}>
                         <div
@@ -27295,6 +27295,7 @@ const nextF = familias.filter(x => x !== f)
                           style={{
                             display: 'flex',
                             alignItems: 'center',
+                            flexWrap: 'wrap',
                             gap: '12px',
                             padding: '12px 15px',
                             marginBottom: '8px',
@@ -27387,12 +27388,12 @@ const nextF = familias.filter(x => x !== f)
                             <>
                               <span style={{ flex: 1, minWidth: 0, fontWeight: 600, color: '#fff', fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={f}>{f}</span>
                               <span style={{ padding: '4px 8px', backgroundColor: 'rgba(0, 255, 0, 0.15)', borderRadius: '6px', fontSize: '12px', color: '#00ff00', fontWeight: 600, flexShrink: 0 }}>{count} {safeT?.grupos || 'grupos'}</span>
-                              <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                              <div className="fg-familia-row-acoes" onClick={e => e.stopPropagation()}>
                                 {isChecklist && (
-                                  <button type="button" className="btn-primary" style={{ ...btnStyle, padding: '4px 10px', whiteSpace: 'nowrap' }} onClick={() => { setSelectedFamiliaForGrupos(f); setSelectedParenteIdForPainelGrupos(''); setSelectedParenteIdForNovoGrupo(''); setTimeout(() => document.getElementById('grupos-familia-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100); }}>{safeT?.verGrupos || 'Ver Grupos'}</button>
+                                  <button type="button" className="btn-primary fg-btn fg-btn--ver-grupos" style={btnStyle} onClick={() => { setSelectedFamiliaForGrupos(f); setSelectedParenteIdForPainelGrupos(''); setSelectedParenteIdForNovoGrupo(''); setTimeout(() => document.getElementById('grupos-familia-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100); }}>{safeT?.verGrupos || 'Ver Grupos'}</button>
                                 )}
-                                <button className="btn-primary" onClick={() => { setEditingFamiliaNome(f); setEditFamiliaValue(f); }} style={{ ...btnStyle, minWidth: '95px' }} title={safeT?.edit || 'Editar'}>{safeT?.edit || 'Editar'}</button>
-                                <button className="btn-danger" onClick={() => {
+                                <button className="btn-primary fg-btn fg-btn--editar" onClick={() => { setEditingFamiliaNome(f); setEditFamiliaValue(f); }} style={btnStyle} title={safeT?.edit || 'Editar'}>{safeT?.edit || 'Editar'}</button>
+                                <button className="btn-danger fg-btn fg-btn--excluir" onClick={() => {
                                   if (isChecklist) {
                                     const nextFam = familiasChecklist.filter(x => x !== f)
                                     setFamiliasChecklist(nextFam)
@@ -27422,7 +27423,7 @@ const nextF = familias.filter(x => x !== f)
                                   <div style={{ marginLeft: '28px', marginBottom: '12px', paddingLeft: '12px', borderLeft: '2px solid rgba(0, 255, 0, 0.3)', backgroundColor: 'rgba(0,255,0,0.04)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
                                       <p style={{ margin: '8px 0 6px', fontSize: '11px', color: '#00ff00', fontWeight: 600 }} title={safeT?.parenteDesc}>{safeT?.parente || 'Parente'}</p>
-                                      <button type="button" className="btn-primary" style={{ padding: '4px 10px', height: '28px', fontSize: '11px', whiteSpace: 'nowrap', flexShrink: 0 }} onClick={() => { setSelectedFamiliaForGrupos(f); setSelectedParenteIdForPainelGrupos(''); setSelectedParenteIdForNovoGrupo(''); setTimeout(() => document.getElementById('grupos-familia-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100); }}>{safeT?.verGrupos || 'Ver Grupos'}</button>
+                                      <button type="button" className="btn-primary fg-btn fg-btn--ver-grupos" style={btnStyle} onClick={() => { setSelectedFamiliaForGrupos(f); setSelectedParenteIdForPainelGrupos(''); setSelectedParenteIdForNovoGrupo(''); setTimeout(() => document.getElementById('grupos-familia-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100); }}>{safeT?.verGrupos || 'Ver Grupos'}</button>
                                     </div>
                                     {parentesDestaFamilia.map((p) => (
                                       <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', marginBottom: '6px', borderRadius: '6px', backgroundColor: '#222222', border: '1px solid rgba(0,255,0,0.2)', flexWrap: 'nowrap' }}>
