@@ -4984,6 +4984,89 @@ a:focus-visible {
   box-shadow: 0 0 0 4px rgba(255, 0, 0, 0.2) !important;
 }
 
+/* Clientes > Listar — índice alfabético (nomes por letra) */
+.clientes-alfa-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.clientes-alfa-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 12px;
+  background: #1a1a1a;
+  border: 1px solid rgba(0, 255, 0, 0.22);
+  border-radius: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.clientes-alfa-jump-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: rgba(22, 28, 28, 0.95);
+  border: 1px solid rgba(0, 255, 0, 0.18);
+  color: #b8ffb8;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.clientes-alfa-jump-link:hover {
+  background: rgba(18, 52, 24, 0.96);
+  border-color: rgba(0, 200, 80, 0.55);
+  color: #fff;
+}
+.clientes-alfa-secao {
+  scroll-margin-top: 72px;
+}
+.clientes-alfa-letra {
+  margin: 0 0 8px;
+  padding: 6px 10px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #7dff9e;
+  background: linear-gradient(90deg, rgba(0, 255, 0, 0.12), transparent);
+  border-left: 4px solid rgba(0, 255, 0, 0.45);
+  border-radius: 0 6px 6px 0;
+}
+.clientes-alfa-nomes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.clientes-alfa-nome-btn {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #222222;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.clientes-alfa-nome-btn:hover {
+  background: rgba(18, 52, 24, 0.88);
+  border-color: rgba(0, 200, 80, 0.45);
+  color: #eaffea;
+}
+.clientes-alfa-voltar {
+  font-size: 13px;
+}
+
 /* Clientes > Listar — telemóvel: cartão não corta nome / estado à direita */
 @media (max-width: 480px) {
   .cliente-lista-card {

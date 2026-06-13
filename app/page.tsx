@@ -6179,6 +6179,7 @@ export default function Dashboard() {
   const [showClienteForm, setShowClienteForm] = useState(false)
   const [editingCliente, setEditingCliente] = useState<Cliente | null>(null)
   const [buscaCliente, setBuscaCliente] = useState('')
+  const [clienteListaDetalheId, setClienteListaDetalheId] = useState<string | null>(null)
   const [clientesActiveTab, setClientesActiveTab] = useState<'cadastrar' | 'listar' | 'grupos'>('cadastrar')
   const [clienteGrupoTarifaSelecionadoId, setClienteGrupoTarifaSelecionadoId] = useState<string | null>(null)
   const [clienteForm, setClienteForm] = useState({
@@ -13465,11 +13466,9 @@ export default function Dashboard() {
     }
     setClienteCadastroAlertaDevedorId(clienteId)
     setBuscaCliente(cl.nomeEmpresa)
+    setClienteListaDetalheId(clienteId)
     setClientesActiveTab('listar')
     openTab('clientes', getTabTitle('clientes'))
-    setTimeout(() => {
-      document.querySelector(`[data-cliente-card-id="${clienteId}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }, 400)
   }
 
   const confirmarCadastroAlertaClienteDivida = () => {
@@ -33936,6 +33935,28 @@ onKeyPress={(e) => {
             cliente.contato?.toLowerCase().includes(qCli)
           )
           .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
+        const getClienteLetraAlfabeto = (nome: string): string => {
+          const n = (nome || '').trim()
+          if (!n) return '#'
+          const ch = n[0].toUpperCase()
+          const base = ch.normalize('NFD').replace(/\p{M}/gu, '')
+          if (/[A-Z]/.test(base)) return base
+          return '#'
+        }
+        const clientesPorLetra = new Map<string, typeof clientesFiltrados>()
+        for (const c of clientesFiltrados) {
+          const letra = getClienteLetraAlfabeto(c.nomeEmpresa)
+          if (!clientesPorLetra.has(letra)) clientesPorLetra.set(letra, [])
+          clientesPorLetra.get(letra)!.push(c)
+        }
+        const clientesLetrasOrdem = [...clientesPorLetra.keys()].sort((a, b) => {
+          if (a === '#') return 1
+          if (b === '#') return -1
+          return a.localeCompare(b, 'pt-BR')
+        })
+        const clientesParaDetalhe = clienteListaDetalheId
+          ? clientesFiltrados.filter(c => c.id === clienteListaDetalheId)
+          : []
         
         return (
           <div className="tab-content-wrapper tab-glass-root tab-glass-root--wide">
@@ -33946,13 +33967,19 @@ onKeyPress={(e) => {
               </button>
               <button 
                 className={`mobile-toolbar-btn ${clientesActiveTab === 'cadastrar' ? 'active' : ''}`}
-                onClick={() => setClientesActiveTab('cadastrar')}
+                onClick={() => {
+                  setClientesActiveTab('cadastrar')
+                  setClienteListaDetalheId(null)
+                }}
               >
                 ➕ {safeT?.cadastrarCliente || 'Cadastrar'}
               </button>
               <button 
                 className={`mobile-toolbar-btn ${clientesActiveTab === 'listar' ? 'active' : ''}`}
-                onClick={() => setClientesActiveTab('listar')}
+                onClick={() => {
+                  setClientesActiveTab('listar')
+                  setClienteListaDetalheId(null)
+                }}
               >
                 📋 {safeT?.clientesCadastrados || 'Listar'}
               </button>
@@ -33960,6 +33987,7 @@ onKeyPress={(e) => {
                 className={`mobile-toolbar-btn ${clientesActiveTab === 'grupos' ? 'active' : ''}`}
                 onClick={() => {
                   setClientesActiveTab('grupos')
+                  setClienteListaDetalheId(null)
                   if (!clienteGrupoTarifaSelecionadoId) {
                     setClienteGrupoTarifaSelecionadoId(ordenarServicoGrupos(servicoGrupos)[0]?.id ?? null)
                   }
@@ -34059,7 +34087,10 @@ onKeyPress={(e) => {
             <div className="tab-nav-desktop tab-glass-nav tab-glass-nav--clientes">
               <button 
                 className="btn-primary"
-                onClick={() => setClientesActiveTab('cadastrar')}
+                onClick={() => {
+                  setClientesActiveTab('cadastrar')
+                  setClienteListaDetalheId(null)
+                }}
                 style={{
                   padding: '12px 24px',
                   fontSize: '14px',
@@ -34077,7 +34108,10 @@ onKeyPress={(e) => {
               </button>
               <button 
                 className="btn-primary"
-                onClick={() => setClientesActiveTab('listar')}
+                onClick={() => {
+                  setClientesActiveTab('listar')
+                  setClienteListaDetalheId(null)
+                }}
                 style={{
                   padding: '12px 24px',
                   fontSize: '14px',
@@ -34097,6 +34131,7 @@ onKeyPress={(e) => {
                 className="btn-primary"
                 onClick={() => {
                   setClientesActiveTab('grupos')
+                  setClienteListaDetalheId(null)
                   if (!clienteGrupoTarifaSelecionadoId) {
                     setClienteGrupoTarifaSelecionadoId(ordenarServicoGrupos(servicoGrupos)[0]?.id ?? null)
                     setServicoGrupoSelecionadoId(ordenarServicoGrupos(servicoGrupos)[0]?.id ?? null)
@@ -34810,7 +34845,10 @@ onKeyPress={(e) => {
                       type="text"
                       placeholder={`🔍 ${safeT?.buscarCliente || 'Buscar cliente por nome, morada, código postal, país, telefone, e-mail ou contato...'}`}
                       value={buscaCliente}
-                      onChange={(e) => setBuscaCliente(e.target.value)}
+                      onChange={(e) => {
+                        setBuscaCliente(e.target.value)
+                        setClienteListaDetalheId(null)
+                      }}
                       style={{ 
                         width: '100%', 
                         padding: '10px', 
@@ -34835,10 +34873,71 @@ onKeyPress={(e) => {
                     {safeT?.mostrando || 'Mostrando'} {clientesFiltrados.length} {safeT?.de || 'de'} {clientes.length} {safeT?.clientes || 'cliente(s)'}
                   </div>
                 )}
-                
-                {clientesFiltrados.length > 0 && (
+
+                {clientesFiltrados.length > 0 && !clienteListaDetalheId && (
+                  <div className="clientes-alfa-wrap">
+                    {clientesLetrasOrdem.length > 1 && (
+                      <nav
+                        className="clientes-alfa-jump"
+                        aria-label={(safeT as any)?.clientesAlfabetoIndice || 'Índice A–Z'}
+                      >
+                        {clientesLetrasOrdem.map(letra => (
+                          <a
+                            key={letra}
+                            href={`#clientes-letra-${letra}`}
+                            className="clientes-alfa-jump-link"
+                          >
+                            {letra === '#' ? '#' : letra}
+                          </a>
+                        ))}
+                      </nav>
+                    )}
+                    {clientesLetrasOrdem.map(letra => (
+                      <section
+                        key={letra}
+                        id={`clientes-letra-${letra}`}
+                        className="clientes-alfa-secao"
+                      >
+                        <h3 className="clientes-alfa-letra">
+                          {letra === '#'
+                            ? (safeT as any)?.clientesAlfabetoOutros || 'Outros'
+                            : letra}
+                        </h3>
+                        <ul className="clientes-alfa-nomes">
+                          {(clientesPorLetra.get(letra) ?? []).map(c => (
+                            <li key={c.id}>
+                              <button
+                                type="button"
+                                className="clientes-alfa-nome-btn"
+                                onClick={() => setClienteListaDetalheId(c.id)}
+                              >
+                                {c.nomeEmpresa}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+                    ))}
+                  </div>
+                )}
+
+                {clientesFiltrados.length > 0 && clienteListaDetalheId && (
+                  <div>
+                    <button
+                      type="button"
+                      className="btn-secondary clientes-alfa-voltar"
+                      onClick={() => setClienteListaDetalheId(null)}
+                      style={{ marginBottom: '14px' }}
+                    >
+                      ← {(safeT as any)?.clientesAlfabetoVoltarLista || 'Voltar à lista por letra'}
+                    </button>
+                    {clientesParaDetalhe.length === 0 ? (
+                      <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>
+                        {safeT?.clienteNaoEncontrado || 'Cliente não encontrado'}
+                      </p>
+                    ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: '8px' }}>
-                    {clientesFiltrados.map(cliente => {
+                    {clientesParaDetalhe.map(cliente => {
                       // Gerar iniciais do nome da empresa
                       const getIniciais = (nome: string) => {
                         const palavras = nome.trim().split(/\s+/)
@@ -35223,6 +35322,8 @@ onKeyPress={(e) => {
                         </div>
                       )
                     })}
+                  </div>
+                    )}
                   </div>
                 )}
               </div>
