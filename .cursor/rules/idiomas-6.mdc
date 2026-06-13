@@ -28,7 +28,8 @@ O projeto **Gestão Técnica Nonato Service** deve manter suporte completo a **6
 
 1. **Nunca** deixar texto fixo em um único idioma na UI; usar sempre uma chave de `translations`.
 2. **Sempre** preencher as 6 traduções para cada chave nova em `app/translations.ts`.
-3. Em PDFs ou documentos gerados, garantir que todos os textos tenham versão para os 6 idiomas (por exemplo via `?lang=pt-BR`, `?lang=es`, etc.).
+3. Após alterações grandes ou novas chaves, correr `npm run i18n:check` (zero falhas) e, se necessário, `npm run i18n:sync` para alinhar todos os idiomas a partir de `pt-BR`.
+4. Em PDFs ou documentos gerados, garantir que todos os textos tenham versão para os 6 idiomas (por exemplo via `?lang=pt-BR`, `?lang=es`, etc.).
 
 ## Exemplo em translations.ts
 

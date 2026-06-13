@@ -11,7 +11,9 @@
     "typecheck": "tsc --noEmit",
     "apply-layout": "node apply-layout-criacao-checklist.js",
     "homag:import": "node scripts/homag-import/run.mjs",
-    "restaurar:cadastro": "node scripts/restaurar-cadastro-servicos.mjs"
+    "restaurar:cadastro": "node scripts/restaurar-cadastro-servicos.mjs",
+    "i18n:check": "node scripts/check-i18n-keys.mjs",
+    "i18n:sync": "node scripts/sync-i18n-full.mjs"
   },
   "dependencies": {
     "adm-zip": "^0.5.16",
@@ -27,6 +29,7 @@
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "google-translate-api-x": "^10.7.3",
     "playwright": "^1.49.0",
     "typescript": "^5.0.0"
   }

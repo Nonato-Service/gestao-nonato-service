@@ -1,4 +1,6 @@
-# dependencies
+# scripts / tooling cache
+scripts/.i18n-sync-cache.json
+
 /node_modules
 /.pnp
 .pnp.js
