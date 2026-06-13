@@ -9302,8 +9302,9 @@ button.dia-trabalho-acao-btn--del:hover {
 
 .ns-dashboard-qa-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
   gap: clamp(14px, 2vw, 20px);
+  align-items: stretch;
 }
 
 .ns-dashboard-qa-card {
@@ -9314,6 +9315,9 @@ button.dia-trabalho-acao-btn--del:hover {
   --qa-title: #e2e8f0;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: clamp(148px, 18vw, 172px);
   padding: clamp(22px, 3vw, 30px) clamp(18px, 2.5vw, 24px);
   border-radius: 18px;
   cursor: pointer;
@@ -9373,20 +9377,26 @@ button.dia-trabalho-acao-btn--del:hover {
   position: relative;
   z-index: 1;
   margin: 0 0 10px;
-  font-size: clamp(15px, 2.2vw, 17px);
+  font-size: clamp(14px, 2vw, 16px);
   font-weight: 800;
-  line-height: 1.25;
+  line-height: 1.3;
   color: var(--qa-title);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .ns-dashboard-qa-card-desc {
   position: relative;
   z-index: 1;
   margin: 0;
+  margin-top: auto;
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.55;
   color: rgba(203, 213, 225, 0.88);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .ns-dashboard-inventory {

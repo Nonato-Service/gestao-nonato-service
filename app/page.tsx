@@ -5492,7 +5492,7 @@ export default function Dashboard() {
       'tecnicos-internos': t?.tecnicosInternos || 'TÉCNICOS INTERNOS',
       'tecnicos-externos': t?.tecnicosExternos || 'TÉCNICOS EXTERNOS',
       'alerta-mensagens': t?.alertaMensagens || 'ALERTA DE MENSAGENS',
-      'protocolos-servico': (t as any)?.protocolosServicoTitle || 'Protocolos de Serviço',
+      'protocolos-servico': (t as any)?.protocolosServicoTitle || 'PROTOCOLOS DE SERVIÇO',
       'manual-programa': (t as any)?.manualProgramaTitle || 'Manual do Programa',
       'informacoes-mecanicas-eletricas':
         (t as any)?.informacoesMecanicasEletricasTitle || 'Informações Mecânicas e Elétricas dos Equipamentos'
@@ -6066,7 +6066,7 @@ export default function Dashboard() {
       { action: 'open-checklist-hub', label: 'Hub do Checklist' },
       { action: 'open-checklist', label: 'Checklist' },
       { action: 'open-desmontados', label: 'Desmontados' },
-      { action: 'open-protocolos-servico', label: 'Protocolos de Serviço' },
+      { action: 'open-protocolos-servico', label: 'PROTOCOLOS DE SERVIÇO' },
       { action: 'open-gestao-industrial', label: 'Gestão Industrial' },
       { action: 'open-gestao-custos', label: 'Gestão de Custos' },
       { action: 'open-gestao-financeira', label: 'Gestão Financeira' },
@@ -67228,12 +67228,13 @@ A1;Peça exemplo;10`}
                 }> = [
                   { action: 'open-relatorio-servico', titleKey: 'relatorioServicoTitle', descKey: 'relatorioServicoSubtitle', icon: '📋', titleFallback: 'RELATÓRIO DE SERVIÇO', descFallback: 'Gestão de Relatórios de Serviço' },
                   { action: 'open-biblioteca-relatorios', titleKey: 'bibliotecaRelatoriosTitle', descKey: 'quickAccessBibliotecaRelatoriosDesc', icon: '📚', titleFallback: 'BIBLIOTECA DE RELATÓRIOS', descFallback: 'Visualize relatórios por cliente.' },
-                  { action: 'open-protocolos-servico', titleKey: 'protocolosServicoTitle', descKey: 'protocolosServicoDesc', icon: '📑', titleFallback: 'Protocolos de Serviço', descFallback: 'Protocolos antes/depois e peças.' },
-                  { action: 'open-quick-gestao-custos', titleKey: 'gestaoCustosTitle', descKey: 'quickAccessGestaoCustosDesc', icon: '💰', titleFallback: 'GESTÃO DE CUSTOS', descFallback: 'Orçamentos, despesas e mapas.' },
+                  { action: 'open-protocolos-servico', titleKey: 'protocolosServicoTitle', descKey: 'quickAccessProtocolosServicoDesc', icon: '📑', titleFallback: 'PROTOCOLOS DE SERVIÇO', descFallback: 'Relatórios visuais, peças, PDF e envio ao cliente.' },
+                  { action: 'open-quick-gestao-custos', titleKey: 'gestaoCustosTitle', descKey: 'quickAccessGestaoCustosDesc', icon: '💰', titleFallback: 'FECHAMENTO DE OS/CUSTOS/ORÇAMENTOS', descFallback: 'Orçamentos, despesas e mapas.' },
+                  { action: 'open-agenda', titleKey: 'agendaTitle', descKey: 'quickAccessAgendaDesc', icon: '📅', titleFallback: 'AGENDA TÉCNICA', descFallback: 'Agenda técnica e agendamentos.' },
                   { action: 'open-quick-biblioteca-pecas', titleKey: 'bibliotecaPecasTitle', descKey: 'quickAccessBibliotecaPecasDesc', icon: '🔩', titleFallback: 'BIBLIOTECA DE PEÇAS', descFallback: 'Cadastro e biblioteca de peças.' },
+                  { action: 'open-almoxarifado-armazem', titleKey: 'almoxarifadoArmazemTitle', descKey: 'quickAccessAlmoxarifadoDesc', icon: '🏪', titleFallback: 'ALMOXARIFADO / ARMAZÉM', descFallback: 'Stock, pedidos e armazém.' },
                   { action: 'open-manuais-informacoes-tecnicas', titleKey: 'manuaisInformacoesTecnicasTitle', descKey: 'quickAccessManuaisDesc', icon: '📖', titleFallback: 'MANUAIS E INFORMAÇÕES TÉCNICAS', descFallback: 'Manuais por família, grupo e modelo.' },
                   { action: 'open-biblia-nonato-service', titleKey: 'bibliaNonatoServiceTitle', descKey: 'bibliaNonatoQuickDesc', icon: '📚', titleFallback: 'BÍBLIA DA NONATO SERVICE', descFallback: 'Referências por família, marca e modelo (uso interno).' },
-                  { action: 'open-almoxarifado-armazem', titleKey: 'almoxarifadoArmazemTitle', descKey: 'quickAccessAlmoxarifadoDesc', icon: '🏪', titleFallback: 'ALMOXARIFADO / ARMAZÉM', descFallback: 'Stock, pedidos e armazém.' },
                   { action: 'open-quick-gestao-financeira', titleKey: 'gestaoFinanceiraTitle', descKey: 'gestaoFinanceiraDesc', icon: '📊', titleFallback: 'GESTÃO FINANCEIRA', descFallback: 'Finanças e controlo.' },
                   {
                     action: 'open-hub-comunicacao',
@@ -67261,8 +67262,7 @@ A1;Peça exemplo;10`}
                     titleFallback: 'HUB DE COMUNICAÇÃO',
                     descFallback: 'Mensagens e participantes.',
                   },
-                  { action: 'open-agenda', titleKey: 'agendaTitle', descKey: 'quickAccessAgendaDesc', icon: '📅', titleFallback: 'AGENDA TÉCNICA', descFallback: 'Agenda técnica e agendamentos.' },
-                  { action: 'open-translator', titleKey: 'translator', descKey: 'quickAccessTranslatorDesc', icon: '🌐', titleFallback: 'Tradutor', descFallback: 'Tradução rápida entre idiomas.' },
+                  { action: 'open-translator', titleKey: 'translator', descKey: 'quickAccessTranslatorDesc', icon: '🌐', titleFallback: 'TRADUTOR', descFallback: 'Tradução rápida entre idiomas.' },
                   { action: 'open-checklist-hub', titleKey: 'checklistGroupTitle', descKey: 'quickAccessChecklistHubDesc', icon: '✅', titleFallback: 'GESTÃO DOS CHECKLIST', descFallback: 'Hub de checklists, pré-checklist e montagem.' }
                 ]
                 return (

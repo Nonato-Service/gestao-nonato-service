@@ -241,11 +241,52 @@ async function main() {
     }
 
     const list = cfg.list || {}
-    const itemSel = list.itemSelector
+    let itemSel = list.itemSelector
     if (!itemSel) {
       console.error('config.json: defina list.itemSelector')
       process.exit(1)
     }
+
+    const sfFallbacks = [
+      'commerce_product-tile',
+      '[data-product-code]',
+      '.product-tile',
+      'article[class*="product"]',
+      'tr[data-row]',
+    ]
+
+    async function countItems(selector) {
+      const parts = String(selector)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+      for (const part of parts) {
+        try {
+          const n = await page.locator(part).count()
+          if (n > 0) return { sel: part, count: n }
+        } catch {
+          /* ignore invalid selector */
+        }
+      }
+      for (const fb of sfFallbacks) {
+        try {
+          const n = await page.locator(fb).count()
+          if (n > 0) return { sel: fb, count: n }
+        } catch {
+          /* ignore */
+        }
+      }
+      return { sel: parts[0] || itemSel, count: 0 }
+    }
+
+    await page.waitForLoadState('networkidle', { timeout: 90000 }).catch(() => {})
+    const firstProbe = await countItems(itemSel)
+    if (firstProbe.count === 0) {
+      console.warn(`[HOMAG] 0 itens com seletor configurado. A aguardar conteúdo dinâmico…`)
+      await page.waitForTimeout(5000)
+    }
+    itemSel = (await countItems(itemSel)).sel
+    console.log(`[HOMAG] Seletor activo: ${itemSel}`)
 
     const maxPages = Math.min(Math.max(1, Number(cfg.maxPages) || 20), 500)
     let pageNum = 1
