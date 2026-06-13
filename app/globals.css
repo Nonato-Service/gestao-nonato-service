@@ -5149,6 +5149,12 @@ a:focus-visible {
   flex-wrap: wrap;
   justify-content: flex-end;
 }
+.relatorio-servico-hero-actions .btn-primary {
+  font-size: 12px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  letter-spacing: 0.02em;
+}
 
 .relatorio-servico-hero-actions-row {
   display: flex;
@@ -5265,7 +5271,283 @@ a:focus-visible {
 .relatorio-servico-report-card {
   overflow: visible;
   min-width: 0;
+  position: relative;
+  box-sizing: border-box;
+  align-self: start;
+  height: fit-content;
+  max-width: 100%;
+  padding: 14px 14px 12px;
+  border-radius: 14px;
+  background: linear-gradient(155deg, rgba(16, 20, 16, 0.94) 0%, rgba(8, 10, 8, 0.9) 100%);
+  border: 1px solid rgba(0, 255, 0, 0.14);
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
 }
+.relatorio-servico-report-card.rs-card:hover {
+  border-color: rgba(0, 200, 80, 0.38);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(0, 255, 0, 0.06);
+  transform: translateY(-1px);
+}
+.relatorio-servico-report-card.relatorio-servico-report-card--fluxo-pendente {
+  background: linear-gradient(155deg, rgba(45, 18, 18, 0.72) 0%, rgba(18, 8, 8, 0.88) 100%);
+  border-color: rgba(248, 113, 113, 0.38);
+}
+.relatorio-servico-report-card.relatorio-servico-report-card--cobranca-pendente {
+  border-color: rgba(255, 190, 70, 0.42);
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 200, 80, 0.08);
+}
+
+/* Cabeçalho compacto: OS + data + badges */
+.rs-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 10px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.rs-card-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.rs-card-os-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  color: #eaffea;
+  background: rgba(18, 52, 24, 0.92);
+  border: 1px solid rgba(0, 200, 80, 0.45);
+}
+.rs-card-date-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.rs-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+  min-width: 0;
+  max-width: 100%;
+}
+.rs-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.rs-badge__ico {
+  font-size: 10px;
+  line-height: 1;
+  opacity: 0.95;
+}
+.rs-badge--ok {
+  background: rgba(0, 255, 0, 0.18);
+  color: #b8ffb8;
+  border: 1px solid rgba(0, 255, 0, 0.45);
+}
+.rs-badge--warn {
+  background: rgba(255, 170, 0, 0.18);
+  color: #ffd966;
+  border: 1px solid rgba(255, 170, 0, 0.45);
+}
+.rs-badge--pecas {
+  background: rgba(255, 68, 68, 0.16);
+  color: #ffb4b4;
+  border: 1px solid rgba(255, 100, 100, 0.42);
+}
+.rs-badge--bib {
+  background: rgba(0, 150, 255, 0.16);
+  color: #9bdcff;
+  border: 1px solid rgba(0, 180, 255, 0.42);
+}
+.rs-badge--armazem {
+  background: rgba(0, 150, 255, 0.1);
+  color: #cfe9ff;
+  border: 1px solid rgba(0, 150, 255, 0.42);
+  font-size: 8px;
+}
+
+.rs-card-ident {
+  margin-bottom: 12px;
+}
+.rs-card-cliente-nome {
+  margin: 0;
+  font-size: clamp(15px, 3.2vw, 17px);
+  color: #f5f5f5;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+}
+.rs-card-detalhes .relatorio-servico-report-card__field-value {
+  font-weight: 500;
+  font-size: 13px;
+}
+.rs-card-pecas-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 12px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffd0d0;
+  background: rgba(220, 72, 72, 0.12);
+  border: 1px solid rgba(255, 100, 100, 0.32);
+}
+.rs-card-pecas-chip__ico {
+  font-size: 11px;
+  line-height: 1;
+}
+
+/* Ações — botões compactos com ícones pequenos */
+.rs-card-acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 255, 0, 0.14);
+  position: relative;
+  z-index: 3;
+}
+.relatorio-servico-card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  border: 1px solid transparent;
+}
+.relatorio-servico-card-btn .rs-btn-ico {
+  font-size: 11px;
+  line-height: 1;
+  opacity: 0.92;
+}
+.relatorio-servico-card-btn--edit {
+  flex: 1;
+  min-width: 0;
+  color: #ffcc66;
+  background: rgba(26, 22, 12, 0.92);
+  border-color: rgba(255, 170, 0, 0.55);
+}
+.relatorio-servico-card-btn--view {
+  flex: 1;
+  min-width: 0;
+  color: #fff;
+  background: rgba(18, 52, 24, 0.92);
+  border-color: rgba(0, 200, 80, 0.45);
+}
+.relatorio-servico-card-btn--pdf {
+  flex: 1;
+  min-width: 0;
+  color: #fff;
+  background: rgba(18, 38, 62, 0.92);
+  border-color: rgba(80, 160, 255, 0.5);
+}
+.relatorio-servico-card-btn--delete {
+  width: 100%;
+  color: #fff;
+  background: rgba(52, 22, 22, 0.92);
+  border-color: rgba(255, 100, 100, 0.45);
+}
+.relatorio-servico-card-btn:hover {
+  filter: brightness(1.08);
+}
+.rs-card-select {
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  padding: 6px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(20, 20, 20, 0.55);
+  color: #fff;
+  border: 1px solid rgba(0, 150, 255, 0.5);
+  border-radius: 8px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+/* Amarelo (cobrança pendente): nome da empresa + botões piscam */
+@keyframes rs-pulse-amarelo-text {
+  0%,
+  100% {
+    color: #ffb347;
+    text-shadow: 0 0 0 transparent;
+  }
+  50% {
+    color: #ffe566;
+    text-shadow: 0 0 14px rgba(255, 210, 60, 0.55);
+  }
+}
+@keyframes rs-pulse-amarelo-btn {
+  0%,
+  100% {
+    border-color: rgba(255, 180, 60, 0.45);
+    box-shadow: 0 0 0 0 rgba(255, 200, 80, 0.15);
+  }
+  50% {
+    border-color: rgba(255, 220, 100, 0.92);
+    box-shadow: 0 0 14px 2px rgba(255, 200, 60, 0.42);
+  }
+}
+.relatorio-servico-report-card--cobranca-pendente .rs-card-cliente-nome--pulse,
+.relatorio-servico-report-card--cobranca-pendente .rs-card-cliente-nome.rs-card-cliente-nome--pulse {
+  animation: rs-pulse-amarelo-text 1.55s ease-in-out infinite;
+}
+.relatorio-servico-card-btn--pulse,
+.rs-card-select.relatorio-servico-card-btn--pulse {
+  animation: rs-pulse-amarelo-btn 1.55s ease-in-out infinite;
+}
+.relatorio-servico-report-card--cobranca-pendente .relatorio-resumo-cobranca-wrap--laranja {
+  animation: relatorio-resumo-pulse-laranja 1.55s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rs-card-cliente-nome--pulse,
+  .relatorio-servico-card-btn--pulse,
+  .rs-card-select.relatorio-servico-card-btn--pulse,
+  .relatorio-servico-report-card--cobranca-pendente .relatorio-resumo-cobranca-wrap--laranja,
+  .relatorio-resumo-cobranca-wrap--laranja,
+  .relatorio-resumo-cobranca-wrap--azul {
+    animation: none !important;
+  }
+}
+
 .relatorio-servico-report-card__badges {
   max-width: 100%;
 }
@@ -5290,6 +5572,11 @@ a:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+.relatorio-servico-report-card__ident.rs-card-ident {
+  margin-bottom: 12px;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 .relatorio-servico-report-card__ident-grid {
   display: grid;

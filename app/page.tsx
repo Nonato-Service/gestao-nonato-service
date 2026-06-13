@@ -33443,154 +33443,93 @@ onKeyPress={(e) => {
                     const fluxoPendenteFinanceiro = relatorioServicoFluxoFinanceiroPendente(
                       fechamentoFluxoFinanceiroPorRelatorioId[relatorio.id]
                     )
+                    const faseCard = getResumoCobrancaVisualClass(relatorio.id)
+                    const cobrancaPendente = faseCard === 'laranja'
+                    const cardClassName = [
+                      'relatorio-servico-report-card',
+                      'rs-card',
+                      fluxoPendenteFinanceiro && 'relatorio-servico-report-card--fluxo-pendente',
+                      cobrancaPendente && 'relatorio-servico-report-card--cobranca-pendente',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')
+                    const clienteNomeClassName = [
+                      'relatorio-servico-report-card__cliente-nome',
+                      'rs-card-cliente-nome',
+                      cobrancaPendente && 'rs-card-cliente-nome--pulse',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')
+                    const btnPulseClass = cobrancaPendente ? ' relatorio-servico-card-btn--pulse' : ''
                     return (
                       <div 
                         key={relatorio.id} 
-                        className={`relatorio-servico-report-card${fluxoPendenteFinanceiro ? ' relatorio-servico-report-card--fluxo-pendente' : ''}`}
+                        className={cardClassName}
                         title={
                           fluxoPendenteFinanceiro
                             ? (safeT as any)?.clienteRelatorioDividaTooltip ||
                               'Relatório com fluxo «não pago» / devedor. Ao regularizar, o destaque some.'
-                            : undefined
+                            : cobrancaPendente
+                              ? (safeT as any)?.resumoCobrancaDicaClique ||
+                                'Toque no resumo para indicar se deve cobrar ao cliente.'
+                              : undefined
                         }
-                        style={{ 
-                          ...glassCardStyle(ACCENT_GREEN, { padding: '15px', radius: '12px', borderAlpha: 0.2 }),
-                          position: 'relative',
-                          overflow: 'visible',
-                          minWidth: 0,
-                          maxWidth: '100%',
-                          height: 'fit-content',
-                          alignSelf: 'start',
-                          boxSizing: 'border-box',
-                          ...(fluxoPendenteFinanceiro
-                            ? {
-                                backgroundColor: 'rgba(45, 18, 18, 0.55)',
-                                border: '1px solid rgba(248, 113, 113, 0.38)',
-                              }
-                            : {}),
-                        }}
-                        onMouseEnter={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, true)}
-                        onMouseLeave={(e) => glassCardHover(e.currentTarget, ACCENT_GREEN, false)}
                       >
-                        {/* Indicador de Status — fluxo normal (evita sobrepor número/cliente em ecrãs estreitos) */}
-                        <div
-                          className="relatorio-servico-report-card__badges"
-                          style={{
-                            display: 'flex',
-                            gap: '4px',
-                            flexWrap: 'wrap',
-                            justifyContent: 'flex-end',
-                            marginBottom: '10px',
-                            minWidth: 0,
-                          }}
-                        >
+                        <div className="rs-card-header">
+                          <div className="rs-card-header__meta">
+                            <span className="rs-card-os-chip">{relatorio.numero || '—'}</span>
+                            <time className="rs-card-date-chip">{dataFormatada}</time>
+                          </div>
+                          <div className="relatorio-servico-report-card__badges rs-card-badges">
                           {fechamentosGuardadosBibliotecaIds.includes(relatorio.id) &&
                             !relatorio.servicoConcluido && (
                               <span
+                                className="rs-badge rs-badge--bib"
                                 title={
                                   (safeT as any)?.relatorioBibliotecaAguardaConclusao ||
                                   'Na Biblioteca, mas continua na lista até marcar «Serviço concluído».'
                                 }
-                                style={{
-                                  padding: '3px 8px',
-                                  backgroundColor: 'rgba(0, 150, 255, 0.25)',
-                                  color: '#7dd3fc',
-                                  border: '1px solid rgba(0, 180, 255, 0.5)',
-                                  borderRadius: '10px',
-                                  fontSize: '9px',
-                                  fontWeight: 'bold',
-                                }}
                               >
-                                📚 {(safeT as any)?.badgeBibliotecaAguardaConclusao || 'Bib. — aguarda conclusão'}
+                                <span className="rs-badge__ico" aria-hidden>📚</span>
+                                {(safeT as any)?.badgeBibliotecaAguardaConclusao || 'Bib. — aguarda conclusão'}
                               </span>
                             )}
                           {relatorio.servicoConcluido && (
-                            <span style={{
-                              padding: '3px 8px',
-                              backgroundColor: '#00ff00',
-                              color: '#000',
-                              borderRadius: '10px',
-                              fontSize: '9px',
-                              fontWeight: 'bold',
-                              boxShadow: '0 2px 8px rgba(0, 255, 0, 0.3)'
-                            }}>
-                              ✓ {safeT?.concluido || 'Concluído'}
+                            <span className="rs-badge rs-badge--ok">
+                              <span className="rs-badge__ico" aria-hidden>✓</span>
+                              {safeT?.concluido || 'Concluído'}
                             </span>
                           )}
                           {relatorio.retornoNecessario && (
-                            <span style={{
-                              padding: '3px 8px',
-                              backgroundColor: '#ffaa00',
-                              color: '#000',
-                              borderRadius: '10px',
-                              fontSize: '9px',
-                              fontWeight: 'bold',
-                              boxShadow: '0 2px 8px rgba(255, 165, 0, 0.3)'
-                            }}>
-                              ↻ {safeT?.retorno || 'Retorno'}
+                            <span className="rs-badge rs-badge--warn">
+                              <span className="rs-badge__ico" aria-hidden>↻</span>
+                              {safeT?.retorno || 'Retorno'}
                             </span>
                           )}
                           {relatorio.necessarioTrocaPecas && (
-                            <span style={{
-                              padding: '3px 8px',
-                              backgroundColor: '#ff4444',
-                              color: '#fff',
-                              borderRadius: '10px',
-                              fontSize: '9px',
-                              fontWeight: 'bold',
-                              boxShadow: '0 2px 8px rgba(255, 68, 68, 0.3)'
-                            }}>
-                              ⚙ {safeT?.pecas || 'Peças'}
+                            <span className="rs-badge rs-badge--pecas">
+                              <span className="rs-badge__ico" aria-hidden>⚙</span>
+                              {safeT?.pecas || 'Peças'}
                             </span>
                           )}
                           {relatorio.equipamentoOrigem === 'armazem' && (
-                            <span style={{
-                              padding: '3px 8px',
-                              backgroundColor: 'rgba(0, 150, 255, 0.1)',
-                              color: '#ffffff',
-                              borderRadius: '10px',
-                              fontSize: '9px',
-                              fontWeight: 'bold',
-                              border: '1px solid rgba(0, 150, 255, 0.58)'
-                            }}>
+                            <span className="rs-badge rs-badge--armazem">
                               {(safeT as any)?.badgeEquipamentoArmazem || '🏭 Armazém'}
                             </span>
                           )}
+                          </div>
                         </div>
 
-                        {/* Identificação — data, n.º e cliente com rótulos */}
-                        <div className="relatorio-servico-report-card__ident">
-                          <div className="relatorio-servico-report-card__ident-grid">
-                            <div style={{ minWidth: 0 }}>
-                              <span className="relatorio-servico-report-card__field-label">{safeT?.data || 'Data'}</span>
-                              <p className="relatorio-servico-report-card__field-value">{dataFormatada}</p>
-                            </div>
-                            <div style={{ minWidth: 0 }}>
-                              <span className="relatorio-servico-report-card__field-label">{safeT?.numeroRelatorio || 'N.º relatório'}</span>
-                              <p className="relatorio-servico-report-card__field-value relatorio-servico-report-card__field-value--numero">{relatorio.numero || '—'}</p>
-                            </div>
-                          </div>
+                        <div className="relatorio-servico-report-card__ident rs-card-ident">
                           <div style={{ minWidth: 0 }}>
                             <span className="relatorio-servico-report-card__field-label">{safeT?.cliente || 'Cliente'}</span>
-                            <p
-                              className="relatorio-servico-report-card__cliente-nome"
-                              style={{
-                                fontSize: 'clamp(15px, 3.5vw, 18px)',
-                                color: '#f5f5f5',
-                                fontWeight: 600,
-                                lineHeight: 1.38,
-                                letterSpacing: '0.02em',
-                                textTransform: 'none',
-                                fontVariantLigatures: 'none',
-                              }}
-                            >
+                            <p className={clienteNomeClassName}>
                               {(relatorio.cliente && String(relatorio.cliente).trim()) || '—'}
                             </p>
                           </div>
                         </div>
 
-                        {/* Detalhes — técnico, local, contacto, tipo e equipamento (sempre visíveis quando vazio: — ) */}
-                        <div className="relatorio-servico-report-card__detalhes">
+                        <div className="relatorio-servico-report-card__detalhes rs-card-detalhes">
                           <div style={{ minWidth: 0 }}>
                             <span className="relatorio-servico-report-card__field-label">{safeT?.tecnico || 'Técnico'}</span>
                             <p className="relatorio-servico-report-card__field-value" style={{ fontWeight: 500 }}>
@@ -33632,13 +33571,14 @@ onKeyPress={(e) => {
                         {/* Resumo de Trabalho — mesmos estados laranja/azul/verde que no formulário (cobrar / fechamento) */}
                         {relatorio.diasTrabalho.length > 0 ? (() => {
                           const ridCard = relatorio.id
-                          const faseCard = getResumoCobrancaVisualClass(ridCard)
                           const wrapCard =
                             faseCard === 'verde'
                               ? 'relatorio-resumo-cobranca-wrap--verde'
                               : faseCard === 'azul'
                                 ? 'relatorio-resumo-cobranca-wrap--azul'
-                                : 'relatorio-resumo-cobranca-wrap--laranja'
+                                : faseCard === 'biblioteca'
+                                  ? 'relatorio-resumo-cobranca-wrap--biblioteca'
+                                  : 'relatorio-resumo-cobranca-wrap--laranja'
                           const diasLbl = (() => {
                             const d = String(safeT?.dias || 'dias').trim()
                             return d ? d.charAt(0).toUpperCase() + d.slice(1) : 'Dias'
@@ -33721,36 +33661,16 @@ onKeyPress={(e) => {
 
                         {/* Peças Substituídas */}
                         {relatorio.pecasSubstituicao.length > 0 && (
-                          <div style={{
-                            ...glassCardStyle({ r: 220, g: 72, b: 72 }, { padding: '10px', radius: '8px', borderAlpha: 0.32 }),
-                            marginBottom: '15px'
-                          }}>
-                            <p style={{
-                              fontSize: '11px',
-                              color: '#ffffff',
-                              fontWeight: 'bold',
-                              margin: 0,
-                              opacity: 0.95
-                            }}>
-                              ⚙️ {relatorio.pecasSubstituicao.length} {safeT?.pecasSubstituicao || 'Peça(s) Substituída(s)'}
-                            </p>
+                          <div className="rs-card-pecas-chip">
+                            <span className="rs-card-pecas-chip__ico" aria-hidden>⚙</span>
+                            {relatorio.pecasSubstituicao.length} {safeT?.pecasSubstituicao || 'Peça(s) Substituída(s)'}
                           </div>
                         )}
 
-                        {/* Botões de Ação */}
-                        <div style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '8px',
-                          marginTop: '15px',
-                          paddingTop: '15px',
-                          borderTop: '1px solid rgba(0, 255, 0, 0.24)',
-                          position: 'relative',
-                          zIndex: 3,
-                        }}>
-                          {/* Primeira linha: Dropdown e Editar */}
+                        <div className="rs-card-acoes">
                           <div className="relatorio-servico-card-acoes-linha">
                             <select
+                              className={`rs-card-select${btnPulseClass}`}
                               value={getPdfModelForRelatorio(relatorio.id)}
                               onChange={(e) => {
                                 e.stopPropagation()
@@ -33758,15 +33678,6 @@ onKeyPress={(e) => {
                               }}
                               onClick={(e) => e.stopPropagation()}
                               onMouseDown={(e) => e.stopPropagation()}
-                              style={{
-                                padding: '8px',
-                                fontSize: '11px',
-                                backgroundColor: 'rgba(20, 20, 20, 0.45)',
-                                color: '#ffffff',
-                                border: '1px solid rgba(0, 150, 255, 0.65)',
-                                borderRadius: '4px',
-                                cursor: 'pointer'
-                              }}
                               title={(safeT as Record<string, string>).relatorioPdfModeloCartaoTitle || safeT?.selecioneModeloPDF || 'Selecione o modelo de PDF'}
                             >
                               <optgroup label={safeT?.relatorioPdfOptgroupRecomendados || 'Recomendados para cliente'}>
@@ -33789,131 +33700,49 @@ onKeyPress={(e) => {
                               </optgroup>
                             </select>
                             <button 
-                              className="btn-primary" 
+                              className={`relatorio-servico-card-btn relatorio-servico-card-btn--edit${btnPulseClass}`}
                               type="button"
                               onClick={(e) => {
                                 e.preventDefault()
                                 e.stopPropagation()
                                 handleEditRelatorioServico(relatorio)
                               }} 
-                              style={{ 
-                                height: '36px',
-                                padding: '8px 6px', 
-                                fontSize: '11px',
-                                fontWeight: 'bold',
-                                backgroundColor: 'rgba(26, 28, 26, 0.92)',
-                                border: '2px solid rgba(255, 170, 0, 0.75)',
-                                color: '#ffaa00',
-                                display: 'flex',
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '6px',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                transition: 'border-color 0.2s ease, background-color 0.2s ease',
-                                boxSizing: 'border-box',
-                                letterSpacing: '0.5px',
-                                WebkitTapHighlightColor: 'transparent',
-                                touchAction: 'manipulation',
-                                position: 'relative',
-                                zIndex: 2,
-                              }}
                               title={safeT?.edit || 'Editar'}
                             >
-                              <span style={{ fontSize: '16px', lineHeight: '1' }}>✏️</span>
-                              <span style={{ lineHeight: '1.3', whiteSpace: 'nowrap', fontSize: '11px', fontWeight: 'bold', color: '#ffaa00' }}>{safeT?.edit || 'Editar'}</span>
+                              <span className="rs-btn-ico" aria-hidden>✏</span>
+                              <span>{safeT?.edit || 'Editar'}</span>
                             </button>
                           </div>
                           
-                          {/* Segunda linha: Ver e Gerar PDF */}
                           <div className="relatorio-servico-card-acoes-linha">
                             <button 
-                              className="btn-primary" 
+                              className={`relatorio-servico-card-btn relatorio-servico-card-btn--view${btnPulseClass}`}
                               type="button"
                               onClick={() => setViewingRelatorioServico(resolverRelatorioServicoDono(relatorio))} 
-                              style={{ 
-                                height: '36px',
-                                padding: '6px', 
-                                fontSize: '10px',
-                                fontWeight: 'bold',
-                                backgroundColor: 'rgba(18, 52, 24, 0.96)',
-                                border: '1px solid rgba(0, 200, 80, 0.55)',
-                                color: '#ffffff',
-                                display: 'flex',
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '5px',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                transition: 'border-color 0.2s ease, background-color 0.2s ease',
-                                boxSizing: 'border-box',
-                                letterSpacing: '0.5px'
-                              }}
                               title={safeT?.view || 'Ver'}
                             >
-                              <span style={{ fontSize: '14px', lineHeight: '1' }}>👁️</span>
-                              <span style={{ lineHeight: '1.3', whiteSpace: 'nowrap', fontSize: '10px', fontWeight: 'bold', color: '#ffffff' }}>{safeT?.view || 'Ver'}</span>
+                              <span className="rs-btn-ico" aria-hidden>👁</span>
+                              <span>{safeT?.view || 'Ver'}</span>
                             </button>
                             <button 
-                              className="btn-primary" 
+                              className={`relatorio-servico-card-btn relatorio-servico-card-btn--pdf${btnPulseClass}`}
                               type="button"
                               onClick={() => handlePrintRelatorio(relatorio, getPdfModelForRelatorio(relatorio.id))} 
-                              style={{ 
-                                height: '36px',
-                                padding: '6px', 
-                                fontSize: '10px',
-                                fontWeight: 'bold',
-                                backgroundColor: 'rgba(18, 38, 62, 0.96)',
-                                border: '1px solid rgba(80, 160, 255, 0.55)',
-                                color: '#ffffff',
-                                display: 'flex',
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '5px',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                transition: 'border-color 0.2s ease, background-color 0.2s ease',
-                                boxSizing: 'border-box',
-                                letterSpacing: '0.5px'
-                              }}
                               title={safeT?.gerarPDF || 'Gerar PDF'}
                             >
-                              <span style={{ fontSize: '14px', lineHeight: '1' }}>📄</span>
-                              <span style={{ lineHeight: '1.3', whiteSpace: 'nowrap', fontSize: '10px', fontWeight: 'bold', color: '#ffffff' }}>{safeT?.gerarPDF || 'Gerar PDF'}</span>
+                              <span className="rs-btn-ico" aria-hidden>📄</span>
+                              <span>{safeT?.gerarPDF || 'Gerar PDF'}</span>
                             </button>
                           </div>
                           
-                          {/* Terceira linha: Excluir */}
                           <button 
-                            className="btn-danger" 
+                            className={`relatorio-servico-card-btn relatorio-servico-card-btn--delete${btnPulseClass}`}
+                            type="button"
                             onClick={() => handleDeleteRelatorioServico(relatorio.id)} 
-                            style={{ 
-                              width: '100%',
-                              height: '36px',
-                              padding: '6px', 
-                              fontSize: '10px',
-                              fontWeight: 'bold',
-                              backgroundColor: 'rgba(52, 22, 22, 0.96)',
-                              border: '1px solid rgba(255, 100, 100, 0.5)',
-                              color: '#ffffff',
-                              display: 'flex',
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: '5px',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              transition: 'border-color 0.2s ease, background-color 0.2s ease',
-                              boxSizing: 'border-box',
-                              letterSpacing: '0.5px'
-                            }}
                             title={safeT?.delete || 'Excluir'}
                           >
-                            <span style={{ fontSize: '14px', lineHeight: '1' }}>🗑️</span>
-                            <span style={{ lineHeight: '1.3', whiteSpace: 'nowrap', fontSize: '10px', fontWeight: 'bold', color: '#ffffff' }}>{safeT?.delete || 'Excluir'}</span>
+                            <span className="rs-btn-ico" aria-hidden>🗑</span>
+                            <span>{safeT?.delete || 'Excluir'}</span>
                           </button>
                         </div>
                       </div>
