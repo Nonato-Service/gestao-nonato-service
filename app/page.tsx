@@ -6355,6 +6355,7 @@ export default function Dashboard() {
   const [showFornecedorForm, setShowFornecedorForm] = useState(false)
   const [editingFornecedor, setEditingFornecedor] = useState<Fornecedor | null>(null)
   const [buscaFornecedor, setBuscaFornecedor] = useState('')
+  const [fornecedorListaDetalheId, setFornecedorListaDetalheId] = useState<string | null>(null)
   
   // Estado para pedidos de separação no almoxarifado
   const [pedidosSeparacao, setPedidosSeparacao] = useState<Array<{
@@ -13496,6 +13497,7 @@ export default function Dashboard() {
   }
 
   const handleAddFornecedor = () => {
+    setFornecedorListaDetalheId(null)
     setEditingFornecedor(null)
     setFornecedorForm({
       nomeEmpresa: '',
@@ -35332,13 +35334,37 @@ onKeyPress={(e) => {
         )
       
       case 'fornecedores':
-        const fornecedoresFiltrados = fornecedores.filter(fornecedor => 
-          fornecedor.nomeEmpresa.toLowerCase().includes(buscaFornecedor.toLowerCase()) ||
-          fornecedor.localidade?.toLowerCase().includes(buscaFornecedor.toLowerCase()) ||
-          fornecedor.telefones?.toLowerCase().includes(buscaFornecedor.toLowerCase()) ||
-          fornecedor.email?.toLowerCase().includes(buscaFornecedor.toLowerCase()) ||
-          fornecedor.contato?.toLowerCase().includes(buscaFornecedor.toLowerCase())
-        )
+        const fornecedoresFiltrados = fornecedores
+          .filter(fornecedor =>
+            fornecedor.nomeEmpresa.toLowerCase().includes(buscaFornecedor.toLowerCase()) ||
+            fornecedor.localidade?.toLowerCase().includes(buscaFornecedor.toLowerCase()) ||
+            fornecedor.telefones?.toLowerCase().includes(buscaFornecedor.toLowerCase()) ||
+            fornecedor.email?.toLowerCase().includes(buscaFornecedor.toLowerCase()) ||
+            fornecedor.contato?.toLowerCase().includes(buscaFornecedor.toLowerCase())
+          )
+          .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
+        const getFornecedorLetraAlfabeto = (nome: string): string => {
+          const n = (nome || '').trim()
+          if (!n) return '#'
+          const ch = n[0].toUpperCase()
+          const base = ch.normalize('NFD').replace(/\p{M}/gu, '')
+          if (/[A-Z]/.test(base)) return base
+          return '#'
+        }
+        const fornecedoresPorLetra = new Map<string, typeof fornecedoresFiltrados>()
+        for (const f of fornecedoresFiltrados) {
+          const letra = getFornecedorLetraAlfabeto(f.nomeEmpresa)
+          if (!fornecedoresPorLetra.has(letra)) fornecedoresPorLetra.set(letra, [])
+          fornecedoresPorLetra.get(letra)!.push(f)
+        }
+        const fornecedoresLetrasOrdem = [...fornecedoresPorLetra.keys()].sort((a, b) => {
+          if (a === '#') return 1
+          if (b === '#') return -1
+          return a.localeCompare(b, 'pt-BR')
+        })
+        const fornecedoresParaDetalhe = fornecedorListaDetalheId
+          ? fornecedoresFiltrados.filter(f => f.id === fornecedorListaDetalheId)
+          : []
         
         return (
           <div className="tab-content-wrapper tab-glass-root">
@@ -35452,7 +35478,10 @@ onKeyPress={(e) => {
                     type="text"
                     placeholder={`🔍 ${safeT?.buscarFornecedor || 'Buscar fornecedor por nome, localidade, telefone, e-mail ou contato...'}`}
                     value={buscaFornecedor}
-                    onChange={(e) => setBuscaFornecedor(e.target.value)}
+                    onChange={(e) => {
+                      setBuscaFornecedor(e.target.value)
+                      setFornecedorListaDetalheId(null)
+                    }}
                     style={{ 
                       width: '100%', 
                       padding: '12px 40px 12px 16px', 
@@ -35619,6 +35648,7 @@ onKeyPress={(e) => {
                   </button>
                   <button className="btn-primary" onClick={() => { 
                     setShowFornecedorForm(false); 
+                    setFornecedorListaDetalheId(null);
                     setEditingFornecedor(null); 
                     setFornecedorForm({ 
                       nomeEmpresa: '', 
@@ -35652,10 +35682,71 @@ onKeyPress={(e) => {
                 {safeT?.mostrando || 'Mostrando'} {fornecedoresFiltrados.length} {safeT?.de || 'de'} {fornecedores.length} {safeT?.fornecedores || 'fornecedor(es)'}
               </div>
             )}
-            
-            {fornecedoresFiltrados.length > 0 && (
+
+            {fornecedoresFiltrados.length > 0 && !fornecedorListaDetalheId && (
+              <div className="clientes-alfa-wrap">
+                {fornecedoresLetrasOrdem.length > 1 && (
+                  <nav
+                    className="clientes-alfa-jump"
+                    aria-label={(safeT as any)?.clientesAlfabetoIndice || 'Índice A–Z'}
+                  >
+                    {fornecedoresLetrasOrdem.map(letra => (
+                      <a
+                        key={letra}
+                        href={`#fornecedores-letra-${letra}`}
+                        className="clientes-alfa-jump-link"
+                      >
+                        {letra === '#' ? '#' : letra}
+                      </a>
+                    ))}
+                  </nav>
+                )}
+                {fornecedoresLetrasOrdem.map(letra => (
+                  <section
+                    key={letra}
+                    id={`fornecedores-letra-${letra}`}
+                    className="clientes-alfa-secao"
+                  >
+                    <h3 className="clientes-alfa-letra">
+                      {letra === '#'
+                        ? (safeT as any)?.clientesAlfabetoOutros || 'Outros'
+                        : letra}
+                    </h3>
+                    <ul className="clientes-alfa-nomes">
+                      {(fornecedoresPorLetra.get(letra) ?? []).map(f => (
+                        <li key={f.id}>
+                          <button
+                            type="button"
+                            className="clientes-alfa-nome-btn"
+                            onClick={() => setFornecedorListaDetalheId(f.id)}
+                          >
+                            {f.nomeEmpresa}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ))}
+              </div>
+            )}
+
+            {fornecedoresFiltrados.length > 0 && fornecedorListaDetalheId && (
+              <div>
+                <button
+                  type="button"
+                  className="btn-secondary clientes-alfa-voltar"
+                  onClick={() => setFornecedorListaDetalheId(null)}
+                  style={{ marginBottom: '14px' }}
+                >
+                  ← {(safeT as any)?.clientesAlfabetoVoltarLista || 'Voltar à lista por letra'}
+                </button>
+                {fornecedoresParaDetalhe.length === 0 ? (
+                  <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>
+                    {(safeT as any)?.fornecedorNaoEncontrado || 'Fornecedor não encontrado'}
+                  </p>
+                ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '15px' }}>
-                {fornecedoresFiltrados.map(fornecedor => {
+                {fornecedoresParaDetalhe.map(fornecedor => {
                   // Agrupar faturas por cliente e calcular status
                   const faturasPorCliente = new Map<string, FaturaFornecedor[]>()
                   fornecedor.faturas?.forEach(fatura => {
@@ -35924,6 +36015,8 @@ onKeyPress={(e) => {
                     </div>
                   )
                 })}
+              </div>
+                )}
               </div>
             )}
           </div>
