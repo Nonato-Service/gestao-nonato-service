@@ -55,7 +55,7 @@ import {
   getKv,
   deleteAllNonatoKvFromIdb,
 } from './utils/manuaisIndexedDb'
-import { WritingAssistFab, WritingLanguageAssistModal } from './components/WritingLanguageAssistModal'
+import { WritingLanguageAssistModal } from './components/WritingLanguageAssistModal'
 import { WritingAssistFieldContext } from './context/WritingAssistFieldContext'
 import { AssistTextarea, AssistInput } from './components/AssistTextFields'
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
@@ -65188,12 +65188,6 @@ A1;Peça exemplo;10`}
             'Gere a tradução e escolha qual texto aplicar ao campo.',
         }}
       />
-      <WritingAssistFab
-        onClick={openWritingAssistStandalone}
-        title={(safeT as any)?.writingAssistFabTitle || 'Assistente de escrita'}
-        hasBottomTabs={openTabs.length > 0}
-        isCompact={isCompactLayout}
-      />
       {/* Barra superior: apenas em modo demo mostra aviso (botão Administrador / Backup está na barra lateral) */}
       {isDemoMode && (
         <div className="app-top-bar" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '8px 16px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '1px solid rgba(0, 255, 0, 0.4)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
@@ -66898,6 +66892,33 @@ A1;Peça exemplo;10`}
                     </span>
                   ) : null
                 })()}
+              </button>
+
+              {/* Assistente de escrita (dois idiomas) */}
+              <button
+                type="button"
+                className="btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry"
+                onClick={() => openWritingAssistStandalone()}
+                title={(safeT as any)?.writingAssistFabTitle || 'Assistente de escrita (Ctrl+Shift+L)'}
+              >
+                <span className="sidebar-empresa-entry-row">
+                  <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                    ✍️
+                  </span>
+                  <span className="sidebar-empresa-entry-text">
+                    <span className="sidebar-empresa-entry-title">
+                      {(safeT as any)?.writingAssistSidebarBtn || 'Assistente de escrita'}
+                    </span>
+                  </span>
+                </span>
+                <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                  ›
+                </span>
+                {((safeT as any)?.writingAssistSidebarDesc || '').trim() ? (
+                  <span className="sidebar-tip-bubble" role="tooltip">
+                    {(safeT as any)?.writingAssistSidebarDesc}
+                  </span>
+                ) : null}
               </button>
 
               {/* Botão Manual de Uso do Gestor Nonato Service */}
