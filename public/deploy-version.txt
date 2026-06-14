@@ -1,3 +1,2 @@
-deploy=2026-06-14T19:45
-commit=deploy-fix-nixpacks
-biblia=sem-2026
+deploy=2026-06-14-restore-docker
+commit=restore-deploy-config
