@@ -21,46 +21,51 @@
       <stop offset="0%" stop-color="#ffffff"/>
       <stop offset="100%" stop-color="#f1f5f9"/>
     </linearGradient>
-    <filter id="bookShadow" x="-15%" y="-10%" width="130%" height="130%">
-      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.45"/>
-    </filter>
+    <clipPath id="frameClip">
+      <rect x="68" y="68" width="376" height="376" rx="66"/>
+    </clipPath>
   </defs>
 
   <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <rect x="56" y="56" width="400" height="400" rx="72" fill="#0f1012" stroke="url(#frame)" stroke-width="12"/>
+  <rect x="56" y="56" width="400" height="400" rx="72" fill="#0f1012"/>
+  <rect x="56" y="56" width="400" height="400" rx="72" fill="none" stroke="url(#frame)" stroke-width="12"/>
 
-  <!-- Bíblia fechada -->
-  <g filter="url(#bookShadow)" transform="translate(88, 118)">
-    <rect x="0" y="8" width="28" height="220" rx="6" fill="#14532d"/>
-    <rect x="4" y="8" width="8" height="220" rx="3" fill="#22c55e" opacity="0.35"/>
-    <rect x="28" y="0" width="118" height="228" rx="10" fill="url(#cover)" stroke="#86efac" stroke-width="4"/>
-    <rect x="42" y="14" width="90" height="200" rx="6" fill="none" stroke="#4ade80" stroke-width="2" opacity="0.45"/>
-    <rect x="78" y="68" width="14" height="92" rx="4" fill="#fde68a"/>
-    <rect x="58" y="104" width="54" height="14" rx="4" fill="#fde68a"/>
-    <rect x="142" y="18" width="10" height="192" rx="3" fill="#e2e8f0"/>
-    <rect x="150" y="24" width="6" height="180" rx="2" fill="#cbd5e1"/>
+  <g clip-path="url(#frameClip)">
+    <!-- Bíblia fechada -->
+    <g transform="translate(98, 138)">
+      <rect x="0" y="6" width="24" height="200" rx="5" fill="#14532d"/>
+      <rect x="3" y="6" width="7" height="200" rx="2.5" fill="#22c55e" opacity="0.35"/>
+      <rect x="24" y="0" width="108" height="206" rx="9" fill="url(#cover)" stroke="#86efac" stroke-width="3"/>
+      <rect x="36" y="12" width="84" height="182" rx="5" fill="none" stroke="#4ade80" stroke-width="2" opacity="0.45"/>
+      <rect x="68" y="62" width="12" height="82" rx="3.5" fill="#fde68a"/>
+      <rect x="50" y="96" width="48" height="12" rx="3.5" fill="#fde68a"/>
+      <rect x="128" y="14" width="8" height="178" rx="2.5" fill="#e2e8f0"/>
+    </g>
+
+    <!-- Bíblia aberta -->
+    <g transform="translate(268, 138)">
+      <path d="M66 5 C66 5 66 0 66 0 L66 206 L0 206 L0 26 Q33 5 66 5 Z" fill="url(#pageL)"/>
+      <path d="M66 0 C66 0 66 5 66 5 C99 5 132 26 132 26 L132 206 L66 206 L66 0 Z" fill="url(#pageR)"/>
+      <path d="M66 0 Q99 6 132 26 L66 26 Z" fill="#ecfdf5" opacity="0.85"/>
+      <rect x="59" y="0" width="14" height="206" rx="3.5" fill="#14532d"/>
+      <rect x="62" y="0" width="5" height="206" rx="2" fill="#22c55e" opacity="0.45"/>
+      <line x1="14" y1="48" x2="52" y2="48" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+      <line x1="14" y1="70" x2="52" y2="70" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+      <line x1="14" y1="92" x2="46" y2="92" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+      <line x1="14" y1="114" x2="52" y2="114" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+      <line x1="14" y1="136" x2="44" y2="136" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+      <line x1="80" y1="48" x2="118" y2="48" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+      <line x1="80" y1="70" x2="118" y2="70" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+      <line x1="80" y1="92" x2="112" y2="92" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+      <line x1="80" y1="114" x2="118" y2="114" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+      <line x1="80" y1="136" x2="110" y2="136" stroke="#94a3b8" stroke-width="5" stroke-linecap="round"/>
+      <path d="M0 194 L66 194 L66 206 L0 206 Z" fill="#16a34a"/>
+      <path d="M66 194 L132 194 L132 206 L66 206 Z" fill="#15803d"/>
+    </g>
   </g>
 
-  <!-- Bíblia aberta -->
-  <g filter="url(#bookShadow)" transform="translate(262, 118)">
-    <path d="M72 6 C72 6 72 0 72 0 L72 228 L0 228 L0 28 Q36 6 72 6 Z" fill="url(#pageL)"/>
-    <path d="M72 0 C72 0 72 6 72 6 C108 6 144 28 144 28 L144 228 L72 228 L72 0 Z" fill="url(#pageR)"/>
-    <path d="M72 0 Q108 8 144 28 L72 28 Z" fill="#ecfdf5" opacity="0.85"/>
-    <rect x="64" y="0" width="16" height="228" rx="4" fill="#14532d"/>
-    <rect x="68" y="0" width="6" height="228" rx="2" fill="#22c55e" opacity="0.45"/>
-    <line x1="16" y1="52" x2="56" y2="52" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
-    <line x1="16" y1="76" x2="56" y2="76" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
-    <line x1="16" y1="100" x2="50" y2="100" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
-    <line x1="16" y1="124" x2="56" y2="124" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
-    <line x1="16" y1="148" x2="48" y2="148" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
-    <line x1="88" y1="52" x2="128" y2="52" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
-    <line x1="88" y1="76" x2="128" y2="76" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
-    <line x1="88" y1="100" x2="122" y2="100" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
-    <line x1="88" y1="124" x2="128" y2="124" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
-    <line x1="88" y1="148" x2="120" y2="148" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
-    <path d="M0 214 L72 214 L72 228 L0 228 Z" fill="#16a34a"/>
-    <path d="M72 214 L144 214 L144 228 L72 228 Z" fill="#15803d"/>
-  </g>
+  <!-- Contorno por cima -->
+  <rect x="56" y="56" width="400" height="400" rx="72" fill="none" stroke="url(#frame)" stroke-width="12" pointer-events="none"/>
 
   <text x="256" y="438" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="52" font-weight="800" fill="#ffffff">BÍBLIA</text>
 </svg>
