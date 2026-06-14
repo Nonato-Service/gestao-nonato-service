@@ -19,7 +19,10 @@ export function hasRealAppSession(request: NextRequest): boolean {
   try {
     const { getAppSessionFromRequest } = require('../auth/appAuth') as typeof import('../auth/appAuth')
     const user = getAppSessionFromRequest(request)
-    return Boolean(user && user.id !== 'demo-visitor')
+    if (!user) return false
+    if (user.isDemoGuest) return false
+    if (user.id === 'demo-visitor' || user.id.startsWith('demo-recipient-')) return false
+    return true
   } catch {
     return false
   }

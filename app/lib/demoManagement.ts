@@ -24,6 +24,10 @@ export type DemoRecipientRecord = {
   demoPreset?: string
   /** Dias de validade após o primeiro «Aceitar e entrar» (definido por si ao criar o link). */
   demoDays?: number
+  /** Utilizador gerado automaticamente para o destinatário entrar na demo. */
+  demoUsuario?: string
+  /** Senha gerada automaticamente (visível só para o administrador). */
+  demoSenha?: string
 }
 
 export type DemoRecipientStatus = 'pendente' | 'ativo' | 'a-expirar' | 'expirado'
@@ -282,9 +286,19 @@ export function getDemoPresetLabel(preset?: string): string {
     case 'partial': return 'Demo parcial'
     case 'gestao-nucleo': return 'Gestão (Custos, Fin., Ind., Com.)'
     case 'tecnica-clientes': return 'Gestão técnica + clientes'
-    case 'custom': return 'Personalizada'
+    case 'completo': return 'Envio completo'
+    case 'custom': return 'Personalizada (módulo a módulo)'
     default: return 'Padrão'
   }
+}
+
+/** Todos os módulos editáveis activos; administrador e extras permanecem ocultos. */
+export function buildDemoModulesComplete(): Record<string, DemoModuleMode> {
+  const out: Record<string, DemoModuleMode> = {}
+  for (const action of FULL_DEMO_ACTION_KEYS) {
+    out[action] = DEMO_HIDDEN_ACTIONS.has(action) ? 'hidden' : 'active'
+  }
+  return out
 }
 
 export function buildDemoModulesFromPreset(
@@ -399,27 +413,49 @@ export function enrichDemoRecipients(
     .sort((a, b) => new Date(b.dataEnvio).getTime() - new Date(a.dataEnvio).getTime())
 }
 
-export function buildDemoShareMessage(nome: string, link: string, demoDays = DEMO_DAYS_DEFAULT): string {
+export function buildDemoShareMessage(
+  nome: string,
+  link: string,
+  demoDays = DEMO_DAYS_DEFAULT,
+  creds?: { demoUsuario?: string; demoSenha?: string }
+): string {
   const quem = nome.trim() || 'cliente'
   const dias = clampDemoDays(demoDays)
+  const credBlock =
+    creds?.demoUsuario && creds?.demoSenha
+      ? `Utilizador: ${creds.demoUsuario}\nSenha: ${creds.demoSenha}\n\n`
+      : ''
   return (
     `Olá ${quem}! Segue o acesso Gestor Demo do sistema NONATO SERVICE (${dias} dia${dias === 1 ? '' : 's'}):\n\n` +
     `${link}\n\n` +
-    `1) Abra o link\n2) Clique em «Aceitar e entrar»\n3) Explore o sistema — os dados ficam isolados.\n\n` +
+    credBlock +
+    `1) Abra o link ou entre com utilizador e senha\n2) Clique em «Aceitar e entrar» (se usar o link)\n3) Explore o sistema — os dados ficam isolados.\n\n` +
     `NONATO SERVICE`
   )
 }
 
-export function buildDemoMailto(email: string, nome: string, link: string, demoDays = DEMO_DAYS_DEFAULT): string {
+export function buildDemoMailto(
+  email: string,
+  nome: string,
+  link: string,
+  demoDays = DEMO_DAYS_DEFAULT,
+  creds?: { demoUsuario?: string; demoSenha?: string }
+): string {
   const dias = clampDemoDays(demoDays)
   const assunto = `Demonstração NONATO SERVICE — ${dias} dia${dias === 1 ? '' : 's'}`
-  const corpo = buildDemoShareMessage(nome, link, dias)
+  const corpo = buildDemoShareMessage(nome, link, dias, creds)
   const to = email.trim()
   return `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`
 }
 
-export function buildDemoWhatsAppUrl(nome: string, link: string, phone?: string): string {
-  const msg = encodeURIComponent(buildDemoShareMessage(nome, link))
+export function buildDemoWhatsAppUrl(
+  nome: string,
+  link: string,
+  phone?: string,
+  creds?: { demoUsuario?: string; demoSenha?: string },
+  demoDays = DEMO_DAYS_DEFAULT
+): string {
+  const msg = encodeURIComponent(buildDemoShareMessage(nome, link, demoDays, creds))
   const digits = (phone || '').replace(/\D/g, '')
   if (digits.length >= 8) return `https://wa.me/${digits}?text=${msg}`
   return `https://wa.me/?text=${msg}`

@@ -801,6 +801,8 @@ type User = {
   name: string
   email: string
   role: string
+  isDemoGuest?: boolean
+  demoRecipientId?: string
   linkedProfileType?: 'gestor' | 'tecnico' | ''
   linkedProfileId?: string
   password?: string
@@ -7800,7 +7802,9 @@ export default function Dashboard() {
     fetch('/api/auth/status', { credentials: 'include' })
       .then((r) => r.json())
       .then((auth: { authenticated?: boolean; user?: User }) => {
-        const isRealAuth = Boolean(auth.authenticated && auth.user && auth.user.id !== 'demo-visitor')
+        const isRealAuth = Boolean(
+          auth.authenticated && auth.user && !auth.user.isDemoGuest && auth.user.id !== 'demo-visitor'
+        )
         if (isRealAuth && auth.user) {
           clearDemoCookiesClient()
           void fetch('/api/demo/clear', { credentials: 'include' }).catch(() => {})
@@ -7849,7 +7853,11 @@ export default function Dashboard() {
               setDemoModuleConfig(d.demoModules || {})
 
               if (d.isDemo && !d.expired) {
-                setLoginUser({ ...DEMO_VISITOR_USER } as User)
+                if (auth.authenticated && auth.user) {
+                  setLoginUser(auth.user)
+                } else {
+                  setLoginUser({ ...DEMO_VISITOR_USER } as User)
+                }
                 setShowSplashInicial(false)
                 setShowPasswordScreen(false)
               } else if (d.expired) {
@@ -7935,7 +7943,7 @@ export default function Dashboard() {
           const authBoot = await fetch('/api/auth/status', { credentials: 'include', cache: 'no-store' })
           if (authBoot.ok) {
             const authData = (await authBoot.json()) as { authenticated?: boolean; user?: { id?: string } }
-            if (authData.authenticated && authData.user?.id && authData.user.id !== 'demo-visitor') {
+            if (authData.authenticated && authData.user?.id && !authData.user.isDemoGuest && authData.user.id !== 'demo-visitor') {
               skipDemoBootstrap = true
               document.cookie = 'nonato_demo=; path=/; max-age=0'
               document.cookie = 'nonato_demo_start=; path=/; max-age=0'
@@ -64870,6 +64878,7 @@ A1;Peça exemplo;10`}
         ok?: boolean
         user?: User
         bootstrap?: boolean
+        demoGuest?: boolean
         message?: string
         error?: string
       }
@@ -64891,12 +64900,14 @@ A1;Peça exemplo;10`}
       setShowSplashInicial(false)
       setLoginUsuarioInput('')
       setSenhaInicialInput('')
-      document.cookie = 'nonato_demo=; path=/; max-age=0'
-      document.cookie = 'nonato_demo_start=; path=/; max-age=0'
-      document.cookie = 'nonato_demo_recipient=; path=/; max-age=0'
-      document.cookie = 'nonato_demo_modules=; path=/; max-age=0'
-      document.cookie = 'nonato_demo_days=; path=/; max-age=0'
-      document.cookie = 'nonato_demo_guest=; path=/; max-age=0'
+      if (!data.demoGuest) {
+        document.cookie = 'nonato_demo=; path=/; max-age=0'
+        document.cookie = 'nonato_demo_start=; path=/; max-age=0'
+        document.cookie = 'nonato_demo_recipient=; path=/; max-age=0'
+        document.cookie = 'nonato_demo_modules=; path=/; max-age=0'
+        document.cookie = 'nonato_demo_days=; path=/; max-age=0'
+        document.cookie = 'nonato_demo_guest=; path=/; max-age=0'
+      }
       if (data.bootstrap) {
         window.alert(
           'Primeiro acesso detectado. Configure utilizadores e senhas no Administrador o quanto antes.'

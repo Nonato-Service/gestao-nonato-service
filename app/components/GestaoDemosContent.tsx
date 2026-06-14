@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   buildDemoMailto,
+  buildDemoModulesComplete,
   buildDemoModulesFromPreset,
   buildDemoShareMessage,
   buildDemoWhatsAppUrl,
@@ -28,6 +29,7 @@ import {
   resolveDemoDaysForRecipient,
   type DemoRecipientWithState,
 } from '../lib/demoManagement'
+import { buildDemoUsername, formatDemoCredentialsText, generateDemoAccessCredentials } from '../lib/demoCredentials'
 
 type Variant = 'full' | 'embedded' | 'compact'
 
@@ -43,6 +45,13 @@ type Props = {
 }
 
 type WizardStep = 'pacote' | 'destinatario' | 'enviados'
+type ModuleSelectionMode = 'pacote-completo' | 'modulo-a-modulo'
+
+const MODULE_MODE_LABELS: Record<DemoModuleMode, string> = {
+  active: 'Ativo',
+  teaser: 'Mostrar bloqueado',
+  hidden: 'Oculto',
+}
 
 const STATUS_LABELS: Record<DemoRecipientStatus, string> = {
   pendente: 'Aguardando entrada',
@@ -76,13 +85,16 @@ export function GestaoDemosContent({
   const [step, setStep] = useState<WizardStep>(variant === 'compact' ? 'destinatario' : 'pacote')
   const [statusFilter, setStatusFilter] = useState<'todos' | DemoRecipientStatus>('todos')
   const [search, setSearch] = useState('')
-  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [moduleSelectionMode, setModuleSelectionMode] = useState<ModuleSelectionMode>('pacote-completo')
+  const [moduleWalkIndex, setModuleWalkIndex] = useState(0)
+  const [showFullModuleGrid, setShowFullModuleGrid] = useState(false)
   const [gridSearch, setGridSearch] = useState('')
   const [groupsExpanded, setGroupsExpanded] = useState<Record<DemoModuleGroupId, boolean>>({
     clientes: false, tecnica: false, gestao: false, outros: false,
   })
   const [lastCreated, setLastCreated] = useState<DemoRecipientWithState | null>(null)
   const [saving, setSaving] = useState(false)
+  const [revealedPasswordIds, setRevealedPasswordIds] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     if (!loadData) return
@@ -134,6 +146,7 @@ export function GestaoDemosContent({
         (r) =>
           r.nome.toLowerCase().includes(q) ||
           r.email.toLowerCase().includes(q) ||
+          (r.demoUsuario || '').toLowerCase().includes(q) ||
           (r.observacoes || '').toLowerCase().includes(q)
       )
     }
@@ -151,13 +164,59 @@ export function GestaoDemosContent({
     [enriched]
   )
 
+  const editableModuleKeys = DEMO_EDITABLE_ACTION_KEYS
+
   const applyPreset = (preset: DemoPresetCard) => {
+    setModuleSelectionMode('pacote-completo')
     setForm((prev) => ({
       ...prev,
       demoPreset: preset.id,
       demoModules: buildDemoModulesFromPreset(preset.id, preset.mode),
     }))
   }
+
+  const applyEnvioCompleto = () => {
+    setModuleSelectionMode('pacote-completo')
+    setForm((prev) => ({
+      ...prev,
+      demoPreset: 'completo',
+      demoModules: buildDemoModulesComplete(),
+    }))
+  }
+
+  const switchModuleSelectionMode = (mode: ModuleSelectionMode) => {
+    setModuleSelectionMode(mode)
+    setModuleWalkIndex(0)
+    setShowFullModuleGrid(false)
+    if (mode === 'modulo-a-modulo') {
+      setForm((prev) => ({
+        ...prev,
+        demoPreset: 'custom',
+        demoModules: Object.fromEntries(
+          editableModuleKeys.map((action) => [action, prev.demoModules[action] || 'teaser'])
+        ) as Record<string, DemoModuleMode>,
+      }))
+    }
+  }
+
+  const setModuleMode = (action: string, mode: DemoModuleMode) => {
+    setForm((prev) => ({
+      ...prev,
+      demoPreset: 'custom',
+      demoModules: { ...prev.demoModules, [action]: mode },
+    }))
+  }
+
+  const previewUsername = useMemo(() => {
+    if (!form.nome.trim()) return ''
+    const draftId = `demo-preview-${form.nome.trim().length}`
+    return buildDemoUsername(
+      form.nome,
+      form.email,
+      draftId,
+      recipients.map((r) => r.demoUsuario || '').filter(Boolean)
+    )
+  }, [form.nome, form.email, recipients])
 
   const handleAdd = async () => {
     if (!form.nome.trim()) {
@@ -166,8 +225,15 @@ export function GestaoDemosContent({
     }
     if (saving) return
     setSaving(true)
+    const id = 'demo-' + Date.now()
+    const { demoUsuario, demoSenha } = generateDemoAccessCredentials(
+      form.nome,
+      form.email,
+      id,
+      recipients.map((r) => r.demoUsuario || '').filter(Boolean)
+    )
     const novo: DemoRecipientRecord = {
-      id: 'demo-' + Date.now(),
+      id,
       nome: form.nome.trim(),
       email: form.email.trim(),
       dataEnvio: new Date().toISOString(),
@@ -175,6 +241,8 @@ export function GestaoDemosContent({
       demoDays: resolveDemoDaysForRecipient({ demoDays: form.demoDays }),
       demoModules: form.demoModules,
       demoPreset: form.demoPreset || 'custom',
+      demoUsuario,
+      demoSenha,
     }
     const updated = [...recipients, novo]
     const saved = await persist(updated, { awaitServer: true })
@@ -213,6 +281,18 @@ export function GestaoDemosContent({
     )
   }
 
+  const handleGenerateCredentials = async (id: string) => {
+    const item = recipients.find((x) => x.id === id)
+    if (!item) return
+    const { demoUsuario, demoSenha } = generateDemoAccessCredentials(
+      item.nome,
+      item.email,
+      item.id,
+      recipients.filter((r) => r.id !== id).map((r) => r.demoUsuario || '').filter(Boolean)
+    )
+    await persist(recipients.map((entry) => (entry.id === id ? { ...entry, demoUsuario, demoSenha } : entry)))
+  }
+
   const handleReset = async (id: string) => {
     if (!window.confirm('Resetar esta demo e aguardar novo primeiro acesso?')) return
     await persist(
@@ -225,7 +305,7 @@ export function GestaoDemosContent({
   }
 
   const stepTabs: { id: WizardStep; label: string; num: string }[] = [
-    { id: 'pacote', label: 'Pacote', num: '1' },
+    { id: 'pacote', label: 'Módulos', num: '1' },
     { id: 'destinatario', label: 'Destinatário', num: '2' },
     { id: 'enviados', label: 'Enviados', num: '3' },
   ]
@@ -281,15 +361,72 @@ export function GestaoDemosContent({
       </div>
     ) : null
 
-  const renderPacoteStep = () => (
-    <div style={panelStyle}>
-      <h4 style={{ margin: '0 0 8px', color: '#8cd8ff', fontSize: compact ? '13px' : '15px' }}>Escolha o pacote de demonstração</h4>
-      <p style={{ fontSize: '12px', opacity: 0.75, marginBottom: '14px', lineHeight: 1.5 }}>
-        Perfil actual: <strong style={{ color: '#7dffb3' }}>{getDemoPresetLabel(form.demoPreset)}</strong>
-        {' · '}
-        {countActiveModules(form.demoModules)} módulos activos
+  const renderModuleModeSelector = () => (
+    <div style={{ display: 'grid', gridTemplateColumns: compact ? '1fr' : '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
+      {([
+        {
+          id: 'pacote-completo' as const,
+          title: 'Envio completo (pacote)',
+          desc: 'Escolha um perfil pronto ou todos os módulos de uma vez',
+          icon: '📦',
+        },
+        {
+          id: 'modulo-a-modulo' as const,
+          title: 'Passo a passo (item a item)',
+          desc: 'Configure cada módulo um de cada vez, no seu ritmo',
+          icon: '🧩',
+        },
+      ]).map((opt) => {
+        const selected = moduleSelectionMode === opt.id
+        return (
+          <button
+            key={opt.id}
+            type="button"
+            onClick={() => switchModuleSelectionMode(opt.id)}
+            style={{
+              textAlign: 'left',
+              padding: '14px',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              border: selected ? '2px solid rgba(0,255,140,0.55)' : '1px solid rgba(255,255,255,0.12)',
+              background: selected ? 'rgba(0,255,140,0.1)' : 'rgba(255,255,255,0.03)',
+              color: '#fff',
+            }}
+          >
+            <div style={{ fontSize: '24px', marginBottom: '6px' }}>{opt.icon}</div>
+            <div style={{ fontWeight: 700, marginBottom: '4px' }}>{opt.title}</div>
+            <div style={{ fontSize: '11px', opacity: 0.75, lineHeight: 1.45 }}>{opt.desc}</div>
+          </button>
+        )
+      })}
+    </div>
+  )
+
+  const renderPacoteCompleto = () => (
+    <>
+      <p style={{ fontSize: '12px', opacity: 0.75, marginBottom: '12px', lineHeight: 1.5 }}>
+        Escolha um pacote pronto ou active <strong>todos os módulos</strong> disponíveis para o cliente.
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: compact ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginBottom: '14px' }}>
+        <button
+          type="button"
+          onClick={applyEnvioCompleto}
+          style={{
+            textAlign: 'left',
+            padding: '14px',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            border: form.demoPreset === 'completo' ? '2px solid rgba(255,215,0,0.6)' : '1px solid rgba(255,215,0,0.25)',
+            background: form.demoPreset === 'completo' ? 'rgba(255,215,0,0.1)' : 'rgba(255,255,255,0.03)',
+            color: '#fff',
+          }}
+        >
+          <div style={{ fontSize: '22px', marginBottom: '6px' }}>✨</div>
+          <div style={{ fontWeight: 700, marginBottom: '4px' }}>Envio completo</div>
+          <div style={{ fontSize: '11px', opacity: 0.72, lineHeight: 1.4 }}>
+            Todos os módulos activos ({editableModuleKeys.length} funções)
+          </div>
+        </button>
         {DEMO_PRESET_CARDS.map((card) => {
           const selected = form.demoPreset === card.id
           return (
@@ -314,19 +451,163 @@ export function GestaoDemosContent({
           )
         })}
       </div>
+      <button
+        type="button"
+        onClick={() => setShowFullModuleGrid((v) => !v)}
+        style={{ padding: '8px 14px', background: 'transparent', border: '1px solid rgba(0,180,255,0.35)', color: '#8cd8ff', borderRadius: '8px', cursor: 'pointer', fontSize: '12px' }}
+      >
+        {showFullModuleGrid ? '▼ Ocultar lista de módulos' : '▶ Ver ou ajustar módulos na lista'}
+      </button>
+      {showFullModuleGrid && renderAdvancedGrid()}
+    </>
+  )
+
+  const renderModuloAModulo = () => {
+    const total = editableModuleKeys.length
+    const safeIndex = Math.min(Math.max(moduleWalkIndex, 0), Math.max(total - 1, 0))
+    const currentAction = editableModuleKeys[safeIndex]
+    const currentMode = (currentAction && form.demoModules[currentAction]) || 'teaser'
+    const currentGroup = currentAction ? DEMO_MODULE_GROUP_LABELS[getDemoModuleGroupId(currentAction)] : ''
+
+    return (
+      <>
+        <p style={{ fontSize: '12px', opacity: 0.75, marginBottom: '12px', lineHeight: 1.5 }}>
+          Percorra cada módulo e defina se fica <strong>Ativo</strong>, <strong>bloqueado (teaser)</strong> ou <strong>Oculto</strong>.
+        </p>
+        <div style={{ marginBottom: '12px', padding: '10px 12px', borderRadius: '8px', background: 'rgba(0,180,255,0.08)', border: '1px solid rgba(0,180,255,0.2)', fontSize: '11px', opacity: 0.85 }}>
+          Progresso: <strong>{safeIndex + 1}</strong> de <strong>{total}</strong>
+          {' · '}
+          {countActiveModules(form.demoModules)} activos
+          {' · '}
+          {Object.values(form.demoModules).filter((m) => m === 'teaser').length} teaser
+          {' · '}
+          {Object.values(form.demoModules).filter((m) => m === 'hidden').length} ocultos
+        </div>
+        {currentAction && (
+          <div style={{ padding: compact ? '14px' : '20px', borderRadius: '12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(0,255,140,0.25)', marginBottom: '14px' }}>
+            <div style={{ fontSize: '11px', opacity: 0.65, marginBottom: '6px' }}>{currentGroup}</div>
+            <div style={{ fontSize: compact ? '15px' : '17px', fontWeight: 700, marginBottom: '14px', color: '#7dffb3' }}>
+              {getDemoModuleLabelForGrid(currentAction)}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: compact ? '1fr' : 'repeat(3, 1fr)', gap: '8px', marginBottom: '14px' }}>
+              {(['active', 'teaser', 'hidden'] as DemoModuleMode[]).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setModuleMode(currentAction, mode)}
+                  style={{
+                    padding: '12px 10px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                    fontSize: '12px',
+                    border: currentMode === mode ? '2px solid rgba(0,255,140,0.6)' : '1px solid rgba(255,255,255,0.15)',
+                    background:
+                      currentMode === mode
+                        ? mode === 'active'
+                          ? 'rgba(0,255,140,0.15)'
+                          : mode === 'teaser'
+                            ? 'rgba(255,180,0,0.12)'
+                            : 'rgba(255,80,80,0.1)'
+                        : 'rgba(255,255,255,0.03)',
+                    color: mode === 'active' ? '#7dffb3' : mode === 'teaser' ? '#ffd36a' : '#ff9b9b',
+                  }}
+                >
+                  {MODULE_MODE_LABELS[mode]}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                disabled={safeIndex <= 0}
+                onClick={() => setModuleWalkIndex((i) => Math.max(0, i - 1))}
+                style={{ padding: '8px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: '#ccc', borderRadius: '8px', cursor: safeIndex <= 0 ? 'not-allowed' : 'pointer', opacity: safeIndex <= 0 ? 0.5 : 1 }}
+              >
+                ← Anterior
+              </button>
+              <button
+                type="button"
+                disabled={safeIndex >= total - 1}
+                onClick={() => setModuleWalkIndex((i) => Math.min(total - 1, i + 1))}
+                style={{ padding: '8px 14px', background: '#00aa55', border: 'none', color: '#fff', borderRadius: '8px', fontWeight: 700, cursor: safeIndex >= total - 1 ? 'not-allowed' : 'pointer', opacity: safeIndex >= total - 1 ? 0.5 : 1 }}
+              >
+                Próximo →
+              </button>
+              {safeIndex < total - 1 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModuleMode(currentAction, 'active')
+                    setModuleWalkIndex((i) => Math.min(total - 1, i + 1))
+                  }}
+                  style={{ padding: '8px 14px', background: 'rgba(0,255,140,0.12)', border: '1px solid rgba(0,255,140,0.35)', color: '#7dffb3', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  Ativo e seguinte
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+          <button
+            type="button"
+            onClick={() =>
+              setForm((prev) => ({
+                ...prev,
+                demoPreset: 'custom',
+                demoModules: Object.fromEntries(editableModuleKeys.map((a) => [a, 'active'])) as Record<string, DemoModuleMode>,
+              }))
+            }
+            style={{ padding: '7px 12px', fontSize: '11px', background: 'rgba(0,255,140,0.1)', border: '1px solid rgba(0,255,140,0.3)', color: '#7dffb3', borderRadius: '6px', cursor: 'pointer' }}
+          >
+            Marcar todos Ativo
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              setForm((prev) => ({
+                ...prev,
+                demoPreset: 'custom',
+                demoModules: Object.fromEntries(editableModuleKeys.map((a) => [a, 'hidden'])) as Record<string, DemoModuleMode>,
+              }))
+            }
+            style={{ padding: '7px 12px', fontSize: '11px', background: 'rgba(255,80,80,0.08)', border: '1px solid rgba(255,80,80,0.3)', color: '#ff9b9b', borderRadius: '6px', cursor: 'pointer' }}
+          >
+            Marcar todos Oculto
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowFullModuleGrid((v) => !v)}
+            style={{ padding: '7px 12px', fontSize: '11px', background: 'transparent', border: '1px solid rgba(0,180,255,0.35)', color: '#8cd8ff', borderRadius: '6px', cursor: 'pointer' }}
+          >
+            {showFullModuleGrid ? 'Ocultar grelha' : 'Ver grelha completa'}
+          </button>
+        </div>
+        {showFullModuleGrid && renderAdvancedGrid()}
+      </>
+    )
+  }
+
+  const renderPacoteStep = () => (
+    <div style={panelStyle}>
+      <h4 style={{ margin: '0 0 8px', color: '#8cd8ff', fontSize: compact ? '13px' : '15px' }}>Escolha como configurar os módulos</h4>
+      <p style={{ fontSize: '12px', opacity: 0.75, marginBottom: '14px', lineHeight: 1.5 }}>
+        Perfil: <strong style={{ color: '#7dffb3' }}>{getDemoPresetLabel(form.demoPreset)}</strong>
+        {' · '}
+        {countActiveModules(form.demoModules)} módulos activos
+      </p>
+      {renderModuleModeSelector()}
+      {moduleSelectionMode === 'pacote-completo' ? renderPacoteCompleto() : renderModuloAModulo()}
       {!compact && (
-        <button type="button" onClick={() => setStep('destinatario')} style={{ padding: '10px 20px', background: '#00aa55', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}>
+        <button
+          type="button"
+          onClick={() => setStep('destinatario')}
+          style={{ marginTop: '14px', padding: '10px 20px', background: '#00aa55', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+        >
           Seguinte: destinatário →
         </button>
       )}
-      <button
-        type="button"
-        onClick={() => setShowAdvanced((v) => !v)}
-        style={{ marginLeft: compact ? 0 : '12px', marginTop: compact ? '8px' : 0, padding: '8px 14px', background: 'transparent', border: '1px solid rgba(0,180,255,0.35)', color: '#8cd8ff', borderRadius: '8px', cursor: 'pointer', fontSize: '12px' }}
-      >
-        {showAdvanced ? '▼ Ocultar ajuste avançado' : '▶ Ajuste avançado (módulo a módulo)'}
-      </button>
-      {showAdvanced && renderAdvancedGrid()}
     </div>
   )
 
@@ -368,13 +649,10 @@ export function GestaoDemosContent({
                       <div style={{ fontSize: '11px', fontWeight: 600, marginBottom: '6px' }}>{getDemoModuleLabelForGrid(module)}</div>
                       <select
                         value={form.demoModules[module] || 'teaser'}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            demoPreset: 'custom',
-                            demoModules: { ...prev.demoModules, [module]: e.target.value as DemoModuleMode },
-                          }))
-                        }
+                        onChange={(e) => {
+                          setModuleSelectionMode('modulo-a-modulo')
+                          setModuleMode(module, e.target.value as DemoModuleMode)
+                        }}
                         style={{ width: '100%', padding: '6px', background: '#141414', color: '#fff', border: '1px solid rgba(0,180,255,0.25)', borderRadius: '4px', fontSize: '11px' }}
                       >
                         <option value="active">Ativo</option>
@@ -388,6 +666,59 @@ export function GestaoDemosContent({
             </div>
           )
         })}
+      </div>
+    )
+  }
+
+  const renderCredentialsBlock = (recipient: Pick<DemoRecipientRecord, 'id' | 'demoUsuario' | 'demoSenha'>, opts?: { compact?: boolean; showCopy?: boolean }) => {
+    if (!recipient.demoUsuario || !recipient.demoSenha) return null
+    const revealed = revealedPasswordIds[recipient.id] ?? opts?.showCopy ?? false
+    return (
+      <div
+        style={{
+          marginTop: opts?.compact ? '8px' : '10px',
+          padding: '10px 12px',
+          borderRadius: '8px',
+          background: 'rgba(255,215,0,0.08)',
+          border: '1px solid rgba(255,215,0,0.28)',
+          fontSize: '12px',
+          lineHeight: 1.6,
+        }}
+      >
+        <strong style={{ color: '#ffd36a' }}>Acesso gerado</strong>
+        <div style={{ marginTop: '6px' }}>
+          Utilizador: <code style={{ color: '#fff' }}>{recipient.demoUsuario}</code>
+        </div>
+        <div>
+          Senha:{' '}
+          <code style={{ color: '#fff' }}>{revealed ? recipient.demoSenha : '••••••••'}</code>
+          {!opts?.showCopy && (
+            <button
+              type="button"
+              onClick={() => setRevealedPasswordIds((p) => ({ ...p, [recipient.id]: !revealed }))}
+              style={{ marginLeft: '8px', padding: '2px 8px', fontSize: '10px', background: 'transparent', border: '1px solid rgba(255,215,0,0.35)', color: '#ffd36a', borderRadius: '4px', cursor: 'pointer' }}
+            >
+              {revealed ? 'Ocultar' : 'Mostrar'}
+            </button>
+          )}
+        </div>
+        {opts?.showCopy !== false && (
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
+            <button type="button" onClick={() => copyText(recipient.demoUsuario!, 'Utilizador')} style={actionBtn('#ffd36a', 'rgba(255,215,0,0.1)', opts?.compact)}>
+              Copiar utilizador
+            </button>
+            <button type="button" onClick={() => copyText(recipient.demoSenha!, 'Senha')} style={actionBtn('#ffd36a', 'rgba(255,215,0,0.1)', opts?.compact)}>
+              Copiar senha
+            </button>
+            <button
+              type="button"
+              onClick={() => copyText(formatDemoCredentialsText(recipient), 'Credenciais')}
+              style={actionBtn('#7dffb3', 'rgba(0,255,140,0.1)', opts?.compact)}
+            >
+              Copiar ambos
+            </button>
+          </div>
+        )}
       </div>
     )
   }
@@ -417,8 +748,19 @@ export function GestaoDemosContent({
         <input type="text" placeholder="Observações" value={form.observacoes} onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))} style={inputStyle} />
       </div>
       <div style={{ fontSize: '11px', opacity: 0.7, marginBottom: '12px', lineHeight: 1.5 }}>
-        Pacote: <strong>{getDemoPresetLabel(form.demoPreset)}</strong> · Gestor Demo: <strong>{resolveDemoDaysForRecipient({ demoDays: form.demoDays })} dia(s)</strong> após «Aceitar e entrar»
+        Módulos: <strong>{getDemoPresetLabel(form.demoPreset)}</strong> ({countActiveModules(form.demoModules)} activos) · Validade: <strong>{resolveDemoDaysForRecipient({ demoDays: form.demoDays })} dia(s)</strong>
       </div>
+      {form.nome.trim() && (
+        <div style={{ marginBottom: '12px', padding: '10px 12px', borderRadius: '8px', background: 'rgba(255,215,0,0.06)', border: '1px dashed rgba(255,215,0,0.25)', fontSize: '11px', lineHeight: 1.55 }}>
+          Ao gerar o link, será criado automaticamente um utilizador de demo com base no nome/e-mail.
+          {previewUsername ? (
+            <>
+              {' '}
+              Pré-visualização do utilizador: <strong style={{ color: '#ffd36a' }}>{previewUsername}</strong> · a senha será gerada ao confirmar.
+            </>
+          ) : null}
+        </div>
+      )}
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         <button
           type="button"
@@ -439,7 +781,7 @@ export function GestaoDemosContent({
         </button>
         {!compact && (
           <button type="button" onClick={() => setStep('pacote')} style={{ padding: '10px 16px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#ccc', borderRadius: '8px', cursor: 'pointer' }}>
-            ← Voltar ao pacote
+            ← Voltar aos módulos
           </button>
         )}
       </div>
@@ -450,13 +792,57 @@ export function GestaoDemosContent({
     lastCreated ? (
       <div style={{ ...panelStyle, border: '2px solid rgba(0,255,140,0.4)', background: 'rgba(0,255,140,0.06)' }}>
         <h4 style={{ margin: '0 0 8px', color: '#7dffb3' }}>Link criado para {lastCreated.nome}</h4>
-        <p style={{ fontSize: '11px', wordBreak: 'break-all', opacity: 0.85, marginBottom: '12px' }}>{lastCreated.link}</p>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <p style={{ fontSize: '11px', wordBreak: 'break-all', opacity: 0.85, marginBottom: '8px' }}>{lastCreated.link}</p>
+        {renderCredentialsBlock(lastCreated, { showCopy: true })}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
           <button type="button" onClick={() => copyText(lastCreated.link, 'Link')} style={actionBtn('#8cc8ff', 'rgba(0,150,255,0.15)')}>📋 Copiar link</button>
-          <button type="button" onClick={() => copyText(buildDemoShareMessage(lastCreated.nome, lastCreated.link, resolveDemoDaysForRecipient(lastCreated)), 'Mensagem')} style={actionBtn('#7dffb3', 'rgba(0,255,140,0.12)')}>📝 Copiar mensagem</button>
-          <button type="button" onClick={() => window.open(buildDemoWhatsAppUrl(lastCreated.nome, lastCreated.link), '_blank', 'noopener,noreferrer')} style={actionBtn('#25d366', 'rgba(37,211,102,0.15)')}>💬 WhatsApp</button>
+          <button
+            type="button"
+            onClick={() =>
+              copyText(
+                buildDemoShareMessage(lastCreated.nome, lastCreated.link, resolveDemoDaysForRecipient(lastCreated), {
+                  demoUsuario: lastCreated.demoUsuario,
+                  demoSenha: lastCreated.demoSenha,
+                }),
+                'Mensagem'
+              )
+            }
+            style={actionBtn('#7dffb3', 'rgba(0,255,140,0.12)')}
+          >
+            📝 Copiar mensagem
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              window.open(
+                buildDemoWhatsAppUrl(lastCreated.nome, lastCreated.link, lastCreated.email, {
+                  demoUsuario: lastCreated.demoUsuario,
+                  demoSenha: lastCreated.demoSenha,
+                }, resolveDemoDaysForRecipient(lastCreated)),
+                '_blank',
+                'noopener,noreferrer'
+              )
+            }
+            style={actionBtn('#25d366', 'rgba(37,211,102,0.15)')}
+          >
+            💬 WhatsApp
+          </button>
           {lastCreated.email ? (
-            <button type="button" onClick={() => window.open(buildDemoMailto(lastCreated.email, lastCreated.nome, lastCreated.link, resolveDemoDaysForRecipient(lastCreated)), '_blank')} style={actionBtn('#ffd36a', 'rgba(255,180,0,0.12)')}>✉️ E-mail</button>
+            <button
+              type="button"
+              onClick={() =>
+                window.open(
+                  buildDemoMailto(lastCreated.email, lastCreated.nome, lastCreated.link, resolveDemoDaysForRecipient(lastCreated), {
+                    demoUsuario: lastCreated.demoUsuario,
+                    demoSenha: lastCreated.demoSenha,
+                  }),
+                  '_blank'
+                )
+              }
+              style={actionBtn('#ffd36a', 'rgba(255,180,0,0.12)')}
+            >
+              ✉️ E-mail
+            </button>
           ) : null}
           <button type="button" onClick={() => setLastCreated(null)} style={actionBtn('#999', 'rgba(255,255,255,0.06)')}>Fechar</button>
         </div>
@@ -503,6 +889,17 @@ export function GestaoDemosContent({
                   <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '10px', background: 'rgba(255,180,0,0.12)', color: '#ffd36a' }}>{resolveDemoDaysForRecipient(r)} dia(s)</span>
                 </div>
                 {r.email && <div style={{ fontSize: '12px', opacity: 0.8 }}>{r.email}</div>}
+                {r.demoUsuario && r.demoSenha ? (
+                  renderCredentialsBlock(r, { compact: true, showCopy: false })
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleGenerateCredentials(r.id)}
+                    style={{ marginTop: '8px', padding: '6px 10px', fontSize: '11px', background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.35)', color: '#ffd36a', borderRadius: '6px', cursor: 'pointer' }}
+                  >
+                    Gerar utilizador e senha
+                  </button>
+                )}
                 <div style={{ fontSize: '10px', opacity: 0.65, marginTop: '6px', lineHeight: 1.5 }}>
                   Enviado: {new Date(r.dataEnvio).toLocaleString('pt-PT')}
                   {r.firstAccessAt ? ` · Entrou: ${new Date(r.firstAccessAt).toLocaleString('pt-PT')}` : ' · Ainda não entrou'}
@@ -511,7 +908,7 @@ export function GestaoDemosContent({
               </div>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 <button type="button" onClick={() => copyText(r.link, 'Link')} style={actionBtn('#8cc8ff', 'rgba(0,150,255,0.12)', compact)}>📋</button>
-                <button type="button" onClick={() => window.open(buildDemoWhatsAppUrl(r.nome, r.link, r.email), '_blank', 'noopener,noreferrer')} style={actionBtn('#25d366', 'rgba(37,211,102,0.12)', compact)}>💬</button>
+                <button type="button" onClick={() => window.open(buildDemoWhatsAppUrl(r.nome, r.link, r.email, { demoUsuario: r.demoUsuario, demoSenha: r.demoSenha }, resolveDemoDaysForRecipient(r)), '_blank', 'noopener,noreferrer')} style={actionBtn('#25d366', 'rgba(37,211,102,0.12)', compact)}>💬</button>
                 <button type="button" onClick={() => handleRenew(r.id)} style={actionBtn('#7dffb3', 'rgba(0,255,140,0.1)', compact)} title={`Renovar ${resolveDemoDaysForRecipient(r)} dia(s)`}>↻</button>
                 {!compact && (
                   <button type="button" onClick={() => handleReset(r.id)} style={actionBtn('#ffd36a', 'rgba(255,180,0,0.1)', compact)} title="Resetar">⟲</button>
@@ -549,8 +946,8 @@ export function GestaoDemosContent({
       <div style={{ ...panelStyle, background: 'rgba(0,180,255,0.06)', border: '1px solid rgba(0,180,255,0.2)' }}>
         <strong style={{ color: '#8cd8ff' }}>Como enviar um Gestor Demo em 3 passos</strong>
         <ol style={{ margin: '8px 0 0', paddingLeft: '20px', fontSize: '12px', opacity: 0.85, lineHeight: 1.6 }}>
-          <li>Escolha o <strong>pacote</strong> (comercial, técnica, etc.)</li>
-          <li>Registe o <strong>destinatário</strong>, defina os <strong>dias de validade</strong> e gere o link</li>
+          <li>Escolha <strong>envio completo</strong> (pacote) ou <strong>módulo a módulo</strong></li>
+          <li>Registe o <strong>destinatário</strong> — o sistema gera <strong>utilizador e senha</strong> automaticamente</li>
           <li>Envie por <strong>WhatsApp, e-mail ou cópia</strong> — o sistema não envia automaticamente</li>
         </ol>
         <p style={{ fontSize: '11px', opacity: 0.65, margin: '8px 0 0' }}>Link base: {demoLinkBaseUrl}</p>

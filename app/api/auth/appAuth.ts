@@ -10,12 +10,14 @@ const SESSIONS_FILE = '_app-auth-sessions.json'
 const SESSION_DAYS = 7
 const SESSION_MAX_AGE = SESSION_DAYS * 24 * 60 * 60
 
-type StoredUser = {
+export type StoredUser = {
   id: string
   name: string
   email: string
   role: string
   isAdmin?: boolean
+  isDemoGuest?: boolean
+  demoRecipientId?: string
   linkedProfileType?: 'gestor' | 'tecnico' | ''
   linkedProfileId?: string
   permissions?: Record<string, boolean>
@@ -79,6 +81,8 @@ function toPublicUser(session: AppSession): StoredUser {
     email: session.email,
     role: session.role,
     isAdmin: session.isAdmin,
+    isDemoGuest: session.isDemoGuest,
+    demoRecipientId: session.demoRecipientId,
     linkedProfileType: session.linkedProfileType,
     linkedProfileId: session.linkedProfileId,
     permissions: session.permissions,

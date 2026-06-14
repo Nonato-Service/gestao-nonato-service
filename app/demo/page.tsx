@@ -9,18 +9,20 @@ export default function DemoWelcomePage() {
   const rid = searchParams.get('rid')?.trim()
   const [loading, setLoading] = useState(false)
   const [demoDays, setDemoDays] = useState(DEMO_DAYS_DEFAULT)
+  const [demoUsuario, setDemoUsuario] = useState<string | null>(null)
   const [invalidLink, setInvalidLink] = useState(!rid)
 
   useEffect(() => {
     if (!rid) return
     fetch(`/api/demo/activate?rid=${encodeURIComponent(rid)}&preview=1`, { credentials: 'include' })
       .then((r) => r.json())
-      .then((data: { demoDays?: number; found?: boolean }) => {
+      .then((data: { demoDays?: number; found?: boolean; demoUsuario?: string | null }) => {
         if (data.found === false) {
           setInvalidLink(true)
           return
         }
         if (typeof data.demoDays === 'number') setDemoDays(data.demoDays)
+        if (data.demoUsuario) setDemoUsuario(data.demoUsuario)
       })
       .catch(() => setInvalidLink(true))
   }, [rid])
@@ -102,9 +104,16 @@ export default function DemoWelcomePage() {
           </strong>{' '}
           após entrar.
         </p>
-        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.5, marginBottom: '32px' }}>
+        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.5, marginBottom: '16px' }}>
           Os dados desta demonstração ficam isolados. Ao clicar em «Aceitar e entrar», concorda com estes termos.
         </p>
+        {demoUsuario && (
+          <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.9rem', lineHeight: 1.55, marginBottom: '24px', padding: '12px', borderRadius: '10px', background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.25)' }}>
+            Utilizador de acesso: <strong style={{ color: '#ffd36a' }}>{demoUsuario}</strong>
+            <br />
+            A senha foi enviada pelo administrador (WhatsApp, e-mail ou mensagem).
+          </p>
+        )}
         <button
           type="button"
           onClick={handleActivate}
