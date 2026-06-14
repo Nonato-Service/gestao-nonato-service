@@ -1,4 +1,4 @@
-/** Lógica partilhada — gestão de envio de demonstrações (15 dias). */
+/** Lógica partilhada — gestão de envio de demonstrações (validade configurável). */
 
 export type DemoModuleMode = 'active' | 'teaser' | 'hidden'
 
@@ -22,6 +22,8 @@ export type DemoRecipientRecord = {
   activationCount?: number
   demoModules?: Record<string, DemoModuleMode>
   demoPreset?: string
+  /** Dias de validade após o primeiro «Aceitar e entrar» (definido por si ao criar o link). */
+  demoDays?: number
 }
 
 export type DemoRecipientStatus = 'pendente' | 'ativo' | 'a-expirar' | 'expirado'
@@ -32,15 +34,29 @@ export type DemoRecipientWithState = DemoRecipientRecord & {
   daysLeft: number | null
 }
 
-export const DEMO_DAYS = 15
+export const DEMO_DAYS_DEFAULT = 15
+export const DEMO_DAYS_MIN = 1
+export const DEMO_DAYS_MAX = 90
+/** Valor por omissão ao criar novos links (retrocompatível com código existente). */
+export const DEMO_DAYS = DEMO_DAYS_DEFAULT
 export const DEMO_RECIPIENTS_KEY = 'nonato-demo-link-recipients'
 
-/** Utilizador limitado — apenas modo demonstração (sem acesso de administrador real). */
+export function clampDemoDays(value: unknown): number {
+  const n = typeof value === 'number' ? value : parseInt(String(value ?? ''), 10)
+  if (!Number.isFinite(n)) return DEMO_DAYS_DEFAULT
+  return Math.min(DEMO_DAYS_MAX, Math.max(DEMO_DAYS_MIN, Math.round(n)))
+}
+
+export function resolveDemoDaysForRecipient(recipient?: { demoDays?: number } | null): number {
+  return clampDemoDays(recipient?.demoDays)
+}
+
+/** Utilizador limitado — Gestor Demo (sem acesso de administrador real). */
 export const DEMO_VISITOR_USER = {
   id: 'demo-visitor',
-  name: 'Visitante (demonstração)',
+  name: 'Gestor Demo',
   email: '',
-  role: 'Demonstração',
+  role: 'Gestor (Demonstração)',
   isAdmin: false,
   permissions: {
     gestores: true,
@@ -344,7 +360,14 @@ export function createDefaultDemoLinkForm() {
       return [action, mode]
     })
   ) as Record<string, DemoModuleMode>
-  return { nome: '', email: '', observacoes: '', demoModules, demoPreset: 'commercial' as DemoPackagePreset | 'custom' }
+  return {
+    nome: '',
+    email: '',
+    observacoes: '',
+    demoDays: DEMO_DAYS_DEFAULT,
+    demoModules,
+    demoPreset: 'commercial' as DemoPackagePreset | 'custom',
+  }
 }
 
 export function enrichDemoRecipients(
@@ -355,11 +378,12 @@ export function enrichDemoRecipients(
   return recipients
     .map((recipient) => {
       const link = `${demoLinkBaseUrl}?rid=${encodeURIComponent(recipient.id)}`
+      const demoDays = resolveDemoDaysForRecipient(recipient)
       const dataBaseAtivacao = recipient.firstAccessAt || recipient.dataEnvio
       const dataBaseMs = new Date(dataBaseAtivacao).getTime()
       const dataExpiracao =
         recipient.dataExpiracao ||
-        (dataBaseMs ? new Date(dataBaseMs + DEMO_DAYS * 24 * 60 * 60 * 1000).toISOString() : undefined)
+        (dataBaseMs ? new Date(dataBaseMs + demoDays * 24 * 60 * 60 * 1000).toISOString() : undefined)
       const expiracaoMs = dataExpiracao ? new Date(dataExpiracao).getTime() : NaN
       const diffMs = isNaN(expiracaoMs) ? NaN : expiracaoMs - agora
       const daysLeft = isNaN(diffMs) ? null : Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)))
@@ -375,19 +399,21 @@ export function enrichDemoRecipients(
     .sort((a, b) => new Date(b.dataEnvio).getTime() - new Date(a.dataEnvio).getTime())
 }
 
-export function buildDemoShareMessage(nome: string, link: string): string {
+export function buildDemoShareMessage(nome: string, link: string, demoDays = DEMO_DAYS_DEFAULT): string {
   const quem = nome.trim() || 'cliente'
+  const dias = clampDemoDays(demoDays)
   return (
-    `Olá ${quem}! Segue o acesso de demonstração do sistema NONATO SERVICE (${DEMO_DAYS} dias):\n\n` +
+    `Olá ${quem}! Segue o acesso Gestor Demo do sistema NONATO SERVICE (${dias} dia${dias === 1 ? '' : 's'}):\n\n` +
     `${link}\n\n` +
     `1) Abra o link\n2) Clique em «Aceitar e entrar»\n3) Explore o sistema — os dados ficam isolados.\n\n` +
     `NONATO SERVICE`
   )
 }
 
-export function buildDemoMailto(email: string, nome: string, link: string): string {
-  const assunto = 'Demonstração NONATO SERVICE — 15 dias'
-  const corpo = buildDemoShareMessage(nome, link)
+export function buildDemoMailto(email: string, nome: string, link: string, demoDays = DEMO_DAYS_DEFAULT): string {
+  const dias = clampDemoDays(demoDays)
+  const assunto = `Demonstração NONATO SERVICE — ${dias} dia${dias === 1 ? '' : 's'}`
+  const corpo = buildDemoShareMessage(nome, link, dias)
   const to = email.trim()
   return `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`
 }

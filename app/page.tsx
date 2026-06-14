@@ -7784,7 +7784,7 @@ export default function Dashboard() {
     }
   }, [activeTabId, openTabs])
 
-  // Verificar modo DEMO (dados isolados, 15 dias, sem export/backup) e sessão autenticada
+  // Verificar modo DEMO — nunca misturar com sessão autenticada do programa principal
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -7793,63 +7793,75 @@ export default function Dashboard() {
       document.cookie = 'nonato_demo_start=; path=/; max-age=0'
       document.cookie = 'nonato_demo_recipient=; path=/; max-age=0'
       document.cookie = 'nonato_demo_modules=; path=/; max-age=0'
+      document.cookie = 'nonato_demo_days=; path=/; max-age=0'
       document.cookie = 'nonato_demo_guest=; path=/; max-age=0'
     }
 
-    Promise.all([
-      fetch('/api/demo/status', { credentials: 'include' }).then((r) => r.json()),
-      fetch('/api/auth/status', { credentials: 'include' }).then((r) => r.json()),
-    ])
-      .then(
-        ([d, auth]: [
-          {
-            isDemo: boolean
-            expired: boolean
-            daysLeft: number | null
-            demoModules?: Record<string, DemoModuleMode>
-            guestLock?: boolean
-          },
-          { authenticated?: boolean; user?: User },
-        ]) => {
-          if (d.guestLock && !d.isDemo && !auth.authenticated) {
-            window.location.replace('/demo/encerrado')
-            return
-          }
-
-          const isRealAuth =
-            Boolean(auth.authenticated && auth.user && auth.user.id !== 'demo-visitor')
-          setOwnerAuthenticated(isRealAuth)
-
-          if (isRealAuth && auth.user) {
-            clearDemoCookiesClient()
-            setIsDemoMode(false)
-            setDemoExpired(false)
-            setDemoDaysLeft(null)
-            setDemoModuleConfig({})
-            setLoginUser(auth.user)
-            setShowSplashInicial(false)
-            setShowPasswordScreen(false)
-            return
-          }
-
-          setIsDemoMode(Boolean(d.isDemo && !d.expired))
-          setDemoExpired(d.expired)
-          setDemoDaysLeft(d.daysLeft)
-          setDemoModuleConfig(d.demoModules || {})
-
-          if (d.isDemo && !d.expired) {
-            setLoginUser({ ...DEMO_VISITOR_USER } as User)
-            setShowSplashInicial(false)
-            setShowPasswordScreen(false)
-          } else if (d.expired) {
-            clearDemoCookiesClient()
-          } else if (auth.authenticated && auth.user) {
-            setLoginUser(auth.user)
-            setShowSplashInicial(false)
-            setShowPasswordScreen(false)
-          }
+    fetch('/api/auth/status', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((auth: { authenticated?: boolean; user?: User }) => {
+        const isRealAuth = Boolean(auth.authenticated && auth.user && auth.user.id !== 'demo-visitor')
+        if (isRealAuth && auth.user) {
+          clearDemoCookiesClient()
+          void fetch('/api/demo/clear', { credentials: 'include' }).catch(() => {})
+          setOwnerAuthenticated(true)
+          setIsDemoMode(false)
+          setDemoExpired(false)
+          setDemoDaysLeft(null)
+          setDemoModuleConfig({})
+          setLoginUser(auth.user)
+          setShowSplashInicial(false)
+          setShowPasswordScreen(false)
+          return
         }
-      )
+
+        return fetch('/api/demo/status', { credentials: 'include' })
+          .then((r) => r.json())
+          .then(
+            (d: {
+              isDemo: boolean
+              expired: boolean
+              daysLeft: number | null
+              demoModules?: Record<string, DemoModuleMode>
+              guestLock?: boolean
+              productionMode?: boolean
+            }) => {
+              if (d.productionMode) {
+                clearDemoCookiesClient()
+                setIsDemoMode(false)
+                setDemoExpired(false)
+                setDemoDaysLeft(null)
+                setDemoModuleConfig({})
+                setOwnerAuthenticated(false)
+                return
+              }
+
+              setOwnerAuthenticated(false)
+
+              if (d.guestLock && !d.isDemo) {
+                window.location.replace('/demo/encerrado')
+                return
+              }
+
+              setIsDemoMode(Boolean(d.isDemo && !d.expired))
+              setDemoExpired(d.expired)
+              setDemoDaysLeft(d.daysLeft)
+              setDemoModuleConfig(d.demoModules || {})
+
+              if (d.isDemo && !d.expired) {
+                setLoginUser({ ...DEMO_VISITOR_USER } as User)
+                setShowSplashInicial(false)
+                setShowPasswordScreen(false)
+              } else if (d.expired) {
+                clearDemoCookiesClient()
+              } else if (auth.authenticated && auth.user) {
+                setLoginUser(auth.user)
+                setShowSplashInicial(false)
+                setShowPasswordScreen(false)
+              }
+            }
+          )
+      })
       .catch(() => {})
   }, [])
 
@@ -7919,21 +7931,46 @@ export default function Dashboard() {
       }
       if (typeof window !== 'undefined') {
         try {
-          const demoRes = await fetch('/api/demo/status', { credentials: 'include', cache: 'no-store' })
-          if (demoRes.ok) {
-            const demoSt = (await demoRes.json()) as { isDemo?: boolean; expired?: boolean; guestLock?: boolean }
-            if (demoSt.guestLock && !demoSt.isDemo) {
-              window.location.replace('/demo/encerrado')
-              return
+          let skipDemoBootstrap = false
+          const authBoot = await fetch('/api/auth/status', { credentials: 'include', cache: 'no-store' })
+          if (authBoot.ok) {
+            const authData = (await authBoot.json()) as { authenticated?: boolean; user?: { id?: string } }
+            if (authData.authenticated && authData.user?.id && authData.user.id !== 'demo-visitor') {
+              skipDemoBootstrap = true
+              document.cookie = 'nonato_demo=; path=/; max-age=0'
+              document.cookie = 'nonato_demo_start=; path=/; max-age=0'
+              document.cookie = 'nonato_demo_recipient=; path=/; max-age=0'
+              document.cookie = 'nonato_demo_modules=; path=/; max-age=0'
+              document.cookie = 'nonato_demo_days=; path=/; max-age=0'
+              document.cookie = 'nonato_demo_guest=; path=/; max-age=0'
+              void fetch('/api/demo/clear', { credentials: 'include' }).catch(() => {})
             }
-            const postDemoWipe = document.cookie.split(';').some((c) => c.trim().startsWith('nonato_post_demo_wipe=1'))
-            if (demoSt.isDemo && !demoSt.expired) {
-              await wipeLocalNonatoForBootstrap(true)
-              preferServerOnlyAfterFullPullWipe = true
-            } else if (postDemoWipe && !demoSt.isDemo && !demoSt.guestLock) {
-              await wipeLocalNonatoForBootstrap(true)
-              preferServerOnlyAfterFullPullWipe = true
-              document.cookie = 'nonato_post_demo_wipe=; path=/; max-age=0'
+          }
+          if (!skipDemoBootstrap) {
+            const demoRes = await fetch('/api/demo/status', { credentials: 'include', cache: 'no-store' })
+            if (demoRes.ok) {
+              const demoSt = (await demoRes.json()) as {
+                isDemo?: boolean
+                expired?: boolean
+                guestLock?: boolean
+                productionMode?: boolean
+              }
+              if (demoSt.productionMode) {
+                /* sessão real — não apagar dados locais por causa de demo */
+              } else if (demoSt.guestLock && !demoSt.isDemo) {
+                window.location.replace('/demo/encerrado')
+                return
+              } else {
+                const postDemoWipe = document.cookie.split(';').some((c) => c.trim().startsWith('nonato_post_demo_wipe=1'))
+                if (demoSt.isDemo && !demoSt.expired) {
+                  await wipeLocalNonatoForBootstrap(true)
+                  preferServerOnlyAfterFullPullWipe = true
+                } else if (postDemoWipe && !demoSt.isDemo && !demoSt.guestLock) {
+                  await wipeLocalNonatoForBootstrap(true)
+                  preferServerOnlyAfterFullPullWipe = true
+                  document.cookie = 'nonato_post_demo_wipe=; path=/; max-age=0'
+                }
+              }
             }
           }
         } catch {
@@ -64858,6 +64895,7 @@ A1;Peça exemplo;10`}
       document.cookie = 'nonato_demo_start=; path=/; max-age=0'
       document.cookie = 'nonato_demo_recipient=; path=/; max-age=0'
       document.cookie = 'nonato_demo_modules=; path=/; max-age=0'
+      document.cookie = 'nonato_demo_days=; path=/; max-age=0'
       document.cookie = 'nonato_demo_guest=; path=/; max-age=0'
       if (data.bootstrap) {
         window.alert(
@@ -65062,7 +65100,7 @@ A1;Peça exemplo;10`}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'linear-gradient(135deg, #0d1a0d 0%, #1a2a1a 100%)', color: '#fff', padding: '40px', textAlign: 'center' }}>
         <h1 style={{ color: '#ff6b6b', marginBottom: '20px', fontSize: '24px' }}>Demonstração expirada</h1>
         <p style={{ opacity: 0.9, marginBottom: '30px', maxWidth: '400px' }}>
-          O período de 15 dias de demonstração terminou. Entre em contacto para obter acesso completo.
+          O período de demonstração terminou. Entre em contacto para obter acesso completo.
         </p>
         <a href="/" style={{ padding: '12px 24px', backgroundColor: '#00ff00', color: '#000', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold' }}>
           Voltar ao início
@@ -65137,7 +65175,7 @@ A1;Peça exemplo;10`}
       {/* Barra superior: apenas em modo demo mostra aviso (botão Administrador / Backup está na barra lateral) */}
       {isDemoMode && (
         <div className="app-top-bar" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, padding: '8px 16px', background: 'rgba(0, 255, 0, 0.15)', borderBottom: '1px solid rgba(0, 255, 0, 0.4)', color: '#00ff00', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <span>🔒 Modo demonstração • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : '15 dias'} • Dados isolados • Sem exportação nem backup</span>
+          <span>🔒 Gestor Demo • {demoDaysLeft !== null ? `${demoDaysLeft} dias restantes` : 'Demonstração'} • Dados isolados • Sem exportação nem backup</span>
           {ownerAuthenticated ? (
             <a href="/api/demo/exit" style={{ color: '#fff', textDecoration: 'underline', fontWeight: '600' }}>
               Sair da demonstração (voltar ao modo normal)

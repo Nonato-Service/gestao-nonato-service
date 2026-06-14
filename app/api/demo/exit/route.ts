@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPublicOrigin } from '../../getPublicOrigin'
 import { getAppSessionFromRequest } from '../../auth/appAuth'
 import { clearDemoSessionCookiesOnResponse, COOKIE_DEMO_GUEST } from '../../data/demo-context'
+import { DEMO_DAYS_MAX } from '../../../lib/demoManagement'
 
-const DEMO_DAYS = 15
-const COOKIE_MAX_AGE = DEMO_DAYS * 24 * 60 * 60
+const COOKIE_MAX_AGE = DEMO_DAYS_MAX * 24 * 60 * 60
 
 export const dynamic = 'force-dynamic'
 

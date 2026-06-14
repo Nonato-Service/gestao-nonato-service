@@ -1,32 +1,70 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { DEMO_DAYS_DEFAULT } from '../lib/demoManagement'
 
 export default function DemoWelcomePage() {
   const searchParams = useSearchParams()
   const rid = searchParams.get('rid')?.trim()
-  const activateHref = rid ? `/api/demo/activate?rid=${encodeURIComponent(rid)}` : '/api/demo/activate'
   const [loading, setLoading] = useState(false)
+  const [demoDays, setDemoDays] = useState(DEMO_DAYS_DEFAULT)
+  const [invalidLink, setInvalidLink] = useState(!rid)
+
+  useEffect(() => {
+    if (!rid) return
+    fetch(`/api/demo/activate?rid=${encodeURIComponent(rid)}&preview=1`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((data: { demoDays?: number; found?: boolean }) => {
+        if (data.found === false) {
+          setInvalidLink(true)
+          return
+        }
+        if (typeof data.demoDays === 'number') setDemoDays(data.demoDays)
+      })
+      .catch(() => setInvalidLink(true))
+  }, [rid])
+
+  const activateHref = `/api/demo/activate?rid=${encodeURIComponent(rid || '')}`
 
   const handleActivate = async () => {
-    if (loading) return
+    if (!rid || loading) return
     setLoading(true)
     try {
-      // Resposta JSON evita redirect interno (Railway 0.0.0.0) e garante cookies no browser.
       const res = await fetch(activateHref, {
         credentials: 'include',
         redirect: 'manual',
         headers: { Accept: 'application/json' },
       })
-      if (res.ok) {
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; message?: string }
+      if (res.ok && data.ok !== false) {
         window.location.assign('/')
         return
       }
-      window.location.assign(activateHref)
+      if (data.error === 'owner_session') {
+        window.alert(data.message || 'Use janela anónima para testar a demo.')
+        setLoading(false)
+        return
+      }
+      setInvalidLink(true)
+      setLoading(false)
     } catch {
-      window.location.assign(activateHref)
+      setInvalidLink(true)
+      setLoading(false)
     }
+  }
+
+  if (invalidLink || !rid) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', background: '#0a0a0a', color: '#fff', textAlign: 'center' }}>
+        <div style={{ maxWidth: '440px' }}>
+          <h1 style={{ color: '#ff9b9b', marginBottom: '12px' }}>Link inválido</h1>
+          <p style={{ opacity: 0.85, lineHeight: 1.6 }}>
+            Este link de demonstração não existe ou está incompleto. Peça um link personalizado a quem lhe enviou o acesso.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -53,84 +91,20 @@ export default function DemoWelcomePage() {
           textAlign: 'center',
         }}
       >
-        <div
-          style={{
-            fontSize: '48px',
-            marginBottom: '20px',
-            lineHeight: 1,
-          }}
-        >
-          🔒
-        </div>
-        <h1
-          style={{
-            color: '#00ff00',
-            fontSize: '1.5rem',
-            fontWeight: 700,
-            marginBottom: '16px',
-          }}
-        >
-          Acesso de demonstração
+        <div style={{ fontSize: '48px', marginBottom: '20px', lineHeight: 1 }}>🔒</div>
+        <h1 style={{ color: '#00ff00', fontSize: '1.5rem', fontWeight: 700, marginBottom: '16px' }}>
+          Gestor Demo — NONATO SERVICE
         </h1>
-        <p
-          style={{
-            color: 'rgba(255,255,255,0.9)',
-            fontSize: '1.1rem',
-            lineHeight: 1.6,
-            marginBottom: '24px',
-          }}
-        >
-          O seu acesso é válido apenas por <strong style={{ color: '#00ff00' }}>15 dias</strong>.
+        <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '24px' }}>
+          O seu acesso é válido por{' '}
+          <strong style={{ color: '#00ff00' }}>
+            {demoDays} dia{demoDays === 1 ? '' : 's'}
+          </strong>{' '}
+          após entrar.
         </p>
-        <p
-          style={{
-            color: 'rgba(255,255,255,0.7)',
-            fontSize: '0.95rem',
-            lineHeight: 1.5,
-            marginBottom: '32px',
-          }}
-        >
-          Os dados desta demonstração ficam isolados e não afetam outros utilizadores. Ao clicar em
-          &quot;Aceitar e entrar&quot;, concorda com estes termos.
+        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.5, marginBottom: '32px' }}>
+          Os dados desta demonstração ficam isolados. Ao clicar em «Aceitar e entrar», concorda com estes termos.
         </p>
-        <div
-          style={{
-            marginBottom: '24px',
-            padding: '16px 18px',
-            borderRadius: '16px',
-            background: 'linear-gradient(135deg, rgba(255,215,0,0.12) 0%, rgba(255,255,255,0.04) 100%)',
-            border: '1px solid rgba(255,215,0,0.28)',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06)',
-            textAlign: 'left',
-          }}
-        >
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              marginBottom: '10px',
-              padding: '6px 10px',
-              borderRadius: '999px',
-              background: 'rgba(255,215,0,0.12)',
-              border: '1px solid rgba(255,215,0,0.25)',
-              color: '#ffd76a',
-              fontSize: '0.75rem',
-              fontWeight: 800,
-              letterSpacing: '0.06em',
-              textTransform: 'uppercase',
-            }}
-          >
-            <span>■</span>
-            <span>Propriedade Intelectual Protegida</span>
-          </div>
-          <p style={{ margin: 0, color: '#fff', fontSize: '0.9rem', lineHeight: 1.6 }}>
-            Este programa pertence a <strong style={{ color: '#00ff00' }}>NONATO SERVICE</strong> e ao seu criador
-            {' '}<strong style={{ color: '#00ff00' }}>Nonato</strong>. Todos os direitos reservados. A sua reprodução,
-            cópia, distribuição, modificação, cedência ou utilização sem autorização expressa é proibida e poderá
-            originar medidas legais.
-          </p>
-        </div>
         <button
           type="button"
           onClick={handleActivate}
@@ -145,7 +119,6 @@ export default function DemoWelcomePage() {
             borderRadius: '8px',
             border: 'none',
             cursor: loading ? 'wait' : 'pointer',
-            transition: 'all 0.2s ease',
             boxShadow: '0 4px 12px rgba(0, 255, 0, 0.3)',
           }}
         >

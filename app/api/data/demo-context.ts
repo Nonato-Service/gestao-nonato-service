@@ -1,18 +1,29 @@
 /**
- * Contexto do modo DEMO: dados isolados e expiração em 15 dias.
+ * Contexto do modo DEMO: dados isolados e expiração configurável por link.
  * Usado pelas APIs para decidir qual pasta de dados usar.
  */
 import path from 'path'
 import { NextRequest, NextResponse } from 'next/server'
+import { clampDemoDays, DEMO_DAYS_DEFAULT } from '../../lib/demoManagement'
 import { DATA_DIR } from './shared'
 
-const DEMO_DAYS = 15
 const COOKIE_DEMO = 'nonato_demo'
 const COOKIE_DEMO_START = 'nonato_demo_start'
 const COOKIE_DEMO_RECIPIENT = 'nonato_demo_recipient'
 /** Marca visitantes que entraram por link personalizado — não podem aceder à app real. */
 const COOKIE_DEMO_GUEST = 'nonato_demo_guest'
 const COOKIE_DEMO_MODULES = 'nonato_demo_modules'
+const COOKIE_DEMO_DAYS = 'nonato_demo_days'
+
+export function hasRealAppSession(request: NextRequest): boolean {
+  try {
+    const { getAppSessionFromRequest } = require('../auth/appAuth') as typeof import('../auth/appAuth')
+    const user = getAppSessionFromRequest(request)
+    return Boolean(user && user.id !== 'demo-visitor')
+  } catch {
+    return false
+  }
+}
 
 function sanitizeDemoRecipient(recipientId?: string): string {
   const safe = String(recipientId || '')
@@ -29,6 +40,11 @@ export type DemoContext = {
 }
 
 export function getDemoContext(request: NextRequest): DemoContext {
+  // Dono / gestor autenticado: programa principal — ignorar cookies de demo antigos
+  if (hasRealAppSession(request)) {
+    return { isDemo: false, expired: false, dataDir: DATA_DIR }
+  }
+
   const demoCookie = request.cookies.get(COOKIE_DEMO)?.value
   const startCookie = request.cookies.get(COOKIE_DEMO_START)?.value
   const recipientCookie = request.cookies.get(COOKIE_DEMO_RECIPIENT)?.value
@@ -54,10 +70,11 @@ export function getDemoContext(request: NextRequest): DemoContext {
   const now = new Date()
   const diffMs = now.getTime() - startDate.getTime()
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  const demoDaysLimit = clampDemoDays(request.cookies.get(COOKIE_DEMO_DAYS)?.value ?? DEMO_DAYS_DEFAULT)
 
   const demoDataDir = path.join(DATA_DIR, 'demo', sanitizeDemoRecipient(recipientCookie))
 
-  if (diffDays >= DEMO_DAYS) {
+  if (diffDays >= demoDaysLimit) {
     return {
       isDemo: true,
       expired: true,
@@ -65,7 +82,7 @@ export function getDemoContext(request: NextRequest): DemoContext {
     }
   }
 
-  const daysLeft = DEMO_DAYS - diffDays
+  const daysLeft = demoDaysLimit - diffDays
   return {
     isDemo: true,
     expired: false,
@@ -82,6 +99,7 @@ export function ensureDemoDataDir(dataDir: string): void {
 }
 
 export function isDemoGuestLock(request: NextRequest): boolean {
+  if (hasRealAppSession(request)) return false
   return request.cookies.get(COOKIE_DEMO_GUEST)?.value === '1'
 }
 
@@ -94,6 +112,7 @@ export function clearDemoSessionCookiesOnResponse(
   response.cookies.set(COOKIE_DEMO_START, '', { path: '/', maxAge: 0 })
   response.cookies.set(COOKIE_DEMO_RECIPIENT, '', { path: '/', maxAge: 0 })
   response.cookies.set(COOKIE_DEMO_MODULES, '', { path: '/', maxAge: 0 })
+  response.cookies.set(COOKIE_DEMO_DAYS, '', { path: '/', maxAge: 0 })
   if (!opts?.keepGuestLock) {
     response.cookies.set(COOKIE_DEMO_GUEST, '', { path: '/', maxAge: 0 })
   }
@@ -114,4 +133,11 @@ export function rejectDemoGuestProductionAccess(request: NextRequest): NextRespo
   return null
 }
 
-export { COOKIE_DEMO, COOKIE_DEMO_START, COOKIE_DEMO_RECIPIENT, COOKIE_DEMO_GUEST, DEMO_DAYS }
+export {
+  COOKIE_DEMO,
+  COOKIE_DEMO_START,
+  COOKIE_DEMO_RECIPIENT,
+  COOKIE_DEMO_GUEST,
+  COOKIE_DEMO_DAYS,
+  DEMO_DAYS_DEFAULT as DEMO_DAYS,
+}

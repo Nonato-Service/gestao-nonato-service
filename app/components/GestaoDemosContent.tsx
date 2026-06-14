@@ -8,7 +8,8 @@ import {
   buildDemoWhatsAppUrl,
   countActiveModules,
   createDefaultDemoLinkForm,
-  DEMO_DAYS,
+  DEMO_DAYS_MAX,
+  DEMO_DAYS_MIN,
   DEMO_EDITABLE_ACTION_KEYS,
   DEMO_MODULE_GROUP_LABELS,
   DEMO_MODULE_GROUP_ORDER,
@@ -24,6 +25,7 @@ import {
   getDemoModuleGroupId,
   getDemoModuleLabelForGrid,
   getDemoPresetLabel,
+  resolveDemoDaysForRecipient,
   type DemoRecipientWithState,
 } from '../lib/demoManagement'
 
@@ -170,6 +172,7 @@ export function GestaoDemosContent({
       email: form.email.trim(),
       dataEnvio: new Date().toISOString(),
       observacoes: form.observacoes.trim() || undefined,
+      demoDays: resolveDemoDaysForRecipient({ demoDays: form.demoDays }),
       demoModules: form.demoModules,
       demoPreset: form.demoPreset || 'custom',
     }
@@ -198,12 +201,14 @@ export function GestaoDemosContent({
   }
 
   const handleRenew = async (id: string) => {
-    if (!window.confirm('Renovar esta demo por mais 15 dias a partir de agora?')) return
+    const item = recipients.find((x) => x.id === id)
+    const dias = resolveDemoDaysForRecipient(item)
+    if (!window.confirm(`Renovar esta demo por mais ${dias} dia${dias === 1 ? '' : 's'} a partir de agora?`)) return
     const agora = new Date().toISOString()
-    const dataExpiracao = new Date(Date.now() + DEMO_DAYS * 24 * 60 * 60 * 1000).toISOString()
+    const dataExpiracao = new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString()
     await persist(
-      recipients.map((item) =>
-        item.id === id ? { ...item, firstAccessAt: agora, lastAccessAt: agora, dataExpiracao } : item
+      recipients.map((entry) =>
+        entry.id === id ? { ...entry, firstAccessAt: agora, lastAccessAt: agora, dataExpiracao } : entry
       )
     )
   }
@@ -393,10 +398,26 @@ export function GestaoDemosContent({
       <div style={{ display: 'grid', gridTemplateColumns: compact ? '1fr' : 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '12px' }}>
         <input type="text" placeholder="Nome *" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={inputStyle} />
         <input type="email" placeholder="E-mail (opcional)" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} style={inputStyle} />
+        <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px', opacity: 0.85 }}>
+          <span>Validade (dias) *</span>
+          <input
+            type="number"
+            min={DEMO_DAYS_MIN}
+            max={DEMO_DAYS_MAX}
+            value={form.demoDays}
+            onChange={(e) =>
+              setForm((f) => ({
+                ...f,
+                demoDays: resolveDemoDaysForRecipient({ demoDays: Number(e.target.value) }),
+              }))
+            }
+            style={inputStyle}
+          />
+        </label>
         <input type="text" placeholder="Observações" value={form.observacoes} onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))} style={inputStyle} />
       </div>
       <div style={{ fontSize: '11px', opacity: 0.7, marginBottom: '12px', lineHeight: 1.5 }}>
-        Pacote: <strong>{getDemoPresetLabel(form.demoPreset)}</strong> · Validade: <strong>{DEMO_DAYS} dias</strong> após «Aceitar e entrar»
+        Pacote: <strong>{getDemoPresetLabel(form.demoPreset)}</strong> · Gestor Demo: <strong>{resolveDemoDaysForRecipient({ demoDays: form.demoDays })} dia(s)</strong> após «Aceitar e entrar»
       </div>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         <button
@@ -421,9 +442,6 @@ export function GestaoDemosContent({
             ← Voltar ao pacote
           </button>
         )}
-        <button type="button" onClick={() => copyText(demoLinkBaseUrl, 'Link base /demo')} style={{ padding: '10px 16px', background: 'rgba(0,150,255,0.15)', border: '1px solid rgba(102,179,255,0.45)', color: '#8cc8ff', borderRadius: '8px', cursor: 'pointer' }}>
-          📋 Só link genérico
-        </button>
       </div>
     </div>
   )
@@ -435,10 +453,10 @@ export function GestaoDemosContent({
         <p style={{ fontSize: '11px', wordBreak: 'break-all', opacity: 0.85, marginBottom: '12px' }}>{lastCreated.link}</p>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button type="button" onClick={() => copyText(lastCreated.link, 'Link')} style={actionBtn('#8cc8ff', 'rgba(0,150,255,0.15)')}>📋 Copiar link</button>
-          <button type="button" onClick={() => copyText(buildDemoShareMessage(lastCreated.nome, lastCreated.link), 'Mensagem')} style={actionBtn('#7dffb3', 'rgba(0,255,140,0.12)')}>📝 Copiar mensagem</button>
+          <button type="button" onClick={() => copyText(buildDemoShareMessage(lastCreated.nome, lastCreated.link, resolveDemoDaysForRecipient(lastCreated)), 'Mensagem')} style={actionBtn('#7dffb3', 'rgba(0,255,140,0.12)')}>📝 Copiar mensagem</button>
           <button type="button" onClick={() => window.open(buildDemoWhatsAppUrl(lastCreated.nome, lastCreated.link), '_blank', 'noopener,noreferrer')} style={actionBtn('#25d366', 'rgba(37,211,102,0.15)')}>💬 WhatsApp</button>
           {lastCreated.email ? (
-            <button type="button" onClick={() => window.open(buildDemoMailto(lastCreated.email, lastCreated.nome, lastCreated.link), '_blank')} style={actionBtn('#ffd36a', 'rgba(255,180,0,0.12)')}>✉️ E-mail</button>
+            <button type="button" onClick={() => window.open(buildDemoMailto(lastCreated.email, lastCreated.nome, lastCreated.link, resolveDemoDaysForRecipient(lastCreated)), '_blank')} style={actionBtn('#ffd36a', 'rgba(255,180,0,0.12)')}>✉️ E-mail</button>
           ) : null}
           <button type="button" onClick={() => setLastCreated(null)} style={actionBtn('#999', 'rgba(255,255,255,0.06)')}>Fechar</button>
         </div>
@@ -482,6 +500,7 @@ export function GestaoDemosContent({
                   <strong>{r.nome}</strong>
                   <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 700, ...statusBadgeStyle(r.status) }}>{STATUS_LABELS[r.status]}</span>
                   <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '10px', background: 'rgba(0,180,255,0.12)', color: '#8cd8ff' }}>{getDemoPresetLabel(r.demoPreset)}</span>
+                  <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '10px', background: 'rgba(255,180,0,0.12)', color: '#ffd36a' }}>{resolveDemoDaysForRecipient(r)} dia(s)</span>
                 </div>
                 {r.email && <div style={{ fontSize: '12px', opacity: 0.8 }}>{r.email}</div>}
                 <div style={{ fontSize: '10px', opacity: 0.65, marginTop: '6px', lineHeight: 1.5 }}>
@@ -493,7 +512,7 @@ export function GestaoDemosContent({
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 <button type="button" onClick={() => copyText(r.link, 'Link')} style={actionBtn('#8cc8ff', 'rgba(0,150,255,0.12)', compact)}>📋</button>
                 <button type="button" onClick={() => window.open(buildDemoWhatsAppUrl(r.nome, r.link, r.email), '_blank', 'noopener,noreferrer')} style={actionBtn('#25d366', 'rgba(37,211,102,0.12)', compact)}>💬</button>
-                <button type="button" onClick={() => handleRenew(r.id)} style={actionBtn('#7dffb3', 'rgba(0,255,140,0.1)', compact)} title="Renovar 15 dias">↻</button>
+                <button type="button" onClick={() => handleRenew(r.id)} style={actionBtn('#7dffb3', 'rgba(0,255,140,0.1)', compact)} title={`Renovar ${resolveDemoDaysForRecipient(r)} dia(s)`}>↻</button>
                 {!compact && (
                   <button type="button" onClick={() => handleReset(r.id)} style={actionBtn('#ffd36a', 'rgba(255,180,0,0.1)', compact)} title="Resetar">⟲</button>
                 )}
@@ -508,11 +527,30 @@ export function GestaoDemosContent({
 
   const body = (
     <>
+      <div style={{ ...panelStyle, background: 'rgba(255,120,80,0.08)', border: '1px solid rgba(255,120,80,0.35)' }}>
+        <strong style={{ color: '#ffb199' }}>Importante — não misture com o seu programa principal</strong>
+        <p style={{ margin: '8px 0 0', fontSize: '12px', opacity: 0.9, lineHeight: 1.6 }}>
+          Envie o link <strong>só aos clientes</strong>. Não abra links de demo no browser onde trabalha no sistema real —
+          isso activava modo demonstração no seu programa. Para testar, use <strong>janela anónima</strong> ou outro browser.
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            void fetch('/api/demo/clear', { credentials: 'include' })
+              .then(() => window.location.assign('/'))
+              .catch(() => window.location.assign('/api/demo/clear'))
+          }}
+          style={{ marginTop: '10px', padding: '8px 14px', background: 'rgba(255,120,80,0.15)', border: '1px solid rgba(255,120,80,0.45)', color: '#ffb199', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 700 }}
+        >
+          Sair do modo demo neste browser
+        </button>
+      </div>
+
       <div style={{ ...panelStyle, background: 'rgba(0,180,255,0.06)', border: '1px solid rgba(0,180,255,0.2)' }}>
-        <strong style={{ color: '#8cd8ff' }}>Como enviar uma demo em 3 passos</strong>
+        <strong style={{ color: '#8cd8ff' }}>Como enviar um Gestor Demo em 3 passos</strong>
         <ol style={{ margin: '8px 0 0', paddingLeft: '20px', fontSize: '12px', opacity: 0.85, lineHeight: 1.6 }}>
           <li>Escolha o <strong>pacote</strong> (comercial, técnica, etc.)</li>
-          <li>Registe o <strong>destinatário</strong> e gere o link com <code>?rid=</code></li>
+          <li>Registe o <strong>destinatário</strong>, defina os <strong>dias de validade</strong> e gere o link</li>
           <li>Envie por <strong>WhatsApp, e-mail ou cópia</strong> — o sistema não envia automaticamente</li>
         </ol>
         <p style={{ fontSize: '11px', opacity: 0.65, margin: '8px 0 0' }}>Link base: {demoLinkBaseUrl}</p>
