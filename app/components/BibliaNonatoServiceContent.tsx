@@ -10,14 +10,14 @@ type Props = {
   activeTabId?: string
   onHome: () => void
   isCompactLayout?: boolean
-  /** Mantidos por compatibilidade com page.tsx — a Bíblia 2026 sincroniza via /biblia-app/ */
+  /** Mantidos por compatibilidade com page.tsx — a Bíblia sincroniza via /biblia-app/ */
   saveData?: (key: string, data: unknown) => Promise<void>
   loadData?: (key: string) => Promise<unknown>
 }
 
 export function BibliaNonatoServiceContent({ safeT }: Props) {
   const title = useMemo(
-    () => String(safeT.bibliaNonatoServiceTitle ?? 'BÍBLIA DA NONATO SERVICE 2026'),
+    () => String(safeT.bibliaNonatoServiceTitle ?? 'BÍBLIA DA NONATO SERVICE'),
     [safeT]
   )
 
