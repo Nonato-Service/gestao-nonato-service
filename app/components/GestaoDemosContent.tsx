@@ -96,6 +96,11 @@ export function GestaoDemosContent({
   const [lastCreated, setLastCreated] = useState<DemoRecipientWithState | null>(null)
   const [saving, setSaving] = useState(false)
   const [revealedPasswordIds, setRevealedPasswordIds] = useState<Record<string, boolean>>({})
+  const [demoListaDetalheId, setDemoListaDetalheId] = useState<string | null>(null)
+
+  useEffect(() => {
+    setDemoListaDetalheId(null)
+  }, [statusFilter, search])
 
   useEffect(() => {
     if (!loadData) return
@@ -153,6 +158,32 @@ export function GestaoDemosContent({
     }
     return list
   }, [enriched, statusFilter, search])
+
+  const demoListaAgrupada = useMemo(() => {
+    const map = new Map<string, DemoRecipientWithState[]>()
+    for (const r of filtered) {
+      const raw = r.nome.trim().charAt(0)
+      const base = raw ? raw.normalize('NFD').replace(/\p{M}/gu, '').toUpperCase() : ''
+      const letra = base && /[A-Z]/.test(base) ? base : 'Outros'
+      const arr = map.get(letra) || []
+      arr.push(r)
+      map.set(letra, arr)
+    }
+    const letras = Array.from(map.keys()).sort((a, b) => {
+      if (a === 'Outros') return 1
+      if (b === 'Outros') return -1
+      return a.localeCompare(b, 'pt', { sensitivity: 'base' })
+    })
+    for (const arr of map.values()) {
+      arr.sort((a, b) => a.nome.localeCompare(b.nome, 'pt', { sensitivity: 'base' }))
+    }
+    return letras.map((letra) => ({ letra, items: map.get(letra)! }))
+  }, [filtered])
+
+  const demoDetalhe = useMemo(
+    () => (demoListaDetalheId ? filtered.find((r) => r.id === demoListaDetalheId) ?? enriched.find((r) => r.id === demoListaDetalheId) : null),
+    [demoListaDetalheId, filtered, enriched]
+  )
 
   const stats = useMemo(
     () => ({
@@ -251,6 +282,7 @@ export function GestaoDemosContent({
     if (!saved) return
     const created = enrichDemoRecipients([novo], demoLinkBaseUrl)[0]!
     setLastCreated(created)
+    setDemoListaDetalheId(created.id)
     setForm((prev) => ({ ...createDefaultDemoLinkForm(), demoModules: prev.demoModules, demoPreset: prev.demoPreset }))
     setStep('enviados')
   }
@@ -850,78 +882,194 @@ export function GestaoDemosContent({
       </div>
     ) : null
 
-  const renderEnviadosStep = () => (
-    <>
-      {renderLastCreatedBanner()}
-      {renderStats()}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
-        {(['todos', 'pendente', 'ativo', 'a-expirar', 'expirado'] as const).map((id) => (
+  const renderEnviadosStep = () => {
+    const renderRecipientDetail = (r: DemoRecipientWithState) => (
+      <div style={{ ...panelStyle, border: '2px solid rgba(0,180,255,0.35)', background: 'rgba(0,180,255,0.04)' }}>
+        <button
+          type="button"
+          onClick={() => setDemoListaDetalheId(null)}
+          style={{ marginBottom: '14px', padding: '8px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#ccc', borderRadius: '8px', cursor: 'pointer', fontSize: '12px' }}
+        >
+          ← Voltar à lista de nomes
+        </button>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '10px' }}>
+          <h4 style={{ margin: 0, color: '#8cd8ff', fontSize: compact ? '16px' : '18px' }}>{r.nome}</h4>
+          <span style={{ padding: '3px 10px', borderRadius: '999px', fontSize: '10px', fontWeight: 700, ...statusBadgeStyle(r.status) }}>
+            {STATUS_LABELS[r.status]}
+          </span>
+        </div>
+        {r.email ? <div style={{ fontSize: '13px', opacity: 0.85, marginBottom: '10px' }}>{r.email}</div> : null}
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
+          <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '10px', background: 'rgba(0,180,255,0.12)', color: '#8cd8ff' }}>
+            {getDemoPresetLabel(r.demoPreset)}
+          </span>
+          <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '10px', background: 'rgba(255,180,0,0.12)', color: '#ffd36a' }}>
+            {resolveDemoDaysForRecipient(r)} dia(s)
+          </span>
+          <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '10px', background: 'rgba(0,255,140,0.1)', color: '#7dffb3' }}>
+            {countActiveModules(r.demoModules || {})} módulos activos
+          </span>
+        </div>
+        <p style={{ fontSize: '11px', wordBreak: 'break-all', opacity: 0.9, margin: '0 0 10px', lineHeight: 1.5 }}>
+          <strong style={{ color: '#8cd8ff' }}>Link:</strong> {r.link}
+        </p>
+        {r.demoUsuario && r.demoSenha ? (
+          renderCredentialsBlock(r, { showCopy: true })
+        ) : (
           <button
-            key={id}
             type="button"
-            onClick={() => setStatusFilter(id)}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '999px',
-              border: statusFilter === id ? '1px solid rgba(0,255,140,0.45)' : '1px solid rgba(255,255,255,0.12)',
-              background: statusFilter === id ? 'rgba(0,255,140,0.1)' : 'rgba(255,255,255,0.04)',
-              color: statusFilter === id ? '#7dffb3' : '#ccc',
-              fontSize: '11px',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
+            onClick={() => handleGenerateCredentials(r.id)}
+            style={{ marginBottom: '12px', padding: '8px 12px', fontSize: '12px', background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.35)', color: '#ffd36a', borderRadius: '6px', cursor: 'pointer' }}
           >
-            {id === 'todos' ? `Todos (${stats.total})` : `${STATUS_LABELS[id as DemoRecipientStatus]} (${enriched.filter((r) => r.status === id).length})`}
+            Gerar utilizador e senha
           </button>
-        ))}
+        )}
+        <div style={{ fontSize: '11px', opacity: 0.75, lineHeight: 1.6, marginBottom: '14px' }}>
+          <div>Enviado: {new Date(r.dataEnvio).toLocaleString('pt-PT')}</div>
+          <div>{r.firstAccessAt ? `Entrou: ${new Date(r.firstAccessAt).toLocaleString('pt-PT')}` : 'Ainda não entrou na demo'}</div>
+          {r.daysLeft !== null && r.status !== 'pendente' && r.status !== 'expirado' ? (
+            <div>{r.daysLeft} dia(s) restante(s)</div>
+          ) : null}
+          {r.observacoes ? <div style={{ marginTop: '6px' }}>Obs.: {r.observacoes}</div> : null}
+        </div>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button type="button" onClick={() => copyText(r.link, 'Link')} style={actionBtn('#8cc8ff', 'rgba(0,150,255,0.15)', compact)}>
+            📋 Copiar link
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              copyText(
+                buildDemoShareMessage(r.nome, r.link, resolveDemoDaysForRecipient(r), {
+                  demoUsuario: r.demoUsuario,
+                  demoSenha: r.demoSenha,
+                }),
+                'Mensagem'
+              )
+            }
+            style={actionBtn('#7dffb3', 'rgba(0,255,140,0.12)', compact)}
+          >
+            📝 Copiar mensagem
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              window.open(
+                buildDemoWhatsAppUrl(r.nome, r.link, r.email, { demoUsuario: r.demoUsuario, demoSenha: r.demoSenha }, resolveDemoDaysForRecipient(r)),
+                '_blank',
+                'noopener,noreferrer'
+              )
+            }
+            style={actionBtn('#25d366', 'rgba(37,211,102,0.15)', compact)}
+          >
+            💬 WhatsApp
+          </button>
+          {r.email ? (
+            <button
+              type="button"
+              onClick={() =>
+                window.open(
+                  buildDemoMailto(r.email, r.nome, r.link, resolveDemoDaysForRecipient(r), {
+                    demoUsuario: r.demoUsuario,
+                    demoSenha: r.demoSenha,
+                  }),
+                  '_blank'
+                )
+              }
+              style={actionBtn('#ffd36a', 'rgba(255,180,0,0.12)', compact)}
+            >
+              ✉️ E-mail
+            </button>
+          ) : null}
+          <button type="button" onClick={() => handleRenew(r.id)} style={actionBtn('#7dffb3', 'rgba(0,255,140,0.1)', compact)} title={`Renovar ${resolveDemoDaysForRecipient(r)} dia(s)`}>
+            ↻ Renovar
+          </button>
+          {!compact && (
+            <button type="button" onClick={() => handleReset(r.id)} style={actionBtn('#ffd36a', 'rgba(255,180,0,0.1)', compact)} title="Resetar">
+              ⟲ Resetar
+            </button>
+          )}
+          <button type="button" onClick={() => handleDelete(r.id)} style={{ ...actionBtn('#ff8888', 'rgba(255,80,80,0.12)', compact), border: '1px solid rgba(255,80,80,0.4)' }}>
+            🗑 Remover
+          </button>
+        </div>
       </div>
-      <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Procurar por nome, e-mail…" style={{ ...inputStyle, width: '100%', maxWidth: '400px', marginBottom: '12px' }} />
-      {filtered.length === 0 ? (
-        <p style={{ textAlign: 'center', opacity: 0.6, padding: '24px' }}>Nenhuma demonstração neste filtro.</p>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: compact ? '220px' : 'none', overflowY: compact ? 'auto' : 'visible' }}>
-          {filtered.map((r) => (
-            <div key={r.id} style={{ padding: compact ? '10px' : '14px', background: '#222', borderRadius: '8px', border: '1px solid rgba(0,255,0,0.1)', display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ flex: 1, minWidth: '200px' }}>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '4px' }}>
-                  <strong>{r.nome}</strong>
-                  <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '10px', fontWeight: 700, ...statusBadgeStyle(r.status) }}>{STATUS_LABELS[r.status]}</span>
-                  <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '10px', background: 'rgba(0,180,255,0.12)', color: '#8cd8ff' }}>{getDemoPresetLabel(r.demoPreset)}</span>
-                  <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '10px', background: 'rgba(255,180,0,0.12)', color: '#ffd36a' }}>{resolveDemoDaysForRecipient(r)} dia(s)</span>
-                </div>
-                {r.email && <div style={{ fontSize: '12px', opacity: 0.8 }}>{r.email}</div>}
-                {r.demoUsuario && r.demoSenha ? (
-                  renderCredentialsBlock(r, { compact: true, showCopy: false })
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleGenerateCredentials(r.id)}
-                    style={{ marginTop: '8px', padding: '6px 10px', fontSize: '11px', background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.35)', color: '#ffd36a', borderRadius: '6px', cursor: 'pointer' }}
-                  >
-                    Gerar utilizador e senha
-                  </button>
-                )}
-                <div style={{ fontSize: '10px', opacity: 0.65, marginTop: '6px', lineHeight: 1.5 }}>
-                  Enviado: {new Date(r.dataEnvio).toLocaleString('pt-PT')}
-                  {r.firstAccessAt ? ` · Entrou: ${new Date(r.firstAccessAt).toLocaleString('pt-PT')}` : ' · Ainda não entrou'}
-                  {r.daysLeft !== null && r.status !== 'pendente' && r.status !== 'expirado' ? ` · ${r.daysLeft} dia(s) restante(s)` : ''}
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                <button type="button" onClick={() => copyText(r.link, 'Link')} style={actionBtn('#8cc8ff', 'rgba(0,150,255,0.12)', compact)}>📋</button>
-                <button type="button" onClick={() => window.open(buildDemoWhatsAppUrl(r.nome, r.link, r.email, { demoUsuario: r.demoUsuario, demoSenha: r.demoSenha }, resolveDemoDaysForRecipient(r)), '_blank', 'noopener,noreferrer')} style={actionBtn('#25d366', 'rgba(37,211,102,0.12)', compact)}>💬</button>
-                <button type="button" onClick={() => handleRenew(r.id)} style={actionBtn('#7dffb3', 'rgba(0,255,140,0.1)', compact)} title={`Renovar ${resolveDemoDaysForRecipient(r)} dia(s)`}>↻</button>
-                {!compact && (
-                  <button type="button" onClick={() => handleReset(r.id)} style={actionBtn('#ffd36a', 'rgba(255,180,0,0.1)', compact)} title="Resetar">⟲</button>
-                )}
-                <button type="button" onClick={() => handleDelete(r.id)} style={{ ...actionBtn('#ff8888', 'rgba(255,80,80,0.12)', compact), border: '1px solid rgba(255,80,80,0.4)' }}>🗑</button>
-              </div>
-            </div>
+    )
+
+    return (
+      <>
+        {renderLastCreatedBanner()}
+        {renderStats()}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
+          {(['todos', 'pendente', 'ativo', 'a-expirar', 'expirado'] as const).map((id) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setStatusFilter(id)}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '999px',
+                border: statusFilter === id ? '1px solid rgba(0,255,140,0.45)' : '1px solid rgba(255,255,255,0.12)',
+                background: statusFilter === id ? 'rgba(0,255,140,0.1)' : 'rgba(255,255,255,0.04)',
+                color: statusFilter === id ? '#7dffb3' : '#ccc',
+                fontSize: '11px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              {id === 'todos' ? `Todos (${stats.total})` : `${STATUS_LABELS[id as DemoRecipientStatus]} (${enriched.filter((r) => r.status === id).length})`}
+            </button>
           ))}
         </div>
-      )}
-    </>
-  )
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Procurar por nome, e-mail ou utilizador…"
+          style={{ ...inputStyle, width: '100%', maxWidth: '400px', marginBottom: '12px' }}
+        />
+
+        {demoDetalhe ? (
+          renderRecipientDetail(demoDetalhe)
+        ) : filtered.length === 0 ? (
+          <p style={{ textAlign: 'center', opacity: 0.6, padding: '24px' }}>Nenhuma demonstração neste filtro.</p>
+        ) : (
+          <div className="clientes-alfa-wrap" style={{ maxHeight: compact ? '280px' : 'none', overflowY: compact ? 'auto' : 'visible' }}>
+            <p style={{ fontSize: '12px', opacity: 0.75, margin: '0 0 12px' }}>
+              Clique num <strong>nome</strong> para ver link, credenciais, estado e acções.
+            </p>
+            {demoListaAgrupada.length > 1 && (
+              <nav className="clientes-alfa-jump" aria-label="Índice alfabético">
+                {demoListaAgrupada.map(({ letra }) => (
+                  <a key={letra} className="clientes-alfa-jump-link" href={`#demo-alfa-${letra}`}>
+                    {letra}
+                  </a>
+                ))}
+              </nav>
+            )}
+            {demoListaAgrupada.map(({ letra, items }) => (
+              <section key={letra} id={`demo-alfa-${letra}`} className="clientes-alfa-secao">
+                <div className="clientes-alfa-letra">{letra}</div>
+                <div className="clientes-alfa-nomes">
+                  {items.map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      className="clientes-alfa-nome-btn"
+                      onClick={() => setDemoListaDetalheId(r.id)}
+                      title={`${STATUS_LABELS[r.status]} · ${getDemoPresetLabel(r.demoPreset)}`}
+                    >
+                      {r.nome}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
+      </>
+    )
+  }
 
   const body = (
     <>
