@@ -28,6 +28,7 @@ import {
   downloadBackupJson,
 } from './utils/backupRestore'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData } from './utils/syncRevision'
+import { cmpNomeCliente, ordenarClientesPorNome, localeOrdenacaoClientes } from './lib/ordenarClientes'
 import { isNonatoDemoBuild } from './utils/nonatoDemoMode'
 import { collectLocalNonatoSnapshot, summarizeDataDiff } from './utils/syncDiff'
 import { assessPullServerRisk, type PullRiskSeverity } from './utils/syncRisk'
@@ -6217,6 +6218,15 @@ export default function Dashboard() {
     kmIdaPadrao: '',
     kmRetornoPadrao: '',
   })
+
+  const clientesOrdenadosAlfabeticamente = useMemo(
+    () => ordenarClientesPorNome(clientes, localeOrdenacaoClientes(selectedLanguage)),
+    [clientes, selectedLanguage]
+  )
+  const localeOrdCli = useMemo(
+    () => localeOrdenacaoClientes(selectedLanguage),
+    [selectedLanguage]
+  )
 
   /** Antes de gerar PDF/mail: valor, nota e anexos opcionais para a contabilidade. */
   const [modalEnvioContabilidadeCliente, setModalEnvioContabilidadeCliente] = useState<Cliente | null>(null)
@@ -26647,7 +26657,7 @@ const nextF = familias.filter(x => x !== f)
                     style={{ width: '100%', maxWidth: '100%', padding: '10px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.35)', borderRadius: '6px', cursor: 'pointer' }}
                   >
                     <option value="">{safeT?.cadastroNonatoEnvioPlaceholderCliente || '— Selecionar cliente do cadastro (preenche e-mail e telefone) —'}</option>
-                    {[...clientes].sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt', { sensitivity: 'base' })).map(cli => (
+                    {clientesOrdenadosAlfabeticamente.map(cli => (
                       <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
                     ))}
                   </select>
@@ -29592,10 +29602,10 @@ onKeyPress={(e) => {
         const protocolosEmExecucao = protocolosFiltrados.filter((p) => protocoloEstaEmExecucao(p))
         const protocolosExecutadosFiltrados = protocolosFiltrados.filter((p) => protocoloEstaExecutadoEnviado(p))
         const protocoloIdsComArquivo = new Set(protocolosServico.map((p) => p.clienteId).filter(Boolean))
-        const clientesComProtocolo = clientes
-          .filter((c) => protocoloIdsComArquivo.has(c.id))
-          .slice()
-          .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', undefined, { sensitivity: 'base' }))
+        const clientesComProtocolo = ordenarClientesPorNome(
+          clientes.filter((c) => protocoloIdsComArquivo.has(c.id)),
+          localeOrdCli
+        )
         type GrupoProtocolosLista = { clienteId: string; nomeGrupo: string; itens: ProtocoloServico[] }
         const gruposProtocolosLista: GrupoProtocolosLista[] = (() => {
           if (!protocoloServicoAgruparPorCliente) return []
@@ -30287,7 +30297,7 @@ onKeyPress={(e) => {
                         style={inputBase}
                       >
                         <option value="">— {protoT?.protocolosServicoSelecionarCliente || 'Selecionar cliente'}</option>
-                        {clientes.map(c => <option key={c.id} value={c.id}>{c.nomeEmpresa}</option>)}
+                        {clientesOrdenadosAlfabeticamente.map(c => <option key={c.id} value={c.id}>{c.nomeEmpresa}</option>)}
                       </select>
                     </div>
                     <div>
@@ -31967,7 +31977,7 @@ onKeyPress={(e) => {
                         style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                       >
                         <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
-                        {clientes.map(cli => (
+                        {clientesOrdenadosAlfabeticamente.map(cli => (
                           <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
                         ))}
                       </select>
@@ -34025,8 +34035,8 @@ onKeyPress={(e) => {
       
       case 'clientes':
         const qCli = buscaCliente.toLowerCase()
-        const clientesFiltrados = clientes
-          .filter(cliente =>
+        const clientesFiltrados = ordenarClientesPorNome(
+          clientes.filter(cliente =>
             cliente.nomeEmpresa.toLowerCase().includes(qCli) ||
             (cliente.morada || '').toLowerCase().includes(qCli) ||
             (cliente.codigoPostal || '').toLowerCase().includes(qCli) ||
@@ -34034,8 +34044,9 @@ onKeyPress={(e) => {
             cliente.telefones?.toLowerCase().includes(qCli) ||
             cliente.email?.toLowerCase().includes(qCli) ||
             cliente.contato?.toLowerCase().includes(qCli)
-          )
-          .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
+          ),
+          localeOrdCli
+        )
         const getClienteLetraAlfabeto = (nome: string): string => {
           const n = (nome || '').trim()
           if (!n) return '#'
@@ -34943,10 +34954,7 @@ onKeyPress={(e) => {
                         }
                         return (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {noGrupo
-                              .slice()
-                              .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
-                              .map((c) => (
+                            {ordenarClientesPorNome(noGrupo, localeOrdCli).map((c) => (
                                 <div
                                   key={c.id}
                                   style={{
@@ -40717,7 +40725,7 @@ A1;Peça exemplo;10`}
                   style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }}
                 >
                   <option value="">{(safeT as any)?.solicitacaoServicoTecnicoClienteCadastradoOpt || '— Nenhum —'}</option>
-                  {clientes.map((cli) => (
+                  {clientesOrdenadosAlfabeticamente.map((cli) => (
                     <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
                   ))}
                 </select>
@@ -40874,7 +40882,7 @@ A1;Peça exemplo;10`}
                     style={{ width: '100%', maxWidth: 480, padding: '8px 12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '6px' }}
                   >
                     <option value="">{(safeT as any)?.solicitacaoServicoTecnicoClienteCadastradoOpt || '— Nenhum / preencher só o nome acima —'}</option>
-                    {clientes.map((cli) => (
+                    {clientesOrdenadosAlfabeticamente.map((cli) => (
                       <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
                     ))}
                   </select>
@@ -42326,7 +42334,7 @@ A1;Peça exemplo;10`}
                     style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   >
                     <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
-                    {clientes.map(cli => (
+                    {clientesOrdenadosAlfabeticamente.map(cli => (
                       <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
                     ))}
                   </select>
@@ -44091,7 +44099,7 @@ A1;Peça exemplo;10`}
           <CadastroServicosContent
             servicoGrupos={servicoGrupos}
             servicos={servicos}
-            clientes={clientes}
+            clientes={clientesOrdenadosAlfabeticamente}
             safeT={safeT}
             activeTabId={activeTabId}
             closeTab={closeTab}
@@ -44610,7 +44618,7 @@ A1;Peça exemplo;10`}
 
       case 'orcamentos-avulso':
         return <OrcamentosAvulsoContent 
-          clientes={clientes}
+          clientes={clientesOrdenadosAlfabeticamente}
           clientePrioritario={clientePrioritario}
           pecasBiblioteca={pecasBiblioteca}
           relatoriosServico={relatoriosServico}
@@ -44639,7 +44647,7 @@ A1;Peça exemplo;10`}
       case 'pedido-orcamentos-avulso':
         return (
           <PedidoOrcamentosAvulsoContent
-            clientes={clientes}
+            clientes={clientesOrdenadosAlfabeticamente}
             pecasBiblioteca={pecasBiblioteca}
             safeT={safeT}
             closeTab={closeTab}
@@ -44661,7 +44669,7 @@ A1;Peça exemplo;10`}
       case 'orcamento-servico-tecnico':
         return (
           <OrcamentoServicoTecnicoContent
-            clientes={clientes}
+            clientes={clientesOrdenadosAlfabeticamente}
             servicos={servicos}
             safeT={safeT}
             openTab={(type, title) => openTab(type as TabType, title)}
@@ -44674,7 +44682,7 @@ A1;Peça exemplo;10`}
 
       case 'registro-despesas':
         return <RegistroDespesasContent
-          clientes={clientes}
+          clientes={clientesOrdenadosAlfabeticamente}
           relatoriosServico={relatoriosServico}
           servicos={servicos}
           saveData={async (key, data) => {
@@ -46104,7 +46112,7 @@ A1;Peça exemplo;10`}
         const nomesCadastroClientes = clientes.map((c) => c.nomeEmpresa).filter(Boolean)
         const clientesOuPessoalUnicos = Array.from(new Set([...nomesCadastroClientes, ...nomesDosComprovantes])).sort(
           (a, b) =>
-            a === labelGrupoNonato ? 1 : b === labelGrupoNonato ? -1 : a.localeCompare(b, 'pt-BR')
+            a === labelGrupoNonato ? 1 : b === labelGrupoNonato ? -1 : cmpNomeCliente(a, b, localeOrdCli)
         )
         const filtrados = comprovantesDespesas.filter((c) => {
           const mesAno = mesCompetenciaKey(c)
@@ -46880,9 +46888,7 @@ A1;Peça exemplo;10`}
                           style={{ width: '100%', padding: '10px', background: '#1a1a1a', border: '1px solid rgba(0,255,0,0.3)', borderRadius: '6px', color: '#fff' }}
                         >
                           <option value="">{(safeT as any)?.comprovantesSelecioneClientePlaceholder || 'Selecione um cliente…'}</option>
-                          {[...clientes]
-                            .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
-                            .map(c => (
+                          {clientesOrdenadosAlfabeticamente.map(c => (
                               <option key={c.id} value={c.nomeEmpresa}>{c.nomeEmpresa}</option>
                             ))}
                         </select>
@@ -61355,8 +61361,8 @@ A1;Peça exemplo;10`}
     }
 
     const q = buscaCliente.toLowerCase().trim()
-    const clientesFiltrados = clientes
-      .filter(cliente => {
+    const clientesFiltrados = ordenarClientesPorNome(
+      clientes.filter(cliente => {
         if (!q) return true
         const nome = (cliente.nomeEmpresa || '').toLowerCase()
         const email = (cliente.email || '').toLowerCase()
@@ -61366,12 +61372,13 @@ A1;Peça exemplo;10`}
         const cp = (cliente.codigoPostal || '').toLowerCase()
         const pais = (cliente.pais || '').toLowerCase()
         return nome.includes(q) || email.includes(q) || tel.includes(q) || cont.includes(q) || morada.includes(q) || cp.includes(q) || pais.includes(q)
-      })
-      .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
+      }),
+      localeOrdCli
+    )
 
     const qPf = buscaClientePrioritarioFixo.toLowerCase().trim()
-    const clientesFiltradosPrioritarioFixo = clientes
-      .filter(cliente => {
+    const clientesFiltradosPrioritarioFixo = ordenarClientesPorNome(
+      clientes.filter(cliente => {
         if (!qPf) return true
         const nome = (cliente.nomeEmpresa || '').toLowerCase()
         const email = (cliente.email || '').toLowerCase()
@@ -61381,12 +61388,13 @@ A1;Peça exemplo;10`}
         const cp = (cliente.codigoPostal || '').toLowerCase()
         const pais = (cliente.pais || '').toLowerCase()
         return nome.includes(qPf) || email.includes(qPf) || tel.includes(qPf) || cont.includes(qPf) || morada.includes(qPf) || cp.includes(qPf) || pais.includes(qPf)
-      })
-      .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
+      }),
+      localeOrdCli
+    )
 
     const qEnvOrc = buscaClienteEnvioOrcamento.toLowerCase().trim()
-    const clientesFiltradosEnvioOrcamento = clientes
-      .filter(cliente => {
+    const clientesFiltradosEnvioOrcamento = ordenarClientesPorNome(
+      clientes.filter(cliente => {
         if (!qEnvOrc) return true
         const nome = (cliente.nomeEmpresa || '').toLowerCase()
         const email = (cliente.email || '').toLowerCase()
@@ -61396,8 +61404,9 @@ A1;Peça exemplo;10`}
         const cp = (cliente.codigoPostal || '').toLowerCase()
         const pais = (cliente.pais || '').toLowerCase()
         return nome.includes(qEnvOrc) || email.includes(qEnvOrc) || tel.includes(qEnvOrc) || cont.includes(qEnvOrc) || morada.includes(qEnvOrc) || cp.includes(qEnvOrc) || pais.includes(qEnvOrc)
-      })
-      .sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR'))
+      }),
+      localeOrdCli
+    )
 
     const aplicarClienteEnvioOrcamento = (c: Cliente) => {
       setClienteEnvioOrcamentoId(c.id)
@@ -68350,11 +68359,7 @@ A1;Peça exemplo;10`}
                   <option value="">
                     {(safeT as any)?.diarioPedidosClienteEscolher || '— Escolher cliente —'}
                   </option>
-                  {[...clientes]
-                    .sort((a, b) =>
-                      (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', undefined, { sensitivity: 'base' })
-                    )
-                    .map((c) => (
+                  {clientesOrdenadosAlfabeticamente.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.nomeEmpresa || c.id}
                       </option>
@@ -70829,7 +70834,7 @@ A1;Peça exemplo;10`}
               <p>{safeT?.noClientes || 'Nenhum cliente cadastrado.'}</p>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '8px' }}>
-                {[...clientes].sort((a, b) => (a.nomeEmpresa || '').localeCompare(b.nomeEmpresa || '', 'pt-BR')).map(cliente => {
+                {clientesOrdenadosAlfabeticamente.map(cliente => {
                   // Gerar iniciais do nome da empresa
                   const getIniciais = (nome: string) => {
                     const palavras = nome.trim().split(/\s+/)
@@ -71594,7 +71599,7 @@ A1;Peça exemplo;10`}
                   style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
-                  {clientes.map(cli => (
+                  {clientesOrdenadosAlfabeticamente.map(cli => (
                     <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
                   ))}
                 </select>
@@ -72310,7 +72315,7 @@ A1;Peça exemplo;10`}
                   style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 >
                   <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
-                  {clientes.map(cli => (
+                  {clientesOrdenadosAlfabeticamente.map(cli => (
                     <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
                   ))}
                 </select>
@@ -73654,7 +73659,7 @@ A1;Peça exemplo;10`}
                     style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                   >
                     <option value="">{safeT?.selecioneCliente || 'Selecione o cliente'}</option>
-                    {clientes.map(cli => <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>)}
+                    {clientesOrdenadosAlfabeticamente.map(cli => <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>)}
                   </select>
                 )}
                 <input type="date" placeholder={safeT?.dataVencimento || 'Data de Vencimento'} value={faturaFornecedorForm.dataVencimento} onChange={(e) => setFaturaFornecedorForm({ ...faturaFornecedorForm, dataVencimento: e.target.value })} style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }} />
@@ -73832,7 +73837,7 @@ A1;Peça exemplo;10`}
               style={{ width: '100%', padding: '8px', marginBottom: '12px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
             >
               <option value="">{(safeT as any)?.faturaSelecioneCliente || '— Selecione o cliente —'}</option>
-              {clientes.map(cli => (
+              {clientesOrdenadosAlfabeticamente.map(cli => (
                 <option key={cli.id} value={cli.id}>{cli.nomeEmpresa}</option>
               ))}
             </select>
