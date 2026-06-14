@@ -1668,6 +1668,10 @@ function normalizeKmForPersist(raw: string | undefined): string {
   return String(n)
 }
 
+function isKmFieldEmpty(raw: string | undefined | null): boolean {
+  return kmStringForNumberField(raw) === ''
+}
+
 type PecaSubstituicao = {
   id: string
   imagem?: string
@@ -2425,6 +2429,10 @@ type Cliente = {
   anexosSolicitacaoServico?: SolicitacaoDocDevolvidoCliente[]
   /** Grupo do Cadastro de Serviços (tabela HTT/KRC/…) aplicada a este cliente */
   grupoTarifaId?: string
+  /** KM de ida predefinidos — preenchidos no relatório de serviço ao escolher o cliente */
+  kmIdaPadrao?: string
+  /** KM de retorno predefinidos — preenchidos no relatório de serviço ao escolher o cliente */
+  kmRetornoPadrao?: string
 }
 
 function findClienteByRelatorio(clientes: Cliente[], rel: RelatorioServico): Cliente | undefined {
@@ -6206,6 +6214,8 @@ export default function Dashboard() {
     contato: '',
     photo: '',
     grupoTarifaId: '',
+    kmIdaPadrao: '',
+    kmRetornoPadrao: '',
   })
 
   /** Antes de gerar PDF/mail: valor, nota e anexos opcionais para a contabilidade. */
@@ -12961,6 +12971,8 @@ export default function Dashboard() {
       contato: '',
       photo: '',
       grupoTarifaId: clienteGrupoTarifaSelecionadoId || ordenarServicoGrupos(servicoGrupos)[0]?.id || '',
+      kmIdaPadrao: '',
+      kmRetornoPadrao: '',
     })
     setShowClienteForm(true)
   }
@@ -12981,6 +12993,8 @@ export default function Dashboard() {
       contato: cliente.contato,
       photo: cliente.photo || '',
       grupoTarifaId: cliente.grupoTarifaId || '',
+      kmIdaPadrao: kmStringForNumberField(cliente.kmIdaPadrao),
+      kmRetornoPadrao: kmStringForNumberField(cliente.kmRetornoPadrao),
     })
     setClientesActiveTab('cadastrar')
     setShowClienteForm(true)
@@ -14809,8 +14823,10 @@ export default function Dashboard() {
     let updatedClientes: Cliente[]
     let savedCliente: Cliente
     const grupoTarifaId = (clienteForm.grupoTarifaId || '').trim() || undefined
+    const kmIdaPadrao = normalizeKmForPersist(clienteForm.kmIdaPadrao)
+    const kmRetornoPadrao = normalizeKmForPersist(clienteForm.kmRetornoPadrao)
     if (editingCliente) {
-      savedCliente = { ...editingCliente, ...clienteForm, grupoTarifaId }
+      savedCliente = { ...editingCliente, ...clienteForm, grupoTarifaId, kmIdaPadrao, kmRetornoPadrao }
       updatedClientes = clientes.map(c =>
         c.id === editingCliente.id
           ? savedCliente
@@ -14821,6 +14837,8 @@ export default function Dashboard() {
         id: Date.now().toString(),
         ...clienteForm,
         grupoTarifaId,
+        kmIdaPadrao,
+        kmRetornoPadrao,
         equipamentos: [],
         relatorios: {} // Pasta na Biblioteca de Relatórios (Relatórios de Serviço + Despesas)
       }
@@ -14851,6 +14869,8 @@ export default function Dashboard() {
       contato: savedCliente.contato,
       photo: savedCliente.photo || '',
       grupoTarifaId: savedCliente.grupoTarifaId || '',
+      kmIdaPadrao: kmStringForNumberField(savedCliente.kmIdaPadrao),
+      kmRetornoPadrao: kmStringForNumberField(savedCliente.kmRetornoPadrao),
     })
     setEditingCliente(savedCliente)
     alert((t as any).clienteSaved || 'Cliente salvo com sucesso!')
@@ -20525,6 +20545,47 @@ export default function Dashboard() {
     }
   }
 
+  const applyKmClienteAoRelatorio = useCallback(
+    (cliente?: Cliente | null) => {
+      const kmIda = kmStringForNumberField(cliente?.kmIdaPadrao)
+      const kmRetorno = kmStringForNumberField(cliente?.kmRetornoPadrao)
+      if (!kmIda && !kmRetorno) return
+
+      setNovoDiaTrabalho((prev) =>
+        atualizarCalculosDia({
+          ...prev,
+          kmIda: kmIda || prev.kmIda,
+          kmRetorno: kmRetorno || prev.kmRetorno,
+        })
+      )
+
+      setRelatorioServicoForm((prev) => {
+        let changed = false
+        const dias = prev.diasTrabalho.map((dia) => {
+          let next = dia
+          let diaChanged = false
+          if (kmIda && isKmFieldEmpty(dia.kmIda)) {
+            next = { ...next, kmIda }
+            diaChanged = true
+          }
+          if (kmRetorno && isKmFieldEmpty(dia.kmRetorno)) {
+            next = { ...next, kmRetorno }
+            diaChanged = true
+          }
+          if (diaChanged) {
+            changed = true
+            return atualizarCalculosDia(next)
+          }
+          return dia
+        })
+        if (!changed) return prev
+        const totais = calcularTotais(dias)
+        return { ...prev, diasTrabalho: dias, kmsPercorridos: totais.kmsPercorridos }
+      })
+    },
+    []
+  )
+
   const handleSaveRelatorioServico = () => {
     // Validar apenas campos obrigatórios do relatório (não dos dias de trabalho)
     if (!relatorioServicoForm.tecnico || !relatorioServicoForm.cliente || !relatorioServicoForm.data || !relatorioServicoForm.numero) {
@@ -21132,23 +21193,28 @@ export default function Dashboard() {
       })
     }
 
-    setNovoDiaTrabalho({
-      data: new Date().toISOString().split('T')[0],
-      idaHora: '',
-      idaChegada: '',
-      idaDuracao: '',
-      horasInicio: '',
-      horasFim: '',
-      horasDuracao: '',
-      retornoSaida: '',
-      retornoChegada: '',
-      retornoDuracao: '',
-      kmIda: '',
-      kmRetorno: '',
-      kmTotal: '',
-      pausa: '',
-      tempoPausa: '',
-      descricaoTrabalho: ''
+    setNovoDiaTrabalho(() => {
+      const clienteAtual = clientes.find((c) => c.id === relatorioServicoForm.clienteId)
+      const kmIda = kmStringForNumberField(clienteAtual?.kmIdaPadrao)
+      const kmRetorno = kmStringForNumberField(clienteAtual?.kmRetornoPadrao)
+      return atualizarCalculosDia({
+        data: new Date().toISOString().split('T')[0],
+        idaHora: '',
+        idaChegada: '',
+        idaDuracao: '',
+        horasInicio: '',
+        horasFim: '',
+        horasDuracao: '',
+        retornoSaida: '',
+        retornoChegada: '',
+        retornoDuracao: '',
+        kmIda,
+        kmRetorno,
+        kmTotal: '',
+        pausa: '',
+        tempoPausa: '',
+        descricaoTrabalho: '',
+      })
     })
   }
 
@@ -31896,6 +31962,7 @@ onKeyPress={(e) => {
                               ? { equipamentoId: '', numeroMaquina: '', maquinaModelo: '' }
                               : {}),
                           }))
+                          if (selectedClient) applyKmClienteAoRelatorio(selectedClient)
                         }}
                         style={{ width: '100%', padding: '8px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                       >
@@ -34495,6 +34562,45 @@ onKeyPress={(e) => {
                       style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                     />
                   </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>
+                      {(safeT as any)?.clienteKmIdaPadrao || 'KM de ida (padrão)'}
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder={(safeT as any)?.clienteKmIdaPadrao || 'KM de ida (padrão)'}
+                      value={clienteForm.kmIdaPadrao}
+                      onChange={(e) =>
+                        setClienteForm({ ...clienteForm, kmIdaPadrao: sanitizeKmFieldTyping(e.target.value) })
+                      }
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>
+                      {(safeT as any)?.clienteKmRetornoPadrao || 'KM de retorno (padrão)'}
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder={(safeT as any)?.clienteKmRetornoPadrao || 'KM de retorno (padrão)'}
+                      value={clienteForm.kmRetornoPadrao}
+                      onChange={(e) =>
+                        setClienteForm({ ...clienteForm, kmRetornoPadrao: sanitizeKmFieldTyping(e.target.value) })
+                      }
+                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                    />
+                  </div>
+
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <p style={{ margin: 0, fontSize: '11px', opacity: 0.65, lineHeight: 1.4 }}>
+                      {(safeT as any)?.clienteKmPadraoHint ||
+                        'Usado automaticamente no relatório de serviço ao escolher este cliente. Pode alterar no relatório se estiver mais perto ou mais longe.'}
+                    </p>
+                  </div>
                   
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.photo || 'Foto do Cliente'}</label>
@@ -34654,7 +34760,9 @@ onKeyPress={(e) => {
                       contato: '',
                       photo: '',
                       grupoTarifaId: '',
-                    }); 
+                      kmIdaPadrao: '',
+                      kmRetornoPadrao: '',
+                    });
                   }} style={{ flex: 1, padding: '8px 16px' }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
@@ -70648,6 +70756,30 @@ A1;Peça exemplo;10`}
                   onChange={(e) => setClienteForm({ ...clienteForm, contato: e.target.value })}
                   style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder={(safeT as any)?.clienteKmIdaPadrao || 'KM de ida (padrão)'}
+                  value={clienteForm.kmIdaPadrao}
+                  onChange={(e) =>
+                    setClienteForm({ ...clienteForm, kmIdaPadrao: sanitizeKmFieldTyping(e.target.value) })
+                  }
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder={(safeT as any)?.clienteKmRetornoPadrao || 'KM de retorno (padrão)'}
+                  value={clienteForm.kmRetornoPadrao}
+                  onChange={(e) =>
+                    setClienteForm({ ...clienteForm, kmRetornoPadrao: sanitizeKmFieldTyping(e.target.value) })
+                  }
+                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                />
+                <p style={{ margin: '0 0 10px', fontSize: '11px', opacity: 0.65, lineHeight: 1.4 }}>
+                  {(safeT as any)?.clienteKmPadraoHint ||
+                    'Usado automaticamente no relatório de serviço ao escolher este cliente. Pode alterar no relatório se necessário.'}
+                </p>
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.photo || 'Foto do Cliente'}</label>
                   <input
@@ -71447,16 +71579,17 @@ A1;Peça exemplo;10`}
                   ))}
                 </select>
                 <select
-                  value={relatorioServicoForm.cliente}
+                  value={relatorioServicoForm.clienteId || ''}
                   onChange={(e) => {
                     const selectedClient = clientes.find(c => c.id === e.target.value);
-                    setRelatorioServicoForm({
-                      ...relatorioServicoForm,
+                    setRelatorioServicoForm(prev => ({
+                      ...prev,
                       cliente: selectedClient?.nomeEmpresa || '',
                       clienteId: selectedClient?.id || '',
                       cidade: selectedClient?.conselho || selectedClient?.localidade || '',
                       telefone: selectedClient?.telefones || '',
-                    });
+                    }));
+                    if (selectedClient) applyKmClienteAoRelatorio(selectedClient)
                   }}
                   style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
                 >
