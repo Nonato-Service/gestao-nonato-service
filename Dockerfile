@@ -7,10 +7,9 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
 
-# Código e build
+# Código e build (384MB — plano gratuito Railway ~512MB RAM; evita "Killed" no build)
 COPY . .
-ENV NODE_OPTIONS=--max-old-space-size=4096
-RUN npm run build
+RUN node --max-old-space-size=384 node_modules/next/dist/bin/next build
 
 # Railway usa PORT; o script start-server.js já lê process.env.PORT
 ENV NODE_ENV=production
