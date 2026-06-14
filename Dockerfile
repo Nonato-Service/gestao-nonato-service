@@ -1,18 +1,25 @@
-# Build e deploy no Railway (evita erro do nixpacks.toml)
-FROM node:20-alpine
-
+# Build e deploy no Railway (alternativa ao Nixpacks)
+FROM node:20-alpine AS deps
 WORKDIR /app
-
-# Dependências
 COPY package.json package-lock.json* ./
 RUN npm ci
 
-# Código e build (384MB — plano gratuito Railway ~512MB RAM; evita "Killed" no build)
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
 RUN node --max-old-space-size=384 node_modules/next/dist/bin/next build
 
-# Railway usa PORT; o script start-server.js já lê process.env.PORT
+FROM node:20-alpine AS runner
+WORKDIR /app
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/next.config.js ./
 EXPOSE 3000
-# Evita npm como PID 1 (SIGTERM/restarts no Railway ficam mais limpos que com "npm start")
 CMD ["node", "scripts/start-server.js"]
