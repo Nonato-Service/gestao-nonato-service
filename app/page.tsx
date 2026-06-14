@@ -56,6 +56,7 @@ import {
   deleteAllNonatoKvFromIdb,
 } from './utils/manuaisIndexedDb'
 import { WritingLanguageAssistModal } from './components/WritingLanguageAssistModal'
+import { useInstallPrompt } from './components/InstallPrompt'
 import { WritingAssistFieldContext } from './context/WritingAssistFieldContext'
 import { AssistTextarea, AssistInput } from './components/AssistTextFields'
 import { RegistroDespesasContent } from './components/RegistroDespesasContent'
@@ -3860,6 +3861,8 @@ export default function Dashboard() {
     setWritingAssistField(null)
     setWritingAssistOpen(true)
   }, [])
+
+  const installPrompt = useInstallPrompt()
 
   const openWritingAssistForField = useCallback((initial: string, onApply: (s: string) => void) => {
     setWritingAssistField({ initial, onApply })
@@ -66920,6 +66923,33 @@ A1;Peça exemplo;10`}
                   </span>
                 ) : null}
               </button>
+
+              {/* Instalar a app (PWA) — barra lateral em vez de botão flutuante */}
+              {installPrompt?.canShow ? (
+                <button
+                  type="button"
+                  className="btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry"
+                  onClick={() => installPrompt.openInstallModal()}
+                  title={installPrompt.installDesc}
+                >
+                  <span className="sidebar-empresa-entry-row">
+                    <span className="sidebar-empresa-icon sidebar-empresa-icon--compact" aria-hidden>
+                      📲
+                    </span>
+                    <span className="sidebar-empresa-entry-text">
+                      <span className="sidebar-empresa-entry-title">{installPrompt.installLabel}</span>
+                    </span>
+                  </span>
+                  <span className="sidebar-nav-chevron sidebar-nav-chevron--entry" aria-hidden>
+                    ›
+                  </span>
+                  {installPrompt.installDesc.trim() ? (
+                    <span className="sidebar-tip-bubble" role="tooltip">
+                      {installPrompt.installDesc}
+                    </span>
+                  ) : null}
+                </button>
+              ) : null}
 
               {/* Botão Manual de Uso do Gestor Nonato Service */}
               <button

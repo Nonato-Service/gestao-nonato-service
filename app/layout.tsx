@@ -3,7 +3,7 @@ import './globals.css'
 import { AdicionarServicosStyle } from './AdicionarServicosStyle'
 import { RegisterSW } from './RegisterSW'
 import { OfflineIndicator } from './components/OfflineIndicator'
-import { InstallPrompt } from './components/InstallPrompt'
+import { InstallPromptProvider } from './components/InstallPrompt'
 import { NonatoDemoShell } from './components/NonatoDemoShell'
 
 // Evita pré-renderização pesada no build (reduz memória no Railway)
@@ -55,10 +55,11 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
       </head>
       <body suppressHydrationWarning>
-        {children}
+        <InstallPromptProvider>
+          {children}
+        </InstallPromptProvider>
         <AdicionarServicosStyle />
         <RegisterSW />
-        <InstallPrompt />
         <OfflineIndicator />
         <NonatoDemoShell />
       </body>

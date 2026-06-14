@@ -1,11 +1,25 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 const STORAGE_KEY = 'nonato-install-prompt-dismissed'
 const DISMISS_DAYS = 7
 
-const texts: Record<string, { installApp: string; installDesc: string; installNow: string; addToHome: string; iosHint: string; iosSafariHint: string; androidHint: string; desktopHint: string; later: string; close: string }> = {
+const texts: Record<
+  string,
+  {
+    installApp: string
+    installDesc: string
+    installNow: string
+    addToHome: string
+    iosHint: string
+    iosSafariHint: string
+    androidHint: string
+    desktopHint: string
+    later: string
+    close: string
+  }
+> = {
   pt: {
     installApp: 'Instalar a app',
     installDesc: 'Use no telemóvel, tablet ou computador. Funciona no Firefox, Chrome e Edge.',
@@ -16,7 +30,7 @@ const texts: Record<string, { installApp: string; installDesc: string; installNo
     androidHint: 'No Android: Firefox ou Chrome → Menu (⋮) → "Instalar app" ou "Adicionar ao ecrã inicial"',
     desktopHint: 'No computador: Firefox, Chrome ou Edge → menu (⋮) → "Instalar" ou "Guardar como"',
     later: 'Agora não',
-    close: 'Fechar'
+    close: 'Fechar',
   },
   en: {
     installApp: 'Install the app',
@@ -28,7 +42,7 @@ const texts: Record<string, { installApp: string; installDesc: string; installNo
     androidHint: 'On Android: Firefox or Chrome → Menu (⋮) → "Install app" or "Add to home screen"',
     desktopHint: 'On computer: Firefox, Chrome or Edge → menu (⋮) → "Install" or "Save as"',
     later: 'Not now',
-    close: 'Close'
+    close: 'Close',
   },
   es: {
     installApp: 'Instalar la app',
@@ -40,22 +54,23 @@ const texts: Record<string, { installApp: string; installDesc: string; installNo
     androidHint: 'En Android: Firefox o Chrome → Menú (⋮) → "Instalar aplicación" o "Añadir a la pantalla de inicio"',
     desktopHint: 'En ordenador: Firefox, Chrome o Edge → menú (⋮) → "Instalar" o "Guardar como"',
     later: 'Ahora no',
-    close: 'Cerrar'
+    close: 'Cerrar',
   },
   fr: {
-    installApp: 'Installer l\'app',
+    installApp: "Installer l'app",
     installDesc: 'Utilisez sur téléphone, tablette ou ordinateur. Fonctionne avec Firefox, Chrome et Edge.',
     installNow: 'Installer',
-    addToHome: 'Ajouter à l\'écran d\'accueil',
+    addToHome: "Ajouter à l'écran d'accueil",
     iosHint: 'Sur iPhone/iPad : Safari → Partager (□↑) → "Sur l\'écran d\'accueil"',
-    iosSafariHint: 'Sur iPhone/iPad, utilisez Safari pour l’ajouter à l’écran d’accueil et obtenir la meilleure compatibilité.',
+    iosSafariHint:
+      "Sur iPhone/iPad, utilisez Safari pour l'ajouter à l'écran d'accueil et obtenir la meilleure compatibilité.",
     androidHint: 'Sur Android : Firefox ou Chrome → Menu (⋮) → "Installer l\'application"',
     desktopHint: 'Sur ordinateur : Firefox, Chrome ou Edge → menu (⋮) → "Installer"',
     later: 'Plus tard',
-    close: 'Fermer'
+    close: 'Fermer',
   },
   it: {
-    installApp: 'Installa l\'app',
+    installApp: "Installa l'app",
     installDesc: 'Usa su telefono, tablet o computer. Funziona con Firefox, Chrome e Edge.',
     installNow: 'Installa ora',
     addToHome: 'Aggiungi alla schermata Home',
@@ -64,7 +79,7 @@ const texts: Record<string, { installApp: string; installDesc: string; installNo
     androidHint: 'Su Android: Firefox o Chrome → Menu (⋮) → "Installa app"',
     desktopHint: 'Su computer: Firefox, Chrome o Edge → menu (⋮) → "Installa"',
     later: 'Ora no',
-    close: 'Chiudi'
+    close: 'Chiudi',
   },
   de: {
     installApp: 'App installieren',
@@ -72,12 +87,13 @@ const texts: Record<string, { installApp: string; installDesc: string; installNo
     installNow: 'Jetzt installieren',
     addToHome: 'Zum Startbildschirm',
     iosHint: 'Auf iPhone/iPad: Safari → Teilen (□↑) → "Zum Home-Bildschirm"',
-    iosSafariHint: 'Auf iPhone/iPad Safari verwenden, um die App zum Startbildschirm hinzuzufügen und die beste Kompatibilität zu erhalten.',
+    iosSafariHint:
+      'Auf iPhone/iPad Safari verwenden, um die App zum Startbildschirm hinzuzufügen und die beste Kompatibilität zu erhalten.',
     androidHint: 'Auf Android: Firefox oder Chrome → Menü (⋮) → "App installieren"',
     desktopHint: 'Am Computer: Firefox, Chrome oder Edge → Menü (⋮) → "Installieren"',
     later: 'Später',
-    close: 'Schließen'
-  }
+    close: 'Schließen',
+  },
 }
 
 function getLang(): string {
@@ -91,7 +107,20 @@ function getLang(): string {
   return 'en'
 }
 
-export function InstallPrompt() {
+type InstallPromptContextValue = {
+  canShow: boolean
+  openInstallModal: () => void
+  installLabel: string
+  installDesc: string
+}
+
+const InstallPromptContext = createContext<InstallPromptContextValue | null>(null)
+
+export function useInstallPrompt(): InstallPromptContextValue | null {
+  return useContext(InstallPromptContext)
+}
+
+export function InstallPromptProvider({ children }: { children: ReactNode }) {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
   const [showCard, setShowCard] = useState(false)
   const [canShow, setCanShow] = useState(false)
@@ -114,11 +143,12 @@ export function InstallPrompt() {
     if (typeof window === 'undefined') return
     mounted.current = true
 
-    const standalone = (window.matchMedia('(display-mode: standalone)').matches) ||
+    const standalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
       (navigator as any).standalone === true ||
       document.referrer.includes('android-app://')
     const ua = window.navigator.userAgent || ''
-    const ios = /iPad|iPhone|iPod/.test(ua) || ((navigator.platform === 'MacIntel') && navigator.maxTouchPoints > 1)
+    const ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
     const safari = /^((?!chrome|android).)*safari/i.test(ua)
     setIsIos(ios)
     setIsSafari(safari)
@@ -164,102 +194,93 @@ export function InstallPrompt() {
   }
 
   const t = texts[getLang()] || texts.pt
+  const visible = canShow && !installed && !isStandalone
 
-  if (!canShow || installed || isStandalone) return null
+  const openInstallModal = useCallback(() => {
+    setShowCard(true)
+  }, [])
+
+  const contextValue = useMemo<InstallPromptContextValue>(
+    () => ({
+      canShow: visible,
+      openInstallModal,
+      installLabel: t.installApp,
+      installDesc: t.installDesc,
+    }),
+    [visible, openInstallModal, t.installApp, t.installDesc]
+  )
 
   return (
-    <div data-ns-print-hide="1">
-      {/* Botão flutuante "Instalar a app" */}
-      <button
-        type="button"
-        onClick={() => setShowCard(true)}
-        aria-label={t.installApp}
-        style={{
-          position: 'fixed',
-          bottom: 80,
-          right: 16,
-          zIndex: 9998,
-          padding: '12px 20px',
-          background: 'linear-gradient(135deg, rgba(0, 200, 0, 0.9) 0%, rgba(0, 120, 0, 0.95) 100%)',
-          color: '#fff',
-          border: '2px solid rgba(0, 255, 0, 0.6)',
-          borderRadius: 12,
-          fontSize: 14,
-          fontWeight: 700,
-          cursor: 'pointer',
-          boxShadow: '0 4px 16px rgba(0, 255, 0, 0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          touchAction: 'manipulation'
-        }}
-      >
-        <span style={{ fontSize: 20 }}>📲</span>
-        {t.installApp}
-      </button>
-
-      {/* Card / modal com instruções */}
-      {showCard && (
-        <div
-          role="dialog"
-          aria-label={t.installApp}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: 9999,
-            background: 'rgba(0,0,0,0.7)',
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'center',
-            padding: 16,
-            paddingBottom: 100,
-            boxSizing: 'border-box'
-          }}
-          onClick={() => setShowCard(false)}
-        >
+    <InstallPromptContext.Provider value={contextValue}>
+      {children}
+      {visible && showCard && (
+        <div data-ns-print-hide="1">
           <div
-            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-label={t.installApp}
             style={{
-              background: '#1a1a1a',
-              borderRadius: 16,
-              border: '2px solid rgba(0, 255, 0, 0.5)',
-              padding: 24,
-              maxWidth: 400,
-              width: '100%',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              background: 'rgba(0,0,0,0.7)',
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'center',
+              padding: 16,
+              paddingBottom: 48,
+              boxSizing: 'border-box',
             }}
+            onClick={() => setShowCard(false)}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <h3 style={{ margin: 0, color: '#00ff00', fontSize: 18 }}>📲 {t.installApp}</h3>
-              <button type="button" onClick={() => setShowCard(false)} aria-label={t.close} style={{ background: 'transparent', border: 'none', color: '#999', fontSize: 24, cursor: 'pointer', lineHeight: 1 }}>×</button>
-            </div>
-            <p style={{ color: '#ccc', fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>{t.installDesc}</p>
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: '#1a1a1a',
+                borderRadius: 16,
+                border: '2px solid rgba(0, 255, 0, 0.5)',
+                padding: 24,
+                maxWidth: 400,
+                width: '100%',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <h3 style={{ margin: 0, color: '#00ff00', fontSize: 18 }}>📲 {t.installApp}</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowCard(false)}
+                  aria-label={t.close}
+                  style={{ background: 'transparent', border: 'none', color: '#999', fontSize: 24, cursor: 'pointer', lineHeight: 1 }}
+                >
+                  ×
+                </button>
+              </div>
+              <p style={{ color: '#ccc', fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>{t.installDesc}</p>
 
-            {deferredPrompt ? (
-              <button
-                type="button"
-                onClick={handleInstall}
-                style={{
-                  width: '100%',
-                  padding: 14,
-                  background: '#00aa00',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 10,
-                  fontWeight: 700,
-                  fontSize: 16,
-                  cursor: 'pointer',
-                  marginBottom: 12
-                }}
-              >
-                {t.installNow}
-              </button>
-            ) : (
-              <>
-                <p style={{ color: '#00ff00', fontSize: 13, marginBottom: 8, fontWeight: 600 }}>{t.addToHome}</p>
-                {isMobileOrTablet ? (
-                  <>
-                    {isIos ? (
+              {deferredPrompt ? (
+                <button
+                  type="button"
+                  onClick={handleInstall}
+                  style={{
+                    width: '100%',
+                    padding: 14,
+                    background: '#00aa00',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 10,
+                    fontWeight: 700,
+                    fontSize: 16,
+                    cursor: 'pointer',
+                    marginBottom: 12,
+                  }}
+                >
+                  {t.installNow}
+                </button>
+              ) : (
+                <>
+                  <p style={{ color: '#00ff00', fontSize: 13, marginBottom: 8, fontWeight: 600 }}>{t.addToHome}</p>
+                  {isMobileOrTablet ? (
+                    isIos ? (
                       <>
                         {!isSafari && (
                           <p style={{ color: '#ffd166', fontSize: 12, marginBottom: 8 }}>{t.iosSafariHint}</p>
@@ -268,20 +289,38 @@ export function InstallPrompt() {
                       </>
                     ) : (
                       <p style={{ color: '#aaa', fontSize: 12, marginBottom: 16 }}>{t.androidHint}</p>
-                    )}
-                  </>
-                ) : (
-                  <p style={{ color: '#aaa', fontSize: 12, marginBottom: 16 }}>{t.desktopHint}</p>
-                )}
-              </>
-            )}
+                    )
+                  ) : (
+                    <p style={{ color: '#aaa', fontSize: 12, marginBottom: 16 }}>{t.desktopHint}</p>
+                  )}
+                </>
+              )}
 
-            <button type="button" onClick={handleDismiss} style={{ width: '100%', padding: 10, background: 'transparent', color: '#888', border: '1px solid #555', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>
-              {t.later}
-            </button>
+              <button
+                type="button"
+                onClick={handleDismiss}
+                style={{
+                  width: '100%',
+                  padding: 10,
+                  background: 'transparent',
+                  color: '#888',
+                  border: '1px solid #555',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontSize: 14,
+                }}
+              >
+                {t.later}
+              </button>
+            </div>
           </div>
         </div>
       )}
-    </div>
+    </InstallPromptContext.Provider>
   )
+}
+
+/** @deprecated Use InstallPromptProvider — mantido por compatibilidade */
+export function InstallPrompt() {
+  return <InstallPromptProvider>{null}</InstallPromptProvider>
 }
