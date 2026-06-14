@@ -1,4 +1,4 @@
-const CACHE = "nonato-biblia-v2";
+const CACHE = "nonato-biblia-v3";
 const ASSETS = [
   "./",
   "./index.html",

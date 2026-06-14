@@ -1,32 +1,66 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Nonato Bíblia">
-  <rect width="512" height="512" rx="96" fill="#1a1a1c"/>
-  <rect x="64" y="64" width="384" height="384" rx="72" fill="#111114" stroke="#22c55e" stroke-width="12"/>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a1c"/>
+      <stop offset="100%" stop-color="#111114"/>
+    </linearGradient>
+    <linearGradient id="frame" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#4ade80"/>
+    </linearGradient>
+    <linearGradient id="cover" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#16a34a"/>
+      <stop offset="50%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#15803d"/>
+    </linearGradient>
+    <linearGradient id="pageL" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#e2e8f0"/>
+      <stop offset="100%" stop-color="#f8fafc"/>
+    </linearGradient>
+    <linearGradient id="pageR" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f1f5f9"/>
+    </linearGradient>
+    <filter id="bookShadow" x="-15%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
 
-  <!-- Bíblia fechada (esquerda) -->
-  <g transform="translate(108, 130)">
-    <rect x="0" y="0" width="20" height="200" rx="5" fill="#15803d"/>
-    <rect x="20" y="0" width="112" height="200" rx="8" fill="#22c55e" stroke="#86efac" stroke-width="3"/>
-    <rect x="66" y="58" width="12" height="84" rx="3" fill="#86efac"/>
-    <rect x="44" y="88" width="56" height="12" rx="3" fill="#86efac"/>
-    <rect x="128" y="10" width="8" height="180" rx="2" fill="#e5e7eb"/>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <rect x="56" y="56" width="400" height="400" rx="72" fill="#0f1012" stroke="url(#frame)" stroke-width="12"/>
+
+  <!-- Bíblia fechada -->
+  <g filter="url(#bookShadow)" transform="translate(88, 118)">
+    <rect x="0" y="8" width="28" height="220" rx="6" fill="#14532d"/>
+    <rect x="4" y="8" width="8" height="220" rx="3" fill="#22c55e" opacity="0.35"/>
+    <rect x="28" y="0" width="118" height="228" rx="10" fill="url(#cover)" stroke="#86efac" stroke-width="4"/>
+    <rect x="42" y="14" width="90" height="200" rx="6" fill="none" stroke="#4ade80" stroke-width="2" opacity="0.45"/>
+    <rect x="78" y="68" width="14" height="92" rx="4" fill="#fde68a"/>
+    <rect x="58" y="104" width="54" height="14" rx="4" fill="#fde68a"/>
+    <rect x="142" y="18" width="10" height="192" rx="3" fill="#e2e8f0"/>
+    <rect x="150" y="24" width="6" height="180" rx="2" fill="#cbd5e1"/>
   </g>
 
-  <!-- Bíblia aberta (direita) -->
-  <g transform="translate(268, 130)">
-    <path d="M68 0 L68 200 L0 200 L0 18 Q34 0 68 0 Z" fill="#f1f5f9"/>
-    <path d="M68 0 Q102 0 136 18 L136 200 L68 200 Z" fill="#ffffff"/>
-    <rect x="62" y="0" width="12" height="200" rx="2" fill="#15803d"/>
-    <line x1="14" y1="42" x2="54" y2="42" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/>
-    <line x1="14" y1="62" x2="54" y2="62" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/>
-    <line x1="14" y1="82" x2="54" y2="82" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/>
-    <line x1="14" y1="102" x2="54" y2="102" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/>
-    <line x1="82" y1="42" x2="122" y2="42" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/>
-    <line x1="82" y1="62" x2="122" y2="62" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/>
-    <line x1="82" y1="82" x2="122" y2="82" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/>
-    <line x1="82" y1="102" x2="122" y2="102" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/>
-    <path d="M0 192 L68 192 L68 200 L0 200 Z" fill="#22c55e"/>
-    <path d="M68 192 L136 192 L136 200 L68 200 Z" fill="#22c55e"/>
+  <!-- Bíblia aberta -->
+  <g filter="url(#bookShadow)" transform="translate(262, 118)">
+    <path d="M72 6 C72 6 72 0 72 0 L72 228 L0 228 L0 28 Q36 6 72 6 Z" fill="url(#pageL)"/>
+    <path d="M72 0 C72 0 72 6 72 6 C108 6 144 28 144 28 L144 228 L72 228 L72 0 Z" fill="url(#pageR)"/>
+    <path d="M72 0 Q108 8 144 28 L72 28 Z" fill="#ecfdf5" opacity="0.85"/>
+    <rect x="64" y="0" width="16" height="228" rx="4" fill="#14532d"/>
+    <rect x="68" y="0" width="6" height="228" rx="2" fill="#22c55e" opacity="0.45"/>
+    <line x1="16" y1="52" x2="56" y2="52" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
+    <line x1="16" y1="76" x2="56" y2="76" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
+    <line x1="16" y1="100" x2="50" y2="100" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
+    <line x1="16" y1="124" x2="56" y2="124" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
+    <line x1="16" y1="148" x2="48" y2="148" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
+    <line x1="88" y1="52" x2="128" y2="52" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
+    <line x1="88" y1="76" x2="128" y2="76" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
+    <line x1="88" y1="100" x2="122" y2="100" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
+    <line x1="88" y1="124" x2="128" y2="124" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
+    <line x1="88" y1="148" x2="120" y2="148" stroke="#94a3b8" stroke-width="6" stroke-linecap="round"/>
+    <path d="M0 214 L72 214 L72 228 L0 228 Z" fill="#16a34a"/>
+    <path d="M72 214 L144 214 L144 228 L72 228 Z" fill="#15803d"/>
   </g>
 
-  <text x="256" y="430" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="52" font-weight="800" fill="#ffffff">BÍBLIA</text>
+  <text x="256" y="438" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="52" font-weight="800" fill="#ffffff">BÍBLIA</text>
 </svg>
