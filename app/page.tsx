@@ -4338,6 +4338,11 @@ export default function Dashboard() {
 
   // Funções para gerenciar abas
   const openTab = (type: TabType, title: string, icon?: string) => {
+    const DEMO_BLOCKED_TABS: TabType[] = ['administrador', 'gestao-demos']
+    if (isDemoMode && DEMO_BLOCKED_TABS.includes(type)) {
+      window.alert('O Administrador e a gestão interna não estão disponíveis na versão de demonstração.')
+      return
+    }
     const tabId = `${type}-${Date.now()}`
     const newTab: Tab = { id: tabId, type, title, icon }
     
@@ -23052,6 +23057,7 @@ export default function Dashboard() {
 
   const canAccessAction = useCallback((action: string): boolean => {
     if (!loginUser) return false
+    if (isDemoMode && DEMO_HIDDEN_ACTIONS.has(action)) return false
     if (loginUser.isAdmin) return true
     const permKey = actionToPermission[action]
     if (!permKey) return true
@@ -23059,7 +23065,7 @@ export default function Dashboard() {
     // Utilizadores/gravações antigas sem a chave: permitir relatórios (antes o sistema não bloqueava)
     if (val === undefined && permKey === 'relatorioServico') return true
     return Boolean(val)
-  }, [loginUser])
+  }, [loginUser, isDemoMode, DEMO_HIDDEN_ACTIONS])
 
   const currentCommunicationIdentity = useMemo(() => {
     if (!loginUser || loginUser.isAdmin) return null
@@ -23405,6 +23411,10 @@ export default function Dashboard() {
 
   // Função para lidar com cliques nos botões da sidebar (buttonId opcional: quando dois botões abrem a mesma aba, usar id para só um ficar ativo)
   const handleButtonClick = useCallback((action: string, buttonId?: string) => {
+    if (isDemoMode && (DEMO_HIDDEN_ACTIONS.has(action) || action === 'open-administrador')) {
+      window.alert('Esta função não está disponível na versão de demonstração.')
+      return
+    }
     const groupToggles = [
       'open-gestao-tecnica',
       'open-parceiros-comercial',
@@ -23609,7 +23619,7 @@ export default function Dashboard() {
       ])
       if (!keepDrawerOpen.has(action)) setMobileMenuOpen(false)
     }
-  }, [expandedGroups, openTab, getTabTitle, canAccessAction, isDemoTeaserAction, safeT, scrollMainContentToTop, isCompactLayout, activeTabId, openTabs, dashboardWorkspaceExpanded, openDashboardHubFromSidebar, dashboardMainHubId, toggleOrOpenDashboardHub, ensureGestaoFinanceiraSidebarExpanded])
+  }, [expandedGroups, openTab, getTabTitle, canAccessAction, isDemoTeaserAction, isDemoMode, DEMO_HIDDEN_ACTIONS, safeT, scrollMainContentToTop, isCompactLayout, activeTabId, openTabs, dashboardWorkspaceExpanded, openDashboardHubFromSidebar, dashboardMainHubId, toggleOrOpenDashboardHub, ensureGestaoFinanceiraSidebarExpanded])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -60088,6 +60098,7 @@ A1;Peça exemplo;10`}
       .filter((btn) => !isSidebarButtonLocked(btn))
       .filter((btn) => (btn.group || getDefaultSidebarGroup(btn.id)) === group)
       .filter((btn) => isActionVisibleInDemo(btn.action))
+      .filter((btn) => !isDemoMode || (btn.action !== 'open-administrador' && btn.id !== 'administrador-default'))
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 
     if (
@@ -69001,7 +69012,7 @@ A1;Peça exemplo;10`}
       )}
 
       {/* Modal de Extras - Só mostra se não houver aba de administrador aberta */}
-      {showModal && !openTabs.some(tab => tab.type === 'administrador') && (
+      {showModal && !isDemoMode && !openTabs.some(tab => tab.type === 'administrador') && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal admin-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '900px', maxHeight: '90vh', overflowY: 'auto' }}>
             <AdministradorContent

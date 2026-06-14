@@ -150,6 +150,8 @@ export const FULL_DEMO_ACTION_KEYS: string[] = Array.from(
     'open-almoxarifado-armazem',
     'open-parceiros-comercial',
     'open-documentacao-relatorios',
+    'open-administrador',
+    'open-gestao-demos',
   ])
 )
 
@@ -292,11 +294,24 @@ export function getDemoPresetLabel(preset?: string): string {
   }
 }
 
-/** Todos os módulos editáveis activos; administrador e extras permanecem ocultos. */
 export function buildDemoModulesComplete(): Record<string, DemoModuleMode> {
-  const out: Record<string, DemoModuleMode> = {}
+  return finalizeDemoModulesPolicy(
+    Object.fromEntries(
+      FULL_DEMO_ACTION_KEYS.map((action) => [action, DEMO_HIDDEN_ACTIONS.has(action) ? 'hidden' : 'active'])
+    ) as Record<string, DemoModuleMode>
+  )
+}
+
+/** Garante que módulos sensíveis (Administrador, backup, etc.) nunca ficam activos na demo. */
+export function finalizeDemoModulesPolicy(modules: Record<string, DemoModuleMode>): Record<string, DemoModuleMode> {
+  const out: Record<string, DemoModuleMode> = { ...modules }
   for (const action of FULL_DEMO_ACTION_KEYS) {
-    out[action] = DEMO_HIDDEN_ACTIONS.has(action) ? 'hidden' : 'active'
+    if (out[action] === undefined) {
+      out[action] = DEMO_HIDDEN_ACTIONS.has(action) ? 'hidden' : 'teaser'
+    }
+  }
+  for (const action of DEMO_HIDDEN_ACTIONS) {
+    out[action] = 'hidden'
   }
   return out
 }
@@ -360,7 +375,7 @@ export function buildDemoModulesFromPreset(
     }
     out[action] = active.has(action) ? 'active' : restMode
   }
-  return out
+  return finalizeDemoModulesPolicy(out)
 }
 
 export function createDefaultDemoLinkForm() {

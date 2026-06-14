@@ -22,6 +22,7 @@ import {
   DemoPresetCard,
   DemoRecipientRecord,
   DemoRecipientStatus,
+  finalizeDemoModulesPolicy,
   enrichDemoRecipients,
   getDemoModuleGroupId,
   getDemoModuleLabelForGrid,
@@ -239,7 +240,7 @@ export function GestaoDemosContent({
       dataEnvio: new Date().toISOString(),
       observacoes: form.observacoes.trim() || undefined,
       demoDays: resolveDemoDaysForRecipient({ demoDays: form.demoDays }),
-      demoModules: form.demoModules,
+      demoModules: finalizeDemoModulesPolicy(form.demoModules),
       demoPreset: form.demoPreset || 'custom',
       demoUsuario,
       demoSenha,
@@ -424,7 +425,7 @@ export function GestaoDemosContent({
           <div style={{ fontSize: '22px', marginBottom: '6px' }}>✨</div>
           <div style={{ fontWeight: 700, marginBottom: '4px' }}>Envio completo</div>
           <div style={{ fontSize: '11px', opacity: 0.72, lineHeight: 1.4 }}>
-            Todos os módulos activos ({editableModuleKeys.length} funções)
+            Todos os módulos operacionais ({editableModuleKeys.length} funções) — <strong>sem Administrador</strong>
           </div>
         </button>
         {DEMO_PRESET_CARDS.map((card) => {
