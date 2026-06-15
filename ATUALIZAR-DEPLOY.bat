@@ -46,6 +46,10 @@ if %errorlevel%==0 (
   echo ============================================
   echo O Railway vai atualizar o deploy em 2-5 min.
   echo Consulte o painel do Railway para ver o progresso.
+  echo.
+  echo IMPORTANTE: os cadastros ficam no VOLUME Railway (/app/data).
+  echo Confirme em Settings ^> Volumes: mount /app/data e DATA_DIR=/app/data
+  echo Se faltar volume, cada deploy apaga clientes e relatórios no servidor.
 ) else (
   echo.
   echo Falha no push. Se pedir autenticação:

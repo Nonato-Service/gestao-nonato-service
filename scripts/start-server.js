@@ -6,6 +6,26 @@ const path = require('path');
 
 const port = process.env.PORT || 3000;
 const nextBin = path.join(__dirname, '..', 'node_modules', 'next', 'dist', 'bin', 'next');
+const dataDir =
+  process.env.RAILWAY_VOLUME_MOUNT_PATH ||
+  process.env.DATA_DIR ||
+  path.join(__dirname, '..', 'data');
+
+try {
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+  const files = fs.readdirSync(dataDir).filter((f) => f.endsWith('.json') || f.endsWith('.txt'));
+  console.log('[start-server] DATA_DIR:', dataDir);
+  console.log('[start-server] Ficheiros de dados:', files.length);
+  if (files.length < 3) {
+    console.warn(
+      '[start-server] AVISO: poucos ficheiros em DATA_DIR — configure volume Railway (/app/data) e DATA_DIR=/app/data para não perder cadastros após deploy.'
+    );
+  }
+} catch (e) {
+  console.warn('[start-server] Não foi possível verificar DATA_DIR:', e);
+}
 
 if (!fs.existsSync(nextBin)) {
   console.error('[start-server] Next.js não encontrado em:', nextBin);

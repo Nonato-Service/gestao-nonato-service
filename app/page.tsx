@@ -29,6 +29,12 @@ import {
 } from './utils/backupRestore'
 import { fetchSyncStatus, getLastAcceptedRevision, setLastAcceptedRevision, hasMeaningfulLocalData } from './utils/syncRevision'
 import { cmpNomeCliente, ordenarClientesPorNome, localeOrdenacaoClientes } from './lib/ordenarClientes'
+import {
+  NONATO_CRITICAL_CADASTRO_KEYS,
+  localStorageKeyHasMeaningfulCadastro,
+  serverCadastroBundleIsEmpty,
+  serverKeyHasMeaningfulData,
+} from './lib/criticalCadastroKeys'
 import { isNonatoDemoBuild } from './utils/nonatoDemoMode'
 import { collectLocalNonatoSnapshot, summarizeDataDiff } from './utils/syncDiff'
 import { assessPullServerRisk, type PullRiskSeverity } from './utils/syncRisk'
@@ -131,8 +137,8 @@ let manuaisSaveAlertShownOnce = false
 
 /** Persistido até a carga terminar: se a flag for limpa cedo demais, o 2.º arranque (Strict Mode) deixa de fazer o wipe. */
 const NONATO_PENDING_FULL_SERVER_REPLACE_LS = 'nonato-pending-full-server-replace'
-/** Cadastro de serviços — cópia de segurança antes de «substituir tudo pelo servidor» (servidor vazio apagava o cadastro). */
-const NONATO_CADASTRO_KEYS_BACKUP_ON_FULL_PULL = ['nonato-servicos', 'nonato-servicos-grupos'] as const
+/** Cadastros — cópia de segurança antes de «substituir tudo pelo servidor» (servidor vazio apagava dados após deploy). */
+const NONATO_CADASTRO_KEYS_BACKUP_ON_FULL_PULL = NONATO_CRITICAL_CADASTRO_KEYS
 
 /** Tamanho dos SVG nos cards do hub (sem Unicode — evita mojibake no deploy) */
 const HUB_CARD_SVG_SIZE = 44
@@ -7487,6 +7493,19 @@ export default function Dashboard() {
       }
       await bumpOp(58)
       const { severity, lines } = assessPullServerRisk(serverNow || {}, localNow)
+      const onlyServerEmptySevere =
+        severity === 'severe' &&
+        lines.length > 0 &&
+        lines.every((line) => line.includes('no servidor há 0') || line.includes('servidor tem 0'))
+      if (onlyServerEmptySevere) {
+        window.alert(
+          (safeT as any)?.syncPullBlockedEmptyServer ||
+            'O servidor está vazio (possível deploy sem volume persistente). NÃO carregue do servidor — use «Enviar tudo ao servidor» neste aparelho para repor os cadastros.'
+        )
+        setSyncPullChecking(false)
+        setSyncOperationPercent(0)
+        return
+      }
       if (severity === 'severe') {
         const intro =
           (safeT as any)?.syncPullRiskSevereIntro ||
@@ -8035,20 +8054,38 @@ export default function Dashboard() {
               for (const k of NONATO_CADASTRO_KEYS_BACKUP_ON_FULL_PULL) {
                 try {
                   const raw = localStorage.getItem(k)
-                  if (raw && raw.trim().length > 4) backupCadastroAntesFullPull[k] = raw
+                  if (raw && localStorageKeyHasMeaningfulCadastro(raw)) {
+                    backupCadastroAntesFullPull[k] = raw
+                  }
                 } catch {
                   /* ignorar */
                 }
               }
+              const localTemCadastro = Object.keys(backupCadastroAntesFullPull).length > 0
+              const servidorSemCadastro = serverCadastroBundleIsEmpty(pre.data as Record<string, unknown>)
+              if (localTemCadastro && servidorSemCadastro) {
+                /** Deploy sem volume: não apagar este aparelho — fundir local no bundle e repor servidor depois. */
+                serverDataFromFullPullPrefetch = { ...pre.data }
+                for (const k of NONATO_CADASTRO_KEYS_BACKUP_ON_FULL_PULL) {
+                  const raw = backupCadastroAntesFullPull[k]
+                  if (!raw) continue
+                  try {
+                    serverDataFromFullPullPrefetch[k] = JSON.parse(raw)
+                  } catch {
+                    /* ignorar parse */
+                  }
+                }
+                preferServerOnlyAfterFullPullWipe = false
+              } else {
+              const backupCadastroAntesFullPullMerge: Record<string, string> = backupCadastroAntesFullPull
               preferServerOnlyAfterFullPullWipe = true
               serverDataFromFullPullPrefetch = { ...pre.data }
               for (const k of NONATO_CADASTRO_KEYS_BACKUP_ON_FULL_PULL) {
                 const sv = serverDataFromFullPullPrefetch[k]
-                const serverVazio =
-                  sv == null || sv === undefined || (Array.isArray(sv) && sv.length === 0)
-                if (serverVazio && backupCadastroAntesFullPull[k]) {
+                const serverVazio = !serverKeyHasMeaningfulData(sv)
+                if (serverVazio && backupCadastroAntesFullPullMerge[k]) {
                   try {
-                    serverDataFromFullPullPrefetch[k] = JSON.parse(backupCadastroAntesFullPull[k])
+                    serverDataFromFullPullPrefetch[k] = JSON.parse(backupCadastroAntesFullPullMerge[k])
                   } catch {
                     /* ignorar parse */
                   }
@@ -8079,6 +8116,7 @@ export default function Dashboard() {
                   /* ignorar */
                 }
               }
+              }
             }
           }
         } catch {
@@ -8088,6 +8126,7 @@ export default function Dashboard() {
       await reportBoot(14)
       const localSnapshotBeforeMerge = collectLocalNonatoSnapshot()
       let bootstrapLoadErrored = false
+      let serverData: Record<string, any> = {}
       try {
         setBlockImplicitServerPushDuringBootstrap(true)
         const syncSt = await fetchSyncStatus()
@@ -8111,7 +8150,7 @@ export default function Dashboard() {
         if (syncSt) serverRevision = syncSt.revision
 
         // Primeiro, tentar carregar tudo do servidor (ou reutilizar bundle do full-pull já obtido antes do wipe)
-        const serverData =
+        serverData =
           serverDataFromFullPullPrefetch !== null
             ? serverDataFromFullPullPrefetch
             : (await loadAllFromServer()).data
@@ -8156,7 +8195,7 @@ export default function Dashboard() {
           if (Object.prototype.hasOwnProperty.call(serverData, key)) {
             const serverValue = serverData[key]
             if (
-              (key === 'nonato-servicos' || key === 'nonato-servicos-grupos') &&
+              (NONATO_CRITICAL_CADASTRO_KEYS as readonly string[]).includes(key) &&
               Array.isArray(serverValue) &&
               serverValue.length === 0
             ) {
@@ -8184,7 +8223,31 @@ export default function Dashboard() {
             } catch (e) { /* ignorar */ }
           }
         }
-        // Cadastro de serviços: servidor vazio não deve apagar o que ainda está neste aparelho
+        // Cadastros críticos: servidor vazio não deve apagar o que ainda está neste aparelho (ex.: após deploy)
+        if (
+          (NONATO_CRITICAL_CADASTRO_KEYS as readonly string[]).includes(key) &&
+          !preferServerOnlyAfterFullPullWipe &&
+          typeof window !== 'undefined'
+        ) {
+          const serverValue = serverData[key]
+          if (!serverKeyHasMeaningfulData(serverValue)) {
+            const localData = localStorage.getItem(key)
+            if (localData !== null && localData !== '') {
+              try {
+                const parsed = JSON.parse(localData)
+                if (serverKeyHasMeaningfulData(parsed)) {
+                  if (!deferServerMerge) {
+                    saveData(key, parsed, false).catch(() => {})
+                  }
+                  return parsed
+                }
+              } catch {
+                /* continuar */
+              }
+            }
+          }
+        }
+        // Cadastro de serviços (legado — coberto pela lista crítica acima; mantido por compatibilidade)
         if (
           (key === 'nonato-servicos' || key === 'nonato-servicos-grupos') &&
           !preferServerOnlyAfterFullPullWipe &&
@@ -8723,6 +8786,15 @@ export default function Dashboard() {
       }
       if (preferServerOnlyAfterFullPullWipe && gruposInicial.length > 0) {
         void saveData('nonato-servicos-grupos', gruposInicial, true, true).catch(() => {})
+      }
+      if (preferServerOnlyAfterFullPullWipe) {
+        for (const cadKey of NONATO_CRITICAL_CADASTRO_KEYS) {
+          if (cadKey === 'nonato-servicos' || cadKey === 'nonato-servicos-grupos') continue
+          const val = getData(cadKey)
+          if (serverKeyHasMeaningfulData(val)) {
+            void saveData(cadKey, val, true, true).catch(() => {})
+          }
+        }
       }
 
       // Carregar biblioteca do tradutor (separada por idiomas)
@@ -11213,6 +11285,14 @@ export default function Dashboard() {
         console.error('Erro ao carregar dados iniciais:', error)
       } finally {
         setBlockImplicitServerPushDuringBootstrap(false)
+        if (
+          !bootstrapLoadErrored &&
+          typeof window !== 'undefined' &&
+          serverCadastroBundleIsEmpty(serverData as Record<string, unknown>) &&
+          hasMeaningfulLocalData()
+        ) {
+          void pushAllLocalStorageToServer().catch(() => {})
+        }
         if (preferServerOnlyAfterFullPullWipe) {
           try {
             localStorage.removeItem(NONATO_PENDING_FULL_SERVER_REPLACE_LS)
@@ -14857,7 +14937,11 @@ export default function Dashboard() {
     setClientes(updatedClientes)
 
     try {
-      await saveData('nonato-clientes', updatedClientes)
+      const savedOk = await saveData('nonato-clientes', updatedClientes, true, true)
+      if (!savedOk) {
+        alert((t as any).erroSalvar || 'Erro ao salvar no servidor. Verifique a ligação e tente novamente.')
+        return
+      }
     } catch (err) {
       console.error('Erro ao salvar clientes:', err)
       alert((t as any).erroSalvar || 'Erro ao salvar. Tente novamente.')
@@ -67436,7 +67520,7 @@ A1;Peça exemplo;10`}
                 <div className="ns-dashboard-entry">
                   <div className="ns-dashboard-entry-hero">
                     <div className="ns-dashboard-entry-pill">{(safeT as any)?.dashboardEntradaBadge || 'Nonato Service'}</div>
-                    <div style={{ marginBottom: isCompactLayout ? 14 : 22 }}>
+                    <div className="ns-dashboard-logo-wrap">
                       <LogoComponent size={isCompactLayout ? 'small' : 'large'} />
                     </div>
                     <h1 className="ns-dashboard-entry-title">
@@ -67508,13 +67592,15 @@ A1;Peça exemplo;10`}
                 className={`ns-dashboard-full-hero${isCompactLayout ? ' ns-dashboard-full-hero--compact' : ''}`}
                 style={{ marginBottom: isCompactLayout ? 12 : 8 }}
               >
-                <div style={{ marginBottom: isCompactLayout ? 12 : 28 }}>
+                <p className="ns-dashboard-full-eyebrow">{safeT?.nonatoService || safeT?.boaTrade || 'NONATO SERVICE'}</p>
+                <div className="ns-dashboard-logo-wrap">
                   <LogoComponent size={isCompactLayout ? 'small' : 'large'} />
                 </div>
-                <h1 className="ns-dashboard-full-title">{safeT?.title || 'GESTÃO TÉCNICA'}</h1>
-                <p className="ns-dashboard-full-welcome">{safeT?.welcome || 'Sistema de Gestão Completo'}</p>
+                <h1 className="ns-dashboard-full-title">{safeT?.welcome || 'Bem-vindo ao Painel de Controlo'}</h1>
+                <p className="ns-dashboard-full-welcome">{safeT?.title || 'Gestão Técnica da Nonato Service'}</p>
+                <div className="ns-dashboard-full-divider" aria-hidden="true" />
                 <p className="ns-dashboard-full-lead">
-                  {safeT?.welcomeText2 || 'Gerencie clientes, equipamentos, relatórios e muito mais em um único lugar.'}
+                  {safeT?.welcomeText2 || 'Utilize o menu lateral para acessar as funcionalidades disponíveis.'}
                 </p>
               </div>
 
