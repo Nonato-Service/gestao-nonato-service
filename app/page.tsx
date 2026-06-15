@@ -3982,7 +3982,7 @@ export default function Dashboard() {
   const [appInitialLoading, setAppInitialLoading] = useState(true)
   const [showDashboardView, setShowDashboardView] = useState(true) // Dashboard central por padrão
   /** Vista resumida no painel inicial; «Entrar no sistema» mostra métricas, atalhos e inventário. */
-  const [dashboardWorkspaceExpanded, setDashboardWorkspaceExpanded] = useState(false)
+  const [dashboardWorkspaceExpanded, setDashboardWorkspaceExpanded] = useState(true)
   /** No painel completo (sem aba): mostrar grelha só com os botões do grupo expandido na barra lateral. */
   const [dashboardMainHubId, setDashboardMainHubId] = useState<string | null>(null)
   const [showTranslatorModal, setShowTranslatorModal] = useState(false)
@@ -5413,7 +5413,7 @@ export default function Dashboard() {
   const voltarPaginaInicial = () => {
     setOpenTabs([])
     setActiveTabId(null)
-    setDashboardWorkspaceExpanded(false)
+    setDashboardWorkspaceExpanded(true)
     setDashboardMainHubId(null)
     // Fechar todos os modais
     setShowModal(false)
@@ -67520,7 +67520,7 @@ A1;Peça exemplo;10`}
                 <div className="ns-dashboard-entry">
                   <div className="ns-dashboard-entry-hero">
                     <div className="ns-dashboard-entry-pill">{(safeT as any)?.dashboardEntradaBadge || 'Nonato Service'}</div>
-                    <div className="ns-dashboard-logo-wrap">
+                    <div style={{ marginBottom: isCompactLayout ? 14 : 22 }}>
                       <LogoComponent size={isCompactLayout ? 'small' : 'large'} />
                     </div>
                     <h1 className="ns-dashboard-entry-title">
@@ -67592,15 +67592,13 @@ A1;Peça exemplo;10`}
                 className={`ns-dashboard-full-hero${isCompactLayout ? ' ns-dashboard-full-hero--compact' : ''}`}
                 style={{ marginBottom: isCompactLayout ? 12 : 8 }}
               >
-                <p className="ns-dashboard-full-eyebrow">{safeT?.nonatoService || safeT?.boaTrade || 'NONATO SERVICE'}</p>
-                <div className="ns-dashboard-logo-wrap">
+                <div style={{ marginBottom: isCompactLayout ? 12 : 28 }}>
                   <LogoComponent size={isCompactLayout ? 'small' : 'large'} />
                 </div>
-                <h1 className="ns-dashboard-full-title">{safeT?.welcome || 'Bem-vindo ao Painel de Controlo'}</h1>
-                <p className="ns-dashboard-full-welcome">{safeT?.title || 'Gestão Técnica da Nonato Service'}</p>
-                <div className="ns-dashboard-full-divider" aria-hidden="true" />
+                <h1 className="ns-dashboard-full-title">{safeT?.title || 'GESTÃO TÉCNICA'}</h1>
+                <p className="ns-dashboard-full-welcome">{safeT?.welcome || 'Sistema de Gestão Completo'}</p>
                 <p className="ns-dashboard-full-lead">
-                  {safeT?.welcomeText2 || 'Utilize o menu lateral para acessar as funcionalidades disponíveis.'}
+                  {safeT?.welcomeText2 || 'Gerencie clientes, equipamentos, relatórios e muito mais em um único lugar.'}
                 </p>
               </div>
 

@@ -9646,98 +9646,47 @@ button.dia-trabalho-acao-btn--del:hover {
   gap: clamp(22px, 3.5vw, 40px);
 }
 
-/* Dashboard / hero: logos PNG com fundo preto fundem-se ao painel escuro */
-.ns-dashboard-logo-wrap .ns-logo-in-box {
-  background: transparent;
-  border-radius: 14px;
-}
-.ns-dashboard-logo-wrap .ns-logo-in-box img,
-.ns-dashboard-logo-wrap .ns-logo-in-box video {
-  mix-blend-mode: lighten;
-  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.45));
-}
-
-.ns-dashboard-logo-wrap {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(10px, 2vw, 16px);
-  margin: 0 auto clamp(12px, 2.5vw, 22px);
-  border-radius: 22px;
-  background: radial-gradient(ellipse 80% 70% at 50% 40%, rgba(52, 211, 153, 0.08), transparent 70%);
-  border: 1px solid rgba(52, 211, 153, 0.18);
-  box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-
 .ns-dashboard-full-hero {
   text-align: center;
-  padding: clamp(28px, 4.5vw, 52px) clamp(20px, 4vw, 40px);
-  border-radius: clamp(18px, 2.5vw, 26px);
-  background:
-    radial-gradient(ellipse 90% 55% at 50% -15%, rgba(34, 197, 94, 0.12), transparent 58%),
-    linear-gradient(165deg, rgba(14, 24, 20, 0.72) 0%, rgba(8, 10, 16, 0.94) 52%, rgba(4, 6, 10, 0.98) 100%);
-  border: 1px solid rgba(52, 211, 153, 0.22);
+  padding: clamp(18px, 3.5vw, 44px) clamp(14px, 3vw, 32px);
+  border-radius: clamp(14px, 2vw, 22px);
+  background: linear-gradient(152deg, rgba(12, 22, 18, 0.55) 0%, rgba(8, 10, 16, 0.88) 55%, rgba(4, 6, 10, 0.92) 100%);
+  border: 1px solid rgba(52, 211, 153, 0.2);
   box-shadow:
-    0 24px 64px rgba(0, 0, 0, 0.48),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 20px 56px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .ns-dashboard-full-hero--compact {
-  padding: 20px 16px 24px;
-  border-radius: 16px;
-}
-
-.ns-dashboard-full-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 0 clamp(14px, 2.5vw, 20px);
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(110, 231, 183, 0.95);
-  background: rgba(52, 211, 153, 0.08);
-  border: 1px solid rgba(52, 211, 153, 0.28);
+  padding: 16px 12px 20px;
+  border-radius: 14px;
 }
 
 .ns-dashboard-full-title {
-  margin: 0 0 10px;
-  font-size: clamp(1.5rem, 4.2vw, 2.15rem);
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.15;
-  text-transform: none;
+  margin: 0 0 12px;
+  font-size: clamp(1.35rem, 4.5vw, 2.35rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: #f8fafc;
-  text-shadow: 0 2px 24px rgba(34, 197, 94, 0.12);
+  text-shadow: 0 0 28px rgba(34, 197, 94, 0.18);
 }
 
 .ns-dashboard-full-welcome {
-  margin: 0 0 14px;
-  font-size: clamp(13px, 2.5vw, 15px);
+  margin: 0 0 10px;
+  font-size: clamp(14px, 2.8vw, 17px);
   font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: none;
-  color: rgba(148, 163, 184, 0.95);
-}
-
-.ns-dashboard-full-divider {
-  width: min(120px, 28vw);
-  height: 1px;
-  margin: 0 auto 16px;
-  background: linear-gradient(90deg, transparent, rgba(52, 211, 153, 0.55), transparent);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(110, 231, 183, 0.92);
 }
 
 .ns-dashboard-full-lead {
   margin: 0 auto;
-  max-width: 46ch;
-  font-size: clamp(13px, 2.5vw, 15px);
-  line-height: 1.7;
-  color: rgba(203, 213, 225, 0.82);
+  max-width: 52ch;
+  font-size: clamp(12px, 2.4vw, 15px);
+  line-height: 1.65;
+  color: rgba(203, 213, 225, 0.88);
 }
 
 .ns-dashboard-stats {
@@ -10219,12 +10168,10 @@ button.dia-trabalho-acao-btn--del:hover {
 
 .ns-dashboard-entry-hero {
   width: 100%;
-  padding: clamp(28px, 4.5vw, 48px) clamp(20px, 3.5vw, 42px);
-  border-radius: 26px;
-  background:
-    radial-gradient(ellipse 85% 50% at 50% -10%, rgba(34, 197, 94, 0.1), transparent 55%),
-    linear-gradient(155deg, rgba(10, 28, 18, 0.88) 0%, rgba(14, 18, 26, 0.96) 45%, rgba(8, 12, 20, 0.98) 100%);
-  border: 1px solid rgba(52, 211, 153, 0.24);
+  padding: clamp(24px, 4vw, 44px) clamp(18px, 3vw, 40px);
+  border-radius: 24px;
+  background: linear-gradient(155deg, rgba(10, 28, 18, 0.92) 0%, rgba(14, 18, 26, 0.96) 45%, rgba(8, 12, 20, 0.98) 100%);
+  border: 1px solid rgba(52, 211, 153, 0.22);
   box-shadow: 0 28px 72px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   text-align: center;
   box-sizing: border-box;
