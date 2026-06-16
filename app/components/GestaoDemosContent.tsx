@@ -457,7 +457,7 @@ export function GestaoDemosContent({
           <div style={{ fontSize: '22px', marginBottom: '6px' }}>✨</div>
           <div style={{ fontWeight: 700, marginBottom: '4px' }}>Envio completo</div>
           <div style={{ fontSize: '11px', opacity: 0.72, lineHeight: 1.4 }}>
-            Todos os módulos operacionais ({editableModuleKeys.length} funções) — <strong>sem Administrador</strong>
+            Todos os módulos operacionais ({editableModuleKeys.length} funções) — <strong>sem Administrador</strong>, com <strong>Extras (idioma)</strong>
           </div>
         </button>
         {DEMO_PRESET_CARDS.map((card) => {

@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { NextResponse } from 'next/server'
 import { DATA_DIR, ensureDataDir } from '../data/shared'
-import { DEMO_VISITOR_USER, clampDemoDays, DEMO_DAYS_DEFAULT, resolveDemoDaysForRecipient, type DemoRecipientRecord } from '../../lib/demoManagement'
+import { DEMO_VISITOR_USER, clampDemoDays, DEMO_DAYS_DEFAULT, resolveDemoDaysForRecipient, normalizeDemoModulesForSession, type DemoRecipientRecord } from '../../lib/demoManagement'
 import type { StoredUser } from '../auth/appAuth'
 
 export const RECIPIENTS_FILE = 'nonato-demo-link-recipients.json'
@@ -33,7 +33,8 @@ export function getDemoRecipientById(recipientId: string): DemoRecipientRecord |
 
 export function getDemoModulesByRecipient(recipientId: string): Record<string, string> | undefined {
   const recipient = getDemoRecipientById(recipientId)
-  return recipient?.demoModules && typeof recipient.demoModules === 'object' ? recipient.demoModules : undefined
+  if (!recipient?.demoModules || typeof recipient.demoModules !== 'object') return undefined
+  return normalizeDemoModulesForSession(recipient.demoModules) as Record<string, string>
 }
 
 export function getDemoDaysByRecipient(recipientId: string): number {

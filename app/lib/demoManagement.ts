@@ -72,12 +72,11 @@ export const DEMO_VISITOR_USER = {
     agenda: true,
     desmontados: true,
     cadastroServicos: true,
-    extras: false,
+    extras: true,
   },
 } as const
 
 export const DEMO_HIDDEN_ACTIONS = new Set([
-  'open-extra',
   'open-administrador',
   'open-cadastro-nonato-service',
   'open-ficha-cadastral',
@@ -117,6 +116,7 @@ export const DEMO_ALLOWED_ACTIONS = new Set([
   'open-formularios-checklist-tecnicos',
   'open-verificacao-final-entrega',
   'open-protocolos-servico',
+  'open-extra',
 ])
 
 export const FULL_DEMO_ACTION_KEYS: string[] = Array.from(
@@ -242,6 +242,7 @@ export function getDemoModuleLabelForGrid(action: string): string {
     'open-almoxarifado-armazem': 'Almoxarifado / armazém',
     'open-ficha-pagamento-transferencia': 'Ficha para transferência / pagamento',
     'open-ficha-fatura-cliente': 'Ficha para o cliente emitir fatura',
+    'open-extra': 'Extras (idioma)',
   }
   if (labels[action]) return labels[action]
   return action
@@ -313,7 +314,24 @@ export function finalizeDemoModulesPolicy(modules: Record<string, DemoModuleMode
   for (const action of DEMO_HIDDEN_ACTIONS) {
     out[action] = 'hidden'
   }
+  // Idioma sempre disponível na demo (Administrador e restantes sensíveis continuam ocultos).
+  out['open-extra'] = 'active'
   return out
+}
+
+/** Normaliza módulos guardados/cookie — útil para demos já enviadas antes de Extras estar activo. */
+export function normalizeDemoModulesForSession(
+  modules: Record<string, DemoModuleMode | string> | undefined
+): Record<string, DemoModuleMode> {
+  const base: Record<string, DemoModuleMode> = {}
+  if (modules && typeof modules === 'object') {
+    for (const [key, value] of Object.entries(modules)) {
+      if (value === 'active' || value === 'teaser' || value === 'hidden') {
+        base[key] = value
+      }
+    }
+  }
+  return finalizeDemoModulesPolicy(base)
 }
 
 export function buildDemoModulesFromPreset(

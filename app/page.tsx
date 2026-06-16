@@ -6101,7 +6101,6 @@ export default function Dashboard() {
   )
   const DEMO_HIDDEN_ACTIONS = useMemo(
     () => new Set([
-      'open-extra',
       'open-administrador',
       'open-cadastro-nonato-service',
       'open-ficha-cadastral',
@@ -6143,6 +6142,7 @@ export default function Dashboard() {
       'open-formularios-checklist-tecnicos',
       'open-verificacao-final-entrega',
       'open-protocolos-servico',
+      'open-extra',
     ]),
     []
   )
@@ -6184,12 +6184,14 @@ export default function Dashboard() {
   }, [DEMO_ALLOWED_ACTIONS, DEMO_MODULE_CATALOG])
   const isActionVisibleInDemo = useCallback((action: string): boolean => {
     if (!isDemoMode) return true
+    if (action === 'open-extra') return true
     const configuredMode = demoModuleConfig[action]
     if (configuredMode) return configuredMode !== 'hidden'
     return !DEMO_HIDDEN_ACTIONS.has(action)
   }, [DEMO_HIDDEN_ACTIONS, demoModuleConfig, isDemoMode])
   const isActionAllowedInDemo = useCallback((action: string): boolean => {
     if (!isDemoMode) return true
+    if (action === 'open-extra') return true
     const configuredMode = demoModuleConfig[action]
     if (configuredMode) return configuredMode === 'active'
     return DEMO_ALLOWED_ACTIONS.has(action)
@@ -7919,6 +7921,14 @@ export default function Dashboard() {
       })
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (!isDemoMode) return
+    setExpandedGroups((prev) => {
+      if (prev.has('extra')) return prev
+      return new Set(prev).add('extra')
+    })
+  }, [isDemoMode])
 
   // Carregar logo, idioma e usuários salvos ao iniciar
   // Mensagens / peças armazém: carregadas em loadAllData com getData (mesmo snapshot que o resto) — não usar loadData em paralelo no arranque (causa resultados diferentes a cada F5).
@@ -67017,8 +67027,8 @@ A1;Peça exemplo;10`}
             </div>
           )}
 
-        {/* Grupo: EXTRA */}
-        {!isDemoMode && (
+        {/* Grupo: EXTRA — na demo só idioma; restantes ferramentas sensíveis ficam ocultas */}
+        {(!isDemoMode || isActionVisibleInDemo('open-extra')) && (
         <div className="sidebar-nav-cluster">
           <button
             className={`btn-primary sidebar-group-header${selectedSidebarButton === 'open-extra' ? ' sidebar-group-btn-selected' : ''}`}
@@ -67063,6 +67073,7 @@ A1;Peça exemplo;10`}
               </div>
 
               {/* Botão Tradutor de Idiomas */}
+              {!isDemoMode && (
               <button
                 className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
                   selectedSidebarButton === 'open-translator' ? ' sidebar-action-btn-active' : ''
@@ -67097,8 +67108,10 @@ A1;Peça exemplo;10`}
                   ) : null
                 })()}
               </button>
+              )}
 
               {/* Assistente de escrita (dois idiomas) */}
+              {!isDemoMode && (
               <button
                 type="button"
                 className="btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry"
@@ -67124,9 +67137,10 @@ A1;Peça exemplo;10`}
                   </span>
                 ) : null}
               </button>
+              )}
 
               {/* Instalar a app (PWA) — barra lateral em vez de botão flutuante */}
-              {installPrompt?.canShow ? (
+              {!isDemoMode && installPrompt?.canShow ? (
                 <button
                   type="button"
                   className="btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry"
@@ -67153,6 +67167,7 @@ A1;Peça exemplo;10`}
               ) : null}
 
               {/* Botão Manual de Uso do Gestor Nonato Service */}
+              {!isDemoMode && (
               <button
                 className={`btn-primary sidebar-action-btn sidebar-action-btn--row sidebar-action-btn--empresa-entry${
                   selectedSidebarButton === 'open-manual-gestor' ? ' sidebar-action-btn-active' : ''
@@ -67189,6 +67204,7 @@ A1;Peça exemplo;10`}
                   ) : null
                 })()}
               </button>
+              )}
             </div>
           )}
         </div>

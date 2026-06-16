@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDemoContext, hasRealAppSession, isDemoGuestLock } from '../../data/demo-context'
+import { normalizeDemoModulesForSession } from '../../../lib/demoManagement'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
       expired: productionMode ? false : expired,
       daysLeft: productionMode ? null : (daysLeft ?? null),
       recipientId: productionMode ? null : recipientId,
-      demoModules: productionMode ? {} : demoModules,
+      demoModules: productionMode ? {} : normalizeDemoModulesForSession(demoModules),
       guestLock: productionMode ? false : guestLock,
       productionMode,
     })
