@@ -5887,6 +5887,9 @@ export default function Dashboard() {
   const [filtroDataAgenda, setFiltroDataAgenda] = useState('')
   const [buscaAgendaListaRapida, setBuscaAgendaListaRapida] = useState('')
   const [visualizacaoAgenda, setVisualizacaoAgenda] = useState<'lista' | 'calendario'>('lista')
+  const [agendaPainelSituacaoSelecionada, setAgendaPainelSituacaoSelecionada] = useState<
+    'exec' | 'agend' | 'pre' | 'pessoal' | 'pend' | 'canc' | 'done' | null
+  >(null)
   const [agendaCalendarioMostrarConcluidos, setAgendaCalendarioMostrarConcluidos] = useState(() => {
     if (typeof window === 'undefined') return false
     try {
@@ -41921,8 +41924,11 @@ A1;Peça exemplo;10`}
                     {(safeT as any)?.agendaPainelOperacionalTitulo || 'Situação operacional'}
                   </h2>
                   <p className="agenda-tecnica-painel-hint" style={{ margin: '6px 0 0 0', fontSize: '12px', color: '#999', maxWidth: '900px' }}>
-                    {(safeT as any)?.agendaPainelOperacionalHint ||
-                      'Resumo em tempo real: execução, confirmados, pré-agendados, pendentes (ag. técnico), cancelados e concluídos recentes. O filtro de técnico acima aplica-se aqui; tipo e data da lista não ocultam este painel.'}
+                    {agendaPainelSituacaoSelecionada
+                      ? (safeT as any)?.agendaPainelDetalheHint ||
+                        'Registos desta situação. Use «Voltar às situações» para escolher outra.'
+                      : (safeT as any)?.agendaPainelSelecionarSituacaoHint ||
+                        'Selecione uma situação abaixo para ver os registos. O filtro de técnico acima aplica-se aqui.'}
                   </p>
                 </div>
               </div>
@@ -41965,12 +41971,10 @@ A1;Peça exemplo;10`}
                   .filter((a) => normalizeStatusAgendamento(a) === 'cancelado')
                   .sort(ordenarDataHoraDescPainel)
                 const canceladosPainelCount = canceladosPainelFull.length
-                const canceladosPainel = canceladosPainelFull.slice(0, AGENDA_PAINEL_CANCELADOS_MAX)
                 const concluidosPainelFull = agBasePainel
                   .filter((a) => normalizeStatusAgendamento(a) === 'concluido')
                   .sort(ordenarDataHoraDescPainel)
                 const concluidosPainelCount = concluidosPainelFull.length
-                const concluidosPainel = concluidosPainelFull.slice(0, AGENDA_PAINEL_CONCLUIDOS_MAX)
 
                 const cabecalhoPainelColuna = (
                   variant: 'exec' | 'agend' | 'pre' | 'pend' | 'pessoal' | 'canc' | 'done',
@@ -42198,174 +42202,203 @@ A1;Peça exemplo;10`}
                   <div style={{ padding: '12px', fontSize: '12px', color: '#666', borderRadius: '8px', border: '1px dashed rgba(255,255,255,0.12)' }}>{msg}</div>
                 )
 
-                return (
-                  <>
+                type PainelSitId = 'exec' | 'agend' | 'pre' | 'pessoal' | 'pend' | 'canc' | 'done'
+                const trPainel = safeT as Record<string, string | undefined>
+
+                const painelSituacoes: Array<{
+                  id: PainelSitId
+                  titulo: string
+                  count: number
+                  wrapStyle: React.CSSProperties
+                  borda: string
+                  itens: Agendamento[]
+                  vazioMsg: string
+                  miniOpts?: { muted?: boolean; cancelado?: boolean }
+                  rodape?: React.ReactNode
+                }> = [
+                  {
+                    id: 'exec',
+                    titulo: trPainel.agendaPainelEmExecucao || 'Em execução',
+                    count: emExecucao.length,
+                    wrapStyle: {
+                      backgroundColor: 'rgba(28, 14, 8, 0.55)',
+                      border: '1px solid rgba(255, 110, 55, 0.5)',
+                      boxShadow: '0 4px 18px rgba(255, 80, 30, 0.08)',
+                    },
+                    borda: 'rgba(255, 150, 60, 0.55)',
+                    itens: emExecucao,
+                    vazioMsg: trPainel.agendaPainelVazioExecucao || 'Nenhum trabalho em execução.',
+                  },
+                  {
+                    id: 'agend',
+                    titulo: trPainel.agendaPainelAgendados || 'Agendados (confirmados)',
+                    count: agendados.length,
+                    wrapStyle: {
+                      backgroundColor: 'rgba(8, 16, 32, 0.6)',
+                      border: '1px solid rgba(80, 150, 255, 0.52)',
+                      boxShadow: '0 4px 18px rgba(40, 100, 255, 0.1)',
+                    },
+                    borda: 'rgba(90, 150, 255, 0.45)',
+                    itens: agendados,
+                    vazioMsg: trPainel.agendaPainelVazioAgendados || 'Nenhum agendamento técnico confirmado.',
+                  },
+                  {
+                    id: 'pre',
+                    titulo: trPainel.agendaPainelPreAgendados || 'Pré-agendados',
+                    count: preAgendados.length,
+                    wrapStyle: {
+                      backgroundColor: 'rgba(32, 28, 10, 0.58)',
+                      border: '1px solid rgba(215, 175, 45, 0.48)',
+                      boxShadow: '0 4px 18px rgba(200, 160, 30, 0.08)',
+                    },
+                    borda: 'rgba(230, 200, 80, 0.4)',
+                    itens: preAgendados,
+                    vazioMsg: trPainel.agendaPainelVazioPre || 'Nenhum pré-agendamento ativo.',
+                  },
+                  {
+                    id: 'pessoal',
+                    titulo: trPainel.agendaPainelAssuntosPessoais || 'Assuntos pessoais',
+                    count: assuntosPessoaisPainel.length,
+                    wrapStyle: {
+                      backgroundColor: 'rgba(28, 14, 38, 0.62)',
+                      border: '1px solid rgba(168, 85, 247, 0.48)',
+                      boxShadow: '0 4px 18px rgba(120, 60, 180, 0.12)',
+                    },
+                    borda: 'rgba(168, 85, 247, 0.45)',
+                    itens: assuntosPessoaisPainel,
+                    vazioMsg: trPainel.agendaPainelVazioPessoal || 'Nenhum assunto pessoal pendente.',
+                  },
+                  {
+                    id: 'pend',
+                    titulo: trPainel.agendaPainelPendentes || 'Pendentes (ag. técnico)',
+                    count: pendentesPainel.length,
+                    wrapStyle: {
+                      backgroundColor: 'rgba(36, 18, 10, 0.58)',
+                      border: '1px solid rgba(234, 88, 12, 0.48)',
+                      boxShadow: '0 4px 18px rgba(200, 80, 20, 0.1)',
+                    },
+                    borda: 'rgba(255, 120, 60, 0.5)',
+                    itens: pendentesPainel,
+                    vazioMsg: trPainel.agendaPainelVazioPendentes || 'Nenhum agendamento técnico pendente.',
+                  },
+                  {
+                    id: 'canc',
+                    titulo: trPainel.agendaPainelCancelados || 'Cancelados',
+                    count: canceladosPainelCount,
+                    wrapStyle: {
+                      backgroundColor: 'rgba(40, 0, 0, 0.55)',
+                      border: '2px solid rgba(248, 113, 113, 0.65)',
+                      boxShadow: '0 4px 18px rgba(220, 38, 38, 0.22)',
+                    },
+                    borda: AGENDA_CANCELADO_BORDA,
+                    itens: canceladosPainelFull,
+                    vazioMsg: trPainel.agendaPainelVazioCancelados || 'Nenhum agendamento cancelado.',
+                    miniOpts: { muted: true, cancelado: true },
+                  },
+                  {
+                    id: 'done',
+                    titulo: trPainel.agendaPainelConcluidosRecentes || 'Concluídos (recentes)',
+                    count: concluidosPainelCount,
+                    wrapStyle: {
+                      backgroundColor: 'rgba(8, 28, 16, 0.58)',
+                      border: '1px solid rgba(34, 197, 94, 0.45)',
+                      boxShadow: '0 4px 18px rgba(0, 160, 70, 0.1)',
+                    },
+                    borda: 'rgba(50, 200, 100, 0.45)',
+                    itens: concluidosPainelFull,
+                    vazioMsg: trPainel.agendaPainelVazioConcluidos || 'Nenhum trabalho concluído.',
+                    rodape:
+                      concluidosPainelCount > 0 ? (
+                        <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#6a8f6f', lineHeight: 1.35 }}>
+                          {trPainel.agendaPainelConcluidosDicaHistorico ||
+                            'Para pesquisa completa por cliente ou datas, use «Histórico — trabalhos concluídos» abaixo.'}
+                        </p>
+                      ) : null,
+                  },
+                ]
+
+                const renderPainelConteudoSituacao = (sit: (typeof painelSituacoes)[number]) => (
+                  <div
+                    style={{
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      ...sit.wrapStyle,
+                    }}
+                  >
+                    {cabecalhoPainelColuna(sit.id, sit.titulo, sit.count)}
+                    <div style={{ padding: '0 12px 12px' }}>
+                      {sit.itens.length === 0
+                        ? vazio(sit.vazioMsg)
+                        : sit.itens.map((a) => miniAgendaBtn(a, sit.borda, sit.miniOpts))}
+                      {sit.rodape}
+                    </div>
+                  </div>
+                )
+
+                if (!agendaPainelSituacaoSelecionada) {
+                  return (
                     <div
-                      className="agenda-tecnica-painel-grid"
+                      className="agenda-tecnica-painel-grid agenda-tecnica-painel-grid--menu"
                       style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
                         gap: '14px',
                         marginBottom: '18px',
                       }}
                     >
-                      <div
-                        style={{
-                          borderRadius: '12px',
-                          overflow: 'hidden',
-                          backgroundColor: 'rgba(28, 14, 8, 0.55)',
-                          border: '1px solid rgba(255, 110, 55, 0.5)',
-                          boxShadow: '0 4px 18px rgba(255, 80, 30, 0.08)',
-                        }}
-                      >
-                        {cabecalhoPainelColuna(
-                          'exec',
-                          (safeT as any)?.agendaPainelEmExecucao || 'Em execução',
-                          emExecucao.length
-                        )}
-                        <div style={{ padding: '0 12px 12px' }}>
-                          {emExecucao.length === 0
-                            ? vazio((safeT as any)?.agendaPainelVazioExecucao || 'Nenhum trabalho em execução.')
-                            : emExecucao.map((a) => miniAgendaBtn(a, 'rgba(255, 150, 60, 0.55)'))}
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          borderRadius: '12px',
-                          overflow: 'hidden',
-                          backgroundColor: 'rgba(8, 16, 32, 0.6)',
-                          border: '1px solid rgba(80, 150, 255, 0.52)',
-                          boxShadow: '0 4px 18px rgba(40, 100, 255, 0.1)',
-                        }}
-                      >
-                        {cabecalhoPainelColuna(
-                          'agend',
-                          (safeT as any)?.agendaPainelAgendados || 'Agendados (confirmados)',
-                          agendados.length
-                        )}
-                        <div style={{ padding: '0 12px 12px' }}>
-                          {agendados.length === 0
-                            ? vazio((safeT as any)?.agendaPainelVazioAgendados || 'Nenhum agendamento técnico confirmado.')
-                            : agendados.map((a) => miniAgendaBtn(a, 'rgba(90, 150, 255, 0.45)'))}
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          borderRadius: '12px',
-                          overflow: 'hidden',
-                          backgroundColor: 'rgba(32, 28, 10, 0.58)',
-                          border: '1px solid rgba(215, 175, 45, 0.48)',
-                          boxShadow: '0 4px 18px rgba(200, 160, 30, 0.08)',
-                        }}
-                      >
-                        {cabecalhoPainelColuna(
-                          'pre',
-                          (safeT as any)?.agendaPainelPreAgendados || 'Pré-agendados',
-                          preAgendados.length
-                        )}
-                        <div style={{ padding: '0 12px 12px' }}>
-                          {preAgendados.length === 0
-                            ? vazio((safeT as any)?.agendaPainelVazioPre || 'Nenhum pré-agendamento ativo.')
-                            : preAgendados.map((a) => miniAgendaBtn(a, 'rgba(230, 200, 80, 0.4)'))}
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          borderRadius: '12px',
-                          overflow: 'hidden',
-                          backgroundColor: 'rgba(28, 14, 38, 0.62)',
-                          border: '1px solid rgba(168, 85, 247, 0.48)',
-                          boxShadow: '0 4px 18px rgba(120, 60, 180, 0.12)',
-                        }}
-                      >
-                        {cabecalhoPainelColuna(
-                          'pessoal',
-                          (safeT as any)?.agendaPainelAssuntosPessoais || 'Assuntos pessoais',
-                          assuntosPessoaisPainel.length
-                        )}
-                        <div style={{ padding: '0 12px 12px' }}>
-                          {assuntosPessoaisPainel.length === 0
-                            ? vazio((safeT as any)?.agendaPainelVazioPessoal || 'Nenhum assunto pessoal pendente.')
-                            : assuntosPessoaisPainel.map((a) => miniAgendaBtn(a, 'rgba(168, 85, 247, 0.45)'))}
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          borderRadius: '12px',
-                          overflow: 'hidden',
-                          backgroundColor: 'rgba(36, 18, 10, 0.58)',
-                          border: '1px solid rgba(234, 88, 12, 0.48)',
-                          boxShadow: '0 4px 18px rgba(200, 80, 20, 0.1)',
-                        }}
-                      >
-                        {cabecalhoPainelColuna(
-                          'pend',
-                          (safeT as any)?.agendaPainelPendentes || 'Pendentes (ag. técnico)',
-                          pendentesPainel.length
-                        )}
-                        <div style={{ padding: '0 12px 12px' }}>
-                          {pendentesPainel.length === 0
-                            ? vazio((safeT as any)?.agendaPainelVazioPendentes || 'Nenhum agendamento técnico pendente.')
-                            : pendentesPainel.map((a) => miniAgendaBtn(a, 'rgba(255, 120, 60, 0.5)'))}
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          borderRadius: '12px',
-                          overflow: 'hidden',
-                          backgroundColor: 'rgba(40, 0, 0, 0.55)',
-                          border: '2px solid rgba(248, 113, 113, 0.65)',
-                          boxShadow: '0 4px 18px rgba(220, 38, 38, 0.22)',
-                        }}
-                      >
-                        {cabecalhoPainelColuna(
-                          'canc',
-                          (safeT as any)?.agendaPainelCancelados || 'Cancelados',
-                          canceladosPainelCount
-                        )}
-                        <div style={{ padding: '0 12px 12px' }}>
-                          {canceladosPainelCount === 0
-                            ? vazio((safeT as any)?.agendaPainelVazioCancelados || 'Nenhum agendamento cancelado.')
-                            : canceladosPainel.map((a) => miniAgendaBtn(a, AGENDA_CANCELADO_BORDA, { muted: true, cancelado: true }))}
-                          {canceladosPainelCount > canceladosPainel.length ? (
-                            <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#777' }}>
-                              +{canceladosPainelCount - canceladosPainel.length}{' '}
-                              {(safeT as any)?.agendaPainelListaTruncada || 'outros — clique num item ou use a lista/calendário.'}
-                            </p>
-                          ) : null}
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          borderRadius: '12px',
-                          overflow: 'hidden',
-                          backgroundColor: 'rgba(8, 28, 16, 0.58)',
-                          border: '1px solid rgba(34, 197, 94, 0.45)',
-                          boxShadow: '0 4px 18px rgba(0, 160, 70, 0.1)',
-                        }}
-                      >
-                        {cabecalhoPainelColuna(
-                          'done',
-                          (safeT as any)?.agendaPainelConcluidosRecentes || 'Concluídos (recentes)',
-                          concluidosPainelCount
-                        )}
-                        <div style={{ padding: '0 12px 12px' }}>
-                          {concluidosPainelCount === 0
-                            ? vazio((safeT as any)?.agendaPainelVazioConcluidos || 'Nenhum trabalho concluído.')
-                            : concluidosPainel.map((a) => miniAgendaBtn(a, 'rgba(50, 200, 100, 0.45)'))}
-                          {concluidosPainelCount > 0 ? (
-                            <p style={{ margin: '8px 0 0', fontSize: '11px', color: '#6a8f6f', lineHeight: 1.35 }}>
-                              {(safeT as any)?.agendaPainelConcluidosDicaHistorico ||
-                                'Para pesquisa completa por cliente ou datas, use «Histórico — trabalhos concluídos» abaixo.'}
-                              {concluidosPainelCount > concluidosPainel.length
-                                ? ` (+${concluidosPainelCount - concluidosPainel.length} ${(safeT as any)?.agendaPainelOutrosRegistos || 'outros registos'})`
-                                : ''}
-                            </p>
-                          ) : null}
-                        </div>
-                      </div>
+                      {painelSituacoes.map((sit) => (
+                        <button
+                          key={sit.id}
+                          type="button"
+                          className="agenda-painel-situacao-btn"
+                          onClick={() => setAgendaPainelSituacaoSelecionada(sit.id)}
+                          style={{
+                            padding: 0,
+                            margin: 0,
+                            border: 'none',
+                            background: 'transparent',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            borderRadius: '12px',
+                            overflow: 'hidden',
+                            width: '100%',
+                            transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                          }}
+                        >
+                          <div style={{ borderRadius: '12px', overflow: 'hidden', ...sit.wrapStyle }}>
+                            {cabecalhoPainelColuna(sit.id, sit.titulo, sit.count)}
+                          </div>
+                        </button>
+                      ))}
                     </div>
-                  </>
+                  )
+                }
+
+                const situacaoAtiva = painelSituacoes.find((s) => s.id === agendaPainelSituacaoSelecionada)
+                if (!situacaoAtiva) {
+                  return null
+                }
+
+                return (
+                  <div className="agenda-tecnica-painel-detalhe" style={{ marginBottom: '18px' }}>
+                    <button
+                      type="button"
+                      className="btn-secondary agenda-painel-voltar-btn"
+                      onClick={() => setAgendaPainelSituacaoSelecionada(null)}
+                      style={{
+                        marginBottom: '14px',
+                        padding: '10px 18px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      ← {trPainel.agendaPainelVoltarSituacoes || 'Voltar às situações'}
+                    </button>
+                    {renderPainelConteudoSituacao(situacaoAtiva)}
+                  </div>
                 )
               })()}
             </div>

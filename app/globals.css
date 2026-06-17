@@ -5023,6 +5023,19 @@ a:focus-visible {
   color: #fff !important;
 }
 
+.agenda-painel-situacao-btn:hover {
+  transform: translateY(-2px);
+}
+
+.agenda-painel-situacao-btn:hover > div {
+  filter: brightness(1.08);
+}
+
+.agenda-painel-situacao-btn:focus-visible {
+  outline: 2px solid rgba(0, 255, 122, 0.75);
+  outline-offset: 3px;
+}
+
 .cliente-form-alerta-devedor label,
 .cliente-form-alerta-devedor h3,
 .cliente-form-alerta-devedor h4,
