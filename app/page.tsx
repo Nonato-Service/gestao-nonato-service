@@ -2421,12 +2421,92 @@ function rotuloTituloAgendamento(ag: Agendamento, tr?: Record<string, string | u
 
 function rotuloCurtoAgendamentoCalendario(ag: Agendamento, tr?: Record<string, string | undefined>): string {
   if (isAgendamentoPessoal(ag)) {
-    return ag.subtipoPessoal === 'visita-tecnica'
-      ? tr?.agendaVisitaTecnica || 'Visita técnica'
-      : tr?.agendaPessoal || 'Pessoal'
+    const base =
+      ag.subtipoPessoal === 'visita-tecnica'
+        ? tr?.agendaVisitaTecnica || 'Visita técnica'
+        : tr?.agendaPessoal || 'Pessoal'
+    const assunto = String(ag.assunto || '').trim()
+    if (assunto) {
+      const curto = assunto.length > 14 ? `${assunto.substring(0, 14)}…` : assunto
+      return `${base}: ${curto}`
+    }
+    return base
   }
+  const st = normalizeStatusAgendamento(ag)
   const nome = String(ag.cliente || '').trim()
-  return nome.length > 15 ? `${nome.substring(0, 15)}…` : nome
+  const curto = nome.length > 14 ? `${nome.substring(0, 14)}…` : nome
+  if (st === 'cancelado') {
+    return curto ? `${curto} (${tr?.cancelado || 'canc.'})` : tr?.cancelado || 'Cancelado'
+  }
+  return curto || '—'
+}
+
+/** Assuntos pessoais permanecem visíveis na agenda normal mesmo com filtro de tipo de serviço. */
+function agendaPassaFiltroTipoListagem(
+  filtro: 'todos' | 'pre-agendamento' | 'agendamento-tecnico' | 'assuntos-pessoais' | 'visita-tecnica' | 'nenhum' | 'folga' | 'doente' | 'ferias',
+  ag: Agendamento
+): boolean {
+  if (filtro === 'assuntos-pessoais' && !isAgendamentoPessoal(ag)) return false
+  if (
+    filtro === 'visita-tecnica' &&
+    (!isAgendamentoPessoal(ag) || ag.subtipoPessoal !== 'visita-tecnica')
+  ) {
+    return false
+  }
+  if (
+    (filtro === 'pre-agendamento' || filtro === 'agendamento-tecnico') &&
+    !isAgendamentoPessoal(ag) &&
+    normalizeTipoAgendamento(ag) !== filtro
+  ) {
+    return false
+  }
+  return true
+}
+
+function ordenarAgendamentosCalendarioDia(a: Agendamento, b: Agendamento): number {
+  const prioridade = (ag: Agendamento): number => {
+    if (isAgendamentoPessoal(ag)) return 2
+    const st = normalizeStatusAgendamento(ag)
+    if (st === 'cancelado') return 3
+    if (st === 'concluido') return 5
+    return 1
+  }
+  const pa = prioridade(a)
+  const pb = prioridade(b)
+  if (pa !== pb) return pa - pb
+  return String(a.hora || '').localeCompare(String(b.hora || ''))
+}
+
+function accentCorAgendamentoLista(ag: Agendamento): string {
+  if (isAgendamentoPessoal(ag)) return 'rgba(168, 85, 247, 0.92)'
+  const st = normalizeStatusAgendamento(ag)
+  if (st === 'cancelado') return '#f87171'
+  if (st === 'em-andamento') return 'rgba(255, 107, 45, 0.92)'
+  if (st === 'confirmado') return 'rgba(55, 130, 235, 0.92)'
+  if (st === 'pendente') return 'rgba(234, 88, 12, 0.92)'
+  if (normalizeTipoAgendamento(ag) === 'pre-agendamento') return 'rgba(255, 190, 50, 0.95)'
+  return 'rgba(90, 150, 255, 0.45)'
+}
+
+const AGENDA_CANCELADO_BG =
+  'linear-gradient(165deg, rgba(110, 14, 14, 0.98) 0%, rgba(52, 8, 8, 0.99) 48%, rgba(16, 0, 0, 1) 100%)'
+const AGENDA_CANCELADO_BORDA = '#f87171'
+const AGENDA_CANCELADO_SOMBRA = '0 0 22px rgba(248, 113, 113, 0.42)'
+
+function isAgendamentoCancelado(ag: Agendamento): boolean {
+  return normalizeStatusAgendamento(ag) === 'cancelado'
+}
+
+function estiloMarcadorAgendamentoCancelado(): React.CSSProperties {
+  return {
+    background: AGENDA_CANCELADO_BG,
+    border: `2px solid ${AGENDA_CANCELADO_BORDA}`,
+    boxShadow: AGENDA_CANCELADO_SOMBRA,
+    color: '#ffffff',
+    fontWeight: 700,
+    textDecoration: 'line-through',
+    textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+  }
 }
 
 type EquipamentoCliente = {
@@ -41967,11 +42047,11 @@ A1;Peça exemplo;10`}
                       cfg = {
                         icon: '✕',
                         tag: trAny.agendaPainelHeadTagCancelado || 'CANCELADO',
-                        bar: '#71717a',
-                        grad: 'linear-gradient(105deg, rgba(100,100,110,0.45) 0%, rgba(16,16,20,0.97) 48%, rgba(12,12,14,0.98) 100%)',
-                        iconBox: 'rgba(90, 90, 100, 0.28)',
-                        iconBorder: '1px solid rgba(160, 160, 175, 0.45)',
-                        titleTint: '#e4e4e7',
+                        bar: '#ef4444',
+                        grad: 'linear-gradient(105deg, rgba(220, 38, 38, 0.55) 0%, rgba(52, 8, 8, 0.97) 48%, rgba(16, 0, 0, 0.98) 100%)',
+                        iconBox: 'rgba(220, 38, 38, 0.28)',
+                        iconBorder: '1px solid rgba(248, 113, 113, 0.65)',
+                        titleTint: '#fecaca',
                       }
                       break
                     default:
@@ -42072,25 +42152,28 @@ A1;Peça exemplo;10`}
                   )
                 }
 
-                const miniAgendaBtn = (a: Agendamento, borda: string, opts?: { muted?: boolean }) => (
+                const miniAgendaBtn = (a: Agendamento, borda: string, opts?: { muted?: boolean; cancelado?: boolean }) => (
                   <button
                     key={`painel-${a.id}`}
                     type="button"
                     title={(safeT as any)?.agendaMiniCardEditarHint || 'Clique para editar este registo'}
                     onClick={() => handleEditAgendamento(a)}
+                    className={opts?.cancelado || isAgendamentoCancelado(a) ? 'agenda-mini-card-cancelado' : undefined}
                     style={{
                       width: '100%',
                       textAlign: 'left',
                       padding: '10px 11px',
                       marginBottom: '8px',
                       borderRadius: '8px',
-                      border: `1px solid ${borda}`,
-                      backgroundColor: '#181818',
-                      color: '#eee',
+                      border: opts?.cancelado || isAgendamentoCancelado(a) ? `2px solid ${AGENDA_CANCELADO_BORDA}` : `1px solid ${borda}`,
+                      background: opts?.cancelado || isAgendamentoCancelado(a) ? AGENDA_CANCELADO_BG : undefined,
+                      backgroundColor: opts?.cancelado || isAgendamentoCancelado(a) ? undefined : '#181818',
+                      boxShadow: opts?.cancelado || isAgendamentoCancelado(a) ? AGENDA_CANCELADO_SOMBRA : undefined,
+                      color: '#fff',
                       cursor: 'pointer',
                       fontSize: '12px',
                       lineHeight: 1.35,
-                      opacity: opts?.muted ? 0.88 : 1,
+                      opacity: opts?.muted ? 0.95 : 1,
                     }}
                   >
                     <div
@@ -42230,9 +42313,9 @@ A1;Peça exemplo;10`}
                         style={{
                           borderRadius: '12px',
                           overflow: 'hidden',
-                          backgroundColor: 'rgba(22, 22, 26, 0.65)',
-                          border: '1px solid rgba(120, 120, 135, 0.5)',
-                          boxShadow: '0 4px 18px rgba(0, 0, 0, 0.2)',
+                          backgroundColor: 'rgba(40, 0, 0, 0.55)',
+                          border: '2px solid rgba(248, 113, 113, 0.65)',
+                          boxShadow: '0 4px 18px rgba(220, 38, 38, 0.22)',
                         }}
                       >
                         {cabecalhoPainelColuna(
@@ -42243,7 +42326,7 @@ A1;Peça exemplo;10`}
                         <div style={{ padding: '0 12px 12px' }}>
                           {canceladosPainelCount === 0
                             ? vazio((safeT as any)?.agendaPainelVazioCancelados || 'Nenhum agendamento cancelado.')
-                            : canceladosPainel.map((a) => miniAgendaBtn(a, 'rgba(130, 130, 145, 0.45)', { muted: true }))}
+                            : canceladosPainel.map((a) => miniAgendaBtn(a, AGENDA_CANCELADO_BORDA, { muted: true, cancelado: true }))}
                           {canceladosPainelCount > canceladosPainel.length ? (
                             <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#777' }}>
                               +{canceladosPainelCount - canceladosPainel.length}{' '}
@@ -43132,21 +43215,9 @@ A1;Peça exemplo;10`}
               <div>
                 {(() => {
                   const agendamentosFiltrados = agendamentos.filter((ag) => {
-                    if (filtroAgenda === 'assuntos-pessoais' && !isAgendamentoPessoal(ag)) return false
-                    if (
-                      filtroAgenda === 'visita-tecnica' &&
-                      (!isAgendamentoPessoal(ag) || ag.subtipoPessoal !== 'visita-tecnica')
-                    ) {
-                      return false
-                    }
-                    if (
-                      (filtroAgenda === 'pre-agendamento' || filtroAgenda === 'agendamento-tecnico') &&
-                      (isAgendamentoPessoal(ag) || normalizeTipoAgendamento(ag) !== filtroAgenda)
-                    ) {
-                      return false
-                    }
+                    if (!agendaPassaFiltroTipoListagem(filtroAgenda, ag)) return false
                     if (filtroTecnicoAgenda && !isAgendamentoPessoal(ag) && ag.tecnico !== filtroTecnicoAgenda) return false
-                    if (filtroDataAgenda && ag.data !== filtroDataAgenda) return false
+                    if (filtroDataAgenda && !agendamentoIncluiData(ag, filtroDataAgenda)) return false
                     const q = buscaAgendaListaRapida.trim().toLowerCase()
                     if (q.length >= 2) {
                       const blob = [
@@ -43220,20 +43291,24 @@ A1;Peça exemplo;10`}
                     .filter((ag) => normalizeStatusAgendamento(ag) === 'cancelado')
                     .sort(ordenarAgenda)
 
-                  const renderAgendaCard = (agendamento: Agendamento, accent: string, pulseClass?: string, opts?: { muted?: boolean }) => (
+                  const renderAgendaCard = (agendamento: Agendamento, accent: string, pulseClass?: string, opts?: { muted?: boolean }) => {
+                    const cancelado = isAgendamentoCancelado(agendamento)
+                    return (
                     <div
                       key={agendamento.id}
                       role="button"
                       tabIndex={0}
                       title={(safeT as any)?.agendaCardClickToEditHint || 'Clique para editar (ou use o botão Editar)'}
-                      className={['agenda-lista-card', pulseClass || ''].filter(Boolean).join(' ') || undefined}
+                      className={['agenda-lista-card', pulseClass || '', cancelado ? 'agenda-lista-card-cancelado' : ''].filter(Boolean).join(' ') || undefined}
                       style={{
-                        backgroundColor: '#141414',
+                        backgroundColor: cancelado ? undefined : '#141414',
+                        background: cancelado ? AGENDA_CANCELADO_BG : undefined,
                         padding: '20px',
                         borderRadius: '10px',
-                        border: `1px solid ${accent}`,
-                        borderLeft: `6px solid ${accent}`,
-                        opacity: opts?.muted ? 0.92 : 1,
+                        border: cancelado ? `2px solid ${AGENDA_CANCELADO_BORDA}` : `1px solid ${accent}`,
+                        borderLeft: cancelado ? `6px solid ${AGENDA_CANCELADO_BORDA}` : `6px solid ${accent}`,
+                        boxShadow: cancelado ? AGENDA_CANCELADO_SOMBRA : undefined,
+                        opacity: opts?.muted ? 0.96 : 1,
                         cursor: 'pointer',
                         outline: 'none',
                       }}
@@ -43445,6 +43520,7 @@ A1;Peça exemplo;10`}
                       </div>
                     </div>
                   )
+                  }
 
                   const renderAgendaSection = (
                     titulo: string,
@@ -43519,6 +43595,84 @@ A1;Peça exemplo;10`}
                   const soConcluidosNosFiltros =
                     agendamentosListaAtivos.length === 0 && agConcluidosLista.length > 0
 
+                  if (filtroDataAgenda) {
+                    const agDoDiaAtivos = [...agendamentosListaAtivos].sort(ordenarAgendamentosCalendarioDia)
+                    const dataFmt = parseDataAgendaLocal(filtroDataAgenda).toLocaleDateString('pt-PT', {
+                      weekday: 'long',
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric',
+                    })
+                    return (
+                      <div>
+                        <div
+                          style={{
+                            marginBottom: '16px',
+                            padding: '14px 16px',
+                            backgroundColor: 'rgba(18, 18, 28, 0.85)',
+                            borderRadius: '10px',
+                            border: '1px solid rgba(168, 85, 247, 0.28)',
+                          }}
+                        >
+                          <p style={{ fontSize: '15px', color: '#e9d5ff', margin: '0 0 6px 0', fontWeight: 800 }}>
+                            {(safeT as any)?.agendaSecaoDiaUnificado || 'Agenda do dia'} — {dataFmt}
+                          </p>
+                          <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.65)', margin: 0 }}>
+                            {(safeT as any)?.agendaSecaoDiaUnificadoHint ||
+                              'Trabalhos e assuntos pessoais deste dia — inclui cancelados e novos compromissos.'}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setFiltroDataAgenda('')}
+                            style={{
+                              marginTop: '10px',
+                              padding: '6px 12px',
+                              fontSize: '12px',
+                              borderRadius: '6px',
+                              border: '1px solid rgba(255,255,255,0.2)',
+                              background: 'transparent',
+                              color: '#ccc',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {(safeT as any)?.agendaLimparFiltroDia || 'Ver todos os dias'}
+                          </button>
+                        </div>
+                        {agDoDiaAtivos.length === 0 ? (
+                          <div className="agenda-lista-empty" style={{ padding: '30px', textAlign: 'center', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
+                            <p style={{ fontSize: '14px', opacity: 0.7, margin: 0 }}>
+                              {(safeT as any)?.agendaDiaSemCompromissos || 'Nenhum compromisso ativo neste dia.'}
+                            </p>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '18px' }}>
+                            {agDoDiaAtivos.map((ag) =>
+                              renderAgendaCard(
+                                ag,
+                                accentCorAgendamentoLista(ag),
+                                undefined,
+                                normalizeStatusAgendamento(ag) === 'cancelado' ? { muted: true } : undefined
+                              )
+                            )}
+                          </div>
+                        )}
+                        {agConcluidosLista.length > 0 ? (
+                          <div style={{ marginBottom: '18px' }}>
+                            {renderAgendaSection(
+                              (safeT as any)?.agendaListaSecaoConcluidos || (safeT as any)?.agendaPainelConcluidosRecentes || 'Concluídos (recentes)',
+                              'rgba(34, 197, 94, 0.88)',
+                              agConcluidosLista,
+                              undefined,
+                              undefined,
+                              false,
+                              agConcluidosListaTotal
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
+                    )
+                  }
+
                   return (
                     <div>
                       {soConcluidosNosFiltros ? (
@@ -43575,7 +43729,7 @@ A1;Peça exemplo;10`}
                       )}
                       {renderAgendaSection(
                         (safeT as any)?.agendaSecaoCancelados || (safeT as any)?.agendaPainelCancelados || (safeT?.cancelado || 'Cancelados'),
-                        'rgba(140, 140, 155, 0.75)',
+                        '#f87171',
                         agCancelados,
                         (safeT as any)?.agendaSecaoCanceladosHint || 'Cancelado — mantido para registo',
                         undefined,
@@ -43607,21 +43761,9 @@ A1;Peça exemplo;10`}
             {visualizacaoAgenda === 'calendario' && (() => {
               // Filtrar agendamentos
               const agendamentosFiltrados = agendamentos.filter((ag) => {
-                if (filtroAgenda === 'assuntos-pessoais' && !isAgendamentoPessoal(ag)) return false
-                if (
-                  filtroAgenda === 'visita-tecnica' &&
-                  (!isAgendamentoPessoal(ag) || ag.subtipoPessoal !== 'visita-tecnica')
-                ) {
-                  return false
-                }
-                if (
-                  (filtroAgenda === 'pre-agendamento' || filtroAgenda === 'agendamento-tecnico') &&
-                  (isAgendamentoPessoal(ag) || normalizeTipoAgendamento(ag) !== filtroAgenda)
-                ) {
-                  return false
-                }
+                if (!agendaPassaFiltroTipoListagem(filtroAgenda, ag)) return false
                 if (filtroTecnicoAgenda && !isAgendamentoPessoal(ag) && ag.tecnico !== filtroTecnicoAgenda) return false
-                if (filtroDataAgenda && ag.data !== filtroDataAgenda) return false
+                if (filtroDataAgenda && !agendamentoIncluiData(ag, filtroDataAgenda)) return false
                 return true
               })
               const agendamentosCalendarioVisiveis = agendaCalendarioMostrarConcluidos
@@ -43736,12 +43878,7 @@ A1;Peça exemplo;10`}
                 if (st === 'cancelado') {
                   return {
                     ...texto,
-                    backgroundColor: 'rgba(68, 70, 78, 0.9)',
-                    border: '1px solid rgba(130, 132, 142, 0.55)',
-                    color: 'rgba(255, 255, 255, 0.58)',
-                    fontWeight: 600,
-                    textDecoration: 'line-through',
-                    textShadow: 'none',
+                    ...estiloMarcadorAgendamentoCancelado(),
                   }
                 }
                 if (st === 'concluido') {
@@ -43862,7 +43999,7 @@ A1;Peça exemplo;10`}
                         const dia = index + 1
                         const dataKey = `${calendarioAno}-${String(calendarioMes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
                         const agendamentosDoDia = agendamentosPorData[dataKey] || []
-                        const agDiaUnicos = agendamentosUnicosDoDia(agendamentosDoDia)
+                        const agDiaUnicos = agendamentosUnicosDoDia(agendamentosDoDia).sort(ordenarAgendamentosCalendarioDia)
                         const hojeDia = isHoje(dia)
 
                         return (
@@ -43880,10 +44017,6 @@ A1;Peça exemplo;10`}
                             }}
                             onClick={() => {
                               if (agDiaUnicos.length === 0) return
-                              if (agDiaUnicos.length === 1) {
-                                handleEditAgendamento(agDiaUnicos[0])
-                                return
-                              }
                               setFiltroDataAgenda(dataKey)
                               setVisualizacaoAgenda('lista')
                               setBuscaAgendaListaRapida('')
@@ -43905,7 +44038,7 @@ A1;Peça exemplo;10`}
 
                             {/* Agendamentos do dia */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                              {agDiaUnicos.slice(0, 3).map((ag) => {
+                              {agDiaUnicos.slice(0, 5).map((ag) => {
                                 const clienteTxt = rotuloCurtoAgendamentoCalendario(ag, safeT as Record<string, string | undefined>)
                                 const tituloCal = rotuloTituloAgendamento(ag, safeT as Record<string, string | undefined>)
                                 return (
@@ -43931,7 +44064,7 @@ A1;Peça exemplo;10`}
                                   <strong>{ag.hora}</strong> {clienteTxt}
                                 </div>
                               )})}
-                              {agDiaUnicos.length > 3 && (
+                              {agDiaUnicos.length > 5 && (
                                 <div
                                   style={{
                                     fontSize: '10px',
@@ -43947,9 +44080,10 @@ A1;Peça exemplo;10`}
                                     e.stopPropagation()
                                     setFiltroDataAgenda(dataKey)
                                     setVisualizacaoAgenda('lista')
+                                    setBuscaAgendaListaRapida('')
                                   }}
                                 >
-                                  +{agDiaUnicos.length - 3} {safeT?.mais || 'mais'}
+                                  +{agDiaUnicos.length - 5} {safeT?.mais || 'mais'}
                                 </div>
                               )}
                             </div>
@@ -44066,17 +44200,21 @@ A1;Peça exemplo;10`}
                             style={{
                               padding: '2px 8px',
                               borderRadius: '6px',
-                              backgroundColor: 'rgba(68, 70, 78, 0.9)',
-                              border: '1px solid rgba(130, 132, 142, 0.55)',
+                              background: AGENDA_CANCELADO_BG,
+                              border: `2px solid ${AGENDA_CANCELADO_BORDA}`,
+                              boxShadow: AGENDA_CANCELADO_SOMBRA,
                               fontSize: '11px',
-                              color: 'rgba(255, 255, 255, 0.58)',
-                              fontWeight: 600,
+                              color: '#fff',
+                              fontWeight: 700,
                               textDecoration: 'line-through',
+                              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
                             }}
                           >
                             09:00 Cliente
                           </div>
-                          <span style={{ fontSize: '12px' }}>{safeT?.cancelado || 'Cancelado'}</span>
+                          <span style={{ fontSize: '12px', color: '#fecaca' }}>
+                            {(safeT as any)?.agendaLegendaCancelado || safeT?.cancelado || 'Cancelado — fundo vermelho (igual devedor)'}
+                          </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: agendaCalendarioMostrarConcluidos ? 1 : 0.72 }}>
                           <div
