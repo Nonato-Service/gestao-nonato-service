@@ -26,6 +26,7 @@ type AgendamentoRef = {
   data: string
   hora?: string
   status: string
+  categoria?: string
 }
 
 function chaveCliente(clienteId: string | undefined, clienteNome: string): string {
@@ -104,6 +105,7 @@ function clientesDeAgendaHoje(agendamentos: AgendamentoRef[], hoje: string): Cli
   const map = new Map<string, ClienteAtivoComprovante>()
   for (const a of agendamentos) {
     if (a.status === 'cancelado') continue
+    if (a.categoria === 'pessoal') continue
     const dataAg = String(a.data || '').trim().slice(0, 10)
     if (dataAg !== hoje) continue
     const nome = String(a.cliente || '').trim()

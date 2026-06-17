@@ -2230,6 +2230,12 @@ type Agendamento = {
   relatorioTrabalhoExecutado?: string
   /** Preenchido automaticamente ao passar o estado para «Concluído». */
   dataRegistoConclusao?: string
+  /** servico = cliente/equipamento; pessoal = assuntos particulares ou visita técnica (sem cliente). */
+  categoria?: 'servico' | 'pessoal'
+  /** Quando categoria = pessoal: tipo de compromisso exibido na agenda. */
+  subtipoPessoal?: 'pessoal' | 'visita-tecnica'
+  /** Descrição opcional do assunto pessoal (ex.: médico, banco). */
+  assunto?: string
 }
 
 /** Normaliza tipo para o calendário: dados antigos podem vir sem `tipo` ou com texto diferente — antes ficava tudo azul. */
@@ -2391,6 +2397,36 @@ function rotuloPeriodoAgendamento(ag: Agendamento): string {
   if (keys.length <= 1) return keys[0] || ag.data
   const fmt = (k: string) => parseDataAgendaLocal(k).toLocaleDateString('pt-PT')
   return `${fmt(keys[0])} — ${fmt(keys[keys.length - 1])}`
+}
+
+function normalizeCategoriaAgendamento(ag: { categoria?: string }): 'servico' | 'pessoal' {
+  return ag.categoria === 'pessoal' ? 'pessoal' : 'servico'
+}
+
+function isAgendamentoPessoal(ag: { categoria?: string }): boolean {
+  return normalizeCategoriaAgendamento(ag) === 'pessoal'
+}
+
+function rotuloTituloAgendamento(ag: Agendamento, tr?: Record<string, string | undefined>): string {
+  if (isAgendamentoPessoal(ag)) {
+    const base =
+      ag.subtipoPessoal === 'visita-tecnica'
+        ? tr?.agendaVisitaTecnica || 'Visita técnica'
+        : tr?.agendaPessoal || 'Pessoal'
+    const assunto = String(ag.assunto || ag.tipoServico || '').trim()
+    return assunto ? `${base} — ${assunto}` : base
+  }
+  return String(ag.cliente || '').trim() || '—'
+}
+
+function rotuloCurtoAgendamentoCalendario(ag: Agendamento, tr?: Record<string, string | undefined>): string {
+  if (isAgendamentoPessoal(ag)) {
+    return ag.subtipoPessoal === 'visita-tecnica'
+      ? tr?.agendaVisitaTecnica || 'Visita técnica'
+      : tr?.agendaPessoal || 'Pessoal'
+  }
+  const nome = String(ag.cliente || '').trim()
+  return nome.length > 15 ? `${nome.substring(0, 15)}…` : nome
 }
 
 type EquipamentoCliente = {
@@ -5759,9 +5795,14 @@ export default function Dashboard() {
     cidade: '',
     dataCriacao: new Date().toISOString(),
     relatorioTrabalhoExecutado: '',
-    dataRegistoConclusao: undefined
+    dataRegistoConclusao: undefined,
+    categoria: 'servico',
+    subtipoPessoal: 'pessoal',
+    assunto: '',
   })
-  const [filtroAgenda, setFiltroAgenda] = useState<'todos' | 'pre-agendamento' | 'agendamento-tecnico' | 'nenhum' | 'folga' | 'doente' | 'ferias'>('todos')
+  const [filtroAgenda, setFiltroAgenda] = useState<
+    'todos' | 'pre-agendamento' | 'agendamento-tecnico' | 'assuntos-pessoais' | 'visita-tecnica' | 'nenhum' | 'folga' | 'doente' | 'ferias'
+  >('todos')
   const [filtroTecnicoAgenda, setFiltroTecnicoAgenda] = useState('')
   const [filtroDataAgenda, setFiltroDataAgenda] = useState('')
   const [buscaAgendaListaRapida, setBuscaAgendaListaRapida] = useState('')
@@ -9395,6 +9436,7 @@ export default function Dashboard() {
             ...a,
             tipo: normalizeTipoAgendamento(a),
             status: normalizeStatusAgendamento(a),
+            categoria: normalizeCategoriaAgendamento(a),
           }))
         )
       }
@@ -13899,7 +13941,7 @@ export default function Dashboard() {
   }
 
   // Funções para Agenda
-  const handleAddAgendamento = () => {
+  const handleAddAgendamento = (categoriaInicial: 'servico' | 'pessoal' = 'servico') => {
     setEditingAgendamento(null)
     setAgendaForm({
       id: '',
@@ -13911,7 +13953,7 @@ export default function Dashboard() {
       equipamentoId: '',
       data: new Date().toISOString().split('T')[0],
       hora: '09:00',
-      duracaoEstimada: '2',
+      duracaoEstimada: categoriaInicial === 'pessoal' ? '1' : '2',
       diasSelecionados: undefined,
       tipoServico: '',
       observacoesTecnicas: '',
@@ -13924,7 +13966,10 @@ export default function Dashboard() {
       cidade: '',
       dataCriacao: new Date().toISOString(),
       relatorioTrabalhoExecutado: '',
-      dataRegistoConclusao: undefined
+      dataRegistoConclusao: undefined,
+      categoria: categoriaInicial,
+      subtipoPessoal: 'pessoal',
+      assunto: '',
     })
     const hoje = new Date()
     setAgendaPickerMes(hoje.getMonth())
@@ -13941,6 +13986,9 @@ export default function Dashboard() {
       ...resolved,
       tipo: normalizeTipoAgendamento(agendamento),
       status: normalizeStatusAgendamento(agendamento),
+      categoria: normalizeCategoriaAgendamento(agendamento),
+      subtipoPessoal: agendamento.subtipoPessoal || 'pessoal',
+      assunto: agendamento.assunto || '',
     })
     const dias = agendamento.diasSelecionados?.length
       ? [...agendamento.diasSelecionados].sort()
@@ -13959,7 +14007,12 @@ export default function Dashboard() {
   }
 
   const handleSaveAgendamento = () => {
-    if (!agendaForm.tecnico || !agendaForm.cliente || !agendaForm.data || !agendaForm.hora) {
+    const pessoal = isAgendamentoPessoal(agendaForm)
+    if (!agendaForm.tecnico || !agendaForm.data || !agendaForm.hora) {
+      alert(safeT?.fillAllFields || 'Preencha todos os campos obrigatórios!')
+      return
+    }
+    if (!pessoal && !agendaForm.cliente) {
       alert(safeT?.fillAllFields || 'Preencha todos os campos obrigatórios!')
       return
     }
@@ -13968,6 +14021,23 @@ export default function Dashboard() {
       ...agendaForm,
       tipo: normalizeTipoAgendamento(agendaForm),
       status: normalizeStatusAgendamento(agendaForm),
+      categoria: pessoal ? 'pessoal' : 'servico',
+      subtipoPessoal: pessoal ? agendaForm.subtipoPessoal || 'pessoal' : undefined,
+      assunto: pessoal ? String(agendaForm.assunto || '').trim() : undefined,
+      ...(pessoal
+        ? {
+            cliente: '',
+            clienteId: '',
+            equipamento: '',
+            equipamentoId: '',
+            telefone: '',
+            endereco: '',
+            cidade: '',
+            necessidadePecas: false,
+            codigoNotaFiscal: '',
+            pecasAnexadas: [],
+          }
+        : {}),
     }
 
     const statusAntes = editingAgendamento ? normalizeStatusAgendamento(editingAgendamento) : null
@@ -14061,14 +14131,17 @@ export default function Dashboard() {
   const getMensagemLembreteAgenda = (a: Agendamento): string => {
     const dataPt = a.data ? new Date(a.data + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''
     const tipoLabel = a.tipo === 'agendamento-tecnico' ? (safeT?.agendamentoTecnico || 'Agendamento Técnico') : (safeT?.preAgendamento || 'Pré-Agendamento')
+    const titulo = rotuloTituloAgendamento(a, safeT as Record<string, string | undefined>)
     return [
       (safeT?.lembreteAgendaWhatsAppPrefixo || 'Lembrete Nonato Service:'),
       '',
       (safeT?.lembreteAgendaTemosAgendado || 'Temos agendado para') + ` ${dataPt} ${safeT?.as || 'às'} ${a.hora || ''}:`,
       `• ${tipoLabel}`,
-      `• ${safeT?.cliente || 'Cliente'}: ${a.cliente || ''}`,
+      isAgendamentoPessoal(a)
+        ? `• ${titulo}`
+        : `• ${safeT?.cliente || 'Cliente'}: ${a.cliente || ''}`,
       `• ${safeT?.tecnico || 'Técnico'}: ${a.tecnico || ''}`,
-      a.equipamento ? `• ${safeT?.equipamento || 'Equipamento'}: ${a.equipamento}` : '',
+      !isAgendamentoPessoal(a) && a.equipamento ? `• ${safeT?.equipamento || 'Equipamento'}: ${a.equipamento}` : '',
       '',
       (safeT?.lembreteAgendaQualquerDuvida || 'Qualquer dúvida, contacte-nos.')
     ].filter(Boolean).join('\n')
@@ -41483,7 +41556,7 @@ A1;Peça exemplo;10`}
                   <div className="agenda-tecnica-hero__actions-primary">
                   <button 
                     className="btn-primary" 
-                    onClick={handleAddAgendamento} 
+                    onClick={() => handleAddAgendamento('servico')} 
                     style={{ 
                       padding: '10px 20px',
                       backgroundColor: 'rgba(0, 255, 0, 0.2)',
@@ -41494,6 +41567,22 @@ A1;Peça exemplo;10`}
                     }}
                   >
                     ➕ {safeT?.novoAgendamento || 'Novo Agendamento'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => handleAddAgendamento('pessoal')}
+                    style={{
+                      padding: '10px 20px',
+                      backgroundColor: 'rgba(140, 80, 220, 0.18)',
+                      border: '1px solid rgba(180, 130, 255, 0.55)',
+                      color: '#d8b4fe',
+                      fontWeight: 'bold',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    📌 {(safeT as any)?.agendaNovoAssuntoPessoal || 'Novo assunto pessoal'}
                   </button>
                   <button
                     type="button"
@@ -41673,6 +41762,8 @@ A1;Peça exemplo;10`}
                   <option value="todos">{safeT?.todos || 'Todos'}</option>
                   <option value="pre-agendamento">{safeT?.preAgendamento || 'Pré-Agendamento'}</option>
                   <option value="agendamento-tecnico">{safeT?.agendamentoTecnico || 'Agendamento Técnico'}</option>
+                  <option value="assuntos-pessoais">{(safeT as any)?.agendaFiltroAssuntosPessoais || 'Assuntos pessoais'}</option>
+                  <option value="visita-tecnica">{(safeT as any)?.agendaFiltroVisitaTecnica || 'Visita técnica'}</option>
                 </select>
               </div>
               <div className="agenda-tecnica-filtros__field" style={{ minWidth: '150px' }}>
@@ -41761,15 +41852,23 @@ A1;Peça exemplo;10`}
                   return c !== 0 ? c : String(x.hora || '').localeCompare(String(y.hora || ''))
                 }
                 const emExecucao = agBasePainel
-                  .filter((a) => normalizeTipoAgendamento(a) === 'agendamento-tecnico' && normalizeStatusAgendamento(a) === 'em-andamento')
+                  .filter((a) => !isAgendamentoPessoal(a) && normalizeTipoAgendamento(a) === 'agendamento-tecnico' && normalizeStatusAgendamento(a) === 'em-andamento')
                   .sort(ordenarDataHoraAsc)
                 const agendados = agBasePainel
-                  .filter((a) => normalizeTipoAgendamento(a) === 'agendamento-tecnico' && normalizeStatusAgendamento(a) === 'confirmado')
+                  .filter((a) => !isAgendamentoPessoal(a) && normalizeTipoAgendamento(a) === 'agendamento-tecnico' && normalizeStatusAgendamento(a) === 'confirmado')
                   .sort(ordenarDataHoraAsc)
                 const preAgendados = agBasePainel
                   .filter(
                     (a) =>
+                      !isAgendamentoPessoal(a) &&
                       normalizeTipoAgendamento(a) === 'pre-agendamento' &&
+                      !['concluido', 'cancelado'].includes(normalizeStatusAgendamento(a))
+                  )
+                  .sort(ordenarDataHoraAsc)
+                const assuntosPessoaisPainel = agBasePainel
+                  .filter(
+                    (a) =>
+                      isAgendamentoPessoal(a) &&
                       !['concluido', 'cancelado'].includes(normalizeStatusAgendamento(a))
                   )
                   .sort(ordenarDataHoraAsc)
@@ -41779,7 +41878,7 @@ A1;Peça exemplo;10`}
                   return c !== 0 ? c : String(y.hora || '').localeCompare(String(x.hora || ''))
                 }
                 const pendentesPainel = agBasePainel
-                  .filter((a) => normalizeTipoAgendamento(a) === 'agendamento-tecnico' && normalizeStatusAgendamento(a) === 'pendente')
+                  .filter((a) => !isAgendamentoPessoal(a) && normalizeTipoAgendamento(a) === 'agendamento-tecnico' && normalizeStatusAgendamento(a) === 'pendente')
                   .sort(ordenarDataHoraAsc)
                 const canceladosPainelFull = agBasePainel
                   .filter((a) => normalizeStatusAgendamento(a) === 'cancelado')
@@ -41793,7 +41892,7 @@ A1;Peça exemplo;10`}
                 const concluidosPainel = concluidosPainelFull.slice(0, AGENDA_PAINEL_CONCLUIDOS_MAX)
 
                 const cabecalhoPainelColuna = (
-                  variant: 'exec' | 'agend' | 'pre' | 'pend' | 'canc' | 'done',
+                  variant: 'exec' | 'agend' | 'pre' | 'pend' | 'pessoal' | 'canc' | 'done',
                   titulo: string,
                   n: number
                 ) => {
@@ -41850,6 +41949,17 @@ A1;Peça exemplo;10`}
                         iconBox: 'rgba(234, 88, 12, 0.22)',
                         iconBorder: '1px solid rgba(255, 140, 90, 0.55)',
                         titleTint: '#ffdcc4',
+                      }
+                      break
+                    case 'pessoal':
+                      cfg = {
+                        icon: '📌',
+                        tag: trAny.agendaPainelHeadTagPessoal || 'PESSOAL',
+                        bar: '#a855f7',
+                        grad: 'linear-gradient(105deg, rgba(168,85,247,0.38) 0%, rgba(22,10,32,0.97) 48%, rgba(14,12,18,0.98) 100%)',
+                        iconBox: 'rgba(168, 85, 247, 0.22)',
+                        iconBorder: '1px solid rgba(216, 180, 254, 0.55)',
+                        titleTint: '#e9d5ff',
                       }
                       break
                     case 'canc':
@@ -41990,12 +42100,12 @@ A1;Peça exemplo;10`}
                         textDecoration: opts?.muted ? 'line-through' : undefined,
                       }}
                     >
-                      {a.cliente}
+                      {rotuloTituloAgendamento(a, safeT as Record<string, string | undefined>)}
                     </div>
                     <div style={{ opacity: 0.88 }}>
                       {new Date(a.data + 'T12:00:00').toLocaleDateString('pt-PT')} · {a.hora} · {a.tecnico}
                     </div>
-                    {a.tipoServico ? <div style={{ marginTop: '4px', opacity: 0.75 }}>{a.tipoServico}</div> : null}
+                    {a.tipoServico && !isAgendamentoPessoal(a) ? <div style={{ marginTop: '4px', opacity: 0.75 }}>{a.tipoServico}</div> : null}
                   </button>
                 )
 
@@ -42072,6 +42182,26 @@ A1;Peça exemplo;10`}
                           {preAgendados.length === 0
                             ? vazio((safeT as any)?.agendaPainelVazioPre || 'Nenhum pré-agendamento ativo.')
                             : preAgendados.map((a) => miniAgendaBtn(a, 'rgba(230, 200, 80, 0.4)'))}
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          borderRadius: '12px',
+                          overflow: 'hidden',
+                          backgroundColor: 'rgba(28, 14, 38, 0.62)',
+                          border: '1px solid rgba(168, 85, 247, 0.48)',
+                          boxShadow: '0 4px 18px rgba(120, 60, 180, 0.12)',
+                        }}
+                      >
+                        {cabecalhoPainelColuna(
+                          'pessoal',
+                          (safeT as any)?.agendaPainelAssuntosPessoais || 'Assuntos pessoais',
+                          assuntosPessoaisPainel.length
+                        )}
+                        <div style={{ padding: '0 12px 12px' }}>
+                          {assuntosPessoaisPainel.length === 0
+                            ? vazio((safeT as any)?.agendaPainelVazioPessoal || 'Nenhum assunto pessoal pendente.')
+                            : assuntosPessoaisPainel.map((a) => miniAgendaBtn(a, 'rgba(168, 85, 247, 0.45)'))}
                         </div>
                       </div>
                       <div
@@ -42378,6 +42508,76 @@ A1;Peça exemplo;10`}
                 
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+                    {(safeT as any)?.agendaCategoria || 'Categoria'}
+                  </label>
+                  <select
+                    value={agendaForm.categoria || 'servico'}
+                    onChange={(e) => {
+                      const cat = e.target.value as 'servico' | 'pessoal'
+                      if (cat === 'pessoal') {
+                        setAgendaForm({
+                          ...agendaForm,
+                          categoria: 'pessoal',
+                          subtipoPessoal: agendaForm.subtipoPessoal || 'pessoal',
+                          cliente: '',
+                          clienteId: '',
+                          equipamento: '',
+                          equipamentoId: '',
+                          telefone: '',
+                          endereco: '',
+                          cidade: '',
+                          necessidadePecas: false,
+                          codigoNotaFiscal: '',
+                          pecasAnexadas: [],
+                        })
+                      } else {
+                        setAgendaForm({ ...agendaForm, categoria: 'servico' })
+                      }
+                    }}
+                    style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
+                  >
+                    <option value="servico">{(safeT as any)?.agendaCategoriaServico || 'Serviço ao cliente'}</option>
+                    <option value="pessoal">{(safeT as any)?.agendaCategoriaPessoal || 'Assunto pessoal'}</option>
+                  </select>
+                </div>
+
+                {isAgendamentoPessoal(agendaForm) ? (
+                  <>
+                    <div style={{ marginBottom: '15px' }}>
+                      <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+                        {(safeT as any)?.agendaTipoCompromisso || 'Tipo de compromisso'} <span style={{ color: '#ff0000' }}>*</span>
+                      </label>
+                      <select
+                        value={agendaForm.subtipoPessoal || 'pessoal'}
+                        onChange={(e) =>
+                          setAgendaForm({
+                            ...agendaForm,
+                            subtipoPessoal: e.target.value as 'pessoal' | 'visita-tecnica',
+                          })
+                        }
+                        style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(180, 130, 255, 0.45)', borderRadius: '4px' }}
+                      >
+                        <option value="pessoal">{(safeT as any)?.agendaPessoal || 'Pessoal'}</option>
+                        <option value="visita-tecnica">{(safeT as any)?.agendaVisitaTecnica || 'Visita técnica'}</option>
+                      </select>
+                    </div>
+                    <div style={{ marginBottom: '15px' }}>
+                      <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
+                        {(safeT as any)?.agendaAssunto || 'Assunto / descrição'}
+                      </label>
+                      <input
+                        type="text"
+                        value={agendaForm.assunto || ''}
+                        onChange={(e) => setAgendaForm({ ...agendaForm, assunto: e.target.value })}
+                        placeholder={(safeT as any)?.agendaAssuntoPlaceholder || 'Ex.: médico, banco, assuntos particulares…'}
+                        style={{ width: '100%', padding: '10px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(180, 130, 255, 0.45)', borderRadius: '4px' }}
+                      />
+                    </div>
+                  </>
+                ) : null}
+
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
                     {safeT?.tipoAgendamento || 'Tipo de Agendamento'}
                   </label>
                   <select
@@ -42406,6 +42606,7 @@ A1;Peça exemplo;10`}
                   </select>
                 </div>
 
+                {!isAgendamentoPessoal(agendaForm) ? (
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
                     {safeT?.cliente || 'Cliente'} <span style={{ color: '#ff0000' }}>*</span>
@@ -42433,6 +42634,7 @@ A1;Peça exemplo;10`}
                     ))}
                   </select>
                 </div>
+                ) : null}
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '15px' }}>
                   <div>
@@ -42583,6 +42785,8 @@ A1;Peça exemplo;10`}
                   )}
                 </div>
 
+                {!isAgendamentoPessoal(agendaForm) ? (
+                <>
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
                     {safeT?.tipoServico || 'Tipo de Serviço'}
@@ -42671,6 +42875,9 @@ A1;Peça exemplo;10`}
                   </div>
                 </div>
 
+                </>
+                ) : null}
+
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px' }}>
                     {safeT?.observacaoTecnica || 'Observação Técnica'}
@@ -42701,7 +42908,7 @@ A1;Peça exemplo;10`}
                   />
                 </div>
 
-                {/* Necessidade de Peças */}
+                {!isAgendamentoPessoal(agendaForm) ? (
                 <div style={{ marginBottom: '15px', padding: '15px', backgroundColor: '#222222', borderRadius: '4px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', marginBottom: agendaForm.necessidadePecas ? '15px' : '0' }}>
                     <input
@@ -42854,6 +43061,7 @@ A1;Peça exemplo;10`}
                     </div>
                   )}
                 </div>
+                ) : null}
 
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button 
@@ -42906,9 +43114,16 @@ A1;Peça exemplo;10`}
               <div>
                 {(() => {
                   const agendamentosFiltrados = agendamentos.filter((ag) => {
+                    if (filtroAgenda === 'assuntos-pessoais' && !isAgendamentoPessoal(ag)) return false
+                    if (
+                      filtroAgenda === 'visita-tecnica' &&
+                      (!isAgendamentoPessoal(ag) || ag.subtipoPessoal !== 'visita-tecnica')
+                    ) {
+                      return false
+                    }
                     if (
                       (filtroAgenda === 'pre-agendamento' || filtroAgenda === 'agendamento-tecnico') &&
-                      normalizeTipoAgendamento(ag) !== filtroAgenda
+                      (isAgendamentoPessoal(ag) || normalizeTipoAgendamento(ag) !== filtroAgenda)
                     ) {
                       return false
                     }
@@ -42917,7 +43132,9 @@ A1;Peça exemplo;10`}
                     const q = buscaAgendaListaRapida.trim().toLowerCase()
                     if (q.length >= 2) {
                       const blob = [
+                        rotuloTituloAgendamento(ag, safeT as Record<string, string | undefined>),
                         ag.cliente,
+                        ag.assunto,
                         ag.tecnico,
                         ag.tipoServico,
                         ag.equipamento,
@@ -42967,16 +43184,19 @@ A1;Peça exemplo;10`}
                   const agConcluidosListaTotal = agendamentosFiltrados.filter((ag) => normalizeStatusAgendamento(ag) === 'concluido').length
 
                   const agPreAgendamento = agendamentosListaAtivos
-                    .filter((ag) => normalizeTipoAgendamento(ag) === 'pre-agendamento' && normalizeStatusAgendamento(ag) !== 'concluido' && normalizeStatusAgendamento(ag) !== 'cancelado')
+                    .filter((ag) => !isAgendamentoPessoal(ag) && normalizeTipoAgendamento(ag) === 'pre-agendamento' && normalizeStatusAgendamento(ag) !== 'concluido' && normalizeStatusAgendamento(ag) !== 'cancelado')
+                    .sort(ordenarAgenda)
+                  const agAssuntosPessoais = agendamentosListaAtivos
+                    .filter((ag) => isAgendamentoPessoal(ag) && normalizeStatusAgendamento(ag) !== 'cancelado')
                     .sort(ordenarAgenda)
                   const agPendencias = agendamentosListaAtivos
-                    .filter((ag) => normalizeTipoAgendamento(ag) === 'agendamento-tecnico' && normalizeStatusAgendamento(ag) === 'pendente')
+                    .filter((ag) => !isAgendamentoPessoal(ag) && normalizeTipoAgendamento(ag) === 'agendamento-tecnico' && normalizeStatusAgendamento(ag) === 'pendente')
                     .sort(ordenarAgenda)
                   const agEmExecucao = agendamentosListaAtivos
-                    .filter((ag) => normalizeTipoAgendamento(ag) === 'agendamento-tecnico' && normalizeStatusAgendamento(ag) === 'em-andamento')
+                    .filter((ag) => !isAgendamentoPessoal(ag) && normalizeTipoAgendamento(ag) === 'agendamento-tecnico' && normalizeStatusAgendamento(ag) === 'em-andamento')
                     .sort(ordenarAgenda)
                   const agConfirmadosSomente = agendamentosListaAtivos
-                    .filter((ag) => normalizeTipoAgendamento(ag) === 'agendamento-tecnico' && normalizeStatusAgendamento(ag) === 'confirmado')
+                    .filter((ag) => !isAgendamentoPessoal(ag) && normalizeTipoAgendamento(ag) === 'agendamento-tecnico' && normalizeStatusAgendamento(ag) === 'confirmado')
                     .sort(ordenarAgenda)
                   const agCancelados = agendamentosListaAtivos
                     .filter((ag) => normalizeStatusAgendamento(ag) === 'cancelado')
@@ -43020,8 +43240,15 @@ A1;Peça exemplo;10`}
                               textDecoration: opts?.muted ? 'line-through' : undefined,
                             }}
                           >
-                            {agendamento.cliente}
+                            {rotuloTituloAgendamento(agendamento, safeT as Record<string, string | undefined>)}
                           </h3>
+                          {isAgendamentoPessoal(agendamento) ? (
+                            <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#d8b4fe', fontWeight: 700 }}>
+                              {agendamento.subtipoPessoal === 'visita-tecnica'
+                                ? (safeT as any)?.agendaVisitaTecnica || 'Visita técnica'
+                                : (safeT as any)?.agendaPessoal || 'Pessoal'}
+                            </p>
+                          ) : null}
                           <div className="agenda-card-meta-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', fontSize: '14px', marginBottom: '10px' }}>
                             <p style={{ margin: 0, opacity: 0.86 }}>
                               <strong>{safeT?.tecnico || 'Técnico'}:</strong> {agendamento.tecnico}
@@ -43040,12 +43267,12 @@ A1;Peça exemplo;10`}
                             <p style={{ margin: 0, opacity: 0.86 }}>
                               <strong>{safeT?.tipoAgendamento || 'Tipo'}:</strong> {normalizeTipoAgendamento(agendamento) === 'pre-agendamento' ? (safeT?.preAgendamento || 'Pré-Agendamento') : (safeT?.agendamentoTecnico || 'Agendamento Técnico')}
                             </p>
-                            {agendamento.tipoServico && (
+                            {agendamento.tipoServico && !isAgendamentoPessoal(agendamento) && (
                               <p style={{ margin: 0, opacity: 0.86 }}>
                                 <strong>{safeT?.tipoServico || 'Tipo de Serviço'}:</strong> {agendamento.tipoServico}
                               </p>
                             )}
-                            {agendamento.equipamento && (
+                            {agendamento.equipamento && !isAgendamentoPessoal(agendamento) && (
                               <p style={{ margin: 0, opacity: 0.86 }}>
                                 <strong>{safeT?.equipamento || 'Equipamento'}:</strong> {agendamento.equipamento}
                               </p>
@@ -43065,7 +43292,7 @@ A1;Peça exemplo;10`}
                             </p>
                           </div>
 
-                          {(agendamento.telefone || agendamento.endereco || agendamento.cidade) && (
+                          {(agendamento.telefone || agendamento.endereco || agendamento.cidade) && !isAgendamentoPessoal(agendamento) && (
                             <div style={{ padding: '10px', backgroundColor: '#222222', borderRadius: '8px', marginBottom: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
                               <h4 style={{ fontSize: '13px', marginBottom: '8px', color: '#e8ffe8' }}>{safeT?.informacoesContato || 'Informações de Contato'}</h4>
                               <div className="agenda-card-meta-grid agenda-card-meta-grid--contato" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px', fontSize: '13px' }}>
@@ -43307,6 +43534,12 @@ A1;Peça exemplo;10`}
                         'pre'
                       )}
                       {renderAgendaSection(
+                        (safeT as any)?.agendaSecaoAssuntosPessoais || (safeT as any)?.agendaPainelAssuntosPessoais || 'Assuntos pessoais',
+                        'rgba(168, 85, 247, 0.92)',
+                        agAssuntosPessoais,
+                        (safeT as any)?.agendaSecaoAssuntosPessoaisHint || 'Compromissos pessoais ou visitas técnicas — sem cliente nem equipamento'
+                      )}
+                      {renderAgendaSection(
                         (safeT as any)?.agendaSecaoPendencias || (safeT as any)?.agendaPainelPendentes || 'Pendentes',
                         'rgba(234, 88, 12, 0.92)',
                         agPendencias,
@@ -43347,9 +43580,16 @@ A1;Peça exemplo;10`}
             {visualizacaoAgenda === 'calendario' && (() => {
               // Filtrar agendamentos
               const agendamentosFiltrados = agendamentos.filter((ag) => {
+                if (filtroAgenda === 'assuntos-pessoais' && !isAgendamentoPessoal(ag)) return false
+                if (
+                  filtroAgenda === 'visita-tecnica' &&
+                  (!isAgendamentoPessoal(ag) || ag.subtipoPessoal !== 'visita-tecnica')
+                ) {
+                  return false
+                }
                 if (
                   (filtroAgenda === 'pre-agendamento' || filtroAgenda === 'agendamento-tecnico') &&
-                  normalizeTipoAgendamento(ag) !== filtroAgenda
+                  (isAgendamentoPessoal(ag) || normalizeTipoAgendamento(ag) !== filtroAgenda)
                 ) {
                   return false
                 }
@@ -43456,6 +43696,15 @@ A1;Peça exemplo;10`}
                   color: '#ffffff',
                   fontWeight: 700,
                   textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                }
+                if (isAgendamentoPessoal(ag)) {
+                  return {
+                    ...texto,
+                    backgroundColor: 'rgba(124, 58, 237, 0.94)',
+                    border: '1px solid rgba(216, 180, 254, 0.55)',
+                    boxShadow: '0 0 12px rgba(168, 85, 247, 0.28)',
+                    fontWeight: 800,
+                  }
                 }
                 if (st === 'cancelado') {
                   return {
@@ -43630,12 +43879,13 @@ A1;Peça exemplo;10`}
                             {/* Agendamentos do dia */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                               {agDiaUnicos.slice(0, 3).map((ag) => {
-                                const clienteTxt = `${ag.cliente.substring(0, 15)}${ag.cliente.length > 15 ? '...' : ''}`
+                                const clienteTxt = rotuloCurtoAgendamentoCalendario(ag, safeT as Record<string, string | undefined>)
+                                const tituloCal = rotuloTituloAgendamento(ag, safeT as Record<string, string | undefined>)
                                 return (
                                 <div
                                   key={`${ag.id}-${dataKey}`}
                                   id={`agendamento-${ag.id}`}
-                                  title={`${ag.cliente} - ${ag.hora}`}
+                                  title={`${tituloCal} - ${ag.hora}`}
                                   style={{
                                     fontSize: '10px',
                                     padding: '4px 6px',
@@ -43762,6 +44012,26 @@ A1;Peça exemplo;10`}
                           <span style={{ fontSize: '12px' }}>
                             {(safeT as any)?.legendaPendenteTecnico ||
                               'Agendamento técnico pendente — fundo laranja'}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                              backgroundColor: 'rgba(124, 58, 237, 0.94)',
+                              border: '1px solid rgba(216, 180, 254, 0.55)',
+                              fontSize: '11px',
+                              color: '#fff',
+                              fontWeight: 800,
+                              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                            }}
+                          >
+                            09:00 {(safeT as any)?.agendaPessoal || 'Pessoal'}
+                          </div>
+                          <span style={{ fontSize: '12px' }}>
+                            {(safeT as any)?.agendaLegendaPessoal ||
+                              'Assunto pessoal ou visita técnica — fundo roxo'}
                           </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
