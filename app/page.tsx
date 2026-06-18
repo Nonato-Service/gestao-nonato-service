@@ -6269,6 +6269,7 @@ export default function Dashboard() {
       'open-pecas-substituicao',
       'open-solicitacao-servico-tecnico',
       'open-agenda',
+      'open-estado-visual-tecnico',
       'open-biblioteca-relatorios',
       'open-checklist-hub',
       'open-pre-checklist',
@@ -10651,6 +10652,7 @@ export default function Dashboard() {
           group: 'gestao-tecnica'
         }
         buttons.push(estadoVisualTecnicoButton)
+        saveData('nonato-sidebar-buttons', buttons)
       }
 
       if (!hasInformacoesConhecimentoTecnicos) {
@@ -11195,6 +11197,18 @@ export default function Dashboard() {
           order: filteredButtons.length,
           translationKey: 'diarioPedidosTitle',
           group: 'gestao-tecnica'
+        })
+      }
+      const hasEstadoVisualTecnicoAfter = filteredButtons.some((b: SidebarButton) => b.id === 'estado-visual-tecnico-default')
+      if (!hasEstadoVisualTecnicoAfter) {
+        filteredButtons.push({
+          id: 'estado-visual-tecnico-default',
+          name: 'ESTADO VISUAL DO TÉCNICO',
+          action: 'open-estado-visual-tecnico',
+          order: filteredButtons.length,
+          translationKey: 'estadoVisualTecnico',
+          group: 'gestao-tecnica',
+          customName: false,
         })
       }
 
@@ -41692,6 +41706,26 @@ A1;Peça exemplo;10`}
                   </button>
                   <button
                     type="button"
+                    onClick={() => handleButtonClick('open-estado-visual-tecnico', 'estado-visual-tecnico-default')}
+                    style={{
+                      padding: '10px 18px',
+                      backgroundColor: 'rgba(255, 200, 50, 0.16)',
+                      border: '1px solid rgba(255, 210, 80, 0.62)',
+                      borderRadius: '8px',
+                      color: '#fde68a',
+                      fontWeight: 'bold',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                    title={(safeT as any)?.agendaAbrirEstadoVisualHint || 'Mapa com cores dos técnicos: em atendimento, pré-agendamento, etc.'}
+                  >
+                    🎯 {safeT?.estadoVisualTecnico || 'Estado Visual do Técnico'}
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setShowAgendaLembreteModal(true)}
                     style={{
                       padding: '10px 18px',
@@ -44401,6 +44435,23 @@ A1;Peça exemplo;10`}
             </div>
 
             <div className="tab-glass-cards-grid" style={{ gap: '20px' }}>
+              {tecnicos.length === 0 ? (
+                <div
+                  style={{
+                    ...glassCardStyle(ACCENT_GREEN, { padding: '24px', radius: '12px', borderAlpha: 0.2 }),
+                    gridColumn: '1 / -1',
+                    textAlign: 'center',
+                  }}
+                >
+                  <p style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#fff', fontWeight: 700 }}>
+                    {(safeT as any)?.estadoVisualSemTecnicos || 'Nenhum técnico cadastrado.'}
+                  </p>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#aaa', lineHeight: 1.45 }}>
+                    {(safeT as any)?.estadoVisualSemTecnicosHint ||
+                      'Cadastre técnicos em Gestores / Utilizadores para ver o mapa visual aqui.'}
+                  </p>
+                </div>
+              ) : null}
               {tecnicos.map(tecnico => {
                 const hoje = formatDataYYYYMMDDLocal(new Date())
                 const hojeDate = parseDataAgendaLocal(hoje)
