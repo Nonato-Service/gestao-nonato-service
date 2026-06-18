@@ -2509,6 +2509,28 @@ function estiloMarcadorAgendamentoCancelado(): React.CSSProperties {
   }
 }
 
+function rotuloAgendaPainelSituacao(
+  id: 'exec' | 'agend' | 'pre' | 'pessoal' | 'pend' | 'canc' | 'done',
+  tr?: Record<string, string | undefined>
+): string {
+  switch (id) {
+    case 'exec':
+      return tr?.agendaPainelEmExecucao || 'Em execução'
+    case 'agend':
+      return tr?.agendaPainelAgendados || 'Agendados (confirmados)'
+    case 'pre':
+      return tr?.agendaPainelPreAgendados || 'Pré-agendados'
+    case 'pessoal':
+      return tr?.agendaPainelAssuntosPessoais || 'Assuntos pessoais'
+    case 'pend':
+      return tr?.agendaPainelPendentes || 'Pendentes (ag. técnico)'
+    case 'canc':
+      return tr?.agendaPainelCancelados || 'Cancelados'
+    default:
+      return tr?.agendaPainelConcluidosRecentes || 'Concluídos (recentes)'
+  }
+}
+
 type EquipamentoCliente = {
   /** ID ou código de referência (opcional). Se vazio na 1.ª gravação, gera-se um ID técnico (UUID). Distinto do n.º de série. */
   id?: string
@@ -41918,6 +41940,26 @@ A1;Peça exemplo;10`}
                 border: '1px solid rgba(0, 255, 0, 0.22)',
               }}
             >
+              {agendaPainelSituacaoSelecionada ? (
+                <div className="agenda-painel-voltar-bar">
+                  <button
+                    type="button"
+                    className="btn-primary agenda-painel-voltar-btn"
+                    onClick={() => setAgendaPainelSituacaoSelecionada(null)}
+                  >
+                    ← {(safeT as any)?.agendaPainelVoltarSituacoes || 'Voltar às situações'}
+                  </button>
+                  <span className="agenda-painel-voltar-contexto">
+                    {(safeT as any)?.agendaPainelSituacaoAtual || 'Situação:'}{' '}
+                    <strong>
+                      {rotuloAgendaPainelSituacao(
+                        agendaPainelSituacaoSelecionada,
+                        safeT as Record<string, string | undefined>
+                      )}
+                    </strong>
+                  </span>
+                </div>
+              ) : null}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '14px' }}>
                 <div>
                   <h2 style={{ margin: 0, fontSize: '17px', color: '#00ff00', letterSpacing: '0.5px' }}>
@@ -42381,23 +42423,15 @@ A1;Peça exemplo;10`}
 
                 return (
                   <div className="agenda-tecnica-painel-detalhe" style={{ marginBottom: '18px' }}>
+                    {renderPainelConteudoSituacao(situacaoAtiva)}
                     <button
                       type="button"
-                      className="btn-secondary agenda-painel-voltar-btn"
+                      className="btn-primary agenda-painel-voltar-btn"
                       onClick={() => setAgendaPainelSituacaoSelecionada(null)}
-                      style={{
-                        marginBottom: '14px',
-                        padding: '10px 18px',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                      }}
+                      style={{ marginTop: '14px', width: '100%', justifyContent: 'center' }}
                     >
                       ← {trPainel.agendaPainelVoltarSituacoes || 'Voltar às situações'}
                     </button>
-                    {renderPainelConteudoSituacao(situacaoAtiva)}
                   </div>
                 )
               })()}
