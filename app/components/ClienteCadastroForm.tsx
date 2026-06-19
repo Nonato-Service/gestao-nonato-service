@@ -41,6 +41,8 @@ type Props = {
   onRemovePhoto: () => void
   onBack?: () => void
   variant?: 'page' | 'modal'
+  /** Layout igual à referência visual — só campos principais, sem extras */
+  referenceLayout?: boolean
   className?: string
   headerSlot?: React.ReactNode
   alertSlot?: React.ReactNode
@@ -117,6 +119,7 @@ export function ClienteCadastroForm({
   onRemovePhoto,
   onBack,
   variant = 'page',
+  referenceLayout = false,
   className,
   headerSlot,
   alertSlot,
@@ -127,8 +130,9 @@ export function ClienteCadastroForm({
   const tx = safeT as Record<string, string>
   const photoInputId = useId()
   const photoInputRef = useRef<HTMLInputElement>(null)
-  const [detalhesAbertos, setDetalhesAbertos] = useState(Boolean(editingCliente))
+  const [detalhesAbertos, setDetalhesAbertos] = useState(Boolean(editingCliente) && !referenceLayout)
   const isFisica = clienteForm.tipoCliente !== 'juridica'
+  const showExtras = !referenceLayout
 
   const titulo = editingCliente
     ? tx.editCliente || 'Editar Cliente'
@@ -140,17 +144,21 @@ export function ClienteCadastroForm({
   const mapsQuery = [clienteForm.morada, clienteForm.codigoPostal, clienteForm.pais].filter(Boolean).join(', ')
 
   return (
-    <div className={`cliente-cadastro-v2 cliente-cadastro-v2--${variant}${className ? ` ${className}` : ''}`}>
+    <div
+      className={`cliente-cadastro-v2 cliente-cadastro-v2--${variant}${referenceLayout ? ' cliente-cadastro-v2--reference' : ''}${className ? ` ${className}` : ''}`}
+    >
       {variant === 'page' ? (
         <header className="cliente-cadastro-v2__page-header">
           <div className="cliente-cadastro-v2__page-header-main">
-            <nav className="cliente-cadastro-v2__breadcrumb" aria-label="Breadcrumb">
-              <span className="cliente-cadastro-v2__breadcrumb-home">
-                <IconHome size={14} />
-              </span>
-              <span className="cliente-cadastro-v2__breadcrumb-sep">/</span>
-              <span>{tx.clientesBreadcrumb || 'add-client'}</span>
-            </nav>
+            {!referenceLayout ? (
+              <nav className="cliente-cadastro-v2__breadcrumb" aria-label="Breadcrumb">
+                <span className="cliente-cadastro-v2__breadcrumb-home">
+                  <IconHome size={14} />
+                </span>
+                <span className="cliente-cadastro-v2__breadcrumb-sep">/</span>
+                <span>{tx.clientesBreadcrumb || 'add-client'}</span>
+              </nav>
+            ) : null}
             <div className="cliente-cadastro-v2__title-row">
               <div>
                 <h2 className="cliente-cadastro-v2__title">{titulo}</h2>
@@ -303,6 +311,7 @@ export function ClienteCadastroForm({
         </FieldInput>
       </section>
 
+      {showExtras ? (
       <section className="cliente-cadastro-v2__card cliente-cadastro-v2__card--details">
         <button
           type="button"
@@ -451,17 +460,20 @@ export function ClienteCadastroForm({
           </div>
         ) : null}
       </section>
+      ) : null}
 
-      {editingExtras}
+      {showExtras ? editingExtras : null}
 
       <div className="cliente-cadastro-v2__actions">
         <button type="button" className="cliente-cadastro-v2__submit" onClick={onSave}>
           <span className="cliente-cadastro-v2__submit-icon">+</span>
           {editingCliente ? tx.save || 'Salvar' : tx.addCliente || 'Adicionar Cliente'}
         </button>
-        <button type="button" className="cliente-cadastro-v2__cancel" onClick={onCancel}>
-          {tx.cancel || 'Cancelar'}
-        </button>
+        {!referenceLayout ? (
+          <button type="button" className="cliente-cadastro-v2__cancel" onClick={onCancel}>
+            {tx.cancel || 'Cancelar'}
+          </button>
+        ) : null}
       </div>
 
       {footerExtras}

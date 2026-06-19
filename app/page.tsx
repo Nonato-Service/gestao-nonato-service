@@ -15094,7 +15094,7 @@ export default function Dashboard() {
   }
 
   const handleSaveCliente = async () => {
-    if (!clienteForm.nomeEmpresa || !clienteForm.morada || !clienteForm.email) {
+    if (!clienteForm.nomeEmpresa?.trim() || !clienteForm.morada?.trim()) {
       alert(t.fillAllFields)
       return
     }
@@ -34347,8 +34347,14 @@ onKeyPress={(e) => {
           : []
         
         return (
-          <div className="tab-content-wrapper tab-glass-root tab-glass-root--wide">
-            {/* Barra fixa no topo para mobile - Voltar + Cadastrar + Listar + Adicionar (aba cadastrar) + Início */}
+          <div
+            className={
+              'tab-content-wrapper tab-glass-root tab-glass-root--wide' +
+              (clientesActiveTab === 'cadastrar' ? ' clientes-cadastro-page' : '')
+            }
+          >
+            {/* Barra mobile — oculta na aba Cadastrar (layout Novo Cliente) */}
+            {clientesActiveTab !== 'cadastrar' ? (
             <div className="mobile-sticky-toolbar">
               <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>
                 ↶ {safeT?.voltar || 'Voltar'}
@@ -34392,6 +34398,7 @@ onKeyPress={(e) => {
                 🏠
               </button>
             </div>
+            ) : null}
             {/* Cabeçalho Profissional - oculto em mobile (toolbar substitui) e na aba Cadastrar (formulário Novo Cliente) */}
             {clientesActiveTab !== 'cadastrar' ? (
             <div className="tab-header-desktop tab-glass-hero">
@@ -34473,7 +34480,8 @@ onKeyPress={(e) => {
             </div>
             ) : null}
 
-            {/* Abas de Navegação - ocultas em mobile (toolbar tem Cadastrar/Listar + Adicionar na aba cadastrar) */}
+            {/* Abas Listar / Grupos — ocultas na aba Cadastrar (layout Novo Cliente) */}
+            {clientesActiveTab !== 'cadastrar' ? (
             <div className="tab-nav-desktop tab-glass-nav tab-glass-nav--clientes">
               <button 
                 className="btn-primary"
@@ -34564,6 +34572,7 @@ onKeyPress={(e) => {
                 </button>
               )}
             </div>
+            ) : null}
 
             {clientesActiveTab !== 'cadastrar' ? (
             <div
@@ -34609,8 +34618,12 @@ onKeyPress={(e) => {
                   onCancel={handleCancelClienteForm}
                   onPhotoChange={handleClientePhotoChange}
                   onRemovePhoto={handleRemoveClientePhoto}
-                  onBack={handleCancelClienteForm}
+                  onBack={() => {
+                    setClientesActiveTab('listar')
+                    setClienteListaDetalheId(null)
+                  }}
                   variant="page"
+                  referenceLayout={!editingCliente}
                   sanitizeKmFieldTyping={sanitizeKmFieldTyping}
                   className={
                     editingCliente &&
