@@ -1,13 +1,26 @@
 'use client'
 
-import React, { useId, useRef, useState } from 'react'
+import React, { useId, useMemo, useRef, useState } from 'react'
 import {
   IconBuilding2,
   IconHome,
   IconIdCard,
   IconUser,
 } from './UiIcons'
+import { translations, translationBundleKey } from '../translations'
 import { ordenarServicoGrupos, type ServicoCadastroGrupo } from '../lib/servicosCadastroUtils'
+
+function useClienteFormTr(language: string) {
+  return useMemo(() => {
+    const primary = (translations[translationBundleKey(language)] || translations['pt-BR']) as Record<
+      string,
+      string | undefined
+    >
+    const en = translations.en as Record<string, string | undefined>
+    const pt = translations['pt-BR'] as Record<string, string | undefined>
+    return (key: string) => primary[key] ?? en[key] ?? pt[key] ?? key
+  }, [language])
+}
 
 export type ClienteFormState = {
   nomeEmpresa: string
@@ -32,7 +45,7 @@ type Props = {
   clienteForm: ClienteFormState
   setClienteForm: React.Dispatch<React.SetStateAction<ClienteFormState>>
   editingCliente: { id: string; isDevedor?: boolean; saldoPendente?: number } | null
-  safeT: Record<string, string | undefined>
+  language: string
   servicoGrupos: ServicoCadastroGrupo[]
   clienteGrupoTarifaSelecionadoId: string | null
   onSave: () => void
@@ -112,7 +125,7 @@ export function ClienteCadastroForm({
   clienteForm,
   setClienteForm,
   editingCliente,
-  safeT,
+  language,
   servicoGrupos,
   clienteGrupoTarifaSelecionadoId,
   onSave,
@@ -129,19 +142,15 @@ export function ClienteCadastroForm({
   footerExtras,
   sanitizeKmFieldTyping = (v) => v,
 }: Props) {
-  const tx = safeT as Record<string, string>
+  const tr = useClienteFormTr(language)
   const photoInputId = useId()
   const photoInputRef = useRef<HTMLInputElement>(null)
   const [detalhesAbertos, setDetalhesAbertos] = useState(Boolean(editingCliente) && !referenceLayout)
   const isFisica = clienteForm.tipoCliente !== 'juridica'
   const showExtras = !referenceLayout
 
-  const titulo = editingCliente
-    ? tx.editCliente || 'Editar Cliente'
-    : tx.novoCliente || 'Novo Cliente'
-  const subtitulo = editingCliente
-    ? tx.editClienteSubtitle || 'Atualize os dados do cliente'
-    : tx.novoClienteSubtitle || 'Adicione um novo cliente ao sistema'
+  const titulo = editingCliente ? tr('editCliente') : tr('novoCliente')
+  const subtitulo = editingCliente ? tr('editClienteSubtitle') : tr('novoClienteSubtitle')
 
   const mapsQuery = [clienteForm.morada, clienteForm.codigoPostal, clienteForm.pais].filter(Boolean).join(', ')
 
@@ -158,7 +167,7 @@ export function ClienteCadastroForm({
                   <IconHome size={14} />
                 </span>
                 <span className="cliente-cadastro-v2__breadcrumb-sep">/</span>
-                <span>{tx.clientesBreadcrumb || 'add-client'}</span>
+                <span>{tr('clientesBreadcrumb')}</span>
               </nav>
             ) : null}
             <div className="cliente-cadastro-v2__title-row">
@@ -167,7 +176,7 @@ export function ClienteCadastroForm({
                 <p className="cliente-cadastro-v2__subtitle">{subtitulo}</p>
               </div>
               {onBack ? (
-                <button type="button" className="cliente-cadastro-v2__back-btn" onClick={onBack} title={tx.voltar || 'Voltar'}>
+                <button type="button" className="cliente-cadastro-v2__back-btn" onClick={onBack} title={tr('voltar')}>
                   ↶
                 </button>
               ) : null}
@@ -185,7 +194,7 @@ export function ClienteCadastroForm({
       {alertSlot}
 
       <section className="cliente-cadastro-v2__card">
-        <h3 className="cliente-cadastro-v2__card-title">{tx.fotoPerfil || 'Foto de Perfil'}</h3>
+        <h3 className="cliente-cadastro-v2__card-title">{tr('fotoPerfil')}</h3>
         <input
           ref={photoInputRef}
           id={photoInputId}
@@ -204,22 +213,22 @@ export function ClienteCadastroForm({
           ) : (
             <>
               <IconCamera className="cliente-cadastro-v2__photo-icon" />
-              <span>{tx.cliqueAdicionarFoto || 'Clique para adicionar foto'}</span>
+              <span>{tr('cliqueAdicionarFoto')}</span>
             </>
           )}
         </button>
         {clienteForm.photo ? (
           <button type="button" className="cliente-cadastro-v2__photo-remove" onClick={onRemovePhoto}>
-            {tx.removePhoto || 'Remover Foto'}
+            {tr('removePhoto')}
           </button>
         ) : null}
       </section>
 
       <section className="cliente-cadastro-v2__card cliente-cadastro-v2__card--info">
-        <h3 className="cliente-cadastro-v2__card-title">{tx.informacoesCliente || 'Informações do Cliente'}</h3>
+        <h3 className="cliente-cadastro-v2__card-title">{tr('informacoesCliente')}</h3>
 
         <div className="cliente-cadastro-v2__fields-grid">
-        <FieldInput id="tipo-cliente" icon={<IconUser size={18} />} label={tx.tipoCliente || 'Tipo de Cliente'} fullWidth>
+        <FieldInput id="tipo-cliente" icon={<IconUser size={18} />} label={tr('tipoCliente')} fullWidth>
           <select
             id="tipo-cliente"
             className="cliente-cadastro-v2__input cliente-cadastro-v2__select"
@@ -231,15 +240,15 @@ export function ClienteCadastroForm({
               })
             }
           >
-            <option value="fisica">{tx.pessoaFisica || 'Pessoa Física'}</option>
-            <option value="juridica">{tx.pessoaJuridica || 'Pessoa Jurídica'}</option>
+            <option value="fisica">{tr('pessoaFisica')}</option>
+            <option value="juridica">{tr('pessoaJuridica')}</option>
           </select>
         </FieldInput>
 
         <FieldInput
           id="nome-cliente"
           icon={<IconUser size={18} />}
-          label={isFisica ? tx.nomeCompleto || 'Nome Completo' : tx.nomeEmpresa || 'Razão Social / Nome'}
+          label={isFisica ? tr('nomeCompleto') : tr('nomeEmpresa')}
           required
           fullWidth
         >
@@ -247,7 +256,7 @@ export function ClienteCadastroForm({
             id="nome-cliente"
             type="text"
             className="cliente-cadastro-v2__input"
-            placeholder={isFisica ? tx.nomeCompletoPlaceholder || 'Ex: João Silva' : tx.nomeEmpresaPlaceholder || 'Ex: Empresa Lda.'}
+            placeholder={isFisica ? tr('nomeCompletoPlaceholder') : tr('nomeEmpresaPlaceholder')}
             value={clienteForm.nomeEmpresa}
             onChange={(e) => setClienteForm({ ...clienteForm, nomeEmpresa: e.target.value })}
           />
@@ -257,59 +266,59 @@ export function ClienteCadastroForm({
           <FieldInput
             id="empresa-opcional"
             icon={<IconBuilding2 size={18} />}
-            label={tx.empresaOpcional || 'Empresa (Opcional)'}
+            label={tr('empresaOpcional')}
             fullWidth
           >
             <input
               id="empresa-opcional"
               type="text"
               className="cliente-cadastro-v2__input"
-              placeholder={tx.empresaOpcionalPlaceholder || 'Ex: Nome da Empresa'}
+              placeholder={tr('empresaOpcionalPlaceholder')}
               value={clienteForm.contato}
               onChange={(e) => setClienteForm({ ...clienteForm, contato: e.target.value })}
             />
           </FieldInput>
         ) : null}
 
-        <FieldInput id="telefone-cliente" icon={<IconPhone />} label={tx.telefone || tx.telefones || 'Telefone'} fullWidth>
+        <FieldInput id="telefone-cliente" icon={<IconPhone />} label={tr('telefone') || tr('telefones')} fullWidth>
           <input
             id="telefone-cliente"
             type="tel"
             className="cliente-cadastro-v2__input"
-            placeholder={tx.telefonePlaceholder || 'Ex: (11) 98765-4321'}
+            placeholder={tr('telefonePlaceholder')}
             value={clienteForm.telefones}
             onChange={(e) => setClienteForm({ ...clienteForm, telefones: e.target.value })}
           />
         </FieldInput>
 
-        <FieldInput id="endereco-cliente" icon={<IconMapPin />} label={tx.endereco || tx.morada || 'Endereço'} required fullWidth>
+        <FieldInput id="endereco-cliente" icon={<IconMapPin />} label={tr('endereco') || tr('morada')} required fullWidth>
           <input
             id="endereco-cliente"
             type="text"
             className="cliente-cadastro-v2__input"
-            placeholder={tx.enderecoPlaceholder || 'Ex: Rua Exemplo, 123'}
+            placeholder={tr('enderecoPlaceholder')}
             value={clienteForm.morada}
             onChange={(e) => setClienteForm({ ...clienteForm, morada: e.target.value })}
           />
         </FieldInput>
 
-        <FieldInput id="codigo-postal-cliente" icon={<IconMapPin />} label={tx.codigoPostal || 'Código Postal'}>
+        <FieldInput id="codigo-postal-cliente" icon={<IconMapPin />} label={tr('codigoPostal')}>
           <input
             id="codigo-postal-cliente"
             type="text"
             className="cliente-cadastro-v2__input"
-            placeholder={tx.codigoPostalPlaceholder || 'Ex: 1234-567'}
+            placeholder={tr('codigoPostalPlaceholder')}
             value={clienteForm.codigoPostal}
             onChange={(e) => setClienteForm({ ...clienteForm, codigoPostal: e.target.value })}
           />
         </FieldInput>
 
-        <FieldInput id="nif-cliente" icon={<IconIdCard size={18} />} label={tx.nif || tx.identificacaoFiscal || 'NIF'}>
+        <FieldInput id="nif-cliente" icon={<IconIdCard size={18} />} label={tr('nif') || tr('identificacaoFiscal')}>
           <input
             id="nif-cliente"
             type="text"
             className="cliente-cadastro-v2__input"
-            placeholder={tx.nifPlaceholder || 'Ex: 123456789'}
+            placeholder={tr('nifPlaceholder')}
             value={clienteForm.numeroContribuicaoFiscal}
             onChange={(e) => setClienteForm({ ...clienteForm, numeroContribuicaoFiscal: e.target.value })}
           />
@@ -325,37 +334,37 @@ export function ClienteCadastroForm({
           onClick={() => setDetalhesAbertos((v) => !v)}
           aria-expanded={detalhesAbertos}
         >
-          <span>{tx.detalhesAdicionaisCliente || 'Detalhes adicionais'}</span>
+          <span>{tr('detalhesAdicionaisCliente')}</span>
           <span aria-hidden>{detalhesAbertos ? '▾' : '▸'}</span>
         </button>
 
         {detalhesAbertos ? (
           <div className="cliente-cadastro-v2__details-grid">
-            <FieldInput id="email-cliente" icon={<IconUser size={18} />} label={tx.email || 'E-mail'} required>
+            <FieldInput id="email-cliente" icon={<IconUser size={18} />} label={tr('email')} required>
               <input
                 id="email-cliente"
                 type="email"
                 className="cliente-cadastro-v2__input"
-                placeholder={tx.emailPlaceholder || 'Ex: cliente@email.com'}
+                placeholder={tr('emailPlaceholder')}
                 value={clienteForm.email}
                 onChange={(e) => setClienteForm({ ...clienteForm, email: e.target.value })}
               />
             </FieldInput>
 
             {!isFisica ? (
-              <FieldInput id="contato-cliente" icon={<IconUser size={18} />} label={tx.contato || 'Contacto responsável'}>
+              <FieldInput id="contato-cliente" icon={<IconUser size={18} />} label={tr('contato')}>
                 <input
                   id="contato-cliente"
                   type="text"
                   className="cliente-cadastro-v2__input"
-                  placeholder={tx.contatoPlaceholder || 'Ex: Maria Santos'}
+                  placeholder={tr('contatoPlaceholder')}
                   value={clienteForm.contato}
                   onChange={(e) => setClienteForm({ ...clienteForm, contato: e.target.value })}
                 />
               </FieldInput>
             ) : null}
 
-            <FieldInput id="localidade-cliente" icon={<IconMapPin />} label={tx.localidade || 'Localidade'}>
+            <FieldInput id="localidade-cliente" icon={<IconMapPin />} label={tr('localidade')}>
               <input
                 id="localidade-cliente"
                 type="text"
@@ -365,7 +374,7 @@ export function ClienteCadastroForm({
               />
             </FieldInput>
 
-            <FieldInput id="conselho-cliente" icon={<IconMapPin />} label={tx.conselho || 'Conselho'}>
+            <FieldInput id="conselho-cliente" icon={<IconMapPin />} label={tr('conselho')}>
               <input
                 id="conselho-cliente"
                 type="text"
@@ -375,7 +384,7 @@ export function ClienteCadastroForm({
               />
             </FieldInput>
 
-            <FieldInput id="freguesia-cliente" icon={<IconMapPin />} label={tx.freguesia || 'Freguesia'}>
+            <FieldInput id="freguesia-cliente" icon={<IconMapPin />} label={tr('freguesia')}>
               <input
                 id="freguesia-cliente"
                 type="text"
@@ -385,7 +394,7 @@ export function ClienteCadastroForm({
               />
             </FieldInput>
 
-            <FieldInput id="pais-cliente" icon={<IconMapPin />} label={tx.pais || 'País'}>
+            <FieldInput id="pais-cliente" icon={<IconMapPin />} label={tr('pais')}>
               <input
                 id="pais-cliente"
                 type="text"
@@ -398,7 +407,7 @@ export function ClienteCadastroForm({
             <FieldInput
               id="grupo-tarifa-cliente"
               icon={<IconBuilding2 size={18} />}
-              label={tx.clienteGrupoTarifa || 'Grupo / tabela de valores'}
+              label={tr('clienteGrupoTarifa')}
             >
               <select
                 id="grupo-tarifa-cliente"
@@ -411,7 +420,7 @@ export function ClienteCadastroForm({
                 }
                 onChange={(e) => setClienteForm({ ...clienteForm, grupoTarifaId: e.target.value })}
               >
-                <option value="">{tx.clienteSemGrupoTarifa || '— Sem grupo (tarifa padrão) —'}</option>
+                <option value="">{tr('clienteSemGrupoTarifa')}</option>
                 {ordenarServicoGrupos(servicoGrupos).map((g) => (
                   <option key={g.id} value={g.id}>
                     {g.nome}
@@ -423,7 +432,7 @@ export function ClienteCadastroForm({
             <FieldInput
               id="km-ida-cliente"
               icon={<IconMapPin />}
-              label={tx.clienteKmIdaPadrao || 'KM de ida (padrão)'}
+              label={tr('clienteKmIdaPadrao')}
             >
               <input
                 id="km-ida-cliente"
@@ -438,7 +447,7 @@ export function ClienteCadastroForm({
             <FieldInput
               id="km-retorno-cliente"
               icon={<IconMapPin />}
-              label={tx.clienteKmRetornoPadrao || 'KM de retorno (padrão)'}
+              label={tr('clienteKmRetornoPadrao')}
             >
               <input
                 id="km-retorno-cliente"
@@ -459,7 +468,7 @@ export function ClienteCadastroForm({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  🗺️ {tx.abrirGoogleMaps || 'Abrir no Google Maps'}
+                  🗺️ {tr('abrirGoogleMaps')}
                 </a>
               </div>
             ) : null}
@@ -473,11 +482,11 @@ export function ClienteCadastroForm({
       <div className="cliente-cadastro-v2__actions">
         <button type="button" className="cliente-cadastro-v2__submit" onClick={onSave}>
           <span className="cliente-cadastro-v2__submit-icon">+</span>
-          {editingCliente ? tx.save || 'Salvar' : tx.addCliente || 'Adicionar Cliente'}
+          {editingCliente ? tr('save') : tr('addCliente')}
         </button>
         {!referenceLayout ? (
           <button type="button" className="cliente-cadastro-v2__cancel" onClick={onCancel}>
-            {tx.cancel || 'Cancelar'}
+            {tr('cancel')}
           </button>
         ) : null}
       </div>

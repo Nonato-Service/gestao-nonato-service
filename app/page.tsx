@@ -34608,10 +34608,11 @@ onKeyPress={(e) => {
             {clientesActiveTab === 'cadastrar' ? (
               <div>
                 <ClienteCadastroForm
+                  key={selectedLanguage}
                   clienteForm={clienteForm}
                   setClienteForm={setClienteForm}
                   editingCliente={editingCliente}
-                  safeT={safeT as Record<string, string | undefined>}
+                  language={selectedLanguage}
                   servicoGrupos={servicoGrupos}
                   clienteGrupoTarifaSelecionadoId={clienteGrupoTarifaSelecionadoId}
                   onSave={handleSaveCliente}
@@ -70944,10 +70945,11 @@ A1;Peça exemplo;10`}
             </button>
             {showClienteForm && (
               <ClienteCadastroForm
+                key={`modal-cliente-${selectedLanguage}`}
                 clienteForm={clienteForm}
                 setClienteForm={setClienteForm}
                 editingCliente={editingCliente}
-                safeT={safeT as Record<string, string | undefined>}
+                language={selectedLanguage}
                 servicoGrupos={servicoGrupos}
                 clienteGrupoTarifaSelecionadoId={clienteGrupoTarifaSelecionadoId}
                 onSave={handleSaveCliente}
