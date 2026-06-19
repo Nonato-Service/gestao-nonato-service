@@ -4068,27 +4068,23 @@ body {
     justify-content: center !important;
     width: 100%;
   }
-  .agenda-calendario-toolbar__mes > button {
+  .agenda-calendario-toolbar__mes-label {
     flex: 1 1 auto;
-    min-height: 44px;
     min-width: 0;
   }
-  .agenda-calendario-toolbar__mes h3 {
-    flex: 1 1 100%;
-    order: -1;
-    min-width: 0 !important;
+  .agenda-calendario-toolbar__mes-label h3 {
     font-size: 16px !important;
-    margin-bottom: 6px !important;
   }
-  .agenda-calendario-toolbar > .btn-secondary {
-    width: 100%;
-    min-height: 44px;
+  .agenda-cal-nav-btn {
+    min-height: 44px !important;
+    min-width: 44px !important;
   }
   .agenda-cal-grid--head > div {
     padding: 8px 4px !important;
     font-size: 10px !important;
   }
-  .agenda-cal-grid--body > div {
+  .agenda-cal-day,
+  .agenda-cal-day--empty {
     min-height: 76px !important;
     padding: 4px !important;
   }
@@ -15083,7 +15079,148 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   background: #252525 !important;
 }
 
-/* Calendário */
+/* Calendário — visual moderno (células separadas, data no canto superior direito) */
+.agenda-cal-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.agenda-cal-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #2a2a2a !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 12px !important;
+  min-height: 72px;
+  box-sizing: border-box;
+}
+
+.agenda-cal-stat-card__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.agenda-cal-stat-card__icon--green { background: rgba(29, 185, 84, 0.18); }
+.agenda-cal-stat-card__icon--blue { background: rgba(59, 130, 246, 0.18); }
+.agenda-cal-stat-card__icon--red { background: rgba(239, 68, 68, 0.18); }
+.agenda-cal-stat-card__icon--yellow { background: rgba(234, 179, 8, 0.18); }
+
+.agenda-cal-stat-card__value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.agenda-cal-stat-card__label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 2px;
+}
+
+.agenda-calendario-toolbar {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 14px !important;
+  margin-bottom: 16px !important;
+}
+
+.agenda-calendario-toolbar__mes {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.agenda-calendario-toolbar__mes-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 180px;
+  justify-content: center;
+}
+
+.agenda-cal-mes-icon {
+  font-size: 18px;
+  opacity: 0.85;
+}
+
+.agenda-cal-nav-btn {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  border-radius: 10px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  font-size: 20px !important;
+  line-height: 1 !important;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.agenda-cal-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.agenda-calendario-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.agenda-cal-btn-lista {
+  padding: 10px 18px !important;
+  min-height: 42px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  background: #1db954 !important;
+  border: none !important;
+  color: #ffffff !important;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agenda-cal-btn-lista:hover {
+  background: #1ed760 !important;
+}
+
+.agenda-cal-btn-atualizar {
+  padding: 10px 18px !important;
+  min-height: 42px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .agenda-calendario-toolbar .btn-primary {
   padding: 12px 18px !important;
   min-height: 44px !important;
@@ -15110,27 +15247,156 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   color: #ffffff !important;
   font-size: 17px !important;
   font-weight: 600 !important;
+  margin: 0 !important;
 }
 
-.agenda-calendario-mes > div {
+.agenda-calendario-mes {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 4px;
+}
+
+.agenda-cal-grid-wrap {
   background: #2a2a2a !important;
   border: 1px solid rgba(255, 255, 255, 0.06) !important;
   border-radius: 14px !important;
-  overflow: hidden;
+  padding: 14px !important;
+  min-width: 520px;
+  box-sizing: border-box;
+}
+
+.agenda-cal-grid--head,
+.agenda-cal-grid--body {
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+.agenda-cal-grid--head {
+  margin-bottom: 8px !important;
 }
 
 .agenda-cal-grid--head > div {
-  background: #1f1f1f !important;
-  color: rgba(255, 255, 255, 0.55) !important;
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.5) !important;
   font-size: 12px !important;
   font-weight: 600 !important;
-  border-color: rgba(255, 255, 255, 0.06) !important;
-  padding: 14px 8px !important;
+  border: none !important;
+  padding: 8px 4px !important;
+  text-align: center !important;
 }
 
-.agenda-cal-grid--body > div {
-  border-color: rgba(255, 255, 255, 0.06) !important;
-  background: #252525 !important;
+.agenda-cal-day,
+.agenda-cal-day--empty {
+  min-height: 112px;
+  border-radius: 10px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.agenda-cal-day {
+  background: #333333 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 8px;
+  cursor: default;
+}
+
+.agenda-cal-day--clickable {
+  cursor: pointer;
+}
+
+.agenda-cal-day--clickable:hover {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+.agenda-cal-day--empty {
+  background: #2a2a2a !important;
+  border: 1px solid rgba(255, 255, 255, 0.04) !important;
+  opacity: 0.45;
+}
+
+.agenda-cal-day--today,
+.agenda-cal-day--selected {
+  border: 2px solid #1db954 !important;
+  box-shadow: 0 0 0 1px rgba(29, 185, 84, 0.25);
+}
+
+.agenda-cal-day__num {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1;
+}
+
+.agenda-cal-day--today .agenda-cal-day__num {
+  color: #1db954;
+  font-weight: 700;
+}
+
+.agenda-cal-day__events {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 28px;
+  max-height: 72px;
+  overflow: hidden;
+}
+
+.agenda-cal-empty {
+  margin-top: 24px;
+  padding: 48px 24px;
+  text-align: center;
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+}
+
+.agenda-cal-empty__icon {
+  font-size: 48px;
+  opacity: 0.35;
+  margin-bottom: 12px;
+}
+
+.agenda-cal-empty__text {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0;
+}
+
+@media (max-width: 1100px) {
+  .agenda-cal-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .agenda-cal-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .agenda-calendario-toolbar__actions {
+    width: 100%;
+  }
+
+  .agenda-cal-btn-lista,
+  .agenda-cal-btn-atualizar {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .agenda-cal-day,
+  .agenda-cal-day--empty {
+    min-height: 88px;
+  }
+}
+
+@media (max-width: 480px) {
+  .agenda-cal-stats {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Botões genéricos dentro da agenda */

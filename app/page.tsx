@@ -43204,18 +43204,17 @@ A1;Peça exemplo;10`}
               const diasNoMes = ultimoDia.getDate()
               const diaSemanaInicio = primeiroDia.getDay() // 0 = Domingo, 6 = Sábado
               
-              // Ajustar para segunda-feira = 0
-              const diaSemanaAjustado = diaSemanaInicio === 0 ? 6 : diaSemanaInicio - 1
+              const diaSemanaAjustado = diaSemanaInicio
 
-              // Nomes dos dias da semana e meses
+              // Nomes dos dias da semana e meses (domingo = primeira coluna)
               const diasSemana = [
+                safeT?.domingo || 'Dom',
                 safeT?.segunda || 'Seg',
                 safeT?.terca || 'Ter',
                 safeT?.quarta || 'Qua',
                 safeT?.quinta || 'Qui',
                 safeT?.sexta || 'Sex',
                 safeT?.sabado || 'Sáb',
-                safeT?.domingo || 'Dom'
               ]
 
               const meses = [
@@ -43273,14 +43272,56 @@ A1;Peça exemplo;10`}
 
               // Verificar se é hoje
               const hoje = new Date()
+              const agendamentosUnicosDoDia = (lista: Agendamento[]) =>
+                Array.from(new Map(lista.map((a) => [a.id, a])).values())
+
               const isHoje = (dia: number) => {
                 return dia === hoje.getDate() && 
                        calendarioMes === hoje.getMonth() && 
                        calendarioAno === hoje.getFullYear()
               }
 
-              const agendamentosUnicosDoDia = (lista: Agendamento[]) =>
-                Array.from(new Map(lista.map((a) => [a.id, a])).values())
+              const agendamentoCaiNoMes = (ag: Agendamento) =>
+                getDatasPeriodoAgendamento(ag).some((d) => {
+                  const p = d.split('-').map(Number)
+                  return p[0] === calendarioAno && p[1] === calendarioMes + 1
+                })
+
+              const baseAgendaStats = agendamentos.filter((ag) => {
+                if (!agendaPassaFiltroTipoListagem(filtroAgenda, ag)) return false
+                if (filtroTecnicoAgenda && !isAgendamentoPessoal(ag) && ag.tecnico !== filtroTecnicoAgenda) return false
+                return agendamentoCaiNoMes(ag)
+              })
+
+              const hojeKey = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`
+              const statsTotalMes = new Set(baseAgendaStats.map((a) => a.id)).size
+              const statsHoje = agendamentosUnicosDoDia(
+                baseAgendaStats.filter((ag) => agendamentoIncluiData(ag, hojeKey))
+              ).length
+              const statsUrgentes = baseAgendaStats.filter((ag) => {
+                const st = normalizeStatusAgendamento(ag)
+                return st === 'pendente' || st === 'em-andamento'
+              }).length
+              const statsConcluidos = baseAgendaStats.filter((ag) => normalizeStatusAgendamento(ag) === 'concluido').length
+              const statsPreAg = baseAgendaStats.filter(
+                (ag) =>
+                  !isAgendamentoPessoal(ag) &&
+                  normalizeTipoAgendamento(ag) === 'pre-agendamento' &&
+                  normalizeStatusAgendamento(ag) !== 'concluido' &&
+                  normalizeStatusAgendamento(ag) !== 'cancelado'
+              ).length
+              const mesTemAgendamentosVisiveis = Object.keys(agendamentosPorData).some((k) => {
+                const p = k.split('-').map(Number)
+                return p[0] === calendarioAno && p[1] === calendarioMes + 1 && (agendamentosPorData[k]?.length ?? 0) > 0
+              })
+
+              const agendaCalStatCards = [
+                { key: 'total', value: statsTotalMes, label: (safeT as any)?.agendaCalStatsTotalMes || 'Total do Mês', icon: '📅', tone: 'green' as const },
+                { key: 'hoje', value: statsHoje, label: (safeT as any)?.agendaCalStatsHoje || 'Hoje', icon: '🕐', tone: 'blue' as const },
+                { key: 'urg', value: statsUrgentes, label: (safeT as any)?.agendaCalStatsUrgentes || 'Urgentes', icon: '⚠️', tone: 'red' as const },
+                { key: 'conc', value: statsConcluidos, label: (safeT as any)?.agendaCalStatsConcluidos || 'Concluídos', icon: '✅', tone: 'green' as const },
+                { key: 'pre', value: statsPreAg, label: (safeT as any)?.agendaCalStatsPreAgend || 'Pré-Agendamentos', icon: '✨', tone: 'yellow' as const },
+              ]
 
               /**
                * Marcador do calendário: fundo na cor do status; hora e nome em branco (pedido do usuário).
@@ -43355,172 +43396,178 @@ A1;Peça exemplo;10`}
 
               return (
                 <div className="agenda-calendario-root">
-                  {/* Controles de navegação */}
-                  <div className="agenda-calendario-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
-                    <div className="agenda-calendario-toolbar__mes" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  {/* Resumo do mês */}
+                  <div className="agenda-cal-stats">
+                    {agendaCalStatCards.map((card) => (
+                      <div key={card.key} className="agenda-cal-stat-card">
+                        <div className={`agenda-cal-stat-card__icon agenda-cal-stat-card__icon--${card.tone}`}>{card.icon}</div>
+                        <div>
+                          <div className="agenda-cal-stat-card__value">{card.value}</div>
+                          <div className="agenda-cal-stat-card__label">{card.label}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Navegação do mês */}
+                  <div className="agenda-calendario-toolbar">
+                    <div className="agenda-calendario-toolbar__mes">
                       <button
+                        type="button"
+                        className="agenda-cal-nav-btn"
                         onClick={() => navegarMes('anterior')}
-                        className="btn-primary"
-                        style={{ padding: '8px 15px', fontSize: '13px' }}
+                        title={safeT?.mesAnterior || 'Mês Anterior'}
+                        aria-label={safeT?.mesAnterior || 'Mês Anterior'}
                       >
-                        ← {safeT?.mesAnterior || 'Mês Anterior'}
+                        ‹
                       </button>
-                      <h3 style={{ margin: 0, minWidth: '200px', textAlign: 'center', fontSize: '18px' }}>
-                        {meses[calendarioMes]} {calendarioAno}
-                      </h3>
+                      <div className="agenda-calendario-toolbar__mes-label">
+                        <span className="agenda-cal-mes-icon" aria-hidden="true">📅</span>
+                        <h3>{meses[calendarioMes]} {calendarioAno}</h3>
+                      </div>
                       <button
+                        type="button"
+                        className="agenda-cal-nav-btn"
                         onClick={() => navegarMes('proximo')}
-                        className="btn-primary"
-                        style={{ padding: '8px 15px', fontSize: '13px' }}
+                        title={safeT?.proximoMes || 'Próximo Mês'}
+                        aria-label={safeT?.proximoMes || 'Próximo Mês'}
                       >
-                        {safeT?.proximoMes || 'Próximo Mês'} →
+                        ›
                       </button>
                     </div>
-                    <button
-                      onClick={irParaMesAtual}
-                      className="btn-secondary"
-                      style={{ padding: '8px 15px', fontSize: '13px' }}
-                    >
-                      {safeT?.mesAtual || 'Mês Atual'}
-                    </button>
+                    <div className="agenda-calendario-toolbar__actions">
+                      <button
+                        type="button"
+                        className="agenda-cal-btn-lista"
+                        onClick={() => setVisualizacaoAgenda('lista')}
+                      >
+                        📋 {(safeT as any)?.agendaVisualizarLista || 'Visualizar Lista'}
+                      </button>
+                      <button
+                        type="button"
+                        className="agenda-cal-btn-atualizar"
+                        onClick={() => {
+                          irParaMesAtual()
+                          setFiltroDataAgenda('')
+                          setBuscaAgendaListaRapida('')
+                        }}
+                      >
+                        ↻ {(safeT as any)?.agendaAtualizarLista || 'Atualizar Lista'}
+                      </button>
+                    </div>
                   </div>
 
                   {/* Calendário */}
-                  <div className="agenda-calendario-mes" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: '4px' }}>
-                  <div style={{ backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)', overflow: 'hidden', minWidth: '520px' }}>
-                    {/* Cabeçalho dos dias da semana */}
-                    <div className="agenda-cal-grid agenda-cal-grid--head" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', backgroundColor: '#222222' }}>
-                      {diasSemana.map((dia, index) => (
-                        <div
-                          key={index}
-                          style={{
-                            padding: '12px',
-                            textAlign: 'center',
-                            fontWeight: 'bold',
-                            fontSize: '13px',
-                            color: '#00ff00',
-                            borderRight: index < 6 ? '1px solid rgba(0, 255, 0, 0.2)' : 'none'
-                          }}
-                        >
-                          {dia}
-                        </div>
-                      ))}
-                    </div>
+                  <div className="agenda-calendario-mes">
+                    <div className="agenda-cal-grid-wrap">
+                      <div className="agenda-cal-grid agenda-cal-grid--head">
+                        {diasSemana.map((dia, index) => (
+                          <div key={index}>{dia}</div>
+                        ))}
+                      </div>
 
-                    {/* Dias do calendário */}
-                    <div className="agenda-cal-grid agenda-cal-grid--body" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
-                      {/* Espaços vazios antes do primeiro dia */}
-                      {Array.from({ length: diaSemanaAjustado }).map((_, index) => (
-                        <div
-                          key={`empty-${index}`}
-                          style={{
-                            minHeight: '100px',
-                            borderRight: '1px solid rgba(0, 255, 0, 0.1)',
-                            borderBottom: '1px solid rgba(0, 255, 0, 0.1)',
-                            backgroundColor: '#151515'
-                          }}
-                        />
-                      ))}
+                      <div className="agenda-cal-grid agenda-cal-grid--body">
+                        {Array.from({ length: diaSemanaAjustado }).map((_, index) => (
+                          <div key={`empty-${index}`} className="agenda-cal-day--empty" aria-hidden="true" />
+                        ))}
 
-                      {/* Dias do mês */}
-                      {Array.from({ length: diasNoMes }).map((_, index) => {
-                        const dia = index + 1
-                        const dataKey = `${calendarioAno}-${String(calendarioMes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
-                        const agendamentosDoDia = agendamentosPorData[dataKey] || []
-                        const agDiaUnicos = agendamentosUnicosDoDia(agendamentosDoDia).sort(ordenarAgendamentosCalendarioDia)
-                        const hojeDia = isHoje(dia)
+                        {Array.from({ length: diasNoMes }).map((_, index) => {
+                          const dia = index + 1
+                          const dataKey = `${calendarioAno}-${String(calendarioMes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
+                          const agendamentosDoDia = agendamentosPorData[dataKey] || []
+                          const agDiaUnicos = agendamentosUnicosDoDia(agendamentosDoDia).sort(ordenarAgendamentosCalendarioDia)
+                          const hojeDia = isHoje(dia)
+                          const diaSelecionado = filtroDataAgenda === dataKey
+                          const dayClassName = [
+                            'agenda-cal-day',
+                            agDiaUnicos.length > 0 ? 'agenda-cal-day--clickable' : '',
+                            hojeDia ? 'agenda-cal-day--today' : '',
+                            diaSelecionado && !hojeDia ? 'agenda-cal-day--selected' : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' ')
 
-                        return (
-                          <div
-                            key={dia}
-                            style={{
-                              minHeight: '100px',
-                              padding: '8px',
-                              borderRight: (diaSemanaAjustado + dia) % 7 !== 0 ? '1px solid rgba(0, 255, 0, 0.1)' : 'none',
-                              borderBottom: '1px solid rgba(0, 255, 0, 0.1)',
-                              backgroundColor: '#141414',
-                              boxShadow: hojeDia ? 'inset 0 0 0 2px rgba(0, 255, 160, 0.45)' : undefined,
-                              position: 'relative',
-                              cursor: agendamentosDoDia.length > 0 ? 'pointer' : 'default'
-                            }}
-                            onClick={() => {
-                              if (agDiaUnicos.length === 0) return
-                              setFiltroDataAgenda(dataKey)
-                              setVisualizacaoAgenda('lista')
-                              setBuscaAgendaListaRapida('')
-                            }}
-                          >
-                            {/* Número do dia */}
+                          return (
                             <div
-                              style={{
-                                fontWeight: hojeDia ? 'bold' : 'normal',
-                                color: hojeDia ? '#b8ffc8' : '#fff',
-                                fontSize: '14px',
-                                marginBottom: '5px',
-                                borderBottom: hojeDia ? '2px solid rgba(0, 255, 122, 0.75)' : 'none',
-                                paddingBottom: '2px'
+                              key={dia}
+                              className={dayClassName}
+                              onClick={() => {
+                                if (agDiaUnicos.length === 0) return
+                                setFiltroDataAgenda(dataKey)
+                                setVisualizacaoAgenda('lista')
+                                setBuscaAgendaListaRapida('')
                               }}
                             >
-                              {dia}
-                            </div>
+                              <div className="agenda-cal-day__num">{dia}</div>
 
-                            {/* Agendamentos do dia */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                              {agDiaUnicos.slice(0, 5).map((ag) => {
-                                const clienteTxt = rotuloCurtoAgendamentoCalendario(ag, safeT as Record<string, string | undefined>)
-                                const tituloCal = rotuloTituloAgendamento(ag, safeT as Record<string, string | undefined>)
-                                return (
-                                <div
-                                  key={`${ag.id}-${dataKey}`}
-                                  id={`agendamento-${ag.id}`}
-                                  title={`${tituloCal} - ${ag.hora}`}
-                                  style={{
-                                    fontSize: '10px',
-                                    padding: '4px 6px',
-                                    borderRadius: '6px',
-                                    ...estiloMarcadorCalendario(ag),
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    whiteSpace: 'nowrap',
-                                    cursor: 'pointer'
-                                  }}
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleEditAgendamento(ag)
-                                  }}
-                                >
-                                  <strong>{ag.hora}</strong> {clienteTxt}
-                                </div>
-                              )})}
-                              {agDiaUnicos.length > 5 && (
-                                <div
-                                  style={{
-                                    fontSize: '10px',
-                                    padding: '4px 6px',
-                                    borderRadius: '3px',
-                                    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                                    color: 'rgba(255, 255, 255, 0.8)',
-                                    border: '1px solid rgba(0, 255, 0, 0.22)',
-                                    textAlign: 'center',
-                                    cursor: 'pointer'
-                                  }}
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setFiltroDataAgenda(dataKey)
-                                    setVisualizacaoAgenda('lista')
-                                    setBuscaAgendaListaRapida('')
-                                  }}
-                                >
-                                  +{agDiaUnicos.length - 5} {safeT?.mais || 'mais'}
-                                </div>
-                              )}
+                              <div className="agenda-cal-day__events">
+                                {agDiaUnicos.slice(0, 5).map((ag) => {
+                                  const clienteTxt = rotuloCurtoAgendamentoCalendario(ag, safeT as Record<string, string | undefined>)
+                                  const tituloCal = rotuloTituloAgendamento(ag, safeT as Record<string, string | undefined>)
+                                  return (
+                                    <div
+                                      key={`${ag.id}-${dataKey}`}
+                                      id={`agendamento-${ag.id}`}
+                                      title={`${tituloCal} - ${ag.hora}`}
+                                      style={{
+                                        fontSize: '10px',
+                                        padding: '4px 6px',
+                                        borderRadius: '6px',
+                                        ...estiloMarcadorCalendario(ag),
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                        cursor: 'pointer',
+                                      }}
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        handleEditAgendamento(ag)
+                                      }}
+                                    >
+                                      <strong>{ag.hora}</strong> {clienteTxt}
+                                    </div>
+                                  )
+                                })}
+                                {agDiaUnicos.length > 5 && (
+                                  <div
+                                    style={{
+                                      fontSize: '10px',
+                                      padding: '4px 6px',
+                                      borderRadius: '3px',
+                                      backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                                      color: 'rgba(255, 255, 255, 0.8)',
+                                      border: '1px solid rgba(0, 255, 0, 0.22)',
+                                      textAlign: 'center',
+                                      cursor: 'pointer',
+                                    }}
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setFiltroDataAgenda(dataKey)
+                                      setVisualizacaoAgenda('lista')
+                                      setBuscaAgendaListaRapida('')
+                                    }}
+                                  >
+                                    +{agDiaUnicos.length - 5} {safeT?.mais || 'mais'}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )
-                      })}
+                          )
+                        })}
+                      </div>
                     </div>
                   </div>
-                  </div>
+
+                  {!mesTemAgendamentosVisiveis ? (
+                    <div className="agenda-cal-empty">
+                      <div className="agenda-cal-empty__icon" aria-hidden="true">📅</div>
+                      <p className="agenda-cal-empty__text">
+                        {(safeT as any)?.nenhumAgendamentoCalendario ||
+                          safeT?.nenhumAgendamentoFiltro ||
+                          'Nenhum agendamento encontrado'}
+                      </p>
+                    </div>
+                  ) : null}
 
                   {/* Legenda */}
                   <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#141414', borderRadius: '8px', border: '1px solid rgba(0, 255, 0, 0.2)' }}>
