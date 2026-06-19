@@ -90,6 +90,14 @@ function IconCamera({ className }: { className?: string }) {
   )
 }
 
+function IconArrowLeft({ className }: { className?: string }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" className={className} aria-hidden fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 function FieldInput({
   id,
   icon,
@@ -161,15 +169,13 @@ export function ClienteCadastroForm({
       {variant === 'page' ? (
         <header className="cliente-cadastro-v2__page-header">
           <div className="cliente-cadastro-v2__page-header-main">
-            {!referenceLayout ? (
-              <nav className="cliente-cadastro-v2__breadcrumb" aria-label="Breadcrumb">
-                <span className="cliente-cadastro-v2__breadcrumb-home">
-                  <IconHome size={14} />
-                </span>
-                <span className="cliente-cadastro-v2__breadcrumb-sep">/</span>
-                <span>{tr('clientesBreadcrumb')}</span>
-              </nav>
-            ) : null}
+            <nav className="cliente-cadastro-v2__breadcrumb" aria-label="Breadcrumb">
+              <span className="cliente-cadastro-v2__breadcrumb-home">
+                <IconHome size={14} />
+              </span>
+              <span className="cliente-cadastro-v2__breadcrumb-sep">/</span>
+              <span>{tr('clientesBreadcrumb')}</span>
+            </nav>
             <div className="cliente-cadastro-v2__title-row">
               <div>
                 <h2 className="cliente-cadastro-v2__title">{titulo}</h2>
@@ -177,7 +183,7 @@ export function ClienteCadastroForm({
               </div>
               {onBack ? (
                 <button type="button" className="cliente-cadastro-v2__back-btn" onClick={onBack} title={tr('voltar')}>
-                  ↶
+                  <IconArrowLeft />
                 </button>
               ) : null}
             </div>
@@ -227,7 +233,12 @@ export function ClienteCadastroForm({
       <section className="cliente-cadastro-v2__card cliente-cadastro-v2__card--info">
         <h3 className="cliente-cadastro-v2__card-title">{tr('informacoesCliente')}</h3>
 
-        <div className="cliente-cadastro-v2__fields-grid">
+        <div
+          className={
+            'cliente-cadastro-v2__fields-grid' +
+            (referenceLayout ? ' cliente-cadastro-v2__fields-grid--single' : '')
+          }
+        >
         <FieldInput id="tipo-cliente" icon={<IconUser size={18} />} label={tr('tipoCliente')} fullWidth>
           <select
             id="tipo-cliente"
@@ -302,7 +313,7 @@ export function ClienteCadastroForm({
           />
         </FieldInput>
 
-        <FieldInput id="codigo-postal-cliente" icon={<IconMapPin />} label={tr('codigoPostal')}>
+        <FieldInput id="codigo-postal-cliente" icon={<IconMapPin />} label={tr('codigoPostal')} fullWidth={referenceLayout}>
           <input
             id="codigo-postal-cliente"
             type="text"
@@ -313,7 +324,12 @@ export function ClienteCadastroForm({
           />
         </FieldInput>
 
-        <FieldInput id="nif-cliente" icon={<IconIdCard size={18} />} label={tr('nif') || tr('identificacaoFiscal')}>
+        <FieldInput
+          id="nif-cliente"
+          icon={<IconIdCard size={18} />}
+          label={tr('nif') || tr('identificacaoFiscal')}
+          fullWidth={referenceLayout}
+        >
           <input
             id="nif-cliente"
             type="text"

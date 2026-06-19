@@ -13927,7 +13927,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  padding: clamp(12px, 2vw, 24px) clamp(20px, 3.5vw, 40px) !important;
+  padding: clamp(16px, 2.5vw, 32px) clamp(24px, 4vw, 48px) clamp(32px, 4vw, 48px) !important;
   max-width: none !important;
   width: 100% !important;
   margin: 0 !important;
@@ -13937,48 +13937,74 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   max-width: none !important;
   width: 100% !important;
   margin: 0 !important;
-  gap: 24px;
+  gap: 28px;
 }
 
 .cliente-cadastro-v2--reference .cliente-cadastro-v2__page-header {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+}
+
+.cliente-cadastro-v2--reference .cliente-cadastro-v2__breadcrumb {
+  margin-bottom: 18px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.cliente-cadastro-v2--reference .cliente-cadastro-v2__title-row {
+  align-items: center;
 }
 
 .cliente-cadastro-v2--reference .cliente-cadastro-v2__title {
-  font-size: clamp(1.75rem, 4.5vw, 2.25rem) !important;
+  font-size: clamp(1.85rem, 4.5vw, 2.35rem) !important;
   font-weight: 700 !important;
   color: #ffffff !important;
+  margin-bottom: 8px !important;
 }
 
 .cliente-cadastro-v2--reference .cliente-cadastro-v2__subtitle {
   font-size: 15px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.48);
 }
 
 .cliente-cadastro-v2--reference .cliente-cadastro-v2__card {
   background: #2a2a2a !important;
   border: 1px solid rgba(255, 255, 255, 0.06) !important;
   border-radius: 16px !important;
-  padding: 24px !important;
+  padding: 28px !important;
+  box-shadow: none !important;
 }
 
 .cliente-cadastro-v2--reference .cliente-cadastro-v2__card-title {
   font-size: 16px !important;
   font-weight: 600 !important;
-  margin-bottom: 20px !important;
+  margin-bottom: 22px !important;
   color: #ffffff !important;
 }
 
 .cliente-cadastro-v2--reference .cliente-cadastro-v2__photo-drop {
-  min-height: 180px;
-  border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(0, 0, 0, 0.35);
+  min-height: 220px;
+  border: 2px dashed rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.32);
+  gap: 12px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.cliente-cadastro-v2--reference .cliente-cadastro-v2__photo-icon {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.cliente-cadastro-v2--reference .cliente-cadastro-v2__fields-grid--single {
+  display: flex;
+  flex-direction: column;
 }
 
 .cliente-cadastro-v2--reference .cliente-cadastro-v2__label {
   font-size: 14px !important;
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: rgba(255, 255, 255, 0.88) !important;
   margin-bottom: 10px !important;
+  font-weight: 500;
 }
 
 /* Sobrescreve regras globais de .tab-content-wrapper */
@@ -13991,7 +14017,7 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 12px !important;
   color: #ffffff !important;
-  min-height: 48px;
+  min-height: 50px;
   box-sizing: border-box;
 }
 
@@ -14001,53 +14027,62 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 }
 
 .clientes-cadastro-page .cliente-cadastro-v2__field {
-  margin-bottom: 20px;
+  margin-bottom: 22px;
+}
+
+.clientes-cadastro-page .cliente-cadastro-v2__field:last-child {
+  margin-bottom: 0;
+}
+
+.clientes-cadastro-page .cliente-cadastro-v2__actions {
+  margin-top: 0;
 }
 
 .clientes-cadastro-page .cliente-cadastro-v2__submit {
-  margin-top: 8px;
+  margin-top: 4px;
   padding: 18px 24px !important;
   font-size: 16px !important;
   font-weight: 700 !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
-  background: #00e676 !important;
+  background: #1db954 !important;
+  border: none !important;
   border-radius: 14px !important;
-  box-shadow: 0 8px 28px rgba(0, 230, 118, 0.35) !important;
+  box-shadow: 0 6px 24px rgba(29, 185, 84, 0.32) !important;
+  transform: none !important;
 }
 
 .clientes-cadastro-page .cliente-cadastro-v2__submit:hover {
-  background: #00ff88 !important;
+  background: #1ed760 !important;
+  box-shadow: 0 8px 28px rgba(29, 185, 84, 0.4) !important;
+  transform: none !important;
 }
 
 .clientes-cadastro-page .cliente-cadastro-v2__submit-icon {
-  background: rgba(255, 255, 255, 0.2);
+  background: transparent;
+  width: auto;
+  height: auto;
+  font-size: 20px;
+  font-weight: 700;
   color: #fff;
 }
 
 .clientes-cadastro-page .cliente-cadastro-v2__back-btn {
   width: 48px;
   height: 48px;
-  background: rgba(0, 230, 118, 0.15);
-  border-color: rgba(0, 230, 118, 0.5);
+  background: #1db954 !important;
+  border: none !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(29, 185, 84, 0.28);
 }
 
-/* Campos em 2 colunas em ecrãs largos — aproveita a largura */
-@media (min-width: 900px) {
-  .clientes-cadastro-page .cliente-cadastro-v2__card--info .cliente-cadastro-v2__fields-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 28px;
-    row-gap: 0;
-  }
-
-  .clientes-cadastro-page .cliente-cadastro-v2__field--span-2 {
-    grid-column: 1 / -1;
-  }
+.clientes-cadastro-page .cliente-cadastro-v2__back-btn:hover {
+  background: #1ed760 !important;
+  border: none !important;
 }
 
 @media (min-width: 1400px) {
   .clientes-cadastro-page .cliente-cadastro-v2__card {
-    padding: 28px 36px !important;
+    padding: 32px 40px !important;
   }
 }
