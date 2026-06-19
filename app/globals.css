@@ -14757,6 +14757,29 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
   opacity: 1 !important;
 }
 
+/* Barra de ações — espaçamento entre botões (desktop) */
+.agenda-tecnica-hero__actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 14px !important;
+  row-gap: 10px !important;
+}
+
+.agenda-tecnica-hero__actions-primary {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.agenda-tecnica-hero__actions-nav {
+  display: flex !important;
+  flex-shrink: 0 !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
 /* Botões do hero — tamanho uniforme */
 .agenda-tecnica-hero__actions-primary > button,
 .agenda-tecnica-hero__actions-primary > .btn-primary {
