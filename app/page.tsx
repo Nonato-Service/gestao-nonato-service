@@ -41141,6 +41141,10 @@ A1;Peça exemplo;10`}
             }}>
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <button
+                  type="button"
+                  className={
+                    'agenda-tecnica-view-btn' + (visualizacaoAgenda === 'lista' ? ' agenda-tecnica-view-btn--active' : '')
+                  }
                   onClick={() => setVisualizacaoAgenda('lista')}
                   style={{
                     padding: '12px 24px',
@@ -41157,6 +41161,11 @@ A1;Peça exemplo;10`}
                   📋 {safeT?.lista || 'Lista'}
                 </button>
                 <button
+                  type="button"
+                  className={
+                    'agenda-tecnica-view-btn' +
+                    (visualizacaoAgenda === 'calendario' ? ' agenda-tecnica-view-btn--active' : '')
+                  }
                   onClick={() => setVisualizacaoAgenda('calendario')}
                   style={{
                     padding: '12px 24px',
@@ -42005,7 +42014,7 @@ A1;Peça exemplo;10`}
 
             {/* Formulário de Agendamento */}
             {showAgendaForm && (
-              <div ref={agendaInlineFormRef} style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}>
+              <div ref={agendaInlineFormRef} className="agenda-tecnica-form" style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}>
                 <h3 style={{ marginBottom: '15px', color: isAgendamentoPessoal(agendaForm) ? '#d8b4fe' : '#00ff00' }}>
                   {editingAgendamento
                     ? isAgendamentoPessoal(agendaForm)
@@ -42583,7 +42592,7 @@ A1;Peça exemplo;10`}
                 </div>
                 ) : null}
 
-                <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                <div className="agenda-tecnica-form__actions" style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                   <button 
                     className="btn-primary" 
                     onClick={handleSaveAgendamento} 

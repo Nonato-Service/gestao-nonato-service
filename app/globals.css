@@ -14720,3 +14720,412 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
     padding: 20px;
   }
 }
+
+/* ==========================================================================
+   Agenda técnica — visual alinhado ao padrão Clientes (cores + botões)
+   Mantém estrutura e lógica; só restyle via CSS
+   ========================================================================== */
+.agenda-tecnica-page {
+  padding: clamp(16px, 2.5vw, 32px) clamp(20px, 3.5vw, 40px) clamp(28px, 4vw, 40px) !important;
+  max-width: none !important;
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+/* Hero */
+.agenda-tecnica-hero {
+  margin-bottom: 28px !important;
+  padding: clamp(20px, 3vw, 28px) !important;
+  background: #2a2a2a !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+
+.agenda-tecnica-hero__h1 {
+  color: #ffffff !important;
+  text-shadow: none !important;
+  font-size: clamp(1.5rem, 4vw, 2rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+  margin-bottom: 6px !important;
+}
+
+.agenda-tecnica-hero__sub {
+  color: rgba(255, 255, 255, 0.48) !important;
+  font-size: 14px !important;
+  opacity: 1 !important;
+}
+
+/* Botões do hero — tamanho uniforme */
+.agenda-tecnica-hero__actions-primary > button,
+.agenda-tecnica-hero__actions-primary > .btn-primary {
+  padding: 12px 20px !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  min-height: 44px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+/* Novo agendamento — verde principal */
+.agenda-tecnica-hero__actions-primary > .btn-primary:first-of-type {
+  background: #1db954 !important;
+  border: none !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(29, 185, 84, 0.28);
+}
+
+.agenda-tecnica-hero__actions-primary > .btn-primary:first-of-type:hover {
+  background: #1ed760 !important;
+}
+
+/* Assunto pessoal — mantém roxo, só normaliza forma */
+.agenda-tecnica-hero__actions-primary > .btn-primary:nth-of-type(2) {
+  background: rgba(139, 92, 246, 0.18) !important;
+  border: 1px solid rgba(167, 139, 250, 0.45) !important;
+  color: #c4b5fd !important;
+}
+
+/* Estado visual / WhatsApp — bordas arredondadas consistentes */
+.agenda-tecnica-hero__actions-primary > button:not(.btn-primary) {
+  border-radius: 12px !important;
+}
+
+/* Voltar circular verde */
+.agenda-tecnica-hero__actions-nav button:first-child {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  background: #1db954 !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-size: 18px !important;
+  box-shadow: 0 4px 14px rgba(29, 185, 84, 0.28);
+}
+
+.agenda-tecnica-hero__actions-nav button:first-child:hover {
+  background: #1ed760 !important;
+}
+
+.agenda-tecnica-hero__actions-nav button:last-child {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  background: rgba(37, 99, 235, 0.15) !important;
+  border: 1px solid rgba(96, 165, 250, 0.4) !important;
+  color: #93c5fd !important;
+}
+
+/* Toggle Lista / Calendário */
+.agenda-tecnica-view-toggle {
+  margin-bottom: 24px !important;
+  padding: 20px 24px !important;
+  background: #2a2a2a !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 16px !important;
+}
+
+.agenda-tecnica-view-toggle > div:first-child {
+  gap: 12px !important;
+}
+
+.agenda-tecnica-view-btn {
+  padding: 14px 28px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border-radius: 12px !important;
+  min-height: 48px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  background: #1a1a1a !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.agenda-tecnica-view-btn--active {
+  background: rgba(29, 185, 84, 0.18) !important;
+  border: 1px solid rgba(29, 185, 84, 0.5) !important;
+  color: #1db954 !important;
+}
+
+.agenda-tecnica-view-toggle > label {
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: #1a1a1a !important;
+  padding: 12px 16px !important;
+  font-size: 13px !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.agenda-tecnica-view-toggle input[type='checkbox'] {
+  accent-color: #1db954 !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* Filtros */
+.agenda-tecnica-filtros {
+  margin-bottom: 24px !important;
+  padding: 20px 24px !important;
+  background: #2a2a2a !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 16px !important;
+  gap: 14px !important;
+}
+
+.agenda-tecnica-filtros__field label {
+  color: rgba(255, 255, 255, 0.55) !important;
+  font-size: 13px !important;
+  margin-bottom: 6px !important;
+}
+
+.agenda-tecnica-filtros select,
+.agenda-tecnica-filtros input[type='date'],
+.agenda-tecnica-filtros input[type='search'] {
+  padding: 12px 14px !important;
+  min-height: 48px !important;
+  background: #1a1a1a !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+  box-sizing: border-box;
+}
+
+.agenda-tecnica-filtros > .btn-secondary {
+  padding: 12px 20px !important;
+  min-height: 48px !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Painel operacional */
+.agenda-tecnica-painel-outer {
+  background: #2a2a2a !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 16px !important;
+  padding: 22px !important;
+  margin-bottom: 24px !important;
+}
+
+.agenda-painel-voltar-bar {
+  border: 1px solid rgba(29, 185, 84, 0.4) !important;
+  background: rgba(29, 185, 84, 0.08) !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+.agenda-painel-voltar-btn {
+  background: #1db954 !important;
+  border: none !important;
+  color: #fff !important;
+  border-radius: 12px !important;
+  padding: 12px 20px !important;
+  min-height: 48px !important;
+}
+
+.agenda-painel-situacao-btn:focus-visible {
+  outline: 2px solid rgba(29, 185, 84, 0.65) !important;
+}
+
+/* Formulário inline */
+.agenda-tecnica-form {
+  background: #2a2a2a !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 16px !important;
+  box-shadow: none !important;
+  padding: 24px 28px !important;
+  margin-bottom: 24px !important;
+}
+
+.agenda-tecnica-form select,
+.agenda-tecnica-form input,
+.agenda-tecnica-form textarea {
+  background: #1a1a1a !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  color: #fff !important;
+  padding: 12px 14px !important;
+  font-size: 14px !important;
+}
+
+.agenda-tecnica-form label {
+  color: rgba(255, 255, 255, 0.78) !important;
+  font-size: 14px !important;
+}
+
+.agenda-tecnica-form__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.agenda-tecnica-form__actions .btn-primary {
+  flex: 1;
+  padding: 16px 24px !important;
+  min-height: 52px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  border-radius: 14px !important;
+  background: #1db954 !important;
+  border: none !important;
+  color: #fff !important;
+}
+
+.agenda-tecnica-form__actions .btn-primary:hover {
+  background: #1ed760 !important;
+}
+
+.agenda-tecnica-form__actions .btn-secondary {
+  flex: 1;
+  padding: 16px 24px !important;
+  min-height: 52px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  border-radius: 14px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Cards da lista */
+.agenda-lista-card:not(.agenda-lista-card-cancelado) {
+  background-color: #2a2a2a !important;
+  border-radius: 14px !important;
+  padding: 22px !important;
+}
+
+.agenda-lista-card h3 {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+.agenda-lista-empty {
+  background: #2a2a2a !important;
+  border: 1px dashed rgba(255, 255, 255, 0.12) !important;
+  border-radius: 14px !important;
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* Editar / Excluir nos cards */
+.agenda-card-actions .btn-primary {
+  padding: 10px 18px !important;
+  min-height: 44px !important;
+  min-width: 88px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  background: #2563eb !important;
+  border: none !important;
+  color: #ffffff !important;
+}
+
+.agenda-card-actions .btn-primary:hover {
+  background: #3b82f6 !important;
+}
+
+.agenda-card-actions .btn-danger {
+  padding: 10px 18px !important;
+  min-height: 44px !important;
+  min-width: 88px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  background: #dc2626 !important;
+  border: none !important;
+  color: #ffffff !important;
+}
+
+.agenda-card-actions .btn-danger:hover {
+  background: #ef4444 !important;
+}
+
+/* Secções da lista */
+.agenda-section-header {
+  border-radius: 12px !important;
+  background: #252525 !important;
+}
+
+/* Calendário */
+.agenda-calendario-toolbar .btn-primary {
+  padding: 12px 18px !important;
+  min-height: 44px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border-radius: 12px !important;
+  background: rgba(29, 185, 84, 0.15) !important;
+  border: 1px solid rgba(29, 185, 84, 0.45) !important;
+  color: #1db954 !important;
+}
+
+.agenda-calendario-toolbar .btn-secondary {
+  padding: 12px 20px !important;
+  min-height: 44px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.agenda-calendario-toolbar__mes h3 {
+  color: #ffffff !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+}
+
+.agenda-calendario-mes > div {
+  background: #2a2a2a !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 14px !important;
+  overflow: hidden;
+}
+
+.agenda-cal-grid--head > div {
+  background: #1f1f1f !important;
+  color: rgba(255, 255, 255, 0.55) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  padding: 14px 8px !important;
+}
+
+.agenda-cal-grid--body > div {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  background: #252525 !important;
+}
+
+/* Botões genéricos dentro da agenda */
+.agenda-tecnica-page .btn-primary:not(.agenda-card-actions .btn-primary):not(.agenda-tecnica-hero__actions-primary .btn-primary:nth-of-type(2)) {
+  border-radius: 12px !important;
+}
+
+.agenda-tecnica-page .btn-primary:not(.agenda-card-actions .btn-primary) {
+  font-weight: 600 !important;
+}
+
+@media (max-width: 768px) {
+  .agenda-tecnica-view-btn {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .agenda-tecnica-filtros {
+    padding: 16px !important;
+  }
+}
