@@ -26217,7 +26217,7 @@ const nextF = familias.filter(x => x !== f)
     switch (tab.type) {
       case 'gestores':
         return (
-          <div className="tab-content-wrapper tab-glass-root">
+          <div className="tab-content-wrapper tab-glass-root ns-ui-v2">
             {/* Barra fixa mobile */}
             <div className="mobile-sticky-toolbar">
               <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>↶ {safeT?.voltar || 'Voltar'}</button>
@@ -34350,7 +34350,7 @@ onKeyPress={(e) => {
         return (
           <div
             className={
-              'tab-content-wrapper tab-glass-root tab-glass-root--wide' +
+              'tab-content-wrapper tab-glass-root tab-glass-root--wide ns-ui-v2 cadastro-valores-v2' +
               (clientesActiveTab === 'cadastrar' ? ' clientes-cadastro-page' : '') +
               (clienteListaDetalheId ? ' clientes-detalhe-page' : '')
             }
@@ -35120,112 +35120,40 @@ onKeyPress={(e) => {
           : []
         
         return (
-          <div className="tab-content-wrapper tab-glass-root">
+          <div className="tab-content-wrapper tab-glass-root tab-glass-root--wide ns-ui-v2 cadastro-valores-v2">
             {/* Barra fixa mobile */}
             <div className="mobile-sticky-toolbar">
               <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>↶ {safeT?.voltar || 'Voltar'}</button>
               <button className="mobile-toolbar-btn active" onClick={handleAddFornecedor}>➕ {safeT?.addFornecedor || 'Novo Fornecedor'}</button>
               <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
             </div>
-            {/* Cabeçalho - oculto em mobile */}
-            <div className="tab-header-desktop tab-glass-hero">
-              <div className="tab-glass-hero-top">
+            <div className="tab-header-desktop cadastro-valores-v2__hero">
+              <div className="cadastro-valores-v2__hero-row">
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
                 </div>
-                <div className="tab-glass-hero-heading">
-                  <h1 className="tab-glass-hero-title">
-                    {safeT?.fornecedoresTitle || 'FORNECEDORES'}
-                  </h1>
-                  <p className="tab-glass-hero-meta">
+                <div style={{ flex: 1, textAlign: 'center' }}>
+                  <h1 className="cadastro-valores-v2__hero-title">{safeT?.fornecedoresTitle || 'FORNECEDORES'}</h1>
+                  <p className="cadastro-valores-v2__hero-meta">
                     {fornecedores.length} {safeT?.fornecedoresCadastrados || 'fornecedor(es) cadastrado(s)'}
                   </p>
                 </div>
-                <div className="tab-glass-hero-actions">
-                  <button 
-                    className="btn-primary" 
-                    onClick={handleAddFornecedor} 
-                    style={{ 
-                      padding: '10px 20px',
-                      backgroundColor: 'rgba(18, 52, 24, 0.96)',
-                      border: '1px solid rgba(0, 200, 80, 0.55)',
-                      color: '#ffffff',
-                      fontWeight: 'bold',
-                      fontSize: '13px'
-                    }}
-                  >
+                <div className="cadastro-valores-v2__hero-actions">
+                  <button type="button" className="cadastro-valores-v2__btn-green" onClick={handleAddFornecedor}>
                     ➕ {safeT?.addFornecedor || 'Novo Fornecedor'}
                   </button>
-                  <div className="tab-glass-hero-actions-row">
-                    <button 
-                      onClick={() => closeTab(activeTabId || '')}
-                      style={{ 
-                        padding: '6px 8px', 
-                        fontSize: '16px',
-                        backgroundColor: 'rgba(0, 255, 0, 0.06)',
-                        border: '1px solid rgba(0, 255, 0, 0.55)',
-                        borderRadius: '4px',
-                        color: '#ffffff',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '32px',
-                        height: '32px'
-                      }}
-                      title={safeT?.voltar || 'Voltar'}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.12)'
-                        e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.72)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.06)'
-                        e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.55)'
-                      }}
-                    >
-                      ↶
-                    </button>
-                    <button 
-                      onClick={voltarPaginaInicial}
-                      style={{ 
-                        padding: '6px 8px', 
-                        fontSize: '16px',
-                        backgroundColor: 'rgba(0, 150, 255, 0.06)',
-                        border: '1px solid rgba(0, 150, 255, 0.55)',
-                        borderRadius: '4px',
-                        color: '#ffffff',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '32px',
-                        height: '32px'
-                      }}
-                      title={safeT?.paginaInicial || 'Página Inicial'}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.12)'
-                        e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.72)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.06)'
-                        e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.55)'
-                      }}
-                    >
-                      🏠
-                    </button>
-                  </div>
+                  <button type="button" className="cadastro-valores-v2__btn-nav" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>
+                    ↶
+                  </button>
+                  <button type="button" className="cadastro-valores-v2__btn-nav cadastro-valores-v2__btn-nav--home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>
+                    🏠
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Barra de Busca */}
             {fornecedores.length > 0 && (
-              <div style={{
-                ...glassCardStyle(ACCENT_AMBER, { padding: '20px', radius: '12px', borderAlpha: 0.25 }),
-                marginBottom: '30px'
-              }}>
+              <div className="ns-ui-card ns-ui-search-wrap">
                 <div style={{ position: 'relative' }}>
                   <input
                     type="text"
@@ -35235,32 +35163,15 @@ onKeyPress={(e) => {
                       setBuscaFornecedor(e.target.value)
                       setFornecedorListaDetalheId(null)
                     }}
-                    style={{ 
-                      width: '100%', 
-                      padding: '12px 40px 12px 16px', 
-                      backgroundColor: '#222222', 
-                      color: '#fff', 
-                      border: '1px solid rgba(255, 165, 0, 0.3)', 
-                      borderRadius: '8px',
-                      fontSize: '14px'
-                    }}
                   />
-                  <span style={{
-                    position: 'absolute',
-                    right: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    fontSize: '18px',
-                    pointerEvents: 'none'
-                  }}>🔍</span>
+                  <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '18px', pointerEvents: 'none' }}>🔍</span>
                 </div>
               </div>
             )}
             
             {showFornecedorForm && (
-              <div style={{ ...glassCardStyle(ACCENT_GREEN, { padding: '20px', radius: '12px', borderAlpha: 0.2 }), marginBottom: '20px' }}>
-                <h3 style={{ marginBottom: '15px' }}>{editingFornecedor ? (safeT?.editFornecedor || 'Editar Fornecedor') : (safeT?.addFornecedor || 'Adicionar Fornecedor')}</h3>
-                
+              <div className="cadastro-valores-v2__card" style={{ marginBottom: '20px' }}>
+                <h3 className="cadastro-valores-v2__card-title">{editingFornecedor ? (safeT?.editFornecedor || 'Editar Fornecedor') : (safeT?.addFornecedor || 'Adicionar Fornecedor')}</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
                   <div>
                     <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.nomeEmpresa || 'Nome da Empresa'} *</label>
@@ -35395,11 +35306,11 @@ onKeyPress={(e) => {
                   </div>
                 </div>
                 
-                <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                  <button className="btn-primary" onClick={handleSaveFornecedor} style={{ flex: 1, padding: '8px 16px' }}>
+                <div className="cadastro-valores-v2__form-actions">
+                  <button type="button" className="cadastro-valores-v2__btn-green" onClick={handleSaveFornecedor}>
                     {safeT?.save || 'Salvar'}
                   </button>
-                  <button className="btn-primary" onClick={() => { 
+                  <button type="button" className="cadastro-valores-v2__btn-secondary" onClick={() => { 
                     setShowFornecedorForm(false); 
                     setFornecedorListaDetalheId(null);
                     setEditingFornecedor(null); 
@@ -35417,7 +35328,7 @@ onKeyPress={(e) => {
                       contato: '', 
                       iban: '' 
                     }); 
-                  }} style={{ flex: 1, padding: '8px 16px' }}>
+                  }}>
                     {safeT?.cancel || 'Cancelar'}
                   </button>
                 </div>
@@ -35425,13 +35336,13 @@ onKeyPress={(e) => {
             )}
             
             {fornecedores.length === 0 ? (
-              <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>{safeT?.noFornecedores || 'Nenhum fornecedor cadastrado.'}</p>
+              <p className="ns-ui-empty">{safeT?.noFornecedores || 'Nenhum fornecedor cadastrado.'}</p>
             ) : fornecedoresFiltrados.length === 0 ? (
-              <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>
+              <p className="ns-ui-empty">
                 {safeT?.nenhumEncontrado || 'Nenhum encontrado com'} {safeT?.fornecedor || 'fornecedor'} "{buscaFornecedor}"
               </p>
             ) : (
-              <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#222222', borderRadius: '6px', fontSize: '14px' }}>
+              <div className="ns-ui-count-bar">
                 {safeT?.mostrando || 'Mostrando'} {fornecedoresFiltrados.length} {safeT?.de || 'de'} {fornecedores.length} {safeT?.fornecedores || 'fornecedor(es)'}
               </div>
             )}
@@ -36186,7 +36097,7 @@ onKeyPress={(e) => {
           )
         }
         return (
-          <div className="tab-content-wrapper tab-glass-root biblioteca-pecas-hub" style={{ overflow: 'visible' }}>
+          <div className="tab-content-wrapper tab-glass-root biblioteca-pecas-hub ns-ui-v2" style={{ overflow: 'visible' }}>
             {bibliotecaImageHoverPreview && typeof window !== 'undefined' ? (() => {
               const maxW = 300
               const maxH = 300
@@ -40279,7 +40190,7 @@ A1;Peça exemplo;10`}
           return new Date(t).toLocaleDateString(localePdfSst)
         }
         return (
-          <div className="tab-content-wrapper tab-glass-root">
+          <div className="tab-content-wrapper tab-glass-root ns-ui-v2">
             <div className="tab-glass-hero">
               <div className="tab-glass-hero-top">
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
@@ -40955,7 +40866,7 @@ A1;Peça exemplo;10`}
 
       case 'agenda':
         return (
-          <div className="agenda-tecnica-page" style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
+          <div className="agenda-tecnica-page ns-ui-v2 cadastro-valores-v2" style={{ padding: '30px', maxWidth: '1600px', margin: '0 auto' }}>
             {/* Cabeçalho Profissional */}
             <div className="alerta-mensagens-hero agenda-tecnica-hero" style={{
               marginBottom: '40px',
@@ -43728,7 +43639,7 @@ A1;Peça exemplo;10`}
 
       case 'estado-visual-tecnico':
         return (
-          <div className="tab-content-wrapper tab-glass-root">
+          <div className="tab-content-wrapper tab-glass-root ns-ui-v2">
             {/* Cabeçalho Profissional */}
             <div className="tab-glass-hero">
               <div className="tab-glass-hero-top">
@@ -56077,7 +55988,7 @@ A1;Peça exemplo;10`}
             saveData('nonato-conhecimento-tecnicos', next).catch(() => {})
           }
           return (
-            <div className="tab-content-wrapper tab-glass-root" style={{ minHeight: '480px' }}>
+            <div className="tab-content-wrapper tab-glass-root ns-ui-v2" style={{ minHeight: '480px' }}>
               <div className="tab-glass-hero tab-glass-hero--compact">
                 <div className="tab-glass-hero-top" style={{ marginBottom: 0 }}>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>

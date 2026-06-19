@@ -263,7 +263,7 @@ export function CadastroServicosContent(props: Props) {
   )
 
   return (
-    <div className="tab-content-wrapper tab-glass-root tab-glass-root--wide cadastro-valores-v2">
+    <div className="tab-content-wrapper tab-glass-root tab-glass-root--wide ns-ui-v2 cadastro-valores-v2">
       <div className="mobile-sticky-toolbar">
         <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT.voltar || 'Voltar'}>
           ↶ {safeT.voltar || 'Voltar'}

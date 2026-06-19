@@ -5153,11 +5153,11 @@ a:focus-visible {
 .clientes-alfa-jump {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  padding: 10px 12px;
-  background: #1a1a1a;
-  border: 1px solid rgba(0, 255, 0, 0.22);
-  border-radius: 8px;
+  gap: 8px;
+  padding: 14px 16px;
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
   position: sticky;
   top: 0;
   z-index: 5;
@@ -5166,36 +5166,36 @@ a:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 28px;
-  height: 28px;
-  padding: 0 6px;
-  border-radius: 6px;
-  background: rgba(22, 28, 28, 0.95);
-  border: 1px solid rgba(0, 255, 0, 0.18);
-  color: #b8ffb8;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.75);
   font-size: 12px;
   font-weight: 700;
   text-decoration: none;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .clientes-alfa-jump-link:hover {
-  background: rgba(18, 52, 24, 0.96);
-  border-color: rgba(0, 200, 80, 0.55);
-  color: #fff;
+  background: rgba(29, 185, 84, 0.15);
+  border-color: rgba(29, 185, 84, 0.45);
+  color: #1db954;
 }
 .clientes-alfa-secao {
   scroll-margin-top: 72px;
 }
 .clientes-alfa-letra {
-  margin: 0 0 8px;
-  padding: 6px 10px;
-  font-size: 1.35rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  color: #7dff9e;
-  background: linear-gradient(90deg, rgba(0, 255, 0, 0.12), transparent);
-  border-left: 4px solid rgba(0, 255, 0, 0.45);
-  border-radius: 0 6px 6px 0;
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid #1db954;
+  border-radius: 0 10px 10px 0;
 }
 .clientes-alfa-nomes {
   list-style: none;
@@ -5203,15 +5203,15 @@ a:focus-visible {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 .clientes-alfa-nome-btn {
   width: 100%;
   text-align: left;
-  padding: 10px 12px;
-  border-radius: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background: #222222;
+  background: #333333;
   color: #fff;
   font-size: 14px;
   font-weight: 600;
@@ -5219,9 +5219,9 @@ a:focus-visible {
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .clientes-alfa-nome-btn:hover {
-  background: rgba(18, 52, 24, 0.88);
-  border-color: rgba(0, 200, 80, 0.45);
-  color: #eaffea;
+  background: rgba(29, 185, 84, 0.12);
+  border-color: rgba(29, 185, 84, 0.45);
+  color: #ffffff;
 }
 .clientes-alfa-voltar {
   font-size: 13px;
@@ -7188,14 +7188,14 @@ a:focus-visible {
 
 /* Telas de cadastro / gestão — mesmo padrão Relatório de Serviço / Biblioteca */
 .tab-glass-root {
-  padding: clamp(8px, 2.5vw, 30px) !important;
+  padding: clamp(16px, 2.5vw, 32px) !important;
   box-sizing: border-box;
   max-width: 1600px;
   margin: 0 auto;
   width: 100%;
   min-width: 0;
-  background: rgba(0, 0, 0, 0.38);
-  border-radius: clamp(8px, 1.5vw, 16px);
+  background: transparent;
+  border-radius: 0;
 }
 
 .tab-glass-root--wide {
@@ -7203,12 +7203,12 @@ a:focus-visible {
 }
 
 .tab-glass-hero {
-  margin-bottom: clamp(16px, 4vw, 40px);
-  padding: clamp(12px, 3vw, 30px);
-  background: linear-gradient(135deg, rgba(0, 255, 0, 0.055) 0%, rgba(0, 0, 0, 0.78) 100%);
-  border-radius: clamp(10px, 2.5vw, 20px);
-  border: 2px solid rgba(0, 255, 0, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 255, 0, 0.1);
+  margin-bottom: clamp(16px, 4vw, 28px);
+  padding: clamp(20px, 3vw, 28px);
+  background: #2a2a2a;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: none;
 }
 
 .tab-glass-hero--compact {
@@ -7234,24 +7234,24 @@ a:focus-visible {
 
 .tab-glass-hero-title {
   margin: 0 0 6px 0 !important;
-  font-size: clamp(1rem, 4.2vw, 1.85rem) !important;
-  font-weight: bold !important;
+  font-size: clamp(1.25rem, 4vw, 2rem) !important;
+  font-weight: 700 !important;
   color: #ffffff !important;
-  letter-spacing: 0.08em !important;
-  text-shadow: 0 0 14px rgba(255, 255, 255, 0.12) !important;
+  letter-spacing: -0.02em !important;
+  text-shadow: none !important;
   line-height: 1.2 !important;
 }
 
 .tab-glass-hero-meta {
   margin: 0 !important;
   font-size: clamp(12px, 3vw, 14px) !important;
-  color: #ffffff !important;
-  opacity: 0.95 !important;
+  color: rgba(255, 255, 255, 0.48) !important;
+  opacity: 1 !important;
 }
 
 .tab-glass-hero-actions {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: center;
   flex-wrap: wrap;
   justify-content: flex-end;
@@ -7259,16 +7259,19 @@ a:focus-visible {
 
 .tab-glass-hero-actions-row {
   display: flex;
-  gap: 6px;
+  gap: 10px;
   align-items: center;
 }
 
 .tab-glass-nav {
   display: flex;
-  gap: 10px;
-  margin-bottom: 30px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid rgba(0, 255, 0, 0.24);
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
 }
 
 .tab-glass-nav--clientes {
@@ -15989,4 +15992,218 @@ html body .ns-dashboard-stat[role="button"] .ns-dashboard-stat-value {
 .cadastro-valores-modal .modal > div > div:first-child button[style*='rgba(18, 52, 24'] {
   border: 2px solid #1db954 !important;
   background: rgba(29, 185, 84, 0.12) !important;
+}
+
+/* === NS UI v2 — botões, formulários e modais em todo o sistema === */
+.tab-glass-hero-actions > .btn-primary,
+.tab-glass-hero-actions > button.btn-primary {
+  padding: 12px 20px !important;
+  min-height: 44px !important;
+  border-radius: 12px !important;
+  background: #1db954 !important;
+  border: none !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  box-shadow: 0 4px 16px rgba(29, 185, 84, 0.28) !important;
+}
+
+.tab-glass-hero-actions > .btn-primary:hover,
+.tab-glass-hero-actions > button.btn-primary:hover {
+  background: #1ed760 !important;
+}
+
+.tab-glass-hero-actions-row > button {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 18px !important;
+  cursor: pointer !important;
+  transition: background 0.2s ease, border-color 0.2s ease !important;
+}
+
+.tab-glass-hero-actions-row > button:first-child {
+  background: #1db954 !important;
+  border: none !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(29, 185, 84, 0.28) !important;
+}
+
+.tab-glass-hero-actions-row > button:last-child {
+  background: rgba(37, 99, 235, 0.15) !important;
+  border: 1px solid rgba(96, 165, 250, 0.4) !important;
+  color: #93c5fd !important;
+  box-shadow: none !important;
+}
+
+.tab-glass-nav .btn-primary {
+  padding: 12px 20px !important;
+  min-height: 44px !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  box-shadow: none !important;
+}
+
+.tab-glass-nav .btn-primary[style*='rgba(18, 52, 24'],
+.tab-glass-nav .btn-primary[style*='rgba(0, 255, 0, 0.3)'] {
+  background: #1db954 !important;
+  border-color: #1db954 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(29, 185, 84, 0.28) !important;
+}
+
+.tab-glass-root input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='file']),
+.tab-glass-root select,
+.tab-glass-root textarea {
+  padding: 12px 14px !important;
+  background: rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 10px !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+  box-sizing: border-box;
+}
+
+.tab-glass-root input:focus,
+.tab-glass-root select:focus,
+.tab-glass-root textarea:focus {
+  outline: none !important;
+  border-color: rgba(29, 185, 84, 0.55) !important;
+}
+
+.tab-glass-root label {
+  color: rgba(255, 255, 255, 0.65) !important;
+  font-size: 13px !important;
+  font-weight: 500;
+}
+
+.tab-glass-root .btn-primary:not(.sidebar-group-header):not(.sidebar-action-btn):not(.dia-trabalho-acao-btn) {
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  min-height: 40px;
+}
+
+.tab-glass-root .btn-danger {
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+}
+
+.tab-glass-cards-grid > div,
+.tab-glass-cards-grid > article {
+  background: #2a2a2a !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 14px !important;
+}
+
+.modal {
+  background: #2a2a2a !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55) !important;
+}
+
+.modal h2,
+.modal h3,
+.modal h4 {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+.modal-overlay .modal input:not([type='checkbox']):not([type='radio']):not([type='hidden']),
+.modal-overlay .modal select,
+.modal-overlay .modal textarea {
+  padding: 10px 12px !important;
+  background: rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 10px !important;
+  color: #fff !important;
+}
+
+.modal-overlay .modal .btn-primary {
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+}
+
+.ns-ui-card,
+.cadastro-valores-v2__card {
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: clamp(16px, 3vw, 20px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+
+.ns-ui-search-wrap {
+  margin-bottom: 24px;
+}
+
+.ns-ui-search-wrap input {
+  width: 100%;
+  padding: 12px 40px 12px 16px !important;
+  font-size: 14px !important;
+}
+
+.ns-ui-count-bar {
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  background: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.ns-ui-empty {
+  text-align: center;
+  opacity: 0.65;
+  padding: 24px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 14px;
+}
+
+/* Alias: classes cadastro-valores reutilizáveis em qualquer ecrã */
+.ns-ui-v2 .cadastro-valores-v2__btn-green,
+.cadastro-valores-v2__btn-green {
+  padding: 12px 20px;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 12px;
+  border: none;
+  background: #1db954;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(29, 185, 84, 0.28);
+}
+
+.ns-ui-v2 .cadastro-valores-v2__btn-green:hover,
+.cadastro-valores-v2__btn-green:hover {
+  background: #1ed760;
+}
+
+@media (max-width: 768px) {
+  .tab-glass-hero-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tab-glass-nav {
+    flex-direction: column;
+  }
+
+  .tab-glass-nav .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
 }
