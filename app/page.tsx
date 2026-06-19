@@ -76,6 +76,7 @@ import { AdministradorContent } from './components/admin/AdministradorContent'
 import { OrcamentoServicoTecnicoContent } from './components/OrcamentoServicoTecnicoContent'
 import { CadastroServicosContent } from './components/CadastroServicosContent'
 import { ClienteCadastroForm, emptyClienteFormState, type ClienteFormState } from './components/ClienteCadastroForm'
+import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { TEMPLATE_SERVICOS_PADRAO } from './lib/servicosCadastroUtils'
 import { NonatoBrandLogo } from './components/NonatoBrandLogo'
 import {
@@ -34350,11 +34351,12 @@ onKeyPress={(e) => {
           <div
             className={
               'tab-content-wrapper tab-glass-root tab-glass-root--wide' +
-              (clientesActiveTab === 'cadastrar' ? ' clientes-cadastro-page' : '')
+              (clientesActiveTab === 'cadastrar' ? ' clientes-cadastro-page' : '') +
+              (clienteListaDetalheId ? ' clientes-detalhe-page' : '')
             }
           >
             {/* Barra mobile — oculta na aba Cadastrar (layout Novo Cliente) */}
-            {clientesActiveTab !== 'cadastrar' ? (
+            {clientesActiveTab !== 'cadastrar' && !clienteListaDetalheId ? (
             <div className="mobile-sticky-toolbar">
               <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>
                 ↶ {safeT?.voltar || 'Voltar'}
@@ -34400,7 +34402,7 @@ onKeyPress={(e) => {
             </div>
             ) : null}
             {/* Cabeçalho Profissional - oculto em mobile (toolbar substitui) e na aba Cadastrar (formulário Novo Cliente) */}
-            {clientesActiveTab !== 'cadastrar' ? (
+            {clientesActiveTab !== 'cadastrar' && !clienteListaDetalheId ? (
             <div className="tab-header-desktop tab-glass-hero">
               <div className="tab-glass-hero-top">
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
@@ -34481,7 +34483,7 @@ onKeyPress={(e) => {
             ) : null}
 
             {/* Abas Listar / Grupos — ocultas na aba Cadastrar (layout Novo Cliente) */}
-            {clientesActiveTab !== 'cadastrar' ? (
+            {clientesActiveTab !== 'cadastrar' && !clienteListaDetalheId ? (
             <div className="tab-nav-desktop tab-glass-nav tab-glass-nav--clientes">
               <button 
                 className="btn-primary"
@@ -34574,7 +34576,7 @@ onKeyPress={(e) => {
             </div>
             ) : null}
 
-            {clientesActiveTab !== 'cadastrar' ? (
+            {clientesActiveTab !== 'cadastrar' && !clienteListaDetalheId ? (
             <div
               className="clientes-financeiro-aviso"
               style={{
@@ -34967,6 +34969,35 @@ onKeyPress={(e) => {
               </div>
             ) : (
               <div>
+                {clienteListaDetalheId ? (
+                  clientesParaDetalhe.length === 0 ? (
+                    <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>
+                      {safeT?.clienteNaoEncontrado || 'Cliente não encontrado'}
+                    </p>
+                  ) : (
+                    <ClienteDetalheView
+                      key={selectedLanguage + clientesParaDetalhe[0].id}
+                      cliente={clientesParaDetalhe[0]}
+                      language={selectedLanguage}
+                      faturasPecas={faturasPecas}
+                      fechamentosGuardadosBibliotecaIds={fechamentosGuardadosBibliotecaIds}
+                      fechamentosRelatorios={fechamentosRelatorios}
+                      fechamentoFluxoFinanceiroPorRelatorioId={fechamentoFluxoFinanceiroPorRelatorioId}
+                      fechamentoIvaPorRelatorioId={fechamentoIvaPorRelatorioId}
+                      fechamentoItensOmitidosPorRelatorio={fechamentoItensOmitidosPorRelatorio}
+                      onBack={() => setClienteListaDetalheId(null)}
+                      onEdit={() => {
+                        handleEditCliente(clientesParaDetalhe[0])
+                        setClientesActiveTab('cadastrar')
+                        setClienteListaDetalheId(null)
+                      }}
+                      onDelete={() => handleDeleteCliente(clientesParaDetalhe[0].id)}
+                      onAddEquipamento={() => handleAddEquipamentoCliente(clientesParaDetalhe[0])}
+                      onViewEquipamentos={() => handleViewClienteEquipamentos(clientesParaDetalhe[0])}
+                    />
+                  )
+                ) : (
+                  <>
                 {clientes.length > 0 && (
                   <div style={{ marginBottom: '20px' }}>
                     <input
@@ -35002,7 +35033,7 @@ onKeyPress={(e) => {
                   </div>
                 )}
 
-                {clientesFiltrados.length > 0 && !clienteListaDetalheId && (
+                {clientesFiltrados.length > 0 && (
                   <div className="clientes-alfa-wrap">
                     {clientesLetrasOrdem.length > 1 && (
                       <nav
@@ -35048,411 +35079,7 @@ onKeyPress={(e) => {
                     ))}
                   </div>
                 )}
-
-                {clientesFiltrados.length > 0 && clienteListaDetalheId && (
-                  <div>
-                    <button
-                      type="button"
-                      className="btn-secondary clientes-alfa-voltar"
-                      onClick={() => setClienteListaDetalheId(null)}
-                      style={{ marginBottom: '14px' }}
-                    >
-                      ← {(safeT as any)?.clientesAlfabetoVoltarLista || 'Voltar à lista por letra'}
-                    </button>
-                    {clientesParaDetalhe.length === 0 ? (
-                      <p style={{ textAlign: 'center', opacity: 0.7, padding: '20px' }}>
-                        {safeT?.clienteNaoEncontrado || 'Cliente não encontrado'}
-                      </p>
-                    ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: '8px' }}>
-                    {clientesParaDetalhe.map(cliente => {
-                      // Gerar iniciais do nome da empresa
-                      const getIniciais = (nome: string) => {
-                        const palavras = nome.trim().split(/\s+/)
-                        if (palavras.length >= 2) {
-                          return (palavras[0][0] + palavras[1][0]).toUpperCase()
-                        }
-                        return nome.substring(0, 2).toUpperCase()
-                      }
-                      
-                      const iniciais = getIniciais(cliente.nomeEmpresa)
-                      const statusFaturas = getStatusFaturasCliente(cliente.id)
-                      const statusText =
-                        statusFaturas === 'pago'
-                          ? (safeT as any)?.clienteBadgeEmDia || 'Em Dia'
-                          : statusFaturas === 'pendente'
-                            ? (safeT as any)?.pendente || 'Pendente'
-                            : statusFaturas === 'atrasado'
-                              ? (safeT as any)?.atrasado || 'Atrasado'
-                              : (safeT as any)?.semFaturas || 'Sem Faturas'
-                      const badgeF = getClienteFaturaBadgeProps(cliente.id)
-                      const alertaDevedor = clienteCadastroAlertaDevedorId === cliente.id
-                      const relNaoPagoCount = Number(cliente.relatoriosNaoPagoCount ?? 0)
-                      const devedorDetalhe = clientesDevedores.find(
-                        d =>
-                          d.clienteId === cliente.id &&
-                          d.isDevedor &&
-                          (d.saldoPendente > 0 || Number(d.relatoriosNaoPagoCount ?? 0) > 0)
-                      )
-                      const ehDevedor =
-                        Boolean(cliente.isDevedor) &&
-                        (Number(cliente.saldoPendente ?? 0) > 0 || relNaoPagoCount > 0)
-                      const highlightDevedor = ehDevedor || alertaDevedor
-                      const valorDividaPecas =
-                        devedorDetalhe?.saldoPendente ?? Number(cliente.saldoPendente ?? 0)
-                      const numsFaturaPecas = (devedorDetalhe?.faturasPendentes ?? [])
-                        .map(f => f.numeroFatura)
-                        .filter(Boolean)
-                      const faturasResumoPecas =
-                        numsFaturaPecas.length === 0
-                          ? ''
-                          : numsFaturaPecas.length <= 5
-                            ? numsFaturaPecas.join(', ')
-                            : `${numsFaturaPecas.slice(0, 5).join(', ')} (+${numsFaturaPecas.length - 5})`
-
-                      return (
-                        <div 
-                          key={cliente.id}
-                          data-cliente-card-id={cliente.id}
-                          className={[
-                            'cliente-lista-card',
-                            ehDevedor ? 'cliente-lista-card-devedor' : '',
-                            highlightDevedor ? 'cliente-card-alerta-devedor' : '',
-                          ]
-                            .filter(Boolean)
-                            .join(' ')}
-                          style={{ 
-                            ...(ehDevedor
-                              ? {}
-                              : {
-                                  backgroundColor: '#222222',
-                                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                                }),
-                            padding: '8px', 
-                            borderRadius: '6px', 
-                            display: 'flex',
-                            gap: '8px',
-                            alignItems: 'center',
-                            position: 'relative'
-                          }}
-                        >
-                          {/* Avatar Quadrado com Cantos Arredondados */}
-                          <div style={{ flexShrink: 0 }}>
-                            {cliente.photo ? (
-                              <div style={{
-                                width: '50px',
-                                height: '50px',
-                                borderRadius: '6px',
-                                overflow: 'hidden',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                backgroundColor: '#141414',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                              }}>
-                                <img 
-                                  src={cliente.photo} 
-                                  alt={cliente.nomeEmpresa} 
-                                  style={{ 
-                                    width: '100%', 
-                                    height: '100%', 
-                                    objectFit: 'cover'
-                                  }} 
-                                />
-                              </div>
-                            ) : (
-                              <div style={{
-                                width: '50px',
-                                height: '50px',
-                                borderRadius: '6px',
-                                backgroundColor: '#8B4513',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: '#fff',
-                                fontWeight: 'bold',
-                                fontSize: '14px'
-                              }}>
-                                <div>{iniciais}</div>
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Informações do Cliente */}
-                          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                            <div className="cliente-lista-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <h3 style={{ 
-                                  margin: 0, 
-                                  color: highlightDevedor ? (ehDevedor ? '#fff' : '#ff6666') : '#fff', 
-                                  fontSize: '14px',
-                                  fontWeight: 'bold',
-                                  wordBreak: 'break-word',
-                                  lineHeight: 1.25
-                                }}>
-                                  {cliente.nomeEmpresa}
-                                </h3>
-                                {cliente.grupoTarifaId && (
-                                  <p style={{ margin: '4px 0 0', color: '#7dff9e', fontSize: '10px', fontWeight: 600 }}>
-                                    📁 {nomeGrupoTarifaServico(servicoGrupos, cliente.grupoTarifaId)}
-                                  </p>
-                                )}
-                                <p style={{ 
-                                  margin: 0, 
-                                  color: highlightDevedor ? (ehDevedor ? '#fecaca' : '#ff8888') : '#888', 
-                                  fontSize: '11px',
-                                  wordBreak: 'break-word',
-                                  lineHeight: 1.3
-                                }}>
-                                  {cliente.telefones || 'Sem telefone'}
-                                </p>
-                              </div>
-                              
-                              <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
-                                {/* Badge de Status */}
-                                <div
-                                  style={{
-                                    backgroundColor:
-                                      ehDevedor || alertaDevedor ? 'rgba(160, 0, 0, 0.9)' : badgeF.bg,
-                                    color: ehDevedor || alertaDevedor ? '#ffcccc' : badgeF.fg,
-                                    border:
-                                      ehDevedor || alertaDevedor
-                                        ? '1px solid rgba(255, 120, 120, 0.55)'
-                                        : badgeF.border,
-                                    padding: '2px 6px',
-                                    borderRadius: '10px',
-                                    fontSize: '9px',
-                                    fontWeight: 600,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '3px',
-                                    whiteSpace: 'nowrap',
-                                    boxShadow:
-                                      !ehDevedor && !alertaDevedor && statusFaturas === 'pendente'
-                                        ? '0 0 12px rgba(253, 224, 71, 0.42)'
-                                        : !ehDevedor && !alertaDevedor && statusFaturas === 'sem-faturas'
-                                          ? '0 0 10px rgba(255, 255, 255, 0.22)'
-                                          : !ehDevedor && !alertaDevedor && statusFaturas === 'atrasado'
-                                            ? '0 0 12px rgba(220, 38, 38, 0.45)'
-                                            : undefined,
-                                  }}
-                                >
-                                  {!ehDevedor && !alertaDevedor && (
-                                    <span style={{ fontWeight: 800, lineHeight: 1 }}>{badgeF.mark}</span>
-                                  )}
-                                  {(ehDevedor || alertaDevedor) && (
-                                    <span style={{ fontWeight: 800 }}>!</span>
-                                  )}
-                                  <span>
-                                    {ehDevedor
-                                      ? (safeT as any)?.clienteDevedorBadge || 'Devedor'
-                                      : alertaDevedor
-                                        ? statusText
-                                        : badgeF.label}
-                                  </span>
-                                </div>
-                                
-                                {/* Menu de Opções */}
-                                <div style={{ cursor: 'pointer', padding: '1px' }}>
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={highlightDevedor ? '#ff6666' : '#888'} strokeWidth="2">
-                                    <circle cx="12" cy="5" r="1.5"/>
-                                    <circle cx="12" cy="12" r="1.5"/>
-                                    <circle cx="12" cy="19" r="1.5"/>
-                                  </svg>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            {/* Endereço e NIF em linha */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                              {(cliente.morada || cliente.codigoPostal) && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: highlightDevedor ? '#ff9999' : '#aaa', fontSize: '10px', flexWrap: 'wrap' }}>
-                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={highlightDevedor ? '#ff7777' : '#888'} strokeWidth="2">
-                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                    <circle cx="12" cy="10" r="3"></circle>
-                                  </svg>
-                                  <span style={{ wordBreak: 'break-word', lineHeight: 1.35 }}>
-                                    {[cliente.morada, cliente.codigoPostal].filter(Boolean).join(' ')}
-                                  </span>
-                                  <a
-                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([cliente.morada, cliente.codigoPostal, cliente.pais].filter(Boolean).join(', '))}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    title={(safeT as any)?.abrirGoogleMaps || 'Abrir no Google Maps'}
-                                    style={{ marginLeft: '4px', color: highlightDevedor ? '#ff8888' : '#6ba3f6', textDecoration: 'none', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '2px' }}
-                                  >
-                                    🗺️ {(safeT as any)?.verNoMaps || 'Ver no Maps'}
-                                  </a>
-                                </div>
-                              )}
-                              
-                              {cliente.numeroContribuicaoFiscal && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: highlightDevedor ? '#ff9999' : '#aaa', fontSize: '10px' }}>
-                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={highlightDevedor ? '#ff7777' : '#888'} strokeWidth="2">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                                    <line x1="7" y1="2" x2="7" y2="6"></line>
-                                    <line x1="17" y1="2" x2="17" y2="6"></line>
-                                  </svg>
-                                  <span>NIF: {cliente.numeroContribuicaoFiscal}</span>
-                                </div>
-                              )}
-                            </div>
-
-                            {ehDevedor && (valorDividaPecas > 0 || relNaoPagoCount > 0) && (
-                              <div
-                                style={{
-                                  marginTop: '6px',
-                                  padding: '8px 9px',
-                                  borderRadius: '6px',
-                                  background: 'rgba(0, 0, 0, 0.42)',
-                                  border: '1px solid rgba(255, 120, 120, 0.5)',
-                                  width: '100%',
-                                  boxSizing: 'border-box',
-                                }}
-                              >
-                                {valorDividaPecas > 0 ? (
-                                  <div style={{ fontSize: '12px', color: '#fff', fontWeight: 700 }}>
-                                    {(safeT as any)?.clienteDevedorDividaLabel || 'Dívida'}: €
-                                    {valorDividaPecas.toFixed(2)}
-                                  </div>
-                                ) : null}
-                                {faturasResumoPecas ? (
-                                  <div
-                                    style={{
-                                      fontSize: '10px',
-                                      color: '#fecaca',
-                                      marginTop: valorDividaPecas > 0 ? '4px' : 0,
-                                      wordBreak: 'break-word',
-                                      lineHeight: 1.35,
-                                    }}
-                                  >
-                                    {(safeT as any)?.clienteDevedorFaturasLabel || 'Faturas em aberto'}:{' '}
-                                    {faturasResumoPecas}
-                                  </div>
-                                ) : null}
-                                {relNaoPagoCount > 0 ? (
-                                  <div
-                                    style={{
-                                      fontSize: '10px',
-                                      color: '#fecaca',
-                                      marginTop: '4px',
-                                      lineHeight: 1.35,
-                                    }}
-                                  >
-                                    {(safeT as any)?.clienteDevedorRelatoriosNaoPagoLabel ||
-                                      'Relatório(s) de serviço marcados como não pago'}
-                                    : {relNaoPagoCount}
-                                  </div>
-                                ) : null}
-                              </div>
-                            )}
-                            
-                            {/* Botões: Editar | Excluir na mesma linha (metade cada); Equipamentos em largura total por baixo */}
-                            <div
-                              style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '6px',
-                                marginTop: '6px',
-                                width: '100%',
-                                boxSizing: 'border-box',
-                              }}
-                            >
-                              {alertaDevedor && (
-                                <button
-                                  type="button"
-                                  className="btn-danger"
-                                  onClick={() => setClienteCadastroAlertaDevedorId(null)}
-                                  style={{
-                                    width: '100%',
-                                    padding: '6px 10px',
-                                    fontSize: '10px',
-                                    whiteSpace: 'nowrap',
-                                    lineHeight: 1.25,
-                                    boxSizing: 'border-box',
-                                  }}
-                                >
-                                  {safeT?.encerrarAlertaDevedorCadastro || 'Encerrar alerta de devedor'}
-                                </button>
-                              )}
-                              <div style={{ display: 'flex', gap: '6px', width: '100%', alignItems: 'stretch' }}>
-                                <button
-                                  type="button"
-                                  className="btn-primary"
-                                  onClick={() => {
-                                    handleEditCliente(cliente)
-                                    setClientesActiveTab('cadastrar')
-                                  }}
-                                  style={{
-                                    flex: 1,
-                                    minWidth: 0,
-                                    padding: '8px 10px',
-                                    fontSize: '11px',
-                                    lineHeight: 1.25,
-                                    boxSizing: 'border-box',
-                                  }}
-                                >
-                                  {safeT?.edit || 'Editar'}
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn-danger"
-                                  onClick={() => handleDeleteCliente(cliente.id)}
-                                  style={{
-                                    flex: 1,
-                                    minWidth: 0,
-                                    padding: '8px 10px',
-                                    fontSize: '11px',
-                                    lineHeight: 1.25,
-                                    boxSizing: 'border-box',
-                                  }}
-                                >
-                                  {safeT?.delete || 'Excluir'}
-                                </button>
-                              </div>
-                              <button
-                                type="button"
-                                className="btn-primary"
-                                onClick={() => handleViewClienteEquipamentos(cliente)}
-                                style={{
-                                  width: '100%',
-                                  padding: '8px 14px',
-                                  fontSize: '10px',
-                                  whiteSpace: 'nowrap',
-                                  lineHeight: 1.25,
-                                  boxSizing: 'border-box',
-                                }}
-                              >
-                                {safeT?.equipamentosDoCliente || 'Equipamentos'}
-                              </button>
-                              <button
-                                type="button"
-                                className="btn-primary"
-                                onClick={() => abrirClienteDadosContabilidade(cliente)}
-                                style={{
-                                  width: '100%',
-                                  padding: '8px 12px',
-                                  fontSize: '10px',
-                                  lineHeight: 1.25,
-                                  boxSizing: 'border-box',
-                                  backgroundColor: 'rgba(21, 101, 192, 0.35)',
-                                  borderColor: 'rgba(100, 181, 246, 0.55)',
-                                }}
-                                title={(safeT as any)?.clienteDadosContabilidadeSub || ''}
-                              >
-                                📄 {(safeT as any)?.clienteDadosContabilidade || 'Dados p/ contabilidade'}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                    )}
-                  </div>
+                  </>
                 )}
               </div>
             )}
