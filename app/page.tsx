@@ -76,6 +76,7 @@ import { AdministradorContent } from './components/admin/AdministradorContent'
 import { OrcamentoServicoTecnicoContent } from './components/OrcamentoServicoTecnicoContent'
 import { CadastroServicosContent } from './components/CadastroServicosContent'
 import { ClienteCadastroForm, emptyClienteFormState, type ClienteFormState } from './components/ClienteCadastroForm'
+import { FornecedorCadastroForm, emptyFornecedorFormState } from './components/FornecedorCadastroForm'
 import { ClienteDetalheView } from './components/ClienteDetalheView'
 import { TEMPLATE_SERVICOS_PADRAO } from './lib/servicosCadastroUtils'
 import { NonatoBrandLogo } from './components/NonatoBrandLogo'
@@ -6359,6 +6360,7 @@ export default function Dashboard() {
   const [buscaCliente, setBuscaCliente] = useState('')
   const [clienteListaDetalheId, setClienteListaDetalheId] = useState<string | null>(null)
   const [clientesActiveTab, setClientesActiveTab] = useState<'cadastrar' | 'listar' | 'grupos'>('cadastrar')
+  const [fornecedoresActiveTab, setFornecedoresActiveTab] = useState<'cadastrar' | 'listar'>('cadastrar')
   const [clienteGrupoTarifaSelecionadoId, setClienteGrupoTarifaSelecionadoId] = useState<string | null>(null)
   const [clienteForm, setClienteForm] = useState<ClienteFormState>(() => emptyClienteFormState())
 
@@ -13816,21 +13818,15 @@ export default function Dashboard() {
   const handleAddFornecedor = () => {
     setFornecedorListaDetalheId(null)
     setEditingFornecedor(null)
-    setFornecedorForm({
-      nomeEmpresa: '',
-      morada: '',
-      localidade: '',
-      conselho: '',
-      pais: '',
-      codigoPostal: '',
-      freguesia: '',
-      numeroContribuicaoFiscal: '',
-      telefones: '',
-      email: '',
-      contato: '',
-      iban: ''
-    })
+    setFornecedorForm(emptyFornecedorFormState())
+    setFornecedoresActiveTab('cadastrar')
     setShowFornecedorForm(true)
+  }
+
+  const handleCancelFornecedorForm = () => {
+    setEditingFornecedor(null)
+    setFornecedorForm(emptyFornecedorFormState())
+    if (showFornecedoresModal) setShowFornecedorForm(false)
   }
 
   // Funções para gerenciar Serviços
@@ -14720,6 +14716,8 @@ export default function Dashboard() {
       contato: fornecedor.contato,
       iban: fornecedor.iban
     })
+    setFornecedoresActiveTab('cadastrar')
+    setFornecedorListaDetalheId(null)
     setShowFornecedorForm(true)
   }
 
@@ -15988,7 +15986,7 @@ export default function Dashboard() {
       iban: savedFornecedor.iban || ''
     })
     setEditingFornecedor(savedFornecedor)
-    alert(t.supplierSavedSuccess || 'Fornecedor salvo com sucesso!')
+    alert(t.supplierSavedSuccess || t.fornecedorSaved || 'Fornecedor salvo com sucesso!')
   }
 
   const handleDeleteFornecedor = (fornecedorId: string) => {
@@ -35120,218 +35118,202 @@ onKeyPress={(e) => {
           : []
         
         return (
-          <div className="tab-content-wrapper tab-glass-root tab-glass-root--wide ns-ui-v2 cadastro-valores-v2">
-            {/* Barra fixa mobile */}
+          <div
+            className={
+              'tab-content-wrapper tab-glass-root tab-glass-root--wide ns-ui-v2 cadastro-valores-v2' +
+              (fornecedoresActiveTab === 'cadastrar' ? ' clientes-cadastro-page' : '') +
+              (fornecedorListaDetalheId ? ' fornecedores-detalhe-page' : '')
+            }
+          >
+            {fornecedoresActiveTab !== 'cadastrar' && !fornecedorListaDetalheId ? (
             <div className="mobile-sticky-toolbar">
               <button className="mobile-toolbar-btn mobile-toolbar-voltar" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>↶ {safeT?.voltar || 'Voltar'}</button>
-              <button className="mobile-toolbar-btn active" onClick={handleAddFornecedor}>➕ {safeT?.addFornecedor || 'Novo Fornecedor'}</button>
+              <button
+                className="mobile-toolbar-btn"
+                onClick={() => {
+                  setFornecedoresActiveTab('cadastrar')
+                  setFornecedorListaDetalheId(null)
+                }}
+              >
+                ➕ {safeT?.cadastrarFornecedor || 'Cadastrar'}
+              </button>
+              <button
+                className={`mobile-toolbar-btn ${fornecedoresActiveTab === 'listar' ? 'active' : ''}`}
+                onClick={() => {
+                  setFornecedoresActiveTab('listar')
+                  setFornecedorListaDetalheId(null)
+                }}
+              >
+                📋 {safeT?.fornecedoresCadastrados || 'Listar'}
+              </button>
               <button className="mobile-toolbar-btn mobile-toolbar-home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>🏠</button>
             </div>
-            <div className="tab-header-desktop cadastro-valores-v2__hero">
-              <div className="cadastro-valores-v2__hero-row">
+            ) : null}
+            {fornecedoresActiveTab !== 'cadastrar' && !fornecedorListaDetalheId ? (
+            <div className="tab-header-desktop tab-glass-hero">
+              <div className="tab-glass-hero-top">
                 <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                   <LogoComponent size="small" />
                 </div>
-                <div style={{ flex: 1, textAlign: 'center' }}>
-                  <h1 className="cadastro-valores-v2__hero-title">{safeT?.fornecedoresTitle || 'FORNECEDORES'}</h1>
-                  <p className="cadastro-valores-v2__hero-meta">
+                <div className="tab-glass-hero-heading">
+                  <h1 className="tab-glass-hero-title">{safeT?.fornecedoresTitle || 'FORNECEDORES'}</h1>
+                  <p className="tab-glass-hero-meta">
                     {fornecedores.length} {safeT?.fornecedoresCadastrados || 'fornecedor(es) cadastrado(s)'}
                   </p>
                 </div>
-                <div className="cadastro-valores-v2__hero-actions">
-                  <button type="button" className="cadastro-valores-v2__btn-green" onClick={handleAddFornecedor}>
-                    ➕ {safeT?.addFornecedor || 'Novo Fornecedor'}
-                  </button>
-                  <button type="button" className="cadastro-valores-v2__btn-nav" onClick={() => closeTab(activeTabId || '')} title={safeT?.voltar || 'Voltar'}>
+                <div className="tab-glass-hero-actions">
+                  <div className="tab-glass-hero-actions-row">
+                  <button
+                    onClick={() => closeTab(activeTabId || '')}
+                    style={{
+                      padding: '6px 8px',
+                      fontSize: '16px',
+                      backgroundColor: 'rgba(0, 255, 0, 0.06)',
+                      border: '1px solid rgba(0, 255, 0, 0.55)',
+                      borderRadius: '4px',
+                      color: '#ffffff',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '32px',
+                      height: '32px'
+                    }}
+                    title={safeT?.voltar || 'Voltar'}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.12)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.72)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 0, 0.06)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 255, 0, 0.55)'
+                    }}
+                  >
                     ↶
                   </button>
-                  <button type="button" className="cadastro-valores-v2__btn-nav cadastro-valores-v2__btn-nav--home" onClick={voltarPaginaInicial} title={safeT?.paginaInicial || 'Página Inicial'}>
+                  <button
+                    onClick={voltarPaginaInicial}
+                    style={{
+                      padding: '6px 8px',
+                      fontSize: '16px',
+                      backgroundColor: 'rgba(0, 150, 255, 0.06)',
+                      border: '1px solid rgba(0, 150, 255, 0.55)',
+                      borderRadius: '4px',
+                      color: '#ffffff',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '32px',
+                      height: '32px'
+                    }}
+                    title={safeT?.paginaInicial || 'Página Inicial'}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.12)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.72)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 150, 255, 0.06)'
+                      e.currentTarget.style.borderColor = 'rgba(0, 150, 255, 0.55)'
+                    }}
+                  >
                     🏠
                   </button>
+                  </div>
                 </div>
               </div>
             </div>
+            ) : null}
 
-            {fornecedores.length > 0 && (
-              <div className="ns-ui-card ns-ui-search-wrap">
-                <div style={{ position: 'relative' }}>
-                  <input
-                    type="text"
-                    placeholder={`🔍 ${safeT?.buscarFornecedor || 'Buscar fornecedor por nome, localidade, telefone, e-mail ou contato...'}`}
-                    value={buscaFornecedor}
-                    onChange={(e) => {
-                      setBuscaFornecedor(e.target.value)
-                      setFornecedorListaDetalheId(null)
-                    }}
-                  />
-                  <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '18px', pointerEvents: 'none' }}>🔍</span>
-                </div>
+            {fornecedoresActiveTab !== 'cadastrar' && !fornecedorListaDetalheId ? (
+            <div className="tab-nav-desktop tab-glass-nav tab-glass-nav--clientes">
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  setFornecedoresActiveTab('cadastrar')
+                  setFornecedorListaDetalheId(null)
+                }}
+                style={{
+                  padding: '12px 24px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  border: '1px solid',
+                  borderColor: 'rgba(0, 255, 0, 0.22)',
+                  backgroundColor: 'rgba(22, 28, 28, 0.88)',
+                  color: '#ffffff',
+                  transition: 'border-color 0.2s ease, background-color 0.2s ease',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                ➕ {safeT?.cadastrarFornecedor || 'Cadastrar Fornecedor'}
+              </button>
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  setFornecedoresActiveTab('listar')
+                  setFornecedorListaDetalheId(null)
+                }}
+                style={{
+                  padding: '12px 24px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  border: '1px solid',
+                  borderColor: fornecedoresActiveTab === 'listar' ? 'rgba(0, 200, 80, 0.55)' : 'rgba(0, 255, 0, 0.22)',
+                  backgroundColor: fornecedoresActiveTab === 'listar' ? 'rgba(18, 52, 24, 0.96)' : 'rgba(22, 28, 28, 0.88)',
+                  color: '#ffffff',
+                  transition: 'border-color 0.2s ease, background-color 0.2s ease',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                📋 {safeT?.fornecedoresCadastrados || 'Fornecedores Cadastrados'} ({fornecedores.length})
+              </button>
+            </div>
+            ) : null}
+
+            {fornecedoresActiveTab === 'cadastrar' ? (
+              <div>
+                <FornecedorCadastroForm
+                  key={selectedLanguage}
+                  fornecedorForm={fornecedorForm}
+                  setFornecedorForm={setFornecedorForm}
+                  editingFornecedor={editingFornecedor}
+                  language={selectedLanguage}
+                  onSave={handleSaveFornecedor}
+                  onCancel={handleCancelFornecedorForm}
+                  onBack={() => {
+                    setFornecedoresActiveTab('listar')
+                    setFornecedorListaDetalheId(null)
+                  }}
+                  variant="page"
+                  referenceLayout={!editingFornecedor}
+                />
               </div>
-            )}
-            
-            {showFornecedorForm && (
-              <div className="cadastro-valores-v2__card" style={{ marginBottom: '20px' }}>
-                <h3 className="cadastro-valores-v2__card-title">{editingFornecedor ? (safeT?.editFornecedor || 'Editar Fornecedor') : (safeT?.addFornecedor || 'Adicionar Fornecedor')}</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.nomeEmpresa || 'Nome da Empresa'} *</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.nomeEmpresa || 'Nome da Empresa'}
-                      value={fornecedorForm.nomeEmpresa}
-                      onChange={(e) => setFornecedorForm({ ...fornecedorForm, nomeEmpresa: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.morada || 'Morada'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.morada || 'Morada'}
-                      value={fornecedorForm.morada}
-                      onChange={(e) => setFornecedorForm({ ...fornecedorForm, morada: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.localidade || 'Localidade'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.localidade || 'Localidade'}
-                      value={fornecedorForm.localidade}
-                      onChange={(e) => setFornecedorForm({ ...fornecedorForm, localidade: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.conselho || 'Conselho'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.conselho || 'Conselho'}
-                      value={fornecedorForm.conselho}
-                      onChange={(e) => setFornecedorForm({ ...fornecedorForm, conselho: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.pais || 'País'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.pais || 'País'}
-                      value={fornecedorForm.pais}
-                      onChange={(e) => setFornecedorForm({ ...fornecedorForm, pais: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.codigoPostal || 'Código Postal'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.codigoPostal || 'Código Postal'}
-                      value={fornecedorForm.codigoPostal}
-                      onChange={(e) => setFornecedorForm({ ...fornecedorForm, codigoPostal: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.freguesia || 'Freguesia'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.freguesia || 'Freguesia'}
-                      value={fornecedorForm.freguesia}
-                      onChange={(e) => setFornecedorForm({ ...fornecedorForm, freguesia: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.numeroContribuicaoFiscal || 'Número de Contribuição Fiscal'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.numeroContribuicaoFiscal || 'Número de Contribuição Fiscal'}
-                      value={fornecedorForm.numeroContribuicaoFiscal}
-                      onChange={(e) => setFornecedorForm({ ...fornecedorForm, numeroContribuicaoFiscal: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.telefones || 'Telefones'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.telefones || 'Telefones'}
-                      value={fornecedorForm.telefones}
-                      onChange={(e) => setFornecedorForm({ ...fornecedorForm, telefones: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.email || 'E-mail'}</label>
-                    <input
-                      type="email"
-                      placeholder={safeT?.email || 'E-mail'}
-                      value={fornecedorForm.email}
-                      onChange={(e) => setFornecedorForm({ ...fornecedorForm, email: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.contato || 'Contato'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.contato || 'Contato'}
-                      value={fornecedorForm.contato}
-                      onChange={(e) => setFornecedorForm({ ...fornecedorForm, contato: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                  
-                  <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={{ display: 'block', marginBottom: '5px' }}>{safeT?.iban || 'IBAN'}</label>
-                    <input
-                      type="text"
-                      placeholder={safeT?.iban || 'IBAN'}
-                      value={fornecedorForm.iban}
-                      onChange={(e) => setFornecedorForm({ ...fornecedorForm, iban: e.target.value })}
-                      style={{ width: '100%', padding: '8px', backgroundColor: '#222222', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                    />
-                  </div>
-                </div>
-                
-                <div className="cadastro-valores-v2__form-actions">
-                  <button type="button" className="cadastro-valores-v2__btn-green" onClick={handleSaveFornecedor}>
-                    {safeT?.save || 'Salvar'}
-                  </button>
-                  <button type="button" className="cadastro-valores-v2__btn-secondary" onClick={() => { 
-                    setShowFornecedorForm(false); 
-                    setFornecedorListaDetalheId(null);
-                    setEditingFornecedor(null); 
-                    setFornecedorForm({ 
-                      nomeEmpresa: '', 
-                      morada: '', 
-                      localidade: '', 
-                      conselho: '', 
-                      pais: '', 
-                      codigoPostal: '', 
-                      freguesia: '', 
-                      numeroContribuicaoFiscal: '', 
-                      telefones: '', 
-                      email: '', 
-                      contato: '', 
-                      iban: '' 
-                    }); 
-                  }}>
-                    {safeT?.cancel || 'Cancelar'}
-                  </button>
-                </div>
+            ) : (
+              <>
+            {fornecedores.length > 0 && (
+              <div style={{ marginBottom: '20px' }}>
+                <input
+                  type="text"
+                  placeholder={`🔍 ${safeT?.buscarFornecedor || 'Buscar fornecedor por nome, localidade, telefone, e-mail ou contato...'}`}
+                  value={buscaFornecedor}
+                  onChange={(e) => {
+                    setBuscaFornecedor(e.target.value)
+                    setFornecedorListaDetalheId(null)
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    backgroundColor: '#222222',
+                    color: '#fff',
+                    border: '1px solid rgba(0, 255, 0, 0.3)',
+                    borderRadius: '4px',
+                    fontSize: '14px'
+                  }}
+                />
               </div>
             )}
             
@@ -35682,6 +35664,8 @@ onKeyPress={(e) => {
               </div>
                 )}
               </div>
+            )}
+              </>
             )}
           </div>
         )
@@ -71193,101 +71177,16 @@ A1;Peça exemplo;10`}
               {safeT?.addFornecedor || 'Adicionar Fornecedor'}
             </button>
             {showFornecedorForm && (
-              <div style={{ border: '1px solid rgba(0, 255, 0, 0.2)', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
-                <h4>{editingFornecedor ? (safeT?.editFornecedor || 'Editar Fornecedor') : (safeT?.addFornecedor || 'Adicionar Fornecedor')}</h4>
-                <input
-                  type="text"
-                  placeholder={safeT?.nomeEmpresa || 'Nome da Empresa'}
-                  value={fornecedorForm.nomeEmpresa}
-                  onChange={(e) => setFornecedorForm({ ...fornecedorForm, nomeEmpresa: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder={safeT?.morada || 'Morada'}
-                  value={fornecedorForm.morada}
-                  onChange={(e) => setFornecedorForm({ ...fornecedorForm, morada: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder={safeT?.localidade || 'Localidade'}
-                  value={fornecedorForm.localidade}
-                  onChange={(e) => setFornecedorForm({ ...fornecedorForm, localidade: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder={safeT?.conselho || 'Conselho'}
-                  value={fornecedorForm.conselho}
-                  onChange={(e) => setFornecedorForm({ ...fornecedorForm, conselho: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder={safeT?.pais || 'País'}
-                  value={fornecedorForm.pais}
-                  onChange={(e) => setFornecedorForm({ ...fornecedorForm, pais: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder={safeT?.codigoPostal || 'Código Postal'}
-                  value={fornecedorForm.codigoPostal}
-                  onChange={(e) => setFornecedorForm({ ...fornecedorForm, codigoPostal: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder={safeT?.freguesia || 'Freguesia'}
-                  value={fornecedorForm.freguesia}
-                  onChange={(e) => setFornecedorForm({ ...fornecedorForm, freguesia: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder={safeT?.numeroContribuicaoFiscal || 'Número de Contribuição Fiscal'}
-                  value={fornecedorForm.numeroContribuicaoFiscal}
-                  onChange={(e) => setFornecedorForm({ ...fornecedorForm, numeroContribuicaoFiscal: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder={safeT?.telefones || 'Telefones'}
-                  value={fornecedorForm.telefones}
-                  onChange={(e) => setFornecedorForm({ ...fornecedorForm, telefones: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="email"
-                  placeholder={safeT?.email || 'E-mail'}
-                  value={fornecedorForm.email}
-                  onChange={(e) => setFornecedorForm({ ...fornecedorForm, email: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder={safeT?.contato || 'Contato'}
-                  value={fornecedorForm.contato}
-                  onChange={(e) => setFornecedorForm({ ...fornecedorForm, contato: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <input
-                  type="text"
-                  placeholder={safeT?.iban || 'IBAN'}
-                  value={fornecedorForm.iban}
-                  onChange={(e) => setFornecedorForm({ ...fornecedorForm, iban: e.target.value })}
-                  style={{ width: '100%', padding: '8px', marginBottom: '10px', backgroundColor: '#141414', color: '#fff', border: '1px solid rgba(0, 255, 0, 0.3)', borderRadius: '4px' }}
-                />
-                <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                  <button className="btn-primary" onClick={handleSaveFornecedor} style={{ flex: 1 }}>
-                    {safeT?.save || 'Salvar'}
-                  </button>
-                  <button className="btn-primary" onClick={() => { setShowFornecedorForm(false); setEditingFornecedor(null); setFornecedorForm({ nomeEmpresa: '', morada: '', localidade: '', conselho: '', pais: '', codigoPostal: '', freguesia: '', numeroContribuicaoFiscal: '', telefones: '', email: '', contato: '', iban: '' }); }} style={{ flex: 1 }}>
-                    {safeT?.cancel || 'Cancelar'}
-                  </button>
-                </div>
-              </div>
+              <FornecedorCadastroForm
+                key={selectedLanguage}
+                fornecedorForm={fornecedorForm}
+                setFornecedorForm={setFornecedorForm}
+                editingFornecedor={editingFornecedor}
+                language={selectedLanguage}
+                onSave={handleSaveFornecedor}
+                onCancel={handleCancelFornecedorForm}
+                variant="modal"
+              />
             )}
             {fornecedores.length === 0 ? (
               <p>{safeT?.noFornecedores || 'Nenhum fornecedor cadastrado.'}</p>
