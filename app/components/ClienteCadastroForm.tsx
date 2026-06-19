@@ -82,16 +82,18 @@ function FieldInput({
   icon,
   label,
   required,
+  fullWidth,
   children,
 }: {
   id: string
   icon: React.ReactNode
   label: string
   required?: boolean
+  fullWidth?: boolean
   children: React.ReactNode
 }) {
   return (
-    <div className="cliente-cadastro-v2__field">
+    <div className={'cliente-cadastro-v2__field' + (fullWidth ? ' cliente-cadastro-v2__field--span-2' : '')}>
       <label htmlFor={id} className="cliente-cadastro-v2__label">
         {label}
         {required ? ' *' : ''}
@@ -213,10 +215,11 @@ export function ClienteCadastroForm({
         ) : null}
       </section>
 
-      <section className="cliente-cadastro-v2__card">
+      <section className="cliente-cadastro-v2__card cliente-cadastro-v2__card--info">
         <h3 className="cliente-cadastro-v2__card-title">{tx.informacoesCliente || 'Informações do Cliente'}</h3>
 
-        <FieldInput id="tipo-cliente" icon={<IconUser size={18} />} label={tx.tipoCliente || 'Tipo de Cliente'}>
+        <div className="cliente-cadastro-v2__fields-grid">
+        <FieldInput id="tipo-cliente" icon={<IconUser size={18} />} label={tx.tipoCliente || 'Tipo de Cliente'} fullWidth>
           <select
             id="tipo-cliente"
             className="cliente-cadastro-v2__input cliente-cadastro-v2__select"
@@ -238,6 +241,7 @@ export function ClienteCadastroForm({
           icon={<IconUser size={18} />}
           label={isFisica ? tx.nomeCompleto || 'Nome Completo' : tx.nomeEmpresa || 'Razão Social / Nome'}
           required
+          fullWidth
         >
           <input
             id="nome-cliente"
@@ -254,6 +258,7 @@ export function ClienteCadastroForm({
             id="empresa-opcional"
             icon={<IconBuilding2 size={18} />}
             label={tx.empresaOpcional || 'Empresa (Opcional)'}
+            fullWidth
           >
             <input
               id="empresa-opcional"
@@ -266,7 +271,7 @@ export function ClienteCadastroForm({
           </FieldInput>
         ) : null}
 
-        <FieldInput id="telefone-cliente" icon={<IconPhone />} label={tx.telefone || tx.telefones || 'Telefone'}>
+        <FieldInput id="telefone-cliente" icon={<IconPhone />} label={tx.telefone || tx.telefones || 'Telefone'} fullWidth>
           <input
             id="telefone-cliente"
             type="tel"
@@ -277,7 +282,7 @@ export function ClienteCadastroForm({
           />
         </FieldInput>
 
-        <FieldInput id="endereco-cliente" icon={<IconMapPin />} label={tx.endereco || tx.morada || 'Endereço'} required>
+        <FieldInput id="endereco-cliente" icon={<IconMapPin />} label={tx.endereco || tx.morada || 'Endereço'} required fullWidth>
           <input
             id="endereco-cliente"
             type="text"
@@ -309,6 +314,7 @@ export function ClienteCadastroForm({
             onChange={(e) => setClienteForm({ ...clienteForm, numeroContribuicaoFiscal: e.target.value })}
           />
         </FieldInput>
+        </div>
       </section>
 
       {showExtras ? (
