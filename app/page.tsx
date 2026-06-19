@@ -72737,7 +72737,7 @@ A1;Peça exemplo;10`}
 
       {/* Modal de Cadastro de Serviços */}
       {showCadastroServicosModal && (
-        <div className="modal-overlay" onClick={() => setShowCadastroServicosModal(false)}>
+        <div className="modal-overlay cadastro-valores-modal" onClick={() => setShowCadastroServicosModal(false)}>
           <div
             className="modal"
             onClick={(e) => e.stopPropagation()}
